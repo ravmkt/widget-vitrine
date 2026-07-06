@@ -5,7 +5,6 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  ExternalLink,
   Heart,
   MessageCircle,
   Share2,
@@ -14,10 +13,7 @@ import {
   Play,
   Pause,
   Check,
-  Mail,
-  Facebook,
-  Link as LinkIcon,
-} from 'lucide-react';
+} from 'lucide-react'; // Removidos imports não utilizados: ExternalLink, Mail, Facebook, Link as LinkIcon
 import { showSuccess } from '@/utils/toast';
 import WhatsAppIcon from '@/components/WhatsAppIcon';
 import { cn } from '@/lib/utils';
@@ -177,13 +173,22 @@ const StoriesWidgetPage = () => {
     if (selectedStory?.cta_link) {
       return selectedStory.cta_link;
     }
+    // Fallback para a URL atual se não houver link de CTA
     return window.location.href;
   };
 
   const handleWhatsAppShare = () => {
     const productLink = getProductOrStoryLink();
-    const message = `Quero mais informações desse produto\n\nProduto: ${productLink}`;
-    const whatsappUrl = `https://wa.me/5545999629702?text=${encodeURIComponent(message)}`;
+    const productName = selectedStory?.title || "este produto";
+    const message = `Olá! Tenho interesse em ${productName}. Link: ${productLink}`;
+    
+    let whatsappUrl = '';
+    if (store?.whatsapp_number) {
+      whatsappUrl = `https://wa.me/${store.whatsapp_number}?text=${encodeURIComponent(message)}`;
+    } else {
+      whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    }
+    
     window.open(whatsappUrl, '_blank');
   };
 
@@ -340,7 +345,7 @@ const StoriesWidgetPage = () => {
             </div>
 
             {/* Vertical Action Buttons */}
-            <div className="absolute right-[14px] bottom-[74px] z-20 flex flex-col gap-2">
+            <div className="absolute right-[14px] bottom-[74px] z-40 flex flex-col gap-2"> {/* Z-index ajustado para z-40 */}
               {/* Comments Button */}
               <button
                 onClick={handleToggleComments}

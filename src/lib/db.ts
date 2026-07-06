@@ -5,6 +5,7 @@ export interface Store {
   name: string;
   domain: string;
   active: boolean;
+  whatsapp_number?: string; // Adicionado campo para número de WhatsApp
   created_at?: string;
 }
 
@@ -41,6 +42,7 @@ const DEFAULT_STORES: Store[] = [
     name: 'Useanny',
     domain: 'useanny.com.br',
     active: true,
+    whatsapp_number: '5545999629702', // Exemplo de número de WhatsApp
   }
 ];
 
