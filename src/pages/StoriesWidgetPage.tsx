@@ -1,15 +1,37 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { db, Story, Store } from '@/lib/db';
-import { X, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import {
+  X,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Heart,
+  MessageCircle,
+  MessageCircleMore,
+  Share2,
+  Volume2,
+  VolumeX,
+  Play,
+  Pause,
+  Check,
+} from 'lucide-react';
+import { showSuccess } from '@/utils/toast';
 
 const StoriesWidgetPage = () => {
   const { storeId } = useParams();
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const [store, setStore] = useState<Store | null>(null);
   const [stories, setStories] = useState<Story[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [showPlayPauseOverlay, setShowPlayPauseOverlay] = useState(false);
+  const [showCommentsPanel, setShowCommentsPanel] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const selectedStory =
     selectedIndex !== null ? stories[selectedIndex] : null;
@@ -17,9 +39,8 @@ const StoriesWidgetPage = () => {
   const loadWidgetData = async () => {
     try {
       const stores = await db.getStores();
-      
-      // Se houver storeId na URL, busca por ele. Caso contrário, usa a primeira loja como fallback (para testes no painel)
-      const currentStore = storeId 
+
+      const currentStore = storeId
         ? (stores.find((item) => item.id === storeId) || null)
         : (stores[0] || null);
 
@@ -48,26 +69,95 @@ const StoriesWidgetPage = () => {
     loadWidgetData();
   }, [storeId]);
 
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = isMuted;
+      if (isPlaying) {
+        videoRef.current.play().catch((e) => console.error("Error playing video:", e));
+      } else {
+        videoRef.current.pause();
+      }
+    }
+  }, [isMuted, isPlaying, selectedStory]); // Re-apply mute/play state when story changes
+
   const handlePrevious = () => {
     if (selectedIndex === null) return;
-
-    if (selectedIndex === 0) {
-      setSelectedIndex(stories.length - 1);
-      return;
-    }
-
-    setSelectedIndex(selectedIndex - 1);
+    setIsLiked(false); // Reset like state
+    setShowCommentsPanel(false); // Close comments panel
+    setIsPlaying(true); // Ensure video plays on next/prev
+    setSelectedIndex((prevIndex) =>
+      prevIndex === 0 ? stories.length - 1 : prevIndex - 1
+    );
   };
 
   const handleNext = () => {
     if (selectedIndex === null) return;
+    setIsLiked(false); // Reset like state
+    setShowCommentsPanel(false); // Close comments panel
+    setIsPlaying(true); // Ensure video plays on next/prev
+    setSelectedIndex((prevIndex) =>
+      prevIndex === stories.length - 1 ? 0 : prevIndex + 1
+    );
+  };
 
-    if (selectedIndex === stories.length - 1) {
-      setSelectedIndex(0);
-      return;
+  const handleVideoClick = () => {
+    if (videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current.play();
+        setIsPlaying(true);
+      } else {
+        videoRef.current.pause();
+        setIsPlaying(false);
+      }
+      setShowPlayPauseOverlay(true);
+      setTimeout(() => setShowPlayPauseOverlay(false), 700);
     }
+  };
 
-    setSelectedIndex(selectedIndex + 1);
+  const handleToggleMute = () => {
+    setIsMuted((prev) => !prev);
+  };
+
+  const handleToggleLike = () => {
+    setIsLiked((prev) => !prev);
+  };
+
+  const handleToggleComments = () => {
+    setShowCommentsPanel((prev) => !prev);
+  };
+
+  const handleWhatsAppShare = () => {
+    if (selectedStory && store) {
+      const shareText = encodeURIComponent(
+        `Confira este story da ${store.name}: ${selectedStory.title} - ${selectedStory.cta_link || window.location.href}`
+      );
+      window.open(`https://wa.me/?text=${shareText}`, '_blank');
+    }
+  };
+
+  const handleShare = async () => {
+    if (selectedStory && store) {
+      const shareUrl = selectedStory.cta_link || window.location.href;
+      const shareData = {
+        title: selectedStory.title,
+        text: `Confira este story da ${store.name}!`,
+        url: shareUrl,
+      };
+
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+          showSuccess('Story compartilhado!');
+        } catch (error) {
+          console.error('Erro ao compartilhar:', error);
+        }
+      } else {
+        navigator.clipboard.writeText(shareUrl);
+        setCopiedLink(true);
+        showSuccess('Link copiado para a área de transferência!');
+        setTimeout(() => setCopiedLink(false), 2000);
+      }
+    }
   };
 
   if (loading) {
@@ -90,7 +180,13 @@ const StoriesWidgetPage = () => {
             <button
               key={story.id}
               type="button"
-              onClick={() => setSelectedIndex(index)}
+              onClick={() => {
+                setSelectedIndex(index);
+                setIsMuted(true); // Start muted
+                setIsLiked(false); // Reset like state
+                setShowCommentsPanel(false); // Close comments panel
+                setIsPlaying(true); // Ensure video plays
+              }}
               className="flex flex-col items-center gap-2 shrink-0 group"
             >
               <div className="w-20 h-20 rounded-full p-[3px] bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-orange-400 shadow-sm">
@@ -135,14 +231,32 @@ const StoriesWidgetPage = () => {
 
           <div className="relative w-full max-w-[420px] aspect-[9/16] bg-black rounded-3xl overflow-hidden shadow-2xl">
             <video
-              key={selectedStory.id}
+              key={selectedStory.id} // Key change forces re-render and autoplay
+              ref={videoRef}
               src={selectedStory.video_url}
               poster={selectedStory.thumbnail_url}
-              controls
               autoPlay
+              muted={isMuted}
               playsInline
-              className="w-full h-full object-cover"
+              loop
+              className="w-full h-full object-cover cursor-pointer"
+              onClick={handleVideoClick}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
             />
+
+            {/* Play/Pause Overlay */}
+            {showPlayPauseOverlay && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="bg-white/30 backdrop-blur-sm rounded-full p-3 transition-opacity duration-300">
+                  {isPlaying ? (
+                    <Pause className="w-8 h-8 text-white" />
+                  ) : (
+                    <Play className="w-8 h-8 text-white" />
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/70 to-transparent pointer-events-none">
               <p className="text-white font-bold text-sm">
@@ -151,6 +265,54 @@ const StoriesWidgetPage = () => {
               <p className="text-white/60 text-xs">
                 {store.name}
               </p>
+            </div>
+
+            {/* Vertical Action Buttons */}
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-10">
+              {/* Mute/Unmute Button */}
+              <button
+                onClick={handleToggleMute}
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
+                aria-label={isMuted ? 'Ativar som' : 'Desativar som'}
+              >
+                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+              </button>
+
+              {/* Like Button */}
+              <button
+                onClick={handleToggleLike}
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
+                aria-label="Curtir story"
+              >
+                <Heart className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+              </button>
+
+              {/* Comments Button */}
+              <button
+                onClick={handleToggleComments}
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
+                aria-label="Comentários"
+              >
+                <MessageCircle className="w-5 h-5" />
+              </button>
+
+              {/* WhatsApp Button */}
+              <button
+                onClick={handleWhatsAppShare}
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
+                aria-label="Compartilhar no WhatsApp"
+              >
+                <MessageCircleMore className="w-5 h-5" />
+              </button>
+
+              {/* Share Button */}
+              <button
+                onClick={handleShare}
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
+                aria-label="Compartilhar"
+              >
+                {copiedLink ? <Check className="w-5 h-5 text-emerald-400" /> : <Share2 className="w-5 h-5" />}
+              </button>
             </div>
 
             {selectedStory.cta_link && (
@@ -166,6 +328,33 @@ const StoriesWidgetPage = () => {
                 </a>
               </div>
             )}
+
+            {/* Comments Panel */}
+            <div
+              className={`absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm p-4 transition-transform duration-300 ease-out ${
+                showCommentsPanel ? 'translate-y-0' : 'translate-y-full'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-white text-sm font-bold">Comentários</h4>
+                <button
+                  onClick={() => setShowCommentsPanel(false)}
+                  className="text-white/70 hover:text-white transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Adicionar comentário..."
+                  className="flex-1 px-3 py-2 rounded-xl bg-white/10 text-white text-sm border border-white/20 focus:outline-none focus:ring-1 focus:ring-violet-400"
+                />
+                <button className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-xl text-sm font-semibold">
+                  Enviar
+                </button>
+              </div>
+            </div>
           </div>
 
           {stories.length > 1 && (
