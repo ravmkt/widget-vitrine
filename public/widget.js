@@ -6,8 +6,6 @@
   console.log(`[Vidlytics] Domínio identificado: ${currentDomain}`);
 
   // 2. Configurações e dados de fallback (Useanny)
-  // Em produção, se o Supabase estiver configurado, buscaríamos via API/Supabase Client.
-  // Para garantir funcionamento imediato e robusto, usamos dados locais se o Supabase não responder.
   const fallbackStoreId = '11111111-1111-1111-1111-111111111111';
   
   const fallbackStories = [
@@ -16,6 +14,7 @@
       title: 'Nova Coleção Outono 🍂',
       video_url: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-in-a-futuristic-setting-41809-large.mp4',
       thumbnail_url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=250&auto=format&fit=crop&q=60',
+      cta_link: 'https://useanny.com.br/collections/outono',
       active: true,
       position: 1,
     },
@@ -24,6 +23,7 @@
       title: 'Unboxing Especial 🎁',
       video_url: 'https://assets.mixkit.co/videos/preview/mixkit-hands-opening-a-gift-box-41604-large.mp4',
       thumbnail_url: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=250&auto=format&fit=crop&q=60',
+      cta_link: 'https://useanny.com.br/products/vestido-especial',
       active: true,
       position: 2,
     },
@@ -32,6 +32,7 @@
       title: 'Provador Fashion ✨',
       video_url: 'https://assets.mixkit.co/videos/preview/mixkit-woman-holding-shopping-bags-and-smiling-40358-large.mp4',
       thumbnail_url: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=250&auto=format&fit=crop&q=60',
+      cta_link: 'https://useanny.com.br/collections/novidades',
       active: true,
       position: 3,
     },
@@ -40,6 +41,7 @@
       title: 'Cupom de Desconto 🏷️',
       video_url: 'https://assets.mixkit.co/videos/preview/mixkit-holding-a-smartphone-with-a-green-screen-41618-large.mp4',
       thumbnail_url: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=250&auto=format&fit=crop&q=60',
+      cta_link: 'https://useanny.com.br/discount/PROMO10',
       active: true,
       position: 4,
     }
@@ -174,7 +176,7 @@
       height: 56px;
       border-radius: 50%;
       border: 2px solid #fff;
-      object-cover: cover;
+      object-fit: cover;
       display: block;
     }
 
@@ -379,10 +381,11 @@
   const progressBar = modal.querySelector('#vidlytics-progress');
   const ctaBtn = modal.querySelector('.cta-btn');
 
-  let progressInterval;
+  let currentStory = null;
 
   function openPlayer(story) {
     console.log(`[Vidlytics] Abrindo story: ${story.title}`);
+    currentStory = story;
     titleElement.textContent = story.title;
     videoElement.src = story.video_url;
     modal.classList.add('active');
@@ -408,6 +411,7 @@
     progressBar.style.width = '0%';
     videoElement.removeEventListener('timeupdate', updateProgress);
     videoElement.removeEventListener('ended', closePlayer);
+    currentStory = null;
   }
 
   closeBtn.addEventListener('click', closePlayer);
@@ -417,8 +421,11 @@
 
   ctaBtn.addEventListener('click', () => {
     console.log('[Vidlytics] Clique no botão de CTA!');
-    // Redirecionar para o checkout ou produto
-    alert('Redirecionando para o produto...');
+    if (currentStory && currentStory.cta_link) {
+      window.open(currentStory.cta_link, '_blank');
+    } else {
+      alert('Redirecionando para o produto...');
+    }
   });
 
 })();

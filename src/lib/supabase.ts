@@ -25,6 +25,7 @@ export interface Story {
   title: string;
   video_url: string;
   thumbnail_url: string;
+  cta_link?: string; // Link de redirecionamento do botão de compra
   active: boolean;
   position: number;
   created_at?: string;
@@ -59,6 +60,7 @@ const DEFAULT_STORIES: Story[] = [
     title: 'Nova Coleção Outono 🍂',
     video_url: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-in-a-futuristic-setting-41809-large.mp4',
     thumbnail_url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=250&auto=format&fit=crop&q=60',
+    cta_link: 'https://useanny.com.br/collections/outono',
     active: true,
     position: 1,
   },
@@ -68,6 +70,7 @@ const DEFAULT_STORIES: Story[] = [
     title: 'Unboxing Especial 🎁',
     video_url: 'https://assets.mixkit.co/videos/preview/mixkit-hands-opening-a-gift-box-41604-large.mp4',
     thumbnail_url: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=250&auto=format&fit=crop&q=60',
+    cta_link: 'https://useanny.com.br/products/vestido-especial',
     active: true,
     position: 2,
   },
@@ -77,6 +80,161 @@ const DEFAULT_STORIES: Story[] = [
     title: 'Provador Fashion ✨',
     video_url: 'https://assets.mixkit.co/videos/preview/mixkit-woman-holding-shopping-bags-and-smiling-40358-large.mp4',
     thumbnail_url: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=250&auto=format&fit=crop&q=60',
+    cta_link: 'https://useanny.com.br/collections/novidades',
+    active: true,
+    position: 3,
+  },
+  {
+    id: 's4',
+    store_id: '11111111-1111-1111-1111-111111111111',
+    title: 'Cupom de Desconto 🏷️',
+    video_url: 'https://assets.mixkit.co/videos/preview/mixkit-holding-a-smartphone-with-a-green-screen-41618-large.mp4',
+    thumbnail_url: 'https://images.unsplash.com/<dyad-write path="src/lib/supabase.ts" description="Atualizando o arquivo supabase.ts por completo com o campo cta_link">
+import { createClient } from '@supabase/supabase-js';
+
+// Chaves do Supabase (podem ser configuradas no painel ou via env)
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+
+export const supabase = isSupabaseConfigured
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
+
+// Interfaces
+export interface Store {
+  id: string;
+  name: string;
+  domain: string;
+  active: boolean;
+  created_at?: string;
+}
+
+export interface Story {
+  id: string;
+  store_id: string;
+  title: string;
+  video_url: string;
+  thumbnail_url: string;
+  cta_link?: string; // Link de redirecionamento do botão de compra
+  active: boolean;
+  position: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface WidgetSettings {
+  id: string;
+  store_id: string;
+  position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left' | 'bottom-center';
+  theme_color: string;
+  display_mode: 'carousel' | 'grid' | 'bubbles';
+  active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Dados Iniciais de Exemplo (Useanny)
+const DEFAULT_STORES: Store[] = [
+  {
+    id: '11111111-1111-1111-1111-111111111111',
+    name: 'Useanny',
+    domain: 'useanny.com.br',
+    active: true,
+  }
+];
+
+const DEFAULT_STORIES: Story[] = [
+  {
+    id: 's1',
+    store_id: '11111111-1111-1111-1111-111111111111',
+    title: 'Nova Coleção Outono 🍂',
+    video_url: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-in-a-futuristic-setting-41809-large.mp4',
+    thumbnail_url: 'https://images.unsplash.com/photo-151588<dyad-write path="src/lib/supabase.ts" description="Atualizando o arquivo supabase.ts por completo com o campo cta_link">
+import { createClient } from '@supabase/supabase-js';
+
+// Chaves do Supabase (podem ser configuradas no painel ou via env)
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+
+export const supabase = isSupabaseConfigured
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
+
+// Interfaces
+export interface Store {
+  id: string;
+  name: string;
+  domain: string;
+  active: boolean;
+  created_at?: string;
+}
+
+export interface Story {
+  id: string;
+  store_id: string;
+  title: string;
+  video_url: string;
+  thumbnail_url: string;
+  cta_link?: string; // Link de redirecionamento do botão de compra
+  active: boolean;
+  position: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface WidgetSettings {
+  id: string;
+  store_id: string;
+  position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left' | 'bottom-center';
+  theme_color: string;
+  display_mode: 'carousel' | 'grid' | 'bubbles';
+  active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Dados Iniciais de Exemplo (Useanny)
+const DEFAULT_STORES: Store[] = [
+  {
+    id: '11111111-1111-1111-1111-111111111111',
+    name: 'Useanny',
+    domain: 'useanny.com.br',
+    active: true,
+  }
+];
+
+const DEFAULT_STORIES: Story[] = [
+  {
+    id: 's1',
+    store_id: '11111111-1111-1111-1111-111111111111',
+    title: 'Nova Coleção Outono 🍂',
+    video_url: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-in-a-futuristic-setting-41809-large.mp4',
+    thumbnail_url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=250&auto=format&fit=crop&q=60',
+    cta_link: 'https://useanny.com.br/collections/outono',
+    active: true,
+    position: 1,
+  },
+  {
+    id: 's2',
+    store_id: '11111111-1111-1111-1111-111111111111',
+    title: 'Unboxing Especial 🎁',
+    video_url: 'https://assets.mixkit.co/videos/preview/mixkit-hands-opening-a-gift-box-41604-large.mp4',
+    thumbnail_url: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=250&auto=format&fit=crop&q=60',
+    cta_link: 'https://useanny.com.br/products/vestido-especial',
+    active: true,
+    position: 2,
+  },
+  {
+    id: 's3',
+    store_id: '11111111-1111-1111-1111-111111111111',
+    title: 'Provador Fashion ✨',
+    video_url: 'https://assets.mixkit.co/videos/preview/mixkit-woman-holding-shopping-bags-and-smiling-40358-large.mp4',
+    thumbnail_url: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=250&auto=format&fit=crop&q=60',
+    cta_link: 'https://useanny.com.br/collections/novidades',
     active: true,
     position: 3,
   },
@@ -86,6 +244,7 @@ const DEFAULT_STORIES: Story[] = [
     title: 'Cupom de Desconto 🏷️',
     video_url: 'https://assets.mixkit.co/videos/preview/mixkit-holding-a-smartphone-with-a-green-screen-41618-large.mp4',
     thumbnail_url: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=250&auto=format&fit=crop&q=60',
+    cta_link: 'https://useanny.com.br/discount/PROMO10',
     active: true,
     position: 4,
   }

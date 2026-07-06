@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { db, Story, Store } from '@/lib/supabase';
-import { Plus, Trash2, Edit2, Eye, EyeOff, ArrowUp, ArrowDown, Film, Sparkles, Check, X } from 'lucide-react';
+import { Plus, Trash2, Edit2, Eye, EyeOff, ArrowUp, ArrowDown, Film, X } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 
 const StoriesPage = () => {
@@ -16,6 +16,7 @@ const StoriesPage = () => {
     title: '',
     video_url: '',
     thumbnail_url: '',
+    cta_link: '',
     active: true,
     position: 0,
   });
@@ -47,6 +48,7 @@ const StoriesPage = () => {
       title: '',
       video_url: '',
       thumbnail_url: '',
+      cta_link: '',
       active: true,
       position: stories.length + 1,
     });
@@ -59,6 +61,7 @@ const StoriesPage = () => {
       title: story.title,
       video_url: story.video_url,
       thumbnail_url: story.thumbnail_url,
+      cta_link: story.cta_link || '',
       active: story.active,
       position: story.position,
     });
@@ -122,6 +125,7 @@ const StoriesPage = () => {
         title: formData.title,
         video_url: formData.video_url,
         thumbnail_url: formData.thumbnail_url,
+        cta_link: formData.cta_link || undefined,
         active: formData.active,
         position: formData.position,
       };
@@ -188,6 +192,7 @@ const StoriesPage = () => {
                     <th className="py-4 px-6">Posição</th>
                     <th className="py-4 px-6">Thumbnail</th>
                     <th className="py-4 px-6">Título</th>
+                    <th className="py-4 px-6">Link de Compra (CTA)</th>
                     <th className="py-4 px-6">Status</th>
                     <th className="py-4 px-6 text-right">Ações</th>
                   </tr>
@@ -232,6 +237,11 @@ const StoriesPage = () => {
                       {/* Título */}
                       <td className="py-4 px-6 font-semibold text-slate-800">
                         {story.title}
+                      </td>
+
+                      {/* Link de Compra */}
+                      <td className="py-4 px-6 text-slate-500 max-w-[200px] truncate font-mono text-xs">
+                        {story.cta_link || <span className="text-slate-300 italic">Nenhum link</span>}
                       </td>
 
                       {/* Status */}
@@ -344,6 +354,22 @@ const StoriesPage = () => {
                   placeholder="https://exemplo.com/imagem.jpg"
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  Link de Compra / CTA (Opcional)
+                </label>
+                <input
+                  type="url"
+                  value={formData.cta_link}
+                  onChange={(e) => setFormData({ ...formData, cta_link: e.target.value })}
+                  placeholder="https://useanny.com.br/produtos/vestido-outono"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  O botão "Comprar Agora" no player de vídeo redirecionará o cliente para este link.
+                </p>
               </div>
 
               <div className="flex items-center gap-3 pt-2">

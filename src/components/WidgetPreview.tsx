@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Story, WidgetSettings } from '@/lib/supabase';
-import { Play, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Play, X } from 'lucide-react';
 
 interface WidgetPreviewProps {
   stories: Story[];
@@ -13,6 +13,14 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({ stories, settings }) => {
 
   const handleStoryClick = (story: Story) => {
     setActiveStory(story);
+  };
+
+  const handleCtaClick = (link?: string) => {
+    if (link) {
+      window.open(link, '_blank');
+    } else {
+      alert('Este story não possui um link de compra configurado.');
+    }
   };
 
   return (
@@ -138,6 +146,7 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({ stories, settings }) => {
           {/* Footer Action */}
           <div className="pb-4">
             <button 
+              onClick={() => handleCtaClick(activeStory.cta_link)}
               style={{ backgroundColor: settings.theme_color }}
               className="w-full py-2.5 rounded-xl text-white text-xs font-bold shadow-lg hover:opacity-90 transition-opacity"
             >
