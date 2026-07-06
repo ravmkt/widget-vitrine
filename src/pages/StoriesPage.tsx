@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
-import { db, Story, Store } from '@/lib/supabase';
+import { db, Story, Store } from '@/lib/db';
 import { Plus, Trash2, Edit2, Eye, EyeOff, ArrowUp, ArrowDown, Film, X } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 
@@ -338,7 +338,7 @@ const StoriesPage = () => {
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm"
                 />
                 <p className="text-[10px] text-slate-400 mt-1">
-                  Dica: Use links diretos de vídeos MP4 hospedados no Supabase Storage, Shopify, ou similares.
+                  O botão "Comprar Agora" no player de vídeo redirecionará o cliente para este link.
                 </p>
               </div>
 

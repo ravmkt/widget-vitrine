@@ -32,7 +32,7 @@ export interface WidgetSettings {
   updated_at?: string;
 }
 
-export const isSupabaseConfigured = !!import.meta.env.VITE_SUPABASE_URL && !!import.meta.env.VITE_SUPABASE_ANON_KEY;
+export const isSupabaseConfigured = !!import.meta.env.VITE_SUPABASE_URL && !!import.meta.env.VITE_SUPABASE_ANON_KEY && !!supabase;
 
 // Dados Iniciais de Exemplo (Useanny)
 const DEFAULT_STORES: Store[] = [
