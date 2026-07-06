@@ -35,7 +35,6 @@ const StoriesWidgetPage = () => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [showPlayPauseOverlay, setShowPlayPauseOverlay] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
-  const [showShareMenu, setShowShareMenu] = useState(false); // Estado para o menu de compartilhamento
   const [copiedLink, setCopiedLink] = useState(false);
 
   const selectedStory =
@@ -89,7 +88,6 @@ const StoriesWidgetPage = () => {
     if (selectedIndex === null) return;
     setIsLiked(false); // Reset like state
     setShowCommentsPanel(false); // Close comments panel
-    setShowShareMenu(false); // Close share menu
     setIsPlaying(true); // Ensure video plays on next/prev
     setSelectedIndex((prevIndex) =>
       prevIndex === 0 ? stories.length - 1 : prevIndex - 1
@@ -100,7 +98,6 @@ const StoriesWidgetPage = () => {
     if (selectedIndex === null) return;
     setIsLiked(false); // Reset like state
     setShowCommentsPanel(false); // Close comments panel
-    setShowShareMenu(false); // Close share menu
     setIsPlaying(true); // Ensure video plays on next/prev
     setSelectedIndex((prevIndex) =>
       prevIndex === stories.length - 1 ? 0 : prevIndex + 1
@@ -131,7 +128,6 @@ const StoriesWidgetPage = () => {
 
   const handleToggleComments = () => {
     setShowCommentsPanel((prev) => !prev);
-    setShowShareMenu(false); // Close share menu if comments open
   };
 
   // Helper para determinar o link do produto/story
@@ -139,8 +135,6 @@ const StoriesWidgetPage = () => {
     if (selectedStory?.cta_link) {
       return selectedStory.cta_link;
     }
-    // Adicionar outras verificações se a interface Story for expandida
-    // Ex: if (selectedStory?.product_url) return selectedStory.product_url;
     return window.location.href;
   };
 
@@ -149,39 +143,13 @@ const StoriesWidgetPage = () => {
     const message = `Quero mais informações desse produto\n\nProduto: ${productLink}`;
     const whatsappUrl = `https://wa.me/5545999629702?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
-    setShowShareMenu(false); // Close share menu after action
-  };
-
-  const handleShareEmail = () => {
-    const productLink = getProductOrStoryLink();
-    const title = selectedStory?.title || "Confira este produto";
-    const shareText = `Confira este produto: ${productLink}`;
-    const emailUrl = `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(shareText)}`;
-    window.open(emailUrl, '_blank');
-    setShowShareMenu(false); // Close share menu after action
-  };
-
-  const handleShareFacebook = () => {
-    const productLink = getProductOrStoryLink();
-    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productLink)}`;
-    window.open(facebookUrl, '_blank');
-    setShowShareMenu(false); // Close share menu after action
-  };
-
-  const handleCopyLink = () => {
-    const productLink = getProductOrStoryLink();
-    navigator.clipboard.writeText(productLink);
-    setCopiedLink(true);
-    showSuccess('Link copiado para a área de transferência!');
-    setTimeout(() => setCopiedLink(false), 2000);
-    setShowShareMenu(false); // Close share menu after action
   };
 
   const handleShare = async () => {
     const productLink = getProductOrStoryLink();
     const shareData = {
-      title: selectedStory?.title || "Confira este produto",
-      text: "Confira esse produto",
+      title: selectedStory?.title || "Produto",
+      text: "Confira este produto",
       url: productLink,
     };
 
@@ -193,9 +161,11 @@ const StoriesWidgetPage = () => {
         console.error('Erro ao compartilhar:', error);
       }
     } else {
-      // Fallback para desktop ou navegadores sem Web Share API
-      setShowShareMenu((prev) => !prev);
-      setShowCommentsPanel(false); // Close comments panel if share menu opens
+      // Fallback: copy link to clipboard
+      navigator.clipboard.writeText(productLink);
+      showSuccess('Link copiado!'); // Visual feedback
+      setCopiedLink(true); // To show checkmark on button
+      setTimeout(() => setCopiedLink(false), 2000);
     }
   };
 
@@ -211,8 +181,8 @@ const StoriesWidgetPage = () => {
     return null;
   }
 
-  const storyActionButtonClasses = "w-[42px] h-[42px] rounded-full border border-white/[0.75] bg-black/[0.35] text-white flex items-center justify-center backdrop-blur-[6px] cursor-pointer transition-all hover:bg-white/[0.18] hover:scale-[1.04]";
-  const whatsappButtonClasses = "bg-white border-none shadow-md shadow-black/20 hover:bg-white hover:scale-[1.06]";
+  const darkActionButtonClasses = "w-[42px] h-[42px] rounded-full border border-white/[0.75] bg-black/[0.35] text-white flex items-center justify-center backdrop-blur-[6px] cursor-pointer transition-all hover:bg-white/[0.18] hover:scale-[1.04]";
+  const whiteActionButtonClasses = "w-[42px] h-[42px] rounded-full border-none bg-white text-slate-900 flex items-center justify-center shadow-md shadow-black/20 cursor-pointer transition-all hover:scale-[1.06]";
 
   return (
     <div className="w-full bg-transparent">
@@ -227,7 +197,6 @@ const StoriesWidgetPage = () => {
                 setIsMuted(true); // Start muted
                 setIsLiked(false); // Reset like state
                 setShowCommentsPanel(false); // Close comments panel
-                setShowShareMenu(false); // Close share menu
                 setIsPlaying(true); // Ensure video plays
               }}
               className="flex flex-col items-center gap-2 shrink-0 group"
@@ -256,17 +225,26 @@ const StoriesWidgetPage = () => {
           <button
             type="button"
             onClick={() => setSelectedIndex(null)}
-            className={cn(storyActionButtonClasses, "absolute top-4 right-4")}
+            className={cn(darkActionButtonClasses, "absolute top-4 right-4")}
             aria-label="Fechar story"
           >
             <X className="w-5 h-5" />
+          </button>
+
+          {/* Mute/Unmute Button */}
+          <button
+            onClick={handleToggleMute}
+            className={cn(darkActionButtonClasses, "absolute top-4 right-[66px]")}
+            aria-label={isMuted ? 'Ativar som' : 'Desativar som'}
+          >
+            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
           </button>
 
           {stories.length > 1 && (
             <button
               type="button"
               onClick={handlePrevious}
-              className={cn(storyActionButtonClasses, "absolute left-3 sm:left-8 top-1/2 -translate-y-1/2")}
+              className={cn(darkActionButtonClasses, "absolute left-3 sm:left-8 top-1/2 -translate-y-1/2")}
               aria-label="Story anterior"
             >
               <ChevronLeft className="w-6 h-6" />
@@ -316,7 +294,7 @@ const StoriesWidgetPage = () => {
               {/* Comments Button */}
               <button
                 onClick={handleToggleComments}
-                className={cn(storyActionButtonClasses, "relative")}
+                className={cn(darkActionButtonClasses, "relative")}
                 aria-label="Comentários"
               >
                 <MessageCircle className="w-5 h-5" />
@@ -329,67 +307,28 @@ const StoriesWidgetPage = () => {
               {/* Like Button */}
               <button
                 onClick={handleToggleLike}
-                className={storyActionButtonClasses}
+                className={darkActionButtonClasses}
                 aria-label="Curtir story"
               >
                 <Heart className={cn("w-5 h-5", isLiked ? 'fill-red-500 text-red-500' : '')} />
               </button>
 
               {/* Share Button */}
-              <div className="relative">
-                <button
-                  onClick={handleShare}
-                  className={storyActionButtonClasses}
-                  aria-label="Compartilhar"
-                >
-                  {copiedLink ? <Check className="w-5 h-5 text-emerald-400" /> : <Share2 className="w-5 h-5" />}
-                </button>
-                {showShareMenu && (
-                  <div className="absolute right-12 top-1/2 -translate-y-1/2 bg-white rounded-xl shadow-lg py-2 w-40 z-20">
-                    <button
-                      onClick={handleWhatsAppShare}
-                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                    >
-                      <WhatsAppIcon size={16} className="text-green-500" /> WhatsApp
-                    </button>
-                    <button
-                      onClick={handleShareEmail}
-                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                    >
-                      <Mail className="w-4 h-4 text-blue-500" /> E-mail
-                    </button>
-                    <button
-                      onClick={handleShareFacebook}
-                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                    >
-                      <Facebook className="w-4 h-4 text-blue-700" /> Facebook
-                    </button>
-                    <button
-                      onClick={handleCopyLink}
-                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                    >
-                      <LinkIcon className="w-4 h-4 text-slate-500" /> Copiar link
-                    </button>
-                  </div>
-                )}
-              </div>
+              <button
+                onClick={handleShare}
+                className={whiteActionButtonClasses}
+                aria-label="Compartilhar produto"
+              >
+                {copiedLink ? <Check className="w-5 h-5 text-emerald-400" /> : <Share2 className="w-5 h-5" />}
+              </button>
 
               {/* WhatsApp Button */}
               <button
                 onClick={handleWhatsAppShare}
-                className={cn(storyActionButtonClasses, whatsappButtonClasses)}
-                aria-label="Compartilhar no WhatsApp"
+                className={whiteActionButtonClasses}
+                aria-label="Abrir WhatsApp"
               >
                 <WhatsAppIcon size={22} />
-              </button>
-
-              {/* Mute/Unmute Button */}
-              <button
-                onClick={handleToggleMute}
-                className={storyActionButtonClasses}
-                aria-label={isMuted ? 'Ativar som' : 'Desativar som'}
-              >
-                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </button>
             </div>
 
@@ -454,7 +393,7 @@ const StoriesWidgetPage = () => {
             <button
               type="button"
               onClick={handleNext}
-              className={cn(storyActionButtonClasses, "absolute right-3 sm:right-8 top-1/2 -translate-y-1/2")}
+              className={cn(darkActionButtonClasses, "absolute right-3 sm:right-8 top-1/2 -translate-y-1/2")}
               aria-label="Próximo story"
             >
               <ChevronRight className="w-6 h-6" />
