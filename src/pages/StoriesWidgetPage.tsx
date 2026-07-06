@@ -101,7 +101,7 @@ const StoriesWidgetPage = () => {
   }, [isMuted, isPlaying, selectedStory]);
 
   const handlePrevious = (e: React.MouseEvent) => {
-    e.stopPropagation();
+    e.stopPropagation(); // Evita que o clique propague para o vídeo
     if (selectedIndex === null) return;
     setIsLiked(false); // Reset like state
     setShowCommentsPanel(false);
@@ -112,7 +112,7 @@ const StoriesWidgetPage = () => {
   };
 
   const handleNext = (e: React.MouseEvent) => {
-    e.stopPropagation();
+    e.stopPropagation(); // Evita que o clique propague para o vídeo
     if (selectedIndex === null) return;
     setIsLiked(false); // Reset like state
     setShowCommentsPanel(false);
@@ -137,7 +137,7 @@ const StoriesWidgetPage = () => {
   };
 
   const handleToggleMute = (e: React.MouseEvent) => {
-    e.stopPropagation();
+    e.stopPropagation(); // Evita que o clique propague para o vídeo
     if (videoRef.current) {
       videoRef.current.muted = !videoRef.current.muted;
       setIsMuted(videoRef.current.muted);
@@ -194,9 +194,11 @@ const StoriesWidgetPage = () => {
     if (rawPhoneNumber) {
       const cleanedPhoneNumber = rawPhoneNumber.replace(/\D/g, "");
       // Adiciona DDI 55 se o número tiver 9 ou 10 dígitos (assumindo DDD + número)
-      const finalPhoneNumber = cleanedPhoneNumber.length === 11 && cleanedPhoneNumber.startsWith('55') ? cleanedPhoneNumber : `55${cleanedPhoneNumber}`;
+      // E se o número não começar com 55
+      const finalPhoneNumber = cleanedPhoneNumber.length >= 9 && !cleanedPhoneNumber.startsWith('55') ? `55${cleanedPhoneNumber}` : cleanedPhoneNumber;
       whatsappUrl = `https://wa.me/${finalPhoneNumber}?text=${encodeURIComponent(message)}`;
     } else {
+      // Se não houver número de WhatsApp configurado, usa o formato genérico
       whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     }
     
