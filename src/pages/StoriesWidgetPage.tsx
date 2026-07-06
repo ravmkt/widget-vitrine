@@ -16,10 +16,12 @@ const StoriesWidgetPage = () => {
 
   const loadWidgetData = async () => {
     try {
-      if (!storeId) return;
-
       const stores = await db.getStores();
-      const currentStore = stores.find((item) => item.id === storeId) || null;
+      
+      // Se houver storeId na URL, busca por ele. Caso contrário, usa a primeira loja como fallback (para testes no painel)
+      const currentStore = storeId 
+        ? (stores.find((item) => item.id === storeId) || null)
+        : (stores[0] || null);
 
       setStore(currentStore);
 

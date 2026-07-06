@@ -65,6 +65,7 @@ const App = () => {
           <Route path="/stories/:id" element={<StoryDetailsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/widget" element={<StoriesWidgetPage />} />
+          <Route path="/widget/:storeId" element={<StoriesWidgetPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
