@@ -1,6 +1,12 @@
 import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'sonner';
+import Index from './pages/Index';
+import StoriesPage from './pages/StoriesPage';
+import SettingsPage from './pages/SettingsPage';
+import NotFound from './pages/NotFound';
 
-// Error Boundary simples para capturar erros de renderização
+// Error Boundary robusto para capturar e exibir erros de renderização de forma amigável
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: Error | null }> {
   constructor(props: { children: React.ReactNode }) {
     super(props);
@@ -18,18 +24,27 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{
-          padding: '20px',
-          background: '#f8d7da',
-          color: '#721c24',
-          border: '1px solid #f5c6cb',
-          borderRadius: '8px',
-          margin: '20px',
-          fontFamily: 'sans-serif'
-        }}>
-          <h2 style={{ marginTop: 0 }}>Ocorreu um erro na renderização:</h2>
-          <pre style={{ whiteSpace: 'pre-wrap' }}>{this.state.error?.toString()}</pre>
-          <pre style={{ whiteSpace: 'pre-wrap', fontSize: '12px', opacity: 0.8 }}>{this.state.error?.stack}</pre>
+        <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-6 font-sans">
+          <div className="max-w-2xl w-full bg-slate-900 border border-red-500/30 rounded-3xl p-8 shadow-2xl">
+            <div className="flex items-center gap-3 text-red-500 mb-4">
+              <span className="text-3xl">⚠️</span>
+              <h2 className="text-xl font-bold">Ocorreu um erro na renderização</h2>
+            </div>
+            <p className="text-slate-400 text-sm mb-6">
+              Um erro inesperado impediu a renderização desta página. Veja os detalhes técnicos abaixo:
+            </p>
+            <pre className="bg-black/50 p-4 rounded-xl text-xs text-red-400 overflow-auto max-h-60 font-mono mb-6 border border-red-500/10">
+              {this.state.error?.toString()}
+              {"\n\n"}
+              {this.state.error?.stack}
+            </pre>
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full py-3 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-violet-600/20"
+            >
+              Recarregar Aplicação
+            </button>
+          </div>
         </div>
       );
     }
@@ -41,47 +56,15 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
 const App = () => {
   return (
     <ErrorBoundary>
-      <div style={{
-        minHeight: "100vh",
-        background: "#111827",
-        color: "#ffffff",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: "24px",
-        fontWeight: "bold",
-        zIndex: 999999,
-        position: "relative",
-        fontFamily: "sans-serif",
-        gap: "16px",
-        padding: "20px",
-        textAlign: "center"
-      }}>
-        <div>🚀 App carregado com sucesso!</div>
-        <div style={{ fontSize: "14px", fontWeight: "normal", color: "#9ca3af" }}>
-          Se você está vendo esta tela, o React montou com sucesso.
-        </div>
-        <button 
-          onClick={() => {
-            // Botão para restaurar a aplicação real e ver se ela quebra
-            window.location.reload();
-          }}
-          style={{
-            marginTop: "20px",
-            padding: "10px 20px",
-            background: "#6366f1",
-            color: "#ffffff",
-            border: "none",
-            borderRadius: "8px",
-            fontSize: "14px",
-            fontWeight: "bold",
-            cursor: "pointer"
-          }}
-        >
-          Recarregar Página
-        </button>
-      </div>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/stories" element={<StoriesPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+      <Toaster richColors position="top-right" closeButton />
     </ErrorBoundary>
   );
 };
