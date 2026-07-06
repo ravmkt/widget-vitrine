@@ -40,6 +40,7 @@ const StoriesWidgetPage = () => {
   const [showPlayPauseOverlay, setShowPlayPauseOverlay] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [videoError, setVideoError] = useState(false); // Novo estado para erro de vídeo
 
   // Estados para comentários
   const [comments, setComments] = useState<Comment[]>([
@@ -90,14 +91,23 @@ const StoriesWidgetPage = () => {
   }, [storeId]);
 
   useEffect(() => {
-    if (videoRef.current) {
+    setVideoError(false); // Resetar erro de vídeo ao mudar de story
+    if (videoRef.current && selectedStory?.video_url) {
       videoRef.current.muted = isMuted;
       if (isPlaying) {
-        videoRef.current.play().catch((e) => console.error("Error playing video:", e));
+        videoRef.current.load(); // Recarregar o vídeo para garantir que a nova URL seja usada
+        videoRef.current.play().catch((e) => {
+          console.error("Error playing video:", e);
+          setVideoError(true); // Definir erro se a reprodução falhar
+        });
       } else {
         videoRef.current.pause();
       }
+    } else if (selectedStory && !selectedStory.video_url) {
+      setVideoError(true); // Definir erro se não houver URL de vídeo
     }
+    console.log("URL do vídeo atual:", selectedStory?.video_url);
+    console.log("Erro de vídeo?", videoError);
   }, [isMuted, isPlaying, selectedStory]);
 
   const handlePrevious = (e: React.MouseEvent) => {
@@ -123,7 +133,7 @@ const StoriesWidgetPage = () => {
   };
 
   const handleVideoClick = () => {
-    if (videoRef.current) {
+    if (videoRef.current && !videoError) {
       if (videoRef.current.paused) {
         videoRef.current.play();
         setIsPlaying(true);
@@ -322,24 +332,38 @@ const StoriesWidgetPage = () => {
               {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
             </button>
 
-            <video
-              key={selectedStory.id}
-              ref={videoRef}
-              src={selectedStory.video_url}
-              poster={selectedStory.thumbnail_url}
-              autoPlay
-              muted={isMuted}
-              playsInline
-              loop
-              className="w-full h-full object-cover cursor-pointer"
-              onClick={handleVideoClick}
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-              onEnded={handleNext} // Auto-advance to next story
-            />
+            {videoError ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-black text-white text-center p-4">
+                <p className="text-lg font-semibold">Não foi possível carregar este vídeo.</p>
+                <p className="text-sm text-white/70 mt-2">Verifique a URL do vídeo ou sua conexão.</p>
+              </div>
+            ) : (
+              <video
+                key={selectedStory.id}
+                ref={videoRef}
+                poster={selectedStory.thumbnail_url}
+                autoPlay
+                muted={isMuted}
+                playsInline
+                loop
+                preload="metadata"
+                className="w-full h-full object-cover cursor-pointer"
+                onClick={handleVideoClick}
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+                onEnded={handleNext} // Auto-advance to next story
+                onError={() => {
+                  console.error("Erro ao carregar vídeo:", selectedStory.video_url);
+                  setVideoError(true);
+                }}
+              >
+                <source src={selectedStory.video_url} type="video/mp4" />
+                Seu navegador não suporta a tag de vídeo.
+              </video>
+            )}
 
             {/* Play/Pause Overlay */}
-            {showPlayPauseOverlay && (
+            {showPlayPauseOverlay && !videoError && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                 <div className="bg-white/30 backdrop-blur-sm rounded-full p-3 transition-opacity duration-300">
                   {isPlaying ? (
