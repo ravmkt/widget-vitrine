@@ -43,8 +43,7 @@ const SettingsPage = () => {
     }
   };
 
-  const widgetScriptCode = `<!-- Vidlytics Stories Widget -->
-<script src="${window.location.origin}/widget.js" async></script>`;
+  const widgetScriptCode = "<!-- Vidlytics Stories Widget -->\n<script src=\"" + window.location.origin + "/widget.js\" async></script>";
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(widgetScriptCode);
