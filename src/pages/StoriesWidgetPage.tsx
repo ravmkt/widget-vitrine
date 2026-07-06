@@ -212,7 +212,7 @@ const StoriesWidgetPage = () => {
   }
 
   const storyActionButtonClasses = "w-[42px] h-[42px] rounded-full border border-white/[0.75] bg-black/[0.35] text-white flex items-center justify-center backdrop-blur-[6px] cursor-pointer transition-all hover:bg-white/[0.18] hover:scale-[1.04]";
-  const whatsappButtonClasses = "bg-[#25D366] border-white/[0.65] hover:bg-[#20bd5a]";
+  const whatsappButtonClasses = "bg-white border-none shadow-md shadow-black/20 hover:bg-white hover:scale-[1.06]";
 
   return (
     <div className="w-full bg-transparent">
@@ -350,7 +350,7 @@ const StoriesWidgetPage = () => {
                       onClick={handleWhatsAppShare}
                       className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
                     >
-                      <WhatsAppIcon className="w-4 h-4 text-green-500" /> WhatsApp
+                      <WhatsAppIcon size={16} className="text-green-500" /> WhatsApp
                     </button>
                     <button
                       onClick={handleShareEmail}
@@ -380,7 +380,7 @@ const StoriesWidgetPage = () => {
                 className={cn(storyActionButtonClasses, whatsappButtonClasses)}
                 aria-label="Compartilhar no WhatsApp"
               >
-                <WhatsAppIcon className="w-5 h-5" />
+                <WhatsAppIcon size={22} />
               </button>
 
               {/* Mute/Unmute Button */}
