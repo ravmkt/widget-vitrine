@@ -77,7 +77,7 @@ const Index = () => {
                 <p className="text-sm text-slate-400">Próximo passo</p>
                 <h3 className="mt-2 text-xl font-bold">Criar a página de histórias</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Depois desta tela, vamos montar a página onde as histórias serão exibidas.
+                  Depois desta tela, vamos montar a página onde os stories serão exibidas.
                 </p>
               </div>
             </div>
