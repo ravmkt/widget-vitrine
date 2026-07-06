@@ -59,7 +59,7 @@ const Index = () => {
                 <p className="text-sm text-slate-400">Módulo</p>
                 <h3 className="mt-2 text-xl font-bold">Stories</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Acesse, cadastre e organize suas histórias.
+                  Acesse, cadastre e organize seus stories.
                 </p>
               </div>
 
@@ -75,7 +75,7 @@ const Index = () => {
 
               <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
                 <p className="text-sm text-slate-400">Próximo passo</p>
-                <h3 className="mt-2 text-xl font-bold">Criar a página de histórias</h3>
+                <h3 className="mt-2 text-xl font-bold">Criar a página de stories</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-400">
                   Depois desta tela, vamos montar a página onde os stories serão exibidas.
                 </p>
