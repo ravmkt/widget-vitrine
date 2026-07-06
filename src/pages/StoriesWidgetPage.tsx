@@ -28,6 +28,37 @@ const StoriesWidgetPage = () => {
 
   const [store, setStore] = useState<Store | null>(null);
   const [stories, setStories] = useState<Story[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState<dyad-write path="src/pages/StoriesWidgetPage.tsx" description="Ajustando o visual e a funcionalidade da barra inferior do produto no modal de stories.">
+import { useEffect, useRef, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { db, Story, Store } from '@/lib/db';
+import {
+  X,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Heart,
+  MessageCircle,
+  Share2,
+  Volume2,
+  VolumeX,
+  Play,
+  Pause,
+  Check,
+  Mail,
+  Facebook,
+  Link as LinkIcon,
+} from 'lucide-react';
+import { showSuccess } from '@/utils/toast';
+import WhatsAppIcon from '@/components/WhatsAppIcon'; // Importar o novo componente
+import { cn } from '@/lib/utils'; // Importar cn para combinar classes Tailwind
+
+const StoriesWidgetPage = () => {
+  const { storeId } = useParams();
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const [store, setStore] = useState<Store | null>(null);
+  const [stories, setStories] = useState<Story[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
@@ -333,8 +364,8 @@ const StoriesWidgetPage = () => {
             </div>
 
             {selectedStory.cta_link && (
-              <div
-                className="absolute left-[12px] right-[74px] bottom-[28px] min-h-[60px] p-2.5 rounded-[10px] bg-black/[0.45] text-white flex items-center gap-2.5 backdrop-blur-[8px] z-18 cursor-pointer hover:bg-black/[0.58]"
+              <button
+                className="absolute left-[12px] right-[74px] bottom-[28px] h-[64px] px-3 py-2 rounded-xl bg-white shadow-lg flex items-center gap-3 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]"
                 onClick={() => {
                   if (selectedStory.cta_link) {
                     window.open(selectedStory.cta_link, "_blank", "noopener,noreferrer");
@@ -345,20 +376,19 @@ const StoriesWidgetPage = () => {
                   <img
                     src={selectedStory.thumbnail_url}
                     alt={selectedStory.title || "Produto"}
-                    className="w-[42px] h-[42px] rounded-[6px] object-cover flex-shrink-0"
+                    className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
                   />
                 )}
 
-                <div className="flex flex-col min-w-0">
-                  <div className="text-white text-sm font-bold leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
+                <div className="flex flex-col min-w-0 flex-1 text-left">
+                  <div className="text-slate-900 font-bold text-sm line-clamp-1">
                     {selectedStory.title || "Produto"}
                   </div>
-
-                  <div className="mt-[3px] text-white/[0.9] text-xs font-semibold">
-                    Comprar Agora
-                  </div>
                 </div>
-              </div>
+                <span className="text-emerald-600 font-bold text-xs px-3 py-1 rounded-full bg-emerald-50 flex-shrink-0">
+                  Comprar Agora
+                </span>
+              </button>
             )}
 
             {/* Comments Panel */}
