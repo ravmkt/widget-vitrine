@@ -15,17 +15,27 @@ const Index = () => {
     const loadDashboardData = async () => {
       try {
         const stores = await db.getStores();
-        const mainStore = stores[0]; // Useanny
+        const mainStore = stores && stores.length > 0 ? stores[0] : {
+          id: '11111111-1111-1111-1111-111111111111',
+          name: 'Useanny',
+          domain: 'useanny.com.br',
+          active: true,
+        };
         setStore(mainStore);
 
-        if (mainStore) {
-          const [fetchedStories, fetchedSettings] = await Promise.all([
-            db.getStories(mainStore.id),
-            db.getSettings(mainStore.id),
-          ]);
-          setStories(fetchedStories);
-          setSettings(fetchedSettings);
-        }
+        const [fetchedStories, fetchedSettings] = await Promise.all([
+          db.getStories(mainStore.id),
+          db.getSettings(mainStore.id),
+        ]);
+        setStories(fetchedStories || []);
+        setSettings(fetchedSettings || {
+          id: 'w1',
+          store_id: mainStore.id,
+          position: 'bottom-center',
+          theme_color: '#8B5CF6',
+          display_mode: 'carousel',
+          active: true,
+        });
       } catch (error) {
         console.error('Erro ao carregar dados do dashboard:', error);
       } finally {
@@ -38,8 +48,9 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600"></div>
+        <p className="text-sm text-slate-500 font-medium">Carregando painel Vidlytics...</p>
       </div>
     );
   }

@@ -98,15 +98,26 @@ const DEFAULT_SETTINGS: WidgetSettings[] = [
   }
 ];
 
+// Fallback em memória caso o localStorage esteja bloqueado ou indisponível no iframe
+let memoryStores = [...DEFAULT_STORES];
+let memoryStories = [...DEFAULT_STORIES];
+let memorySettings = [...DEFAULT_SETTINGS];
+
 const initLocalStorage = () => {
-  if (!localStorage.getItem('vidlytics_stores')) {
-    localStorage.setItem('vidlytics_stores', JSON.stringify(DEFAULT_STORES));
-  }
-  if (!localStorage.getItem('vidlytics_stories')) {
-    localStorage.setItem('vidlytics_stories', JSON.stringify(DEFAULT_STORIES));
-  }
-  if (!localStorage.getItem('vidlytics_settings')) {
-    localStorage.setItem('vidlytics_settings', JSON.stringify(DEFAULT_SETTINGS));
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      if (!localStorage.getItem('vidlytics_stores')) {
+        localStorage.setItem('vidlytics_stores', JSON.stringify(DEFAULT_STORES));
+      }
+      if (!localStorage.getItem('vidlytics_stories')) {
+        localStorage.setItem('vidlytics_stories', JSON.stringify(DEFAULT_STORIES));
+      }
+      if (!localStorage.getItem('vidlytics_settings')) {
+        localStorage.setItem('vidlytics_settings', JSON.stringify(DEFAULT_SETTINGS));
+      }
+    }
+  } catch (e) {
+    console.warn('[Vidlytics] LocalStorage indisponível. Usando fallback em memória.', e);
   }
 };
 
@@ -115,109 +126,204 @@ initLocalStorage();
 export const db = {
   async getStores(): Promise<Store[]> {
     if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase.from('stores').select('*');
-      if (!error && data) return data;
+      try {
+        const { data, error } = await supabase.from('stores').select('*');
+        if (!error && data) return data;
+      } catch (e) {
+        console.error('[Vidlytics] Erro ao buscar lojas no Supabase:', e);
+      }
     }
-    return JSON.parse(localStorage.getItem('vidlytics_stores') || '[]');
+    try {
+      const local = localStorage.getItem('vidlytics_stores');
+      return local ? JSON.parse(local) : memoryStores;
+    } catch (e) {
+      return memoryStores;
+    }
   },
 
   async saveStore(store: Store): Promise<Store> {
     if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase.from('stores').upsert(store).select().single();
-      if (!error && data) return data;
+      try {
+        const { data, error } = await supabase.from('stores').upsert(store).select().single();
+        if (!error && data) return data;
+      } catch (e) {
+        console.error('[Vidlytics] Erro ao salvar loja no Supabase:', e);
+      }
     }
-    const stores = JSON.parse(localStorage.getItem('vidlytics_stores') || '[]');
-    const index = stores.findIndex((s: Store) => s.id === store.id);
-    if (index >= 0) {
-      stores[index] = store;
-    } else {
-      stores.push(store);
+    try {
+      const stores = JSON.parse(localStorage.getItem('vidlytics_stores') || '[]');
+      const index = stores.findIndex((s: Store) => s.id === store.id);
+      if (index >= 0) {
+        stores[index] = store;
+      } else {
+        stores.push(store);
+      }
+      localStorage.setItem('vidlytics_stores', JSON.stringify(stores));
+      memoryStores = stores;
+    } catch (e) {
+      const index = memoryStores.findIndex((s: Store) => s.id === store.id);
+      if (index >= 0) {
+        memoryStores[index] = store;
+      } else {
+        memoryStores.push(store);
+      }
     }
-    localStorage.setItem('vidlytics_stores', JSON.stringify(stores));
     return store;
   },
 
   async getStories(storeId: string): Promise<Story[]> {
     if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase
-        .from('stories')
-        .select('*')
-        .eq('store_id', storeId)
-        .order('position', { ascending: true });
-      if (!error && data) return data;
+      try {
+        const { data, error } = await supabase
+          .from('stories')
+          .select('*')
+          .eq('store_id', storeId)
+          .order('position', { ascending: true });
+        if (!error && data) return data;
+      } catch (e) {
+        console.error('[Vidlytics] Erro ao buscar stories no Supabase:', e);
+      }
     }
-    const stories = JSON.parse(localStorage.getItem('vidlytics_stories') || '[]');
-    return stories
-      .filter((s: Story) => s.store_id === storeId)
-      .sort((a: Story, b: Story) => a.position - b.position);
+    try {
+      const local = localStorage.getItem('vidlytics_stories');
+      const stories = local ? JSON.parse(local) : memoryStories;
+      return stories
+        .filter((s: Story) => s.store_id === storeId)
+        .sort((a: Story, b: Story) => a.position - b.position);
+    } catch (e) {
+      return memoryStories
+        .filter((s: Story) => s.store_id === storeId)
+        .sort((a: Story, b: Story) => a.position - b.position);
+    }
   },
 
   async saveStory(story: Story): Promise<Story> {
     if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase.from('stories').upsert(story).select().single();
-      if (!error && data) return data;
+      try {
+        const { data, error } = await supabase.from('stories').upsert(story).select().single();
+        if (!error && data) return data;
+      } catch (e) {
+        console.error('[Vidlytics] Erro ao salvar story no Supabase:', e);
+      }
     }
-    const stories = JSON.parse(localStorage.getItem('vidlytics_stories') || '[]');
-    const index = stories.findIndex((s: Story) => s.id === story.id);
-    if (index >= 0) {
-      stories[index] = { ...story, updated_at: new Date().toISOString() };
-    } else {
-      stories.push({ ...story, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+    const updatedStory = { ...story, updated_at: new Date().toISOString() };
+    try {
+      const stories = JSON.parse(localStorage.getItem('vidlytics_stories') || '[]');
+      const index = stories.findIndex((s: Story) => s.id === story.id);
+      if (index >= 0) {
+        stories[index] = updatedStory;
+      } else {
+        stories.push({ ...updatedStory, created_at: new Date().toISOString() });
+      }
+      localStorage.setItem('vidlytics_stories', JSON.stringify(stories));
+      memoryStories = stories;
+    } catch (e) {
+      const index = memoryStories.findIndex((s: Story) => s.id === story.id);
+      if (index >= 0) {
+        memoryStories[index] = updatedStory;
+      } else {
+        memoryStories.push({ ...updatedStory, created_at: new Date().toISOString() });
+      }
     }
-    localStorage.setItem('vidlytics_stories', JSON.stringify(stories));
     return story;
   },
 
   async deleteStory(id: string): Promise<boolean> {
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('stories').delete().eq('id', id);
-      return !error;
+      try {
+        const { error } = await supabase.from('stories').delete().eq('id', id);
+        if (!error) return true;
+      } catch (e) {
+        console.error('[Vidlytics] Erro ao deletar story no Supabase:', e);
+      }
     }
-    const stories = JSON.parse(localStorage.getItem('vidlytics_stories') || '[]');
-    const filtered = stories.filter((s: Story) => s.id !== id);
-    localStorage.setItem('vidlytics_stories', JSON.stringify(filtered));
+    try {
+      const stories = JSON.parse(localStorage.getItem('vidlytics_stories') || '[]');
+      const filtered = stories.filter((s: Story) => s.id !== id);
+      localStorage.setItem('vidlytics_stories', JSON.stringify(filtered));
+      memoryStories = filtered;
+    } catch (e) {
+      memoryStories = memoryStories.filter((s: Story) => s.id !== id);
+    }
     return true;
   },
 
   async getSettings(storeId: string): Promise<WidgetSettings> {
     if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase
-        .from('widget_settings')
-        .select('*')
-        .eq('store_id', storeId)
-        .maybeSingle();
-      if (!error && data) return data;
+      try {
+        const { data, error } = await supabase
+          .from('widget_settings')
+          .select('*')
+          .eq('store_id', storeId)
+          .maybeSingle();
+        if (!error && data) return data;
+      } catch (e) {
+        console.error('[Vidlytics] Erro ao buscar configurações no Supabase:', e);
+      }
     }
-    const settings = JSON.parse(localStorage.getItem('vidlytics_settings') || '[]');
-    let storeSettings = settings.find((s: WidgetSettings) => s.store_id === storeId);
-    if (!storeSettings) {
-      storeSettings = {
-        id: Math.random().toString(36).substr(2, 9),
-        store_id: storeId,
-        position: 'bottom-center',
-        theme_color: '#8B5CF6',
-        display_mode: 'carousel',
-        active: true,
-      };
-      settings.push(storeSettings);
-      localStorage.setItem('vidlytics_settings', JSON.stringify(settings));
+    try {
+      const local = localStorage.getItem('vidlytics_settings');
+      const settings = local ? JSON.parse(local) : memorySettings;
+      let storeSettings = settings.find((s: WidgetSettings) => s.store_id === storeId);
+      if (!storeSettings) {
+        storeSettings = {
+          id: Math.random().toString(36).substr(2, 9),
+          store_id: storeId,
+          position: 'bottom-center',
+          theme_color: '#8B5CF6',
+          display_mode: 'carousel',
+          active: true,
+        };
+        settings.push(storeSettings);
+        localStorage.setItem('vidlytics_settings', JSON.stringify(settings));
+        memorySettings = settings;
+      }
+      return storeSettings;
+    } catch (e) {
+      let storeSettings = memorySettings.find((s: WidgetSettings) => s.store_id === storeId);
+      if (!storeSettings) {
+        storeSettings = {
+          id: Math.random().toString(36).substr(2, 9),
+          store_id: storeId,
+          position: 'bottom-center',
+          theme_color: '#8B5CF6',
+          display_mode: 'carousel',
+          active: true,
+        };
+        memorySettings.push(storeSettings);
+      }
+      return storeSettings;
     }
-    return storeSettings;
   },
 
   async saveSettings(settings: WidgetSettings): Promise<WidgetSettings> {
     if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase.from('widget_settings').upsert(settings).select().single();
-      if (!error && data) return data;
+      try {
+        const { data, error } = await supabase.from('widget_settings').upsert(settings).select().single();
+        if (!error && data) return data;
+      } catch (e) {
+        console.error('[Vidlytics] Erro ao salvar configurações no Supabase:', e);
+      }
     }
-    const allSettings = JSON.parse(localStorage.getItem('vidlytics_settings') || '[]');
-    const index = allSettings.findIndex((s: WidgetSettings) => s.store_id === settings.store_id);
-    if (index >= 0) {
-      allSettings[index] = { ...settings, updated_at: new Date().toISOString() };
-    } else {
-      allSettings.push({ ...settings, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+    const updatedSettings = { ...settings, updated_at: new Date().toISOString() };
+    try {
+      const allSettings = JSON.parse(localStorage.getItem('vidlytics_settings') || '[]');
+      const index = allSettings.findIndex((s: WidgetSettings) => s.store_id === settings.store_id);
+      if (index >= 0) {
+        allSettings[index] = updatedSettings;
+      } else {
+        allSettings.push({ ...updatedSettings, created_at: new Date().toISOString() });
+      }
+      localStorage.setItem('vidlytics_settings', JSON.stringify(allSettings));
+      memorySettings = allSettings;
+    } catch (e) {
+      const index = memorySettings.findIndex((s: WidgetSettings) => s.store_id === settings.store_id);
+      if (index >= 0) {
+        memorySettings[index] = updatedSettings;
+      } else {
+        memorySettings.push({ ...updatedSettings, created_at: new Date().toISOString() });
+      }
     }
-    localStorage.setItem('vidlytics_settings', JSON.stringify(allSettings));
     return settings;
   }
 };
