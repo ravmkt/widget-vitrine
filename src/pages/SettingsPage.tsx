@@ -1,4 +1,3 @@
-' por '>' no JSX do SettingsPage.tsx para garantir compatibilidade total com o compilador">
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { db, WidgetSettings, Store } from '@/lib/db';
