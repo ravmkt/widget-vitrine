@@ -266,7 +266,7 @@ const StoriesWidgetPage = () => {
           <button
             type="button"
             onClick={() => setSelectedIndex(null)}
-            className={cn(darkActionButtonClasses, "absolute top-4 right-4")}
+            className={cn(darkActionButtonClasses, "absolute top-4 right-4 z-50")}
             aria-label="Fechar story"
           >
             <X className="w-5 h-5" />
@@ -275,17 +275,26 @@ const StoriesWidgetPage = () => {
           {/* Mute/Unmute Button */}
           <button
             onClick={handleToggleMute}
-            className={cn(darkActionButtonClasses, "absolute top-4 right-[66px]")}
+            className={cn(darkActionButtonClasses, "absolute top-4 right-[66px] z-50")}
             aria-label={isMuted ? 'Ativar som' : 'Desativar som'}
           >
             {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+          </button>
+
+          {/* Play/Pause Button */}
+          <button
+            onClick={handleVideoClick}
+            className={cn(darkActionButtonClasses, "absolute top-4 right-[128px] z-50")}
+            aria-label={isPlaying ? 'Pausar vídeo' : 'Reproduzir vídeo'}
+          >
+            {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
           </button>
 
           {stories.length > 1 && (
             <button
               type="button"
               onClick={handlePrevious}
-              className={cn(darkActionButtonClasses, "absolute left-3 sm:left-8 top-1/2 -translate-y-1/2")}
+              className={cn(darkActionButtonClasses, "absolute left-3 sm:left-8 top-1/2 -translate-y-1/2 z-50")}
               aria-label="Story anterior"
             >
               <ChevronLeft className="w-6 h-6" />
@@ -310,7 +319,7 @@ const StoriesWidgetPage = () => {
 
             {/* Play/Pause Overlay */}
             {showPlayPauseOverlay && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
                 <div className="bg-white/30 backdrop-blur-sm rounded-full p-3 transition-opacity duration-300">
                   {isPlaying ? (
                     <Pause className="w-8 h-8 text-white" />
@@ -321,7 +330,7 @@ const StoriesWidgetPage = () => {
               </div>
             )}
 
-            <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/70 to-transparent pointer-events-none">
+            <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/70 to-transparent pointer-events-none z-30">
               <p className="text-white font-bold text-sm">
                 {selectedStory.title}
               </p>
@@ -379,7 +388,7 @@ const StoriesWidgetPage = () => {
 
             {selectedStory.cta_link && (
               <button
-                className="absolute left-[12px] right-[74px] bottom-[28px] h-[64px] px-3 py-2 rounded-xl bg-white shadow-lg flex items-center gap-3 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="absolute left-[12px] right-[74px] bottom-[28px] h-[64px] px-3 py-2 rounded-xl bg-white shadow-lg flex items-center gap-3 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] z-30"
                 onClick={() => {
                   if (selectedStory.cta_link) {
                     window.open(selectedStory.cta_link, "_blank", "noopener,noreferrer");
@@ -407,7 +416,7 @@ const StoriesWidgetPage = () => {
 
             {/* Comments Panel */}
             <div
-              className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-lg p-4 transition-transform duration-300 ease-out ${
+              className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-lg p-4 transition-transform duration-300 ease-out z-40 ${
                 showCommentsPanel ? 'translate-y-0' : 'translate-y-full'
               }`}
             >
@@ -467,7 +476,7 @@ const StoriesWidgetPage = () => {
             <button
               type="button"
               onClick={handleNext}
-              className={cn(darkActionButtonClasses, "absolute right-3 sm:right-8 top-1/2 -translate-y-1/2")}
+              className={cn(darkActionButtonClasses, "absolute right-3 sm:right-8 top-1/2 -translate-y-1/2 z-50")}
               aria-label="Próximo story"
             >
               <ChevronRight className="w-6 h-6" />
