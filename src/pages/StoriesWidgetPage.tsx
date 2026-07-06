@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
 import WhatsAppIcon from '@/components/WhatsAppIcon'; // Importar o novo componente
+import { cn } from '@/lib/utils'; // Importar cn para combinar classes Tailwind
 
 const StoriesWidgetPage = () => {
   const { storeId } = useParams();
@@ -210,6 +211,9 @@ const StoriesWidgetPage = () => {
     return null;
   }
 
+  const storyActionButtonClasses = "w-[42px] h-[42px] rounded-full border border-white/[0.75] bg-black/[0.35] text-white flex items-center justify-center backdrop-blur-[6px] cursor-pointer transition-all hover:bg-white/[0.18] hover:scale-[1.04]";
+  const whatsappButtonClasses = "bg-[#25D366] border-white/[0.65] hover:bg-[#20bd5a]";
+
   return (
     <div className="w-full bg-transparent">
       <div className="w-full overflow-x-auto">
@@ -248,10 +252,11 @@ const StoriesWidgetPage = () => {
 
       {selectedStory && (
         <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center px-4 py-6">
+          {/* Close Button */}
           <button
             type="button"
             onClick={() => setSelectedIndex(null)}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
+            className={cn(storyActionButtonClasses, "absolute top-4 right-4")}
             aria-label="Fechar story"
           >
             <X className="w-5 h-5" />
@@ -261,7 +266,7 @@ const StoriesWidgetPage = () => {
             <button
               type="button"
               onClick={handlePrevious}
-              className="absolute left-3 sm:left-8 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
+              className={cn(storyActionButtonClasses, "absolute left-3 sm:left-8 top-1/2 -translate-y-1/2")}
               aria-label="Story anterior"
             >
               <ChevronLeft className="w-6 h-6" />
@@ -307,48 +312,34 @@ const StoriesWidgetPage = () => {
             </div>
 
             {/* Vertical Action Buttons */}
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-10">
-              {/* Mute/Unmute Button */}
+            <div className="absolute right-[14px] bottom-[74px] z-20 flex flex-col gap-2">
+              {/* Comments Button */}
               <button
-                onClick={handleToggleMute}
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
-                aria-label={isMuted ? 'Ativar som' : 'Desativar som'}
+                onClick={handleToggleComments}
+                className={cn(storyActionButtonClasses, "relative")}
+                aria-label="Comentários"
               >
-                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                <MessageCircle className="w-5 h-5" />
+                {/* Placeholder for comments counter */}
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white">
+                  3
+                </span>
               </button>
 
               {/* Like Button */}
               <button
                 onClick={handleToggleLike}
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
+                className={storyActionButtonClasses}
                 aria-label="Curtir story"
               >
-                <Heart className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
-              </button>
-
-              {/* Comments Button */}
-              <button
-                onClick={handleToggleComments}
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
-                aria-label="Comentários"
-              >
-                <MessageCircle className="w-5 h-5" />
-              </button>
-
-              {/* WhatsApp Button */}
-              <button
-                onClick={handleWhatsAppShare}
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
-                aria-label="Compartilhar no WhatsApp"
-              >
-                <WhatsAppIcon className="w-5 h-5" />
+                <Heart className={cn("w-5 h-5", isLiked ? 'fill-red-500 text-red-500' : '')} />
               </button>
 
               {/* Share Button */}
               <div className="relative">
                 <button
                   onClick={handleShare}
-                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
+                  className={storyActionButtonClasses}
                   aria-label="Compartilhar"
                 >
                   {copiedLink ? <Check className="w-5 h-5 text-emerald-400" /> : <Share2 className="w-5 h-5" />}
@@ -382,19 +373,52 @@ const StoriesWidgetPage = () => {
                   </div>
                 )}
               </div>
+
+              {/* WhatsApp Button */}
+              <button
+                onClick={handleWhatsAppShare}
+                className={cn(storyActionButtonClasses, whatsappButtonClasses)}
+                aria-label="Compartilhar no WhatsApp"
+              >
+                <WhatsAppIcon className="w-5 h-5" />
+              </button>
+
+              {/* Mute/Unmute Button */}
+              <button
+                onClick={handleToggleMute}
+                className={storyActionButtonClasses}
+                aria-label={isMuted ? 'Ativar som' : 'Desativar som'}
+              >
+                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+              </button>
             </div>
 
-            {selectedStory.cta_link && ( // Botão "Comprar agora" só aparece se houver cta_link
-              <div className="absolute bottom-5 left-5 right-5">
-                <a
-                  href={selectedStory.cta_link}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-100 text-slate-900 px-5 py-3 rounded-2xl font-bold text-sm shadow-lg transition-all"
-                >
-                  Comprar agora
-                  <ExternalLink className="w-4 h-4" />
-                </a>
+            {selectedStory.cta_link && (
+              <div
+                className="absolute left-[12px] right-[74px] bottom-[28px] min-h-[60px] p-2.5 rounded-[10px] bg-black/[0.45] text-white flex items-center gap-2.5 backdrop-blur-[8px] z-18 cursor-pointer hover:bg-black/[0.58]"
+                onClick={() => {
+                  if (selectedStory.cta_link) {
+                    window.open(selectedStory.cta_link, "_blank", "noopener,noreferrer");
+                  }
+                }}
+              >
+                {selectedStory.thumbnail_url && (
+                  <img
+                    src={selectedStory.thumbnail_url}
+                    alt={selectedStory.title || "Produto"}
+                    className="w-[42px] h-[42px] rounded-[6px] object-cover flex-shrink-0"
+                  />
+                )}
+
+                <div className="flex flex-col min-w-0">
+                  <div className="text-white text-sm font-bold leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
+                    {selectedStory.title || "Produto"}
+                  </div>
+
+                  <div className="mt-[3px] text-white/[0.9] text-xs font-semibold">
+                    Comprar Agora
+                  </div>
+                </div>
               </div>
             )}
 
@@ -430,7 +454,7 @@ const StoriesWidgetPage = () => {
             <button
               type="button"
               onClick={handleNext}
-              className="absolute right-3 sm:right-8 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
+              className={cn(storyActionButtonClasses, "absolute right-3 sm:right-8 top-1/2 -translate-y-1/2")}
               aria-label="Próximo story"
             >
               <ChevronRight className="w-6 h-6" />
