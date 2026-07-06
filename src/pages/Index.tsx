@@ -57,7 +57,7 @@ const Index = () => {
             <div className="grid gap-4">
               <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
                 <p className="text-sm text-slate-400">Módulo</p>
-                <h3 className="mt-2 text-xl font-bold">Histórias</h3>
+                <h3 className="mt-2 text-xl font-bold">Stories</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-400">
                   Acesse, cadastre e organize suas histórias.
                 </p>
