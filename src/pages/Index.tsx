@@ -1,208 +1,90 @@
-import React, { useEffect, useState } from 'react';
-import Navbar from '@/components/Navbar';
-import WidgetPreview from '@/components/WidgetPreview';
-import { db, Story, WidgetSettings, Store } from '@/lib/db';
-import { Film, Eye, MousePointerClick, Percent, ArrowRight, Sparkles, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Index = () => {
-  const [store, setStore] = useState<Store | null>(null);
-  const [stories, setStories] = useState<Story[]>([]);
-  const [settings, setSettings] = useState<WidgetSettings | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        const stores = await db.getStores();
-        const mainStore = stores && stores.length > 0 ? stores[0] : {
-          id: '11111111-1111-1111-1111-111111111111',
-          name: 'Useanny',
-          domain: 'useanny.com.br',
-          active: true,
-        };
-        setStore(mainStore);
-
-        const [fetchedStories, fetchedSettings] = await Promise.all([
-          db.getStories(mainStore.id),
-          db.getSettings(mainStore.id),
-        ]);
-        setStories(fetchedStories || []);
-        setSettings(fetchedSettings || {
-          id: 'w1',
-          store_id: mainStore.id,
-          position: 'bottom-center',
-          theme_color: '#8B5CF6',
-          display_mode: 'carousel',
-          active: true,
-        });
-      } catch (error) {
-        console.error('Erro ao carregar dados do dashboard:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadDashboardData();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600"></div>
-        <p className="text-sm text-slate-500 font-medium">Carregando painel Vidlytics...</p>
-      </div>
-    );
-  }
-
-  const activeStoriesCount = stories.filter(s => s.active).length;
-
-  // Métricas simuladas realistas
-  const metrics = [
-    {
-      label: 'Total de Stories',
-      value: stories.length,
-      icon: Film,
-      color: 'text-violet-600 bg-violet-50',
-    },
-    {
-      label: 'Stories Ativos',
-      value: activeStoriesCount,
-      icon: Sparkles,
-      color: 'text-emerald-600 bg-emerald-50',
-    },
-    {
-      label: 'Visualizações do Widget',
-      value: '12.480',
-      icon: Eye,
-      color: 'text-blue-600 bg-blue-50',
-    },
-    {
-      label: 'Cliques em Stories',
-      value: '1.842',
-      icon: MousePointerClick,
-      color: 'text-fuchsia-600 bg-fuchsia-50',
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Navbar />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+    <main className="min-h-screen bg-slate-950 text-white">
+      <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-8">
+        <header className="flex items-center justify-between border-b border-white/10 pb-6">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Olá, Useanny! 👋</h1>
-            <p className="text-slate-500 mt-1">
-              Gerencie seus stories em vídeo e acompanhe o engajamento da sua loja virtual.
-            </p>
+            <p className="text-sm font-medium text-violet-400">Bem-vindo</p>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight">
+              Painel Principal
+            </h1>
           </div>
-          <div className="flex gap-3">
-            <Link
-              to="/stories"
-              className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-violet-100 transition-all"
-            >
-              <Plus className="w-4 h-4" />
-              Novo Story
-            </Link>
-          </div>
-        </div>
 
-        {/* Grid Principal */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Coluna da Esquerda: Métricas e Ações */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Métricas */}
-            <div className="grid grid-cols-2 gap-4">
-              {metrics.map((metric, index) => {
-                const Icon = metric.icon;
-                return (
-                  <div key={index} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
-                    <div className={`p-3 rounded-xl ${metric.color}`}>
-                      <Icon className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-400">{metric.label}</p>
-                      <p className="text-2xl font-bold text-slate-800 mt-0.5">{metric.value}</p>
-                    </div>
-                  </div>
-                );
-              })}
+          <Link
+            to="/settings"
+            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10"
+          >
+            Configurações
+          </Link>
+        </header>
+
+        <div className="grid flex-1 items-center gap-8 py-12 lg:grid-cols-2">
+          <div>
+            <div className="mb-6 inline-flex rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-2 text-sm text-violet-300">
+              Seu app está funcionando
             </div>
 
-            {/* CTR Card */}
-            <div className="bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-2xl p-6 text-white shadow-xl shadow-violet-100 flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="space-y-2">
-                <span className="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                  Performance Excelente
-                </span>
-                <h3 className="text-xl font-bold">Taxa de Cliques (CTR) de 14.7%</h3>
-                <p className="text-white/80 text-sm max-w-md">
-                  Seus stories estão convertendo muito bem! Continue adicionando vídeos curtos e dinâmicos para prender a atenção dos clientes.
+            <h2 className="max-w-2xl text-4xl font-bold leading-tight tracking-tight md:text-5xl">
+              Organize suas histórias em um só lugar.
+            </h2>
+
+            <p className="mt-5 max-w-xl text-base leading-7 text-slate-400">
+              Esta é a tela inicial do aplicativo. A partir daqui, você poderá
+              acessar suas histórias, criar novos conteúdos e ajustar as
+              configurações do sistema.
+            </p>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link
+                to="/stories"
+                className="rounded-2xl bg-violet-600 px-6 py-3 text-center font-bold text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700"
+              >
+                Ver histórias
+              </Link>
+
+              <Link
+                to="/settings"
+                className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center font-bold text-white transition hover:bg-white/10"
+              >
+                Ajustar configurações
+              </Link>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-2xl">
+            <div className="grid gap-4">
+              <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
+                <p className="text-sm text-slate-400">Módulo</p>
+                <h3 className="mt-2 text-xl font-bold">Histórias</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-400">
+                  Acesse, cadastre e organize suas histórias.
                 </p>
               </div>
-              <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm flex flex-col items-center justify-center min-w-[120px]">
-                <Percent className="w-8 h-8 text-white mb-1" />
-                <span className="text-2xl font-extrabold">14.7%</span>
-                <span className="text-[10px] text-white/70 uppercase font-bold">Média da Loja</span>
-              </div>
-            </div>
 
-            {/* Atalhos Rápidos */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-              <h3 className="text-lg font-bold text-slate-800 mb-4">Configuração Rápida</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Link
-                  to="/stories"
-                  className="p-4 rounded-xl border border-slate-100 hover:border-violet-200 hover:bg-violet-50/30 transition-all group flex items-center justify-between"
-                >
-                  <div>
-                    <h4 className="font-bold text-slate-800 group-hover:text-violet-600 transition-colors">
-                      Gerenciar Stories
-                    </h4>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Adicione, ordene ou remova vídeos da sua vitrine.
-                    </p>
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-slate-300 group-hover:text-violet-600 transition-all group-hover:translate-x-1" />
-                </Link>
-
-                <Link
-                  to="/settings"
-                  className="p-4 rounded-xl border border-slate-100 hover:border-violet-200 hover:bg-violet-50/30 transition-all group flex items-center justify-between"
-                >
-                  <div>
-                    <h4 className="font-bold text-slate-800 group-hover:text-violet-600 transition-colors">
-                      Customizar Widget
-                    </h4>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Altere cores, posições e o comportamento do widget.
-                    </p>
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-slate-300 group-hover:text-violet-600 transition-all group-hover:translate-x-1" />
-                </Link>
+              <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
+                <p className="text-sm text-slate-400">Status</p>
+                <h3 className="mt-2 text-xl font-bold text-emerald-400">
+                  Aplicação ativa
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-slate-400">
+                  O roteamento principal já está configurado corretamente.
+                </p>
               </div>
-            </div>
-          </div>
 
-          {/* Coluna da Direita: Simulador de Celular */}
-          <div className="flex flex-col items-center">
-            <div className="sticky top-24">
-              <div className="text-center mb-4">
-                <span className="text-xs font-bold text-violet-600 bg-violet-50 px-3 py-1 rounded-full uppercase tracking-wider">
-                  Visualização em Tempo Real
-                </span>
-                <h3 className="text-lg font-bold text-slate-800 mt-2">Simulador de Loja</h3>
+              <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
+                <p className="text-sm text-slate-400">Próximo passo</p>
+                <h3 className="mt-2 text-xl font-bold">Criar a página de histórias</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-400">
+                  Depois desta tela, vamos montar a página onde as histórias serão exibidas.
+                </p>
               </div>
-              {settings && (
-                <WidgetPreview stories={stories} settings={settings} />
-              )}
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </section>
+    </main>
   );
 };
 
