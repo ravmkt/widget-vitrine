@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { db, Story, Store } from '@/lib/db';
-import { Plus, Film, Play, Eye, Trash2, Edit3, Sparkles, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Plus, Film, Play, Eye, Trash2, Edit3, Sparkles, ToggleLeft, ToggleRight, Copy, Check } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 
 const StoriesPage = () => {
@@ -10,6 +10,7 @@ const StoriesPage = () => {
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [copiedId, setCopiedId] = useState(false);
 
   // Form states
   const [title, setTitle] = useState('');
@@ -43,6 +44,15 @@ const StoriesPage = () => {
   useEffect(() => {
     loadStoriesData();
   }, []);
+
+  const handleCopyStoreId = () => {
+    if (store?.id) {
+      navigator.clipboard.writeText(store.id);
+      setCopiedId(true);
+      showSuccess('ID da loja copiado com sucesso!');
+      setTimeout(() => setCopiedId(false), 2000);
+    }
+  };
 
   const handleCreateStory = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,6 +130,27 @@ const StoriesPage = () => {
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Banner de Teste do ID da Loja */}
+        {store && (
+          <div className="mb-6 bg-violet-50 border border-violet-100 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-violet-700 font-medium shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span className="bg-violet-600 text-white px-2.5 py-1 rounded-lg font-bold text-[10px] uppercase tracking-wider self-start sm:self-auto">
+                Dica de Teste
+              </span>
+              <span>
+                ID da loja para teste do widget: <code className="font-mono bg-white px-2 py-1 rounded-lg border border-violet-200/60 text-violet-800 font-bold">{store.id}</code>
+              </span>
+            </div>
+            <button
+              onClick={handleCopyStoreId}
+              className="inline-flex items-center justify-center gap-1.5 bg-white hover:bg-violet-100 text-violet-700 px-3.5 py-2 rounded-xl border border-violet-200 transition-all font-bold shadow-sm self-start sm:self-auto"
+            >
+              {copiedId ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+              {copiedId ? 'Copiado!' : 'Copiar ID'}
+            </button>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
