@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import WidgetPreview from '@/components/WidgetPreview';
-import { db, Story, WidgetSettings, Store } from '@/lib/supabase';
+import { db, Story, WidgetSettings, Store } from '@/lib/db';
 import { Film, Eye, MousePointerClick, Percent, ArrowRight, Sparkles, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 

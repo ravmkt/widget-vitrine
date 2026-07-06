@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
-import { db, WidgetSettings, Store } from '@/lib/supabase';
-import { Save, Code, Copy, Check, Sparkles, Palette, Layout, Eye } from 'lucide-react';
+import { db, WidgetSettings, Store } from '@/lib/db';
+import { Save, Code, Copy, Check, Palette } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 
 const SettingsPage = () => {

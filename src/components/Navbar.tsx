@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Film, Settings, Sparkles, Database } from 'lucide-react';
-import { isSupabaseConfigured } from '@/lib/supabase';
+import { isSupabaseConfigured } from '@/lib/db';
 
 const Navbar = () => {
   const location = useLocation();

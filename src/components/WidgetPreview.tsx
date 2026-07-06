@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Story, WidgetSettings } from '@/lib/supabase';
+import { Story, WidgetSettings } from '@/lib/db';
 import { Play, X } from 'lucide-react';
 
 interface WidgetPreviewProps {
