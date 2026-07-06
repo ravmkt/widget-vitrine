@@ -54,6 +54,9 @@ const StoriesWidgetPage = () => {
   const [newCommentText, setNewCommentText] = useState('');
   const [commentsCount, setCommentsCount] = useState(comments.length);
 
+  // Estados para curtidas
+  const [likesCount, setLikesCount] = useState(Math.floor(Math.random() * 100) + 50); // Valor inicial aleatório para demonstração
+
   const selectedStory =
     selectedIndex !== null ? stories[selectedIndex] : null;
 
@@ -103,7 +106,7 @@ const StoriesWidgetPage = () => {
 
   const handlePrevious = () => {
     if (selectedIndex === null) return;
-    setIsLiked(false);
+    setIsLiked(false); // Reset like state
     setShowCommentsPanel(false);
     setIsPlaying(true);
     setSelectedIndex((prevIndex) =>
@@ -113,7 +116,7 @@ const StoriesWidgetPage = () => {
 
   const handleNext = () => {
     if (selectedIndex === null) return;
-    setIsLiked(false);
+    setIsLiked(false); // Reset like state
     setShowCommentsPanel(false);
     setIsPlaying(true);
     setSelectedIndex((prevIndex) =>
@@ -140,7 +143,14 @@ const StoriesWidgetPage = () => {
   };
 
   const handleToggleLike = () => {
-    setIsLiked((prev) => !prev);
+    setIsLiked((prev) => {
+      if (prev) {
+        setLikesCount((count) => count - 1);
+      } else {
+        setLikesCount((count) => count + 1);
+      }
+      return !prev;
+    });
   };
 
   const handleToggleComments = () => {
@@ -226,7 +236,7 @@ const StoriesWidgetPage = () => {
               onClick={() => {
                 setSelectedIndex(index);
                 setIsMuted(true);
-                setIsLiked(false);
+                setIsLiked(false); // Reset like state
                 setShowCommentsPanel(false);
                 setIsPlaying(true);
               }}
@@ -337,10 +347,15 @@ const StoriesWidgetPage = () => {
               {/* Like Button */}
               <button
                 onClick={handleToggleLike}
-                className={darkActionButtonClasses}
+                className={cn(darkActionButtonClasses, "relative group")}
                 aria-label="Curtir story"
               >
-                <Heart className={cn("w-5 h-5", isLiked ? 'fill-red-500 text-red-500' : '')} />
+                <Heart className={cn("w-5 h-5 transition-all duration-200", isLiked ? 'fill-red-500 text-red-500 scale-110' : 'text-white')} />
+                {likesCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white">
+                    {likesCount}
+                  </span>
+                )}
               </button>
 
               {/* Share Button */}
