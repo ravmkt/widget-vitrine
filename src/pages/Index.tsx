@@ -32,7 +32,7 @@ const Index = () => {
 
             <p className="mt-5 max-w-xl text-base leading-7 text-slate-400">
               Esta é a tela inicial do aplicativo. A partir daqui, você poderá
-              acessar suas histórias, criar novos conteúdos e ajustar as
+              acessar seus stories, criar novos conteúdos e ajustar as
               configurações do sistema.
             </p>
 
@@ -41,7 +41,7 @@ const Index = () => {
                 to="/stories"
                 className="rounded-2xl bg-violet-600 px-6 py-3 text-center font-bold text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700"
               >
-                Ver histórias
+                Ver stories
               </Link>
 
               <Link
