@@ -27,7 +27,7 @@ const Index = () => {
             </div>
 
             <h2 className="max-w-2xl text-4xl font-bold leading-tight tracking-tight md:text-5xl">
-              Organize suas histórias em um só lugar.
+              Organize seus stories em um só lugar.
             </h2>
 
             <p className="mt-5 max-w-xl text-base leading-7 text-slate-400">
