@@ -1,4 +1,4 @@
-' no JSX do SettingsPage.tsx para evitar erros de compilação do SWC">
+' por '>' no JSX do SettingsPage.tsx para garantir compatibilidade total com o compilador">
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { db, WidgetSettings, Store } from '@/lib/db';
@@ -231,7 +231,7 @@ const SettingsPage = () => {
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Passo a Passo:</h4>
                 <ol className="list-decimal list-inside text-xs text-slate-600 space-y-2">
                   <li>Acesse o painel da sua loja na <strong>Yampi</strong>.</li>
-                  <li>Vá em <strong>Configurações</strong> {" > "} <strong>Scripts</strong>.</li>
+                  <li>Vá em <strong>Configurações</strong> > <strong>Scripts</strong>.</li>
                   <li>Clique em <strong>Adicionar Script</strong>.</li>
                   <li>Cole o código acima no campo de script do <strong>Cabeçalho (Head)</strong> ou <strong>Rodapé (Body)</strong>.</li>
                   <li>Salve as alterações e pronto! O widget identificará automaticamente o domínio da sua loja.</li>
