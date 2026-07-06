@@ -19,39 +19,16 @@ import {
   Link as LinkIcon,
 } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
-import WhatsAppIcon from '@/components/WhatsAppIcon'; // Importar o novo componente
-import { cn } from '@/lib/utils'; // Importar cn para combinar classes Tailwind
+import WhatsAppIcon from '@/components/WhatsAppIcon';
+import { cn } from '@/lib/utils';
 
-const StoriesWidgetPage = () => {
-  const { storeId } = useParams();
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  const [store, setStore] = useState<Store | null>(null);
-  const [stories, setStories] = useState<Story[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState<dyad-write path="src/pages/StoriesWidgetPage.tsx" description="Ajustando o visual e a funcionalidade da barra inferior do produto no modal de stories.">
-import { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { db, Story, Store } from '@/lib/db';
-import {
-  X,
-  ChevronLeft,
-  ChevronRight,
-  ExternalLink,
-  Heart,
-  MessageCircle,
-  Share2,
-  Volume2,
-  VolumeX,
-  Play,
-  Pause,
-  Check,
-  Mail,
-  Facebook,
-  Link as LinkIcon,
-} from 'lucide-react';
-import { showSuccess } from '@/utils/toast';
-import WhatsAppIcon from '@/components/WhatsAppIcon'; // Importar o novo componente
-import { cn } from '@/lib/utils'; // Importar cn para combinar classes Tailwind
+// Interface para um comentário
+interface Comment {
+  id: string;
+  username: string;
+  text: string;
+  timestamp: string;
+}
 
 const StoriesWidgetPage = () => {
   const { storeId } = useParams();
@@ -67,6 +44,15 @@ const StoriesWidgetPage = () => {
   const [showPlayPauseOverlay, setShowPlayPauseOverlay] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  // Estados para comentários
+  const [comments, setComments] = useState<Comment[]>([
+    { id: 'c1', username: 'Cliente Feliz', text: 'Adorei esse story! O produto é incrível!', timestamp: '5 min atrás' },
+    { id: 'c2', username: 'Comprador VIP', text: 'Já comprei e recomendo muito!', timestamp: '10 min atrás' },
+    { id: 'c3', username: 'Curioso', text: 'Qual o preço desse item?', timestamp: '15 min atrás' },
+  ]);
+  const [newCommentText, setNewCommentText] = useState('');
+  const [commentsCount, setCommentsCount] = useState(comments.length);
 
   const selectedStory =
     selectedIndex !== null ? stories[selectedIndex] : null;
@@ -113,13 +99,13 @@ const StoriesWidgetPage = () => {
         videoRef.current.pause();
       }
     }
-  }, [isMuted, isPlaying, selectedStory]); // Re-apply mute/play state when story changes
+  }, [isMuted, isPlaying, selectedStory]);
 
   const handlePrevious = () => {
     if (selectedIndex === null) return;
-    setIsLiked(false); // Reset like state
-    setShowCommentsPanel(false); // Close comments panel
-    setIsPlaying(true); // Ensure video plays on next/prev
+    setIsLiked(false);
+    setShowCommentsPanel(false);
+    setIsPlaying(true);
     setSelectedIndex((prevIndex) =>
       prevIndex === 0 ? stories.length - 1 : prevIndex - 1
     );
@@ -127,9 +113,9 @@ const StoriesWidgetPage = () => {
 
   const handleNext = () => {
     if (selectedIndex === null) return;
-    setIsLiked(false); // Reset like state
-    setShowCommentsPanel(false); // Close comments panel
-    setIsPlaying(true); // Ensure video plays on next/prev
+    setIsLiked(false);
+    setShowCommentsPanel(false);
+    setIsPlaying(true);
     setSelectedIndex((prevIndex) =>
       prevIndex === stories.length - 1 ? 0 : prevIndex + 1
     );
@@ -161,7 +147,22 @@ const StoriesWidgetPage = () => {
     setShowCommentsPanel((prev) => !prev);
   };
 
-  // Helper para determinar o link do produto/story
+  const handleAddComment = () => {
+    if (newCommentText.trim() === '') return;
+
+    const newComment: Comment = {
+      id: `c${comments.length + 1}`,
+      username: 'Você', // Mock user
+      text: newCommentText,
+      timestamp: 'agora',
+    };
+
+    setComments((prevComments) => [newComment, ...prevComments]);
+    setNewCommentText('');
+    setCommentsCount((prevCount) => prevCount + 1);
+    showSuccess('Comentário enviado!');
+  };
+
   const getProductOrStoryLink = () => {
     if (selectedStory?.cta_link) {
       return selectedStory.cta_link;
@@ -192,10 +193,9 @@ const StoriesWidgetPage = () => {
         console.error('Erro ao compartilhar:', error);
       }
     } else {
-      // Fallback: copy link to clipboard
       navigator.clipboard.writeText(productLink);
-      showSuccess('Link copiado!'); // Visual feedback
-      setCopiedLink(true); // To show checkmark on button
+      showSuccess('Link copiado!');
+      setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);
     }
   };
@@ -225,10 +225,10 @@ const StoriesWidgetPage = () => {
               type="button"
               onClick={() => {
                 setSelectedIndex(index);
-                setIsMuted(true); // Start muted
-                setIsLiked(false); // Reset like state
-                setShowCommentsPanel(false); // Close comments panel
-                setIsPlaying(true); // Ensure video plays
+                setIsMuted(true);
+                setIsLiked(false);
+                setShowCommentsPanel(false);
+                setIsPlaying(true);
               }}
               className="flex flex-col items-center gap-2 shrink-0 group"
             >
@@ -284,7 +284,7 @@ const StoriesWidgetPage = () => {
 
           <div className="relative w-full max-w-[420px] aspect-[9/16] bg-black rounded-3xl overflow-hidden shadow-2xl">
             <video
-              key={selectedStory.id} // Key change forces re-render and autoplay
+              key={selectedStory.id}
               ref={videoRef}
               src={selectedStory.video_url}
               poster={selectedStory.thumbnail_url}
@@ -329,9 +329,8 @@ const StoriesWidgetPage = () => {
                 aria-label="Comentários"
               >
                 <MessageCircle className="w-5 h-5" />
-                {/* Placeholder for comments counter */}
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white">
-                  3
+                  {commentsCount}
                 </span>
               </button>
 
@@ -393,26 +392,56 @@ const StoriesWidgetPage = () => {
 
             {/* Comments Panel */}
             <div
-              className={`absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm p-4 transition-transform duration-300 ease-out ${
+              className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-lg p-4 transition-transform duration-300 ease-out ${
                 showCommentsPanel ? 'translate-y-0' : 'translate-y-full'
               }`}
             >
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-white text-sm font-bold">Comentários</h4>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-slate-900 text-lg font-bold">Comentários</h4>
                 <button
                   onClick={() => setShowCommentsPanel(false)}
-                  className="text-white/70 hover:text-white transition-colors"
+                  className="text-slate-500 hover:text-slate-700 transition-colors p-1 rounded-full hover:bg-slate-100"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
-              <div className="flex gap-2">
+
+              <div className="max-h-[200px] overflow-y-auto space-y-4 mb-4 pr-2">
+                {comments.length === 0 ? (
+                  <p className="text-slate-500 text-sm text-center py-4">Nenhum comentário ainda. Seja o primeiro!</p>
+                ) : (
+                  comments.map((comment) => (
+                    <div key={comment.id} className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-xs flex-shrink-0">
+                        {comment.username.charAt(0)}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-semibold text-slate-800 text-sm">{comment.username}</span>
+                          <span className="text-slate-400 text-xs">{comment.timestamp}</span>
+                        </div>
+                        <p className="text-slate-700 text-sm mt-0.5">{comment.text}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="flex gap-2 pt-4 border-t border-slate-100">
                 <input
                   type="text"
                   placeholder="Adicionar comentário..."
-                  className="flex-1 px-3 py-2 rounded-xl bg-white/10 text-white text-sm border border-white/20 focus:outline-none focus:ring-1 focus:ring-violet-400"
+                  value={newCommentText}
+                  onChange={(e) => setNewCommentText(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') handleAddComment();
+                  }}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 text-slate-800 text-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
                 />
-                <button className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-xl text-sm font-semibold">
+                <button
+                  onClick={handleAddComment}
+                  className="bg-violet-600 hover:bg-violet-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-violet-100 transition-all"
+                >
                   Enviar
                 </button>
               </div>
