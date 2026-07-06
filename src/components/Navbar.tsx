@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Film, Settings, Sparkles, Database } from 'lucide-react';
+import { LayoutDashboard, Film, Settings, Sparkles, Database, Eye } from 'lucide-react';
 import { isSupabaseConfigured } from '@/lib/db';
 
 const Navbar = () => {
@@ -9,6 +9,7 @@ const Navbar = () => {
   const menuItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/stories', label: 'Stories', icon: Film },
+    { path: '/widget', label: 'Visualizar Widget', icon: Eye },
     { path: '/settings', label: 'Configurações', icon: Settings },
   ];
 
