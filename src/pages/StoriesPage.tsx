@@ -3,21 +3,21 @@ import { Link } from 'react-router-dom';
 const stories = [
   {
     id: 1,
-    title: 'A Jornada do Herói',
-    description: 'Uma história sobre coragem, escolhas difíceis e transformação.',
+    title: 'Story de boas-vindas',
+    description: 'Um exemplo de story para apresentar o aplicativo.',
     status: 'Rascunho',
   },
   {
     id: 2,
-    title: 'O Reino Esquecido',
-    description: 'Uma aventura em um mundo antigo cheio de mistérios.',
+    title: 'Story promocional',
+    description: 'Um exemplo de story voltado para divulgação e campanha.',
     status: 'Em andamento',
   },
   {
     id: 3,
-    title: 'Depois da Tempestade',
-    description: 'Um drama sobre recomeços, perdas e esperança.',
-    status: 'Finalizada',
+    title: 'Story institucional',
+    description: 'Um exemplo de story para comunicação da marca.',
+    status: 'Finalizado',
   },
 ];
 
@@ -29,7 +29,7 @@ const StoriesPage = () => {
           <div>
             <p className="text-sm font-medium text-violet-400">Biblioteca</p>
             <h1 className="mt-1 text-2xl font-bold tracking-tight">
-              Histórias
+              Stories
             </h1>
           </div>
 
@@ -45,7 +45,7 @@ const StoriesPage = () => {
               type="button"
               className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700"
             >
-              Nova história
+              Novo story
             </button>
           </div>
         </header>
@@ -53,10 +53,10 @@ const StoriesPage = () => {
         <section className="py-8">
           <div className="mb-6">
             <h2 className="text-3xl font-bold tracking-tight">
-              Suas histórias
+              Seus stories
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-              Aqui você poderá visualizar, criar e organizar suas histórias.
+              Aqui você poderá visualizar, criar e organizar seus stories.
               Por enquanto, estamos usando dados de exemplo.
             </p>
           </div>
@@ -81,7 +81,7 @@ const StoriesPage = () => {
                   type="button"
                   className="mt-6 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
                 >
-                  Abrir história
+                  Abrir story
                 </button>
               </article>
             ))}
