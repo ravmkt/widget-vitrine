@@ -13,7 +13,7 @@ import {
   Play,
   Pause,
   Check,
-} from 'lucide-react'; // Removidos imports não utilizados: ExternalLink, Mail, Facebook, Link as LinkIcon
+} from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
 import WhatsAppIcon from '@/components/WhatsAppIcon';
 import { cn } from '@/lib/utils';
@@ -100,7 +100,8 @@ const StoriesWidgetPage = () => {
     }
   }, [isMuted, isPlaying, selectedStory]);
 
-  const handlePrevious = () => {
+  const handlePrevious = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (selectedIndex === null) return;
     setIsLiked(false); // Reset like state
     setShowCommentsPanel(false);
@@ -110,7 +111,8 @@ const StoriesWidgetPage = () => {
     );
   };
 
-  const handleNext = () => {
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (selectedIndex === null) return;
     setIsLiked(false); // Reset like state
     setShowCommentsPanel(false);
@@ -134,8 +136,12 @@ const StoriesWidgetPage = () => {
     }
   };
 
-  const handleToggleMute = () => {
-    setIsMuted((prev) => !prev);
+  const handleToggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(videoRef.current.muted);
+    }
   };
 
   const handleToggleLike = () => {
@@ -183,13 +189,18 @@ const StoriesWidgetPage = () => {
     const message = `Olá! Tenho interesse em ${productName}. Link: ${productLink}`;
     
     let whatsappUrl = '';
-    if (store?.whatsapp_number) {
-      whatsappUrl = `https://wa.me/${store.whatsapp_number}?text=${encodeURIComponent(message)}`;
+    const rawPhoneNumber = store?.whatsapp_number;
+
+    if (rawPhoneNumber) {
+      const cleanedPhoneNumber = rawPhoneNumber.replace(/\D/g, "");
+      // Adiciona DDI 55 se o número tiver 9 ou 10 dígitos (assumindo DDD + número)
+      const finalPhoneNumber = cleanedPhoneNumber.length === 11 && cleanedPhoneNumber.startsWith('55') ? cleanedPhoneNumber : `55${cleanedPhoneNumber}`;
+      whatsappUrl = `https://wa.me/${finalPhoneNumber}?text=${encodeURIComponent(message)}`;
     } else {
       whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     }
     
-    window.open(whatsappUrl, '_blank');
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleShare = async () => {
@@ -230,6 +241,8 @@ const StoriesWidgetPage = () => {
   const darkActionButtonClasses = "w-[42px] h-[42px] rounded-full border border-white/[0.75] bg-black/[0.35] text-white flex items-center justify-center backdrop-blur-[6px] cursor-pointer transition-all hover:bg-white/[0.18] hover:scale-[1.04]";
   const whiteActionButtonClasses = "w-[42px] h-[42px] rounded-full border-none bg-white text-slate-900 flex items-center justify-center shadow-md shadow-black/20 cursor-pointer transition-all hover:scale-[1.06]";
 
+  const isWhatsAppButtonDisabled = !store?.whatsapp_number;
+
   return (
     <div className="w-full bg-transparent">
       <div className="w-full overflow-x-auto">
@@ -267,34 +280,6 @@ const StoriesWidgetPage = () => {
 
       {selectedStory && (
         <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center px-4 py-6">
-          {/* Close Button */}
-          <button
-            type="button"
-            onClick={() => setSelectedIndex(null)}
-            className={cn(darkActionButtonClasses, "absolute top-4 right-4 z-50")}
-            aria-label="Fechar story"
-          >
-            <X className="w-5 h-5" />
-          </button>
-
-          {/* Mute/Unmute Button */}
-          <button
-            onClick={handleToggleMute}
-            className={cn(darkActionButtonClasses, "absolute top-4 right-[66px] z-50")}
-            aria-label={isMuted ? 'Ativar som' : 'Desativar som'}
-          >
-            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-          </button>
-
-          {/* Play/Pause Button */}
-          <button
-            onClick={handleVideoClick}
-            className={cn(darkActionButtonClasses, "absolute top-4 right-[128px] z-50")}
-            aria-label={isPlaying ? 'Pausar vídeo' : 'Reproduzir vídeo'}
-          >
-            {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-          </button>
-
           {stories.length > 1 && (
             <button
               type="button"
@@ -307,6 +292,34 @@ const StoriesWidgetPage = () => {
           )}
 
           <div className="relative w-full max-w-[420px] aspect-[9/16] bg-black rounded-3xl overflow-hidden shadow-2xl">
+            {/* Close Button (inside story card) */}
+            <button
+              type="button"
+              onClick={() => setSelectedIndex(null)}
+              className={cn(darkActionButtonClasses, "absolute top-4 right-4 z-30")}
+              aria-label="Fechar story"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Mute/Unmute Button (inside story card) */}
+            <button
+              onClick={handleToggleMute}
+              className={cn(darkActionButtonClasses, "absolute top-4 right-[66px] z-30")}
+              aria-label={isMuted ? 'Ativar som' : 'Desativar som'}
+            >
+              {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+            </button>
+
+            {/* Play/Pause Button (inside story card) */}
+            <button
+              onClick={handleVideoClick}
+              className={cn(darkActionButtonClasses, "absolute top-4 right-[128px] z-30")}
+              aria-label={isPlaying ? 'Pausar vídeo' : 'Reproduzir vídeo'}
+            >
+              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+            </button>
+
             <video
               key={selectedStory.id}
               ref={videoRef}
@@ -320,11 +333,12 @@ const StoriesWidgetPage = () => {
               onClick={handleVideoClick}
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
+              onEnded={handleNext} // Auto-advance to next story
             />
 
             {/* Play/Pause Overlay */}
             {showPlayPauseOverlay && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                 <div className="bg-white/30 backdrop-blur-sm rounded-full p-3 transition-opacity duration-300">
                   {isPlaying ? (
                     <Pause className="w-8 h-8 text-white" />
@@ -335,7 +349,7 @@ const StoriesWidgetPage = () => {
               </div>
             )}
 
-            <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/70 to-transparent pointer-events-none z-30">
+            <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/70 to-transparent pointer-events-none z-10">
               <p className="text-white font-bold text-sm">
                 {selectedStory.title}
               </p>
@@ -345,7 +359,7 @@ const StoriesWidgetPage = () => {
             </div>
 
             {/* Vertical Action Buttons */}
-            <div className="absolute right-[14px] bottom-[74px] z-40 flex flex-col gap-2"> {/* Z-index ajustado para z-40 */}
+            <div className="absolute right-[14px] bottom-[74px] z-40 flex flex-col gap-2">
               {/* Comments Button */}
               <button
                 onClick={handleToggleComments}
@@ -384,8 +398,9 @@ const StoriesWidgetPage = () => {
               {/* WhatsApp Button */}
               <button
                 onClick={handleWhatsAppShare}
-                className={whiteActionButtonClasses}
+                className={cn(whiteActionButtonClasses, isWhatsAppButtonDisabled && "opacity-50 cursor-not-allowed")}
                 aria-label="Abrir WhatsApp"
+                disabled={isWhatsAppButtonDisabled}
               >
                 <WhatsAppIcon size={22} />
               </button>
