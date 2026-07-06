@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import Index from './pages/Index';
 import StoriesPage from './pages/StoriesPage';
+import StoryDetailsPage from './pages/StoryDetailsPage';
 import SettingsPage from './pages/SettingsPage';
 import NotFound from './pages/NotFound';
 
@@ -60,6 +61,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/stories" element={<StoriesPage />} />
+          <Route path="/stories/:id" element={<StoryDetailsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

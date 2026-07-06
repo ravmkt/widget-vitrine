@@ -1,226 +1,349 @@
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-
-type Story = {
-  id: number;
-  title: string;
-  description: string;
-  status: string;
-};
-
-const initialStories: Story[] = [
-  {
-    id: 1,
-    title: 'Story de boas-vindas',
-    description: 'Um exemplo de story para apresentar o aplicativo.',
-    status: 'Rascunho',
-  },
-  {
-    id: 2,
-    title: 'Story promocional',
-    description: 'Um exemplo de story voltado para divulgação e campanha.',
-    status: 'Em andamento',
-  },
-  {
-    id: 3,
-    title: 'Story institucional',
-    description: 'Um exemplo de story para comunicação da marca.',
-    status: 'Finalizado',
-  },
-];
+import Navbar from '@/components/Navbar';
+import { db, Story, Store } from '@/lib/db';
+import { Plus, Film, Play, Eye, Trash2, Edit3, Sparkles, ToggleLeft, ToggleRight } from 'lucide-react';
+import { showSuccess, showError } from '@/utils/toast';
 
 const StoriesPage = () => {
-  const [stories, setStories] = useState<Story[]>(initialStories);
+  const [store, setStore] = useState<Store | null>(null);
+  const [stories, setStories] = useState<Story[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
 
+  // Form states
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [status, setStatus] = useState('Rascunho');
+  const [videoUrl, setVideoUrl] = useState('');
+  const [thumbnailUrl, setThumbnailUrl] = useState('');
+  const [ctaLink, setCtaLink] = useState('');
+  const [position, setPosition] = useState(1);
+  const [active, setActive] = useState(true);
 
-  const handleCreateStory = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const loadStoriesData = async () => {
+    try {
+      const stores = await db.getStores();
+      const mainStore = stores[0];
+      setStore(mainStore);
 
-    if (!title.trim() || !description.trim()) {
+      if (mainStore) {
+        const fetchedStories = await db.getStories(mainStore.id);
+        setStories(fetchedStories);
+        // Set next position
+        const maxPos = fetchedStories.reduce((max, s) => s.position > max ? s.position : max, 0);
+        setPosition(maxPos + 1);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar stories:', error);
+      showError('Erro ao carregar a lista de stories.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadStoriesData();
+  }, []);
+
+  const handleCreateStory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!store) return;
+
+    if (!title.trim() || !videoUrl.trim() || !thumbnailUrl.trim()) {
+      showError('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
 
     const newStory: Story = {
-      id: Date.now(),
+      id: Math.random().toString(36).substr(2, 9),
+      store_id: store.id,
       title,
-      description,
-      status,
+      video_url: videoUrl,
+      thumbnail_url: thumbnailUrl,
+      cta_link: ctaLink || undefined,
+      active,
+      position,
     };
 
-    setStories((currentStories) => [newStory, ...currentStories]);
-
-    setTitle('');
-    setDescription('');
-    setStatus('Rascunho');
-    setShowForm(false);
+    try {
+      await db.saveStory(newStory);
+      showSuccess('Story criado com sucesso!');
+      
+      // Reset form
+      setTitle('');
+      setVideoUrl('');
+      setThumbnailUrl('');
+      setCtaLink('');
+      setActive(true);
+      setShowForm(false);
+      
+      // Reload list
+      loadStoriesData();
+    } catch (error) {
+      showError('Erro ao criar o story.');
+    }
   };
 
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Tem certeza que deseja excluir este story?')) {
+      try {
+        await db.deleteStory(id);
+        showSuccess('Story excluído com sucesso!');
+        loadStoriesData();
+      } catch (error) {
+        showError('Erro ao excluir o story.');
+      }
+    }
+  };
+
+  const handleToggleActive = async (story: Story) => {
+    const updated = { ...story, active: !story.active };
+    try {
+      await db.saveStory(updated);
+      showSuccess(`Story ${updated.active ? 'ativado' : 'desativado'} com sucesso!`);
+      loadStoriesData();
+    } catch (error) {
+      showError('Erro ao atualizar status do story.');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600"></div>
+        <p className="text-sm text-slate-500 font-medium">Carregando seus stories...</p>
+      </div>
+    );
+  }
+
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
-      <section className="mx-auto w-full max-w-6xl px-6 py-8">
-        <header className="flex flex-col gap-4 border-b border-white/10 pb-6 sm:flex-row sm:items-center sm:justify-between">
+    <div className="min-h-screen bg-slate-50">
+      <Navbar />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <p className="text-sm font-medium text-violet-400">Biblioteca</p>
-            <h1 className="mt-1 text-2xl font-bold tracking-tight">
-              Stories
-            </h1>
-          </div>
-
-          <div className="flex gap-3">
-            <Link
-              to="/"
-              className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10"
-            >
-              Voltar
-            </Link>
-
-            <button
-              type="button"
-              onClick={() => setShowForm((currentValue) => !currentValue)}
-              className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700"
-            >
-              {showForm ? 'Fechar formulário' : 'Novo story'}
-            </button>
-          </div>
-        </header>
-
-        {showForm && (
-          <section className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-xl">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold">Cadastrar novo story</h2>
-              <p className="mt-2 text-sm text-slate-400">
-                Preencha os dados abaixo para adicionar um novo story.
-              </p>
-            </div>
-
-            <form onSubmit={handleCreateStory} className="grid gap-5">
-              <div className="grid gap-2">
-                <label
-                  htmlFor="title"
-                  className="text-sm font-medium text-slate-200"
-                >
-                  Título
-                </label>
-
-                <input
-                  id="title"
-                  type="text"
-                  value={title}
-                  onChange={(event) => setTitle(event.target.value)}
-                  placeholder="Ex: Story para campanha de lançamento"
-                  className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-violet-500"
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <label
-                  htmlFor="description"
-                  className="text-sm font-medium text-slate-200"
-                >
-                  Descrição
-                </label>
-
-                <textarea
-                  id="description"
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  placeholder="Descreva o objetivo deste story"
-                  rows={4}
-                  className="resize-none rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-violet-500"
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <label
-                  htmlFor="status"
-                  className="text-sm font-medium text-slate-200"
-                >
-                  Status
-                </label>
-
-                <select
-                  id="status"
-                  value={status}
-                  onChange={(event) => setStatus(event.target.value)}
-                  className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition focus:border-violet-500"
-                >
-                  <option value="Rascunho">Rascunho</option>
-                  <option value="Em andamento">Em andamento</option>
-                  <option value="Finalizado">Finalizado</option>
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/10"
-                >
-                  Cancelar
-                </button>
-
-                <button
-                  type="submit"
-                  className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700"
-                >
-                  Salvar story
-                </button>
-              </div>
-            </form>
-          </section>
-        )}
-
-        <section className="py-8">
-          <div className="mb-6">
-            <h2 className="text-3xl font-bold tracking-tight">
-              Seus stories
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-              Aqui você poderá visualizar, criar e organizar seus stories.
+            <h1 className="text-3xl font-bold text-slate-900">Gerenciador de Stories</h1>
+            <p className="text-slate-500 mt-1">
+              Crie, edite e organize a ordem de exibição dos seus stories em vídeo.
             </p>
           </div>
 
-          {stories.length === 0 ? (
-            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 text-center">
-              <h3 className="text-xl font-bold">Nenhum story cadastrado</h3>
-              <p className="mt-2 text-sm text-slate-400">
-                Clique em “Novo story” para cadastrar o primeiro.
-              </p>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-violet-100 transition-all self-start sm:self-auto"
+          >
+            <Plus className="w-4 h-4" />
+            {showForm ? 'Fechar Formulário' : 'Novo Story'}
+          </button>
+        </div>
+
+        {/* Formulário de Criação */}
+        {showForm && (
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 mb-8 max-w-3xl">
+            <div className="flex items-center gap-2 pb-4 border-b border-slate-100 mb-6">
+              <Sparkles className="w-5 h-5 text-violet-600" />
+              <h3 className="text-lg font-bold text-slate-800">Cadastrar Novo Story</h3>
             </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-3">
-              {stories.map((story) => (
-                <article
-                  key={story.id}
-                  className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 shadow-xl transition hover:-translate-y-1 hover:bg-white/[0.06]"
-                >
-                  <div className="mb-4 inline-flex rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs font-medium text-violet-300">
-                    {story.status}
-                  </div>
 
-                  <h3 className="text-xl font-bold">{story.title}</h3>
+            <form onSubmit={handleCreateStory} className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                    Título do Story *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Ex: Nova Coleção Outono 🍂"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
+                  />
+                </div>
 
-                  <p className="mt-3 text-sm leading-6 text-slate-400">
-                    {story.description}
-                  </p>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                    Link de Compra (CTA)
+                  </label>
+                  <input
+                    type="url"
+                    value={ctaLink}
+                    onChange={(e) => setCtaLink(e.target.value)}
+                    placeholder="https://useanny.com.br/produtos/vestido"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
+                  />
+                </div>
+              </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                    URL do Vídeo (MP4) *
+                  </label>
+                  <input
+                    type="url"
+                    required
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    placeholder="https://assets.mixkit.co/videos/preview/..."
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-mono text-slate-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                    URL da Thumbnail (Imagem de Capa) *
+                  </label>
+                  <input
+                    type="url"
+                    required
+                    value={thumbnailUrl}
+                    onChange={(e) => setThumbnailUrl(e.target.value)}
+                    placeholder="https://images.unsplash.com/photo-..."
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-mono text-slate-800"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                    Ordem de Exibição (Posição)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    value={position}
+                    onChange={(e) => setPosition(parseInt(e.target.value) || 1)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                    Status Inicial
+                  </label>
                   <button
                     type="button"
-                    className="mt-6 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
+                    onClick={() => setActive(!active)}
+                    className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
+                      active
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                        : 'border-slate-200 bg-slate-50 text-slate-500'
+                    }`}
                   >
-                    Abrir story
+                    <span>{active ? 'Ativo no Widget' : 'Inativo / Rascunho'}</span>
+                    {active ? (
+                      <ToggleRight className="w-6 h-6 text-emerald-600" />
+                    ) : (
+                      <ToggleLeft className="w-6 h-6 text-slate-400" />
+                    )}
                   </button>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-      </section>
-    </main>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-sm transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="bg-violet-600 hover:bg-violet-700 text-white px-6 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-violet-100 transition-all"
+                >
+                  Salvar Story
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Lista de Stories */}
+        {stories.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-12 text-center max-w-2xl mx-auto">
+            <Film className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-slate-800">Nenhum story cadastrado</h3>
+            <p className="text-slate-500 text-sm mt-1 mb-6">
+              Comece adicionando seu primeiro story em vídeo para engajar seus clientes.
+            </p>
+            <button
+              onClick={() => setShowForm(true)}
+              className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-violet-100 transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              Adicionar Primeiro Story
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {stories.map((story) => (
+              <div
+                key={story.id}
+                className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition-all"
+              >
+                {/* Thumbnail Preview */}
+                <div className="relative aspect-[9/16] max-h-[280px] bg-slate-900 overflow-hidden">
+                  <img
+                    src={story.thumbnail_url}
+                    alt={story.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+
+                  {/* Badge de Status */}
+                  <button
+                    onClick={() => handleToggleActive(story)}
+                    className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold shadow-sm backdrop-blur-sm transition-all ${
+                      story.active
+                        ? 'bg-emerald-500/90 text-white'
+                        : 'bg-slate-500/90 text-white'
+                    }`}
+                  >
+                    {story.active ? 'Ativo' : 'Inativo'}
+                  </button>
+
+                  {/* Posição */}
+                  <span className="absolute bottom-4 left-4 bg-black/40 text-white text-xs font-bold px-2.5 py-1 rounded-lg backdrop-blur-sm">
+                    Posição #{story.position}
+                  </span>
+                </div>
+
+                {/* Detalhes */}
+                <div className="p-5 flex-1 flex flex-col justify-between gap-4">
+                  <div>
+                    <h3 className="font-bold text-slate-800 text-lg line-clamp-1">{story.title}</h3>
+                    <p className="text-xs text-slate-400 font-mono mt-1 truncate">{story.video_url}</p>
+                  </div>
+
+                  {/* Ações */}
+                  <div className="flex items-center gap-2 pt-4 border-t border-slate-50">
+                    <Link
+                      to={`/stories/${story.id}`}
+                      className="flex-1 inline-flex items-center justify-center gap-2 bg-slate-50 hover:bg-violet-50 hover:text-violet-600 text-slate-600 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                      Editar Detalhes
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(story.id)}
+                      className="p-2.5 rounded-xl border border-slate-100 hover:border-red-100 hover:bg-red-50 text-slate-400 hover:text-red-600 transition-all"
+                      title="Excluir Story"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
   );
 };
 
