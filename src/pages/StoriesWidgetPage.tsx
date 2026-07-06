@@ -8,15 +8,18 @@ import {
   ExternalLink,
   Heart,
   MessageCircle,
-  MessageCircleMore,
   Share2,
   Volume2,
   VolumeX,
   Play,
   Pause,
   Check,
+  Mail,
+  Facebook,
+  Link as LinkIcon,
 } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
+import WhatsAppIcon from '@/components/WhatsAppIcon'; // Importar o novo componente
 
 const StoriesWidgetPage = () => {
   const { storeId } = useParams();
@@ -31,6 +34,7 @@ const StoriesWidgetPage = () => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [showPlayPauseOverlay, setShowPlayPauseOverlay] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false); // Estado para o menu de compartilhamento
   const [copiedLink, setCopiedLink] = useState(false);
 
   const selectedStory =
@@ -84,6 +88,7 @@ const StoriesWidgetPage = () => {
     if (selectedIndex === null) return;
     setIsLiked(false); // Reset like state
     setShowCommentsPanel(false); // Close comments panel
+    setShowShareMenu(false); // Close share menu
     setIsPlaying(true); // Ensure video plays on next/prev
     setSelectedIndex((prevIndex) =>
       prevIndex === 0 ? stories.length - 1 : prevIndex - 1
@@ -94,6 +99,7 @@ const StoriesWidgetPage = () => {
     if (selectedIndex === null) return;
     setIsLiked(false); // Reset like state
     setShowCommentsPanel(false); // Close comments panel
+    setShowShareMenu(false); // Close share menu
     setIsPlaying(true); // Ensure video plays on next/prev
     setSelectedIndex((prevIndex) =>
       prevIndex === stories.length - 1 ? 0 : prevIndex + 1
@@ -124,39 +130,71 @@ const StoriesWidgetPage = () => {
 
   const handleToggleComments = () => {
     setShowCommentsPanel((prev) => !prev);
+    setShowShareMenu(false); // Close share menu if comments open
+  };
+
+  // Helper para determinar o link do produto/story
+  const getProductOrStoryLink = () => {
+    if (selectedStory?.cta_link) {
+      return selectedStory.cta_link;
+    }
+    // Adicionar outras verificações se a interface Story for expandida
+    // Ex: if (selectedStory?.product_url) return selectedStory.product_url;
+    return window.location.href;
   };
 
   const handleWhatsAppShare = () => {
-    if (selectedStory && store) {
-      const shareText = encodeURIComponent(
-        `Confira este story da ${store.name}: ${selectedStory.title} - ${selectedStory.cta_link || window.location.href}`
-      );
-      window.open(`https://wa.me/?text=${shareText}`, '_blank');
-    }
+    const productLink = getProductOrStoryLink();
+    const message = `Quero mais informações desse produto\n\nProduto: ${productLink}`;
+    const whatsappUrl = `https://wa.me/5545999629702?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+    setShowShareMenu(false); // Close share menu after action
+  };
+
+  const handleShareEmail = () => {
+    const productLink = getProductOrStoryLink();
+    const title = selectedStory?.title || "Confira este produto";
+    const shareText = `Confira este produto: ${productLink}`;
+    const emailUrl = `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(shareText)}`;
+    window.open(emailUrl, '_blank');
+    setShowShareMenu(false); // Close share menu after action
+  };
+
+  const handleShareFacebook = () => {
+    const productLink = getProductOrStoryLink();
+    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productLink)}`;
+    window.open(facebookUrl, '_blank');
+    setShowShareMenu(false); // Close share menu after action
+  };
+
+  const handleCopyLink = () => {
+    const productLink = getProductOrStoryLink();
+    navigator.clipboard.writeText(productLink);
+    setCopiedLink(true);
+    showSuccess('Link copiado para a área de transferência!');
+    setTimeout(() => setCopiedLink(false), 2000);
+    setShowShareMenu(false); // Close share menu after action
   };
 
   const handleShare = async () => {
-    if (selectedStory && store) {
-      const shareUrl = selectedStory.cta_link || window.location.href;
-      const shareData = {
-        title: selectedStory.title,
-        text: `Confira este story da ${store.name}!`,
-        url: shareUrl,
-      };
+    const productLink = getProductOrStoryLink();
+    const shareData = {
+      title: selectedStory?.title || "Confira este produto",
+      text: "Confira esse produto",
+      url: productLink,
+    };
 
-      if (navigator.share) {
-        try {
-          await navigator.share(shareData);
-          showSuccess('Story compartilhado!');
-        } catch (error) {
-          console.error('Erro ao compartilhar:', error);
-        }
-      } else {
-        navigator.clipboard.writeText(shareUrl);
-        setCopiedLink(true);
-        showSuccess('Link copiado para a área de transferência!');
-        setTimeout(() => setCopiedLink(false), 2000);
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        showSuccess('Story compartilhado!');
+      } catch (error) {
+        console.error('Erro ao compartilhar:', error);
       }
+    } else {
+      // Fallback para desktop ou navegadores sem Web Share API
+      setShowShareMenu((prev) => !prev);
+      setShowCommentsPanel(false); // Close comments panel if share menu opens
     }
   };
 
@@ -185,6 +223,7 @@ const StoriesWidgetPage = () => {
                 setIsMuted(true); // Start muted
                 setIsLiked(false); // Reset like state
                 setShowCommentsPanel(false); // Close comments panel
+                setShowShareMenu(false); // Close share menu
                 setIsPlaying(true); // Ensure video plays
               }}
               className="flex flex-col items-center gap-2 shrink-0 group"
@@ -302,20 +341,50 @@ const StoriesWidgetPage = () => {
                 className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
                 aria-label="Compartilhar no WhatsApp"
               >
-                <MessageCircleMore className="w-5 h-5" />
+                <WhatsAppIcon className="w-5 h-5" />
               </button>
 
               {/* Share Button */}
-              <button
-                onClick={handleShare}
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
-                aria-label="Compartilhar"
-              >
-                {copiedLink ? <Check className="w-5 h-5 text-emerald-400" /> : <Share2 className="w-5 h-5" />}
-              </button>
+              <div className="relative">
+                <button
+                  onClick={handleShare}
+                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
+                  aria-label="Compartilhar"
+                >
+                  {copiedLink ? <Check className="w-5 h-5 text-emerald-400" /> : <Share2 className="w-5 h-5" />}
+                </button>
+                {showShareMenu && (
+                  <div className="absolute right-12 top-1/2 -translate-y-1/2 bg-white rounded-xl shadow-lg py-2 w-40 z-20">
+                    <button
+                      onClick={handleWhatsAppShare}
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
+                    >
+                      <WhatsAppIcon className="w-4 h-4 text-green-500" /> WhatsApp
+                    </button>
+                    <button
+                      onClick={handleShareEmail}
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
+                    >
+                      <Mail className="w-4 h-4 text-blue-500" /> E-mail
+                    </button>
+                    <button
+                      onClick={handleShareFacebook}
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
+                    >
+                      <Facebook className="w-4 h-4 text-blue-700" /> Facebook
+                    </button>
+                    <button
+                      onClick={handleCopyLink}
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
+                    >
+                      <LinkIcon className="w-4 h-4 text-slate-500" /> Copiar link
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {selectedStory.cta_link && (
+            {selectedStory.cta_link && ( // Botão "Comprar agora" só aparece se houver cta_link
               <div className="absolute bottom-5 left-5 right-5">
                 <a
                   href={selectedStory.cta_link}
