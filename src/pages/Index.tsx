@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, Film, GalleryVertical, Settings, Palette, ShoppingBag } from 'lucide-react';
+import { LayoutDashboard, Film, GalleryVertical, Settings, Palette, ShoppingBag, BarChart3 } from 'lucide-react';
 
 const Index = () => {
   return (
@@ -59,10 +59,10 @@ const Index = () => {
               <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
                 <p className="text-sm text-slate-400">Módulo</p>
                 <h3 className="mt-2 text-xl font-bold flex items-center gap-2">
-                  <LayoutDashboard className="w-5 h-5 text-violet-400" /> Dashboard
+                  <BarChart3 className="w-5 h-5 text-violet-400" /> Medidas
                 </h3>
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Acompanhe as métricas de visualizações e cliques dos seus stories.
+                  Área avançada de Analytics com funis completos e logs detalhados de eventos.
                 </p>
               </div>
 

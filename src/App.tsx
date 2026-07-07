@@ -10,6 +10,7 @@ import DashboardPage from './pages/DashboardPage';
 import VideoGalleryPage from './pages/VideoGalleryPage';
 import AppearancePage from './pages/AppearancePage';
 import ProductsPage from './pages/ProductsPage';
+import MedidasPage from './pages/MedidasPage';
 import NotFound from './pages/NotFound';
 import WhatsAppFloatingButton from './components/WhatsAppFloatingButton';
 
@@ -67,6 +68,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/medidas" element={<MedidasPage />} />
           <Route path="/stories" element={<StoriesPage />} />
           <Route path="/stories/:id" element={<StoryDetailsPage />} />
           <Route path="/gallery" element={<VideoGalleryPage />} />
