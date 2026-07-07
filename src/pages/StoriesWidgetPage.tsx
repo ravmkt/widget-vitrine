@@ -26,32 +26,71 @@ interface Comment {
   timestamp: string;
 }
 
-const FALLBACK_VIDEO_URL =
-  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4";
+// --- Funções Auxiliares para URL de Vídeo Segura ---
+const FALLBACK_VIDEO_BY_TITLE: Record<string, string> = {
+  provador: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+  cupom: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+  default: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+};
 
-const normalizeStoryVideoUrl = (story: Story): Story => {
-  const currentUrl = story.video_url || "";
+const getRawStoryVideoUrl = (story: Story | null): string => {
+  return String(
+    story?.video_url ||
+    (story as any)?.videoUrl || // Para compatibilidade com possíveis nomes de campo antigos
+    (story as any)?.mediaUrl ||
+    (story as any)?.media_url ||
+    (story as any)?.fileUrl ||
+    (story as any)?.file_url ||
+    (story as any)?.url ||
+    (story as any)?.src ||
+    (story as any)?.video ||
+    ""
+  );
+};
 
-  // Se a URL estiver vazia, ou não vier da nossa fonte confiável (gtv-videos-bucket),
-  // ou contiver padrões problemáticos conhecidos, substitua-a.
-  const isProblematicOrUntrustedUrl =
-    !currentUrl.trim() || // URL vazia ou apenas espaços em branco
-    !currentUrl.includes("commondatastorage.googleapis.com/gtv-videos-bucket/sample/") || // Não é da nossa fonte confiável
-    currentUrl.includes("assets.mixkit.co") || // Padrão Mixkit
-    currentUrl.includes("mixkit-woman-holding-shopping-bags-and-smiling") ||
-    currentUrl.includes("40358-large.mp4") ||
-    currentUrl.includes("sample/ForBiggerBlazes.mp4"); // Outra URL de amostra que pode ser problemática
+const isValidMp4Url = (url: string): boolean => {
+  if (!url) return false;
 
-  if (isProblematicOrUntrustedUrl) {
-    console.warn(`[Vidlytics] Normalizando URL de vídeo para story "${story.title}": "${currentUrl}" substituído por "${FALLBACK_VIDEO_URL}"`);
-    return {
-      ...story,
-      video_url: FALLBACK_VIDEO_URL,
-    };
+  const normalized = url.toLowerCase();
+
+  if (!normalized.startsWith("http")) return false;
+  if (normalized.includes("assets.mixkit.co")) return false;
+  if (normalized.includes("mixkit-")) return false;
+  if (normalized.includes("40358-large.mp4")) return false;
+
+  if (
+    normalized.endsWith(".jpg") ||
+    normalized.endsWith(".jpeg") ||
+    normalized.endsWith(".png") ||
+    normalized.endsWith(".webp") ||
+    normalized.endsWith(".gif")
+  ) {
+    return false;
   }
 
-  return story;
+  return normalized.includes(".mp4");
 };
+
+const getSafeVideoUrl = (story: Story | null): string => {
+  const title = String(story?.title || (story as any)?.name || "").toLowerCase();
+  const rawUrl = getRawStoryVideoUrl(story);
+
+  if (title.includes("cupom de desconto") || title.includes("cupom")) {
+    return FALLBACK_VIDEO_BY_TITLE.cupom;
+  }
+
+  if (title.includes("provador fashion") || title.includes("provador")) {
+    return FALLBACK_VIDEO_BY_TITLE.provador;
+  }
+
+  if (isValidMp4Url(rawUrl)) {
+    return rawUrl;
+  }
+
+  return FALLBACK_VIDEO_BY_TITLE.default;
+};
+// --- Fim das Funções Auxiliares ---
+
 
 const StoriesWidgetPage = () => {
   const { storeId } = useParams();
@@ -125,14 +164,13 @@ const StoriesWidgetPage = () => {
 
       const fetchedStories = await db.getStories(currentStore.id);
       
-      // Aplicar normalização aos stories carregados
-      const normalizedStories = fetchedStories
+      // A normalização agora será feita diretamente no player com getSafeVideoUrl
+      const activeStories = fetchedStories
         .filter((story) => story.active)
-        .sort((a, b) => a.position - b.position)
-        .map(normalizeStoryVideoUrl); // Aplicar normalização aqui
+        .sort((a, b) => a.position - b.position);
 
-      setStories(normalizedStories);
-      console.log("Stories carregados/finais:", normalizedStories); // Log adicionado
+      setStories(activeStories);
+      console.log("Stories carregados/finais (antes da normalização do player):", activeStories); // Log adicionado
     } catch (error) {
       console.error('Erro ao carregar widget de stories:', error);
     } finally {
@@ -144,31 +182,31 @@ const StoriesWidgetPage = () => {
     loadWidgetData();
   }, [storeId]);
 
+  // Handler de erro para o vídeo
+  const handleVideoError = (event: React.SyntheticEvent<HTMLVideoElement>) => {
+    console.error("Erro ao carregar vídeo:", {
+      story: selectedStory,
+      rawUrl: getRawStoryVideoUrl(selectedStory),
+      safeVideoUrl: getSafeVideoUrl(selectedStory), // Usar a função aqui para o log
+      videoError: event.currentTarget.error,
+    });
+    setVideoError(true);
+  };
+
   // Lógica de depuração e reprodução de vídeo
   useEffect(() => {
     setVideoError(false); // Resetar erro de vídeo ao mudar de story
 
-    console.log("Story selecionado:", selectedStory); // Log adicionado
-    console.log("Campos possíveis:", {
-      video_url: selectedStory?.video_url, // Usando video_url conforme definido em db.ts
-      // Outros campos de URL que poderiam existir, mas não são esperados aqui:
-      // videoUrl: (selectedStory as any)?.videoUrl,
-      // mediaUrl: (selectedStory as any)?.mediaUrl,
-      // url: (selectedStory as any)?.url,
-      // src: (selectedStory as any)?.src,
-      // media: (selectedStory as any)?.media,
-      // fileUrl: (selectedStory as any)?.fileUrl,
-      // type: (selectedStory as any)?.type,
-      // mediaType: (selectedStory as any)?.mediaType,
-      // mimeType: (selectedStory as any)?.mimeType,
-    });
+    const currentSafeVideoUrl = getSafeVideoUrl(selectedStory); // Obter a URL segura aqui
 
-    const resolvedVideoUrl = selectedStory?.video_url || "";
-    console.log("URL final usada no vídeo:", resolvedVideoUrl); // Log adicionado
+    console.log("Story selecionado:", selectedStory);
+    console.log("Título do story atual:", selectedStory?.title || (selectedStory as any)?.name);
+    console.log("URL bruta encontrada:", getRawStoryVideoUrl(selectedStory));
+    console.log("URL segura usada no vídeo:", currentSafeVideoUrl);
 
-    if (videoRef.current && resolvedVideoUrl) {
+    if (videoRef.current && currentSafeVideoUrl) {
       videoRef.current.muted = isMuted;
-      videoRef.current.src = resolvedVideoUrl; // Definir src diretamente
+      videoRef.current.src = currentSafeVideoUrl; // Definir src diretamente
       videoRef.current.load(); // Recarregar o vídeo para garantir que a nova URL seja usada
       if (isPlaying) {
         videoRef.current.play().catch((e) => {
@@ -178,8 +216,8 @@ const StoriesWidgetPage = () => {
       } else {
         videoRef.current.pause();
       }
-    } else if (selectedStory && !resolvedVideoUrl) {
-      setVideoError(true); // Definir erro se não houver URL de vídeo
+    } else if (selectedStory && !currentSafeVideoUrl) {
+      setVideoError(true); // Definir erro se não houver URL de vídeo segura
     }
   }, [isMuted, isPlaying, selectedStory]); // Dependências atualizadas
 
@@ -412,7 +450,7 @@ const StoriesWidgetPage = () => {
               </div>
             ) : (
               <video
-                key={selectedStory.id}
+                key={getSafeVideoUrl(selectedStory)} // Usar safeVideoUrl como key
                 ref={videoRef}
                 poster={selectedStory.thumbnail_url}
                 autoPlay
@@ -426,25 +464,18 @@ const StoriesWidgetPage = () => {
                 onPause={() => setIsPlaying(false)}
                 onEnded={handleNext} // Auto-advance to next story
                 onLoadedMetadata={() => {
-                  console.log("Vídeo carregou metadata:", selectedStory.video_url);
+                  console.log("Vídeo carregou metadata:", getSafeVideoUrl(selectedStory));
                 }}
                 onCanPlay={() => {
-                  console.log("Vídeo pronto para reproduzir:", selectedStory.video_url);
+                  console.log("Vídeo pronto para reproduzir:", getSafeVideoUrl(selectedStory));
                 }}
-                onError={(event) => {
-                  const video = event.currentTarget;
-                  console.error("Erro ao carregar vídeo:", {
-                    resolvedVideoUrl: selectedStory.video_url,
-                    error: video.error,
-                    code: video.error?.code,
-                    message: video.error?.message,
-                    networkState: video.networkState,
-                    readyState: video.readyState,
-                  });
-                  setVideoError(true);
+                onLoadedData={() => {
+                  console.log("Vídeo carregado com sucesso:", getSafeVideoUrl(selectedStory));
+                  setVideoError(false);
                 }}
+                onError={handleVideoError} // Usar o handler de erro aprimorado
               >
-                <source src={selectedStory.video_url} type="video/mp4" />
+                <source src={getSafeVideoUrl(selectedStory)} type="video/mp4" /> {/* Usar safeVideoUrl aqui */}
                 Seu navegador não suporta a tag de vídeo.
               </video>
             )}
