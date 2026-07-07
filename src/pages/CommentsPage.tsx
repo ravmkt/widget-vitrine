@@ -18,6 +18,7 @@ import {
   Info
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
+import CustomDialog from '@/components/CustomDialog';
 
 interface CommentWithReply extends Comment {
   reply_text?: string;
@@ -40,17 +41,25 @@ const CommentsPage = () => {
   const [replyText, setReplyText] = useState('');
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
 
+  // Custom Dialog state
+  const [dialog, setDialog] = useState<{
+    isOpen: boolean;
+    type: 'success' | 'error' | 'warning' | 'confirm';
+    title: string;
+    description: string;
+    onConfirm: () => void;
+    onCancel?: () => void;
+  }>({ isOpen: false, type: 'confirm', title: '', description: '', onConfirm: () => {} });
+
   const loadData = async () => {
     try {
       const stores = await db.stores.getAll();
       const mainStore = stores[0];
 
       if (mainStore) {
-        // Load all comments
         const allComments = await db.comments.getAll() as CommentWithReply[];
         setComments(allComments);
 
-        // Load stories & videos for lookup mapping
         const allStories = await db.stories.getAll(mainStore.id);
         setStories(allStories);
 
@@ -69,7 +78,6 @@ const CommentsPage = () => {
     loadData();
   }, []);
 
-  // Filtered comments logic with secure String casting to avoid 'toLowerCase of undefined' crashes
   const filteredComments = useMemo(() => {
     const searchNormalized = String(searchTerm ?? '').toLowerCase().trim();
     return comments.filter((c) => {
@@ -89,7 +97,6 @@ const CommentsPage = () => {
     });
   }, [comments, searchTerm, filterStatus, filterStoryId]);
 
-  // Handle Comment Actions
   const handleUpdateStatus = async (comment: CommentWithReply, newStatus: CommentStatus) => {
     try {
       const updated: CommentWithReply = {
@@ -97,23 +104,31 @@ const CommentsPage = () => {
         status: newStatus,
       };
       await db.comments.save(updated as any);
-      showSuccess(`Comentário de ${comment.user_name || 'Usuário'} foi marcado como "${newStatus}"!`);
+      showSuccess(`Comentário atualizado para ${newStatus}`);
       loadData();
     } catch (e) {
       showError('Erro ao atualizar status do comentário.');
     }
   };
 
-  const handleDelete = async (id: string, userName: string) => {
-    if (window.confirm(`Tem certeza que deseja excluir permanentemente o comentário de ${userName || 'Usuário'}?`)) {
-      try {
-        await db.comments.delete(id);
-        showSuccess('Comentário excluído com sucesso!');
-        loadData();
-      } catch (e) {
-        showError('Erro ao excluir comentário.');
-      }
-    }
+  const handleDelete = (id: string, userName: string) => {
+    setDialog({
+      isOpen: true,
+      type: 'confirm',
+      title: 'Excluir Comentário?',
+      description: `Tem certeza que deseja excluir permanentemente o comentário de "${userName}"? Esta ação é irreversível.`,
+      onConfirm: async () => {
+        try {
+          await db.comments.delete(id);
+          showSuccess('Comentário excluído com sucesso!');
+          setDialog(prev => ({ ...prev, isOpen: false }));
+          loadData();
+        } catch (e) {
+          showError('Erro ao excluir comentário.');
+        }
+      },
+      onCancel: () => setDialog(prev => ({ ...prev, isOpen: false }))
+    });
   };
 
   const handleOpenReplyModal = (comment: CommentWithReply) => {
@@ -136,11 +151,11 @@ const CommentsPage = () => {
         ...replyingComment,
         reply_text: replyText.trim(),
         replied_at: new Date().toISOString(),
-        status: 'approved', // Auto-approves the original comment when replying
+        status: 'approved',
       };
 
       await db.comments.save(updated as any);
-      showSuccess(`Resposta enviada para ${replyingComment.user_name || 'Usuário'}!`);
+      showSuccess(`Resposta salva com sucesso!`);
       setReplyimgComment(null);
       setReplyText('');
       loadData();
@@ -155,26 +170,26 @@ const CommentsPage = () => {
     switch (status) {
       case 'approved':
         return (
-          <span className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 text-[10px] font-black uppercase px-2.5 py-1 rounded-full">
-            <Check className="w-3 h-3" /> Aprovado
+          <span className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 text-xs font-black uppercase px-2.5 py-1 rounded-full">
+            <Check className="w-3.5 h-3.5" /> Aprovado
           </span>
         );
       case 'pending':
         return (
-          <span className="inline-flex items-center gap-1 bg-amber-500/10 text-amber-400 border border-amber-500/25 text-[10px] font-black uppercase px-2.5 py-1 rounded-full">
-            <Info className="w-3 h-3 animate-pulse" /> Pendente
+          <span className="inline-flex items-center gap-1 bg-amber-500/10 text-amber-400 border border-amber-500/25 text-xs font-black uppercase px-2.5 py-1 rounded-full">
+            <Info className="w-3.5 h-3.5 animate-pulse" /> Pendente
           </span>
         );
       case 'rejected':
         return (
-          <span className="inline-flex items-center gap-1 bg-slate-800 text-slate-400 border border-slate-700 text-[10px] font-black uppercase px-2.5 py-1 rounded-full">
-            <X className="w-3 h-3" /> Rejeitado
+          <span className="inline-flex items-center gap-1 bg-slate-800 text-slate-400 border border-slate-700 text-xs font-black uppercase px-2.5 py-1 rounded-full">
+            <X className="w-3.5 h-3.5" /> Rejeitado
           </span>
         );
       case 'spam':
         return (
-          <span className="inline-flex items-center gap-1 bg-rose-500/10 text-rose-400 border border-rose-500/25 text-[10px] font-black uppercase px-2.5 py-1 rounded-full">
-            <AlertTriangle className="w-3 h-3" /> Spam
+          <span className="inline-flex items-center gap-1 bg-rose-500/10 text-rose-400 border border-rose-500/25 text-xs font-black uppercase px-2.5 py-1 rounded-full">
+            <AlertTriangle className="w-3.5 h-3.5" /> Spam
           </span>
         );
       default:
@@ -185,220 +200,182 @@ const CommentsPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-4 text-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500"></div>
-        <p className="text-sm text-slate-400 font-semibold">Carregando central de comentários...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600"></div>
+        <p className="text-base text-slate-400 font-semibold font-mono">Carregando central de comentários...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900">
+    <div className="min-h-screen bg-slate-950 text-slate-100">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Header */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
-            Central de Comentários
-          </h1>
-          <p className="text-slate-500 mt-1">
-            Modere as perguntas dos clientes, responda dúvidas de produtos e gerencie spams nos players de stories.
+          <h1 className="text-3xl font-black bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">Moderação de Comentários</h1>
+          <p className="text-slate-400 text-sm md:text-base mt-1">
+            Gerencie e responda às perguntas que seus clientes deixam nas caixas de interação dos stories.
           </p>
         </div>
 
-        {/* Filters and Searches */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col lg:flex-row gap-4 items-center shadow-sm">
-          
-          {/* Keyword Search */}
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 flex flex-col lg:flex-row gap-4 items-center shadow-xl">
           <div className="relative flex-1 w-full">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xs uppercase tracking-wider">Busca</span>
             <input
               type="text"
-              placeholder="Buscar por palavra-chave no texto ou autor..."
+              placeholder="Pesquisar por autor, palavras-chave..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400"
+              className="w-full pl-16 pr-4 py-2.5 bg-slate-950 border border-slate-800 focus:border-violet-500 rounded-xl text-sm md:text-base text-slate-200"
             />
           </div>
 
-          {/* Filters Grid */}
           <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-            {/* Status Filter */}
-            <div className="flex-1 sm:min-w-[180px] flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1">
-              <Filter className="w-4 h-4 text-slate-400 shrink-0" />
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value as any)}
-                className="w-full bg-transparent border-none text-xs font-bold text-slate-700 focus:outline-none cursor-pointer py-1.5"
-              >
-                <option value="all">Todos os Status</option>
-                <option value="pending">Pendentes ⏳</option>
-                <option value="approved">Aprovados ✅</option>
-                <option value="rejected">Rejeitados ❌</option>
-                <option value="spam">Spam ⚠️</option>
-              </select>
-            </div>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value as any)}
+              className="flex-1 bg-slate-950 border border-slate-800 px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold text-slate-300"
+            >
+              <option value="all">Todos os Status</option>
+              <option value="pending">Pendentes</option>
+              <option value="approved">Aprovados</option>
+              <option value="rejected">Rejeitados</option>
+              <option value="spam">Spam</option>
+            </select>
 
-            {/* Story Filter */}
-            <div className="flex-1 sm:min-w-[200px] flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1">
-              <Film className="w-4 h-4 text-slate-400 shrink-0" />
-              <select
-                value={filterStoryId}
-                onChange={(e) => setFilterStoryId(e.target.value)}
-                className="w-full bg-transparent border-none text-xs font-bold text-slate-700 focus:outline-none cursor-pointer py-1.5"
-              >
-                <option value="all">Todos os Stories</option>
-                {stories.map(s => (
-                  <option key={s.id} value={s.id}>{s.title}</option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={filterStoryId}
+              onChange={(e) => setFilterStoryId(e.target.value)}
+              className="flex-1 bg-slate-950 border border-slate-800 px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold text-slate-300"
+            >
+              <option value="all">Todos os Stories</option>
+              {stories.map(s => (
+                <option key={s.id} value={s.id}>{s.title}</option>
+              ))}
+            </select>
           </div>
-
         </div>
 
-        {/* Comments Listing */}
         {filteredComments.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-3xl p-16 text-center max-w-xl mx-auto shadow-sm">
-            <MessageSquare className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-slate-800">Nenhum comentário correspondente</h3>
-            <p className="text-slate-500 text-sm mt-1">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-16 text-center max-w-xl mx-auto shadow-xl">
+            <MessageSquare className="w-12 h-12 text-slate-700 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-slate-200">Nenhum comentário correspondente</h3>
+            <p className="text-slate-400 text-sm mt-1">
               Ajuste seus filtros de busca ou aguarde novas interações dos clientes em sua loja virtual.
             </p>
           </div>
         ) : (
-          <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+          <div className="bg-slate-900 border border-slate-800/80 rounded-3xl overflow-hidden shadow-xl animate-fade-in">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
+              <table className="w-full text-left border-collapse text-xs md:text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-slate-500 bg-slate-50 uppercase font-bold text-[10px] tracking-wider">
+                  <tr className="border-b border-slate-850 text-slate-400 bg-slate-950/40 uppercase font-bold text-[10px] md:text-xs tracking-wider">
                     <th className="p-4 pl-6 w-[200px]">Usuário</th>
                     <th className="p-4">Comentário / Resposta</th>
-                    <th className="p-4">Story & Vídeo Relacionado</th>
+                    <th className="p-4">Origem</th>
                     <th className="p-4 text-center">Data</th>
                     <th className="p-4 text-center w-[120px]">Status</th>
-                    <th className="p-4 pr-6 text-right w-[240px]">Ações de Moderação</th>
+                    <th className="p-4 pr-6 text-right w-[240px]">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
+                <tbody className="divide-y divide-slate-800/60 font-semibold text-slate-300">
                   {filteredComments.map((row) => {
                     const story = stories.find(s => s.id === row.story_id);
                     const video = videos.find(v => v.id === row.video_id);
                     const safeUserName = String(row.user_name ?? 'Anônimo');
 
                     return (
-                      <tr key={row.id} className="hover:bg-slate-50/50 transition-all">
-                        {/* Usuário */}
+                      <tr key={row.id} className="hover:bg-slate-800/20 transition-all">
                         <td className="p-4 pl-6">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-violet-100 text-violet-600 font-extrabold text-sm flex items-center justify-center shrink-0">
+                            <div className="w-9 h-9 rounded-xl bg-violet-500/10 text-violet-400 font-extrabold text-sm flex items-center justify-center shrink-0 border border-violet-500/20">
                               {safeUserName.charAt(0).toUpperCase()}
                             </div>
                             <div className="min-w-0">
-                              <p className="text-slate-800 font-bold truncate">{safeUserName}</p>
+                              <p className="text-slate-100 font-bold truncate text-sm md:text-base">{safeUserName}</p>
                               {row.user_email && (
-                                <p className="text-[10px] text-slate-400 font-mono truncate">{row.user_email}</p>
+                                <p className="text-[10px] md:text-xs text-slate-500 font-mono truncate">{row.user_email}</p>
                               )}
                             </div>
                           </div>
                         </td>
 
-                        {/* Comentário */}
                         <td className="p-4 max-w-[320px]">
-                          <p className="text-slate-800 font-medium leading-relaxed break-words whitespace-pre-wrap">
+                          <p className="text-slate-200 font-medium leading-relaxed break-words whitespace-pre-wrap text-sm md:text-base">
                             "{row.text ?? ''}"
                           </p>
                           {row.reply_text && (
-                            <div className="mt-3 bg-slate-50 border-l-2 border-violet-500/50 rounded-r-lg p-2.5 flex items-start gap-2">
-                              <CornerDownRight className="w-3.5 h-3.5 text-violet-500 mt-0.5 shrink-0" />
+                            <div className="mt-3 bg-slate-950 border-l-2 border-violet-500 rounded-r-xl p-2.5 flex items-start gap-2 border-y border-r border-slate-800">
+                              <CornerDownRight className="w-3.5 h-3.5 text-violet-400 mt-0.5 shrink-0" />
                               <div className="min-w-0">
-                                <p className="text-[10px] font-bold text-violet-600">Resposta da Loja</p>
-                                <p className="text-[11px] text-slate-600 italic break-words mt-0.5">"{row.reply_text}"</p>
+                                <p className="text-[10px] font-bold text-violet-400 uppercase tracking-wider">Resposta da Loja</p>
+                                <p className="text-xs text-slate-400 italic break-words mt-0.5">"{row.reply_text}"</p>
                               </div>
                             </div>
                           )}
                         </td>
 
-                        {/* Story Relacionado */}
                         <td className="p-4 max-w-[200px]">
-                          <p className="text-slate-800 font-bold truncate">🎬 {story?.title || 'Story desconhecido'}</p>
+                          <p className="text-slate-200 font-bold truncate">🎬 {story?.title || 'Story'}</p>
                           {video ? (
-                            <p className="text-[10px] text-slate-400 font-semibold truncate mt-0.5">🎥 {video.title}</p>
+                            <p className="text-[11px] text-slate-500 font-semibold truncate mt-0.5">🎥 {video.title}</p>
                           ) : (
-                            <p className="text-[10px] text-slate-400 italic mt-0.5">Sem vídeo específico</p>
+                            <p className="text-[11px] text-slate-500 italic mt-0.5">Sem vídeo</p>
                           )}
                         </td>
 
-                        {/* Data */}
-                        <td className="p-4 text-center font-mono text-slate-500">
-                          {row.created_at ? (
-                            <>
-                              <p>{new Date(row.created_at).toLocaleDateString('pt-BR')}</p>
-                              <p className="text-[10px] text-slate-400 mt-0.5">
-                                {new Date(row.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                              </p>
-                            </>
-                          ) : (
-                            'Recente'
-                          )}
+                        <td className="p-4 text-center font-mono text-slate-400">
+                          {row.created_at ? new Date(row.created_at).toLocaleDateString('pt-BR') : 'Hoje'}
                         </td>
 
-                        {/* Status */}
                         <td className="p-4 text-center">
                           {getStatusBadge(row.status)}
                         </td>
 
-                        {/* Ações */}
                         <td className="p-4 pr-6 text-right whitespace-nowrap">
-                          <div className="inline-flex gap-1.5 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
-                            
-                            {/* Responder */}
+                          <div className="inline-flex gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
                             <button
                               onClick={() => handleOpenReplyModal(row)}
-                              className="p-1.5 rounded-lg bg-white hover:bg-violet-50 text-slate-500 hover:text-violet-600 transition-all inline-flex items-center shadow-sm"
-                              title="Responder Comentário"
+                              className="p-1.5 rounded-lg hover:bg-violet-600/20 text-slate-400 hover:text-violet-400 transition-all inline-flex items-center"
+                              title="Responder"
                             >
                               <Reply className="w-4 h-4" />
                             </button>
 
-                            {/* Aprovar (Apenas se não for aprovado) */}
                             {row.status !== 'approved' && (
                               <button
                                 onClick={() => handleUpdateStatus(row, 'approved')}
-                                className="p-1.5 rounded-lg bg-white hover:bg-emerald-50 text-slate-500 hover:text-emerald-600 transition-all inline-flex items-center shadow-sm"
-                                title="Aprovar Comentário"
+                                className="p-1.5 rounded-lg hover:bg-emerald-500/20 text-slate-400 hover:text-emerald-400 transition-all inline-flex items-center"
+                                title="Aprovar"
                               >
                                 <Check className="w-4 h-4" />
                               </button>
                             )}
 
-                            {/* Rejeitar (Apenas se não for rejeitado) */}
                             {row.status !== 'rejected' && (
                               <button
                                 onClick={() => handleUpdateStatus(row, 'rejected')}
-                                className="p-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-all inline-flex items-center shadow-sm"
-                                title="Rejeitar Comentário"
+                                className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-100 transition-all inline-flex items-center"
+                                title="Rejeitar"
                               >
                                 <X className="w-4 h-4" />
                               </button>
                             )}
 
-                            {/* Spam (Apenas se não for spam) */}
                             {row.status !== 'spam' && (
                               <button
                                 onClick={() => handleUpdateStatus(row, 'spam')}
-                                className="p-1.5 rounded-lg bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-600 transition-all inline-flex items-center shadow-sm"
-                                title="Marcar como Spam"
+                                className="p-1.5 rounded-lg hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-all inline-flex items-center"
+                                title="Spam"
                               >
                                 <AlertTriangle className="w-4 h-4" />
                               </button>
                             )}
 
-                            {/* Excluir */}
                             <button
                               onClick={() => handleDelete(row.id, safeUserName)}
-                              className="p-1.5 rounded-lg bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-600 transition-all inline-flex items-center shadow-sm"
-                              title="Excluir Comentário"
+                              className="p-1.5 rounded-lg hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-all inline-flex items-center"
+                              title="Excluir"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -413,77 +390,62 @@ const CommentsPage = () => {
           </div>
         )}
 
-        {/* Reply Dialog Modal */}
+        {/* Modal de Resposta Embutido com Tema Dark e Altamente Responsivo */}
         {replyingComment && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden max-w-lg w-full relative p-6 shadow-2xl">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden max-w-lg w-full relative p-6 shadow-2xl">
               <button
                 onClick={() => setReplyimgComment(null)}
-                className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-100 text-slate-400 hover:text-slate-800 transition-all"
+                className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-950 text-slate-400 hover:text-white transition-all"
               >
                 <X className="w-4 h-4" />
               </button>
 
-              <div className="pb-4 border-b border-slate-100 mb-6 flex items-center gap-2">
-                <Reply className="w-5 h-5 text-violet-600" />
-                <h3 className="font-extrabold text-slate-800 text-lg">Responder Comentário</h3>
+              <div className="pb-4 border-b border-slate-800 mb-6 flex items-center gap-2">
+                <Reply className="w-5 h-5 text-violet-400" />
+                <h3 className="font-extrabold text-slate-100 text-lg">Responder Comentário</h3>
               </div>
 
-              {/* Original message */}
-              <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl mb-6">
-                <div className="flex items-center gap-2.5 mb-2.5">
-                  <div className="w-6 h-6 rounded-full bg-violet-100 text-violet-600 font-extrabold text-xs flex items-center justify-center shrink-0">
+              <div className="bg-slate-950 border border-slate-850 p-4 rounded-2xl mb-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 rounded-lg bg-violet-500/10 text-violet-400 font-extrabold text-xs flex items-center justify-center">
                     {String(replyingComment.user_name ?? 'U').charAt(0).toUpperCase()}
                   </div>
-                  <span className="text-xs font-bold text-slate-700">{replyingComment.user_name || 'Usuário'}</span>
-                  <span className="text-[10px] text-slate-400 font-mono ml-auto">
-                    {replyingComment.created_at ? new Date(replyingComment.created_at).toLocaleDateString('pt-BR') : 'Hoje'}
-                  </span>
+                  <span className="text-xs font-bold text-slate-300">{replyingComment.user_name || 'Usuário'}</span>
                 </div>
-                <p className="text-xs text-slate-600 italic leading-relaxed">
+                <p className="text-sm text-slate-400 italic">
                   "{replyingComment.text ?? ''}"
                 </p>
               </div>
 
-              {/* Form */}
               <form onSubmit={handleSaveReply} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                    Sua resposta (Exibida publicamente no Player)
+                    Sua resposta pública no player
                   </label>
                   <textarea
                     required
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
                     rows={4}
-                    placeholder="Escreva uma resposta amigável, tire dúvidas do produto ou envie links de suporte..."
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 rounded-xl text-sm text-slate-800 placeholder-slate-400 resize-none font-medium leading-relaxed"
+                    placeholder="Escreva uma resposta explicativa..."
+                    className="w-full bg-slate-950 border border-slate-800 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 rounded-2xl p-4 text-sm md:text-base text-slate-200"
                   />
-                  <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
-                    💡 Dica: Responder a um comentário aprova-o automaticamente no player público.
-                  </p>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
                   <button
                     type="button"
                     onClick={() => setReplyimgComment(null)}
-                    className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 font-semibold text-sm transition-all"
-                    disabled={isSubmittingReply}
+                    className="px-5 py-2.5 rounded-xl border border-slate-800 text-slate-400 hover:bg-slate-800 font-semibold text-sm transition-all"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all"
-                    disabled={isSubmittingReply}
+                    className="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md"
                   >
-                    {isSubmittingReply ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    ) : (
-                      <Send className="w-4 h-4" />
-                    )}
-                    {isSubmittingReply ? 'Enviando...' : 'Enviar Resposta'}
+                    Enviar Resposta
                   </button>
                 </div>
               </form>
@@ -492,6 +454,17 @@ const CommentsPage = () => {
         )}
 
       </main>
+
+      <CustomDialog
+        isOpen={dialog.isOpen}
+        type={dialog.type}
+        title={dialog.title}
+        description={dialog.description}
+        onConfirm={dialog.onConfirm}
+        onCancel={dialog.onCancel}
+        confirmText="Confirmar"
+        cancelText="Voltar"
+      />
     </div>
   );
 };

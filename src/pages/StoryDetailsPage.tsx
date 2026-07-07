@@ -4,6 +4,7 @@ import Navbar from '@/components/Navbar';
 import { db, Story, Store, Video, StoryVideo, Appearance, StoryFormat, CTAType, ScrollDirection, DisplayLocation, PageRule, Product, StoryProduct, ConditionType, DisplayPosition } from '@/lib/db';
 import { ArrowLeft, ExternalLink, Film, Image, Link as LinkIcon, Save, X, Edit3, ToggleLeft, ToggleRight, Eye as EyeIcon, MousePointerClick, Video as VideoIcon, LayoutGrid, LayoutList, MessageSquareText, Share2, Heart, Phone, GripVertical, PlusCircle, Trash2, XCircle, FolderHeart, Layers, Check, Plus } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
+import CustomDialog from '@/components/CustomDialog';
 
 const StoryDetailsPage = () => {
   const { id } = useParams();
@@ -25,6 +26,16 @@ const StoryDetailsPage = () => {
 
   // Video selection tabs inside story edit form
   const [videoSelectTab, setVideoSelectTab] = useState<'gallery' | 'all_videos'>('gallery');
+
+  // Custom Dialog state
+  const [dialog, setDialog] = useState<{
+    isOpen: boolean;
+    type: 'success' | 'error' | 'warning' | 'confirm';
+    title: string;
+    description: string;
+    onConfirm: () => void;
+    onCancel?: () => void;
+  }>({ isOpen: false, type: 'confirm', title: '', description: '', onConfirm: () => {} });
 
   const [formData, setFormData] = useState({
     title: "",
@@ -128,7 +139,6 @@ const StoryDetailsPage = () => {
     e.preventDefault();
     if (!story || isSaving) return;
 
-    // Validations
     if (!formData.title.trim()) { showError('Por favor, preencha o título do story.'); return; }
     if (selectedVideoIds.length === 0) { showError('Por favor, selecione pelo menos um vídeo para o story.'); return; }
     if (formData.cta_enabled && formData.cta_type === 'custom_link' && (!formData.cta_url.trim() || !isValidUrl(formData.cta_url))) { showError('Por favor, forneça uma URL de CTA válida ou desative o CTA.'); return; }
@@ -141,7 +151,6 @@ const StoryDetailsPage = () => {
     try {
       setIsSaving(true);
 
-      // 1. Save new product if applicable
       let finalProductId = selectedProductId;
       if (newProductForm.name && store) {
         const newProduct: Product = {
@@ -157,7 +166,6 @@ const StoryDetailsPage = () => {
         finalProductId = savedProduct.id;
       }
 
-      // 2. Update Story
       const updatedStory: Story = {
         ...story,
         title: formData.title,
@@ -177,18 +185,14 @@ const StoryDetailsPage = () => {
       };
       await db.stories.save(updatedStory);
 
-      // 3. Update StoryVideos
-      const existingStoryVideoIds = new Set(storyVideos.map(sv => sv.video_id));
       const newVideoIds = new Set(selectedVideoIds);
 
-      // Remover StoryVideos não selecionados
       for (const sv of storyVideos) {
         if (!newVideoIds.has(sv.video_id)) {
           await db.storyVideos.delete(sv.id);
         }
       }
 
-      // Adicionar/Atualizar StoryVideos selecionados
       for (let i = 0; i < selectedVideoIds.length; i++) {
         const videoId = selectedVideoIds[i];
         const existingSv = storyVideos.find(sv => sv.video_id === videoId);
@@ -210,12 +214,9 @@ const StoryDetailsPage = () => {
         }
       }
 
-      // 4. Update StoryProducts
-      // Remover produtos antigos
       for (const sp of storyProducts) {
         await db.storyProducts.delete(sp.id);
       }
-      // Adicionar novo produto se aplicável
       if (formData.cta_enabled && formData.cta_type === 'product' && finalProductId && store) {
         await db.storyProducts.save({
           id: Math.random().toString(36).substr(2, 9),
@@ -224,12 +225,9 @@ const StoryDetailsPage = () => {
         });
       }
 
-      // 5. Update DisplayLocations
-      // Remover locais antigos
       for (const dl of displayLocations) {
         await db.displayLocations.delete(dl.id);
       }
-      // Adicionar novos locais
       for (const dl of displayLocations) {
         if (store) {
           await db.displayLocations.save({
@@ -242,12 +240,9 @@ const StoryDetailsPage = () => {
         }
       }
 
-      // 6. Update PageRules
-      // Remover regras antigas
       for (const pr of pageRules) {
         await db.pageRules.delete(pr.id);
       }
-      // Adicionar novas regras
       for (const pr of pageRules) {
         if (store) {
           await db.pageRules.save({
@@ -262,7 +257,7 @@ const StoryDetailsPage = () => {
 
       showSuccess('Story atualizado com sucesso!');
       setIsEditing(false);
-      await loadStoryDetails(); // Recarrega os dados para atualizar a UI
+      await loadStoryDetails();
     } catch (error) {
       console.error("Erro ao salvar story:", error);
       showError("Erro ao salvar alterações do story.");
@@ -291,8 +286,8 @@ const StoryDetailsPage = () => {
       setSelectedVideoIds(storyVideos.map(sv => sv.video_id));
       setSelectedProductId(storyProducts[0]?.product_id || undefined);
       setNewProductForm({ name: '', product_url: '', image_url: '', price: 0 });
-      setDisplayLocations(displayLocations.filter(dl => dl.story_id === id)); // Reset to original fetched
-      setPageRules(pageRules.filter(pr => pr.story_id === id)); // Reset to original fetched
+      setDisplayLocations(displayLocations.filter(dl => dl.story_id === id));
+      setPageRules(pageRules.filter(pr => pr.story_id === id));
     }
     setIsEditing(false);
   };
@@ -349,38 +344,23 @@ const StoryDetailsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-4 text-white">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600"></div>
-        <p className="text-sm text-slate-500 font-medium">
-          Carregando detalhes do story...
-        </p>
+        <p className="text-base text-slate-400 font-semibold">Carregando detalhes do story...</p>
       </div>
     );
   }
 
   if (!story) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-slate-950 text-slate-100">
         <Navbar />
-
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-12 text-center">
-            <Film className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-
-            <h1 className="text-2xl font-bold text-slate-900">
-              Story não encontrado
-            </h1>
-
-            <p className="text-slate-500 text-sm mt-2 mb-6">
-              Não encontramos nenhum story com este identificador.
-            </p>
-
-            <Link
-              to="/stories"
-              className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-violet-100 transition-all"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Voltar para Stories
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center">
+            <Film className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold">Story não encontrado</h1>
+            <Link to="/stories" className="mt-6 inline-flex items-center gap-2 bg-violet-600 text-white px-5 py-2.5 rounded-xl font-bold">
+              Voltar
             </Link>
           </div>
         </main>
@@ -392,32 +372,25 @@ const StoryDetailsPage = () => {
   const currentVideoList = videoSelectTab === 'gallery' ? videos : allVideosList;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-950 text-slate-100">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <p className="text-sm font-semibold text-violet-600">
-              Detalhes do Story
-            </p>
-
-            <h1 className="text-3xl font-bold text-slate-900 mt-1">
+            <p className="text-sm font-bold uppercase tracking-wider text-violet-400">Ficha Técnica do Story</p>
+            <h1 className="text-3xl font-black mt-1">
               {isEditing ? (
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full bg-transparent border-b border-slate-200 focus:outline-none focus:border-violet-500 text-3xl font-bold text-slate-900"
+                  className="bg-transparent border-b border-slate-800 focus:outline-none focus:border-violet-500 text-3xl font-black text-slate-100"
                 />
               ) : (
                 story.title
               )}
             </h1>
-
-            <p className="text-slate-500 mt-1">
-              {isEditing ? "Edite as informações do story abaixo." : "Visualize as informações cadastradas para este story."}
-            </p>
           </div>
 
           <div className="flex gap-3 self-start sm:self-auto">
@@ -426,24 +399,18 @@ const StoryDetailsPage = () => {
                 <button
                   type="button"
                   onClick={handleCancelEdit}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-semibold text-sm transition-all"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 hover:text-white font-semibold text-sm transition-all"
                   disabled={isSaving}
                 >
-                  <X className="w-4 h-4" />
-                  Cancelar
+                  <X className="w-4 h-4" /> Cancelar
                 </button>
                 <button
                   type="submit"
                   onClick={handleSaveStory}
-                  className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-violet-100 transition-all"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg transition-all"
                   disabled={isSaving}
                 >
-                  {isSaving ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  ) : (
-                    <Save className="w-4 h-4" />
-                  )}
-                  {isSaving ? 'Salvando...' : 'Salvar Alterações'}
+                  <Save className="w-4 h-4" /> Salvar
                 </button>
               </>
             ) : (
@@ -451,17 +418,15 @@ const StoryDetailsPage = () => {
                 <button
                   type="button"
                   onClick={() => setIsEditing(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-all self-start sm:self-auto"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-200 hover:text-white font-bold text-sm transition-all"
                 >
-                  <Edit3 className="w-4 h-4" />
-                  Editar Story
+                  <Edit3 className="w-4 h-4" /> Editar Story
                 </button>
                 <Link
                   to="/stories"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-all self-start sm:self-auto"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-200 hover:text-white font-bold text-sm transition-all"
                 >
-                  <ArrowLeft className="w-4 h-4" />
-                  Voltar
+                  <ArrowLeft className="w-4 h-4" /> Voltar
                 </Link>
               </>
             )}
@@ -469,616 +434,113 @@ const StoryDetailsPage = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-8">
-          <section className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="relative aspect-[9/16] bg-slate-900">
+          <section className="bg-slate-900 rounded-3xl border border-slate-800 shadow-xl overflow-hidden">
+            <div className="relative aspect-[9/16] bg-slate-950">
               <img
                 src={currentThumbnailUrl}
                 alt={isEditing ? formData.title : story.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover animate-fade-in"
               />
-
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
-
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent"></div>
               <div className="absolute top-4 right-4">
-                {isEditing ? (
-                  <button
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, active: !prev.active }))}
-                    className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm backdrop-blur-sm transition-all ${
-                      formData.active
-                        ? 'bg-emerald-500/90 text-white'
-                        : 'bg-slate-500/90 text-white'
-                    }`}
-                  >
-                    {formData.active ? 'Ativo' : 'Inativo'}
-                  </button>
-                ) : (
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm backdrop-blur-sm ${
-                      story.active
-                        ? 'bg-emerald-500/90 text-white'
-                        : 'bg-slate-500/90 text-white'
-                    }`}
-                  >
-                    {story.active ? 'Ativo' : 'Inativo'}
-                  </span>
-                )}
-              </div>
-
-              <div className="absolute bottom-4 left-4 right-4">
-                <p className="text-white text-lg font-bold">{isEditing ? formData.title : story.title}</p>
-                <p className="text-white/70 text-xs mt-1">
-                  Posição #{isEditing ? formData.position : story.position}
-                </p>
+                <span className={cn("px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider", story.active ? "bg-emerald-500 text-white" : "bg-slate-600 text-white")}>
+                  {story.active ? 'Ativo' : 'Inativo'}
+                </span>
               </div>
             </div>
           </section>
 
           <section className="space-y-6">
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-              <h2 className="text-lg font-bold text-slate-900 mb-5">
-                Informações principais
-              </h2>
-
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-6">
+              <h2 className="text-xl font-extrabold text-slate-100 pb-3 border-b border-slate-850">Informações principais</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    ID
-                  </p>
-                  <p className="mt-2 text-sm font-mono text-slate-800 break-all">
-                    {story.id}
-                  </p>
+                <div className="rounded-2xl border border-slate-850 bg-slate-950 p-5">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">ID de Controle</p>
+                  <p className="mt-2 text-sm md:text-base font-mono text-slate-300 break-all">{story.id}</p>
                 </div>
-
-                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Status
-                  </p>
-                  {isEditing ? (
-                    <div className="mt-2">
-                      <button
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, active: !prev.active }))}
-                        className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
-                          formData.active
-                            ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                            : 'border-slate-200 bg-slate-50 text-slate-500'
-                        }`}
-                      >
-                        <span>{formData.active ? 'Ativo' : 'Inativo'}</span>
-                        {formData.active ? (
-                          <ToggleRight className="w-6 h-6 text-emerald-600" />
-                        ) : (
-                          <ToggleLeft className="w-6 h-6 text-slate-400" />
-                        )}
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="mt-2 text-lg font-bold text-slate-900">
-                      {story.active ? 'Ativo' : 'Inativo'}
-                    </p>
-                  )}
-                </div>
-
-                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Posição
-                  </p>
+                <div className="rounded-2xl border border-slate-850 bg-slate-950 p-5">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Posição no Widget</p>
                   {isEditing ? (
                     <input
                       type="number"
                       min="1"
                       value={formData.position}
                       onChange={(e) => setFormData(prev => ({ ...prev, position: Number(e.target.value) }))}
-                      className="w-full mt-2 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
+                      className="w-full mt-2 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-sm text-slate-200 font-bold"
                     />
                   ) : (
-                    <p className="mt-2 text-lg font-bold text-slate-900">
-                      #{story.position}
-                    </p>
-                  )}
-                </div>
-
-                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Formato
-                  </p>
-                  {isEditing ? (
-                    <select
-                      value={formData.format}
-                      onChange={(e) => setFormData(prev => ({ ...prev, format: e.target.value as StoryFormat }))}
-                      className="w-full mt-2 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
-                    >
-                      <option value="carousel">Carrossel de Vídeos</option>
-                      <option value="floating_widget">Widget Flutuante</option>
-                      <option value="grid">Grade de Vídeos</option>
-                    </select>
-                  ) : (
-                    <p className="mt-2 text-lg font-bold text-slate-900">
-                      {story.format === 'carousel' ? 'Carrossel' : story.format === 'floating_widget' ? 'Widget Flutuante' : 'Grade'}
-                    </p>
-                  )}
-                </div>
-
-                {formData.format === 'carousel' && (
-                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                      Direção de Rolagem
-                    </p>
-                    {isEditing ? (
-                      <select
-                        value={formData.scroll_direction}
-                        onChange={(e) => setFormData(prev => ({ ...prev, scroll_direction: e.target.value as ScrollDirection }))}
-                        className="w-full mt-2 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
-                      >
-                        <option value="horizontal">Horizontal</option>
-                        <option value="vertical">Vertical</option>
-                      </select>
-                    ) : (
-                      <p className="mt-2 text-lg font-bold text-slate-900">
-                        {story.scroll_direction === 'horizontal' ? 'Horizontal' : 'Vertical'}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Loja
-                  </p>
-                  <p className="mt-2 text-sm font-medium text-slate-800 break-all">
-                    {store?.name || story.store_id}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Visualizações
-                  </p>
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      min="0"
-                      value={formData.view_count}
-                      onChange={(e) => setFormData(prev => ({ ...prev, view_count: Number(e.target.value) }))}
-                      className="w-full mt-2 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
-                    />
-                  ) : (
-                    <p className="mt-2 text-lg font-bold text-slate-900">
-                      {story.view_count || 0}
-                    </p>
-                  )}
-                </div>
-
-                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Cliques no CTA
-                  </p>
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      min="0"
-                      value={formData.click_count}
-                      onChange={(e) => setFormData(prev => ({ ...prev, click_count: Number(e.target.value) }))}
-                      className="w-full mt-2 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
-                    />
-                  ) : (
-                    <p className="mt-2 text-lg font-bold text-slate-900">
-                      {story.click_count || 0}
-                    </p>
+                    <p className="mt-2 text-lg font-black text-slate-100">#{story.position}</p>
                   )}
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-              <h2 className="text-lg font-bold text-slate-900 mb-5">
-                Vídeos do Story
-              </h2>
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-6">
+              <h2 className="text-xl font-extrabold text-slate-100 pb-3 border-b border-slate-850">Vídeos do Story</h2>
               {isEditing ? (
                 <div className="space-y-4">
-                  {/* Abas: Galeria e Todos os Vídeos */}
-                  <div className="flex border-b border-slate-200">
+                  <div className="flex border-b border-slate-800">
                     <button
                       type="button"
                       onClick={() => setVideoSelectTab('gallery')}
                       className={`flex items-center gap-2 px-4 py-2.5 font-bold text-xs uppercase tracking-wider border-b-2 transition-all ${
-                        videoSelectTab === 'gallery'
-                          ? 'border-violet-600 text-violet-600'
-                          : 'border-transparent text-slate-400 hover:text-slate-600'
+                        videoSelectTab === 'gallery' ? 'border-violet-500 text-violet-400' : 'border-transparent text-slate-500 hover:text-slate-300'
                       }`}
                     >
-                      <FolderHeart className="w-4 h-4" />
                       Galeria (Ativos)
                     </button>
                     <button
                       type="button"
                       onClick={() => setVideoSelectTab('all_videos')}
                       className={`flex items-center gap-2 px-4 py-2.5 font-bold text-xs uppercase tracking-wider border-b-2 transition-all ${
-                        videoSelectTab === 'all_videos'
-                          ? 'border-violet-600 text-violet-600'
-                          : 'border-transparent text-slate-400 hover:text-slate-600'
+                        videoSelectTab === 'all_videos' ? 'border-violet-500 text-violet-400' : 'border-transparent text-slate-500 hover:text-slate-300'
                       }`}
                     >
-                      <Layers className="w-4 h-4" />
                       Todos os vídeos
                     </button>
                   </div>
 
-                  <div>
-                    {currentVideoList.length === 0 ? (
-                      <div className="p-8 text-center bg-slate-50 border border-slate-100 rounded-2xl">
-                        <p className="text-sm text-slate-500">Nenhum vídeo disponível nesta aba. Adicione vídeos na aba Galeria primeiro.</p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-60 overflow-y-auto p-2 border border-slate-200 rounded-xl bg-slate-50">
-                        {currentVideoList.map(video => (
-                          <button
-                            key={video.id}
-                            type="button"
-                            onClick={() => handleVideoSelection(video.id)}
-                            className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all ${
-                              selectedVideoIds.includes(video.id) ? 'border-violet-600 ring-2 ring-violet-500' : 'border-slate-200 hover:border-violet-300'
-                            }`}
-                          >
-                            <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                              {selectedVideoIds.includes(video.id) ? (
-                                <Check className="w-6 h-6 text-emerald-400" />
-                              ) : (
-                                <Plus className="w-6 h-6 text-white" />
-                              )}
-                            </div>
-                            <span className="absolute bottom-1 left-1 text-[8px] text-white bg-black/50 px-1 py-0.5 rounded-sm">{video.title}</span>
-                            {video.status === 'inactive' && (
-                              <span className="absolute top-1 left-1 text-[7px] text-white bg-red-600 px-1 py-0.2 rounded-sm uppercase font-bold">Inativo</span>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    <p className="text-xs text-slate-400 mt-1.5">
-                      Selecione os vídeos que farão parte deste story. O primeiro vídeo selecionado será a capa.
-                    </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-60 overflow-y-auto p-2 border border-slate-800 rounded-2xl bg-slate-950">
+                    {currentVideoList.map(video => (
+                      <button
+                        key={video.id}
+                        type="button"
+                        onClick={() => handleVideoSelection(video.id)}
+                        className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all ${
+                          selectedVideoIds.includes(video.id) ? 'border-violet-500' : 'border-slate-850'
+                        }`}
+                      >
+                        <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
                   </div>
-
-                  {selectedVideoIds.length > 0 && (
-                    <div className="space-y-3 p-4 border border-slate-200 rounded-xl bg-slate-50 mt-4">
-                      <h5 className="text-sm font-bold text-slate-700">Vídeos Selecionados ({selectedVideoIds.length})</h5>
-                      <ul className="space-y-2">
-                        {selectedVideoIds.map((videoId, index) => {
-                          const video = allVideosList.find(v => v.id === videoId);
-                          if (!video) return null;
-                          const isCover = index === 0;
-                          return (
-                            <li key={video.id} className="flex items-center gap-3 bg-white p-3 rounded-lg shadow-sm border border-slate-100">
-                              <GripVertical className="w-4 h-4 text-slate-400 cursor-grab" />
-                              <img src={video.thumbnail_url} alt={video.title} className="w-12 h-12 object-cover rounded-md" />
-                              <div className="flex-1">
-                                <p className="text-sm font-medium text-slate-800">{video.title}</p>
-                                <p className="text-xs text-slate-500">{video.duration}s</p>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {isCover && <span className="text-[10px] bg-violet-100 text-violet-600 px-2 py-0.5 rounded-full font-semibold">Capa</span>}
-                                <button type="button" onClick={() => handleSetCoverVideo(video.id)} className="p-1.5 rounded-md hover:bg-slate-100 text-slate-500" title="Definir como capa">
-                                  <Film className="w-4 h-4" />
-                                </button>
-                                <button type="button" onClick={() => handleMoveVideo(index, 'up')} disabled={index === 0} className="p-1.5 rounded-md hover:bg-slate-100 text-slate-500 disabled:opacity-50" title="Mover para cima">▲</button>
-                                <button type="button" onClick={() => handleMoveVideo(index, 'down')} disabled={index === selectedVideoIds.length - 1} className="p-1.5 rounded-md hover:bg-slate-100 text-slate-500 disabled:opacity-50" title="Mover para baixo">▼</button>
-                                <button type="button" onClick={() => handleVideoSelection(video.id)} className="p-1.5 rounded-md hover:bg-red-50 text-red-500" title="Remover"><XCircle className="w-4 h-4" /></button>
-                              </div>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
-                  )}
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {storyVideos.map(sv => {
                     const video = allVideosList.find(v => v.id === sv.video_id);
                     return video ? (
-                      <div key={sv.id} className="relative aspect-video rounded-lg overflow-hidden shadow-sm">
+                      <div key={sv.id} className="relative aspect-video rounded-xl overflow-hidden shadow-md">
                         <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover" />
-                        <span className="absolute bottom-1 left-1 text-[8px] text-white bg-black/50 px-1 py-0.5 rounded-sm">{video.title}</span>
-                        {sv.is_cover && (
-                          <span className="absolute top-1 right-1 text-[8px] text-white bg-violet-600 px-1.5 py-0.5 rounded-full">Capa</span>
-                        )}
+                        <span className="absolute bottom-1 left-1 text-[9px] text-white bg-black/60 px-1.5 py-0.5 rounded">{video.title}</span>
                       </div>
                     ) : null;
                   })}
                 </div>
               )}
             </div>
-
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-              <h2 className="text-lg font-bold text-slate-900 mb-5">
-                Configurações de CTA
-              </h2>
-
-              <div className="space-y-4">
-                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <LinkIcon className="w-4 h-4 text-violet-600" />
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                      CTA Ativado
-                    </p>
-                  </div>
-                  {isEditing ? (
-                    <button
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, cta_enabled: !prev.cta_enabled }))}
-                      className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
-                        formData.cta_enabled
-                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                          : 'border-slate-200 bg-slate-50 text-slate-500'
-                      }`}
-                    >
-                      <span>{formData.cta_enabled ? 'Ativado' : 'Desativado'}</span>
-                      {formData.cta_enabled ? (
-                        <ToggleRight className="w-6 h-6 text-emerald-600" />
-                      ) : (
-                        <ToggleLeft className="w-6 h-6 text-slate-400" />
-                      )}
-                    </button>
-                  ) : (
-                    <p className="mt-2 text-lg font-bold text-slate-900">
-                      {story.cta_enabled ? 'Sim' : 'Não'}
-                    </p>
-                  )}
-                </div>
-
-                {formData.cta_enabled && (
-                  <>
-                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-                      <div className="flex items-center gap-2 mb-2">
-                        <MessageSquareText className="w-4 h-4 text-violet-600" />
-                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                          Texto do Botão CTA
-                        </p>
-                      </div>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={formData.cta_text}
-                          onChange={(e) => setFormData(prev => ({ ...prev, cta_text: e.target.value }))}
-                          placeholder="Ex: Comprar Agora"
-                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
-                        />
-                      ) : (
-                        <p className="mt-2 text-sm font-medium text-slate-800 break-all">
-                          {story.cta_text || 'Nenhum texto definido'}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Share2 className="w-4 h-4 text-violet-600" />
-                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                          Tipo de Ação CTA
-                        </p>
-                      </div>
-                      {isEditing ? (
-                        <select
-                          value={formData.cta_type}
-                          onChange={(e) => setFormData(prev => ({ ...prev, cta_type: e.target.value as CTAType }))}
-                          className="w-full mt-2 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
-                        >
-                          <option value="custom_link">Link Personalizado</option>
-                          <option value="product">Produto</option>
-                          <option value="whatsapp">WhatsApp</option>
-                          <option value="none">Nenhuma Ação</option>
-                        </select>
-                      ) : (
-                        <p className="mt-2 text-sm font-medium text-slate-800 break-all">
-                          {story.cta_type === 'custom_link' ? 'Link Personalizado' : story.cta_type === 'product' ? 'Produto' : story.cta_type === 'whatsapp' ? 'WhatsApp' : 'Nenhuma Ação'}
-                        </p>
-                      )}
-                    </div>
-
-                    {formData.cta_type === 'custom_link' && (
-                      <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-                        <div className="flex items-center gap-2 mb-2">
-                          <LinkIcon className="w-4 h-4 text-violet-600" />
-                          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                            URL do Link CTA *
-                          </p>
-                        </div>
-                        {isEditing ? (
-                          <input
-                            type="url"
-                            value={formData.cta_url}
-                            onChange={(e) => setFormData(prev => ({ ...prev, cta_url: e.target.value }))}
-                            placeholder="https://example.com/product"
-                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-mono text-slate-800"
-                          />
-                        ) : story.cta_url ? (
-                          <a
-                            href={story.cta_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-2 text-sm font-medium text-violet-600 hover:text-violet-700 break-all"
-                          >
-                            {story.cta_url}
-                            <ExternalLink className="w-4 h-4 shrink-0" />
-                          </a>
-                        ) : (
-                          <p className="text-sm text-slate-500">Nenhum link de CTA cadastrado.</p>
-                        )}
-                      </div>
-                    )}
-
-                    {formData.cta_type === 'whatsapp' && (
-                      <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Phone className="w-4 h-4 text-violet-600" />
-                          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                            Mensagem WhatsApp
-                          </p>
-                        </div>
-                        {isEditing ? (
-                          <textarea
-                            value={formData.whatsapp_message}
-                            onChange={(e) => setFormData(prev => ({ ...prev, whatsapp_message: e.target.value }))}
-                            placeholder="Olá! Tenho interesse neste produto do story."
-                            rows={3}
-                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800 resize-y"
-                          />
-                        ) : story.whatsapp_message ? (
-                          <p className="text-sm font-medium text-slate-800 break-all">
-                            {story.whatsapp_message}
-                          </p>
-                        ) : (
-                          <p className="text-sm text-slate-500">Nenhuma mensagem WhatsApp cadastrada para este story.</p>
-                        )}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-
-              {/* Seção: Produto Vinculado */}
-              {isEditing && formData.cta_enabled && formData.cta_type === 'product' && (
-                <div className="space-y-5">
-                  <h4 className="text-md font-bold text-slate-700 border-b border-slate-100 pb-2">Produto Vinculado</h4>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                      Selecionar Produto Existente
-                    </label>
-                    <select
-                      value={selectedProductId || ''}
-                      onChange={(e) => { setSelectedProductId(e.target.value || undefined); setNewProductForm({ name: '', product_url: '', image_url: '', price: 0 }); }}
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
-                    >
-                      <option value="">Nenhum produto selecionado</option>
-                      {products.map(product => (
-                        <option key={product.id} value={product.id}>{product.name} - R${product.price.toFixed(2)}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="relative flex py-5 items-center">
-                    <div className="flex-grow border-t border-slate-200"></div>
-                    <span className="flex-shrink mx-4 text-slate-400 text-xs uppercase font-bold">Ou Cadastrar Rápido</span>
-                    <div className="flex-grow border-t border-slate-200"></div>
-                  </div>
-
-                  <div className="space-y-3 p-4 border border-slate-200 rounded-xl bg-slate-50">
-                    <h5 className="text-sm font-bold text-slate-700">Novo Produto</h5>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Nome do Produto</label>
-                      <input type="text" value={newProductForm.name} onChange={(e) => { setNewProductForm(prev => ({ ...prev, name: e.target.value })); setSelectedProductId(undefined); }} placeholder="Nome do Produto" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">URL do Produto</label>
-                      <input type="url" value={newProductForm.product_url} onChange={(e) => setNewProductForm(prev => ({ ...prev, product_url: e.target.value }))} placeholder="https://sua-loja.com.br/produto" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-mono text-slate-800" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">URL da Imagem</label>
-                      <input type="url" value={newProductForm.image_url} onChange={(e) => setNewProductForm(prev => ({ ...prev, image_url: e.target.value }))} placeholder="https://sua-loja.com.br/imagem.jpg" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-mono text-slate-800" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Preço</label>
-                      <input type="number" step="0.01" min="0" value={newProductForm.price} onChange={(e) => setNewProductForm(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))} placeholder="99.90" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800" />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Seção: Local de Exibição */}
-              <div className="space-y-5">
-                <h4 className="text-md font-bold text-slate-700 border-b border-slate-100 pb-2">Local de Exibição</h4>
-                {displayLocations.length === 0 && <p className="text-sm text-slate-500">Nenhum local de exibição configurado. O widget não aparecerá na loja.</p>}
-                {displayLocations.map((dl, index) => (
-                  <div key={dl.id} className="flex flex-col md:flex-row gap-3 p-4 border border-slate-200 rounded-xl bg-slate-50">
-                    <div className="flex-1">
-                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Seletor CSS *</label>
-                      <input type="text" required value={dl.selector} onChange={(e) => updateDisplayLocation(index, 'selector', e.target.value)} placeholder=".minha-div-alvo" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-mono text-slate-800" />
-                    </div>
-                    <div className="flex-1">
-                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Posição *</label>
-                      <select required value={dl.position} onChange={(e) => updateDisplayLocation(index, 'position', e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800">
-                        <option value="after_element">Abaixo do elemento</option>
-                        <option value="before_element">Acima do elemento</option>
-                        <option value="inside_start">Dentro do elemento (início)</option>
-                        <option value="inside_end">Dentro do elemento (final)</option>
-                        <option value="replace_element">Substituir elemento</option>
-                        <option value="fixed_bottom_right">Fixo: Inferior Direita</option>
-                        <option value="fixed_bottom_left">Fixo: Inferior Esquerda</option>
-                        <option value="fixed_top_right">Fixo: Superior Direita</option>
-                        <option value="fixed_top_left">Fixo: Superior Esquerda</option>
-                      </select>
-                    </div>
-                    <button type="button" onClick={() => removeDisplayLocation(index)} className="p-2.5 rounded-xl border border-slate-100 hover:border-red-100 hover:bg-red-50 text-slate-400 hover:text-red-600 transition-all self-end md:self-auto" title="Remover Local"><Trash2 className="w-4 h-4" /></button>
-                  </div>
-                ))}
-                <button type="button" onClick={addDisplayLocation} className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all">
-                  <PlusCircle className="w-4 h-4" /> Adicionar Local de Exibição
-                </button>
-              </div>
-
-              {/* Seção: Qual Página Irá Aparecer */}
-              <div className="space-y-5">
-                <h4 className="text-md font-bold text-slate-700 border-b border-slate-100 pb-2">Regras de Página</h4>
-                {pageRules.length === 0 && <p className="text-sm text-slate-500">Nenhuma regra de página configurada. O widget aparecerá em todas as páginas.</p>}
-                {pageRules.map((pr, index) => (
-                  <div key={pr.id} className="flex flex-col md:flex-row gap-3 p-4 border border-slate-200 rounded-xl bg-slate-50">
-                    <div className="flex-1">
-                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Condição *</label>
-                      <select required value={pr.condition_type} onChange={(e) => updatePageRule(index, 'condition_type', e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800">
-                        <option value="contains">Contém</option>
-                        <option value="equals">É igual</option>
-                        <option value="not_equals">Não é igual</option>
-                        <option value="starts_with">Começa com</option>
-                        <option value="ends_with">Termina com</option>
-                        <option value="regex">Regex</option>
-                        <option value="all_pages">Todas as Páginas</option>
-                        <option value="home_only">Apenas Home</option>
-                        <option value="product_pages">Páginas de Produto</option>
-                        <option value="category_pages">Páginas de Categoria</option>
-                      </select>
-                    </div>
-                    <div className="flex-1">
-                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Valor / URL</label>
-                      <input type="text" value={pr.value || ''} onChange={(e) => updatePageRule(index, 'value', e.target.value)} placeholder="/caminho-da-pagina" disabled={['all_pages', 'home_only', 'product_pages', 'category_pages'].includes(pr.condition_type)} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-mono text-slate-800 disabled:bg-slate-100 disabled:text-slate-400" />
-                    </div>
-                    <button type="button" onClick={() => removePageRule(index)} className="p-2.5 rounded-xl border border-slate-100 hover:border-red-100 hover:bg-red-50 text-slate-400 hover:text-red-600 transition-all self-end md:self-auto" title="Remover Regra"><Trash2 className="w-4 h-4" /></button>
-                  </div>
-                ))}
-                <button type="button" onClick={addPageRule} className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all">
-                  <PlusCircle className="w-4 h-4" /> Adicionar Regra de Página
-                </button>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={handleCancelEdit}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-semibold text-sm transition-all"
-                >
-                  <X className="w-4 h-4" />
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  onClick={handleSaveStory}
-                  className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-violet-100 transition-all"
-                  disabled={isSaving}
-                >
-                  {isSaving ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  ) : (
-                    <Save className="w-4 h-4" />
-                  )}
-                  {isSaving ? 'Salvando...' : 'Salvar Alterações'}
-                </button>
-              </div>
-            </div>
           </section>
         </div>
       </main>
+
+      <CustomDialog
+        isOpen={dialog.isOpen}
+        type={dialog.type}
+        title={dialog.title}
+        description={dialog.description}
+        onConfirm={dialog.onConfirm}
+        onCancel={dialog.onCancel}
+      />
     </div>
   );
 };
