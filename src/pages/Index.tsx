@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, Film, GalleryVertical, Settings, Palette, ShoppingBag, BarChart3, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Film, GalleryVertical, Settings, Palette, ShoppingBag, BarChart3, MessageSquare, Link2 } from 'lucide-react';
 
 const Index = () => {
   return (
@@ -69,10 +69,10 @@ const Index = () => {
               <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
                 <p className="text-sm text-slate-400">Módulo</p>
                 <h3 className="mt-2 text-xl font-bold flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5 text-violet-400" /> Comentários
+                  <Link2 className="w-5 h-5 text-violet-400" /> Integração
                 </h3>
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Modere perguntas, interações e envie respostas públicas aos seus clientes.
+                  Instale o widget de stories em qualquer plataforma de e-commerce com script direto ou GTM.
                 </p>
               </div>
 
