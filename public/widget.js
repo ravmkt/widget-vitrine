@@ -1,22 +1,23 @@
 (function() {
   console.log('[Vidlytics] Inicializando widget de stories...');
 
-  // 1. Identificar o domínio atual
+  // 1. Identificar o domínio atual e URL
   const currentDomain = window.location.hostname;
-  console.log(`[Vidlytics] Domínio identificado: ${currentDomain}`);
+  const currentPath = window.location.pathname;
+  console.log(`[Vidlytics] Domínio identificado: ${currentDomain}, Path: ${currentPath}`);
 
   // 2. Configurações e dados de fallback (Useanny)
-  const fallbackStoreId = '11111111-1111-1111-1111-111111111111';
-  
   const fallbackStories = [
     {
       id: 's1',
       title: 'Nova Coleção Outono 🍂',
-      video_url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', // URL atualizada
+      video_url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
       thumbnail_url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=250&auto=format&fit=crop&q=60',
       cta_link: 'https://useanny.com.br/collections/outono',
       active: true,
       position: 1,
+      view_count: 0,
+      click_count: 0,
     },
     {
       id: 's2',
@@ -26,6 +27,8 @@
       cta_link: 'https://useanny.com.br/products/vestido-especial',
       active: true,
       position: 2,
+      view_count: 0,
+      click_count: 0,
     },
     {
       id: 's3',
@@ -35,6 +38,8 @@
       cta_link: 'https://useanny.com.br/collections/novidades',
       active: true,
       position: 3,
+      view_count: 0,
+      click_count: 0,
     },
     {
       id: 's4',
@@ -44,6 +49,8 @@
       cta_link: 'https://useanny.com.br/discount/PROMO10',
       active: true,
       position: 4,
+      view_count: 0,
+      click_count: 0,
     }
   ];
 
@@ -52,7 +59,8 @@
     theme_color: '#8B5CF6',
     display_mode: 'carousel',
     active: true,
-    whatsapp_number: '5545999629702' // Exemplo de número de WhatsApp padrão
+    whatsapp_number: '5545999629702', // Exemplo de número de WhatsApp padrão
+    display_urls: '', // Padrão: exibir em todas as URLs
   };
 
   // Tentar carregar dados do localStorage do painel administrativo se estiver no mesmo domínio
@@ -73,11 +81,31 @@
     console.log('[Vidlytics] Usando dados padrão de fallback.');
   }
 
+  // Função para verificar se a URL atual corresponde às regras de exibição
+  const shouldDisplayOnCurrentUrl = (displayUrls: string | undefined, currentPath: string): boolean => {
+    if (!displayUrls || displayUrls.trim() === '') {
+      return true; // Exibir em todas as URLs se não houver regras
+    }
+
+    const urls = displayUrls.split(',').map(url => url.trim()).filter(url => url !== '');
+
+    for (const urlPattern of urls) {
+      if (urlPattern === '*') return true; // Curinga global
+
+      const regexPattern = urlPattern.replace(/\*/g, '.*');
+      const regex = new RegExp(`^${regexPattern}$`);
+      if (regex.test(currentPath)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
   // Filtrar apenas stories ativos
   const activeStories = stories.filter(s => s.active).sort((a, b) => a.position - b.position);
 
-  if (!settings.active || activeStories.length === 0) {
-    console.log('[Vidlytics] Widget inativo ou sem stories ativos.');
+  if (!settings.active || activeStories.length === 0 || !shouldDisplayOnCurrentUrl(settings.display_urls, currentPath)) {
+    console.log('[Vidlytics] Widget inativo, sem stories ativos ou não deve exibir nesta URL.');
     return;
   }
 
@@ -192,6 +220,48 @@
       text-align: center;
     }
 
+    /* Grid de Stories */
+    .stories-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      padding: 4px;
+      max-width: 360px;
+    }
+
+    .story-grid-item {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .story-grid-item:hover {
+      transform: scale(1.02);
+    }
+
+    .story-grid-thumb {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .story-grid-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+      display: flex;
+      align-items: flex-end;
+      padding: 8px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
     /* Modal do Player de Vídeo */
     .video-modal {
       position: fixed;
@@ -287,6 +357,9 @@
       padding: 20px;
       background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
       z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     .cta-btn {
@@ -333,20 +406,21 @@
       background: #25D366; /* WhatsApp green */
       color: #fff;
       border: none;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      font-size: 18px;
+      gap: 8px;
       transition: transform 0.2s;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
     .whatsapp-btn:hover {
-      transform: scale(1.1);
+      transform: scale(1.01);
     }
   `;
 
@@ -356,24 +430,44 @@
   const wrapper = document.createElement('div');
   wrapper.className = `widget-wrapper position-${settings.position}`;
 
-  const carousel = document.createElement('div');
-  carousel.className = 'stories-carousel';
+  const renderStoriesDisplay = () => {
+    switch (settings.display_mode) {
+      case 'grid':
+        const grid = document.createElement('div');
+        grid.className = 'stories-grid';
+        activeStories.forEach((story) => {
+          const gridItem = document.createElement('button');
+          gridItem.className = 'story-grid-item';
+          gridItem.innerHTML = `
+            <img class="story-grid-thumb" src="${story.thumbnail_url}" alt="${story.title}">
+            <div class="story-grid-overlay">${story.title}</div>
+          `;
+          gridItem.addEventListener('click', () => openPlayer(story));
+          grid.appendChild(gridItem);
+        });
+        return grid;
+      case 'bubbles': // Fallback para bubbles se carousel não for o padrão
+      case 'carousel': // Padrão de exibição
+      default:
+        const carousel = document.createElement('div');
+        carousel.className = 'stories-carousel';
+        activeStories.forEach((story) => {
+          const bubble = document.createElement('button');
+          bubble.className = 'story-bubble';
+          bubble.innerHTML = `
+            <div class="story-ring">
+              <img class="story-thumb" src="${story.thumbnail_url}" alt="${story.title}">
+            </div>
+            <span class="story-title">${story.title}</span>
+          `;
+          bubble.addEventListener('click', () => openPlayer(story));
+          carousel.appendChild(bubble);
+        });
+        return carousel;
+    }
+  };
 
-  activeStories.forEach((story) => {
-    const bubble = document.createElement('button');
-    bubble.className = 'story-bubble';
-    bubble.innerHTML = `
-      <div class="story-ring">
-        <img class="story-thumb" src="${story.thumbnail_url}" alt="${story.title}">
-      </div>
-      <span class="story-title">${story.title}</span>
-    `;
-
-    bubble.addEventListener('click', () => openPlayer(story));
-    carousel.appendChild(bubble);
-  });
-
-  wrapper.appendChild(carousel);
+  wrapper.appendChild(renderStoriesDisplay());
   shadowRoot.appendChild(wrapper);
 
   // 6. Criar Modal do Player de Vídeo
@@ -390,13 +484,13 @@
       </div>
       <video class="video-player" id="vidlytics-video" playsinline></video>
       <div class="modal-footer">
-        <button class="cta-btn">Comprar Agora</button>
+        <button class="cta-btn" id="vidlytics-cta-btn">Comprar Agora</button>
         <button class="whatsapp-btn" id="vidlytics-whatsapp-btn">
           <svg width="22" height="22" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path fill="#25D366" d="M16.01 3.2c-7.07 0-12.82 5.75-12.82 12.82 0 2.26.59 4.47 1.72 6.42L3.08 29.2l6.92-1.81c1.88 1.03 4 1.57 6.01 1.57h.01c7.07 0 12.82-5.75 12.82-12.82S23.08 3.2 16.01 3.2z"/>
             <path fill="#FFFFFF" d="M16.02 26.74h-.01c-1.81 0-3.58-.49-5.12-1.42l-.37-.22-4.1 1.07 1.09-4-.24-.41c-1.01-1.67-1.54-3.59-1.54-5.56 0-5.67 4.61-10.28 10.29-10.28 2.75 0 5.33 1.07 7.27 3.01 1.94 1.94 3.01 4.52 3.01 7.27 0 5.67-4.61 10.28-10.28 10.28z"/>
             <path fill="#25D366" d="M21.88 18.96c-.32-.16-1.89-.93-2.18-1.04-.29-.11-.5-.16-.71.16-.21.32-.82 1.04-1 1.25-.18.21-.37.24-.69.08-.32-.16-1.35-.5-2.57-1.58-.95-.85-1.59-1.9-1.78-2.22-.18-.32-.02-.49.14-.65.14-.14.32-.37.48-.55.16-.18.21-.32.32-.53.11-.21.05-.4-.03-.56-.08-.16-.71-1.71-.97-2.34-.26-.62-.52-.54-.71-.55h-.61c-.21 0-.56.08-.85.4-.29.32-1.11 1.09-1.11 2.66s1.14 3.08 1.3 3.29c.16.21 2.24 3.42 5.43 4.8.76.33 1.35.52 1.81.67.76.24 1.45.21 2 .13.61-.09 1.89-.77 2.16-1.52.27-.75.27-1.39.19-1.52-.08-.13-.29-.21-.61-.37z"/>
           </svg>
+          Falar no WhatsApp
         </button>
       </div>
     </div>
@@ -408,7 +502,7 @@
   const titleElement = modal.querySelector('#vidlytics-title') as HTMLSpanElement;
   const closeBtn = modal.querySelector('#vidlytics-close') as HTMLButtonElement;
   const progressBar = modal.querySelector('#vidlytics-progress') as HTMLDivElement;
-  const ctaBtn = modal.querySelector('.cta-btn') as HTMLButtonElement;
+  const ctaBtn = modal.querySelector('#vidlytics-cta-btn') as HTMLButtonElement;
   const whatsappBtn = modal.querySelector('#vidlytics-whatsapp-btn') as HTMLButtonElement;
 
   let currentStory = null;
@@ -424,6 +518,12 @@
     // Atualizar barra de progresso
     videoElement.addEventListener('timeupdate', updateProgress);
     videoElement.addEventListener('ended', closePlayer);
+
+    // Rastreamento de visualização (simulado)
+    // Em um ambiente real, esta chamada seria para um endpoint de API
+    // que atualizaria o banco de dados.
+    console.log(`[Vidlytics Tracking] Story ${story.id} visualizado.`);
+    // db.incrementViewCount(story.id); // Descomentar em modo Agent com Supabase configurado
   }
 
   function updateProgress() {
@@ -452,9 +552,14 @@
   ctaBtn.addEventListener('click', () => {
     console.log('[Vidlytics] Clique no botão de CTA!');
     if (currentStory && currentStory.cta_link) {
+      // Rastreamento de clique (simulado)
+      // Em um ambiente real, esta chamada seria para um endpoint de API
+      // que atualizaria o banco de dados.
+      console.log(`[Vidlytics Tracking] Story ${currentStory.id} CTA clicado.`);
+      // db.incrementClickCount(currentStory.id); // Descomentar em modo Agent com Supabase configurado
       window.open(currentStory.cta_link, '_blank');
     } else {
-      alert('Redirecionando para o produto...');
+      alert('Este story não possui um link de compra configurado.');
     }
   });
 

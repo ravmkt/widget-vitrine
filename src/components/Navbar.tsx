@@ -1,14 +1,16 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Film, Settings, Sparkles, Database, Eye } from 'lucide-react';
+import { LayoutDashboard, Film, Settings, Sparkles, Database, Eye, GalleryVertical } from 'lucide-react';
 import { isSupabaseConfigured } from '@/lib/db';
 
 const Navbar = () => {
   const location = useLocation();
 
   const menuItems = [
-    { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/', label: 'Início', icon: Sparkles },
+    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard }, // Novo link
     { path: '/stories', label: 'Stories', icon: Film },
+    { path: '/gallery', label: 'Galeria de Vídeos', icon: GalleryVertical }, // Novo link
     { path: '/widget', label: 'Visualizar Widget', icon: Eye },
     { path: '/settings', label: 'Configurações', icon: Settings },
   ];

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { db, Story, Store } from '@/lib/db';
-import { ArrowLeft, ExternalLink, Film, Image, Link as LinkIcon, Save, X, Edit3, ToggleLeft, ToggleRight } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Film, Image, Link as LinkIcon, Save, X, Edit3, ToggleLeft, ToggleRight, Eye as EyeIcon, MousePointerClick } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
 
 const StoryDetailsPage = () => {
@@ -19,9 +19,10 @@ const StoryDetailsPage = () => {
     video_url: "",
     thumbnail_url: "",
     cta_link: "",
-    // whatsapp_number: "", // Removido: WhatsApp agora é global
     active: true,
     position: 1,
+    view_count: 0,
+    click_count: 0,
   });
 
   const loadStoryDetails = async () => {
@@ -47,9 +48,10 @@ const StoryDetailsPage = () => {
           video_url: currentStory.video_url,
           thumbnail_url: currentStory.thumbnail_url,
           cta_link: currentStory.cta_link || "",
-          // whatsapp_number: currentStory.whatsapp_number || "", // Removido: WhatsApp agora é global
           active: currentStory.active,
           position: currentStory.position,
+          view_count: currentStory.view_count || 0,
+          click_count: currentStory.click_count || 0,
         });
       }
     } catch (error) {
@@ -103,9 +105,10 @@ const StoryDetailsPage = () => {
         video_url: formData.video_url,
         thumbnail_url: formData.thumbnail_url,
         cta_link: formData.cta_link || undefined,
-        // whatsapp_number: formData.whatsapp_number || undefined, // Removido: WhatsApp agora é global
         active: formData.active,
         position: formData.position,
+        view_count: formData.view_count,
+        click_count: formData.click_count,
         updated_at: new Date().toISOString(),
       };
 
@@ -128,9 +131,10 @@ const StoryDetailsPage = () => {
         video_url: story.video_url,
         thumbnail_url: story.thumbnail_url,
         cta_link: story.cta_link || "",
-        // whatsapp_number: story.whatsapp_number || "", // Removido: WhatsApp agora é global
         active: story.active,
         position: story.position,
+        view_count: story.view_count || 0,
+        click_count: story.click_count || 0,
       });
     }
     setIsEditing(false);
@@ -373,6 +377,44 @@ const StoryDetailsPage = () => {
                     {store?.name || story.store_id}
                   </p>
                 </div>
+
+                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Visualizações
+                  </p>
+                  {isEditing ? (
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.view_count}
+                      onChange={(e) => setFormData(prev => ({ ...prev, view_count: Number(e.target.value) }))}
+                      className="w-full mt-2 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
+                    />
+                  ) : (
+                    <p className="mt-2 text-lg font-bold text-slate-900">
+                      {story.view_count || 0}
+                    </p>
+                  )}
+                </div>
+
+                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Cliques no CTA
+                  </p>
+                  {isEditing ? (
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.click_count}
+                      onChange={(e) => setFormData(prev => ({ ...prev, click_count: Number(e.target.value) }))}
+                      className="w-full mt-2 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
+                    />
+                  ) : (
+                    <p className="mt-2 text-lg font-bold text-slate-900">
+                      {story.click_count || 0}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -467,31 +509,6 @@ const StoryDetailsPage = () => {
                     <p className="text-sm text-slate-500">Nenhum link de CTA cadastrado.</p>
                   )}
                 </div>
-
-                {/* Removido: Campo de WhatsApp individual do story */}
-                {/* <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <LinkIcon className="w-4 h-4 text-violet-600" />
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                      Número de WhatsApp (Story)
-                    </p>
-                  </div>
-                  {isEditing ? (
-                    <input
-                      type="tel"
-                      value={formData.whatsapp_number}
-                      onChange={(e) => setFormData(prev => ({ ...prev, whatsapp_number: e.target.value }))}
-                      placeholder="Ex: 5545999629702"
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-mono text-slate-800"
-                    />
-                  ) : story.whatsapp_number ? (
-                    <p className="text-sm font-medium text-slate-800 break-all">
-                      {story.whatsapp_number}
-                    </p>
-                  ) : (
-                    <p className="text-sm text-slate-500">Nenhum número de WhatsApp cadastrado para este story.</p>
-                  )}
-                </div> */}
               </div>
             </div>
           </section>

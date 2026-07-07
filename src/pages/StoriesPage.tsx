@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { db, Story, Store } from '@/lib/db';
-import { Plus, Film, Play, Eye, Trash2, Edit3, Sparkles, ToggleLeft, ToggleRight, Copy, Check } from 'lucide-react';
+import { Plus, Film, Eye, Trash2, Edit3, Sparkles, ToggleLeft, ToggleRight, Copy, Check, Eye as EyeIcon, MousePointerClick } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 
 const StoriesPage = () => {
@@ -17,7 +17,6 @@ const StoriesPage = () => {
   const [videoUrl, setVideoUrl] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [ctaLink, setCtaLink] = useState('');
-  // const [whatsappNumber, setWhatsappNumber] = useState(''); // Removido: WhatsApp agora é global
   const [position, setPosition] = useState(1);
   const [active, setActive] = useState(true);
 
@@ -92,9 +91,10 @@ const StoriesPage = () => {
       video_url: videoUrl,
       thumbnail_url: thumbnailUrl,
       cta_link: ctaLink || undefined,
-      // whatsapp_number: whatsappNumber || undefined, // Removido: WhatsApp agora é global
       active,
       position,
+      view_count: 0, // Inicializa com 0
+      click_count: 0, // Inicializa com 0
     };
 
     try {
@@ -106,7 +106,6 @@ const StoriesPage = () => {
       setVideoUrl('');
       setThumbnailUrl('');
       setCtaLink('');
-      // setWhatsappNumber(''); // Removido: WhatsApp agora é global
       setActive(true);
       setShowForm(false);
       
@@ -261,23 +260,6 @@ const StoriesPage = () => {
                 </div>
               </div>
 
-              {/* Removido: Campo de WhatsApp individual do story */}
-              {/* <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                  Número de WhatsApp (para este Story)
-                </label>
-                <input
-                  type="tel"
-                  value={whatsappNumber}
-                  onChange={(e) => setWhatsappNumber(e.target.value)}
-                  placeholder="Ex: 5545999629702"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
-                />
-                <p className="text-xs text-slate-400 mt-1.5">
-                  Se preenchido, este número será usado para o botão de WhatsApp deste story. Caso contrário, usará o da loja.
-                </p>
-              </div> */}
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
@@ -390,6 +372,18 @@ const StoriesPage = () => {
                   <div>
                     <h3 className="font-bold text-slate-800 text-lg line-clamp-1">{story.title}</h3>
                     <p className="text-xs text-slate-400 font-mono mt-1 truncate">{story.video_url}</p>
+                  </div>
+
+                  {/* Métricas */}
+                  <div className="flex items-center gap-4 text-sm text-slate-500">
+                    <div className="flex items-center gap-1">
+                      <EyeIcon className="w-4 h-4 text-violet-500" />
+                      <span>{story.view_count || 0}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <MousePointerClick className="w-4 h-4 text-violet-500" />
+                      <span>{story.click_count || 0}</span>
+                    </div>
                   </div>
 
                   {/* Ações */}

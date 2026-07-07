@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { db, Story, Store, WidgetSettings } from '@/lib/db'; // Importar WidgetSettings
+import { db, Story, Store, WidgetSettings, Comment } from '@/lib/db'; // Importar WidgetSettings e Comment
 import {
   X,
   ChevronLeft,
@@ -13,18 +13,12 @@ import {
   Play,
   Pause,
   Check,
+  Eye as EyeIcon, // Renomeado para evitar conflito com o ícone Eye da Navbar
+  MousePointerClick,
 } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
 import WhatsAppIcon from '@/components/WhatsAppIcon';
 import { cn } from '@/lib/utils';
-
-// Interface para um comentário
-interface Comment {
-  id: string;
-  username: string;
-  text: string;
-  timestamp: string;
-}
 
 // --- Funções Auxiliares para URL de Vídeo Segura ---
 const FALLBACK_VIDEO_BY_TITLE: Record<string, string> = {
@@ -114,26 +108,22 @@ const StoriesWidgetPage = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const [store, setStore] = useState<Store | null>(null);
-  const [settings, setSettings] = useState<WidgetSettings | null>(null); // Adicionado estado para settings
+  const [settings, setSettings] = useState<WidgetSettings | null>(null);
   const [stories, setStories] = useState<Story[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(true); // Estado para controlar play/pause
+  const [isPlaying, setIsPlaying] = useState(true);
   const [showPlayPauseOverlay, setShowPlayPauseOverlay] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
-  const [videoError, setVideoError] = useState(false); // Estado para erro de carregamento do vídeo
+  const [videoError, setVideoError] = useState(false);
 
   // Estados para comentários
-  const [comments, setComments] = useState<Comment[]>([
-    { id: 'c1', username: 'Cliente Feliz', text: 'Adorei esse story! O produto é incrível!', timestamp: '5 min atrás' },
-    { id: 'c2', username: 'Comprador VIP', text: 'Já comprei e recomendo muito!', timestamp: '10 min atrás' },
-    { id: 'c3', username: 'Curioso', text: 'Qual o preço desse item?', timestamp: '15 min atrás' },
-  ]);
+  const [currentStoryComments, setCurrentStoryComments] = useState<Comment[]>([]);
   const [newCommentText, setNewCommentText] = useState('');
-  const [commentsCount, setCommentsCount] = useState(comments.length);
+  const [commentsCount, setCommentsCount] = useState(0);
 
   // Estados para curtidas
   const [likesCount, setLikesCount] = useState(Math.floor(Math.random() * 100) + 50);
@@ -205,7 +195,7 @@ const StoriesWidgetPage = () => {
       }
 
       const fetchedStories = await db.getStories(currentStore.id);
-      const fetchedSettings = await db.getSettings(currentStore.id); // Carregar settings
+      const fetchedSettings = await db.getSettings(currentStore.id);
       
       setSettings(fetchedSettings);
 
@@ -222,9 +212,29 @@ const StoriesWidgetPage = () => {
     }
   };
 
+  const loadCommentsForStory = async (storyId: string) => {
+    try {
+      const comments = await db.getComments(storyId);
+      setCurrentStoryComments(comments);
+      setCommentsCount(comments.length);
+    } catch (error) {
+      console.error('Erro ao carregar comentários:', error);
+      setCurrentStoryComments([]);
+      setCommentsCount(0);
+    }
+  };
+
   useEffect(() => {
     loadWidgetData();
   }, [storeId]);
+
+  useEffect(() => {
+    if (selectedStory) {
+      loadCommentsForStory(selectedStory.id);
+      // Incrementar visualização ao abrir o story
+      db.incrementViewCount(selectedStory.id);
+    }
+  }, [selectedStory]);
 
   // Função para alternar play/pause do vídeo
   const handleTogglePlay = async (event?: React.MouseEvent) => {
@@ -262,7 +272,7 @@ const StoriesWidgetPage = () => {
         console.log("Pause executado com sucesso.");
       }
       setShowPlayPauseOverlay(true);
-      setTimeout(() => setShowPlayPauseOverlay(false), 700); // Esconde overlay após 700ms
+      setTimeout(() => setShowPlayPauseOverlay(false), 700);
     } catch (error) {
       console.error("Falha ao executar play/pause:", error);
       setVideoError(true); // Define o erro como true se o vídeo falhar no carregamento
@@ -314,20 +324,27 @@ const StoriesWidgetPage = () => {
     setShowCommentsPanel((prev) => !prev);
   };
 
-  const handleAddComment = () => {
-    if (newCommentText.trim() === '') return;
+  const handleAddComment = async () => {
+    if (newCommentText.trim() === '' || !selectedStory) return;
 
     const newComment: Comment = {
-      id: `c${comments.length + 1}`,
+      id: Math.random().toString(36).substr(2, 9),
+      story_id: selectedStory.id,
       username: 'Você',
       text: newCommentText,
-      timestamp: 'agora',
+      created_at: new Date().toISOString(),
     };
 
-    setComments((prevComments) => [newComment, ...prevComments]);
-    setNewCommentText('');
-    setCommentsCount((prevCount) => prevCount + 1);
-    showSuccess('Comentário enviado!');
+    try {
+      const savedComment = await db.saveComment(newComment);
+      setCurrentStoryComments((prevComments) => [savedComment, ...prevComments]);
+      setNewCommentText('');
+      setCommentsCount((prevCount) => prevCount + 1);
+      showSuccess('Comentário enviado!');
+    } catch (error) {
+      console.error('Erro ao adicionar comentário:', error);
+      // show error toast
+    }
   };
 
   // Função para obter dados de compartilhamento do story atual
@@ -423,6 +440,15 @@ const StoriesWidgetPage = () => {
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   };
 
+  const handleCtaClick = (link?: string) => {
+    if (link && selectedStory) {
+      db.incrementClickCount(selectedStory.id); // Incrementar clique no CTA
+      window.open(link, '_blank');
+    } else {
+      alert('Este story não possui um link de compra configurado.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="w-full min-h-[120px] flex items-center justify-center bg-transparent">
@@ -449,40 +475,114 @@ const StoriesWidgetPage = () => {
   // Condição para mostrar a mensagem de erro do vídeo
   const shouldShowVideoError = videoError && isInvalidVideoUrl(safeVideoUrl);
 
+  const renderStoriesDisplay = () => {
+    switch (settings?.display_mode) {
+      case 'grid':
+        return (
+          <div className="grid grid-cols-2 gap-4 p-4">
+            {stories.map((story) => (
+              <button
+                key={story.id}
+                type="button"
+                onClick={() => {
+                  setSelectedIndex(stories.indexOf(story));
+                  setIsMuted(true);
+                  setIsLiked(false);
+                  setShowCommentsPanel(false);
+                  setIsPlaying(true);
+                }}
+                className="relative aspect-[9/16] rounded-xl overflow-hidden shadow-md group focus:outline-none"
+              >
+                <img
+                  src={story.thumbnail_url}
+                  alt={story.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Play className="w-8 h-8 text-white fill-white" />
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-white text-xs font-semibold">
+                  {story.title}
+                </div>
+              </button>
+            ))}
+          </div>
+        );
+      case 'bubbles':
+        return (
+          <div className="flex items-start gap-4 px-4 py-3">
+            {stories.map((story, index) => (
+              <button
+                key={story.id}
+                type="button"
+                onClick={() => {
+                  setSelectedIndex(index);
+                  setIsMuted(true);
+                  setIsLiked(false);
+                  setShowCommentsPanel(false);
+                  setIsPlaying(true);
+                }}
+                className="flex flex-col items-center gap-2 shrink-0 group"
+              >
+                <div className="w-20 h-20 rounded-full p-[3px] bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-orange-400 shadow-sm">
+                  <div className="w-full h-full rounded-full bg-white p-[3px]">
+                    <img
+                      src={story.thumbnail_url}
+                      alt={story.title}
+                      className="w-full h-full rounded-full object-cover group-hover:scale-105 transition-transform"
+                    />
+                  </div>
+                </div>
+
+                <span className="max-w-[88px] text-xs font-semibold text-slate-700 truncate">
+                  {story.title}
+                </span>
+              </button>
+            ))}
+          </div>
+        );
+      case 'carousel':
+      default:
+        return (
+          <div className="w-full overflow-x-auto">
+            <div className="flex items-start gap-4 px-4 py-3">
+              {stories.map((story, index) => (
+                <button
+                  key={story.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedIndex(index);
+                    setIsMuted(true);
+                    setIsLiked(false);
+                    setShowCommentsPanel(false);
+                    setIsPlaying(true);
+                  }}
+                  className="flex flex-col items-center gap-2 shrink-0 group"
+                >
+                  <div className="w-20 h-20 rounded-full p-[3px] bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-orange-400 shadow-sm">
+                    <div className="w-full h-full rounded-full bg-white p-[3px]">
+                      <img
+                        src={story.thumbnail_url}
+                        alt={story.title}
+                        className="w-full h-full rounded-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    </div>
+                  </div>
+
+                  <span className="max-w-[88px] text-xs font-semibold text-slate-700 truncate">
+                    {story.title}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+    }
+  };
+
   return (
     <div className="w-full bg-transparent">
-      <div className="w-full overflow-x-auto">
-        <div className="flex items-start gap-4 px-4 py-3">
-          {stories.map((story, index) => (
-            <button
-              key={story.id}
-              type="button"
-              onClick={() => {
-                setSelectedIndex(index);
-                setIsMuted(true);
-                setIsLiked(false);
-                setShowCommentsPanel(false);
-                setIsPlaying(true);
-              }}
-              className="flex flex-col items-center gap-2 shrink-0 group"
-            >
-              <div className="w-20 h-20 rounded-full p-[3px] bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-orange-400 shadow-sm">
-                <div className="w-full h-full rounded-full bg-white p-[3px]">
-                  <img
-                    src={story.thumbnail_url}
-                    alt={story.title}
-                    className="w-full h-full rounded-full object-cover group-hover:scale-105 transition-transform"
-                  />
-                </div>
-              </div>
-
-              <span className="max-w-[88px] text-xs font-semibold text-slate-700 truncate">
-                {story.title}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+      {renderStoriesDisplay()}
 
       {selectedStory && (
         <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center px-4 py-6">
@@ -659,11 +759,7 @@ const StoriesWidgetPage = () => {
               <button
                 type="button"
                 className="absolute left-[12px] right-[74px] bottom-[28px] h-[64px] px-3 py-2 rounded-xl bg-white shadow-lg flex items-center gap-3 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] z-30"
-                onClick={() => {
-                  if (selectedStory.cta_link) {
-                    window.open(selectedStory.cta_link, "_blank", "noopener,noreferrer");
-                  }
-                }}
+                onClick={() => handleCtaClick(selectedStory.cta_link)}
               >
                 {selectedStory.thumbnail_url && (
                   <img
@@ -702,10 +798,10 @@ const StoriesWidgetPage = () => {
               </div>
 
               <div className="max-h-[200px] overflow-y-auto space-y-4 mb-4 pr-2">
-                {comments.length === 0 ? (
+                {currentStoryComments.length === 0 ? (
                   <p className="text-slate-500 text-sm text-center py-4">Nenhum comentário ainda. Seja o primeiro!</p>
                 ) : (
-                  comments.map((comment) => (
+                  currentStoryComments.map((comment) => (
                     <div key={comment.id} className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-xs flex-shrink-0">
                         {comment.username.charAt(0)}
@@ -713,7 +809,7 @@ const StoriesWidgetPage = () => {
                       <div className="flex-1">
                         <div className="flex items-baseline gap-2">
                           <span className="font-semibold text-slate-800 text-sm">{comment.username}</span>
-                          <span className="text-slate-400 text-xs">{comment.timestamp}</span>
+                          <span className="text-slate-400 text-xs">{comment.created_at ? new Date(comment.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'agora'}</span>
                         </div>
                         <p className="text-slate-700 text-sm mt-0.5">{comment.text}</p>
                       </div>

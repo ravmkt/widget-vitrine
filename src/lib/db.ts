@@ -17,6 +17,8 @@ export interface Story {
   cta_link?: string;
   active: boolean;
   position: number;
+  view_count?: number; // Novo campo para contagem de visualizações
+  click_count?: number; // Novo campo para contagem de cliques no CTA
   created_at?: string;
   updated_at?: string;
 }
@@ -28,9 +30,18 @@ export interface WidgetSettings {
   theme_color: string;
   display_mode: 'carousel' | 'grid' | 'bubbles';
   active: boolean;
-  whatsapp_number?: string; // Adicionado campo para número de WhatsApp da loja
+  whatsapp_number?: string;
+  display_urls?: string; // Novo campo para URLs onde o widget deve aparecer (separadas por vírgula)
   created_at?: string;
   updated_at?: string;
+}
+
+export interface Comment {
+  id: string;
+  story_id: string;
+  username: string;
+  text: string;
+  created_at?: string;
 }
 
 export const isSupabaseConfigured = !!import.meta.env.VITE_SUPABASE_URL && !!import.meta.env.VITE_SUPABASE_ANON_KEY && !!supabase;
@@ -55,6 +66,8 @@ const DEFAULT_STORIES: Story[] = [
     cta_link: 'https://useanny.com.br/collections/outono',
     active: true,
     position: 1,
+    view_count: 1200,
+    click_count: 85,
   },
   {
     id: 's2',
@@ -65,6 +78,8 @@ const DEFAULT_STORIES: Story[] = [
     cta_link: 'https://useanny.com.br/products/vestido-especial',
     active: true,
     position: 2,
+    view_count: 950,
+    click_count: 60,
   },
   {
     id: 's3',
@@ -75,6 +90,8 @@ const DEFAULT_STORIES: Story[] = [
     cta_link: 'https://useanny.com.br/collections/novidades',
     active: true,
     position: 3,
+    view_count: 1500,
+    click_count: 110,
   },
   {
     id: 's4',
@@ -85,6 +102,8 @@ const DEFAULT_STORIES: Story[] = [
     cta_link: 'https://useanny.com.br/discount/PROMO10',
     active: true,
     position: 4,
+    view_count: 800,
+    click_count: 45,
   }
 ];
 
@@ -97,13 +116,22 @@ const DEFAULT_SETTINGS: WidgetSettings[] = [
     display_mode: 'carousel',
     active: true,
     whatsapp_number: '5545999629702', // Exemplo de número de WhatsApp padrão
+    display_urls: '', // Padrão: exibir em todas as URLs
   }
 ];
+
+const DEFAULT_COMMENTS: Comment[] = [
+  { id: 'c1', story_id: 's1', username: 'Cliente Feliz', text: 'Adorei esse story! O produto é incrível!', created_at: new Date().toISOString() },
+  { id: 'c2', story_id: 's1', username: 'Comprador VIP', text: 'Já comprei e recomendo muito!', created_at: new Date().toISOString() },
+  { id: 'c3', story_id: 's2', username: 'Curioso', text: 'Qual o preço desse item?', created_at: new Date().toISOString() },
+];
+
 
 // Fallback em memória caso o localStorage esteja bloqueado ou indisponível no iframe
 let memoryStores = [...DEFAULT_STORES];
 let memoryStories = [...DEFAULT_STORIES];
 let memorySettings = [...DEFAULT_SETTINGS];
+let memoryComments = [...DEFAULT_COMMENTS];
 
 const initLocalStorage = () => {
   try {
@@ -114,6 +142,7 @@ const initLocalStorage = () => {
         localStorage.setItem('vidlytics_stores', JSON.stringify(DEFAULT_STORES));
         localStorage.setItem('vidlytics_stories', JSON.stringify(DEFAULT_STORIES));
         localStorage.setItem('vidlytics_settings', JSON.stringify(DEFAULT_SETTINGS));
+        localStorage.setItem('vidlytics_comments', JSON.stringify(DEFAULT_COMMENTS));
       } else {
         // Se Supabase estiver configurado, garantir que os defaults existam se não houver nada no localStorage.
         // O Supabase será a fonte primária, mas o localStorage serve como um cache inicial.
@@ -125,6 +154,9 @@ const initLocalStorage = () => {
         }
         if (!localStorage.getItem('vidlytics_settings')) {
           localStorage.setItem('vidlytics_settings', JSON.stringify(DEFAULT_SETTINGS));
+        }
+        if (!localStorage.getItem('vidlytics_comments')) {
+          localStorage.setItem('vidlytics_comments', JSON.stringify(DEFAULT_COMMENTS));
         }
       }
     }
@@ -260,6 +292,58 @@ export const db = {
     return true;
   },
 
+  async incrementViewCount(storyId: string): Promise<void> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase.rpc('increment_story_view', { story_id_param: storyId });
+        if (error) throw error;
+      } catch (e) {
+        console.error('[Vidlytics] Erro ao incrementar visualização no Supabase:', e);
+      }
+    }
+    // Fallback para memória/localStorage
+    try {
+      const stories = JSON.parse(localStorage.getItem('vidlytics_stories') || '[]');
+      const story = stories.find((s: Story) => s.id === storyId);
+      if (story) {
+        story.view_count = (story.view_count || 0) + 1;
+        localStorage.setItem('vidlytics_stories', JSON.stringify(stories));
+        memoryStories = stories;
+      }
+    } catch (e) {
+      const story = memoryStories.find((s: Story) => s.id === storyId);
+      if (story) {
+        story.view_count = (story.view_count || 0) + 1;
+      }
+    }
+  },
+
+  async incrementClickCount(storyId: string): Promise<void> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase.rpc('increment_story_click', { story_id_param: storyId });
+        if (error) throw error;
+      } catch (e) {
+        console.error('[Vidlytics] Erro ao incrementar clique no Supabase:', e);
+      }
+    }
+    // Fallback para memória/localStorage
+    try {
+      const stories = JSON.parse(localStorage.getItem('vidlytics_stories') || '[]');
+      const story = stories.find((s: Story) => s.id === storyId);
+      if (story) {
+        story.click_count = (story.click_count || 0) + 1;
+        localStorage.setItem('vidlytics_stories', JSON.stringify(stories));
+        memoryStories = stories;
+      }
+    } catch (e) {
+      const story = memoryStories.find((s: Story) => s.id === storyId);
+      if (story) {
+        story.click_count = (story.click_count || 0) + 1;
+      }
+    }
+  },
+
   async getSettings(storeId: string): Promise<WidgetSettings> {
     if (isSupabaseConfigured && supabase) {
       try {
@@ -285,7 +369,8 @@ export const db = {
           theme_color: '#8B5CF6',
           display_mode: 'carousel',
           active: true,
-          whatsapp_number: DEFAULT_SETTINGS[0].whatsapp_number, // Usar o padrão
+          whatsapp_number: DEFAULT_SETTINGS[0].whatsapp_number,
+          display_urls: DEFAULT_SETTINGS[0].display_urls,
         };
         settings.push(storeSettings);
         localStorage.setItem('vidlytics_settings', JSON.stringify(settings));
@@ -302,7 +387,8 @@ export const db = {
           theme_color: '#8B5CF6',
           display_mode: 'carousel',
           active: true,
-          whatsapp_number: DEFAULT_SETTINGS[0].whatsapp_number, // Usar o padrão
+          whatsapp_number: DEFAULT_SETTINGS[0].whatsapp_number,
+          display_urls: DEFAULT_SETTINGS[0].display_urls,
         };
         memorySettings.push(storeSettings);
       }
@@ -339,5 +425,52 @@ export const db = {
       }
     }
     return settings;
+  },
+
+  async getComments(storyId: string): Promise<Comment[]> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('comments')
+          .select('*')
+          .eq('story_id', storyId)
+          .order('created_at', { ascending: false });
+        if (!error && data) return data;
+      } catch (e) {
+        console.error('[Vidlytics] Erro ao buscar comentários no Supabase:', e);
+      }
+    }
+    try {
+      const local = localStorage.getItem('vidlytics_comments');
+      const comments = local ? JSON.parse(local) : memoryComments;
+      return comments
+        .filter((c: Comment) => c.story_id === storyId)
+        .sort((a: Comment, b: Comment) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime());
+    } catch (e) {
+      return memoryComments
+        .filter((c: Comment) => c.story_id === storyId)
+        .sort((a: Comment, b: Comment) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime());
+    }
+  },
+
+  async saveComment(comment: Comment): Promise<Comment> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data, error } = await supabase.from('comments').upsert(comment).select().single();
+        if (!error && data) return data;
+      } catch (e) {
+        console.error('[Vidlytics] Erro ao salvar comentário no Supabase:', e);
+      }
+    }
+    const newComment = { ...comment, id: comment.id || Math.random().toString(36).substr(2, 9), created_at: new Date().toISOString() };
+    try {
+      const comments = JSON.parse(localStorage.getItem('vidlytics_comments') || '[]');
+      comments.push(newComment);
+      localStorage.setItem('vidlytics_comments', JSON.stringify(comments));
+      memoryComments = comments;
+    } catch (e) {
+      memoryComments.push(newComment);
+    }
+    return newComment;
   }
 };

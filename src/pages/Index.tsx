@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { LayoutDashboard, Film, GalleryVertical, Settings } from 'lucide-react';
 
 const Index = () => {
   return (
@@ -32,23 +33,23 @@ const Index = () => {
 
             <p className="mt-5 max-w-xl text-base leading-7 text-slate-400">
               Esta é a tela inicial do aplicativo. A partir daqui, você poderá
-              acessar seus stories, criar novos conteúdos e ajustar as
+              acessar seus stories, criar novos conteúdos, gerenciar vídeos e ajustar as
               configurações do sistema.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
-                to="/stories"
+                to="/dashboard"
                 className="rounded-2xl bg-violet-600 px-6 py-3 text-center font-bold text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700"
               >
-                Ver stories
+                Ver Dashboard
               </Link>
 
               <Link
-                to="/settings"
+                to="/stories"
                 className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center font-bold text-white transition hover:bg-white/10"
               >
-                Ajustar configurações
+                Gerenciar Stories
               </Link>
             </div>
           </div>
@@ -57,27 +58,31 @@ const Index = () => {
             <div className="grid gap-4">
               <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
                 <p className="text-sm text-slate-400">Módulo</p>
-                <h3 className="mt-2 text-xl font-bold">Stories</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Acesse, cadastre e organize seus stories.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
-                <p className="text-sm text-slate-400">Status</p>
-                <h3 className="mt-2 text-xl font-bold text-emerald-400">
-                  Aplicação ativa
+                <h3 className="mt-2 text-xl font-bold flex items-center gap-2">
+                  <LayoutDashboard className="w-5 h-5 text-violet-400" /> Dashboard
                 </h3>
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  O roteamento principal já está configurado corretamente.
+                  Acompanhe as métricas de visualizações e cliques dos seus stories.
                 </p>
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
-                <p className="text-sm text-slate-400">Próximo passo</p>
-                <h3 className="mt-2 text-xl font-bold">Criar a página de stories</h3>
+                <p className="text-sm text-slate-400">Módulo</p>
+                <h3 className="mt-2 text-xl font-bold flex items-center gap-2">
+                  <Film className="w-5 h-5 text-violet-400" /> Stories
+                </h3>
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Depois desta tela, vamos montar a página onde os stories serão exibidas.
+                  Acesse, cadastre e organize seus stories em vídeo.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
+                <p className="text-sm text-slate-400">Módulo</p>
+                <h3 className="mt-2 text-xl font-bold flex items-center gap-2">
+                  <GalleryVertical className="w-5 h-5 text-violet-400" /> Galeria de Vídeos
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-slate-400">
+                  Gerencie seus arquivos de vídeo para reutilização.
                 </p>
               </div>
             </div>

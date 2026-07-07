@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { db, WidgetSettings, Store } from '@/lib/db';
-import { Save, Code, Copy, Check, Palette, Phone } from 'lucide-react'; // Adicionado Phone icon
+import { Save, Code, Copy, Check, Palette, Phone, Globe } from 'lucide-react'; // Adicionado Globe icon
 import { showSuccess, showError } from '@/utils/toast';
 
 const SettingsPage = () => {
@@ -146,6 +146,7 @@ const SettingsPage = () => {
                       {[
                         { value: 'carousel', label: 'Carrossel Horizontal' },
                         { value: 'bubbles', label: 'Bolhas Flutuantes' },
+                        { value: 'grid', label: 'Grade de Stories' }, // Novo modo
                       ].map((mode) => (
                         <button
                           key={mode.value}
@@ -180,6 +181,26 @@ const SettingsPage = () => {
                     />
                     <p className="text-xs text-slate-400 mt-1.5">
                       Este número será usado para o botão de WhatsApp em todos os stories. Inclua o código do país (ex: 55 para Brasil).
+                    </p>
+                  </div>
+
+                  {/* URLs de Exibição do Widget */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Globe className="w-4 h-4 text-violet-600" />
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        Exibir Widget nas URLs
+                      </label>
+                    </div>
+                    <textarea
+                      value={settings.display_urls || ''}
+                      onChange={(e) => setSettings({ ...settings, display_urls: e.target.value })}
+                      placeholder="Ex: /, /produtos/*, /colecoes/verao"
+                      rows={4}
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800 resize-y"
+                    />
+                    <p className="text-xs text-slate-400 mt-1.5">
+                      Liste as URLs (separadas por vírgula) onde o widget deve ser exibido. Use `*` para curinga (ex: `/produtos/*`). Deixe em branco para exibir em todas as páginas.
                     </p>
                   </div>
 
@@ -230,6 +251,7 @@ const SettingsPage = () => {
 
               <p className="text-xs text-slate-500 leading-relaxed mb-4">
                 Para instalar o widget de stories na sua loja virtual Useanny hospedada na Yampi, copie o código abaixo e cole-o na seção de scripts personalizados do seu painel Yampi.
+                Este script também é compatível com o Google Tag Manager (GTM).
               </p>
 
               <div className="bg-slate-950 rounded-xl p-4 relative group">
