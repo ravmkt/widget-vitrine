@@ -1,4 +1,4 @@
-' character in the JSX template by replacing it with > to resolve the Vite/React SWC compilation error.">
+' para garantir a compilação correta.">
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { db, GeneralSettings, Appearance, Store } from '@/lib/db';
