@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Film, Settings, Sparkles, Database, Eye, GalleryVertical, Palette } from 'lucide-react';
+import { LayoutDashboard, Film, Settings, Sparkles, Database, Eye, GalleryVertical, Palette, ShoppingBag } from 'lucide-react';
 import { isSupabaseConfigured } from '@/lib/db';
 
 const Navbar = () => {
@@ -11,6 +11,7 @@ const Navbar = () => {
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/stories', label: 'Stories', icon: Film },
     { path: '/gallery', label: 'Galeria de Vídeos', icon: GalleryVertical },
+    { path: '/products', label: 'Produtos', icon: ShoppingBag },
     { path: '/appearance', label: 'Aparência', icon: Palette },
     { path: '/widget', label: 'Visualizar Widget', icon: Eye },
     { path: '/settings', label: 'Configurações', icon: Settings },

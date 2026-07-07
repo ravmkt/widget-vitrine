@@ -9,6 +9,7 @@ import StoriesWidgetPage from './pages/StoriesWidgetPage';
 import DashboardPage from './pages/DashboardPage';
 import VideoGalleryPage from './pages/VideoGalleryPage';
 import AppearancePage from './pages/AppearancePage';
+import ProductsPage from './pages/ProductsPage';
 import NotFound from './pages/NotFound';
 import WhatsAppFloatingButton from './components/WhatsAppFloatingButton';
 
@@ -71,6 +72,7 @@ const App = () => {
           <Route path="/gallery" element={<VideoGalleryPage />} />
           <Route path="/appearance" element={<AppearancePage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/products" element={<ProductsPage />} />
           <Route path="/widget" element={<StoriesWidgetPage />} />
           <Route path="/widget/:storeId" element={<StoriesWidgetPage />} />
           <Route path="*" element={<NotFound />} />

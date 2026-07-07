@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, Film, GalleryVertical, Settings, Palette } from 'lucide-react';
+import { LayoutDashboard, Film, GalleryVertical, Settings, Palette, ShoppingBag } from 'lucide-react';
 
 const Index = () => {
   return (
@@ -33,7 +33,7 @@ const Index = () => {
 
             <p className="mt-5 max-w-xl text-base leading-7 text-slate-400">
               Esta é a tela inicial do aplicativo. A partir daqui, você poderá
-              acessar seus stories, criar novos conteúdos, gerenciar vídeos, customizar aparências e ajustar as
+              acessar seus stories, criar novos conteúdos, gerenciar vídeos, produtos, customizar aparências e ajustar as
               configurações do sistema.
             </p>
 
@@ -79,10 +79,10 @@ const Index = () => {
               <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
                 <p className="text-sm text-slate-400">Módulo</p>
                 <h3 className="mt-2 text-xl font-bold flex items-center gap-2">
-                  <Palette className="w-5 h-5 text-violet-400" /> Aparência
+                  <ShoppingBag className="w-5 h-5 text-violet-400" /> Produtos
                 </h3>
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Configure as cores, temas, formatos e botões do player e do widget.
+                  Gerencie os produtos da loja e vincule-os diretamente às chamadas de ação dos vídeos.
                 </p>
               </div>
             </div>
