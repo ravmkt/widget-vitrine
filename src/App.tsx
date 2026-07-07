@@ -14,7 +14,7 @@ import MedidasPage from './pages/MedidasPage';
 import CommentsPage from './pages/CommentsPage';
 import IntegrationPage from './pages/IntegrationPage';
 import NotFound from './pages/NotFound';
-import WhatsAppFloatingButton from './components/WhatsAppFloatingButton';
+import FloatingSupportButton from './components/FloatingSupportButton';
 
 // Error Boundary robusto para capturar e exibir erros de renderização de forma amigável
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: Error | null }> {
@@ -83,7 +83,8 @@ const App = () => {
           <Route path="/widget/:storeId" element={<StoriesWidgetPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-        <WhatsAppFloatingButton />
+        {/* Botão de Suporte via WhatsApp Administrativo */}
+        <FloatingSupportButton />
       </BrowserRouter>
       <Toaster richColors position="top-right" closeButton />
     </ErrorBoundary>
