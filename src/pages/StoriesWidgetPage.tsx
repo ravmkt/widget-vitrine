@@ -676,20 +676,23 @@ const StoriesWidgetPage = () => {
                 {currentStoryComments.length === 0 ? (
                   <p className="text-slate-500 text-sm text-center py-4">Nenhum comentário ainda. Seja o primeiro!</p>
                 ) : (
-                  currentStoryComments.map((comment) => (
-                    <div key={comment.id} className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-xs flex-shrink-0">
-                        {comment.user_name.charAt(0)}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-baseline gap-2">
-                          <span className="font-semibold text-slate-800 text-sm">{comment.user_name}</span>
-                          <span className="text-slate-400 text-xs">{comment.created_at ? new Date(comment.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'agora'}</span>
+                  currentStoryComments.map((comment) => {
+                    const safeAuthorName = String(comment.user_name ?? 'Anônimo');
+                    return (
+                      <div key={comment.id} className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-xs flex-shrink-0">
+                          {safeAuthorName.charAt(0).toUpperCase()}
                         </div>
-                        <p className="text-slate-700 text-sm mt-0.5">{comment.text}</p>
+                        <div className="flex-1">
+                          <div className="flex items-baseline gap-2">
+                            <span className="font-semibold text-slate-800 text-sm">{safeAuthorName}</span>
+                            <span className="text-slate-400 text-xs">{comment.created_at ? new Date(comment.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'agora'}</span>
+                          </div>
+                          <p className="text-slate-700 text-sm mt-0.5">{comment.text}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
 
