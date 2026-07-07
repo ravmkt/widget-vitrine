@@ -57,6 +57,12 @@ const StoriesWidgetPage = () => {
   const selectedStory =
     selectedIndex !== null ? stories[selectedIndex] : null;
 
+  // Adicionando logs temporários para localStorage e sessionStorage
+  useEffect(() => {
+    console.log("localStorage:", { ...localStorage });
+    console.log("sessionStorage:", { ...sessionStorage });
+  }, []);
+
   const loadWidgetData = async () => {
     try {
       const stores = await db.getStores();

@@ -71,7 +71,7 @@ const DEFAULT_STORIES: Story[] = [
     id: 's3',
     store_id: '11111111-1111-1111-1111-111111111111',
     title: 'Provador Fashion ✨',
-    video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', // URL corrigida
     thumbnail_url: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=250&auto=format&fit=crop&q=60',
     cta_link: 'https://useanny.com.br/collections/novidades',
     active: true,
@@ -81,7 +81,7 @@ const DEFAULT_STORIES: Story[] = [
     id: 's4',
     store_id: '11111111-1111-1111-1111-111111111111',
     title: 'Cupom de Desconto 🏷️',
-    video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+    video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4', // Usando Sintel para variar
     thumbnail_url: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=250&auto=format&fit=crop&q=60',
     cta_link: 'https://useanny.com.br/discount/PROMO10',
     active: true,
@@ -108,14 +108,23 @@ let memorySettings = [...DEFAULT_SETTINGS];
 const initLocalStorage = () => {
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
-      if (!localStorage.getItem('vidlytics_stores')) {
+      // Sempre sobrescrever o localStorage com os dados padrão se Supabase não estiver configurado
+      // Isso garante que dados antigos do localStorage não persistam
+      if (!isSupabaseConfigured) {
         localStorage.setItem('vidlytics_stores', JSON.stringify(DEFAULT_STORES));
-      }
-      if (!localStorage.getItem('vidlytics_stories')) {
         localStorage.setItem('vidlytics_stories', JSON.stringify(DEFAULT_STORIES));
-      }
-      if (!localStorage.getItem('vidlytics_settings')) {
         localStorage.setItem('vidlytics_settings', JSON.stringify(DEFAULT_SETTINGS));
+      } else {
+        // Se Supabase estiver configurado, ainda garantir que os defaults existam se não houver nada
+        if (!localStorage.getItem('vidlytics_stores')) {
+          localStorage.setItem('vidlytics_stores', JSON.stringify(DEFAULT_STORES));
+        }
+        if (!localStorage.getItem('vidlytics_stories')) {
+          localStorage.setItem('vidlytics_stories', JSON.stringify(DEFAULT_STORIES));
+        }
+        if (!localStorage.getItem('vidlytics_settings')) {
+          localStorage.setItem('vidlytics_settings', JSON.stringify(DEFAULT_SETTINGS));
+        }
       }
     }
   } catch (e) {
