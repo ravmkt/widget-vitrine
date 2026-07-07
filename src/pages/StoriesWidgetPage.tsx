@@ -271,7 +271,6 @@ const StoriesWidgetPage = () => {
       }
       return !prev;
     });
-    // TODO: Log metric 'like'
   };
 
   const handleToggleComments = () => {
@@ -293,13 +292,10 @@ const StoriesWidgetPage = () => {
 
     try {
       const savedComment = await db.comments.save(newComment);
-      // Não adiciona diretamente à lista de aprovados, pois o status é 'pending'
       showSuccess('Comentário enviado para aprovação!');
       setNewCommentText('');
-      // setCommentsCount((prevCount) => prevCount + 1); // Não incrementa até ser aprovado
     } catch (error) {
       console.error('Erro ao adicionar comentário:', error);
-      // show error toast
     }
   };
 
@@ -331,7 +327,6 @@ const StoriesWidgetPage = () => {
         console.error("Erro ao compartilhar story:", error);
       }
     }
-    // TODO: Log metric 'share'
   };
 
   const normalizeWhatsAppNumber = (value?: string | null) => {
@@ -365,14 +360,12 @@ const StoriesWidgetPage = () => {
 
     const whatsappUrl = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-    // TODO: Log metric 'whatsapp_click'
   };
 
   const handleCtaClick = (link?: string) => {
     if (link && selectedStory) {
       db.incrementClickCount(selectedStory.id);
       window.open(link, '_blank');
-      // TODO: Log metric 'cta_click'
     } else {
       alert('Este story não possui um link de compra configurado.');
     }
@@ -394,7 +387,7 @@ const StoriesWidgetPage = () => {
   const whiteActionButtonClasses = "w-[42px] h-[42px] rounded-full border-none bg-white text-slate-900 flex items-center justify-center shadow-md shadow-black/20 cursor-pointer transition-all hover:scale-[1.06]";
 
   const renderStoriesDisplay = () => {
-    const displayMode = selectedStory?.format || currentAppearance?.widget_shape || 'carousel'; // Prioriza o formato do story, depois da aparência, fallback para carousel
+    const displayMode = selectedStory?.format || currentAppearance?.widget_shape || 'carousel';
 
     switch (displayMode) {
       case 'grid':
@@ -428,7 +421,7 @@ const StoriesWidgetPage = () => {
             ))}
           </div>
         );
-      case 'floating_widget': // Renderiza como bolhas flutuantes
+      case 'floating_widget':
       case 'carousel':
       default:
         return (
@@ -645,7 +638,7 @@ const StoriesWidgetPage = () => {
               >
                 {mainVideoForSelectedStory?.thumbnail_url && (
                   <img
-                    src={mainVideoForActiveStory.thumbnail_url}
+                    src={mainVideoForSelectedStory.thumbnail_url}
                     alt={selectedStory.title || "Produto"}
                     className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
                   />
