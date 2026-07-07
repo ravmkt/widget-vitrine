@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { db, Story, Store, Video, StoryVideo, Appearance, StoryFormat, CTAType, ScrollDirection, DisplayLocation, PageRule, Product, StoryProduct, ConditionType, DisplayPosition } from '@/lib/db';
-import { Plus, Film, Eye, Trash2, Edit3, Sparkles, ToggleLeft, ToggleRight, Copy, Check, Eye as EyeIcon, MousePointerClick, Video as VideoIcon, LayoutGrid, LayoutList, MessageSquareText, Share2, Heart, Phone, GripVertical, ExternalLink, Search, Filter, XCircle, PlusCircle } from 'lucide-react';
+import { Plus, Film, Eye, Trash2, Edit3, Sparkles, ToggleLeft, ToggleRight, Copy, Check, Eye as EyeIcon, MousePointerClick, Video as VideoIcon, LayoutGrid, LayoutList, MessageSquareText, Share2, Heart, Phone, GripVertical, ExternalLink, Search, Filter, XCircle, PlusCircle, FolderHeart, Layers } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 
 const StoriesPage = () => {
@@ -10,6 +10,7 @@ const StoriesPage = () => {
   const [allStories, setAllStories] = useState<Story[]>([]);
   const [filteredStories, setFilteredStories] = useState<Story[]>([]);
   const [videos, setVideos] = useState<Video[]>([]);
+  const [allVideosList, setAllVideosList] = useState<Video[]>([]); // Todos os vídeos cadastrados (ativos e inativos)
   const [appearances, setAppearances] = useState<Appearance[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [storyVideosMap, setStoryVideosMap] = useState<Map<string, StoryVideo[]>>(new Map());
@@ -24,6 +25,9 @@ const StoriesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const [filterFormat, setFilterFormat] = useState<'all' | StoryFormat>('all');
+
+  // Video selection tabs inside story creation form
+  const [videoSelectTab, setVideoSelectTab] = useState<'gallery' | 'all_videos'>('gallery');
 
   // Form states
   const [title, setTitle] = useState('');
@@ -54,7 +58,8 @@ const StoriesPage = () => {
         setAllStories(fetchedStories.sort((a, b) => a.position - b.position));
 
         const fetchedVideos = await db.videos.getAll(mainStore.id);
-        setVideos(fetchedVideos.filter(v => v.status === 'active'));
+        setAllVideosList(fetchedVideos); // Todos os vídeos cadastrados na galeria (independente de status)
+        setVideos(fetchedVideos.filter(v => v.status === 'active')); // Apenas ativos para a aba 'Galeria'
 
         const fetchedAppearances = await db.appearances.getAll(mainStore.id);
         setAppearances(fetchedAppearances);
@@ -373,6 +378,9 @@ const StoriesPage = () => {
     );
   }
 
+  // Determine active video list based on selected tab
+  const currentVideoList = videoSelectTab === 'gallery' ? videos : allVideosList;
+
   return (
     <div className="min-h-screen bg-slate-50">
       <Navbar />
@@ -537,21 +545,49 @@ const StoriesPage = () => {
                 </div>
               </div>
 
-              {/* Seção: Vídeos/Imagens */}
+              {/* Seção: Vídeos/Imagens com Abas da Galeria */}
               <div className="space-y-5">
                 <h4 className="text-md font-bold text-slate-700 border-b border-slate-100 pb-2">Vídeos do Story *</h4>
+                
+                {/* Abas: Galeria e Todos os Vídeos */}
+                <div className="flex border-b border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setVideoSelectTab('gallery')}
+                    className={`flex items-center gap-2 px-4 py-2.5 font-bold text-xs uppercase tracking-wider border-b-2 transition-all ${
+                      videoSelectTab === 'gallery'
+                        ? 'border-violet-600 text-violet-600'
+                        : 'border-transparent text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    <FolderHeart className="w-4 h-4" />
+                    Galeria (Ativos)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVideoSelectTab('all_videos')}
+                    className={`flex items-center gap-2 px-4 py-2.5 font-bold text-xs uppercase tracking-wider border-b-2 transition-all ${
+                      videoSelectTab === 'all_videos'
+                        ? 'border-violet-600 text-violet-600'
+                        : 'border-transparent text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    <Layers className="w-4 h-4" />
+                    Todos os vídeos
+                  </button>
+                </div>
+
                 <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <VideoIcon className="w-4 h-4 text-violet-600" />
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
-                      Selecione vídeos da Galeria
-                    </label>
-                  </div>
-                  {videos.length === 0 ? (
-                    <p className="text-sm text-slate-500">Nenhum vídeo disponível na galeria. Adicione vídeos primeiro.</p>
+                  {currentVideoList.length === 0 ? (
+                    <div className="p-8 text-center bg-slate-50 border border-slate-100 rounded-2xl">
+                      <p className="text-sm text-slate-500">Nenhum vídeo disponível nesta aba. Adicione vídeos na aba Galeria primeiro.</p>
+                      <Link to="/gallery" className="mt-3 inline-flex items-center gap-1.5 text-xs text-violet-600 font-bold hover:underline">
+                        Ir para Galeria de Vídeos <ExternalLink className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
                   ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-60 overflow-y-auto p-2 border border-slate-200 rounded-xl bg-slate-50">
-                      {videos.map(video => (
+                      {currentVideoList.map(video => (
                         <button
                           key={video.id}
                           type="button"
@@ -569,6 +605,9 @@ const StoriesPage = () => {
                             )}
                           </div>
                           <span className="absolute bottom-1 left-1 text-[8px] text-white bg-black/50 px-1 py-0.5 rounded-sm">{video.title}</span>
+                          {video.status === 'inactive' && (
+                            <span className="absolute top-1 left-1 text-[7px] text-white bg-red-600 px-1 py-0.2 rounded-sm uppercase font-bold">Inativo</span>
+                          )}
                         </button>
                       ))}
                     </div>
@@ -583,7 +622,7 @@ const StoriesPage = () => {
                     <h5 className="text-sm font-bold text-slate-700">Vídeos Selecionados ({selectedVideoIds.length})</h5>
                     <ul className="space-y-2">
                       {selectedVideoIds.map((videoId, index) => {
-                        const video = videos.find(v => v.id === videoId);
+                        const video = allVideosList.find(v => v.id === videoId);
                         if (!video) return null;
                         const isCover = index === 0;
                         return (
@@ -895,7 +934,7 @@ const StoriesPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredStories.map((story) => {
               const coverVideo = storyVideosMap.get(story.id)?.find(sv => sv.is_cover);
-              const thumbnailUrl = videos.find(v => v.id === coverVideo?.video_id)?.thumbnail_url || 'https://via.placeholder.com/150';
+              const thumbnailUrl = allVideosList.find(v => v.id === coverVideo?.video_id)?.thumbnail_url || 'https://via.placeholder.com/150';
               const appearanceName = appearances.find(app => app.id === story.appearance_id)?.name || 'Padrão da Loja';
               const mainPageRule = pageRulesMap.get(story.id)?.[0];
               const mainDisplayLocation = displayLocationsMap.get(story.id)?.[0];

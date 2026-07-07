@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { db, Story, Store, Video, StoryVideo, Appearance, StoryFormat, CTAType, ScrollDirection, DisplayLocation, PageRule, Product, StoryProduct, ConditionType, DisplayPosition } from '@/lib/db';
-import { ArrowLeft, ExternalLink, Film, Image, Link as LinkIcon, Save, X, Edit3, ToggleLeft, ToggleRight, Eye as EyeIcon, MousePointerClick, Video as VideoIcon, LayoutGrid, LayoutList, MessageSquareText, Share2, Heart, Phone, GripVertical, PlusCircle, Trash2, XCircle } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Film, Image, Link as LinkIcon, Save, X, Edit3, ToggleLeft, ToggleRight, Eye as EyeIcon, MousePointerClick, Video as VideoIcon, LayoutGrid, LayoutList, MessageSquareText, Share2, Heart, Phone, GripVertical, PlusCircle, Trash2, XCircle, FolderHeart, Layers, Check } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
 
 const StoryDetailsPage = () => {
@@ -11,6 +11,7 @@ const StoryDetailsPage = () => {
   const [store, setStore] = useState<Store | null>(null);
   const [story, setStory] = useState<Story | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
+  const [allVideosList, setAllVideosList] = useState<Video[]>([]); // Todos os vídeos cadastrados
   const [storyVideos, setStoryVideos] = useState<StoryVideo[]>([]);
   const [appearances, setAppearances] = useState<Appearance[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -21,6 +22,9 @@ const StoryDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Video selection tabs inside story edit form
+  const [videoSelectTab, setVideoSelectTab] = useState<'gallery' | 'all_videos'>('gallery');
 
   const [formData, setFormData] = useState({
     title: "",
@@ -57,7 +61,8 @@ const StoryDetailsPage = () => {
       setStory(currentStory || null);
 
       const fetchedVideos = await db.videos.getAll(mainStore.id);
-      setVideos(fetchedVideos.filter(v => v.status === 'active'));
+      setAllVideosList(fetchedVideos); // Todos os vídeos
+      setVideos(fetchedVideos.filter(v => v.status === 'active')); // Apenas ativos para a aba 'Galeria'
 
       const fetchedStoryVideos = await db.storyVideos.getAll(mainStore.id);
       const currentStoryVideos = fetchedStoryVideos.filter(sv => sv.story_id === id).sort((a, b) => a.position - b.position);
@@ -383,7 +388,8 @@ const StoryDetailsPage = () => {
     );
   }
 
-  const currentThumbnailUrl = videos.find(v => v.id === selectedVideoIds[0])?.thumbnail_url || 'https://via.placeholder.com/150';
+  const currentThumbnailUrl = allVideosList.find(v => v.id === selectedVideoIds[0])?.thumbnail_url || 'https://via.placeholder.com/150';
+  const currentVideoList = videoSelectTab === 'gallery' ? videos : allVideosList;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -670,38 +676,78 @@ const StoryDetailsPage = () => {
                 Vídeos do Story
               </h2>
               {isEditing ? (
-                <div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-60 overflow-y-auto p-2 border border-slate-200 rounded-xl bg-slate-50">
-                    {videos.map(video => (
-                      <button
-                        key={video.id}
-                        type="button"
-                        onClick={() => handleVideoSelection(video.id)}
-                        className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all ${
-                          selectedVideoIds.includes(video.id) ? 'border-violet-600 ring-2 ring-violet-500' : 'border-slate-200 hover:border-violet-300'
-                        }`}
-                      >
-                        <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                          {selectedVideoIds.includes(video.id) ? (
-                            <Check className="w-6 h-6 text-emerald-400" />
-                          ) : (
-                            <Plus className="w-6 h-6 text-white" />
-                          )}
-                        </div>
-                        <span className="absolute bottom-1 left-1 text-[8px] text-white bg-black/50 px-1 py-0.5 rounded-sm">{video.title}</span>
-                      </button>
-                    ))}
+                <div className="space-y-4">
+                  {/* Abas: Galeria e Todos os Vídeos */}
+                  <div className="flex border-b border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() => setVideoSelectTab('gallery')}
+                      className={`flex items-center gap-2 px-4 py-2.5 font-bold text-xs uppercase tracking-wider border-b-2 transition-all ${
+                        videoSelectTab === 'gallery'
+                          ? 'border-violet-600 text-violet-600'
+                          : 'border-transparent text-slate-400 hover:text-slate-600'
+                      }`}
+                    >
+                      <FolderHeart className="w-4 h-4" />
+                      Galeria (Ativos)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setVideoSelectTab('all_videos')}
+                      className={`flex items-center gap-2 px-4 py-2.5 font-bold text-xs uppercase tracking-wider border-b-2 transition-all ${
+                        videoSelectTab === 'all_videos'
+                          ? 'border-violet-600 text-violet-600'
+                          : 'border-transparent text-slate-400 hover:text-slate-600'
+                      }`}
+                    >
+                      <Layers className="w-4 h-4" />
+                      Todos os vídeos
+                    </button>
                   </div>
-                  <p className="text-xs text-slate-400 mt-1.5">
-                    Selecione os vídeos que farão parte deste story. O primeiro vídeo selecionado será a capa.
-                  </p>
+
+                  <div>
+                    {currentVideoList.length === 0 ? (
+                      <div className="p-8 text-center bg-slate-50 border border-slate-100 rounded-2xl">
+                        <p className="text-sm text-slate-500">Nenhum vídeo disponível nesta aba. Adicione vídeos na aba Galeria primeiro.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-60 overflow-y-auto p-2 border border-slate-200 rounded-xl bg-slate-50">
+                        {currentVideoList.map(video => (
+                          <button
+                            key={video.id}
+                            type="button"
+                            onClick={() => handleVideoSelection(video.id)}
+                            className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all ${
+                              selectedVideoIds.includes(video.id) ? 'border-violet-600 ring-2 ring-violet-500' : 'border-slate-200 hover:border-violet-300'
+                            }`}
+                          >
+                            <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                              {selectedVideoIds.includes(video.id) ? (
+                                <Check className="w-6 h-6 text-emerald-400" />
+                              ) : (
+                                <Plus className="w-6 h-6 text-white" />
+                              )}
+                            </div>
+                            <span className="absolute bottom-1 left-1 text-[8px] text-white bg-black/50 px-1 py-0.5 rounded-sm">{video.title}</span>
+                            {video.status === 'inactive' && (
+                              <span className="absolute top-1 left-1 text-[7px] text-white bg-red-600 px-1 py-0.2 rounded-sm uppercase font-bold">Inativo</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-xs text-slate-400 mt-1.5">
+                      Selecione os vídeos que farão parte deste story. O primeiro vídeo selecionado será a capa.
+                    </p>
+                  </div>
+
                   {selectedVideoIds.length > 0 && (
                     <div className="space-y-3 p-4 border border-slate-200 rounded-xl bg-slate-50 mt-4">
                       <h5 className="text-sm font-bold text-slate-700">Vídeos Selecionados ({selectedVideoIds.length})</h5>
                       <ul className="space-y-2">
                         {selectedVideoIds.map((videoId, index) => {
-                          const video = videos.find(v => v.id === videoId);
+                          const video = allVideosList.find(v => v.id === videoId);
                           if (!video) return null;
                           const isCover = index === 0;
                           return (
@@ -731,7 +777,7 @@ const StoryDetailsPage = () => {
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {storyVideos.map(sv => {
-                    const video = videos.find(v => v.id === sv.video_id);
+                    const video = allVideosList.find(v => v.id === sv.video_id);
                     return video ? (
                       <div key={sv.id} className="relative aspect-video rounded-lg overflow-hidden shadow-sm">
                         <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover" />
