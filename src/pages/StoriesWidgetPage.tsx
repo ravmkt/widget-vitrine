@@ -31,22 +31,26 @@ const FALLBACK_VIDEO_URL =
 
 const normalizeStoryVideoUrl = (story: Story): Story => {
   const currentUrl = story.video_url || "";
-  const title = String(story.title || "").toLowerCase();
 
-  const shouldReplaceVideo =
-    title.includes("provador fashion") ||
-    currentUrl.includes("assets.mixkit.co") ||
+  // Se a URL estiver vazia, ou não vier da nossa fonte confiável (gtv-videos-bucket),
+  // ou contiver padrões problemáticos conhecidos, substitua-a.
+  const isProblematicOrUntrustedUrl =
+    !currentUrl.trim() || // URL vazia ou apenas espaços em branco
+    !currentUrl.includes("commondatastorage.googleapis.com/gtv-videos-bucket/sample/") || // Não é da nossa fonte confiável
+    currentUrl.includes("assets.mixkit.co") || // Padrão Mixkit
     currentUrl.includes("mixkit-woman-holding-shopping-bags-and-smiling") ||
-    currentUrl.includes("40358-large.mp4");
+    currentUrl.includes("40358-large.mp4") ||
+    currentUrl.includes("sample/ForBiggerBlazes.mp4"); // Outra URL de amostra que pode ser problemática
 
-  if (!shouldReplaceVideo) {
-    return story;
+  if (isProblematicOrUntrustedUrl) {
+    console.warn(`[Vidlytics] Normalizando URL de vídeo para story "${story.title}": "${currentUrl}" substituído por "${FALLBACK_VIDEO_URL}"`);
+    return {
+      ...story,
+      video_url: FALLBACK_VIDEO_URL,
+    };
   }
 
-  return {
-    ...story,
-    video_url: FALLBACK_VIDEO_URL,
-  };
+  return story;
 };
 
 const StoriesWidgetPage = () => {
