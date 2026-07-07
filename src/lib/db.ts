@@ -184,6 +184,11 @@ export interface GeneralSettings {
   show_video_controls: boolean;
   created_at?: string;
   updated_at?: string;
+  
+  // Novos campos requeridos para robustez total do módulo:
+  whatsapp_button_enabled?: boolean;
+  pause_on_invisible?: boolean;
+  public_installation_key?: string;
 }
 
 // --- Store (mantida, mas com campos atualizados se necessário) ---
@@ -211,10 +216,10 @@ const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   store_id: DEFAULT_STORE.id,
   store_name: DEFAULT_STORE.name,
   store_url: DEFAULT_STORE.domain,
-  logo_url: 'https://via.placeholder.com/40x40?text=U',
+  logo_url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=100&q=80',
   contact_email: 'contato@useanny.com.br',
   whatsapp_number: '5545999629702',
-  whatsapp_default_message: 'Olá! Tenho interesse nos produtos da Useanny.',
+  whatsapp_default_message: 'Olá! Tenho interesse nesse produto que vi no vídeo: {{story_title}}',
   app_enabled: true,
   stories_enabled: true,
   carousel_enabled: true,
@@ -226,6 +231,9 @@ const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   autoplay: true,
   muted_by_default: true,
   show_video_controls: false,
+  whatsapp_button_enabled: true,
+  pause_on_invisible: true,
+  public_installation_key: 'pub_live_67a28e9fd28a1c902d5d83a18b109ccb',
 };
 
 const DEFAULT_APPEARANCES: Appearance[] = [
