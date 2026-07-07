@@ -81,7 +81,7 @@ const DEFAULT_STORIES: Story[] = [
     id: 's4',
     store_id: '11111111-1111-1111-1111-111111111111',
     title: 'Cupom de Desconto 🏷️',
-    video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4', // Usando Sintel para variar
+    video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4', // Alterado para ForBiggerFun.mp4
     thumbnail_url: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=250&auto=format&fit=crop&q=60',
     cta_link: 'https://useanny.com.br/discount/PROMO10',
     active: true,
