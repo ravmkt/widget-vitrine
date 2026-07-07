@@ -90,13 +90,33 @@ const StoriesWidgetPage = () => {
     loadWidgetData();
   }, [storeId]);
 
+  // Lógica de depuração e reprodução de vídeo
   useEffect(() => {
-    console.log("Story atual:", selectedStory); // Log adicionado
     setVideoError(false); // Resetar erro de vídeo ao mudar de story
-    if (videoRef.current && selectedStory?.video_url) {
+
+    console.log("Story atual completo:", selectedStory);
+    console.log("Campos possíveis:", {
+      video_url: selectedStory?.video_url, // Usando video_url conforme definido em db.ts
+      // Outros campos de URL que poderiam existir, mas não são esperados aqui:
+      // videoUrl: (selectedStory as any)?.videoUrl,
+      // mediaUrl: (selectedStory as any)?.mediaUrl,
+      // url: (selectedStory as any)?.url,
+      // src: (selectedStory as any)?.src,
+      // media: (selectedStory as any)?.media,
+      // fileUrl: (selectedStory as any)?.fileUrl,
+      // type: (selectedStory as any)?.type,
+      // mediaType: (selectedStory as any)?.mediaType,
+      // mimeType: (selectedStory as any)?.mimeType,
+    });
+
+    const resolvedVideoUrl = selectedStory?.video_url || "";
+    console.log("URL final usada no vídeo:", resolvedVideoUrl);
+
+    if (videoRef.current && resolvedVideoUrl) {
       videoRef.current.muted = isMuted;
+      videoRef.current.src = resolvedVideoUrl; // Definir src diretamente
+      videoRef.current.load(); // Recarregar o vídeo para garantir que a nova URL seja usada
       if (isPlaying) {
-        videoRef.current.load(); // Recarregar o vídeo para garantir que a nova URL seja usada
         videoRef.current.play().catch((e) => {
           console.error("Error playing video:", e);
           setVideoError(true); // Definir erro se a reprodução falhar
@@ -104,12 +124,10 @@ const StoriesWidgetPage = () => {
       } else {
         videoRef.current.pause();
       }
-    } else if (selectedStory && !selectedStory.video_url) {
+    } else if (selectedStory && !resolvedVideoUrl) {
       setVideoError(true); // Definir erro se não houver URL de vídeo
     }
-    console.log("URL do vídeo atual:", selectedStory?.video_url);
-    console.log("Erro de vídeo?", videoError);
-  }, [isMuted, isPlaying, selectedStory]);
+  }, [isMuted, isPlaying, selectedStory]); // Dependências atualizadas
 
   const handlePrevious = (e: React.MouseEvent) => {
     e.stopPropagation(); // Evita que o clique propague para o vídeo
@@ -353,8 +371,22 @@ const StoriesWidgetPage = () => {
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
                 onEnded={handleNext} // Auto-advance to next story
-                onError={() => {
-                  console.error("Erro ao carregar vídeo:", selectedStory.video_url);
+                onLoadedMetadata={() => {
+                  console.log("Vídeo carregou metadata:", selectedStory.video_url);
+                }}
+                onCanPlay={() => {
+                  console.log("Vídeo pronto para reproduzir:", selectedStory.video_url);
+                }}
+                onError={(event) => {
+                  const video = event.currentTarget;
+                  console.error("Erro ao carregar vídeo:", {
+                    resolvedVideoUrl: selectedStory.video_url,
+                    error: video.error,
+                    code: video.error?.code,
+                    message: video.error?.message,
+                    networkState: video.networkState,
+                    readyState: video.readyState,
+                  });
                   setVideoError(true);
                 }}
               >
