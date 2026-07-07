@@ -645,7 +645,7 @@ const StoriesWidgetPage = () => {
               >
                 {mainVideoForSelectedStory?.thumbnail_url && (
                   <img
-                    src={mainVideoForSelectedStory.thumbnail_url}
+                    src={mainVideoForActiveStory.thumbnail_url}
                     alt={selectedStory.title || "Produto"}
                     className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
                   />
