@@ -17,6 +17,7 @@ const StoriesPage = () => {
   const [videoUrl, setVideoUrl] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [ctaLink, setCtaLink] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState(''); // Novo campo para WhatsApp
   const [position, setPosition] = useState(1);
   const [active, setActive] = useState(true);
 
@@ -54,12 +55,33 @@ const StoriesPage = () => {
     }
   };
 
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url);
+      return url.startsWith('http://') || url.startsWith('https://');
+    } catch (e) {
+      return false;
+    }
+  };
+
   const handleCreateStory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!store) return;
 
-    if (!title.trim() || !videoUrl.trim() || !thumbnailUrl.trim()) {
-      showError('Por favor, preencha todos os campos obrigatórios.');
+    if (!title.trim()) {
+      showError('Por favor, preença o título do story.');
+      return;
+    }
+    if (!videoUrl.trim() || !isValidUrl(videoUrl)) {
+      showError('Por favor, forneça uma URL de vídeo válida (começando com http/https).');
+      return;
+    }
+    if (!thumbnailUrl.trim() || !isValidUrl(thumbnailUrl)) {
+      showError('Por favor, forneça uma URL de thumbnail válida (começando com http/https).');
+      return;
+    }
+    if (ctaLink.trim() && !isValidUrl(ctaLink)) {
+      showError('Por favor, forneça uma URL de CTA válida (começando com http/https) ou deixe em branco.');
       return;
     }
 
@@ -70,6 +92,7 @@ const StoriesPage = () => {
       video_url: videoUrl,
       thumbnail_url: thumbnailUrl,
       cta_link: ctaLink || undefined,
+      whatsapp_number: whatsappNumber || undefined, // Adicionado WhatsApp
       active,
       position,
     };
@@ -83,6 +106,7 @@ const StoriesPage = () => {
       setVideoUrl('');
       setThumbnailUrl('');
       setCtaLink('');
+      setWhatsappNumber(''); // Resetar WhatsApp
       setActive(true);
       setShowForm(false);
       
@@ -217,7 +241,7 @@ const StoriesPage = () => {
                     required
                     value={videoUrl}
                     onChange={(e) => setVideoUrl(e.target.value)}
-                    placeholder="https://assets.mixkit.co/videos/preview/..."
+                    placeholder="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-mono text-slate-800"
                   />
                 </div>
@@ -235,6 +259,22 @@ const StoriesPage = () => {
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-mono text-slate-800"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  Número de WhatsApp (para este Story)
+                </label>
+                <input
+                  type="tel"
+                  value={whatsappNumber}
+                  onChange={(e) => setWhatsappNumber(e.target.value)}
+                  placeholder="Ex: 5545999629702"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
+                />
+                <p className="text-xs text-slate-400 mt-1.5">
+                  Se preenchido, este número será usado para o botão de WhatsApp deste story. Caso contrário, usará o da loja.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

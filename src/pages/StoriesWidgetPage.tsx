@@ -30,8 +30,8 @@ interface Comment {
 const FALLBACK_VIDEO_BY_TITLE: Record<string, string> = {
   cupom: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
   provador: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-  novaColecao: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-  default: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+  novaColecao: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", // URL atualizada
+  default: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", // URL atualizada
 };
 
 const getRawStoryVideoUrl = (story: Story | null): string => {
@@ -229,16 +229,21 @@ const StoriesWidgetPage = () => {
     const video = videoRef.current;
 
     if (!video) {
-      console.warn("Nenhum elemento de vídeo encontrado para play/pause.");
+      console.error("Elemento de vídeo não encontrado.");
+      return;
+    }
+
+    if (!video.currentSrc && !video.src) {
+      console.error("Vídeo sem src.");
       return;
     }
 
     try {
-      console.log("Estado antes do toggle:", {
-        paused: video.paused,
-        currentTime: video.currentTime,
+      console.log("Tentando alternar play/pause:", {
         src: video.currentSrc || video.src,
+        paused: video.paused,
         readyState: video.readyState,
+        networkState: video.networkState,
       });
 
       if (video.paused) {
@@ -252,9 +257,10 @@ const StoriesWidgetPage = () => {
         console.log("Pause executado com sucesso.");
       }
       setShowPlayPauseOverlay(true);
-      setTimeout(() => setShowPlayPauseOverlay(false), 700);
+      setTimeout(() => setShowPlayPauseOverlay(700));
     } catch (error) {
       console.error("Falha ao executar play/pause:", error);
+      setVideoError(true); // Define o erro como true se o vídeo falhar no carregamento
     }
   };
 
@@ -361,26 +367,43 @@ const StoriesWidgetPage = () => {
     }
   };
 
+  const normalizeWhatsAppNumber = (value?: string | null) => {
+    if (!value) return "";
+    return String(value).replace(/\D/g, "");
+  };
+
+  const getWhatsAppNumber = () => {
+    const rawNumber =
+      selectedStory?.whatsapp_number ||
+      store?.whatsapp_number ||
+      ""; // Fallback para string vazia se não encontrar
+
+    let number = normalizeWhatsAppNumber(rawNumber);
+
+    // Se o número tiver 10 ou 11 dígitos e não começar com 55, adicionar 55.
+    if (number.length >= 10 && number.length <= 11 && !number.startsWith("55")) {
+      number = `55${number}`;
+    }
+
+    return number;
+  };
+
   // Função para compartilhar via WhatsApp
   const handleWhatsAppShare = (event?: React.MouseEvent) => {
     event?.preventDefault();
     event?.stopPropagation();
 
     const shareData = getStoryShareData();
+    const number = getWhatsAppNumber();
 
     const message = `${shareData.text}\n${shareData.url}`;
-    let whatsappUrl = '';
-    const rawPhoneNumber = store?.whatsapp_number;
 
-    if (rawPhoneNumber) {
-      const cleanedPhoneNumber = rawPhoneNumber.replace(/\D/g, "");
-      const finalPhoneNumber = cleanedPhoneNumber.length >= 9 && !cleanedPhoneNumber.startsWith('55') ? `55${cleanedPhoneNumber}` : cleanedPhoneNumber;
-      whatsappUrl = `https://wa.me/${finalPhoneNumber}?text=${encodeURIComponent(message)}`;
-    } else {
-      whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    }
-    
+    const whatsappUrl = number
+      ? `https://wa.me/${number}?text=${encodeURIComponent(message)}`
+      : `https://wa.me/?text=${encodeURIComponent(message)}`;
+
     console.log("Clique WhatsApp:", {
+      number,
       selectedStory,
       shareData,
       whatsappUrl,
@@ -402,9 +425,6 @@ const StoriesWidgetPage = () => {
 
   const darkActionButtonClasses = "w-[42px] h-[42px] rounded-full border border-white/[0.75] bg-black/[0.35] text-white flex items-center justify-center backdrop-blur-[6px] cursor-pointer transition-all hover:bg-white/[0.18] hover:scale-[1.04]";
   const whiteActionButtonClasses = "w-[42px] h-[42px] rounded-full border-none bg-white text-slate-900 flex items-center justify-center shadow-md shadow-black/20 cursor-pointer transition-all hover:scale-[1.06]";
-
-  // Apenas desabilita visualmente se não houver número de WhatsApp configurado
-  const isWhatsAppButtonVisuallyDisabled = !store?.whatsapp_number;
 
   // Logs de depuração antes do return
   console.log("Story atual completo:", selectedStory);
@@ -616,10 +636,8 @@ const StoriesWidgetPage = () => {
               <button
                 type="button"
                 onClick={handleWhatsAppShare}
-                className={cn(whiteActionButtonClasses, isWhatsAppButtonVisuallyDisabled && "opacity-50 cursor-not-allowed")}
+                className={cn(whiteActionButtonClasses, "cursor-pointer pointer-events-auto opacity-100")}
                 aria-label="Abrir WhatsApp"
-                // O botão está sempre habilitado, mas pode ter um estilo visual de desabilitado se não houver número
-                // A ação de clique ainda funcionará, mas pode levar a um WhatsApp genérico se o número não estiver configurado
               >
                 <WhatsAppIcon size={22} />
               </button>

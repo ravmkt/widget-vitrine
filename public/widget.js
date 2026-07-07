@@ -12,7 +12,7 @@
     {
       id: 's1',
       title: 'Nova Coleção Outono 🍂',
-      video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+      video_url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', // URL atualizada
       thumbnail_url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=250&auto=format&fit=crop&q=60',
       cta_link: 'https://useanny.com.br/collections/outono',
       active: true,

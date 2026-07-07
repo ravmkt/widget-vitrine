@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { db, Story, Store } from '@/lib/db';
-import { ArrowLeft, ExternalLink, Film, Image, Link as LinkIcon } from 'lucide-react';
-import { showError } from '@/utils/toast';
+import { ArrowLeft, ExternalLink, Film, Image, Link as LinkIcon, Save, X, Edit3, ToggleLeft, ToggleRight } from 'lucide-react';
+import { showError, showSuccess } from '@/utils/toast';
 
 const StoryDetailsPage = () => {
   const { id } = useParams();
@@ -11,6 +11,18 @@ const StoryDetailsPage = () => {
   const [store, setStore] = useState<Store | null>(null);
   const [story, setStory] = useState<Story | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [formData, setFormData] = useState({
+    title: "",
+    video_url: "",
+    thumbnail_url: "",
+    cta_link: "",
+    whatsapp_number: "",
+    active: true,
+    position: 1,
+  });
 
   const loadStoryDetails = async () => {
     try {
@@ -28,6 +40,18 @@ const StoryDetailsPage = () => {
       const currentStory = fetchedStories.find((item) => item.id === id);
 
       setStory(currentStory || null);
+
+      if (currentStory) {
+        setFormData({
+          title: currentStory.title,
+          video_url: currentStory.video_url,
+          thumbnail_url: currentStory.thumbnail_url,
+          cta_link: currentStory.cta_link || "",
+          whatsapp_number: currentStory.whatsapp_number || "",
+          active: currentStory.active,
+          position: currentStory.position,
+        });
+      }
     } catch (error) {
       console.error('Erro ao carregar detalhes do story:', error);
       showError('Erro ao carregar os detalhes do story.');
@@ -39,6 +63,78 @@ const StoryDetailsPage = () => {
   useEffect(() => {
     loadStoryDetails();
   }, [id]);
+
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url);
+      return url.startsWith('http://') || url.startsWith('https://');
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const handleSaveStory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!story || isSaving) return;
+
+    if (!formData.title.trim()) {
+      showError('Por favor, preencha o título do story.');
+      return;
+    }
+    if (!formData.video_url.trim() || !isValidUrl(formData.video_url)) {
+      showError('Por favor, forneça uma URL de vídeo válida (começando com http/https).');
+      return;
+    }
+    if (!formData.thumbnail_url.trim() || !isValidUrl(formData.thumbnail_url)) {
+      showError('Por favor, forneça uma URL de thumbnail válida (começando com http/https).');
+      return;
+    }
+    if (formData.cta_link.trim() && !isValidUrl(formData.cta_link)) {
+      showError('Por favor, forneça uma URL de CTA válida (começando com http/https) ou deixe em branco.');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+
+      const updatedStory: Story = {
+        ...story,
+        title: formData.title,
+        video_url: formData.video_url,
+        thumbnail_url: formData.thumbnail_url,
+        cta_link: formData.cta_link || undefined,
+        whatsapp_number: formData.whatsapp_number || undefined,
+        active: formData.active,
+        position: formData.position,
+        updated_at: new Date().toISOString(),
+      };
+
+      await db.saveStory(updatedStory);
+      showSuccess('Story atualizado com sucesso!');
+      setIsEditing(false);
+      await loadStoryDetails(); // Recarrega os dados para atualizar a UI
+    } catch (error) {
+      console.error("Erro ao salvar story:", error);
+      showError("Erro ao salvar alterações do story.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    if (story) {
+      setFormData({
+        title: story.title,
+        video_url: story.video_url,
+        thumbnail_url: story.thumbnail_url,
+        cta_link: story.cta_link || "",
+        whatsapp_number: story.whatsapp_number || "",
+        active: story.active,
+        position: story.position,
+      });
+    }
+    setIsEditing(false);
+  };
 
   if (loading) {
     return (
@@ -93,50 +189,112 @@ const StoryDetailsPage = () => {
             </p>
 
             <h1 className="text-3xl font-bold text-slate-900 mt-1">
-              {story.title}
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  className="w-full bg-transparent border-b border-slate-200 focus:outline-none focus:border-violet-500 text-3xl font-bold text-slate-900"
+                />
+              ) : (
+                story.title
+              )}
             </h1>
 
             <p className="text-slate-500 mt-1">
-              Visualize as informações cadastradas para este story.
+              {isEditing ? "Edite as informações do story abaixo." : "Visualize as informações cadastradas para este story."}
             </p>
           </div>
 
-          <Link
-            to="/stories"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-all self-start sm:self-auto"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Voltar
-          </Link>
+          <div className="flex gap-3 self-start sm:self-auto">
+            {isEditing ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-semibold text-sm transition-all"
+                  disabled={isSaving}
+                >
+                  <X className="w-4 h-4" />
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  onClick={handleSaveStory}
+                  className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-violet-100 transition-all"
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
+                  {isSaving ? 'Salvando...' : 'Salvar Alterações'}
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(true)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-all self-start sm:self-auto"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  Editar Story
+                </button>
+                <Link
+                  to="/stories"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-all self-start sm:self-auto"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Voltar
+                </Link>
+              </>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-8">
           <section className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="relative aspect-[9/16] bg-slate-900">
               <img
-                src={story.thumbnail_url}
-                alt={story.title}
+                src={isEditing ? formData.thumbnail_url : story.thumbnail_url}
+                alt={isEditing ? formData.title : story.title}
                 className="w-full h-full object-cover"
               />
 
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
 
               <div className="absolute top-4 right-4">
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm backdrop-blur-sm ${
-                    story.active
-                      ? 'bg-emerald-500/90 text-white'
-                      : 'bg-slate-500/90 text-white'
-                  }`}
-                >
-                  {story.active ? 'Ativo' : 'Inativo'}
-                </span>
+                {isEditing ? (
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, active: !prev.active }))}
+                    className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm backdrop-blur-sm transition-all ${
+                      formData.active
+                        ? 'bg-emerald-500/90 text-white'
+                        : 'bg-slate-500/90 text-white'
+                    }`}
+                  >
+                    {formData.active ? 'Ativo' : 'Inativo'}
+                  </button>
+                ) : (
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm backdrop-blur-sm ${
+                      story.active
+                        ? 'bg-emerald-500/90 text-white'
+                        : 'bg-slate-500/90 text-white'
+                    }`}
+                  >
+                    {story.active ? 'Ativo' : 'Inativo'}
+                  </span>
+                )}
               </div>
 
               <div className="absolute bottom-4 left-4 right-4">
-                <p className="text-white text-lg font-bold">{story.title}</p>
+                <p className="text-white text-lg font-bold">{isEditing ? formData.title : story.title}</p>
                 <p className="text-white/70 text-xs mt-1">
-                  Posição #{story.position}
+                  Posição #{isEditing ? formData.position : story.position}
                 </p>
               </div>
             </div>
@@ -162,18 +320,49 @@ const StoryDetailsPage = () => {
                   <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
                     Status
                   </p>
-                  <p className="mt-2 text-lg font-bold text-slate-900">
-                    {story.active ? 'Ativo' : 'Inativo'}
-                  </p>
+                  {isEditing ? (
+                    <div className="mt-2">
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, active: !prev.active }))}
+                        className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
+                          formData.active
+                            ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                            : 'border-slate-200 bg-slate-50 text-slate-500'
+                        }`}
+                      >
+                        <span>{formData.active ? 'Ativo' : 'Inativo'}</span>
+                        {formData.active ? (
+                          <ToggleRight className="w-6 h-6 text-emerald-600" />
+                        ) : (
+                          <ToggleLeft className="w-6 h-6 text-slate-400" />
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-lg font-bold text-slate-900">
+                      {story.active ? 'Ativo' : 'Inativo'}
+                    </p>
+                  )}
                 </div>
 
                 <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
                   <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
                     Posição
                   </p>
-                  <p className="mt-2 text-lg font-bold text-slate-900">
-                    #{story.position}
-                  </p>
+                  {isEditing ? (
+                    <input
+                      type="number"
+                      min="1"
+                      value={formData.position}
+                      onChange={(e) => setFormData(prev => ({ ...prev, position: Number(e.target.value) }))}
+                      className="w-full mt-2 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
+                    />
+                  ) : (
+                    <p className="mt-2 text-lg font-bold text-slate-900">
+                      #{story.position}
+                    </p>
+                  )}
                 </div>
 
                 <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
@@ -200,16 +389,25 @@ const StoryDetailsPage = () => {
                       URL do Vídeo
                     </p>
                   </div>
-
-                  <a
-                    href={story.video_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 text-sm font-medium text-violet-600 hover:text-violet-700 break-all"
-                  >
-                    {story.video_url}
-                    <ExternalLink className="w-4 h-4 shrink-0" />
-                  </a>
+                  {isEditing ? (
+                    <input
+                      type="url"
+                      value={formData.video_url}
+                      onChange={(e) => setFormData(prev => ({ ...prev, video_url: e.target.value }))}
+                      placeholder="https://example.com/video.mp4"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-mono text-slate-800"
+                    />
+                  ) : (
+                    <a
+                      href={story.video_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 text-sm font-medium text-violet-600 hover:text-violet-700 break-all"
+                    >
+                      {story.video_url}
+                      <ExternalLink className="w-4 h-4 shrink-0" />
+                    </a>
+                  )}
                 </div>
 
                 <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
@@ -219,27 +417,43 @@ const StoryDetailsPage = () => {
                       URL da Thumbnail
                     </p>
                   </div>
-
-                  <a
-                    href={story.thumbnail_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 text-sm font-medium text-violet-600 hover:text-violet-700 break-all"
-                  >
-                    {story.thumbnail_url}
-                    <ExternalLink className="w-4 h-4 shrink-0" />
-                  </a>
+                  {isEditing ? (
+                    <input
+                      type="url"
+                      value={formData.thumbnail_url}
+                      onChange={(e) => setFormData(prev => ({ ...prev, thumbnail_url: e.target.value }))}
+                      placeholder="https://example.com/thumbnail.jpg"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-mono text-slate-800"
+                    />
+                  ) : (
+                    <a
+                      href={story.thumbnail_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 text-sm font-medium text-violet-600 hover:text-violet-700 break-all"
+                    >
+                      {story.thumbnail_url}
+                      <ExternalLink className="w-4 h-4 shrink-0" />
+                    </a>
+                  )}
                 </div>
 
-                {story.cta_link && (
-                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-                    <div className="flex items-center gap-2 mb-2">
-                      <LinkIcon className="w-4 h-4 text-violet-600" />
-                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                        Link de Compra / CTA
-                      </p>
-                    </div>
-
+                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <LinkIcon className="w-4 h-4 text-violet-600" />
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                      Link de Compra / CTA
+                    </p>
+                  </div>
+                  {isEditing ? (
+                    <input
+                      type="url"
+                      value={formData.cta_link}
+                      onChange={(e) => setFormData(prev => ({ ...prev, cta_link: e.target.value }))}
+                      placeholder="https://example.com/product"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-mono text-slate-800"
+                    />
+                  ) : story.cta_link ? (
                     <a
                       href={story.cta_link}
                       target="_blank"
@@ -249,8 +463,34 @@ const StoryDetailsPage = () => {
                       {story.cta_link}
                       <ExternalLink className="w-4 h-4 shrink-0" />
                     </a>
+                  ) : (
+                    <p className="text-sm text-slate-500">Nenhum link de CTA cadastrado.</p>
+                  )}
+                </div>
+
+                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <LinkIcon className="w-4 h-4 text-violet-600" /> {/* Usando LinkIcon para WhatsApp */}
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                      Número de WhatsApp (Story)
+                    </p>
                   </div>
-                )}
+                  {isEditing ? (
+                    <input
+                      type="tel"
+                      value={formData.whatsapp_number}
+                      onChange={(e) => setFormData(prev => ({ ...prev, whatsapp_number: e.target.value }))}
+                      placeholder="Ex: 5545999629702"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-mono text-slate-800"
+                    />
+                  ) : story.whatsapp_number ? (
+                    <p className="text-sm font-medium text-slate-800 break-all">
+                      {story.whatsapp_number}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-slate-500">Nenhum número de WhatsApp cadastrado para este story.</p>
+                  )}
+                </div>
               </div>
             </div>
           </section>
