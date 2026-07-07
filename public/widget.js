@@ -12,7 +12,7 @@
     {
       id: 's1',
       title: 'Nova Coleção Outono 🍂',
-      video_url: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-in-a-futuristic-setting-41809-large.mp4',
+      video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
       thumbnail_url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=250&auto=format&fit=crop&q=60',
       cta_link: 'https://useanny.com.br/collections/outono',
       active: true,
@@ -21,7 +21,7 @@
     {
       id: 's2',
       title: 'Unboxing Especial 🎁',
-      video_url: 'https://assets.mixkit.co/videos/preview/mixkit-hands-opening-a-gift-box-41604-large.mp4',
+      video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
       thumbnail_url: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=250&auto=format&fit=crop&q=60',
       cta_link: 'https://useanny.com.br/products/vestido-especial',
       active: true,
@@ -30,7 +30,7 @@
     {
       id: 's3',
       title: 'Provador Fashion ✨',
-      video_url: 'https://assets.mixkit.co/videos/preview/mixkit-woman-holding-shopping-bags-and-smiling-40358-large.mp4',
+      video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
       thumbnail_url: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=250&auto=format&fit=crop&q=60',
       cta_link: 'https://useanny.com.br/collections/novidades',
       active: true,
@@ -39,7 +39,7 @@
     {
       id: 's4',
       title: 'Cupom de Desconto 🏷️',
-      video_url: 'https://assets.mixkit.co/videos/preview/mixkit-holding-a-smartphone-with-a-green-screen-41618-large.mp4',
+      video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
       thumbnail_url: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=250&auto=format&fit=crop&q=60',
       cta_link: 'https://useanny.com.br/discount/PROMO10',
       active: true,
@@ -375,15 +375,15 @@
 
   shadowRoot.appendChild(modal);
 
-  const videoElement = modal.querySelector('#vidlytics-video');
-  const titleElement = modal.querySelector('#vidlytics-title');
-  const closeBtn = modal.querySelector('#vidlytics-close');
-  const progressBar = modal.querySelector('#vidlytics-progress');
-  const ctaBtn = modal.querySelector('.cta-btn');
+  const videoElement = modal.querySelector('#vidlytics-video') as HTMLVideoElement;
+  const titleElement = modal.querySelector('#vidlytics-title') as HTMLSpanElement;
+  const closeBtn = modal.querySelector('#vidlytics-close') as HTMLButtonElement;
+  const progressBar = modal.querySelector('#vidlytics-progress') as HTMLDivElement;
+  const ctaBtn = modal.querySelector('.cta-btn') as HTMLButtonElement;
 
   let currentStory = null;
 
-  function openPlayer(story) {
+  function openPlayer(story: any) {
     console.log(`[Vidlytics] Abrindo story: ${story.title}`);
     currentStory = story;
     titleElement.textContent = story.title;

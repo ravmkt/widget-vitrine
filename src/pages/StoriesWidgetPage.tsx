@@ -91,6 +91,7 @@ const StoriesWidgetPage = () => {
   }, [storeId]);
 
   useEffect(() => {
+    console.log("Story atual:", selectedStory); // Log adicionado
     setVideoError(false); // Resetar erro de vídeo ao mudar de story
     if (videoRef.current && selectedStory?.video_url) {
       videoRef.current.muted = isMuted;
