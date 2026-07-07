@@ -26,6 +26,29 @@ interface Comment {
   timestamp: string;
 }
 
+const FALLBACK_VIDEO_URL =
+  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4";
+
+const normalizeStoryVideoUrl = (story: Story): Story => {
+  const currentUrl = story.video_url || "";
+  const title = String(story.title || "").toLowerCase();
+
+  const shouldReplaceVideo =
+    title.includes("provador fashion") ||
+    currentUrl.includes("assets.mixkit.co") ||
+    currentUrl.includes("mixkit-woman-holding-shopping-bags-and-smiling") ||
+    currentUrl.includes("40358-large.mp4");
+
+  if (!shouldReplaceVideo) {
+    return story;
+  }
+
+  return {
+    ...story,
+    video_url: FALLBACK_VIDEO_URL,
+  };
+};
+
 const StoriesWidgetPage = () => {
   const { storeId } = useParams();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -57,10 +80,28 @@ const StoriesWidgetPage = () => {
   const selectedStory =
     selectedIndex !== null ? stories[selectedIndex] : null;
 
-  // Adicionando logs temporários para localStorage e sessionStorage
+  // Adicionando logs temporários para localStorage e sessionStorage e limpeza agressiva
   useEffect(() => {
-    console.log("localStorage:", { ...localStorage });
-    console.log("sessionStorage:", { ...sessionStorage });
+    console.log("localStorage (antes da limpeza):", { ...localStorage });
+    console.log("sessionStorage (antes da limpeza):", { ...sessionStorage });
+
+    Object.keys(localStorage).forEach((key) => {
+      const value = localStorage.getItem(key);
+      if (value?.includes("assets.mixkit.co")) {
+        console.warn("Removendo cache antigo com Mixkit do localStorage:", key);
+        localStorage.removeItem(key);
+      }
+    });
+
+    Object.keys(sessionStorage).forEach((key) => {
+      const value = sessionStorage.getItem(key);
+      if (value?.includes("assets.mixkit.co")) {
+        console.warn("Removendo sessionStorage antigo com Mixkit:", key);
+        sessionStorage.removeItem(key);
+      }
+    });
+    console.log("localStorage (depois da limpeza):", { ...localStorage });
+    console.log("sessionStorage (depois da limpeza):", { ...sessionStorage });
   }, []);
 
   const loadWidgetData = async () => {
@@ -79,12 +120,15 @@ const StoriesWidgetPage = () => {
       }
 
       const fetchedStories = await db.getStories(currentStore.id);
-
-      const activeStories = fetchedStories
+      
+      // Aplicar normalização aos stories carregados
+      const normalizedStories = fetchedStories
         .filter((story) => story.active)
-        .sort((a, b) => a.position - b.position);
+        .sort((a, b) => a.position - b.position)
+        .map(normalizeStoryVideoUrl); // Aplicar normalização aqui
 
-      setStories(activeStories);
+      setStories(normalizedStories);
+      console.log("Stories carregados/finais:", normalizedStories); // Log adicionado
     } catch (error) {
       console.error('Erro ao carregar widget de stories:', error);
     } finally {
@@ -100,7 +144,7 @@ const StoriesWidgetPage = () => {
   useEffect(() => {
     setVideoError(false); // Resetar erro de vídeo ao mudar de story
 
-    console.log("Story atual completo:", selectedStory);
+    console.log("Story selecionado:", selectedStory); // Log adicionado
     console.log("Campos possíveis:", {
       video_url: selectedStory?.video_url, // Usando video_url conforme definido em db.ts
       // Outros campos de URL que poderiam existir, mas não são esperados aqui:
@@ -116,7 +160,7 @@ const StoriesWidgetPage = () => {
     });
 
     const resolvedVideoUrl = selectedStory?.video_url || "";
-    console.log("URL final usada no vídeo:", resolvedVideoUrl);
+    console.log("URL final usada no vídeo:", resolvedVideoUrl); // Log adicionado
 
     if (videoRef.current && resolvedVideoUrl) {
       videoRef.current.muted = isMuted;

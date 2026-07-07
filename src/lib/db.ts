@@ -108,14 +108,15 @@ let memorySettings = [...DEFAULT_SETTINGS];
 const initLocalStorage = () => {
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
-      // Sempre sobrescrever o localStorage com os dados padrão se Supabase não estiver configurado
-      // Isso garante que dados antigos do localStorage não persistam
+      // Se Supabase não estiver configurado, sempre sobrescrever o localStorage com os dados padrão.
+      // Isso garante que dados antigos do localStorage não persistam e que os defaults sejam a fonte primária.
       if (!isSupabaseConfigured) {
         localStorage.setItem('vidlytics_stores', JSON.stringify(DEFAULT_STORES));
         localStorage.setItem('vidlytics_stories', JSON.stringify(DEFAULT_STORIES));
         localStorage.setItem('vidlytics_settings', JSON.stringify(DEFAULT_SETTINGS));
       } else {
-        // Se Supabase estiver configurado, ainda garantir que os defaults existam se não houver nada
+        // Se Supabase estiver configurado, garantir que os defaults existam se não houver nada no localStorage.
+        // O Supabase será a fonte primária, mas o localStorage serve como um cache inicial.
         if (!localStorage.getItem('vidlytics_stores')) {
           localStorage.setItem('vidlytics_stores', JSON.stringify(DEFAULT_STORES));
         }
