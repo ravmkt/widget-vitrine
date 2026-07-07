@@ -222,7 +222,10 @@ const StoriesWidgetPage = () => {
   }, [storeId]);
 
   // Função para alternar play/pause do vídeo
-  const handleTogglePlay = async () => {
+  const handleTogglePlay = async (event?: React.MouseEvent) => {
+    event?.preventDefault();
+    event?.stopPropagation();
+
     const video = videoRef.current;
 
     if (!video) {
@@ -231,19 +234,27 @@ const StoriesWidgetPage = () => {
     }
 
     try {
+      console.log("Estado antes do toggle:", {
+        paused: video.paused,
+        currentTime: video.currentTime,
+        src: video.currentSrc || video.src,
+        readyState: video.readyState,
+      });
+
       if (video.paused) {
+        video.muted = isMuted; // Garante que o estado de mute seja respeitado
         await video.play();
         setIsPlaying(true);
-        console.log("Vídeo reproduzindo:", safeVideoUrl);
+        console.log("Play executado com sucesso.");
       } else {
         video.pause();
         setIsPlaying(false);
-        console.log("Vídeo pausado:", safeVideoUrl);
+        console.log("Pause executado com sucesso.");
       }
       setShowPlayPauseOverlay(true);
       setTimeout(() => setShowPlayPauseOverlay(false), 700);
     } catch (error) {
-      console.error("Erro ao alternar play/pause:", error);
+      console.error("Falha ao executar play/pause:", error);
     }
   };
 
@@ -351,7 +362,10 @@ const StoriesWidgetPage = () => {
   };
 
   // Função para compartilhar via WhatsApp
-  const handleWhatsAppShare = () => {
+  const handleWhatsAppShare = (event?: React.MouseEvent) => {
+    event?.preventDefault();
+    event?.stopPropagation();
+
     const shareData = getStoryShareData();
 
     const message = `${shareData.text}\n${shareData.url}`;
@@ -366,7 +380,11 @@ const StoriesWidgetPage = () => {
       whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     }
     
-    console.log("Abrindo WhatsApp:", whatsappUrl);
+    console.log("Clique WhatsApp:", {
+      selectedStory,
+      shareData,
+      whatsappUrl,
+    });
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
@@ -385,7 +403,8 @@ const StoriesWidgetPage = () => {
   const darkActionButtonClasses = "w-[42px] h-[42px] rounded-full border border-white/[0.75] bg-black/[0.35] text-white flex items-center justify-center backdrop-blur-[6px] cursor-pointer transition-all hover:bg-white/[0.18] hover:scale-[1.04]";
   const whiteActionButtonClasses = "w-[42px] h-[42px] rounded-full border-none bg-white text-slate-900 flex items-center justify-center shadow-md shadow-black/20 cursor-pointer transition-all hover:scale-[1.06]";
 
-  const isWhatsAppButtonDisabled = !store?.whatsapp_number;
+  // Apenas desabilita visualmente se não houver número de WhatsApp configurado
+  const isWhatsAppButtonVisuallyDisabled = !store?.whatsapp_number;
 
   // Logs de depuração antes do return
   console.log("Story atual completo:", selectedStory);
@@ -493,7 +512,7 @@ const StoriesWidgetPage = () => {
                 muted={isMuted}
                 playsInline
                 loop
-                preload="metadata"
+                preload="auto" // Adicionado preload="auto"
                 className="w-full h-full object-cover cursor-pointer"
                 onClick={handleTogglePlay} // Clicar no vídeo também alterna play/pause
                 onPlay={() => setIsPlaying(true)}
@@ -509,6 +528,12 @@ const StoriesWidgetPage = () => {
                 onLoadedData={() => {
                   console.log("Vídeo carregado com sucesso:", safeVideoUrl);
                   setVideoError(false); // Garante que o erro seja falso no carregamento bem-sucedido
+                  const video = videoRef.current;
+                  if (video && video.paused) {
+                    video.play().catch((err) => {
+                      console.warn("Autoplay falhou, aguardando clique do usuário:", err);
+                    });
+                  }
                 }}
                 onError={(event) => {
                   console.error("Erro ao carregar vídeo:", {
@@ -591,9 +616,10 @@ const StoriesWidgetPage = () => {
               <button
                 type="button"
                 onClick={handleWhatsAppShare}
-                className={cn(whiteActionButtonClasses, isWhatsAppButtonDisabled && "opacity-50 cursor-not-allowed")}
+                className={cn(whiteActionButtonClasses, isWhatsAppButtonVisuallyDisabled && "opacity-50 cursor-not-allowed")}
                 aria-label="Abrir WhatsApp"
-                disabled={isWhatsAppButtonDisabled}
+                // O botão está sempre habilitado, mas pode ter um estilo visual de desabilitado se não houver número
+                // A ação de clique ainda funcionará, mas pode levar a um WhatsApp genérico se o número não estiver configurado
               >
                 <WhatsAppIcon size={22} />
               </button>
