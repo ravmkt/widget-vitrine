@@ -119,7 +119,7 @@ const StoriesWidgetPage = () => {
   const [loading, setLoading] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(true); // Estado para controlar play/pause
   const [showPlayPauseOverlay, setShowPlayPauseOverlay] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -221,12 +221,38 @@ const StoriesWidgetPage = () => {
     loadWidgetData();
   }, [storeId]);
 
+  // Função para alternar play/pause do vídeo
+  const handleTogglePlay = async () => {
+    const video = videoRef.current;
+
+    if (!video) {
+      console.warn("Nenhum elemento de vídeo encontrado para play/pause.");
+      return;
+    }
+
+    try {
+      if (video.paused) {
+        await video.play();
+        setIsPlaying(true);
+        console.log("Vídeo reproduzindo:", safeVideoUrl);
+      } else {
+        video.pause();
+        setIsPlaying(false);
+        console.log("Vídeo pausado:", safeVideoUrl);
+      }
+      setShowPlayPauseOverlay(true);
+      setTimeout(() => setShowPlayPauseOverlay(false), 700);
+    } catch (error) {
+      console.error("Erro ao alternar play/pause:", error);
+    }
+  };
+
   const handlePrevious = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (selectedIndex === null) return;
     setIsLiked(false);
     setShowCommentsPanel(false);
-    setIsPlaying(true);
+    setIsPlaying(true); // Resetar para play ao mudar de story
     setSelectedIndex((prevIndex) =>
       prevIndex === 0 ? stories.length - 1 : prevIndex - 1
     );
@@ -237,24 +263,10 @@ const StoriesWidgetPage = () => {
     if (selectedIndex === null) return;
     setIsLiked(false);
     setShowCommentsPanel(false);
-    setIsPlaying(true);
+    setIsPlaying(true); // Resetar para play ao mudar de story
     setSelectedIndex((prevIndex) =>
       prevIndex === stories.length - 1 ? 0 : prevIndex + 1
     );
-  };
-
-  const handleVideoClick = () => {
-    if (videoRef.current && !videoError) {
-      if (videoRef.current.paused) {
-        videoRef.current.play();
-        setIsPlaying(true);
-      } else {
-        videoRef.current.pause();
-        setIsPlaying(false);
-      }
-      setShowPlayPauseOverlay(true);
-      setTimeout(() => setShowPlayPauseOverlay(false), 700);
-    }
   };
 
   const handleToggleMute = (e: React.MouseEvent) => {
@@ -296,18 +308,53 @@ const StoriesWidgetPage = () => {
     showSuccess('Comentário enviado!');
   };
 
-  const getProductOrStoryLink = () => {
-    if (selectedStory?.cta_link) {
-      return selectedStory.cta_link;
-    }
-    return window.location.href;
+  // Função para obter dados de compartilhamento do story atual
+  const getStoryShareData = () => {
+    const title = String(selectedStory?.title || (selectedStory as any)?.name || "Story");
+    const text = `Confira este story: ${title}`;
+    const url =
+      selectedStory?.cta_link || // Preferir link de CTA
+      window.location.href; // Fallback para a URL atual
+
+    return { title, text, url };
   };
 
+  // Função para compartilhar o story (Web Share API ou fallback)
+  const handleShareStory = async () => {
+    const shareData = getStoryShareData();
+    console.log("Story para compartilhamento:", selectedStory);
+    console.log("Dados de compartilhamento:", shareData);
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        console.log("Compartilhamento nativo aberto:", shareData);
+        showSuccess('Story compartilhado!');
+        setCopiedLink(false); // Resetar estado de copiado
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareData.url);
+        console.log("Link copiado como fallback:", shareData.url);
+        showSuccess('Link copiado!');
+        setCopiedLink(true);
+        setTimeout(() => setCopiedLink(false), 2000);
+      } else {
+        window.prompt("Copie o link:", shareData.url);
+        setCopiedLink(false); // Resetar estado de copiado
+      }
+    } catch (error) {
+      console.error("Erro ao compartilhar story:", error);
+      // Não mostrar erro para o usuário se for apenas cancelamento do compartilhamento
+      if ((error as any).name !== 'AbortError') {
+        // showError('Erro ao compartilhar o story.'); // Descomentar se quiser mostrar erro genérico
+      }
+    }
+  };
+
+  // Função para compartilhar via WhatsApp
   const handleWhatsAppShare = () => {
-    const productLink = getProductOrStoryLink();
-    const productName = selectedStory?.title || "este produto";
-    const message = `Olá! Tenho interesse em ${productName}. Link: ${productLink}`;
-    
+    const shareData = getStoryShareData();
+
+    const message = `${shareData.text}\n${shareData.url}`;
     let whatsappUrl = '';
     const rawPhoneNumber = store?.whatsapp_number;
 
@@ -319,30 +366,8 @@ const StoriesWidgetPage = () => {
       whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     }
     
+    console.log("Abrindo WhatsApp:", whatsappUrl);
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-  };
-
-  const handleShare = async () => {
-    const productLink = getProductOrStoryLink();
-    const shareData = {
-      title: selectedStory?.title || "Produto",
-      text: "Confira este produto",
-      url: productLink,
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-        showSuccess('Story compartilhado!');
-      } catch (error) {
-        console.error('Erro ao compartilhar:', error);
-      }
-    } else {
-      navigator.clipboard.writeText(productLink);
-      showSuccess('Link copiado!');
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2000);
-    }
   };
 
   if (loading) {
@@ -434,6 +459,7 @@ const StoriesWidgetPage = () => {
 
             {/* Mute/Unmute Button (inside story card) */}
             <button
+              type="button"
               onClick={handleToggleMute}
               className={cn(darkActionButtonClasses, "absolute top-4 right-[66px] z-30")}
               aria-label={isMuted ? 'Ativar som' : 'Desativar som'}
@@ -443,7 +469,8 @@ const StoriesWidgetPage = () => {
 
             {/* Play/Pause Button (inside story card) */}
             <button
-              onClick={handleVideoClick}
+              type="button"
+              onClick={handleTogglePlay}
               className={cn(darkActionButtonClasses, "absolute top-4 right-[128px] z-30")}
               aria-label={isPlaying ? 'Pausar vídeo' : 'Reproduzir vídeo'}
             >
@@ -468,7 +495,7 @@ const StoriesWidgetPage = () => {
                 loop
                 preload="metadata"
                 className="w-full h-full object-cover cursor-pointer"
-                onClick={handleVideoClick}
+                onClick={handleTogglePlay} // Clicar no vídeo também alterna play/pause
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
                 onEnded={handleNext} // Avança automaticamente para o próximo story
@@ -524,6 +551,7 @@ const StoriesWidgetPage = () => {
             <div className="absolute right-[14px] bottom-[74px] z-40 flex flex-col gap-2">
               {/* Comments Button */}
               <button
+                type="button"
                 onClick={handleToggleComments}
                 className={cn(darkActionButtonClasses, "relative")}
                 aria-label="Comentários"
@@ -536,6 +564,7 @@ const StoriesWidgetPage = () => {
 
               {/* Like Button */}
               <button
+                type="button"
                 onClick={handleToggleLike}
                 className={cn(darkActionButtonClasses, "relative group")}
                 aria-label="Curtir story"
@@ -550,7 +579,8 @@ const StoriesWidgetPage = () => {
 
               {/* Share Button */}
               <button
-                onClick={handleShare}
+                type="button"
+                onClick={handleShareStory}
                 className={whiteActionButtonClasses}
                 aria-label="Compartilhar produto"
               >
@@ -559,6 +589,7 @@ const StoriesWidgetPage = () => {
 
               {/* WhatsApp Button */}
               <button
+                type="button"
                 onClick={handleWhatsAppShare}
                 className={cn(whiteActionButtonClasses, isWhatsAppButtonDisabled && "opacity-50 cursor-not-allowed")}
                 aria-label="Abrir WhatsApp"
@@ -570,6 +601,7 @@ const StoriesWidgetPage = () => {
 
             {selectedStory.cta_link && (
               <button
+                type="button"
                 className="absolute left-[12px] right-[74px] bottom-[28px] h-[64px] px-3 py-2 rounded-xl bg-white shadow-lg flex items-center gap-3 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] z-30"
                 onClick={() => {
                   if (selectedStory.cta_link) {
@@ -605,6 +637,7 @@ const StoriesWidgetPage = () => {
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-slate-900 text-lg font-bold">Comentários</h4>
                 <button
+                  type="button"
                   onClick={() => setShowCommentsPanel(false)}
                   className="text-slate-500 hover:text-slate-700 transition-colors p-1 rounded-full hover:bg-slate-100"
                 >
@@ -645,6 +678,7 @@ const StoriesWidgetPage = () => {
                   className="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 text-slate-800 text-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
                 />
                 <button
+                  type="button"
                   onClick={handleAddComment}
                   className="bg-violet-600 hover:bg-violet-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-violet-100 transition-all"
                 >
