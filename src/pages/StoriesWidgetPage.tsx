@@ -28,8 +28,9 @@ interface Comment {
 
 // --- Funções Auxiliares para URL de Vídeo Segura ---
 const FALLBACK_VIDEO_BY_TITLE: Record<string, string> = {
-  provador: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
   cupom: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+  provador: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+  novaColecao: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
   default: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
 };
 
@@ -48,46 +49,62 @@ const getRawStoryVideoUrl = (story: Story | null): string => {
   );
 };
 
-const isValidMp4Url = (url: string): boolean => {
-  if (!url) return false;
+const isInvalidVideoUrl = (url: string): boolean => {
+  if (!url) return true;
 
-  const normalized = url.toLowerCase();
+  const normalized = url.toLowerCase().trim();
 
-  if (!normalized.startsWith("http")) return false;
-  if (normalized.includes("assets.mixkit.co")) return false;
-  if (normalized.includes("mixkit-")) return false;
-  if (normalized.includes("40358-large.mp4")) return false;
+  if (!normalized.startsWith("http")) return true;
+
+  if (normalized.includes("assets.mixkit.co")) return true;
+  if (normalized.includes("mixkit-")) return true;
+  if (normalized.includes("40358-large.mp4")) return true;
 
   if (
     normalized.endsWith(".jpg") ||
     normalized.endsWith(".jpeg") ||
     normalized.endsWith(".png") ||
     normalized.endsWith(".webp") ||
-    normalized.endsWith(".gif")
+    normalized.endsWith(".gif") ||
+    normalized.endsWith(".svg")
   ) {
-    return false;
+    return true;
   }
 
-  return normalized.includes(".mp4");
+  return !normalized.includes(".mp4");
 };
 
-const getSafeVideoUrl = (story: Story | null): string => {
+const getFallbackVideoUrl = (story: Story | null): string => {
   const title = String(story?.title || (story as any)?.name || "").toLowerCase();
-  const rawUrl = getRawStoryVideoUrl(story);
 
-  if (title.includes("cupom de desconto") || title.includes("cupom")) {
+  if (title.includes("cupom")) {
     return FALLBACK_VIDEO_BY_TITLE.cupom;
   }
 
-  if (title.includes("provador fashion") || title.includes("provador")) {
+  if (title.includes("provador")) {
     return FALLBACK_VIDEO_BY_TITLE.provador;
   }
 
-  if (isValidMp4Url(rawUrl)) {
-    return rawUrl;
+  if (
+    title.includes("nova coleção") ||
+    title.includes("nova colecao") ||
+    title.includes("coleção") ||
+    title.includes("colecao")
+  ) {
+    return FALLBACK_VIDEO_BY_TITLE.novaColecao;
   }
 
   return FALLBACK_VIDEO_BY_TITLE.default;
+};
+
+const getSafeVideoUrl = (story: Story | null): string => {
+  const rawUrl = getRawStoryVideoUrl(story);
+
+  if (isInvalidVideoUrl(rawUrl)) {
+    return getFallbackVideoUrl(story);
+  }
+
+  return rawUrl;
 };
 // --- Fim das Funções Auxiliares ---
 
@@ -106,7 +123,7 @@ const StoriesWidgetPage = () => {
   const [showPlayPauseOverlay, setShowPlayPauseOverlay] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
-  const [videoError, setVideoError] = useState(false); // Novo estado para erro de vídeo
+  const [videoError, setVideoError] = useState(false); // Estado para erro de carregamento do vídeo
 
   // Estados para comentários
   const [comments, setComments] = useState<Comment[]>([
@@ -118,12 +135,35 @@ const StoriesWidgetPage = () => {
   const [commentsCount, setCommentsCount] = useState(comments.length);
 
   // Estados para curtidas
-  const [likesCount, setLikesCount] = useState(Math.floor(Math.random() * 100) + 50); // Valor inicial aleatório para demonstração
+  const [likesCount, setLikesCount] = useState(Math.floor(Math.random() * 100) + 50);
 
   const selectedStory =
     selectedIndex !== null ? stories[selectedIndex] : null;
 
-  // Adicionando logs temporários para localStorage e sessionStorage e limpeza agressiva
+  // Variável safeVideoUrl centralizada
+  const safeVideoUrl = getSafeVideoUrl(selectedStory);
+
+  // Resetar videoError quando safeVideoUrl mudar
+  useEffect(() => {
+    setVideoError(false);
+  }, [safeVideoUrl]);
+
+  // Efeito para carregar e reproduzir vídeo quando safeVideoUrl mudar
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.load(); // Força o recarregamento do vídeo
+      const playPromise = videoRef.current.play();
+
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          console.warn("Autoplay bloqueado ou falhou:", error);
+          // Não definimos videoError aqui, pois autoplay bloqueado não é um erro de URL.
+        });
+      }
+    }
+  }, [safeVideoUrl]); // Dispara quando safeVideoUrl muda
+
+  // Limpeza de cache do localStorage/sessionStorage
   useEffect(() => {
     console.log("localStorage (antes da limpeza):", { ...localStorage });
     console.log("sessionStorage (antes da limpeza):", { ...sessionStorage });
@@ -164,13 +204,12 @@ const StoriesWidgetPage = () => {
 
       const fetchedStories = await db.getStories(currentStore.id);
       
-      // A normalização agora será feita diretamente no player com getSafeVideoUrl
       const activeStories = fetchedStories
         .filter((story) => story.active)
         .sort((a, b) => a.position - b.position);
 
       setStories(activeStories);
-      console.log("Stories carregados/finais (antes da normalização do player):", activeStories); // Log adicionado
+      console.log("Stories carregados/finais:", activeStories);
     } catch (error) {
       console.error('Erro ao carregar widget de stories:', error);
     } finally {
@@ -182,49 +221,10 @@ const StoriesWidgetPage = () => {
     loadWidgetData();
   }, [storeId]);
 
-  // Handler de erro para o vídeo
-  const handleVideoError = (event: React.SyntheticEvent<HTMLVideoElement>) => {
-    console.error("Erro ao carregar vídeo:", {
-      story: selectedStory,
-      rawUrl: getRawStoryVideoUrl(selectedStory),
-      safeVideoUrl: getSafeVideoUrl(selectedStory), // Usar a função aqui para o log
-      videoError: event.currentTarget.error,
-    });
-    setVideoError(true);
-  };
-
-  // Lógica de depuração e reprodução de vídeo
-  useEffect(() => {
-    setVideoError(false); // Resetar erro de vídeo ao mudar de story
-
-    const currentSafeVideoUrl = getSafeVideoUrl(selectedStory); // Obter a URL segura aqui
-
-    console.log("Story selecionado:", selectedStory);
-    console.log("Título do story atual:", selectedStory?.title || (selectedStory as any)?.name);
-    console.log("URL bruta encontrada:", getRawStoryVideoUrl(selectedStory));
-    console.log("URL segura usada no vídeo:", currentSafeVideoUrl);
-
-    if (videoRef.current && currentSafeVideoUrl) {
-      videoRef.current.muted = isMuted;
-      videoRef.current.src = currentSafeVideoUrl; // Definir src diretamente
-      videoRef.current.load(); // Recarregar o vídeo para garantir que a nova URL seja usada
-      if (isPlaying) {
-        videoRef.current.play().catch((e) => {
-          console.error("Error playing video:", e);
-          setVideoError(true); // Definir erro se a reprodução falhar
-        });
-      } else {
-        videoRef.current.pause();
-      }
-    } else if (selectedStory && !currentSafeVideoUrl) {
-      setVideoError(true); // Definir erro se não houver URL de vídeo segura
-    }
-  }, [isMuted, isPlaying, selectedStory]); // Dependências atualizadas
-
   const handlePrevious = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Evita que o clique propague para o vídeo
+    e.stopPropagation();
     if (selectedIndex === null) return;
-    setIsLiked(false); // Reset like state
+    setIsLiked(false);
     setShowCommentsPanel(false);
     setIsPlaying(true);
     setSelectedIndex((prevIndex) =>
@@ -233,9 +233,9 @@ const StoriesWidgetPage = () => {
   };
 
   const handleNext = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Evita que o clique propague para o vídeo
+    e.stopPropagation();
     if (selectedIndex === null) return;
-    setIsLiked(false); // Reset like state
+    setIsLiked(false);
     setShowCommentsPanel(false);
     setIsPlaying(true);
     setSelectedIndex((prevIndex) =>
@@ -258,7 +258,7 @@ const StoriesWidgetPage = () => {
   };
 
   const handleToggleMute = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Evita que o clique propague para o vídeo
+    e.stopPropagation();
     if (videoRef.current) {
       videoRef.current.muted = !videoRef.current.muted;
       setIsMuted(videoRef.current.muted);
@@ -285,7 +285,7 @@ const StoriesWidgetPage = () => {
 
     const newComment: Comment = {
       id: `c${comments.length + 1}`,
-      username: 'Você', // Mock user
+      username: 'Você',
       text: newCommentText,
       timestamp: 'agora',
     };
@@ -300,7 +300,6 @@ const StoriesWidgetPage = () => {
     if (selectedStory?.cta_link) {
       return selectedStory.cta_link;
     }
-    // Fallback para a URL atual se não houver link de CTA
     return window.location.href;
   };
 
@@ -314,12 +313,9 @@ const StoriesWidgetPage = () => {
 
     if (rawPhoneNumber) {
       const cleanedPhoneNumber = rawPhoneNumber.replace(/\D/g, "");
-      // Adiciona DDI 55 se o número tiver 9 ou 10 dígitos (assumindo DDD + número)
-      // E se o número não começar com 55
       const finalPhoneNumber = cleanedPhoneNumber.length >= 9 && !cleanedPhoneNumber.startsWith('55') ? `55${cleanedPhoneNumber}` : cleanedPhoneNumber;
       whatsappUrl = `https://wa.me/${finalPhoneNumber}?text=${encodeURIComponent(message)}`;
     } else {
-      // Se não houver número de WhatsApp configurado, usa o formato genérico
       whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     }
     
@@ -366,6 +362,17 @@ const StoriesWidgetPage = () => {
 
   const isWhatsAppButtonDisabled = !store?.whatsapp_number;
 
+  // Logs de depuração antes do return
+  console.log("Story atual completo:", selectedStory);
+  console.log("Título do story atual:", selectedStory?.title || (selectedStory as any)?.name);
+  console.log("URL bruta encontrada:", getRawStoryVideoUrl(selectedStory));
+  console.log("URL fallback:", getFallbackVideoUrl(selectedStory));
+  console.log("URL segura usada no vídeo:", safeVideoUrl);
+  console.log("videoError atual:", videoError);
+
+  // Condição para mostrar a mensagem de erro do vídeo
+  const shouldShowVideoError = videoError && isInvalidVideoUrl(safeVideoUrl);
+
   return (
     <div className="w-full bg-transparent">
       <div className="w-full overflow-x-auto">
@@ -377,7 +384,7 @@ const StoriesWidgetPage = () => {
               onClick={() => {
                 setSelectedIndex(index);
                 setIsMuted(true);
-                setIsLiked(false); // Reset like state
+                setIsLiked(false);
                 setShowCommentsPanel(false);
                 setIsPlaying(true);
               }}
@@ -443,15 +450,17 @@ const StoriesWidgetPage = () => {
               {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
             </button>
 
-            {videoError ? (
+            {/* Renderização Condicional do Vídeo ou Mensagem de Erro */}
+            {shouldShowVideoError ? (
               <div className="absolute inset-0 flex items-center justify-center bg-black text-white text-center p-4">
                 <p className="text-lg font-semibold">Não foi possível carregar este vídeo.</p>
                 <p className="text-sm text-white/70 mt-2">Verifique a URL do vídeo ou sua conexão.</p>
               </div>
             ) : (
               <video
-                key={getSafeVideoUrl(selectedStory)} // Usar safeVideoUrl como key
                 ref={videoRef}
+                key={safeVideoUrl} // Força a remontagem quando a URL muda
+                src={safeVideoUrl}
                 poster={selectedStory.thumbnail_url}
                 autoPlay
                 muted={isMuted}
@@ -462,26 +471,35 @@ const StoriesWidgetPage = () => {
                 onClick={handleVideoClick}
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
-                onEnded={handleNext} // Auto-advance to next story
+                onEnded={handleNext} // Avança automaticamente para o próximo story
                 onLoadedMetadata={() => {
-                  console.log("Vídeo carregou metadata:", getSafeVideoUrl(selectedStory));
+                  console.log("Vídeo carregou metadata:", safeVideoUrl);
                 }}
                 onCanPlay={() => {
-                  console.log("Vídeo pronto para reproduzir:", getSafeVideoUrl(selectedStory));
+                  console.log("Vídeo pronto para reproduzir:", safeVideoUrl);
+                  setVideoError(false); // Garante que o erro seja falso se puder reproduzir
                 }}
                 onLoadedData={() => {
-                  console.log("Vídeo carregado com sucesso:", getSafeVideoUrl(selectedStory));
-                  setVideoError(false);
+                  console.log("Vídeo carregado com sucesso:", safeVideoUrl);
+                  setVideoError(false); // Garante que o erro seja falso no carregamento bem-sucedido
                 }}
-                onError={handleVideoError} // Usar o handler de erro aprimorado
+                onError={(event) => {
+                  console.error("Erro ao carregar vídeo:", {
+                    story: selectedStory,
+                    rawUrl: getRawStoryVideoUrl(selectedStory),
+                    safeVideoUrl,
+                    videoError: event.currentTarget.error,
+                  });
+                  setVideoError(true); // Define o erro como true se o vídeo falhar no carregamento
+                }}
               >
-                <source src={getSafeVideoUrl(selectedStory)} type="video/mp4" /> {/* Usar safeVideoUrl aqui */}
+                <source src={safeVideoUrl} type="video/mp4" />
                 Seu navegador não suporta a tag de vídeo.
               </video>
             )}
 
             {/* Play/Pause Overlay */}
-            {showPlayPauseOverlay && !videoError && (
+            {showPlayPauseOverlay && !shouldShowVideoError && ( // Mostra overlay apenas se não houver erro de vídeo
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                 <div className="bg-white/30 backdrop-blur-sm rounded-full p-3 transition-opacity duration-300">
                   {isPlaying ? (

@@ -30,7 +30,7 @@
     {
       id: 's3',
       title: 'Provador Fashion ✨',
-      video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
       thumbnail_url: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=250&auto=format&fit=crop&q=60',
       cta_link: 'https://useanny.com.br/collections/novidades',
       active: true,
@@ -39,7 +39,7 @@
     {
       id: 's4',
       title: 'Cupom de Desconto 🏷️',
-      video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+      video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
       thumbnail_url: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=250&auto=format&fit=crop&q=60',
       cta_link: 'https://useanny.com.br/discount/PROMO10',
       active: true,
