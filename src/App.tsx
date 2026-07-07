@@ -6,10 +6,10 @@ import StoriesPage from './pages/StoriesPage';
 import StoryDetailsPage from './pages/StoryDetailsPage';
 import SettingsPage from './pages/SettingsPage';
 import StoriesWidgetPage from './pages/StoriesWidgetPage';
-import DashboardPage from './pages/DashboardPage'; // Importar nova página
-import VideoGalleryPage from './pages/VideoGalleryPage'; // Importar nova página
+import DashboardPage from './pages/DashboardPage';
+import VideoGalleryPage from './pages/VideoGalleryPage';
 import NotFound from './pages/NotFound';
-import WhatsAppFloatingButton from './components/WhatsAppFloatingButton'; // Importar botão flutuante
+import WhatsAppFloatingButton from './components/WhatsAppFloatingButton';
 
 // Error Boundary robusto para capturar e exibir erros de renderização de forma amigável
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: Error | null }> {
@@ -64,16 +64,16 @@ const App = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/dashboard" element={<DashboardPage />} /> {/* Nova rota */}
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/stories" element={<StoriesPage />} />
           <Route path="/stories/:id" element={<StoryDetailsPage />} />
-          <Route path="/gallery" element={<VideoGalleryPage />} /> {/* Nova rota */}
+          <Route path="/gallery" element={<VideoGalleryPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/widget" element={<StoriesWidgetPage />} />
           <Route path="/widget/:storeId" element={<StoriesWidgetPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-        <WhatsAppFloatingButton /> {/* Botão flutuante de WhatsApp */}
+        <WhatsAppFloatingButton />
       </BrowserRouter>
       <Toaster richColors position="top-right" closeButton />
     </ErrorBoundary>

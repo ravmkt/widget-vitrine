@@ -8,9 +8,9 @@ const Navbar = () => {
 
   const menuItems = [
     { path: '/', label: 'Início', icon: Sparkles },
-    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard }, // Novo link
+    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/stories', label: 'Stories', icon: Film },
-    { path: '/gallery', label: 'Galeria de Vídeos', icon: GalleryVertical }, // Novo link
+    { path: '/gallery', label: 'Galeria de Vídeos', icon: GalleryVertical },
     { path: '/widget', label: 'Visualizar Widget', icon: Eye },
     { path: '/settings', label: 'Configurações', icon: Settings },
   ];

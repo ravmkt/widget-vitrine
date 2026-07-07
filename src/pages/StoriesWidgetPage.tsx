@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { db, Story, Store, WidgetSettings, Comment } from '@/lib/db'; // Importar WidgetSettings e Comment
+import { db, Story, Video, StoryVideo, Appearance, GeneralSettings, Comment, DisplayLocation, PageRule } from '@/lib/db';
 import {
   X,
   ChevronLeft,
@@ -13,8 +13,6 @@ import {
   Play,
   Pause,
   Check,
-  Eye as EyeIcon, // Renomeado para evitar conflito com o ícone Eye da Navbar
-  MousePointerClick,
 } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
 import WhatsAppIcon from '@/components/WhatsAppIcon';
@@ -24,36 +22,24 @@ import { cn } from '@/lib/utils';
 const FALLBACK_VIDEO_BY_TITLE: Record<string, string> = {
   cupom: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
   provador: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-  novaColecao: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", // URL atualizada
-  default: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", // URL atualizada
+  novaColecao: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+  default: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
 };
 
-const getRawStoryVideoUrl = (story: Story | null): string => {
+const getRawVideoUrl = (video: Video | null): string => {
   return String(
-    story?.video_url ||
-    (story as any)?.videoURL || // Para compatibilidade com possíveis nomes de campo antigos
-    (story as any)?.mediaUrl ||
-    (story as any)?.media_url ||
-    (story as any)?.fileUrl ||
-    (story as any)?.file_url ||
-    (story as any)?.url ||
-    (story as any)?.src ||
-    (story as any)?.video ||
+    video?.video_url ||
     ""
   );
 };
 
 const isInvalidVideoUrl = (url: string): boolean => {
   if (!url) return true;
-
   const normalized = url.toLowerCase().trim();
-
   if (!normalized.startsWith("http")) return true;
-
   if (normalized.includes("assets.mixkit.co")) return true;
   if (normalized.includes("mixkit-")) return true;
   if (normalized.includes("40358-large.mp4")) return true;
-
   if (
     normalized.endsWith(".jpg") ||
     normalized.endsWith(".jpeg") ||
@@ -64,40 +50,22 @@ const isInvalidVideoUrl = (url: string): boolean => {
   ) {
     return true;
   }
-
   return !normalized.includes(".mp4");
 };
 
-const getFallbackVideoUrl = (story: Story | null): string => {
-  const title = String(story?.title || (story as any)?.name || "").toLowerCase();
-
-  if (title.includes("cupom")) {
-    return FALLBACK_VIDEO_BY_TITLE.cupom;
-  }
-
-  if (title.includes("provador")) {
-    return FALLBACK_VIDEO_BY_TITLE.provador;
-  }
-
-  if (
-    title.includes("nova coleção") ||
-    title.includes("nova colecao") ||
-    title.includes("coleção") ||
-    title.includes("colecao")
-  ) {
-    return FALLBACK_VIDEO_BY_TITLE.novaColecao;
-  }
-
+const getFallbackVideoUrl = (storyTitle: string | null): string => {
+  const title = String(storyTitle || "").toLowerCase();
+  if (title.includes("cupom")) return FALLBACK_VIDEO_BY_TITLE.cupom;
+  if (title.includes("provador")) return FALLBACK_VIDEO_BY_TITLE.provador;
+  if (title.includes("nova coleção") || title.includes("nova colecao") || title.includes("coleção") || title.includes("colecao")) return FALLBACK_VIDEO_BY_TITLE.novaColecao;
   return FALLBACK_VIDEO_BY_TITLE.default;
 };
 
-const getSafeVideoUrl = (story: Story | null): string => {
-  const rawUrl = getRawStoryVideoUrl(story);
-
+const getSafeVideoUrl = (video: Video | null, storyTitle: string | null): string => {
+  const rawUrl = getRawVideoUrl(video);
   if (isInvalidVideoUrl(rawUrl)) {
-    return getFallbackVideoUrl(story);
+    return getFallbackVideoUrl(storyTitle);
   }
-
   return rawUrl;
 };
 // --- Fim das Funções Auxiliares ---
@@ -107,9 +75,10 @@ const StoriesWidgetPage = () => {
   const { storeId } = useParams();
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const [store, setStore] = useState<Store | null>(null);
-  const [settings, setSettings] = useState<WidgetSettings | null>(null);
+  const [generalSettings, setGeneralSettings] = useState<GeneralSettings | null>(null);
+  const [currentAppearance, setCurrentAppearance] = useState<Appearance | null>(null);
   const [stories, setStories] = useState<Story[]>([]);
+  const [storyVideosMap, setStoryVideosMap] = useState<Map<string, Video[]>>(new Map());
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
@@ -128,11 +97,11 @@ const StoriesWidgetPage = () => {
   // Estados para curtidas
   const [likesCount, setLikesCount] = useState(Math.floor(Math.random() * 100) + 50);
 
-  const selectedStory =
-    selectedIndex !== null ? stories[selectedIndex] : null;
+  const selectedStory = selectedIndex !== null ? stories[selectedIndex] : null;
+  const videosForSelectedStory = selectedStory ? storyVideosMap.get(selectedStory.id) || [] : [];
+  const mainVideoForSelectedStory = videosForSelectedStory.find(v => v.id === (selectedStory?.id)) || videosForSelectedStory[0] || null; // Simplificado para pegar o primeiro vídeo
 
-  // Variável safeVideoUrl centralizada
-  const safeVideoUrl = getSafeVideoUrl(selectedStory);
+  const safeVideoUrl = getSafeVideoUrl(mainVideoForSelectedStory, selectedStory?.title || null);
 
   // Resetar videoError quando safeVideoUrl mudar
   useEffect(() => {
@@ -148,63 +117,66 @@ const StoriesWidgetPage = () => {
       if (playPromise !== undefined) {
         playPromise.catch((error) => {
           console.warn("Autoplay bloqueado ou falhou:", error);
-          // Não definimos videoError aqui, pois autoplay bloqueado não é um erro de URL.
         });
       }
     }
-  }, [safeVideoUrl]); // Dispara quando safeVideoUrl muda
+  }, [safeVideoUrl]);
 
   // Limpeza de cache do localStorage/sessionStorage
   useEffect(() => {
-    console.log("localStorage (antes da limpeza):", { ...localStorage });
-    console.log("sessionStorage (antes da limpeza):", { ...sessionStorage });
-
     Object.keys(localStorage).forEach((key) => {
       const value = localStorage.getItem(key);
       if (value?.includes("assets.mixkit.co")) {
-        console.warn("Removendo cache antigo com Mixkit do localStorage:", key);
         localStorage.removeItem(key);
       }
     });
-
     Object.keys(sessionStorage).forEach((key) => {
       const value = sessionStorage.getItem(key);
       if (value?.includes("assets.mixkit.co")) {
-        console.warn("Removendo sessionStorage antigo com Mixkit:", key);
         sessionStorage.removeItem(key);
       }
     });
-    console.log("localStorage (depois da limpeza):", { ...localStorage });
-    console.log("sessionStorage (depois da limpeza):", { ...sessionStorage });
   }, []);
 
   const loadWidgetData = async () => {
     try {
-      const stores = await db.getStores();
-
-      const currentStore = storeId
-        ? (stores.find((item) => item.id === storeId) || null)
-        : (stores[0] || null);
-
-      setStore(currentStore);
+      const stores = await db.stores.getAll();
+      const currentStore = storeId ? (stores.find((item) => item.id === storeId) || null) : (stores[0] || null);
 
       if (!currentStore) {
         setStories([]);
-        setSettings(null);
+        setGeneralSettings(null);
+        setCurrentAppearance(null);
         return;
       }
 
-      const fetchedStories = await db.getStories(currentStore.id);
-      const fetchedSettings = await db.getSettings(currentStore.id);
-      
-      setSettings(fetchedSettings);
+      const fetchedGeneralSettings = (await db.generalSettings.getAll(currentStore.id))[0];
+      setGeneralSettings(fetchedGeneralSettings);
 
+      const allAppearances = await db.appearances.getAll(currentStore.id);
+      const storyAppearance = allAppearances.find(app => app.id === fetchedGeneralSettings?.default_appearance_id);
+      setCurrentAppearance(storyAppearance || null);
+
+      const fetchedStories = await db.stories.getAll(currentStore.id);
       const activeStories = fetchedStories
         .filter((story) => story.active)
         .sort((a, b) => a.position - b.position);
-
       setStories(activeStories);
-      console.log("Stories carregados/finais:", activeStories);
+
+      const allStoryVideos = await db.storyVideos.getAll(currentStore.id);
+      const allVideos = await db.videos.getAll(currentStore.id);
+
+      const map = new Map<string, Video[]>();
+      activeStories.forEach(story => {
+        const videosForStory = allStoryVideos
+          .filter(sv => sv.story_id === story.id)
+          .map(sv => allVideos.find(v => v.id === sv.video_id))
+          .filter((v): v is Video => v !== undefined)
+          .sort((a, b) => (allStoryVideos.find(sv => sv.video_id === a.id)?.position || 0) - (allStoryVideos.find(sv => sv.video_id === b.id)?.position || 0));
+        map.set(story.id, videosForStory);
+      });
+      setStoryVideosMap(map);
+
     } catch (error) {
       console.error('Erro ao carregar widget de stories:', error);
     } finally {
@@ -214,9 +186,9 @@ const StoriesWidgetPage = () => {
 
   const loadCommentsForStory = async (storyId: string) => {
     try {
-      const comments = await db.getComments(storyId);
-      setCurrentStoryComments(comments);
-      setCommentsCount(comments.length);
+      const comments = await db.comments.getAll(storyId); // Usar getAll com storyId
+      setCurrentStoryComments(comments.filter(c => c.status === 'approved')); // Apenas comentários aprovados
+      setCommentsCount(comments.filter(c => c.status === 'approved').length);
     } catch (error) {
       console.error('Erro ao carregar comentários:', error);
       setCurrentStoryComments([]);
@@ -231,51 +203,32 @@ const StoriesWidgetPage = () => {
   useEffect(() => {
     if (selectedStory) {
       loadCommentsForStory(selectedStory.id);
-      // Incrementar visualização ao abrir o story
       db.incrementViewCount(selectedStory.id);
     }
   }, [selectedStory]);
 
-  // Função para alternar play/pause do vídeo
   const handleTogglePlay = async (event?: React.MouseEvent) => {
     event?.preventDefault();
     event?.stopPropagation();
-
     const video = videoRef.current;
-
-    if (!video) {
-      console.error("Elemento de vídeo não encontrado.");
+    if (!video || (!video.currentSrc && !video.src)) {
+      console.error("Elemento de vídeo não encontrado ou sem src.");
       return;
     }
-
-    if (!video.currentSrc && !video.src) {
-      console.error("Vídeo sem src.");
-      return;
-    }
-
     try {
-      console.log("Tentando alternar play/pause:", {
-        src: video.currentSrc || video.src,
-        paused: video.paused,
-        readyState: video.readyState,
-        networkState: video.networkState,
-      });
-
       if (video.paused) {
-        video.muted = isMuted; // Garante que o estado de mute seja respeitado
+        video.muted = isMuted;
         await video.play();
         setIsPlaying(true);
-        console.log("Play executado com sucesso.");
       } else {
         video.pause();
         setIsPlaying(false);
-        console.log("Pause executado com sucesso.");
       }
       setShowPlayPauseOverlay(true);
       setTimeout(() => setShowPlayPauseOverlay(false), 700);
     } catch (error) {
       console.error("Falha ao executar play/pause:", error);
-      setVideoError(true); // Define o erro como true se o vídeo falhar no carregamento
+      setVideoError(true);
     }
   };
 
@@ -284,7 +237,7 @@ const StoriesWidgetPage = () => {
     if (selectedIndex === null) return;
     setIsLiked(false);
     setShowCommentsPanel(false);
-    setIsPlaying(true); // Resetar para play ao mudar de story
+    setIsPlaying(true);
     setSelectedIndex((prevIndex) =>
       prevIndex === 0 ? stories.length - 1 : prevIndex - 1
     );
@@ -295,7 +248,7 @@ const StoriesWidgetPage = () => {
     if (selectedIndex === null) return;
     setIsLiked(false);
     setShowCommentsPanel(false);
-    setIsPlaying(true); // Resetar para play ao mudar de story
+    setIsPlaying(true);
     setSelectedIndex((prevIndex) =>
       prevIndex === stories.length - 1 ? 0 : prevIndex + 1
     );
@@ -318,6 +271,7 @@ const StoriesWidgetPage = () => {
       }
       return !prev;
     });
+    // TODO: Log metric 'like'
   };
 
   const handleToggleComments = () => {
@@ -325,68 +279,59 @@ const StoriesWidgetPage = () => {
   };
 
   const handleAddComment = async () => {
-    if (newCommentText.trim() === '' || !selectedStory) return;
+    if (newCommentText.trim() === '' || !selectedStory || !generalSettings) return;
 
     const newComment: Comment = {
       id: Math.random().toString(36).substr(2, 9),
       story_id: selectedStory.id,
-      username: 'Você',
+      user_name: 'Você', // Em um app real, viria do usuário logado
+      user_email: generalSettings.contact_email || 'anonymous@example.com', // Exemplo
       text: newCommentText,
+      status: 'pending', // Comentários precisam ser aprovados
       created_at: new Date().toISOString(),
     };
 
     try {
-      const savedComment = await db.saveComment(newComment);
-      setCurrentStoryComments((prevComments) => [savedComment, ...prevComments]);
+      const savedComment = await db.comments.save(newComment);
+      // Não adiciona diretamente à lista de aprovados, pois o status é 'pending'
+      showSuccess('Comentário enviado para aprovação!');
       setNewCommentText('');
-      setCommentsCount((prevCount) => prevCount + 1);
-      showSuccess('Comentário enviado!');
+      // setCommentsCount((prevCount) => prevCount + 1); // Não incrementa até ser aprovado
     } catch (error) {
       console.error('Erro ao adicionar comentário:', error);
       // show error toast
     }
   };
 
-  // Função para obter dados de compartilhamento do story atual
   const getStoryShareData = () => {
-    const title = String(selectedStory?.title || (selectedStory as any)?.name || "Story");
+    const title = String(selectedStory?.title || "Story");
     const text = `Confira este story: ${title}`;
-    const url =
-      selectedStory?.cta_link || // Preferir link de CTA
-      window.location.href; // Fallback para a URL atual
-
+    const url = selectedStory?.cta_url || window.location.href;
     return { title, text, url };
   };
 
-  // Função para compartilhar o story (Web Share API ou fallback)
   const handleShareStory = async () => {
     const shareData = getStoryShareData();
-    console.log("Story para compartilhamento:", selectedStory);
-    console.log("Dados de compartilhamento:", shareData);
-
     try {
       if (navigator.share) {
         await navigator.share(shareData);
-        console.log("Compartilhamento nativo aberto:", shareData);
         showSuccess('Story compartilhado!');
-        setCopiedLink(false); // Resetar estado de copiado
+        setCopiedLink(false);
       } else if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(shareData.url);
-        console.log("Link copiado como fallback:", shareData.url);
         showSuccess('Link copiado!');
         setCopiedLink(true);
         setTimeout(() => setCopiedLink(false), 2000);
       } else {
         window.prompt("Copie o link:", shareData.url);
-        setCopiedLink(false); // Resetar estado de copiado
+        setCopiedLink(false);
       }
     } catch (error) {
-      console.error("Erro ao compartilhar story:", error);
-      // Não mostrar erro para o usuário se for apenas cancelamento do compartilhamento
       if ((error as any).name !== 'AbortError') {
-        // showError('Erro ao compartilhar o story.'); // Descomentar se quiser mostrar erro genérico
+        console.error("Erro ao compartilhar story:", error);
       }
     }
+    // TODO: Log metric 'share'
   };
 
   const normalizeWhatsAppNumber = (value?: string | null) => {
@@ -395,33 +340,22 @@ const StoriesWidgetPage = () => {
   };
 
   const getConfiguredWhatsAppNumber = () => {
-    const rawNumber =
-      settings?.whatsapp_number ||
-      ""; // Puxa o número das configurações da loja
-
+    const rawNumber = generalSettings?.whatsapp_number || "";
     let number = normalizeWhatsAppNumber(rawNumber);
-
-    // Se for número brasileiro com DDD sem código do país, adiciona 55.
     if (number.length >= 10 && number.length <= 11 && !number.startsWith("55")) {
       number = `55${number}`;
     }
-
     return number;
   };
 
-  // Função para compartilhar via WhatsApp
   const handleWhatsAppShare = (event?: React.MouseEvent) => {
     event?.preventDefault();
     event?.stopPropagation();
 
     const number = getConfiguredWhatsAppNumber();
-
-    const storyTitle = selectedStory?.title || selectedStory?.name || "Story";
-    const storyUrl =
-      selectedStory?.cta_link ||
-      window.location.href;
-
-    const message = `Olá! Tenho interesse neste produto/story: ${storyTitle}\n${storyUrl}`;
+    const storyTitle = selectedStory?.title || "Story";
+    const storyUrl = selectedStory?.cta_url || window.location.href;
+    const message = selectedStory?.whatsapp_message || generalSettings?.whatsapp_default_message || `Olá! Tenho interesse neste produto/story: ${storyTitle}\n${storyUrl}`;
 
     if (!number) {
       console.error("WhatsApp não configurado em Configurações.");
@@ -430,20 +364,15 @@ const StoriesWidgetPage = () => {
     }
 
     const whatsappUrl = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
-
-    console.log("Abrindo WhatsApp configurado:", {
-      rawSettings: settings,
-      number,
-      whatsappUrl,
-    });
-
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+    // TODO: Log metric 'whatsapp_click'
   };
 
   const handleCtaClick = (link?: string) => {
     if (link && selectedStory) {
-      db.incrementClickCount(selectedStory.id); // Incrementar clique no CTA
+      db.incrementClickCount(selectedStory.id);
       window.open(link, '_blank');
+      // TODO: Log metric 'cta_click'
     } else {
       alert('Este story não possui um link de compra configurado.');
     }
@@ -457,26 +386,17 @@ const StoriesWidgetPage = () => {
     );
   }
 
-  if (!store || stories.length === 0) {
+  if (!generalSettings?.app_enabled || stories.length === 0) {
     return null;
   }
 
   const darkActionButtonClasses = "w-[42px] h-[42px] rounded-full border border-white/[0.75] bg-black/[0.35] text-white flex items-center justify-center backdrop-blur-[6px] cursor-pointer transition-all hover:bg-white/[0.18] hover:scale-[1.04]";
   const whiteActionButtonClasses = "w-[42px] h-[42px] rounded-full border-none bg-white text-slate-900 flex items-center justify-center shadow-md shadow-black/20 cursor-pointer transition-all hover:scale-[1.06]";
 
-  // Logs de depuração antes do return
-  console.log("Story atual completo:", selectedStory);
-  console.log("Título do story atual:", selectedStory?.title || (selectedStory as any)?.name);
-  console.log("URL bruta encontrada:", getRawStoryVideoUrl(selectedStory));
-  console.log("URL fallback:", getFallbackVideoUrl(selectedStory));
-  console.log("URL segura usada no vídeo:", safeVideoUrl);
-  console.log("videoError atual:", videoError);
-
-  // Condição para mostrar a mensagem de erro do vídeo
-  const shouldShowVideoError = videoError && isInvalidVideoUrl(safeVideoUrl);
-
   const renderStoriesDisplay = () => {
-    switch (settings?.display_mode) {
+    const displayMode = selectedStory?.format || currentAppearance?.widget_shape || 'carousel'; // Prioriza o formato do story, depois da aparência, fallback para carousel
+
+    switch (displayMode) {
       case 'grid':
         return (
           <div className="grid grid-cols-2 gap-4 p-4">
@@ -494,7 +414,7 @@ const StoriesWidgetPage = () => {
                 className="relative aspect-[9/16] rounded-xl overflow-hidden shadow-md group focus:outline-none"
               >
                 <img
-                  src={story.thumbnail_url}
+                  src={storyVideosMap.get(story.id)?.[0]?.thumbnail_url || 'https://via.placeholder.com/150'}
                   alt={story.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
@@ -508,39 +428,7 @@ const StoriesWidgetPage = () => {
             ))}
           </div>
         );
-      case 'bubbles':
-        return (
-          <div className="flex items-start gap-4 px-4 py-3">
-            {stories.map((story, index) => (
-              <button
-                key={story.id}
-                type="button"
-                onClick={() => {
-                  setSelectedIndex(index);
-                  setIsMuted(true);
-                  setIsLiked(false);
-                  setShowCommentsPanel(false);
-                  setIsPlaying(true);
-                }}
-                className="flex flex-col items-center gap-2 shrink-0 group"
-              >
-                <div className="w-20 h-20 rounded-full p-[3px] bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-orange-400 shadow-sm">
-                  <div className="w-full h-full rounded-full bg-white p-[3px]">
-                    <img
-                      src={story.thumbnail_url}
-                      alt={story.title}
-                      className="w-full h-full rounded-full object-cover group-hover:scale-105 transition-transform"
-                    />
-                  </div>
-                </div>
-
-                <span className="max-w-[88px] text-xs font-semibold text-slate-700 truncate">
-                  {story.title}
-                </span>
-              </button>
-            ))}
-          </div>
-        );
+      case 'floating_widget': // Renderiza como bolhas flutuantes
       case 'carousel':
       default:
         return (
@@ -562,7 +450,7 @@ const StoriesWidgetPage = () => {
                   <div className="w-20 h-20 rounded-full p-[3px] bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-orange-400 shadow-sm">
                     <div className="w-full h-full rounded-full bg-white p-[3px]">
                       <img
-                        src={story.thumbnail_url}
+                        src={storyVideosMap.get(story.id)?.[0]?.thumbnail_url || 'https://via.placeholder.com/150'}
                         alt={story.title}
                         className="w-full h-full rounded-full object-cover group-hover:scale-105 transition-transform"
                       />
@@ -609,27 +497,31 @@ const StoriesWidgetPage = () => {
             </button>
 
             {/* Mute/Unmute Button (inside story card) */}
-            <button
-              type="button"
-              onClick={handleToggleMute}
-              className={cn(darkActionButtonClasses, "absolute top-4 right-[66px] z-30")}
-              aria-label={isMuted ? 'Ativar som' : 'Desativar som'}
-            >
-              {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-            </button>
+            {currentAppearance?.show_video_controls && (
+              <button
+                type="button"
+                onClick={handleToggleMute}
+                className={cn(darkActionButtonClasses, "absolute top-4 right-[66px] z-30")}
+                aria-label={isMuted ? 'Ativar som' : 'Desativar som'}
+              >
+                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+              </button>
+            )}
 
             {/* Play/Pause Button (inside story card) */}
-            <button
-              type="button"
-              onClick={handleTogglePlay}
-              className={cn(darkActionButtonClasses, "absolute top-4 right-[128px] z-30")}
-              aria-label={isPlaying ? 'Pausar vídeo' : 'Reproduzir vídeo'}
-            >
-              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-            </button>
+            {currentAppearance?.show_video_controls && (
+              <button
+                type="button"
+                onClick={handleTogglePlay}
+                className={cn(darkActionButtonClasses, "absolute top-4 right-[128px] z-30")}
+                aria-label={isPlaying ? 'Pausar vídeo' : 'Reproduzir vídeo'}
+              >
+                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+              </button>
+            )}
 
             {/* Renderização Condicional do Vídeo ou Mensagem de Erro */}
-            {shouldShowVideoError ? (
+            {videoError ? (
               <div className="absolute inset-0 flex items-center justify-center bg-black text-white text-center p-4">
                 <p className="text-lg font-semibold">Não foi possível carregar este vídeo.</p>
                 <p className="text-sm text-white/70 mt-2">Verifique a URL do vídeo ou sua conexão.</p>
@@ -637,44 +529,28 @@ const StoriesWidgetPage = () => {
             ) : (
               <video
                 ref={videoRef}
-                key={safeVideoUrl} // Força a remontagem quando a URL muda
+                key={safeVideoUrl}
                 src={safeVideoUrl}
-                poster={selectedStory.thumbnail_url}
-                autoPlay
-                muted={isMuted}
+                poster={mainVideoForSelectedStory?.thumbnail_url || selectedStory?.thumbnail_url}
+                autoPlay={generalSettings?.autoplay}
+                muted={generalSettings?.muted_by_default}
                 playsInline
                 loop
-                preload="auto" // Adicionado preload="auto"
+                preload="auto"
+                controls={generalSettings?.show_video_controls}
                 className="w-full h-full object-cover cursor-pointer"
-                onClick={handleTogglePlay} // Clicar no vídeo também alterna play/pause
+                onClick={handleTogglePlay}
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
-                onEnded={handleNext} // Avança automaticamente para o próximo story
-                onLoadedMetadata={() => {
-                  console.log("Vídeo carregou metadata:", safeVideoUrl);
-                }}
-                onCanPlay={() => {
-                  console.log("Vídeo pronto para reproduzir:", safeVideoUrl);
-                  setVideoError(false); // Garante que o erro seja falso se puder reproduzir
-                }}
-                onLoadedData={() => {
-                  console.log("Vídeo carregado com sucesso:", safeVideoUrl);
-                  setVideoError(false); // Garante que o erro seja falso no carregamento bem-sucedido
-                  const video = videoRef.current;
-                  if (video && video.paused) {
-                    video.play().catch((err) => {
-                      console.warn("Autoplay falhou, aguardando clique do usuário:", err);
-                    });
-                  }
-                }}
+                onEnded={handleNext}
                 onError={(event) => {
                   console.error("Erro ao carregar vídeo:", {
                     story: selectedStory,
-                    rawUrl: getRawStoryVideoUrl(selectedStory),
+                    video: mainVideoForSelectedStory,
                     safeVideoUrl,
                     videoError: event.currentTarget.error,
                   });
-                  setVideoError(true); // Define o erro como true se o vídeo falhar no carregamento
+                  setVideoError(true);
                 }}
               >
                 <source src={safeVideoUrl} type="video/mp4" />
@@ -683,7 +559,7 @@ const StoriesWidgetPage = () => {
             )}
 
             {/* Play/Pause Overlay */}
-            {showPlayPauseOverlay && !shouldShowVideoError && ( // Mostra overlay apenas se não houver erro de vídeo
+            {showPlayPauseOverlay && !videoError && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                 <div className="bg-white/30 backdrop-blur-sm rounded-full p-3 transition-opacity duration-300">
                   {isPlaying ? (
@@ -696,74 +572,80 @@ const StoriesWidgetPage = () => {
             )}
 
             <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/70 to-transparent pointer-events-none z-10">
-              <p className="text-white font-bold text-sm">
-                {selectedStory.title}
-              </p>
+              {currentAppearance?.show_title && (
+                <p className="text-white font-bold text-sm">
+                  {selectedStory?.title}
+                </p>
+              )}
               <p className="text-white/60 text-xs">
-                {store.name}
+                {generalSettings?.store_name}
               </p>
             </div>
 
             {/* Vertical Action Buttons */}
             <div className="absolute right-[14px] bottom-[74px] z-40 flex flex-col gap-2">
-              {/* Comments Button */}
-              <button
-                type="button"
-                onClick={handleToggleComments}
-                className={cn(darkActionButtonClasses, "relative")}
-                aria-label="Comentários"
-              >
-                <MessageCircle className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white">
-                  {commentsCount}
-                </span>
-              </button>
-
-              {/* Like Button */}
-              <button
-                type="button"
-                onClick={handleToggleLike}
-                className={cn(darkActionButtonClasses, "relative group")}
-                aria-label="Curtir story"
-              >
-                <Heart className={cn("w-5 h-5 transition-all duration-200", isLiked ? 'fill-red-500 text-red-500 scale-110' : 'text-white')} />
-                {likesCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white">
-                    {likesCount}
+              {currentAppearance?.show_comment_button && (
+                <button
+                  type="button"
+                  onClick={handleToggleComments}
+                  className={cn(darkActionButtonClasses, "relative")}
+                  aria-label="Comentários"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white">
+                    {commentsCount}
                   </span>
-                )}
-              </button>
+                </button>
+              )}
 
-              {/* Share Button */}
-              <button
-                type="button"
-                onClick={handleShareStory}
-                className={whiteActionButtonClasses}
-                aria-label="Compartilhar produto"
-              >
-                {copiedLink ? <Check className="w-5 h-5 text-emerald-400" /> : <Share2 className="w-5 h-5" />}
-              </button>
+              {currentAppearance?.show_like_button && (
+                <button
+                  type="button"
+                  onClick={handleToggleLike}
+                  className={cn(darkActionButtonClasses, "relative group")}
+                  aria-label="Curtir story"
+                >
+                  <Heart className={cn("w-5 h-5 transition-all duration-200", isLiked ? 'fill-red-500 text-red-500 scale-110' : 'text-white')} />
+                  {likesCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white">
+                      {likesCount}
+                    </span>
+                  )}
+                </button>
+              )}
 
-              {/* WhatsApp Button */}
-              <button
-                type="button"
-                onClick={handleWhatsAppShare}
-                className={cn(whiteActionButtonClasses, "cursor-pointer pointer-events-auto opacity-100")}
-                aria-label="Abrir WhatsApp"
-              >
-                <WhatsAppIcon size={22} />
-              </button>
+              {currentAppearance?.show_share_button && (
+                <button
+                  type="button"
+                  onClick={handleShareStory}
+                  className={whiteActionButtonClasses}
+                  aria-label="Compartilhar produto"
+                >
+                  {copiedLink ? <Check className="w-5 h-5 text-emerald-400" /> : <Share2 className="w-5 h-5" />}
+                </button>
+              )}
+
+              {currentAppearance?.show_whatsapp_button && (
+                <button
+                  type="button"
+                  onClick={handleWhatsAppShare}
+                  className={cn(whiteActionButtonClasses, "cursor-pointer pointer-events-auto opacity-100")}
+                  aria-label="Abrir WhatsApp"
+                >
+                  <WhatsAppIcon size={22} />
+                </button>
+              )}
             </div>
 
-            {selectedStory.cta_link && (
+            {selectedStory?.cta_enabled && selectedStory.cta_type !== 'none' && (
               <button
                 type="button"
                 className="absolute left-[12px] right-[74px] bottom-[28px] h-[64px] px-3 py-2 rounded-xl bg-white shadow-lg flex items-center gap-3 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] z-30"
-                onClick={() => handleCtaClick(selectedStory.cta_link)}
+                onClick={() => handleCtaClick(selectedStory.cta_url)}
               >
-                {selectedStory.thumbnail_url && (
+                {mainVideoForSelectedStory?.thumbnail_url && (
                   <img
-                    src={selectedStory.thumbnail_url}
+                    src={mainVideoForSelectedStory.thumbnail_url}
                     alt={selectedStory.title || "Produto"}
                     className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
                   />
@@ -771,11 +653,11 @@ const StoriesWidgetPage = () => {
 
                 <div className="flex flex-col min-w-0 flex-1 text-left">
                   <div className="text-slate-900 font-bold text-sm line-clamp-1">
-                    {selectedStory.title || "Produto"}
+                    {selectedStory.cta_text || selectedStory.title || "Produto"}
                   </div>
                 </div>
                 <span className="text-emerald-600 font-bold text-xs px-3 py-1 rounded-full bg-emerald-50 flex-shrink-0">
-                  Comprar Agora
+                  {selectedStory.cta_text || "Comprar Agora"}
                 </span>
               </button>
             )}
@@ -804,11 +686,11 @@ const StoriesWidgetPage = () => {
                   currentStoryComments.map((comment) => (
                     <div key={comment.id} className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-xs flex-shrink-0">
-                        {comment.username.charAt(0)}
+                        {comment.user_name.charAt(0)}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-baseline gap-2">
-                          <span className="font-semibold text-slate-800 text-sm">{comment.username}</span>
+                          <span className="font-semibold text-slate-800 text-sm">{comment.user_name}</span>
                           <span className="text-slate-400 text-xs">{comment.created_at ? new Date(comment.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'agora'}</span>
                         </div>
                         <p className="text-slate-700 text-sm mt-0.5">{comment.text}</p>

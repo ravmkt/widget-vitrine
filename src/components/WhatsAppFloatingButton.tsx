@@ -1,42 +1,35 @@
 import React, { useEffect, useState } from 'react';
-import { db, WidgetSettings } from '@/lib/db';
+import { db, GeneralSettings } from '@/lib/db';
 import WhatsAppIcon from './WhatsAppIcon';
 
 const WhatsAppFloatingButton = () => {
-  const [whatsappNumber, setWhatsappNumber] = useState<string | null>(null);
+  const [generalSettings, setGeneralSettings] = useState<GeneralSettings | null>(null);
 
   useEffect(() => {
-    const loadWhatsappNumber = async () => {
+    const loadSettings = async () => {
       try {
-        const stores = await db.getStores();
+        const stores = await db.stores.getAll();
         const mainStore = stores[0]; // Assumindo uma única loja principal
 
         if (mainStore) {
-          const settings: WidgetSettings = await db.getSettings(mainStore.id);
-          if (settings?.whatsapp_number) {
-            const rawNumber = settings.whatsapp_number;
-            let number = String(rawNumber).replace(/\D/g, "");
-            if (number.length >= 10 && number.length <= 11 && !number.startsWith("55")) {
-              number = `55${number}`;
-            }
-            setWhatsappNumber(number);
-          }
+          const fetchedGeneralSettings = (await db.generalSettings.getAll(mainStore.id))[0];
+          setGeneralSettings(fetchedGeneralSettings);
         }
       } catch (error) {
-        console.error('Erro ao carregar número de WhatsApp para o botão flutuante:', error);
+        console.error('Erro ao carregar configurações gerais para o botão flutuante:', error);
       }
     };
 
-    loadWhatsappNumber();
+    loadSettings();
   }, []);
 
-  if (!whatsappNumber) {
+  if (!generalSettings?.whatsapp_number) {
     return null; // Não renderiza o botão se não houver número configurado
   }
 
   const handleWhatsAppClick = () => {
-    const message = encodeURIComponent("Olá! Preciso de suporte com o painel Vidlytics Stories.");
-    window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank", "noopener,noreferrer");
+    const message = encodeURIComponent(generalSettings.whatsapp_default_message || "Olá! Preciso de suporte com o painel Vidlytics Stories.");
+    window.open(`https://wa.me/${generalSettings.whatsapp_number}?text=${message}`, "_blank", "noopener,noreferrer");
   };
 
   return (

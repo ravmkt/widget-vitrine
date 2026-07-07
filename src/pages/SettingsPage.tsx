@@ -1,25 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
-import { db, WidgetSettings, Store } from '@/lib/db';
-import { Save, Code, Copy, Check, Palette, Phone, Globe } from 'lucide-react'; // Adicionado Globe icon
+import { db, GeneralSettings, Appearance, Store } from '@/lib/db';
+import { Save, Code, Copy, Check, Palette, Phone, Globe, Settings as SettingsIcon, Brush } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 
 const SettingsPage = () => {
   const [store, setStore] = useState<Store | null>(null);
-  const [settings, setSettings] = useState<WidgetSettings | null>(null);
+  const [generalSettings, setGeneralSettings] = useState<GeneralSettings | null>(null);
+  const [appearances, setAppearances] = useState<Appearance[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const stores = await db.getStores();
+        const stores = await db.stores.getAll();
         const mainStore = stores[0];
         setStore(mainStore);
 
         if (mainStore) {
-          const fetchedSettings = await db.getSettings(mainStore.id);
-          setSettings(fetchedSettings);
+          const fetchedGeneralSettings = (await db.generalSettings.getAll(mainStore.id))[0];
+          setGeneralSettings(fetchedGeneralSettings);
+
+          const fetchedAppearances = await db.appearances.getAll(mainStore.id);
+          setAppearances(fetchedAppearances);
         }
       } catch (error) {
         console.error('Erro ao carregar configurações:', error);
@@ -33,10 +37,10 @@ const SettingsPage = () => {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!settings) return;
+    if (!generalSettings) return;
 
     try {
-      await db.saveSettings(settings);
+      await db.generalSettings.save(generalSettings);
       showSuccess('Configurações salvas com sucesso!');
     } catch (error) {
       showError('Erro ao salvar configurações.');
@@ -78,90 +82,38 @@ const SettingsPage = () => {
           <div className="lg:col-span-2 space-y-8">
             <form onSubmit={handleSave} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-6">
               <div className="flex items-center gap-2 pb-4 border-b border-slate-100">
-                <Palette className="w-5 h-5 text-violet-600" />
-                <h3 className="text-lg font-bold text-slate-800">Aparência Visual</h3>
+                <SettingsIcon className="w-5 h-5 text-violet-600" />
+                <h3 className="text-lg font-bold text-slate-800">Configurações Gerais</h3>
               </div>
 
-              {settings && (
+              {generalSettings && (
                 <div className="space-y-6">
-                  {/* Cor do Tema */}
+                  {/* Nome da Loja */}
                   <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                      Cor Principal do Widget
+                      Nome da Loja
                     </label>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="color"
-                        value={settings.theme_color}
-                        onChange={(e) => setSettings({ ...settings, theme_color: e.target.value })}
-                        className="w-12 h-12 rounded-xl border border-slate-200 cursor-pointer p-1"
-                      />
-                      <input
-                        type="text"
-                        value={settings.theme_color}
-                        onChange={(e) => setSettings({ ...settings, theme_color: e.target.value })}
-                        className="px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-mono"
-                      />
-                    </div>
-                    <p className="text-xs text-slate-400 mt-1.5">
-                      Esta cor será usada nas bordas dos stories e nos botões de ação do player.
-                    </p>
+                    <input
+                      type="text"
+                      value={generalSettings.store_name}
+                      onChange={(e) => setGeneralSettings({ ...generalSettings, store_name: e.target.value })}
+                      placeholder="Nome da sua loja"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
+                    />
                   </div>
 
-                  {/* Posição do Widget */}
+                  {/* URL da Loja */}
                   <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                      Posição na Tela (Mobile & Desktop)
+                      URL da Loja
                     </label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {[
-                        { value: 'bottom-center', label: 'Inferior Centro' },
-                        { value: 'bottom-right', label: 'Inferior Direita' },
-                        { value: 'bottom-left', label: 'Inferior Esquerda' },
-                        { value: 'top-right', label: 'Superior Direita' },
-                        { value: 'top-left', label: 'Superior Esquerda' },
-                      ].map((pos) => (
-                        <button
-                          key={pos.value}
-                          type="button"
-                          onClick={() => setSettings({ ...settings, position: pos.value as any })}
-                          className={`px-4 py-3 rounded-xl border text-sm font-semibold transition-all ${
-                            settings.position === pos.value
-                              ? 'border-violet-600 bg-violet-50 text-violet-600 shadow-sm'
-                              : 'border-slate-200 hover:bg-slate-50 text-slate-600'
-                          }`}
-                        >
-                          {pos.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Modo de Exibição */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                      Modo de Exibição
-                    </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {[
-                        { value: 'carousel', label: 'Carrossel Horizontal' },
-                        { value: 'bubbles', label: 'Bolhas Flutuantes' },
-                        { value: 'grid', label: 'Grade de Stories' }, // Novo modo
-                      ].map((mode) => (
-                        <button
-                          key={mode.value}
-                          type="button"
-                          onClick={() => setSettings({ ...settings, display_mode: mode.value as any })}
-                          className={`px-4 py-3 rounded-xl border text-sm font-semibold transition-all ${
-                            settings.display_mode === mode.value
-                              ? 'border-violet-600 bg-violet-50 text-violet-600 shadow-sm'
-                              : 'border-slate-200 hover:bg-slate-50 text-slate-600'
-                          }`}
-                        >
-                          {mode.label}
-                        </button>
-                      ))}
-                    </div>
+                    <input
+                      type="url"
+                      value={generalSettings.store_url}
+                      onChange={(e) => setGeneralSettings({ ...generalSettings, store_url: e.target.value })}
+                      placeholder="https://sua-loja.com.br"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
+                    />
                   </div>
 
                   {/* Número de WhatsApp da Loja */}
@@ -174,8 +126,8 @@ const SettingsPage = () => {
                     </div>
                     <input
                       type="tel"
-                      value={settings.whatsapp_number || ''}
-                      onChange={(e) => setSettings({ ...settings, whatsapp_number: e.target.value })}
+                      value={generalSettings.whatsapp_number || ''}
+                      onChange={(e) => setGeneralSettings({ ...generalSettings, whatsapp_number: e.target.value })}
                       placeholder="Ex: 5541999999999"
                       className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
                     />
@@ -184,44 +136,64 @@ const SettingsPage = () => {
                     </p>
                   </div>
 
-                  {/* URLs de Exibição do Widget */}
+                  {/* Mensagem Padrão WhatsApp */}
                   <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Globe className="w-4 h-4 text-violet-600" />
-                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
-                        Exibir Widget nas URLs
-                      </label>
-                    </div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                      Mensagem Padrão WhatsApp
+                    </label>
                     <textarea
-                      value={settings.display_urls || ''}
-                      onChange={(e) => setSettings({ ...settings, display_urls: e.target.value })}
-                      placeholder="Ex: /, /produtos/*, /colecoes/verao"
-                      rows={4}
+                      value={generalSettings.whatsapp_default_message || ''}
+                      onChange={(e) => setGeneralSettings({ ...generalSettings, whatsapp_default_message: e.target.value })}
+                      placeholder="Olá! Tenho interesse nos produtos da loja."
+                      rows={3}
                       className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800 resize-y"
                     />
                     <p className="text-xs text-slate-400 mt-1.5">
-                      Liste as URLs (separadas por vírgula) onde o widget deve ser exibido. Use `*` para curinga (ex: `/produtos/*`). Deixe em branco para exibir em todas as páginas.
+                      Mensagem pré-preenchida ao iniciar uma conversa via WhatsApp.
                     </p>
                   </div>
 
-                  {/* Ativar/Desativar Widget */}
+                  {/* Aparência Padrão */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Brush className="w-4 h-4 text-violet-600" />
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        Aparência Padrão do Widget
+                      </label>
+                    </div>
+                    <select
+                      value={generalSettings.default_appearance_id || ''}
+                      onChange={(e) => setGeneralSettings({ ...generalSettings, default_appearance_id: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
+                    >
+                      <option value="">Nenhuma</option>
+                      {appearances.map(app => (
+                        <option key={app.id} value={app.id}>{app.name}</option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-slate-400 mt-1.5">
+                      Selecione a aparência padrão para novos stories e widgets.
+                    </p>
+                  </div>
+
+                  {/* Ativar/Desativar App */}
                   <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
                     <div>
-                      <h4 className="font-bold text-slate-800">Status do Widget</h4>
+                      <h4 className="font-bold text-slate-800">Status Geral do App</h4>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        Ative ou desative a exibição do widget na sua loja virtual instantaneamente.
+                        Ative ou desative todas as funcionalidades do Vidlytics Stories na sua loja.
                       </p>
                     </div>
                     <button
                       type="button"
-                      onClick={() => setSettings({ ...settings, active: !settings.active })}
+                      onClick={() => setGeneralSettings({ ...generalSettings, app_enabled: !generalSettings.app_enabled })}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                        settings.active ? 'bg-violet-600' : 'bg-slate-200'
+                        generalSettings.app_enabled ? 'bg-violet-600' : 'bg-slate-200'
                       }`}
                     >
                       <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          settings.active ? 'translate-x-6' : 'translate-x-1'
+                          generalSettings.app_enabled ? 'translate-x-6' : 'translate-x-1'
                         }`}
                       />
                     </button>
