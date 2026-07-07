@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { db, Story, Store } from '@/lib/db';
+import { db, Story, Store, WidgetSettings } from '@/lib/db'; // Importar WidgetSettings
 import {
   X,
   ChevronLeft,
@@ -37,7 +37,7 @@ const FALLBACK_VIDEO_BY_TITLE: Record<string, string> = {
 const getRawStoryVideoUrl = (story: Story | null): string => {
   return String(
     story?.video_url ||
-    (story as any)?.videoUrl || // Para compatibilidade com possíveis nomes de campo antigos
+    (story as any)?.videoURL || // Para compatibilidade com possíveis nomes de campo antigos
     (story as any)?.mediaUrl ||
     (story as any)?.media_url ||
     (story as any)?.fileUrl ||
@@ -114,6 +114,7 @@ const StoriesWidgetPage = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const [store, setStore] = useState<Store | null>(null);
+  const [settings, setSettings] = useState<WidgetSettings | null>(null); // Adicionado estado para settings
   const [stories, setStories] = useState<Story[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -199,11 +200,15 @@ const StoriesWidgetPage = () => {
 
       if (!currentStore) {
         setStories([]);
+        setSettings(null);
         return;
       }
 
       const fetchedStories = await db.getStories(currentStore.id);
+      const fetchedSettings = await db.getSettings(currentStore.id); // Carregar settings
       
+      setSettings(fetchedSettings);
+
       const activeStories = fetchedStories
         .filter((story) => story.active)
         .sort((a, b) => a.position - b.position);
@@ -257,7 +262,7 @@ const StoriesWidgetPage = () => {
         console.log("Pause executado com sucesso.");
       }
       setShowPlayPauseOverlay(true);
-      setTimeout(() => setShowPlayPauseOverlay(700));
+      setTimeout(() => setShowPlayPauseOverlay(false), 700); // Esconde overlay após 700ms
     } catch (error) {
       console.error("Falha ao executar play/pause:", error);
       setVideoError(true); // Define o erro como true se o vídeo falhar no carregamento
@@ -372,15 +377,14 @@ const StoriesWidgetPage = () => {
     return String(value).replace(/\D/g, "");
   };
 
-  const getWhatsAppNumber = () => {
+  const getConfiguredWhatsAppNumber = () => {
     const rawNumber =
-      selectedStory?.whatsapp_number ||
-      store?.whatsapp_number ||
-      ""; // Fallback para string vazia se não encontrar
+      settings?.whatsapp_number ||
+      ""; // Puxa o número das configurações da loja
 
     let number = normalizeWhatsAppNumber(rawNumber);
 
-    // Se o número tiver 10 ou 11 dígitos e não começar com 55, adicionar 55.
+    // Se for número brasileiro com DDD sem código do país, adiciona 55.
     if (number.length >= 10 && number.length <= 11 && !number.startsWith("55")) {
       number = `55${number}`;
     }
@@ -393,22 +397,30 @@ const StoriesWidgetPage = () => {
     event?.preventDefault();
     event?.stopPropagation();
 
-    const shareData = getStoryShareData();
-    const number = getWhatsAppNumber();
+    const number = getConfiguredWhatsAppNumber();
 
-    const message = `${shareData.text}\n${shareData.url}`;
+    const storyTitle = selectedStory?.title || selectedStory?.name || "Story";
+    const storyUrl =
+      selectedStory?.cta_link ||
+      window.location.href;
 
-    const whatsappUrl = number
-      ? `https://wa.me/${number}?text=${encodeURIComponent(message)}`
-      : `https://wa.me/?text=${encodeURIComponent(message)}`;
+    const message = `Olá! Tenho interesse neste produto/story: ${storyTitle}\n${storyUrl}`;
 
-    console.log("Clique WhatsApp:", {
+    if (!number) {
+      console.error("WhatsApp não configurado em Configurações.");
+      alert("WhatsApp não configurado. Cadastre o número na tela de Configurações.");
+      return;
+    }
+
+    const whatsappUrl = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+
+    console.log("Abrindo WhatsApp configurado:", {
+      rawSettings: settings,
       number,
-      selectedStory,
-      shareData,
       whatsappUrl,
     });
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   };
 
   if (loading) {

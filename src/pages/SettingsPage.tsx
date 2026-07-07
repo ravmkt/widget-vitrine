@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { db, WidgetSettings, Store } from '@/lib/db';
-import { Save, Code, Copy, Check, Palette } from 'lucide-react';
+import { Save, Code, Copy, Check, Palette, Phone } from 'lucide-react'; // Adicionado Phone icon
 import { showSuccess, showError } from '@/utils/toast';
 
 const SettingsPage = () => {
@@ -163,6 +163,26 @@ const SettingsPage = () => {
                     </div>
                   </div>
 
+                  {/* Número de WhatsApp da Loja */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Phone className="w-4 h-4 text-violet-600" />
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        WhatsApp da Loja
+                      </label>
+                    </div>
+                    <input
+                      type="tel"
+                      value={settings.whatsapp_number || ''}
+                      onChange={(e) => setSettings({ ...settings, whatsapp_number: e.target.value })}
+                      placeholder="Ex: 5541999999999"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-medium text-slate-800"
+                    />
+                    <p className="text-xs text-slate-400 mt-1.5">
+                      Este número será usado para o botão de WhatsApp em todos os stories. Inclua o código do país (ex: 55 para Brasil).
+                    </p>
+                  </div>
+
                   {/* Ativar/Desativar Widget */}
                   <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
                     <div>
@@ -230,7 +250,7 @@ const SettingsPage = () => {
                 <ol className="list-decimal list-inside text-xs text-slate-600 space-y-2">
                   <li>Acesse o painel da sua loja na <strong>Yampi</strong>.</li>
                   <li>
-  Vá em <strong>Configurações</strong> &gt; <strong>Scripts</strong>
+  Vá em <strong>Configurações</strong> > <strong>Scripts</strong>
 </li>
                   <li>Clique em <strong>Adicionar Script</strong>.</li>
                   <li>Cole o código acima no campo de script do <strong>Cabeçalho (Head)</strong> ou <strong>Rodapé (Body)</strong>.</li>

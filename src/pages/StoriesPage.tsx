@@ -17,7 +17,7 @@ const StoriesPage = () => {
   const [videoUrl, setVideoUrl] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [ctaLink, setCtaLink] = useState('');
-  const [whatsappNumber, setWhatsappNumber] = useState(''); // Novo campo para WhatsApp
+  // const [whatsappNumber, setWhatsappNumber] = useState(''); // Removido: WhatsApp agora é global
   const [position, setPosition] = useState(1);
   const [active, setActive] = useState(true);
 
@@ -92,7 +92,7 @@ const StoriesPage = () => {
       video_url: videoUrl,
       thumbnail_url: thumbnailUrl,
       cta_link: ctaLink || undefined,
-      whatsapp_number: whatsappNumber || undefined, // Adicionado WhatsApp
+      // whatsapp_number: whatsappNumber || undefined, // Removido: WhatsApp agora é global
       active,
       position,
     };
@@ -106,7 +106,7 @@ const StoriesPage = () => {
       setVideoUrl('');
       setThumbnailUrl('');
       setCtaLink('');
-      setWhatsappNumber(''); // Resetar WhatsApp
+      // setWhatsappNumber(''); // Removido: WhatsApp agora é global
       setActive(true);
       setShowForm(false);
       
@@ -261,7 +261,8 @@ const StoriesPage = () => {
                 </div>
               </div>
 
-              <div>
+              {/* Removido: Campo de WhatsApp individual do story */}
+              {/* <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                   Número de WhatsApp (para este Story)
                 </label>
@@ -275,7 +276,7 @@ const StoriesPage = () => {
                 <p className="text-xs text-slate-400 mt-1.5">
                   Se preenchido, este número será usado para o botão de WhatsApp deste story. Caso contrário, usará o da loja.
                 </p>
-              </div>
+              </div> */}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>

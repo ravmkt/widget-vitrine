@@ -19,7 +19,7 @@ const StoryDetailsPage = () => {
     video_url: "",
     thumbnail_url: "",
     cta_link: "",
-    whatsapp_number: "",
+    // whatsapp_number: "", // Removido: WhatsApp agora é global
     active: true,
     position: 1,
   });
@@ -47,7 +47,7 @@ const StoryDetailsPage = () => {
           video_url: currentStory.video_url,
           thumbnail_url: currentStory.thumbnail_url,
           cta_link: currentStory.cta_link || "",
-          whatsapp_number: currentStory.whatsapp_number || "",
+          // whatsapp_number: currentStory.whatsapp_number || "", // Removido: WhatsApp agora é global
           active: currentStory.active,
           position: currentStory.position,
         });
@@ -103,7 +103,7 @@ const StoryDetailsPage = () => {
         video_url: formData.video_url,
         thumbnail_url: formData.thumbnail_url,
         cta_link: formData.cta_link || undefined,
-        whatsapp_number: formData.whatsapp_number || undefined,
+        // whatsapp_number: formData.whatsapp_number || undefined, // Removido: WhatsApp agora é global
         active: formData.active,
         position: formData.position,
         updated_at: new Date().toISOString(),
@@ -128,7 +128,7 @@ const StoryDetailsPage = () => {
         video_url: story.video_url,
         thumbnail_url: story.thumbnail_url,
         cta_link: story.cta_link || "",
-        whatsapp_number: story.whatsapp_number || "",
+        // whatsapp_number: story.whatsapp_number || "", // Removido: WhatsApp agora é global
         active: story.active,
         position: story.position,
       });
@@ -468,9 +468,10 @@ const StoryDetailsPage = () => {
                   )}
                 </div>
 
-                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
+                {/* Removido: Campo de WhatsApp individual do story */}
+                {/* <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
                   <div className="flex items-center gap-2 mb-2">
-                    <LinkIcon className="w-4 h-4 text-violet-600" /> {/* Usando LinkIcon para WhatsApp */}
+                    <LinkIcon className="w-4 h-4 text-violet-600" />
                     <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
                       Número de WhatsApp (Story)
                     </p>
@@ -490,7 +491,7 @@ const StoryDetailsPage = () => {
                   ) : (
                     <p className="text-sm text-slate-500">Nenhum número de WhatsApp cadastrado para este story.</p>
                   )}
-                </div>
+                </div> */}
               </div>
             </div>
           </section>

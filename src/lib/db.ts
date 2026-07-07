@@ -5,7 +5,6 @@ export interface Store {
   name: string;
   domain: string;
   active: boolean;
-  whatsapp_number?: string; // Adicionado campo para número de WhatsApp
   created_at?: string;
 }
 
@@ -16,7 +15,6 @@ export interface Story {
   video_url: string;
   thumbnail_url: string;
   cta_link?: string;
-  whatsapp_number?: string; // Adicionado campo para número de WhatsApp específico do story
   active: boolean;
   position: number;
   created_at?: string;
@@ -30,6 +28,7 @@ export interface WidgetSettings {
   theme_color: string;
   display_mode: 'carousel' | 'grid' | 'bubbles';
   active: boolean;
+  whatsapp_number?: string; // Adicionado campo para número de WhatsApp da loja
   created_at?: string;
   updated_at?: string;
 }
@@ -43,7 +42,6 @@ const DEFAULT_STORES: Store[] = [
     name: 'Useanny',
     domain: 'useanny.com.br',
     active: true,
-    whatsapp_number: '5545999629702', // Exemplo de número de WhatsApp
   }
 ];
 
@@ -52,72 +50,7 @@ const DEFAULT_STORIES: Story[] = [
     id: 's1',
     store_id: '11111111-1111-1111-1111-111111111111',
     title: 'Nova Coleção Outono 🍂',
-    video_url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', // URL atualizada
-    thumbnail_url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=250&auto=format&fit=crop&q=60',
-    cta_link: 'https://useanny.com.br/collections/outono',
-    active: true,
-    position: 1,
-  },
-  {
-    id: 's2',
-    store_id: '11111111-1111-1111-1111-111111111111',
-    title: 'Unboxing Especial 🎁',
-    video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp<dyad-write path="src/lib/db.ts" description="Atualizando URLs de vídeo de fallback e adicionando campo whatsapp_number à interface Story.">
-import { supabase } from './supabase';
-
-export interface Store {
-  id: string;
-  name: string;
-  domain: string;
-  active: boolean;
-  whatsapp_number?: string; // Adicionado campo para número de WhatsApp
-  created_at?: string;
-}
-
-export interface Story {
-  id: string;
-  store_id: string;
-  title: string;
-  video_url: string;
-  thumbnail_url: string;
-  cta_link?: string;
-  whatsapp_number?: string; // Adicionado campo para número de WhatsApp específico do story
-  active: boolean;
-  position: number;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface WidgetSettings {
-  id: string;
-  store_id: string;
-  position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left' | 'bottom-center';
-  theme_color: string;
-  display_mode: 'carousel' | 'grid' | 'bubbles';
-  active: boolean;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export const isSupabaseConfigured = !!import.meta.env.VITE_SUPABASE_URL && !!import.meta.env.VITE_SUPABASE_ANON_KEY && !!supabase;
-
-// Dados Iniciais de Exemplo (Useanny)
-const DEFAULT_STORES: Store[] = [
-  {
-    id: '11111111-1111-1111-1111-111111111111',
-    name: 'Useanny',
-    domain: 'useanny.com.br',
-    active: true,
-    whatsapp_number: '5545999629702', // Exemplo de número de WhatsApp
-  }
-];
-
-const DEFAULT_STORIES: Story[] = [
-  {
-    id: 's1',
-    store_id: '11111111-1111-1111-1111-111111111111',
-    title: 'Nova Coleção Outono 🍂',
-    video_url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', // URL atualizada
+    video_url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
     thumbnail_url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=250&auto=format&fit=crop&q=60',
     cta_link: 'https://useanny.com.br/collections/outono',
     active: true,
@@ -163,6 +96,7 @@ const DEFAULT_SETTINGS: WidgetSettings[] = [
     theme_color: '#8B5CF6',
     display_mode: 'carousel',
     active: true,
+    whatsapp_number: '5545999629702', // Exemplo de número de WhatsApp padrão
   }
 ];
 
@@ -351,6 +285,7 @@ export const db = {
           theme_color: '#8B5CF6',
           display_mode: 'carousel',
           active: true,
+          whatsapp_number: DEFAULT_SETTINGS[0].whatsapp_number, // Usar o padrão
         };
         settings.push(storeSettings);
         localStorage.setItem('vidlytics_settings', JSON.stringify(settings));
@@ -367,6 +302,7 @@ export const db = {
           theme_color: '#8B5CF6',
           display_mode: 'carousel',
           active: true,
+          whatsapp_number: DEFAULT_SETTINGS[0].whatsapp_number, // Usar o padrão
         };
         memorySettings.push(storeSettings);
       }
