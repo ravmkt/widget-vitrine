@@ -1,4 +1,3 @@
-' para garantir a compilação correta.">
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { db, GeneralSettings, Appearance, Store } from '@/lib/db';
@@ -245,7 +244,7 @@ const SettingsPage = () => {
                 <ol className="list-decimal list-inside text-xs text-slate-600 space-y-2">
                   <li>Acesse o painel da sua loja na <strong>Yampi</strong>.</li>
                   <li>
-                    Vá em <strong>Configurações</strong> > <strong>Scripts</strong>
+                    Vá em <strong>Configurações</strong> {" > "} <strong>Scripts</strong>
                   </li>
                   <li>Clique em <strong>Adicionar Script</strong>.</li>
                   <li>Cole o código acima no campo de script do <strong>Cabeçalho (Head)</strong> ou <strong>Rodapé (Body)</strong>.</li>

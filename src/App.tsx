@@ -8,6 +8,7 @@ import SettingsPage from './pages/SettingsPage';
 import StoriesWidgetPage from './pages/StoriesWidgetPage';
 import DashboardPage from './pages/DashboardPage';
 import VideoGalleryPage from './pages/VideoGalleryPage';
+import AppearancePage from './pages/AppearancePage';
 import NotFound from './pages/NotFound';
 import WhatsAppFloatingButton from './components/WhatsAppFloatingButton';
 
@@ -68,6 +69,7 @@ const App = () => {
           <Route path="/stories" element={<StoriesPage />} />
           <Route path="/stories/:id" element={<StoryDetailsPage />} />
           <Route path="/gallery" element={<VideoGalleryPage />} />
+          <Route path="/appearance" element={<AppearancePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/widget" element={<StoriesWidgetPage />} />
           <Route path="/widget/:storeId" element={<StoriesWidgetPage />} />
