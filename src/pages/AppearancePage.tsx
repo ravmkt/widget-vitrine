@@ -17,7 +17,8 @@ import {
   MessageCircle,
   Share2,
   Play,
-  Volume2
+  Volume2,
+  Brush
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import WhatsAppIcon from '@/components/WhatsAppIcon';
@@ -54,12 +55,10 @@ const AppearancePage = () => {
   const [appearances, setAppearances] = useState<Appearance[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Form handling
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState(INITIAL_APPEARANCE_FORM);
   
-  // Active Preview Tab
   const [previewTab, setPreviewTab] = useState<'widget' | 'carousel' | 'player'>('widget');
 
   const loadAppearances = async () => {
@@ -87,7 +86,7 @@ const AppearancePage = () => {
   const handleCreateNew = () => {
     setFormData({
       ...INITIAL_APPEARANCE_FORM,
-      is_default: appearances.length === 0, // se for a primeira, define como default
+      is_default: appearances.length === 0,
     });
     setEditingId(null);
     setShowForm(true);
@@ -194,7 +193,6 @@ const AppearancePage = () => {
         ...formData,
       };
 
-      // Se for definido como padrão, precisamos desmarcar os outros
       if (formData.is_default) {
         const others = appearances.filter(a => a.id !== appData.id);
         for (const other of others) {
@@ -229,7 +227,6 @@ const AppearancePage = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
@@ -253,7 +250,6 @@ const AppearancePage = () => {
 
         {showForm && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            {/* Form Fields */}
             <form onSubmit={handleSave} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-8 max-h-[85vh] overflow-y-auto scrollbar-none shadow-2xl">
               <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                 <div className="flex items-center gap-2">
@@ -271,7 +267,6 @@ const AppearancePage = () => {
                 </button>
               </div>
 
-              {/* 1. Dados Básicos */}
               <div className="space-y-4">
                 <h4 className="text-sm font-bold text-violet-400 uppercase tracking-wider">1. Dados básicos</h4>
                 <div>
@@ -282,7 +277,7 @@ const AppearancePage = () => {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full bg-slate-950 border border-slate-800 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 rounded-xl px-4 py-2.5 text-sm text-slate-100"
-                    placeholder="Ex: Tema Black Friday, Minimalista..."
+                    placeholder="Ex: Tema Black Friday..."
                   />
                 </div>
                 <div className="flex items-center justify-between p-3.5 bg-slate-950 rounded-xl border border-slate-800">
@@ -304,7 +299,6 @@ const AppearancePage = () => {
                 </div>
               </div>
 
-              {/* 2. Cores */}
               <div className="space-y-4">
                 <h4 className="text-sm font-bold text-violet-400 uppercase tracking-wider">2. Cores</h4>
                 <div className="grid grid-cols-2 gap-4">
@@ -396,7 +390,6 @@ const AppearancePage = () => {
                 </div>
               </div>
 
-              {/* 3. Estilo */}
               <div className="space-y-4">
                 <h4 className="text-sm font-bold text-violet-400 uppercase tracking-wider">3. Estilo</h4>
                 <div className="grid grid-cols-2 gap-4">
@@ -447,7 +440,6 @@ const AppearancePage = () => {
                 </div>
               </div>
 
-              {/* 4. Widget Flutuante */}
               <div className="space-y-4">
                 <h4 className="text-sm font-bold text-violet-400 uppercase tracking-wider">4. Widget flutuante</h4>
                 <div className="grid grid-cols-2 gap-4">
@@ -491,7 +483,6 @@ const AppearancePage = () => {
                 </div>
               </div>
 
-              {/* 5. Carrossel */}
               <div className="space-y-4">
                 <h4 className="text-sm font-bold text-violet-400 uppercase tracking-wider">5. Carrossel de Stories</h4>
                 <div className="grid grid-cols-2 gap-4">
@@ -567,7 +558,6 @@ const AppearancePage = () => {
                 </div>
               </div>
 
-              {/* 6. Player/Modal */}
               <div className="space-y-4">
                 <h4 className="text-sm font-bold text-violet-400 uppercase tracking-wider">6. Player e Modal</h4>
                 <p className="text-xs text-slate-400">Ative ou oculte as ações interativas exibidas nas laterais do story player.</p>
@@ -614,7 +604,6 @@ const AppearancePage = () => {
                 </div>
               </div>
 
-              {/* Actions */}
               <div className="flex justify-end gap-3 pt-6 border-t border-slate-800">
                 <button
                   type="button"
@@ -625,200 +614,154 @@ const AppearancePage = () => {
                 </button>
                 <button
                   type="submit"
-                  className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all"
+                  className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all"
                 >
-                  {editingId ? 'Salvar Alterações' : 'Criar Template'}
+                  {editingId ? 'Salvar Alterações' : 'Cadastrar Estilo'}
                 </button>
               </div>
             </form>
 
-            {/* LIVE PREVIEW AREA */}
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col h-[85vh] sticky top-24 shadow-2xl">
-              <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
-                <h3 className="font-bold text-slate-100 flex items-center gap-2">
-                  <Eye className="w-5 h-5 text-violet-400" /> Preview em Tempo Real
-                </h3>
-                <div className="flex bg-slate-950 p-1.5 rounded-xl border border-slate-800 text-[11px] font-bold">
-                  {(['widget', 'carousel', 'player'] as const).map((tab) => (
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-slate-100 mb-4">Pré-visualização</h3>
+                <div className="flex border-b border-slate-800 mb-4">
+                  {(['widget', 'carousel', 'player'] as const).map(tab => (
                     <button
                       key={tab}
-                      type="button"
                       onClick={() => setPreviewTab(tab)}
-                      className={`px-3 py-1.5 rounded-lg capitalize transition-all ${
+                      className={`px-4 py-2 text-xs font-bold uppercase transition-all border-b-2 ${
                         previewTab === tab
-                          ? 'bg-violet-600 text-white'
-                          : 'text-slate-400 hover:text-white'
+                          ? 'border-violet-500 text-violet-400'
+                          : 'border-transparent text-slate-500 hover:text-slate-300'
                       }`}
                     >
-                      {tab === 'widget' ? 'Widget' : tab === 'carousel' ? 'Carrossel' : 'Player'}
+                      {tab}
                     </button>
                   ))}
                 </div>
-              </div>
 
-              <div className="flex-1 flex items-center justify-center bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden p-6 relative">
-                
-                {/* 1. Widget Preview */}
-                {previewTab === 'widget' && (
-                  <div className="flex flex-col items-center justify-center gap-4 text-center">
-                    <p className="text-xs text-slate-500 max-w-xs mb-4">Veja como a bolinha de story aparece flutuando ou na listagem da página.</p>
-                    
-                    <div className="flex items-center justify-center p-8 bg-slate-900 rounded-3xl border border-slate-800 shadow-xl relative min-w-[200px]">
-                      <button
-                        type="button"
+                <div className="bg-slate-950 rounded-2xl p-8 flex items-center justify-center min-h-[300px] border border-slate-800/60">
+                  {previewTab === 'widget' && (
+                    <div className="flex flex-col items-center">
+                      <div
+                        className="p-[3px] transition-transform duration-300"
                         style={{
-                          animation: formData.widget_animation === 'bounce' ? 'bounce 2s infinite' : formData.widget_animation === 'fade' ? 'pulse 2s infinite' : 'none'
+                          background: `linear-gradient(45deg, ${formData.primary_color}, ${formData.secondary_color})`,
+                          borderRadius: formData.widget_shape === 'circle' ? '50%' : formData.widget_shape === 'rounded' ? '14px' : '2px',
+                          boxShadow: formData.shadow_enabled ? '0 10px 15px -3px rgba(0,0,0,0.3)' : 'none'
                         }}
-                        className="flex flex-col items-center gap-2 focus:outline-none"
                       >
                         <div
-                          className="p-[3px] transition-all"
+                          className="bg-slate-950 p-[3px]"
                           style={{
-                            background: `linear-gradient(45deg, ${formData.primary_color}, ${formData.secondary_color})`,
-                            borderRadius: formData.widget_shape === 'circle' ? '50%' : formData.widget_shape === 'rounded' ? '16px' : '4px',
-                            boxShadow: formData.shadow_enabled ? '0 10px 15px -3px rgba(139, 92, 246, 0.3)' : 'none'
+                            borderRadius: formData.widget_shape === 'circle' ? '50%' : formData.widget_shape === 'rounded' ? '12px' : '0px',
                           }}
                         >
                           <div
-                            className="bg-slate-950 p-[3px] transition-all"
+                            className="overflow-hidden bg-slate-800"
                             style={{
-                              borderRadius: formData.widget_shape === 'circle' ? '50%' : formData.widget_shape === 'rounded' ? '14px' : '2px',
+                              width: formData.widget_size === 'small' ? '56px' : formData.widget_size === 'medium' ? '72px' : '96px',
+                              height: formData.widget_size === 'small' ? '56px' : formData.widget_size === 'medium' ? '72px' : '96px',
+                              borderRadius: formData.widget_shape === 'circle' ? '50%' : formData.widget_shape === 'rounded' ? '10px' : '0px',
                             }}
                           >
                             <img
                               src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=150&q=80"
-                              alt="Preview"
-                              className="object-cover"
-                              style={{
-                                width: formData.widget_size === 'small' ? '56px' : formData.widget_size === 'medium' ? '72px' : '96px',
-                                height: formData.widget_size === 'small' ? '56px' : formData.widget_size === 'medium' ? '72px' : '96px',
-                                borderRadius: formData.widget_shape === 'circle' ? '50%' : formData.widget_shape === 'rounded' ? '12px' : '0px',
-                              }}
+                              alt="thumb"
+                              className="w-full h-full object-cover"
                             />
                           </div>
                         </div>
-                        {formData.show_title && (
-                          <span className="text-xs font-semibold text-slate-200 mt-1 max-w-[80px] truncate" style={{ fontFamily: formData.font_family }}>
-                            Outono 🍂
-                          </span>
-                        )}
-                      </button>
+                      </div>
+                      {formData.show_title && (
+                        <span className="text-xs text-slate-300 mt-2 font-bold" style={{ fontFamily: formData.font_family }}>
+                          Destaque
+                        </span>
+                      )}
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* 2. Carousel Preview */}
-                {previewTab === 'carousel' && (
-                  <div className="w-full">
-                    <p className="text-xs text-slate-500 text-center mb-6 max-w-sm mx-auto">Visualização do carrossel horizontal de stories na página da loja.</p>
-                    <div className="flex gap-4 justify-center items-center overflow-x-auto py-4">
-                      {[1, 2, 3].map((idx) => (
+                  {previewTab === 'carousel' && (
+                    <div className="flex gap-4 overflow-x-auto w-full max-w-sm justify-center">
+                      {[1, 2].map(idx => (
                         <div
                           key={idx}
-                          className="relative aspect-[9/16] w-[110px] bg-slate-900 border border-slate-800 overflow-hidden flex flex-col justify-end p-2 shrink-0 transition-all"
+                          className="relative aspect-[9/16] w-[100px] overflow-hidden flex flex-col justify-end p-2 border border-slate-800"
                           style={{
                             borderRadius: formData.carousel_card_shape === 'rounded' ? '12px' : '0px',
-                            boxShadow: formData.shadow_enabled ? '0 4px 10px rgba(0,0,0,0.3)' : 'none',
-                            fontFamily: formData.font_family,
+                            boxShadow: formData.shadow_enabled ? '0 4px 10px rgba(0,0,0,0.4)' : 'none',
+                            fontFamily: formData.font_family
                           }}
                         >
                           <img
-                            src={
-                              idx === 1 ? 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=150&q=80' :
-                              idx === 2 ? 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=150&q=80' :
-                              'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=150&q=80'
-                            }
+                            src="https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=150&q=80"
+                            alt="Preview"
                             className="absolute inset-0 w-full h-full object-cover opacity-60"
-                            alt="thumb"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                          
-                          {formData.show_play_button && (
-                            <div className="absolute top-2 left-2 w-5 h-5 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                              <Play className="w-2.5 h-2.5 text-white fill-white" />
-                            </div>
-                          )}
-
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
                           {formData.show_title && (
                             <span className="text-[9px] font-bold text-white z-10 truncate">
-                              {idx === 1 ? 'Novidades' : idx === 2 ? 'Unboxing' : 'Provador'}
+                              Story #{idx}
                             </span>
-                          )}
-
-                          {formData.show_product && (
-                            <div className="mt-1.5 p-1 bg-white rounded-lg flex items-center gap-1 z-10">
-                              <div className="w-4 h-4 bg-slate-200 rounded-sm shrink-0"></div>
-                              <span className="text-[7px] text-slate-900 font-bold truncate">Vestido...</span>
-                            </div>
                           )}
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* 3. Player Modal Preview */}
-                {previewTab === 'player' && (
-                  <div className="w-full max-w-[280px] aspect-[9/16] bg-slate-900 rounded-3xl overflow-hidden shadow-2xl relative border border-slate-800 flex flex-col justify-between p-4" style={{ backgroundColor: formData.background_color, fontFamily: formData.font_family }}>
-                    
-                    {/* Header */}
-                    <div className="flex items-center justify-between z-10">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-5 h-5 rounded-full bg-violet-600"></div>
-                        <span className="text-[10px] font-bold text-white">Live Preview</span>
+                  {previewTab === 'player' && (
+                    <div
+                      className="w-full max-w-[240px] aspect-[9/16] rounded-3xl overflow-hidden shadow-2xl relative border border-slate-800 flex flex-col justify-between p-4"
+                      style={{ backgroundColor: formData.background_color, fontFamily: formData.font_family }}
+                    >
+                      <div className="absolute inset-0 overflow-hidden bg-slate-950">
+                        <img
+                          src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=300&q=80"
+                          alt="Video"
+                          className="w-full h-full object-cover opacity-60"
+                        />
                       </div>
-                      <div className="w-5 h-5 rounded-full bg-black/40 flex items-center justify-center text-white text-[10px]">&times;</div>
-                    </div>
+                      
+                      <div className="flex justify-between items-center z-10">
+                        <span className="text-[9px] font-bold text-white">Live Preview</span>
+                        <div className="w-4 h-4 rounded-full bg-black/40 flex items-center justify-center text-white text-[10px]">&times;</div>
+                      </div>
 
-                    {/* Simulado de Vídeo de Fundo */}
-                    <div className="absolute inset-0 bg-slate-950 overflow-hidden">
-                      <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=300&q=80" alt="Video" className="w-full h-full object-cover opacity-70" />
-                    </div>
+                      <div className="absolute right-3 bottom-16 flex flex-col gap-2 z-10">
+                        {formData.show_like_button && (
+                          <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white cursor-pointer">
+                            <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
+                          </div>
+                        )}
+                        {formData.show_comment_button && (
+                          <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white cursor-pointer">
+                            <MessageCircle className="w-3.5 h-3.5" />
+                          </div>
+                        )}
+                        {formData.show_whatsapp_button && (
+                          <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white cursor-pointer shadow-md">
+                            <WhatsAppIcon size={16} />
+                          </div>
+                        )}
+                      </div>
 
-                    {/* Botões interativos laterais */}
-                    <div className="absolute right-3 bottom-24 flex flex-col gap-2.5 z-10">
-                      {formData.show_like_button && (
-                        <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center text-white text-[9px] cursor-pointer">
-                          <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
-                        </div>
-                      )}
-                      {formData.show_comment_button && (
-                        <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center text-white text-[9px] cursor-pointer">
-                          <MessageCircle className="w-3.5 h-3.5" />
-                        </div>
-                      )}
-                      {formData.show_share_button && (
-                        <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center text-white text-[9px] cursor-pointer">
-                          <Share2 className="w-3.5 h-3.5" />
-                        </div>
-                      )}
-                      {formData.show_whatsapp_button && (
-                        <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white cursor-pointer shadow-md">
-                          <WhatsAppIcon size={16} />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Rodapé / CTA */}
-                    <div className="z-10 mt-auto">
-                      {formData.show_product_button && (
+                      <div className="z-10 mt-auto">
                         <button
                           type="button"
-                          className="w-full py-2 rounded-xl text-white text-[11px] font-bold shadow-lg transition-all"
+                          className="w-full py-2 rounded-xl text-white text-[10px] font-bold transition-all shadow-lg"
                           style={{ backgroundColor: formData.button_color }}
                         >
                           Comprar Agora
                         </button>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* List of Templates */}
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6">
           <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
             <h3 className="font-bold text-lg text-slate-100 flex items-center gap-2">
@@ -850,7 +793,6 @@ const AppearancePage = () => {
                       )}
                     </div>
 
-                    {/* Previa rápida de cores */}
                     <div className="flex gap-1.5 my-4">
                       <span className="w-4 h-4 rounded-full border border-slate-800" style={{ backgroundColor: app.primary_color }} title="Cor Principal"></span>
                       <span className="w-4 h-4 rounded-full border border-slate-800" style={{ backgroundColor: app.secondary_color }} title="Cor Secundária"></span>
@@ -865,7 +807,6 @@ const AppearancePage = () => {
                     </div>
                   </div>
 
-                  {/* Actions Bar */}
                   <div className="flex items-center gap-2 pt-4 mt-4 border-t border-slate-900">
                     <button
                       onClick={() => handleEdit(app)}

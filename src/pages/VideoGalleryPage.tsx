@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { db, Video, Store } from '@/lib/db';
 import { Film, UploadCloud, Plus, Trash2, Edit3, Check, X, Play, Link as LinkIcon, Copy, Eye, AlertCircle, FileVideo, Info } from 'lucide-react';
@@ -87,7 +88,6 @@ const VideoGalleryPage = () => {
 
   const handleSourceTypeChange = (newType: Video['source_type']) => {
     setSourceType(newType);
-    // Auto-populate safe default URLs or placeholders to prevent empty crashes and speed up UX
     if (newType === 'instagram') {
       setVideoUrl('https://www.instagram.com/reel/Cw789_Xp_9Y/');
       setThumbnailUrl('https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80');
@@ -108,9 +108,7 @@ const VideoGalleryPage = () => {
     if (file) {
       setSelectedFileName(file.name);
       setFileSize(file.size);
-      // Simulate creating duration
       setDuration(15);
-      // Set a mock local blob URL for instant preview
       const localUrl = URL.createObjectURL(file);
       setVideoUrl(localUrl);
       showSuccess(`Arquivo selecionado: ${file.name}`);
@@ -126,13 +124,11 @@ const VideoGalleryPage = () => {
       return;
     }
 
-    // Required check for video
     if (!videoUrl.trim()) {
       showError('A URL ou arquivo de vídeo é obrigatório.');
       return;
     }
 
-    // Source validations
     if (sourceType === 'instagram') {
       if (!videoUrl.toLowerCase().includes('instagram.com')) {
         showError('Para origem Instagram, forneça uma URL válida do Instagram (ex: instagram.com/reel/...).');
@@ -155,7 +151,6 @@ const VideoGalleryPage = () => {
       }
     }
 
-    // Default Thumbnail if empty
     let finalThumbnail = thumbnailUrl.trim();
     if (!finalThumbnail) {
       finalThumbnail = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80';
@@ -190,7 +185,6 @@ const VideoGalleryPage = () => {
       await db.videos.save(videoToSave);
       showSuccess(`Vídeo "${videoToSave.title}" salvo com sucesso!`);
       
-      // Reset form
       setTitle('');
       setSourceType('external_url');
       setVideoUrl('');
@@ -220,7 +214,6 @@ const VideoGalleryPage = () => {
     setStatus(video.status);
     setSelectedFileName(video.source_type === 'upload' ? 'Video_Original.mp4' : '');
     setShowForm(true);
-    // Scroll to form smoothly
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -228,7 +221,6 @@ const VideoGalleryPage = () => {
     if (window.confirm('Tem certeza que deseja excluir este vídeo? Ele será removido de todos os stories onde estiver sendo usado.')) {
       try {
         await db.videos.delete(id);
-        // Remover StoryVideos que usam este vídeo
         const relatedStoryVideos = (await db.storyVideos.getAll()).filter(sv => sv.video_id === id);
         for (const sv of relatedStoryVideos) {
           await db.storyVideos.delete(sv.id);
@@ -288,7 +280,6 @@ const VideoGalleryPage = () => {
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Galeria</h1>
@@ -312,7 +303,6 @@ const VideoGalleryPage = () => {
           </button>
         </div>
 
-        {/* Video Previewer Modal (if active) */}
         {previewingVideoUrl && (
           <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setPreviewingVideoUrl(null)}>
             <div className="bg-slate-900 rounded-3xl overflow-hidden max-w-sm w-full relative border border-slate-700 shadow-2xl" onClick={e => e.stopPropagation()}>
@@ -329,7 +319,6 @@ const VideoGalleryPage = () => {
           </div>
         )}
 
-        {/* Form para Adicionar/Editar Vídeo */}
         {showForm && (
           <div className="bg-white rounded-3xl border border-slate-100 shadow-lg p-6 mb-8 max-w-2xl mx-auto transition-all">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
@@ -345,7 +334,6 @@ const VideoGalleryPage = () => {
             </div>
 
             <form onSubmit={handleSaveVideo} className="space-y-5">
-              {/* Título do Vídeo */}
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                   Título do Vídeo *
@@ -355,12 +343,11 @@ const VideoGalleryPage = () => {
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Ex: Unboxing Vestido Floral, Provador Novidades..."
+                  placeholder="Ex: Unboxing Vestido Floral..."
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-semibold text-slate-800"
                 />
               </div>
 
-              {/* Origem do Vídeo */}
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                   Origem do Vídeo *
@@ -384,7 +371,6 @@ const VideoGalleryPage = () => {
                 </div>
               </div>
 
-              {/* Upload de Arquivo se tipo for upload ou mobile_upload */}
               {(sourceType === 'upload' || sourceType === 'mobile_upload') ? (
                 <div className="p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 hover:bg-slate-50 transition-all flex flex-col items-center justify-center text-center">
                   <FileVideo className="w-10 h-10 text-slate-400 mb-2" />
@@ -409,7 +395,6 @@ const VideoGalleryPage = () => {
                   )}
                 </div>
               ) : (
-                /* URL do Vídeo (Instagram, TikTok, URL Externa) */
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                     URL do Vídeo *
@@ -429,7 +414,7 @@ const VideoGalleryPage = () => {
                   <p className="text-[11px] text-slate-400 mt-1.5 flex items-start gap-1">
                     <Info className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
                     <span>
-                      {sourceType === 'instagram' && 'Insira um link do Instagram. Para fins de testes no sandbox, simularemos o vídeo do reel.'}
+                      {sourceType === 'instagram' && 'Insira um link do Instagram.'}
                       {sourceType === 'tiktok' && 'Insira o link direto do vídeo do TikTok.'}
                       {sourceType === 'external_url' && 'Insira a URL direta terminando em .mp4 ou arquivo público.'}
                     </span>
@@ -437,7 +422,6 @@ const VideoGalleryPage = () => {
                 </div>
               )}
 
-              {/* Thumbnail / Capa */}
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                   URL da Thumbnail / Capa (Opcional)
@@ -449,12 +433,8 @@ const VideoGalleryPage = () => {
                   placeholder="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400"
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm font-mono text-slate-800"
                 />
-                <p className="text-xs text-slate-400 mt-1">
-                  Se deixado em branco, usaremos uma imagem padrão de alta definição baseada no seu título.
-                </p>
               </div>
 
-              {/* Detalhes extras (Duração, Tamanho, Status) */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
@@ -484,7 +464,6 @@ const VideoGalleryPage = () => {
                 </div>
               </div>
 
-              {/* Actions do Formulário */}
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
@@ -504,9 +483,7 @@ const VideoGalleryPage = () => {
           </div>
         )}
 
-        {/* Filtros e Busca */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 mb-8 flex flex-col md:flex-row gap-4 items-center">
-          {/* Busca por título */}
           <div className="relative flex-1 w-full">
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-xs">Busca</span>
             <input
@@ -518,7 +495,6 @@ const VideoGalleryPage = () => {
             />
           </div>
 
-          {/* Filtro por Origem */}
           <div className="w-full md:w-auto min-w-[180px]">
             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Origem do Vídeo</label>
             <select
@@ -535,7 +511,6 @@ const VideoGalleryPage = () => {
             </select>
           </div>
 
-          {/* Filtro por Status */}
           <div className="w-full md:w-auto min-w-[150px]">
             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Status</label>
             <select
@@ -550,7 +525,6 @@ const VideoGalleryPage = () => {
           </div>
         </div>
 
-        {/* Grid de Vídeos da Galeria */}
         {filteredVideos.length === 0 ? (
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-16 text-center max-w-xl mx-auto">
             <Film className="w-12 h-12 text-slate-300 mx-auto mb-4" />
@@ -572,7 +546,6 @@ const VideoGalleryPage = () => {
                 key={video.id}
                 className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-all group"
               >
-                {/* Thumbnail Preview Area */}
                 <div className="relative aspect-[9/16] bg-slate-900 overflow-hidden">
                   <img
                     src={video.thumbnail_url}
@@ -581,7 +554,6 @@ const VideoGalleryPage = () => {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
 
-                  {/* Badges Overlay */}
                   <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-10">
                     <span className="bg-black/40 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-md">
                       {getSourceTypeLabel(video.source_type)}
@@ -595,7 +567,6 @@ const VideoGalleryPage = () => {
                     </span>
                   </div>
 
-                  {/* Play Action Overlay */}
                   <button
                     onClick={() => setPreviewingVideoUrl(video.video_url)}
                     className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20"
@@ -605,7 +576,6 @@ const VideoGalleryPage = () => {
                     </div>
                   </button>
 
-                  {/* Duracao overlay no bottom */}
                   {video.duration && (
                     <span className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-sm z-10">
                       ⏱️ {video.duration}s
@@ -613,7 +583,6 @@ const VideoGalleryPage = () => {
                   )}
                 </div>
 
-                {/* Video Info Card */}
                 <div className="p-4 flex-1 flex flex-col justify-between gap-3 bg-white">
                   <div>
                     <h4 className="font-bold text-slate-800 text-sm line-clamp-2" title={video.title}>
@@ -625,7 +594,6 @@ const VideoGalleryPage = () => {
                     </div>
                   </div>
 
-                  {/* Actions Grid */}
                   <div className="grid grid-cols-5 gap-1 pt-3 border-t border-slate-50">
                     <button
                       onClick={() => setPreviewingVideoUrl(video.video_url)}

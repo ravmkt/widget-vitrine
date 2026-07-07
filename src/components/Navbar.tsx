@@ -1,4 +1,3 @@
-Section', and the exactly requested 9 navigation modules.">
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -35,7 +34,6 @@ const Navbar = () => {
     { path: '/settings', label: 'Configurações', icon: Settings },
   ];
 
-  // Dynamic high-fidelity breadcrumbs logic mapping
   const getBreadcrumbs = (pathname: string) => {
     const segments = ['Aplicativos'];
     if (pathname === '/dashboard') segments.push('Dashboard');
@@ -58,10 +56,8 @@ const Navbar = () => {
     <header className="bg-slate-950 border-b border-slate-900 sticky top-0 z-50 backdrop-blur-md bg-opacity-95">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Top/Main navbar section */}
         <div className="flex justify-between h-16 items-center">
           
-          {/* Brand/Logo */}
           <Link to="/" className="flex items-center gap-2.5 focus:outline-none group">
             <div className="bg-gradient-to-tr from-violet-600 to-fuchsia-600 p-2 rounded-xl text-white shadow-lg shadow-violet-500/10 group-hover:scale-105 transition-transform duration-200">
               <Sparkles className="w-5 h-5" />
@@ -74,7 +70,6 @@ const Navbar = () => {
             </div>
           </Link>
 
-          {/* Desktop Navigation Links */}
           <nav className="hidden xl:flex space-x-1">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -96,9 +91,7 @@ const Navbar = () => {
             })}
           </nav>
 
-          {/* Right Section: Database Status & Mobile Toggle */}
           <div className="flex items-center gap-3">
-            {/* Status Badge */}
             <div className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
               isSupabaseConfigured 
                 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/15' 
@@ -108,7 +101,6 @@ const Navbar = () => {
               {isSupabaseConfigured ? 'Supabase Conectado' : 'Demonstração'}
             </div>
 
-            {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="xl:hidden p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-all"
@@ -120,7 +112,6 @@ const Navbar = () => {
 
         </div>
 
-        {/* Dynamic Interactive Breadcrumbs Row */}
         <div className="flex items-center gap-1.5 py-2.5 border-t border-slate-900/60 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
           {breadcrumbs.map((segment, idx) => (
             <React.Fragment key={idx}>
@@ -134,7 +125,6 @@ const Navbar = () => {
 
       </div>
 
-      {/* Mobile Navigation Drawer */}
       {mobileMenuOpen && (
         <div className="lg:hidden bg-slate-950 border-t border-slate-900 px-4 py-3 space-y-1.5 shadow-2xl animate-fade-in">
           {menuItems.map((item) => {

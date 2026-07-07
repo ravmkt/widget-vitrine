@@ -17,7 +17,8 @@ import {
   Wifi,
   Globe,
   Settings,
-  ShieldAlert
+  ShieldAlert,
+  Eye
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 
@@ -49,7 +50,6 @@ const IntegrationPage = () => {
           setTestUrl(mainStore.domain || '');
         }
 
-        // Simulating loading initial integration status from localStorage/mock settings
         const status = localStorage.getItem('vidlytics_integration_status') as any;
         const verified = localStorage.getItem('vidlytics_integration_last_checked');
         if (status) setIntegrationStatus(status);
@@ -117,12 +117,10 @@ const IntegrationPage = () => {
     setIsTesting(true);
 
     setTimeout(() => {
-      // High fidelity simulated checking logic
       const timestamp = new Date().toLocaleString('pt-BR');
       setLastVerified(timestamp);
       localStorage.setItem('vidlytics_integration_last_checked', timestamp);
 
-      // In sandbox/demo we connect automatically if they submit any URL
       setIntegrationStatus('connected');
       localStorage.setItem('vidlytics_integration_status', 'connected');
 
@@ -183,7 +181,6 @@ const IntegrationPage = () => {
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
-        {/* Header */}
         <div>
           <h1 className="text-3xl font-extrabold bg-gradient-to-r from-violet-400 via-fuchsia-400 to-indigo-400 bg-clip-text text-transparent">
             Central de Integrações
@@ -193,7 +190,6 @@ const IntegrationPage = () => {
           </p>
         </div>
 
-        {/* SECTION 1: STATUS DE INTEGRAÇÃO */}
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-5">
           <div className="flex items-center gap-2.5 pb-3 border-b border-slate-800">
             <Activity className="w-5 h-5 text-violet-400" />
@@ -202,7 +198,6 @@ const IntegrationPage = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
             
-            {/* Status block */}
             <div className="bg-slate-950/60 p-5 rounded-2xl border border-slate-850 flex items-center justify-between">
               <div className="space-y-1">
                 <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Status atual</span>
@@ -214,7 +209,6 @@ const IntegrationPage = () => {
               <Wifi className="w-8 h-8 text-slate-700" />
             </div>
 
-            {/* Last verified */}
             <div className="bg-slate-950/60 p-5 rounded-2xl border border-slate-850 flex items-center justify-between">
               <div className="space-y-1">
                 <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Última verificação</span>
@@ -223,7 +217,6 @@ const IntegrationPage = () => {
               <CheckCircle2 className="w-8 h-8 text-slate-700" />
             </div>
 
-            {/* Explanatory detail */}
             <div className="space-y-1">
               <p className="text-xs text-slate-400 leading-relaxed">
                 {activeStatus.desc}
@@ -241,7 +234,6 @@ const IntegrationPage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
-          {/* SECTION 2: INSTALAÇÃO POR SCRIPT DIRETO */}
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col justify-between space-y-5">
             <div className="space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -256,7 +248,6 @@ const IntegrationPage = () => {
                 Copie o script abaixo e cole-o logo antes do fechamento da tag <code className="font-mono text-slate-200 bg-slate-950 px-1 py-0.5 rounded">{"</head>"}</code> ou no rodapé do HTML do seu site.
               </p>
 
-              {/* Code block */}
               <div className="relative">
                 <pre className="bg-slate-950 p-4 rounded-xl text-[11px] font-mono text-slate-300 overflow-x-auto border border-slate-850 max-h-[180px] leading-relaxed">
                   {directScriptCode}
@@ -279,7 +270,6 @@ const IntegrationPage = () => {
             </button>
           </div>
 
-          {/* SECTION 3: INSTALAÇÃO VIA GOOGLE TAG MANAGER */}
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col justify-between space-y-5">
             <div className="space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -294,7 +284,6 @@ const IntegrationPage = () => {
                 Utilize o Google Tag Manager para injetar a tag em plataformas como Nuvemshop, Shopify e WooCommerce sem alterar arquivos de código.
               </p>
 
-              {/* Step list */}
               <div className="space-y-2 bg-slate-950/40 p-4 rounded-xl border border-slate-850 text-xs">
                 <div className="flex gap-2"><span className="text-violet-400 font-bold">Passo 1:</span> <span className="text-slate-300">Acesse sua conta do GTM.</span></div>
                 <div className="flex gap-2"><span className="text-violet-400 font-bold">Passo 2:</span> <span className="text-slate-300">Crie uma nova Tag.</span></div>
@@ -304,7 +293,6 @@ const IntegrationPage = () => {
                 <div className="flex gap-2"><span className="text-violet-400 font-bold">Passo 6:</span> <span className="text-slate-300">Publique a versão.</span></div>
               </div>
 
-              {/* Code GTM block */}
               <div className="relative">
                 <pre className="bg-slate-950 p-4 rounded-xl text-[11px] font-mono text-slate-300 overflow-x-auto border border-slate-850 max-h-[150px] leading-relaxed">
                   {gtmScriptCode}
@@ -329,7 +317,6 @@ const IntegrationPage = () => {
 
         </div>
 
-        {/* SECTION 4 & 5: TESTAR INTEGRAÇÃO */}
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-6">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-800">
             <Activity className="w-5 h-5 text-emerald-400" />
@@ -359,12 +346,12 @@ const IntegrationPage = () => {
                   disabled={isTesting}
                   className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg shadow-violet-600/10 flex items-center gap-2 shrink-0 disabled:opacity-60"
                 >
-                  {isRegenerating || isSubmittingReply || isTesting() ? (
+                  {isTesting ? (
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                   ) : (
                     <Eye className="w-3.5 h-3.5" />
                   )}
-                  {isRegenerating ? 'Validando...' : 'Testar Conexão'}
+                  {isTesting ? 'Validando...' : 'Testar Conexão'}
                 </button>
               </div>
             </div>
@@ -381,11 +368,10 @@ const IntegrationPage = () => {
           </div>
         </div>
 
-        {/* SECTION 6: PLATAFORMAS SUPORTADAS (DOCUMENTAÇÃO RÁPIDA) */}
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-5">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-800">
             <BookOpen className="w-5 h-5 text-cyan-400" />
-            <h3 className="text-lg font-bold text-slate-100 font-bold">Plataformas de E-commerce Compatíveis</h3>
+            <h3 className="text-lg font-bold text-slate-100">Plataformas de E-commerce Compatíveis</h3>
           </div>
 
           <p className="text-xs text-slate-400 leading-relaxed">
@@ -416,11 +402,6 @@ const IntegrationPage = () => {
       </main>
     </div>
   );
-
-  // Helper
-  function isTesting() {
-    return isTesting;
-  }
 };
 
 export default IntegrationPage;
