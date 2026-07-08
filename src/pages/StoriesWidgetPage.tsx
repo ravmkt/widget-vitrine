@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import {
   db,
   Story,
@@ -34,12 +34,39 @@ type ModelMeasure = {
   unit?: string;
 };
 
+type VideoWithFallbacks = Video & {
+  poster_url?: string;
+  image_url?: string;
+};
+
+const getVideoPreviewUrl = (video?: Video | null) => {
+  if (!video) return '';
+
+  const item = video as VideoWithFallbacks;
+
+  return (
+    item.thumbnail_url?.trim() ||
+    item.poster_url?.trim() ||
+    item.image_url?.trim() ||
+    item.video_url?.trim() ||
+    ''
+  );
+};
+
+const isVideoFile = (url: string) => {
+  return /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url);
+};
+
 const StoriesWidgetPage = () => {
   const { storeId } = useParams();
+  const [searchParams] = useSearchParams();
+  const previewStoryId = searchParams.get('storyId') || searchParams.get('storyid');
+
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const [generalSettings, setGeneralSettings] = useState<GeneralSettings | null>(null);
   const [currentAppearance, setCurrentAppearance] = useState<Appearance | null>(null);
+  const [appearances, setAppearances] = useState<Appearance[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [storyVideosMap, setStoryVideosMap] = useState<Map<string, Video[]>>(new Map());
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -57,9 +84,51 @@ const StoriesWidgetPage = () => {
   const videosForSelectedStory = selectedStory ? storyVideosMap.get(selectedStory.id) || [] : [];
   const mainVideo = videosForSelectedStory[0] || null;
 
+  const selectedAppearance =
+    selectedStory?.appearance_id
+      ? appearances.find((item) => item.id === selectedStory.appearance_id) || currentAppearance
+      : currentAppearance;
+
+  const renderStoryThumb = (video?: Video | null) => {
+    const previewUrl = getVideoPreviewUrl(video);
+
+    if (!previewUrl) {
+      return (
+        <div className="flex h-full w-full items-center justify-center bg-slate-900">
+          <Play className="h-10 w-10 fill-white text-white" />
+        </div>
+      );
+    }
+
+    if (isVideoFile(previewUrl)) {
+      return (
+        <video
+          src={previewUrl}
+          muted
+          playsInline
+          preload="metadata"
+          className="h-full w-full object-cover transition-all group-hover:scale-105"
+        />
+      );
+    }
+
+    return (
+      <img
+        src={previewUrl}
+        alt={video?.title || 'Story'}
+        className="h-full w-full object-cover transition-all group-hover:scale-105"
+        onError={(event) => {
+          event.currentTarget.style.display = 'none';
+        }}
+      />
+    );
+  };
+
   useEffect(() => {
     const loadWidgetData = async () => {
       try {
+        setLoading(true);
+
         const stores = await db.stores.getAll();
         const currentStore = storeId
           ? stores.find((item) => item.id === storeId) || null
@@ -67,10 +136,12 @@ const StoriesWidgetPage = () => {
 
         if (!currentStore) return;
 
-        const fetchedSettings = (await db.generalSettings.getAll(currentStore.id))[0];
-        setGeneralSettings(fetchedSettings || null);
+        const fetchedSettings = (await db.generalSettings.getAll(currentStore.id))[0] || null;
+        setGeneralSettings(fetchedSettings);
 
         const fetchedAppearances = await db.appearances.getAll(currentStore.id);
+        setAppearances(fetchedAppearances);
+
         setCurrentAppearance(
           fetchedAppearances.find((app) => app.id === fetchedSettings?.default_appearance_id) ||
             fetchedAppearances[0] ||
@@ -78,20 +149,30 @@ const StoriesWidgetPage = () => {
         );
 
         const fetchedStories = await db.stories.getAll(currentStore.id);
+
         const activeStories = fetchedStories
           .filter((story) => story.active)
           .sort((a, b) => a.position - b.position);
 
-        setStories(activeStories);
+        const visibleStories = previewStoryId
+          ? activeStories.filter((story) => story.id === previewStoryId)
+          : activeStories;
+
+        setStories(visibleStories);
+
+        if (previewStoryId && visibleStories.length > 0) {
+          setSelectedIndex(0);
+        }
 
         const allStoryVideos = await db.storyVideos.getAll();
         const allVideos = await db.videos.getAll();
 
         const map = new Map<string, Video[]>();
 
-        activeStories.forEach((story) => {
+        visibleStories.forEach((story) => {
           const videos = allStoryVideos
             .filter((storyVideo) => storyVideo.story_id === story.id)
+            .sort((a, b) => a.position - b.position)
             .map((storyVideo) => allVideos.find((video) => video.id === storyVideo.video_id))
             .filter((video): video is Video => Boolean(video));
 
@@ -108,7 +189,7 @@ const StoriesWidgetPage = () => {
     };
 
     loadWidgetData();
-  }, [storeId]);
+  }, [storeId, previewStoryId]);
 
   useEffect(() => {
     if (!selectedStory) {
@@ -120,6 +201,7 @@ const StoriesWidgetPage = () => {
     }
 
     db.incrementViewCount(selectedStory.id);
+
     setIsLiked(false);
     setIsPlaying(true);
     setShowCommentsPanel(false);
@@ -127,16 +209,12 @@ const StoriesWidgetPage = () => {
 
     const fetchRelations = async () => {
       try {
-        if (selectedStory.cta_type === 'product') {
-          const storyProducts = await db.storyProducts.getAll();
-          const storyProduct = storyProducts.find((item) => item.story_id === selectedStory.id);
+        const storyProducts = await db.storyProducts.getAll();
+        const storyProduct = storyProducts.find((item) => item.story_id === selectedStory.id);
 
-          if (storyProduct) {
-            const product = await db.products.getById(storyProduct.product_id);
-            setCurrentProduct(product || null);
-          } else {
-            setCurrentProduct(null);
-          }
+        if (storyProduct) {
+          const product = await db.products.getById(storyProduct.product_id);
+          setCurrentProduct(product || null);
         } else {
           setCurrentProduct(null);
         }
@@ -195,38 +273,57 @@ const StoriesWidgetPage = () => {
         showSuccess('Link copiado!');
         setTimeout(() => setCopiedLink(false), 2000);
       }
+
+      if (selectedStory) {
+        await db.incrementClickCount(selectedStory.id);
+      }
     } catch (error) {
       console.error('Erro ao compartilhar:', error);
     }
   };
 
-  const handleWhatsApp = () => {
+  const handleWhatsApp = async () => {
     if (!generalSettings?.whatsapp_number) {
       showError('WhatsApp não configurado.');
       return;
     }
 
     const message = encodeURIComponent(
-      selectedStory?.whatsapp_message || 'Olá! Tenho interesse no produto do story.'
+      selectedStory?.whatsapp_message ||
+        generalSettings.whatsapp_default_message?.replace('{{story_title}}', selectedStory?.title || '') ||
+        'Olá! Tenho interesse no produto do story.'
     );
+
+    if (selectedStory) {
+      await db.incrementClickCount(selectedStory.id);
+    }
 
     window.open(`https://wa.me/${generalSettings.whatsapp_number}?text=${message}`, '_blank');
   };
 
-  const handleBuyProduct = () => {
-    if (!currentProduct) return;
-
-    const productUrl =
-      currentProduct.product_url ||
-      selectedStory?.cta_url ||
-      '';
+  const handleBuyProduct = async () => {
+    const productUrl = currentProduct?.product_url || selectedStory?.cta_url || '';
 
     if (!productUrl) {
       showError('Link do produto não configurado.');
       return;
     }
 
+    if (selectedStory) {
+      await db.incrementClickCount(selectedStory.id);
+    }
+
     window.open(productUrl, '_blank');
+  };
+
+  const handleCustomCTA = async () => {
+    if (!selectedStory?.cta_url) {
+      showError('URL do CTA não configurada.');
+      return;
+    }
+
+    await db.incrementClickCount(selectedStory.id);
+    window.open(selectedStory.cta_url, '_blank');
   };
 
   const productPrice = currentProduct
@@ -239,6 +336,15 @@ const StoriesWidgetPage = () => {
   const modelMeasures = currentModel
     ? (((currentModel as unknown as { measures?: ModelMeasure[] }).measures || []) as ModelMeasure[])
     : [];
+
+  const showLikeButton = selectedAppearance?.show_like_button ?? true;
+  const showCommentButton = selectedAppearance?.show_comment_button ?? true;
+  const showShareButton = selectedAppearance?.show_share_button ?? true;
+  const showWhatsappButton = selectedAppearance?.show_whatsapp_button ?? true;
+  const showProduct = selectedAppearance?.show_product ?? true;
+  const showProductButton = selectedAppearance?.show_product_button ?? true;
+  const showPlayButton = selectedAppearance?.show_play_button ?? true;
+  const showTitle = selectedAppearance?.show_title ?? true;
 
   if (loading) {
     return (
@@ -257,45 +363,33 @@ const StoriesWidgetPage = () => {
 
   return (
     <div className="w-full">
-      {/* Grid de Stories */}
-      <div className="grid grid-cols-2 gap-4 p-4">
-        {stories.map((story, index) => {
-          const thumbnailUrl = storyVideosMap.get(story.id)?.[0]?.thumbnail_url;
-
-          return (
+      {!previewStoryId && (
+        <div className="flex gap-4 overflow-x-auto p-4">
+          {stories.map((story, index) => (
             <button
               key={story.id}
               onClick={() => setSelectedIndex(index)}
-              className="group relative aspect-[9/16] overflow-hidden rounded-2xl shadow-lg"
+              className="group relative h-28 w-20 flex-shrink-0 overflow-hidden rounded-3xl border-2 border-violet-500 bg-slate-900 shadow-lg sm:h-32 sm:w-24"
             >
-              {thumbnailUrl ? (
-                <img
-                  src={thumbnailUrl}
-                  alt={story.title}
-                  className="h-full w-full object-cover transition-all group-hover:scale-105"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-slate-900">
-                  <Play className="h-10 w-10 fill-white text-white" />
+              {renderStoryThumb(storyVideosMap.get(story.id)?.[0] || null)}
+
+              <div className="absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 transition-opacity group-hover:opacity-100">
+                <Play className="h-8 w-8 fill-white text-white" />
+              </div>
+
+              {showTitle && (
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 text-[10px] font-black text-white line-clamp-2">
+                  {story.title}
                 </div>
               )}
-
-              <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
-                <Play className="h-10 w-10 fill-white text-white" />
-              </div>
-
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 text-xs font-bold text-white">
-                {story.title}
-              </div>
             </button>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
       {selectedStory && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 px-4">
-          <div className="relative aspect-[9/16] w-full max-w-[420px] overflow-hidden rounded-[40px] bg-black shadow-2xl">
-            {/* Header */}
+          <div className="relative aspect-[9/16] w-full max-w-[420px] max-h-[calc(100vh-24px)] overflow-hidden rounded-[40px] bg-black shadow-2xl">
             <div className="absolute left-0 right-0 top-0 z-50 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent p-6">
               <div>
                 <h3 className="text-sm font-black text-white">{selectedStory.title}</h3>
@@ -309,17 +403,20 @@ const StoriesWidgetPage = () => {
               </button>
             </div>
 
-            {/* Video Player */}
             {mainVideo?.video_url ? (
               <video
+                key={mainVideo.id}
                 ref={videoRef}
                 src={mainVideo.video_url}
-                autoPlay
+                autoPlay={generalSettings?.autoplay ?? true}
                 muted={isMuted}
                 playsInline
                 loop
+                controls={generalSettings?.show_video_controls ?? false}
                 className="h-full w-full cursor-pointer object-cover"
                 onClick={handleTogglePlay}
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-slate-950 text-center text-sm font-bold text-white/70">
@@ -327,48 +424,57 @@ const StoriesWidgetPage = () => {
               </div>
             )}
 
-            {/* Action Buttons */}
             <div className="absolute bottom-32 right-4 z-50 flex flex-col gap-4">
-              <button onClick={handleTogglePlay} className={darkBtn}>
-                {isPlaying ? (
-                  <Pause className="h-5 w-5" />
-                ) : (
-                  <Play className="h-5 w-5 fill-white" />
-                )}
-              </button>
+              {showPlayButton && (
+                <button onClick={handleTogglePlay} className={darkBtn}>
+                  {isPlaying ? (
+                    <Pause className="h-5 w-5" />
+                  ) : (
+                    <Play className="h-5 w-5 fill-white" />
+                  )}
+                </button>
+              )}
 
               <button onClick={handleToggleMute} className={darkBtn}>
                 {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
               </button>
 
-              <button onClick={handleToggleLike} className={darkBtn}>
-                <Heart
-                  className={cn(
-                    'h-5 w-5 transition-all',
-                    isLiked ? 'fill-rose-500 text-rose-500' : 'text-white'
+              {showLikeButton && (
+                <button onClick={handleToggleLike} className={darkBtn}>
+                  <Heart
+                    className={cn(
+                      'h-5 w-5 transition-all',
+                      isLiked ? 'fill-rose-500 text-rose-500' : 'text-white'
+                    )}
+                  />
+                </button>
+              )}
+
+              {showCommentButton && (
+                <button onClick={() => setShowCommentsPanel(true)} className={darkBtn}>
+                  <MessageCircle className="h-5 w-5" />
+                </button>
+              )}
+
+              {showShareButton && (
+                <button onClick={handleShare} className={whiteBtn}>
+                  {copiedLink ? (
+                    <Check className="h-5 w-5 text-emerald-500" />
+                  ) : (
+                    <Share2 className="h-5 w-5" />
                   )}
-                />
-              </button>
+                </button>
+              )}
 
-              <button onClick={() => setShowCommentsPanel(true)} className={darkBtn}>
-                <MessageCircle className="h-5 w-5" />
-              </button>
-
-              <button onClick={handleShare} className={whiteBtn}>
-                {copiedLink ? (
-                  <Check className="h-5 w-5 text-emerald-500" />
-                ) : (
-                  <Share2 className="h-5 w-5" />
-                )}
-              </button>
-
-              <button
-                onClick={handleWhatsApp}
-                className={whiteBtn}
-                style={{ backgroundColor: '#25D366', color: '#fff' }}
-              >
-                <WhatsAppIcon size={24} />
-              </button>
+              {showWhatsappButton && (
+                <button
+                  onClick={handleWhatsApp}
+                  className={whiteBtn}
+                  style={{ backgroundColor: '#25D366', color: '#fff' }}
+                >
+                  <WhatsAppIcon size={24} />
+                </button>
+              )}
 
               <button
                 onClick={() => setShowMeasuresPanel(true)}
@@ -378,8 +484,7 @@ const StoriesWidgetPage = () => {
               </button>
             </div>
 
-            {/* Product Card */}
-            {currentProduct && (
+            {showProduct && currentProduct && (
               <div className="absolute bottom-8 left-4 right-20 z-50 flex animate-fade-in items-center gap-4 rounded-3xl bg-white/95 p-3 shadow-2xl backdrop-blur-xl">
                 <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-2xl bg-slate-100">
                   {currentProduct.image_url ? (
@@ -402,41 +507,60 @@ const StoriesWidgetPage = () => {
 
                   <p className="text-xs font-black text-violet-600">{productPrice}</p>
 
-                  <button
-                    onClick={handleBuyProduct}
-                    className="mt-1 flex w-full items-center justify-center gap-1 rounded-xl bg-slate-950 py-1.5 text-[10px] font-black uppercase text-white"
-                  >
-                    Comprar <ExternalLink className="h-3 w-3" />
-                  </button>
+                  {showProductButton && (
+                    <button
+                      onClick={handleBuyProduct}
+                      className="mt-1 flex w-full items-center justify-center gap-1 rounded-xl bg-slate-950 py-1.5 text-[10px] font-black uppercase text-white"
+                    >
+                      {selectedStory.cta_text || 'Comprar'} <ExternalLink className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
               </div>
             )}
 
-            {/* Navigation */}
-            <button
-              onClick={(event) => {
-                event.stopPropagation();
-                setSelectedIndex((prev) => ((prev ?? 0) - 1 + stories.length) % stories.length);
-              }}
-              className="absolute left-2 top-1/2 z-40 -translate-y-1/2 p-2 text-white/50 transition-colors hover:text-white"
-            >
-              <ChevronLeft className="h-8 w-8" />
-            </button>
+            {!currentProduct &&
+              selectedStory.cta_enabled &&
+              selectedStory.cta_type === 'custom_link' &&
+              selectedStory.cta_url && (
+                <div className="absolute bottom-8 left-4 right-20 z-50">
+                  <button
+                    onClick={handleCustomCTA}
+                    className="flex w-full items-center justify-center gap-2 rounded-3xl bg-white px-4 py-4 text-sm font-black text-slate-950 shadow-2xl"
+                  >
+                    {selectedStory.cta_text || 'Saiba mais'}
+                    <ExternalLink className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
 
-            <button
-              onClick={(event) => {
-                event.stopPropagation();
-                setSelectedIndex((prev) => ((prev ?? 0) + 1) % stories.length);
-              }}
-              className="absolute right-2 top-1/2 z-40 -translate-y-1/2 p-2 text-white/50 transition-colors hover:text-white"
-            >
-              <ChevronRight className="h-8 w-8" />
-            </button>
+            {stories.length > 1 && (
+              <>
+                <button
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setSelectedIndex((prev) => ((prev ?? 0) - 1 + stories.length) % stories.length);
+                  }}
+                  className="absolute left-2 top-1/2 z-40 -translate-y-1/2 p-2 text-white/50 transition-colors hover:text-white"
+                >
+                  <ChevronLeft className="h-8 w-8" />
+                </button>
+
+                <button
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setSelectedIndex((prev) => ((prev ?? 0) + 1) % stories.length);
+                  }}
+                  className="absolute right-2 top-1/2 z-40 -translate-y-1/2 p-2 text-white/50 transition-colors hover:text-white"
+                >
+                  <ChevronRight className="h-8 w-8" />
+                </button>
+              </>
+            )}
           </div>
 
-          {/* Modal Comentários */}
           {showCommentsPanel && (
-            <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 p-4 animate-fade-in">
+            <div className="fixed inset-0 z-[10000] flex animate-fade-in items-center justify-center bg-black/80 p-4">
               <div className="relative w-full max-w-sm rounded-[40px] border border-slate-800 bg-slate-900 p-8 shadow-2xl">
                 <button
                   onClick={() => setShowCommentsPanel(false)}
@@ -469,9 +593,8 @@ const StoriesWidgetPage = () => {
             </div>
           )}
 
-          {/* Modal Medidas */}
           {showMeasuresPanel && (
-            <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 p-4 animate-fade-in">
+            <div className="fixed inset-0 z-[10000] flex animate-fade-in items-center justify-center bg-black/80 p-4">
               <div className="relative w-full max-w-sm rounded-[40px] border border-slate-800 bg-slate-900 p-8 shadow-2xl">
                 <button
                   onClick={() => setShowMeasuresPanel(false)}
