@@ -16,11 +16,13 @@ if (!YAMPI_ALIAS || !YAMPI_TOKEN || !YAMPI_SECRET_KEY) {
   console.error('ERRO: Variáveis de ambiente da Yampi não configuradas corretamente.');
 }
 
-const YAMPI_API_BASE = `https://api.dooki.com.br/v2/${YAMPI_ALIAS}/catalog`;
+// URL Base utilizando o Alias da loja conforme solicitado
+const YAMPI_API_BASE = `https://api.dooki.com.br/v2/${YAMPI_ALIAS}`;
 
 app.get('/api/yampi/products', async (req, res) => {
   try {
-    const response = await fetch(`${YAMPI_API_BASE}/products`, {
+    // Endpoint de catálogo correto: /catalog/products
+    const response = await fetch(`${YAMPI_API_BASE}/catalog/products`, {
       headers: {
         'User-Token': YAMPI_TOKEN || '',
         'User-Secret': YAMPI_SECRET_KEY || '',
@@ -29,7 +31,7 @@ app.get('/api/yampi/products', async (req, res) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({}));
       return res.status(response.status).json({
         error: 'Erro na API da Yampi',
         details: errorData
@@ -37,8 +39,6 @@ app.get('/api/yampi/products', async (req, res) => {
     }
 
     const data = await response.json();
-    
-    // Yampi returns data in a 'data' property
     const products = data.data || [];
     
     const normalized = products.map((p: any) => ({
@@ -65,7 +65,8 @@ app.get('/api/yampi/products', async (req, res) => {
 app.get('/api/yampi/products/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const response = await fetch(`${YAMPI_API_BASE}/products/${id}`, {
+    // Endpoint de produto individual correto: /catalog/products/:id
+    const response = await fetch(`${YAMPI_API_BASE}/catalog/products/${id}`, {
       headers: {
         'User-Token': YAMPI_TOKEN || '',
         'User-Secret': YAMPI_SECRET_KEY || '',
@@ -102,5 +103,5 @@ app.get('/api/yampi/products/:id', async (req, res) => {
 
 app.listen(port, () => {
   console.log(`Backend proxy Yampi rodando em http://localhost:${port}`);
-  console.log(`Usando Alias: ${YAMPI_ALIAS}`);
+  console.log(`URL Base Yampi: ${YAMPI_API_BASE}`);
 });
