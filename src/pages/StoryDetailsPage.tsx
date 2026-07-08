@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { db, Story, Store, Video, StoryVideo, Appearance, StoryFormat, CTAType, ScrollDirection, DisplayLocation, PageRule, Product, StoryProduct, ConditionType, DisplayPosition } from '@/lib/db';
-import { ArrowLeft, ExternalLink, Film, Image, Link as LinkIcon, Save, X, Edit3, ToggleLeft, ToggleRight, Eye as EyeIcon, MousePointerClick, Video as VideoIcon, LayoutGrid, LayoutList, MessageSquareText, Share2, Heart, Phone, GripVertical, PlusCircle, Trash2, XCircle, FolderHeart, Layers, Check, Plus } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Film, Image, Link as LinkIcon, Save, X, Edit3, ToggleLeft, ToggleRight, Eye as EyeIcon, MousePointerClick, Video as VideoIcon, LayoutGrid, LayoutList, MessageSquareText, Share2, Heart, Phone, GripVertical, PlusCircle, Trash2, XCircle, FolderHeart, Layers, Check, Plus, Palette } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
 import CustomDialog from '@/components/CustomDialog';
 
@@ -36,6 +36,9 @@ const StoryDetailsPage = () => {
     onConfirm: () => void;
     onCancel?: () => void;
   }>({ isOpen: false, type: 'confirm', title: '', description: '', onConfirm: () => {} });
+
+  // Field validation errors
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState({
     title: "",
@@ -139,14 +142,31 @@ const StoryDetailsPage = () => {
     e.preventDefault();
     if (!story || isSaving) return;
 
-    if (!formData.title.trim()) { showError('Por favor, preencha o título do story.'); return; }
-    if (selectedVideoIds.length === 0) { showError('Por favor, selecione pelo menos um vídeo para o story.'); return; }
-    if (formData.cta_enabled && formData.cta_type === 'custom_link' && (!formData.cta_url.trim() || !isValidUrl(formData.cta_url))) { showError('Por favor, forneça uma URL de CTA válida ou desative o CTA.'); return; }
-    if (formData.cta_enabled && formData.cta_type === 'whatsapp' && !formData.whatsapp_message.trim()) { showError('Por favor, forneça uma mensagem padrão para o WhatsApp.'); return; }
-    if (displayLocations.some(dl => !dl.selector.trim())) { showError('Por favor, preencha todos os seletores de local de exibição.'); return; }
-    if (pageRules.some(pr => (pr.condition_type !== 'all_pages' && pr.condition_type !== 'home_only' && pr.condition_type !== 'product_pages' && pr.condition_type !== 'category_pages') && !pr.value?.trim())) { showError('Por favor, preencha todos os valores das regras de página ou selecione uma condição sem valor.'); return; }
-    if (formData.cta_enabled && formData.cta_type === 'product' && !selectedProductId && !newProductForm.name) { showError('Por favor, selecione um produto existente ou cadastre um novo.'); return; }
-    if (newProductForm.name && (!newProductForm.product_url || !isValidUrl(newProductForm.product_url) || !newProductForm.image_url || !isValidUrl(newProductForm.image_url) || newProductForm.price <= 0)) { showError('Por favor, preencha todos os campos do novo produto corretamente.'); return; }
+    // Reset validations
+    const errors: Record<string, string> = {};
+
+    if (!formData.title.trim()) { errors.title = 'Por favor, preencha o título do story.'; }
+    if (selectedVideoIds.length === 0) { errors.videos = 'Selecione pelo menos um vídeo para o story.'; }
+    
+    if (formData.cta_enabled) {
+      if (formData.cta_type === 'custom_link' && (!formData.cta_url.trim() || !isValidUrl(formData.cta_url))) {
+        errors.ctaUrl = 'Por favor, forneça uma URL de CTA válida.';
+      }
+      if (formData.cta_type === 'whatsapp' && !formData.whatsapp_message.trim()) {
+        errors.whatsappMessage = 'Por favor, forneça uma mensagem padrão para o WhatsApp.';
+      }
+      if (formData.cta_type === 'product' && !selectedProductId && !newProductForm.name) {
+        errors.productSelection = 'Selecione um produto cadastrado.';
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      showError('Ajuste os campos incorretos antes de salvar as alterações.');
+      return;
+    }
+
+    setFormErrors({});
 
     try {
       setIsSaving(true);
@@ -289,6 +309,7 @@ const StoryDetailsPage = () => {
       setDisplayLocations(displayLocations.filter(dl => dl.story_id === id));
       setPageRules(pageRules.filter(pr => pr.story_id === id));
     }
+    setFormErrors({});
     setIsEditing(false);
   };
 
@@ -296,6 +317,7 @@ const StoryDetailsPage = () => {
     setSelectedVideoIds(prev => 
       prev.includes(videoId) ? prev.filter(id => id !== videoId) : [...prev, videoId]
     );
+    setFormErrors(prev => ({ ...prev, videos: '' }));
   };
 
   const handleMoveVideo = (index: number, direction: 'up' | 'down') => {
@@ -381,12 +403,20 @@ const StoryDetailsPage = () => {
             <p className="text-sm font-bold uppercase tracking-wider text-violet-400">Ficha Técnica do Story</p>
             <h1 className="text-3xl font-black mt-1">
               {isEditing ? (
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  className="bg-transparent border-b border-slate-800 focus:outline-none focus:border-violet-500 text-3xl font-black text-slate-100"
-                />
+                <div>
+                  <input
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, title: e.target.value }));
+                      if (e.target.value.trim()) setFormErrors(prev => ({ ...prev, title: '' }));
+                    }}
+                    className={`bg-slate-950 border focus:outline-none rounded-xl text-xl font-bold text-slate-100 p-2 ${
+                      formErrors.title ? 'border-rose-500' : 'border-slate-800 focus:border-violet-500'
+                    }`}
+                  />
+                  {formErrors.title && <span className="text-xs text-rose-500 font-bold block mt-1">{formErrors.title}</span>}
+                </div>
               ) : (
                 story.title
               )}
@@ -500,7 +530,9 @@ const StoryDetailsPage = () => {
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-60 overflow-y-auto p-2 border border-slate-800 rounded-2xl bg-slate-950">
+                  <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-60 overflow-y-auto p-2 border rounded-2xl bg-slate-950 ${
+                    formErrors.videos ? 'border-rose-500' : 'border-slate-800'
+                  }`}>
                     {currentVideoList.map(video => (
                       <button
                         key={video.id}
@@ -514,6 +546,7 @@ const StoryDetailsPage = () => {
                       </button>
                     ))}
                   </div>
+                  {formErrors.videos && <span className="text-xs text-rose-500 font-bold block">{formErrors.videos}</span>}
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -526,6 +559,81 @@ const StoryDetailsPage = () => {
                       </div>
                     ) : null;
                   })}
+                </div>
+              )}
+            </div>
+
+            {/* Custom CTA settings in StoryDetails */}
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-6">
+              <h2 className="text-xl font-extrabold text-slate-100 pb-3 border-b border-slate-850">Ação CTA do Story</h2>
+              
+              <div className="flex items-center justify-between p-4 bg-slate-950 border border-slate-850 rounded-2xl">
+                <div>
+                  <h4 className="font-bold text-slate-200">Botão de Ação (CTA)</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">Ativa ou desativa botões de checkout ou redirecionamento.</p>
+                </div>
+                {isEditing ? (
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, cta_enabled: !prev.cta_enabled }))}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      formData.cta_enabled ? 'bg-violet-600' : 'bg-slate-800'
+                    }`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.cta_enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                ) : (
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-black uppercase ${story.cta_enabled ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-500'}`}>
+                    {story.cta_enabled ? 'Ativo' : 'Inativo'}
+                  </span>
+                )}
+              </div>
+
+              {formData.cta_enabled && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Texto do Botão CTA</label>
+                    <input
+                      type="text"
+                      disabled={!isEditing}
+                      value={formData.cta_text}
+                      onChange={(e) => setFormData(prev => ({ ...prev, cta_text: e.target.value }))}
+                      className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Tipo de Link CTA</label>
+                    <select
+                      disabled={!isEditing}
+                      value={formData.cta_type}
+                      onChange={(e) => setFormData(prev => ({ ...prev, cta_type: e.target.value as CTAType }))}
+                      className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-200"
+                    >
+                      <option value="custom_link">Link customizado</option>
+                      <option value="product">Produto vinculado</option>
+                      <option value="whatsapp">Falar no WhatsApp</option>
+                    </select>
+                  </div>
+
+                  {formData.cta_type === 'custom_link' && (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">URL de Redirecionamento *</label>
+                      <input
+                        type="url"
+                        disabled={!isEditing}
+                        value={formData.cta_url}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, cta_url: e.target.value }));
+                          if (e.target.value.trim()) setFormErrors(prev => ({ ...prev, ctaUrl: '' }));
+                        }}
+                        className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-slate-200 font-mono focus:outline-none ${
+                          formErrors.ctaUrl ? 'border-rose-500' : 'border-slate-850'
+                        }`}
+                      />
+                      {formErrors.ctaUrl && <span className="text-xs text-rose-500 font-bold block mt-1">{formErrors.ctaUrl}</span>}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

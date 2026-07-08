@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { db, Story, Store, Video, StoryVideo, Appearance, StoryFormat, CTAType, ScrollDirection, DisplayLocation, PageRule, Product, StoryProduct, ConditionType, DisplayPosition } from '@/lib/db';
-import { Plus, Film, Eye, Trash2, Edit3, Sparkles, ToggleLeft, ToggleRight, Copy, Check, Eye as EyeIcon, MousePointerClick, Video as VideoIcon, LayoutGrid, LayoutList, MessageSquareText, Share2, Heart, Phone, GripVertical, PlusCircle, XCircle, FolderHeart, Layers } from 'lucide-react';
+import { Plus, Film, Eye, Trash2, Edit3, Sparkles, ToggleLeft, ToggleRight, Copy, Check, Eye as EyeIcon, MousePointerClick, Video as VideoIcon, LayoutGrid, LayoutList, MessageSquareText, Share2, Heart, Phone, GripVertical, PlusCircle, XCircle, FolderHeart, Layers, Palette } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import CustomDialog from '@/components/CustomDialog';
 
@@ -20,12 +20,10 @@ const StoriesPage = () => {
 
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [copiedId, setCopiedId] = useState(false);
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
-  const [filterFormat, setFilterFormat] = useState<'all' | StoryFormat>('all');
 
   // Video selection tabs inside story creation form
   const [videoSelectTab, setVideoSelectTab] = useState<'gallery' | 'all_videos'>('gallery');
@@ -39,6 +37,9 @@ const StoriesPage = () => {
     onConfirm: () => void;
     onCancel?: () => void;
   }>({ isOpen: false, type: 'confirm', title: '', description: '', onConfirm: () => {} });
+
+  // Form Field Validation Errors
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Form states
   const [title, setTitle] = useState('');
@@ -125,27 +126,14 @@ const StoriesPage = () => {
       currentStories = currentStories.filter(s => s.active === (filterStatus === 'active'));
     }
 
-    if (filterFormat !== 'all') {
-      currentStories = currentStories.filter(s => s.format === filterFormat);
-    }
-
     if (searchTerm) {
       currentStories = currentStories.filter(s =>
-        s.title.toLowerCase().includes(searchTerm.toLowerCase())
+        String(s.title ?? '').toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     setFilteredStories(currentStories);
-  }, [allStories, filterStatus, filterFormat, searchTerm]);
-
-  const handleCopyStoreId = () => {
-    if (store?.id) {
-      navigator.clipboard.writeText(store.id);
-      setCopiedId(true);
-      showSuccess('ID da loja copiado com sucesso!');
-      setTimeout(() => setCopiedId(false), 2000);
-    }
-  };
+  }, [allStories, filterStatus, searchTerm]);
 
   const isValidUrl = (url: string) => {
     try {
@@ -160,14 +148,31 @@ const StoriesPage = () => {
     e.preventDefault();
     if (!store) return;
 
-    if (!title.trim()) { showError('Por favor, preencha o título do story.'); return; }
-    if (selectedVideoIds.length === 0) { showError('Por favor, selecione pelo menos um vídeo para o story.'); return; }
-    if (ctaEnabled && ctaType === 'custom_link' && (!ctaUrl.trim() || !isValidUrl(ctaUrl))) { showError('Por favor, forneça uma URL de CTA válida ou desative o CTA.'); return; }
-    if (ctaEnabled && ctaType === 'whatsapp' && !whatsappMessage.trim()) { showError('Por favor, forneça uma mensagem padrão para o WhatsApp.'); return; }
-    if (displayLocations.some(dl => !dl.selector.trim())) { showError('Por favor, preencha todos os seletores de local de exibição.'); return; }
-    if (pageRules.some(pr => (pr.condition_type !== 'all_pages' && pr.condition_type !== 'home_only' && pr.condition_type !== 'product_pages' && pr.condition_type !== 'category_pages') && !pr.value?.trim())) { showError('Por favor, preencha todos os valores das regras de página ou selecione uma condição sem valor.'); return; }
-    if (ctaEnabled && ctaType === 'product' && !selectedProductId && !newProductForm.name) { showError('Por favor, selecione um produto existente ou cadastre um novo.'); return; }
-    if (newProductForm.name && (!newProductForm.product_url || !isValidUrl(newProductForm.product_url) || !newProductForm.image_url || !isValidUrl(newProductForm.image_url) || newProductForm.price <= 0)) { showError('Por favor, preencha todos os campos do novo produto corretamente.'); return; }
+    // Reset Errors
+    const errors: Record<string, string> = {};
+
+    if (!title.trim()) { errors.title = 'Por favor, insira o título do story.'; }
+    if (selectedVideoIds.length === 0) { errors.videos = 'Selecione pelo menos um vídeo para compor este story.'; }
+    
+    if (ctaEnabled) {
+      if (ctaType === 'custom_link' && (!ctaUrl.trim() || !isValidUrl(ctaUrl))) {
+        errors.ctaUrl = 'Por favor, forneça uma URL de CTA válida (ex: https://sualoja.com/produto).';
+      }
+      if (ctaType === 'whatsapp' && !whatsappMessage.trim()) {
+        errors.whatsappMessage = 'Por favor, preencha a mensagem inicial de atendimento.';
+      }
+      if (ctaType === 'product' && !selectedProductId && !newProductForm.name) {
+        errors.productSelection = 'Escolha um produto cadastrado ou informe os dados do novo produto.';
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      showError('Alguns campos obrigatórios precisam de correção. Veja as marcações abaixo.');
+      return;
+    }
+
+    setFormErrors({});
 
     try {
       let finalProductId = selectedProductId;
@@ -188,7 +193,7 @@ const StoriesPage = () => {
       const newStory: Story = {
         id: Math.random().toString(36).substr(2, 9),
         store_id: store.id,
-        title,
+        title: title.trim(),
         format,
         scroll_direction: format === 'carousel' ? scrollDirection : undefined,
         active,
@@ -243,7 +248,7 @@ const StoriesPage = () => {
         });
       }
 
-      showSuccess('Story criado com sucesso!');
+      showSuccess('Story cadastrado e sincronizado com sucesso!');
       
       setTitle('');
       setFormat('carousel');
@@ -266,6 +271,81 @@ const StoriesPage = () => {
     } catch (error) {
       showError('Erro ao criar o story.');
       console.error(error);
+    }
+  };
+
+  const handleDuplicate = async (storyToDup: Story) => {
+    try {
+      const newStoryId = Math.random().toString(36).substr(2, 9);
+      const duplicatedStory: Story = {
+        ...storyToDup,
+        id: newStoryId,
+        title: `Cópia de ${storyToDup.title}`,
+        view_count: 0,
+        click_count: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      
+      // Save duplicated story payload
+      await db.stories.save(duplicatedStory);
+      
+      // Duplicate videos
+      const allStoryVideos = await db.storyVideos.getAll();
+      const relatedVideos = allStoryVideos.filter(sv => sv.story_id === storyToDup.id);
+      for (const sv of relatedVideos) {
+        await db.storyVideos.save({
+          id: Math.random().toString(36).substr(2, 9),
+          story_id: newStoryId,
+          video_id: sv.video_id,
+          position: sv.position,
+          is_cover: sv.is_cover,
+        });
+      }
+      
+      // Duplicate products relations
+      const allStoryProducts = await db.storyProducts.getAll();
+      const relatedProducts = allStoryProducts.filter(sp => sp.story_id === storyToDup.id);
+      for (const sp of relatedProducts) {
+        await db.storyProducts.save({
+          id: Math.random().toString(36).substr(2, 9),
+          story_id: newStoryId,
+          product_id: sp.product_id,
+          video_id: sp.video_id,
+        });
+      }
+      
+      // Duplicate locations
+      const allLocations = await db.displayLocations.getAll();
+      const relatedLocations = allLocations.filter(dl => dl.story_id === storyToDup.id);
+      for (const dl of relatedLocations) {
+        await db.displayLocations.save({
+          id: Math.random().toString(36).substr(2, 9),
+          store_id: dl.store_id,
+          story_id: newStoryId,
+          selector: dl.selector,
+          position: dl.position,
+        });
+      }
+      
+      // Duplicate page rules
+      const allRules = await db.pageRules.getAll();
+      const relatedRules = allRules.filter(pr => pr.story_id === storyToDup.id);
+      for (const pr of relatedRules) {
+        await db.pageRules.save({
+          id: Math.random().toString(36).substr(2, 9),
+          store_id: pr.store_id,
+          story_id: newStoryId,
+          condition_type: pr.condition_type,
+          value: pr.value,
+        });
+      }
+      
+      showSuccess(`Story duplicado com sucesso como "${duplicatedStory.title}"!`);
+      loadStoriesData();
+    } catch (e) {
+      console.error(e);
+      showError('Falha ao duplicar o story selecionado.');
     }
   };
 
@@ -387,26 +467,6 @@ const StoriesPage = () => {
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        
-        {store && (
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-slate-300 font-semibold shadow-xl">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-              <span className="bg-violet-600 text-white px-3 py-1 rounded-xl font-black text-xs uppercase tracking-wider self-start sm:self-auto shadow-md">
-                Integração
-              </span>
-              <span>
-                ID de identificação primária para instalação: <code className="font-mono bg-slate-950 px-2 py-1 rounded-lg border border-slate-800 text-violet-400 font-bold select-all">{store.id}</code>
-              </span>
-            </div>
-            <button
-              onClick={handleCopyStoreId}
-              className="inline-flex items-center justify-center gap-1.5 bg-slate-950 hover:bg-slate-850 text-violet-400 px-4 py-2 rounded-2xl border border-slate-800 transition-all font-bold shadow-md self-start sm:self-auto"
-            >
-              {copiedId ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-              {copiedId ? 'Copiado!' : 'Copiar ID'}
-            </button>
-          </div>
-        )}
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -417,7 +477,10 @@ const StoriesPage = () => {
           </div>
 
           <button
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => {
+              setShowForm(!showForm);
+              setFormErrors({});
+            }}
             className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white px-6 py-3 rounded-2xl font-bold text-sm md:text-base shadow-lg shadow-violet-600/10 transition-all self-start sm:self-auto"
           >
             <Plus className="w-5 h-5" />
@@ -442,12 +505,19 @@ const StoriesPage = () => {
                     </label>
                     <input
                       type="text"
-                      required
                       value={title}
-                      onChange={(e) => setTitle(e.target.value)}
+                      onChange={(e) => {
+                        setTitle(e.target.value);
+                        if (e.target.value.trim()) setFormErrors(prev => ({ ...prev, title: '' }));
+                      }}
                       placeholder="Ex: Coleção Outono 🍂"
-                      className="w-full bg-slate-950 border border-slate-800 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 rounded-2xl px-4 py-3 text-sm md:text-base text-slate-100 placeholder-slate-600 font-semibold"
+                      className={`w-full bg-slate-950 border focus:outline-none focus:ring-1 rounded-2xl px-4 py-3 text-sm md:text-base text-slate-100 placeholder-slate-600 font-semibold ${
+                        formErrors.title ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-violet-500 focus:ring-violet-500'
+                      }`}
                     />
+                    {formErrors.title && (
+                      <span className="text-xs text-rose-500 font-bold mt-1 block">{formErrors.title}</span>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
@@ -483,9 +553,15 @@ const StoriesPage = () => {
                 )}
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                    Aparência Personalizada
-                  </label>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      Aparência Visual
+                    </label>
+                    <Link to="/appearance" className="inline-flex items-center gap-1.5 text-xs text-violet-400 font-bold hover:underline">
+                      <Palette className="w-3.5 h-3.5" />
+                      Criar/Editar Modelos de Estilo
+                    </Link>
+                  </div>
                   <select
                     value={appearanceId || ''}
                     onChange={(e) => setAppearanceId(e.target.value || undefined)}
@@ -567,21 +643,24 @@ const StoriesPage = () => {
                   </button>
                 </div>
 
-                <div>
+                <div className={`p-2 border rounded-2xl bg-slate-950 ${formErrors.videos ? 'border-rose-500' : 'border-slate-800'}`}>
                   {currentVideoList.length === 0 ? (
-                    <div className="p-8 text-center bg-slate-950 border border-slate-850 rounded-2xl">
+                    <div className="p-8 text-center bg-slate-950 rounded-2xl">
                       <p className="text-sm text-slate-500">Nenhum vídeo disponível nesta aba. Adicione vídeos na aba Galeria primeiro.</p>
                       <Link to="/gallery" className="mt-3 inline-flex items-center gap-1.5 text-xs text-violet-400 font-bold hover:underline">
                         Ir para Galeria de Vídeos
                       </Link>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-60 overflow-y-auto p-2 border border-slate-800 rounded-2xl bg-slate-950">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-60 overflow-y-auto p-1">
                       {currentVideoList.map(video => (
                         <button
                           key={video.id}
                           type="button"
-                          onClick={() => handleVideoSelection(video.id)}
+                          onClick={() => {
+                            handleVideoSelection(video.id);
+                            setFormErrors(prev => ({ ...prev, videos: '' }));
+                          }}
                           className={`relative aspect-video rounded-xl overflow-hidden border-2 transition-all ${
                             selectedVideoIds.includes(video.id) ? 'border-violet-500 ring-2 ring-violet-500/20' : 'border-slate-850 hover:border-slate-700'
                           }`}
@@ -600,6 +679,9 @@ const StoriesPage = () => {
                     </div>
                   )}
                 </div>
+                {formErrors.videos && (
+                  <span className="text-xs text-rose-500 font-bold mt-1 block">{formErrors.videos}</span>
+                )}
 
                 {selectedVideoIds.length > 0 && (
                   <div className="space-y-3 p-4 border border-slate-850 rounded-2xl bg-slate-950 mt-4">
@@ -695,12 +777,19 @@ const StoriesPage = () => {
                         </label>
                         <input
                           type="url"
-                          required
                           value={ctaUrl}
-                          onChange={(e) => setCtaUrl(e.target.value)}
+                          onChange={(e) => {
+                            setCtaUrl(e.target.value);
+                            if (e.target.value.trim()) setFormErrors(prev => ({ ...prev, ctaUrl: '' }));
+                          }}
                           placeholder="https://sualoja.com.br/produto"
-                          className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3 text-sm text-slate-200 font-mono"
+                          className={`w-full bg-slate-950 border rounded-2xl px-4 py-3 text-sm text-slate-200 font-mono focus:outline-none focus:ring-1 ${
+                            formErrors.ctaUrl ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-violet-500 focus:ring-violet-500'
+                          }`}
                         />
+                        {formErrors.ctaUrl && (
+                          <span className="text-xs text-rose-500 font-bold mt-1 block">{formErrors.ctaUrl}</span>
+                        )}
                       </div>
                     )}
 
@@ -710,13 +799,48 @@ const StoriesPage = () => {
                           Mensagem WhatsApp *
                         </label>
                         <textarea
-                          required
                           value={whatsappMessage}
-                          onChange={(e) => setWhatsappMessage(e.target.value)}
+                          onChange={(e) => {
+                            setWhatsappMessage(e.target.value);
+                            if (e.target.value.trim()) setFormErrors(prev => ({ ...prev, whatsappMessage: '' }));
+                          }}
                           placeholder="Olá! Tenho interesse no produto deste story."
                           rows={3}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3 text-sm text-slate-200 resize-y"
+                          className={`w-full bg-slate-950 border rounded-2xl px-4 py-3 text-sm text-slate-200 resize-y focus:outline-none focus:ring-1 ${
+                            formErrors.whatsappMessage ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-violet-500 focus:ring-violet-500'
+                          }`}
                         />
+                        {formErrors.whatsappMessage && (
+                          <span className="text-xs text-rose-500 font-bold mt-1 block">{formErrors.whatsappMessage}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {ctaType === 'product' && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                            Selecionar Produto Cadastrado *
+                          </label>
+                          <select
+                            value={selectedProductId || ''}
+                            onChange={(e) => {
+                              setSelectedProductId(e.target.value || undefined);
+                              setFormErrors(prev => ({ ...prev, productSelection: '' }));
+                            }}
+                            className={`w-full bg-slate-950 border rounded-2xl px-4 py-3 text-sm text-slate-100 font-bold focus:outline-none focus:ring-1 ${
+                              formErrors.productSelection ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-violet-500 focus:ring-violet-500'
+                            }`}
+                          >
+                            <option value="">-- Selecione o Produto --</option>
+                            {products.map(p => (
+                              <option key={p.id} value={p.id}>{p.name} (R$ {p.price.toFixed(2)})</option>
+                            ))}
+                          </select>
+                          {formErrors.productSelection && (
+                            <span className="text-xs text-rose-500 font-bold mt-1 block">{formErrors.productSelection}</span>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -789,7 +913,7 @@ const StoriesPage = () => {
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
                 <button
                   type="button"
-                  onClick={() => setShowForm(false)}
+                  onClick={() => { setShowForm(false); setFormData(INITIAL_PRODUCT_FORM as any); }}
                   className="px-5 py-2.5 rounded-xl border border-slate-800 text-slate-400 hover:bg-slate-800 font-bold text-sm md:text-base transition-all"
                 >
                   Cancelar
@@ -822,21 +946,11 @@ const StoriesPage = () => {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value as any)}
-              className="flex-1 bg-slate-950 border border-slate-800 px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold text-slate-300"
+              className="w-full bg-slate-950 border border-slate-800 px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold text-slate-300 focus:outline-none focus:ring-1 focus:ring-violet-500"
             >
               <option value="all">Todos os Status</option>
               <option value="active">Ativos</option>
               <option value="inactive">Inativos</option>
-            </select>
-            <select
-              value={filterFormat}
-              onChange={(e) => setFilterFormat(e.target.value as any)}
-              className="flex-1 bg-slate-950 border border-slate-800 px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold text-slate-300"
-            >
-              <option value="all">Todos os Formatos</option>
-              <option value="carousel">Carrossel</option>
-              <option value="floating_widget">Widget Flutuante</option>
-              <option value="grid">Grade</option>
             </select>
           </div>
         </div>
@@ -890,7 +1004,7 @@ const StoriesPage = () => {
                   <div className="p-5 flex-1 flex flex-col justify-between gap-4">
                     <div>
                       <h3 className="font-extrabold text-slate-100 text-lg md:text-xl line-clamp-1">{story.title}</h3>
-                      <p className="text-xs text-slate-400 mt-1 font-semibold uppercase tracking-wider">Formato: {story.format} ({videoCount} vídeos)</p>
+                      <p className="text-xs text-slate-400 mt-1 font-semibold uppercase tracking-wider">({videoCount} vídeos vinculados)</p>
                       <p className="text-xs text-slate-400 mt-0.5 font-semibold">Estilo: {appearanceName}</p>
                     </div>
 
@@ -905,26 +1019,37 @@ const StoriesPage = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 pt-4 border-t border-slate-800">
+                    <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-slate-800">
                       <Link
                         to={`/stories/${story.id}`}
-                        className="flex-1 inline-flex items-center justify-center gap-2 bg-slate-950 hover:bg-slate-850 hover:text-violet-400 text-slate-300 px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm border border-slate-800 transition-all"
+                        className="flex-1 min-w-[90px] inline-flex items-center justify-center gap-2 bg-slate-950 hover:bg-slate-850 hover:text-violet-400 text-slate-300 px-3 py-2 rounded-xl font-bold text-xs border border-slate-800 transition-all"
                       >
                         <Edit3 className="w-4 h-4" />
                         Editar
                       </Link>
+
+                      {/* Duplicate Button */}
+                      <button
+                        onClick={() => handleDuplicate(story)}
+                        className="flex-1 min-w-[90px] inline-flex items-center justify-center gap-1.5 bg-slate-950 hover:bg-slate-850 hover:text-violet-400 text-slate-300 px-3 py-2 rounded-xl font-bold text-xs border border-slate-800 transition-all"
+                        title="Duplicar Story"
+                      >
+                        <Copy className="w-4 h-4" />
+                        Duplicar
+                      </button>
+
                       <Link
                         to={`/widget/${store?.id}?storyId=${story.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:bg-violet-600/10 text-slate-400 hover:text-violet-400 transition-all"
+                        className="p-2 rounded-xl bg-slate-950 border border-slate-800 hover:bg-violet-600/10 text-slate-400 hover:text-violet-400 transition-all"
                         title="Visualizar Story"
                       >
                         <Eye className="w-4.5 h-4.5" />
                       </Link>
                       <button
                         onClick={() => handleDelete(story.id)}
-                        className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 transition-all"
+                        className="p-2 rounded-xl bg-slate-950 border border-slate-800 hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 transition-all"
                         title="Excluir Story"
                       >
                         <Trash2 className="w-4.5 h-4.5" />
@@ -938,7 +1063,7 @@ const StoriesPage = () => {
         )}
       </main>
 
-      {/* Alerta Modal Dark para Confirmações de Exclusão */}
+      {/* Custom Dark Confirm Modal Dialog */}
       <CustomDialog
         isOpen={dialog.isOpen}
         type={dialog.type}
