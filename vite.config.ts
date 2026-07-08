@@ -43,34 +43,56 @@ export default defineConfig(({ mode }) => {
 
             // Rota de Produtos
             if (req.url === '/api/yampi/products') {
+              const targetUrl = `${YAMPI_API_BASE}/catalog/products`;
+              console.log(`[Yampi API] Chamando URL: ${targetUrl}`);
+
               if (!YAMPI_ALIAS || !YAMPI_TOKEN || !YAMPI_SECRET_KEY) {
                 res.statusCode = 500;
                 res.setHeader('Content-Type', 'application/json');
                 res.end(JSON.stringify({
-                  error: 'Variáveis de ambiente ausentes',
-                  missing: { YAMPI_ALIAS: !YAMPI_ALIAS, YAMPI_TOKEN: !YAMPI_TOKEN, YAMPI_SECRET_KEY: !YAMPI_SECRET_KEY }
+                  success: false,
+                  status: 500,
+                  message: 'Variáveis de ambiente ausentes no .env',
+                  details: { YAMPI_ALIAS: !YAMPI_ALIAS, YAMPI_TOKEN: !YAMPI_TOKEN, YAMPI_SECRET_KEY: !YAMPI_SECRET_KEY }
                 }));
                 return;
               }
 
               try {
-                const response = await fetch(`${YAMPI_API_BASE}/catalog/products`, {
+                // Header ajustado para User-Secret-Key conforme solicitação
+                const response = await fetch(targetUrl, {
                   headers: {
                     'User-Token': YAMPI_TOKEN,
-                    'User-Secret': YAMPI_SECRET_KEY,
+                    'User-Secret-Key': YAMPI_SECRET_KEY,
                     'Accept': 'application/json'
                   }
                 });
 
+                console.log(`[Yampi API] Status retornado: ${response.status}`);
                 const data = await response.json();
                 
                 if (!response.ok) {
+                  let customMessage = 'Erro na API Yampi';
+                  if (response.status === 401) customMessage = 'Token ou Secret Key inválidos na Yampi';
+                  if (response.status === 403) customMessage = 'Acesso negado: verifique as permissões da API';
+                  if (response.status === 404) customMessage = 'Endpoint ou Loja (Alias) não encontrados';
+                  
+                  console.error(`[Yampi API] Detalhes do erro:`, JSON.stringify(data));
+                  
                   res.statusCode = response.status;
-                  res.end(JSON.stringify({ error: 'Erro na API Yampi', details: data }));
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify({ 
+                    success: false,
+                    status: response.status,
+                    message: customMessage, 
+                    details: data 
+                  }));
                   return;
                 }
 
-                const products = (data.data || []).map((p: any) => ({
+                // Normalização dos produtos
+                const rawProducts = data.data || [];
+                const products = rawProducts.map((p: any) => ({
                   id: p.id,
                   name: p.name,
                   price: parseFloat(p.price || 0),
@@ -83,8 +105,15 @@ export default defineConfig(({ mode }) => {
                 res.setHeader('Content-Type', 'application/json');
                 res.end(JSON.stringify(products));
               } catch (error) {
+                console.error(`[Yampi API] Erro de rede/conexão:`, error);
                 res.statusCode = 500;
-                res.end(JSON.stringify({ error: 'Falha na conexão com Yampi' }));
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ 
+                  success: false,
+                  status: 500,
+                  message: 'Falha crítica na conexão com o gateway da Yampi',
+                  details: error instanceof Error ? error.message : String(error)
+                }));
               }
               return;
             }
