@@ -101,7 +101,8 @@ app.get('/api/yampi/products/:id', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Backend proxy Yampi rodando em http://localhost:${port}`);
-  console.log(`URL Base Yampi: ${YAMPI_API_BASE}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`[Yampi Proxy] Servidor Express iniciado.`);
+  console.log(`[Yampi Proxy] Porta: ${port}`);
+  console.log(`[Yampi Proxy] URL Base Yampi: ${YAMPI_API_BASE}`);
 });

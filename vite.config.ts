@@ -7,6 +7,12 @@ export default defineConfig(() => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      '/api/yampi': {
+        target: 'http://localhost:3333',
+        changeOrigin: true,
+      }
+    }
   },
   plugins: [dyadComponentTagger(), react()],
   resolve: {

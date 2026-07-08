@@ -1,4 +1,4 @@
-const PROXY_URL = import.meta.env.VITE_YAMPI_PROXY_URL || "http://localhost:3333";
+const PROXY_URL = ""; // Vite handles proxying from same origin
 
 export interface YampiProduct {
   id: number;
