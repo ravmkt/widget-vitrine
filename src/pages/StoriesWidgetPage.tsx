@@ -84,7 +84,14 @@ type StoryComment = {
   created_at: string;
 };
 
-type ShareOption = 'native' | 'whatsapp' | 'facebook' | 'instagram' | 'email' | 'copy';
+type ShareOption =
+  | 'native'
+  | 'whatsapp'
+  | 'messenger'
+  | 'instagram'
+  | 'telegram'
+  | 'email'
+  | 'copy';
 
 const COMMENT_STORAGE_KEYS = [
   'vidlytics_story_comments',
@@ -94,18 +101,23 @@ const COMMENT_STORAGE_KEYS = [
 ];
 
 const EMOJIS = [
+  '😀',
   '😍',
   '🔥',
   '👏',
   '❤️',
-  '😮',
-  '😊',
   '😂',
+  '😮',
+  '😢',
+  '👍',
+  '🙏',
+  '🎉',
+  '💪',
+  '🚀',
   '🤩',
   '😎',
-  '👍',
-  '💜',
   '✨',
+  '💜',
   '🙌',
   '🥰',
   '💯',
@@ -296,7 +308,7 @@ const StoriesWidgetPage = () => {
   const [copiedLink, setCopiedLink] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [commentAuthorName, setCommentAuthorName] = useState('');
-  const [selectedEmoji, setSelectedEmoji] = useState<string>('😍');
+  const [selectedEmoji, setSelectedEmoji] = useState<string>('');
   const [comments, setComments] = useState<StoryComment[]>([]);
   const [videoError, setVideoError] = useState(false);
 
@@ -528,18 +540,48 @@ const StoriesWidgetPage = () => {
           break;
         }
 
-        case 'facebook': {
-          window.open(
-            `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(payload.url)}`,
-            '_blank'
-          );
+        case 'messenger': {
+          await navigator.clipboard.writeText(payload.text);
+
+          const messengerUrl = `fb-messenger://share?link=${encodeURIComponent(payload.url)}`;
+
+          window.location.href = messengerUrl;
+
+          setTimeout(() => {
+            window.open('https://m.me/', '_blank');
+          }, 800);
+
+          showSuccess('Texto copiado! Cole no Messenger.');
           break;
         }
 
         case 'instagram': {
           await navigator.clipboard.writeText(payload.text);
-          showSuccess('Texto copiado! Cole no Instagram.');
-          window.open('https://www.instagram.com/', '_blank');
+
+          const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+          if (isMobile) {
+            window.location.href = 'instagram://direct-inbox';
+
+            setTimeout(() => {
+              window.open('https://www.instagram.com/direct/inbox/', '_blank');
+            }, 800);
+          } else {
+            window.open('https://www.instagram.com/direct/inbox/', '_blank');
+          }
+
+          showSuccess('Texto copiado! Cole no Instagram Direct.');
+          break;
+        }
+
+        case 'telegram': {
+          window.open(
+            `https://t.me/share/url?url=${encodeURIComponent(payload.url)}&text=${encodeURIComponent(
+              payload.text
+            )}`,
+            '_blank'
+          );
+
           break;
         }
 
@@ -557,7 +599,11 @@ const StoriesWidgetPage = () => {
           await navigator.clipboard.writeText(payload.text);
           setCopiedLink(true);
           showSuccess('Link copiado!');
-          setTimeout(() => setCopiedLink(false), 2000);
+
+          setTimeout(() => {
+            setCopiedLink(false);
+          }, 2000);
+
           break;
         }
       }
@@ -724,7 +770,7 @@ const StoriesWidgetPage = () => {
     setShowEmojiPicker(false);
     setShowSharePanel(false);
     setCommentText('');
-    setSelectedEmoji('😍');
+    setSelectedEmoji('');
     setIsMuted(generalSettings?.muted_by_default ?? true);
 
     loadComments(selectedStory.id);
@@ -905,7 +951,12 @@ const StoriesWidgetPage = () => {
     if (!selectedStory) return;
 
     const text = commentText.trim();
-    const authorName = commentAuthorName.trim() || 'Visitante';
+    const authorName = commentAuthorName.trim();
+
+    if (!authorName) {
+      showError('Digite seu nome.');
+      return;
+    }
 
     if (!text) {
       showError('Digite um comentário antes de publicar.');
@@ -922,7 +973,7 @@ const StoriesWidgetPage = () => {
       product_url: getCurrentProductUrl(),
       product_image_url: getCurrentProductImageUrl(),
       text,
-      emoji: '',
+      emoji: selectedEmoji || '',
       author_name: authorName,
       user_name: authorName,
       read: false,
@@ -933,6 +984,7 @@ const StoriesWidgetPage = () => {
     await saveComment(comment);
 
     setCommentText('');
+    setSelectedEmoji('');
     setShowEmojiPicker(false);
     showSuccess('Comentário publicado!');
   };
@@ -967,6 +1019,7 @@ const StoriesWidgetPage = () => {
       return new Date(date).toLocaleString('pt-BR', {
         day: '2-digit',
         month: '2-digit',
+        year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
       });
@@ -1143,6 +1196,30 @@ const StoriesWidgetPage = () => {
               </button>
             )}
 
+            {(stories.length > 1 || totalVideosInStory > 1) && (
+              <div className="pointer-events-none absolute inset-0 z-[35] flex">
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    goToPreviousVideoOrStory();
+                  }}
+                  className="pointer-events-auto h-full flex-1"
+                  aria-label="Anterior"
+                />
+
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    goToNextVideoOrStory();
+                  }}
+                  className="pointer-events-auto h-full flex-1"
+                  aria-label="Próximo"
+                />
+              </div>
+            )}
+
             <div className="absolute bottom-32 right-4 z-50 flex flex-col gap-4">
               {showPlayButton && (
                 <button onClick={handleTogglePlay} className={darkBtn}>
@@ -1275,7 +1352,8 @@ const StoriesWidgetPage = () => {
                     event.stopPropagation();
                     goToPreviousVideoOrStory();
                   }}
-                  className="absolute left-2 top-1/2 z-40 -translate-y-1/2 p-2 text-white/50 transition-colors hover:text-white"
+                  className="absolute left-3 top-1/2 z-40 -translate-y-1/2 rounded-full bg-black/20 p-2 text-white/70 backdrop-blur-sm transition-colors hover:bg-black/40 hover:text-white"
+                  aria-label="Anterior"
                 >
                   <ChevronLeft className="h-8 w-8" />
                 </button>
@@ -1285,7 +1363,8 @@ const StoriesWidgetPage = () => {
                     event.stopPropagation();
                     goToNextVideoOrStory();
                   }}
-                  className="absolute right-2 top-1/2 z-40 -translate-y-1/2 p-2 text-white/50 transition-colors hover:text-white"
+                  className="absolute right-20 top-1/2 z-40 -translate-y-1/2 rounded-full bg-black/20 p-2 text-white/70 backdrop-blur-sm transition-colors hover:bg-black/40 hover:text-white"
+                  aria-label="Próximo"
                 >
                   <ChevronRight className="h-8 w-8" />
                 </button>
@@ -1295,26 +1374,28 @@ const StoriesWidgetPage = () => {
 
           {showSharePanel && (
             <div className="fixed inset-0 z-[10000] flex animate-fade-in items-center justify-center bg-black/80 p-4">
-              <div className="relative w-full max-w-sm rounded-[36px] border border-slate-800 bg-slate-900 p-7 shadow-2xl">
-                <button
-                  onClick={() => setShowSharePanel(false)}
-                  className="absolute right-5 top-5 rounded-full bg-slate-950 p-2 text-slate-400 hover:text-white"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+              <div className="w-full max-w-sm rounded-[32px] border border-slate-800 bg-slate-900 p-5 shadow-2xl">
+                <div className="mb-5 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-black text-white">Compartilhar</h3>
+                    <p className="text-xs font-bold text-slate-500">
+                      Escolha onde deseja enviar
+                    </p>
+                  </div>
 
-                <div className="mb-6">
-                  <h3 className="text-2xl font-black text-white">Compartilhar</h3>
-                  <p className="mt-1 text-sm font-semibold text-slate-400">
-                    Escolha onde deseja enviar o story.
-                  </p>
+                  <button
+                    onClick={() => setShowSharePanel(false)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   {navigator.share && (
                     <button
                       onClick={() => handleShareOption('native')}
-                      className="col-span-2 flex items-center justify-center gap-2 rounded-3xl bg-white px-4 py-4 text-sm font-black text-slate-950"
+                      className="col-span-2 flex items-center justify-center gap-3 rounded-2xl bg-violet-600 px-4 py-4 font-black text-white hover:bg-violet-500"
                     >
                       <Share2 className="h-5 w-5" />
                       Opções do dispositivo
@@ -1323,31 +1404,39 @@ const StoriesWidgetPage = () => {
 
                   <button
                     onClick={() => handleShareOption('whatsapp')}
-                    className="flex items-center justify-center gap-2 rounded-3xl bg-[#25D366] px-4 py-4 text-sm font-black text-white"
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-4 py-4 font-black text-white hover:bg-green-500"
                   >
                     <WhatsAppIcon size={20} />
                     WhatsApp
                   </button>
 
                   <button
-                    onClick={() => handleShareOption('facebook')}
-                    className="flex items-center justify-center gap-2 rounded-3xl bg-[#1877F2] px-4 py-4 text-sm font-black text-white"
+                    onClick={() => handleShareOption('messenger')}
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-4 font-black text-white hover:bg-blue-500"
                   >
                     <Facebook className="h-5 w-5" />
-                    Facebook
+                    Messenger
                   </button>
 
                   <button
                     onClick={() => handleShareOption('instagram')}
-                    className="flex items-center justify-center gap-2 rounded-3xl bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-4 text-sm font-black text-white"
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-pink-600 px-4 py-4 font-black text-white hover:bg-pink-500"
                   >
                     <Instagram className="h-5 w-5" />
-                    Instagram
+                    Direct
+                  </button>
+
+                  <button
+                    onClick={() => handleShareOption('telegram')}
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-sky-600 px-4 py-4 font-black text-white hover:bg-sky-500"
+                  >
+                    <Send className="h-5 w-5" />
+                    Telegram
                   </button>
 
                   <button
                     onClick={() => handleShareOption('email')}
-                    className="flex items-center justify-center gap-2 rounded-3xl bg-slate-700 px-4 py-4 text-sm font-black text-white"
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-slate-800 px-4 py-4 font-black text-white hover:bg-slate-700"
                   >
                     <Mail className="h-5 w-5" />
                     E-mail
@@ -1355,10 +1444,19 @@ const StoriesWidgetPage = () => {
 
                   <button
                     onClick={() => handleShareOption('copy')}
-                    className="col-span-2 flex items-center justify-center gap-2 rounded-3xl bg-violet-600 px-4 py-4 text-sm font-black text-white"
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-slate-800 px-4 py-4 font-black text-white hover:bg-slate-700"
                   >
-                    <Copy className="h-5 w-5" />
-                    Copiar link
+                    {copiedLink ? (
+                      <>
+                        <Check className="h-5 w-5 text-green-400" />
+                        Copiado
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-5 w-5" />
+                        Copiar
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -1367,89 +1465,118 @@ const StoriesWidgetPage = () => {
 
           {showCommentsPanel && (
             <div className="fixed inset-0 z-[10000] flex animate-fade-in items-center justify-center bg-black/80 p-4">
-              <div className="relative flex max-h-[90vh] w-full max-w-sm flex-col rounded-[40px] border border-slate-800 bg-slate-900 p-8 shadow-2xl">
-                <button
-                  onClick={() => setShowCommentsPanel(false)}
-                  className="absolute right-6 top-6 rounded-full bg-slate-950 p-2 text-slate-400 hover:text-white"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+              <div className="relative flex max-h-[92vh] w-full max-w-sm flex-col overflow-hidden rounded-[36px] border border-slate-800 bg-slate-900 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-slate-800 px-6 py-5">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-600/15 text-violet-400">
+                      <MessageCircle className="h-7 w-7" />
+                    </div>
 
-                <div className="mb-6 flex items-center gap-4">
-                  <div className="rounded-3xl bg-violet-600/10 p-4 text-violet-400">
-                    <MessageCircle className="h-8 w-8" />
+                    <div>
+                      <h3 className="text-xl font-black text-white">Comentários</h3>
+                      <p className="text-xs font-bold text-slate-500">
+                        {comments.length} comentário{comments.length === 1 ? '' : 's'} nesta thread
+                      </p>
+                    </div>
                   </div>
 
-                  <div>
-                    <h3 className="text-2xl font-black text-white">Comentários</h3>
-                    <p className="text-xs font-bold text-slate-500">
-                      {comments.length} comentário{comments.length === 1 ? '' : 's'}
-                    </p>
-                  </div>
+                  <button
+                    onClick={() => setShowCommentsPanel(false)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
                 </div>
 
-                <div className="mb-5 max-h-52 space-y-3 overflow-y-auto pr-1">
+                <div className="border-b border-slate-800 bg-slate-950/30 px-6 py-3">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-slate-500">
+                    Comentários antigos
+                  </p>
+                </div>
+
+                <div className="min-h-[160px] max-h-[50vh] flex-1 overflow-y-auto p-4">
                   {comments.length > 0 ? (
-                    comments.map((comment) => (
-                      <div
-                        key={comment.id}
-                        className="rounded-3xl border border-slate-800 bg-slate-950/70 p-4"
-                      >
-                        <div className="mb-2 flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-violet-400" />
-                            <span className="text-xs font-black uppercase text-white">
-                              {comment.author_name || comment.user_name || 'Visitante'}
-                            </span>
+                    <div className="space-y-3">
+                      {comments.map((comment) => (
+                        <div
+                          key={comment.id}
+                          className="rounded-3xl border border-slate-800 bg-slate-950/70 p-4"
+                        >
+                          <div className="mb-2 flex items-center justify-between gap-3">
+                            <div className="flex items-start gap-2">
+                              <User className="mt-0.5 h-4 w-4 text-violet-400" />
+
+                              <div>
+                                <p className="text-sm font-black text-white">
+                                  {comment.author_name || comment.user_name || 'Visitante'}
+                                </p>
+
+                                <p className="text-[11px] font-bold text-slate-500">
+                                  {formatCommentDate(comment.created_at)}
+                                </p>
+                              </div>
+                            </div>
+
+                            {comment.emoji && (
+                              <span className="text-xl">{comment.emoji}</span>
+                            )}
                           </div>
 
-                          <span className="text-[10px] font-bold text-slate-500">
-                            {formatCommentDate(comment.created_at)}
-                          </span>
+                          <p className="text-sm font-semibold leading-relaxed text-slate-300">
+                            {comment.text}
+                          </p>
                         </div>
-
-                        <p className="text-sm font-semibold leading-relaxed text-slate-300">
-                          {comment.text}
-                        </p>
-                      </div>
-                    ))
+                      ))}
+                    </div>
                   ) : (
-                    <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-950/50 p-6 text-center">
+                    <div className="flex h-full items-center justify-center rounded-3xl border border-dashed border-slate-700 bg-slate-950/50 p-6 text-center">
                       <p className="text-sm font-bold text-slate-400">
-                        Seja a primeira pessoa a comentar neste story.
+                        Nenhum comentário ainda. Seja a primeira pessoa a comentar.
                       </p>
                     </div>
                   )}
                 </div>
 
-                <div className="space-y-4">
-                  <input
-                    value={commentAuthorName}
-                    onChange={(event) => setCommentAuthorName(event.target.value)}
-                    placeholder="Seu nome"
-                    className="w-full rounded-3xl border border-slate-800 bg-slate-950 px-5 py-4 text-sm font-semibold text-white placeholder-slate-600 outline-none focus:border-violet-500"
-                  />
+                <div className="border-t border-slate-800 bg-slate-900 px-5 py-5">
+                  <div className="mb-3">
+                    <label className="mb-2 block text-xs font-black uppercase tracking-widest text-slate-500">
+                      Seu nome
+                    </label>
 
-                  <div className="relative">
-                    <textarea
-                      value={commentText}
-                      onChange={(event) => setCommentText(event.target.value)}
-                      rows={4}
-                      placeholder="Digite seu comentário..."
-                      className="w-full resize-none rounded-3xl border border-slate-800 bg-slate-950 px-5 py-4 pr-14 text-sm font-semibold text-white placeholder-slate-600 outline-none focus:border-violet-500"
+                    <input
+                      value={commentAuthorName}
+                      onChange={(event) => setCommentAuthorName(event.target.value)}
+                      placeholder="Digite seu nome"
+                      className="w-full rounded-2xl border border-slate-800 bg-slate-950 px-5 py-3 text-sm font-semibold text-white outline-none placeholder:text-slate-600 focus:border-violet-500"
                     />
+                  </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setShowEmojiPicker((prev) => !prev)}
-                      className="absolute bottom-4 right-4 flex h-9 w-9 items-center justify-center rounded-full bg-slate-800 text-slate-300 hover:bg-violet-600 hover:text-white"
-                    >
-                      <Smile className="h-5 w-5" />
-                    </button>
+                  <div className="mb-3">
+                    <label className="mb-2 block text-xs font-black uppercase tracking-widest text-slate-500">
+                      Novo comentário
+                    </label>
+
+                    <div className="relative">
+                      <textarea
+                        value={commentText}
+                        onChange={(event) => setCommentText(event.target.value)}
+                        rows={3}
+                        placeholder="Digite seu comentário..."
+                        className="w-full resize-none rounded-2xl border border-slate-800 bg-slate-950 px-5 py-4 pr-14 text-sm font-semibold text-white outline-none placeholder:text-slate-600 focus:border-violet-500"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => setShowEmojiPicker((prev) => !prev)}
+                        className="absolute bottom-4 right-4 flex h-9 w-9 items-center justify-center rounded-full bg-slate-800 text-slate-300 hover:bg-violet-600 hover:text-white"
+                      >
+                        <Smile className="h-5 w-5" />
+                      </button>
+                    </div>
                   </div>
 
                   {showEmojiPicker && (
-                    <div className="grid grid-cols-8 gap-2 rounded-3xl border border-slate-800 bg-slate-950 p-3">
+                    <div className="mb-3 grid grid-cols-8 gap-2 rounded-3xl border border-slate-800 bg-slate-950 p-3">
                       {EMOJIS.map((emoji) => (
                         <button
                           key={emoji}
@@ -1472,21 +1599,23 @@ const StoriesWidgetPage = () => {
                     </div>
                   )}
 
-                  <button
-                    onClick={handleSendComment}
-                    className="flex w-full items-center justify-center gap-2 rounded-3xl bg-violet-600 py-4 font-black text-white transition-all hover:bg-violet-500"
-                  >
-                    Publicar comentário
-                    <Send className="h-5 w-5" />
-                  </button>
-                </div>
+                  <div className="grid grid-cols-[1fr_auto] gap-3">
+                    <button
+                      onClick={handleSendComment}
+                      className="flex items-center justify-center gap-2 rounded-2xl bg-violet-600 py-4 font-black text-white transition-all hover:bg-violet-500"
+                    >
+                      Publicar
+                      <Send className="h-5 w-5" />
+                    </button>
 
-                <button
-                  onClick={() => setShowCommentsPanel(false)}
-                  className="mt-4 w-full rounded-3xl bg-slate-800 py-4 font-black text-white transition-all hover:bg-slate-700"
-                >
-                  Fechar
-                </button>
+                    <button
+                      onClick={() => setShowCommentsPanel(false)}
+                      className="rounded-2xl bg-slate-800 px-5 py-4 font-black text-white transition-all hover:bg-slate-700"
+                    >
+                      Fechar
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
