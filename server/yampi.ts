@@ -19,10 +19,36 @@ if (!YAMPI_ALIAS || !YAMPI_TOKEN || !YAMPI_SECRET_KEY) {
 // URL Base utilizando o Alias da loja conforme solicitado
 const YAMPI_API_BASE = `https://api.dooki.com.br/v2/${YAMPI_ALIAS}`;
 
+app.get('/api/yampi/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    port,
+    timestamp: new Date().toISOString(),
+    env: {
+      YAMPI_ALIAS: !!YAMPI_ALIAS,
+      YAMPI_TOKEN: !!YAMPI_TOKEN,
+      YAMPI_SECRET_KEY: !!YAMPI_SECRET_KEY
+    }
+  });
+});
+
 app.get('/api/yampi/products', async (req, res) => {
+  const endpoint = `${YAMPI_API_BASE}/catalog/products`;
+  console.log(`[Yampi Proxy] Chamando: ${endpoint}`);
+  
+  if (!YAMPI_ALIAS || !YAMPI_TOKEN || !YAMPI_SECRET_KEY) {
+    return res.status(500).json({
+      error: 'Variáveis de ambiente ausentes',
+      missing: {
+        YAMPI_ALIAS: !YAMPI_ALIAS,
+        YAMPI_TOKEN: !YAMPI_TOKEN,
+        YAMPI_SECRET_KEY: !YAMPI_SECRET_KEY
+      }
+    });
+  }
+
   try {
-    // Endpoint de catálogo correto: /catalog/products
-    const response = await fetch(`${YAMPI_API_BASE}/catalog/products`, {
+    const response = await fetch(endpoint, {
       headers: {
         'User-Token': YAMPI_TOKEN || '',
         'User-Secret': YAMPI_SECRET_KEY || '',
@@ -30,10 +56,14 @@ app.get('/api/yampi/products', async (req, res) => {
       }
     });
 
+    console.log(`[Yampi Proxy] Status Yampi: ${response.status}`);
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error(`[Yampi Proxy] Erro Yampi:`, JSON.stringify(errorData));
       return res.status(response.status).json({
         error: 'Erro na API da Yampi',
+        status: response.status,
         details: errorData
       });
     }
@@ -41,6 +71,8 @@ app.get('/api/yampi/products', async (req, res) => {
     const data = await response.json();
     const products = data.data || [];
     
+    console.log(`[Yampi Proxy] Sucesso: ${products.length} produtos encontrados.`);
+
     const normalized = products.map((p: any) => ({
       id: p.id,
       yampi_product_id: p.id,
@@ -57,8 +89,8 @@ app.get('/api/yampi/products', async (req, res) => {
 
     res.json(normalized);
   } catch (error) {
-    console.error('Server error:', error);
-    res.status(500).json({ error: 'Erro interno no servidor proxy' });
+    console.error('[Yampi Proxy] Erro fatal:', error);
+    res.status(500).json({ error: 'Erro interno no servidor proxy', message: error instanceof Error ? error.message : String(error) });
   }
 });
 

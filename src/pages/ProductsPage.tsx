@@ -10,17 +10,22 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<YampiProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [health, setHealth] = useState<any>(null);
 
   const fetchProducts = async () => {
     setLoading(true);
     setError(null);
-    console.log("Tentando buscar produtos do proxy...");
+    console.log("Diagnosticando proxy...");
     try {
+      const healthData = await yampiClient.checkHealth();
+      setHealth(healthData);
+      console.log("Health OK:", healthData);
+
       const data = await yampiClient.listProducts();
       console.log("Produtos recebidos:", data);
       setProducts(data);
     } catch (err: any) {
-      console.error("Erro no fetchProducts:", err);
+      console.error("Erro no diagnóstico/fetch:", err);
       setError(err.message || "Ocorreu um erro ao carregar os produtos.");
     } finally {
       setLoading(false);

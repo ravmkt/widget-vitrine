@@ -4,12 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx server/yampi.ts & vite",
+    "dev": "vite",
     "build": "vite build",
-    "build:dev": "vite build --mode development",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "server:yampi": "tsx server/yampi.ts"
+    "server": "tsx server/yampi.ts",
+    "start": "npm run server & npm run dev",
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
