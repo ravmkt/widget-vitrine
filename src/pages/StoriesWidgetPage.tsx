@@ -79,6 +79,9 @@ const StoriesWidgetPage = () => {
   const [copiedLink, setCopiedLink] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [currentModel, setCurrentModel] = useState<SizingModel | null>(null);
+  const [showCommentsPanel, setShowCommentsPanel] = useState(false);
+const [showMeasuresPanel, setShowMeasuresPanel] = useState(false);
+
 
   const selectedStory = selectedIndex !== null ? stories[selectedIndex] : null;
   const videosForSelectedStory = selectedStory ? storyVideosMap.get(selectedStory.id) || [] : [];
