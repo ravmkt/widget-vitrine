@@ -39,22 +39,56 @@ type VideoWithFallbacks = Video & {
   image_url?: string;
 };
 
-const getVideoPreviewUrl = (video?: Video | null) => {
+const normalizeUrl = (url?: string | null) => {
+  if (!url) return '';
+
+  const cleanUrl = String(url).trim();
+
+  if (!cleanUrl) return '';
+
+  if (
+    cleanUrl.startsWith('http://') ||
+    cleanUrl.startsWith('https://') ||
+    cleanUrl.startsWith('blob:') ||
+    cleanUrl.startsWith('data:')
+  ) {
+    return cleanUrl;
+  }
+
+  if (cleanUrl.startsWith('/')) {
+    return `${window.location.origin}${cleanUrl}`;
+  }
+
+  return cleanUrl;
+};
+
+const getVideoPosterUrl = (video?: Video | null) => {
   if (!video) return '';
 
   const item = video as VideoWithFallbacks;
 
   return (
-    item.thumbnail_url?.trim() ||
-    item.poster_url?.trim() ||
-    item.image_url?.trim() ||
-    item.video_url?.trim() ||
+    normalizeUrl(item.thumbnail_url) ||
+    normalizeUrl(item.poster_url) ||
+    normalizeUrl(item.image_url) ||
     ''
   );
 };
 
+const getVideoPlayableUrl = (video?: Video | null) => {
+  if (!video) return '';
+
+  return normalizeUrl(video.video_url);
+};
+
+const getVideoPreviewUrl = (video?: Video | null) => {
+  if (!video) return '';
+
+  return getVideoPosterUrl(video) || getVideoPlayableUrl(video);
+};
+
 const isVideoFile = (url: string) => {
-  return /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url);
+  return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url);
 };
 
 const StoriesWidgetPage = () => {
@@ -69,21 +103,23 @@ const StoriesWidgetPage = () => {
   const [appearances, setAppearances] = useState<Appearance[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [storyVideosMap, setStoryVideosMap] = useState<Map<string, Video[]>>(new Map());
+
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+
   const [isMuted, setIsMuted] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
+
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [showMeasuresPanel, setShowMeasuresPanel] = useState(false);
+
   const [copiedLink, setCopiedLink] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [videoError, setVideoError] = useState(false);
+
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [currentModel, setCurrentModel] = useState<SizingModel | null>(null);
-  const [showCommentsPanel, setShowCommentsPanel] = useState(false);
-const [showMeasuresPanel, setShowMeasuresPanel] = useState(false);
-const [commentText, setCommentText] = useState('');
-const [videoError, setVideoError] = useState(false);
-
 
   const selectedStory = selectedIndex !== null ? stories[selectedIndex] : null;
   const videosForSelectedStory = selectedStory ? storyVideosMap.get(selectedStory.id) || [] : [];
@@ -93,6 +129,56 @@ const [videoError, setVideoError] = useState(false);
     selectedStory?.appearance_id
       ? appearances.find((item) => item.id === selectedStory.appearance_id) || currentAppearance
       : currentAppearance;
+
+  const selectedStoryTitle = selectedStory?.title || 'Story';
+  const storeName = generalSettings?.store_name || 'Loja';
+
+  const productPrice = currentProduct
+    ? Number(currentProduct.price || 0).toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+      })
+    : '';
+
+  const modelMeasures = currentModel
+    ? (((currentModel as unknown as { measures?: ModelMeasure[] }).measures || []) as ModelMeasure[])
+    : [];
+
+  const showLikeButton = selectedAppearance?.show_like_button ?? true;
+  const showCommentButton = selectedAppearance?.show_comment_button ?? true;
+  const showShareButton = selectedAppearance?.show_share_button ?? true;
+  const showWhatsappButton = selectedAppearance?.show_whatsapp_button ?? true;
+  const showProduct = selectedAppearance?.show_product ?? true;
+  const showProductButton = selectedAppearance?.show_product_button ?? true;
+  const showPlayButton = selectedAppearance?.show_play_button ?? true;
+  const showTitle = selectedAppearance?.show_title ?? true;
+
+  const getCurrentProductUrl = () => {
+    return normalizeUrl(currentProduct?.product_url || selectedStory?.cta_url || window.location.href);
+  };
+
+  const getCurrentProductImageUrl = () => {
+    return normalizeUrl(currentProduct?.image_url || getVideoPosterUrl(mainVideo));
+  };
+
+  const getCurrentProductName = () => {
+    return currentProduct?.name || selectedStory?.title || 'produto';
+  };
+
+  const buildProductMessage = () => {
+    const productName = getCurrentProductName();
+    const productUrl = getCurrentProductUrl();
+    const productImageUrl = getCurrentProductImageUrl();
+
+    return [
+      'Quero mais informações sobre esse produto:',
+      productName,
+      productUrl ? `Link: ${productUrl}` : '',
+      productImageUrl ? `Imagem: ${productImageUrl}` : '',
+    ]
+      .filter(Boolean)
+      .join('\n');
+  };
 
   const renderStoryThumb = (video?: Video | null) => {
     const previewUrl = getVideoPreviewUrl(video);
@@ -170,7 +256,14 @@ const [videoError, setVideoError] = useState(false);
         }
 
         const allStoryVideos = await db.storyVideos.getAll();
-        const allVideos = await db.videos.getAll();
+
+        let allVideos: Video[] = [];
+
+        try {
+          allVideos = await db.videos.getAll(currentStore.id);
+        } catch {
+          allVideos = await db.videos.getAll();
+        }
 
         const map = new Map<string, Video[]>();
 
@@ -209,8 +302,10 @@ const [videoError, setVideoError] = useState(false);
 
     setIsLiked(false);
     setIsPlaying(true);
+    setVideoError(false);
     setShowCommentsPanel(false);
     setShowMeasuresPanel(false);
+    setCommentText('');
 
     const fetchRelations = async () => {
       try {
@@ -240,12 +335,33 @@ const [videoError, setVideoError] = useState(false);
     fetchRelations();
   }, [selectedStory]);
 
+  useEffect(() => {
+    setVideoError(false);
+    setIsPlaying(true);
+
+    const timer = setTimeout(() => {
+      if (videoRef.current && getVideoPlayableUrl(mainVideo)) {
+        videoRef.current.play().catch(() => {
+          setIsPlaying(false);
+        });
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [mainVideo?.id, mainVideo?.video_url]);
+
   const handleTogglePlay = () => {
     if (!videoRef.current) return;
 
     if (videoRef.current.paused) {
-      videoRef.current.play();
-      setIsPlaying(true);
+      videoRef.current
+        .play()
+        .then(() => {
+          setIsPlaying(true);
+        })
+        .catch(() => {
+          setIsPlaying(false);
+        });
     } else {
       videoRef.current.pause();
       setIsPlaying(false);
@@ -264,18 +380,21 @@ const [videoError, setVideoError] = useState(false);
   };
 
   const handleShare = async () => {
-    const url = selectedStory?.cta_url || window.location.href;
+    const productName = getCurrentProductName();
+    const productUrl = getCurrentProductUrl();
+    const shareText = buildProductMessage();
 
     try {
       if (navigator.share) {
         await navigator.share({
-          title: selectedStory?.title || generalSettings?.store_name || 'Story',
-          url,
+          title: productName,
+          text: shareText,
+          url: productUrl || window.location.href,
         });
       } else {
-        await navigator.clipboard.writeText(url);
+        await navigator.clipboard.writeText(shareText);
         setCopiedLink(true);
-        showSuccess('Link copiado!');
+        showSuccess('Informações copiadas!');
         setTimeout(() => setCopiedLink(false), 2000);
       }
 
@@ -288,26 +407,76 @@ const [videoError, setVideoError] = useState(false);
   };
 
   const handleWhatsApp = async () => {
-    if (!generalSettings?.whatsapp_number) {
+    const whatsappNumber = generalSettings?.whatsapp_number;
+
+    if (!whatsappNumber) {
       showError('WhatsApp não configurado.');
       return;
     }
 
-    const message = encodeURIComponent(
-      selectedStory?.whatsapp_message ||
-        generalSettings.whatsapp_default_message?.replace('{{story_title}}', selectedStory?.title || '') ||
-        'Olá! Tenho interesse no produto do story.'
-    );
+    const cleanNumber = whatsappNumber.replace(/\D/g, '');
+
+    if (!cleanNumber) {
+      showError('Número do WhatsApp inválido.');
+      return;
+    }
+
+    const message = buildProductMessage();
 
     if (selectedStory) {
       await db.incrementClickCount(selectedStory.id);
     }
 
-    window.open(`https://wa.me/${generalSettings.whatsapp_number}?text=${message}`, '_blank');
+    window.open(`https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
+  const handleSendComment = async () => {
+    const whatsappNumber = generalSettings?.whatsapp_number;
+
+    if (!whatsappNumber) {
+      showError('WhatsApp não configurado.');
+      return;
+    }
+
+    const cleanNumber = whatsappNumber.replace(/\D/g, '');
+
+    if (!cleanNumber) {
+      showError('Número do WhatsApp inválido.');
+      return;
+    }
+
+    if (!commentText.trim()) {
+      showError('Digite uma mensagem antes de enviar.');
+      return;
+    }
+
+    const productName = getCurrentProductName();
+    const productUrl = getCurrentProductUrl();
+    const productImageUrl = getCurrentProductImageUrl();
+
+    const message = [
+      'Comentário sobre esse produto:',
+      productName,
+      productUrl ? `Link: ${productUrl}` : '',
+      productImageUrl ? `Imagem: ${productImageUrl}` : '',
+      '',
+      commentText.trim(),
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    if (selectedStory) {
+      await db.incrementClickCount(selectedStory.id);
+    }
+
+    window.open(`https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`, '_blank');
+
+    setCommentText('');
+    setShowCommentsPanel(false);
   };
 
   const handleBuyProduct = async () => {
-    const productUrl = currentProduct?.product_url || selectedStory?.cta_url || '';
+    const productUrl = getCurrentProductUrl();
 
     if (!productUrl) {
       showError('Link do produto não configurado.');
@@ -328,28 +497,8 @@ const [videoError, setVideoError] = useState(false);
     }
 
     await db.incrementClickCount(selectedStory.id);
-    window.open(selectedStory.cta_url, '_blank');
+    window.open(normalizeUrl(selectedStory.cta_url), '_blank');
   };
-
-  const productPrice = currentProduct
-    ? Number(currentProduct.price || 0).toLocaleString('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-      })
-    : '';
-
-  const modelMeasures = currentModel
-    ? (((currentModel as unknown as { measures?: ModelMeasure[] }).measures || []) as ModelMeasure[])
-    : [];
-
-  const showLikeButton = selectedAppearance?.show_like_button ?? true;
-  const showCommentButton = selectedAppearance?.show_comment_button ?? true;
-  const showShareButton = selectedAppearance?.show_share_button ?? true;
-  const showWhatsappButton = selectedAppearance?.show_whatsapp_button ?? true;
-  const showProduct = selectedAppearance?.show_product ?? true;
-  const showProductButton = selectedAppearance?.show_product_button ?? true;
-  const showPlayButton = selectedAppearance?.show_play_button ?? true;
-  const showTitle = selectedAppearance?.show_title ?? true;
 
   if (loading) {
     return (
@@ -383,7 +532,7 @@ const [videoError, setVideoError] = useState(false);
               </div>
 
               {showTitle && (
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 text-[10px] font-black text-white line-clamp-2">
+                <div className="absolute bottom-0 left-0 right-0 line-clamp-2 bg-gradient-to-t from-black/80 to-transparent p-2 text-[10px] font-black text-white">
                   {story.title}
                 </div>
               )}
@@ -394,13 +543,11 @@ const [videoError, setVideoError] = useState(false);
 
       {selectedStory && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 px-4">
-          <div className="relative aspect-[9/16] w-full max-w-[420px] max-h-[calc(100vh-24px)] overflow-hidden rounded-[40px] bg-black shadow-2xl">
+          <div className="relative aspect-[9/16] max-h-[calc(100vh-24px)] w-full max-w-[420px] overflow-hidden rounded-[40px] bg-black shadow-2xl">
             <div className="absolute left-0 right-0 top-0 z-50 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent p-6">
               <div>
-                <h3 className="text-sm font-black text-white">{selectedStory.title}</h3>
-                <p className="text-[10px] font-bold uppercase text-white/60">
-                  {generalSettings?.store_name}
-                </p>
+                <h3 className="text-sm font-black text-white">{selectedStoryTitle}</h3>
+                <p className="text-[10px] font-bold uppercase text-white/60">{storeName}</p>
               </div>
 
               <button onClick={() => setSelectedIndex(null)} className={darkBtn}>
@@ -408,24 +555,59 @@ const [videoError, setVideoError] = useState(false);
               </button>
             </div>
 
-            {mainVideo?.video_url ? (
+            {mainVideo && getVideoPlayableUrl(mainVideo) && !videoError ? (
               <video
                 key={mainVideo.id}
                 ref={videoRef}
-                src={mainVideo.video_url}
+                src={getVideoPlayableUrl(mainVideo)}
+                poster={getVideoPosterUrl(mainVideo) || undefined}
                 autoPlay={generalSettings?.autoplay ?? true}
                 muted={isMuted}
                 playsInline
                 loop
                 controls={generalSettings?.show_video_controls ?? false}
+                preload="auto"
                 className="h-full w-full cursor-pointer object-cover"
                 onClick={handleTogglePlay}
+                onLoadedData={() => {
+                  setVideoError(false);
+
+                  if (videoRef.current && (generalSettings?.autoplay ?? true)) {
+                    videoRef.current.play().catch(() => {
+                      setIsPlaying(false);
+                    });
+                  }
+                }}
+                onError={() => {
+                  setVideoError(true);
+                  setIsPlaying(false);
+                }}
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
               />
+            ) : mainVideo && getVideoPosterUrl(mainVideo) ? (
+              <div className="relative h-full w-full bg-slate-950">
+                <img
+                  src={getVideoPosterUrl(mainVideo)}
+                  alt={mainVideo.title || selectedStoryTitle}
+                  className="h-full w-full object-cover opacity-80"
+                />
+
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 px-8 text-center">
+                  <Play className="mb-4 h-12 w-12 fill-white text-white" />
+
+                  <p className="text-sm font-black text-white">
+                    Não foi possível reproduzir o vídeo.
+                  </p>
+
+                  <p className="mt-2 text-xs font-semibold text-white/70">
+                    Verifique se o link do vídeo é direto, público e compatível com MP4/WebM.
+                  </p>
+                </div>
+              </div>
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-slate-950 text-center text-sm font-bold text-white/70">
-                Nenhum vídeo vinculado a este story.
+              <div className="flex h-full w-full items-center justify-center bg-slate-950 px-8 text-center text-sm font-bold text-white/70">
+                Nenhum vídeo reproduzível vinculado a este story.
               </div>
             )}
 
@@ -494,7 +676,7 @@ const [videoError, setVideoError] = useState(false);
                 <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-2xl bg-slate-100">
                   {currentProduct.image_url ? (
                     <img
-                      src={currentProduct.image_url}
+                      src={normalizeUrl(currentProduct.image_url)}
                       alt={currentProduct.name}
                       className="h-full w-full object-cover"
                     />
@@ -582,15 +764,31 @@ const [videoError, setVideoError] = useState(false);
                   <h3 className="text-2xl font-black text-white">Comentários</h3>
                 </div>
 
-                <div className="py-8 text-center">
-                  <p className="font-bold text-slate-400">
-                    Comentários ainda não disponíveis para este story.
+                <div className="space-y-4">
+                  <p className="text-sm font-semibold text-slate-400">
+                    Envie uma mensagem sobre este produto pelo WhatsApp.
                   </p>
+
+                  <textarea
+                    value={commentText}
+                    onChange={(event) => setCommentText(event.target.value)}
+                    rows={5}
+                    placeholder="Ex: Quero mais informações sobre esse produto."
+                    className="w-full resize-none rounded-3xl border border-slate-800 bg-slate-950 px-5 py-4 text-sm font-semibold text-white placeholder-slate-600 outline-none focus:border-violet-500"
+                  />
+
+                  <button
+                    onClick={handleSendComment}
+                    className="flex w-full items-center justify-center gap-2 rounded-3xl bg-violet-600 py-4 font-black text-white transition-all hover:bg-violet-500"
+                  >
+                    Enviar pelo WhatsApp
+                    <WhatsAppIcon size={20} />
+                  </button>
                 </div>
 
                 <button
                   onClick={() => setShowCommentsPanel(false)}
-                  className="mt-8 w-full rounded-3xl bg-slate-800 py-4 font-black text-white transition-all hover:bg-slate-700"
+                  className="mt-4 w-full rounded-3xl bg-slate-800 py-4 font-black text-white transition-all hover:bg-slate-700"
                 >
                   Fechar
                 </button>
