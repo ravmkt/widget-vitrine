@@ -465,19 +465,19 @@ export default function StoriesWidgetPage() {
   };
 
   const buildWhatsAppShareText = () => {
-    const storyUrl = getStoryUrl();
     const productImageUrl = getProductImageUrl();
+    const videoUrl = getStoryUrl();
 
     const textLines = [
       'Olha esse produto que encontrei...',
-      storyUrl ? `Vídeo: ${storyUrl}` : '',
-      productImageUrl ? `Miniatura: ${productImageUrl}` : ''
+      productImageUrl,
+      videoUrl
     ].filter(Boolean);
 
     return {
       title: getProductName(),
       text: textLines.join('\n'),
-      url: storyUrl
+      url: videoUrl
     };
   };
 
@@ -486,7 +486,7 @@ export default function StoriesWidgetPage() {
 
     const textLines = [
       'Quero mais informações sobre esse produto',
-      productUrl ? `Link do produto: ${productUrl}` : ''
+      productUrl
     ].filter(Boolean);
 
     return textLines.join('\n');
@@ -671,7 +671,7 @@ export default function StoriesWidgetPage() {
           if (navigator.share) {
             await navigator.share({
               title: payload.title,
-              text: payload.title,
+              text: payload.text,
               url: payload.url
             });
           } else {
