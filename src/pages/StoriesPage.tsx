@@ -59,13 +59,14 @@ const StoriesPage = () => {
   const [selectedProductId, setSelectedProductId] = useState<string | undefined>(undefined);
   const [selectedSizingModelId, setSelectedSizingModelId] = useState<string | undefined>(undefined);
   const [newProductForm, setNewProductForm] = useState({ name: '', product_url: '', image_url: '', price: 0 });
- const [displayLocations, setDisplayLocations] = useState<
-  Omit<DisplayLocation, "id" | "store_id" | "story_id" | "created_at" | "updated_at">[]
->([]);
+  
+  const [displayLocations, setDisplayLocations] = useState<
+    Omit<DisplayLocation, 'id' | 'store_id' | 'story_id' | 'created_at' | 'updated_at'>[]
+  >([]);
 
-const [pageRules, setPageRules] = useState<
-  Omit<PageRule, "id" | "store_id" | "story_id" | "created_at" | "updated_at">[]
->([]);
+  const [pageRules, setPageRules] = useState<
+    Omit<PageRule, 'id' | 'store_id' | 'story_id' | 'created_at' | 'updated_at'>[]
+  >([]);
 
   const loadStoriesData = useCallback(async () => {
     try {
@@ -874,7 +875,7 @@ const [pageRules, setPageRules] = useState<
                               setFormErrors(prev => ({ ...prev, productSelection: '' }));
                             }}
                             className={`w-full bg-slate-950 border rounded-2xl px-4 py-3 text-sm text-slate-100 font-bold focus:outline-none focus:ring-1 ${
-                              formErrors.productSelection ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-violet-500 focus:ring-violet-500'
+                              formErrors.productSelection ? 'border-rose-500' : 'border-rose-500' : 'border-slate-800 focus:border-violet-500 focus:ring-violet-500'
                             }`}
                           >
                             <option value="">-- Selecione o Produto --</option>
