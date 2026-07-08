@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { db, Story, Video, StoryVideo, Appearance, GeneralSettings, Comment, DisplayLocation, PageRule } from '@/lib/db';
+import { db, Story, Video, Appearance, GeneralSettings, Comment, Product, SizingModel } from '@/lib/db';
 import {
   X,
   ChevronLeft,
@@ -14,68 +14,12 @@ import {
   Pause,
   Check,
   ExternalLink,
+  Ruler,
+  ShoppingBag,
 } from 'lucide-react';
-import { showSuccess } from '@/utils/toast';
+import { showSuccess, showError } from '@/utils/toast';
 import WhatsAppIcon from '@/components/WhatsAppIcon';
 import { cn } from '@/lib/utils';
-
-// --- Funções Auxiliares para URL de Vídeo Segura ---
-const FALLBACK_VIDEO_BY_TITLE: Record<string, string> = {
-  cupom: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
-  provador: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-  novaColecao: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-  default: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-};
-
-const getRawVideoUrl = (video: Video | null): string => {
-  return String(
-    video?.video_url ||
-    ""
-  );
-};
-
-const isInvalidVideoUrl = (url: string): boolean => {
-  if (!url) return true;
-  const normalized = url.toLowerCase().trim();
-  if (!normalized.startsWith("http")) return true;
-  if (normalized.includes("assets.mixkit.co")) return true;
-  if (normalized.includes("mixkit-")) return true;
-  if (normalized.includes("40358-large.mp4")) return true;
-  if (
-    normalized.endsWith(".jpg") ||
-    normalized.endsWith(".jpeg") ||
-    normalized.endsWith(".png") ||
-    normalized.endsWith(".webp") ||
-    normalized.endsWith(".gif") ||
-    normalized.endsWith(".svg")
-  ) {
-    return true;
-  }
-  return !normalized.includes(".mp4") && !normalized.includes(".webm") && !normalized.includes(".mov");
-};
-
-const getFallbackVideoUrl = (storyTitle: string | null): string => {
-  const title = String(storyTitle || "").toLowerCase();
-  if (title.includes("cupom")) return FALLBACK_VIDEO_BY_TITLE.cupom;
-  if (title.includes("provador")) return FALLBACK_VIDEO_BY_TITLE.provador;
-  if (title.includes("nova coleção") || title.includes("nova colecao") || title.includes("coleção") || title.includes("colecao")) return FALLBACK_VIDEO_BY_TITLE.novaColecao;
-  return FALLBACK_VIDEO_BY_TITLE.default;
-};
-
-const getSafeVideoUrl = (video: Video | null, storyTitle: string | null): string => {
-  if (!video) return getFallbackVideoUrl(storyTitle);
-  if (video.source_type === 'instagram' || video.source_type === 'tiktok') {
-    // Retorna a URL original de redirecionamento, mídias sociais usam player alternativo
-    return video.video_url;
-  }
-  const rawUrl = getRawVideoUrl(video);
-  if (isInvalidVideoUrl(rawUrl)) {
-    return getFallbackVideoUrl(storyTitle);
-  }
-  return rawUrl;
-};
-// --- Fim das Funções Auxiliares ---
-
 
 const StoriesWidgetPage = () => {
   const { storeId } = useParams();
@@ -90,688 +34,238 @@ const StoriesWidgetPage = () => {
   const [isMuted, setIsMuted] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [showPlayPauseOverlay, setShowPlayPauseOverlay] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
+  const [showMeasuresPanel, setShowMeasuresPanel] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
-  const [videoError, setVideoError] = useState(false);
-
-  // Estados para comentários
-  const [currentStoryComments, setCurrentStoryComments] = useState<Comment[]>([]);
-  const [newCommentText, setNewCommentText] = useState('');
-  const [commentsCount, setCommentsCount] = useState(0);
-
-  // Estados para curtidas
-  const [likesCount, setLikesCount] = useState(Math.floor(Math.random() * 100) + 50);
+  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
+  const [currentModel, setCurrentModel] = useState<SizingModel | null>(null);
 
   const selectedStory = selectedIndex !== null ? stories[selectedIndex] : null;
   const videosForSelectedStory = selectedStory ? storyVideosMap.get(selectedStory.id) || [] : [];
-  const mainVideoForSelectedStory = videosForSelectedStory.find(v => v.id === (selectedStory?.id)) || videosForSelectedStory[0] || null;
+  const mainVideo = videosForSelectedStory[0] || null;
 
-  const isSocialVideo = mainVideoForSelectedStory?.source_type === 'instagram' || mainVideoForSelectedStory?.source_type === 'tiktok';
-  const safeVideoUrl = getSafeVideoUrl(mainVideoForSelectedStory, selectedStory?.title || null);
-
-  // Resetar videoError quando safeVideoUrl mudar
   useEffect(() => {
-    setVideoError(false);
-  }, [safeVideoUrl]);
+    const loadWidgetData = async () => {
+      try {
+        const stores = await db.stores.getAll();
+        const currentStore = storeId ? (stores.find((item) => item.id === storeId) || null) : (stores[0] || null);
 
-  // Efeito para carregar e reproduzir vídeo quando safeVideoUrl mudar
-  useEffect(() => {
-    if (videoRef.current && !isSocialVideo) {
-      videoRef.current.load(); // Força o recarregamento do vídeo
-      const playPromise = videoRef.current.play();
+        if (!currentStore) return;
 
-      if (playPromise !== undefined) {
-        playPromise.catch((error) => {
-          console.warn("Autoplay bloqueado ou falhou:", error);
+        const fetchedSettings = (await db.generalSettings.getAll(currentStore.id))[0];
+        setGeneralSettings(fetchedSettings);
+
+        const fetchedAppearances = await db.appearances.getAll(currentStore.id);
+        setCurrentAppearance(fetchedAppearances.find(app => app.id === fetchedSettings?.default_appearance_id) || fetchedAppearances[0] || null);
+
+        const fetchedStories = await db.stories.getAll(currentStore.id);
+        const activeStories = fetchedStories.filter(s => s.active).sort((a, b) => a.position - b.position);
+        setStories(activeStories);
+
+        const allStoryVideos = await db.storyVideos.getAll();
+        const allVideos = await db.videos.getAll();
+        const map = new Map<string, Video[]>();
+        activeStories.forEach(s => {
+          const svs = allStoryVideos.filter(sv => sv.story_id === s.id).map(sv => allVideos.find(v => v.id === sv.video_id)).filter((v): v is Video => !!v);
+          map.set(s.id, svs);
         });
+        setStoryVideosMap(map);
+      } catch (e) {
+        console.error("Erro no widget:", e);
+      } finally {
+        setLoading(false);
       }
-    }
-  }, [safeVideoUrl, isSocialVideo]);
-
-  // Limpeza de cache do localStorage/sessionStorage
-  useEffect(() => {
-    Object.keys(localStorage).forEach((key) => {
-      const value = localStorage.getItem(key);
-      if (value?.includes("assets.mixkit.co")) {
-        localStorage.removeItem(key);
-      }
-    });
-    Object.keys(sessionStorage).forEach((key) => {
-      const value = sessionStorage.getItem(key);
-      if (value?.includes("assets.mixkit.co")) {
-        sessionStorage.removeItem(key);
-      }
-    });
-  }, []);
-
-  const loadWidgetData = async () => {
-    try {
-      const stores = await db.stores.getAll();
-      const currentStore = storeId ? (stores.find((item) => item.id === storeId) || null) : (stores[0] || null);
-
-      if (!currentStore) {
-        setStories([]);
-        setGeneralSettings(null);
-        setCurrentAppearance(null);
-        return;
-      }
-
-      const fetchedGeneralSettings = (await db.generalSettings.getAll(currentStore.id))[0];
-      setGeneralSettings(fetchedGeneralSettings);
-
-      const allAppearances = await db.appearances.getAll(currentStore.id);
-      const storyAppearance = allAppearances.find(app => app.id === fetchedGeneralSettings?.default_appearance_id);
-      setCurrentAppearance(storyAppearance || null);
-
-      const fetchedStories = await db.stories.getAll(currentStore.id);
-      const activeStories = fetchedStories
-        .filter((story) => story.active)
-        .sort((a, b) => a.position - b.position);
-      setStories(activeStories);
-
-      const allStoryVideos = await db.storyVideos.getAll(currentStore.id);
-      const allVideos = await db.videos.getAll(currentStore.id);
-
-      const map = new Map<string, Video[]>();
-      activeStories.forEach(story => {
-        const videosForStory = allStoryVideos
-          .filter(sv => sv.story_id === story.id)
-          .map(sv => allVideos.find(v => v.id === sv.video_id))
-          .filter((v): v is Video => v !== undefined)
-          .sort((a, b) => (allStoryVideos.find(sv => sv.video_id === a.id)?.position || 0) - (allStoryVideos.find(sv => sv.video_id === b.id)?.position || 0));
-        map.set(story.id, videosForStory);
-      });
-      setStoryVideosMap(map);
-
-    } catch (error) {
-      console.error('Erro ao carregar widget de stories:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadCommentsForStory = async (storyId: string) => {
-    try {
-      const comments = await db.comments.getAll(storyId);
-      setCurrentStoryComments(comments.filter(c => c.status === 'approved'));
-      setCommentsCount(comments.filter(c => c.status === 'approved').length);
-    } catch (error) {
-      console.error('Erro ao carregar comentários:', error);
-      setCurrentStoryComments([]);
-      setCommentsCount(0);
-    }
-  };
-
-  useEffect(() => {
+    };
     loadWidgetData();
   }, [storeId]);
 
   useEffect(() => {
     if (selectedStory) {
-      loadCommentsForStory(selectedStory.id);
       db.incrementViewCount(selectedStory.id);
+      setIsLiked(false);
+      setIsPlaying(true);
+      
+      const fetchRelations = async () => {
+        if (selectedStory.cta_type === 'product') {
+          const sps = await db.storyProducts.getAll();
+          const sp = sps.find(s => s.story_id === selectedStory.id);
+          if (sp) {
+            const prod = await db.products.getById(sp.product_id);
+            setCurrentProduct(prod);
+          } else {
+            setCurrentProduct(null);
+          }
+        } else {
+          setCurrentProduct(null);
+        }
+
+        if (selectedStory.model_id) {
+          const model = await db.sizingModels.getById(selectedStory.model_id);
+          setCurrentModel(model);
+        } else {
+          setCurrentModel(null);
+        }
+      };
+      fetchRelations();
     }
   }, [selectedStory]);
 
-  const handleTogglePlay = async (event?: React.MouseEvent) => {
-    event?.preventDefault();
-    event?.stopPropagation();
-    if (isSocialVideo) {
-      // Se for rede social, redireciona o usuário para assistir na plataforma original
-      if (mainVideoForSelectedStory?.video_url) {
-        window.open(mainVideoForSelectedStory.video_url, '_blank', 'noopener,noreferrer');
-      }
-      return;
-    }
-    const video = videoRef.current;
-    if (!video || (!video.currentSrc && !video.src)) {
-      console.error("Elemento de vídeo não encontrado ou sem src.");
-      return;
-    }
-    try {
-      if (video.paused) {
-        video.muted = isMuted;
-        await video.play();
-        setIsPlaying(true);
-      } else {
-        video.pause();
-        setIsPlaying(false);
-      }
-      setShowPlayPauseOverlay(true);
-      setTimeout(() => setShowPlayPauseOverlay(false), 700);
-    } catch (error) {
-      console.error("Falha ao executar play/pause:", error);
-      setVideoError(true);
+  const handleTogglePlay = () => {
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play();
+      setIsPlaying(true);
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(false);
     }
   };
 
-  const handlePrevious = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (selectedIndex === null) return;
-    setIsLiked(false);
-    setShowCommentsPanel(false);
-    setIsPlaying(true);
-    setSelectedIndex((prevIndex) =>
-      prevIndex === 0 ? stories.length - 1 : prevIndex - 1
-    );
+  const handleToggleMute = () => {
+    if (!videoRef.current) return;
+    videoRef.current.muted = !videoRef.current.muted;
+    setIsMuted(videoRef.current.muted);
   };
 
-  const handleNext = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (selectedIndex === null) return;
-    setIsLiked(false);
-    setShowCommentsPanel(false);
-    setIsPlaying(true);
-    setSelectedIndex((prevIndex) =>
-      prevIndex === stories.length - 1 ? 0 : prevIndex + 1
-    );
-  };
-
-  const handleToggleMute = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (videoRef.current) {
-      videoRef.current.muted = !videoRef.current.muted;
-      setIsMuted(videoRef.current.muted);
-    }
-  };
-
-  const handleToggleLike = () => {
-    setIsLiked((prev) => {
-      if (prev) {
-        setLikesCount((count) => count - 1);
-      } else {
-        setLikesCount((count) => count + 1);
-      }
-      return !prev;
-    });
-  };
-
-  const handleToggleComments = () => {
-    setShowCommentsPanel((prev) => !prev);
-  };
-
-  const handleAddComment = async () => {
-    if (newCommentText.trim() === '' || !selectedStory || !generalSettings) return;
-
-    const newComment: Comment = {
-      id: Math.random().toString(36).substr(2, 9),
-      story_id: selectedStory.id,
-      user_name: 'Você',
-      user_email: generalSettings.contact_email || 'anonymous@example.com',
-      text: newCommentText,
-      status: 'pending',
-      created_at: new Date().toISOString(),
-    };
-
-    try {
-      const savedComment = await db.comments.save(newComment);
-      showSuccess('Comentário enviado para aprovação!');
-      setNewCommentText('');
-    } catch (error) {
-      console.error('Erro ao adicionar comentário:', error);
-    }
-  };
-
-  const getStoryShareData = () => {
-    const title = String(selectedStory?.title || "Story");
-    const text = `Confira este story: ${title}`;
+  const handleShare = async () => {
     const url = selectedStory?.cta_url || window.location.href;
-    return { title, text, url };
-  };
-
-  const handleShareStory = async () => {
-    const shareData = getStoryShareData();
     try {
       if (navigator.share) {
-        await navigator.share(shareData);
-        showSuccess('Story compartilhado!');
-        setCopiedLink(false);
-      } else if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(shareData.url);
-        showSuccess('Link copiado!');
-        setCopiedLink(true);
-        setTimeout(() => setCopiedLink(false), 2000);
+        await navigator.share({ title: selectedStory?.title, url });
       } else {
-        window.prompt("Copie o link:", shareData.url);
-        setCopiedLink(false);
+        await navigator.clipboard.writeText(url);
+        setCopiedLink(true);
+        showSuccess("Link copiado!");
+        setTimeout(() => setCopiedLink(false), 2000);
       }
-    } catch (error) {
-      if ((error as any).name !== 'AbortError') {
-        console.error("Erro ao compartilhar story:", error);
-      }
-    }
+    } catch (e) {}
   };
 
-  const normalizeWhatsAppNumber = (value?: string | null) => {
-    if (!value) return "";
-    return String(value).replace(/\D/g, "");
+  const handleWhatsApp = () => {
+    if (!generalSettings?.whatsapp_number) return;
+    const msg = encodeURIComponent(selectedStory?.whatsapp_message || "Olá! Tenho interesse no produto do story.");
+    window.open(`https://wa.me/${generalSettings.whatsapp_number}?text=${msg}`, '_blank');
   };
 
-  const getConfiguredWhatsAppNumber = () => {
-    const rawNumber = generalSettings?.whatsapp_number || "";
-    let number = normalizeWhatsAppNumber(rawNumber);
-    if (number.length >= 10 && number.length <= 11 && !number.startsWith("55")) {
-      number = `55${number}`;
-    }
-    return number;
-  };
+  if (loading) return <div className="flex items-center justify-center min-h-[200px]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600"></div></div>;
+  if (stories.length === 0) return null;
 
-  const handleWhatsAppShare = (event?: React.MouseEvent) => {
-    event?.preventDefault();
-    event?.stopPropagation();
-
-    const number = getConfiguredWhatsAppNumber();
-    const storyTitle = selectedStory?.title || "Story";
-    const storyUrl = selectedStory?.cta_url || window.location.href;
-    const message = selectedStory?.whatsapp_message || generalSettings?.whatsapp_default_message || `Olá! Tenho interesse neste produto/story: ${storyTitle}\n${storyUrl}`;
-
-    if (!number) {
-      console.error("WhatsApp não configurado em Configurações.");
-      alert("WhatsApp não configurado. Cadastre o número na tela de Configurações.");
-      return;
-    }
-
-    const whatsappUrl = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-  };
-
-  const handleCtaClick = (link?: string) => {
-    if (link && selectedStory) {
-      db.incrementClickCount(selectedStory.id);
-      window.open(link, '_blank');
-    } else {
-      alert('Este story não possui um link de compra configurado.');
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="w-full min-h-[120px] flex items-center justify-center bg-transparent">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600"></div>
-      </div>
-    );
-  }
-
-  if (!generalSettings?.app_enabled || stories.length === 0) {
-    return null;
-  }
-
-  const darkActionButtonClasses = "w-[42px] h-[42px] rounded-full border border-white/[0.75] bg-black/[0.35] text-white flex items-center justify-center backdrop-blur-[6px] cursor-pointer transition-all hover:bg-white/[0.18] hover:scale-[1.04]";
-  const whiteActionButtonClasses = "w-[42px] h-[42px] rounded-full border-none bg-white text-slate-900 flex items-center justify-center shadow-md shadow-black/20 cursor-pointer transition-all hover:scale-[1.06]";
-
-  const renderStoriesDisplay = () => {
-    const displayMode = selectedStory?.format || currentAppearance?.widget_shape || 'carousel';
-
-    switch (displayMode) {
-      case 'grid':
-        return (
-          <div className="grid grid-cols-2 gap-4 p-4">
-            {stories.map((story) => (
-              <button
-                key={story.id}
-                type="button"
-                onClick={() => {
-                  setSelectedIndex(stories.indexOf(story));
-                  setIsMuted(true);
-                  setIsLiked(false);
-                  setShowCommentsPanel(false);
-                  setIsPlaying(true);
-                }}
-                className="relative aspect-[9/16] rounded-xl overflow-hidden shadow-md group focus:outline-none"
-              >
-                <img
-                  src={storyVideosMap.get(story.id)?.[0]?.thumbnail_url || 'https://via.placeholder.com/150'}
-                  alt={story.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Play className="w-8 h-8 text-white fill-white" />
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-white text-xs font-semibold">
-                  {story.title}
-                </div>
-              </button>
-            ))}
-          </div>
-        );
-      case 'floating_widget':
-      case 'carousel':
-      default:
-        return (
-          <div className="w-full overflow-x-auto">
-            <div className="flex items-start gap-4 px-4 py-3">
-              {stories.map((story, index) => (
-                <button
-                  key={story.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedIndex(index);
-                    setIsMuted(true);
-                    setIsLiked(false);
-                    setShowCommentsPanel(false);
-                    setIsPlaying(true);
-                  }}
-                  className="flex flex-col items-center gap-2 shrink-0 group"
-                >
-                  <div className="w-20 h-20 rounded-full p-[3px] bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-orange-400 shadow-sm">
-                    <div className="w-full h-full rounded-full bg-white p-[3px]">
-                      <img
-                        src={storyVideosMap.get(story.id)?.[0]?.thumbnail_url || 'https://via.placeholder.com/150'}
-                        alt={story.title}
-                        className="w-full h-full rounded-full object-cover group-hover:scale-105 transition-transform"
-                      />
-                    </div>
-                  </div>
-
-                  <span className="max-w-[88px] text-xs font-semibold text-slate-700 truncate">
-                    {story.title}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-    }
-  };
+  const btnClass = "w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-md transition-all active:scale-95";
+  const darkBtn = cn(btnClass, "bg-black/30 border border-white/20 text-white hover:bg-black/50");
+  const whiteBtn = cn(btnClass, "bg-white text-slate-900 shadow-xl");
 
   return (
-    <div className="w-full bg-transparent">
-      {renderStoriesDisplay()}
+    <div className="w-full">
+      {/* Grid de Stories (Trigger) */}
+      <div className="grid grid-cols-2 gap-4 p-4">
+        {stories.map((s, idx) => (
+          <button
+            key={s.id}
+            onClick={() => setSelectedIndex(idx)}
+            className="relative aspect-[9/16] rounded-2xl overflow-hidden shadow-lg group"
+          >
+            <img src={storyVideosMap.get(s.id)?.[0]?.thumbnail_url} className="w-full h-full object-cover group-hover:scale-105 transition-all" />
+            <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Play className="w-10 h-10 text-white fill-white" />
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 to-transparent text-white text-xs font-bold">{s.title}</div>
+          </button>
+        ))}
+      </div>
 
       {selectedStory && (
-        <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center px-4 py-6">
-          {stories.length > 1 && (
-            <button
-              type="button"
-              onClick={handlePrevious}
-              className={cn(darkActionButtonClasses, "absolute left-3 sm:left-8 top-1/2 -translate-y-1/2 z-50")}
-              aria-label="Story anterior"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-          )}
-
-          <div className="relative w-full max-w-[420px] aspect-[9/16] bg-black rounded-3xl overflow-hidden shadow-2xl">
-            {/* Close Button (inside story card) */}
-            <button
-              type="button"
-              onClick={() => setSelectedIndex(null)}
-              className={cn(darkActionButtonClasses, "absolute top-4 right-4 z-30")}
-              aria-label="Fechar story"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* Mute/Unmute Button (inside story card) */}
-            {currentAppearance?.show_video_controls && !isSocialVideo && (
-              <button
-                type="button"
-                onClick={handleToggleMute}
-                className={cn(darkActionButtonClasses, "absolute top-4 right-[66px] z-30")}
-                aria-label={isMuted ? 'Ativar som' : 'Desativar som'}
-              >
-                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-              </button>
-            )}
-
-            {/* Play/Pause Button (inside story card) */}
-            {currentAppearance?.show_video_controls && !isSocialVideo && (
-              <button
-                type="button"
-                onClick={handleTogglePlay}
-                className={cn(darkActionButtonClasses, "absolute top-4 right-[128px] z-30")}
-                aria-label={isPlaying ? 'Pausar vídeo' : 'Reproduzir vídeo'}
-              >
-                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-              </button>
-            )}
-
-            {/* Renderização Condicional do Vídeo ou do Player Social Modificado */}
-            {videoError ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-black text-white text-center p-4">
-                <p className="text-lg font-semibold">Não foi possível carregar este vídeo.</p>
-                <p className="text-sm text-white/70 mt-2">Verifique a URL do vídeo ou sua conexão.</p>
+        <div className="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center px-4">
+          <div className="relative w-full max-w-[420px] aspect-[9/16] bg-black rounded-[40px] overflow-hidden shadow-2xl">
+            
+            {/* Header */}
+            <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-50 bg-gradient-to-b from-black/60 to-transparent">
+              <div>
+                <h3 className="text-white font-black text-sm">{selectedStory.title}</h3>
+                <p className="text-white/60 text-[10px] uppercase font-bold">{generalSettings?.store_name}</p>
               </div>
-            ) : isSocialVideo ? (
-              /* Player Limpo e Elegante de Redes Sociais sem iframes inteiros de posts */
-              <div className="relative w-full h-full bg-slate-950 flex flex-col justify-center items-center">
-                <img
-                  src={mainVideoForSelectedStory?.thumbnail_url || selectedStory?.thumbnail_url || 'https://via.placeholder.com/150'}
-                  alt={selectedStory?.title}
-                  className="absolute inset-0 w-full h-full object-cover blur-sm opacity-40 pointer-events-none"
-                />
-                
-                <div className="relative z-10 flex flex-col items-center justify-center p-6 text-center space-y-4 max-w-xs">
-                  <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-xl">
-                    <Play className="w-8 h-8 text-white fill-white ml-1 cursor-pointer animate-[pulse_2s_infinite]" onClick={handleTogglePlay} />
-                  </div>
-                  
-                  <div>
-                    <p className="text-white font-extrabold text-base">{selectedStory?.title}</p>
-                    <p className="text-[11px] text-violet-400 font-bold uppercase tracking-wider mt-1">
-                      {mainVideoForSelectedStory?.source_type === 'instagram' ? 'Vídeo do Instagram' : 'Vídeo do TikTok'}
-                    </p>
-                  </div>
+              <button onClick={() => setSelectedIndex(null)} className={darkBtn}><X className="w-5 h-5" /></button>
+            </div>
 
-                  <button
-                    onClick={handleTogglePlay}
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-bold text-xs uppercase px-5 py-3 rounded-xl transition-transform hover:scale-105 shadow-lg"
+            {/* Video Player */}
+            <video
+              ref={videoRef}
+              src={mainVideo?.video_url}
+              autoPlay
+              muted={isMuted}
+              playsInline
+              loop
+              className="w-full h-full object-cover cursor-pointer"
+              onClick={handleTogglePlay}
+            />
+
+            {/* Action Buttons (Right Sidebar) */}
+            <div className="absolute right-4 bottom-32 z-50 flex flex-col gap-4">
+              <button onClick={handleTogglePlay} className={darkBtn}>{isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 fill-white" />}</button>
+              <button onClick={handleToggleMute} className={darkBtn}>{isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}</button>
+              <button onClick={handleToggleLike} className={darkBtn}><Heart className={cn("w-5 h-5 transition-all", isLiked ? "fill-rose-500 text-rose-500" : "text-white")} /></button>
+              <button onClick={() => setShowCommentsPanel(true)} className={darkBtn}><MessageCircle className="w-5 h-5" /></button>
+              <button onClick={handleShare} className={whiteBtn}>{copiedLink ? <Check className="w-5 h-5 text-emerald-500" /> : <Share2 className="w-5 h-5" />}</button>
+              <button onClick={handleWhatsApp} className={whiteBtn} style={{ backgroundColor: '#25D366', color: '#fff' }}><WhatsAppIcon size={24} /></button>
+              <button onClick={() => setShowMeasuresPanel(true)} className={cn(whiteBtn, "bg-violet-600 text-white")}><Ruler className="w-5 h-5" /></button>
+            </div>
+
+            {/* Product Card */}
+            {currentProduct && (
+              <div className="absolute left-4 right-20 bottom-8 z-50 bg-white/95 backdrop-blur-xl rounded-3xl p-3 flex gap-4 items-center shadow-2xl animate-fade-in">
+                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
+                  <img src={currentProduct.image_url} className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-slate-900 font-black text-sm truncate">{currentProduct.name}</h4>
+                  <p className="text-violet-600 font-black text-xs">R$ {currentProduct.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                  <button 
+                    onClick={() => window.open(currentProduct.product_url, '_blank')}
+                    className="mt-1 w-full bg-slate-950 text-white text-[10px] font-black uppercase py-1.5 rounded-xl flex items-center justify-center gap-1"
                   >
-                    <span>Assistir na Rede</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
+                    Comprar <ExternalLink className="w-3 h-3" />
                   </button>
                 </div>
               </div>
-            ) : (
-              <video
-                ref={videoRef}
-                key={safeVideoUrl}
-                src={safeVideoUrl}
-                poster={mainVideoForSelectedStory?.thumbnail_url || selectedStory?.thumbnail_url}
-                autoPlay={generalSettings?.autoplay}
-                muted={generalSettings?.muted_by_default}
-                playsInline
-                loop
-                preload="auto"
-                controls={generalSettings?.show_video_controls}
-                className="w-full h-full object-cover cursor-pointer"
-                onClick={handleTogglePlay}
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-                onEnded={handleNext}
-                onError={(event) => {
-                  console.error("Erro ao carregar vídeo:", {
-                    story: selectedStory,
-                    video: mainVideoForSelectedStory,
-                    safeVideoUrl,
-                    videoError: event.currentTarget.error,
-                  });
-                  setVideoError(true);
-                }}
-              >
-                <source src={safeVideoUrl} type="video/mp4" />
-                Seu navegador não suporta a tag de vídeo.
-              </video>
             )}
 
-            {/* Play/Pause Overlay */}
-            {showPlayPauseOverlay && !videoError && !isSocialVideo && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-                <div className="bg-white/30 backdrop-blur-sm rounded-full p-3 transition-opacity duration-300">
-                  {isPlaying ? (
-                    <Pause className="w-8 h-8 text-white" />
-                  ) : (
-                    <Play className="w-8 h-8 text-white" />
-                  )}
+            {/* Navigation */}
+            <button onClick={(e) => { e.stopPropagation(); setSelectedIndex(p => (p! - 1 + stories.length) % stories.length) }} className="absolute left-2 top-1/2 -translate-y-1/2 z-40 p-2 text-white/50 hover:text-white transition-colors"><ChevronLeft className="w-8 h-8" /></button>
+            <button onClick={(e) => { e.stopPropagation(); setSelectedIndex(p => (p! + 1) % stories.length) }} className="absolute right-2 top-1/2 -translate-y-1/2 z-40 p-2 text-white/50 hover:text-white transition-colors"><ChevronRight className="w-8 h-8" /></button>
+          </div>
+
+          {/* Modal Medidas */}
+          {showMeasuresPanel && (
+            <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/80 animate-fade-in">
+              <div className="bg-slate-900 border border-slate-800 rounded-[40px] w-full max-w-sm p-8 shadow-2xl relative">
+                <button onClick={() => setShowMeasuresPanel(false)} className="absolute top-6 right-6 p-2 rounded-full bg-slate-950 text-slate-400 hover:text-white"><X className="w-5 h-5" /></button>
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="p-4 rounded-3xl bg-violet-600/10 text-violet-400"><Ruler className="w-8 h-8" /></div>
+                  <h3 className="text-2xl font-black text-white">Tabela de Medidas</h3>
                 </div>
-              </div>
-            )}
-
-            <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/70 to-transparent pointer-events-none z-10">
-              {currentAppearance?.show_title && (
-                <p className="text-white font-bold text-sm">
-                  {selectedStory?.title}
-                </p>
-              )}
-              <p className="text-white/60 text-xs">
-                {generalSettings?.store_name}
-              </p>
-            </div>
-
-            {/* Vertical Action Buttons */}
-            <div className="absolute right-[14px] bottom-[74px] z-40 flex flex-col gap-2">
-              {currentAppearance?.show_comment_button && (
-                <button
-                  type="button"
-                  onClick={handleToggleComments}
-                  className={cn(darkActionButtonClasses, "relative")}
-                  aria-label="Comentários"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white">
-                    {commentsCount}
-                  </span>
-                </button>
-              )}
-
-              {currentAppearance?.show_like_button && (
-                <button
-                  type="button"
-                  onClick={handleToggleLike}
-                  className={cn(darkActionButtonClasses, "relative group")}
-                  aria-label="Curtir story"
-                >
-                  <Heart className={cn("w-5 h-5 transition-all duration-200", isLiked ? 'fill-red-500 text-red-500 scale-110' : 'text-white')} />
-                  {likesCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white">
-                      {likesCount}
-                    </span>
-                  )}
-                </button>
-              )}
-
-              {currentAppearance?.show_share_button && (
-                <button
-                  type="button"
-                  onClick={handleShareStory}
-                  className={whiteActionButtonClasses}
-                  aria-label="Compartilhar produto"
-                >
-                  {copiedLink ? <Check className="w-5 h-5 text-emerald-400" /> : <Share2 className="w-5 h-5" />}
-                </button>
-              )}
-
-              {currentAppearance?.show_whatsapp_button && (
-                <button
-                  type="button"
-                  onClick={handleWhatsAppShare}
-                  className={cn(whiteActionButtonClasses, "cursor-pointer pointer-events-auto opacity-100")}
-                  aria-label="Abrir WhatsApp"
-                >
-                  <WhatsAppIcon size={22} />
-                </button>
-              )}
-            </div>
-
-            {selectedStory?.cta_enabled && selectedStory.cta_type !== 'none' && (
-              <button
-                type="button"
-                className="absolute left-[12px] right-[74px] bottom-[28px] h-[64px] px-3 py-2 rounded-xl bg-white shadow-lg flex items-center gap-3 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] z-30"
-                onClick={() => handleCtaClick(selectedStory.cta_url)}
-              >
-                {mainVideoForSelectedStory?.thumbnail_url && (
-                  <img
-                    src={mainVideoForSelectedStory.thumbnail_url}
-                    alt={selectedStory.title || "Produto"}
-                    className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
-                  />
-                )}
-
-                <div className="flex flex-col min-w-0 flex-1 text-left">
-                  <div className="text-slate-900 font-bold text-sm line-clamp-1">
-                    {selectedStory.cta_text || selectedStory.title || "Produto"}
+                {currentModel ? (
+                  <div className="space-y-6">
+                    <div className="bg-slate-950/60 p-4 rounded-3xl border border-slate-800">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Modelo</p>
+                      <p className="text-lg font-black text-white mt-1">{currentModel.name}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {currentModel.measures.map((m, i) => (
+                        <div key={i} className="bg-slate-950/60 p-4 rounded-3xl border border-slate-800">
+                          <p className="text-[10px] font-bold text-slate-500 uppercase">{m.name}</p>
+                          <p className="text-base font-black text-violet-400 mt-1">{m.value} {m.unit}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-                <span className="text-emerald-600 font-bold text-xs px-3 py-1 rounded-full bg-emerald-50 flex-shrink-0">
-                  {selectedStory.cta_text || "Comprar Agora"}
-                </span>
-              </button>
-            )}
-
-            {/* Comments Panel */}
-            <div
-              className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-lg p-4 transition-transform duration-300 ease-out z-40 ${
-                showCommentsPanel ? 'translate-y-0' : 'translate-y-full'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-slate-900 text-lg font-bold">Comentários</h4>
-                <button
-                  type="button"
-                  onClick={() => setShowCommentsPanel(false)}
-                  className="text-slate-500 hover:text-slate-700 transition-colors p-1 rounded-full hover:bg-slate-100"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="max-h-[200px] overflow-y-auto space-y-4 mb-4 pr-2">
-                {currentStoryComments.length === 0 ? (
-                  <p className="text-slate-500 text-sm text-center py-4">Nenhum comentário ainda. Seja o primeiro!</p>
                 ) : (
-                  currentStoryComments.map((comment) => {
-                    const safeAuthorName = String(comment.user_name ?? 'Anônimo');
-                    return (
-                      <div key={comment.id} className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-xs flex-shrink-0">
-                          {safeAuthorName.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-baseline gap-2">
-                            <span className="font-semibold text-slate-800 text-sm">{safeAuthorName}</span>
-                            <span className="text-slate-400 text-xs">{comment.created_at ? new Date(comment.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'agora'}</span>
-                          </div>
-                          <p className="text-slate-700 text-sm mt-0.5">{comment.text}</p>
-                        </div>
-                      </div>
-                    );
-                  })
+                  <div className="py-8 text-center"><p className="text-slate-400 font-bold">Nenhuma modelo vinculada a este story.</p></div>
                 )}
-              </div>
-
-              <div className="flex gap-2 pt-4 border-t border-slate-100">
-                <input
-                  type="text"
-                  placeholder="Adicionar comentário..."
-                  value={newCommentText}
-                  onChange={(e) => setNewCommentText(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') handleAddComment();
-                  }}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 text-slate-800 text-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddComment}
-                  className="bg-violet-600 hover:bg-violet-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-violet-100 transition-all"
-                >
-                  Enviar
-                </button>
+                <button onClick={() => setShowMeasuresPanel(false)} className="mt-8 w-full py-4 bg-slate-800 hover:bg-slate-700 text-white font-black rounded-3xl transition-all">Fechar</button>
               </div>
             </div>
           </div>
-
-          {stories.length > 1 && (
-            <button
-              type="button"
-              onClick={handleNext}
-              className={cn(darkActionButtonClasses, "absolute right-3 sm:right-8 top-1/2 -translate-y-1/2 z-50")}
-              aria-label="Próximo story"
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
           )}
+
         </div>
       )}
     </div>

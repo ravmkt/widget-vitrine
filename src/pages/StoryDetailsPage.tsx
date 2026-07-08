@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import { db, Story, Store, Video, StoryVideo, Appearance, StoryFormat, CTAType, ScrollDirection, DisplayLocation, PageRule, Product, StoryProduct, ConditionType, DisplayPosition } from '@/lib/db';
-import { ArrowLeft, ExternalLink, Film, Image, Link as LinkIcon, Save, X, Edit3, ToggleLeft, ToggleRight, Eye as EyeIcon, MousePointerClick, Video as VideoIcon, LayoutGrid, LayoutList, MessageSquareText, Share2, Heart, Phone, GripVertical, PlusCircle, Trash2, XCircle, FolderHeart, Layers, Check, Plus, Palette } from 'lucide-react';
+import { db, Story, Store, Video, StoryVideo, Appearance, StoryFormat, CTAType, ScrollDirection, DisplayLocation, PageRule, Product, StoryProduct, SizingModel } from '@/lib/db';
+import { ArrowLeft, Film, Save, X, Edit3, ShoppingBag, Ruler, Palette } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
 import CustomDialog from '@/components/CustomDialog';
 import { cn } from '@/lib/utils';
@@ -13,22 +13,21 @@ const StoryDetailsPage = () => {
   const [store, setStore] = useState<Store | null>(null);
   const [story, setStory] = useState<Story | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
-  const [allVideosList, setAllVideosList] = useState<Video[]>([]); // Todos os vídeos cadastrados
+  const [allVideosList, setAllVideosList] = useState<Video[]>([]);
   const [storyVideos, setStoryVideos] = useState<StoryVideo[]>([]);
   const [appearances, setAppearances] = useState<Appearance[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [storyProducts, setStoryProducts] = useState<StoryProduct[]>([]);
   const [displayLocations, setDisplayLocations] = useState<DisplayLocation[]>([]);
   const [pageRules, setPageRules] = useState<PageRule[]>([]);
+  const [sizingModels, setSizingModels] = useState<SizingModel[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Video selection tabs inside story edit form
   const [videoSelectTab, setVideoSelectTab] = useState<'gallery' | 'all_videos'>('gallery');
 
-  // Custom Dialog state
   const [dialog, setDialog] = useState<{
     isOpen: boolean;
     type: 'success' | 'error' | 'warning' | 'confirm';
@@ -38,7 +37,6 @@ const StoryDetailsPage = () => {
     onCancel?: () => void;
   }>({ isOpen: false, type: 'confirm', title: '', description: '', onConfirm: () => {} });
 
-  // Field validation errors
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState({
@@ -47,6 +45,7 @@ const StoryDetailsPage = () => {
     scroll_direction: 'horizontal' as ScrollDirection,
     active: true,
     appearance_id: undefined as string | undefined,
+    model_id: undefined as string | undefined,
     cta_enabled: true,
     cta_text: "",
     cta_type: 'custom_link' as CTAType,
@@ -58,7 +57,6 @@ const StoryDetailsPage = () => {
   });
   const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
   const [selectedProductId, setSelectedProductId] = useState<string | undefined>(undefined);
-  const [newProductForm, setNewProductForm] = useState({ name: '', product_url: '', image_url: '', price: 0 });
 
   const loadStoryDetails = useCallback(async () => {
     try {
@@ -76,8 +74,8 @@ const StoryDetailsPage = () => {
       setStory(currentStory || null);
 
       const fetchedVideos = await db.videos.getAll(mainStore.id);
-      setAllVideosList(fetchedVideos); // Todos os vídeos
-      setVideos(fetchedVideos.filter(v => v.status === 'active')); // Apenas ativos para a aba 'Galeria'
+      setAllVideosList(fetchedVideos);
+      setVideos(fetchedVideos.filter(v => v.status === 'active'));
 
       const fetchedStoryVideos = await db.storyVideos.getAll(mainStore.id);
       const currentStoryVideos = fetchedStoryVideos.filter(sv => sv.story_id === id).sort((a, b) => a.position - b.position);
@@ -90,7 +88,7 @@ const StoryDetailsPage = () => {
       const fetchedProducts = await db.products.getAll(mainStore.id);
       setProducts(fetchedProducts);
 
-      const fetchedStoryProducts = await db.storyProducts.getAll(mainStore.id);
+      const fetchedStoryProducts = await db.storyProducts.getAll();
       const currentStoryProducts = fetchedStoryProducts.filter(sp => sp.story_id === id);
       setStoryProducts(currentStoryProducts);
       setSelectedProductId(currentStoryProducts[0]?.product_id || undefined);
@@ -101,6 +99,9 @@ const StoryDetailsPage = () => {
       const fetchedPageRules = await db.pageRules.getAll(mainStore.id);
       setPageRules(fetchedPageRules.filter(pr => pr.story_id === id));
 
+      const fetchedSizing = await db.sizingModels.getAll(mainStore.id);
+      setSizingModels(fetchedSizing);
+
       if (currentStory) {
         setFormData({
           title: currentStory.title,
@@ -108,12 +109,13 @@ const StoryDetailsPage = () => {
           scroll_direction: currentStory.scroll_direction || 'horizontal',
           active: currentStory.active,
           appearance_id: currentStory.appearance_id || undefined,
+          model_id: currentStory.model_id || undefined,
           cta_enabled: currentStory.cta_enabled,
           cta_text: currentStory.cta_text || "",
           cta_type: currentStory.cta_type,
           cta_url: currentStory.cta_url || "",
           whatsapp_message: currentStory.whatsapp_message || "",
-          position: currentStory.position,
+          position: Number(currentStory.position) || 1,
           view_count: currentStory.view_count || 0,
           click_count: currentStory.click_count || 0,
         });
@@ -143,25 +145,25 @@ const StoryDetailsPage = () => {
     e.preventDefault();
     if (!story || isSaving) return;
 
-    // Reset validations
     const errors: Record<string, string> = {};
 
-    if (!formData.title.trim()) { errors.title = 'Por favor, preencha o título do story.'; }
-    if (selectedVideoIds.length === 0) { errors.videos = 'Selecione pelo menos um vídeo para o story.'; }
+    if (!formData.title.trim()) { errors.title = 'Título é obrigatório.'; }
+    if (selectedVideoIds.length === 0) { errors.videos = 'Selecione ao menos um vídeo.'; }
     
     if (formData.cta_enabled) {
       if (formData.cta_type === 'custom_link' && (!formData.cta_url.trim() || !isValidUrl(formData.cta_url))) {
-        errors.ctaUrl = 'Por favor, forneça uma URL de CTA válida.';
+        errors.ctaUrl = 'URL de CTA inválida.';
       }
       if (formData.cta_type === 'whatsapp' && !formData.whatsapp_message.trim()) {
-        errors.whatsappMessage = 'Por favor, forneça uma mensagem padrão para o WhatsApp.';
+        errors.whatsappMessage = 'Mensagem de WhatsApp é obrigatória.';
       }
-      if (formData.cta_type === 'product' && !selectedProductId && !newProductForm.name) {
-        errors.productSelection = 'Selecione um produto cadastrado.';
+      if (formData.cta_type === 'product' && !selectedProductId) {
+        errors.productSelection = 'Selecione um produto.';
       }
     }
 
     if (Object.keys(errors).length > 0) {
+      console.error("Erros de validação story:", errors);
       setFormErrors(errors);
       showError('Ajuste os campos incorretos antes de salvar as alterações.');
       return;
@@ -172,44 +174,31 @@ const StoryDetailsPage = () => {
     try {
       setIsSaving(true);
 
-      let finalProductId = selectedProductId;
-      if (newProductForm.name && store) {
-        const newProduct: Product = {
-          id: Math.random().toString(36).substr(2, 9),
-          store_id: store.id,
-          name: newProductForm.name,
-          product_url: newProductForm.product_url,
-          image_url: newProductForm.image_url,
-          price: newProductForm.price,
-          active: true,
-        };
-        const savedProduct = await db.products.save(newProduct);
-        finalProductId = savedProduct.id;
-      }
-
       const updatedStory: Story = {
         ...story,
-        title: formData.title,
+        title: formData.title.trim(),
         format: formData.format,
         scroll_direction: formData.format === 'carousel' ? formData.scroll_direction : undefined,
         active: formData.active,
         appearance_id: formData.appearance_id || undefined,
+        model_id: formData.model_id || undefined,
         cta_enabled: formData.cta_enabled,
-        cta_text: formData.cta_text || undefined,
+        cta_text: formData.cta_text.trim() || undefined,
         cta_type: formData.cta_enabled ? formData.cta_type : 'none',
-        cta_url: formData.cta_enabled && formData.cta_type === 'custom_link' ? formData.cta_url : undefined,
-        whatsapp_message: formData.cta_enabled && formData.cta_type === 'whatsapp' ? formData.whatsapp_message : undefined,
-        position: formData.position,
+        cta_url: formData.cta_enabled && formData.cta_type === 'custom_link' ? formData.cta_url.trim() : undefined,
+        whatsapp_message: formData.cta_enabled && formData.cta_type === 'whatsapp' ? formData.whatsapp_message.trim() : undefined,
+        position: Number(formData.position) || 1,
         view_count: formData.view_count,
         click_count: formData.click_count,
         updated_at: new Date().toISOString(),
       };
+
+      console.log("Payload edição story:", updatedStory);
       await db.stories.save(updatedStory);
 
-      const newVideoIds = new Set(selectedVideoIds);
-
+      const currentVideoIds = new Set(selectedVideoIds);
       for (const sv of storyVideos) {
-        if (!newVideoIds.has(sv.video_id)) {
+        if (!currentVideoIds.has(sv.video_id)) {
           await db.storyVideos.delete(sv.id);
         }
       }
@@ -217,19 +206,19 @@ const StoryDetailsPage = () => {
       for (let i = 0; i < selectedVideoIds.length; i++) {
         const videoId = selectedVideoIds[i];
         const existingSv = storyVideos.find(sv => sv.video_id === videoId);
-        const newPosition = i + 1;
+        const newPos = i + 1;
         const isCover = i === 0;
 
         if (existingSv) {
-          if (existingSv.position !== newPosition || existingSv.is_cover !== isCover) {
-            await db.storyVideos.save({ ...existingSv, position: newPosition, is_cover: isCover });
+          if (existingSv.position !== newPos || existingSv.is_cover !== isCover) {
+            await db.storyVideos.save({ ...existingSv, position: newPos, is_cover: isCover });
           }
         } else {
           await db.storyVideos.save({
             id: Math.random().toString(36).substr(2, 9),
             story_id: story.id,
             video_id: videoId,
-            position: newPosition,
+            position: newPos,
             is_cover: isCover,
           });
         }
@@ -238,49 +227,19 @@ const StoryDetailsPage = () => {
       for (const sp of storyProducts) {
         await db.storyProducts.delete(sp.id);
       }
-      if (formData.cta_enabled && formData.cta_type === 'product' && finalProductId && store) {
+      if (formData.cta_enabled && formData.cta_type === 'product' && selectedProductId) {
         await db.storyProducts.save({
           id: Math.random().toString(36).substr(2, 9),
           story_id: story.id,
-          product_id: finalProductId,
+          product_id: selectedProductId,
         });
-      }
-
-      for (const dl of displayLocations) {
-        await db.displayLocations.delete(dl.id);
-      }
-      for (const dl of displayLocations) {
-        if (store) {
-          await db.displayLocations.save({
-            id: Math.random().toString(36).substr(2, 9),
-            store_id: store.id,
-            story_id: story.id,
-            selector: dl.selector,
-            position: dl.position,
-          });
-        }
-      }
-
-      for (const pr of pageRules) {
-        await db.pageRules.delete(pr.id);
-      }
-      for (const pr of pageRules) {
-        if (store) {
-          await db.pageRules.save({
-            id: Math.random().toString(36).substr(2, 9),
-            store_id: store.id,
-            story_id: story.id,
-            condition_type: pr.condition_type,
-            value: pr.value,
-          });
-        }
       }
 
       showSuccess('Story atualizado com sucesso!');
       setIsEditing(false);
       await loadStoryDetails();
     } catch (error) {
-      console.error("Erro ao salvar story:", error);
+      console.error("Erro Supabase/API ao editar story:", error);
       showError("Erro ao salvar alterações do story.");
     } finally {
       setIsSaving(false);
@@ -295,74 +254,21 @@ const StoryDetailsPage = () => {
         scroll_direction: story.scroll_direction || 'horizontal',
         active: story.active,
         appearance_id: story.appearance_id || undefined,
+        model_id: story.model_id || undefined,
         cta_enabled: story.cta_enabled,
         cta_text: story.cta_text || "",
         cta_type: story.cta_type,
         cta_url: story.cta_url || "",
         whatsapp_message: story.whatsapp_message || "",
-        position: story.position,
+        position: Number(story.position) || 1,
         view_count: story.view_count || 0,
         click_count: story.click_count || 0,
       });
       setSelectedVideoIds(storyVideos.map(sv => sv.video_id));
       setSelectedProductId(storyProducts[0]?.product_id || undefined);
-      setNewProductForm({ name: '', product_url: '', image_url: '', price: 0 });
-      setDisplayLocations(displayLocations.filter(dl => dl.story_id === id));
-      setPageRules(pageRules.filter(pr => pr.story_id === id));
     }
     setFormErrors({});
     setIsEditing(false);
-  };
-
-  const handleVideoSelection = (videoId: string) => {
-    setSelectedVideoIds(prev => 
-      prev.includes(videoId) ? prev.filter(id => id !== videoId) : [...prev, videoId]
-    );
-    setFormErrors(prev => ({ ...prev, videos: '' }));
-  };
-
-  const handleMoveVideo = (index: number, direction: 'up' | 'down') => {
-    setSelectedVideoIds(prev => {
-      const newOrder = [...prev];
-      const [movedItem] = newOrder.splice(index, 1);
-      if (direction === 'up') {
-        newOrder.splice(index - 1, 0, movedItem);
-      } else {
-        newOrder.splice(index + 1, 0, movedItem);
-      }
-      return newOrder;
-    });
-  };
-
-  const handleSetCoverVideo = (videoId: string) => {
-    setSelectedVideoIds(prev => {
-      const newOrder = prev.filter(id => id !== videoId);
-      return [videoId, ...newOrder];
-    });
-  };
-
-  const addDisplayLocation = () => {
-    setDisplayLocations(prev => [...prev, { id: Math.random().toString(36).substr(2, 9), store_id: store?.id || '', story_id: story?.id || '', selector: '', position: 'after_element' }]);
-  };
-
-  const updateDisplayLocation = (index: number, field: string, value: string) => {
-    setDisplayLocations(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
-  };
-
-  const removeDisplayLocation = (index: number) => {
-    setDisplayLocations(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const addPageRule = () => {
-    setPageRules(prev => [...prev, { id: Math.random().toString(36).substr(2, 9), store_id: store?.id || '', story_id: story?.id || '', condition_type: 'contains', value: '' }]);
-  };
-
-  const updatePageRule = (index: number, field: string, value: string) => {
-    setPageRules(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
-  };
-
-  const removePageRule = (index: number) => {
-    setPageRules(prev => prev.filter((_, i) => i !== index));
   };
 
   if (loading) {
@@ -404,20 +310,12 @@ const StoryDetailsPage = () => {
             <p className="text-sm font-bold uppercase tracking-wider text-violet-400">Ficha Técnica do Story</p>
             <h1 className="text-3xl font-black mt-1">
               {isEditing ? (
-                <div>
-                  <input
-                    type="text"
-                    value={formData.title}
-                    onChange={(e) => {
-                      setFormData(prev => ({ ...prev, title: e.target.value }));
-                      if (e.target.value.trim()) setFormErrors(prev => ({ ...prev, title: '' }));
-                    }}
-                    className={`bg-slate-950 border focus:outline-none rounded-xl text-xl font-bold text-slate-100 p-2 ${
-                      formErrors.title ? 'border-rose-500' : 'border-slate-800 focus:border-violet-500'
-                    }`}
-                  />
-                  {formErrors.title && <span className="text-xs text-rose-500 font-bold block mt-1">{formErrors.title}</span>}
-                </div>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  className={cn("bg-slate-950 border focus:outline-none rounded-xl text-xl font-bold text-slate-100 p-2", formErrors.title ? "border-rose-500" : "border-slate-800")}
+                />
               ) : (
                 story.title
               )}
@@ -445,21 +343,13 @@ const StoryDetailsPage = () => {
                 </button>
               </>
             ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-200 hover:text-white font-bold text-sm transition-all"
-                >
-                  <Edit3 className="w-4 h-4" /> Editar Story
-                </button>
-                <Link
-                  to="/stories"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-200 hover:text-white font-bold text-sm transition-all"
-                >
-                  <ArrowLeft className="w-4 h-4" /> Voltar
-                </Link>
-              </>
+              <button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-200 hover:text-white font-bold text-sm transition-all"
+              >
+                <Edit3 className="w-4 h-4" /> Editar Story
+              </button>
             )}
           </div>
         </div>
@@ -469,10 +359,9 @@ const StoryDetailsPage = () => {
             <div className="relative aspect-[9/16] bg-slate-950">
               <img
                 src={currentThumbnailUrl}
-                alt={isEditing ? formData.title : story.title}
+                alt={story.title}
                 className="w-full h-full object-cover animate-fade-in"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent"></div>
               <div className="absolute top-4 right-4">
                 <span className={cn("px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider", story.active ? "bg-emerald-500 text-white" : "bg-slate-600 text-white")}>
                   {story.active ? 'Ativo' : 'Inativo'}
@@ -482,174 +371,118 @@ const StoryDetailsPage = () => {
           </section>
 
           <section className="space-y-6">
+            {/* Informações Básicas */}
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-6">
-              <h2 className="text-xl font-extrabold text-slate-100 pb-3 border-b border-slate-850">Informações principais</h2>
+              <h2 className="text-xl font-extrabold text-slate-100 pb-3 border-b border-slate-850">Configurações</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="rounded-2xl border border-slate-850 bg-slate-950 p-5">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">ID de Controle</p>
-                  <p className="mt-2 text-sm md:text-base font-mono text-slate-300 break-all">{story.id}</p>
-                </div>
-                <div className="rounded-2xl border border-slate-850 bg-slate-950 p-5">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Posição no Widget</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Posição</p>
                   {isEditing ? (
                     <input
                       type="number"
-                      min="1"
                       value={formData.position}
                       onChange={(e) => setFormData(prev => ({ ...prev, position: Number(e.target.value) }))}
-                      className="w-full mt-2 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-sm text-slate-200 font-bold"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-sm text-slate-200 font-bold"
                     />
                   ) : (
-                    <p className="mt-2 text-lg font-black text-slate-100">#{story.position}</p>
+                    <p className="text-lg font-black text-slate-100">#{story.position}</p>
+                  )}
+                </div>
+                <div className="rounded-2xl border border-slate-850 bg-slate-950 p-5">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Modelo / Medidas</p>
+                  {isEditing ? (
+                    <select
+                      value={formData.model_id || ""}
+                      onChange={(e) => setFormData(prev => ({ ...prev, model_id: e.target.value || undefined }))}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-sm text-slate-200 font-bold"
+                    >
+                      <option value="">Nenhuma modelo</option>
+                      {sizingModels.map(m => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="text-sm font-bold text-slate-300">
+                      {sizingModels.find(m => m.id === story.model_id)?.name || "Sem modelo vinculada"}
+                    </p>
                   )}
                 </div>
               </div>
             </div>
 
+            {/* Ação CTA */}
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-6">
-              <h2 className="text-xl font-extrabold text-slate-100 pb-3 border-b border-slate-850">Vídeos do Story</h2>
-              {isEditing ? (
-                <div className="space-y-4">
-                  <div className="flex border-b border-slate-800">
-                    <button
-                      type="button"
-                      onClick={() => setVideoSelectTab('gallery')}
-                      className={`flex items-center gap-2 px-4 py-2.5 font-bold text-xs uppercase tracking-wider border-b-2 transition-all ${
-                        videoSelectTab === 'gallery' ? 'border-violet-500 text-violet-400' : 'border-transparent text-slate-500 hover:text-slate-300'
-                      }`}
-                    >
-                      Galeria (Ativos)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setVideoSelectTab('all_videos')}
-                      className={`flex items-center gap-2 px-4 py-2.5 font-bold text-xs uppercase tracking-wider border-b-2 transition-all ${
-                        videoSelectTab === 'all_videos' ? 'border-violet-500 text-violet-400' : 'border-transparent text-slate-500 hover:text-slate-300'
-                      }`}
-                    >
-                      Todos os vídeos
-                    </button>
+              <h2 className="text-xl font-extrabold text-slate-100 pb-3 border-b border-slate-850">Chamada para Ação (CTA)</h2>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-slate-950 border border-slate-850 rounded-2xl">
+                  <div>
+                    <h4 className="font-bold text-slate-200">Botão de Ação</h4>
+                    <p className="text-xs text-slate-500">Ative links ou botões de compra.</p>
                   </div>
+                  {isEditing ? (
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, cta_enabled: !prev.cta_enabled }))}
+                      className={cn("relative inline-flex h-6 w-11 items-center rounded-full transition-colors", formData.cta_enabled ? "bg-violet-600" : "bg-slate-800")}
+                    >
+                      <span className={cn("inline-block h-4 w-4 transform rounded-full bg-white transition-transform", formData.cta_enabled ? "translate-x-6" : "translate-x-1")} />
+                    </button>
+                  ) : (
+                    <span className={cn("px-2.5 py-1 rounded-full text-xs font-black uppercase", story.cta_enabled ? "bg-emerald-500/10 text-emerald-400" : "bg-slate-800 text-slate-500")}>
+                      {story.cta_enabled ? 'Ativado' : 'Desativado'}
+                    </span>
+                  )}
+                </div>
 
-                  <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-60 overflow-y-auto p-2 border rounded-2xl bg-slate-950 ${
-                    formErrors.videos ? 'border-rose-500' : 'border-slate-800'
-                  }`}>
-                    {currentVideoList.map(video => (
-                      <button
-                        key={video.id}
-                        type="button"
-                        onClick={() => handleVideoSelection(video.id)}
-                        className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all ${
-                          selectedVideoIds.includes(video.id) ? 'border-violet-500' : 'border-slate-850'
-                        }`}
+                {formData.cta_enabled && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Texto do Botão</label>
+                      <input
+                        type="text"
+                        disabled={!isEditing}
+                        value={formData.cta_text}
+                        onChange={(e) => setFormData(prev => ({ ...prev, cta_text: e.target.value }))}
+                        className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-200"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Tipo de Link</label>
+                      <select
+                        disabled={!isEditing}
+                        value={formData.cta_type}
+                        onChange={(e) => setFormData(prev => ({ ...prev, cta_type: e.target.value as CTAType }))}
+                        className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-200"
                       >
-                        <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover" />
-                      </button>
-                    ))}
-                  </div>
-                  {formErrors.videos && <span className="text-xs text-rose-500 font-bold block">{formErrors.videos}</span>}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {storyVideos.map(sv => {
-                    const video = allVideosList.find(v => v.id === sv.video_id);
-                    return video ? (
-                      <div key={sv.id} className="relative aspect-video rounded-xl overflow-hidden shadow-md">
-                        <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover" />
-                        <span className="absolute bottom-1 left-1 text-[9px] text-white bg-black/60 px-1.5 py-0.5 rounded">{video.title}</span>
-                      </div>
-                    ) : null;
-                  })}
-                </div>
-              )}
-            </div>
+                        <option value="custom_link">Link customizado</option>
+                        <option value="product">Produto vinculado</option>
+                        <option value="whatsapp">Falar no WhatsApp</option>
+                      </select>
+                    </div>
 
-            {/* Custom CTA settings in StoryDetails */}
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-6">
-              <h2 className="text-xl font-extrabold text-slate-100 pb-3 border-b border-slate-850">Ação CTA do Story</h2>
-              
-              <div className="flex items-center justify-between p-4 bg-slate-950 border border-slate-850 rounded-2xl">
-                <div>
-                  <h4 className="font-bold text-slate-200">Botão de Ação (CTA)</h4>
-                  <p className="text-xs text-slate-500 mt-0.5">Ativa ou desativa botões de checkout ou redirecionamento.</p>
-                </div>
-                {isEditing ? (
-                  <button
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, cta_enabled: !prev.cta_enabled }))}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      formData.cta_enabled ? 'bg-violet-600' : 'bg-slate-800'
-                    }`}
-                  >
-                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.cta_enabled ? 'translate-x-6' : 'translate-x-1'}`} />
-                  </button>
-                ) : (
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-black uppercase ${story.cta_enabled ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-500'}`}>
-                    {story.cta_enabled ? 'Ativo' : 'Inativo'}
-                  </span>
+                    {formData.cta_type === 'product' && (
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Selecionar Produto</label>
+                        <select
+                          disabled={!isEditing}
+                          value={selectedProductId || ""}
+                          onChange={(e) => setSelectedProductId(e.target.value || undefined)}
+                          className={cn("w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-slate-200", formErrors.productSelection ? "border-rose-500" : "border-slate-850")}
+                        >
+                          <option value="">-- Selecione o Produto --</option>
+                          {products.map(p => (
+                            <option key={p.id} value={p.id}>{p.name} (R$ {p.price.toFixed(2)})</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
-
-              {formData.cta_enabled && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Texto do Botão CTA</label>
-                    <input
-                      type="text"
-                      disabled={!isEditing}
-                      value={formData.cta_text}
-                      onChange={(e) => setFormData(prev => ({ ...prev, cta_text: e.target.value }))}
-                      className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-200"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Tipo de Link CTA</label>
-                    <select
-                      disabled={!isEditing}
-                      value={formData.cta_type}
-                      onChange={(e) => setFormData(prev => ({ ...prev, cta_type: e.target.value as CTAType }))}
-                      className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-200"
-                    >
-                      <option value="custom_link">Link customizado</option>
-                      <option value="product">Produto vinculado</option>
-                      <option value="whatsapp">Falar no WhatsApp</option>
-                    </select>
-                  </div>
-
-                  {formData.cta_type === 'custom_link' && (
-                    <div>
-                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">URL de Redirecionamento *</label>
-                      <input
-                        type="url"
-                        disabled={!isEditing}
-                        value={formData.cta_url}
-                        onChange={(e) => {
-                          setFormData(prev => ({ ...prev, cta_url: e.target.value }));
-                          if (e.target.value.trim()) setFormErrors(prev => ({ ...prev, ctaUrl: '' }));
-                        }}
-                        className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-slate-200 font-mono focus:outline-none ${
-                          formErrors.ctaUrl ? 'border-rose-500' : 'border-slate-850'
-                        }`}
-                      />
-                      {formErrors.ctaUrl && <span className="text-xs text-rose-500 font-bold block mt-1">{formErrors.ctaUrl}</span>}
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           </section>
         </div>
       </main>
-
-      <CustomDialog
-        isOpen={dialog.isOpen}
-        type={dialog.type}
-        title={dialog.title}
-        description={dialog.description}
-        onConfirm={dialog.onConfirm}
-        onCancel={dialog.onCancel}
-      />
     </div>
   );
 };

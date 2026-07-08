@@ -86,6 +86,7 @@ export interface Story {
   scroll_direction?: ScrollDirection;
   active: boolean;
   appearance_id?: string; // ID da aparência personalizada
+  model_id?: string; // ID da modelo vinculada (Tabela de Medidas)
   cta_enabled: boolean;
   cta_text?: string;
   cta_type: CTAType;
@@ -95,6 +96,7 @@ export interface Story {
   click_count?: number; // Métricas agregadas
   created_at?: string;
   updated_at?: string;
+  position: number;
 }
 
 // --- 3. Relação entre story/carrossel e vídeos ---
@@ -126,7 +128,7 @@ export interface Product {
 export interface StoryProduct {
   id: string;
   story_id: string;
-  video_id?: string; // Opcional, se o produto estiver ligado a um vídeo específico dentro do story
+  video_id?: string; // Opcional, se le produto estiver ligado a um vídeo específico dentro do story
   product_id: string;
   created_at?: string;
 }
@@ -213,6 +215,7 @@ export interface SizingModel {
   name: string;      // ex: 'Ana Useanny Modelo'
   image_url?: string; // Foto do rosto da modelo
   measures: SizeMeasure[];
+  size_name?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -364,6 +367,7 @@ const DEFAULT_STORIES: Story[] = [
     whatsapp_message: 'Olá! Tenho interesse na nova coleção de outono.',
     view_count: 1200,
     click_count: 85,
+    position: 1,
   },
   {
     id: 's2',
@@ -376,9 +380,10 @@ const DEFAULT_STORIES: Story[] = [
     cta_text: 'Ver Produto',
     cta_type: 'product',
     cta_url: 'https://useanny.com.br/products/vestido-especial',
-    whatsapp_message: 'Olá! Gostaria de saber mais sobre o produto do unboxing.',
+    whatsapp_message: 'Olá! Gostaria de saber mais sobre le produto do unboxing.',
     view_count: 950,
     click_count: 60,
+    position: 2,
   },
   {
     id: 's3',
@@ -392,6 +397,7 @@ const DEFAULT_STORIES: Story[] = [
     cta_type: 'none',
     view_count: 1500,
     click_count: 110,
+    position: 3,
   },
 ];
 
