@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -16,11 +16,40 @@ import {
   Menu,
   X
 } from 'lucide-react';
-import { isSupabaseConfigured } from '@/lib/db';
+import { isSupabaseConfigured, db } from '@/lib/db';
 
 const Navbar = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  // Dynamic Store Logo reactive fetcher
+  useEffect(() => {
+    const fetchLogo = async () => {
+      try {
+        const stores = await db.stores.getAll();
+        const mainStore = stores[0];
+        if (mainStore) {
+          const fetchedGeneralSettings = (await db.generalSettings.getAll(mainStore.id))[0];
+          if (fetchedGeneralSettings?.logo_url) {
+            setLogoUrl(fetchedGeneralSettings.logo_url);
+          } else {
+            setLogoUrl(null);
+          }
+        }
+      } catch (error) {
+        console.error('Navbar error querying custom store logo Base64 payload:', error);
+      }
+    };
+
+    fetchLogo();
+    
+    // Listen to local changes on general settings saves
+    window.addEventListener('storage', fetchLogo);
+    return () => {
+      window.removeEventListener('storage', fetchLogo);
+    };
+  }, [location.pathname]);
 
   const menuItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -59,9 +88,17 @@ const Navbar = () => {
         <div className="flex justify-between h-16 items-center">
           
           <Link to="/" className="flex items-center gap-2.5 focus:outline-none group">
-            <div className="bg-gradient-to-tr from-violet-600 to-fuchsia-600 p-2 rounded-xl text-white shadow-lg shadow-violet-500/10 group-hover:scale-105 transition-transform duration-200">
-              <Sparkles className="w-5 h-5" />
-            </div>
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt="Store Logo"
+                className="w-10 h-10 object-contain rounded-xl border border-slate-800 bg-slate-900 animate-fade-in p-1 shrink-0"
+              />
+            ) : (
+              <div className="bg-gradient-to-tr from-violet-600 to-fuchsia-600 p-2 rounded-xl text-white shadow-lg shadow-violet-500/10 group-hover:scale-105 transition-transform duration-200 shrink-0">
+                <Sparkles className="w-5 h-5" />
+              </div>
+            )}
             <div>
               <span className="font-black tracking-wider text-lg bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
                 Vidlytics
@@ -151,7 +188,7 @@ const Navbar = () => {
             <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase ${
               isSupabaseConfigured 
                 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                : 'bg-amber-500/10 text-amber-700 border border-amber-500/20'
+                : 'bg-amber-500/10 text-amber-700 border border-emerald-500/20'
             }`}>
               <Database className="w-3.5 h-3.5" />
               {isSupabaseConfigured ? 'Supabase Conectado' : 'Demonstração'}

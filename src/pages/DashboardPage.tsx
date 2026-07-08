@@ -30,7 +30,12 @@ import {
   ShoppingBag,
   ArrowUpRight,
   Filter,
-  CheckCircle2
+  CheckCircle2,
+  Info,
+  HelpCircle,
+  ArrowRight,
+  Plus,
+  X
 } from 'lucide-react';
 import WhatsAppIcon from '@/components/WhatsAppIcon';
 
@@ -67,6 +72,9 @@ const DashboardPage = () => {
   const [store, setStore] = useState<Store | null>(null);
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Conversões popup tooltip state
+  const [showFormulaTooltip, setShowFormulaTooltip] = useState(false);
 
   // Filtros de período
   const [period, setPeriod] = useState<PeriodType>('30days');
@@ -142,13 +150,22 @@ const DashboardPage = () => {
 
     // Dados consolidados dos cards
     const views = Math.round(18540 * multiplier);
-    const clicks = Math.round(3940 * multiplier);
-    const conversions = Math.round(485 * multiplier);
+    const clicks = Math.round(3940 * multiplier); // cliques CTA
     const likes = Math.round(1240 * multiplier);
     const shares = Math.round(590 * multiplier);
     const comments = Math.round(320 * multiplier);
-    const whatsappClicks = Math.round(840 * multiplier);
-    const productClicks = Math.round(1890 * multiplier);
+    const whatsappClicks = Math.round(840 * multiplier); // cliques WhatsApp
+    const productClicks = Math.round(1890 * multiplier); // cliques Produto
+
+    // REGRA DE CONVERSÃO REQUERIDA:
+    // Conversões = Cliques em CTA + Cliques em Produto + Cliques no WhatsApp
+    const conversions = clicks + productClicks + whatsappClicks;
+
+    // TAXA DE CONVERSÃO REQUERIDA:
+    // Taxa de Conversão = (Conversões / Visualizações) * 100
+    // Se não houver visualizações, a taxa deve ser 0%
+    const conversionRateValue = views > 0 ? ((conversions / views) * 100) : 0;
+    const conversionRateString = conversionRateValue.toFixed(2);
 
     // Gráfico 1 & 2 & 6: Métricas diárias (Visualizações, Cliques, Conversões por Dia)
     const dailyStats = Array.from({ length: Math.min(daysCount, 15) }, (_, i) => {
@@ -156,15 +173,18 @@ const DashboardPage = () => {
       const dayLabel = getOffsetDateString(idx);
       const dailyViews = Math.round((800 + Math.random() * 500) * (multiplier / (daysCount / 15 || 1)));
       const dailyClicks = Math.round(dailyViews * (0.15 + Math.random() * 0.1));
-      const dailyConvs = Math.round(dailyClicks * (0.08 + Math.random() * 0.06));
-      const conversionRate = dailyClicks > 0 ? parseFloat(((dailyConvs / dailyClicks) * 100).toFixed(1)) : 0;
+      const dailyProductClicks = Math.round(dailyClicks * 0.45);
+      const dailyWhatsAppClicks = Math.round(dailyClicks * 0.20);
+      
+      const dailyConvs = dailyClicks + dailyProductClicks + dailyWhatsAppClicks;
+      const dailyConvRate = dailyViews > 0 ? parseFloat(((dailyConvs / dailyViews) * 100).toFixed(1)) : 0;
 
       return {
         date: dayLabel,
         views: dailyViews,
         clicks: dailyClicks,
         conversions: dailyConvs,
-        convRate: conversionRate,
+        convRate: dailyConvRate,
       };
     });
 
@@ -232,7 +252,7 @@ const DashboardPage = () => {
         whatsappClicks,
         productClicks,
         ctr: views > 0 ? ((clicks / views) * 100).toFixed(2) : '0.00',
-        conversionRate: clicks > 0 ? ((conversions / clicks) * 100).toFixed(2) : '0.00',
+        conversionRate: conversionRateString,
       },
       dailyStats,
       engagementStats,
@@ -268,7 +288,7 @@ const DashboardPage = () => {
                 className={`px-4 py-2 rounded-xl text-xs font-bold capitalize transition-all ${
                   period === p
                     ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-lg'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-880'
                 }`}
               >
                 {p === 'today' ? 'Hoje' : p === '7days' ? 'Últimos 7 dias' : p === '30days' ? 'Últimos 30 dias' : 'Personalizado'}
@@ -283,7 +303,7 @@ const DashboardPage = () => {
                   onChange={(e) => setStartDate(e.target.value)}
                   className="bg-slate-950 border border-slate-800 text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-violet-500 text-slate-300"
                 />
-                <span className="text-slate-600 text-xs">até</span>
+                <span className="text-slate-600 text-xs font-bold">até</span>
                 <input
                   type="date"
                   value={endDate}
@@ -295,14 +315,14 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {/* Grade de 8 Cards de Métricas Principais */}
+        {/* GRADE DE MÉTRICAS */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           
           {/* Card 1: Visualizações */}
           <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 hover:border-slate-700/60 transition-all shadow-xl flex items-center justify-between">
             <div className="space-y-1.5">
-              <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Visualizações</span>
-              <h2 className="text-2xl font-black text-slate-100">{metricsData.cards.views.toLocaleString()}</h2>
+              <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Visualizações (Views)</span>
+              <h2 className="text-2xl font-black text-slate-100">{(metricsData?.cards?.views ?? 0).toLocaleString()}</h2>
               <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-md w-fit">
                 <ArrowUpRight className="w-3 h-3" /> +12.4%
               </div>
@@ -312,11 +332,11 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {/* Card 2: Cliques */}
+          {/* Card 2: Cliques CTA */}
           <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 hover:border-slate-700/60 transition-all shadow-xl flex items-center justify-between">
             <div className="space-y-1.5">
-              <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Cliques (CTA)</span>
-              <h2 className="text-2xl font-black text-slate-100">{metricsData.cards.clicks.toLocaleString()}</h2>
+              <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Cliques (CTA Link)</span>
+              <h2 className="text-2xl font-black text-slate-100">{(metricsData?.cards?.clicks ?? 0).toLocaleString()}</h2>
               <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-md w-fit">
                 <ArrowUpRight className="w-3 h-3" /> +8.1%
               </div>
@@ -326,25 +346,60 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {/* Card 3: Conversões */}
-          <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 hover:border-slate-700/60 transition-all shadow-xl flex items-center justify-between">
+          {/* Card 3: Conversões (COM FORMULA E EXPLICAÇÃO) */}
+          <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 hover:border-slate-700/60 transition-all shadow-xl flex items-center justify-between relative">
             <div className="space-y-1.5">
-              <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Conversões</span>
-              <h2 className="text-2xl font-black text-slate-100">{metricsData.cards.conversions.toLocaleString()}</h2>
-              <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-md w-fit">
-                <ArrowUpRight className="w-3 h-3" /> +15.2%
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Conversões</span>
+                
+                {/* Info Tooltip Clicker */}
+                <button
+                  type="button"
+                  onClick={() => setShowFormulaTooltip(!showFormulaTooltip)}
+                  className="text-violet-400 hover:text-violet-300 transition-colors focus:outline-none"
+                  title="Como calculamos isso? Clique aqui!"
+                >
+                  <HelpCircle className="w-4 h-4 cursor-pointer" />
+                </button>
+              </div>
+
+              <h2 className="text-2xl font-black text-slate-100">{(metricsData?.cards?.conversions ?? 0).toLocaleString()}</h2>
+              
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-md">
+                  Tx. Conversão: {metricsData?.cards?.conversionRate}%
+                </span>
               </div>
             </div>
-            <div className="p-3.5 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/15">
+
+            <div className="p-3.5 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/15 shrink-0">
               <CheckCircle2 className="w-5 h-5" />
             </div>
+
+            {/* Conversões Explanatory Floating Tooltip Bubble */}
+            {showFormulaTooltip && (
+              <div className="absolute top-full left-0 right-0 mt-3 p-4 bg-slate-950 border border-violet-500/30 rounded-2xl shadow-2xl z-30 space-y-2 animate-fade-in max-w-[280px] md:max-w-xs text-xs">
+                <div className="flex justify-between items-center border-b border-slate-800 pb-1.5">
+                  <span className="font-bold text-violet-400 uppercase tracking-wide text-[10px]">Fórmula de Conversão</span>
+                  <button onClick={() => setShowFormulaTooltip(false)} className="text-slate-500 hover:text-white"><X className="w-3.5 h-3.5" /></button>
+                </div>
+                <p className="text-slate-300 leading-relaxed font-semibold">
+                  <span className="text-white block font-bold mb-1">Conversões =</span>
+                  Cliques em CTA + Cliques em Produto + Cliques de WhatsApp.
+                </p>
+                <p className="text-slate-300 leading-relaxed font-semibold">
+                  <span className="text-white block font-bold mb-1">Taxa de Conversão =</span>
+                  (Conversões / Visualizações) × 100
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Card 4: Curtidas */}
           <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 hover:border-slate-700/60 transition-all shadow-xl flex items-center justify-between">
             <div className="space-y-1.5">
-              <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Curtidas</span>
-              <h2 className="text-2xl font-black text-slate-100">{metricsData.cards.likes.toLocaleString()}</h2>
+              <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Curtidas (Likes)</span>
+              <h2 className="text-2xl font-black text-slate-100">{(metricsData?.cards?.likes ?? 0).toLocaleString()}</h2>
               <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-md w-fit">
                 <ArrowUpRight className="w-3 h-3" /> +9.3%
               </div>
@@ -372,7 +427,7 @@ const DashboardPage = () => {
           <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 hover:border-slate-700/60 transition-all shadow-xl flex items-center justify-between">
             <div className="space-y-1.5">
               <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Comentários</span>
-              <h2 className="text-2xl font-black text-slate-100">{metricsData.cards.comments.toLocaleString()}</h2>
+              <h2 className="text-2xl font-black text-slate-100">{(metricsData?.cards?.comments ?? 0).toLocaleString()}</h2>
               <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-md w-fit">
                 <ArrowUpRight className="w-3 h-3" /> +6.7%
               </div>
@@ -386,7 +441,7 @@ const DashboardPage = () => {
           <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 hover:border-slate-700/60 transition-all shadow-xl flex items-center justify-between">
             <div className="space-y-1.5">
               <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Cliques WhatsApp</span>
-              <h2 className="text-2xl font-black text-slate-100">{metricsData.cards.whatsappClicks.toLocaleString()}</h2>
+              <h2 className="text-2xl font-black text-slate-100">{(metricsData?.cards?.whatsappClicks ?? 0).toLocaleString()}</h2>
               <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-md w-fit">
                 <ArrowUpRight className="w-3 h-3" /> +14.8%
               </div>
@@ -400,7 +455,7 @@ const DashboardPage = () => {
           <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 hover:border-slate-700/60 transition-all shadow-xl flex items-center justify-between">
             <div className="space-y-1.5">
               <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Cliques Produtos</span>
-              <h2 className="text-2xl font-black text-slate-100">{metricsData.cards.productClicks.toLocaleString()}</h2>
+              <h2 className="text-2xl font-black text-slate-100">{(metricsData?.cards?.productClicks ?? 0).toLocaleString()}</h2>
               <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-md w-fit">
                 <ArrowUpRight className="w-3 h-3" /> +11.2%
               </div>
@@ -410,6 +465,54 @@ const DashboardPage = () => {
             </div>
           </div>
 
+        </div>
+
+        {/* METRICS FORMULA VISUAL WIDGET */}
+        <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-8 opacity-5">
+            <Sparkles className="w-48 h-48 text-violet-500" />
+          </div>
+
+          <div className="space-y-4 max-w-3xl">
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 rounded-xl bg-violet-600/15 text-violet-400 border border-violet-500/20">
+                <HelpCircle className="w-4 h-4" />
+              </span>
+              <h3 className="font-extrabold text-base text-slate-100 uppercase tracking-wider">Como calculamos as suas conversões?</h3>
+            </div>
+            
+            <p className="text-slate-400 text-sm md:text-base leading-relaxed font-semibold">
+              O Vidlytics centraliza e correlaciona as intenções de compras em tempo real. A taxa de conversão do widget de stories é baseada estritamente nas seguintes métricas do seu funil:
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              
+              <div className="bg-slate-950/60 p-4 border border-slate-850 rounded-2xl space-y-2">
+                <span className="font-bold text-violet-400 block text-xs uppercase">1. Total de Conversões</span>
+                <div className="flex flex-wrap items-center gap-1 text-slate-200 font-semibold text-sm">
+                  <span>Clique CTA</span>
+                  <Plus className="w-3.5 h-3.5 text-slate-600" />
+                  <span>Clique Produto</span>
+                  <Plus className="w-3.5 h-3.5 text-slate-600" />
+                  <span className="text-emerald-400 font-bold">Falar no WhatsApp</span>
+                </div>
+                <p className="text-[11px] text-slate-500 font-semibold leading-relaxed">Soma de todos os cliques intencionais que redirecionam o cliente para o carrinho, checkout ou canais de suporte.</p>
+              </div>
+
+              <div className="bg-slate-950/60 p-4 border border-slate-850 rounded-2xl space-y-2">
+                <span className="font-bold text-violet-400 block text-xs uppercase">2. Taxa de Conversão Geral</span>
+                <div className="flex items-center gap-2 font-mono font-bold text-xs bg-slate-900 border border-slate-800 p-2 rounded-xl text-center justify-center w-fit text-slate-100">
+                  <span>( Conversões</span>
+                  <span className="text-slate-600">/</span>
+                  <span>Visualizações )</span>
+                  <span className="text-slate-600">×</span>
+                  <span className="text-violet-400">100</span>
+                </div>
+                <p className="text-[11px] text-slate-500 font-semibold leading-relaxed">Indica a porcentagem exata de espectadores do widget que realizaram pelo menos um clique de compra ou suporte.</p>
+              </div>
+
+            </div>
+          </div>
         </div>
 
         {/* Gráficos Linha: Visualizações por Dia & Cliques por Dia */}

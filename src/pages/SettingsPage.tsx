@@ -18,7 +18,10 @@ import {
   Laptop,
   CheckCircle2,
   RefreshCw,
-  Lock
+  Lock,
+  Upload,
+  Trash2,
+  Image as ImageIcon
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 
@@ -64,8 +67,36 @@ const SettingsPage = () => {
     try {
       await db.generalSettings.save(generalSettings);
       showSuccess('Configurações atualizadas com sucesso!');
+      // Force trigger navbar update by triggering a tiny reload message
+      window.dispatchEvent(new Event('storage'));
     } catch (error) {
       showError('Erro ao salvar as configurações.');
+    }
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && generalSettings) {
+      if (file.size > 2 * 1024 * 1024) {
+        showError('A imagem do logo deve ter no máximo 2MB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setGeneralSettings({ ...generalSettings, logo_url: reader.result as string });
+        showSuccess('Logo carregado com sucesso! Lembre-se de clicar em salvar.');
+      };
+      reader.onerror = () => {
+        showError('Erro ao processar o arquivo de imagem.');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    if (generalSettings) {
+      setGeneralSettings({ ...generalSettings, logo_url: '' });
+      showSuccess('Logo removido! Clique em salvar para confirmar.');
     }
   };
 
@@ -161,22 +192,83 @@ const SettingsPage = () => {
                   />
                 </div>
 
-                {/* Logo da Loja */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                    URL do Logo da Loja
+                {/* Logo da Loja (Upload & URL) */}
+                <div className="md:col-span-2 space-y-4">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Logo da Loja
                   </label>
-                  <input
-                    type="url"
-                    value={generalSettings.logo_url || ''}
-                    onChange={(e) => setGeneralSettings({ ...generalSettings, logo_url: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 rounded-xl text-sm font-mono text-slate-200"
-                    placeholder="https://minhaloja.com.br/logo.png"
-                  />
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-4 items-center bg-slate-950 p-4 border border-slate-800 rounded-2xl">
+                    {/* Logo Preview area */}
+                    <div className="w-[120px] h-[120px] bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-center overflow-hidden relative group">
+                      {generalSettings.logo_url ? (
+                        <>
+                          <img
+                            src={generalSettings.logo_url}
+                            alt="Logo preview"
+                            className="w-full h-full object-contain p-2"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleRemoveLogo}
+                            className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-rose-500 transition-opacity font-bold text-xs gap-1.5"
+                          >
+                            <Trash2 className="w-4 h-4" /> Remover
+                          </button>
+                        </>
+                      ) : (
+                        <div className="text-center p-3">
+                          <ImageIcon className="w-8 h-8 text-slate-600 mx-auto mb-1" />
+                          <span className="text-[10px] text-slate-500 font-bold block">Sem Logo</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Logo Control Area */}
+                    <div className="space-y-3">
+                      <p className="text-xs text-slate-400 leading-relaxed font-semibold">
+                        Selecione um arquivo de imagem da sua marca para exibir no cabeçalho do painel de controle e nos templates.
+                      </p>
+                      
+                      <div className="flex flex-wrap gap-2">
+                        {/* Custom styled file input */}
+                        <label className="cursor-pointer inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-md">
+                          <Upload className="w-4 h-4" /> Escolher Imagem
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                            onChange={handleLogoUpload}
+                            className="hidden"
+                          />
+                        </label>
+
+                        {generalSettings.logo_url && (
+                          <button
+                            type="button"
+                            onClick={handleRemoveLogo}
+                            className="inline-flex items-center gap-1.5 bg-slate-900 border border-slate-800 hover:bg-rose-950/20 text-rose-400 text-xs font-bold px-4 py-2.5 rounded-xl transition-all"
+                          >
+                            <Trash2 className="w-4 h-4" /> Remover Logo
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="pt-2">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Ou cole uma URL direta do logo</span>
+                        <input
+                          type="url"
+                          value={generalSettings.logo_url || ''}
+                          onChange={(e) => setGeneralSettings({ ...generalSettings, logo_url: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-900 border border-slate-800 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 rounded-xl text-xs font-mono text-slate-300"
+                          placeholder="https://minhaloja.com.br/logo.png"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Email de Contato */}
-                <div>
+                <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                     E-mail de Contato
                   </label>
@@ -195,18 +287,17 @@ const SettingsPage = () => {
             {/* 2. CONFIGURAÇÕES DO APP */}
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6 shadow-xl">
               <div className="flex items-center gap-2.5 pb-4 border-b border-slate-800">
-                <SettingsIcon className="w-5 h-5 text-fuchsia-400" />
-                <h3 className="text-lg font-bold text-slate-100">2. Configurações do App</h3>
+                <SettingsIcon className="w-5 h-5 text-violet-400" />
+                <h3 className="text-lg font-bold text-slate-100">2. Módulos do Sistema</h3>
               </div>
 
-              {/* Toggles */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 
-                {/* Ativar/Desativar Geral */}
-                <div className="flex items-center justify-between p-4 bg-slate-950 border border-slate-800/80 rounded-2xl">
+                {/* Active switch */}
+                <div className="flex items-center justify-between p-4 bg-slate-950 border border-slate-800 rounded-2xl">
                   <div className="min-w-0 pr-2">
-                    <p className="text-xs font-bold text-slate-200">Ativar Geral do App</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">Controla a renderização completa.</p>
+                    <p className="text-xs font-bold text-slate-200">Ativação Geral do Widget</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">Controla a renderização pública do carrossel/grade na Yampi.</p>
                   </div>
                   <button
                     type="button"
