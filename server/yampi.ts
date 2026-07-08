@@ -1,0 +1,104 @@
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import fetch from 'node-fetch'; // Standard fetch might be available in Node 18+, but adding node-fetch if needed.
+// Actually, in recent Node versions globalThis.fetch is available.
+
+dotenv.config();
+
+const app = express();
+const port = 3333;
+
+app.use(cors());
+app.use(express.json());
+
+const { YAMPI_ALIAS, YAMPI_TOKEN, YAMPI_SECRET_KEY } = process.env;
+
+if (!YAMPI_ALIAS || !YAMPI_TOKEN || !YAMPI_SECRET_KEY) {
+  console.error('ERRO: Variáveis de ambiente da Yampi não configuradas corretamente.');
+}
+
+const YAMPI_API_BASE = 'https://api.dooki.com.br/v2';
+
+app.get('/api/yampi/products', async (req, res) => {
+  try {
+    const response = await fetch(`${YAMPI_API_BASE}/products`, {
+      headers: {
+        'User-Token': YAMPI_TOKEN || '',
+        'User-Secret': YAMPI_SECRET_KEY || '',
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return res.status(response.status).json({
+        error: 'Erro na API da Yampi',
+        details: errorData
+      });
+    }
+
+    const data = await response.json();
+    // Normalize data as requested
+    const normalized = data.data.map((p: any) => ({
+      id: p.id,
+      yampi_product_id: p.id,
+      yampi_sku_id: p.sku,
+      name: p.name,
+      description: p.description,
+      price: parseFloat(p.price),
+      sale_price: parseFloat(p.price_sale),
+      image_url: p.images?.data?.[0]?.url || '',
+      thumbnail_url: p.images?.data?.[0]?.url_thumbnail || '',
+      product_url: p.url,
+      checkout_url: `https://${YAMPI_ALIAS}.yampi.store/checkout/cart/add/${p.id}` // Placeholder checkout URL logic
+    }));
+
+    res.json(normalized);
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({ error: 'Erro interno no servidor proxy' });
+  }
+});
+
+app.get('/api/yampi/products/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const response = await fetch(`${YAMPI_API_BASE}/products/${id}`, {
+      headers: {
+        'User-Token': YAMPI_TOKEN || '',
+        'User-Secret': YAMPI_SECRET_KEY || '',
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      return res.status(response.status).json({ error: 'Produto não encontrado na Yampi' });
+    }
+
+    const json = await response.json();
+    const p = json.data;
+
+    const normalized = {
+      id: p.id,
+      yampi_product_id: p.id,
+      yampi_sku_id: p.sku,
+      name: p.name,
+      description: p.description,
+      price: parseFloat(p.price),
+      sale_price: parseFloat(p.price_sale),
+      image_url: p.images?.data?.[0]?.url || '',
+      thumbnail_url: p.images?.data?.[0]?.url_thumbnail || '',
+      product_url: p.url,
+      checkout_url: `https://${YAMPI_ALIAS}.yampi.store/checkout/cart/add/${p.id}`
+    };
+
+    res.json(normalized);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro interno no servidor proxy' });
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Backend proxy Yampi rodando em http://localhost:${port}`);
+});
