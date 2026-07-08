@@ -199,7 +199,29 @@ const StoriesPage = () => {
 
     setFormErrors({});
 
+    const newStory: Story = {
+      id: Math.random().toString(36).substr(2, 9),
+      store_id: store.id,
+      title: title.trim(),
+      format,
+      scroll_direction: format === 'carousel' ? scrollDirection : undefined,
+      active,
+      appearance_id: appearanceId || undefined,
+      cta_enabled: ctaEnabled,
+      cta_text: ctaText || undefined,
+      cta_type: ctaEnabled ? ctaType : 'none',
+      cta_url: ctaEnabled && ctaType === 'custom_link' ? ctaUrl : undefined,
+      whatsapp_message: ctaEnabled && ctaType === 'whatsapp' ? whatsappMessage : undefined,
+      position: position,
+      view_count: 0,
+      click_count: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
     try {
+      console.log("[StoriesPage] Payload enviado ao banco de dados:", newStory);
+
       let finalProductId = selectedProductId;
       if (newProductForm.name && store) {
         const newProduct: Product = {
@@ -215,25 +237,6 @@ const StoriesPage = () => {
         finalProductId = savedProduct.id;
       }
 
-      const newStory: Story = {
-        id: Math.random().toString(36).substr(2, 9),
-        store_id: store.id,
-        title: title.trim(),
-        format,
-        scroll_direction: format === 'carousel' ? scrollDirection : undefined,
-        active,
-        appearance_id: appearanceId || undefined,
-        cta_enabled: ctaEnabled,
-        cta_text: ctaText || undefined,
-        cta_type: ctaEnabled ? ctaType : 'none',
-        cta_url: ctaEnabled && ctaType === 'custom_link' ? ctaUrl : undefined,
-        whatsapp_message: cta_enabled && cta_type === 'whatsapp' ? whatsappMessage : undefined,
-        position: position,
-        view_count: 0,
-        click_count: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
       const savedStory = await db.stories.save(newStory);
 
       for (let i = 0; i < selectedVideoIds.length; i++) {
@@ -297,8 +300,8 @@ const StoriesPage = () => {
       
       loadStoriesData();
     } catch (error) {
-      showError('Erro ao criar o story.');
-      console.error(error);
+      console.error("Erro detalhado ao criar story:", error);
+      showError(error instanceof Error ? error.message : "Erro ao criar o story.");
     }
   };
 
@@ -451,7 +454,7 @@ const StoriesPage = () => {
   };
 
   const addDisplayLocation = () => {
-    setDisplayLocations(prev => [...prev, { selector: '', position: 'after_element' }]);
+    setDisplayLocations(prev => [...prev, { id: Math.random().toString(36).substr(2, 9), store_id: store?.id || '', story_id: '', selector: '', position: 'after_element' }]);
   };
 
   const updateDisplayLocation = (index: number, field: string, value: string) => {
@@ -961,15 +964,8 @@ const StoriesPage = () => {
                       </select>
                     </div>
                     <div className="flex-1">
-                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">O valor da URL *</label>
-                      <input
-                        type="text"
-                        required
-                        value={pr.value}
-                        onChange={(e) => updatePageRule(index, 'value', e.target.value)}
-                        placeholder="Ex: /colecoes/"
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200"
-                      />
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Valor / URL</label>
+                      <input type="text" value={pr.value || ''} onChange={(e) => updatePageRule(index, 'value', e.target.value)} placeholder="/caminho-da-pagina" disabled={['all_pages', 'home_only', 'product_pages', 'category_pages'].includes(pr.condition_type)} className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 font-mono disabled:opacity-30" />
                     </div>
                     <button type="button" onClick={() => removePageRule(index)} className="p-2.5 rounded-xl border border-slate-800 hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 transition-all self-end md:self-auto"><Trash2 className="w-4 h-4" /></button>
                   </div>
@@ -979,18 +975,17 @@ const StoriesPage = () => {
                 </button>
               </div>
 
-              {/* SAVE FORM ACTIONS */}
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
                 <button
                   type="button"
-                  onClick={() => setShowForm(false)}
-                  className="px-5 py-2.5 rounded-xl border border-slate-800 text-slate-400 hover:bg-slate-800 font-bold text-sm transition-all"
+                  onClick={() => { setShowForm(false); }}
+                  className="px-5 py-2.5 rounded-xl border border-slate-800 text-slate-400 hover:bg-slate-800 font-bold text-sm md:text-base transition-all"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all"
+                  className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm md:text-base shadow-lg transition-all"
                 >
                   Salvar Story
                 </button>
