@@ -8,12 +8,18 @@ export interface Video {
   source_type: 'upload' | 'instagram' | 'tiktok' | 'external_url' | 'mobile_upload' | 'gallery';
   video_url: string;
   thumbnail_url: string;
+
+  // Fallbacks opcionais para evitar imagem quebrada
+  poster_url?: string;
+  image_url?: string;
+
   duration?: number; // em segundos
   file_size?: number; // em bytes
   status: 'active' | 'inactive';
   created_at?: string;
   updated_at?: string;
 }
+
 
 // --- 6. Aparência ---
 export interface Appearance {
