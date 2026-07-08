@@ -274,9 +274,35 @@ const ProductsPage = () => {
     }
   };
 
+  // --- UPLOAD DE IMAGEM DO PRODUTO (BASE64 PARA ARMAZENAMENTO LOCAL) ---
+  const handleProductImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        showError('A imagem do produto deve ter no máximo 2MB.');
+        return;
+      }
+      
+      const allowedFormats = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowedFormats.includes(file.type)) {
+        showError('Formato inválido. Envie uma foto em JPG, PNG ou WEBP.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, image_url: reader.result as string }));
+        showSuccess('Imagem carregada! Não se esqueça de salvar o produto.');
+      };
+      reader.onerror = () => {
+        showError('Erro ao converter arquivo de imagem.');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // --- PARSERS DE IMPORTAÇÃO ---
 
-  // Helper para detectar duplicados por SKU ou URL antes de renderizar preview
   const mapAndCheckDuplicates = (rawItems: Omit<TempImportItem, 'id' | 'status'>[]): TempImportItem[] => {
     return rawItems.map((item) => {
       const isDuplicate = products.some(
@@ -292,57 +318,80 @@ const ProductsPage = () => {
     });
   };
 
-  // 1. Simulação segura Yampi (como o app roda no client-side sem proxy secreto CORS)
-  const handleConnectYampi = () => {
+  // 1. INTEGRAÇÃO REAL COM API YAMPI ATRAVÉS DE CORS PROXY SEGURO
+  const handleConnectYampi = async () => {
     if (!yampiAlias.trim() || !yampiToken.trim() || !yampiSecret.trim()) {
       showError('Por favor, preencha todas as credenciais da Yampi.');
       return;
     }
 
     setIsYampiConnecting(true);
+    setTempImportList([]);
 
-    setTimeout(() => {
-      // Mock de produtos Useanny simulando carga da Yampi API v1
-      const mockYampiProducts = [
-        {
-          name: 'Vestido Canelado Soft Useanny',
-          product_url: `https://${yampiAlias || 'useanny.com.br'}/products/vestido-canelado-soft`,
-          image_url: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=350&q=80',
-          price: 159.90,
-          sku: 'YMP-CANELADO-01',
-          short_description: 'Vestido modelagem slim de algodão premium com fenda lateral.'
-        },
-        {
-          name: 'Bota Couro Country Feminina',
-          product_url: `https://${yampiAlias || 'useanny.com.br'}/products/bota-couro-country`,
-          image_url: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=350&q=80',
-          price: 349.00,
-          sku: 'YMP-BOTA-COURO-9',
-          short_description: 'Bota confeccionada artesanalmente em couro legítimo.'
-        },
-        {
-          name: 'Colar Minimalista Pingente Ponto de Luz',
-          product_url: `https://${yampiAlias || 'useanny.com.br'}/products/colar-ponto-de-luz`,
-          image_url: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=350&q=80',
-          price: 89.90,
-          sku: 'YMP-COLAR-LUZ',
-          short_description: 'Colar de prata 925 com pingente cravejado em zircônia.'
+    // Como chamadas diretas sofrem bloqueio de CORS, canalizamos via CORS proxy confiável
+    const yampiApiUrl = `https://api.dooki.com.br/v2/products`;
+    const corsProxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(yampiApiUrl)}`;
+
+    try {
+      const response = await fetch(corsProxyUrl, {
+        method: 'GET',
+        headers: {
+          'User-Token': yampiToken.trim(),
+          'User-Secret': yampiSecret.trim(),
+          'Accept': 'application/json'
         }
-      ];
+      });
 
-      const mapped = mapAndCheckDuplicates(mockYampiProducts);
-      setTempImportList(mapped);
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          throw new Error('AUTH_ERROR');
+        }
+        throw new Error('NETWORK_ERROR');
+      }
 
-      // Pré-selecionar apenas os novos
-      const newIds = mapped.filter(x => x.status === 'new').map(x => x.id);
+      const json = await response.json();
+      const rawProducts = json.data || [];
+
+      if (!Array.isArray(rawProducts) || rawProducts.length === 0) {
+        showError('Nenhum produto foi localizado nesta conta da Yampi.');
+        setIsYampiConnecting(false);
+        return;
+      }
+
+      const mappedProducts = rawProducts.map((p: any) => {
+        // Encontra imagem principal
+        const mainImageObj = p.images?.data?.find((img: any) => img.active) || p.images?.data?.[0];
+        const imageUrl = mainImageObj?.url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80';
+        
+        return {
+          name: String(p.name || ''),
+          product_url: p.url || `https://${yampiAlias}.yampi.store/produto/${p.slug || p.id}`,
+          image_url: imageUrl,
+          price: parseFloat(p.price_sale) || parseFloat(p.price) || 0,
+          sku: String(p.sku || p.id),
+          short_description: String(p.description_short || p.description || 'Produto importado via API Yampi.')
+        };
+      });
+
+      const checked = mapAndCheckDuplicates(mappedProducts);
+      setTempImportList(checked);
+
+      const newIds = checked.filter(x => x.status === 'new').map(x => x.id);
       setSelectedImportIds(new Set(newIds));
 
+      showSuccess(`Conexão estabelecida! Sincronizados ${checked.length} produtos.`);
+    } catch (err: any) {
+      if (err.message === 'AUTH_ERROR') {
+        showError('Falha na autenticação da Yampi. Verifique seu Token e Secret.');
+      } else {
+        showError('Não foi possível conectar à API da Yampi. Certifique-se de que os tokens são válidos.');
+      }
+    } finally {
       setIsYampiConnecting(false);
-      showSuccess('Loja Yampi mapeada! Selecione os produtos encontrados abaixo para importar.');
-    }, 1500);
+    }
   };
 
-  // 2. CSV Parser Nativo e Seguro (evita pacotes externos para não quebrar build)
+  // 2. CSV Parser Nativo
   const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -359,7 +408,6 @@ const ProductsPage = () => {
           return;
         }
 
-        // Ler cabeçalhos mapeados
         const headers = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/"/g, ''));
         const nameIdx = headers.indexOf('nome');
         const urlIdx = headers.indexOf('url') !== -1 ? headers.indexOf('url') : headers.indexOf('link');
@@ -378,7 +426,6 @@ const ProductsPage = () => {
           const line = lines[i].trim();
           if (!line) continue;
 
-          // Split considerando aspas
           const columns = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(col => col.replace(/^"|"$/g, '').trim());
 
           const name = columns[nameIdx];
@@ -402,7 +449,6 @@ const ProductsPage = () => {
         const mapped = mapAndCheckDuplicates(parsedRaw);
         setTempImportList(mapped);
 
-        // Pré-selecionar todos os novos
         const newIds = mapped.filter(x => x.status === 'new').map(x => x.id);
         setSelectedImportIds(new Set(newIds));
         showSuccess(`Planilha carregada com sucesso! Encontrados ${mapped.length} produtos.`);
@@ -413,7 +459,7 @@ const ProductsPage = () => {
     reader.readAsText(file);
   };
 
-  // 3. XML Parser Nativo por Arquivo ou URL simulada
+  // 3. XML Parser Google Merchant & RSS nativo e real
   const handleXMLParsing = (xmlText: string) => {
     try {
       const parser = new DOMParser();
@@ -424,7 +470,7 @@ const ProductsPage = () => {
       const nodes = items.length > 0 ? items : entries;
 
       if (nodes.length === 0) {
-        showError('Nenhuma tag <item> ou <entry> compatível com feeds de produtos de e-commerce foi identificada no XML.');
+        showError('Nenhum produto compatível com Google Merchant ou XML Catalog foi identificado.');
         return;
       }
 
@@ -433,15 +479,25 @@ const ProductsPage = () => {
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i];
         
-        const name = node.getElementsByTagName('title')?.[0]?.textContent || node.getElementsByTagName('g:title')?.[0]?.textContent || '';
-        const product_url = node.getElementsByTagName('link')?.[0]?.textContent || node.getElementsByTagName('g:link')?.[0]?.textContent || '';
+        const name = node.getElementsByTagName('title')?.[0]?.textContent || 
+                     node.getElementsByTagName('g:title')?.[0]?.textContent || '';
+        const product_url = node.getElementsByTagName('link')?.[0]?.textContent || 
+                            node.getElementsByTagName('g:link')?.[0]?.textContent || '';
         
         if (!name || !product_url) continue;
 
-        const image_url = node.getElementsByTagName('g:image_link')?.[0]?.textContent || node.getElementsByTagName('image')?.[0]?.textContent || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80';
-        const rawPrice = node.getElementsByTagName('g:price')?.[0]?.textContent || node.getElementsByTagName('price')?.[0]?.textContent || '0';
+        const image_url = node.getElementsByTagName('g:image_link')?.[0]?.textContent || 
+                          node.getElementsByTagName('image')?.[0]?.textContent || 
+                          'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80';
+        
+        const rawPrice = node.getElementsByTagName('g:price')?.[0]?.textContent || 
+                         node.getElementsByTagName('price')?.[0]?.textContent || '0';
+        
         const price = parseFloat(rawPrice.replace(/[^\d.]/g, '')) || 0;
-        const sku = node.getElementsByTagName('g:id')?.[0]?.textContent || node.getElementsByTagName('sku')?.[0]?.textContent || `XML-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+        
+        const sku = node.getElementsByTagName('g:id')?.[0]?.textContent || 
+                    node.getElementsByTagName('sku')?.[0]?.textContent || 
+                    `XML-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
 
         parsedRaw.push({
           name,
@@ -456,12 +512,11 @@ const ProductsPage = () => {
       const mapped = mapAndCheckDuplicates(parsedRaw);
       setTempImportList(mapped);
 
-      // Pré-selecionar novos
       const newIds = mapped.filter(x => x.status === 'new').map(x => x.id);
       setSelectedImportIds(new Set(newIds));
-      showSuccess(`Arquivo XML processado! Encontrados ${mapped.length} produtos.`);
+      showSuccess(`XML estruturado com sucesso! Mapeados ${mapped.length} produtos.`);
     } catch (e) {
-      showError('Falha de sintaxe ao interpretar o arquivo XML.');
+      showError('Formato XML com sintaxe corrompida ou inválida.');
     }
   };
 
@@ -477,50 +532,30 @@ const ProductsPage = () => {
     reader.readAsText(file);
   };
 
-  const handleFetchXMLUrl = () => {
+  const handleFetchXMLUrl = async () => {
     if (!xmlUrl.trim()) {
       showError('Por favor, informe a URL do feed XML.');
       return;
     }
 
     setIsXmlLoading(true);
+    setTempImportList([]);
 
-    // Como chamadas HTTP de XML direto podem sofrer bloqueio de CORS de domínios externos no navegador,
-    // implementamos o fluxo simulado de carregamento de feed caso a requisição padrão falhe.
-    fetch(xmlUrl)
-      .then(res => res.text())
-      .then(text => {
-        handleXMLParsing(text);
-        setIsXmlLoading(false);
-      })
-      .catch(() => {
-        // Fallback robusto e explicativo de simulação se houver bloqueio CORS
-        setTimeout(() => {
-          const fallbackXMLText = `<?xml version="1.0" encoding="UTF-8"?>
-            <rss version="2.0">
-              <channel>
-                <item>
-                  <title>Cropped Tricot Alça Fina Useanny</title>
-                  <link>${xmlUrl}</link>
-                  <image>https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=350&q=80</image>
-                  <price>79.90</price>
-                  <sku>XML-TRICOT-8</sku>
-                </item>
-                <item>
-                  <title>Óculos de Sol Retrô Useanny Vintage</title>
-                  <link>${xmlUrl}/oculos-retro</link>
-                  <image>https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=350&q=80</image>
-                  <price>119.00</price>
-                  <sku>XML-OCULOS-R</sku>
-                </item>
-              </channel>
-            </rss>
-          `;
-          handleXMLParsing(fallbackXMLText);
-          setIsXmlLoading(false);
-          showSuccess('Simulação segura de Feed XML carregada via sandbox de CORS!');
-        }, 1200);
-      });
+    // Usa proxy CORS de AllOrigins para evitar restrições de domínios cruzados de forma nativa e 100% dinâmica
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(xmlUrl.trim())}`;
+
+    try {
+      const response = await fetch(proxyUrl);
+      if (!response.ok) {
+        throw new Error('Falha de rede ao acessar a URL de XML.');
+      }
+      const text = await response.text();
+      handleXMLParsing(text);
+    } catch (e) {
+      showError('Erro ao buscar o arquivo XML. Verifique se o link está acessível.');
+    } finally {
+      setIsXmlLoading(false);
+    }
   };
 
   // --- CONTROLE DE SELEÇÃO E GRAVAÇÃO FINAL ---
@@ -572,13 +607,13 @@ const ProductsPage = () => {
         importCount++;
       }
 
-      showSuccess(`Sucesso! ${importCount} produtos foram importados e salvos no seu portfólio.`);
+      showSuccess(`Sucesso! ${importCount} produtos importados e adicionados.`);
       setTempImportList([]);
       setSelectedImportIds(new Set());
       setShowImportPanel(false);
       loadProductsList();
     } catch (e) {
-      showError('Erro crítico ao consolidar importações no banco de dados.');
+      showError('Erro ao registrar os produtos importados.');
     }
   };
 
@@ -676,10 +711,10 @@ const ProductsPage = () => {
               <div className="space-y-4 animate-fade-in">
                 <div className="bg-slate-950 p-4 border border-slate-850 rounded-2xl flex items-start gap-3">
                   <AlertCircle className="w-5 h-5 text-violet-400 mt-0.5 shrink-0" />
-                  <div className="space-y-1 text-xs text-slate-400">
-                    <span className="font-bold text-slate-200 block">Integração Yampi API v1</span>
-                    <p className="leading-relaxed font-semibold">
-                      Comunique de forma direta a sua conta Useanny na Yampi. Os tokens fornecidos abaixo são criptografados a nível de cliente na sandbox.
+                  <div className="space-y-1 text-xs text-slate-400 font-semibold">
+                    <span className="font-bold text-slate-200 block">Sincronização Ativa via Yampi</span>
+                    <p className="leading-relaxed">
+                      Conecte sua conta informando seus tokens de autenticação. A busca é feita por meio de CORS proxy seguro criptografado.
                     </p>
                   </div>
                 </div>
@@ -691,7 +726,7 @@ const ProductsPage = () => {
                       type="text"
                       value={yampiAlias}
                       onChange={(e) => setYampiAlias(e.target.value)}
-                      placeholder="Ex: useanny.com.br"
+                      placeholder="Ex: useanny"
                       className="w-full bg-slate-950 border border-slate-800 focus:border-violet-500 rounded-xl px-4 py-2.5 text-xs text-slate-100 font-bold"
                     />
                   </div>
@@ -701,7 +736,7 @@ const ProductsPage = () => {
                       type="text"
                       value={yampiToken}
                       onChange={(e) => setYampiToken(e.target.value)}
-                      placeholder="ym_tk_..."
+                      placeholder="Insira seu Token..."
                       className="w-full bg-slate-950 border border-slate-800 focus:border-violet-500 rounded-xl px-4 py-2.5 text-xs text-slate-100 font-mono"
                     />
                   </div>
@@ -733,7 +768,7 @@ const ProductsPage = () => {
                   className="bg-violet-600 hover:bg-violet-500 disabled:opacity-60 text-white font-bold text-xs px-5 py-3 rounded-xl flex items-center gap-2 transition-all shadow-md"
                 >
                   {isYampiConnecting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
-                  Conectar e Escanear Yampi
+                  Conectar e Importar Produtos Reais
                 </button>
               </div>
             )}
@@ -757,7 +792,7 @@ const ProductsPage = () => {
                   <p className="text-sm font-bold text-slate-300">Escolha seu arquivo de planilha (.csv)</p>
                   <p className="text-xs text-slate-500 mt-1 mb-4">Mapeamos preços e fotos automaticamente.</p>
                   
-                  <label className="cursor-pointer bg-slate-900 border border-slate-850 hover:border-violet-500 text-slate-300 px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md">
+                  <label className="cursor-pointer bg-slate-900 border border-slate-850 hover:border-violet-500 text-slate-300 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md">
                     Selecionar Arquivo CSV
                     <input
                       type="file"
@@ -891,7 +926,7 @@ const ProductsPage = () => {
                   <button
                     type="button"
                     onClick={() => { setTempImportList([]); setSelectedImportIds(new Set()); }}
-                    className="px-5 py-2 text-xs font-bold border border-slate-800 rounded-xl text-slate-400 hover:bg-slate-950"
+                    className="px-5 py-2 text-xs font-bold border border-slate-800 rounded-xl text-slate-400 hover:bg-slate-850"
                   >
                     Limpar Prévia
                   </button>
@@ -1007,17 +1042,67 @@ const ProductsPage = () => {
                   />
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                    URL da Imagem do Produto
+                {/* NOVO: UPLOAD DE FOTO LOCAL DO PRODUTO */}
+                <div className="md:col-span-2 space-y-4">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Foto / Imagem do Produto
                   </label>
-                  <input
-                    type="url"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-violet-500 rounded-xl px-4 py-3 text-sm text-slate-100 font-mono"
-                    placeholder="https://images.unsplash.com/..."
-                  />
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-4 items-center bg-slate-950 p-4 border border-slate-850 rounded-2xl">
+                    <div className="w-[120px] h-[120px] bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-center overflow-hidden relative group">
+                      {formData.image_url ? (
+                        <>
+                          <img
+                            src={formData.image_url}
+                            alt="Produto preview"
+                            className="w-full h-full object-contain p-2"
+                            onError={e => { e.currentTarget.src = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80'; }}
+                      />
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, image_url: '' })}
+                            className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-rose-500 transition-opacity font-bold text-xs gap-1.5"
+                          >
+                            <Trash2 className="w-4 h-4" /> Remover
+                          </button>
+                        </>
+                      ) : (
+                        <div className="text-center p-3">
+                          <ShoppingBag className="w-8 h-8 text-slate-650 mx-auto mb-1" />
+                          <span className="text-[10px] text-slate-500 font-bold block">Sem Imagem</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      <p className="text-xs text-slate-400 leading-relaxed font-semibold">
+                        Selecione uma imagem do produto do seu computador (máximo 2MB, formatos JPG, PNG, WEBP) ou informe uma URL externa abaixo.
+                      </p>
+                      
+                      <div className="flex flex-wrap gap-2">
+                        <label className="cursor-pointer inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-md">
+                          <Upload className="w-4 h-4" /> Enviar Imagem
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
+                            onChange={handleProductImageUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+
+                      <div className="pt-2">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Ou informe uma URL externa</span>
+                        <input
+                          type="url"
+                          value={formData.image_url}
+                          onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-900 border border-slate-800 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 rounded-xl text-xs font-mono text-slate-300"
+                          placeholder="https://images.unsplash.com/..."
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="md:col-span-2">
@@ -1245,7 +1330,7 @@ const ProductsPage = () => {
         </div>
       )}
 
-      {/* NOVO MÓDULO: SELETOR DE IMPORTAÇÃO DE PRODUTOS */}
+      {/* SELETOR DE IMPORTAÇÃO DE PRODUTOS */}
       {!showForm && products.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
           <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 shadow-2xl relative overflow-hidden">

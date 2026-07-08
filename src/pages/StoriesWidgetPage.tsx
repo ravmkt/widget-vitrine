@@ -13,6 +13,7 @@ import {
   Play,
   Pause,
   Check,
+  ExternalLink,
 } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
 import WhatsAppIcon from '@/components/WhatsAppIcon';
@@ -50,7 +51,7 @@ const isInvalidVideoUrl = (url: string): boolean => {
   ) {
     return true;
   }
-  return !normalized.includes(".mp4");
+  return !normalized.includes(".mp4") && !normalized.includes(".webm") && !normalized.includes(".mov");
 };
 
 const getFallbackVideoUrl = (storyTitle: string | null): string => {
@@ -62,6 +63,11 @@ const getFallbackVideoUrl = (storyTitle: string | null): string => {
 };
 
 const getSafeVideoUrl = (video: Video | null, storyTitle: string | null): string => {
+  if (!video) return getFallbackVideoUrl(storyTitle);
+  if (video.source_type === 'instagram' || video.source_type === 'tiktok') {
+    // Retorna a URL original de redirecionamento, mídias sociais usam player alternativo
+    return video.video_url;
+  }
   const rawUrl = getRawVideoUrl(video);
   if (isInvalidVideoUrl(rawUrl)) {
     return getFallbackVideoUrl(storyTitle);
@@ -99,8 +105,9 @@ const StoriesWidgetPage = () => {
 
   const selectedStory = selectedIndex !== null ? stories[selectedIndex] : null;
   const videosForSelectedStory = selectedStory ? storyVideosMap.get(selectedStory.id) || [] : [];
-  const mainVideoForSelectedStory = videosForSelectedStory.find(v => v.id === (selectedStory?.id)) || videosForSelectedStory[0] || null; // Simplificado para pegar o primeiro vídeo
+  const mainVideoForSelectedStory = videosForSelectedStory.find(v => v.id === (selectedStory?.id)) || videosForSelectedStory[0] || null;
 
+  const isSocialVideo = mainVideoForSelectedStory?.source_type === 'instagram' || mainVideoForSelectedStory?.source_type === 'tiktok';
   const safeVideoUrl = getSafeVideoUrl(mainVideoForSelectedStory, selectedStory?.title || null);
 
   // Resetar videoError quando safeVideoUrl mudar
@@ -110,7 +117,7 @@ const StoriesWidgetPage = () => {
 
   // Efeito para carregar e reproduzir vídeo quando safeVideoUrl mudar
   useEffect(() => {
-    if (videoRef.current) {
+    if (videoRef.current && !isSocialVideo) {
       videoRef.current.load(); // Força o recarregamento do vídeo
       const playPromise = videoRef.current.play();
 
@@ -120,7 +127,7 @@ const StoriesWidgetPage = () => {
         });
       }
     }
-  }, [safeVideoUrl]);
+  }, [safeVideoUrl, isSocialVideo]);
 
   // Limpeza de cache do localStorage/sessionStorage
   useEffect(() => {
@@ -186,8 +193,8 @@ const StoriesWidgetPage = () => {
 
   const loadCommentsForStory = async (storyId: string) => {
     try {
-      const comments = await db.comments.getAll(storyId); // Usar getAll com storyId
-      setCurrentStoryComments(comments.filter(c => c.status === 'approved')); // Apenas comentários aprovados
+      const comments = await db.comments.getAll(storyId);
+      setCurrentStoryComments(comments.filter(c => c.status === 'approved'));
       setCommentsCount(comments.filter(c => c.status === 'approved').length);
     } catch (error) {
       console.error('Erro ao carregar comentários:', error);
@@ -210,6 +217,13 @@ const StoriesWidgetPage = () => {
   const handleTogglePlay = async (event?: React.MouseEvent) => {
     event?.preventDefault();
     event?.stopPropagation();
+    if (isSocialVideo) {
+      // Se for rede social, redireciona o usuário para assistir na plataforma original
+      if (mainVideoForSelectedStory?.video_url) {
+        window.open(mainVideoForSelectedStory.video_url, '_blank', 'noopener,noreferrer');
+      }
+      return;
+    }
     const video = videoRef.current;
     if (!video || (!video.currentSrc && !video.src)) {
       console.error("Elemento de vídeo não encontrado ou sem src.");
@@ -283,10 +297,10 @@ const StoriesWidgetPage = () => {
     const newComment: Comment = {
       id: Math.random().toString(36).substr(2, 9),
       story_id: selectedStory.id,
-      user_name: 'Você', // Em um app real, viria do usuário logado
-      user_email: generalSettings.contact_email || 'anonymous@example.com', // Exemplo
+      user_name: 'Você',
+      user_email: generalSettings.contact_email || 'anonymous@example.com',
       text: newCommentText,
-      status: 'pending', // Comentários precisam ser aprovados
+      status: 'pending',
       created_at: new Date().toISOString(),
     };
 
@@ -490,7 +504,7 @@ const StoriesWidgetPage = () => {
             </button>
 
             {/* Mute/Unmute Button (inside story card) */}
-            {currentAppearance?.show_video_controls && (
+            {currentAppearance?.show_video_controls && !isSocialVideo && (
               <button
                 type="button"
                 onClick={handleToggleMute}
@@ -502,7 +516,7 @@ const StoriesWidgetPage = () => {
             )}
 
             {/* Play/Pause Button (inside story card) */}
-            {currentAppearance?.show_video_controls && (
+            {currentAppearance?.show_video_controls && !isSocialVideo && (
               <button
                 type="button"
                 onClick={handleTogglePlay}
@@ -513,11 +527,41 @@ const StoriesWidgetPage = () => {
               </button>
             )}
 
-            {/* Renderização Condicional do Vídeo ou Mensagem de Erro */}
+            {/* Renderização Condicional do Vídeo ou do Player Social Modificado */}
             {videoError ? (
               <div className="absolute inset-0 flex items-center justify-center bg-black text-white text-center p-4">
                 <p className="text-lg font-semibold">Não foi possível carregar este vídeo.</p>
                 <p className="text-sm text-white/70 mt-2">Verifique a URL do vídeo ou sua conexão.</p>
+              </div>
+            ) : isSocialVideo ? (
+              /* Player Limpo e Elegante de Redes Sociais sem iframes inteiros de posts */
+              <div className="relative w-full h-full bg-slate-950 flex flex-col justify-center items-center">
+                <img
+                  src={mainVideoForSelectedStory?.thumbnail_url || selectedStory?.thumbnail_url || 'https://via.placeholder.com/150'}
+                  alt={selectedStory?.title}
+                  className="absolute inset-0 w-full h-full object-cover blur-sm opacity-40 pointer-events-none"
+                />
+                
+                <div className="relative z-10 flex flex-col items-center justify-center p-6 text-center space-y-4 max-w-xs">
+                  <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-xl">
+                    <Play className="w-8 h-8 text-white fill-white ml-1 cursor-pointer animate-[pulse_2s_infinite]" onClick={handleTogglePlay} />
+                  </div>
+                  
+                  <div>
+                    <p className="text-white font-extrabold text-base">{selectedStory?.title}</p>
+                    <p className="text-[11px] text-violet-400 font-bold uppercase tracking-wider mt-1">
+                      {mainVideoForSelectedStory?.source_type === 'instagram' ? 'Vídeo do Instagram' : 'Vídeo do TikTok'}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={handleTogglePlay}
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-bold text-xs uppercase px-5 py-3 rounded-xl transition-transform hover:scale-105 shadow-lg"
+                  >
+                    <span>Assistir na Rede</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             ) : (
               <video
@@ -552,7 +596,7 @@ const StoriesWidgetPage = () => {
             )}
 
             {/* Play/Pause Overlay */}
-            {showPlayPauseOverlay && !videoError && (
+            {showPlayPauseOverlay && !videoError && !isSocialVideo && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                 <div className="bg-white/30 backdrop-blur-sm rounded-full p-3 transition-opacity duration-300">
                   {isPlaying ? (

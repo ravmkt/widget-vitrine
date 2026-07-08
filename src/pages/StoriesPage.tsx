@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { db, Story, Store, Video, StoryVideo, Appearance, StoryFormat, CTAType, ScrollDirection, DisplayLocation, PageRule, Product, StoryProduct, ConditionType, DisplayPosition, SizingModel } from '@/lib/db';
@@ -144,13 +144,11 @@ const StoriesPage = () => {
       );
     }
 
-    setFilteredVideos(currentVideos => {
-      return currentStories;
-    });
+    setFilteredStories(currentStories);
   }, [allStories, filterStatus, searchTerm]);
 
   const filteredStoriesToShow = useMemo(() => {
-    let currentStories = stories;
+    let currentStories = allStories;
     if (filterStatus !== 'all') {
       currentStories = currentStories.filter(s => s.active === (filterStatus === 'active'));
     }
@@ -160,7 +158,7 @@ const StoriesPage = () => {
       );
     }
     return currentStories;
-  }, [stories, filterStatus, searchTerm]);
+  }, [allStories, filterStatus, searchTerm]);
 
   const isValidUrl = (url: string) => {
     try {
@@ -228,11 +226,11 @@ const StoriesPage = () => {
         cta_enabled: ctaEnabled,
         cta_text: ctaText || undefined,
         cta_type: ctaEnabled ? ctaType : 'none',
-        cta_url: ctaEnabled && ctaType === 'custom_link' ? formData.cta_url : undefined,
-        whatsapp_message: cta_enabled && cta_type === 'whatsapp' ? formData.whatsapp_message : undefined,
-        position: formData.position,
-        view_count: formData.view_count,
-        click_count: formData.click_count,
+        cta_url: ctaEnabled && ctaType === 'custom_link' ? ctaUrl : undefined,
+        whatsapp_message: cta_enabled && cta_type === 'whatsapp' ? whatsappMessage : undefined,
+        position: position,
+        view_count: 0,
+        click_count: 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -453,7 +451,7 @@ const StoriesPage = () => {
   };
 
   const addDisplayLocation = () => {
-    setDisplayLocations(prev => [...prev, { id: Math.random().toString(36).substr(2, 9), store_id: store?.id || '', story_id: '', selector: '', position: 'after_element' }]);
+    setDisplayLocations(prev => [...prev, { selector: '', position: 'after_element' }]);
   };
 
   const updateDisplayLocation = (index: number, field: string, value: string) => {
@@ -892,7 +890,7 @@ const StoriesPage = () => {
                             }}
                             className={`w-full bg-slate-950 border rounded-2xl px-4 py-3 text-sm text-slate-100 font-bold focus:outline-none focus:ring-1 ${
                               formErrors.productSelection
-                                ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500'
+                                ? 'border-rose-500 focus:ring-rose-500 focus:border-rose-500'
                                 : 'border-slate-800 focus:border-violet-500 focus:ring-violet-500'
                             }`}
                           >
@@ -963,8 +961,15 @@ const StoriesPage = () => {
                       </select>
                     </div>
                     <div className="flex-1">
-                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Valor / URL</label>
-                      <input type="text" value={pr.value || ''} onChange={(e) => updatePageRule(index, 'value', e.target.value)} placeholder="/caminho-da-pagina" disabled={['all_pages', 'home_only', 'product_pages', 'category_pages'].includes(pr.condition_type)} className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 font-mono disabled:opacity-30" />
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">O valor da URL *</label>
+                      <input
+                        type="text"
+                        required
+                        value={pr.value}
+                        onChange={(e) => updatePageRule(index, 'value', e.target.value)}
+                        placeholder="Ex: /colecoes/"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200"
+                      />
                     </div>
                     <button type="button" onClick={() => removePageRule(index)} className="p-2.5 rounded-xl border border-slate-800 hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 transition-all self-end md:self-auto"><Trash2 className="w-4 h-4" /></button>
                   </div>
@@ -974,17 +979,18 @@ const StoriesPage = () => {
                 </button>
               </div>
 
+              {/* SAVE FORM ACTIONS */}
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
                 <button
                   type="button"
-                  onClick={() => { setShowForm(false); }}
-                  className="px-5 py-2.5 rounded-xl border border-slate-800 text-slate-400 hover:bg-slate-800 font-bold text-sm md:text-base transition-all"
+                  onClick={() => setShowForm(false)}
+                  className="px-5 py-2.5 rounded-xl border border-slate-800 text-slate-400 hover:bg-slate-800 font-bold text-sm transition-all"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm md:text-base shadow-lg transition-all"
+                  className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all"
                 >
                   Salvar Story
                 </button>
