@@ -1041,9 +1041,9 @@ export default function StoriesWidgetPage() {
             )}
 
             {(currentProduct || getProductUrl()) && (
-              <div className="absolute bottom-6 left-4 z-50 max-w-[260px]">
-                <div className="rounded-3xl border border-white/15 bg-black/45 p-3 text-white backdrop-blur-md">
-                  <p className="line-clamp-1 text-xs font-black">
+              <div className="absolute bottom-6 left-4 z-50">
+                <div className="rounded-[22px] bg-zinc-500/85 p-3 text-white shadow-xl backdrop-blur-sm">
+                  <p className="mb-2 max-w-[130px] truncate text-[11px] font-black leading-none text-white">
                     {getProductName()}
                   </p>
 
@@ -1052,7 +1052,7 @@ export default function StoriesWidgetPage() {
                       href={getProductUrl()}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-2 inline-flex items-center gap-1 rounded-full bg-violet-600 px-3 py-2 text-[11px] font-black text-white hover:bg-violet-700"
+                      className="inline-flex items-center gap-1 rounded-full bg-violet-600 px-4 py-2 text-[11px] font-black text-white hover:bg-violet-700"
                     >
                       Ver produto
                       <ExternalLink className="h-3.5 w-3.5" />
