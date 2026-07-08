@@ -8,7 +8,10 @@ export interface YampiProduct {
   productUrl?: string;
   checkoutUrl?: string;
   active: boolean;
-  raw?: any;
+  debug?: {
+    pricePath: string;
+    imagePath: string;
+  };
 }
 
 export interface YampiHealth {

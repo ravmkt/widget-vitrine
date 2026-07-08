@@ -39,18 +39,11 @@ export default defineConfig(({ mode }) => {
             if (req.url === '/api/yampi/products') {
               const targetUrl = `${YAMPI_API_BASE}/catalog/products`;
               
-              if (!YAMPI_ALIAS || !YAMPI_TOKEN || !YAMPI_SECRET_KEY) {
-                res.statusCode = 500;
-                res.setHeader('Content-Type', 'application/json');
-                res.end(JSON.stringify({ success: false, message: 'Credenciais ausentes' }));
-                return;
-              }
-
               try {
                 const response = await fetch(targetUrl, {
                   headers: {
-                    'User-Token': YAMPI_TOKEN,
-                    'User-Secret-Key': YAMPI_SECRET_KEY,
+                    'User-Token': YAMPI_TOKEN || '',
+                    'User-Secret-Key': YAMPI_SECRET_KEY || '',
                     'Accept': 'application/json'
                   }
                 });
@@ -59,58 +52,68 @@ export default defineConfig(({ mode }) => {
                 
                 if (!response.ok) {
                   res.statusCode = response.status;
-                  res.setHeader('Content-Type', 'application/json');
-                  res.end(JSON.stringify({ success: false, status: response.status, message: 'Erro Yampi', details: data }));
+                  res.end(JSON.stringify({ success: false, message: 'Erro na API Yampi', details: data }));
                   return;
                 }
 
                 const rawProducts = data.data || [];
                 
-                // --- DEBUG LOGS SEGUROS ---
-                if (rawProducts.length > 0) {
-                  const p = rawProducts[0];
-                  console.log('--- INSPEÇÃO DE PRODUTO YAMPI ---');
-                  console.log(`ID: ${p.id} | Nome: ${p.name}`);
-                  console.log(`Campos de Preço: price=${p.price}, price_sale=${p.price_sale}, cost_price=${p.cost_price}`);
-                  console.log(`Estrutura de Imagens:`, p.images ? (p.images.data ? `Array com ${p.images.data.length}` : 'Não é array') : 'Nula');
-                  if (p.images?.data?.[0]) console.log(`Primeira Imagem:`, p.images.data[0]);
-                  console.log(`SKUs:`, p.skus ? (p.skus.data ? `Array com ${p.skus.data.length}` : 'Não é array') : 'Nula');
-                  console.log(`OBJETO COMPLETO (Saneado):`, JSON.stringify({ ...p, links: 'hidden' }, null, 2));
-                  console.log('---------------------------------');
-                }
-
-                // Normalização robusta seguindo o novo padrão solicitado
                 const products = rawProducts.map((p: any) => {
-                  // Preço: Tenta no produto, senão tenta no primeiro SKU
-                  let price = parseFloat(p.price || 0);
-                  let salePrice = parseFloat(p.price_sale || 0);
-                  
-                  if (price === 0 && p.skus?.data?.[0]) {
-                    price = parseFloat(p.skus.data[0].price || 0);
-                    salePrice = parseFloat(p.skus.data[0].price_sale || 0);
+                  // --- LÓGICA DE DESCOBERTA DE PREÇO ---
+                  let foundPrice = 0;
+                  let foundSalePrice = undefined;
+                  let pricePath = 'none';
+
+                  // Prioridade 1: Preços na raiz
+                  if (p.price && parseFloat(p.price) > 0) {
+                    foundPrice = parseFloat(p.price);
+                    foundSalePrice = p.price_sale ? parseFloat(p.price_sale) : undefined;
+                    pricePath = 'root (price/price_sale)';
+                  } 
+                  // Prioridade 2: Preços no primeiro SKU
+                  else if (p.skus?.data?.[0]) {
+                    const sku = p.skus.data[0];
+                    foundPrice = parseFloat(sku.price || 0);
+                    foundSalePrice = sku.price_sale ? parseFloat(sku.price_sale) : undefined;
+                    pricePath = 'skus.data[0] (price/price_sale)';
                   }
 
-                  // Imagem: Tenta imagens.data, senão tenta image_url, senão tenta no SKU
-                  let image = p.images?.data?.[0]?.url || p.image_url || '';
-                  if (!image && p.skus?.data?.[0]?.image_url) {
-                    image = p.skus.data[0].image_url;
+                  // --- LÓGICA DE DESCOBERTA DE IMAGEM ---
+                  let foundImage = '';
+                  let imagePath = 'none';
+
+                  // Prioridade 1: Array de imagens
+                  if (p.images?.data?.[0]?.url) {
+                    foundImage = p.images.data[0].url;
+                    imagePath = 'images.data[0].url';
                   }
+                  // Prioridade 2: Campo image_url (comum em algumas versões da API)
+                  else if (p.image_url && p.image_url.startsWith('http')) {
+                    foundImage = p.image_url;
+                    imagePath = 'root.image_url';
+                  }
+                  // Prioridade 3: Imagem do primeiro SKU
+                  else if (p.skus?.data?.[0]?.image_url) {
+                    foundImage = p.skus.data[0].image_url;
+                    imagePath = 'skus.data[0].image_url';
+                  }
+
+                  // Log de diagnóstico para o console (Backend)
+                  console.log(`[Normalizer] ID: ${p.id} | Name: ${p.name}`);
+                  console.log(`  > Price: ${foundPrice} (Path: ${pricePath})`);
+                  console.log(`  > Image: ${foundImage ? foundImage.substring(0, 40) + '...' : 'EMPTY'} (Path: ${imagePath})`);
 
                   return {
                     id: String(p.id),
                     name: p.name,
                     sku: p.sku || p.skus?.data?.[0]?.sku || `ID-${p.id}`,
-                    price: price,
-                    salePrice: salePrice > 0 ? salePrice : undefined,
-                    image: image,
+                    price: foundPrice,
+                    salePrice: foundSalePrice && foundSalePrice < foundPrice ? foundSalePrice : undefined,
+                    image: foundImage,
                     productUrl: p.url,
                     checkoutUrl: `https://${YAMPI_ALIAS}.yampi.store/checkout/cart/add/${p.id}`,
                     active: !!p.active,
-                    raw: {
-                      id: p.id,
-                      has_skus: !!p.skus?.data?.length,
-                      has_images: !!p.images?.data?.length
-                    }
+                    debug: { pricePath, imagePath }
                   };
                 });
 
@@ -118,8 +121,7 @@ export default defineConfig(({ mode }) => {
                 res.end(JSON.stringify(products));
               } catch (error) {
                 res.statusCode = 500;
-                res.setHeader('Content-Type', 'application/json');
-                res.end(JSON.stringify({ success: false, message: 'Falha crítica no proxy' }));
+                res.end(JSON.stringify({ success: false, message: 'Falha no Proxy' }));
               }
               return;
             }
