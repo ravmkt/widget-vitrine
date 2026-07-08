@@ -1,23 +1,18 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { db, Comment, Story, Video, CommentStatus } from '@/lib/db';
+import { db, Comment, CommentStatus } from '@/lib/db';
 import {
   MessageSquare,
   Check,
-  X,
-  AlertTriangle,
   Search,
   Trash2,
-  Reply,
-  Info
+  User
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import CustomDialog from '@/components/CustomDialog';
 
 const CommentsPage = () => {
   const [comments, setComments] = useState<Comment[]>([]);
-  const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<CommentStatus | 'all'>('all');
 
@@ -32,17 +27,10 @@ const CommentsPage = () => {
 
   const loadData = async () => {
     try {
-      const stores = await db.stores.getAll();
-      const mainStore = stores[0];
-
-      if (mainStore) {
-        const allComments = await db.comments.getAll();
-        setComments(allComments);
-
-        const allStories = await db.stories.getAll(mainStore.id);
-        setStories(allStories);
-      }
+      const allComments = await db.comments.getAll();
+      setComments(allComments || []);
     } catch (error) {
+      console.error('Erro ao carregar comentários:', error);
       showError('Erro ao carregar comentários.');
     } finally {
       setLoading(false);
@@ -55,8 +43,13 @@ const CommentsPage = () => {
 
   const filteredComments = useMemo(() => {
     return comments.filter((c) => {
-      const matchesSearch = c.user_name.toLowerCase().includes(searchTerm.toLowerCase()) || c.text.toLowerCase().includes(searchTerm.toLowerCase());
+      const userName = (c.user_name || '').toLowerCase();
+      const text = (c.text || '').toLowerCase();
+      const search = searchTerm.toLowerCase();
+      
+      const matchesSearch = userName.includes(search) || text.includes(search);
       const matchesStatus = filterStatus === 'all' || c.status === filterStatus;
+      
       return matchesSearch && matchesStatus;
     });
   }, [comments, searchTerm, filterStatus]);
@@ -64,7 +57,7 @@ const CommentsPage = () => {
   const handleUpdateStatus = async (comment: Comment, newStatus: CommentStatus) => {
     try {
       await db.comments.save({ ...comment, status: newStatus });
-      showSuccess(`Status atualizado!`);
+      showSuccess(`Status atualizado para ${newStatus}!`);
       loadData();
     } catch (e) {
       showError('Erro ao atualizar status.');
@@ -87,7 +80,11 @@ const CommentsPage = () => {
     });
   };
 
-  if (loading) return null;
+  if (loading) return (
+    <div className="flex h-64 items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-[#0094EB]"></div>
+    </div>
+  );
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -104,13 +101,13 @@ const CommentsPage = () => {
             placeholder="Pesquisar autor ou conteúdo..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0094EB] focus:ring-2 focus:ring-[#0094EB]/10 rounded-xl text-sm font-bold text-slate-700"
+            className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0094EB] focus:ring-2 focus:ring-[#0094EB]/10 rounded-xl text-sm font-bold text-slate-700 outline-none"
           />
         </div>
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value as any)}
-          className="bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-600 focus:outline-none"
+          className="bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-600 focus:outline-none cursor-pointer"
         >
           <option value="all">Todos os Status</option>
           <option value="pending">Pendentes</option>
@@ -135,9 +132,9 @@ const CommentsPage = () => {
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-blue-50 text-[#0094EB] flex items-center justify-center font-black text-xs">
-                      {row.user_name.charAt(0).toUpperCase()}
+                      {row.user_name ? row.user_name.charAt(0).toUpperCase() : '?'}
                     </div>
-                    <span className="font-bold text-slate-800 text-sm">{row.user_name}</span>
+                    <span className="font-bold text-slate-800 text-sm">{row.user_name || 'Usuário'}</span>
                   </div>
                 </td>
                 <td className="px-6 py-4">
@@ -148,15 +145,27 @@ const CommentsPage = () => {
                     row.status === 'approved' ? 'bg-emerald-50 text-emerald-600' :
                     row.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-500'
                   }`}>
-                    {row.status}
+                    {row.status || 'Pendente'}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex justify-end gap-2">
                     {row.status !== 'approved' && (
-                      <button onClick={() => handleUpdateStatus(row, 'approved')} className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors"><Check size={18} /></button>
+                      <button 
+                        onClick={() => handleUpdateStatus(row, 'approved')} 
+                        title="Aprovar"
+                        className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors"
+                      >
+                        <Check size={18} />
+                      </button>
                     )}
-                    <button onClick={() => handleDelete(row.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={18} /></button>
+                    <button 
+                      onClick={() => handleDelete(row.id)} 
+                      title="Excluir"
+                      className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </div>
                 </td>
               </tr>
