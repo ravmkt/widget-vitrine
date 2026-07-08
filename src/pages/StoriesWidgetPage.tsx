@@ -218,9 +218,7 @@ const mergeComments = (items: any[]) => {
   });
 
   return Array.from(map.values()).sort((a, b) => {
-    return (
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
 };
 
@@ -239,12 +237,7 @@ const getVideoLikeCount = (video?: Video | null) => {
 
   const v = video as any;
 
-  const val =
-    v.like_count ??
-    v.likes_count ??
-    v.likes ??
-    v.likeCount ??
-    0;
+  const val = v.like_count ?? v.likes_count ?? v.likes ?? v.likeCount ?? 0;
 
   return Number(val) || 0;
 };
@@ -471,6 +464,34 @@ export default function StoriesWidgetPage() {
     };
   };
 
+  const buildWhatsAppShareText = () => {
+    const storyUrl = getStoryUrl();
+    const productImageUrl = getProductImageUrl();
+
+    const textLines = [
+      'Olha esse produto que encontrei...',
+      storyUrl ? `Vídeo: ${storyUrl}` : '',
+      productImageUrl ? `Miniatura: ${productImageUrl}` : ''
+    ].filter(Boolean);
+
+    return {
+      title: getProductName(),
+      text: textLines.join('\n'),
+      url: storyUrl
+    };
+  };
+
+  const buildSupportWhatsAppText = () => {
+    const productUrl = getProductUrl();
+
+    const textLines = [
+      'Quero mais informações sobre esse produto',
+      productUrl ? `Link do produto: ${productUrl}` : ''
+    ].filter(Boolean);
+
+    return textLines.join('\n');
+  };
+
   const insertEmojiAtCursor = (item: string) => {
     const el = textareaRef.current;
 
@@ -635,7 +656,8 @@ export default function StoriesWidgetPage() {
   };
 
   const handleShare = async (type: ShareOption) => {
-    const payload = buildShareText();
+    const payload =
+      type === 'whatsapp' ? buildWhatsAppShareText() : buildShareText();
 
     try {
       await (db as any).incrementClickCount?.(story?.id);
@@ -713,7 +735,7 @@ export default function StoriesWidgetPage() {
   };
 
   const handleWhatsApp = async () => {
-    const payload = buildShareText();
+    const text = buildSupportWhatsAppText();
 
     try {
       await (db as any).incrementClickCount?.(story?.id);
@@ -726,8 +748,8 @@ export default function StoriesWidgetPage() {
     ).replace(/\D/g, '');
 
     const url = phone
-      ? `https://wa.me/${phone}?text=${encodeURIComponent(payload.text)}`
-      : `https://wa.me/?text=${encodeURIComponent(payload.text)}`;
+      ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}`
+      : `https://wa.me/?text=${encodeURIComponent(text)}`;
 
     window.open(url, '_blank');
   };
@@ -1050,7 +1072,9 @@ export default function StoriesWidgetPage() {
                   onClick={handleTogglePlay}
                   className={darkBtn}
                   aria-label={
-                    playing && !videoError ? 'Pausar vídeo' : 'Reproduzir vídeo'
+                    playing && !videoError
+                      ? 'Pausar vídeo'
+                      : 'Reproduzir vídeo'
                   }
                 >
                   {playing && !videoError ? (
@@ -1115,7 +1139,7 @@ export default function StoriesWidgetPage() {
                 <button
                   type="button"
                   onClick={goPrev}
-                  className="absolute left-3 top-1/2 z-[65] flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-purple-600/85 text-white shadow-xl backdrop-blur-md transition-all hover:bg-purple-700 active:scale-95"
+                  className="absolute left-3 top-[42%] z-[65] flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-purple-600/85 text-white shadow-xl backdrop-blur-md transition-all hover:bg-purple-700 active:scale-95"
                   aria-label="Voltar vídeo"
                 >
                   <ChevronLeft className="h-7 w-7" />
@@ -1124,7 +1148,7 @@ export default function StoriesWidgetPage() {
                 <button
                   type="button"
                   onClick={goNext}
-                  className="absolute right-3 top-1/2 z-[65] flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-purple-600/85 text-white shadow-xl backdrop-blur-md transition-all hover:bg-purple-700 active:scale-95"
+                  className="absolute right-3 top-[42%] z-[65] flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-purple-600/85 text-white shadow-xl backdrop-blur-md transition-all hover:bg-purple-700 active:scale-95"
                   aria-label="Avançar vídeo"
                 >
                   <ChevronRight className="h-7 w-7" />
@@ -1461,9 +1485,7 @@ export default function StoriesWidgetPage() {
             <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 p-4">
               <div className="w-full max-w-sm rounded-3xl border border-slate-800 bg-slate-950 p-5 shadow-2xl">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-xl font-black text-white">
-                    Medidas
-                  </h3>
+                  <h3 className="text-xl font-black text-white">Medidas</h3>
 
                   <button
                     type="button"
