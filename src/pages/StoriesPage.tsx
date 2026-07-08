@@ -59,9 +59,13 @@ const StoriesPage = () => {
   const [selectedProductId, setSelectedProductId] = useState<string | undefined>(undefined);
   const [selectedSizingModelId, setSelectedSizingModelId] = useState<string | undefined>(undefined);
   const [newProductForm, setNewProductForm] = useState({ name: '', product_url: '', image_url: '', price: 0 });
-  const [displayLocations, setDisplayLocations] = useState<Omit<DisplayLocation, 'id' | 'store_id' | 'story_id' | 'created_at' | 'updated_at'>[]>([]);
-  const [pageRules, setPageRules] = useState<Omit<PageRule, 'id' | 'store_id<dyad-write path="src/pages/StoriesPage.tsx" description="Continuing the StoriesPage code to support both products and sizing model linking, fixing cn ReferenceErrors, and styling state forms.">
-                  const [pageRules, setPageRules] = useState<Omit<PageRule, 'id' | 'store_id' | 'story_id' | 'created_at' | 'updated_at'>[]>([]);
+ const [displayLocations, setDisplayLocations] = useState<
+  Omit<DisplayLocation, "id" | "store_id" | "story_id" | "created_at" | "updated_at">[]
+>([]);
+
+const [pageRules, setPageRules] = useState<
+  Omit<PageRule, "id" | "store_id" | "story_id" | "created_at" | "updated_at">[]
+>([]);
 
   const loadStoriesData = useCallback(async () => {
     try {
