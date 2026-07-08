@@ -4,9 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "concurrently --kill-others \"npm run server\" \"vite\"",
+    "dev": "vite",
     "build": "vite build",
-    "server": "tsx server/yampi.ts",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -42,7 +41,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
-    "concurrently": "^9.1.0",
     "cors": "^2.8.5",
     "date-fns": "^3.6.0",
     "dotenv": "^16.4.5",
