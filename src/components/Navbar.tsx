@@ -14,7 +14,8 @@ import {
   Link2,
   ChevronRight,
   Menu,
-  X
+  X,
+  Ruler
 } from 'lucide-react';
 import { isSupabaseConfigured, db } from '@/lib/db';
 
@@ -57,7 +58,7 @@ const Navbar = () => {
     { path: '/gallery', label: 'Galeria', icon: GalleryVertical },
     { path: '/products', label: 'Produtos', icon: ShoppingBag },
     { path: '/appearance', label: 'Aparência', icon: Palette },
-    { path: '/medidas', label: 'Medidas', icon: BarChart3 },
+    { path: '/medidas', label: 'Medidas', icon: Ruler },
     { path: '/comments', label: 'Comentários', icon: MessageSquare },
     { path: '/integration', label: 'Integração', icon: Link2 },
     { path: '/settings', label: 'Configurações', icon: Settings },
@@ -71,7 +72,7 @@ const Navbar = () => {
     else if (pathname === '/gallery') segments.push('Galeria de Vídeos');
     else if (pathname === '/products') segments.push('Produtos');
     else if (pathname === '/appearance') segments.push('Aparência');
-    else if (pathname === '/medidas') segments.push('Medidas');
+    else if (pathname === '/medidas') segments.push('Tabelas de Medidas');
     else if (pathname === '/comments') segments.push('Comentários');
     else if (pathname === '/integration') segments.push('Integração');
     else if (pathname === '/settings') segments.push('Configurações');

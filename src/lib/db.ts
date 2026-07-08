@@ -200,6 +200,23 @@ export interface Store {
   created_at?: string;
 }
 
+// --- 12. Tabelas de Medidas / Provador (Sizing Guide Module) ---
+export interface SizeMeasure {
+  name: string;      // ex: 'Quadril', 'Cintura', 'Busto', 'Altura'
+  value: number;
+  unit: 'cm' | 'm';
+}
+
+export interface SizingModel {
+  id: string;
+  store_id: string;
+  name: string;      // ex: 'Modelo Calça Jeans Useanny'
+  size_name: string; // ex: 'P', 'M', 'G', 'GG'
+  measures: SizeMeasure[];
+  created_at?: string;
+  updated_at?: string;
+}
+
 
 export const isSupabaseConfigured = !!import.meta.env.VITE_SUPABASE_URL && !!import.meta.env.VITE_SUPABASE_ANON_KEY && !!supabase;
 
@@ -392,10 +409,10 @@ const DEFAULT_PRODUCTS: Product[] = [
     id: 'p1',
     store_id: DEFAULT_STORE.id,
     name: 'Vestido Floral Verão',
-    image_url: 'https://images.unsplash.com/photo-1581044777550-4cfa607037dc?w=200&auto=format&fit=crop&q=60',
-    product_url: 'https://useanny.com.br/products/vestido-floral',
+    image_url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80',
+    product_url: 'https://useanny.com.br/produtos/vestido-floral',
     price: 129.90,
-    sku: 'VFV001',
+    sku: 'PROD-VEST-FLORAL',
     short_description: 'Vestido leve e elegante para o verão.',
     active: true,
   },
@@ -403,10 +420,10 @@ const DEFAULT_PRODUCTS: Product[] = [
     id: 'p2',
     store_id: DEFAULT_STORE.id,
     name: 'Bolsa de Couro Clássica',
-    image_url: 'https://images.unsplash.com/photo-1566150905458-1bf1666d5023?w=200&auto=format&fit=crop&q=60',
-    product_url: 'https://useanny.com.br/products/bolsa-couro',
+    image_url: 'https://images.unsplash.com/photo-1566150905458-1bf1666d5023?w=400&q=80',
+    product_url: 'https://useanny.com.br/produtos/bolsa-couro',
     price: 299.00,
-    sku: 'BCC002',
+    sku: 'PROD-BOLSA-COURO',
     short_description: 'Bolsa sofisticada para todas as ocasiões.',
     active: true,
   },
@@ -442,6 +459,41 @@ const DEFAULT_METRICS: Metric[] = [
   { id: 'm5', story_id: 's2', event_type: 'whatsapp_click', page_url: '/home', device_type: 'mobile', browser: 'Safari', created_at: new Date().toISOString() },
 ];
 
+const DEFAULT_SIZING_MODELS: SizingModel[] = [
+  {
+    id: 'sm1',
+    store_id: DEFAULT_STORE.id,
+    name: 'Tabela Jeans Regular Feminina',
+    size_name: 'M',
+    measures: [
+      { name: 'Cintura', value: 78, unit: 'cm' },
+      { name: 'Quadril', value: 96, unit: 'cm' },
+      { name: 'Comprimento', value: 1.02, unit: 'm' },
+    ]
+  },
+  {
+    id: 'sm2',
+    store_id: DEFAULT_STORE.id,
+    name: 'Tabela Jeans Regular Feminina',
+    size_name: 'G',
+    measures: [
+      { name: 'Cintura', value: 84, unit: 'cm' },
+      { name: 'Quadril', value: 104, unit: 'cm' },
+      { name: 'Comprimento', value: 1.05, unit: 'm' },
+    ]
+  },
+  {
+    id: 'sm3',
+    store_id: DEFAULT_STORE.id,
+    name: 'Cropped Tricot Alça Fina',
+    size_name: 'P',
+    measures: [
+      { name: 'Busto', value: 88, unit: 'cm' },
+      { name: 'Comprimento', value: 38, unit: 'cm' },
+    ]
+  }
+];
+
 
 // --- Fallback em memória e inicialização do localStorage ---
 let memoryStores = [DEFAULT_STORE];
@@ -456,6 +508,7 @@ let memoryDisplayLocations = [...DEFAULT_DISPLAY_LOCATIONS];
 let memoryPageRules = [...DEFAULT_PAGE_RULES];
 let memoryComments = [...DEFAULT_COMMENTS];
 let memoryMetrics = [...DEFAULT_METRICS];
+let memorySizingModels = [...DEFAULT_SIZING_MODELS];
 
 
 const initLocalStorage = () => {
@@ -474,6 +527,7 @@ const initLocalStorage = () => {
         { key: 'vidlytics_page_rules', default: DEFAULT_PAGE_RULES },
         { key: 'vidlytics_comments', default: DEFAULT_COMMENTS },
         { key: 'vidlytics_metrics', default: DEFAULT_METRICS },
+        { key: 'vidlytics_sizing_models', default: DEFAULT_SIZING_MODELS },
       ];
 
       items.forEach(item => {
@@ -495,6 +549,7 @@ const initLocalStorage = () => {
       memoryPageRules = JSON.parse(localStorage.getItem('vidlytics_page_rules') || '[]');
       memoryComments = JSON.parse(localStorage.getItem('vidlytics_comments') || '[]');
       memoryMetrics = JSON.parse(localStorage.getItem('vidlytics_metrics') || '[]');
+      memorySizingModels = JSON.parse(localStorage.getItem('vidlytics_sizing_models') || '[]');
 
     }
   } catch (e) {
@@ -594,6 +649,7 @@ const createCrudFunctions = <T extends { id: string; store_id?: string; created_
           case 'page_rules': memoryPageRules = newMemoryArray as PageRule[]; break;
           case 'comments': memoryComments = newMemoryArray as Comment[]; break;
           case 'metrics': memoryMetrics = newMemoryArray as Metric[]; break;
+          case 'sizing_models': memorySizingModels = newMemoryArray as SizingModel[]; break;
         }
       } catch (e) {
         const index = memoryArray.findIndex((s: T) => s.id === item.id);
@@ -634,6 +690,7 @@ const createCrudFunctions = <T extends { id: string; store_id?: string; created_
           case 'page_rules': memoryPageRules = newMemoryArray as PageRule[]; break;
           case 'comments': memoryComments = newMemoryArray as Comment[]; break;
           case 'metrics': memoryMetrics = newMemoryArray as Metric[]; break;
+          case 'sizing_models': memorySizingModels = newMemoryArray as SizingModel[]; break;
         }
       } catch (e) {
         // Update memory array directly
@@ -660,6 +717,7 @@ export const db = {
   pageRules: createCrudFunctions<PageRule>('page_rules', memoryPageRules, DEFAULT_PAGE_RULES),
   comments: createCrudFunctions<Comment>('comments', memoryComments, DEFAULT_COMMENTS),
   metrics: createCrudFunctions<Metric>('metrics', memoryMetrics, DEFAULT_METRICS),
+  sizingModels: createCrudFunctions<SizingModel>('sizing_models', memorySizingModels, DEFAULT_SIZING_MODELS),
 
   // Métodos específicos para incrementar contadores (mantidos para simplicidade no dashboard)
   async incrementViewCount(storyId: string): Promise<void> {
