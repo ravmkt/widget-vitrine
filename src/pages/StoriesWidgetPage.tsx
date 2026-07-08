@@ -81,6 +81,8 @@ const StoriesWidgetPage = () => {
   const [currentModel, setCurrentModel] = useState<SizingModel | null>(null);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
 const [showMeasuresPanel, setShowMeasuresPanel] = useState(false);
+const [commentText, setCommentText] = useState('');
+const [videoError, setVideoError] = useState(false);
 
 
   const selectedStory = selectedIndex !== null ? stories[selectedIndex] : null;
