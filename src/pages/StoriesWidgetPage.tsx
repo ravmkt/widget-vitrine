@@ -25,6 +25,11 @@ import {
   Ruler,
   Send,
   Smile,
+  Copy,
+  Mail,
+  Facebook,
+  Instagram,
+  User,
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import WhatsAppIcon from '@/components/WhatsAppIcon';
@@ -45,6 +50,20 @@ type VideoWithFallbacks = Video & {
   source_url?: string;
   url?: string;
   src?: string;
+  story_id?: string;
+  storyId?: string;
+  story_ids?: string[];
+  stories?: string[];
+};
+
+type StoryWithFallbacks = Story & {
+  video_id?: string;
+  video_ids?: string[];
+  videos?: string[];
+  like_count?: number;
+  likes_count?: number;
+  likes?: number;
+  likeCount?: number;
 };
 
 type StoryComment = {
@@ -64,6 +83,8 @@ type StoryComment = {
   status?: string;
   created_at: string;
 };
+
+type ShareOption = 'native' | 'whatsapp' | 'facebook' | 'instagram' | 'email' | 'copy';
 
 const COMMENT_STORAGE_KEYS = [
   'vidlytics_story_comments',
@@ -215,6 +236,35 @@ const mergeComments = (items: StoryComment[]) => {
   );
 };
 
+const mergeVideos = (items: Video[]) => {
+  const map = new Map<string, Video>();
+
+  items.forEach((item) => {
+    if (item?.id) {
+      map.set(item.id, item);
+    }
+  });
+
+  return Array.from(map.values());
+};
+
+const getStoryLikeCount = (story?: Story | null) => {
+  if (!story) return 0;
+
+  const item = story as StoryWithFallbacks;
+
+  const value =
+    item.like_count ??
+    item.likes_count ??
+    item.likes ??
+    item.likeCount ??
+    0;
+
+  const numberValue = Number(value);
+
+  return Number.isFinite(numberValue) ? Math.max(0, numberValue) : 0;
+};
+
 const StoriesWidgetPage = () => {
   const { storeId } = useParams();
   const [searchParams] = useSearchParams();
@@ -230,18 +280,22 @@ const StoriesWidgetPage = () => {
   const [storyVideosMap, setStoryVideosMap] = useState<Map<string, Video[]>>(new Map());
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const [isMuted, setIsMuted] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
 
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [showMeasuresPanel, setShowMeasuresPanel] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showSharePanel, setShowSharePanel] = useState(false);
 
   const [copiedLink, setCopiedLink] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const [commentAuthorName, setCommentAuthorName] = useState('');
   const [selectedEmoji, setSelectedEmoji] = useState<string>('😍');
   const [comments, setComments] = useState<StoryComment[]>([]);
   const [videoError, setVideoError] = useState(false);
@@ -251,7 +305,8 @@ const StoriesWidgetPage = () => {
 
   const selectedStory = selectedIndex !== null ? stories[selectedIndex] : null;
   const videosForSelectedStory = selectedStory ? storyVideosMap.get(selectedStory.id) || [] : [];
-  const mainVideo = videosForSelectedStory[0] || null;
+  const totalVideosInStory = videosForSelectedStory.length;
+  const mainVideo = videosForSelectedStory[currentVideoIndex] || videosForSelectedStory[0] || null;
 
   const selectedAppearance =
     selectedStory?.appearance_id
@@ -305,6 +360,29 @@ const StoriesWidgetPage = () => {
     return currentProduct?.name || selectedStory?.title || 'produto';
   };
 
+  const getSharePayload = () => {
+    const storyUrl = getStoryPublicUrl();
+    const productUrl = getCurrentProductUrl();
+    const productName = getCurrentProductName();
+
+    const text = [
+      'Olha esse vídeo que achei interessante:',
+      selectedStory?.title || productName,
+      '',
+      `Story: ${storyUrl}`,
+      currentProduct ? `Produto: ${currentProduct.name}` : '',
+      productUrl ? `Link do produto: ${productUrl}` : '',
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    return {
+      title: selectedStory?.title || productName,
+      text,
+      url: storyUrl,
+    };
+  };
+
   const buildProductMessage = () => {
     const productName = getCurrentProductName();
     const productUrl = getCurrentProductUrl();
@@ -315,23 +393,6 @@ const StoriesWidgetPage = () => {
       productName,
       productUrl ? `Link: ${productUrl}` : '',
       productImageUrl ? `Imagem: ${productImageUrl}` : '',
-    ]
-      .filter(Boolean)
-      .join('\n');
-  };
-
-  const buildShareMessage = () => {
-    const productName = getCurrentProductName();
-    const productUrl = getCurrentProductUrl();
-    const storyUrl = getStoryPublicUrl();
-
-    return [
-      'Olha esse vídeo que achei interessante:',
-      selectedStory?.title || productName,
-      '',
-      `Story: ${storyUrl}`,
-      currentProduct ? `Produto: ${currentProduct.name}` : '',
-      productUrl ? `Link do produto: ${productUrl}` : '',
     ]
       .filter(Boolean)
       .join('\n');
@@ -383,6 +444,129 @@ const StoriesWidgetPage = () => {
     }
 
     setComments((prev) => mergeComments([comment, ...prev]));
+  };
+
+  const openStory = (index: number) => {
+    setSelectedIndex(index);
+    setCurrentVideoIndex(0);
+  };
+
+  const closeStory = () => {
+    setSelectedIndex(null);
+    setCurrentVideoIndex(0);
+    setShowCommentsPanel(false);
+    setShowMeasuresPanel(false);
+    setShowEmojiPicker(false);
+    setShowSharePanel(false);
+  };
+
+  const goToNextVideoOrStory = () => {
+    if (totalVideosInStory > 0 && currentVideoIndex < totalVideosInStory - 1) {
+      setCurrentVideoIndex((prev) => prev + 1);
+      return;
+    }
+
+    if (selectedIndex !== null && stories.length > 1) {
+      setSelectedIndex((selectedIndex + 1) % stories.length);
+      setCurrentVideoIndex(0);
+      return;
+    }
+
+    setIsPlaying(false);
+  };
+
+  const goToPreviousVideoOrStory = () => {
+    if (currentVideoIndex > 0) {
+      setCurrentVideoIndex((prev) => prev - 1);
+      return;
+    }
+
+    if (selectedIndex !== null && stories.length > 1) {
+      const previousStoryIndex = (selectedIndex - 1 + stories.length) % stories.length;
+      const previousStory = stories[previousStoryIndex];
+      const previousStoryVideos = previousStory
+        ? storyVideosMap.get(previousStory.id) || []
+        : [];
+
+      setSelectedIndex(previousStoryIndex);
+      setCurrentVideoIndex(Math.max(previousStoryVideos.length - 1, 0));
+    }
+  };
+
+  const handleShare = () => {
+    if (!selectedStory) return;
+
+    setShowSharePanel(true);
+  };
+
+  const handleShareOption = async (type: ShareOption) => {
+    if (!selectedStory) return;
+
+    const payload = getSharePayload();
+
+    try {
+      await db.incrementClickCount(selectedStory.id);
+    } catch {
+      //
+    }
+
+    try {
+      switch (type) {
+        case 'native': {
+          if (navigator.share) {
+            await navigator.share(payload);
+          } else {
+            await navigator.clipboard.writeText(payload.text);
+            showSuccess('Mensagem copiada!');
+          }
+
+          break;
+        }
+
+        case 'whatsapp': {
+          window.open(`https://wa.me/?text=${encodeURIComponent(payload.text)}`, '_blank');
+          break;
+        }
+
+        case 'facebook': {
+          window.open(
+            `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(payload.url)}`,
+            '_blank'
+          );
+          break;
+        }
+
+        case 'instagram': {
+          await navigator.clipboard.writeText(payload.text);
+          showSuccess('Texto copiado! Cole no Instagram.');
+          window.open('https://www.instagram.com/', '_blank');
+          break;
+        }
+
+        case 'email': {
+          window.open(
+            `mailto:?subject=${encodeURIComponent(payload.title)}&body=${encodeURIComponent(
+              payload.text
+            )}`
+          );
+          break;
+        }
+
+        case 'copy':
+        default: {
+          await navigator.clipboard.writeText(payload.text);
+          setCopiedLink(true);
+          showSuccess('Link copiado!');
+          setTimeout(() => setCopiedLink(false), 2000);
+          break;
+        }
+      }
+
+      setShowSharePanel(false);
+    } catch (error) {
+      console.error('Erro ao compartilhar:', error);
+      showError('Não foi possível compartilhar.');
+    }
   };
 
   const renderStoryThumb = (video?: Video | null) => {
@@ -461,6 +645,7 @@ const StoriesWidgetPage = () => {
 
         if (previewStoryId && visibleStories.length > 0) {
           setSelectedIndex(0);
+          setCurrentVideoIndex(0);
         }
 
         const allStoryVideos = await db.storyVideos.getAll();
@@ -469,11 +654,36 @@ const StoriesWidgetPage = () => {
         const map = new Map<string, Video[]>();
 
         visibleStories.forEach((story) => {
-          const videos = allStoryVideos
+          const storyItem = story as StoryWithFallbacks;
+
+          const relationVideos = allStoryVideos
             .filter((storyVideo) => storyVideo.story_id === story.id)
             .sort((a, b) => a.position - b.position)
             .map((storyVideo) => allVideos.find((video) => video.id === storyVideo.video_id))
             .filter((video): video is Video => Boolean(video));
+
+          const storyFieldVideoIds = [
+            storyItem.video_id,
+            ...(Array.isArray(storyItem.video_ids) ? storyItem.video_ids : []),
+            ...(Array.isArray(storyItem.videos) ? storyItem.videos : []),
+          ].filter(Boolean) as string[];
+
+          const storyFieldVideos = storyFieldVideoIds
+            .map((videoId) => allVideos.find((video) => video.id === videoId))
+            .filter((video): video is Video => Boolean(video));
+
+          const directVideos = allVideos.filter((video) => {
+            const videoItem = video as VideoWithFallbacks;
+
+            return (
+              videoItem.story_id === story.id ||
+              videoItem.storyId === story.id ||
+              videoItem.story_ids?.includes(story.id) ||
+              videoItem.stories?.includes(story.id)
+            );
+          });
+
+          const videos = mergeVideos([...relationVideos, ...storyFieldVideos, ...directVideos]);
 
           map.set(story.id, videos);
         });
@@ -496,18 +706,23 @@ const StoriesWidgetPage = () => {
       setCurrentModel(null);
       setShowCommentsPanel(false);
       setShowMeasuresPanel(false);
+      setShowEmojiPicker(false);
+      setShowSharePanel(false);
       setComments([]);
+      setLikeCount(0);
       return;
     }
 
     db.incrementViewCount(selectedStory.id);
 
     setIsLiked(false);
+    setLikeCount(getStoryLikeCount(selectedStory));
     setIsPlaying(true);
     setVideoError(false);
     setShowCommentsPanel(false);
     setShowMeasuresPanel(false);
     setShowEmojiPicker(false);
+    setShowSharePanel(false);
     setCommentText('');
     setSelectedEmoji('😍');
     setIsMuted(generalSettings?.muted_by_default ?? true);
@@ -543,6 +758,14 @@ const StoriesWidgetPage = () => {
   }, [selectedStory?.id, generalSettings?.muted_by_default]);
 
   useEffect(() => {
+    if (!selectedStory) return;
+
+    if (totalVideosInStory > 0 && currentVideoIndex > totalVideosInStory - 1) {
+      setCurrentVideoIndex(0);
+    }
+  }, [selectedStory?.id, totalVideosInStory, currentVideoIndex]);
+
+  useEffect(() => {
     setVideoError(false);
     setIsPlaying(true);
 
@@ -560,7 +783,7 @@ const StoriesWidgetPage = () => {
     }, 250);
 
     return () => clearTimeout(timer);
-  }, [mainVideo?.id, videoPlayableUrl]);
+  }, [mainVideo?.id, videoPlayableUrl, isMuted, generalSettings?.autoplay]);
 
   const handleRetryVideo = () => {
     if (!videoPlayableUrl) {
@@ -628,29 +851,29 @@ const StoriesWidgetPage = () => {
     setIsMuted(videoRef.current.muted);
   };
 
-  const handleToggleLike = () => {
-    setIsLiked((prev) => !prev);
-  };
-
-  const handleShare = async () => {
+  const handleToggleLike = async () => {
     if (!selectedStory) return;
 
-    const message = buildShareMessage();
+    const nextLiked = !isLiked;
+
+    setIsLiked(nextLiked);
+    setLikeCount((prev) => Math.max(0, prev + (nextLiked ? 1 : -1)));
 
     try {
-      await db.incrementClickCount(selectedStory.id);
-      window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-    } catch (error) {
-      console.error('Erro ao compartilhar:', error);
+      const dbLikeApi = db as unknown as {
+        incrementLikeCount?: (storyId: string) => Promise<void>;
+        decrementLikeCount?: (storyId: string) => Promise<void>;
+      };
 
-      try {
-        await navigator.clipboard.writeText(message);
-        setCopiedLink(true);
-        showSuccess('Mensagem copiada!');
-        setTimeout(() => setCopiedLink(false), 2000);
-      } catch {
-        showError('Não foi possível compartilhar.');
+      if (nextLiked && dbLikeApi.incrementLikeCount) {
+        await dbLikeApi.incrementLikeCount(selectedStory.id);
       }
+
+      if (!nextLiked && dbLikeApi.decrementLikeCount) {
+        await dbLikeApi.decrementLikeCount(selectedStory.id);
+      }
+    } catch {
+      //
     }
   };
 
@@ -682,6 +905,7 @@ const StoriesWidgetPage = () => {
     if (!selectedStory) return;
 
     const text = commentText.trim();
+    const authorName = commentAuthorName.trim() || 'Visitante';
 
     if (!text) {
       showError('Digite um comentário antes de publicar.');
@@ -698,9 +922,9 @@ const StoriesWidgetPage = () => {
       product_url: getCurrentProductUrl(),
       product_image_url: getCurrentProductImageUrl(),
       text,
-      emoji: selectedEmoji,
-      author_name: 'Visitante',
-      user_name: 'Visitante',
+      emoji: '',
+      author_name: authorName,
+      user_name: authorName,
       read: false,
       status: 'published',
       created_at: new Date().toISOString(),
@@ -773,7 +997,7 @@ const StoriesWidgetPage = () => {
           {stories.map((story, index) => (
             <button
               key={story.id}
-              onClick={() => setSelectedIndex(index)}
+              onClick={() => openStory(index)}
               className="group relative h-28 w-20 flex-shrink-0 overflow-hidden rounded-3xl border-2 border-violet-500 bg-slate-900 shadow-lg sm:h-32 sm:w-24"
             >
               {renderStoryThumb(storyVideosMap.get(story.id)?.[0] || null)}
@@ -787,6 +1011,12 @@ const StoriesWidgetPage = () => {
                   {story.title}
                 </div>
               )}
+
+              {(storyVideosMap.get(story.id)?.length || 0) > 1 && (
+                <div className="absolute right-2 top-2 rounded-full bg-black/70 px-2 py-1 text-[9px] font-black text-white">
+                  {storyVideosMap.get(story.id)?.length} vídeos
+                </div>
+              )}
             </button>
           ))}
         </div>
@@ -795,31 +1025,62 @@ const StoriesWidgetPage = () => {
       {selectedStory && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 px-4">
           <div className="relative aspect-[9/16] max-h-[calc(100vh-24px)] w-full max-w-[420px] overflow-hidden rounded-[40px] bg-black shadow-2xl">
-            <div className="absolute left-0 right-0 top-0 z-50 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent p-6">
+            {totalVideosInStory > 1 && (
+              <div className="absolute left-4 right-4 top-3 z-[70] flex gap-1.5">
+                {videosForSelectedStory.map((video, index) => (
+                  <button
+                    key={`${video.id}-${index}`}
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setCurrentVideoIndex(index);
+                    }}
+                    className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/25"
+                  >
+                    <span
+                      className={cn(
+                        'block h-full rounded-full transition-all',
+                        index < currentVideoIndex && 'w-full bg-white',
+                        index === currentVideoIndex && 'w-full bg-violet-400',
+                        index > currentVideoIndex && 'w-0 bg-white'
+                      )}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="absolute left-0 right-0 top-0 z-50 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent p-6 pt-8">
               <div>
                 <h3 className="text-sm font-black text-white">{selectedStoryTitle}</h3>
-                <p className="text-[10px] font-bold uppercase text-white/60">{storeName}</p>
+                <p className="text-[10px] font-bold uppercase text-white/60">
+                  {storeName}
+                  {totalVideosInStory > 1
+                    ? ` • ${currentVideoIndex + 1}/${totalVideosInStory}`
+                    : ''}
+                </p>
               </div>
 
-              <button onClick={() => setSelectedIndex(null)} className={darkBtn}>
+              <button onClick={closeStory} className={darkBtn}>
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {mainVideo && videoPlayableUrl && !videoError ? (
               <video
-                key={`${mainVideo.id}-${videoPlayableUrl.slice(0, 40)}`}
+                key={`${mainVideo.id}-${videoPlayableUrl.slice(0, 40)}-${currentVideoIndex}`}
                 ref={videoRef}
                 src={videoPlayableUrl}
                 poster={videoPosterUrl || undefined}
                 autoPlay={generalSettings?.autoplay ?? true}
                 muted={isMuted}
                 playsInline
-                loop
+                loop={false}
                 controls={generalSettings?.show_video_controls ?? false}
                 preload="auto"
                 className="h-full w-full cursor-pointer object-cover"
                 onClick={handleTogglePlay}
+                onEnded={goToNextVideoOrStory}
                 onLoadedData={() => {
                   setVideoError(false);
 
@@ -898,19 +1159,34 @@ const StoriesWidgetPage = () => {
               </button>
 
               {showLikeButton && (
-                <button onClick={handleToggleLike} className={darkBtn}>
+                <button onClick={handleToggleLike} className={cn(darkBtn, 'relative')}>
                   <Heart
                     className={cn(
                       'h-5 w-5 transition-all',
                       isLiked ? 'fill-rose-500 text-rose-500' : 'text-white'
                     )}
                   />
+
+                  {likeCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-black text-white ring-2 ring-black">
+                      {likeCount > 99 ? '99+' : likeCount}
+                    </span>
+                  )}
                 </button>
               )}
 
               {showCommentButton && (
-                <button onClick={() => setShowCommentsPanel(true)} className={darkBtn}>
+                <button
+                  onClick={() => setShowCommentsPanel(true)}
+                  className={cn(darkBtn, 'relative')}
+                >
                   <MessageCircle className="h-5 w-5" />
+
+                  {comments.length > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-violet-600 px-1 text-[10px] font-black text-white ring-2 ring-black">
+                      {comments.length > 99 ? '99+' : comments.length}
+                    </span>
+                  )}
                 </button>
               )}
 
@@ -992,12 +1268,12 @@ const StoriesWidgetPage = () => {
                 </div>
               )}
 
-            {stories.length > 1 && (
+            {(stories.length > 1 || totalVideosInStory > 1) && (
               <>
                 <button
                   onClick={(event) => {
                     event.stopPropagation();
-                    setSelectedIndex((prev) => ((prev ?? 0) - 1 + stories.length) % stories.length);
+                    goToPreviousVideoOrStory();
                   }}
                   className="absolute left-2 top-1/2 z-40 -translate-y-1/2 p-2 text-white/50 transition-colors hover:text-white"
                 >
@@ -1007,7 +1283,7 @@ const StoriesWidgetPage = () => {
                 <button
                   onClick={(event) => {
                     event.stopPropagation();
-                    setSelectedIndex((prev) => ((prev ?? 0) + 1) % stories.length);
+                    goToNextVideoOrStory();
                   }}
                   className="absolute right-2 top-1/2 z-40 -translate-y-1/2 p-2 text-white/50 transition-colors hover:text-white"
                 >
@@ -1016,6 +1292,78 @@ const StoriesWidgetPage = () => {
               </>
             )}
           </div>
+
+          {showSharePanel && (
+            <div className="fixed inset-0 z-[10000] flex animate-fade-in items-center justify-center bg-black/80 p-4">
+              <div className="relative w-full max-w-sm rounded-[36px] border border-slate-800 bg-slate-900 p-7 shadow-2xl">
+                <button
+                  onClick={() => setShowSharePanel(false)}
+                  className="absolute right-5 top-5 rounded-full bg-slate-950 p-2 text-slate-400 hover:text-white"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+
+                <div className="mb-6">
+                  <h3 className="text-2xl font-black text-white">Compartilhar</h3>
+                  <p className="mt-1 text-sm font-semibold text-slate-400">
+                    Escolha onde deseja enviar o story.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {navigator.share && (
+                    <button
+                      onClick={() => handleShareOption('native')}
+                      className="col-span-2 flex items-center justify-center gap-2 rounded-3xl bg-white px-4 py-4 text-sm font-black text-slate-950"
+                    >
+                      <Share2 className="h-5 w-5" />
+                      Opções do dispositivo
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => handleShareOption('whatsapp')}
+                    className="flex items-center justify-center gap-2 rounded-3xl bg-[#25D366] px-4 py-4 text-sm font-black text-white"
+                  >
+                    <WhatsAppIcon size={20} />
+                    WhatsApp
+                  </button>
+
+                  <button
+                    onClick={() => handleShareOption('facebook')}
+                    className="flex items-center justify-center gap-2 rounded-3xl bg-[#1877F2] px-4 py-4 text-sm font-black text-white"
+                  >
+                    <Facebook className="h-5 w-5" />
+                    Facebook
+                  </button>
+
+                  <button
+                    onClick={() => handleShareOption('instagram')}
+                    className="flex items-center justify-center gap-2 rounded-3xl bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-4 text-sm font-black text-white"
+                  >
+                    <Instagram className="h-5 w-5" />
+                    Instagram
+                  </button>
+
+                  <button
+                    onClick={() => handleShareOption('email')}
+                    className="flex items-center justify-center gap-2 rounded-3xl bg-slate-700 px-4 py-4 text-sm font-black text-white"
+                  >
+                    <Mail className="h-5 w-5" />
+                    E-mail
+                  </button>
+
+                  <button
+                    onClick={() => handleShareOption('copy')}
+                    className="col-span-2 flex items-center justify-center gap-2 rounded-3xl bg-violet-600 px-4 py-4 text-sm font-black text-white"
+                  >
+                    <Copy className="h-5 w-5" />
+                    Copiar link
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {showCommentsPanel && (
             <div className="fixed inset-0 z-[10000] flex animate-fade-in items-center justify-center bg-black/80 p-4">
@@ -1049,7 +1397,7 @@ const StoriesWidgetPage = () => {
                       >
                         <div className="mb-2 flex items-center justify-between gap-3">
                           <div className="flex items-center gap-2">
-                            <span className="text-xl">{comment.emoji || '💬'}</span>
+                            <User className="h-4 w-4 text-violet-400" />
                             <span className="text-xs font-black uppercase text-white">
                               {comment.author_name || comment.user_name || 'Visitante'}
                             </span>
@@ -1075,6 +1423,13 @@ const StoriesWidgetPage = () => {
                 </div>
 
                 <div className="space-y-4">
+                  <input
+                    value={commentAuthorName}
+                    onChange={(event) => setCommentAuthorName(event.target.value)}
+                    placeholder="Seu nome"
+                    className="w-full rounded-3xl border border-slate-800 bg-slate-950 px-5 py-4 text-sm font-semibold text-white placeholder-slate-600 outline-none focus:border-violet-500"
+                  />
+
                   <div className="relative">
                     <textarea
                       value={commentText}
@@ -1101,6 +1456,9 @@ const StoriesWidgetPage = () => {
                           type="button"
                           onClick={() => {
                             setSelectedEmoji(emoji);
+                            setCommentText((prev) =>
+                              prev.trim() ? `${prev}${prev.endsWith(' ') ? '' : ' '}${emoji}` : emoji
+                            );
                             setShowEmojiPicker(false);
                           }}
                           className={cn(
