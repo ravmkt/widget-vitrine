@@ -120,8 +120,8 @@ const StoriesPage = () => {
         setPosition(maxPos + 1);
       }
     } catch (error) {
-      console.error('Erro ao carregar stories:', error);
-      showError('Erro ao carregar a lista de stories.');
+      console.error('Erro ao carregar dados de stories:', error);
+      showError('Erro ao carregar os stories.');
     } finally {
       setLoading(false);
     }
@@ -139,13 +139,28 @@ const StoriesPage = () => {
     }
 
     if (searchTerm) {
+      currentStories = currentStories.filter(v =>
+        v.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    setFilteredVideos(currentVideos => {
+      return currentStories;
+    });
+  }, [allStories, filterStatus, searchTerm]);
+
+  const filteredStoriesToShow = useMemo(() => {
+    let currentStories = stories;
+    if (filterStatus !== 'all') {
+      currentStories = currentStories.filter(s => s.active === (filterStatus === 'active'));
+    }
+    if (searchTerm) {
       currentStories = currentStories.filter(s =>
         String(s.title ?? '').toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
-    setFilteredStories(currentStories);
-  }, [allStories, filterStatus, searchTerm]);
+    return currentStories;
+  }, [stories, filterStatus, searchTerm]);
 
   const isValidUrl = (url: string) => {
     try {
@@ -192,8 +207,8 @@ const StoriesPage = () => {
         const newProduct: Product = {
           id: Math.random().toString(36).substr(2, 9),
           store_id: store.id,
-          name: newProductForm.name,
-          product_url: newProductForm.product_url,
+          name: newProductForm.name.trim(),
+          product_url: newProductForm.product_url.trim(),
           image_url: newProductForm.image_url,
           price: newProductForm.price,
           active: true,
@@ -213,11 +228,13 @@ const StoriesPage = () => {
         cta_enabled: ctaEnabled,
         cta_text: ctaText || undefined,
         cta_type: ctaEnabled ? ctaType : 'none',
-        cta_url: ctaEnabled && ctaType === 'custom_link' ? ctaUrl : undefined,
-        whatsapp_message: ctaEnabled && ctaType === 'whatsapp' ? whatsappMessage : undefined,
-        position,
-        view_count: 0,
-        click_count: 0,
+        cta_url: ctaEnabled && ctaType === 'custom_link' ? formData.cta_url : undefined,
+        whatsapp_message: cta_enabled && cta_type === 'whatsapp' ? formData.whatsapp_message : undefined,
+        position: formData.position,
+        view_count: formData.view_count,
+        click_count: formData.click_count,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
       const savedStory = await db.stories.save(newStory);
 
@@ -436,7 +453,7 @@ const StoriesPage = () => {
   };
 
   const addDisplayLocation = () => {
-    setDisplayLocations(prev => [...prev, { selector: '', position: 'after_element' }]);
+    setDisplayLocations(prev => [...prev, { id: Math.random().toString(36).substr(2, 9), store_id: store?.id || '', story_id: '', selector: '', position: 'after_element' }]);
   };
 
   const updateDisplayLocation = (index: number, field: string, value: string) => {
@@ -641,7 +658,7 @@ const StoriesPage = () => {
                     <button
                       type="button"
                       onClick={() => setActive(!active)}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl border text-sm md:text-base font-bold transition-all ${
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl border text-sm font-semibold transition-all ${
                         active
                           ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
                           : 'border-slate-850 bg-slate-950 text-slate-500'
@@ -807,12 +824,11 @@ const StoriesPage = () => {
                         required
                         value={ctaType}
                         onChange={(e) => setCtaType(e.target.value as CTAType)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3 text-sm text-slate-100 font-bold"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3 text-sm text-slate-100 font-semibold"
                       >
-                        <option value="custom_link">Link Personalizado</option>
-                        <option value="product">Produto</option>
-                        <option value="whatsapp">WhatsApp</option>
-                        <option value="none">Nenhuma Ação</option>
+                        <option value="custom_link">Link customizado</option>
+                        <option value="product">Produto vinculado</option>
+                        <option value="whatsapp">Falar no WhatsApp</option>
                       </select>
                     </div>
 
@@ -875,7 +891,9 @@ const StoriesPage = () => {
                               setFormErrors(prev => ({ ...prev, productSelection: '' }));
                             }}
                             className={`w-full bg-slate-950 border rounded-2xl px-4 py-3 text-sm text-slate-100 font-bold focus:outline-none focus:ring-1 ${
-                              formErrors.productSelection ? 'border-rose-500' : 'border-rose-500' : 'border-slate-800 focus:border-violet-500 focus:ring-violet-500'
+                              formErrors.productSelection
+                                ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500'
+                                : 'border-slate-800 focus:border-violet-500 focus:ring-violet-500'
                             }`}
                           >
                             <option value="">-- Selecione o Produto --</option>
@@ -1002,17 +1020,17 @@ const StoriesPage = () => {
         </div>
 
         {/* Lista de Stories */}
-        {filteredStories.length === 0 ? (
+        {filteredStoriesToShow.length === 0 ? (
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center max-w-2xl mx-auto shadow-xl">
             <Film className="w-12 h-12 text-slate-700 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-slate-200">Nenhum story encontrado</h3>
-            <p className="text-slate-400 text-sm md:text-base mt-1 mb-6">
+            <p className="text-slate-400 text-sm mt-1 mb-6">
               Ajuste seus filtros de busca ou clique no botão acima para cadastrar seu primeiro story em vídeo.
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
-            {filteredStories.map((story) => {
+            {filteredStoriesToShow.map((story) => {
               const coverVideo = storyVideosMap.get(story.id)?.find(sv => sv.is_cover);
               const thumbnailUrl = allVideosList.find(v => v.id === coverVideo?.video_id)?.thumbnail_url || 'https://via.placeholder.com/150';
               const appearanceName = appearances.find(app => app.id === story.appearance_id)?.name || 'Padrão da Loja';
@@ -1050,7 +1068,7 @@ const StoriesPage = () => {
                   <div className="p-5 flex-1 flex flex-col justify-between gap-4">
                     <div>
                       <h3 className="font-extrabold text-slate-100 text-lg md:text-xl line-clamp-1">{story.title}</h3>
-                      <p className="text-xs text-slate-400 mt-1 font-semibold uppercase tracking-wider">({videoCount} vídeos vinculados)</p>
+                      <p className="text-xs text-slate-400 mt-1 font-semibold uppercase tracking-wider">( {videoCount} vídeos vinculados )</p>
                       <p className="text-xs text-slate-400 mt-0.5 font-semibold">Estilo: {appearanceName}</p>
                     </div>
 
