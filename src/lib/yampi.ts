@@ -12,12 +12,11 @@ export interface YampiProduct {
     pricePath: string;
     imagePath: string;
   };
+  raw?: any;
 }
 
 export interface YampiHealth {
   status: string;
-  integrated: boolean;
-  timestamp: string;
   env: {
     YAMPI_ALIAS: boolean;
     YAMPI_TOKEN: boolean;
@@ -32,10 +31,17 @@ export const yampiClient = {
     return response.json();
   },
 
-  async listProducts(): Promise<YampiProduct[]> {
+  async listRawProducts(): Promise<any[]> {
     const response = await fetch(`/api/yampi/products`);
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Erro ao carregar produtos');
-    return data as YampiProduct[];
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Erro ao carregar produtos brutos');
+    }
+    return response.json();
+  },
+
+  async getDebugProduct(): Promise<any> {
+    const response = await fetch(`/api/yampi/debug`);
+    return response.json();
   }
 };
