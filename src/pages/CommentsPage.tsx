@@ -200,7 +200,7 @@ const CommentsPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-4 text-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500"></div>
         <p className="text-base text-slate-400 font-semibold font-mono">Carregando central de comentários...</p>
       </div>
     );
