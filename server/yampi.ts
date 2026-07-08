@@ -1,8 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import fetch from 'node-fetch'; // Standard fetch might be available in Node 18+, but adding node-fetch if needed.
-// Actually, in recent Node versions globalThis.fetch is available.
+
+// Node.js 18+ includes native fetch
+// If running on an older version, install node-fetch and import it.
 
 dotenv.config();
 
@@ -51,7 +52,7 @@ app.get('/api/yampi/products', async (req, res) => {
       image_url: p.images?.data?.[0]?.url || '',
       thumbnail_url: p.images?.data?.[0]?.url_thumbnail || '',
       product_url: p.url,
-      checkout_url: `https://${YAMPI_ALIAS}.yampi.store/checkout/cart/add/${p.id}` // Placeholder checkout URL logic
+      checkout_url: `https://${YAMPI_ALIAS}.yampi.store/checkout/cart/add/${p.id}`
     }));
 
     res.json(normalized);
