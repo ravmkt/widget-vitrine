@@ -54,6 +54,10 @@ type VideoWithFallbacks = Video & {
   storyId?: string;
   story_ids?: string[];
   stories?: string[];
+  like_count?: number;
+  likes_count?: number;
+  likes?: number;
+  likeCount?: number;
 };
 
 type StoryWithFallbacks = Story & {
@@ -71,6 +75,8 @@ type StoryComment = {
   store_id?: string;
   story_id: string;
   story_title?: string;
+  video_id?: string;
+  video_title?: string;
   product_id?: string;
   product_name?: string;
   product_url?: string;
@@ -93,12 +99,19 @@ type ShareOption =
   | 'email'
   | 'copy';
 
+type LocalVideoLike = {
+  liked: boolean;
+  count: number;
+};
+
 const COMMENT_STORAGE_KEYS = [
   'vidlytics_story_comments',
   'stories_comments',
   'story_comments',
   'comments',
 ];
+
+const VIDEO_LIKES_STORAGE_KEY = 'vidlytics_video_likes';
 
 const EMOJIS = [
   '😀',
@@ -234,6 +247,32 @@ const writeLocalComments = (comments: StoryComment[]) => {
   });
 };
 
+const readLocalVideoLikes = (): Record<string, LocalVideoLike> => {
+  try {
+    const raw = localStorage.getItem(VIDEO_LIKES_STORAGE_KEY);
+
+    if (!raw) return {};
+
+    const parsed = JSON.parse(raw);
+
+    if (parsed && typeof parsed === 'object') {
+      return parsed;
+    }
+  } catch {
+    //
+  }
+
+  return {};
+};
+
+const writeLocalVideoLikes = (likes: Record<string, LocalVideoLike>) => {
+  try {
+    localStorage.setItem(VIDEO_LIKES_STORAGE_KEY, JSON.stringify(likes));
+  } catch {
+    //
+  }
+};
+
 const mergeComments = (items: StoryComment[]) => {
   const map = new Map<string, StoryComment>();
 
@@ -260,10 +299,10 @@ const mergeVideos = (items: Video[]) => {
   return Array.from(map.values());
 };
 
-const getStoryLikeCount = (story?: Story | null) => {
-  if (!story) return 0;
+const getVideoLikeCount = (video?: Video | null) => {
+  if (!video) return 0;
 
-  const item = story as StoryWithFallbacks;
+  const item = video as VideoWithFallbacks;
 
   const value =
     item.like_count ??
@@ -320,12 +359,16 @@ const StoriesWidgetPage = () => {
   const totalVideosInStory = videosForSelectedStory.length;
   const mainVideo = videosForSelectedStory[currentVideoIndex] || videosForSelectedStory[0] || null;
 
+  const currentVideoId = mainVideo?.id || '';
+  const currentVideoKey = currentVideoId || selectedStory?.id || '';
+
   const selectedAppearance =
     selectedStory?.appearance_id
       ? appearances.find((item) => item.id === selectedStory.appearance_id) || currentAppearance
       : currentAppearance;
 
   const selectedStoryTitle = selectedStory?.title || 'Story';
+  const selectedVideoTitle = mainVideo?.title || selectedStoryTitle;
   const storeName = generalSettings?.store_name || 'Loja';
 
   const videoPlayableUrl = getVideoPlayableUrl(mainVideo);
@@ -359,6 +402,10 @@ const StoriesWidgetPage = () => {
     const url = new URL(window.location.href);
     url.searchParams.set('storyId', selectedStory.id);
 
+    if (currentVideoId) {
+      url.searchParams.set('videoId', currentVideoId);
+    }
+
     return url.toString();
   };
 
@@ -381,9 +428,9 @@ const StoriesWidgetPage = () => {
 
     const text = [
       'Olha esse vídeo que achei interessante:',
-      selectedStory?.title || productName,
+      selectedVideoTitle || productName,
       '',
-      `Story: ${storyUrl}`,
+      `Vídeo: ${storyUrl}`,
       currentProduct ? `Produto: ${currentProduct.name}` : '',
       productUrl ? `Link do produto: ${productUrl}` : '',
     ]
@@ -391,7 +438,7 @@ const StoriesWidgetPage = () => {
       .join('\n');
 
     return {
-      title: selectedStory?.title || productName,
+      title: selectedVideoTitle || productName,
       text,
       url: storyUrl,
     };
@@ -412,8 +459,15 @@ const StoriesWidgetPage = () => {
       .join('\n');
   };
 
-  const loadComments = async (storyId: string) => {
-    const localComments = readLocalComments().filter((comment) => comment.story_id === storyId);
+  const loadComments = async (storyId: string, videoId: string) => {
+    const localComments = readLocalComments().filter((comment) => {
+      if (videoId) {
+        return comment.story_id === storyId && comment.video_id === videoId;
+      }
+
+      return comment.story_id === storyId && !comment.video_id;
+    });
+
     let remoteComments: StoryComment[] = [];
 
     try {
@@ -425,7 +479,13 @@ const StoriesWidgetPage = () => {
           : await commentsApi.getAll();
 
         if (Array.isArray(response)) {
-          remoteComments = response.filter((comment: StoryComment) => comment.story_id === storyId);
+          remoteComments = response.filter((comment: StoryComment) => {
+            if (videoId) {
+              return comment.story_id === storyId && comment.video_id === videoId;
+            }
+
+            return comment.story_id === storyId && !comment.video_id;
+          });
         }
       }
     } catch {
@@ -458,6 +518,28 @@ const StoriesWidgetPage = () => {
     }
 
     setComments((prev) => mergeComments([comment, ...prev]));
+  };
+
+  const loadVideoLikeState = (video?: Video | null) => {
+    const key = video?.id || selectedStory?.id || '';
+
+    if (!key) {
+      setIsLiked(false);
+      setLikeCount(0);
+      return;
+    }
+
+    const localLikes = readLocalVideoLikes();
+    const localState = localLikes[key];
+
+    if (localState) {
+      setIsLiked(Boolean(localState.liked));
+      setLikeCount(Math.max(0, Number(localState.count || 0)));
+      return;
+    }
+
+    setIsLiked(false);
+    setLikeCount(getVideoLikeCount(video));
   };
 
   const openStory = (index: number) => {
@@ -774,8 +856,6 @@ const StoriesWidgetPage = () => {
 
     db.incrementViewCount(selectedStory.id);
 
-    setIsLiked(false);
-    setLikeCount(getStoryLikeCount(selectedStory));
     setIsPlaying(true);
     setVideoError(false);
     setShowCommentsPanel(false);
@@ -785,8 +865,6 @@ const StoriesWidgetPage = () => {
     setCommentText('');
     setSelectedEmoji('');
     setIsMuted(generalSettings?.muted_by_default ?? true);
-
-    loadComments(selectedStory.id);
 
     const fetchRelations = async () => {
       try {
@@ -823,6 +901,17 @@ const StoriesWidgetPage = () => {
       setCurrentVideoIndex(0);
     }
   }, [selectedStory?.id, totalVideosInStory, currentVideoIndex]);
+
+  useEffect(() => {
+    if (!selectedStory) return;
+
+    loadComments(selectedStory.id, currentVideoId);
+    loadVideoLikeState(mainVideo);
+    setShowCommentsPanel(false);
+    setShowEmojiPicker(false);
+    setCommentText('');
+    setSelectedEmoji('');
+  }, [selectedStory?.id, currentVideoId]);
 
   useEffect(() => {
     setVideoError(false);
@@ -911,25 +1000,39 @@ const StoriesWidgetPage = () => {
   };
 
   const handleToggleLike = async () => {
-    if (!selectedStory) return;
+    if (!currentVideoKey) return;
 
     const nextLiked = !isLiked;
+    const nextCount = Math.max(0, likeCount + (nextLiked ? 1 : -1));
 
     setIsLiked(nextLiked);
-    setLikeCount((prev) => Math.max(0, prev + (nextLiked ? 1 : -1)));
+    setLikeCount(nextCount);
+
+    const localLikes = readLocalVideoLikes();
+
+    localLikes[currentVideoKey] = {
+      liked: nextLiked,
+      count: nextCount,
+    };
+
+    writeLocalVideoLikes(localLikes);
 
     try {
-      const dbLikeApi = db as unknown as {
-        incrementLikeCount?: (storyId: string) => Promise<void>;
-        decrementLikeCount?: (storyId: string) => Promise<void>;
+      const api = db as unknown as {
+        incrementVideoLikeCount?: (videoId: string) => Promise<void>;
+        decrementVideoLikeCount?: (videoId: string) => Promise<void>;
+        incrementLikeCount?: (id: string) => Promise<void>;
+        decrementLikeCount?: (id: string) => Promise<void>;
       };
 
-      if (nextLiked && dbLikeApi.incrementLikeCount) {
-        await dbLikeApi.incrementLikeCount(selectedStory.id);
-      }
+      if (currentVideoId) {
+        if (nextLiked && api.incrementVideoLikeCount) {
+          await api.incrementVideoLikeCount(currentVideoId);
+        }
 
-      if (!nextLiked && dbLikeApi.decrementLikeCount) {
-        await dbLikeApi.decrementLikeCount(selectedStory.id);
+        if (!nextLiked && api.decrementVideoLikeCount) {
+          await api.decrementVideoLikeCount(currentVideoId);
+        }
       }
     } catch {
       //
@@ -981,6 +1084,8 @@ const StoriesWidgetPage = () => {
       store_id: currentStoreId || storeId || '',
       story_id: selectedStory.id,
       story_title: selectedStory.title,
+      video_id: currentVideoId,
+      video_title: selectedVideoTitle,
       product_id: currentProduct?.id,
       product_name: currentProduct?.name || selectedStory.title,
       product_url: getCurrentProductUrl(),
@@ -1055,6 +1160,10 @@ const StoriesWidgetPage = () => {
     'w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-md transition-all active:scale-95';
   const darkBtn = cn(btnClass, 'bg-black/35 border border-white/20 text-white hover:bg-black/55');
   const whiteBtn = cn(btnClass, 'bg-white text-slate-900 shadow-xl');
+  const purpleBtn = cn(
+    btnClass,
+    'bg-violet-600/95 border border-violet-300/30 text-white shadow-xl hover:bg-violet-500'
+  );
 
   return (
     <div className="w-full">
@@ -1175,7 +1284,7 @@ const StoriesWidgetPage = () => {
               >
                 <img
                   src={videoPosterUrl}
-                  alt={mainVideo.title || selectedStoryTitle}
+                  alt={selectedVideoTitle}
                   className="h-full w-full object-cover opacity-80"
                 />
 
@@ -1209,31 +1318,7 @@ const StoriesWidgetPage = () => {
               </button>
             )}
 
-            {hasNavigation && (
-              <div className="pointer-events-none absolute inset-0 z-[35] flex">
-                <button
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    goToPreviousVideoOrStory();
-                  }}
-                  className="pointer-events-auto h-full flex-1"
-                  aria-label="Anterior"
-                />
-
-                <button
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    goToNextVideoOrStory();
-                  }}
-                  className="pointer-events-auto h-full flex-1"
-                  aria-label="Próximo"
-                />
-              </div>
-            )}
-
-            <div className="absolute bottom-32 right-4 z-50 flex flex-col gap-5">
+            <div className="absolute bottom-28 right-4 z-50 flex flex-col gap-5">
               {showPlayButton && (
                 <button onClick={handleTogglePlay} className={darkBtn}>
                   {isPlaying && !videoError ? (
@@ -1266,16 +1351,29 @@ const StoriesWidgetPage = () => {
               )}
 
               {hasNavigation && (
-                <button
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    goToNextVideoOrStory();
-                  }}
-                  className={cn(darkBtn, 'bg-violet-600/90 hover:bg-violet-500')}
-                  aria-label="Avançar"
-                >
-                  <ChevronRight className="h-6 w-6" />
-                </button>
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      goToPreviousVideoOrStory();
+                    }}
+                    className={purpleBtn}
+                    aria-label="Voltar vídeo"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      goToNextVideoOrStory();
+                    }}
+                    className={purpleBtn}
+                    aria-label="Avançar vídeo"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                </div>
               )}
 
               {showCommentButton && (
@@ -1320,19 +1418,6 @@ const StoriesWidgetPage = () => {
                 <Ruler className="h-5 w-5" />
               </button>
             </div>
-
-            {hasNavigation && (
-              <button
-                onClick={(event) => {
-                  event.stopPropagation();
-                  goToPreviousVideoOrStory();
-                }}
-                className="absolute left-3 top-1/2 z-40 -translate-y-1/2 rounded-full bg-black/20 p-2 text-white/70 backdrop-blur-sm transition-colors hover:bg-black/40 hover:text-white"
-                aria-label="Anterior"
-              >
-                <ChevronLeft className="h-8 w-8" />
-              </button>
-            )}
 
             {showProduct && currentProduct && (
               <div className="absolute bottom-8 left-4 right-20 z-50 flex animate-fade-in items-center gap-4 rounded-3xl bg-white/95 p-3 shadow-2xl backdrop-blur-xl">
@@ -1488,7 +1573,7 @@ const StoriesWidgetPage = () => {
                     <div>
                       <h3 className="text-xl font-black text-white">Comentários</h3>
                       <p className="text-xs font-bold text-slate-500">
-                        {comments.length} comentário{comments.length === 1 ? '' : 's'} nesta thread
+                        {comments.length} comentário{comments.length === 1 ? '' : 's'} neste vídeo
                       </p>
                     </div>
                   </div>
@@ -1530,9 +1615,7 @@ const StoriesWidgetPage = () => {
                               </div>
                             </div>
 
-                            {comment.emoji && (
-                              <span className="text-xl">{comment.emoji}</span>
-                            )}
+                            {comment.emoji && <span className="text-xl">{comment.emoji}</span>}
                           </div>
 
                           <p className="text-sm font-semibold leading-relaxed text-slate-700">
@@ -1544,7 +1627,7 @@ const StoriesWidgetPage = () => {
                   ) : (
                     <div className="flex h-full items-center justify-center rounded-3xl border border-dashed border-slate-400 bg-slate-100 p-6 text-center">
                       <p className="text-sm font-bold text-slate-500">
-                        Nenhum comentário ainda. Seja a primeira pessoa a comentar.
+                        Nenhum comentário neste vídeo. Seja a primeira pessoa a comentar.
                       </p>
                     </div>
                   )}
@@ -1597,7 +1680,9 @@ const StoriesWidgetPage = () => {
                           onClick={() => {
                             setSelectedEmoji(emoji);
                             setCommentText((prev) =>
-                              prev.trim() ? `${prev}${prev.endsWith(' ') ? '' : ' '}${emoji}` : emoji
+                              prev.trim()
+                                ? `${prev}${prev.endsWith(' ') ? '' : ' '}${emoji}`
+                                : emoji
                             );
                             setShowEmojiPicker(false);
                           }}
