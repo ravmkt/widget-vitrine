@@ -909,4 +909,742 @@ const StoriesPage = () => {
 
                 <div>
                   <div className="mb-2 flex items-center justify-between">
-                    <label
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">
+                      Aparência Visual
+                    </label>
+
+                    <Link
+                      to="/appearance"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-violet-400 hover:underline"
+                    >
+                      <Palette className="h-3.5 w-3.5" />
+                      Criar/Editar
+                    </Link>
+                  </div>
+
+                  <select
+                    value={appearanceId || ''}
+                    onChange={(event) => setAppearanceId(event.target.value || undefined)}
+                    className="w-full rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm font-semibold text-slate-100 focus:border-violet-500"
+                  >
+                    <option value="">Usar aparência padrão da loja</option>
+                    {appearances.map((appearance) => (
+                      <option key={appearance.id} value={appearance.id}>
+                        {appearance.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                      Ordem de Exibição
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={position}
+                      onChange={(event) => setPosition(parseInt(event.target.value) || 1)}
+                      className="w-full rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm font-semibold text-slate-100 focus:border-violet-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                      Status
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setActive(!active)}
+                      className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-sm font-semibold transition-all ${
+                        active
+                          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                          : 'border-slate-800 bg-slate-950 text-slate-500'
+                      }`}
+                    >
+                      <span>{active ? 'Ativo no Widget' : 'Inativo / Rascunho'}</span>
+                      {active ? (
+                        <ToggleRight className="h-7 w-7 text-emerald-400" />
+                      ) : (
+                        <ToggleLeft className="h-7 w-7 text-slate-600" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <section className="space-y-5">
+                <h4 className="border-b border-slate-800 pb-2 text-base font-bold text-slate-300">
+                  Vídeos do Story *
+                </h4>
+
+                <div className="flex border-b border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setVideoSelectTab('gallery')}
+                    className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all ${
+                      videoSelectTab === 'gallery'
+                        ? 'border-violet-500 text-violet-400'
+                        : 'border-transparent text-slate-500 hover:text-slate-300'
+                    }`}
+                  >
+                    <FolderHeart className="h-4 w-4" />
+                    Galeria Ativa
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setVideoSelectTab('all_videos')}
+                    className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all ${
+                      videoSelectTab === 'all_videos'
+                        ? 'border-violet-500 text-violet-400'
+                        : 'border-transparent text-slate-500 hover:text-slate-300'
+                    }`}
+                  >
+                    <Layers className="h-4 w-4" />
+                    Todos os Vídeos
+                  </button>
+                </div>
+
+                <div
+                  className={`rounded-2xl border bg-slate-950 p-2 ${
+                    formErrors.videos ? 'border-rose-500' : 'border-slate-800'
+                  }`}
+                >
+                  {currentVideoList.length === 0 ? (
+                    <div className="rounded-2xl bg-slate-950 p-8 text-center">
+                      <p className="text-sm text-slate-500">
+                        Nenhum vídeo disponível nesta aba.
+                      </p>
+                      <Link
+                        to="/gallery"
+                        className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-violet-400 hover:underline"
+                      >
+                        Ir para Galeria
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="grid max-h-60 grid-cols-2 gap-3 overflow-y-auto p-1 sm:grid-cols-3 md:grid-cols-4">
+                      {currentVideoList.map((video) => (
+                        <button
+                          key={video.id}
+                          type="button"
+                          onClick={() => {
+                            handleVideoSelection(video.id);
+                            setFormErrors((prev) => ({ ...prev, videos: '' }));
+                          }}
+                          className={`relative aspect-video overflow-hidden rounded-xl border-2 transition-all ${
+                            selectedVideoIds.includes(video.id)
+                              ? 'border-violet-500 ring-2 ring-violet-500/20'
+                              : 'border-slate-800 hover:border-slate-700'
+                          }`}
+                        >
+                          {renderVideoPreview(video)}
+
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
+                            {selectedVideoIds.includes(video.id) ? (
+                              <Check className="h-6 w-6 text-emerald-400" />
+                            ) : (
+                              <Plus className="h-6 w-6 text-white" />
+                            )}
+                          </div>
+
+                          <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1 py-0.5 text-[9px] text-white">
+                            {video.title}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {formErrors.videos && (
+                  <span className="mt-1 block text-xs font-bold text-rose-500">
+                    {formErrors.videos}
+                  </span>
+                )}
+
+                {selectedVideoIds.length > 0 && (
+                  <div className="mt-4 space-y-3 rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                    <h5 className="text-sm font-bold text-slate-300">
+                      Vídeos Selecionados ({selectedVideoIds.length})
+                    </h5>
+
+                    <ul className="space-y-2">
+                      {selectedVideoIds.map((videoId, index) => {
+                        const video = allVideosList.find((item) => item.id === videoId);
+                        if (!video) return null;
+
+                        const isCover = index === 0;
+
+                        return (
+                          <li
+                            key={video.id}
+                            className="flex items-center gap-3 rounded-xl border border-slate-800/60 bg-slate-900 p-3 shadow-md"
+                          >
+                            <GripVertical className="h-4 w-4 text-slate-600" />
+
+                            <div className="h-12 w-12 overflow-hidden rounded-lg bg-slate-950">
+                              {renderVideoPreview(video)}
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-bold text-slate-200">
+                                {video.title}
+                              </p>
+                              <p className="text-xs text-slate-500">{video.duration || 0}s</p>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              {isCover && (
+                                <span className="rounded-full border border-violet-500/35 bg-violet-500/10 px-2 py-0.5 text-[10px] font-bold text-violet-400">
+                                  Capa
+                                </span>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => handleSetCoverVideo(video.id)}
+                                className="rounded-lg bg-slate-950 p-1.5 text-slate-400 hover:text-white"
+                                title="Definir como capa"
+                              >
+                                <Film className="h-4 w-4" />
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleMoveVideo(index, 'up')}
+                                disabled={index === 0}
+                                className="rounded-lg bg-slate-950 p-1.5 text-slate-400 disabled:opacity-30"
+                              >
+                                ▲
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleMoveVideo(index, 'down')}
+                                disabled={index === selectedVideoIds.length - 1}
+                                className="rounded-lg bg-slate-950 p-1.5 text-slate-400 disabled:opacity-30"
+                              >
+                                ▼
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleVideoSelection(video.id)}
+                                className="rounded-lg bg-slate-950 p-1.5 text-rose-500"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+              </section>
+
+              <section className="space-y-5">
+                <h4 className="border-b border-slate-800 pb-2 text-base font-bold text-slate-300">
+                  CTA
+                </h4>
+
+                <div className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                  <div>
+                    <h4 className="font-bold text-slate-200">Botão de Ação</h4>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      Link, produto ou WhatsApp dentro do player.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setCtaEnabled(!ctaEnabled)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      ctaEnabled ? 'bg-violet-600' : 'bg-slate-800'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        ctaEnabled ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {ctaEnabled && (
+                  <div className="space-y-5 rounded-2xl border border-slate-800 p-4">
+                    <div>
+                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                        Texto do CTA
+                      </label>
+                      <input
+                        type="text"
+                        value={ctaText}
+                        onChange={(event) => setCtaText(event.target.value)}
+                        placeholder="Ex: Comprar Agora"
+                        className="w-full rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm font-bold text-slate-200 placeholder-slate-700"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                        Tipo de CTA
+                      </label>
+                      <select
+                        value={ctaType}
+                        onChange={(event) => setCtaType(event.target.value as CTAType)}
+                        className="w-full rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm font-semibold text-slate-100"
+                      >
+                        <option value="custom_link">Link customizado</option>
+                        <option value="product">Produto vinculado</option>
+                        <option value="whatsapp">Falar no WhatsApp</option>
+                      </select>
+                    </div>
+
+                    {ctaType === 'custom_link' && (
+                      <div>
+                        <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                          URL do CTA *
+                        </label>
+                        <input
+                          type="url"
+                          value={ctaUrl}
+                          onChange={(event) => {
+                            setCtaUrl(event.target.value);
+                            if (event.target.value.trim()) {
+                              setFormErrors((prev) => ({ ...prev, ctaUrl: '' }));
+                            }
+                          }}
+                          placeholder="https://sualoja.com.br/produto"
+                          className={`w-full rounded-2xl border bg-slate-950 px-4 py-3 font-mono text-sm text-slate-200 focus:outline-none focus:ring-1 ${
+                            formErrors.ctaUrl
+                              ? 'border-rose-500'
+                              : 'border-slate-800 focus:border-violet-500 focus:ring-violet-500'
+                          }`}
+                        />
+                        {formErrors.ctaUrl && (
+                          <span className="mt-1 block text-xs font-bold text-rose-500">
+                            {formErrors.ctaUrl}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {ctaType === 'whatsapp' && (
+                      <div>
+                        <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                          Mensagem WhatsApp *
+                        </label>
+                        <textarea
+                          value={whatsappMessage}
+                          onChange={(event) => {
+                            setWhatsappMessage(event.target.value);
+                            if (event.target.value.trim()) {
+                              setFormErrors((prev) => ({ ...prev, whatsappMessage: '' }));
+                            }
+                          }}
+                          placeholder="Olá! Tenho interesse no produto deste story."
+                          rows={3}
+                          className={`w-full resize-y rounded-2xl border bg-slate-950 px-4 py-3 text-sm text-slate-200 focus:outline-none focus:ring-1 ${
+                            formErrors.whatsappMessage
+                              ? 'border-rose-500'
+                              : 'border-slate-800 focus:border-violet-500 focus:ring-violet-500'
+                          }`}
+                        />
+                        {formErrors.whatsappMessage && (
+                          <span className="mt-1 block text-xs font-bold text-rose-500">
+                            {formErrors.whatsappMessage}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {ctaType === 'product' && (
+                      <div>
+                        <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                          Produto do CTA *
+                        </label>
+                        <select
+                          value={selectedProductId || ''}
+                          onChange={(event) => {
+                            setSelectedProductId(event.target.value || undefined);
+                            setFormErrors((prev) => ({ ...prev, productSelection: '' }));
+                          }}
+                          className={`w-full rounded-2xl border bg-slate-950 px-4 py-3 text-sm font-bold text-slate-100 focus:outline-none focus:ring-1 ${
+                            formErrors.productSelection
+                              ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500'
+                              : 'border-slate-800 focus:border-violet-500 focus:ring-violet-500'
+                          }`}
+                        >
+                          <option value="">Selecione o produto</option>
+                          {products.map((product) => (
+                            <option key={product.id} value={product.id}>
+                              {product.name} - R$ {Number(product.price || 0).toFixed(2)}
+                            </option>
+                          ))}
+                        </select>
+                        {formErrors.productSelection && (
+                          <span className="mt-1 block text-xs font-bold text-rose-500">
+                            {formErrors.productSelection}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </section>
+
+              <section className="space-y-5">
+                <h4 className="border-b border-slate-800 pb-2 text-base font-bold text-slate-300">
+                  Local de Exibição
+                </h4>
+
+                {displayLocations.map((item, index) => (
+                  <div
+                    key={index}
+                    className="flex flex-col gap-3 rounded-2xl border border-slate-800 bg-slate-950 p-4 md:flex-row"
+                  >
+                    <div className="flex-1">
+                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                        Seletor CSS *
+                      </label>
+                      <input
+                        type="text"
+                        value={item.selector}
+                        onChange={(event) =>
+                          updateDisplayLocation(index, 'selector', event.target.value)
+                        }
+                        placeholder="Ex: .minha-div-alvo"
+                        className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 font-mono text-sm text-slate-200"
+                      />
+                      {formErrors[`displayLocation_${index}`] && (
+                        <span className="mt-1 block text-xs font-bold text-rose-500">
+                          {formErrors[`displayLocation_${index}`]}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex-1">
+                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                        Posição *
+                      </label>
+                      <select
+                        value={item.position}
+                        onChange={(event) =>
+                          updateDisplayLocation(index, 'position', event.target.value)
+                        }
+                        className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-sm font-semibold text-slate-100"
+                      >
+                        <option value="after_element">Abaixo do elemento</option>
+                        <option value="before_element">Acima do elemento</option>
+                        <option value="inside_start">Dentro do elemento - início</option>
+                        <option value="inside_end">Dentro do elemento - final</option>
+                        <option value="replace_element">Substituir elemento</option>
+                        <option value="fixed_bottom_right">Fixo: Inferior Direita</option>
+                        <option value="fixed_bottom_left">Fixo: Inferior Esquerda</option>
+                        <option value="fixed_top_right">Fixo: Superior Direita</option>
+                        <option value="fixed_top_left">Fixo: Superior Esquerda</option>
+                      </select>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => removeDisplayLocation(index)}
+                      className="self-end rounded-xl border border-slate-800 p-2.5 text-slate-400 transition-all hover:bg-rose-500/10 hover:text-rose-400 md:self-auto"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={addDisplayLocation}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950 px-4 py-2.5 text-xs font-bold text-slate-200 transition-all hover:bg-slate-800 md:text-sm"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Adicionar Local de Exibição
+                </button>
+              </section>
+
+              <section className="space-y-5">
+                <h4 className="border-b border-slate-800 pb-2 text-base font-bold text-slate-300">
+                  Regras de Página
+                </h4>
+
+                {pageRules.map((item, index) => {
+                  const isValueDisabled = [
+                    'all_pages',
+                    'home_only',
+                    'product_pages',
+                    'category_pages',
+                  ].includes(item.condition_type);
+
+                  return (
+                    <div
+                      key={index}
+                      className="flex flex-col gap-3 rounded-2xl border border-slate-800 bg-slate-950 p-4 md:flex-row"
+                    >
+                      <div className="flex-1">
+                        <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                          Condição *
+                        </label>
+                        <select
+                          value={item.condition_type}
+                          onChange={(event) =>
+                            updatePageRule(index, 'condition_type', event.target.value)
+                          }
+                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-sm font-semibold text-slate-100"
+                        >
+                          <option value="contains">Contém</option>
+                          <option value="equals">É igual</option>
+                          <option value="not_equals">Não é igual</option>
+                          <option value="starts_with">Começa com</option>
+                          <option value="ends_with">Termina com</option>
+                          <option value="regex">Regex</option>
+                          <option value="all_pages">Todas as páginas</option>
+                          <option value="home_only">Apenas Home</option>
+                          <option value="product_pages">Páginas de Produto</option>
+                          <option value="category_pages">Páginas de Categoria</option>
+                        </select>
+                      </div>
+
+                      <div className="flex-1">
+                        <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                          Valor / URL
+                        </label>
+                        <input
+                          type="text"
+                          value={item.value || ''}
+                          onChange={(event) =>
+                            updatePageRule(index, 'value', event.target.value)
+                          }
+                          placeholder="/caminho-da-pagina"
+                          disabled={isValueDisabled}
+                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 font-mono text-sm text-slate-200 disabled:opacity-30"
+                        />
+                        {formErrors[`pageRule_${index}`] && (
+                          <span className="mt-1 block text-xs font-bold text-rose-500">
+                            {formErrors[`pageRule_${index}`]}
+                          </span>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => removePageRule(index)}
+                        className="self-end rounded-xl border border-slate-800 p-2.5 text-slate-400 transition-all hover:bg-rose-500/10 hover:text-rose-400 md:self-auto"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  );
+                })}
+
+                <button
+                  type="button"
+                  onClick={addPageRule}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950 px-4 py-2.5 text-xs font-bold text-slate-200 transition-all hover:bg-slate-800 md:text-sm"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Adicionar Regra de Página
+                </button>
+              </section>
+
+              <div className="flex justify-end gap-3 border-t border-slate-800 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetForm();
+                    setShowForm(false);
+                  }}
+                  className="rounded-xl border border-slate-800 px-5 py-2.5 text-sm font-bold text-slate-400 transition-all hover:bg-slate-800 md:text-base"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:from-violet-500 hover:to-fuchsia-500 md:text-base"
+                >
+                  {editingStory ? 'Salvar Alterações' : 'Salvar Story'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        <div className="flex flex-col items-center gap-4 rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl md:flex-row">
+          <div className="relative w-full flex-1">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold uppercase tracking-wider text-slate-500">
+              Busca
+            </span>
+            <input
+              type="text"
+              placeholder="Pesquisar story pelo título..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              className="w-full rounded-xl border border-slate-800 bg-slate-950 py-2.5 pl-20 pr-4 text-sm font-semibold text-slate-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 md:text-base"
+            />
+          </div>
+
+          <select
+            value={filterStatus}
+            onChange={(event) => setFilterStatus(event.target.value as typeof filterStatus)}
+            className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:ring-1 focus:ring-violet-500 md:w-auto md:text-sm"
+          >
+            <option value="all">Todos os Status</option>
+            <option value="active">Ativos</option>
+            <option value="inactive">Inativos</option>
+          </select>
+        </div>
+
+        {filteredStoriesToShow.length === 0 ? (
+          <div className="mx-auto max-w-2xl rounded-3xl border border-slate-800 bg-slate-900 p-12 text-center shadow-xl">
+            <Film className="mx-auto mb-4 h-12 w-12 text-slate-700" />
+            <h3 className="text-xl font-bold text-slate-200">Nenhum story encontrado</h3>
+            <p className="mt-1 text-sm text-slate-400">
+              Ajuste seus filtros ou cadastre um novo story.
+            </p>
+          </div>
+        ) : (
+          <div className="grid animate-fade-in grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredStoriesToShow.map((story) => {
+              const coverRelation =
+                storyVideosMap.get(story.id)?.find((item) => item.is_cover) ||
+                storyVideosMap.get(story.id)?.[0];
+
+              const coverVideo = allVideosList.find(
+                (video) => video.id === coverRelation?.video_id
+              );
+
+              const appearanceName =
+                appearances.find((item) => item.id === story.appearance_id)?.name ||
+                'Padrão da Loja';
+
+              const modelName =
+                sizingModels.find((item) => item.id === story.model_id)?.name ||
+                'Nenhuma modelo';
+
+              const videoCount = storyVideosMap.get(story.id)?.length || 0;
+
+              return (
+                <div
+                  key={story.id}
+                  className="group flex flex-col overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 shadow-xl transition-all hover:border-slate-700"
+                >
+                  <div className="relative aspect-[9/16] max-h-[280px] overflow-hidden bg-slate-950">
+                    <div className="h-full w-full transition-transform duration-500 group-hover:scale-105">
+                      {renderVideoPreview(coverVideo)}
+                    </div>
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+
+                    <button
+                      onClick={() => handleToggleActive(story)}
+                      className={`absolute right-4 top-4 rounded-full px-3 py-1.5 text-xs font-bold shadow-md backdrop-blur-md transition-all ${
+                        story.active ? 'bg-emerald-500/90 text-white' : 'bg-slate-600/90 text-white'
+                      }`}
+                    >
+                      {story.active ? 'Ativo' : 'Inativo'}
+                    </button>
+
+                    <span className="absolute bottom-4 left-4 rounded-lg bg-black/50 px-2.5 py-1 text-xs font-bold text-white backdrop-blur-md">
+                      Posição #{story.position}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-1 flex-col justify-between gap-4 p-5">
+                    <div>
+                      <h3 className="line-clamp-1 text-lg font-extrabold text-slate-100 md:text-xl">
+                        {story.title}
+                      </h3>
+
+                      <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        {videoCount} vídeo(s) vinculados
+                      </p>
+
+                      <p className="mt-0.5 text-xs font-semibold text-slate-400">
+                        Estilo: {appearanceName}
+                      </p>
+
+                      <p className="mt-0.5 text-xs font-semibold text-slate-400">
+                        Modelo: {modelName}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-4 text-sm text-slate-400">
+                      <div className="flex items-center gap-1.5">
+                        <EyeIcon className="h-4 w-4 text-violet-400" />
+                        <span className="font-bold">{story.view_count || 0}</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <MousePointerClick className="h-4 w-4 text-violet-400" />
+                        <span className="font-bold">{story.click_count || 0}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 border-t border-slate-800 pt-4">
+                      <button
+                        type="button"
+                        onClick={() => openEditStory(story)}
+                        className="inline-flex min-w-[90px] flex-1 items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs font-bold text-slate-300 transition-all hover:bg-slate-800 hover:text-violet-400"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                        Editar
+                      </button>
+
+                      <button
+                        onClick={() => handleDuplicate(story)}
+                        className="inline-flex min-w-[90px] flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs font-bold text-slate-300 transition-all hover:bg-slate-800 hover:text-violet-400"
+                        title="Duplicar Story"
+                      >
+                        <Copy className="h-4 w-4" />
+                        Duplicar
+                      </button>
+
+                      <Link
+                        to={`/widget/${store?.id}?storyId=${story.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-xl border border-slate-800 bg-slate-950 p-2 text-slate-400 transition-all hover:bg-violet-600/10 hover:text-violet-400"
+                        title="Visualizar Story"
+                      >
+                        <Eye className="h-4.5 w-4.5" />
+                      </Link>
+
+                      <button
+                        onClick={() => handleDelete(story.id)}
+                        className="rounded-xl border border-slate-800 bg-slate-950 p-2 text-slate-400 transition-all hover:bg-rose-500/10 hover:text-rose-400"
+                        title="Excluir Story"
+                      >
+                        <Trash2 className="h-4.5 w-4.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </main>
+
+      <CustomDialog
+        isOpen={dialog.isOpen}
+        type={dialog.type}
+        title={dialog.title}
+        description={dialog.description}
+        onConfirm={dialog.onConfirm}
+        onCancel={dialog.onCancel}
+        confirmText="Confirmar"
+        cancelText="Voltar"
+      />
+    </div>
+  );
+};
+
+export default StoriesPage;
