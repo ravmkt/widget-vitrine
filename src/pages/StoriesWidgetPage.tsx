@@ -23,6 +23,8 @@ import {
   Check,
   ExternalLink,
   Ruler,
+  Send,
+  Smile,
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import WhatsAppIcon from '@/components/WhatsAppIcon';
@@ -37,7 +39,56 @@ type ModelMeasure = {
 type VideoWithFallbacks = Video & {
   poster_url?: string;
   image_url?: string;
+  file_url?: string;
+  upload_url?: string;
+  media_url?: string;
+  source_url?: string;
+  url?: string;
+  src?: string;
 };
+
+type StoryComment = {
+  id: string;
+  store_id?: string;
+  story_id: string;
+  story_title?: string;
+  product_id?: string;
+  product_name?: string;
+  product_url?: string;
+  product_image_url?: string;
+  text: string;
+  emoji?: string;
+  author_name?: string;
+  read?: boolean;
+  status?: string;
+  created_at: string;
+};
+
+const COMMENT_STORAGE_KEYS = [
+  'vidlytics_story_comments',
+  'stories_comments',
+  'story_comments',
+  'comments',
+];
+
+const EMOJIS = [
+  '😍',
+  '🔥',
+  '👏',
+  '❤️',
+  '😮',
+  '😊',
+  '😂',
+  '🤩',
+  '😎',
+  '👍',
+  '💜',
+  '✨',
+  '🙌',
+  '🥰',
+  '💯',
+  '🛍️',
+];
 
 const normalizeUrl = (url?: string | null) => {
   if (!url) return '';
@@ -78,7 +129,18 @@ const getVideoPosterUrl = (video?: Video | null) => {
 const getVideoPlayableUrl = (video?: Video | null) => {
   if (!video) return '';
 
-  return normalizeUrl(video.video_url);
+  const item = video as VideoWithFallbacks;
+
+  return (
+    normalizeUrl(item.video_url) ||
+    normalizeUrl(item.file_url) ||
+    normalizeUrl(item.upload_url) ||
+    normalizeUrl(item.media_url) ||
+    normalizeUrl(item.source_url) ||
+    normalizeUrl(item.url) ||
+    normalizeUrl(item.src) ||
+    ''
+  );
 };
 
 const getVideoPreviewUrl = (video?: Video | null) => {
@@ -88,7 +150,59 @@ const getVideoPreviewUrl = (video?: Video | null) => {
 };
 
 const isVideoFile = (url: string) => {
-  return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url);
+  return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url) || url.startsWith('data:video/');
+};
+
+const generateId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
+
+const readLocalComments = (): StoryComment[] => {
+  for (const key of COMMENT_STORAGE_KEYS) {
+    try {
+      const raw = localStorage.getItem(key);
+
+      if (!raw) continue;
+
+      const parsed = JSON.parse(raw);
+
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+    } catch {
+      //
+    }
+  }
+
+  return [];
+};
+
+const writeLocalComments = (comments: StoryComment[]) => {
+  COMMENT_STORAGE_KEYS.forEach((key) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(comments));
+    } catch {
+      //
+    }
+  });
+};
+
+const mergeComments = (items: StoryComment[]) => {
+  const map = new Map<string, StoryComment>();
+
+  items.forEach((item) => {
+    if (item?.id) {
+      map.set(item.id, item);
+    }
+  });
+
+  return Array.from(map.values()).sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
 };
 
 const StoriesWidgetPage = () => {
@@ -98,6 +212,7 @@ const StoriesWidgetPage = () => {
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const [currentStoreId, setCurrentStoreId] = useState<string>('');
   const [generalSettings, setGeneralSettings] = useState<GeneralSettings | null>(null);
   const [currentAppearance, setCurrentAppearance] = useState<Appearance | null>(null);
   const [appearances, setAppearances] = useState<Appearance[]>([]);
@@ -113,9 +228,12 @@ const StoriesWidgetPage = () => {
 
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [showMeasuresPanel, setShowMeasuresPanel] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const [copiedLink, setCopiedLink] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const [selectedEmoji, setSelectedEmoji] = useState<string>('😍');
+  const [comments, setComments] = useState<StoryComment[]>([]);
   const [videoError, setVideoError] = useState(false);
 
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
@@ -132,6 +250,9 @@ const StoriesWidgetPage = () => {
 
   const selectedStoryTitle = selectedStory?.title || 'Story';
   const storeName = generalSettings?.store_name || 'Loja';
+
+  const videoPlayableUrl = getVideoPlayableUrl(mainVideo);
+  const videoPosterUrl = getVideoPosterUrl(mainVideo);
 
   const productPrice = currentProduct
     ? Number(currentProduct.price || 0).toLocaleString('pt-BR', {
@@ -178,6 +299,52 @@ const StoriesWidgetPage = () => {
     ]
       .filter(Boolean)
       .join('\n');
+  };
+
+  const loadComments = async (storyId: string) => {
+    const localComments = readLocalComments().filter((comment) => comment.story_id === storyId);
+    let remoteComments: StoryComment[] = [];
+
+    try {
+      const commentsApi = (db as unknown as { comments?: any }).comments;
+
+      if (commentsApi?.getAll) {
+        const response = currentStoreId
+          ? await commentsApi.getAll(currentStoreId)
+          : await commentsApi.getAll();
+
+        if (Array.isArray(response)) {
+          remoteComments = response.filter((comment: StoryComment) => comment.story_id === storyId);
+        }
+      }
+    } catch {
+      remoteComments = [];
+    }
+
+    setComments(mergeComments([...localComments, ...remoteComments]));
+  };
+
+  const saveComment = async (comment: StoryComment) => {
+    const localComments = readLocalComments();
+    const nextComments = mergeComments([comment, ...localComments]);
+
+    writeLocalComments(nextComments);
+
+    try {
+      const commentsApi = (db as unknown as { comments?: any }).comments;
+
+      if (commentsApi?.create) {
+        await commentsApi.create(comment);
+      } else if (commentsApi?.add) {
+        await commentsApi.add(comment);
+      } else if (commentsApi?.insert) {
+        await commentsApi.insert(comment);
+      }
+    } catch {
+      //
+    }
+
+    setComments((prev) => mergeComments([comment, ...prev]));
   };
 
   const renderStoryThumb = (video?: Video | null) => {
@@ -227,6 +394,8 @@ const StoriesWidgetPage = () => {
 
         if (!currentStore) return;
 
+        setCurrentStoreId(currentStore.id);
+
         const fetchedSettings = (await db.generalSettings.getAll(currentStore.id))[0] || null;
         setGeneralSettings(fetchedSettings);
 
@@ -256,14 +425,7 @@ const StoriesWidgetPage = () => {
         }
 
         const allStoryVideos = await db.storyVideos.getAll();
-
-        let allVideos: Video[] = [];
-
-        try {
-          allVideos = await db.videos.getAll(currentStore.id);
-        } catch {
-          allVideos = await db.videos.getAll();
-        }
+        const allVideos = await db.videos.getAll();
 
         const map = new Map<string, Video[]>();
 
@@ -295,6 +457,7 @@ const StoriesWidgetPage = () => {
       setCurrentModel(null);
       setShowCommentsPanel(false);
       setShowMeasuresPanel(false);
+      setComments([]);
       return;
     }
 
@@ -305,7 +468,11 @@ const StoriesWidgetPage = () => {
     setVideoError(false);
     setShowCommentsPanel(false);
     setShowMeasuresPanel(false);
+    setShowEmojiPicker(false);
     setCommentText('');
+    setSelectedEmoji('😍');
+
+    loadComments(selectedStory.id);
 
     const fetchRelations = async () => {
       try {
@@ -333,25 +500,63 @@ const StoriesWidgetPage = () => {
     };
 
     fetchRelations();
-  }, [selectedStory]);
+  }, [selectedStory?.id]);
 
   useEffect(() => {
     setVideoError(false);
     setIsPlaying(true);
 
     const timer = setTimeout(() => {
-      if (videoRef.current && getVideoPlayableUrl(mainVideo)) {
-        videoRef.current.play().catch(() => {
-          setIsPlaying(false);
-        });
+      if (videoRef.current && videoPlayableUrl) {
+        videoRef.current.load();
+
+        if (generalSettings?.autoplay ?? true) {
+          videoRef.current.play().catch(() => {
+            setIsPlaying(false);
+          });
+        }
       }
-    }, 300);
+    }, 250);
 
     return () => clearTimeout(timer);
-  }, [mainVideo?.id, mainVideo?.video_url]);
+  }, [mainVideo?.id, videoPlayableUrl]);
+
+  const handleRetryVideo = () => {
+    if (!videoPlayableUrl) {
+      showError('Este vídeo não possui uma URL reproduzível.');
+      return;
+    }
+
+    setVideoError(false);
+    setIsPlaying(true);
+
+    setTimeout(() => {
+      if (!videoRef.current) return;
+
+      videoRef.current.load();
+
+      videoRef.current
+        .play()
+        .then(() => {
+          setIsPlaying(true);
+        })
+        .catch(() => {
+          setIsPlaying(false);
+          setVideoError(true);
+        });
+    }, 150);
+  };
 
   const handleTogglePlay = () => {
-    if (!videoRef.current) return;
+    if (videoError) {
+      handleRetryVideo();
+      return;
+    }
+
+    if (!videoRef.current) {
+      handleRetryVideo();
+      return;
+    }
 
     if (videoRef.current.paused) {
       videoRef.current
@@ -361,6 +566,7 @@ const StoriesWidgetPage = () => {
         })
         .catch(() => {
           setIsPlaying(false);
+          setVideoError(true);
         });
     } else {
       videoRef.current.pause();
@@ -431,48 +637,37 @@ const StoriesWidgetPage = () => {
   };
 
   const handleSendComment = async () => {
-    const whatsappNumber = generalSettings?.whatsapp_number;
+    if (!selectedStory) return;
 
-    if (!whatsappNumber) {
-      showError('WhatsApp não configurado.');
+    const text = commentText.trim();
+
+    if (!text) {
+      showError('Digite um comentário antes de publicar.');
       return;
     }
 
-    const cleanNumber = whatsappNumber.replace(/\D/g, '');
+    const comment: StoryComment = {
+      id: generateId(),
+      store_id: currentStoreId || storeId || '',
+      story_id: selectedStory.id,
+      story_title: selectedStory.title,
+      product_id: currentProduct?.id,
+      product_name: currentProduct?.name || selectedStory.title,
+      product_url: getCurrentProductUrl(),
+      product_image_url: getCurrentProductImageUrl(),
+      text,
+      emoji: selectedEmoji,
+      author_name: 'Visitante',
+      read: false,
+      status: 'published',
+      created_at: new Date().toISOString(),
+    };
 
-    if (!cleanNumber) {
-      showError('Número do WhatsApp inválido.');
-      return;
-    }
-
-    if (!commentText.trim()) {
-      showError('Digite uma mensagem antes de enviar.');
-      return;
-    }
-
-    const productName = getCurrentProductName();
-    const productUrl = getCurrentProductUrl();
-    const productImageUrl = getCurrentProductImageUrl();
-
-    const message = [
-      'Comentário sobre esse produto:',
-      productName,
-      productUrl ? `Link: ${productUrl}` : '',
-      productImageUrl ? `Imagem: ${productImageUrl}` : '',
-      '',
-      commentText.trim(),
-    ]
-      .filter(Boolean)
-      .join('\n');
-
-    if (selectedStory) {
-      await db.incrementClickCount(selectedStory.id);
-    }
-
-    window.open(`https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`, '_blank');
+    await saveComment(comment);
 
     setCommentText('');
-    setShowCommentsPanel(false);
+    setShowEmojiPicker(false);
+    showSuccess('Comentário publicado!');
   };
 
   const handleBuyProduct = async () => {
@@ -498,6 +693,19 @@ const StoriesWidgetPage = () => {
 
     await db.incrementClickCount(selectedStory.id);
     window.open(normalizeUrl(selectedStory.cta_url), '_blank');
+  };
+
+  const formatCommentDate = (date: string) => {
+    try {
+      return new Date(date).toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return '';
+    }
   };
 
   if (loading) {
@@ -555,12 +763,12 @@ const StoriesWidgetPage = () => {
               </button>
             </div>
 
-            {mainVideo && getVideoPlayableUrl(mainVideo) && !videoError ? (
+            {mainVideo && videoPlayableUrl && !videoError ? (
               <video
                 key={mainVideo.id}
                 ref={videoRef}
-                src={getVideoPlayableUrl(mainVideo)}
-                poster={getVideoPosterUrl(mainVideo) || undefined}
+                src={videoPlayableUrl}
+                poster={videoPosterUrl || undefined}
                 autoPlay={generalSettings?.autoplay ?? true}
                 muted={isMuted}
                 playsInline
@@ -578,6 +786,9 @@ const StoriesWidgetPage = () => {
                     });
                   }
                 }}
+                onCanPlay={() => {
+                  setVideoError(false);
+                }}
                 onError={() => {
                   setVideoError(true);
                   setIsPlaying(false);
@@ -585,36 +796,53 @@ const StoriesWidgetPage = () => {
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
               />
-            ) : mainVideo && getVideoPosterUrl(mainVideo) ? (
-              <div className="relative h-full w-full bg-slate-950">
+            ) : mainVideo && videoPosterUrl ? (
+              <button
+                type="button"
+                onClick={handleRetryVideo}
+                className="relative h-full w-full bg-slate-950 text-left"
+              >
                 <img
-                  src={getVideoPosterUrl(mainVideo)}
+                  src={videoPosterUrl}
                   alt={mainVideo.title || selectedStoryTitle}
                   className="h-full w-full object-cover opacity-80"
                 />
 
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 px-8 text-center">
-                  <Play className="mb-4 h-12 w-12 fill-white text-white" />
+                  <Play className="mb-4 h-14 w-14 fill-white text-white" />
 
                   <p className="text-sm font-black text-white">
                     Não foi possível reproduzir o vídeo.
                   </p>
 
                   <p className="mt-2 text-xs font-semibold text-white/70">
-                    Verifique se o link do vídeo é direto, público e compatível com MP4/WebM.
+                    Toque para tentar novamente. Se continuar, o upload salvou apenas a capa ou um
+                    link inválido do MP4.
                   </p>
                 </div>
-              </div>
+              </button>
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-slate-950 px-8 text-center text-sm font-bold text-white/70">
                 Nenhum vídeo reproduzível vinculado a este story.
               </div>
             )}
 
+            {mainVideo && videoPlayableUrl && !videoError && !isPlaying && (
+              <button
+                type="button"
+                onClick={handleTogglePlay}
+                className="absolute inset-0 z-30 flex items-center justify-center bg-black/10"
+              >
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/90 text-slate-950 shadow-2xl">
+                  <Play className="ml-1 h-10 w-10 fill-slate-950" />
+                </div>
+              </button>
+            )}
+
             <div className="absolute bottom-32 right-4 z-50 flex flex-col gap-4">
               {showPlayButton && (
                 <button onClick={handleTogglePlay} className={darkBtn}>
-                  {isPlaying ? (
+                  {isPlaying && !videoError ? (
                     <Pause className="h-5 w-5" />
                   ) : (
                     <Play className="h-5 w-5 fill-white" />
@@ -748,7 +976,7 @@ const StoriesWidgetPage = () => {
 
           {showCommentsPanel && (
             <div className="fixed inset-0 z-[10000] flex animate-fade-in items-center justify-center bg-black/80 p-4">
-              <div className="relative w-full max-w-sm rounded-[40px] border border-slate-800 bg-slate-900 p-8 shadow-2xl">
+              <div className="relative flex max-h-[90vh] w-full max-w-sm flex-col rounded-[40px] border border-slate-800 bg-slate-900 p-8 shadow-2xl">
                 <button
                   onClick={() => setShowCommentsPanel(false)}
                   className="absolute right-6 top-6 rounded-full bg-slate-950 p-2 text-slate-400 hover:text-white"
@@ -756,33 +984,99 @@ const StoriesWidgetPage = () => {
                   <X className="h-5 w-5" />
                 </button>
 
-                <div className="mb-8 flex items-center gap-4">
+                <div className="mb-6 flex items-center gap-4">
                   <div className="rounded-3xl bg-violet-600/10 p-4 text-violet-400">
                     <MessageCircle className="h-8 w-8" />
                   </div>
 
-                  <h3 className="text-2xl font-black text-white">Comentários</h3>
+                  <div>
+                    <h3 className="text-2xl font-black text-white">Comentários</h3>
+                    <p className="text-xs font-bold text-slate-500">
+                      {comments.length} comentário{comments.length === 1 ? '' : 's'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mb-5 max-h-52 space-y-3 overflow-y-auto pr-1">
+                  {comments.length > 0 ? (
+                    comments.map((comment) => (
+                      <div
+                        key={comment.id}
+                        className="rounded-3xl border border-slate-800 bg-slate-950/70 p-4"
+                      >
+                        <div className="mb-2 flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl">{comment.emoji || '💬'}</span>
+                            <span className="text-xs font-black uppercase text-white">
+                              {comment.author_name || 'Visitante'}
+                            </span>
+                          </div>
+
+                          <span className="text-[10px] font-bold text-slate-500">
+                            {formatCommentDate(comment.created_at)}
+                          </span>
+                        </div>
+
+                        <p className="text-sm font-semibold leading-relaxed text-slate-300">
+                          {comment.text}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-950/50 p-6 text-center">
+                      <p className="text-sm font-bold text-slate-400">
+                        Seja a primeira pessoa a comentar neste story.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-4">
-                  <p className="text-sm font-semibold text-slate-400">
-                    Envie uma mensagem sobre este produto pelo WhatsApp.
-                  </p>
+                  <div className="relative">
+                    <textarea
+                      value={commentText}
+                      onChange={(event) => setCommentText(event.target.value)}
+                      rows={4}
+                      placeholder="Digite seu comentário..."
+                      className="w-full resize-none rounded-3xl border border-slate-800 bg-slate-950 px-5 py-4 pr-14 text-sm font-semibold text-white placeholder-slate-600 outline-none focus:border-violet-500"
+                    />
 
-                  <textarea
-                    value={commentText}
-                    onChange={(event) => setCommentText(event.target.value)}
-                    rows={5}
-                    placeholder="Ex: Quero mais informações sobre esse produto."
-                    className="w-full resize-none rounded-3xl border border-slate-800 bg-slate-950 px-5 py-4 text-sm font-semibold text-white placeholder-slate-600 outline-none focus:border-violet-500"
-                  />
+                    <button
+                      type="button"
+                      onClick={() => setShowEmojiPicker((prev) => !prev)}
+                      className="absolute bottom-4 right-4 flex h-9 w-9 items-center justify-center rounded-full bg-slate-800 text-slate-300 hover:bg-violet-600 hover:text-white"
+                    >
+                      <Smile className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  {showEmojiPicker && (
+                    <div className="grid grid-cols-8 gap-2 rounded-3xl border border-slate-800 bg-slate-950 p-3">
+                      {EMOJIS.map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => {
+                            setSelectedEmoji(emoji);
+                            setShowEmojiPicker(false);
+                          }}
+                          className={cn(
+                            'flex h-8 w-8 items-center justify-center rounded-xl text-lg transition-all hover:bg-violet-600/30',
+                            selectedEmoji === emoji && 'bg-violet-600/40 ring-1 ring-violet-400'
+                          )}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
                   <button
                     onClick={handleSendComment}
                     className="flex w-full items-center justify-center gap-2 rounded-3xl bg-violet-600 py-4 font-black text-white transition-all hover:bg-violet-500"
                   >
-                    Enviar pelo WhatsApp
-                    <WhatsAppIcon size={20} />
+                    Publicar comentário
+                    <Send className="h-5 w-5" />
                   </button>
                 </div>
 
