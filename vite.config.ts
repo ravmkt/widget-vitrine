@@ -25,41 +25,28 @@ export default defineConfig(({ mode }) => {
             const { YAMPI_ALIAS, YAMPI_TOKEN, YAMPI_SECRET_KEY } = env;
             const YAMPI_API_BASE = `https://api.dooki.com.br/v2/${YAMPI_ALIAS}`;
 
-            // Rota de Health Check
             if (req.url === '/api/yampi/health') {
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({
                 status: 'ok',
                 integrated: true,
                 timestamp: new Date().toISOString(),
-                env: {
-                  YAMPI_ALIAS: !!YAMPI_ALIAS,
-                  YAMPI_TOKEN: !!YAMPI_TOKEN,
-                  YAMPI_SECRET_KEY: !!YAMPI_SECRET_KEY
-                }
+                env: { YAMPI_ALIAS: !!YAMPI_ALIAS, YAMPI_TOKEN: !!YAMPI_TOKEN, YAMPI_SECRET_KEY: !!YAMPI_SECRET_KEY }
               }));
               return;
             }
 
-            // Rota de Produtos
             if (req.url === '/api/yampi/products') {
               const targetUrl = `${YAMPI_API_BASE}/catalog/products`;
-              console.log(`[Yampi API] Chamando URL: ${targetUrl}`);
-
+              
               if (!YAMPI_ALIAS || !YAMPI_TOKEN || !YAMPI_SECRET_KEY) {
                 res.statusCode = 500;
                 res.setHeader('Content-Type', 'application/json');
-                res.end(JSON.stringify({
-                  success: false,
-                  status: 500,
-                  message: 'Variáveis de ambiente ausentes no .env',
-                  details: { YAMPI_ALIAS: !YAMPI_ALIAS, YAMPI_TOKEN: !YAMPI_TOKEN, YAMPI_SECRET_KEY: !YAMPI_SECRET_KEY }
-                }));
+                res.end(JSON.stringify({ success: false, message: 'Credenciais ausentes' }));
                 return;
               }
 
               try {
-                // Header ajustado para User-Secret-Key conforme solicitação
                 const response = await fetch(targetUrl, {
                   headers: {
                     'User-Token': YAMPI_TOKEN,
@@ -68,52 +55,55 @@ export default defineConfig(({ mode }) => {
                   }
                 });
 
-                console.log(`[Yampi API] Status retornado: ${response.status}`);
                 const data = await response.json();
                 
                 if (!response.ok) {
-                  let customMessage = 'Erro na API Yampi';
-                  if (response.status === 401) customMessage = 'Token ou Secret Key inválidos na Yampi';
-                  if (response.status === 403) customMessage = 'Acesso negado: verifique as permissões da API';
-                  if (response.status === 404) customMessage = 'Endpoint ou Loja (Alias) não encontrados';
-                  
-                  console.error(`[Yampi API] Detalhes do erro:`, JSON.stringify(data));
-                  
                   res.statusCode = response.status;
                   res.setHeader('Content-Type', 'application/json');
-                  res.end(JSON.stringify({ 
-                    success: false,
-                    status: response.status,
-                    message: customMessage, 
-                    details: data 
-                  }));
+                  res.end(JSON.stringify({ success: false, status: response.status, message: 'Erro Yampi', details: data }));
                   return;
                 }
 
-                // Normalização dos produtos
                 const rawProducts = data.data || [];
-                const products = rawProducts.map((p: any) => ({
-                  id: p.id,
-                  name: p.name,
-                  price: parseFloat(p.price || 0),
-                  sale_price: parseFloat(p.price_sale || 0),
-                  image_url: p.images?.data?.[0]?.url || '',
-                  product_url: p.url,
-                  checkout_url: `https://${YAMPI_ALIAS}.yampi.store/checkout/cart/add/${p.id}`
-                }));
+                
+                // Log de inspeção seguro (apenas o primeiro produto se existir)
+                if (rawProducts.length > 0) {
+                  const first = rawProducts[0];
+                  console.log(`[Yampi Debug] Estrutura do produto ID ${first.id}:`, {
+                    has_images: !!first.images?.data,
+                    price_raw: first.price,
+                    price_sale_raw: first.price_sale,
+                    sku: first.sku,
+                    active: first.active
+                  });
+                }
+
+                // Normalização robusta para Video Commerce
+                const products = rawProducts.map((p: any) => {
+                  // Tenta pegar a primeira imagem válida
+                  const mainImage = p.images?.data?.[0]?.url || p.image_url || '';
+                  
+                  return {
+                    id: p.id,
+                    name: p.name,
+                    sku: p.sku || `ID-${p.id}`,
+                    active: !!p.active,
+                    // Garante que o preço seja número
+                    price: typeof p.price === 'string' ? parseFloat(p.price) : (p.price || 0),
+                    sale_price: typeof p.price_sale === 'string' ? parseFloat(p.price_sale) : (p.price_sale || 0),
+                    image_url: mainImage,
+                    product_url: p.url,
+                    // Link direto para adição ao carrinho na Yampi
+                    checkout_url: `https://${YAMPI_ALIAS}.yampi.store/checkout/cart/add/${p.id}`
+                  };
+                });
 
                 res.setHeader('Content-Type', 'application/json');
                 res.end(JSON.stringify(products));
               } catch (error) {
-                console.error(`[Yampi API] Erro de rede/conexão:`, error);
                 res.statusCode = 500;
                 res.setHeader('Content-Type', 'application/json');
-                res.end(JSON.stringify({ 
-                  success: false,
-                  status: 500,
-                  message: 'Falha crítica na conexão com o gateway da Yampi',
-                  details: error instanceof Error ? error.message : String(error)
-                }));
+                res.end(JSON.stringify({ success: false, message: 'Falha crítica no proxy' }));
               }
               return;
             }

@@ -1,6 +1,8 @@
 export interface YampiProduct {
   id: number;
   name: string;
+  sku: string;
+  active: boolean;
   price: number;
   sale_price: number;
   image_url: string;
@@ -41,8 +43,7 @@ export const yampiClient = {
 
     if (!response.ok) {
       const errorData = data as YampiErrorResponse;
-      const detailStr = errorData.details ? JSON.stringify(errorData.details) : '';
-      throw new Error(`[${errorData.status}] ${errorData.message}${detailStr ? ': ' + detailStr : ''}`);
+      throw new Error(`[${errorData.status}] ${errorData.message}`);
     }
     
     return data as YampiProduct[];
