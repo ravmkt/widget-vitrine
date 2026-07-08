@@ -1,70 +1,38 @@
 import { YampiProduct } from "./yampi";
 
 /**
- * Normalizador centralizado para produtos Yampi (Dooki)
- * Busca preços e imagens em múltiplos níveis do JSON
+ * Normalizador atualizado com base na inspeção real do JSON Yampi
  */
-export function normalizeYampiProduct(p: any, alias: string): YampiProduct {
-  let foundPrice = 0;
-  let foundSalePrice: number | undefined = undefined;
-  let pricePath = 'not_found';
+export function normalizeYampiProduct(item: any): YampiProduct {
+  const firstSku = item.skus?.data?.[0];
+  
+  // Mapeamento de Imagem (Cascata de tamanhos)
+  const imageData = item.images?.data?.[0];
+  const foundImage = 
+    imageData?.large?.url || 
+    imageData?.medium?.url || 
+    imageData?.thumb?.url || 
+    imageData?.small?.url || 
+    null;
 
-  // 1. Tenta Preço na Raiz
-  const rootPrice = parseFloat(p.price || 0);
-  if (rootPrice > 0) {
-    foundPrice = rootPrice;
-    foundSalePrice = p.price_sale ? parseFloat(p.price_sale) : undefined;
-    pricePath = 'root.price';
-  } 
-  // 2. Tenta no Primeiro SKU (Comum em produtos com variações)
-  else if (p.skus?.data?.[0]) {
-    const sku = p.skus.data[0];
-    foundPrice = parseFloat(sku.price || 0);
-    foundSalePrice = sku.price_sale ? parseFloat(sku.price_sale) : undefined;
-    pricePath = 'skus.data[0].price';
-  }
-
-  let foundImage = '';
-  let imagePath = 'not_found';
-
-  // 1. Tenta Array de Imagens (Relacionamento include=images)
-  if (p.images?.data?.[0]?.url) {
-    foundImage = p.images.data[0].url;
-    imagePath = 'images.data[0].url';
-  }
-  // 2. Tenta image_url na Raiz
-  else if (p.image_url && p.image_url.startsWith('http')) {
-    foundImage = p.image_url;
-    imagePath = 'root.image_url';
-  }
-  // 3. Tenta no Primeiro SKU
-  else if (p.skus?.data?.[0]?.image_url) {
-    foundImage = p.skus.data[0].image_url;
-    imagePath = 'skus.data[0].image_url';
-  }
-
-  // Log de diagnóstico para depuração no console do navegador
-  console.log(`[Yampi Sync] ${p.name}`, {
-    id: p.id,
-    price: foundPrice,
-    pricePath,
-    image: foundImage ? 'OK' : 'MISSING',
-    imagePath,
-    rawSkus: p.skus?.data?.length || 0,
-    rawImages: p.images?.data?.length || 0
-  });
+  // Caminhos para debug visual
+  const pricePath = firstSku?.price_sale ? 'skus.data[0].price_sale' : 'not_found';
+  const imagePath = imageData?.large?.url ? 'images.data[0].large.url' : (imageData?.medium?.url ? 'images.data[0].medium.url' : 'not_found');
 
   return {
-    id: String(p.id),
-    name: p.name,
-    sku: p.sku || p.skus?.data?.[0]?.sku || `ID-${p.id}`,
-    price: foundPrice,
-    salePrice: foundSalePrice && foundSalePrice < foundPrice ? foundSalePrice : undefined,
+    id: String(item.id),
+    name: item.name,
+    slug: item.slug,
+    sku: item.sku || firstSku?.sku,
+    active: !!item.active,
+    price: Number(firstSku?.price_sale ?? 0),
+    priceCost: firstSku?.price_cost ? Number(firstSku?.price_cost) : null,
     image: foundImage,
-    productUrl: p.url,
-    checkoutUrl: `https://${alias}.yampi.store/checkout/cart/add/${p.id}`,
-    active: !!p.active,
+    url: item.url,
+    checkoutUrl: firstSku?.purchase_url || null,
+    stock: firstSku?.total_in_stock ?? 0,
+    stockStatus: firstSku?.stock_status ?? null,
     debug: { pricePath, imagePath },
-    raw: p // Armazena o bruto para o "Ver JSON"
+    raw: item
   };
 }

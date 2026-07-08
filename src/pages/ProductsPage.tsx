@@ -4,7 +4,7 @@ import { normalizeYampiProduct } from "@/lib/yampi-normalizer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCw, Bug, Tag, Database, ExternalLink, Code, Eye } from "lucide-react";
+import { RefreshCw, Bug, Tag, Database, ExternalLink, Code, Package } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -24,8 +24,7 @@ export default function ProductsPage() {
       setHealth(h);
       
       const raw = await yampiClient.listRawProducts();
-      // O ALIAS agora é extraído do health ou de uma variável se necessário, mas aqui simulamos com fallback
-      const normalized = raw.map(p => normalizeYampiProduct(p, 'loja')); 
+      const normalized = raw.map(p => normalizeYampiProduct(p)); 
       setProducts(normalized);
     } catch (err: any) {
       setError(err.message);
@@ -42,17 +41,17 @@ export default function ProductsPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Database className="h-5 w-5 text-violet-600" />
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Inspeção Yampi</h1>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Sincronia Yampi</h1>
           </div>
           <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider">
-            <span className={health?.env.YAMPI_ALIAS ? "text-emerald-600" : "text-red-600"}>ALIAS</span>
-            <span className={health?.env.YAMPI_TOKEN ? "text-emerald-600" : "text-red-600"}>TOKEN</span>
-            <span className={health?.env.YAMPI_SECRET_KEY ? "text-emerald-600" : "text-red-600"}>SECRET</span>
+            <Badge variant="outline" className={health?.env.YAMPI_ALIAS ? "text-emerald-600 border-emerald-100" : "text-red-600"}>ALIAS</Badge>
+            <Badge variant="outline" className={health?.env.YAMPI_TOKEN ? "text-emerald-600 border-emerald-100" : "text-red-600"}>TOKEN</Badge>
+            <Badge variant="outline" className={health?.env.YAMPI_SECRET_KEY ? "text-emerald-600 border-emerald-100" : "text-red-600"}>SECRET</Badge>
           </div>
         </div>
         <Button onClick={fetchData} disabled={loading} className="rounded-xl bg-violet-600 hover:bg-violet-700 font-bold h-12 px-6">
           <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Sincronizar Bruto
+          Sincronizar Agora
         </Button>
       </div>
 
@@ -66,21 +65,21 @@ export default function ProductsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {loading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-[450px] w-full rounded-2xl" />
+          Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-[400px] w-full rounded-2xl" />
           ))
         ) : products.map((product) => (
-          <Card key={product.id} className="overflow-hidden border-slate-200 shadow-sm rounded-2xl bg-white flex flex-col group">
-            <div className="relative aspect-square bg-slate-100 p-4">
+          <Card key={product.id} className="overflow-hidden border-slate-200 shadow-sm rounded-2xl bg-white flex flex-col group transition-all hover:shadow-md">
+            <div className="relative aspect-square bg-slate-50 p-4">
               <img 
                 src={product.image || '/placeholder.svg'} 
                 alt={product.name}
-                className="w-full h-full object-contain mix-blend-multiply"
+                className="w-full h-full object-contain mix-blend-multiply transition-transform group-hover:scale-105"
                 onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
               />
               
-              <div className="absolute top-3 right-3 flex flex-col gap-2">
-                <Badge className={product.active ? "bg-emerald-500" : "bg-slate-400"}>
+              <div className="absolute top-3 left-3 flex flex-col gap-2">
+                <Badge className={product.active ? "bg-emerald-500 hover:bg-emerald-600" : "bg-slate-400"}>
                   {product.active ? "Ativo" : "Inativo"}
                 </Badge>
               </div>
@@ -96,8 +95,8 @@ export default function ProductsPage() {
                     <DialogHeader>
                       <DialogTitle>JSON Bruto: {product.name}</DialogTitle>
                     </DialogHeader>
-                    <ScrollArea className="h-[60vh] w-full rounded-md border p-4 bg-slate-900">
-                      <pre className="text-[10px] text-emerald-400 font-mono">
+                    <ScrollArea className="h-[60vh] w-full rounded-md border p-4 bg-slate-950">
+                      <pre className="text-[11px] text-emerald-400 font-mono">
                         {JSON.stringify(product.raw, null, 2)}
                       </pre>
                     </ScrollArea>
@@ -108,14 +107,16 @@ export default function ProductsPage() {
             
             <CardContent className="p-4 flex-1 flex flex-col">
               <div className="space-y-1 mb-4">
-                <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase">
-                  <Tag className="h-3 w-3" /> {product.sku}
+                <div className="flex items-center justify-between gap-1 text-[10px] font-bold text-slate-400 uppercase">
+                  <span className="flex items-center gap-1"><Tag className="h-3 w-3" /> {product.sku}</span>
+                  <span className="flex items-center gap-1"><Package className="h-3 w-3" /> {product.stock} un</span>
                 </div>
-                <h3 className="text-sm font-black text-slate-900 line-clamp-2 leading-tight">
+                <h3 className="text-sm font-black text-slate-900 line-clamp-2 leading-tight min-h-[2.5rem]">
                   {product.name}
                 </h3>
-                <div className="text-[8px] font-mono text-slate-400">
-                  P: {product.debug?.pricePath} | I: {product.debug?.imagePath}
+                <div className="bg-slate-100 p-1.5 rounded-lg text-[8px] font-mono text-slate-500">
+                  <p>P: {product.debug?.pricePath}</p>
+                  <p>I: {product.debug?.imagePath}</p>
                 </div>
               </div>
 
@@ -127,11 +128,11 @@ export default function ProductsPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
-                  <Button asChild variant="outline" className="h-8 text-[10px] font-black rounded-lg">
-                    <a href={product.productUrl} target="_blank" rel="noreferrer">PÁGINA <ExternalLink className="ml-1 h-3 w-3" /></a>
+                  <Button asChild variant="outline" className="h-8 text-[10px] font-black rounded-lg border-slate-200 hover:bg-slate-50">
+                    <a href={product.url} target="_blank" rel="noreferrer">LOJA <ExternalLink className="ml-1 h-3 w-3" /></a>
                   </Button>
-                  <Button asChild className="h-8 text-[10px] font-black rounded-lg bg-slate-900">
-                    <a href={product.checkoutUrl} target="_blank" rel="noreferrer">CHECKOUT</a>
+                  <Button asChild className="h-8 text-[10px] font-black rounded-lg bg-slate-900 hover:bg-black" disabled={!product.checkoutUrl}>
+                    <a href={product.checkoutUrl || '#'} target="_blank" rel="noreferrer">CHECKOUT</a>
                   </Button>
                 </div>
               </div>

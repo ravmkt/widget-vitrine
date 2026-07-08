@@ -1,13 +1,16 @@
 export interface YampiProduct {
   id: string;
   name: string;
+  slug: string;
   sku: string;
   price: number;
-  salePrice?: number;
-  image: string;
-  productUrl?: string;
-  checkoutUrl?: string;
+  priceCost: number | null;
+  image: string | null;
+  url: string;
+  checkoutUrl: string | null;
   active: boolean;
+  stock: number;
+  stockStatus: string | null;
   debug?: {
     pricePath: string;
     imagePath: string;
