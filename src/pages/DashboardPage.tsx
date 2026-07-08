@@ -346,7 +346,7 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {/* Card 3: Conversões (COM FORMULA E EXPLICAÇÃO) */}
+          {/* Card 3: Conversões */}
           <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 hover:border-slate-700/60 transition-all shadow-xl flex items-center justify-between relative">
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
@@ -414,7 +414,7 @@ const DashboardPage = () => {
             <div className="space-y-1.5">
               <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Compartilhar</span>
               <h2 className="text-2xl font-black text-slate-100">{metricsData.cards.shares.toLocaleString()}</h2>
-              <div className="flex items-center gap-1 text-[10px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-md w-fit">
+              <div className="flex items-center gap-1 text-[10px] font-bold text-amber-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-md w-fit">
                 <TrendingUp className="w-3 h-3" /> Estável
               </div>
             </div>
@@ -465,54 +465,6 @@ const DashboardPage = () => {
             </div>
           </div>
 
-        </div>
-
-        {/* METRICS FORMULA VISUAL WIDGET */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-5">
-            <Sparkles className="w-48 h-48 text-violet-500" />
-          </div>
-
-          <div className="space-y-4 max-w-3xl">
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-xl bg-violet-600/15 text-violet-400 border border-violet-500/20">
-                <HelpCircle className="w-4 h-4" />
-              </span>
-              <h3 className="font-extrabold text-base text-slate-100 uppercase tracking-wider">Como calculamos as suas conversões?</h3>
-            </div>
-            
-            <p className="text-slate-400 text-sm md:text-base leading-relaxed font-semibold">
-              O Vidlytics centraliza e correlaciona as intenções de compras em tempo real. A taxa de conversão do widget de stories é baseada estritamente nas seguintes métricas do seu funil:
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              
-              <div className="bg-slate-950/60 p-4 border border-slate-850 rounded-2xl space-y-2">
-                <span className="font-bold text-violet-400 block text-xs uppercase">1. Total de Conversões</span>
-                <div className="flex flex-wrap items-center gap-1 text-slate-200 font-semibold text-sm">
-                  <span>Clique CTA</span>
-                  <Plus className="w-3.5 h-3.5 text-slate-600" />
-                  <span>Clique Produto</span>
-                  <Plus className="w-3.5 h-3.5 text-slate-600" />
-                  <span className="text-emerald-400 font-bold">Falar no WhatsApp</span>
-                </div>
-                <p className="text-[11px] text-slate-500 font-semibold leading-relaxed">Soma de todos os cliques intencionais que redirecionam o cliente para o carrinho, checkout ou canais de suporte.</p>
-              </div>
-
-              <div className="bg-slate-950/60 p-4 border border-slate-850 rounded-2xl space-y-2">
-                <span className="font-bold text-violet-400 block text-xs uppercase">2. Taxa de Conversão Geral</span>
-                <div className="flex items-center gap-2 font-mono font-bold text-xs bg-slate-900 border border-slate-800 p-2 rounded-xl text-center justify-center w-fit text-slate-100">
-                  <span>( Conversões</span>
-                  <span className="text-slate-600">/</span>
-                  <span>Visualizações )</span>
-                  <span className="text-slate-600">×</span>
-                  <span className="text-violet-400">100</span>
-                </div>
-                <p className="text-[11px] text-slate-500 font-semibold leading-relaxed">Indica a porcentagem exata de espectadores do widget que realizaram pelo menos um clique de compra ou suporte.</p>
-              </div>
-
-            </div>
-          </div>
         </div>
 
         {/* Gráficos Linha: Visualizações por Dia & Cliques por Dia */}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import { db, Product, Store, StoryProduct, Story } from '@/lib/db';
+import { Link } from 'react-router-dom';
 import {
   ShoppingBag,
   Plus,
@@ -131,10 +132,15 @@ const ProductsPage = () => {
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
+      const nameNorm = String(p.name ?? '').toLowerCase();
+      const skuNorm = String(p.sku ?? '').toLowerCase();
+      const urlNorm = String(p.product_url ?? '').toLowerCase();
+      const searchNorm = searchTerm.toLowerCase();
+
       const matchesSearch =
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (p.sku && p.sku.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        p.product_url.toLowerCase().includes(searchTerm.toLowerCase());
+        nameNorm.includes(searchNorm) ||
+        skuNorm.includes(searchNorm) ||
+        urlNorm.includes(searchNorm);
 
       const matchesStatus =
         filterStatus === 'all' ||

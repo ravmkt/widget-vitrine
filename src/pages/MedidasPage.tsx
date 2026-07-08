@@ -14,20 +14,17 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
-  Info
+  Info,
+  Upload,
+  User,
+  Image as ImageIcon
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import CustomDialog from '@/components/CustomDialog';
 
-const INITIAL_MEASURE_ROW: SizeMeasure = {
-  name: 'Busto',
-  value: 0,
-  unit: 'cm'
-};
-
 const INITIAL_FORM_STATE = {
   name: '',
-  size_name: '',
+  image_url: '',
   measures: [] as SizeMeasure[]
 };
 
@@ -82,9 +79,8 @@ const MedidasPage = () => {
   // Filtered and paginated lists
   const filteredModels = useMemo(() => {
     return sizingModels.filter((model) => {
-      const matchesName = model.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesSize = model.size_name.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesName || matchesSize;
+      const matchesName = String(model.name ?? '').toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesName;
     });
   }, [sizingModels, searchTerm]);
 
@@ -105,10 +101,11 @@ const MedidasPage = () => {
   const handleCreateNew = () => {
     setFormData({
       name: '',
-      size_name: 'M',
+      image_url: '',
       measures: [
         { name: 'Cintura', value: 80, unit: 'cm' },
-        { name: 'Quadril', value: 98, unit: 'cm' }
+        { name: 'Quadril', value: 98, unit: 'cm' },
+        { name: 'Busto', value: 90, unit: 'cm' }
       ]
     });
     setEditingId(null);
@@ -120,7 +117,7 @@ const MedidasPage = () => {
   const handleEdit = (model: SizingModel) => {
     setFormData({
       name: model.name || '',
-      size_name: model.size_name || '',
+      image_url: model.image_url || '',
       measures: model.measures ? [...model.measures] : []
     });
     setEditingId(model.id);
@@ -134,11 +131,11 @@ const MedidasPage = () => {
       isOpen: true,
       type: 'confirm',
       title: 'Remover Modelo de Medidas?',
-      description: `Tem certeza que deseja excluir o modelo "${name}"? Esta ação removerá permanentemente as medidas registradas no provador virtual.`,
+      description: `Tem certeza que deseja excluir o perfil da modelo "${name}"? Esta ação removerá permanentemente as medidas registradas no provador.`,
       onConfirm: async () => {
         try {
           await db.sizingModels.delete(id);
-          showSuccess('Modelo de medidas excluído!');
+          showSuccess('Perfil da modelo excluído!');
           setDialog(prev => ({ ...prev, isOpen: false }));
           loadData();
         } catch (e) {
@@ -147,6 +144,30 @@ const MedidasPage = () => {
       },
       onCancel: () => setDialog(prev => ({ ...prev, isOpen: false }))
     });
+  };
+
+  // Face picture upload trigger
+  const handleFacePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Limit to 1MB size limit
+      if (file.size > 1.5 * 1024 * 1024) {
+        setDialog({
+          isOpen: true,
+          type: 'error',
+          title: 'Arquivo Excedeu o Limite',
+          description: 'A foto do rosto da modelo deve ter no máximo 1.5MB de tamanho nos formatos aceitos (JPG, PNG, WebP).',
+          onConfirm: () => setDialog(prev => ({ ...prev, isOpen: false }))
+        });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, image_url: reader.result as string }));
+        showSuccess('Foto da modelo carregada! Clique em salvar.');
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   // Measures Rows controls
@@ -181,10 +202,7 @@ const MedidasPage = () => {
     // Validations
     const newErrors: Record<string, string> = {};
     if (!formData.name.trim()) {
-      newErrors.name = 'O nome do modelo de roupas é obrigatório.';
-    }
-    if (!formData.size_name.trim()) {
-      newErrors.size_name = 'O tamanho (ex: P, M, G) é obrigatório.';
+      newErrors.name = 'O nome da modelo é obrigatório.';
     }
     if (formData.measures.length === 0) {
       newErrors.measures = 'Adicione ao menos uma linha de especificação de medidas.';
@@ -201,12 +219,13 @@ const MedidasPage = () => {
         id: editingId || Math.random().toString(36).substr(2, 9),
         store_id: storeId,
         name: formData.name.trim(),
-        size_name: formData.size_name.trim(),
+        image_url: formData.image_url || undefined,
+        size_name: 'M', // fallback sizing label deprecated from editing
         measures: formData.measures
       };
 
       await db.sizingModels.save(payload);
-      showSuccess(editingId ? 'Especiais de medidas salvos!' : 'Tabela de tamanho cadastrada!');
+      showSuccess(editingId ? 'Dados da modelo atualizados!' : 'Nova modelo cadastrada!');
       setShowForm(false);
       setEditingId(null);
       loadData();
@@ -237,7 +256,7 @@ const MedidasPage = () => {
               Tabelas de Medidas
             </h1>
             <p className="text-slate-400 text-sm md:text-base mt-1">
-              Cadastre tabelas de tamanhos, especificações e medidas para o provador virtual de roupas e vestuário.
+              Cadastre o perfil das modelos e as respectivas especificações de medidas para o provador de roupas e vestuário.
             </p>
           </div>
 
@@ -259,7 +278,7 @@ const MedidasPage = () => {
               <div className="flex items-center gap-2">
                 <Ruler className="w-5 h-5 text-violet-400" />
                 <h3 className="text-lg font-bold">
-                  {editingId ? 'Editar Modelo de Medidas' : 'Cadastrar Modelo de Medidas'}
+                  {editingId ? 'Editar Perfil da Modelo' : 'Cadastrar Perfil da Modelo'}
                 </h3>
               </div>
               <button
@@ -278,7 +297,7 @@ const MedidasPage = () => {
                 {/* Nome do Modelo */}
                 <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                    Nome do Modelo / Produto *
+                    Nome da Modelo *
                   </label>
                   <input
                     type="text"
@@ -287,9 +306,9 @@ const MedidasPage = () => {
                       setFormData({ ...formData, name: e.target.value });
                       if (e.target.value.trim()) setFormErrors(prev => ({ ...prev, name: '' }));
                     }}
-                    placeholder="Ex: Tabela de Medidas Jeans Useanny"
+                    placeholder="Ex: Amanda Silva"
                     className={`w-full bg-slate-950 border focus:ring-1 focus:outline-none rounded-xl px-4 py-3 text-sm md:text-base text-slate-100 font-bold ${
-                      errors.name ? 'border-rose-500 focus:ring-rose-500 focus:border-rose-500' : 'border-slate-800 focus:border-violet-500 focus:ring-violet-500'
+                      errors.name ? 'border-rose-500 focus:ring-rose-500 focus:border-rose-500' : 'border-slate-800 focus:border-violet-500'
                     }`}
                   />
                   {errors.name && (
@@ -297,26 +316,64 @@ const MedidasPage = () => {
                   )}
                 </div>
 
-                {/* Nome do Tamanho */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                    Nome do Tamanho *
+                {/* Foto do rosto de modelo */}
+                <div className="md:col-span-3 space-y-4">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Foto do Rosto da Modelo
                   </label>
-                  <input
-                    type="text"
-                    value={formData.size_name}
-                    onChange={(e) => {
-                      setFormData({ ...formData, size_name: e.target.value });
-                      if (e.target.value.trim()) setFormErrors(prev => ({ ...prev, size_name: '' }));
-                    }}
-                    placeholder="Ex: M"
-                    className={`w-full bg-slate-950 border focus:ring-1 focus:outline-none rounded-xl px-4 py-3 text-sm md:text-base text-slate-100 font-bold ${
-                      errors.size_name ? 'border-rose-500 focus:ring-rose-500 focus:border-rose-500' : 'border-slate-800 focus:border-violet-500 focus:ring-violet-500'
-                    }`}
-                  />
-                  {errors.size_name && (
-                    <span className="text-xs text-rose-500 font-bold mt-1 block">{errors.size_name}</span>
-                  )}
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-[110px_1fr] gap-4 items-center bg-slate-950 p-4 border border-slate-850 rounded-2xl">
+                    <div className="w-[90px] h-[90px] bg-slate-900 border border-slate-800 rounded-full flex items-center justify-center overflow-hidden relative group shrink-0">
+                      {formData.image_url ? (
+                        <>
+                          <img
+                            src={formData.image_url}
+                            alt="Face preview"
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, image_url: '' })}
+                            className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-rose-500 transition-opacity font-bold text-[10px]"
+                          >
+                            Remover
+                          </button>
+                        </>
+                      ) : (
+                        <div className="text-center p-2">
+                          <User className="w-8 h-8 text-slate-600 mx-auto" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      <p className="text-xs text-slate-400 font-semibold leading-relaxed">
+                        Envie uma foto de perfil nítida do rosto (máximo 1.5MB nos formatos JPG, PNG, WebP).
+                      </p>
+                      
+                      <div className="flex flex-wrap gap-2">
+                        <label className="cursor-pointer inline-flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md">
+                          <Upload className="w-3.5 h-3.5" /> Enviar Foto
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
+                            onChange={handleFacePhotoUpload}
+                            className="hidden"
+                          />
+                        </label>
+
+                        {formData.image_url && (
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, image_url: '' })}
+                            className="text-xs text-rose-400 font-bold px-3 py-2 rounded-xl border border-slate-800 hover:bg-rose-950/20 transition-all"
+                          >
+                            Remover Imagem
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
               </div>
@@ -421,7 +478,7 @@ const MedidasPage = () => {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <input
               type="text"
-              placeholder="Buscar modelos de medidas ou tamanhos (ex: Calça Jeans, P, M)..."
+              placeholder="Buscar modelos cadastrados pelo nome..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -438,7 +495,7 @@ const MedidasPage = () => {
             <Ruler className="w-12 h-12 text-slate-700 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-slate-200">Nenhum modelo cadastrado</h3>
             <p className="text-slate-400 text-sm mt-1">
-              {searchTerm ? 'Nenhum resultado corresponde à sua pesquisa.' : 'Comece a configurar o provador cadastrando sua primeira tabela de tamanhos.'}
+              {searchTerm ? 'Nenhum resultado corresponde à sua pesquisa.' : 'Comece a configurar suas modelos preenchendo as medidas.'}
             </p>
           </div>
         ) : (
@@ -448,8 +505,7 @@ const MedidasPage = () => {
               <table className="w-full text-left border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-slate-800 text-slate-400 bg-slate-950/40 uppercase font-bold text-[10px] tracking-wider">
-                    <th className="p-4 pl-6 w-[240px]">Modelo / Vestuário</th>
-                    <th className="p-4 text-center w-[120px]">Tamanho</th>
+                    <th className="p-4 pl-6 w-[280px]">Modelo / Rosto</th>
                     <th className="p-4">Tabela de Medidas (Detalhes)</th>
                     <th className="p-4 pr-6 text-right w-[140px]">Ações</th>
                   </tr>
@@ -459,20 +515,22 @@ const MedidasPage = () => {
                     <tr key={model.id} className="hover:bg-slate-800/20 transition-all">
                       <td className="p-4 pl-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-violet-600/10 text-violet-400 flex items-center justify-center border border-violet-500/20">
-                            <Ruler className="w-5 h-5" />
-                          </div>
+                          {model.image_url ? (
+                            <img
+                              src={model.image_url}
+                              alt={model.name}
+                              className="w-10 h-10 rounded-full object-cover shrink-0 border border-slate-800 bg-slate-900"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-violet-600/10 text-violet-400 flex items-center justify-center border border-violet-500/20 shrink-0">
+                              <User className="w-5 h-5" />
+                            </div>
+                          )}
                           <div>
                             <span className="text-slate-100 font-bold block text-base leading-tight">{model.name}</span>
                             <span className="text-[10px] text-slate-500 font-mono">ID: {model.id}</span>
                           </div>
                         </div>
-                      </td>
-
-                      <td className="p-4 text-center">
-                        <span className="bg-violet-500/15 text-violet-400 border border-violet-500/20 px-3 py-1.5 rounded-xl font-black text-xs">
-                          {model.size_name}
-                        </span>
                       </td>
 
                       <td className="p-4">
@@ -540,25 +598,6 @@ const MedidasPage = () => {
           </div>
         )}
 
-        {/* Info Explanatory Box */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-5">
-            <Sparkles className="w-48 h-48 text-violet-500" />
-          </div>
-
-          <div className="space-y-4 max-w-3xl">
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-xl bg-violet-600/15 text-violet-400 border border-violet-500/20">
-                <Info className="w-4 h-4" />
-              </span>
-              <h3 className="font-extrabold text-base text-slate-100 uppercase tracking-wider">Como funciona o Provador Virtual?</h3>
-            </div>
-            <p className="text-slate-400 text-sm leading-relaxed font-semibold">
-              Ao vincular as tabelas de tamanhos criadas acima nas páginas de produto correspondentes na Useanny, a tag em Javascript detecta automaticamente as medidas do manequim do cliente, indicando o tamanho ideal e reduzindo a taxa de devoluções e logística reversa por tamanho incorreto.
-            </p>
-          </div>
-        </div>
-
       </main>
 
       {/* Confirm Deletion Custom Dialog */}
@@ -569,8 +608,8 @@ const MedidasPage = () => {
         description={dialog.description}
         onConfirm={dialog.onConfirm}
         onCancel={dialog.onCancel}
-        confirmText="Excluir Modelo"
-        cancelText="Cancelar"
+        confirmText="Confirmar"
+        cancelText="Voltar"
       />
     </div>
   );

@@ -5,6 +5,7 @@ import { db, Story, Store, Video, StoryVideo, Appearance, StoryFormat, CTAType, 
 import { ArrowLeft, ExternalLink, Film, Image, Link as LinkIcon, Save, X, Edit3, ToggleLeft, ToggleRight, Eye as EyeIcon, MousePointerClick, Video as VideoIcon, LayoutGrid, LayoutList, MessageSquareText, Share2, Heart, Phone, GripVertical, PlusCircle, Trash2, XCircle, FolderHeart, Layers, Check, Plus, Palette } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
 import CustomDialog from '@/components/CustomDialog';
+import { cn } from '@/lib/utils';
 
 const StoryDetailsPage = () => {
   const { id } = useParams();

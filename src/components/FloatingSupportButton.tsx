@@ -32,7 +32,7 @@ const FloatingSupportButton = () => {
       return;
     }
 
-    const defaultMsg = encodeURIComponent(generalSettings?.whatsapp_default_message || "Olá! Preciso de suporte com o app Video Commerce.");
+    const defaultMsg = encodeURIComponent("Olá! Preciso de ajuda com o aplicativo Vidlytics Stories.");
     const supportUrl = `https://wa.me/${whatsappNum.replace(/\D/g, "")}?text=${defaultMsg}`;
     window.open(supportUrl, "_blank", "noopener,noreferrer");
   };

@@ -116,7 +116,6 @@ const VideoGalleryPage = () => {
 
     videoNode.onloadedmetadata = () => {
       setDuration(Math.round(videoNode.duration));
-      // Seek slightly forward to avoid completely black starting frames
       videoNode.currentTime = Math.min(1, videoNode.duration / 2);
     };
 
@@ -142,20 +141,10 @@ const VideoGalleryPage = () => {
   };
 
   const handleSourceTypeChange = (newType: Video['source_type']) => {
-    // Standardize source types and remove mobile_upload duplicate
     const cleanType = newType === 'mobile_upload' ? 'upload' : newType;
     setSourceType(cleanType);
-    
-    if (cleanType === 'instagram') {
-      setVideoUrl('https://www.instagram.com/p/DaQ1-vHpsGa/');
-      setThumbnailUrl('https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80');
-    } else if (cleanType === 'tiktok') {
-      setVideoUrl('https://www.tiktok.com/@useanny_oficial/video/7624665768281541906');
-      setThumbnailUrl('https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80');
-    } else {
-      setVideoUrl('https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4');
-      setThumbnailUrl('https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80');
-    }
+    setVideoUrl(''); // Always blank on load
+    setThumbnailUrl('');
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -314,7 +303,6 @@ const VideoGalleryPage = () => {
   };
 
   const getInstagramEmbedUrl = (url: string) => {
-    // Normalizes instagram posts/reels to embed URLs
     try {
       const match = url.match(/(?:instagram\.com\/(?:p|reel|tv)\/)([^\/?#&]+)/i);
       if (match && match[1]) {
@@ -325,7 +313,6 @@ const VideoGalleryPage = () => {
   };
 
   const getTikTokEmbedUrl = (url: string) => {
-    // Normalizes TikTok video URLs to embed URLs
     try {
       const match = url.match(/(?:tiktok\.com\/@[^\/]+\/video\/)(\d+)/i);
       if (match && match[1]) {
@@ -338,7 +325,7 @@ const VideoGalleryPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-4 text-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500"></div>
         <p className="text-base text-slate-400 font-semibold">Carregando galeria de vídeos...</p>
       </div>
     );
@@ -361,7 +348,16 @@ const VideoGalleryPage = () => {
           <button
             onClick={() => {
               if (showForm) handleCancelForm();
-              else setShowForm(true);
+              else {
+                setTitle('');
+                setSourceType('external_url');
+                setVideoUrl(''); // Ensure blank on load
+                setThumbnailUrl('');
+                setDuration(undefined);
+                setFileSize(undefined);
+                setSelectedFileName('');
+                setShowForm(true);
+              }
             }}
             className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white px-5 py-3 rounded-2xl font-bold text-sm md:text-base shadow-lg shadow-violet-100 transition-all self-start sm:self-auto"
           >
@@ -502,7 +498,7 @@ const VideoGalleryPage = () => {
                   <p className="text-sm font-bold text-slate-300">Escolha um arquivo MP4 local</p>
                   <p className="text-xs text-slate-500 mt-1 mb-4">O sistema detectará a duração e extrairá a imagem de capa automaticamente.</p>
                   
-                  <label className="cursor-pointer bg-slate-900 border border-slate-800 hover:border-violet-500 text-slate-300 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md">
+                  <label className="cursor-pointer bg-slate-900 border border-slate-850 hover:border-violet-500 text-slate-300 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md">
                     Selecionar Arquivo
                     <input
                       type="file"

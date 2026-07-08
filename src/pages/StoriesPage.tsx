@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import { db, Story, Store, Video, StoryVideo, Appearance, StoryFormat, CTAType, ScrollDirection, DisplayLocation, PageRule, Product, StoryProduct, ConditionType, DisplayPosition } from '@/lib/db';
-import { Plus, Film, Eye, Trash2, Edit3, Sparkles, ToggleLeft, ToggleRight, Copy, Check, Eye as EyeIcon, MousePointerClick, Video as VideoIcon, LayoutGrid, LayoutList, MessageSquareText, Share2, Heart, Phone, GripVertical, PlusCircle, XCircle, FolderHeart, Layers, Palette } from 'lucide-react';
+import { db, Story, Store, Video, StoryVideo, Appearance, StoryFormat, CTAType, ScrollDirection, DisplayLocation, PageRule, Product, StoryProduct, ConditionType, DisplayPosition, SizingModel } from '@/lib/db';
+import { Plus, Film, Eye, Trash2, Edit3, Sparkles, ToggleLeft, ToggleRight, Copy, Check, Eye as EyeIcon, MousePointerClick, Video as VideoIcon, LayoutGrid, LayoutList, MessageSquareText, Share2, Heart, Phone, GripVertical, PlusCircle, XCircle, FolderHeart, Layers, Palette, Ruler } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import CustomDialog from '@/components/CustomDialog';
+import { cn } from '@/lib/utils';
 
 const StoriesPage = () => {
   const [store, setStore] = useState<Store | null>(null);
@@ -14,6 +15,7 @@ const StoriesPage = () => {
   const [allVideosList, setAllVideosList] = useState<Video[]>([]); // Todos os vídeos cadastrados
   const [appearances, setAppearances] = useState<Appearance[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [sizingModels, setSizingModels] = useState<SizingModel[]>([]);
   const [storyVideosMap, setStoryVideosMap] = useState<Map<string, StoryVideo[]>>(new Map());
   const [displayLocationsMap, setDisplayLocationsMap] = useState<Map<string, DisplayLocation[]>>(new Map());
   const [pageRulesMap, setPageRulesMap] = useState<Map<string, PageRule[]>>(new Map());
@@ -55,9 +57,11 @@ const StoriesPage = () => {
   const [position, setPosition] = useState(1);
   const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
   const [selectedProductId, setSelectedProductId] = useState<string | undefined>(undefined);
+  const [selectedSizingModelId, setSelectedSizingModelId] = useState<string | undefined>(undefined);
   const [newProductForm, setNewProductForm] = useState({ name: '', product_url: '', image_url: '', price: 0 });
   const [displayLocations, setDisplayLocations] = useState<Omit<DisplayLocation, 'id' | 'store_id' | 'story_id' | 'created_at' | 'updated_at'>[]>([]);
-  const [pageRules, setPageRules] = useState<Omit<PageRule, 'id' | 'store_id' | 'story_id' | 'created_at' | 'updated_at'>[]>([]);
+  const [pageRules, setPageRules] = useState<Omit<PageRule, 'id' | 'store_id<dyad-write path="src/pages/StoriesPage.tsx" description="Continuing the StoriesPage code to support both products and sizing model linking, fixing cn ReferenceErrors, and styling state forms.">
+                  const [pageRules, setPageRules] = useState<Omit<PageRule, 'id' | 'store_id' | 'story_id' | 'created_at' | 'updated_at'>[]>([]);
 
   const loadStoriesData = useCallback(async () => {
     try {
@@ -78,6 +82,9 @@ const StoriesPage = () => {
 
         const fetchedProducts = await db.products.getAll(mainStore.id);
         setProducts(fetchedProducts);
+
+        const fetchedSizing = await db.sizingModels.getAll(mainStore.id);
+        setSizingModels(fetchedSizing);
 
         const fetchedStoryVideos = await db.storyVideos.getAll(mainStore.id);
         const svMap = new Map<string, StoryVideo[]>();
@@ -262,6 +269,7 @@ const StoriesPage = () => {
       setWhatsappMessage('');
       setSelectedVideoIds([]);
       setSelectedProductId(undefined);
+      setSelectedSizingModelId(undefined);
       setNewProductForm({ name: '', product_url: '', image_url: '', price: 0 });
       setDisplayLocations([]);
       setPageRules([]);
@@ -287,10 +295,8 @@ const StoriesPage = () => {
         updated_at: new Date().toISOString(),
       };
       
-      // Save duplicated story payload
       await db.stories.save(duplicatedStory);
       
-      // Duplicate videos
       const allStoryVideos = await db.storyVideos.getAll();
       const relatedVideos = allStoryVideos.filter(sv => sv.story_id === storyToDup.id);
       for (const sv of relatedVideos) {
@@ -303,7 +309,6 @@ const StoriesPage = () => {
         });
       }
       
-      // Duplicate products relations
       const allStoryProducts = await db.storyProducts.getAll();
       const relatedProducts = allStoryProducts.filter(sp => sp.story_id === storyToDup.id);
       for (const sp of relatedProducts) {
@@ -315,7 +320,6 @@ const StoriesPage = () => {
         });
       }
       
-      // Duplicate locations
       const allLocations = await db.displayLocations.getAll();
       const relatedLocations = allLocations.filter(dl => dl.story_id === storyToDup.id);
       for (const dl of relatedLocations) {
@@ -328,7 +332,6 @@ const StoriesPage = () => {
         });
       }
       
-      // Duplicate page rules
       const allRules = await db.pageRules.getAll();
       const relatedRules = allRules.filter(pr => pr.story_id === storyToDup.id);
       for (const pr of relatedRules) {
@@ -341,7 +344,7 @@ const StoriesPage = () => {
         });
       }
       
-      showSuccess(`Story duplicado com sucesso como "${duplicatedStory.title}"!`);
+      showSuccess(`Story duplicado com sucesso!`);
       loadStoriesData();
     } catch (e) {
       console.error(e);
@@ -454,7 +457,7 @@ const StoriesPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-4 text-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500"></div>
         <p className="text-base text-slate-400 font-semibold">Carregando seus stories...</p>
       </div>
     );
@@ -511,7 +514,7 @@ const StoriesPage = () => {
                         if (e.target.value.trim()) setFormErrors(prev => ({ ...prev, title: '' }));
                       }}
                       placeholder="Ex: Coleção Outono 🍂"
-                      className={`w-full bg-slate-950 border focus:outline-none focus:ring-1 rounded-2xl px-4 py-3 text-sm md:text-base text-slate-100 placeholder-slate-600 font-semibold ${
+                      className={`w-full bg-slate-950 border focus:outline-none focus:ring-1 rounded-2xl px-4 py-3 text-sm md:text-base text-slate-100 placeholder-slate-650 font-semibold ${
                         formErrors.title ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-violet-500 focus:ring-violet-500'
                       }`}
                     />
@@ -529,9 +532,9 @@ const StoriesPage = () => {
                       onChange={(e) => setFormat(e.target.value as StoryFormat)}
                       className="w-full bg-slate-950 border border-slate-800 focus:border-violet-500 rounded-2xl px-4 py-3 text-sm md:text-base text-slate-100 font-semibold"
                     >
-                      <option value="carousel">Carrossel de Vídeos</option>
-                      <option value="floating_widget">Widget Flutuante (1 Vídeo)</option>
-                      <option value="grid">Grade de Vídeos</option>
+                      <option value="carousel">Carrossel de Balões</option>
+                      <option value="floating_widget">Balão Fixo de Canto</option>
+                      <option value="grid">Grade / Bloco Fixo</option>
                     </select>
                   </div>
                 </div>
@@ -551,6 +554,44 @@ const StoriesPage = () => {
                     </select>
                   </div>
                 )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Link Produto */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                      <ShoppingBag className="w-3.5 h-3.5 text-violet-400" />
+                      Vincular Produto Principal (Opcional)
+                    </label>
+                    <select
+                      value={selectedProductId || ''}
+                      onChange={(e) => setSelectedProductId(e.target.value || undefined)}
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-violet-500 rounded-2xl px-4 py-3 text-sm text-slate-100 font-bold"
+                    >
+                      <option value="">Nenhum produto vinculado</option>
+                      {products.map(p => (
+                        <option key={p.id} value={p.id}>{p.name} (R$ {p.price.toFixed(2)})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Link Modelo / SizingModel */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                      <Ruler className="w-3.5 h-3.5 text-violet-400" />
+                      Vincular Modelo / Medidas (Opcional)
+                    </label>
+                    <select
+                      value={selectedSizingModelId || ''}
+                      onChange={(e) => setSelectedSizingModelId(e.target.value || undefined)}
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-violet-500 rounded-2xl px-4 py-3 text-sm text-slate-100 font-bold"
+                    >
+                      <option value="">Nenhuma modelo vinculada</option>
+                      {sizingModels.map(sm => (
+                        <option key={sm.id} value={sm.id}>{sm.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
                 <div>
                   <div className="flex justify-between items-center mb-2">
@@ -614,7 +655,7 @@ const StoriesPage = () => {
 
               {/* Seção: Vídeos do Story */}
               <div className="space-y-5">
-                <h4 className="text-base font-bold text-slate-300 border-b border-slate-850 pb-2 font-bold">Vídeos do Story *</h4>
+                <h4 className="text-base font-bold text-slate-300 border-b border-slate-850 pb-2">Vídeos do Story *</h4>
                 
                 <div className="flex border-b border-slate-800">
                   <button
@@ -784,7 +825,7 @@ const StoriesPage = () => {
                           }}
                           placeholder="https://sualoja.com.br/produto"
                           className={`w-full bg-slate-950 border rounded-2xl px-4 py-3 text-sm text-slate-200 font-mono focus:outline-none focus:ring-1 ${
-                            formErrors.ctaUrl ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-violet-500 focus:ring-violet-500'
+                            formErrors.ctaUrl ? 'border-rose-500' : 'border-slate-800 focus:border-violet-500 focus:ring-violet-500'
                           }`}
                         />
                         {formErrors.ctaUrl && (
@@ -807,7 +848,7 @@ const StoriesPage = () => {
                           placeholder="Olá! Tenho interesse no produto deste story."
                           rows={3}
                           className={`w-full bg-slate-950 border rounded-2xl px-4 py-3 text-sm text-slate-200 resize-y focus:outline-none focus:ring-1 ${
-                            formErrors.whatsappMessage ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-violet-500 focus:ring-violet-500'
+                            formErrors.whatsappMessage ? 'border-rose-500' : 'border-slate-800 focus:border-violet-500 focus:ring-violet-500'
                           }`}
                         />
                         {formErrors.whatsappMessage && (
@@ -913,7 +954,7 @@ const StoriesPage = () => {
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
                 <button
                   type="button"
-                  onClick={() => { setShowForm(false); setFormData(INITIAL_PRODUCT_FORM as any); }}
+                  onClick={() => { setShowForm(false); }}
                   className="px-5 py-2.5 rounded-xl border border-slate-800 text-slate-400 hover:bg-slate-800 font-bold text-sm md:text-base transition-all"
                 >
                   Cancelar
@@ -1071,7 +1112,7 @@ const StoriesPage = () => {
         description={dialog.description}
         onConfirm={dialog.onConfirm}
         onCancel={dialog.onCancel}
-        confirmText="Confirmar Exclusão"
+        confirmText="Confirmar"
         cancelText="Voltar"
       />
     </div>

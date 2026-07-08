@@ -22,7 +22,8 @@ import {
   Palette,
   EyeOff,
   Laptop,
-  Maximize2
+  Maximize2,
+  X
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import WhatsAppIcon from '@/components/WhatsAppIcon';
@@ -40,7 +41,7 @@ const INITIAL_APPEARANCE_FORM = {
   border_radius: '16px',
   shadow_enabled: true,
   font_family: 'Inter, sans-serif',
-  widget_shape: 'circle' as 'circle' | 'rounded' | 'rectangle',
+  widget_shape: 'circle' as 'circle' | 'rounded' | 'square' | 'rectangle',
   widget_size: 'medium' as 'small' | 'medium' | 'large',
   widget_animation: 'bounce' as 'none' | 'fade' | 'slide' | 'bounce' | 'pulse',
   carousel_card_shape: 'rounded' as 'rounded' | 'square',
@@ -116,13 +117,11 @@ const AppearancePage = () => {
   };
 
   const handleEdit = (app: Appearance) => {
-    // Normalizing shapes
     let shape = app.widget_shape;
-    if (shape !== 'circle' && shape !== 'rounded' && shape !== 'rectangle') {
+    if (shape !== 'circle' && shape !== 'rounded' && shape !== 'square' && shape !== 'rectangle') {
       shape = 'circle';
     }
     
-    // Normalizing animations
     let anim = app.widget_animation as any;
     if (anim !== 'none' && anim !== 'fade' && anim !== 'slide' && anim !== 'bounce' && anim !== 'pulse') {
       anim = 'bounce';
@@ -233,6 +232,7 @@ const AppearancePage = () => {
         id: editingId || Math.random().toString(36).substr(2, 9),
         store_id: store.id,
         ...formData,
+        widget_shape: formData.widget_shape === 'rectangle' ? 'square' : formData.widget_shape as any
       };
 
       if (formData.is_default) {
@@ -274,20 +274,21 @@ const AppearancePage = () => {
     }
   };
 
-  // Define layout shape classes for preview
+  // Define layout shape classes for preview respecting border radius
   const getWidgetShapeClasses = () => {
     switch (formData.widget_shape) {
       case 'rounded':
-        return 'rounded-[20px] aspect-square';
+        return 'rounded-[16px] aspect-square';
+      case 'square':
+        return 'rounded-[2px] aspect-square';
       case 'rectangle':
-        return 'rounded-[16px] aspect-[9/14] w-[90px] h-[140px]';
+        return 'rounded-[12px] aspect-[9/14] w-[90px] h-[140px]';
       case 'circle':
       default:
         return 'rounded-full aspect-square';
     }
   };
 
-  // Custom simulation animation helper inside live preview
   const getWidgetAnimationClasses = () => {
     switch (formData.widget_animation) {
       case 'bounce': return 'animate-[bounce_2s_infinite]';
@@ -352,9 +353,9 @@ const AppearancePage = () => {
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="text-slate-400 hover:text-slate-200 text-sm font-semibold transition-all"
+                  className="text-slate-400 hover:text-white p-1"
                 >
-                  Cancelar
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
@@ -489,7 +490,7 @@ const AppearancePage = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-2">Arredondamento das Bordas</label>
+                    <label className="block text-xs font-semibold text-slate-300 mb-2">Arredondamento das Bordas (Afeta Widgets, Modais e Carrosséis)</label>
                     <select
                       value={formData.border_radius}
                       onChange={(e) => setFormData({ ...formData, border_radius: e.target.value })}
@@ -505,7 +506,7 @@ const AppearancePage = () => {
                 </div>
               </div>
 
-              {/* SECTION 3: WIDGET FLUTUANTE */}
+              {/* SECTION 3: FORMATO DO WIDGET */}
               <div className="space-y-4">
                 <h4 className="text-sm font-bold text-violet-400 uppercase tracking-wider">3. Aparência do Widget Flutuante</h4>
                 
@@ -519,6 +520,7 @@ const AppearancePage = () => {
                     >
                       <option value="circle">Circular</option>
                       <option value="rounded">Quadrado Arredondado</option>
+                      <option value="square">Quadrado Reto</option>
                       <option value="rectangle">Retangular / Retrato</option>
                     </select>
                   </div>
@@ -553,9 +555,9 @@ const AppearancePage = () => {
                 </div>
               </div>
 
-              {/* SECTION 4: CARROSSEL DE STORIES */}
+              {/* SECTION 4: CARROSSEL DE STORIES / GRADE */}
               <div className="space-y-4">
-                <h4 className="text-sm font-bold text-violet-400 uppercase tracking-wider">4. Carrossel de Stories</h4>
+                <h4 className="text-sm font-bold text-violet-400 uppercase tracking-wider">4. Carrossel & Grade de Stories</h4>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
@@ -755,7 +757,7 @@ const AppearancePage = () => {
                           : "text-slate-400 hover:text-slate-200"
                       )}
                     >
-                      {tab === 'widget' ? 'Widget Fixo' : tab === 'carousel' ? 'Carrossel' : 'Player Modal'}
+                      {tab === 'widget' ? 'Widget Fixo' : tab === 'carousel' ? 'Carrossel / Grade' : 'Player Modal'}
                     </button>
                   ))}
                 </div>
@@ -777,15 +779,13 @@ const AppearancePage = () => {
                         )}
                         style={{
                           background: `linear-gradient(45deg, ${formData.primary_color}, ${formData.secondary_color})`,
+                          borderRadius: formData.widget_shape === 'circle' ? '9999px' : formData.border_radius,
                           boxShadow: formData.shadow_enabled ? '0 10px 25px -3px rgba(0, 0, 0, 0.4)' : 'none'
                         }}
                       >
                         <div
-                          className={cn(
-                            "w-full h-full border-[3px] border-slate-950 overflow-hidden relative bg-slate-800",
-                            getWidgetShapeClasses()
-                          )}
-                          style={{ borderRadius: formData.widget_shape === 'circle' ? '9999px' : formData.widget_shape === 'rounded' ? '18px' : '12px' }}
+                          className="w-full h-full border-[3px] border-slate-950 overflow-hidden relative bg-slate-800"
+                          style={{ borderRadius: formData.widget_shape === 'circle' ? '9999px' : formData.border_radius }}
                         >
                           <img
                             src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200&q=80"
@@ -818,12 +818,11 @@ const AppearancePage = () => {
                     </div>
                   )}
 
-                  {/* TAB 2: CARROSSEL PREVIEW */}
+                  {/* TAB 2: CARROSSEL / GRADE PREVIEW */}
                   {previewTab === 'carousel' && (
                     <div className="w-full space-y-4 custom-preview-font">
-                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider text-center">Preview do Carrossel de Stories (Horizontal)</p>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider text-center">Preview do Carrossel / Grade (Respeita Bordas)</p>
                       
-                      {/* Grid representation adapting dynamically to user gap and visible count values */}
                       <div
                         className="flex overflow-hidden pb-4 justify-center"
                         style={{ gap: `${formData.carousel_gap}px` }}
@@ -837,14 +836,14 @@ const AppearancePage = () => {
                               className="w-14 h-14 p-[2px] transition-all"
                               style={{
                                 background: `linear-gradient(45deg, ${formData.primary_color}, ${formData.secondary_color})`,
-                                borderRadius: formData.carousel_card_shape === 'rounded' ? '16px' : '0px',
+                                borderRadius: formData.carousel_card_shape === 'rounded' ? formData.border_radius : '0px',
                                 boxShadow: formData.shadow_enabled ? '0 4px 10px rgba(0,0,0,0.2)' : 'none'
                               }}
                             >
                               <div
                                 className="w-full h-full bg-slate-900 overflow-hidden relative"
                                 style={{
-                                  borderRadius: formData.carousel_card_shape === 'rounded' ? '14px' : '0px'
+                                  borderRadius: formData.carousel_card_shape === 'rounded' ? formData.border_radius : '0px'
                                 }}
                               >
                                 <img
@@ -867,15 +866,18 @@ const AppearancePage = () => {
                       </div>
 
                       <div className="bg-slate-900 border border-slate-850 p-3 rounded-xl space-y-1.5 text-[11px] text-slate-400 text-center">
+                        <p>Borda configurada: <span className="font-mono text-violet-400 font-bold">{formData.border_radius}</span></p>
                         <p>Gap configurado: <span className="font-mono text-violet-400 font-bold">{formData.carousel_gap}px</span></p>
-                        <p>Cards visíveis no desktop: <span className="font-mono text-violet-400 font-bold">{formData.carousel_visible_items} itens</span></p>
                       </div>
                     </div>
                   )}
 
                   {/* TAB 3: PLAYER / MODAL PREVIEW */}
                   {previewTab === 'player' && (
-                    <div className="w-full max-w-[240px] aspect-[9/16] bg-slate-950 border border-slate-800 rounded-3xl overflow-hidden relative flex flex-col justify-between p-4 custom-preview-font">
+                    <div
+                      className="w-full max-w-[240px] aspect-[9/16] bg-slate-950 border border-slate-800 overflow-hidden relative flex flex-col justify-between p-4 custom-preview-font"
+                      style={{ borderRadius: formData.border_radius }}
+                    >
                       {/* Top Header */}
                       <div className="flex items-center justify-between z-10 text-white">
                         <div className="flex items-center gap-1.5">
@@ -909,7 +911,6 @@ const AppearancePage = () => {
                           </div>
                         )}
 
-                        {/* REACTIVE TO SHOW_SHARE_BUTTON OPTION */}
                         {formData.show_share_button && (
                           <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-slate-900 shadow-md cursor-pointer hover:scale-105 transition-all">
                             <Share2 className="w-4 h-4" />
@@ -927,8 +928,8 @@ const AppearancePage = () => {
                       {/* Bottom Call to action link representation */}
                       {formData.show_product && (
                         <div
-                          className="w-full py-2 px-3 bg-white text-slate-900 rounded-xl text-center shadow-lg text-[10px] font-black uppercase tracking-wider transition-all"
-                          style={{ backgroundColor: formData.button_color }}
+                          className="w-full py-2 px-3 bg-white text-slate-900 shadow-lg text-[10px] font-black uppercase tracking-wider text-center"
+                          style={{ backgroundColor: formData.button_color, borderRadius: formData.border_radius }}
                         >
                           <span style={{ color: formData.text_color }}>Comprar Agora</span>
                         </div>
@@ -950,7 +951,7 @@ const AppearancePage = () => {
               <Brush className="w-5 h-5 text-violet-400" />
               <div>
                 <h3 className="font-bold text-base text-slate-100">Estilos Cadastrados ({appearances.length})</h3>
-                <p className="text-xs text-slate-400">Modelos Visuais de carrosséis e widgets salvos no banco de dados.</p>
+                <p className="text-xs text-slate-400">Modelos Visuais de carrosséis, grades e widgets salvos no banco de dados.</p>
               </div>
             </div>
 
@@ -961,7 +962,7 @@ const AppearancePage = () => {
                     <th className="p-4 pl-6">Nome do Estilo</th>
                     <th className="p-4 text-center">Cor Principal</th>
                     <th className="p-4 text-center">Formato Widget</th>
-                    <th className="p-4 text-center">Animação</th>
+                    <th className="p-4 text-center">Arredondamento</th>
                     <th className="p-4 text-center">Status</th>
                     <th className="p-4 pr-6 text-right">Ações</th>
                   </tr>
@@ -972,8 +973,8 @@ const AppearancePage = () => {
                       <td className="p-4 pl-6">
                         <div className="flex items-center gap-3">
                           <div
-                            className="w-8 h-8 rounded-lg shrink-0 border border-slate-800 shadow-md"
-                            style={{ background: `linear-gradient(135deg, ${app.primary_color}, ${app.secondary_color || '#EC4899'})` }}
+                            className="w-8 h-8 shrink-0 border border-slate-800 shadow-md"
+                            style={{ background: `linear-gradient(135deg, ${app.primary_color}, ${app.secondary_color || '#EC4899'})`, borderRadius: app.border_radius || '12px' }}
                           />
                           <div>
                             <span className="text-slate-100 font-bold block text-sm md:text-base">{app.name}</span>
@@ -987,11 +988,11 @@ const AppearancePage = () => {
                       </td>
 
                       <td className="p-4 text-center font-bold text-slate-200 capitalize">
-                        {app.widget_shape === 'rounded' ? 'Quadrado Arredondado' : app.widget_shape === 'rectangle' ? 'Retangular' : 'Circular'}
+                        {app.widget_shape === 'rounded' ? 'Quadrado Arredondado' : app.widget_shape === 'square' ? 'Quadrado Reto' : 'Circular'}
                       </td>
 
-                      <td className="p-4 text-center font-mono text-xs text-violet-400 uppercase font-bold">
-                        {app.widget_animation || 'none'}
+                      <td className="p-4 text-center font-mono text-xs text-violet-400 font-bold">
+                        {app.border_radius || '12px'}
                       </td>
 
                       <td className="p-4 text-center">

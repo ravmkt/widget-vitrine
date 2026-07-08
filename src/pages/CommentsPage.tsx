@@ -25,6 +25,11 @@ interface CommentWithReply extends Comment {
   replied_at?: string;
 }
 
+// Simple list of words for filtering inappropriate content
+const OFFENSIVE_WORDS_LIST = [
+  'palavrao', 'ofensa', 'lixo', 'bosta', 'merda', 'caralho', 'filho da puta', 'fdp', 'porra'
+];
+
 const CommentsPage = () => {
   const [comments, setComments] = useState<CommentWithReply[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
@@ -140,6 +145,20 @@ const CommentsPage = () => {
     e.preventDefault();
     if (!replyingComment) return;
 
+    const normalizedText = replyText.toLowerCase();
+    const hasOffensiveWord = OFFENSIVE_WORDS_LIST.some(word => normalizedText.includes(word));
+
+    if (hasOffensiveWord) {
+      setDialog({
+        isOpen: true,
+        type: 'error',
+        title: 'Conteúdo Ofensivo Bloqueado',
+        description: 'Sua resposta não pôde ser enviada porque contém termos ou palavras consideradas impróprias/ofensivas. Por favor, reformule o comentário de forma adequada.',
+        onConfirm: () => setDialog(prev => ({ ...prev, isOpen: false }))
+      });
+      return;
+    }
+
     if (!replyText.trim()) {
       showError('O texto da resposta não pode ficar em branco.');
       return;
@@ -214,7 +233,7 @@ const CommentsPage = () => {
         <div>
           <h1 className="text-3xl font-black bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">Moderação de Comentários</h1>
           <p className="text-slate-400 text-sm md:text-base mt-1">
-            Gerencie e responda às perguntas que seus clientes deixam nas caixas de interação dos stories.
+            Gerencie e responda às perguntas que seus clientes deixam nas caixas de interação dos stories (Suporta emojis 😊🚀✨).
           </p>
         </div>
 
@@ -421,7 +440,7 @@ const CommentsPage = () => {
               <form onSubmit={handleSaveReply} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                    Sua resposta pública no player
+                    Sua resposta pública no player (suporta emojis)
                   </label>
                   <textarea
                     required

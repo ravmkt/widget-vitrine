@@ -210,8 +210,8 @@ export interface SizeMeasure {
 export interface SizingModel {
   id: string;
   store_id: string;
-  name: string;      // ex: 'Modelo Calça Jeans Useanny'
-  size_name: string; // ex: 'P', 'M', 'G', 'GG'
+  name: string;      // ex: 'Ana Useanny Modelo'
+  image_url?: string; // Foto do rosto da modelo
   measures: SizeMeasure[];
   created_at?: string;
   updated_at?: string;
@@ -463,33 +463,23 @@ const DEFAULT_SIZING_MODELS: SizingModel[] = [
   {
     id: 'sm1',
     store_id: DEFAULT_STORE.id,
-    name: 'Tabela Jeans Regular Feminina',
-    size_name: 'M',
+    name: 'Amanda Useanny',
+    image_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80',
     measures: [
       { name: 'Cintura', value: 78, unit: 'cm' },
       { name: 'Quadril', value: 96, unit: 'cm' },
-      { name: 'Comprimento', value: 1.02, unit: 'm' },
+      { name: 'Busto', value: 92, unit: 'cm' },
     ]
   },
   {
     id: 'sm2',
     store_id: DEFAULT_STORE.id,
-    name: 'Tabela Jeans Regular Feminina',
-    size_name: 'G',
+    name: 'Carolina Useanny',
+    image_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80',
     measures: [
       { name: 'Cintura', value: 84, unit: 'cm' },
       { name: 'Quadril', value: 104, unit: 'cm' },
-      { name: 'Comprimento', value: 1.05, unit: 'm' },
-    ]
-  },
-  {
-    id: 'sm3',
-    store_id: DEFAULT_STORE.id,
-    name: 'Cropped Tricot Alça Fina',
-    size_name: 'P',
-    measures: [
-      { name: 'Busto', value: 88, unit: 'cm' },
-      { name: 'Comprimento', value: 38, unit: 'cm' },
+      { name: 'Busto', value: 98, unit: 'cm' },
     ]
   }
 ];
