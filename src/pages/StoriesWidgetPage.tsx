@@ -351,6 +351,8 @@ const StoriesWidgetPage = () => {
   const showPlayButton = selectedAppearance?.show_play_button ?? true;
   const showTitle = selectedAppearance?.show_title ?? true;
 
+  const hasNavigation = stories.length > 1 || totalVideosInStory > 1;
+
   const getStoryPublicUrl = () => {
     if (!selectedStory) return window.location.href;
 
@@ -511,10 +513,20 @@ const StoriesWidgetPage = () => {
     setShowSharePanel(true);
   };
 
+  const copyShareText = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const handleShareOption = async (type: ShareOption) => {
     if (!selectedStory) return;
 
     const payload = getSharePayload();
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     try {
       await db.incrementClickCount(selectedStory.id);
@@ -528,7 +540,7 @@ const StoriesWidgetPage = () => {
           if (navigator.share) {
             await navigator.share(payload);
           } else {
-            await navigator.clipboard.writeText(payload.text);
+            await copyShareText(payload.text);
             showSuccess('Mensagem copiada!');
           }
 
@@ -541,31 +553,31 @@ const StoriesWidgetPage = () => {
         }
 
         case 'messenger': {
-          await navigator.clipboard.writeText(payload.text);
+          await copyShareText(payload.text);
 
-          const messengerUrl = `fb-messenger://share?link=${encodeURIComponent(payload.url)}`;
+          if (isMobile) {
+            window.location.href = `fb-messenger://share?link=${encodeURIComponent(payload.url)}`;
 
-          window.location.href = messengerUrl;
-
-          setTimeout(() => {
-            window.open('https://m.me/', '_blank');
-          }, 800);
+            setTimeout(() => {
+              window.open('https://www.messenger.com/', '_blank');
+            }, 700);
+          } else {
+            window.open('https://www.messenger.com/', '_blank');
+          }
 
           showSuccess('Texto copiado! Cole no Messenger.');
           break;
         }
 
         case 'instagram': {
-          await navigator.clipboard.writeText(payload.text);
-
-          const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+          await copyShareText(payload.text);
 
           if (isMobile) {
             window.location.href = 'instagram://direct-inbox';
 
             setTimeout(() => {
               window.open('https://www.instagram.com/direct/inbox/', '_blank');
-            }, 800);
+            }, 700);
           } else {
             window.open('https://www.instagram.com/direct/inbox/', '_blank');
           }
@@ -591,12 +603,13 @@ const StoriesWidgetPage = () => {
               payload.text
             )}`
           );
+
           break;
         }
 
         case 'copy':
         default: {
-          await navigator.clipboard.writeText(payload.text);
+          await copyShareText(payload.text);
           setCopiedLink(true);
           showSuccess('Link copiado!');
 
@@ -1040,7 +1053,7 @@ const StoriesWidgetPage = () => {
 
   const btnClass =
     'w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-md transition-all active:scale-95';
-  const darkBtn = cn(btnClass, 'bg-black/30 border border-white/20 text-white hover:bg-black/50');
+  const darkBtn = cn(btnClass, 'bg-black/35 border border-white/20 text-white hover:bg-black/55');
   const whiteBtn = cn(btnClass, 'bg-white text-slate-900 shadow-xl');
 
   return (
@@ -1196,7 +1209,7 @@ const StoriesWidgetPage = () => {
               </button>
             )}
 
-            {(stories.length > 1 || totalVideosInStory > 1) && (
+            {hasNavigation && (
               <div className="pointer-events-none absolute inset-0 z-[35] flex">
                 <button
                   type="button"
@@ -1220,7 +1233,7 @@ const StoriesWidgetPage = () => {
               </div>
             )}
 
-            <div className="absolute bottom-32 right-4 z-50 flex flex-col gap-4">
+            <div className="absolute bottom-32 right-4 z-50 flex flex-col gap-5">
               {showPlayButton && (
                 <button onClick={handleTogglePlay} className={darkBtn}>
                   {isPlaying && !videoError ? (
@@ -1249,6 +1262,19 @@ const StoriesWidgetPage = () => {
                       {likeCount > 99 ? '99+' : likeCount}
                     </span>
                   )}
+                </button>
+              )}
+
+              {hasNavigation && (
+                <button
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    goToNextVideoOrStory();
+                  }}
+                  className={cn(darkBtn, 'bg-violet-600/90 hover:bg-violet-500')}
+                  aria-label="Avançar"
+                >
+                  <ChevronRight className="h-6 w-6" />
                 </button>
               )}
 
@@ -1294,6 +1320,19 @@ const StoriesWidgetPage = () => {
                 <Ruler className="h-5 w-5" />
               </button>
             </div>
+
+            {hasNavigation && (
+              <button
+                onClick={(event) => {
+                  event.stopPropagation();
+                  goToPreviousVideoOrStory();
+                }}
+                className="absolute left-3 top-1/2 z-40 -translate-y-1/2 rounded-full bg-black/20 p-2 text-white/70 backdrop-blur-sm transition-colors hover:bg-black/40 hover:text-white"
+                aria-label="Anterior"
+              >
+                <ChevronLeft className="h-8 w-8" />
+              </button>
+            )}
 
             {showProduct && currentProduct && (
               <div className="absolute bottom-8 left-4 right-20 z-50 flex animate-fade-in items-center gap-4 rounded-3xl bg-white/95 p-3 shadow-2xl backdrop-blur-xl">
@@ -1344,32 +1383,6 @@ const StoriesWidgetPage = () => {
                   </button>
                 </div>
               )}
-
-            {(stories.length > 1 || totalVideosInStory > 1) && (
-              <>
-                <button
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    goToPreviousVideoOrStory();
-                  }}
-                  className="absolute left-3 top-1/2 z-40 -translate-y-1/2 rounded-full bg-black/20 p-2 text-white/70 backdrop-blur-sm transition-colors hover:bg-black/40 hover:text-white"
-                  aria-label="Anterior"
-                >
-                  <ChevronLeft className="h-8 w-8" />
-                </button>
-
-                <button
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    goToNextVideoOrStory();
-                  }}
-                  className="absolute right-20 top-1/2 z-40 -translate-y-1/2 rounded-full bg-black/20 p-2 text-white/70 backdrop-blur-sm transition-colors hover:bg-black/40 hover:text-white"
-                  aria-label="Próximo"
-                >
-                  <ChevronRight className="h-8 w-8" />
-                </button>
-              </>
-            )}
           </div>
 
           {showSharePanel && (
@@ -1488,26 +1501,26 @@ const StoriesWidgetPage = () => {
                   </button>
                 </div>
 
-                <div className="border-b border-slate-800 bg-slate-950/30 px-6 py-3">
+                <div className="bg-slate-200 px-6 py-3">
                   <p className="text-[11px] font-black uppercase tracking-widest text-slate-500">
                     Comentários antigos
                   </p>
                 </div>
 
-                <div className="min-h-[160px] max-h-[50vh] flex-1 overflow-y-auto p-4">
+                <div className="min-h-[170px] max-h-[46vh] flex-1 overflow-y-auto bg-slate-200 p-4">
                   {comments.length > 0 ? (
                     <div className="space-y-3">
                       {comments.map((comment) => (
                         <div
                           key={comment.id}
-                          className="rounded-3xl border border-slate-800 bg-slate-950/70 p-4"
+                          className="rounded-3xl border border-slate-300 bg-white p-4 shadow-sm"
                         >
                           <div className="mb-2 flex items-center justify-between gap-3">
                             <div className="flex items-start gap-2">
-                              <User className="mt-0.5 h-4 w-4 text-violet-400" />
+                              <User className="mt-0.5 h-4 w-4 text-violet-600" />
 
                               <div>
-                                <p className="text-sm font-black text-white">
+                                <p className="text-sm font-black text-slate-950">
                                   {comment.author_name || comment.user_name || 'Visitante'}
                                 </p>
 
@@ -1522,15 +1535,15 @@ const StoriesWidgetPage = () => {
                             )}
                           </div>
 
-                          <p className="text-sm font-semibold leading-relaxed text-slate-300">
+                          <p className="text-sm font-semibold leading-relaxed text-slate-700">
                             {comment.text}
                           </p>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="flex h-full items-center justify-center rounded-3xl border border-dashed border-slate-700 bg-slate-950/50 p-6 text-center">
-                      <p className="text-sm font-bold text-slate-400">
+                    <div className="flex h-full items-center justify-center rounded-3xl border border-dashed border-slate-400 bg-slate-100 p-6 text-center">
+                      <p className="text-sm font-bold text-slate-500">
                         Nenhum comentário ainda. Seja a primeira pessoa a comentar.
                       </p>
                     </div>
