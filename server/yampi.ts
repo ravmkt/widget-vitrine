@@ -2,9 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
-// Node.js 18+ includes native fetch
-// If running on an older version, install node-fetch and import it.
-
 dotenv.config();
 
 const app = express();
@@ -19,7 +16,7 @@ if (!YAMPI_ALIAS || !YAMPI_TOKEN || !YAMPI_SECRET_KEY) {
   console.error('ERRO: Variáveis de ambiente da Yampi não configuradas corretamente.');
 }
 
-const YAMPI_API_BASE = 'https://api.dooki.com.br/v2';
+const YAMPI_API_BASE = `https://api.dooki.com.br/v2/${YAMPI_ALIAS}/catalog`;
 
 app.get('/api/yampi/products', async (req, res) => {
   try {
@@ -40,15 +37,18 @@ app.get('/api/yampi/products', async (req, res) => {
     }
 
     const data = await response.json();
-    // Normalize data as requested
-    const normalized = data.data.map((p: any) => ({
+    
+    // Yampi returns data in a 'data' property
+    const products = data.data || [];
+    
+    const normalized = products.map((p: any) => ({
       id: p.id,
       yampi_product_id: p.id,
       yampi_sku_id: p.sku,
       name: p.name,
       description: p.description,
-      price: parseFloat(p.price),
-      sale_price: parseFloat(p.price_sale),
+      price: parseFloat(p.price || 0),
+      sale_price: parseFloat(p.price_sale || 0),
       image_url: p.images?.data?.[0]?.url || '',
       thumbnail_url: p.images?.data?.[0]?.url_thumbnail || '',
       product_url: p.url,
@@ -86,8 +86,8 @@ app.get('/api/yampi/products/:id', async (req, res) => {
       yampi_sku_id: p.sku,
       name: p.name,
       description: p.description,
-      price: parseFloat(p.price),
-      sale_price: parseFloat(p.price_sale),
+      price: parseFloat(p.price || 0),
+      sale_price: parseFloat(p.price_sale || 0),
       image_url: p.images?.data?.[0]?.url || '',
       thumbnail_url: p.images?.data?.[0]?.url_thumbnail || '',
       product_url: p.url,
@@ -102,4 +102,5 @@ app.get('/api/yampi/products/:id', async (req, res) => {
 
 app.listen(port, () => {
   console.log(`Backend proxy Yampi rodando em http://localhost:${port}`);
+  console.log(`Usando Alias: ${YAMPI_ALIAS}`);
 });
