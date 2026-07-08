@@ -414,12 +414,43 @@ export default function StoriesWidgetPage() {
     return normalizeUrl(
       currentProduct?.image_url ||
         currentProduct?.thumbnail_url ||
+        currentProduct?.photo_url ||
+        currentProduct?.foto ||
+        currentProduct?.image ||
+        currentProduct?.images?.[0] ||
         getVideoPosterUrl(currentVideo)
     );
   };
 
   const getProductName = () => {
     return currentProduct?.name || story?.title || 'produto';
+  };
+
+  const getProductPrice = () => {
+    const value =
+      currentProduct?.sale_price ??
+      currentProduct?.price ??
+      currentProduct?.promotional_price ??
+      currentProduct?.regular_price ??
+      currentProduct?.valor ??
+      currentProduct?.preco ??
+      '';
+
+    if (value === null || value === undefined || value === '') return '';
+
+    const numericValue =
+      typeof value === 'number'
+        ? value
+        : Number(String(value).replace(/[^\d,.-]/g, '').replace(',', '.'));
+
+    if (!Number.isNaN(numericValue) && numericValue > 0) {
+      return numericValue.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      });
+    }
+
+    return String(value);
   };
 
   const buildShareText = () => {
@@ -1041,33 +1072,59 @@ export default function StoriesWidgetPage() {
             )}
 
             {(currentProduct || getProductUrl()) && (
-              <div className="absolute bottom-6 left-4 z-50">
-                <div className="rounded-[22px] bg-zinc-500/85 p-3 text-white shadow-xl backdrop-blur-sm">
-                  <p className="mb-2 max-w-[130px] truncate text-[11px] font-black leading-none text-white">
-                    {getProductName()}
-                  </p>
+              <div className="absolute bottom-5 left-4 z-[70] max-w-[285px]">
+                <div className="flex items-center gap-3 rounded-2xl border border-white/25 bg-white/95 p-2.5 text-slate-950 shadow-2xl backdrop-blur-md">
+                  <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl bg-slate-200">
+                    {getProductImageUrl() ? (
+                      <img
+                        src={getProductImageUrl()}
+                        alt={getProductName()}
+                        className="h-full w-full object-cover"
+                        onError={(event) => {
+                          event.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-slate-200 text-[10px] font-black text-slate-500">
+                        Produto
+                      </div>
+                    )}
+                  </div>
 
-                  {getProductUrl() && (
-                    <a
-                      href={getProductUrl()}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 rounded-full bg-violet-600 px-4 py-2 text-[11px] font-black text-white hover:bg-violet-700"
-                    >
-                      Ver produto
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </a>
-                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="line-clamp-2 text-xs font-black leading-tight text-slate-950">
+                      {getProductName()}
+                    </p>
+
+                    {getProductPrice() && (
+                      <p className="mt-1 text-sm font-black text-violet-700">
+                        {getProductPrice()}
+                      </p>
+                    )}
+
+                    {getProductUrl() && (
+                      <a
+                        href={getProductUrl()}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 inline-flex items-center gap-1 rounded-full bg-violet-600 px-3 py-1.5 text-[10px] font-black text-white hover:bg-violet-700"
+                      >
+                        Ver produto
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
 
-            <div className="absolute bottom-28 right-4 z-[50] flex flex-col gap-4">
+            <div className="absolute bottom-28 right-4 z-[80] flex flex-col gap-4">
               {isEnabled('show_play_button', true) && (
                 <button
                   type="button"
                   onClick={handleTogglePlay}
                   className={darkBtn}
+                  aria-label={playing && !videoError ? 'Pausar vídeo' : 'Reproduzir vídeo'}
                 >
                   {playing && !videoError ? (
                     <Pause className="h-5 w-5" />
@@ -1081,6 +1138,7 @@ export default function StoriesWidgetPage() {
                 type="button"
                 onClick={handleToggleMute}
                 className={darkBtn}
+                aria-label={muted ? 'Ativar som' : 'Desativar som'}
               >
                 {muted ? (
                   <VolumeX className="h-5 w-5" />
@@ -1093,6 +1151,7 @@ export default function StoriesWidgetPage() {
                 type="button"
                 onClick={handleLike}
                 className={cn(darkBtn, 'relative')}
+                aria-label={liked ? 'Remover curtida' : 'Curtir vídeo'}
               >
                 <Heart
                   className={cn(
@@ -1113,6 +1172,7 @@ export default function StoriesWidgetPage() {
                   type="button"
                   onClick={() => setShowComments(true)}
                   className={cn(darkBtn, 'relative')}
+                  aria-label="Abrir comentários"
                 >
                   <MessageCircle className="h-5 w-5" />
 
@@ -1129,6 +1189,7 @@ export default function StoriesWidgetPage() {
                   type="button"
                   onClick={() => setShowShare(true)}
                   className={whiteBtn}
+                  aria-label="Compartilhar"
                 >
                   {copied ? (
                     <Check className="h-5 w-5 text-emerald-500" />
@@ -1147,6 +1208,7 @@ export default function StoriesWidgetPage() {
                     backgroundColor: '#25D366',
                     color: '#fff'
                   }}
+                  aria-label="Enviar pelo WhatsApp"
                 >
                   <WhatsAppIcon size={24} />
                 </button>
@@ -1157,6 +1219,7 @@ export default function StoriesWidgetPage() {
                   type="button"
                   onClick={() => setShowMeasures(true)}
                   className={purpleBtn}
+                  aria-label="Ver medidas"
                 >
                   <Ruler className="h-5 w-5" />
                 </button>
@@ -1240,8 +1303,8 @@ export default function StoriesWidgetPage() {
 
           {showComments && (
             <div className="fixed inset-0 z-[99999] flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-4">
-              <div className="max-h-[86vh] w-full max-w-md overflow-hidden rounded-t-3xl border border-slate-800 bg-slate-950 shadow-2xl sm:rounded-3xl">
-                <div className="flex items-center justify-between border-b border-slate-800 p-4">
+              <div className="max-h-[86vh] w-full max-w-md overflow-hidden rounded-t-3xl border border-white/10 bg-black shadow-2xl sm:rounded-3xl">
+                <div className="flex items-center justify-between border-b border-white/10 p-4">
                   <h3 className="text-lg font-black text-white">
                     Comentários
                   </h3>
@@ -1249,7 +1312,7 @@ export default function StoriesWidgetPage() {
                   <button
                     type="button"
                     onClick={() => setShowComments(false)}
-                    className="rounded-full bg-slate-800 p-2 text-white hover:bg-slate-700"
+                    className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -1257,7 +1320,7 @@ export default function StoriesWidgetPage() {
 
                 <div className="max-h-[42vh] overflow-y-auto p-4">
                   {comments.length === 0 ? (
-                    <div className="rounded-2xl bg-slate-900 p-5 text-center text-sm font-bold text-slate-400">
+                    <div className="rounded-2xl bg-white/10 p-5 text-center text-sm font-bold text-white/60">
                       Seja o primeiro a comentar.
                     </div>
                   ) : (
@@ -1265,7 +1328,7 @@ export default function StoriesWidgetPage() {
                       {comments.map((comment) => (
                         <div
                           key={comment.id}
-                          className="rounded-2xl bg-slate-900 p-3"
+                          className="rounded-2xl bg-white/10 p-3"
                         >
                           <div className="mb-1 flex items-center gap-2 text-white">
                             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-600">
@@ -1279,7 +1342,7 @@ export default function StoriesWidgetPage() {
                                   'Cliente'}
                               </p>
 
-                              <p className="text-[10px] font-bold text-slate-500">
+                              <p className="text-[10px] font-bold text-white/40">
                                 {comment.created_at
                                   ? new Date(
                                       comment.created_at
@@ -1289,7 +1352,7 @@ export default function StoriesWidgetPage() {
                             </div>
                           </div>
 
-                          <p className="text-sm font-medium text-slate-200">
+                          <p className="text-sm font-medium text-white/80">
                             {comment.emoji ? `${comment.emoji} ` : ''}
                             {comment.text}
                           </p>
@@ -1299,7 +1362,7 @@ export default function StoriesWidgetPage() {
                   )}
                 </div>
 
-                <div className="border-t border-slate-800 p-4">
+                <div className="border-t border-white/10 p-4">
                   <div className="mb-3">
                     <input
                       value={commentAuthor}
@@ -1307,7 +1370,7 @@ export default function StoriesWidgetPage() {
                         setCommentAuthor(event.target.value)
                       }
                       placeholder="Seu nome"
-                      className="w-full rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-500 focus:border-violet-600"
+                      className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-white/40 focus:border-violet-500"
                     />
                   </div>
 
@@ -1317,19 +1380,19 @@ export default function StoriesWidgetPage() {
                       onChange={(event) => setCommentText(event.target.value)}
                       placeholder="Escreva seu comentário..."
                       rows={3}
-                      className="w-full resize-none rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3 pr-12 text-sm font-bold text-white outline-none placeholder:text-slate-500 focus:border-violet-600"
+                      className="w-full resize-none rounded-2xl border border-white/10 bg-white/10 px-4 py-3 pr-12 text-sm font-bold text-white outline-none placeholder:text-white/40 focus:border-violet-500"
                     />
 
                     <button
                       type="button"
                       onClick={() => setShowEmoji((prev) => !prev)}
-                      className="absolute right-3 top-3 rounded-full bg-slate-800 p-2 text-white hover:bg-slate-700"
+                      className="absolute right-3 top-3 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
                     >
                       <Smile className="h-4 w-4" />
                     </button>
 
                     {showEmoji && (
-                      <div className="absolute bottom-full right-0 mb-2 grid w-64 grid-cols-7 gap-1 rounded-2xl border border-slate-800 bg-slate-900 p-3 shadow-2xl">
+                      <div className="absolute bottom-full right-0 mb-2 grid w-64 grid-cols-7 gap-1 rounded-2xl border border-white/10 bg-black p-3 shadow-2xl">
                         {EMOJIS.map((item) => (
                           <button
                             key={item}
@@ -1339,7 +1402,7 @@ export default function StoriesWidgetPage() {
                               setShowEmoji(false);
                             }}
                             className={cn(
-                              'rounded-xl p-2 text-lg hover:bg-slate-800',
+                              'rounded-xl p-2 text-lg hover:bg-white/10',
                               emoji === item && 'bg-violet-600'
                             )}
                           >
