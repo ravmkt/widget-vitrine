@@ -59,6 +59,7 @@ type StoryComment = {
   text: string;
   emoji?: string;
   author_name?: string;
+  user_name?: string;
   read?: boolean;
   status?: string;
   created_at: string;
@@ -113,6 +114,10 @@ const normalizeUrl = (url?: string | null) => {
   return cleanUrl;
 };
 
+const isProbablySocialUrl = (url: string) => {
+  return /instagram\.com|tiktok\.com/i.test(url);
+};
+
 const getVideoPosterUrl = (video?: Video | null) => {
   if (!video) return '';
 
@@ -131,7 +136,7 @@ const getVideoPlayableUrl = (video?: Video | null) => {
 
   const item = video as VideoWithFallbacks;
 
-  return (
+  const url =
     normalizeUrl(item.video_url) ||
     normalizeUrl(item.file_url) ||
     normalizeUrl(item.upload_url) ||
@@ -139,8 +144,13 @@ const getVideoPlayableUrl = (video?: Video | null) => {
     normalizeUrl(item.source_url) ||
     normalizeUrl(item.url) ||
     normalizeUrl(item.src) ||
-    ''
-  );
+    '';
+
+  if (!url) return '';
+
+  if (isProbablySocialUrl(url)) return '';
+
+  return url;
 };
 
 const getVideoPreviewUrl = (video?: Video | null) => {
@@ -274,6 +284,15 @@ const StoriesWidgetPage = () => {
   const showPlayButton = selectedAppearance?.show_play_button ?? true;
   const showTitle = selectedAppearance?.show_title ?? true;
 
+  const getStoryPublicUrl = () => {
+    if (!selectedStory) return window.location.href;
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('storyId', selectedStory.id);
+
+    return url.toString();
+  };
+
   const getCurrentProductUrl = () => {
     return normalizeUrl(currentProduct?.product_url || selectedStory?.cta_url || window.location.href);
   };
@@ -292,10 +311,27 @@ const StoriesWidgetPage = () => {
     const productImageUrl = getCurrentProductImageUrl();
 
     return [
-      'Quero mais informações sobre esse produto:',
+      'Olá! Quero mais informações sobre esse produto:',
       productName,
       productUrl ? `Link: ${productUrl}` : '',
       productImageUrl ? `Imagem: ${productImageUrl}` : '',
+    ]
+      .filter(Boolean)
+      .join('\n');
+  };
+
+  const buildShareMessage = () => {
+    const productName = getCurrentProductName();
+    const productUrl = getCurrentProductUrl();
+    const storyUrl = getStoryPublicUrl();
+
+    return [
+      'Olha esse vídeo que achei interessante:',
+      selectedStory?.title || productName,
+      '',
+      `Story: ${storyUrl}`,
+      currentProduct ? `Produto: ${currentProduct.name}` : '',
+      productUrl ? `Link do produto: ${productUrl}` : '',
     ]
       .filter(Boolean)
       .join('\n');
@@ -333,7 +369,9 @@ const StoriesWidgetPage = () => {
     try {
       const commentsApi = (db as unknown as { comments?: any }).comments;
 
-      if (commentsApi?.create) {
+      if (commentsApi?.save) {
+        await commentsApi.save(comment);
+      } else if (commentsApi?.create) {
         await commentsApi.create(comment);
       } else if (commentsApi?.add) {
         await commentsApi.add(comment);
@@ -398,6 +436,7 @@ const StoriesWidgetPage = () => {
 
         const fetchedSettings = (await db.generalSettings.getAll(currentStore.id))[0] || null;
         setGeneralSettings(fetchedSettings);
+        setIsMuted(fetchedSettings?.muted_by_default ?? true);
 
         const fetchedAppearances = await db.appearances.getAll(currentStore.id);
         setAppearances(fetchedAppearances);
@@ -471,6 +510,7 @@ const StoriesWidgetPage = () => {
     setShowEmojiPicker(false);
     setCommentText('');
     setSelectedEmoji('😍');
+    setIsMuted(generalSettings?.muted_by_default ?? true);
 
     loadComments(selectedStory.id);
 
@@ -500,7 +540,7 @@ const StoriesWidgetPage = () => {
     };
 
     fetchRelations();
-  }, [selectedStory?.id]);
+  }, [selectedStory?.id, generalSettings?.muted_by_default]);
 
   useEffect(() => {
     setVideoError(false);
@@ -508,6 +548,7 @@ const StoriesWidgetPage = () => {
 
     const timer = setTimeout(() => {
       if (videoRef.current && videoPlayableUrl) {
+        videoRef.current.muted = isMuted;
         videoRef.current.load();
 
         if (generalSettings?.autoplay ?? true) {
@@ -523,7 +564,7 @@ const StoriesWidgetPage = () => {
 
   const handleRetryVideo = () => {
     if (!videoPlayableUrl) {
-      showError('Este vídeo não possui uma URL reproduzível.');
+      showError('Este vídeo não possui uma URL reproduzível. Reenvie o vídeo pela galeria.');
       return;
     }
 
@@ -533,12 +574,14 @@ const StoriesWidgetPage = () => {
     setTimeout(() => {
       if (!videoRef.current) return;
 
+      videoRef.current.muted = isMuted;
       videoRef.current.load();
 
       videoRef.current
         .play()
         .then(() => {
           setIsPlaying(true);
+          setVideoError(false);
         })
         .catch(() => {
           setIsPlaying(false);
@@ -563,6 +606,7 @@ const StoriesWidgetPage = () => {
         .play()
         .then(() => {
           setIsPlaying(true);
+          setVideoError(false);
         })
         .catch(() => {
           setIsPlaying(false);
@@ -575,7 +619,10 @@ const StoriesWidgetPage = () => {
   };
 
   const handleToggleMute = () => {
-    if (!videoRef.current) return;
+    if (!videoRef.current) {
+      setIsMuted((prev) => !prev);
+      return;
+    }
 
     videoRef.current.muted = !videoRef.current.muted;
     setIsMuted(videoRef.current.muted);
@@ -586,29 +633,24 @@ const StoriesWidgetPage = () => {
   };
 
   const handleShare = async () => {
-    const productName = getCurrentProductName();
-    const productUrl = getCurrentProductUrl();
-    const shareText = buildProductMessage();
+    if (!selectedStory) return;
+
+    const message = buildShareMessage();
 
     try {
-      if (navigator.share) {
-        await navigator.share({
-          title: productName,
-          text: shareText,
-          url: productUrl || window.location.href,
-        });
-      } else {
-        await navigator.clipboard.writeText(shareText);
-        setCopiedLink(true);
-        showSuccess('Informações copiadas!');
-        setTimeout(() => setCopiedLink(false), 2000);
-      }
-
-      if (selectedStory) {
-        await db.incrementClickCount(selectedStory.id);
-      }
+      await db.incrementClickCount(selectedStory.id);
+      window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     } catch (error) {
       console.error('Erro ao compartilhar:', error);
+
+      try {
+        await navigator.clipboard.writeText(message);
+        setCopiedLink(true);
+        showSuccess('Mensagem copiada!');
+        setTimeout(() => setCopiedLink(false), 2000);
+      } catch {
+        showError('Não foi possível compartilhar.');
+      }
     }
   };
 
@@ -658,6 +700,7 @@ const StoriesWidgetPage = () => {
       text,
       emoji: selectedEmoji,
       author_name: 'Visitante',
+      user_name: 'Visitante',
       read: false,
       status: 'published',
       created_at: new Date().toISOString(),
@@ -765,7 +808,7 @@ const StoriesWidgetPage = () => {
 
             {mainVideo && videoPlayableUrl && !videoError ? (
               <video
-                key={mainVideo.id}
+                key={`${mainVideo.id}-${videoPlayableUrl.slice(0, 40)}`}
                 ref={videoRef}
                 src={videoPlayableUrl}
                 poster={videoPosterUrl || undefined}
@@ -781,6 +824,7 @@ const StoriesWidgetPage = () => {
                   setVideoError(false);
 
                   if (videoRef.current && (generalSettings?.autoplay ?? true)) {
+                    videoRef.current.muted = isMuted;
                     videoRef.current.play().catch(() => {
                       setIsPlaying(false);
                     });
@@ -816,8 +860,7 @@ const StoriesWidgetPage = () => {
                   </p>
 
                   <p className="mt-2 text-xs font-semibold text-white/70">
-                    Toque para tentar novamente. Se continuar, o upload salvou apenas a capa ou um
-                    link inválido do MP4.
+                    Toque para tentar novamente. Se continuar, reenvie o vídeo pela biblioteca.
                   </p>
                 </div>
               </button>
@@ -1008,7 +1051,7 @@ const StoriesWidgetPage = () => {
                           <div className="flex items-center gap-2">
                             <span className="text-xl">{comment.emoji || '💬'}</span>
                             <span className="text-xs font-black uppercase text-white">
-                              {comment.author_name || 'Visitante'}
+                              {comment.author_name || comment.user_name || 'Visitante'}
                             </span>
                           </div>
 
