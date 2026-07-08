@@ -1,8 +1,27 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { db, Video, Store } from '@/lib/db';
-import { Film, UploadCloud, Plus, Trash2, Edit3, Check, X, Play, Link as LinkIcon, Copy, Eye, AlertCircle, FileVideo, Info } from 'lucide-react';
+import {
+  Film,
+  UploadCloud,
+  Plus,
+  Trash2,
+  Edit3,
+  Check,
+  X,
+  Play,
+  Link as LinkIcon,
+  Copy,
+  Eye,
+  AlertCircle,
+  FileVideo,
+  Info,
+  Image as ImageIcon,
+  Instagram,
+  Video as VideoIcon,
+  ExternalLink
+} from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import CustomDialog from '@/components/CustomDialog';
 
@@ -16,7 +35,7 @@ const VideoGalleryPage = () => {
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
   // Previewing video in gallery
-  const [previewingVideoUrl, setPreviewingVideoUrl] = useState<string | null>(null);
+  const [previewingVideo, setPreviewingVideo] = useState<Video | null>(null);
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
@@ -86,27 +105,53 @@ const VideoGalleryPage = () => {
     setFilteredVideos(currentVideos);
   }, [allVideos, filterStatus, filterSource, searchTerm]);
 
-  const isValidUrl = (url: string) => {
-    if (!url) return false;
-    try {
-      new URL(url);
-      return url.startsWith('http://') || url.startsWith('https://');
-    } catch (e) {
-      return false;
-    }
+  // Capture video duration and frame automatically on load
+  const extractVideoMetadata = (file: File) => {
+    const videoNode = document.createElement('video');
+    videoNode.preload = 'metadata';
+    videoNode.muted = true;
+    videoNode.playsInline = true;
+    const objectUrl = URL.createObjectURL(file);
+    videoNode.src = objectUrl;
+
+    videoNode.onloadedmetadata = () => {
+      setDuration(Math.round(videoNode.duration));
+      // Seek slightly forward to avoid completely black starting frames
+      videoNode.currentTime = Math.min(1, videoNode.duration / 2);
+    };
+
+    videoNode.onseeked = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = videoNode.videoWidth || 320;
+        canvas.height = videoNode.videoHeight || 568;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(videoNode, 0, 0, canvas.width, canvas.height);
+          const autoFrameBase64 = canvas.toDataURL('image/jpeg', 0.85);
+          if (!thumbnailUrl) {
+            setThumbnailUrl(autoFrameBase64);
+          }
+        }
+      } catch (e) {
+        console.warn('CORS/Canvas Frame capture block. Skipping frame auto-render.');
+      } finally {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
   };
 
   const handleSourceTypeChange = (newType: Video['source_type']) => {
-    setSourceType(newType);
-    if (newType === 'instagram') {
-      setVideoUrl('https://www.instagram.com/reel/Cw789_Xp_9Y/');
+    // Standardize source types and remove mobile_upload duplicate
+    const cleanType = newType === 'mobile_upload' ? 'upload' : newType;
+    setSourceType(cleanType);
+    
+    if (cleanType === 'instagram') {
+      setVideoUrl('https://www.instagram.com/p/DaQ1-vHpsGa/');
       setThumbnailUrl('https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80');
-    } else if (newType === 'tiktok') {
-      setVideoUrl('https://www.tiktok.com/@fashion/video/721122334455');
+    } else if (cleanType === 'tiktok') {
+      setVideoUrl('https://www.tiktok.com/@useanny_oficial/video/7624665768281541906');
       setThumbnailUrl('https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80');
-    } else if (newType === 'upload' || newType === 'mobile_upload') {
-      setVideoUrl('https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4');
-      setThumbnailUrl('https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&q=80');
     } else {
       setVideoUrl('https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4');
       setThumbnailUrl('https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80');
@@ -118,10 +163,26 @@ const VideoGalleryPage = () => {
     if (file) {
       setSelectedFileName(file.name);
       setFileSize(file.size);
-      setDuration(15);
       const localUrl = URL.createObjectURL(file);
       setVideoUrl(localUrl);
-      showSuccess(`Arquivo selecionado: ${file.name}`);
+      extractVideoMetadata(file);
+      showSuccess(`Arquivo de vídeo selecionado: ${file.name}`);
+    }
+  };
+
+  const handleManualThumbUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1 * 1024 * 1024) {
+        showError('A imagem de capa deve ter no máximo 1MB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setThumbnailUrl(reader.result as string);
+        showSuccess('Capa carregada com sucesso!');
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -145,7 +206,7 @@ const VideoGalleryPage = () => {
       source_type: sourceType,
       video_url: videoUrl,
       thumbnail_url: thumbnailUrl || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80',
-      duration: duration || 10,
+      duration: duration || 15,
       file_size: fileSize || 4500000,
       status,
     } : {
@@ -155,7 +216,7 @@ const VideoGalleryPage = () => {
       source_type: sourceType,
       video_url: videoUrl,
       thumbnail_url: thumbnailUrl || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80',
-      duration: duration || 10,
+      duration: duration || 15,
       file_size: fileSize || 4500000,
       status,
       created_at: new Date().toISOString(),
@@ -185,7 +246,7 @@ const VideoGalleryPage = () => {
   const handleEdit = (video: Video) => {
     setEditingVideo(video);
     setTitle(video.title);
-    setSourceType(video.source_type);
+    setSourceType(video.source_type === 'mobile_upload' ? 'upload' : video.source_type);
     setVideoUrl(video.video_url);
     setThumbnailUrl(video.thumbnail_url);
     setDuration(video.duration);
@@ -246,10 +307,32 @@ const VideoGalleryPage = () => {
       case 'instagram': return '📸 Instagram';
       case 'tiktok': return '🎵 TikTok';
       case 'external_url': return '🔗 URL Externa';
-      case 'mobile_upload': return '📱 Celular';
+      case 'mobile_upload': return '📦 Upload';
       case 'gallery': return '🖼️ Galeria';
       default: return 'Vídeo';
     }
+  };
+
+  const getInstagramEmbedUrl = (url: string) => {
+    // Normalizes instagram posts/reels to embed URLs
+    try {
+      const match = url.match(/(?:instagram\.com\/(?:p|reel|tv)\/)([^\/?#&]+)/i);
+      if (match && match[1]) {
+        return `https://www.instagram.com/p/${match[1]}/embed/`;
+      }
+    } catch (e) {}
+    return '';
+  };
+
+  const getTikTokEmbedUrl = (url: string) => {
+    // Normalizes TikTok video URLs to embed URLs
+    try {
+      const match = url.match(/(?:tiktok\.com\/@[^\/]+\/video\/)(\d+)/i);
+      if (match && match[1]) {
+        return `https://www.tiktok.com/embed/v2/${match[1]}`;
+      }
+    } catch (e) {}
+    return '';
   };
 
   if (loading) {
@@ -271,7 +354,7 @@ const VideoGalleryPage = () => {
           <div>
             <h1 className="text-3xl font-black bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">Biblioteca de Vídeos</h1>
             <p className="text-slate-400 text-sm md:text-base mt-1">
-              Organize os arquivos de vídeo e mídia que farão parte do feed dos seus stories.
+              Organize os arquivos de vídeo e links de redes sociais que farão parte do feed dos seus stories.
             </p>
           </div>
 
@@ -287,17 +370,70 @@ const VideoGalleryPage = () => {
           </button>
         </div>
 
-        {previewingVideoUrl && (
-          <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4" onClick={() => setPreviewingVideoUrl(null)}>
+        {/* Improved Responsive Video & Social Media Embed Preview Modal */}
+        {previewingVideo && (
+          <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4" onClick={() => setPreviewingVideo(null)}>
             <div className="bg-slate-900 rounded-3xl overflow-hidden max-w-sm w-full relative border border-slate-800 shadow-2xl animate-fade-in" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between p-4 border-b border-slate-800">
-                <span className="font-bold text-white text-sm">Visualização de Vídeo</span>
-                <button onClick={() => setPreviewingVideoUrl(null)} className="p-1 rounded-full bg-slate-800 text-slate-400 hover:text-white transition-colors">
+                <div className="min-w-0 pr-2">
+                  <span className="font-bold text-white text-xs block truncate">{previewingVideo.title}</span>
+                  <span className="text-[10px] text-violet-400 font-bold uppercase">{getSourceTypeLabel(previewingVideo.source_type)}</span>
+                </div>
+                <button onClick={() => setPreviewingVideo(null)} className="p-1.5 rounded-full bg-slate-800 text-slate-400 hover:text-white transition-colors">
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <div className="aspect-[9/16] bg-black">
-                <video src={previewingVideoUrl} controls autoPlay loop className="w-full h-full object-cover"></video>
+              
+              <div className="aspect-[9/16] bg-black relative flex flex-col justify-center items-center">
+                {previewingVideo.source_type === 'instagram' ? (
+                  getInstagramEmbedUrl(previewingVideo.video_url) ? (
+                    <iframe
+                      src={getInstagramEmbedUrl(previewingVideo.video_url)}
+                      className="w-full h-full border-0"
+                      allowFullScreen
+                      scrolling="no"
+                    />
+                  ) : (
+                    <div className="p-6 text-center space-y-4">
+                      <Instagram className="w-12 h-12 text-pink-500 mx-auto" />
+                      <p className="text-sm font-semibold text-slate-200">Não foi possível carregar o preview direto.</p>
+                      <p className="text-xs text-slate-500">Este post do Instagram pode estar configurado como privado ou bloqueado para embeds.</p>
+                      <a
+                        href={previewingVideo.video_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 bg-pink-600 hover:bg-pink-500 text-white px-4 py-2 rounded-xl text-xs font-bold"
+                      >
+                        Abrir no Instagram <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  )
+                ) : previewingVideo.source_type === 'tiktok' ? (
+                  getTikTokEmbedUrl(previewingVideo.video_url) ? (
+                    <iframe
+                      src={getTikTokEmbedUrl(previewingVideo.video_url)}
+                      className="w-full h-full border-0"
+                      allow="autoplay; encrypted-media"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <div className="p-6 text-center space-y-4">
+                      <VideoIcon className="w-12 h-12 text-cyan-400 mx-auto" />
+                      <p className="text-sm font-semibold text-slate-200">Não foi possível carregar o preview do TikTok.</p>
+                      <p className="text-xs text-slate-500">Links alternativos do TikTok podem exigir visualização direta no aplicativo.</p>
+                      <a
+                        href={previewingVideo.video_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl text-xs font-bold"
+                      >
+                        Abrir no TikTok <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  )
+                ) : (
+                  <video src={previewingVideo.video_url} controls autoPlay loop className="w-full h-full object-cover"></video>
+                )}
               </div>
             </div>
           </div>
@@ -336,30 +472,35 @@ const VideoGalleryPage = () => {
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                   Origem do Vídeo *
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {(['external_url', 'upload', 'instagram', 'tiktok', 'mobile_upload'] as Video['source_type'][]).map((type) => (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {([
+                    { value: 'external_url', label: '🔗 Link Direto' },
+                    { value: 'upload', label: '📦 Upload Local' },
+                    { value: 'instagram', label: '📸 Instagram' },
+                    { value: 'tiktok', label: '🎵 TikTok' }
+                  ] as { value: Video['source_type']; label: string }[]).map((type) => (
                     <button
-                      key={type}
+                      key={type.value}
                       type="button"
-                      onClick={() => handleSourceTypeChange(type)}
+                      onClick={() => handleSourceTypeChange(type.value)}
                       className={`px-4 py-3 rounded-2xl text-xs font-bold border transition-all text-left flex items-center justify-between ${
-                        sourceType === type
+                        sourceType === type.value
                           ? 'border-violet-500 bg-violet-500/10 text-violet-400'
                           : 'border-slate-800 hover:bg-slate-950 text-slate-400'
                       }`}
                     >
-                      <span>{getSourceTypeLabel(type).split(' ')[1] || getSourceTypeLabel(type)}</span>
-                      <span className="text-sm">{getSourceTypeLabel(type).split(' ')[0]}</span>
+                      <span>{type.label.split(' ')[1]}</span>
+                      <span className="text-sm">{type.label.split(' ')[0]}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {(sourceType === 'upload' || sourceType === 'mobile_upload') ? (
+              {sourceType === 'upload' ? (
                 <div className="p-6 border-2 border-dashed border-slate-800 rounded-2xl bg-slate-950/50 hover:bg-slate-950 transition-all flex flex-col items-center justify-center text-center">
                   <FileVideo className="w-10 h-10 text-slate-600 mb-2" />
                   <p className="text-sm font-bold text-slate-300">Escolha um arquivo MP4 local</p>
-                  <p className="text-xs text-slate-500 mt-1 mb-4">Limite recomendado: 20MB</p>
+                  <p className="text-xs text-slate-500 mt-1 mb-4">O sistema detectará a duração e extrairá a imagem de capa automaticamente.</p>
                   
                   <label className="cursor-pointer bg-slate-900 border border-slate-800 hover:border-violet-500 text-slate-300 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md">
                     Selecionar Arquivo
@@ -381,59 +522,79 @@ const VideoGalleryPage = () => {
               ) : (
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                    URL do Vídeo *
+                    Link de Origem / URL *
                   </label>
                   <input
                     type="url"
                     required
                     value={videoUrl}
                     onChange={(e) => setVideoUrl(e.target.value)}
-                    placeholder="https://example.com/seu-video.mp4"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3 text-sm text-slate-200 font-mono"
+                    placeholder={sourceType === 'instagram' ? "https://www.instagram.com/p/..." : sourceType === 'tiktok' ? "https://www.tiktok.com/..." : "https://example.com/seu-video.mp4"}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3 text-sm text-slate-200 font-mono focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                   />
                 </div>
               )}
 
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                  URL da Thumbnail / Capa (Opcional)
-                </label>
-                <input
-                  type="url"
-                  value={thumbnailUrl}
-                  onChange={(e) => setThumbnailUrl(e.target.value)}
-                  placeholder="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3 text-sm text-slate-200 font-mono"
-                />
+              {/* Subida Manual da Thumbnail / Capa com Preview de Ativação */}
+              <div className="space-y-3 bg-slate-950 p-4 border border-slate-850 rounded-2xl">
+                <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Imagem de Capa (Thumbnail)</span>
+                
+                <div className="flex flex-col sm:flex-row gap-4 items-center">
+                  <div className="w-24 h-36 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shrink-0 flex items-center justify-center relative">
+                    {thumbnailUrl ? (
+                      <img src={thumbnailUrl} alt="Thumbnail preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-center p-2">
+                        <ImageIcon className="w-6 h-6 text-slate-600 mx-auto mb-1" />
+                        <span className="text-[10px] text-slate-500 font-bold block">Sem Capa</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 space-y-3">
+                    <p className="text-xs text-slate-500 leading-relaxed font-semibold">Envie uma imagem para capa do story (JPG/PNG). Se for upload local e você não enviar, extrairemos um frame do vídeo.</p>
+                    
+                    <div className="flex gap-2">
+                      <label className="cursor-pointer bg-slate-900 border border-slate-800 hover:border-violet-500 text-slate-300 px-4 py-2 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5">
+                        <UploadCloud className="w-4 h-4" /> Enviar Capa
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp"
+                          onChange={handleManualThumbUpload}
+                          className="hidden"
+                        />
+                      </label>
+                      {thumbnailUrl && (
+                        <button type="button" onClick={() => setThumbnailUrl('')} className="bg-slate-900 border border-slate-800 text-rose-500 px-3 py-2 rounded-xl text-xs font-bold hover:bg-rose-950/20">Remover</button>
+                      )}
+                    </div>
+
+                    <div>
+                      <span className="text-[9px] font-bold text-slate-500 uppercase block mb-1">Ou cole o link direto da imagem</span>
+                      <input
+                        type="url"
+                        value={thumbnailUrl}
+                        onChange={(e) => setThumbnailUrl(e.target.value)}
+                        placeholder="https://example.com/imagem.jpg"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                    Duração (segundos)
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={duration || ''}
-                    onChange={(e) => setDuration(parseInt(e.target.value) || undefined)}
-                    placeholder="Ex: 15"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3 text-sm text-slate-100 font-semibold"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                    Status *
-                  </label>
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value as any)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3 text-sm text-slate-100 font-semibold"
-                  >
-                    <option value="active">Ativo (visível na galeria do story)</option>
-                    <option value="inactive">Inativo (arquivado)</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  Status de Ativação *
+                </label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as any)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3 text-sm text-slate-100 font-semibold"
+                >
+                  <option value="active">Ativo (visível na galeria do story)</option>
+                  <option value="inactive">Inativo (arquivado)</option>
+                </select>
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
@@ -478,7 +639,6 @@ const VideoGalleryPage = () => {
               <option value="instagram">Instagram</option>
               <option value="tiktok">TikTok</option>
               <option value="external_url">URL externa</option>
-              <option value="mobile_upload">Celular</option>
             </select>
           </div>
 
@@ -532,7 +692,7 @@ const VideoGalleryPage = () => {
                   </div>
 
                   <button
-                    onClick={() => setPreviewingVideoUrl(video.video_url)}
+                    onClick={() => setPreviewingVideo(video)}
                     className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20 animate-fade-in"
                   >
                     <div className="bg-white/95 p-3.5 rounded-full shadow-lg transform scale-90 group-hover:scale-100 transition-all">
@@ -556,7 +716,7 @@ const VideoGalleryPage = () => {
 
                   <div className="grid grid-cols-5 gap-1 pt-3 border-t border-slate-800">
                     <button
-                      onClick={() => setPreviewingVideoUrl(video.video_url)}
+                      onClick={() => setPreviewingVideo(video)}
                       className="p-2 rounded-xl bg-slate-950 hover:bg-violet-600/20 text-slate-400 hover:text-violet-400 transition-all flex items-center justify-center"
                       title="Visualizar vídeo"
                     >
