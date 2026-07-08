@@ -14,10 +14,13 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setLoading(true);
     setError(null);
+    console.log("Tentando buscar produtos do proxy...");
     try {
       const data = await yampiClient.listProducts();
+      console.log("Produtos recebidos:", data);
       setProducts(data);
     } catch (err: any) {
+      console.error("Erro no fetchProducts:", err);
       setError(err.message || "Ocorreu um erro ao carregar os produtos.");
     } finally {
       setLoading(false);
