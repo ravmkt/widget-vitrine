@@ -8,7 +8,8 @@ import {
   Code, 
   Eye, 
   ShoppingCart,
-  ChevronRight
+  ChevronRight,
+  Database
 } from "lucide-react";
 import {
   Sidebar,
@@ -25,67 +26,73 @@ import {
 import { Link, useLocation } from "react-router-dom";
 
 const menuItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Produtos Yampi", url: "/products", icon: ShoppingCart },
-  { title: "Gerenciar Stories", url: "/stories", icon: PlayCircle },
-  { title: "Galeria de Vídeos", url: "/videos", icon: Library },
-  { title: "Novo Story", url: "/stories/new", icon: PlusCircle },
-  { title: "Modelos de Estilo", url: "/styles", icon: Palette },
-  { title: "Configuração Yampi", url: "/settings/yampi", icon: Settings },
-  { title: "Instalar Widget", url: "/widget/install", icon: Code },
-  { title: "Preview Widget", url: "/widget/preview", icon: Eye },
+  { group: "Video Commerce", items: [
+    { title: "Dashboard", url: "/", icon: LayoutDashboard },
+    { title: "Meus Stories", url: "/stories", icon: PlayCircle },
+    { title: "Galeria de Vídeos", url: "/videos", icon: Library },
+    { title: "Modelos de Estilo", url: "/styles", icon: Palette },
+  ]},
+  { group: "Widget & Publicação", items: [
+    { title: "Instalar Widget", url: "/widget/install", icon: Code },
+    { title: "Preview Global", url: "/widget/preview", icon: Eye },
+  ]},
+  { group: "Integrações", items: [
+    { title: "Produtos Yampi", url: "/products", icon: ShoppingCart },
+    { title: "Configuração API", url: "/settings/yampi", icon: Database },
+  ]}
 ];
 
 export function AppSidebar() {
   const location = useLocation();
 
   return (
-    <Sidebar variant="inset" className="border-r border-slate-200">
-      <SidebarHeader className="p-6">
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 bg-violet-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-violet-200">
+    <Sidebar variant="inset" className="border-r border-slate-100 shadow-sm">
+      <SidebarHeader className="p-8">
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-10 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-[1rem] flex items-center justify-center text-white shadow-xl shadow-violet-200">
             <PlayCircle className="h-6 w-6" />
           </div>
           <div className="flex flex-col">
-            <span className="font-black text-slate-900 tracking-tight leading-none text-lg">VIDEO</span>
-            <span className="text-[10px] font-bold text-violet-600 uppercase tracking-[0.2em] leading-none mt-1">Commerce</span>
+            <span className="font-black text-slate-900 tracking-tighter leading-none text-xl">VIDEO</span>
+            <span className="text-[10px] font-black text-violet-600 uppercase tracking-[0.3em] leading-none mt-1">Commerce</span>
           </div>
         </div>
       </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-6 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Menu Principal</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="px-3 gap-1">
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild 
-                    isActive={location.pathname === item.url}
-                    className={`h-11 rounded-xl px-4 transition-all ${
-                      location.pathname === item.url 
-                        ? "bg-violet-50 text-violet-700 font-bold" 
-                        : "text-slate-600 hover:bg-slate-50 font-medium"
-                    }`}
-                  >
-                    <Link to={item.url}>
-                      <item.icon className={`h-5 w-5 ${location.pathname === item.url ? "text-violet-600" : "text-slate-400"}`} />
-                      <span>{item.title}</span>
-                      {location.pathname === item.url && <ChevronRight className="ml-auto h-4 w-4" />}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      <SidebarContent className="px-4">
+        {menuItems.map((group) => (
+          <SidebarGroup key={group.group} className="mb-6">
+            <SidebarGroupLabel className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-3">{group.group}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-1">
+                {group.items.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton 
+                      asChild 
+                      isActive={location.pathname === item.url}
+                      className={`h-12 rounded-[1.2rem] px-5 transition-all duration-300 ${
+                        location.pathname === item.url 
+                          ? "bg-violet-600 text-white shadow-lg shadow-violet-100 font-bold hover:bg-violet-700" 
+                          : "text-slate-600 hover:bg-slate-100 font-bold"
+                      }`}
+                    >
+                      <Link to={item.url}>
+                        <item.icon className={`h-5 w-5 ${location.pathname === item.url ? "text-white" : "text-slate-400"}`} />
+                        <span className="text-sm">{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
-      <SidebarFooter className="p-6 border-t border-slate-100">
-        <div className="bg-slate-50 rounded-2xl p-4 flex items-center gap-3">
-          <div className="h-8 w-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-black text-xs">AD</div>
-          <div className="flex flex-col overflow-hidden">
-            <span className="text-xs font-bold text-slate-900 truncate">Admin User</span>
-            <span className="text-[10px] text-slate-400 truncate">admin@shop.com</span>
+      <SidebarFooter className="p-8">
+        <div className="bg-slate-950 rounded-[1.5rem] p-4 text-white">
+          <p className="text-[10px] font-black text-violet-400 uppercase tracking-widest mb-1">Status</p>
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-bold">Produção Ativa</span>
           </div>
         </div>
       </SidebarFooter>
