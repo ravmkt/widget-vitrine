@@ -3,18 +3,13 @@ import Navbar from '@/components/Navbar';
 import { db, Comment, Story, Video, CommentStatus } from '@/lib/db';
 import {
   MessageSquare,
-  Search,
-  Filter,
   Check,
   X,
   AlertTriangle,
   CornerDownRight,
   Trash2,
   Reply,
-  Calendar,
-  Eye,
   Send,
-  Film,
   Info
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
@@ -25,10 +20,12 @@ interface CommentWithReply extends Comment {
   replied_at?: string;
 }
 
-// Simple list of words for filtering inappropriate content
-const OFFENSIVE_WORDS_LIST = [
-  'palavrao', 'ofensa', 'lixo', 'bosta', 'merda', 'caralho', 'filho da puta', 'fdp', 'porra'
+// Comprehensive offensive word list for comment moderation filtering
+const PROHIBITED_WORDS = [
+  'palavrao', 'lixo', 'bosta', 'merda', 'caralho', 'filho da puta', 'fdp', 'porra', 'vigarista', 'fraude', 'roubo', 'babaquece', 'idiota', 'imbecil', 'otario', 'otário', 'puta', 'porcaria'
 ];
+
+const POPULAR_EMOJIS = ['😊', '🚀', '✨', '👍', '😍', '🔥', '❤️', '🙌', '🎉', '💯', '🎬', '📦', '⭐', '👕', '👗', '💬'];
 
 const CommentsPage = () => {
   const [comments, setComments] = useState<CommentWithReply[]>([]);
@@ -141,26 +138,32 @@ const CommentsPage = () => {
     setReplyText(comment.reply_text || '');
   };
 
+  // Inject emoji at end of current replyText
+  const handleEmojiSelect = (emoji: string) => {
+    setReplyText(prev => prev + emoji);
+  };
+
   const handleSaveReply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!replyingComment) return;
 
-    const normalizedText = replyText.toLowerCase();
-    const hasOffensiveWord = OFFENSIVE_WORDS_LIST.some(word => normalizedText.includes(word));
-
-    if (hasOffensiveWord) {
-      setDialog({
-        isOpen: true,
-        type: 'error',
-        title: 'Conteúdo Ofensivo Bloqueado',
-        description: 'Sua resposta não pôde ser enviada porque contém termos ou palavras consideradas impróprias/ofensivas. Por favor, reformule o comentário de forma adequada.',
-        onConfirm: () => setDialog(prev => ({ ...prev, isOpen: false }))
-      });
+    if (!replyText.trim()) {
+      showError('O texto da resposta não pode ficar em branco.');
       return;
     }
 
-    if (!replyText.trim()) {
-      showError('O texto da resposta não pode ficar em branco.');
+    // Moderate text and block if containing blacklisted words
+    const cleanText = replyText.toLowerCase().trim();
+    const hasInappropriateWords = PROHIBITED_WORDS.some(word => cleanText.includes(word));
+
+    if (hasInappropriateWords) {
+      setDialog({
+        isOpen: true,
+        type: 'error',
+        title: 'Vocabulário Não Permitido',
+        description: 'Não foi possível enviar a resposta porque foram identificados termos impróprios ou agressivos. Por favor, ajuste o vocabulário para continuar.',
+        onConfirm: () => setDialog(prev => ({ ...prev, isOpen: false }))
+      });
       return;
     }
 
@@ -174,7 +177,7 @@ const CommentsPage = () => {
       };
 
       await db.comments.save(updated as any);
-      showSuccess(`Resposta salva com sucesso!`);
+      showSuccess(`Resposta enviada e comentário aprovado!`);
       setReplyimgComment(null);
       setReplyText('');
       loadData();
@@ -409,7 +412,7 @@ const CommentsPage = () => {
           </div>
         )}
 
-        {/* Modal de Resposta Embutido com Tema Dark e Altamente Responsivo */}
+        {/* Modal de Resposta Embutido com Tema Dark, Seletor de Emojis e Altamente Responsivo */}
         {replyingComment && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden max-w-lg w-full relative p-6 shadow-2xl">
@@ -425,7 +428,7 @@ const CommentsPage = () => {
                 <h3 className="font-extrabold text-slate-100 text-lg">Responder Comentário</h3>
               </div>
 
-              <div className="bg-slate-950 border border-slate-850 p-4 rounded-2xl mb-6">
+              <div className="bg-slate-950 border border-slate-850 p-4 rounded-2xl mb-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-6 h-6 rounded-lg bg-violet-500/10 text-violet-400 font-extrabold text-xs flex items-center justify-center">
                     {String(replyingComment.user_name ?? 'U').charAt(0).toUpperCase()}
@@ -440,7 +443,7 @@ const CommentsPage = () => {
               <form onSubmit={handleSaveReply} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                    Sua resposta pública no player (suporta emojis)
+                    Sua resposta pública no player
                   </label>
                   <textarea
                     required
@@ -450,6 +453,23 @@ const CommentsPage = () => {
                     placeholder="Escreva uma resposta explicativa..."
                     className="w-full bg-slate-950 border border-slate-800 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 rounded-2xl p-4 text-sm md:text-base text-slate-200"
                   />
+                </div>
+
+                {/* EMOJI SELECTOR SECTION */}
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Inserir Emojis</span>
+                  <div className="flex flex-wrap gap-1.5 p-2 bg-slate-950 border border-slate-850 rounded-xl">
+                    {POPULAR_EMOJIS.map(emoji => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => handleEmojiSelect(emoji)}
+                        className="w-8 h-8 rounded-lg hover:bg-slate-800 transition-colors flex items-center justify-center text-lg active:scale-90"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">

@@ -7,22 +7,10 @@ import {
   Trash2,
   Edit3,
   Copy,
-  Check,
   Star,
-  Eye,
-  Info,
-  ChevronLeft,
-  ChevronRight,
-  Heart,
-  MessageCircle,
-  Share2,
   Play,
-  Volume2,
   Brush,
-  Palette,
-  EyeOff,
   Laptop,
-  Maximize2,
   X
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
@@ -66,7 +54,7 @@ const AppearancePage = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState(INITIAL_APPEARANCE_FORM);
   
-  const [previewTab, setPreviewTab] = useState<'widget' | 'carousel' | 'player'>('widget');
+  const [previewTab, setPreviewTab] = useState<'widget' | 'carousel' | 'grid' | 'player'>('widget');
   const [animTriggerKey, setAnimTriggerKey] = useState(0); // For restarting animation preview simulation
 
   // Custom Dialog state
@@ -188,7 +176,7 @@ const AppearancePage = () => {
         };
         await db.appearances.save(updated);
       }
-      showSuccess('Estilo padrão atualizado!');
+      showSuccess('Estilo padrão updated!');
       loadAppearances();
     } catch (e) {
       showError('Erro ao definir como padrão.');
@@ -231,8 +219,7 @@ const AppearancePage = () => {
       const appData: Appearance = {
         id: editingId || Math.random().toString(36).substr(2, 9),
         store_id: store.id,
-        ...formData,
-        widget_shape: formData.widget_shape === 'rectangle' ? 'square' : formData.widget_shape as any
+        ...formData
       };
 
       if (formData.is_default) {
@@ -263,7 +250,7 @@ const AppearancePage = () => {
     );
   }
 
-  // Define scale sizing classes
+  // Scale size for dynamic canvas previews
   const getWidgetSizeClasses = () => {
     switch (formData.widget_size) {
       case 'small': return 'w-14 h-14';
@@ -274,15 +261,15 @@ const AppearancePage = () => {
     }
   };
 
-  // Define layout shape classes for preview respecting border radius
+  // Shape class generator
   const getWidgetShapeClasses = () => {
     switch (formData.widget_shape) {
       case 'rounded':
-        return 'rounded-[16px] aspect-square';
+        return 'aspect-square';
       case 'square':
-        return 'rounded-[2px] aspect-square';
+        return 'aspect-square rounded-none';
       case 'rectangle':
-        return 'rounded-[12px] aspect-[9/14] w-[90px] h-[140px]';
+        return 'aspect-[9/14] w-[90px] h-[140px]';
       case 'circle':
       default:
         return 'rounded-full aspect-square';
@@ -305,7 +292,6 @@ const AppearancePage = () => {
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <Navbar />
 
-      {/* Embedded CSS for custom dynamic transitions & fonts */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Montserrat:wght@600;800&family=Playfair+Display:wght@700&family=Roboto+Mono:wght@700&display=swap');
         
@@ -680,7 +666,7 @@ const AppearancePage = () => {
 
                   <div className="flex items-center justify-between p-4 bg-slate-950 border border-slate-800 rounded-2xl">
                     <div className="min-w-0 pr-2">
-                      <p className="text-xs font-bold text-slate-200">Botão Compartilhar *</p>
+                      <p className="text-xs font-bold text-slate-200">Botão Compartilhar</p>
                       <p className="text-[10px] text-slate-500 mt-0.5">Mostra o botão de copiar link no player.</p>
                     </div>
                     <button
@@ -732,7 +718,7 @@ const AppearancePage = () => {
 
             {/* COLUMN 2: REAL-TIME INTERACTIVE LIVE PREVIEW (5 COLS) */}
             <div className="lg:col-span-5 space-y-6">
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl relative flex flex-col justify-between min-h-[580px]">
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl flex flex-col min-h-[580px]">
                 
                 {/* PREVIEW TAB SELECTOR */}
                 <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-5">
@@ -740,30 +726,29 @@ const AppearancePage = () => {
                     <Laptop className="w-4 h-4 text-violet-400" />
                     <span className="text-xs font-black uppercase text-slate-400">Live Preview Real-time</span>
                   </div>
-
                   <span className="text-[9px] bg-emerald-500/10 text-emerald-400 font-black uppercase px-2 py-0.5 rounded-md">Ativo</span>
                 </div>
 
-                <div className="flex bg-slate-950 p-1.5 rounded-2xl border border-slate-850 mb-6">
-                  {(['widget', 'carousel', 'player'] as const).map((tab) => (
+                <div className="grid grid-cols-2 gap-1 bg-slate-950 p-1 rounded-2xl border border-slate-850 mb-6">
+                  {(['widget', 'carousel', 'grid', 'player'] as const).map((tab) => (
                     <button
                       key={tab}
                       type="button"
                       onClick={() => setPreviewTab(tab)}
                       className={cn(
-                        "flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all",
+                        "py-2 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all",
                         previewTab === tab
                           ? "bg-violet-600 text-white shadow-md shadow-violet-600/10"
                           : "text-slate-400 hover:text-slate-200"
                       )}
                     >
-                      {tab === 'widget' ? 'Widget Fixo' : tab === 'carousel' ? 'Carrossel / Grade' : 'Player Modal'}
+                      {tab === 'widget' ? 'Widget Fixo' : tab === 'carousel' ? 'Carrossel' : tab === 'grid' ? 'Grade' : 'Player Modal'}
                     </button>
                   ))}
                 </div>
 
-                {/* DYNAMIC SCREEN SIMULATION CANVAS */}
-                <div className="flex-1 bg-slate-950 rounded-2xl p-6 flex flex-col justify-center items-center border border-slate-850 overflow-hidden relative">
+                {/* DYNAMIC SCREEN SIMULATION CANVAS - Clean, no duplications */}
+                <div className="flex-1 bg-slate-950 rounded-2xl p-6 flex flex-col justify-center items-center border border-slate-850 overflow-hidden relative min-h-[380px]">
                   
                   {/* TAB 1: WIDGET FLUTUANTE PREVIEW */}
                   {previewTab === 'widget' && (
@@ -784,7 +769,7 @@ const AppearancePage = () => {
                         }}
                       >
                         <div
-                          className="w-full h-full border-[3px] border-slate-950 overflow-hidden relative bg-slate-800"
+                          className="w-full h-full overflow-hidden relative bg-slate-800"
                           style={{ borderRadius: formData.widget_shape === 'circle' ? '9999px' : formData.border_radius }}
                         >
                           <img
@@ -818,13 +803,13 @@ const AppearancePage = () => {
                     </div>
                   )}
 
-                  {/* TAB 2: CARROSSEL / GRADE PREVIEW */}
+                  {/* TAB 2: CARROSSEL PREVIEW (Perfect geometries) */}
                   {previewTab === 'carousel' && (
-                    <div className="w-full space-y-4 custom-preview-font">
-                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider text-center">Preview do Carrossel / Grade (Respeita Bordas)</p>
+                    <div className="w-full space-y-4 custom-preview-font text-center">
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Preview do Carrossel de Stories</p>
                       
                       <div
-                        className="flex overflow-hidden pb-4 justify-center"
+                        className="flex overflow-hidden pb-4 justify-center items-center w-full"
                         style={{ gap: `${formData.carousel_gap}px` }}
                       >
                         {Array.from({ length: formData.carousel_visible_items }).map((_, idx) => (
@@ -833,17 +818,19 @@ const AppearancePage = () => {
                             className="flex flex-col items-center shrink-0"
                           >
                             <div
-                              className="w-14 h-14 p-[2px] transition-all"
+                              className={cn("p-[3px] transition-all", getWidgetShapeClasses())}
                               style={{
                                 background: `linear-gradient(45deg, ${formData.primary_color}, ${formData.secondary_color})`,
-                                borderRadius: formData.carousel_card_shape === 'rounded' ? formData.border_radius : '0px',
-                                boxShadow: formData.shadow_enabled ? '0 4px 10px rgba(0,0,0,0.2)' : 'none'
+                                borderRadius: formData.widget_shape === 'circle' ? '9999px' : formData.border_radius,
+                                boxShadow: formData.shadow_enabled ? '0 4px 10px rgba(0,0,0,0.2)' : 'none',
+                                width: formData.widget_shape === 'rectangle' ? '70px' : '56px',
+                                height: formData.widget_shape === 'rectangle' ? '108px' : '56px'
                               }}
                             >
                               <div
                                 className="w-full h-full bg-slate-900 overflow-hidden relative"
                                 style={{
-                                  borderRadius: formData.carousel_card_shape === 'rounded' ? formData.border_radius : '0px'
+                                  borderRadius: formData.widget_shape === 'circle' ? '9999px' : formData.border_radius
                                 }}
                               >
                                 <img
@@ -859,23 +846,78 @@ const AppearancePage = () => {
                               </div>
                             </div>
                             {formData.show_title && (
-                              <span className="text-[9px] font-bold text-slate-400 mt-1 max-w-[50px] truncate text-center block">Story #{idx + 1}</span>
+                              <span className="text-[9px] font-bold text-slate-400 mt-1.5 max-w-[60px] truncate text-center block">Story #{idx + 1}</span>
                             )}
                           </div>
                         ))}
                       </div>
 
-                      <div className="bg-slate-900 border border-slate-850 p-3 rounded-xl space-y-1.5 text-[11px] text-slate-400 text-center">
-                        <p>Borda configurada: <span className="font-mono text-violet-400 font-bold">{formData.border_radius}</span></p>
+                      <div className="bg-slate-900 border border-slate-850 p-3 rounded-xl space-y-1 text-[11px] text-slate-400 text-left">
+                        <p>Geometria do balão: <span className="text-violet-400 font-bold capitalize">{formData.widget_shape}</span></p>
+                        <p>Arredondamento: <span className="font-mono text-violet-400 font-bold">{formData.border_radius}</span></p>
                         <p>Gap configurado: <span className="font-mono text-violet-400 font-bold">{formData.carousel_gap}px</span></p>
                       </div>
                     </div>
                   )}
 
-                  {/* TAB 3: PLAYER / MODAL PREVIEW */}
+                  {/* TAB 3: GRADE PREVIEW */}
+                  {previewTab === 'grid' && (
+                    <div className="w-full space-y-4 custom-preview-font text-center">
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Preview de Exibição em Grade</p>
+                      
+                      <div
+                        className="grid grid-cols-2 gap-3 w-full max-w-[280px] mx-auto pb-4"
+                        style={{ gap: `${formData.carousel_gap}px` }}
+                      >
+                        {Array.from({ length: 4 }).map((_, idx) => (
+                          <div
+                            key={idx}
+                            className="flex flex-col items-center"
+                          >
+                            <div
+                              className="p-[3px] transition-all w-full relative"
+                              style={{
+                                background: `linear-gradient(45deg, ${formData.primary_color}, ${formData.secondary_color})`,
+                                borderRadius: formData.widget_shape === 'circle' ? '9999px' : formData.border_radius,
+                                boxShadow: formData.shadow_enabled ? '0 4px 10px rgba(0,0,0,0.15)' : 'none',
+                                aspectRatio: formData.widget_shape === 'rectangle' ? '9/14' : '1'
+                              }}
+                            >
+                              <div
+                                className="w-full h-full bg-slate-900 overflow-hidden relative"
+                                style={{
+                                  borderRadius: formData.widget_shape === 'circle' ? '9999px' : formData.border_radius
+                                }}
+                              >
+                                <img
+                                  src="https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=150&q=80"
+                                  alt="Thumb"
+                                  className="w-full h-full object-cover"
+                                />
+                                {formData.show_play_button && (
+                                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                                    <Play className="w-5 h-5 text-white fill-white opacity-85" />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            {formData.show_title && (
+                              <span className="text-[9px] font-bold text-slate-400 mt-1 max-w-[80px] truncate text-center block">Vestido {idx + 1}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="bg-slate-900 border border-slate-850 p-3 rounded-xl text-[11px] text-slate-400 text-left">
+                        <p>Grade flexível com 2 colunas no mobile e gap de <span className="font-mono text-violet-400 font-bold">{formData.carousel_gap}px</span>.</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 4: PLAYER / MODAL PREVIEW */}
                   {previewTab === 'player' && (
                     <div
-                      className="w-full max-w-[240px] aspect-[9/16] bg-slate-950 border border-slate-800 overflow-hidden relative flex flex-col justify-between p-4 custom-preview-font"
+                      className="w-full max-w-[220px] aspect-[9/16] bg-slate-950 border border-slate-800 overflow-hidden relative flex flex-col justify-between p-4 custom-preview-font"
                       style={{ borderRadius: formData.border_radius }}
                     >
                       {/* Top Header */}
@@ -884,7 +926,7 @@ const AppearancePage = () => {
                           <div className="w-4 h-4 rounded-full bg-violet-600 flex items-center justify-center text-[8px] font-bold">U</div>
                           <span className="text-[9px] font-bold text-slate-200">Useanny</span>
                         </div>
-                        <X className="w-3.5 h-3.5 text-slate-400" />
+                        <X className="w-3 h-3 text-slate-400" />
                       </div>
 
                       {/* Mock background content representing playing video */}
@@ -897,29 +939,29 @@ const AppearancePage = () => {
                       </div>
 
                       {/* Vertical Action Buttons layout with toggle items */}
-                      <div className="absolute right-3 bottom-16 z-20 flex flex-col gap-2.5">
+                      <div className="absolute right-3 bottom-14 z-20 flex flex-col gap-2">
                         
                         {formData.show_like_button && (
-                          <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white cursor-pointer hover:bg-black/60 transition-all">
-                            <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
+                          <div className="w-7 h-7 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white cursor-pointer hover:bg-black/60 transition-all">
+                            <span className="text-[12px] text-rose-500">❤️</span>
                           </div>
                         )}
 
                         {formData.show_comment_button && (
-                          <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white cursor-pointer hover:bg-black/60 transition-all">
-                            <MessageCircle className="w-4 h-4" />
+                          <div className="w-7 h-7 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white cursor-pointer hover:bg-black/60 transition-all text-[11px]">
+                            💬
                           </div>
                         )}
 
                         {formData.show_share_button && (
-                          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-slate-900 shadow-md cursor-pointer hover:scale-105 transition-all">
-                            <Share2 className="w-4 h-4" />
+                          <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-slate-900 shadow-md cursor-pointer hover:scale-105 transition-all text-[10px]">
+                            🔗
                           </div>
                         )}
 
                         {formData.show_whatsapp_button && (
-                          <div className="w-8 h-8 rounded-full bg-[#25D366] flex items-center justify-center text-white shadow-md cursor-pointer hover:scale-105 transition-all">
-                            <WhatsAppIcon size={18} />
+                          <div className="w-7 h-7 rounded-full bg-[#25D366] flex items-center justify-center text-white shadow-md cursor-pointer hover:scale-105 transition-all">
+                            <WhatsAppIcon size={14} />
                           </div>
                         )}
 
@@ -928,7 +970,7 @@ const AppearancePage = () => {
                       {/* Bottom Call to action link representation */}
                       {formData.show_product && (
                         <div
-                          className="w-full py-2 px-3 bg-white text-slate-900 shadow-lg text-[10px] font-black uppercase tracking-wider text-center"
+                          className="w-full py-2 px-3 bg-white text-slate-900 shadow-lg text-[9px] font-black uppercase tracking-wider text-center"
                           style={{ backgroundColor: formData.button_color, borderRadius: formData.border_radius }}
                         >
                           <span style={{ color: formData.text_color }}>Comprar Agora</span>
@@ -988,7 +1030,7 @@ const AppearancePage = () => {
                       </td>
 
                       <td className="p-4 text-center font-bold text-slate-200 capitalize">
-                        {app.widget_shape === 'rounded' ? 'Quadrado Arredondado' : app.widget_shape === 'square' ? 'Quadrado Reto' : 'Circular'}
+                        {app.widget_shape === 'rounded' ? 'Quadrado Arredondado' : app.widget_shape === 'square' ? 'Quadrado Reto' : app.widget_shape === 'rectangle' ? 'Retangular' : 'Circular'}
                       </td>
 
                       <td className="p-4 text-center font-mono text-xs text-violet-400 font-bold">
@@ -1022,7 +1064,7 @@ const AppearancePage = () => {
 
                           <button
                             onClick={() => handleDuplicate(app)}
-                            className="p-1.5 rounded-lg hover:bg-violet-600/20 text-slate-400 hover:text-violet-400 transition-all inline-flex items-center"
+                            className="p-1.5 rounded-lg hover:bg-violet-600/20 text-slate-400 hover:text-white transition-all inline-flex items-center"
                             title="Duplicar Template"
                           >
                             <Copy className="w-4 h-4" />

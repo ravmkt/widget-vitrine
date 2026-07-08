@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { db, Video, Store } from '@/lib/db';
@@ -11,16 +11,14 @@ import {
   Check,
   X,
   Play,
-  Link as LinkIcon,
   Copy,
   Eye,
-  AlertCircle,
   FileVideo,
-  Info,
   Image as ImageIcon,
   Instagram,
   Video as VideoIcon,
-  ExternalLink
+  ExternalLink,
+  RefreshCw
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import CustomDialog from '@/components/CustomDialog';
@@ -62,6 +60,7 @@ const VideoGalleryPage = () => {
   const [status, setStatus] = useState<Video['status']>('active');
 
   const [selectedFileName, setSelectedFileName] = useState<string>('');
+  const [isFetchingSocialThumb, setIsFetchingSocialThumb] = useState(false);
 
   const loadVideos = useCallback(async () => {
     try {
@@ -105,7 +104,62 @@ const VideoGalleryPage = () => {
     setFilteredVideos(currentVideos);
   }, [allVideos, filterStatus, filterSource, searchTerm]);
 
-  // Capture video duration and frame automatically on load
+  // oEmbed dynamic metadata fetcher for Instagram / TikTok
+  const fetchSocialThumbnailAndTitle = async (url: string, type: 'instagram' | 'tiktok') => {
+    if (!url || !url.startsWith('http')) return;
+
+    setIsFetchingSocialThumb(true);
+    let oEmbedApiUrl = '';
+
+    if (type === 'instagram') {
+      oEmbedApiUrl = `https://api.instagram.com/oembed?url=${encodeURIComponent(url.split('?')[0])}`;
+    } else {
+      oEmbedApiUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(url.split('?')[0])}`;
+    }
+
+    // AllOrigins proxy to bypass CORS
+    const safeProxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(oEmbedApiUrl)}`;
+
+    try {
+      const res = await fetch(safeProxyUrl);
+      if (!res.ok) throw new Error('Proxy fail');
+      
+      const parsed = await res.json();
+      const rawJsonString = parsed.contents;
+      const data = JSON.parse(rawJsonString);
+
+      if (data.thumbnail_url) {
+        setThumbnailUrl(data.thumbnail_url);
+        if (!title && data.title) {
+          setTitle(data.title.substring(0, 50) + (data.title.length > 50 ? '...' : ''));
+        }
+        showSuccess('Capa da publicação vinculada automaticamente!');
+      } else {
+        throw new Error('No thumbnail found');
+      }
+    } catch (e) {
+      console.warn('[Gallery] oEmbed fetch fail. Using visual default fallback.');
+      // Define elegant default graphic social placeholders
+      if (type === 'instagram') {
+        setThumbnailUrl('https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=400&q=80');
+      } else {
+        setThumbnailUrl('https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&q=80');
+      }
+    } finally {
+      setIsFetchingSocialThumb(false);
+    }
+  };
+
+  useEffect(() => {
+    if ((sourceType === 'instagram' || sourceType === 'tiktok') && videoUrl) {
+      const delayTimer = setTimeout(() => {
+        fetchSocialThumbnailAndTitle(videoUrl, sourceType);
+      }, 800);
+      return () => clearTimeout(delayTimer);
+    }
+  }, [videoUrl, sourceType]);
+
+  // Capture video duration and frame automatically on load for local uploads
   const extractVideoMetadata = (file: File) => {
     const videoNode = document.createElement('video');
     videoNode.preload = 'metadata';
@@ -381,52 +435,31 @@ const VideoGalleryPage = () => {
               </div>
               
               <div className="aspect-[9/16] bg-black relative flex flex-col justify-center items-center">
-                {previewingVideo.source_type === 'instagram' ? (
-                  getInstagramEmbedUrl(previewingVideo.video_url) ? (
-                    <iframe
-                      src={getInstagramEmbedUrl(previewingVideo.video_url)}
-                      className="w-full h-full border-0"
-                      allowFullScreen
-                      scrolling="no"
-                    />
-                  ) : (
-                    <div className="p-6 text-center space-y-4">
+                {previewingVideo.source_type === 'instagram' || previewingVideo.source_type === 'tiktok' ? (
+                  <div className="p-6 text-center space-y-4">
+                    {previewingVideo.source_type === 'instagram' ? (
                       <Instagram className="w-12 h-12 text-pink-500 mx-auto" />
-                      <p className="text-sm font-semibold text-slate-200">Não foi possível carregar o preview direto.</p>
-                      <p className="text-xs text-slate-500">Este post do Instagram pode estar configurado como privado ou bloqueado para embeds.</p>
-                      <a
-                        href={previewingVideo.video_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 bg-pink-600 hover:bg-pink-500 text-white px-4 py-2 rounded-xl text-xs font-bold"
-                      >
-                        Abrir no Instagram <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-                    </div>
-                  )
-                ) : previewingVideo.source_type === 'tiktok' ? (
-                  getTikTokEmbedUrl(previewingVideo.video_url) ? (
-                    <iframe
-                      src={getTikTokEmbedUrl(previewingVideo.video_url)}
-                      className="w-full h-full border-0"
-                      allow="autoplay; encrypted-media"
-                      allowFullScreen
-                    />
-                  ) : (
-                    <div className="p-6 text-center space-y-4">
+                    ) : (
                       <VideoIcon className="w-12 h-12 text-cyan-400 mx-auto" />
-                      <p className="text-sm font-semibold text-slate-200">Não foi possível carregar o preview do TikTok.</p>
-                      <p className="text-xs text-slate-500">Links alternativos do TikTok podem exigir visualização direta no aplicativo.</p>
+                    )}
+                    <img 
+                      src={previewingVideo.thumbnail_url} 
+                      alt={previewingVideo.title} 
+                      className="absolute inset-0 w-full h-full object-cover blur-sm opacity-50 pointer-events-none"
+                    />
+                    <div className="relative z-10 space-y-4">
+                      <p className="text-sm font-semibold text-slate-200">Publicação do {previewingVideo.source_type === 'instagram' ? 'Instagram' : 'TikTok'}</p>
+                      <p className="text-xs text-slate-400">Exibindo capa otimizada no widget para preservar a velocidade e o layout original da sua loja.</p>
                       <a
                         href={previewingVideo.video_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl text-xs font-bold"
+                        className="inline-flex items-center gap-1.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:opacity-90 text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider shadow-lg"
                       >
-                        Abrir no TikTok <ExternalLink className="w-3.5 h-3.5" />
+                        Abrir Publicação Original <ExternalLink className="w-3.5 h-3.5" />
                       </a>
                     </div>
-                  )
+                  </div>
                 ) : (
                   <video src={previewingVideo.video_url} controls autoPlay loop className="w-full h-full object-cover"></video>
                 )}
@@ -520,14 +553,21 @@ const VideoGalleryPage = () => {
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                     Link de Origem / URL *
                   </label>
-                  <input
-                    type="url"
-                    required
-                    value={videoUrl}
-                    onChange={(e) => setVideoUrl(e.target.value)}
-                    placeholder={sourceType === 'instagram' ? "https://www.instagram.com/p/..." : sourceType === 'tiktok' ? "https://www.tiktok.com/..." : "https://example.com/seu-video.mp4"}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3 text-sm text-slate-200 font-mono focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                  />
+                  <div className="relative">
+                    <input
+                      type="url"
+                      required
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                      placeholder={sourceType === 'instagram' ? "https://www.instagram.com/p/..." : sourceType === 'tiktok' ? "https://www.tiktok.com/..." : "https://example.com/seu-video.mp4"}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-4 pr-10 py-3 text-sm text-slate-200 font-mono focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    />
+                    {isFetchingSocialThumb && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-violet-400">
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -548,7 +588,7 @@ const VideoGalleryPage = () => {
                   </div>
 
                   <div className="flex-1 space-y-3">
-                    <p className="text-xs text-slate-500 leading-relaxed font-semibold">Envie uma imagem para capa do story (JPG/PNG). Se for upload local e você não enviar, extrairemos um frame do vídeo.</p>
+                    <p className="text-xs text-slate-500 leading-relaxed font-semibold">Envie uma imagem para capa do story (JPG/PNG). Se for rede social ou link externo, buscamos automaticamente pelo oEmbed/API de forma segura.</p>
                     
                     <div className="flex gap-2">
                       <label className="cursor-pointer bg-slate-900 border border-slate-800 hover:border-violet-500 text-slate-300 px-4 py-2 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5">
@@ -730,7 +770,7 @@ const VideoGalleryPage = () => {
                       className="p-2 rounded-xl bg-slate-950 hover:bg-violet-600/20 text-slate-400 hover:text-violet-400 transition-all flex items-center justify-center"
                       title="Copiar link"
                     >
-                      {copiedUrl === video.video_url ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                      {copiedUrl === video.video_url ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                     </button>
                     <Link
                       to={`/stories?videoId=${video.id}`}
