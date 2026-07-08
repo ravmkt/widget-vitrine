@@ -66,35 +66,51 @@ export default defineConfig(({ mode }) => {
 
                 const rawProducts = data.data || [];
                 
-                // Log de inspeção seguro (apenas o primeiro produto se existir)
+                // --- DEBUG LOGS SEGUROS ---
                 if (rawProducts.length > 0) {
-                  const first = rawProducts[0];
-                  console.log(`[Yampi Debug] Estrutura do produto ID ${first.id}:`, {
-                    has_images: !!first.images?.data,
-                    price_raw: first.price,
-                    price_sale_raw: first.price_sale,
-                    sku: first.sku,
-                    active: first.active
-                  });
+                  const p = rawProducts[0];
+                  console.log('--- INSPEÇÃO DE PRODUTO YAMPI ---');
+                  console.log(`ID: ${p.id} | Nome: ${p.name}`);
+                  console.log(`Campos de Preço: price=${p.price}, price_sale=${p.price_sale}, cost_price=${p.cost_price}`);
+                  console.log(`Estrutura de Imagens:`, p.images ? (p.images.data ? `Array com ${p.images.data.length}` : 'Não é array') : 'Nula');
+                  if (p.images?.data?.[0]) console.log(`Primeira Imagem:`, p.images.data[0]);
+                  console.log(`SKUs:`, p.skus ? (p.skus.data ? `Array com ${p.skus.data.length}` : 'Não é array') : 'Nula');
+                  console.log(`OBJETO COMPLETO (Saneado):`, JSON.stringify({ ...p, links: 'hidden' }, null, 2));
+                  console.log('---------------------------------');
                 }
 
-                // Normalização robusta para Video Commerce
+                // Normalização robusta seguindo o novo padrão solicitado
                 const products = rawProducts.map((p: any) => {
-                  // Tenta pegar a primeira imagem válida
-                  const mainImage = p.images?.data?.[0]?.url || p.image_url || '';
+                  // Preço: Tenta no produto, senão tenta no primeiro SKU
+                  let price = parseFloat(p.price || 0);
+                  let salePrice = parseFloat(p.price_sale || 0);
                   
+                  if (price === 0 && p.skus?.data?.[0]) {
+                    price = parseFloat(p.skus.data[0].price || 0);
+                    salePrice = parseFloat(p.skus.data[0].price_sale || 0);
+                  }
+
+                  // Imagem: Tenta imagens.data, senão tenta image_url, senão tenta no SKU
+                  let image = p.images?.data?.[0]?.url || p.image_url || '';
+                  if (!image && p.skus?.data?.[0]?.image_url) {
+                    image = p.skus.data[0].image_url;
+                  }
+
                   return {
-                    id: p.id,
+                    id: String(p.id),
                     name: p.name,
-                    sku: p.sku || `ID-${p.id}`,
+                    sku: p.sku || p.skus?.data?.[0]?.sku || `ID-${p.id}`,
+                    price: price,
+                    salePrice: salePrice > 0 ? salePrice : undefined,
+                    image: image,
+                    productUrl: p.url,
+                    checkoutUrl: `https://${YAMPI_ALIAS}.yampi.store/checkout/cart/add/${p.id}`,
                     active: !!p.active,
-                    // Garante que o preço seja número
-                    price: typeof p.price === 'string' ? parseFloat(p.price) : (p.price || 0),
-                    sale_price: typeof p.price_sale === 'string' ? parseFloat(p.price_sale) : (p.price_sale || 0),
-                    image_url: mainImage,
-                    product_url: p.url,
-                    // Link direto para adição ao carrinho na Yampi
-                    checkout_url: `https://${YAMPI_ALIAS}.yampi.store/checkout/cart/add/${p.id}`
+                    raw: {
+                      id: p.id,
+                      has_skus: !!p.skus?.data?.length,
+                      has_images: !!p.images?.data?.length
+                    }
                   };
                 });
 

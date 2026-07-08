@@ -1,13 +1,14 @@
 export interface YampiProduct {
-  id: number;
+  id: string;
   name: string;
   sku: string;
-  active: boolean;
   price: number;
-  sale_price: number;
-  image_url: string;
-  product_url: string;
-  checkout_url: string;
+  salePrice?: number;
+  image: string;
+  productUrl?: string;
+  checkoutUrl?: string;
+  active: boolean;
+  raw?: any;
 }
 
 export interface YampiHealth {
@@ -21,31 +22,17 @@ export interface YampiHealth {
   };
 }
 
-export interface YampiErrorResponse {
-  success: boolean;
-  status: number;
-  message: string;
-  details?: any;
-}
-
 export const yampiClient = {
   async checkHealth(): Promise<YampiHealth> {
     const response = await fetch(`/api/yampi/health`);
-    if (!response.ok) {
-      throw new Error('Servidor de proxy não está respondendo.');
-    }
+    if (!response.ok) throw new Error('Proxy offline');
     return response.json();
   },
 
   async listProducts(): Promise<YampiProduct[]> {
     const response = await fetch(`/api/yampi/products`);
     const data = await response.json();
-
-    if (!response.ok) {
-      const errorData = data as YampiErrorResponse;
-      throw new Error(`[${errorData.status}] ${errorData.message}`);
-    }
-    
+    if (!response.ok) throw new Error(data.message || 'Erro ao carregar produtos');
     return data as YampiProduct[];
   }
 };
