@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "./components/AppLayout";
 
-// Pages - Video Commerce Core
+// Core Pages
 import Dashboard from "./pages/Dashboard";
 import StoriesManager from "./pages/StoriesManager";
 import VideoGallery from "./pages/VideoGallery";
@@ -14,7 +14,7 @@ import StyleModels from "./pages/StyleModels";
 import WidgetInstall from "./pages/WidgetInstall";
 import WidgetPreview from "./pages/WidgetPreview";
 
-// Pages - Integration Module
+// Integration Pages (Yampi)
 import ProductsPage from "./pages/ProductsPage";
 import YampiSettings from "./pages/YampiSettings";
 import NotFound from "./pages/NotFound";
@@ -34,7 +34,6 @@ const App = () => (
             {/* Video Commerce Core */}
             <Route path="/stories" element={<StoriesManager />} />
             <Route path="/stories/new" element={<StoryEditor />} />
-            <Route path="/stories/edit/:id" element={<StoryEditor />} />
             <Route path="/videos" element={<VideoGallery />} />
             <Route path="/styles" element={<StyleModels />} />
             
@@ -42,7 +41,7 @@ const App = () => (
             <Route path="/widget/install" element={<WidgetInstall />} />
             <Route path="/widget/preview" element={<WidgetPreview />} />
             
-            {/* Yampi Integration (Secondary) */}
+            {/* Yampi Integration Module */}
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/settings/yampi" element={<YampiSettings />} />
             
