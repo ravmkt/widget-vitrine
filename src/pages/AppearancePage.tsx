@@ -5,34 +5,26 @@ import {
   Plus,
   Trash2,
   Edit3,
-  Copy,
   Star,
-  Play,
-  Brush,
-  X
+  Brush
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
-import CustomDialog from '@/components/CustomDialog';
+import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 
 const AppearancePage = () => {
-  const [store, setStore] = useState<Store | null>(null);
   const [appearances, setAppearances] = useState<Appearance[]>([]);
   const [loading, setLoading] = useState(true);
   
-  const [dialog, setDialog] = useState<{
-    isOpen: boolean;
-    type: 'success' | 'error' | 'warning' | 'confirm';
-    title: string;
-    description: string;
-    onConfirm: () => void;
-    onCancel?: () => void;
-  }>({ isOpen: false, type: 'confirm', title: '', description: '', onConfirm: () => {} });
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: string; name: string }>({
+    isOpen: false,
+    id: '',
+    name: ''
+  });
 
   const loadData = async () => {
     try {
       const stores = await db.stores.getAll();
       const mainStore = stores[0];
-      setStore(mainStore);
 
       if (mainStore) {
         const list = await db.appearances.getAll(mainStore.id);
@@ -60,26 +52,29 @@ const AppearancePage = () => {
     }
   };
 
-  const handleDelete = (id: string, name: string) => {
-    setDialog({
+  const handleDeleteClick = (app: Appearance) => {
+    setDeleteModal({
       isOpen: true,
-      type: 'confirm',
-      title: 'Excluir Estilo?',
-      description: `Deseja remover o template "${name}"?`,
-      onConfirm: async () => {
-        await db.appearances.delete(id);
-        showSuccess('Estilo excluído.');
-        setDialog(prev => ({ ...prev, isOpen: false }));
-        loadData();
-      },
-      onCancel: () => setDialog(prev => ({ ...prev, isOpen: false }))
+      id: app.id,
+      name: app.name
     });
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await db.appearances.delete(deleteModal.id);
+      showSuccess('Estilo excluído com sucesso.');
+      setDeleteModal(prev => ({ ...prev, isOpen: false }));
+      loadData();
+    } catch (e) {
+      showError('Erro ao excluir estilo.');
+    }
   };
 
   if (loading) return null;
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Aparência</h1>
@@ -87,7 +82,7 @@ const AppearancePage = () => {
             Customize o design dos widgets e carrosséis de vídeo da sua loja.
           </p>
         </div>
-        <button className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-blue-100 transition-all flex items-center gap-2">
+        <button className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-lg transition-all flex items-center gap-2">
           <Plus size={18} /> Novo Estilo
         </button>
       </div>
@@ -131,7 +126,7 @@ const AppearancePage = () => {
                     <div className="flex justify-end gap-2">
                       <button className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-blue-50 rounded-lg transition-colors"><Edit3 size={18} /></button>
                       {!app.is_default && (
-                        <button onClick={() => handleDelete(app.id, app.name)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={18} /></button>
+                        <button onClick={() => handleDeleteClick(app)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"><Trash2 size={18} /></button>
                       )}
                     </div>
                   </td>
@@ -141,6 +136,14 @@ const AppearancePage = () => {
           </table>
         </div>
       </div>
+
+      <ConfirmDeleteDialog
+        isOpen={deleteModal.isOpen}
+        title="Excluir Aparência"
+        itemName={deleteModal.name}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

@@ -1,35 +1,69 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { db, Story, Video } from '@/lib/db';
-import { Plus, Eye, Trash2, Edit3, Film, Search, Layers, Layout, MousePointer2, X, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { db, Story, Video, DisplayLocation } from '@/lib/db';
+import { 
+  Plus, 
+  Search, 
+  PlayCircle, 
+  Layout, 
+  Layers, 
+  MousePointer2, 
+  Trash2, 
+  Edit3, 
+  Eye, 
+  MapPin, 
+  Film,
+  Filter,
+  CheckCircle2,
+  XCircle
+} from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
-import CustomDialog from '@/components/CustomDialog';
+import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import { cn } from '@/lib/utils';
 
 const StoriesPage = () => {
+  const navigate = useNavigate();
   const [stories, setStories] = useState<Story[]>([]);
-  const [videos, setVideos] = useState<Video[]>([]);
+  const [videoCounts, setVideoCounts] = useState<Record<string, number>>({});
+  const [locations, setLocations] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
   
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingStory, setEditingStory] = useState<Story | null>(null);
-  const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
+  // Filtros
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
 
-  const [formData, setFormData] = useState({
-    title: '',
-    format: 'carousel' as Story['format'],
-    active: true,
-    position: 1,
+  // Estado de Exclusão
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; storyId: string; storyName: string }>({
+    isOpen: false,
+    storyId: '',
+    storyName: ''
   });
 
   const loadData = async () => {
     try {
       const s = await db.stories.getAll();
-      const v = await db.videos.getAll();
-      setStories(s.sort((a, b) => a.position - b.position));
-      setVideos(v);
+      const sv = await db.storyVideos.getAll();
+      const dl = await db.displayLocations.getAll();
+
+      // Mapear contagem de vídeos por story
+      const countMap: Record<string, number> = {};
+      sv.forEach(relation => {
+        countMap[relation.story_id] = (countMap[relation.story_id] || 0) + 1;
+      });
+      setVideoCounts(countMap);
+
+      // Mapear local por story (primeiro local encontrado)
+      const locationMap: Record<string, string> = {};
+      dl.forEach(loc => {
+        if (!locationMap[loc.story_id]) {
+          locationMap[loc.story_id] = loc.selector === 'body' ? 'Página Inicial' : loc.selector;
+        }
+      });
+      setLocations(locationMap);
+
+      setStories(s.sort((a, b) => (a.position || 0) - (b.position || 0)));
     } catch (e) {
-      showError('Erro ao carregar dados.');
+      showError('Erro ao carregar os Stories.');
     } finally {
       setLoading(false);
     }
@@ -37,131 +71,202 @@ const StoriesPage = () => {
 
   useEffect(() => { loadData(); }, []);
 
-  const handleEdit = (story: Story) => {
-    setEditingStory(story);
-    setFormData({
-      title: story.title,
-      format: story.format,
-      active: story.active,
-      position: story.position,
+  const filteredStories = useMemo(() => {
+    return stories.filter(s => {
+      const matchesSearch = s.title.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = filterStatus === 'all' || (filterStatus === 'active' ? s.active : !s.active);
+      return matchesSearch && matchesStatus;
     });
-    // Simulação de vídeos selecionados (aqui buscaria a relação real)
-    setSelectedVideoIds([]); 
-    setIsModalOpen(true);
+  }, [stories, searchTerm, filterStatus]);
+
+  const handleToggleStatus = async (story: Story) => {
+    try {
+      const updated = { ...story, active: !story.active };
+      await db.stories.save(updated);
+      setStories(prev => prev.map(s => s.id === story.id ? updated : s));
+      showSuccess(`Story ${updated.active ? 'ativado' : 'desativado'} com sucesso.`);
+    } catch (e) {
+      showError('Erro ao alterar status.');
+    }
   };
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const data: Story = {
-      ...editingStory,
-      id: editingStory?.id || Math.random().toString(36).substr(2, 9),
-      store_id: '11111111-1111-1111-1111-111111111111',
-      title: formData.title,
-      format: formData.format,
-      active: formData.active,
-      position: formData.position,
-      cta_enabled: true,
-      cta_type: 'none',
-    };
-    await db.stories.save(data);
-    showSuccess('Story salvo com sucesso!');
-    setIsModalOpen(false);
-    loadData();
+  const handleDeleteClick = (story: Story) => {
+    setDeleteModal({
+      isOpen: true,
+      storyId: story.id,
+      storyName: story.title
+    });
   };
 
-  const toggleVideoSelection = (id: string) => {
-    setSelectedVideoIds(prev => prev.includes(id) ? prev.filter(v => v !== id) : [...prev, id]);
+  const handleConfirmDelete = async () => {
+    try {
+      await db.stories.delete(deleteModal.storyId);
+      setStories(prev => prev.filter(s => s.id !== deleteModal.storyId));
+      showSuccess('Story removido permanentemente.');
+      setDeleteModal(prev => ({ ...prev, isOpen: false }));
+    } catch (e) {
+      showError('Erro ao excluir o story.');
+    }
   };
+
+  const getFormatLabel = (format: string) => {
+    switch (format) {
+      case 'floating_widget': return 'Widget Fixo';
+      case 'carousel': return 'Carrossel';
+      case 'grid': return 'Grade';
+      default: return format;
+    }
+  };
+
+  const getFormatIcon = (format: string) => {
+    switch (format) {
+      case 'floating_widget': return <MousePointer2 size={14} />;
+      case 'carousel': return <Layout size={14} />;
+      case 'grid': return <Layers size={14} />;
+      default: return <PlayCircle size={14} />;
+    }
+  };
+
+  if (loading) return null;
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Stories</h1>
-          <p className="text-slate-500 font-medium mt-1">Organize seus vídeos em carrosséis ou grades interativas.</p>
+          <p className="text-slate-500 font-medium mt-1">Gerencie as configurações de exibição e agrupamento de vídeos.</p>
         </div>
         <button 
-          onClick={() => { setEditingStory(null); setIsModalOpen(true); }}
+          onClick={() => { /* Aqui abriria o modal de novo story ou redirecionaria */ }}
           className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl transition-all flex items-center gap-2"
         >
           <Plus size={18} /> Novo Story
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {stories.map(story => (
-          <div key={story.id} className="bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-xl transition-all group">
-            <div className="aspect-[9/12] bg-slate-50 relative flex items-center justify-center text-slate-200">
-               <Film size={60} strokeWidth={1} />
-               <div className="absolute top-5 right-5">
-                  <span className={cn("px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider", story.active ? "bg-emerald-500 text-white" : "bg-slate-300 text-white")}>
+      <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 flex flex-col md:flex-row gap-4 shadow-sm">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <input 
+            type="text" 
+            placeholder="Pesquisar por nome, tipo ou local..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
+          />
+        </div>
+        <div className="flex gap-2">
+          {['all', 'active', 'inactive'].map((status) => (
+            <button
+              key={status}
+              onClick={() => setFilterStatus(status as any)}
+              className={cn(
+                "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                filterStatus === status ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-400 hover:text-slate-600"
+              )}
+            >
+              {status === 'all' ? 'Todos' : status === 'active' ? 'Ativos' : 'Inativos'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {filteredStories.map((story) => (
+          <div key={story.id} className="bg-white border border-slate-200 rounded-[2rem] p-6 hover:border-[#0094EB]/30 transition-all shadow-sm group">
+            <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+              
+              {/* Nome e Info Principal */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-1">
+                  <h3 className="text-xl font-black text-slate-800 truncate">{story.title}</h3>
+                  <span className={cn(
+                    "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5",
+                    story.active ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-slate-50 text-slate-400 border border-slate-200"
+                  )}>
+                    {story.active ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
                     {story.active ? 'Ativo' : 'Inativo'}
                   </span>
-               </div>
-            </div>
-            <div className="p-8">
-               <h3 className="font-black text-xl text-slate-800 truncate mb-6">{story.title}</h3>
-               <div className="flex gap-3">
-                  <button onClick={() => handleEdit(story)} className="flex-1 bg-[#EAF6FF] hover:bg-blue-100 text-[#0094EB] py-3 rounded-2xl text-xs font-black transition-all">Editar Story</button>
-                  <button className="p-3 border border-slate-200 rounded-2xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"><Trash2 size={18} /></button>
-               </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-y-2 gap-x-4">
+                  <div className="flex items-center gap-1.5 text-[10px] font-black text-[#0094EB] uppercase tracking-widest">
+                    {getFormatIcon(story.format)} {getFormatLabel(story.format)}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <Film size={12} /> {videoCounts[story.id] || 0} {(videoCounts[story.id] || 0) === 1 ? 'Vídeo' : 'Vídeos'}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <MapPin size={12} /> {locations[story.id] || 'Página Geral'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Métricas Reais */}
+              <div className="flex gap-8 lg:px-8 border-l border-slate-100 lg:border-slate-100 border-none">
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Visualizações</p>
+                  <div className="flex items-center gap-2">
+                    <Eye size={14} className="text-[#0094EB]" />
+                    <span className="text-lg font-black text-slate-800">{story.view_count || 0}</span>
+                  </div>
+                </div>
+                {story.click_count !== undefined && (
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Cliques</p>
+                    <div className="flex items-center gap-2">
+                      <MousePointer2 size={14} className="text-violet-500" />
+                      <span className="text-lg font-black text-slate-800">{story.click_count || 0}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Ações */}
+              <div className="flex items-center gap-2 shrink-0">
+                <button 
+                  onClick={() => handleToggleStatus(story)}
+                  className={cn(
+                    "px-4 py-3 rounded-2xl text-[10px] font-black uppercase transition-all",
+                    story.active ? "bg-slate-100 text-slate-600 hover:bg-slate-200" : "bg-emerald-500 text-white hover:bg-emerald-600"
+                  )}
+                >
+                  {story.active ? 'Desativar' : 'Ativar'}
+                </button>
+                <button 
+                  onClick={() => navigate(`/stories/${story.id}`)}
+                  className="p-3 bg-[#EAF6FF] text-[#0094EB] hover:bg-[#0094EB] hover:text-white rounded-2xl transition-all"
+                  title="Editar Story"
+                >
+                  <Edit3 size={20} />
+                </button>
+                <button 
+                  onClick={() => handleDeleteClick(story)}
+                  className="p-3 bg-white border border-slate-200 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all"
+                  title="Excluir Story"
+                >
+                  <Trash2 size={20} />
+                </button>
+              </div>
+
             </div>
           </div>
         ))}
+
+        {filteredStories.length === 0 && (
+          <div className="p-20 text-center bg-slate-50 rounded-[3rem] border border-dashed border-slate-200">
+            <PlayCircle size={48} className="mx-auto text-slate-300 mb-4" />
+            <p className="text-slate-500 font-bold">Nenhum Story encontrado.</p>
+          </div>
+        )}
       </div>
 
-      <CustomDialog
-        isOpen={isModalOpen}
-        type="form"
-        title={editingStory ? 'Editar Story' : 'Novo Story'}
-        maxWidth="max-w-3xl"
-        onCancel={() => setIsModalOpen(false)}
-        onConfirm={handleSave}
-      >
-        <div className="space-y-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Título do Story</label>
-              <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Formato de Exibição</label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { id: 'carousel', icon: Layout, label: 'Carrossel' },
-                  { id: 'grid', icon: Layers, label: 'Grade' },
-                  { id: 'floating_widget', icon: MousePointer2, label: 'Flutuante' },
-                ].map(item => (
-                  <button 
-                    key={item.id} type="button" onClick={() => setFormData({...formData, format: item.id as any})}
-                    className={cn("flex flex-col items-center gap-2 p-3 rounded-xl border text-[10px] font-black transition-all", formData.format === item.id ? "bg-blue-50 border-[#0094EB] text-[#0094EB]" : "bg-white border-slate-100 text-slate-400")}
-                  >
-                    <item.icon size={18} /> {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-8 border-t border-slate-100">
-             <h4 className="text-sm font-black text-slate-800 mb-6">Selecionar Vídeos do Story</h4>
-             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                {videos.map(v => (
-                  <button 
-                    key={v.id} type="button" onClick={() => toggleVideoSelection(v.id)}
-                    className={cn("relative aspect-square rounded-2xl border-2 overflow-hidden transition-all", selectedVideoIds.includes(v.id) ? "border-[#0094EB]" : "border-transparent opacity-60 hover:opacity-100")}
-                  >
-                     <img src={v.thumbnail_url} className="w-full h-full object-cover" alt={v.title} />
-                     {selectedVideoIds.includes(v.id) && (
-                       <div className="absolute top-2 right-2 bg-[#0094EB] text-white rounded-full p-1"><Check size={12} /></div>
-                     )}
-                     <div className="absolute bottom-0 left-0 right-0 p-2 bg-black/40 text-white text-[9px] font-black truncate">{v.title}</div>
-                  </button>
-                ))}
-             </div>
-          </div>
-        </div>
-      </CustomDialog>
+      <ConfirmDeleteDialog
+        isOpen={deleteModal.isOpen}
+        title="Excluir Story"
+        itemName={deleteModal.storyName}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

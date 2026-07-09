@@ -3,6 +3,7 @@ import { db, SizingModel } from '@/lib/db';
 import { Ruler, Plus, User, Trash2, Edit3, X, Upload } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import CustomDialog from '@/components/CustomDialog';
+import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import { cn } from '@/lib/utils';
 
 const MedidasPage = () => {
@@ -10,6 +11,12 @@ const MedidasPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingModel, setEditingModel] = useState<SizingModel | null>(null);
   
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: string; name: string }>({
+    isOpen: false,
+    id: '',
+    name: ''
+  });
+
   const [formData, setFormData] = useState({
     name: '',
     image_url: '',
@@ -48,6 +55,25 @@ const MedidasPage = () => {
     loadData();
   };
 
+  const handleDeleteClick = (model: SizingModel) => {
+    setDeleteModal({
+      isOpen: true,
+      id: model.id,
+      name: model.name
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await db.sizingModels.delete(deleteModal.id);
+      showSuccess('Perfil de medidas removido.');
+      setDeleteModal(prev => ({ ...prev, isOpen: false }));
+      loadData();
+    } catch (e) {
+      showError('Erro ao excluir perfil.');
+    }
+  };
+
   const addMeasure = () => {
     setFormData({...formData, measures: [...formData.measures, { name: '', value: 0, unit: 'cm' }]});
   };
@@ -57,7 +83,7 @@ const MedidasPage = () => {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Medidas</h1>
@@ -90,7 +116,7 @@ const MedidasPage = () => {
              </div>
              <div className="flex gap-3">
                 <button onClick={() => handleEdit(m)} className="flex-1 bg-slate-50 text-slate-600 py-3 rounded-2xl text-xs font-black hover:bg-blue-50 hover:text-[#0094EB] transition-all">Editar</button>
-                <button className="p-3 border border-slate-200 rounded-2xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"><Trash2 size={18} /></button>
+                <button onClick={() => handleDeleteClick(m)} className="p-3 border border-slate-200 rounded-2xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all"><Trash2 size={18} /></button>
              </div>
           </div>
         ))}
@@ -139,6 +165,14 @@ const MedidasPage = () => {
           </div>
         </div>
       </CustomDialog>
+
+      <ConfirmDeleteDialog
+        isOpen={deleteModal.isOpen}
+        title="Excluir Medidas"
+        itemName={deleteModal.name}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

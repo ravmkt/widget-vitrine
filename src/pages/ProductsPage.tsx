@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { db, Product } from '@/lib/db';
-import { Plus, ShoppingBag, Search, ExternalLink, Trash2, Edit3, X, Upload, FileSpreadsheet, Globe, FileCode, Download } from 'lucide-react';
+import { Plus, ShoppingBag, Search, Edit3, Trash2, Upload, FileCode, Download, Globe } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import CustomDialog from '@/components/CustomDialog';
+import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import { cn } from '@/lib/utils';
 
 const ProductsPage = () => {
@@ -14,6 +15,12 @@ const ProductsPage = () => {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importType, setImportType] = useState<'spreadsheet' | 'api'>('spreadsheet');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: string; name: string }>({
+    isOpen: false,
+    id: '',
+    name: ''
+  });
 
   const [formData, setFormData] = useState({
     name: '',
@@ -50,6 +57,25 @@ const ProductsPage = () => {
     loadData();
   };
 
+  const handleDeleteClick = (product: Product) => {
+    setDeleteModal({
+      isOpen: true,
+      id: product.id,
+      name: product.name
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await db.products.delete(deleteModal.id);
+      showSuccess('Produto removido.');
+      setDeleteModal(prev => ({ ...prev, isOpen: false }));
+      loadData();
+    } catch (e) {
+      showError('Erro ao excluir produto.');
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -58,7 +84,7 @@ const ProductsPage = () => {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Produtos</h1>
@@ -96,7 +122,10 @@ const ProductsPage = () => {
                 <td className="px-8 py-5 text-[#0094EB] font-black">R$ {p.price.toFixed(2)}</td>
                 <td className="px-8 py-5 text-slate-400 font-mono text-xs">{p.sku}</td>
                 <td className="px-8 py-5 text-right">
-                   <button onClick={() => { setEditingProduct(p); setFormData({name: p.name, price: p.price.toString(), sku: p.sku||'', image_url: p.image_url, product_url: p.product_url}); setIsAddModalOpen(true); }} className="p-2.5 text-slate-400 hover:text-[#0094EB] transition-colors"><Edit3 size={18} /></button>
+                   <div className="flex justify-end gap-2">
+                      <button onClick={() => { setEditingProduct(p); setFormData({name: p.name, price: p.price.toString(), sku: p.sku||'', image_url: p.image_url, product_url: p.product_url}); setIsAddModalOpen(true); }} className="p-2.5 text-slate-400 hover:text-[#0094EB] transition-colors"><Edit3 size={18} /></button>
+                      <button onClick={() => handleDeleteClick(p)} className="p-2.5 text-slate-400 hover:text-rose-500 transition-colors"><Trash2 size={18} /></button>
+                   </div>
                 </td>
               </tr>
             ))}
@@ -104,7 +133,6 @@ const ProductsPage = () => {
         </table>
       </div>
 
-      {/* Modal Adicionar/Editar */}
       <CustomDialog isOpen={isAddModalOpen} type="form" title={editingProduct ? 'Editar Produto' : 'Novo Produto'} maxWidth="max-w-xl" onCancel={() => setIsAddModalOpen(false)} onConfirm={handleSave}>
         <div className="space-y-8">
            <div className="flex flex-col sm:flex-row gap-6 items-center">
@@ -136,59 +164,13 @@ const ProductsPage = () => {
         </div>
       </CustomDialog>
 
-      {/* Modal Importação */}
-      <CustomDialog isOpen={isImportModalOpen} type="form" title="Importar Produtos" maxWidth="max-w-2xl" onCancel={() => setIsImportModalOpen(false)}>
-        <div className="space-y-10">
-           <div className="flex bg-slate-100 p-1.5 rounded-2xl gap-2 w-fit">
-              <button onClick={() => setImportType('spreadsheet')} className={cn("px-6 py-2.5 rounded-xl text-xs font-black transition-all", importType === 'spreadsheet' ? "bg-white text-[#0094EB] shadow-sm" : "text-slate-400 hover:text-slate-600")}>Planilha</button>
-              <button onClick={() => setImportType('api')} className={cn("px-6 py-2.5 rounded-xl text-xs font-black transition-all", importType === 'api' ? "bg-white text-[#0094EB] shadow-sm" : "text-slate-400 hover:text-slate-600")}>API / Plataforma</button>
-           </div>
-
-           {importType === 'spreadsheet' ? (
-             <div className="space-y-8 animate-fade-in">
-                <div className="p-8 bg-blue-50 border border-blue-100 rounded-3xl flex items-center justify-between">
-                   <div className="flex items-center gap-4">
-                      <FileCode className="text-[#0094EB]" size={32} />
-                      <div>
-                        <h4 className="font-black text-slate-800 text-sm">Modelo de Planilha</h4>
-                        <p className="text-xs text-slate-500 font-bold">Baixe o modelo e preencha os dados.</p>
-                      </div>
-                   </div>
-                   <button className="flex items-center gap-2 bg-white text-[#0094EB] px-5 py-2.5 rounded-xl text-xs font-black border border-blue-100 hover:bg-blue-100 transition-all shadow-sm">
-                      <Download size={16} /> Baixar Modelo
-                   </button>
-                </div>
-                <label className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-slate-200 rounded-[2rem] cursor-pointer hover:bg-slate-50 transition-all">
-                   <Upload size={40} className="text-[#0094EB] mb-4" />
-                   <span className="text-sm font-black text-slate-600">Fazer upload da planilha</span>
-                   <span className="text-xs text-slate-400 mt-2">Arraste ou clique para selecionar (.csv, .xlsx)</span>
-                   <input type="file" className="hidden" />
-                </label>
-                <button className="w-full py-4 bg-[#0094EB] text-white rounded-2xl font-black text-sm shadow-xl hover:bg-[#0E4787]">Iniciar Importação</button>
-             </div>
-           ) : (
-             <div className="space-y-6 animate-fade-in">
-                {[
-                  { id: 'yampi', label: 'Yampi', active: true, logo: 'https://yampi.com.br/favicon.ico' },
-                  { id: 'shopify', label: 'Shopify', active: false, logo: 'https://shopify.com/favicon.ico' },
-                  { id: 'nuvemshop', label: 'Nuvemshop', active: false, logo: 'https://nuvemshop.com.br/favicon.ico' },
-                ].map(p => (
-                  <div key={p.id} className={cn("p-6 rounded-[1.5rem] border flex items-center justify-between", p.active ? "bg-white border-slate-200" : "bg-slate-50 border-slate-100 opacity-60")}>
-                     <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 bg-white rounded-xl border border-slate-100 p-2 flex items-center justify-center"><Globe size={20} className="text-slate-300" /></div>
-                        <span className="font-black text-slate-800">{p.label}</span>
-                     </div>
-                     {p.active ? (
-                       <button className="bg-blue-50 text-[#0094EB] px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-100">Configurar</button>
-                     ) : (
-                       <span className="bg-slate-200 text-slate-500 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">Em Breve</span>
-                     )}
-                  </div>
-                ))}
-             </div>
-           )}
-        </div>
-      </CustomDialog>
+      <ConfirmDeleteDialog
+        isOpen={deleteModal.isOpen}
+        title="Excluir Produto"
+        itemName={deleteModal.name}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };
