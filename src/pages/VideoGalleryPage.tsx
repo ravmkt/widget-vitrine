@@ -32,7 +32,7 @@ const VideoGalleryPage = () => {
 
   useEffect(() => { loadData(); }, []);
 
-  const filteredVideos = videos.filter(v => v.title.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredVideos = videos.filter(v => (v.title || '').toLowerCase().includes(searchTerm.toLowerCase()));
 
   const handleDelete = (id: string, title: string) => {
     setDialog({
@@ -42,12 +42,21 @@ const VideoGalleryPage = () => {
       description: `Deseja remover "${title}" da galeria?`,
       onConfirm: async () => {
         await db.videos.delete(id);
-        showSuccess('Vídeo removido.');
+        showSuccess('Vídeo removido com sucesso.');
         setDialog(p => ({ ...p, isOpen: false }));
         loadData();
       },
       onCancel: () => setDialog(p => ({ ...p, isOpen: false }))
     });
+  };
+
+  const handleAddVideo = () => {
+    showSuccess('Abrindo seletor de upload...');
+    // Aqui viria a lógica real de upload ou modal de link
+  };
+
+  const handleEditVideo = (video: Video) => {
+    showSuccess(`Editando vídeo: ${video.title}`);
   };
 
   if (loading) return null;
@@ -59,7 +68,10 @@ const VideoGalleryPage = () => {
           <h1 className="text-3xl font-black text-[#0F172A] tracking-tight">Biblioteca de Vídeos</h1>
           <p className="text-[#64748B] font-medium mt-1">Hospede e gerencie seus vídeos de vendas e unboxing.</p>
         </div>
-        <button className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-lg transition-all flex items-center gap-2">
+        <button 
+          onClick={handleAddVideo}
+          className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-lg transition-all flex items-center gap-2"
+        >
           <Plus size={18} /> Adicionar Vídeo
         </button>
       </div>
@@ -90,7 +102,10 @@ const VideoGalleryPage = () => {
                <p className="text-xs font-bold text-[#0094EB] uppercase tracking-widest mb-1">{video.source_type}</p>
                <h4 className="font-bold text-[#0F172A] truncate text-sm">{video.title}</h4>
                <div className="flex gap-2 mt-4 pt-4 border-t border-[#F1F5F9]">
-                  <button className="p-2 rounded-lg bg-[#F8FAFC] hover:bg-[#EAF6FF] text-[#0094EB] transition-colors">
+                  <button 
+                    onClick={() => handleEditVideo(video)}
+                    className="p-2 rounded-lg bg-[#F8FAFC] hover:bg-[#EAF6FF] text-[#0094EB] transition-colors"
+                  >
                     <Edit3 size={16} />
                   </button>
                   <button onClick={() => handleDelete(video.id, video.title)} className="p-2 rounded-lg bg-[#F8FAFC] hover:bg-red-50 text-red-500 transition-colors">

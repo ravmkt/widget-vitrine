@@ -4,8 +4,6 @@ import {
   ChevronRight, 
   Bell, 
   User, 
-  Search,
-  Settings,
   HelpCircle
 } from 'lucide-react';
 import { SidebarTrigger } from './ui/sidebar';
@@ -40,16 +38,7 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-2 md:gap-5">
-          <div className="relative hidden lg:block">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
-            <input 
-              type="text" 
-              placeholder="Pesquisar no painel..." 
-              className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-full pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0094EB]/10 w-72 transition-all"
-            />
-          </div>
-          
-          <div className="flex items-center gap-1 border-l border-[#F1F5F9] pl-5">
+          <div className="flex items-center gap-1">
             <button className="p-2.5 rounded-xl text-[#64748B] hover:bg-[#F1F5F9] transition-colors relative">
               <Bell size={18} />
               <span className="absolute top-2.5 right-2.5 h-2 w-2 bg-[#0094EB] rounded-full border-2 border-white" />
@@ -57,7 +46,7 @@ const Navbar = () => {
             <button className="p-2.5 rounded-xl text-[#64748B] hover:bg-[#F1F5F9] transition-colors">
               <HelpCircle size={18} />
             </button>
-            <button className="p-2.5 rounded-xl text-[#64748B] hover:bg-[#F1F5F9] transition-colors lg:hidden">
+            <button className="p-2.5 rounded-xl text-[#64748B] hover:bg-[#F1F5F9] transition-colors">
               <User size={18} />
             </button>
           </div>
