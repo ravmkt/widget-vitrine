@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { db, Story, Video } from '@/lib/db';
-import { Plus, Eye, Trash2, Edit3, Film, Search, Filter, Play, Check, ChevronRight, Layers, Layout, Clock, MousePointer2, X } from 'lucide-react';
+import { Plus, Eye, Trash2, Edit3, Film, Search, Layers, Layout, MousePointer2, X, Check } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import CustomDialog from '@/components/CustomDialog';
-import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 const StoriesPage = () => {
@@ -11,33 +10,26 @@ const StoriesPage = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
-
-  // Estados para Modais
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [dialog, setDialog] = useState<{
-    isOpen: boolean;
-    type: 'success' | 'error' | 'warning' | 'confirm';
-    title: string;
-    description: string;
-    onConfirm: () => void;
-    onCancel?: () => void;
-  }>({ isOpen: false, type: 'confirm', title: '', description: '', onConfirm: () => {} });
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingStory, setEditingStory] = useState<Story | null>(null);
+  const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
     title: '',
     format: 'carousel' as Story['format'],
     active: true,
+    position: 1,
   });
 
   const loadData = async () => {
     try {
-      const allStories = await db.stories.getAll();
-      setStories(allStories.sort((a, b) => a.position - b.position));
-      const allVideos = await db.videos.getAll();
-      setVideos(allVideos);
+      const s = await db.stories.getAll();
+      const v = await db.videos.getAll();
+      setStories(s.sort((a, b) => a.position - b.position));
+      setVideos(v);
     } catch (e) {
-      showError('Erro ao carregar stories.');
+      showError('Erro ao carregar dados.');
     } finally {
       setLoading(false);
     }
@@ -45,217 +37,131 @@ const StoriesPage = () => {
 
   useEffect(() => { loadData(); }, []);
 
-  const filteredStories = useMemo(() => {
-    return stories.filter(s => {
-      const matchesSearch = s.title.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = filterStatus === 'all' || (filterStatus === 'active' ? s.active : !s.active);
-      return matchesSearch && matchesStatus;
+  const handleEdit = (story: Story) => {
+    setEditingStory(story);
+    setFormData({
+      title: story.title,
+      format: story.format,
+      active: story.active,
+      position: story.position,
     });
-  }, [stories, searchTerm, filterStatus]);
+    // Simulação de vídeos selecionados (aqui buscaria a relação real)
+    setSelectedVideoIds([]); 
+    setIsModalOpen(true);
+  };
 
-  const handleCreateStory = async (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title) return;
-
-    try {
-      const newStory: Story = {
-        id: Math.random().toString(36).substr(2, 9),
-        store_id: '11111111-1111-1111-1111-111111111111',
-        title: formData.title,
-        format: formData.format,
-        active: formData.active,
-        cta_enabled: true,
-        cta_type: 'none',
-        position: stories.length + 1,
-        view_count: 0,
-        click_count: 0,
-      };
-
-      await db.stories.save(newStory);
-      showSuccess('Story criado com sucesso!');
-      setIsAddModalOpen(false);
-      setFormData({ title: '', format: 'carousel', active: true });
-      loadData();
-    } catch (e) {
-      showError('Erro ao criar story.');
-    }
+    const data: Story = {
+      ...editingStory,
+      id: editingStory?.id || Math.random().toString(36).substr(2, 9),
+      store_id: '11111111-1111-1111-1111-111111111111',
+      title: formData.title,
+      format: formData.format,
+      active: formData.active,
+      position: formData.position,
+      cta_enabled: true,
+      cta_type: 'none',
+    };
+    await db.stories.save(data);
+    showSuccess('Story salvo com sucesso!');
+    setIsModalOpen(false);
+    loadData();
   };
 
-  const handleDelete = (id: string, title: string) => {
-    setDialog({
-      isOpen: true,
-      type: 'confirm',
-      title: 'Excluir Story?',
-      description: `Deseja remover o story "${title}"? Esta ação é irreversível.`,
-      onConfirm: async () => {
-        await db.stories.delete(id);
-        showSuccess('Story excluído com sucesso.');
-        setDialog(p => ({ ...p, isOpen: false }));
-        loadData();
-      },
-      onCancel: () => setDialog(p => ({ ...p, isOpen: false }))
-    });
+  const toggleVideoSelection = (id: string) => {
+    setSelectedVideoIds(prev => prev.includes(id) ? prev.filter(v => v !== id) : [...prev, id]);
   };
-
-  if (loading) return null;
 
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-[#0F172A] tracking-tight">Meus Stories</h1>
-          <p className="text-[#64748B] font-medium mt-1">Gerencie a exibição e os vídeos dos seus stories interativos.</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Stories</h1>
+          <p className="text-slate-500 font-medium mt-1">Organize seus vídeos em carrosséis ou grades interativas.</p>
         </div>
         <button 
-          onClick={() => setIsAddModalOpen(true)}
-          className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-blue-100 transition-all flex items-center gap-2"
+          onClick={() => { setEditingStory(null); setIsModalOpen(true); }}
+          className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl transition-all flex items-center gap-2"
         >
           <Plus size={18} /> Novo Story
         </button>
       </div>
 
-      <div className="bg-white border border-[#E2E8F0] rounded-[1.5rem] p-4 flex flex-col md:flex-row gap-4 shadow-sm">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={18} />
-          <input 
-            type="text" 
-            placeholder="Pesquisar por título..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl pl-12 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0094EB]/10 font-medium"
-          />
-        </div>
-        <select 
-          value={filterStatus}
-          onChange={e => setFilterStatus(e.target.value as any)}
-          className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-4 py-2.5 text-sm font-bold text-[#64748B] focus:outline-none cursor-pointer"
-        >
-          <option value="all">Todos os Status</option>
-          <option value="active">Ativos</option>
-          <option value="inactive">Inativos</option>
-        </select>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredStories.map(story => (
-          <div key={story.id} className="bg-white border border-[#E2E8F0] rounded-[2rem] overflow-hidden shadow-sm hover:shadow-md transition-all group">
-            <div className="aspect-[9/12] bg-[#F1F5F9] relative overflow-hidden">
-               <div className="absolute inset-0 flex items-center justify-center text-[#CBD5E1]">
-                  <Film size={48} strokeWidth={1.5} />
-               </div>
-               <div className="absolute top-4 right-4">
-                  <span className={cn(
-                    "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm",
-                    story.active ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-600"
-                  )}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {stories.map(story => (
+          <div key={story.id} className="bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-xl transition-all group">
+            <div className="aspect-[9/12] bg-slate-50 relative flex items-center justify-center text-slate-200">
+               <Film size={60} strokeWidth={1} />
+               <div className="absolute top-5 right-5">
+                  <span className={cn("px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider", story.active ? "bg-emerald-500 text-white" : "bg-slate-300 text-white")}>
                     {story.active ? 'Ativo' : 'Inativo'}
                   </span>
                </div>
             </div>
-            <div className="p-6">
-               <h3 className="font-black text-lg text-[#0F172A] truncate">{story.title}</h3>
-               <div className="flex items-center gap-4 mt-4">
-                  <div className="flex items-center gap-1.5">
-                    <Eye size={14} className="text-[#0094EB]" />
-                    <span className="text-xs font-bold text-[#64748B]">{story.view_count || 0}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <MousePointer2 size={14} className="text-[#0094EB]" />
-                    <span className="text-xs font-bold text-[#64748B]">{story.click_count || 0}</span>
-                  </div>
-               </div>
-               <div className="grid grid-cols-2 gap-2 mt-6">
-                  <Link to={`/stories/${story.id}`} className="flex-1 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#0F172A] py-2.5 rounded-xl text-xs font-bold transition-all text-center">
-                    Configurar
-                  </Link>
-                  <button 
-                    onClick={() => handleDelete(story.id, story.title)}
-                    className="flex-1 border border-[#E2E8F0] hover:bg-red-50 hover:text-red-500 text-[#64748B] py-2.5 rounded-xl text-xs font-bold transition-all"
-                  >
-                    Excluir
-                  </button>
+            <div className="p-8">
+               <h3 className="font-black text-xl text-slate-800 truncate mb-6">{story.title}</h3>
+               <div className="flex gap-3">
+                  <button onClick={() => handleEdit(story)} className="flex-1 bg-[#EAF6FF] hover:bg-blue-100 text-[#0094EB] py-3 rounded-2xl text-xs font-black transition-all">Editar Story</button>
+                  <button className="p-3 border border-slate-200 rounded-2xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"><Trash2 size={18} /></button>
                </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Modal Novo Story */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-lg bg-white border border-slate-200 rounded-[2rem] p-8 shadow-2xl relative">
-            <button onClick={() => setIsAddModalOpen(false)} className="absolute top-6 right-6 p-2 rounded-full text-slate-400 hover:bg-slate-50">
-              <X size={20} />
-            </button>
-            <h3 className="text-2xl font-black text-[#0F172A] mb-6">Criar Novo Story</h3>
-            
-            <form onSubmit={handleCreateStory} className="space-y-6">
-              <div>
-                <label className="block text-[10px] font-black text-[#64748B] uppercase tracking-widest mb-2">Título do Story</label>
-                <input 
-                  type="text" required
-                  value={formData.title}
-                  onChange={e => setFormData({...formData, title: e.target.value})}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
-                  placeholder="Ex: Lançamentos de Verão"
-                />
+      <CustomDialog
+        isOpen={isModalOpen}
+        type="form"
+        title={editingStory ? 'Editar Story' : 'Novo Story'}
+        maxWidth="max-w-3xl"
+        onCancel={() => setIsModalOpen(false)}
+        onConfirm={handleSave}
+      >
+        <div className="space-y-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Título do Story</label>
+              <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Formato de Exibição</label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: 'carousel', icon: Layout, label: 'Carrossel' },
+                  { id: 'grid', icon: Layers, label: 'Grade' },
+                  { id: 'floating_widget', icon: MousePointer2, label: 'Flutuante' },
+                ].map(item => (
+                  <button 
+                    key={item.id} type="button" onClick={() => setFormData({...formData, format: item.id as any})}
+                    className={cn("flex flex-col items-center gap-2 p-3 rounded-xl border text-[10px] font-black transition-all", formData.format === item.id ? "bg-blue-50 border-[#0094EB] text-[#0094EB]" : "bg-white border-slate-100 text-slate-400")}
+                  >
+                    <item.icon size={18} /> {item.label}
+                  </button>
+                ))}
               </div>
+            </div>
+          </div>
 
-              <div>
-                <label className="block text-[10px] font-black text-[#64748B] uppercase tracking-widest mb-2">Formato de Exibição</label>
-                <div className="grid grid-cols-2 gap-2">
-                   {[
-                     { id: 'carousel', label: 'Carrossel Bolinha', icon: Layout },
-                     { id: 'grid', label: 'Grade/Mosaico', icon: Layers },
-                     { id: 'floating_widget', label: 'Widget Flutuante', icon: MousePointer2 },
-                   ].map(item => (
-                     <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setFormData({...formData, format: item.id as any})}
-                        className={cn(
-                          "flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all text-center",
-                          formData.format === item.id ? "bg-blue-50 border-[#0094EB] text-[#0094EB]" : "bg-white border-slate-100 text-slate-400 hover:border-slate-300"
-                        )}
-                     >
-                        <item.icon size={20} />
-                        <span className="text-[10px] font-black uppercase">{item.label}</span>
-                     </button>
-                   ))}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl">
-                 <div className="flex-1">
-                    <h4 className="text-sm font-bold text-slate-700">Ativar Instantaneamente</h4>
-                    <p className="text-[10px] text-slate-500 font-medium">O story ficará visível na loja assim que criado.</p>
-                 </div>
-                 <button 
-                   type="button"
-                   onClick={() => setFormData({...formData, active: !formData.active})}
-                   className={cn("w-12 h-6 rounded-full transition-all relative", formData.active ? "bg-[#0094EB]" : "bg-slate-300")}
-                 >
-                    <div className={cn("w-4 h-4 bg-white rounded-full absolute top-1 transition-all", formData.active ? "left-7" : "left-1")} />
-                 </button>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setIsAddModalOpen(false)} className="flex-1 py-3.5 rounded-2xl border border-slate-200 text-slate-600 font-bold text-sm">Cancelar</button>
-                <button type="submit" className="flex-1 py-3.5 rounded-2xl bg-[#0094EB] text-white font-bold text-sm hover:bg-[#0E4787] shadow-lg">Criar Story</button>
-              </div>
-            </form>
+          <div className="pt-8 border-t border-slate-100">
+             <h4 className="text-sm font-black text-slate-800 mb-6">Selecionar Vídeos do Story</h4>
+             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                {videos.map(v => (
+                  <button 
+                    key={v.id} type="button" onClick={() => toggleVideoSelection(v.id)}
+                    className={cn("relative aspect-square rounded-2xl border-2 overflow-hidden transition-all", selectedVideoIds.includes(v.id) ? "border-[#0094EB]" : "border-transparent opacity-60 hover:opacity-100")}
+                  >
+                     <img src={v.thumbnail_url} className="w-full h-full object-cover" alt={v.title} />
+                     {selectedVideoIds.includes(v.id) && (
+                       <div className="absolute top-2 right-2 bg-[#0094EB] text-white rounded-full p-1"><Check size={12} /></div>
+                     )}
+                     <div className="absolute bottom-0 left-0 right-0 p-2 bg-black/40 text-white text-[9px] font-black truncate">{v.title}</div>
+                  </button>
+                ))}
+             </div>
           </div>
         </div>
-      )}
-
-      <CustomDialog
-        isOpen={dialog.isOpen}
-        type={dialog.type}
-        title={dialog.title}
-        description={dialog.description}
-        onConfirm={dialog.onConfirm}
-        onCancel={dialog.onCancel}
-      />
+      </CustomDialog>
     </div>
   );
 };

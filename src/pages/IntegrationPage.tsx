@@ -32,87 +32,89 @@ const IntegrationPage = () => {
         <p className="text-slate-500 font-medium mt-1">Conecte o Vitrine Vídeo à sua loja virtual via script direto ou GTM.</p>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm">
-        <div className="flex bg-slate-50 p-1.5 rounded-2xl gap-2 w-fit mb-8">
+      <div className="bg-white border border-slate-200 rounded-[2.5rem] p-10 shadow-sm">
+        <div className="flex bg-slate-100 p-1.5 rounded-2xl gap-2 w-fit mb-12">
            <button 
              onClick={() => setTab('script')}
-             className={cn("px-6 py-2.5 rounded-xl text-xs font-bold transition-all", tab === 'script' ? "bg-white text-[#0094EB] shadow-sm" : "text-slate-400 hover:text-slate-600")}
+             className={cn("px-8 py-3 rounded-xl text-xs font-black transition-all", tab === 'script' ? "bg-white text-[#0094EB] shadow-md" : "text-slate-400 hover:text-slate-600")}
            >
              Script Direto
            </button>
            <button 
              onClick={() => setTab('gtm')}
-             className={cn("px-6 py-2.5 rounded-xl text-xs font-bold transition-all", tab === 'gtm' ? "bg-white text-[#0094EB] shadow-sm" : "text-slate-400 hover:text-slate-600")}
+             className={cn("px-8 py-3 rounded-xl text-xs font-black transition-all", tab === 'gtm' ? "bg-white text-[#0094EB] shadow-md" : "text-slate-400 hover:text-slate-600")}
            >
              Google Tag Manager
            </button>
         </div>
 
         {tab === 'script' ? (
-          <div className="space-y-6 animate-fade-in">
+          <div className="space-y-8 animate-fade-in">
             <div className="flex items-center gap-3">
-              <Terminal className="text-[#0094EB]" size={20} />
-              <h3 className="text-xl font-black text-slate-800">Script de Integração</h3>
+              <Terminal className="text-[#0094EB]" size={24} />
+              <h3 className="text-2xl font-black text-slate-800 tracking-tight">Instalação via Script</h3>
             </div>
-            <p className="text-sm text-slate-500 leading-relaxed font-medium">
+            <p className="text-sm text-slate-500 leading-relaxed font-bold">
               Copie o código abaixo e cole no cabeçalho (Head) da sua loja (Yampi, Shopify, Nuvemshop...) para ativar a exibição dos stories.
             </p>
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 relative group overflow-hidden">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 relative group overflow-hidden shadow-2xl">
                <pre className="text-xs md:text-sm font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap leading-relaxed">
                  {scriptCode}
                </pre>
                <button 
                  onClick={() => copy(scriptCode)}
-                 className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 p-2 rounded-lg text-white transition-all"
+                 className="absolute top-6 right-6 bg-white/10 hover:bg-[#0094EB] p-3 rounded-xl text-white transition-all active:scale-95"
                >
-                 <Copy size={16} />
+                 <Copy size={18} />
                </button>
             </div>
           </div>
         ) : (
-          <div className="space-y-6 animate-fade-in">
+          <div className="space-y-8 animate-fade-in">
             <div className="flex items-center gap-3">
-              <Blocks className="text-[#0094EB]" size={20} />
-              <h3 className="text-xl font-black text-slate-800">Instalação via GTM</h3>
+              <Blocks className="text-[#0094EB]" size={24} />
+              <h3 className="text-2xl font-black text-slate-800 tracking-tight">Google Tag Manager</h3>
             </div>
-            <p className="text-sm text-slate-500 leading-relaxed font-medium">
-              Crie uma nova Tag do tipo "HTML Personalizado" no seu container GTM e cole o código abaixo. Acione em "All Pages".
-            </p>
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 relative group overflow-hidden">
+            <div className="space-y-4">
+               <p className="text-sm text-slate-700 font-bold">Passo 1: <span className="text-slate-500 font-medium">Acesse sua conta do GTM e selecione o container da sua loja.</span></p>
+               <p className="text-sm text-slate-700 font-bold">Passo 2: <span className="text-slate-500 font-medium">Crie uma nova tag do tipo HTML personalizado.</span></p>
+               <p className="text-sm text-slate-700 font-bold">Passo 3: <span className="text-slate-500 font-medium">Cole o código abaixo, configure o acionador para todas as páginas e publique as alterações.</span></p>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 relative group overflow-hidden shadow-2xl">
                <pre className="text-xs md:text-sm font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap leading-relaxed">
                  {gtmCode}
                </pre>
                <button 
                  onClick={() => copy(gtmCode)}
-                 className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 p-2 rounded-lg text-white transition-all"
+                 className="absolute top-6 right-6 bg-white/10 hover:bg-[#0094EB] p-3 rounded-xl text-white transition-all active:scale-95"
                >
-                 <Copy size={16} />
+                 <Copy size={18} />
                </button>
             </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-          <div className="p-6 rounded-2xl bg-blue-50 border border-blue-100">
-            <Globe className="text-[#0094EB] mb-3" />
-            <h4 className="font-bold text-slate-800 mb-1">Passo 1</h4>
-            <p className="text-xs text-slate-500 font-medium">Acesse as configurações de scripts da sua loja.</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+          <div className="p-8 rounded-[2rem] bg-blue-50 border border-blue-100 group hover:scale-105 transition-all">
+            <Globe className="text-[#0094EB] mb-4" size={28} />
+            <h4 className="font-black text-slate-800 mb-2">Passo 1</h4>
+            <p className="text-xs text-slate-500 font-bold leading-relaxed">Acesse as configurações de scripts da sua loja.</p>
           </div>
-          <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200">
-            <Code className="text-slate-400 mb-3" />
-            <h4 className="font-bold text-slate-800 mb-1">Passo 2</h4>
-            <p className="text-xs text-slate-500 font-medium">Cole o código no campo de "Cabeçalho" (Header).</p>
+          <div className="p-8 rounded-[2rem] bg-slate-50 border border-slate-100 group hover:scale-105 transition-all">
+            <Code className="text-slate-400 mb-4" size={28} />
+            <h4 className="font-black text-slate-800 mb-2">Passo 2</h4>
+            <p className="text-xs text-slate-500 font-bold leading-relaxed">Vá até a seção do Cabeçalho (Header).</p>
           </div>
-          <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-100">
-            <CheckCircle2 className="text-emerald-500 mb-3" />
-            <h4 className="font-bold text-slate-800 mb-1">Passo 3</h4>
-            <p className="text-xs text-slate-500 font-medium">Cole o código e salve as alterações.</p>
+          <div className="p-8 rounded-[2rem] bg-emerald-50 border border-emerald-100 group hover:scale-105 transition-all">
+            <CheckCircle2 className="text-emerald-500 mb-4" size={28} />
+            <h4 className="font-black text-slate-800 mb-2">Passo 3</h4>
+            <p className="text-xs text-slate-500 font-bold leading-relaxed">Cole o código e salve as alterações.</p>
           </div>
         </div>
 
-        <div className="mt-12 p-5 bg-amber-50 border border-amber-100 rounded-2xl flex gap-4 items-start">
-           <AlertTriangle className="text-amber-500 shrink-0" size={20} />
-           <p className="text-xs font-bold text-amber-800 leading-relaxed">
+        <div className="mt-16 p-6 bg-amber-50 border border-amber-100 rounded-[2rem] flex gap-5 items-start">
+           <AlertTriangle className="text-amber-500 shrink-0" size={24} />
+           <p className="text-xs font-black text-amber-800 leading-relaxed">
              Atenção: dependendo da plataforma, a exibição pode levar alguns minutos por causa do cache. Se necessário, limpe o cache da plataforma ou aguarde alguns minutos.
            </p>
         </div>

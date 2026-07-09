@@ -1,19 +1,21 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { db, Video } from '@/lib/db';
-import { Plus, Library, Search, Play, Trash2, Edit3, X, Upload, Link as LinkIcon, Instagram, Video as VideoIcon } from 'lucide-react';
+import { db, Video, Product, SizingModel } from '@/lib/db';
+import { Plus, Library, Search, Play, Trash2, Edit3, X, Upload, Link as LinkIcon, Instagram, Video as VideoIcon, ShoppingBag, Ruler, MousePointer2 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import CustomDialog from '@/components/CustomDialog';
 import { cn } from '@/lib/utils';
 
 const VideoGalleryPage = () => {
   const [videos, setVideos] = useState<Video[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [sizingModels, setSizingModels] = useState<SizingModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSource, setFilterSource] = useState<'all' | 'upload' | 'instagram' | 'tiktok' | 'external_url'>('all');
 
-  // Estados para Modais
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVideo, setEditingVideo] = useState<Video | null>(null);
+  
   const [dialog, setDialog] = useState<{
     isOpen: boolean;
     type: 'success' | 'error' | 'warning' | 'confirm';
@@ -23,20 +25,29 @@ const VideoGalleryPage = () => {
     onCancel?: () => void;
   }>({ isOpen: false, type: 'confirm', title: '', description: '', onConfirm: () => {} });
 
-  // Formulário
   const [formData, setFormData] = useState({
     title: '',
     source_type: 'upload' as Video['source_type'],
     video_url: '',
     thumbnail_url: '',
+    product_id: '',
+    model_id: '',
+    cta_enabled: true,
+    cta_text: 'Comprar Agora',
+    cta_type: 'product' as any,
+    cta_link: '',
   });
 
   const loadData = async () => {
     try {
-      const all = await db.videos.getAll();
-      setVideos(all);
+      const allV = await db.videos.getAll();
+      const allP = await db.products.getAll();
+      const allM = await db.sizingModels.getAll();
+      setVideos(allV);
+      setProducts(allP);
+      setSizingModels(allM);
     } catch (e) {
-      showError('Erro ao carregar galeria.');
+      showError('Erro ao carregar dados.');
     } finally {
       setLoading(false);
     }
@@ -46,60 +57,11 @@ const VideoGalleryPage = () => {
 
   const filteredVideos = useMemo(() => {
     return videos.filter(v => {
-      const matchesSearch = (v.title || '').toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = v.title.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesSource = filterSource === 'all' || v.source_type === filterSource;
       return matchesSearch && matchesSource;
     });
   }, [videos, searchTerm, filterSource]);
-
-  const resetForm = () => {
-    setFormData({ title: '', source_type: 'upload', video_url: '', thumbnail_url: '' });
-    setEditingVideo(null);
-  };
-
-  const handleSaveVideo = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.title || !formData.video_url) {
-      showError('Preencha os campos obrigatórios.');
-      return;
-    }
-
-    try {
-      const videoData: Video = {
-        id: editingVideo?.id || Math.random().toString(36).substr(2, 9),
-        store_id: '11111111-1111-1111-1111-111111111111',
-        title: formData.title,
-        source_type: formData.source_type,
-        video_url: formData.video_url,
-        thumbnail_url: formData.thumbnail_url || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=250',
-        status: 'active',
-      };
-
-      await db.videos.save(videoData);
-      showSuccess(editingVideo ? 'Vídeo atualizado!' : 'Vídeo adicionado!');
-      setIsAddModalOpen(false);
-      resetForm();
-      loadData();
-    } catch (e) {
-      showError('Erro ao salvar vídeo.');
-    }
-  };
-
-  const handleDelete = (id: string, title: string) => {
-    setDialog({
-      isOpen: true,
-      type: 'confirm',
-      title: 'Excluir Vídeo?',
-      description: `Deseja remover "${title}" da galeria?`,
-      onConfirm: async () => {
-        await db.videos.delete(id);
-        showSuccess('Vídeo removido com sucesso.');
-        setDialog(p => ({ ...p, isOpen: false }));
-        loadData();
-      },
-      onCancel: () => setDialog(p => ({ ...p, isOpen: false }))
-    });
-  };
 
   const handleEdit = (video: Video) => {
     setEditingVideo(video);
@@ -108,42 +70,70 @@ const VideoGalleryPage = () => {
       source_type: video.source_type,
       video_url: video.video_url,
       thumbnail_url: video.thumbnail_url,
+      product_id: (video as any).product_id || '',
+      model_id: (video as any).model_id || '',
+      cta_enabled: (video as any).cta_enabled ?? true,
+      cta_text: (video as any).cta_text || 'Comprar Agora',
+      cta_type: (video as any).cta_type || 'product',
+      cta_link: (video as any).cta_link || '',
     });
-    setIsAddModalOpen(true);
+    setIsModalOpen(true);
   };
 
-  if (loading) return null;
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const videoData: Video = {
+      ...editingVideo,
+      id: editingVideo?.id || Math.random().toString(36).substr(2, 9),
+      store_id: '11111111-1111-1111-1111-111111111111',
+      title: formData.title,
+      source_type: formData.source_type,
+      video_url: formData.video_url,
+      thumbnail_url: formData.thumbnail_url,
+      status: 'active',
+      ...({
+        product_id: formData.product_id,
+        model_id: formData.model_id,
+        cta_enabled: formData.cta_enabled,
+        cta_text: formData.cta_text,
+        cta_type: formData.cta_type,
+        cta_link: formData.cta_link
+      } as any)
+    };
+
+    await db.videos.save(videoData);
+    showSuccess('Vídeo salvo com sucesso!');
+    setIsModalOpen(false);
+    loadData();
+  };
 
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-[#0F172A] tracking-tight">Biblioteca de Vídeos</h1>
-          <p className="text-[#64748B] font-medium mt-1">Hospede e gerencie seus vídeos de vendas e unboxing.</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Biblioteca de Vídeos</h1>
+          <p className="text-slate-500 font-medium mt-1">Gerencie vídeos e suas informações comerciais.</p>
         </div>
         <button 
-          onClick={() => { resetForm(); setIsAddModalOpen(true); }}
-          className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-lg transition-all flex items-center gap-2"
+          onClick={() => { setEditingVideo(null); setFormData({...formData, title: ''}); setIsModalOpen(true); }}
+          className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl transition-all flex items-center gap-2"
         >
           <Plus size={18} /> Adicionar Vídeo
         </button>
       </div>
 
-      <div className="bg-white border border-[#E2E8F0] rounded-[1.5rem] p-4 flex flex-col md:flex-row gap-4 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 flex flex-col md:flex-row gap-4 shadow-sm">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={18} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input 
-            type="text" 
-            placeholder="Pesquisar vídeos..."
-            value={searchTerm}
+            type="text" placeholder="Pesquisar vídeos..." value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl pl-12 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0094EB]/10"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-12 pr-4 py-2.5 text-sm font-bold text-slate-700 focus:border-[#0094EB] outline-none"
           />
         </div>
         <select 
-          value={filterSource}
-          onChange={e => setFilterSource(e.target.value as any)}
-          className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-4 py-2.5 text-sm font-bold text-[#64748B] focus:outline-none"
+          value={filterSource} onChange={e => setFilterSource(e.target.value as any)}
+          className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-600 outline-none"
         >
           <option value="all">Todas as Fontes</option>
           <option value="upload">Upload Direto</option>
@@ -155,121 +145,102 @@ const VideoGalleryPage = () => {
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {filteredVideos.map(video => (
-          <div key={video.id} className="bg-white border border-[#E2E8F0] rounded-[2rem] overflow-hidden shadow-sm group">
-            <div className="aspect-[9/16] bg-slate-900 relative overflow-hidden">
+          <div key={video.id} className="bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-md transition-all group">
+            <div className="aspect-[9/16] bg-slate-900 relative">
                <img src={video.thumbnail_url} className="w-full h-full object-cover opacity-80" alt={video.title} />
-               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
+               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all bg-black/40">
                   <Play size={40} className="text-white fill-white" />
                </div>
             </div>
-            <div className="p-5">
-               <p className="text-[10px] font-black text-[#0094EB] uppercase tracking-widest mb-1">{video.source_type.replace('_', ' ')}</p>
-               <h4 className="font-bold text-[#0F172A] truncate text-sm">{video.title}</h4>
-               <div className="flex gap-2 mt-4 pt-4 border-t border-[#F1F5F9]">
-                  <button 
-                    onClick={() => handleEdit(video)}
-                    className="p-2 rounded-lg bg-[#F8FAFC] hover:bg-[#EAF6FF] text-[#0094EB] transition-colors"
-                  >
-                    <Edit3 size={16} />
-                  </button>
-                  <button onClick={() => handleDelete(video.id, video.title)} className="p-2 rounded-lg bg-[#F8FAFC] hover:bg-red-50 text-red-500 transition-colors">
-                    <Trash2 size={16} />
-                  </button>
+            <div className="p-6">
+               <span className="text-[10px] font-black text-[#0094EB] uppercase tracking-widest mb-1 block">{video.source_type}</span>
+               <h4 className="font-bold text-slate-800 truncate text-sm mb-4">{video.title}</h4>
+               <div className="flex gap-2 pt-4 border-t border-slate-100">
+                  <button onClick={() => handleEdit(video)} className="flex-1 p-2.5 rounded-xl bg-slate-50 hover:bg-blue-50 text-[#0094EB] transition-colors flex justify-center"><Edit3 size={16} /></button>
+                  <button className="flex-1 p-2.5 rounded-xl bg-slate-50 hover:bg-red-50 text-red-500 transition-colors flex justify-center"><Trash2 size={16} /></button>
                </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Modal Adicionar/Editar Vídeo */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-lg bg-white border border-slate-200 rounded-[2rem] p-8 shadow-2xl relative">
-            <button onClick={() => setIsAddModalOpen(false)} className="absolute top-6 right-6 p-2 rounded-full text-slate-400 hover:bg-slate-50">
-              <X size={20} />
-            </button>
-            <h3 className="text-2xl font-black text-[#0F172A] mb-6">{editingVideo ? 'Editar Vídeo' : 'Adicionar Novo Vídeo'}</h3>
-            
-            <form onSubmit={handleSaveVideo} className="space-y-5">
-              <div>
-                <label className="block text-[10px] font-black text-[#64748B] uppercase tracking-widest mb-2">Título do Vídeo</label>
-                <input 
-                  type="text" 
-                  required
-                  value={formData.title}
-                  onChange={e => setFormData({...formData, title: e.target.value})}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:border-[#0094EB] outline-none"
-                  placeholder="Ex: Unboxing Coleção Outono"
-                />
-              </div>
+      <CustomDialog
+        isOpen={isModalOpen}
+        type="form"
+        title={editingVideo ? 'Editar Vídeo' : 'Adicionar Vídeo'}
+        maxWidth="max-w-2xl"
+        onCancel={() => setIsModalOpen(false)}
+        onConfirm={handleSave}
+      >
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Título do Vídeo</label>
+              <input 
+                type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Origem</label>
+              <select 
+                disabled={!!editingVideo} value={formData.source_type} onChange={e => setFormData({...formData, source_type: e.target.value as any})}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none disabled:opacity-50"
+              >
+                <option value="upload">Upload</option>
+                <option value="instagram">Instagram</option>
+                <option value="tiktok">TikTok</option>
+                <option value="external_url">URL</option>
+              </select>
+            </div>
+            <div className="md:col-span-2 space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">URL do Vídeo</label>
+              <input 
+                type="url" value={formData.video_url} onChange={e => setFormData({...formData, video_url: e.target.value})}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
+              />
+            </div>
+          </div>
 
-              <div>
-                <label className="block text-[10px] font-black text-[#64748B] uppercase tracking-widest mb-2">Origem do Vídeo</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: 'upload', label: 'Upload', icon: Upload },
-                    { id: 'instagram', label: 'Instagram', icon: Instagram },
-                    { id: 'tiktok', label: 'TikTok', icon: VideoIcon },
-                    { id: 'external_url', label: 'URL', icon: LinkIcon },
-                  ].map(item => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setFormData({...formData, source_type: item.id as any})}
-                      className={cn(
-                        "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all",
-                        formData.source_type === item.id ? "bg-blue-50 border-[#0094EB] text-[#0094EB]" : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
-                      )}
-                    >
-                      <item.icon size={14} />
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+          <div className="pt-8 border-t border-slate-100">
+            <h4 className="text-sm font-black text-slate-800 mb-6 flex items-center gap-2"><ShoppingBag size={18} className="text-[#0094EB]" /> Informações Comerciais</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vincular Produto</label>
+                  <select value={formData.product_id} onChange={e => setFormData({...formData, product_id: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none">
+                     <option value="">Nenhum produto</option>
+                     {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+               </div>
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tabela de Medidas</label>
+                  <select value={formData.model_id} onChange={e => setFormData({...formData, model_id: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none">
+                     <option value="">Sem medidas</option>
+                     {sizingModels.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  </select>
+               </div>
+            </div>
+          </div>
 
-              <div>
-                <label className="block text-[10px] font-black text-[#64748B] uppercase tracking-widest mb-2">
-                  {formData.source_type === 'upload' ? 'URL do Arquivo MP4' : 'Link Social'}
-                </label>
-                <input 
-                  type="url" 
-                  required
-                  value={formData.video_url}
-                  onChange={e => setFormData({...formData, video_url: e.target.value})}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:border-[#0094EB] outline-none"
-                  placeholder="https://..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-black text-[#64748B] uppercase tracking-widest mb-2">URL da Capa (Thumbnail)</label>
-                <input 
-                  type="url" 
-                  value={formData.thumbnail_url}
-                  onChange={e => setFormData({...formData, thumbnail_url: e.target.value})}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:border-[#0094EB] outline-none"
-                  placeholder="https://imagem..."
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setIsAddModalOpen(false)} className="flex-1 py-3.5 rounded-2xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50">Cancelar</button>
-                <button type="submit" className="flex-1 py-3.5 rounded-2xl bg-[#0094EB] text-white font-bold text-sm hover:bg-[#0E4787] shadow-lg">Salvar Vídeo</button>
-              </div>
-            </form>
+          <div className="pt-8 border-t border-slate-100">
+            <h4 className="text-sm font-black text-slate-800 mb-6 flex items-center gap-2"><MousePointer2 size={18} className="text-[#0094EB]" /> Chamada de Ação (CTA)</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Texto do Botão</label>
+                  <input type="text" value={formData.cta_text} onChange={e => setFormData({...formData, cta_text: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none" />
+               </div>
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo de Link</label>
+                  <select value={formData.cta_type} onChange={e => setFormData({...formData, cta_type: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none">
+                     <option value="product">Produto Vinculado</option>
+                     <option value="external">Link Externo</option>
+                     <option value="whatsapp">WhatsApp</option>
+                  </select>
+               </div>
+            </div>
           </div>
         </div>
-      )}
-
-      <CustomDialog
-        isOpen={dialog.isOpen}
-        type={dialog.type}
-        title={dialog.title}
-        description={dialog.description}
-        onConfirm={dialog.onConfirm}
-        onCancel={dialog.onCancel}
-      />
+      </CustomDialog>
     </div>
   );
 };
