@@ -28,14 +28,25 @@ const DashboardPage = () => {
     return { start: startOfDay(customRange.from || subDays(now, 7)), end: endOfDay(customRange.to || now) };
   }, [selectedPeriod, customRange]);
 
+  // Gerador determinístico baseado na data para evitar números aleatórios bugados
+  const getDailyMetric = (date: Date, type: 'views' | 'clicks' | 'sales') => {
+    const day = date.getDate();
+    const month = date.getMonth();
+    const year = date.getFullYear();
+    const seed = (day * 13) + (month * 101) + (year % 100);
+    
+    if (type === 'views') return 120 + (seed % 300);
+    if (type === 'clicks') return Math.floor((120 + (seed % 300)) * (0.12 + (seed % 8) / 100));
+    return Math.floor((120 + (seed % 300)) * (0.02 + (seed % 3) / 100));
+  };
+
   const dashboardData = useMemo(() => {
     const days = eachDayOfInterval({ start: activeInterval.start, end: activeInterval.end });
     
     const flow = days.map(day => {
-      const seed = day.getDate() + day.getMonth();
-      const views = Math.floor(500 + Math.random() * 1000 + seed * 10);
-      const clicks = Math.floor(views * (0.15 + Math.random() * 0.1));
-      const sales = Math.floor(clicks * (0.05 + Math.random() * 0.05));
+      const views = getDailyMetric(day, 'views');
+      const clicks = getDailyMetric(day, 'clicks');
+      const sales = getDailyMetric(day, 'sales');
       
       return {
         name: format(day, 'dd/MM', { locale: ptBR }),
@@ -51,22 +62,17 @@ const DashboardPage = () => {
       revenue: acc.revenue + curr.revenue
     }), { views: 0, clicks: 0, sales: 0, revenue: 0 });
 
-    // Performance por Story com Médias e Comparativos
     const stories = [
-      { name: "Coleção Outono 🍂", viewsWeight: 0.35, avgViews: 870, ctr: 24.5, avgCtr: 18.2 },
-      { name: "Oferta Relâmpago ⚡", viewsWeight: 0.25, avgViews: 870, ctr: 18.2, avgCtr: 22.0 },
-      { name: "Unboxing Vestido Max", viewsWeight: 0.20, avgViews: 870, ctr: 21.0, avgCtr: 15.5 },
-      { name: "Provador Casual", viewsWeight: 0.15, avgViews: 870, ctr: 14.8, avgCtr: 14.0 },
+      { name: "Coleção Outono 🍂", weight: 0.35, ctr: 18.2 },
+      { name: "Oferta Relâmpago ⚡", weight: 0.25, ctr: 22.0 },
+      { name: "Unboxing Vestido Max", weight: 0.20, ctr: 15.5 },
+      { name: "Provador Casual", weight: 0.15, ctr: 14.0 },
     ].map(s => {
-      const currentViews = Math.floor(totals.views * s.viewsWeight);
-      const viewDiff = ((currentViews - s.avgViews) / s.avgViews) * 100;
-      const ctrDiff = ((s.ctr - s.avgCtr) / s.avgCtr) * 100;
-
+      const currentViews = Math.floor(totals.views * s.weight);
       return {
         ...s,
         views: currentViews,
-        viewDiff,
-        ctrDiff
+        ctr: s.ctr
       };
     });
 
@@ -89,7 +95,7 @@ const DashboardPage = () => {
         <div>
           <h1 className="text-3xl font-black tracking-tight text-slate-900">Visão Geral</h1>
           <p className="text-slate-500 font-medium mt-1">
-            Performance de <span className="text-[#0094EB] font-bold">{format(activeInterval.start, "dd/MM")}</span> até <span className="text-[#0094EB] font-bold">{format(activeInterval.end, "dd/MM")}</span>
+            Métricas de <span className="text-[#0094EB] font-bold">{format(activeInterval.start, "dd/MM")}</span> até <span className="text-[#0094EB] font-bold">{format(activeInterval.end, "dd/MM")}</span>
           </p>
         </div>
 
@@ -124,7 +130,7 @@ const DashboardPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
         <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm">
-          <h3 className="text-lg font-black text-slate-800 mb-8">Fluxo de Visualizações</h3>
+          <h3 className="text-lg font-black text-slate-800 mb-8">Fluxo de Performance de Vídeos</h3>
           <div className="h-[340px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={dashboardData.flow}>
@@ -144,7 +150,7 @@ const DashboardPage = () => {
         </div>
 
         <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm flex flex-col">
-          <h3 className="text-lg font-black text-slate-800 mb-8">Performance por Story</h3>
+          <h3 className="text-lg font-black text-slate-800 mb-8">Performance de Vídeos</h3>
           <div className="space-y-6 flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
             {dashboardData.stories.map((item, i) => (
               <div key={i} className="flex flex-col gap-3 p-4 rounded-3xl bg-slate-50 border border-slate-100 hover:border-[#0094EB]/30 transition-all">
@@ -157,24 +163,10 @@ const DashboardPage = () => {
                   <div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Visualizações</p>
                     <p className="text-sm font-black text-slate-900">{item.views.toLocaleString()}</p>
-                    <div className="flex items-center gap-1 mt-0.5">
-                      <span className="text-[10px] font-bold text-slate-400">Média: {item.avgViews}</span>
-                      <span className={cn("text-[9px] font-bold flex items-center", item.viewDiff >= 0 ? "text-emerald-500" : "text-rose-500")}>
-                        {item.viewDiff >= 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
-                        {Math.abs(item.viewDiff).toFixed(0)}%
-                      </span>
-                    </div>
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Taxa (CTR)</p>
                     <p className="text-sm font-black text-slate-900">{item.ctr}%</p>
-                    <div className="flex items-center justify-end gap-1 mt-0.5">
-                      <span className={cn("text-[9px] font-bold flex items-center", item.ctrDiff >= 0 ? "text-emerald-500" : "text-rose-500")}>
-                        {item.ctrDiff >= 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
-                        {Math.abs(item.ctrDiff).toFixed(0)}%
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-400">Média: {item.avgCtr}%</span>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -182,10 +174,10 @@ const DashboardPage = () => {
           </div>
           
           <button 
-            onClick={() => navigate('/stories/report')}
+            onClick={() => navigate('/videos/performance')}
             className="w-full mt-8 py-4 bg-slate-950 hover:bg-slate-800 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-slate-200"
           >
-            Ver Relatório Completo
+            Ver relatório completo
           </button>
         </div>
       </div>
@@ -197,12 +189,6 @@ const DashboardPage = () => {
       >
         <div className="flex flex-col items-center">
           <DayPicker mode="range" selected={customRange} onSelect={(r) => setCustomRange({ from: r?.from, to: r?.to })} locale={ptBR} className="border-none" modifiersStyles={{ selected: { backgroundColor: '#0094EB', color: 'white' } }} />
-          {customRange.from && customRange.to && (
-            <div className="mt-4 p-4 bg-blue-50 rounded-2xl w-full text-center">
-              <p className="text-xs font-black text-[#0094EB] uppercase tracking-widest">Intervalo Selecionado</p>
-              <p className="text-sm font-bold text-slate-700 mt-1">{format(customRange.from, 'dd/MM/yyyy')} — {format(customRange.to, 'dd/MM/yyyy')}</p>
-            </div>
-          )}
         </div>
       </CustomDialog>
     </div>
@@ -210,7 +196,7 @@ const DashboardPage = () => {
 };
 
 const MetricCard = ({ title, value, change, icon: Icon, isConversion = false }: any) => (
-  <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
+  <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
     <div className="flex items-start justify-between mb-6">
       <div className={cn("p-4 rounded-2xl transition-all group-hover:scale-110", isConversion ? 'bg-emerald-50 text-emerald-500' : 'bg-blue-50 text-[#0094EB]')}>
         <Icon size={24} />
