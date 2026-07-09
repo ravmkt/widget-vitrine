@@ -15,6 +15,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import { cn } from "@/lib/utils";
 
+// Toggle Switch Component
 const ToggleSwitch = ({
   label,
   checked,
@@ -40,23 +41,25 @@ const ToggleSwitch = ({
   );
 };
 
+// Color Input Component
 const ColorInput = ({
   label,
   value,
   onChange,
-  placeholder = "",
 }: {
   label: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder?: string;
 }) => {
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e);
   };
   return (
     <div className="flex items-center gap-2">
-      <div className="w-12 h-12 rounded-lg border border-slate-200 bg-slate-100 flex items-center justify-center">
+      <div 
+        className="w-12 h-12 rounded-lg border border-slate-200 bg-slate-100 flex items-center justify-center cursor-pointer"
+        style={{ backgroundColor: value }}
+      >
         <input
           type="color"
           value={value}
@@ -66,45 +69,86 @@ const ColorInput = ({
       </div>
       <input
         type="text"
-        placeholder={placeholder}
         value={value}
         onChange={onChange}
-        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
+        className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-sm font-bold text-white outline-none focus:border-[#0094EB]"
       />
     </div>
   );
 };
 
-type AppearanceFormData = Appearance & {
-  useGlobalAppearance: boolean;
-  width: string;
-  unit: 'px' | 'percent';
-  height: string;
-  position: string;
-  bottom_spacing: string;
-  left_spacing: string;
-  cta_text: string;
-  cta_size: string;
-  cta_duration: string;
-  border_style: string;
-  color: string;
-  show_play_icon: boolean;
-  show_product: boolean;
-  hide_stories: boolean;
-  auto_center: boolean;
-  carousel_view_mode: string;
-  margin_top: string;
-  margin_bottom: string;
-  draggable: boolean;
-  allow_close: boolean;
-  object_fit: string;
-  z_index: string;
-  desktop_columns: number;
-  desktop_rows: number;
-  desktop_gap: number;
-  mobile_columns: number;
-  mobile_rows: number;
-  mobile_gap: number;
+// Device Tabs Component
+const DeviceTabs = ({
+  activeDevice,
+  onChange,
+}: {
+  activeDevice: 'desktop' | 'mobile';
+  onChange: (device: 'desktop' | 'mobile') => void;
+}) => {
+  return (
+    <div className="flex bg-slate-900 rounded-lg p-1">
+      <button
+        onClick={() => onChange('desktop')}
+        className={cn(
+          "px-4 py-2 rounded-lg text-sm font-bold transition-all",
+          activeDevice === 'desktop'
+            ? "bg-[#0094EB] text-white shadow-lg"
+            : "text-slate-400 hover:text-white"
+        )}
+      >
+        Desktop
+      </button>
+      <button
+        onClick={() => onChange('mobile')}
+        className={cn(
+          "px-4 py-2 rounded-lg text-sm font-bold transition-all",
+          activeDevice === 'mobile'
+            ? "bg-[#0094EB] text-white shadow-lg"
+            : "text-slate-400 hover:text-white"
+        )}
+      >
+        Mobile
+      </button>
+    </div>
+  );
+};
+
+// Section Card Component
+const SectionCard = ({
+  title,
+  children,
+  className,
+}: {
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <div className={cn("bg-slate-950 rounded-[1.5rem] p-6 space-y-6", className)}>
+      <h3 className="text-lg font-black text-white">{title}</h3>
+      {children}
+    </div>
+  );
+};
+
+// Form Field Component
+const FormField = ({
+  label,
+  children,
+  className,
+}: {
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <div className={cn("space-y-3", className)}>
+      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">
+        {label}
+      </label>
+      {children}
+    </div>
+  );
 };
 
 const AppearancePage = () => {
@@ -118,7 +162,37 @@ const AppearancePage = () => {
 
   const [showModal, setShowModal] = useState(false);
   const [editingStyle, setEditingStyle] = useState<Appearance | null>(null);
-  const [formData, setFormData] = useState<AppearanceFormData>({
+  const [formData, setFormData] = useState<Appearance & {
+    useGlobalAppearance: boolean;
+    width: string;
+    unit: 'px' | 'percent';
+    height: string;
+    position: string;
+    bottom_spacing: string;
+    left_spacing: string;
+    cta_text: string;
+    cta_size: string;
+    cta_duration: string;
+    border_style: string;
+    color: string;
+    show_play_icon: boolean;
+    show_product: boolean;
+    hide_stories: boolean;
+    auto_center: boolean;
+    carousel_view_mode: string;
+    margin_top: string;
+    margin_bottom: string;
+    draggable: boolean;
+    allow_close: boolean;
+    object_fit: string;
+    z_index: string;
+    desktop_columns: number;
+    desktop_rows: number;
+    desktop_gap: number;
+    mobile_columns: number;
+    mobile_rows: number;
+    mobile_gap: number;
+  }>({
     id: "",
     store_id: "",
     name: "",
@@ -396,9 +470,9 @@ const AppearancePage = () => {
                     </div>
                   </td>
                 </tr>
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -416,667 +490,420 @@ const AppearancePage = () => {
             </div>
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {/* Dados Básicos */}
-              <div className="bg-slate-950 rounded-[1.5rem] p-6 space-y-6">
-                <h3 className="text-lg font-black text-white">1. Dados Básicos</h3>
+              <SectionCard title="1. Dados Básicos">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-3">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Nome do Estilo</label>
+                  <FormField label="Nome do Estilo">
                     <input
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                      className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
                     />
-                  </div>
-                  <div className="space-y-3">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Definir como padrão</label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={formData.is_default}
-                        onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
-                        className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
-                      />
-                      <span className="text-sm text-slate-300">Definir como estilo padrão da loja</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Toggle: Usar aparência em todos os dispositivos */}
-                <div className="space-y-3">
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Usar aparência em todos os dispositivos</label>
-                  <div className="flex items-center gap-2">
+                  </FormField>
+                  <FormField label="Definir como padrão">
                     <ToggleSwitch
-                      label="Usar aparência em todos os dispositivos"
-                      checked={formData.useGlobalAppearance}
-                      onChange={(e) => setFormData({ ...formData, useGlobalAppearance: e.target.checked })}
-                      className="w-5 h-5 rounded-lg bg-gray-50 text-gray-600 focus:ring-2 focus:ring-[#0094EB]"
+                      label="Definir como padrão da loja"
+                      checked={formData.is_default}
+                      onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
                     />
-                    <span className="text-sm text-slate-500">{formData.useGlobalAppearance ? 'Ativado' : 'Desativado'}</span>
-                  </div>
+                  </FormField>
                 </div>
+                <FormField label="Usar aparência em todos os dispositivos">
+                  <ToggleSwitch
+                    label="Usar aparência em todos os dispositivos"
+                    checked={formData.useGlobalAppearance}
+                    onChange={(e) => setFormData({ ...formData, useGlobalAppearance: e.target.checked })}
+                    description="Quando ativado, a mesma aparência será aplicada no mobile e no desktop."
+                  />
+                </FormField>
+              </SectionCard>
 
-                {/* Configurações do Widget Flutuante */}
-                <div className="bg-slate-950 rounded-[1.5rem] p-6 space-y-6">
-                  <h3 className="text-lg font-black text-white">2. Configurações</h3>
-                  <div className="flex gap-4 mb-6">
-                    <button
-                      onClick={() => setFormData({ ...formData, widget_shape: 'floating_widget' })}
-                      className={cn(
-                        "px-6 py-3 rounded-xl font-bold text-sm transition-all",
-                        formData.widget_shape === 'floating_widget'
-                          ? "bg-[#0094EB] text-white shadow-lg"
-                          : "bg-slate-900 text-slate-400 hover:bg-slate-800"
-                    )}
-                  >
-                    Flutuante
-                  </button>
-                  <button
-                    onClick={() => setFormData({ ...formData, widget_shape: 'carousel' })}
-                    className={cn(
-                      "px-6 py-3 rounded-xl font-bold text-sm transition-all",
-                      formData.widget_shape === 'carousel'
-                        ? "bg-[#0094EB] text-white shadow-lg"
-                        : "bg-slate-900 text-slate-400 hover:bg-slate-800"
-                    )}
-                  >
-                    Carrossel
-                  </button>
-                  <button
-                    onClick={() => setFormData({ ...formData, widget_shape: 'grid' })}
-                    className={cn(
-                      "px-6 py-3 rounded-xl font-bold text-sm transition-all",
-                      formData.widget_shape === 'grid'
-                        ? "bg-[#0094EB] text-white shadow-lg"
-                        : "bg-slate-900 text-slate-400 hover:bg-slate-800"
-                    )}
-                  >
-                    Grade
-                  </button>
-                </div>
-
-                {/* Flutuante */}
-                {formData.widget_shape === 'floating_widget' && (
-                  <div className="space-y-6">
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Forma</label>
-                      <select
-                        value={formData.widget_shape}
-                        onChange={(e) => setFormData({ ...formData, widget_shape: e.target.value as any })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      >
-                        <option value="floating_widget">Flutuante</option>
-                        <option value="carousel">Carrossel</option>
-                        <option value="grid">Grade</option>
-                      </select>
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Largura</label>
-                      <input
-                        type="text"
-                        value={formData.width}
-                        onChange={(e) => setFormData({ ...formData, width: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Unidade da largura</label>
-                      <select
-                        value={formData.unit}
-                        onChange={(e) => setFormData({ ...formData, unit: e.target.value as any })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      >
-                        <option value="px">Px</option>
-                        <option value="percent">%</option>
-                      </select>
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Raio da borda</label>
-                      <input
-                        type="text"
-                        value={formData.border_radius}
-                        onChange={(e) => setFormData({ ...formData, border_radius: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Posição</label>
-                      <select
-                        value={formData.position}
-                        onChange={(e) => setFormData({ ...formData, position: e.target.value as any })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      >
-                        <option value="fixed_bottom_right">Flutuante (Direita)</option>
-                        <option value="fixed_bottom_left">Flutuante (Esquerda)</option>
-                        <option value="fixed_top_right">Flutuante (Topo Direita)</option>
-                        <option value="fixed_top_left">Flutuante (Topo Esquerda)</option>
-                      </select>
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Chamada para ação</label>
-                      <input
-                        type="text"
-                        value={formData.cta_text}
-                        onChange={(e) => setFormData({ ...formData, cta_text: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Tamanho da chamada para ação</label>
-                      <input
-                        type="text"
-                        value={formData.cta_size}
-                        onChange={(e) => setFormData({ ...formData, cta_size: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Duração da chamada para ação</label>
-                      <input
-                        type="text"
-                        value={formData.cta_duration}
-                        onChange={(e) => setFormData({ ...formData, cta_duration: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Estilo da borda</label>
-                      <input
-                        type="text"
-                        value={formData.border_style}
-                        onChange={(e) => setFormData({ ...formData, border_style: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Cor</label>
-                      <ColorInput
-                        label="Cor"
-                        value={formData.color}
-                        onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Remover cor</label>
-                      <input
-                        type="checkbox"
-                        checked={formData.hide_stories}
-                        onChange={(e) => setFormData({ ...formData, hide_stories: e.target.checked })}
-                        className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Arrastável</label>
-                      <input
-                        type="checkbox"
-                        checked={formData.draggable}
-                        onChange={(e) => setFormData({ ...formData, draggable: e.target.checked })}
-                        className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Permitir fechar</label>
-                      <input
-                        type="checkbox"
-                        checked={formData.allow_close}
-                        onChange={(e) => setFormData({ ...formData, allow_close: e.target.checked })}
-                        className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Exibição do vídeo/imagem</label>
-                      <select
-                        value={formData.object_fit}
-                        onChange={(e) => setFormData({ ...formData, object_fit: e.target.value as any })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      >
-                        <option value="cover">Preencher</option>
-                        <option value="contain">Contenir</option>
-                        <option value="contain-fill">Contenir preenchimento</option>
-                      </select>
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Z-Index</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={formData.z_index}
-                        onChange={(e) => setFormData({ ...formData, z_index: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
+              {/* Configurações */}
+              <SectionCard title="2. Configurações">
+                <div className="space-y-6">
+                  {/* Flutuante */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-black text-white">Flutuante</h4>
+                    <DeviceTabs
+                      activeDevice="desktop"
+                      onChange={() => {}}
+                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField label="Forma">
+                        <select
+                          value={formData.widget_shape}
+                          onChange={(e) => setFormData({ ...formData, widget_shape: e.target.value as any })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        >
+                          <option value="circle">Circular</option>
+                          <option value="square">Quadrado</option>
+                          <option value="portrait">Retrato</option>
+                        </select>
+                      </FormField>
+                      <FormField label="Tamanho">
+                        <input
+                          type="text"
+                          value={formData.width}
+                          onChange={(e) => setFormData({ ...formData, width: e.target.value })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        />
+                      </FormField>
+                      <FormField label="Raio da borda">
+                        <input
+                          type="text"
+                          value={formData.border_radius}
+                          onChange={(e) => setFormData({ ...formData, border_radius: e.target.value })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        />
+                      </FormField>
+                      <FormField label="Posição">
+                        <select
+                          value={formData.position}
+                          onChange={(e) => setFormData({ ...formData, position: e.target.value as any })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        >
+                          <option value="fixed_bottom_right">Flutuante (Direita)</option>
+                          <option value="fixed_bottom_left">Flutuante (Esquerda)</option>
+                          <option value="fixed_top_right">Flutuante (Topo Direita)</option>
+                          <option value="fixed_top_left">Flutuante (Topo Esquerda)</option>
+                        </select>
+                      </FormField>
+                      <FormField label="Chamada para ação">
+                        <input
+                          type="text"
+                          value={formData.cta_text}
+                          onChange={(e) => setFormData({ ...formData, cta_text: e.target.value })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        />
+                      </FormField>
+                      <FormField label="Cor da borda">
+                        <ColorInput
+                          label="Cor da borda"
+                          value={formData.color}
+                          onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                        />
+                      </FormField>
+                      <FormField label="Largura da borda">
+                        <input
+                          type="text"
+                          value={formData.border_style}
+                          onChange={(e) => setFormData({ ...formData, border_style: e.target.value })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        />
+                      </FormField>
                     </div>
                   </div>
-                )}
 
-                {/* Carrossel */}
-                {formData.widget_shape === 'carousel' && (
-                  <div className="space-y-6">
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Espaçamento / Gap</label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={formData.carousel_gap}
-                        onChange={(e) => setFormData({ ...formData, carousel_gap: Number(e.target.value) })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Forma</label>
-                      <select
-                        value={formData.carousel_card_shape}
-                        onChange={(e) => setFormData({ ...formData, carousel_card_shape: e.target.value as any })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      >
-                        <option value="rounded">Arredondado</option>
-                        <option value="square">Quadrado</option>
-                        <option value="circle">Circular</option>
-                        <option value="custom">Personalizado</option>
-                      </select>
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Largura</label>
-                      <input
-                        type="text"
-                        value={formData.width}
-                        onChange={(e) => setFormData({ ...formData, width: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Altura</label>
-                      <input
-                        type="text"
-                        value={formData.height}
-                        onChange={(e) => setFormData({ ...formData, height: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Largura da borda</label>
-                      <input
-                        type="text"
-                        value={formData.cta_size}
-                        onChange={(e) => setFormData({ ...formData, cta_size: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Cor</label>
-                      <ColorInput
-                        label="Cor"
-                        value={formData.color}
-                        onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Mostrar produto no carrossel</label>
-                      <input
-                        type="checkbox"
-                        checked={formData.show_product}
-                        onChange={(e) => setFormData({ ...formData, show_product: e.target.checked })}
-                        className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Mostrar botão play</label>
-                      <input
-                        type="checkbox"
-                        checked={formData.show_play_icon}
-                        onChange={(e) => setFormData({ ...formData, show_play_icon: e.target.checked })}
-                        className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Margem superior</label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={formData.margin_top}
-                        onChange={(e) => setFormData({ ...formData, margin_top: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Margem inferior</label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={formData.margin_bottom}
-                        onChange={(e) => setFormData({ ...formData, margin_bottom: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Mostrar botão play</label>
-                      <input
-                        type="checkbox"
-                        checked={formData.show_play_icon}
-                        onChange={(e) => setFormData({ ...formData, show_play_icon: e.target.checked })}
-                        className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Modo de visualização do carrossel</label>
-                      <select
-                        value={formData.carousel_view_mode}
-                        onChange={(e) => setFormData({ ...formData, carousel_view_mode: e.target.value as any })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      >
-                        <option value="preview">Preview (vídeo no hover)</option>
-                        <option value="poster">Poster/imagem apenas</option>
-                        <option value="custom">Personalizado</option>
-                      </select>
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Exibir produto no carrossel</label>
-                      <input
-                        type="checkbox"
-                        checked={formData.show_product}
-                        onChange={(e) => setFormData({ ...formData, show_product: e.target.checked })}
-                        className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Ocultar stories</label>
-                      <input
-                        type="checkbox"
-                        checked={formData.hide_stories}
-                        onChange={(e) => setFormData({ ...formData, hide_stories: e.target.checked })}
-                        className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Centralizar automaticamente</label>
-                      <input
-                        type="checkbox"
-                        checked={formData.auto_center}
-                        onChange={(e) => setFormData({ ...formData, auto_center: e.target.checked })}
-                        className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
-                      />
+                  {/* Carrossel */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-black text-white">Carrossel</h4>
+                    <DeviceTabs
+                      activeDevice="desktop"
+                      onChange={() => {}}
+                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField label="Espaçamento">
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={formData.carousel_gap}
+                          onChange={(e) => setFormData({ ...formData, carousel_gap: Number(e.target.value) })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        />
+                      </FormField>
+                      <FormField label="Forma">
+                        <select
+                          value={formData.carousel_card_shape}
+                          onChange={(e) => setFormData({ ...formData, carousel_card_shape: e.target.value as any })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        >
+                          <option value="rounded">Arredondado</option>
+                          <option value="square">Quadrado</option>
+                          <option value="circle">Circular</option>
+                          <option value="custom">Personalizado</option>
+                        </select>
+                      </FormField>
+                      <FormField label="Altura">
+                        <input
+                          type="text"
+                          value={formData.height}
+                          onChange={(e) => setFormData({ ...formData, height: e.target.value })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        />
+                      </FormField>
+                      <FormField label="Largura">
+                        <input
+                          type="text"
+                          value={formData.width}
+                          onChange={(e) => setFormData({ ...formData, width: e.target.value })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        />
+                      </FormField>
+                      <FormField label="Raio da borda">
+                        <input
+                          type="text"
+                          value={formData.border_radius}
+                          onChange={(e) => setFormData({ ...formData, border_radius: e.target.value })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        />
+                      </FormField>
+                      <FormField label="Largura da borda">
+                        <input
+                          type="text"
+                          value={formData.border_style}
+                          onChange={(e) => setFormData({ ...formData, border_style: e.target.value })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        />
+                      </FormField>
+                      <FormField label="Exibir produto no carrossel">
+                        <ToggleSwitch
+                          label="Exibir produto no carrossel"
+                          checked={formData.show_product}
+                          onChange={(e) => setFormData({ ...formData, show_product: e.target.checked })}
+                        />
+                      </FormField>
+                      <FormField label="Mostrar botão play">
+                        <ToggleSwitch
+                          label="Mostrar botão play"
+                          checked={formData.show_play_icon}
+                          onChange={(e) => setFormData({ ...formData, show_play_icon: e.target.checked })}
+                        />
+                      </FormField>
+                      <FormField label="Margem superior">
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={formData.margin_top}
+                          onChange={(e) => setFormData({ ...formData, margin_top: e.target.value })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        />
+                      </FormField>
+                      <FormField label="Margem inferior">
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={formData.margin_bottom}
+                          onChange={(e) => setFormData({ ...formData, margin_bottom: e.target.value })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        />
+                      </FormField>
+                      <FormField label="Modo de visualização do carrossel">
+                        <select
+                          value={formData.carousel_view_mode}
+                          onChange={(e) => setFormData({ ...formData, carousel_view_mode: e.target.value as any })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        >
+                          <option value="preview">Preview (vídeo no hover)</option>
+                          <option value="poster">Poster/imagem apenas</option>
+                          <option value="custom">Personalizado</option>
+                        </select>
+                      </FormField>
                     </div>
                   </div>
-                )}
 
-                {/* Grade */}
-                {formData.widget_shape === 'grid' && (
-                  <div className="space-y-6">
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Colunas</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={formData.desktop_columns}
-                        onChange={(e) => setFormData({ ...formData, desktop_columns: Number(e.target.value) })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Linhas</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={formData.desktop_rows}
-                        onChange={(e) => setFormData({ ...formData, desktop_rows: Number(e.target.value) })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Espaçamento / Gap</label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={formData.desktop_gap}
-                        onChange={(e) => setFormData({ ...formData, desktop_gap: Number(e.target.value) })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Forma do widget</label>
-                      <select
-                        value={formData.widget_shape}
-                        onChange={(e) => setFormData({ ...formData, widget_shape: e.target.value as any })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      >
-                        <option value="circle">Círculo</option>
-                        <option value="square">Quadrado</option>
-                        <option value="portrait">Retrato</option>
-                      </select>
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Largura</label>
-                      <input
-                        type="text"
-                        value={formData.width}
-                        onChange={(e) => setFormData({ ...formData, width: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Altura</label>
-                      <input
-                        type="text"
-                        value={formData.height}
-                        onChange={(e) => setFormData({ ...formData, height: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Raio da borda</label>
-                      <input
-                        type="text"
-                        value={formData.border_radius}
-                        onChange={(e) => setFormData({ ...formData, border_radius: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Chamada para ação</label>
-                      <input
-                        type="text"
-                        value={formData.cta_text}
-                        onChange={(e) => setFormData({ ...formData, cta_text: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Tamanho da chamada para ação</label>
-                      <input
-                        type="text"
-                        value={formData.cta_size}
-                        onChange={(e) => setFormData({ ...formData, cta_size: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Estilo da borda</label>
-                      <input
-                        type="text"
-                        value={formData.border_style}
-                        onChange={(e) => setFormData({ ...formData, border_style: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Cor</label>
-                      <ColorInput
-                        label="Cor"
-                        value={formData.color}
-                        onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Remover cor</label>
-                      <input
-                        type="checkbox"
-                        checked={formData.hide_stories}
-                        onChange={(e) => setFormData({ ...formData, hide_stories: e.target.checked })}
-                        className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Mostrar botão play</label>
-                      <input
-                        type="checkbox"
-                        checked={formData.show_play_icon}
-                        onChange={(e) => setFormData({ ...formData, show_play_icon: e.target.checked })}
-                        className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Exibir produto</label>
-                      <input
-                        type="checkbox"
-                        checked={formData.show_product}
-                        onChange={(e) => setFormData({ ...formData, show_product: e.target.checked })}
-                        className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Ocultar stories</label>
-                      <input
-                        type="checkbox"
-                        checked={formData.hide_stories}
-                        onChange={(e) => setFormData({ ...formData, hide_stories: e.target.checked })}
-                        className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Centralizar automaticamente</label>
-                      <input
-                        type="checkbox"
-                        checked={formData.auto_center}
-                        onChange={(e) => setFormData({ ...formData, auto_center: e.target.checked })}
-                        className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Cores e Tipografia */}
-                <div className="bg-slate-950 rounded-[1.5rem] p-6 space-y-6">
-                  <h3 className="text-lg font-black text-white">3. Cores e Tipografia</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Cor principal</label>
-                      <ColorInput
-                        label="Cor principal"
-                        value={formData.primary_color}
-                        onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Cor secundária</label>
-                      <ColorInput
-                        label="Cor secundária"
-                        value={formData.secondary_color}
-                        onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Cor do texto</label>
-                      <ColorInput
-                        label="Cor do texto"
-                        value={formData.text_color}
-                        onChange={(e) => setFormData({ ...formData, text_color: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Cor do botão</label>
-                      <ColorInput
-                        label="Cor do botão"
-                        value={formData.button_color}
-                        onChange={(e) => setFormData({ ...formData, button_color: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Fonte de texto</label>
-                      <select
-                        value={formData.font_family}
-                        onChange={(e) => setFormData({ ...formData, font_family: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      >
-                        <option value="Inter, sans-serif">Inter</option>
-                        <option value="Roboto, sans-serif">Roboto</option>
-                        <option value="Open Sans, sans-serif">Open Sans</option>
-                        <option value="Lato, sans-serif">Lato</option>
-                      </select>
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Arredondamento das bordas</label>
-                      <input
-                        type="text"
-                        value={formData.border_radius}
-                        onChange={(e) => setFormData({ ...formData, border_radius: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                      />
+                  {/* Grade */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-black text-white">Grade</h4>
+                    <DeviceTabs
+                      activeDevice="desktop"
+                      onChange={() => {}}
+                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField label="Colunas">
+                        <input
+                          type="number"
+                          min="1"
+                          value={formData.desktop_columns}
+                          onChange={(e) => setFormData({ ...formData, desktop_columns: Number(e.target.value) })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        />
+                      </FormField>
+                      <FormField label="Linhas">
+                        <input
+                          type="number"
+                          min="1"
+                          value={formData.desktop_rows}
+                          onChange={(e) => setFormData({ ...formData, desktop_rows: Number(e.target.value) })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        />
+                      </FormField>
+                      <FormField label="Espaçamento">
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={formData.desktop_gap}
+                          onChange={(e) => setFormData({ ...formData, desktop_gap: Number(e.target.value) })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        />
+                      </FormField>
+                      <FormField label="Forma">
+                        <select
+                          value={formData.widget_shape}
+                          onChange={(e) => setFormData({ ...formData, widget_shape: e.target.value as any })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        >
+                          <option value="circle">Circular</option>
+                          <option value="square">Quadrado</option>
+                          <option value="portrait">Retrato</option>
+                        </select>
+                      </FormField>
+                      <FormField label="Altura">
+                        <input
+                          type="text"
+                          value={formData.height}
+                          onChange={(e) => setFormData({ ...formData, height: e.target.value })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        />
+                      </FormField>
+                      <FormField label="Largura">
+                        <input
+                          type="text"
+                          value={formData.width}
+                          onChange={(e) => setFormData({ ...formData, width: e.target.value })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        />
+                      </FormField>
+                      <FormField label="Raio da borda">
+                        <input
+                          type="text"
+                          value={formData.border_radius}
+                          onChange={(e) => setFormData({ ...formData, border_radius: e.target.value })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        />
+                      </FormField>
+                      <FormField label="Chamada para ação">
+                        <input
+                          type="text"
+                          value={formData.cta_text}
+                          onChange={(e) => setFormData({ ...formData, cta_text: e.target.value })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        />
+                      </FormField>
+                      <FormField label="Largura da borda">
+                        <input
+                          type="text"
+                          value={formData.border_style}
+                          onChange={(e) => setFormData({ ...formData, border_style: e.target.value })}
+                          className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        />
+                      </FormField>
+                      <FormField label="Exibir produto">
+                        <ToggleSwitch
+                          label="Exibir produto"
+                          checked={formData.show_product}
+                          onChange={(e) => setFormData({ ...formData, show_product: e.target.checked })}
+                        />
+                      </FormField>
+                      <FormField label="Mostrar botão play">
+                        <ToggleSwitch
+                          label="Mostrar botão play"
+                          checked={formData.show_play_icon}
+                          onChange={(e) => setFormData({ ...formData, show_play_icon: e.target.checked })}
+                        />
+                      </FormField>
                     </div>
                   </div>
                 </div>
+              </SectionCard>
 
-                {/* Player Interativo e Modal */}
-                <div className="bg-slate-950 rounded-[1.5rem] p-6 space-y-6">
-                  <h3 className="text-lg font-black text-white">5. Player Interativo e Modal</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Mostrar botão de curtir</label>
-                      <input
-                        type="checkbox"
-                        checked={formData.show_like_button}
-                        onChange={(e) => setFormData({ ...formData, show_like_button: e.target.checked })}
-                        className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Mostrar botão WhatsApp</label>
-                      <input
-                        type="checkbox"
-                        checked={formData.show_whatsapp_button}
-                        onChange={(e) => setFormData({ ...formData, show_whatsapp_button: e.target.checked })}
-                        className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Mostrar botão produto</label>
-                      <input
-                        type="checkbox"
-                        checked={formData.show_product}
-                        onChange={(e) => setFormData({ ...formData, show_product: e.target.checked })}
-                        className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Mostrar botão compartilhar</label>
-                      <input
-                        type="checkbox"
-                        checked={formData.show_share_button}
-                        onChange={(e) => setFormData({ ...formData, show_share_button: e.target.checked })}
-                        className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Mostrar botão comentários</label>
-                      <input
-                        type="checkbox"
-                        checked={formData.show_comment_button}
-                        onChange={(e) => setFormData({ ...formData, show_comment_button: e.target.checked })}
-                        className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
-                      />
-                    </div>
-                  </div>
+              {/* Cores e Tipografia */}
+              <SectionCard title="3. Cores e Tipografia">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField label="Cor principal">
+                    <ColorInput
+                      label="Cor principal"
+                      value={formData.primary_color}
+                      onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })}
+                    />
+                  </FormField>
+                  <FormField label="Cor secundária">
+                    <ColorInput
+                      label="Cor secundária"
+                      value={formData.secondary_color}
+                      onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
+                    />
+                  </FormField>
+                  <FormField label="Cor do texto">
+                    <ColorInput
+                      label="Cor do texto"
+                      value={formData.text_color}
+                      onChange={(e) => setFormData({ ...formData, text_color: e.target.value })}
+                    />
+                  </FormField>
+                  <FormField label="Cor do botão">
+                    <ColorInput
+                      label="Cor do botão"
+                      value={formData.button_color}
+                      onChange={(e) => setFormData({ ...formData, button_color: e.target.value })}
+                    />
+                  </FormField>
+                  <FormField label="Fonte de texto">
+                    <select
+                      value={formData.font_family}
+                      onChange={(e) => setFormData({ ...formData, font_family: e.target.value })}
+                      className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                    >
+                      <option value="Inter, sans-serif">Inter</option>
+                      <option value="Roboto, sans-serif">Roboto</option>
+                      <option value="Open Sans, sans-serif">Open Sans</option>
+                      <option value="Lato, sans-serif">Lato</option>
+                    </select>
+                  </FormField>
+                  <FormField label="Tamanho do texto">
+                    <input
+                      type="text"
+                      value={formData.border_radius}
+                      onChange={(e) => setFormData({ ...formData, border_radius: e.target.value })}
+                      className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                    />
+                  </FormField>
                 </div>
-              </div>
+              </SectionCard>
+
+              {/* Player Interativo e Modal */}
+              <SectionCard title="4. Player Interativo e Modal">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField label="Mostrar botão curtir">
+                    <ToggleSwitch
+                      label="Mostrar botão curtir"
+                      checked={formData.show_like_button}
+                      onChange={(e) => setFormData({ ...formData, show_like_button: e.target.checked })}
+                    />
+                  </FormField>
+                  <FormField label="Mostrar botão WhatsApp">
+                    <ToggleSwitch
+                      label="Mostrar botão WhatsApp"
+                      checked={formData.show_whatsapp_button}
+                      onChange={(e) => setFormData({ ...formData, show_whatsapp_button: e.target.checked })}
+                    />
+                  </FormField>
+                  <FormField label="Mostrar botão produto">
+                    <ToggleSwitch
+                      label="Mostrar botão produto"
+                      checked={formData.show_product}
+                      onChange={(e) => setFormData({ ...formData, show_product: e.target.checked })}
+                    />
+                  </FormField>
+                  <FormField label="Mostrar botão compartilhar">
+                    <ToggleSwitch
+                      label="Mostrar botão compartilhar"
+                      checked={formData.show_share_button}
+                      onChange={(e) => setFormData({ ...formData, show_share_button: e.target.checked })}
+                    />
+                  </FormField>
+                  <FormField label="Mostrar botão comentários">
+                    <ToggleSwitch
+                      label="Mostrar botão comentários"
+                      checked={formData.show_comment_button}
+                      onChange={(e) => setFormData({ ...formData, show_comment_button: e.target.checked })}
+                    />
+                  </FormField>
+                </div>
+              </SectionCard>
             </div>
           </div>
         </div>
