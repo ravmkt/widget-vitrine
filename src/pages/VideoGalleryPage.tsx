@@ -44,10 +44,6 @@ const VideoGalleryPage = () => {
     thumbnail_url: '',
     product_id: '',
     model_id: '',
-    cta_enabled: true,
-    cta_text: 'Comprar Agora',
-    cta_type: 'product' as any,
-    cta_link: '',
   });
 
   const loadData = async () => {
@@ -75,7 +71,7 @@ const VideoGalleryPage = () => {
     });
   }, [videos, searchTerm, filterSource]);
 
-  const handleEdit = (video: Video) => {
+  const handleEditVideo = (video: Video) => {
     setEditingVideo(video);
     setFormData({
       title: video.title,
@@ -84,22 +80,23 @@ const VideoGalleryPage = () => {
       thumbnail_url: video.thumbnail_url,
       product_id: (video as any).product_id || '',
       model_id: (video as any).model_id || '',
-      cta_enabled: (video as any).cta_enabled ?? true,
-      cta_text: (video as any).cta_text || 'Comprar Agora',
-      cta_type: (video as any).cta_type || 'product',
-      cta_link: (video as any).cta_link || '',
     });
-    setIsViewModalOpen(false);
+    setIsViewModalOpen(false); // Fecha player se estiver aberto
     setIsModalOpen(true);
   };
 
-  const handleView = (video: Video) => {
+  const handleViewVideo = (video: Video) => {
     setViewingVideo(video);
     setIsViewModalOpen(true);
   };
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSaveVideo = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.title || !formData.video_url) {
+      showError('Preencha título e URL do vídeo.');
+      return;
+    }
+
     const videoData: Video = {
       ...editingVideo,
       id: editingVideo?.id || Math.random().toString(36).substr(2, 9),
@@ -107,22 +104,22 @@ const VideoGalleryPage = () => {
       title: formData.title,
       source_type: formData.source_type,
       video_url: formData.video_url,
-      thumbnail_url: formData.thumbnail_url,
+      thumbnail_url: formData.thumbnail_url || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=250',
       status: 'active',
       ...({
         product_id: formData.product_id,
         model_id: formData.model_id,
-        cta_enabled: formData.cta_enabled,
-        cta_text: formData.cta_text,
-        cta_type: formData.cta_type,
-        cta_link: formData.cta_link
       } as any)
     };
 
-    await db.videos.save(videoData);
-    showSuccess('Vídeo salvo com sucesso!');
-    setIsModalOpen(false);
-    loadData();
+    try {
+      await db.videos.save(videoData);
+      showSuccess('Vídeo atualizado com sucesso!');
+      setIsModalOpen(false);
+      loadData();
+    } catch (err) {
+      showError('Erro ao salvar vídeo.');
+    }
   };
 
   if (loading) return null;
@@ -131,14 +128,14 @@ const VideoGalleryPage = () => {
     <div className="space-y-8 animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Relatório de Vídeos</h1>
-          <p className="text-slate-500 font-medium mt-1">Gerencie vídeos, assista e analise métricas individuais.</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Conteúdo (Vídeos)</h1>
+          <p className="text-slate-500 font-medium mt-1">Gerencie os vídeos reais que serão exibidos nos seus Stories.</p>
         </div>
         <button 
-          onClick={() => { setEditingVideo(null); setFormData({...formData, title: '', video_url: '', thumbnail_url: ''}); setIsModalOpen(true); }}
+          onClick={() => { setEditingVideo(null); setFormData({title: '', source_type: 'upload', video_url: '', thumbnail_url: '', product_id: '', model_id: ''}); setIsModalOpen(true); }}
           className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl transition-all flex items-center gap-2"
         >
-          <Plus size={18} /> Adicionar Vídeo
+          <Plus size={18} /> Novo Vídeo
         </button>
       </div>
 
@@ -159,20 +156,19 @@ const VideoGalleryPage = () => {
           <option value="upload">Upload Direto</option>
           <option value="instagram">Instagram</option>
           <option value="tiktok">TikTok</option>
-          <option value="external_url">URL Externa</option>
         </select>
       </div>
 
       <div className="space-y-6">
         <h3 className="text-xl font-black text-slate-800 flex items-center gap-2 px-2">
           <Filter size={20} className="text-[#0094EB]" />
-          Resultados do Período
+          Biblioteca de Conteúdo
         </h3>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredVideos.map(video => (
             <div key={video.id} className="bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col">
-              <div className="aspect-[9/16] bg-slate-900 relative cursor-pointer" onClick={() => handleView(video)}>
+              <div className="aspect-[9/16] bg-slate-900 relative cursor-pointer" onClick={() => handleViewVideo(video)}>
                  <img src={video.thumbnail_url} className="w-full h-full object-cover opacity-80" alt={video.title} />
                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all bg-black/40">
                     <Play size={40} className="text-white fill-white scale-110" />
@@ -187,13 +183,13 @@ const VideoGalleryPage = () => {
                  <h4 className="font-bold text-slate-800 truncate text-sm mb-4">{video.title}</h4>
                  <div className="mt-auto space-y-2">
                    <button 
-                     onClick={() => handleView(video)}
+                     onClick={() => handleViewVideo(video)}
                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#0094EB] hover:bg-[#0E4787] text-white text-xs font-black shadow-lg shadow-blue-100 transition-all active:scale-95"
                    >
                      <Eye size={14} /> Ver vídeo
                    </button>
                    <div className="flex gap-2">
-                      <button onClick={() => handleEdit(video)} className="flex-1 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500 transition-colors flex justify-center"><Edit3 size={16} /></button>
+                      <button onClick={() => handleEditVideo(video)} className="flex-1 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500 transition-colors flex justify-center"><Edit3 size={16} /></button>
                       <button className="flex-1 p-2.5 rounded-xl bg-slate-50 hover:bg-red-50 text-red-500 transition-colors flex justify-center"><Trash2 size={16} /></button>
                    </div>
                  </div>
@@ -203,7 +199,7 @@ const VideoGalleryPage = () => {
         </div>
       </div>
 
-      {/* Modal de Visualização (Ver Vídeo) */}
+      {/* Modal do Player (Apenas Video ID) */}
       <CustomDialog
         isOpen={isViewModalOpen}
         type="form"
@@ -214,12 +210,7 @@ const VideoGalleryPage = () => {
         {viewingVideo && (
           <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-8">
             <div className="aspect-[9/16] bg-slate-950 rounded-3xl overflow-hidden shadow-2xl relative border-4 border-slate-900">
-               <video 
-                 src={viewingVideo.video_url} 
-                 className="w-full h-full object-cover"
-                 controls
-                 autoPlay
-               />
+               <video src={viewingVideo.video_url} className="w-full h-full object-cover" controls autoPlay />
             </div>
             
             <div className="flex flex-col">
@@ -227,15 +218,13 @@ const VideoGalleryPage = () => {
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-2xl font-black text-slate-900">{viewingVideo.title}</h3>
                   <button 
-                    onClick={() => handleEdit(viewingVideo)}
+                    onClick={() => handleEditVideo(viewingVideo)}
                     className="p-3 bg-blue-50 text-[#0094EB] rounded-2xl hover:bg-blue-100 transition-all flex items-center gap-2 font-black text-xs uppercase"
                   >
-                    <Edit3 size={16} /> Editar
+                    <Edit3 size={16} /> Editar vídeo
                   </button>
                 </div>
-                <p className="text-sm font-bold text-slate-400 flex items-center gap-2">
-                  <Calendar size={14} /> Criado em {format(new Date(viewingVideo.created_at || new Date()), "dd 'de' MMMM", { locale: ptBR })}
-                </p>
+                <p className="text-sm font-bold text-slate-400">Origem: {viewingVideo.source_type}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4 mb-8">
@@ -247,43 +236,19 @@ const VideoGalleryPage = () => {
                   <p className="text-xl font-black text-slate-900">1.248</p>
                 </div>
                 <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                  <div className="flex items-center gap-2 text-violet-500 mb-2">
-                    <MousePointer2 size={16} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Cliques</span>
-                  </div>
-                  <p className="text-xl font-black text-slate-900">184</p>
-                </div>
-                <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
                   <div className="flex items-center gap-2 text-emerald-500 mb-2">
-                    <BarChart3 size={16} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Conversão</span>
+                    <ShoppingBag size={16} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Vendas</span>
                   </div>
-                  <p className="text-xl font-black text-slate-900">7.2%</p>
-                </div>
-                <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                  <div className="flex items-center gap-2 text-rose-500 mb-2">
-                    <TrendingUp size={16} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">CTR</span>
-                  </div>
-                  <p className="text-xl font-black text-slate-900">14.8%</p>
+                  <p className="text-xl font-black text-slate-900">42</p>
                 </div>
               </div>
 
               <div className="mt-auto p-6 bg-slate-900 rounded-3xl text-white">
-                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Produto Vinculado</h4>
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-xl bg-white/10 flex items-center justify-center">
-                    <ShoppingBag size={20} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-black">
-                      {products.find(p => p.id === (viewingVideo as any).product_id)?.name || "Nenhum produto vinculado"}
-                    </p>
-                    <p className="text-[10px] font-bold text-[#0094EB]">
-                      {(viewingVideo as any).cta_text || "Sem CTA"}
-                    </p>
-                  </div>
-                  <ExternalLink size={16} className="text-slate-500" />
+                <h4 className="text-xs font-black text-slate-400 uppercase mb-4">Metadados do Conteúdo</h4>
+                <div className="space-y-2">
+                   <p className="text-xs font-medium">Produto: <span className="text-[#0094EB]">{products.find(p => p.id === (viewingVideo as any).product_id)?.name || "Nenhum"}</span></p>
+                   <p className="text-xs font-medium">Modelo: <span className="text-[#0094EB]">{sizingModels.find(m => m.id === (viewingVideo as any).model_id)?.name || "Nenhum"}</span></p>
                 </div>
               </div>
             </div>
@@ -291,14 +256,14 @@ const VideoGalleryPage = () => {
         )}
       </CustomDialog>
 
-      {/* Modal de Edição */}
+      {/* Modal de Edição (Apenas Video ID) */}
       <CustomDialog
         isOpen={isModalOpen}
         type="form"
         title={editingVideo ? 'Editar Vídeo' : 'Adicionar Vídeo'}
         maxWidth="max-w-2xl"
         onCancel={() => setIsModalOpen(false)}
-        onConfirm={handleSave}
+        onConfirm={handleSaveVideo}
       >
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -311,50 +276,36 @@ const VideoGalleryPage = () => {
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Origem</label>
-              <select 
-                disabled={!!editingVideo} value={formData.source_type} onChange={e => setFormData({...formData, source_type: e.target.value as any})}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none disabled:opacity-50"
-              >
+              <select value={formData.source_type} onChange={e => setFormData({...formData, source_type: e.target.value as any})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none">
                 <option value="upload">Upload</option>
                 <option value="instagram">Instagram</option>
                 <option value="tiktok">TikTok</option>
-                <option value="external_url">URL</option>
               </select>
             </div>
             <div className="md:col-span-2 space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">URL do Vídeo</label>
-              <input 
-                type="url" value={formData.video_url} onChange={e => setFormData({...formData, video_url: e.target.value})}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
-              />
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">URL do Arquivo</label>
+              <input type="url" value={formData.video_url} onChange={e => setFormData({...formData, video_url: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" />
             </div>
             <div className="md:col-span-2 space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">URL da Thumbnail</label>
-              <input 
-                type="url" value={formData.thumbnail_url} onChange={e => setFormData({...formData, thumbnail_url: e.target.value})}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
-              />
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">URL da Capa (Thumbnail)</label>
+              <input type="url" value={formData.thumbnail_url} onChange={e => setFormData({...formData, thumbnail_url: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" />
             </div>
           </div>
-
-          <div className="pt-8 border-t border-slate-100">
-            <h4 className="text-sm font-black text-slate-800 mb-6 flex items-center gap-2"><ShoppingBag size={18} className="text-[#0094EB]" /> Informações Comerciais</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vincular Produto</label>
-                  <select value={formData.product_id} onChange={e => setFormData({...formData, product_id: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none">
-                     <option value="">Nenhum produto</option>
-                     {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
-               </div>
-               <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tabela de Medidas</label>
-                  <select value={formData.model_id} onChange={e => setFormData({...formData, model_id: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none">
-                     <option value="">Sem medidas</option>
-                     {sizingModels.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-                  </select>
-               </div>
-            </div>
+          <div className="pt-8 border-t border-slate-100 grid grid-cols-2 gap-6">
+             <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vincular Produto</label>
+                <select value={formData.product_id} onChange={e => setFormData({...formData, product_id: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none">
+                   <option value="">Nenhum produto</option>
+                   {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+             </div>
+             <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tabela de Medidas</label>
+                <select value={formData.model_id} onChange={e => setFormData({...formData, model_id: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none">
+                   <option value="">Sem medidas</option>
+                   {sizingModels.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+             </div>
           </div>
         </div>
       </CustomDialog>
