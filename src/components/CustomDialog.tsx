@@ -32,56 +32,56 @@ const CustomDialog: React.FC<CustomDialogProps> = ({
   if (!isOpen) return null;
 
   const icons = {
-    success: <CheckCircle2 className="w-12 h-12 text-[#10B981]" />,
-    error: <XCircle className="w-12 h-12 text-[#EF4444]" />,
-    warning: <AlertTriangle className="w-12 h-12 text-[#F59E0B]" />,
-    confirm: <HelpCircle className="w-12 h-12 text-[#0094EB]" />,
+    success: <CheckCircle2 className="w-10 h-10 text-[#10B981]" />,
+    error: <XCircle className="w-10 h-10 text-[#EF4444]" />,
+    warning: <AlertTriangle className="w-10 h-10 text-[#F59E0B]" />,
+    confirm: <HelpCircle className="w-10 h-10 text-[#0094EB]" />,
     form: null
   };
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 md:p-8">
-      {/* Overlay: Ocupa toda a tela e borra o fundo */}
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+      {/* Overlay Compacto */}
       <div 
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+        className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity" 
         onClick={onCancel}
       />
       
-      {/* Card do Modal: Centralizado via Flexbox do pai */}
+      {/* Card do Modal Compacto */}
       <div className={cn(
-        "relative w-full bg-white border border-slate-200 rounded-[2.5rem] shadow-2xl flex flex-col animate-fade-in overflow-hidden z-[100000]",
+        "relative w-full bg-white border border-slate-200 rounded-[1.5rem] shadow-2xl flex flex-col animate-fade-in overflow-hidden z-[100000]",
         maxWidth
-      )} style={{ maxHeight: 'calc(100vh - 64px)' }}>
+      )} style={{ maxHeight: '92vh' }}>
         
-        {/* Header Fixo */}
-        <div className="flex items-center justify-between p-6 md:p-8 border-b border-slate-100 shrink-0">
-          <h3 className="text-xl font-black text-slate-900">{title}</h3>
+        {/* Header Fixo Menor */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+          <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">{title}</h3>
           <button 
             onClick={onCancel} 
-            className="p-2 rounded-full text-slate-400 hover:bg-slate-50 transition-all"
+            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-50 transition-all"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Conteúdo com Scroll Interno */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar bg-white">
+        {/* Conteúdo Otimizado */}
+        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-white">
           {type !== 'form' && (
-            <div className="flex flex-col items-center text-center mb-6">
-              <div className="mb-4">{icons[type]}</div>
-              {description && <p className="text-sm font-bold text-slate-500 leading-relaxed">{description}</p>}
+            <div className="flex flex-col items-center text-center mb-4">
+              <div className="mb-3">{icons[type]}</div>
+              {description && <p className="text-xs font-bold text-slate-500 leading-relaxed">{description}</p>}
             </div>
           )}
           {children}
         </div>
 
-        {/* Footer Fixo */}
-        <div className="p-6 md:p-8 border-t border-slate-100 flex flex-col sm:flex-row gap-3 bg-slate-50/50 shrink-0">
+        {/* Footer Otimizado */}
+        <div className="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row gap-2 bg-slate-50/50 shrink-0">
           {onCancel && (
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 py-4 px-6 rounded-2xl border border-slate-200 text-slate-600 hover:bg-white hover:border-slate-300 font-black text-sm transition-all"
+              className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 hover:bg-white font-black text-xs transition-all"
             >
               {cancelText}
             </button>
@@ -91,9 +91,9 @@ const CustomDialog: React.FC<CustomDialogProps> = ({
               type="button"
               onClick={onConfirm}
               className={cn(
-                "flex-1 py-4 px-6 rounded-2xl font-black text-sm text-white shadow-xl shadow-blue-200 transition-all active:scale-95",
-                type === 'error' ? 'bg-[#EF4444] hover:bg-red-600 shadow-red-100' : 
-                type === 'warning' ? 'bg-[#F59E0B] hover:bg-amber-600 shadow-amber-100' : 'bg-[#0094EB] hover:bg-[#0E4787]'
+                "flex-1 py-2.5 px-4 rounded-xl font-black text-xs text-white shadow-md transition-all active:scale-95",
+                type === 'error' ? 'bg-[#EF4444]' : 
+                type === 'warning' ? 'bg-[#F59E0B]' : 'bg-[#0094EB]'
               )}
             >
               {confirmText}

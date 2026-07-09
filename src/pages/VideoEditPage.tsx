@@ -34,7 +34,7 @@ const VideoEditPage = () => {
         setFormData({
           title: v.title,
           video_url: v.video_url,
-          thumbnail_url: v.thumbnail_url,
+          thumbnail_url: v.thumbnail_url || '',
           product_id: (v as any).product_id || '',
           model_id: (v as any).model_id || '',
         });
@@ -57,14 +57,24 @@ const VideoEditPage = () => {
     if (!video) return;
 
     try {
-      await db.videos.save({
+      // Cria o objeto limpo para salvar
+      const updatedVideo: Video = {
         ...video,
-        ...formData,
+        title: formData.title,
+        video_url: formData.video_url,
+        thumbnail_url: formData.thumbnail_url,
         updated_at: new Date().toISOString()
-      });
+      };
+      
+      // Adiciona campos extras se existirem
+      (updatedVideo as any).product_id = formData.product_id;
+      (updatedVideo as any).model_id = formData.model_id;
+
+      await db.videos.save(updatedVideo);
       showSuccess('Vídeo atualizado com sucesso!');
       navigate(-1);
     } catch (e) {
+      console.error('Erro ao salvar:', e);
       showError('Erro ao salvar vídeo');
     }
   };
@@ -72,10 +82,14 @@ const VideoEditPage = () => {
   const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        showError('Arquivo muito grande. Máximo 2MB.');
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         setFormData(prev => ({ ...prev, thumbnail_url: reader.result as string }));
-        showSuccess('Capa carregada com sucesso!');
+        showSuccess('Capa carregada!');
       };
       reader.readAsDataURL(file);
     }
@@ -86,79 +100,78 @@ const VideoEditPage = () => {
   return (
     <div className="min-h-screen bg-[#F7FAFC]">
       <Navbar />
-      <main className="max-w-5xl mx-auto px-4 py-12">
-        <div className="flex items-center justify-between mb-10">
+      <main className="max-w-5xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate(-1)} className="p-2.5 bg-white border border-slate-200 rounded-xl shadow-sm"><ArrowLeft size={20}/></button>
+            <button onClick={() => navigate(-1)} className="p-2 bg-white border border-slate-200 rounded-xl shadow-sm"><ArrowLeft size={18}/></button>
             <div>
-              <h1 className="text-3xl font-black text-slate-900 tracking-tight">Editar Vídeo</h1>
-              <p className="text-slate-500 font-medium">Conteúdo: <span className="text-[#0094EB]">{formData.title}</span></p>
+              <h1 className="text-2xl font-black text-slate-900 tracking-tight">Editar Vídeo</h1>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{formData.title}</p>
             </div>
           </div>
-          <button onClick={handleSave} className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-8 py-4 rounded-2xl font-black text-sm shadow-xl transition-all flex items-center gap-2">
-            <Save size={18} /> Salvar Alterações
+          <button onClick={handleSave} className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-xl font-black text-sm shadow-lg transition-all flex items-center gap-2">
+            <Save size={16} /> Salvar Alterações
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-10">
-           <div className="space-y-6">
-              <div className="aspect-[9/16] bg-slate-950 rounded-[2.5rem] overflow-hidden shadow-2xl relative border-[8px] border-white">
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
+           <div className="space-y-4">
+              <div className="aspect-[9/16] bg-slate-950 rounded-[2rem] overflow-hidden shadow-xl relative border-[6px] border-white">
                 <video src={formData.video_url} className="w-full h-full object-cover" poster={formData.thumbnail_url} controls />
-              </div>
-              
-              <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Capa do Vídeo</p>
-                <div className="relative group aspect-video rounded-xl bg-slate-100 overflow-hidden mb-4 border border-slate-100">
-                  {formData.thumbnail_url ? (
-                    <img src={formData.thumbnail_url} className="w-full h-full object-cover" alt="Preview" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-300"><ImageIcon size={32} /></div>
-                  )}
-                  <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                    <div className="text-white text-xs font-black flex items-center gap-2"><Upload size={16}/> Mudar Capa</div>
-                    <input type="file" accept="image/*" onChange={handleThumbnailUpload} className="hidden" />
-                  </label>
-                </div>
-                <p className="text-[9px] text-slate-400 text-center font-bold">Resolução sugerida: 1080x1920 (9:16)</p>
               </div>
            </div>
 
-           <form onSubmit={handleSave} className="space-y-8">
-              <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm space-y-8">
-                 <div className="flex items-center gap-3 pb-6 border-b border-slate-100">
-                    <Film className="text-[#0094EB]" size={20} />
-                    <h3 className="text-lg font-black text-slate-800">Metadados do Conteúdo</h3>
+           <form onSubmit={handleSave} className="space-y-6">
+              <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm space-y-6">
+                 <div className="flex items-center gap-2 pb-4 border-b border-slate-100">
+                    <Film className="text-[#0094EB]" size={18} />
+                    <h3 className="text-sm font-black text-slate-800 uppercase">Configurações Gerais</h3>
                  </div>
 
-                 <div className="space-y-6">
-                    <div className="space-y-2">
+                 <div className="space-y-5">
+                    <div className="space-y-1.5">
                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Título do Vídeo</label>
-                       <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:border-[#0094EB]" />
+                       <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]" />
                     </div>
-                    <div className="space-y-2">
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">URL do Vídeo (MP4/WebM)</label>
-                       <input type="url" value={formData.video_url} onChange={e => setFormData({...formData, video_url: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:border-[#0094EB]" />
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-[1fr_200px] gap-4">
+                      <div className="space-y-1.5">
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">URL do Vídeo</label>
+                         <input type="url" value={formData.video_url} onChange={e => setFormData({...formData, video_url: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]" placeholder="https://exemplo.com/video.mp4" />
+                      </div>
+                      <div className="space-y-1.5">
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Capa / Thumbnail</label>
+                         <div className="flex gap-2">
+                            <div className="h-11 w-11 rounded-lg bg-slate-100 border border-slate-200 shrink-0 overflow-hidden">
+                               {formData.thumbnail_url ? <img src={formData.thumbnail_url} className="w-full h-full object-cover" /> : <div className="h-full w-full flex items-center justify-center"><ImageIcon size={16} className="text-slate-300" /></div>}
+                            </div>
+                            <label className="flex-1 flex items-center justify-center gap-2 px-3 h-11 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl text-[10px] font-black cursor-pointer transition-colors">
+                               <Upload size={14}/> {formData.thumbnail_url ? 'Alterar' : 'Upload'}
+                               <input type="file" accept="image/*" onChange={handleThumbnailUpload} className="hidden" />
+                            </label>
+                         </div>
+                      </div>
                     </div>
                  </div>
               </div>
 
-              <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm space-y-8">
-                 <div className="flex items-center gap-3 pb-6 border-b border-slate-100">
-                    <ShoppingBag className="text-[#0094EB]" size={20} />
-                    <h3 className="text-lg font-black text-slate-800">Canais de Venda</h3>
+              <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm space-y-6">
+                 <div className="flex items-center gap-2 pb-4 border-b border-slate-100">
+                    <ShoppingBag className="text-[#0094EB]" size={18} />
+                    <h3 className="text-sm font-black text-slate-800 uppercase">Vínculos Comerciais</h3>
                  </div>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Produto Vinculado</label>
-                       <select value={formData.product_id} onChange={e => setFormData({...formData, product_id: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none">
-                          <option value="">Selecione um produto</option>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Produto Relacionado</label>
+                       <select value={formData.product_id} onChange={e => setFormData({...formData, product_id: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none">
+                          <option value="">Nenhum produto</option>
                           {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                        </select>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tabela de Medidas</label>
-                       <select value={formData.model_id} onChange={e => setFormData({...formData, model_id: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none">
-                          <option value="">Sem tabela de medidas</option>
+                       <select value={formData.model_id} onChange={e => setFormData({...formData, model_id: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none">
+                          <option value="">Sem medidas</option>
                           {models.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                        </select>
                     </div>
