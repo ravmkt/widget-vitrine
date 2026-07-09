@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db, Video, Product, SizingModel, Story } from '@/lib/db';
-import { ArrowLeft, Save, Film, ShoppingBag, Ruler, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { ArrowLeft, Save, Film, ShoppingBag, Ruler, Loader2, CheckCircle2, XCircle, Upload } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
 import SuccessDialog from '@/components/SuccessDialog';
 import { cn } from '@/lib/utils';
@@ -31,7 +31,6 @@ const VideoEditPage = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Fetch videos, products, models
         const [allVideos, allProducts, allModels] = await Promise.all([
           db.videos.getAll(),
           db.products.getAll(),
@@ -56,7 +55,6 @@ const VideoEditPage = () => {
             active: v.active ?? true,
           });
           
-          // Fetch stories that use this video
           const storyVideos = await db.storyVideos.getAll();
           const storyIds = storyVideos
             .filter(sv => sv.video_id === id)
@@ -64,9 +62,6 @@ const VideoEditPage = () => {
           const stories = await db.stories.getAll();
           const usedStories = stories.filter(s => storyIds.includes(s.id));
           setUsedInStories(usedStories);
-        } else {
-          // In create mode, we don't have a video yet
-          setVideo(null);
         }
       } catch (e) {
         showError('Erro ao carregar dados');
@@ -76,6 +71,23 @@ const VideoEditPage = () => {
     };
     loadData();
   }, [id, navigate, isCreate]);
+
+  const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      showError('Formato de imagem inválido. Use JPG, PNG ou WEBP.');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFormData({ ...formData, thumbnail_url: reader.result as string });
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +111,6 @@ const VideoEditPage = () => {
           store_id: '11111111-1111-1111-1111-111111111111',
           created_at: new Date().toISOString()
         };
-        // Handle product_id and model_id as optional
         if (formData.product_id) (newVideo as any).product_id = formData.product_id;
         if (formData.model_id) (newVideo as any).model_id = formData.model_id;
         
@@ -110,7 +121,6 @@ const VideoEditPage = () => {
           ...video,
           ...videoData
         };
-        // Handle product_id and model_id as optional
         if (formData.product_id) (updatedVideo as any).product_id = formData.product_id;
         else (updatedVideo as any).product_id = undefined;
         if (formData.model_id) (updatedVideo as any).model_id = formData.model_id;
@@ -156,10 +166,35 @@ const VideoEditPage = () => {
                  <input type="url" value={formData.video_url} onChange={e => setFormData({...formData, video_url: e.target.value})} className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" />
               </div>
             </div>
+
             <div className="space-y-4">
-               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Capa do Vídeo (Thumbnail URL)</label>
-               <input type="url" value={formData.thumbnail_url} onChange={e => setFormData({...formData, thumbnail_url: e.target.value})} className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" />
+               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Capa do Vídeo (Thumbnail)</label>
+               <div className="flex items-center gap-4">
+                 <div className="h-24 w-24 rounded-2xl overflow-hidden bg-slate-200 border border-slate-300 shrink-0 flex items-center justify-center">
+                   {formData.thumbnail_url ? (
+                     <img src={formData.thumbnail_url} className="w-full h-full object-cover" alt="Capa" />
+                   ) : (
+                     <span className="text-xs font-bold text-slate-400">Sem capa</span>
+                   )}
+                 </div>
+                 <div className="flex-1 space-y-3">
+                   <input 
+                     type="file" 
+                     accept="image/jpeg,image/png,image/webp" 
+                     onChange={handleThumbnailUpload}
+                     className="block w-full text-xs text-slate-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:bg-[#EAF6FF] file:text-[#0094EB] file:font-black file:cursor-pointer hover:file:bg-[#0094EB] hover:file:text-white transition-all"
+                   />
+                   <input 
+                     type="url" 
+                     value={formData.thumbnail_url} 
+                     onChange={e => setFormData({...formData, thumbnail_url: e.target.value})} 
+                     placeholder="Ou cole a URL da capa" 
+                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]" 
+                   />
+                 </div>
+               </div>
             </div>
+
             <div className="space-y-4">
                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Produto Vinculado</label>
                <select 
@@ -198,7 +233,6 @@ const VideoEditPage = () => {
                </select>
             </div>
             
-            {/* Usado em Stories */}
             {usedInStories.length > 0 && (
               <div className="space-y-4 pt-4 border-t border-slate-200">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Usado em Stories</label>

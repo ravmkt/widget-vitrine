@@ -7,15 +7,10 @@ import {
   Play, 
   Trash2, 
   Edit3, 
-  X, 
-  Upload, 
+  ArrowLeft,
   Eye,
   Film,
   CheckCircle2,
-  Menu,
-  ArrowDown,
-  ArrowUp,
-  ArrowLeft,
   MessageCircle,
   TrendingUp
 } from 'lucide-react';
@@ -23,8 +18,7 @@ import { showSuccess, showError } from '@/utils/toast';
 import CustomDialog from '@/components/CustomDialog';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import { cn } from '@/lib/utils';
-import { format, subDays, startOfDay, endOfDay, eachDayOfInterval, differenceInDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { subDays, startOfDay, endOfDay, eachDayOfInterval } from 'date-fns';
 
 const VideoGalleryPage = () => {
   const navigate = useNavigate();
@@ -33,13 +27,12 @@ const VideoGalleryPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSource, setFilterSource] = useState<'all' | 'upload' | 'instagram' | 'tiktok' | 'external_url'>('all');
-  const [productFilter, setProductFilter] = useState<string>('all'); // product id or 'all'
-  const [orderBy, setOrderBy] = useState<string>('recent'); // recent, oldest, views_asc, views_desc, likes_asc, likes_desc, comments_asc, comments_desc, engagement_asc, engagement_desc
+  const [productFilter, setProductFilter] = useState<string>('all');
+  const [orderBy, setOrderBy] = useState<string>('recent');
 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewingVideo, setViewingVideo] = useState<Video | null>(null);
 
-  // Update deleteModal to include usedInStories
   const [deleteModal, setDeleteModal] = useState<{ 
     isOpen: boolean; 
     videoId: string; 
@@ -52,7 +45,6 @@ const VideoGalleryPage = () => {
     usedInStories: false
   });
 
-  // Helper to calculate metrics for a video in the last 30 days
   const calculateVideoMetrics = (videoId: string) => {
     const end = new Date();
     const start = subDays(end, 30);
@@ -98,7 +90,6 @@ const VideoGalleryPage = () => {
     loadData();
   }, []);
 
-  // Filter and sort videos
   const processedVideos = useMemo(() => {
     return videos
       .filter(v => {
@@ -134,7 +125,6 @@ const VideoGalleryPage = () => {
   };
 
   const handleDeleteClick = (video: Video) => {
-    // Check if video is used in any story
     const checkUsedInStories = async () => {
       try {
         const storyVideos = await db.storyVideos.getAll();
@@ -146,7 +136,6 @@ const VideoGalleryPage = () => {
           usedInStories: isUsed
         });
       } catch (e) {
-        // If we can't check, assume not used to avoid blocking deletion
         setDeleteModal({
           isOpen: true,
           videoId: video.id,
@@ -258,33 +247,36 @@ const VideoGalleryPage = () => {
                  </div>
               </div>
               <div className="p-4">
-                 <h4 className="font-bold text-slate-800 truncate text-[11px] mb-2">{video.title}</h4>
-                 <div className="space-y-2 text-xs">
+                 <h4 className="font-bold text-slate-800 truncate text-sm mb-3">{video.title}</h4>
+                 
+                 <div className="flex items-center gap-2 mb-4 text-slate-600">
+                   <Film className="text-[#0094EB]" size={18} />
+                   <span className="text-sm font-semibold truncate">{productName}</span>
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-y-3 gap-x-2 mb-4">
                    <div className="flex items-center gap-2">
-                     <Film className="text-[#0094EB] size={4}" />
-                     <span className="text-slate-600">{productName}</span>
+                     <Eye className="text-[#0094EB]" size={18} />
+                     <span className="text-sm font-semibold text-slate-700">{views.toLocaleString()}</span>
                    </div>
                    <div className="flex items-center gap-2">
-                     <Eye className="text-[#0094EB] size={4}" />
-                     <span className="text-slate-600">{views.toLocaleString()}</span>
+                     <CheckCircle2 className="text-[#0094EB]" size={18} />
+                     <span className="text-sm font-semibold text-slate-700">{likes.toLocaleString()}</span>
                    </div>
                    <div className="flex items-center gap-2">
-                     <CheckCircle2 className="text-[#0094EB] size={4}" />
-                     <span className="text-slate-600">{likes.toLocaleString()}</span>
+                     <MessageCircle className="text-[#0094EB]" size={18} />
+                     <span className="text-sm font-semibold text-slate-700">{comments.toLocaleString()}</span>
                    </div>
                    <div className="flex items-center gap-2">
-                     <MessageCircle className="text-[#0094EB] size={4}" />
-                     <span className="text-slate-600">{comments.toLocaleString()}</span>
-                   </div>
-                   <div className="flex items-center gap-2">
-                     <TrendingUp className="text-[#0094EB] size={4}" />
-                     <span className="text-slate-600">{engagement.toFixed(1)}%</span>
+                     <TrendingUp className="text-[#0094EB]" size={18} />
+                     <span className="text-sm font-semibold text-slate-700">{engagement.toFixed(1)}%</span>
                    </div>
                  </div>
-                 <div className="flex gap-2 mt-3">
-                    <button onClick={() => handleViewVideo(video)} className="flex-1 bg-[#EAF6FF] text-[#0094EB] px-3 py-1.5 rounded-lg text-[10px] font-black">Ver</button>
-                    <button onClick={() => navigate(`/videos/${video.id}/edit`)} className="flex-1 bg-slate-50 text-slate-400 px-3 py-1.5 rounded-lg hover:text-[#0094EB]"><Edit3 size={14} /></button>
-                    <button onClick={() => handleDeleteClick(video)} className="flex-1 bg-slate-50 text-slate-400 px-3 py-1.5 rounded-lg hover:text-rose-500"><Trash2 size={14} /></button>
+
+                 <div className="flex gap-2">
+                    <button onClick={() => handleViewVideo(video)} className="flex-1 bg-[#EAF6FF] text-[#0094EB] py-3 rounded-xl text-xs font-black flex items-center justify-center gap-1">Ver</button>
+                    <button onClick={() => navigate(`/videos/${video.id}/edit`)} className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:text-[#0094EB] flex items-center justify-center"><Edit3 size={18} /></button>
+                    <button onClick={() => handleDeleteClick(video)} className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:text-rose-500 flex items-center justify-center"><Trash2 size={18} /></button>
                  </div>
               </div>
             </div>
@@ -292,7 +284,6 @@ const VideoGalleryPage = () => {
         })}
       </div>
 
-      {/* Modal View Compacto */}
       <CustomDialog isOpen={isViewModalOpen} type="form" title="Visualizar Vídeo" maxWidth="max-w-3xl" onCancel={() => setIsViewModalOpen(false)}>
         {viewingVideo && (
           <div className="flex flex-col sm:flex-row gap-6">
@@ -326,7 +317,6 @@ const VideoGalleryPage = () => {
         )}
       </CustomDialog>
 
-      {/* Update the ConfirmDeleteDialog to receive the usedInStories prop */}
       <ConfirmDeleteDialog
         isOpen={deleteModal.isOpen}
         title="Excluir Vídeo"

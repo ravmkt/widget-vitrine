@@ -33,6 +33,7 @@ const App = () => {
           
           {/* Rotas de Vídeos */}
           <Route path="/gallery" element={<VideoGalleryPage />} />
+          <Route path="/videos/new" element={<VideoEditPage />} />
           <Route path="/videos/:id/edit" element={<VideoEditPage />} />
           <Route path="/videos/performance" element={<VideoPerformancePage />} />
           
