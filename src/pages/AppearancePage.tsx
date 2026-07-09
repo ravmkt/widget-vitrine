@@ -347,7 +347,7 @@ const AppearancePage = () => {
                 <input
                   type="color"
                   value={formData.primary_color}
-                  onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })} // Assuming primary and secondary are the same for border
+                  onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
                 />
               </div>
@@ -357,7 +357,7 @@ const AppearancePage = () => {
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">CTA (texto)</label>
                 <input
                   type="text"
-                  value={formData.show_title ? "Sim" : "Não"} // This is a placeholder, but we don't have a direct CTA text field in the Appearance interface. We'll use show_title as a proxy for now.
+                  value={formData.show_title ? "Sim" : "Não"}
                   onChange={(e) => setFormData({ ...formData, show_title: e.target.value === "Sim" })}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
                 />
@@ -371,7 +371,7 @@ const AppearancePage = () => {
                   <div className="grid grid-cols-2 gap-4">
                     {/* Desktop */}
                     <div className="space-y-3">
-                      <h5 className="text-xs font-black text-slate-400 uppercase">Desktop</h4>
+                      <h5 className="text-xs font-black text-slate-400 uppercase">Desktop</h5>
                       <div className="flex items-center gap-2">
                         <label className="text-[10px] font-black text-slate-400">Formato</label>
                         <select
@@ -403,7 +403,7 @@ const AppearancePage = () => {
                         <input
                           type="text"
                           value={formData.primary_color}
-                          onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })} // Assuming primary and secondary are the same for border
+                          onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })}
                           className="w-16 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
                         />
                       </div>
@@ -429,7 +429,7 @@ const AppearancePage = () => {
 
                     {/* Mobile */}
                     <div className="space-y-3">
-                      <h5 className="text-xs font-black text-slate-400">Mobile</h4>
+                      <h5 className="text-xs font-black text-slate-400">Mobile</h5>
                       <div className="flex items-center gap-2">
                         <label className="text-[10px] font-black text-slate-400">Formato</label>
                         <select
@@ -461,7 +461,7 @@ const AppearancePage = () => {
                         <input
                           type="text"
                           value={formData.primary_color}
-                          onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })} // Assuming primary and secondary are the same for border
+                          onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })}
                           className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
                         />
                       </div>
@@ -480,8 +480,13 @@ const AppearancePage = () => {
                           type="number"
                           min="0"
                           step="1"
-                          value={4} // Placeholder, we don't have spacing in the Appearance interface
-                          onChange={(e) => { /* We don't have a field for spacing, so we ignore */ }}
+                          value={4}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            if (val >= 0) {
+                              setFormData({ ...formData, mobile: { ...formData.mobile, spacing: val } });
+                            }
+                          }}
                           className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
                         />
                       </div>
@@ -491,11 +496,11 @@ const AppearancePage = () => {
                           type="number"
                           min="1"
                           max="2"
-                          value={1} // Placeholder
+                          value={1}
                           onChange={(e) => {
                             const val = Number(e.target.value);
                             if (val >= 1 && val <= 2) {
-                              // We don't have a field for itemsPerRow, so we ignore
+                              setFormData({ ...formData, mobile: { ...formData.mobile, itemsPerRow: val } });
                             }
                           }}
                           className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
@@ -506,8 +511,11 @@ const AppearancePage = () => {
                         <input
                           type="number"
                           min="1"
-                          value={1} // Placeholder
-                          onChange={(e) => { /* We don't have a field for itemsPerColumn, so we ignore */ }}
+                          value={1}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setFormData({ ...formData, mobile: { ...formData.mobile, itemsPerColumn: val } });
+                          }}
                           className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
                         />
                       </div>
@@ -518,7 +526,7 @@ const AppearancePage = () => {
                   <div className="space-y-4">
                     <h4 className="text-xs font-black text-slate-400 uppercase">Carrossel</h4>
                     <div className="space-y-3">
-                      <h5 className="text-xs font-black text-slate-400 uppercase">Desktop</h4>
+                      <h5 className="text-xs font-black text-slate-400 uppercase">Desktop</h5>
                       <div className="flex items-center gap-2">
                         <label className="text-[10px] font-black text-slate-400">Formato</label>
                         <select
@@ -550,7 +558,7 @@ const AppearancePage = () => {
                         <input
                           type="text"
                           value={formData.primary_color}
-                          onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })} // Assuming primary and secondary are the same for border
+                          onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })}
                           className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
                         />
                       </div>
@@ -569,8 +577,13 @@ const AppearancePage = () => {
                           type="number"
                           min="0"
                           step="1"
-                          value={4} // Placeholder
-                          onChange={(e) => { /* We don't have a field for spacing, so we ignore */ }}
+                          value={4}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            if (val >= 0) {
+                              setFormData({ ...formData, desktop: { ...formData.desktop, spacing: val } });
+                            }
+                          }}
                           className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
                         />
                       </div>
@@ -580,11 +593,11 @@ const AppearancePage = () => {
                           type="number"
                           min="1"
                           max="2"
-                          value={4} // Placeholder
+                          value={4}
                           onChange={(e) => {
                             const val = Number(e.target.value);
                             if (val >= 1 && val <= 2) {
-                              // We don't have a field for itemsPerRow, so we ignore
+                              setFormData({ ...formData, desktop: { ...formData.desktop, itemsPerRow: val } });
                             }
                           }}
                           className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
@@ -595,8 +608,11 @@ const AppearancePage = () => {
                         <input
                           type="number"
                           min="1"
-                          value={4} // Placeholder
-                          onChange={(e) => { /* We don't have a field for itemsPerColumn, so we ignore */ }}
+                          value={4}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setFormData({ ...formData, desktop: { ...formData.desktop, itemsPerColumn: val } });
+                          }}
                           className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
                         />
                       </div>
@@ -604,7 +620,7 @@ const AppearancePage = () => {
 
                     {/* Mobile */}
                     <div className="space-y-4">
-                      <h5 className="text-xs font-black text-slate-400">Mobile</h4>
+                      <h5 className="text-xs font-black text-slate-400">Mobile</h5>
                       <div className="flex items-center gap-2">
                         <label className="text-[10px] font-black text-slate-400">Formato</label>
                         <select
@@ -636,7 +652,7 @@ const AppearancePage = () => {
                         <input
                           type="text"
                           value={formData.primary_color}
-                          onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })} // Assuming primary and secondary are the same for border
+                          onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })}
                           className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
                         />
                       </div>
@@ -655,8 +671,13 @@ const AppearancePage = () => {
                           type="number"
                           min="0"
                           step="1"
-                          value={4} // Placeholder
-                          onChange={(e) => { /* We don't have a field for spacing, so we ignore */ }}
+                          value={4}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            if (val >= 0) {
+                              setFormData({ ...formData, mobile: { ...formData.mobile, spacing: val } });
+                            }
+                          }}
                           className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
                         />
                       </div>
@@ -666,11 +687,11 @@ const AppearancePage = () => {
                           type="number"
                           min="1"
                           max="2"
-                          value={4} // Placeholder
+                          value={1}
                           onChange={(e) => {
                             const val = Number(e.target.value);
                             if (val >= 1 && val <= 2) {
-                              // We don't have a field for itemsPerRow, so we ignore
+                              setFormData({ ...formData, mobile: { ...formData.mobile, itemsPerRow: val } });
                             }
                           }}
                           className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
@@ -681,8 +702,11 @@ const AppearancePage = () => {
                         <input
                           type="number"
                           min="1"
-                          value={4} // Placeholder
-                          onChange={(e) => { /* We don't have a field for itemsPerColumn, so we ignore */ }}
+                          value={1}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setFormData({ ...formData, mobile: { ...formData.mobile, itemsPerColumn: val } });
+                          }}
                           className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
                         />
                       </div>
@@ -726,7 +750,7 @@ const AppearancePage = () => {
                       <input
                         type="text"
                         value={formData.primary_color}
-                        onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })} // Assuming primary and secondary are the same for border
+                        onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })}
                         className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
                       />
                     </div>
@@ -745,8 +769,13 @@ const AppearancePage = () => {
                         type="number"
                         min="0"
                         step="1"
-                        value={4} // Placeholder
-                        onChange={(e) => { /* We don't have a field for spacing, so we ignore */ }}
+                        value={4}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          if (val >= 0) {
+                            setFormData({ ...formData, desktop: { ...formData.desktop, spacing: val } });
+                          }
+                        }}
                         className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
                       />
                     </div>
@@ -756,11 +785,11 @@ const AppearancePage = () => {
                         type="number"
                         min="1"
                         max="2"
-                        value={4} // Placeholder
+                        value={4}
                         onChange={(e) => {
                           const val = Number(e.target.value);
                           if (val >= 1 && val <= 2) {
-                            // We don't have a field for itemsPerRow, so we ignore
+                            setFormData({ ...formData, desktop: { ...formData.desktop, itemsPerRow: val } });
                           }
                         }}
                         className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
@@ -771,8 +800,11 @@ const AppearancePage = () => {
                       <input
                         type="number"
                         min="1"
-                        value={4} // Placeholder
-                        onChange={(e) => { /* We don't have a field for itemsPerColumn, so we ignore */ }}
+                        value={4}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setFormData({ ...formData, desktop: { ...formData.desktop, itemsPerColumn: val } });
+                        }}
                         className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
                       />
                     </div>
@@ -789,7 +821,8 @@ const AppearancePage = () => {
                         className="w-12 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
                       >
                         <option value="circle">Círculo</option>
-                        <option value="square">Quadrado</option
+                        <option value="square">Quadrado</option>
+                        <option value="portrait">Retrato</option>
                       </select>
                     </div>
                     <div className="flex items-center gap-2">
@@ -811,7 +844,7 @@ const AppearancePage = () => {
                       <input
                         type="text"
                         value={formData.primary_color}
-                        onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })} // Assuming primary and secondary are the same for border
+                        onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })}
                         className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
                       />
                     </div>
@@ -830,8 +863,13 @@ const AppearancePage = () => {
                         type="number"
                         min="0"
                         step="1"
-                        value={4} // Placeholder
-                        onChange={(e) => { /* We don't have a field for spacing, so we ignore */ }}
+                        value={4}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          if (val >= 0) {
+                            setFormData({ ...formData, mobile: { ...formData.mobile, spacing: val } });
+                          }
+                        }}
                         className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
                       />
                     </div>
@@ -841,11 +879,11 @@ const AppearancePage = () => {
                         type="number"
                         min="1"
                         max="2"
-                        value={4} // Placeholder
+                        value={1}
                         onChange={(e) => {
                           const val = Number(e.target.value);
                           if (val >= 1 && val <= 2) {
-                            // We don't have a field for itemsPerRow, so we ignore
+                            setFormData({ ...formData, mobile: { ...formData.mobile, itemsPerRow: val } });
                           }
                         }}
                         className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
@@ -856,15 +894,18 @@ const AppearancePage = () => {
                       <input
                         type="number"
                         min="1"
-                        value={4} // Placeholder
-                        onChange={(e) => { /* We don't have a field for itemsPerColumn, so we ignore */ }}
+                        value={1}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setFormData({ ...formData, mobile: { ...formData.mobile, itemsPerColumn: val } });
+                        }}
                         className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
                       />
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}
