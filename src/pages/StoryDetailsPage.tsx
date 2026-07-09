@@ -301,25 +301,29 @@ const StoryDetailsPage = () => {
   const currentVideoList = videoSelectTab === 'gallery' ? videos : allVideosList;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-[#F7FAFC] text-slate-900">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-wider text-violet-400">Ficha Técnica do Story</p>
-            <h1 className="text-3xl font-black mt-1">
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  className={cn("bg-slate-950 border focus:outline-none rounded-xl text-xl font-bold text-slate-100 p-2", formErrors.title ? "border-rose-500" : "border-slate-800")}
-                />
-              ) : (
-                story.title
-              )}
-            </h1>
+          <div className="flex items-center gap-4">
+             <Link to="/stories" className="p-2 hover:bg-white border border-slate-200 rounded-xl transition-all">
+                <ArrowLeft size={20} className="text-slate-500" />
+             </Link>
+             <div>
+                <h1 className="text-3xl font-black mt-1">
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={formData.title}
+                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                      className={cn("bg-white border focus:outline-none rounded-xl text-xl font-bold text-slate-900 p-2", formErrors.title ? "border-rose-500" : "border-slate-200")}
+                    />
+                  ) : (
+                    story.title
+                  )}
+                </h1>
+             </div>
           </div>
 
           <div className="flex gap-3 self-start sm:self-auto">
@@ -328,7 +332,7 @@ const StoryDetailsPage = () => {
                 <button
                   type="button"
                   onClick={handleCancelEdit}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 hover:text-white font-semibold text-sm transition-all"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-slate-800 font-bold text-sm transition-all"
                   disabled={isSaving}
                 >
                   <X className="w-4 h-4" /> Cancelar
@@ -336,17 +340,17 @@ const StoryDetailsPage = () => {
                 <button
                   type="submit"
                   onClick={handleSaveStory}
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg transition-all"
+                  className="inline-flex items-center gap-2 bg-[#0094EB] hover:bg-[#0E4787] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg transition-all"
                   disabled={isSaving}
                 >
-                  <Save className="w-4 h-4" /> Salvar
+                  <Save className="w-4 h-4" /> Salvar Configurações
                 </button>
               </>
             ) : (
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-200 hover:text-white font-bold text-sm transition-all"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:text-[#0094EB] font-bold text-sm transition-all"
               >
                 <Edit3 className="w-4 h-4" /> Editar Story
               </button>
@@ -355,15 +359,15 @@ const StoryDetailsPage = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-8">
-          <section className="bg-slate-900 rounded-3xl border border-slate-800 shadow-xl overflow-hidden">
-            <div className="relative aspect-[9/16] bg-slate-950">
+          <section className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden p-2">
+            <div className="relative aspect-[9/16] bg-slate-50 rounded-[1.5rem] overflow-hidden">
               <img
                 src={currentThumbnailUrl}
                 alt={story.title}
-                className="w-full h-full object-cover animate-fade-in"
+                className="w-full h-full object-cover"
               />
               <div className="absolute top-4 right-4">
-                <span className={cn("px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider", story.active ? "bg-emerald-500 text-white" : "bg-slate-600 text-white")}>
+                <span className={cn("px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider", story.active ? "bg-emerald-500 text-white" : "bg-slate-300 text-white")}>
                   {story.active ? 'Ativo' : 'Inativo'}
                 </span>
               </div>
@@ -371,118 +375,150 @@ const StoryDetailsPage = () => {
           </section>
 
           <section className="space-y-6">
-            {/* Informações Básicas */}
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-6">
-              <h2 className="text-xl font-extrabold text-slate-100 pb-3 border-b border-slate-850">Configurações</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="rounded-2xl border border-slate-850 bg-slate-950 p-5">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Posição</p>
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      value={formData.position}
-                      onChange={(e) => setFormData(prev => ({ ...prev, position: Number(e.target.value) }))}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-sm text-slate-200 font-bold"
-                    />
-                  ) : (
-                    <p className="text-lg font-black text-slate-100">#{story.position}</p>
-                  )}
-                </div>
-                <div className="rounded-2xl border border-slate-850 bg-slate-950 p-5">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Modelo / Medidas</p>
-                  {isEditing ? (
-                    <select
-                      value={formData.model_id || ""}
-                      onChange={(e) => setFormData(prev => ({ ...prev, model_id: e.target.value || undefined }))}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-sm text-slate-200 font-bold"
-                    >
-                      <option value="">Nenhuma modelo</option>
-                      {sizingModels.map(m => (
-                        <option key={m.id} value={m.id}>{m.name}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <p className="text-sm font-bold text-slate-300">
-                      {sizingModels.find(m => m.id === story.model_id)?.name || "Sem modelo vinculada"}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Ação CTA */}
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-6">
-              <h2 className="text-xl font-extrabold text-slate-100 pb-3 border-b border-slate-850">Chamada para Ação (CTA)</h2>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-slate-950 border border-slate-850 rounded-2xl">
-                  <div>
-                    <h4 className="font-bold text-slate-200">Botão de Ação</h4>
-                    <p className="text-xs text-slate-500">Ative links ou botões de compra.</p>
-                  </div>
-                  {isEditing ? (
-                    <button
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, cta_enabled: !prev.cta_enabled }))}
-                      className={cn("relative inline-flex h-6 w-11 items-center rounded-full transition-colors", formData.cta_enabled ? "bg-violet-600" : "bg-slate-800")}
-                    >
-                      <span className={cn("inline-block h-4 w-4 transform rounded-full bg-white transition-transform", formData.cta_enabled ? "translate-x-6" : "translate-x-1")} />
-                    </button>
-                  ) : (
-                    <span className={cn("px-2.5 py-1 rounded-full text-xs font-black uppercase", story.cta_enabled ? "bg-emerald-500/10 text-emerald-400" : "bg-slate-800 text-slate-500")}>
-                      {story.cta_enabled ? 'Ativado' : 'Desativado'}
-                    </span>
-                  )}
-                </div>
-
-                {formData.cta_enabled && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Texto do Botão</label>
+            <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm space-y-8">
+              <div>
+                <h2 className="text-xl font-black text-slate-800 flex items-center gap-3 mb-6">
+                  <Palette className="w-5 h-5 text-[#0094EB]" /> Configurações Gerais
+                </h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest">Posição na Loja</label>
+                    {isEditing ? (
                       <input
-                        type="text"
-                        disabled={!isEditing}
-                        value={formData.cta_text}
-                        onChange={(e) => setFormData(prev => ({ ...prev, cta_text: e.target.value }))}
-                        className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-200"
+                        type="number"
+                        value={formData.position}
+                        onChange={(e) => setFormData(prev => ({ ...prev, position: Number(e.target.value) }))}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
                       />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Tipo de Link</label>
-                      <select
-                        disabled={!isEditing}
-                        value={formData.cta_type}
-                        onChange={(e) => setFormData(prev => ({ ...prev, cta_type: e.target.value as CTAType }))}
-                        className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-200"
-                      >
-                        <option value="custom_link">Link customizado</option>
-                        <option value="product">Produto vinculado</option>
-                        <option value="whatsapp">Falar no WhatsApp</option>
-                      </select>
-                    </div>
-
-                    {formData.cta_type === 'product' && (
-                      <div className="md:col-span-2">
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Selecionar Produto</label>
-                        <select
-                          disabled={!isEditing}
-                          value={selectedProductId || ""}
-                          onChange={(e) => setSelectedProductId(e.target.value || undefined)}
-                          className={cn("w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-slate-200", formErrors.productSelection ? "border-rose-500" : "border-slate-850")}
-                        >
-                          <option value="">-- Selecione o Produto --</option>
-                          {products.map(p => (
-                            <option key={p.id} value={p.id}>{p.name} (R$ {p.price.toFixed(2)})</option>
-                          ))}
-                        </select>
-                      </div>
+                    ) : (
+                      <p className="text-lg font-black text-[#0094EB]">Ordem: #{story.position}</p>
                     )}
                   </div>
-                )}
+                  
+                  <div className="space-y-2">
+                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest">Tabela de Medidas</label>
+                    {isEditing ? (
+                      <select
+                        value={formData.model_id || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, model_id: e.target.value || undefined }))}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
+                      >
+                        <option value="">Nenhuma tabela</option>
+                        {sizingModels.map(m => (
+                          <option key={m.id} value={m.id}>{m.name}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-sm font-bold text-slate-600 flex items-center gap-2">
+                        <Ruler size={16} className="text-slate-400" />
+                        {sizingModels.find(m => m.id === story.model_id)?.name || "Nenhuma vinculada"}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-8 border-t border-slate-100">
+                <h2 className="text-xl font-black text-slate-800 flex items-center gap-3 mb-6">
+                  <ShoppingBag className="w-5 h-5 text-[#0094EB]" /> Call to Action (CTA)
+                </h2>
+                
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div>
+                      <h4 className="font-bold text-slate-800 text-sm">Botão de Ação</h4>
+                      <p className="text-xs text-slate-500 font-medium">Exibe um botão de compra ou link no story.</p>
+                    </div>
+                    {isEditing ? (
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, cta_enabled: !prev.cta_enabled }))}
+                        className={cn("relative inline-flex h-6 w-11 items-center rounded-full transition-colors", formData.cta_enabled ? "bg-[#0094EB]" : "bg-slate-300")}
+                      >
+                        <span className={cn("inline-block h-4 w-4 transform rounded-full bg-white transition-transform", formData.cta_enabled ? "translate-x-6" : "translate-x-1")} />
+                      </button>
+                    ) : (
+                      <span className={cn("px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider", story.cta_enabled ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-slate-100 text-slate-400")}>
+                        {story.cta_enabled ? 'Habilitado' : 'Desabilitado'}
+                      </span>
+                    )}
+                  </div>
+
+                  {formData.cta_enabled && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-2">
+                      <div className="space-y-2">
+                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest">Texto do Botão</label>
+                        <input
+                          type="text"
+                          disabled={!isEditing}
+                          value={formData.cta_text}
+                          onChange={(e) => setFormData(prev => ({ ...prev, cta_text: e.target.value }))}
+                          placeholder="Ex: Comprar Agora"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB] disabled:opacity-50"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest">Destino do Clique</label>
+                        <select
+                          disabled={!isEditing}
+                          value={formData.cta_type}
+                          onChange={(e) => setFormData(prev => ({ ...prev, cta_type: e.target.value as CTAType }))}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB] disabled:opacity-50"
+                        >
+                          <option value="custom_link">Link Externo</option>
+                          <option value="product">Vincular Produto</option>
+                          <option value="whatsapp">Falar no WhatsApp</option>
+                        </select>
+                      </div>
+
+                      {formData.cta_type === 'product' && (
+                        <div className="md:col-span-2 space-y-2">
+                          <label className="block text-xs font-black text-slate-400 uppercase tracking-widest">Produto Selecionado</label>
+                          <select
+                            disabled={!isEditing}
+                            value={selectedProductId || ""}
+                            onChange={(e) => setSelectedProductId(e.target.value || undefined)}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB] disabled:opacity-50"
+                          >
+                            <option value="">Selecione um produto</option>
+                            {products.map(p => (
+                              <option key={p.id} value={p.id}>{p.name} - R$ {p.price.toFixed(2)}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {formData.cta_type === 'custom_link' && (
+                        <div className="md:col-span-2 space-y-2">
+                          <label className="block text-xs font-black text-slate-400 uppercase tracking-widest">URL de Destino</label>
+                          <input
+                            type="url"
+                            disabled={!isEditing}
+                            value={formData.cta_url}
+                            onChange={(e) => setFormData(prev => ({ ...prev, cta_url: e.target.value }))}
+                            placeholder="https://sualoja.com/produto"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB] disabled:opacity-50"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </section>
         </div>
       </main>
+
+      <CustomDialog
+        isOpen={dialog.isOpen}
+        type={dialog.type}
+        title={dialog.title}
+        description={dialog.description}
+        onConfirm={dialog.onConfirm}
+        onCancel={() => setDialog(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

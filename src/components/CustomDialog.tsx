@@ -1,20 +1,34 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X, CheckCircle2, AlertTriangle, HelpCircle, XCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface CustomDialogProps {
   isOpen: boolean;
-  type: 'success' | 'error' | 'warning' | 'confirm';
+  type: 'success' | 'error' | 'warning' | 'confirm' | 'form';
   title: string;
-  description: string;
+  description?: string;
   confirmText?: string;
   cancelText?: string;
-  onConfirm: () => void;
+  onConfirm?: () => void;
   onCancel?: () => void;
+  children?: React.ReactNode;
+  maxWidth?: string;
 }
 
 const CustomDialog: React.FC<CustomDialogProps> = ({
-  isOpen, type, title, description, confirmText = 'Confirmar', cancelText = 'Cancelar', onConfirm, onCancel,
+  isOpen, type, title, description, confirmText = 'Confirmar', cancelText = 'Cancelar', 
+  onConfirm, onCancel, children, maxWidth = 'max-w-md'
 }) => {
+  
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const icons = {
@@ -22,42 +36,68 @@ const CustomDialog: React.FC<CustomDialogProps> = ({
     error: <XCircle className="w-12 h-12 text-[#EF4444]" />,
     warning: <AlertTriangle className="w-12 h-12 text-[#F59E0B]" />,
     confirm: <HelpCircle className="w-12 h-12 text-[#0094EB]" />,
+    form: null
   };
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-md bg-white border border-slate-200 rounded-[2rem] p-8 shadow-2xl relative flex flex-col items-center text-center">
-        {onCancel && (
-          <button onClick={onCancel} className="absolute top-6 right-6 p-2 rounded-full text-slate-400 hover:bg-slate-50 transition-all">
-            <X className="w-4 h-4" />
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-hidden">
+      {/* Overlay */}
+      <div 
+        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+        onClick={onCancel}
+      />
+      
+      {/* Modal Container */}
+      <div className={cn(
+        "relative w-full bg-white border border-slate-200 rounded-[2rem] shadow-2xl flex flex-col animate-fade-in max-h-[90vh]",
+        maxWidth
+      )}>
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-slate-100 shrink-0">
+          <h3 className="text-xl font-black text-slate-900">{title}</h3>
+          <button 
+            onClick={onCancel} 
+            className="p-2 rounded-full text-slate-400 hover:bg-slate-50 transition-all"
+          >
+            <X className="w-5 h-5" />
           </button>
-        )}
-
-        <div className="mb-6">
-          {icons[type]}
         </div>
 
-        <h3 className="text-xl font-black text-slate-900 mb-3">{title}</h3>
-        <p className="text-sm font-medium text-slate-500 mb-8 leading-relaxed px-4">{description}</p>
+        {/* Content - Com scroll interno se necessário */}
+        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+          {type !== 'form' && (
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="mb-4">{icons[type]}</div>
+              {description && <p className="text-sm font-medium text-slate-500 leading-relaxed">{description}</p>}
+            </div>
+          )}
+          {children}
+        </div>
 
-        <div className="flex gap-3 w-full">
+        {/* Footer */}
+        <div className="p-6 border-t border-slate-100 flex gap-3 shrink-0">
           {onCancel && (
             <button
+              type="button"
               onClick={onCancel}
               className="flex-1 py-3.5 px-6 rounded-2xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-sm transition-all"
             >
               {cancelText}
             </button>
           )}
-          <button
-            onClick={onConfirm}
-            className={`flex-1 py-3.5 px-6 rounded-2xl font-bold text-sm text-white shadow-lg transition-all ${
-              type === 'error' ? 'bg-[#EF4444] hover:bg-red-600' : 
-              type === 'warning' ? 'bg-[#F59E0B] hover:bg-amber-600' : 'bg-[#0094EB] hover:bg-[#0E4787]'
-            }`}
-          >
-            {confirmText}
-          </button>
+          {onConfirm && (
+            <button
+              type="button"
+              onClick={onConfirm}
+              className={cn(
+                "flex-1 py-3.5 px-6 rounded-2xl font-bold text-sm text-white shadow-lg transition-all",
+                type === 'error' ? 'bg-[#EF4444] hover:bg-red-600' : 
+                type === 'warning' ? 'bg-[#F59E0B] hover:bg-amber-600' : 'bg-[#0094EB] hover:bg-[#0E4787]'
+              )}
+            >
+              {confirmText}
+            </button>
+          )}
         </div>
       </div>
     </div>
