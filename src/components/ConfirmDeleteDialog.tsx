@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import CustomDialog from './CustomDialog';
 import { AlertTriangle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ConfirmDeleteDialogProps {
   isOpen: boolean;
@@ -49,7 +50,7 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
 
         <div className="space-y-2">
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-            Para confirmar, digite <span className="text-rose-500 underline">excluir</span> abaixo:
+            Para confirmar, digite <span className="text-red-500 underline">excluir</span> abaixo:
           </label>
           <input
             type="text"
@@ -57,10 +58,21 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Digite excluir"
             autoFocus
-            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-rose-500 transition-all"
+            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-red-500 transition-all"
           />
         </div>
       </div>
+      
+      {/* CSS Injetado para o botão de confirmação do CustomDialog se tornar vermelho */}
+      <style>{`
+        button.bg-\\[\\#0094EB\\] {
+          background-color: ${isConfirmed ? '#DC2626 !important' : '#CBD5E1 !important'};
+          cursor: ${isConfirmed ? 'pointer' : 'not-allowed'};
+        }
+        button.bg-\\[\\#0094EB\\]:hover {
+          background-color: ${isConfirmed ? '#B91C1C !important' : '#CBD5E1 !important'};
+        }
+      `}</style>
     </CustomDialog>
   );
 };
