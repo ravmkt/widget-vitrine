@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db, Video, Product, SizingModel, Story } from '@/lib/db';
@@ -20,10 +22,14 @@ const VideoEditPage = () => {
   const [formData, setFormData] = useState({
     title: '',
     video_url: '',
+    instagram_link: '',
+    tiktok_link: '',
     thumbnail_url: '',
     product_id: '',
     model_id: '',
     active: true,
+    origin: 'url' as 'url' | 'instagram' | 'tiktok' | 'upload',
+    video_file: null as File | null,
   });
 
   const isCreate = !id;
@@ -49,10 +55,14 @@ const VideoEditPage = () => {
           setFormData({
             title: v.title,
             video_url: v.video_url,
+            instagram_link: v.instagram_link || '',
+            tiktok_link: v.tiktok_link || '',
             thumbnail_url: v.thumbnail_url || '',
             product_id: (v as any).product_id || '',
             model_id: (v as any).model_id || '',
             active: v.active ?? true,
+            origin: 'url' as 'url' | 'instagram' | 'tiktok' | 'upload',
+            video_file: null,
           });
           
           const storyVideos = await db.storyVideos.getAll();
@@ -62,6 +72,8 @@ const VideoEditPage = () => {
           const stories = await db.stories.getAll();
           const usedStories = stories.filter(s => storyIds.includes(s.id));
           setUsedInStories(usedStories);
+        } else {
+          setVideo(null);
         }
       } catch (e) {
         showError('Erro ao carregar dados');
@@ -72,26 +84,140 @@ const VideoEditPage = () => {
     loadData();
   }, [id, navigate, isCreate]);
 
-  const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      showError('Formato de imagem inválido. Use JPG, PNG ou WEBP.');
-      return;
+  const handleOriginChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFormData(prev => ({ ...prev, origin: e.target.value as any }));
+    // Clear related fields when origin changes
+    setFormData(prev => {
+      const newData = { ...prev };
+      if (e.target.value === 'url' && newData.video_file) newData.video_file = null;
+      if (e.target.value === 'instagram' && newData.instagram_link) newData.instagram_link = '';
+      if (e.target.value === 'tiktok' && newData.tiktok_link) newData.tiktok_link = '';
+      if (e.target.value === 'upload' && newData.video_file) newData.video_file = null;
+      return newData;
+    });
+  };
+
+  const validateUrl = (url: string): boolean => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
     }
-    
-    const reader = new FileReader();
-    reader.onload = () => {
-      setFormData({ ...formData, thumbnail_url: reader.result as string });
-    };
-    reader.readAsDataURL(file);
+  };
+
+  const validateInstagramLink = (link: string): boolean => {
+    if (!link) return false;
+    const lowerLink = link.toLowerCase();
+    return lowerLink.includes('instagram.com') || lowerLink.includes('www.instagram.com');
+  };
+
+  const validateTikTokLink = (link: string): boolean => {
+    if (!link) return false;
+    const lowerLink = link.toLowerCase();
+    return lowerLink.includes('tiktok.com') || 
+           lowerLink.includes('www.tiktok.com') || 
+           lowerLink.includes('vm.tiktok.com');
+  };
+
+  const validateFile = (file: File): boolean => {
+    if (!file) return false;
+    if (file.size > 30 * 1024 * 1024) {
+      showError('O vídeo deve ter no máximo 30MB.');
+      return false;
+    }
+    const allowedTypes = ['video/mp4', 'video/mov', 'video/webm'];
+    return allowedTypes.includes(file.type);
+  };
+
+  const validateForm = (): { isValid: boolean; errors: Record<string, string> } => {
+    const errors: Record<string, string> = {};
+    let isValid = true;
+
+    // Title
+    if (!formData.title?.trim()) {
+      errors.title = 'O título do vídeo é obrigatório.';
+      isValid = false;
+    }
+
+    // Product
+    if (!formData.product_id) {
+      errors.product_id = 'O produto vinculado é obrigatório.';
+      isValid = false;
+    }
+
+    // Model
+    if (!formData.model_id) {
+      errors.model_id = 'O modelo vinculado é obrigatório.';
+      isValid = false;
+    }
+
+    // Origin
+    if (!formData.origin) {
+      errors.origin = 'Selecione a origem do vídeo.';
+      isValid = false;
+    }
+
+    // URL origin
+    if (formData.origin === 'url') {
+      if (!formData.video_url?.trim()) {
+        errors.video_url = 'Informe a URL do vídeo.';
+        isValid = false;
+      } else if (!validateUrl(formData.video_url)) {
+        errors.video_url = 'URL inválida.';
+        isValid = false;
+      }
+    }
+
+    // Instagram origin
+    if (formData.origin === 'instagram') {
+      if (!formData.instagram_link?.trim()) {
+        errors.instagram_link = 'Informe o link do Instagram.';
+        isValid = false;
+      } else if (!validateInstagramLink(formData.instagram_link)) {
+        errors.instagram_link = 'Link do Instagram inválido (ex: instagram.com ou www.instagram.com).';
+        isValid = false;
+      }
+    }
+
+    // TikTok origin
+    if (formData.origin === 'tiktok') {
+      if (!formData.tiktok_link?.trim()) {
+        errors.tiktok_link = 'Informe o link do TikTok.';
+        isValid = false;
+      } else if (!validateTikTokLink(formData.tiktok_link)) {
+        errors.tiktok_link = 'Link do TikTok inválido (ex: tiktok.com ou www.tiktok.com).';
+        isValid = false;
+      }
+    }
+
+    // Upload origin
+    if (formData.origin === 'upload') {
+      if (!formData.video_file) {
+        errors.video_file = 'Envie um arquivo de vídeo.';
+        isValid = false;
+      } else if (!validateFile(formData.video_file)) {
+        isValid = false;
+      }
+    }
+
+    return { isValid, errors };
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSaving) return;
+
+    const { isValid, errors } = validateForm();
+    if (!isValid) {
+      // Show field errors
+      Object.entries(errors).forEach(([field, message]) => {
+        // We'd need to set field-specific errors in a real app, 
+        // but for simplicity we'll just show a general message
+        showError(message);
+      });
+      return;
+    }
 
     try {
       setIsSaving(true);
@@ -99,6 +225,8 @@ const VideoEditPage = () => {
       const videoData: Partial<Video> = {
         title: formData.title,
         video_url: formData.video_url,
+        instagram_link: formData.instagram_link,
+        tiktok_link: formData.tiktok_link,
         thumbnail_url: formData.thumbnail_url,
         active: formData.active,
         updated_at: new Date().toISOString()
@@ -111,6 +239,7 @@ const VideoEditPage = () => {
           store_id: '11111111-1111-1111-1111-111111111111',
           created_at: new Date().toISOString()
         };
+        // Handle product_id and model_id
         if (formData.product_id) (newVideo as any).product_id = formData.product_id;
         if (formData.model_id) (newVideo as any).model_id = formData.model_id;
         
@@ -121,6 +250,7 @@ const VideoEditPage = () => {
           ...video,
           ...videoData
         };
+        // Handle product_id and model_id
         if (formData.product_id) (updatedVideo as any).product_id = formData.product_id;
         else (updatedVideo as any).product_id = undefined;
         if (formData.model_id) (updatedVideo as any).model_id = formData.model_id;
@@ -155,84 +285,164 @@ const VideoEditPage = () => {
       </div>
 
       <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm">
-         <form onSubmit={handleSave} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-4">
-                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Título do Vídeo</label>
-                 <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" />
+        <form onSubmit={handleSave} className="space-y-6">
+          <div className="space-y-4">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Título do Vídeo</label>
+            <input 
+              type="text" 
+              value={formData.title} 
+              onChange={e => setFormData({...formData, title: e.target.value})} 
+              className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" 
+            />
+          </div>
+
+          <div className="space-y-4">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Origem do Vídeo</label>
+            <select 
+              value={formData.origin} 
+              onChange={handleOriginChange}
+              className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
+            >
+              <option value="url">URL do vídeo</option>
+              <option value="instagram">Instagram</option>
+              <option value="tiktok">TikTok</option>
+              <option value="upload">Upload de vídeo</option>
+            </select>
+          </div>
+
+          {/* URL do vídeo */}
+          {formData.origin === 'url' && (
+            <div className="space-y-4">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">URL do vídeo</label>
+              <input 
+                type="url" 
+                value={formData.video_url} 
+                onChange={e => setFormData({...formData, video_url: e.target.value})} 
+                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" 
+              />
+            </div>
+          )}
+
+          {/* Instagram */}
+          {formData.origin === 'instagram' && (
+            <div className="space-y-4">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Link do Instagram</label>
+              <input 
+                type="text" 
+                value={formData.instagram_link} 
+                onChange={e => setFormData({...formData, instagram_link: e.target.value})} 
+                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" 
+              />
+            </div>
+          )}
+
+          {/* TikTok */}
+          {formData.origin === 'tiktok' && (
+            <div className="space-y-4">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Link do TikTok</label>
+              <input 
+                type="text" 
+                value={formData.tiktok_link} 
+                onChange={e => setFormData({...formData, tiktok_link: e.target.value})} 
+                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" 
+              />
+            </div>
+          )}
+
+          {/* Upload de vídeo */}
+          {formData.origin === 'upload' && (
+            <div className="space-y-4">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Arquivo de vídeo</label>
+              <input 
+                type="file" 
+                accept="video/mp4,video/mov,video/webm" 
+                onChange={handleFileUpload} 
+                className="block w-full text-xs text-slate-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:bg-[#EAF6FF] file:text-[#0094EB] file:font-black file:cursor-pointer hover:file:bg-[#0094EB] hover:file:text-white transition-all"
+              />
+              {formData.video_file && (
+                <div className="text-sm text-slate-500 mt-1">
+                  {formData.video_file.size > 30 * 1024 * 1024 
+                    ? 'O vídeo deve ter no máximo 30MB.' 
+                    : `Tamanho: ${(formData.video_file.size / (1024 * 1024)).toFixed(1)}MB`}
+                </div>
               </div>
-              <div className="space-y-4">
-                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">URL do Vídeo</label>
-                 <input type="url" value={formData.video_url} onChange={e => setFormData({...formData, video_url: e.target.value})} className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" />
+            </div>
+          )}
+
+          {/* Thumbnail */}
+          <div className="space-y-4">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Capa do Vídeo (Thumbnail)</label>
+            <div className="flex items-center gap-4">
+              <div className="h-24 w-24 rounded-2xl overflow-hidden bg-slate-200 border border-slate-300 shrink-0 flex items-center justify-center">
+                {formData.thumbnail_url ? (
+                  <img src={formData.thumbnail_url} className="w-full h-full object-cover" alt="Capa" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-slate-200 text-[10px] font-black text-slate-400">
+                    Sem capa
+                  </div>
+                </div>
+                <div className="flex-1 space-y-3">
+                  <input 
+                    type="file" 
+                    accept="image/jpeg,image/png,image/webp" 
+                    onChange={handleThumbnailUpload} 
+                    className="block w-full text-xs text-slate-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:bg-[#EAF6FF] file:text-[#0094EB] file:font-black file:cursor-pointer hover:file:bg-[#0094EB] hover:file:text-white transition-all"
+                  />
+                  <input 
+                    type="url" 
+                    value={formData.thumbnail_url} 
+                    onChange={e => setFormData({...formData, thumbnail_url: e.target.value})} 
+                    placeholder="Ou cole a URL da capa" 
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]" 
+                  />
+                </div>
               </div>
             </div>
 
+            {/* Produto vinculado */}
             <div className="space-y-4">
-               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Capa do Vídeo (Thumbnail)</label>
-               <div className="flex items-center gap-4">
-                 <div className="h-24 w-24 rounded-2xl overflow-hidden bg-slate-200 border border-slate-300 shrink-0 flex items-center justify-center">
-                   {formData.thumbnail_url ? (
-                     <img src={formData.thumbnail_url} className="w-full h-full object-cover" alt="Capa" />
-                   ) : (
-                     <span className="text-xs font-bold text-slate-400">Sem capa</span>
-                   )}
-                 </div>
-                 <div className="flex-1 space-y-3">
-                   <input 
-                     type="file" 
-                     accept="image/jpeg,image/png,image/webp" 
-                     onChange={handleThumbnailUpload}
-                     className="block w-full text-xs text-slate-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:bg-[#EAF6FF] file:text-[#0094EB] file:font-black file:cursor-pointer hover:file:bg-[#0094EB] hover:file:text-white transition-all"
-                   />
-                   <input 
-                     type="url" 
-                     value={formData.thumbnail_url} 
-                     onChange={e => setFormData({...formData, thumbnail_url: e.target.value})} 
-                     placeholder="Ou cole a URL da capa" 
-                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]" 
-                   />
-                 </div>
-               </div>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Produto Vinculado</label>
+              <select 
+                value={formData.product_id} 
+                onChange={e => setFormData({...formData, product_id: e.target.value})} 
+                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
+              >
+                <option value="">Nenhum</option>
+                {products.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
             </div>
 
+            {/* Modelo vinculado */}
             <div className="space-y-4">
-               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Produto Vinculado</label>
-               <select 
-                 value={formData.product_id} 
-                 onChange={e => setFormData({...formData, product_id: e.target.value})} 
-                 className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
-               >
-                 <option value="">Nenhum</option>
-                 {products.map(p => (
-                   <option key={p.id} value={p.id}>{p.name}</option>
-                 ))}
-               </select>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Modelo/Medida Vinculado</label>
+              <select 
+                value={formData.model_id} 
+                onChange={e => setFormData({...formData, model_id: e.target.value})} 
+                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
+              >
+                <option value="">Nenhum</option>
+                {models.map(m => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
             </div>
+
+            {/* Status */}
             <div className="space-y-4">
-               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Modelo/Medida Vinculado</label>
-               <select 
-                 value={formData.model_id} 
-                 onChange={e => setFormData({...formData, model_id: e.target.value})} 
-                 className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
-               >
-                 <option value="">Nenhum</option>
-                 {models.map(m => (
-                   <option key={m.id} value={m.id}>{m.name}</option>
-                 ))}
-               </select>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</label>
+              <select 
+                value={formData.active ? 'true' : 'false'} 
+                onChange={e => setFormData({...formData, active: e.target.value === 'true'})} 
+                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
+              >
+                <option value="true">Ativo</option>
+                <option value="false">Inativo</option>
+              </select>
             </div>
-            <div className="space-y-4">
-               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</label>
-               <select 
-                 value={formData.active ? 'true' : 'false'} 
-                 onChange={e => setFormData({...formData, active: e.target.value === 'true'})} 
-                 className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
-               >
-                 <option value="true">Ativo</option>
-                 <option value="false">Inativo</option>
-               </select>
-            </div>
-            
+
+            {/* Usado em Stories */}
             {usedInStories.length > 0 && (
               <div className="space-y-4 pt-4 border-t border-slate-200">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Usado em Stories</label>
@@ -255,7 +465,8 @@ const VideoEditPage = () => {
                 <p className="text-sm font-bold text-slate-600">Não</p>
               </div>
             )}
-         </form>
+          </form>
+        </div>
       </div>
       <SuccessDialog isOpen={showSuccessModal} description="Vídeo salvo com sucesso." onClose={() => navigate('/gallery')} />
     </div>
