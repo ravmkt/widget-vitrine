@@ -40,21 +40,21 @@ const CustomDialog: React.FC<CustomDialogProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-      {/* Overlay fixo e centralizador */}
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 md:p-8">
+      {/* Overlay: Ocupa toda a tela e borra o fundo */}
       <div 
-        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
         onClick={onCancel}
       />
       
-      {/* Card do Modal */}
+      {/* Card do Modal: Centralizado via Flexbox do pai */}
       <div className={cn(
-        "relative w-full bg-white border border-slate-200 rounded-[2.5rem] shadow-2xl flex flex-col animate-fade-in overflow-hidden",
+        "relative w-full bg-white border border-slate-200 rounded-[2.5rem] shadow-2xl flex flex-col animate-fade-in overflow-hidden z-[100000]",
         maxWidth
-      )} style={{ maxHeight: 'calc(100vh - 48px)' }}>
+      )} style={{ maxHeight: 'calc(100vh - 64px)' }}>
         
         {/* Header Fixo */}
-        <div className="flex items-center justify-between p-8 border-b border-slate-100 shrink-0">
+        <div className="flex items-center justify-between p-6 md:p-8 border-b border-slate-100 shrink-0">
           <h3 className="text-xl font-black text-slate-900">{title}</h3>
           <button 
             onClick={onCancel} 
@@ -65,7 +65,7 @@ const CustomDialog: React.FC<CustomDialogProps> = ({
         </div>
 
         {/* Conteúdo com Scroll Interno */}
-        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-white">
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar bg-white">
           {type !== 'form' && (
             <div className="flex flex-col items-center text-center mb-6">
               <div className="mb-4">{icons[type]}</div>
@@ -76,7 +76,7 @@ const CustomDialog: React.FC<CustomDialogProps> = ({
         </div>
 
         {/* Footer Fixo */}
-        <div className="p-8 border-t border-slate-100 flex gap-4 bg-slate-50/50 shrink-0">
+        <div className="p-6 md:p-8 border-t border-slate-100 flex flex-col sm:flex-row gap-3 bg-slate-50/50 shrink-0">
           {onCancel && (
             <button
               type="button"
