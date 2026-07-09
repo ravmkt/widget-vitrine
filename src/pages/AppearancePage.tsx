@@ -27,7 +27,37 @@ const AppearancePage = () => {
   // ==================== NEW STATE FOR STYLE FORM ====================
   const [showModal, setShowModal] = useState(false);
   const [editingStyle, setEditingStyle] = useState<Appearance | null>(null);
-  const [formData, setFormData] = useState<Appearance>({
+  const [formData, setFormData] = useState<Appearance & {
+    useGlobalAppearance: boolean;
+    width: string;
+    unit: 'px' | 'percent';
+    height: string;
+    position: string;
+    bottom_spacing: string;
+    left_spacing: string;
+    cta_text: string;
+    cta_size: string;
+    cta_duration: string;
+    border_style: string;
+    color: string;
+    show_play_icon: boolean;
+    show_product: boolean;
+    hide_stories: boolean;
+    auto_center: boolean;
+    carousel_view_mode: string;
+    margin_top: string;
+    margin_bottom: string;
+    draggable: boolean;
+    allow_close: boolean;
+    object_fit: string;
+    z_index: string;
+    desktop_columns: number;
+    desktop_rows: number;
+    desktop_gap: number;
+    mobile_columns: number;
+    mobile_rows: number;
+    mobile_gap: number;
+  } = {
     id: "",
     store_id: "",
     name: "",
@@ -56,7 +86,30 @@ const AppearancePage = () => {
     show_product_button: true,
     created_at: "",
     updated_at: "",
-  });
+    useGlobalAppearance: false,
+    width: "",
+    unit: "px",
+    height: "",
+    position: "",
+    bottom_spacing: "",
+    left_spacing: "",
+    cta_text: "",
+    cta_size: "",
+    cta_duration: "",
+    border_style: "",
+    color: "",
+    show_play_icon: true,
+    show_product: true,
+    hide_stories: false,
+    auto_center: false,
+    carousel_view_mode: "preview",
+    margin_top: "",
+    margin_bottom: "",
+    draggable: false,
+    allow_close: false,
+    object_fit: "cover",
+    z_index: "",
+  };
   // =================================================================
 
   const loadData = async () => {
@@ -138,6 +191,29 @@ const AppearancePage = () => {
       show_product_button: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      useGlobalAppearance: false,
+      width: "",
+      unit: "px",
+      height: "",
+      position: "",
+      bottom_spacing: "",
+      left_spacing: "",
+      cta_text: "",
+      cta_size: "",
+      cta_duration: "",
+      border_style: "",
+      color: "",
+      show_play_icon: true,
+      show_product: true,
+      hide_stories: false,
+      auto_center: false,
+      carousel_view_mode: "preview",
+      margin_top: "",
+      margin_bottom: "",
+      draggable: false,
+      allow_close: false,
+      object_fit: "cover",
+      z_index: "",
     });
     setShowModal(true);
   };
@@ -288,6 +364,20 @@ const AppearancePage = () => {
                 />
               </div>
 
+              {/* Toggle: Usar aparência em todos os dispositivos */}
+              <div className="space-y-3">
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Usar aparência em todos os dispositivos</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.useGlobalAppearance}
+                    onChange={(e) => setFormData(prev => ({ ...prev, useGlobalAppearance: e.target.checked }))}
+                    className="w-5 h-5 rounded-lg bg-gray-50 text-gray-600 focus:ring-2 focus:ring-[#0094EB]"
+                  />
+                  <span className="text-sm text-slate-500">{formData.useGlobalAppearance ? 'Ativado' : 'Desativado'}</span>
+                </div>
+              </div>
+
               {/* CTA (texto do botão) */}
               <div className="space-y-3">
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">CTA (texto do botão)</label>
@@ -357,558 +447,332 @@ const AppearancePage = () => {
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">CTA (texto)</label>
                 <input
                   type="text"
-                  value={formData.show_title ? "Sim" : "Não"}
-                  onChange={(e) => setFormData({ ...formData, show_title: e.target.value === "Sim" })}
+                  value={formData.cta_text || ""}
+                  onChange={(e) => setFormData({ ...formData, cta_text: e.target.value })}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
                 />
               </div>
 
-              {/* Configurações por Formato */}
+              {/* Configurações por Dispositivo */}
               <div className="space-y-6">
-                {/* Flutuante */}
+                {/* Desktop */}
                 <div className="space-y-4">
-                  <h4 className="text-sm font-black text-slate-800 uppercase">Flutuante</h4>
+                  <h5 className="text-xs font-black text-slate-400 uppercase">Desktop</h5>
                   <div className="grid grid-cols-2 gap-4">
-                    {/* Desktop */}
                     <div className="space-y-3">
-                      <h5 className="text-xs font-black text-slate-400 uppercase">Desktop</h5>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Formato</label>
-                        <select
-                          value={formData.widget_shape}
-                          onChange={(e) => setFormData({ ...formData, widget_shape: e.target.value as any })}
-                          className="w-20 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        >
-                          <option value="circle">Círculo</option>
-                          <option value="square">Quadrado</option>
-                          <option value="portrait">Retrato</option>
-                        </select>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Animação</label>
-                        <select
-                          value={formData.widget_animation}
-                          onChange={(e) => setFormData({ ...formData, widget_animation: e.target.value as any })}
-                          className="w-20 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        >
-                          <option value="">Selecione...</option>
-                          <option value="none">Nenhuma</option>
-                          <option value="fade">Fade</option>
-                          <option value="slide">Slide</option>
-                          <option value="bounce">Bounce</option>
-                        </select>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Borda</label>
-                        <input
-                          type="text"
-                          value={formData.primary_color}
-                          onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })}
-                          className="w-16 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Borda</label>
-                        <input
-                          type="text"
-                          value={formData.border_radius}
-                          onChange={(e) => setFormData({ ...formData, border_radius: e.target.value })}
-                          className="w-16 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">CTA</label>
-                        <input
-                          type="text"
-                          value={formData.show_title ? "Sim" : "Não"}
-                          onChange={(e) => setFormData({ ...formData, show_title: e.target.value === "Sim" })}
-                          className="w-20 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        />
-                      </div>
+                      <h5 className="text-xs font-black text-slate-400 uppercase">Largura</label>
+                      <input
+                        type="text"
+                        value={formData.width}
+                        onChange={(e) => setFormData({ ...formData, width: e.target.value })}
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
+                      />
                     </div>
-
-                    {/* Mobile */}
-                    <div className="space-y-3">
-                      <h5 className="text-xs font-black text-slate-400">Mobile</h5>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Formato</label>
-                        <select
-                          value={formData.widget_shape}
-                          onChange={(e) => setFormData({ ...formData, widget_shape: e.target.value as any })}
-                          className="w-12 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        >
-                          <option value="circle">Círculo</option>
-                          <option value="square">Quadrado</option>
-                          <option value="portrait">Retrato</option>
-                        </select>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Animação</label>
-                        <select
-                          value={formData.widget_animation}
-                          onChange={(e) => setFormData({ ...formData, widget_animation: e.target.value as any })}
-                          className="w-12 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        >
-                          <option value="">Selecione...</option>
-                          <option value="none">Nenhuma</option>
-                          <option value="fade">Fade</option>
-                          <option value="slide">Slide</option>
-                          <option value="bounce">Bounce</option>
-                        </select>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Borda</label>
-                        <input
-                          type="text"
-                          value={formData.primary_color}
-                          onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })}
-                          className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Borda</label>
-                        <input
-                          type="text"
-                          value={formData.border_radius}
-                          onChange={(e) => setFormData({ ...formData, border_radius: e.target.value })}
-                          className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Espaçamento</label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={4}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            if (val >= 0) {
-                              setFormData({ ...formData, mobile: { ...formData.mobile, spacing: val } });
-                            }
-                          }}
-                          className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Itens por linha</label>
-                        <input
-                          type="number"
-                          min="1"
-                          max="2"
-                          value={1}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            if (val >= 1 && val <= 2) {
-                              setFormData({ ...formData, mobile: { ...formData.mobile, itemsPerRow: val } });
-                            }
-                          }}
-                          className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Itens por coluna</label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={1}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            setFormData({ ...formData, mobile: { ...formData.mobile, itemsPerColumn: val } });
-                          }}
-                          className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Carrossel */}
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-black text-slate-400 uppercase">Carrossel</h4>
-                    <div className="space-y-3">
-                      <h5 className="text-xs font-black text-slate-400 uppercase">Desktop</h5>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Formato</label>
-                        <select
-                          value={formData.widget_shape}
-                          onChange={(e) => setFormData({ ...formData, widget_shape: e.target.value as any })}
-                          className="w-12 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        >
-                          <option value="circle">Círculo</option>
-                          <option value="square">Quadrado</option>
-                          <option value="portrait">Retrato</option>
-                        </select>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Animação</label>
-                        <select
-                          value={formData.widget_animation}
-                          onChange={(e) => setFormData({ ...formData, widget_animation: e.target.value as any })}
-                          className="w-12 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        >
-                          <option value="">Selecione...</option>
-                          <option value="none">Nenhuma</option>
-                          <option value="fade">Fade</option>
-                          <option value="slide">Slide</option>
-                          <option value="bounce">Bounce</option>
-                        </select>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Borda</label>
-                        <input
-                          type="text"
-                          value={formData.primary_color}
-                          onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })}
-                          className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Borda</label>
-                        <input
-                          type="text"
-                          value={formData.border_radius}
-                          onChange={(e) => setFormData({ ...formData, border_radius: e.target.value })}
-                          className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Espaçamento</label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={4}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            if (val >= 0) {
-                              setFormData({ ...formData, desktop: { ...formData.desktop, spacing: val } });
-                            }
-                          }}
-                          className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Itens por linha</label>
-                        <input
-                          type="number"
-                          min="1"
-                          max="2"
-                          value={4}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            if (val >= 1 && val <= 2) {
-                              setFormData({ ...formData, desktop: { ...formData.desktop, itemsPerRow: val } });
-                            }
-                          }}
-                          className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Itens por coluna</label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={4}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            setFormData({ ...formData, desktop: { ...formData.desktop, itemsPerColumn: val } });
-                          }}
-                          className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Mobile */}
-                    <div className="space-y-4">
-                      <h5 className="text-xs font-black text-slate-400">Mobile</h5>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Formato</label>
-                        <select
-                          value={formData.widget_shape}
-                          onChange={(e) => setFormData({ ...formData, widget_shape: e.target.value as any })}
-                          className="w-12 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        >
-                          <option value="circle">Círculo</option>
-                          <option value="square">Quadrado</option>
-                          <option value="portrait">Retrato</option>
-                        </select>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Animação</label>
-                        <select
-                          value={formData.widget_animation}
-                          onChange={(e) => setFormData({ ...formData, widget_animation: e.target.value as any })}
-                          className="w-12 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        >
-                          <option value="">Selecione...</option>
-                          <option value="none">Nenhuma</option>
-                          <option value="fade">Fade</option>
-                          <option value="slide">Slide</option>
-                          <option value="bounce">Bounce</option>
-                        </select>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Borda</label>
-                        <input
-                          type="text"
-                          value={formData.primary_color}
-                          onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })}
-                          className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Borda</label>
-                        <input
-                          type="text"
-                          value={formData.border_radius}
-                          onChange={(e) => setFormData({ ...formData, border_radius: e.target.value })}
-                          className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Espaçamento</label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={4}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            if (val >= 0) {
-                              setFormData({ ...formData, mobile: { ...formData.mobile, spacing: val } });
-                            }
-                          }}
-                          className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Itens por linha</label>
-                        <input
-                          type="number"
-                          min="1"
-                          max="2"
-                          value={1}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            if (val >= 1 && val <= 2) {
-                              setFormData({ ...formData, mobile: { ...formData.mobile, itemsPerRow: val } });
-                            }
-                          }}
-                          className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-black text-slate-400">Itens por coluna</label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={1}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            setFormData({ ...formData, mobile: { ...formData.mobile, itemsPerColumn: val } });
-                          }}
-                          className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Grade */}
-                <div className="space-y-4">
-                  <h4 className="text-xs font-black text-slate-400 uppercase">Grade</h4>
-                  <div className="space-y-3">
-                    <h5 className="text-xs font-black text-slate-400 uppercase">Desktop</h5>
                     <div className="flex items-center gap-2">
-                      <label className="text-[10px] font-black text-slate-400">Formato</label>
+                      <label className="text-[10px] font-black text-slate-400">Unidade</label>
                       <select
-                        value={formData.widget_shape}
-                        onChange={(e) => setFormData({ ...formData, widget_shape: e.target.value as any })}
+                        value={formData.unit}
+                        onChange={(e) => setFormData({ ...formData, unit: e.target.value as any })}
                         className="w-12 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
                       >
-                        <option value="circle">Círculo</option>
-                        <option value="square">Quadrado</option>
-                        <option value="portrait">Retrato</option>
+                        <option value="px">Px</option>
+                        <option value="percent">%</option>
                       </select>
                     </div>
                     <div className="flex items-center gap-2">
-                      <label className="text-[10px] font-black text-slate-400">Animação</label>
+                      <label className="text-[10px] font-black text-slate-400">Altura</label>
+                      <input
+                        type="text"
+                        value={formData.height}
+                        onChange={(e) => setFormData({ ...formData, height: e.target.value })}
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-[10px] font-black text-slate-400">Posição</label>
                       <select
-                        value={formData.widget_animation}
-                        onChange={(e) => setFormData({ ...formData, widget_animation: e.target.value as any })}
-                        className="w-12 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
+                        value={formData.position}
+                        onChange={(e) => setFormData({ ...formData, position: e.target.value as any })}
+                        className="w-20 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
                       >
                         <option value="">Selecione...</option>
-                        <option value="none">Nenhuma</option>
-                        <option value="fade">Fade</option>
-                        <option value="slide">Slide</option>
-                        <option value="bounce">Bounce</option>
+                        <option value="fixed_bottom_right">Flutuante (Direita)</option>
+                        <option value="fixed_bottom_left">Flutuante (Esquerda)</option>
+                        <option value="after_element">Depois do Seletor</option>
+                        <option value="before_element">Antes do Seletor</option>
+                        <option value="inside_start">Dentro (Início)</option>
+                        <option value="inside_end">Dentro (Fim)</option>
                       </select>
                     </div>
                     <div className="flex items-center gap-2">
-                      <label className="text-[10px] font-black text-slate-400">Borda</label>
-                      <input
-                        type="text"
-                        value={formData.primary_color}
-                        onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })}
-                        className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <label className="text-[10px] font-black text-slate-400">Borda</label>
-                      <input
-                        type="text"
-                        value={formData.border_radius}
-                        onChange={(e) => setFormData({ ...formData, border_radius: e.target.value })}
-                        className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <label className="text-[10px] font-black text-slate-400">Espaçamento</label>
+                      <label className="text-[10px] font-black text-slate-400">Espaçamento Inferior</label>
                       <input
                         type="number"
                         min="0"
                         step="1"
-                        value={4}
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          if (val >= 0) {
-                            setFormData({ ...formData, desktop: { ...formData.desktop, spacing: val } });
-                          }
-                        }}
+                        value={formData.bottom_spacing}
+                        onChange={(e) => setFormData({ ...formData, bottom_spacing: e.target.value })}
                         className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
                       />
                     </div>
                     <div className="flex items-center gap-2">
-                      <label className="text-[10px] font-black text-slate-400">Itens por linha</label>
+                      <label className="text-[10px] font-black text-slate-400">Espaçamento Esquerdo</label>
                       <input
                         type="number"
-                        min="1"
-                        max="2"
-                        value={4}
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          if (val >= 1 && val <= 2) {
-                            setFormData({ ...formData, desktop: { ...formData.desktop, itemsPerRow: val } });
-                          }
-                        }}
-                        className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <label className="text-[10px] font-black text-slate-400">Itens por coluna</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={4}
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          setFormData({ ...formData, desktop: { ...formData.desktop, itemsPerColumn: val } });
-                        }}
-                        className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                  </div>
+        min="0"
+        step="1"
+        value={formData.left_spacing}
+        onChange={(e) => setFormData({ ...formData, left_spacing: e.target.value })}
+        className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
+      />
+      </div>
+      <div className="space-y-3">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Chamada para Ação</label>
+        <input
+          type="text"
+          value={formData.cta_text}
+          onChange={(e) => setFormData({ ...formData, cta_text: e.target.value })}
+          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
+        />
+      </div>
+      <div className="space-y-3">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tamanho da Chamada para Ação</label>
+        <input
+          type="text"
+          value={formData.cta_size}
+          onChange={(e) => setFormData({ ...formData, cta_size: e.target.value })}
+          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
+        />
+      </div>
+      <div className="space-y-3">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Duração da Chamada para Ação</label>
+        <input
+          type="text"
+          value={formData.cta_duration}
+          onChange={(e) => setFormData({ ...formData, cta_duration: e.target.value })}
+          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
+        />
+      </div>
+      <div className="space-y-3">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Estilo da Borda</label>
+        <input
+          type="text"
+          value={formData.border_style}
+          onChange={(e) => setFormData({ ...formData, border_style: e.target.value })}
+          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
+        />
+      </div>
+      <div className="space-y-3">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cor</label>
+        <input
+          type="color"
+          value={formData.color}
+          onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
+        />
+      </div>
+      <div className="space-y-3">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mostrar ícone de play</label>
+        <input
+          type="checkbox"
+          checked={formData.show_play_icon}
+          onChange={(e) => setFormData({ ...formData, show_play_icon: e.target.checked })}
+          className="w-6 h-6 ml-2 text-sm text-slate-400"
+        />
+      </div>
+      <div className="space-y-3">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Exibir produto no carrossel</label>
+        <input
+          type="checkbox"
+          checked={formData.show_product}
+          onChange={(e) => setFormData({ ...formData, show_product: e.target.checked })}
+          className="w-6 h-6 rounded-lg bg-slate-50 text-sm font-bold outline-none focus:border-[#0094EB]"
+        />
+      </div>
+      <div className="space-y-3">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ocultar stories</label>
+        <input
+          type="checkbox"
+          checked={formData.hide_stories}
+          onChange={(e) => setFormData({ ...formData, hide_stories: e.target.checked })}
+          className="w-6 h-6 rounded-lg bg-slate-50 text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
+        />
+      </div>
+      <div className="space-y-3">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Centralizar automaticamente</label>
+        <input
+          type="checkbox"
+          checked={formData.auto_center}
+          onChange={(e) => setFormData({ ...formData, auto_center: e.target.checked })}
+          className="w-6 h-6 rounded-lg bg-slate-50 text-sm font-bold text-slate-400"
+        />
+      </div>
+      <div className="space-y-3">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Modo de visualização do carrossel</label>
+        <select
+          value={formData.carousel_view_mode}
+          onChange={(e) => setFormData({ ...formData, carousel_view_mode: e.target.value as any })}
+          className="w-12 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
+        >
+          <option value="preview">Preview (vídeo no hover)</option>
+          <option value="poster">Poster/imagem apenas</option>
+          <option value="custom">Personalizado</option>
+        </select>
+      </div>
+      <div className="space-y-3">
+        <label className="text-[10px] font-black text-slate-400 uppercase">Margem superior</label>
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value={formData.margin_top}
+          onChange={(e) => setFormData({ ...formData, margin_top: e.target.value })}
+          className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
+        />
+      </div>
+      <div className="space-y-3">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Margem inferior</label>
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value={formData.margin_bottom}
+          onChange={(e) => setFormData({ ...formData, margin_bottom: e.target.value })}
+          className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
+        />
+      </div>
+      <div className="space-y-3">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Draggable</label>
+        <input
+          type="checkbox"
+          checked={formData.draggable}
+          onChange={(e) => setFormData({ ...formData, draggable: e.target.checked })}
+          className="w-5 h-5 rounded-full bg-slate-50 text-sm font-bold text-slate-700"
+        />
+      </div>
+      <div className="space-y-3">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Permitir Fechar</label>
+        <input
+          type="checkbox"
+          checked={formData.allow_close}
+          onChange={(e) => setFormData({ ...formData, allow_close: e.target.checked })}
+          className="w-6 h-6 rounded-full bg-slate-50 text-sm font-bold text-slate-700"
+        />
+      </div>
+      <div className="space-y-3">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Exibição do vídeo/imagem</label>
+        <select
+          value={formData.object_fit}
+          onChange={(e) => setFormData({ ...formData, object_fit: e.target.value as any })}
+          className="w-12 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
+        >
+          <option value="cover">Preencher</option>
+          <option value="contain">Contenir</option>
+          <option value="contain-fill">Contenir preenchimento</option>
+        </select>
+      </div>
+      <div className="space-y-3">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Z-Index</label>
+        <input
+          type="number"
+          min="0"
+          value={formData.z_index}
+          onChange={(e) => setFormData({ ...formData, z_index: e.target.value })}
+          className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
+        />
+      </div>
 
-                  {/* Mobile */}
-                  <div className="space-y-4">
-                    <h5 className="text-xs font-black text-slate-400">Mobile</h5>
-                    <div className="flex items-center gap-2">
-                      <label className="text-[10px] font-black text-slate-400">Formato</label>
-                      <select
-                        value={formData.widget_shape}
-                        onChange={(e) => setFormData({ ...formData, widget_shape: e.target.value as any })}
-                        className="w-12 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                      >
-                        <option value="circle">Círculo</option>
-                        <option value="square">Quadrado</option>
-                        <option value="portrait">Retrato</option>
-                      </select>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <label className="text-[10px] font-black text-slate-400">Animação</label>
-                      <select
-                        value={formData.widget_animation}
-                        onChange={(e) => setFormData({ ...formData, widget_animation: e.target.value as any })}
-                        className="w-12 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                      >
-                        <option value="">Selecione...</option>
-                        <option value="none">Nenhuma</option>
-                        <option value="fade">Fade</option>
-                        <option value="slide">Slide</option>
-                        <option value="bounce">Bounce</option>
-                      </select>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <label className="text-[10px] font-black text-slate-400">Borda</label>
-                      <input
-                        type="text"
-                        value={formData.primary_color}
-                        onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })}
-                        className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <label className="text-[10px] font-black text-slate-400">Borda</label>
-                      <input
-                        type="text"
-                        value={formData.border_radius}
-                        onChange={(e) => setFormData({ ...formData, border_radius: e.target.value })}
-                        className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <label className="text-[10px] font-black text-slate-400">Espaçamento</label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={4}
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          if (val >= 0) {
-                            setFormData({ ...formData, mobile: { ...formData.mobile, spacing: val } });
-                          }
-                        }}
-                        className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <label className="text-[10px] font-black text-slate-400">Itens por linha</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="2"
-                        value={1}
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          if (val >= 1 && val <= 2) {
-                            setFormData({ ...formData, mobile: { ...formData.mobile, itemsPerRow: val } });
-                          }
-                        }}
-                        className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <label className="text-[10px] font-black text-slate-400">Itens por coluna</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={1}
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          setFormData({ ...formData, mobile: { ...formData.mobile, itemsPerColumn: val } });
-                        }}
-                        className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </form>
-          </div>
+      {/* Mobile */}
+      <div className="space-y-4">
+        <h5 className="text-xs font-black text-slate-400">Mobile</h5>
+        <div className="flex items-center gap-2">
+          <label className="text-[10px] font-black text-slate-400">Formato</label>
+          <select
+            value={formData.widget_shape}
+            onChange={(e) => setFormData({ ...formData, widget_shape: e.target.value as any })}
+            className="w-12 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
+          >
+            <option value="circle">Círculo</option>
+            <option value="square">Quadrado</option>
+            <option value="portrait">Retrato</option>
+          </select>
         </div>
-      )}
+        <div className="flex items-center gap-2">
+          <label className="text-[10px] font-black text-slate-400">Animação</label>
+          <select
+            value={formData.widget_animation}
+            onChange={(e) => setFormData({ ...formData, widget_animation: e.target.value as any })}
+            className="w-12 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
+          >
+            <option value="">Selecione...</option>
+            <option value="none">Nenhuma</option>
+            <option value="fade">Fade</option>
+            <option value="slide">Slide</option>
+            <option value="bounce">Bounce</option>
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-[10px] font-black text-slate-400">Borda</label>
+          <input
+            type="text"
+            value={formData.primary_color}
+            onChange={(e) => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })}
+            className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-[10px] font-black text-slate-400">Borda</label>
+          <input
+            type="text"
+            value={formData.border_radius}
+            onChange={(e) => setFormData({ ...formData, border_radius: e.target.value })}
+            className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-[10px] font-black text-slate-400">Espaçamento</label>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={4}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              if (val >= 0) {
+                setFormData({ ...formData, mobile: { ...formData.mobile, spacing: val } });
+              }
+            }}
+            className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-[10px] font-black text-slate-400">Itens por linha</label>
+          <input
+            type="number"
+            min="1"
+            max="2"
+            value={formData.mobile_items_per_row || 1}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              if (val >= 1 && val <= 2) {
+                setFormData({ ...formData, mobile: { ...formData.mobile, itemsPerRow: val } });
+              }
+            }}
+            className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-[10px] font-black text-slate-400">Itens por coluna</label>
+          <input
+            type="number"
+            min="1"
+            value={formData.mobile_items_per_column || 1}
+            onChange={(e) => setFormData({ ...formData, mobile: { ...formData.mobile, itemsPerColumn: Number(e.target.value) } })}
+            className="w-12 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB]"
+          />
+        </div>
+      </div>
+
       {/* =========================================================== */}
       <ConfirmDeleteDialog
         isOpen={deleteModal.isOpen}
