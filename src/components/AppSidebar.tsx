@@ -10,7 +10,8 @@ import {
   Ruler,
   MonitorPlay,
   User,
-  LogOut
+  LogOut,
+  BarChart3
 } from "lucide-react";
 import {
   Sidebar,
@@ -30,6 +31,7 @@ const menuItems = [
   { title: "Visão Geral", url: "/dashboard", icon: LayoutDashboard },
   { title: "Stories", url: "/stories", icon: PlayCircle },
   { title: "Vídeos", url: "/gallery", icon: Library },
+  { title: "Performance", url: "/videos/performance", icon: BarChart3 }, // Link corrigido
   { title: "Produtos", url: "/products", icon: ShoppingCart },
   { title: "Medidas", url: "/medidas", icon: Ruler },
   { title: "Aparência", url: "/appearance", icon: Palette },

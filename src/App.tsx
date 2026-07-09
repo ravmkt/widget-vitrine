@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
@@ -14,7 +16,8 @@ import CommentsPage from './pages/CommentsPage';
 import IntegrationPage from './pages/IntegrationPage';
 import SettingsPage from './pages/SettingsPage';
 import StoryDetailsPage from './pages/StoryDetailsPage';
-import StoriesReportPage from './pages/StoriesReportPage';
+import VideoPerformancePage from './pages/VideoPerformancePage'; // Renomeado
+import VideoEditPage from './pages/VideoEditPage'; // Nova página
 import NotFound from './pages/NotFound';
 
 const App = () => {
@@ -27,8 +30,12 @@ const App = () => {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/stories" element={<StoriesPage />} />
           <Route path="/stories/:id" element={<StoryDetailsPage />} />
-          <Route path="/stories/report" element={<StoriesReportPage />} />
+          
+          {/* Rotas de Vídeos */}
           <Route path="/gallery" element={<VideoGalleryPage />} />
+          <Route path="/videos/:id/edit" element={<VideoEditPage />} />
+          <Route path="/videos/performance" element={<VideoPerformancePage />} />
+          
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/medidas" element={<MedidasPage />} />
           <Route path="/appearance" element={<AppearancePage />} />

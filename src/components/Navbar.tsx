@@ -15,6 +15,8 @@ const Navbar = () => {
     if (path.includes('dashboard')) return 'Visão Geral';
     if (path.includes('stories')) return 'Stories';
     if (path.includes('gallery')) return 'Vídeos';
+    if (path.includes('videos/performance')) return 'Performance de Vídeos';
+    if (path.includes('videos/') && path.includes('edit')) return 'Editar Vídeo';
     if (path.includes('products')) return 'Produtos';
     if (path.includes('appearance')) return 'Aparência';
     if (path.includes('medidas')) return 'Medidas';
