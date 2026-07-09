@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Plus, Tag, Upload, Search, Filter, Edit3, Trash2, X, CheckCircle2, XCircle, ChevronDown, Image, Link2, AlertCircle, Download, Settings, ExternalLink, Loader2, Save, FileSpreadsheet, Globe, Package } from 'lucide-react';
+import { Plus, Tag, Upload, Search, Edit3, Trash2, X, CheckCircle2, XCircle, Image, Download, Settings, Loader2, Save, FileSpreadsheet, Globe, Package } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
 import { cn } from '@/lib/utils';
+import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 
 const ProductsPage = () => {
   const [products, setProducts] = useState([
@@ -14,11 +15,11 @@ const ProductsPage = () => {
     { id: '5', name: 'Tênis Branco Casual', price: 249.90, category: 'Sapatos', video: '', origin: 'manual', active: true, image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=200' },
   ]);
   const [categories, setCategories] = useState([
-    { id: '1', name: 'Vestidos', active: true },
-    { id: '2', name: 'Blusas', active: true },
-    { id: '3', name: 'Calças', active: true },
-    { id: '4', name: 'Acessórios', active: true },
-    { id: '5', name: 'Sapatos', active: false },
+    { id: '1', name: 'Vestidos' },
+    { id: '2', name: 'Blusas' },
+    { id: '3', name: 'Calças' },
+    { id: '4', name: 'Acessórios' },
+    { id: '5', name: 'Sapatos' },
   ]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
@@ -43,6 +44,12 @@ const ProductsPage = () => {
   });
 
   const [isSaving, setIsSaving] = useState(false);
+
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; productId: string; productTitle: string }>({
+    isOpen: false,
+    productId: '',
+    productTitle: ''
+  });
 
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -116,11 +123,18 @@ const ProductsPage = () => {
     }, 300);
   };
 
-  const handleDeleteProduct = (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este produto?')) {
-      setProducts(prev => prev.filter(p => p.id !== id));
-      showSuccess('Produto removido.');
-    }
+  const handleDeleteClick = (product: any) => {
+    setDeleteModal({ isOpen: true, productId: product.id, productTitle: product.name });
+  };
+
+  const handleConfirmDelete = () => {
+    setProducts(prev => prev.filter(p => p.id !== deleteModal.productId));
+    showSuccess('Produto removido.');
+    setDeleteModal(prev => ({ ...prev, isOpen: false }));
+  };
+
+  const handleToggleStatus = (product: any) => {
+    setProducts(prev => prev.map(p => p.id === product.id ? { ...p, active: !p.active } : p));
   };
 
   // Categories modal logic
@@ -130,7 +144,7 @@ const ProductsPage = () => {
 
   const handleCatAdd = () => {
     if (!catNewName.trim()) return;
-    setCategories(prev => [...prev, { id: Date.now().toString(), name: catNewName.trim(), active: true }]);
+    setCategories(prev => [...prev, { id: Date.now().toString(), name: catNewName.trim() }]);
     setCatNewName('');
   };
   const handleCatEditStart = (cat: any) => { setCatEditingId(cat.id); setCatEditName(cat.name); };
@@ -161,7 +175,7 @@ const ProductsPage = () => {
     showSuccess('Modelo baixado!');
   };
 
-  const activeCategories = categories.filter(c => c.active).map(c => c.name);
+  const activeCategories = categories.map(c => c.name);
 
   return (
     <div className="space-y-6 animate-fade-in pb-20">
@@ -247,18 +261,23 @@ const ProductsPage = () => {
                   </td>
                   <td className="px-6 py-4 text-center">
                     <span className={cn(
-                      "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
-                      product.origin === 'manual' ? "bg-blue-50 text-blue-600 border border-blue-100" : "bg-violet-50 text-violet-600 border border-violet-100"
+                      "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
+                      product.origin === 'manual' ? "bg-blue-50 text-blue-600 border-blue-100" : "bg-violet-50 text-violet-600 border-violet-100"
                     )}>
                       {product.origin === 'manual' ? <Tag size={10} /> : <Globe size={10} />}
                       {product.origin === 'manual' ? 'Manual' : 'Integração'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <span className={cn(
-                      "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
-                      product.active ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-rose-50 text-rose-600 border-rose-100"
-                    )}>
+                    <span 
+                      onClick={() => handleToggleStatus(product)}
+                      className={cn(
+                        "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border cursor-pointer transition-all",
+                        product.active 
+                          ? "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100" 
+                          : "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100"
+                      )}
+                    >
                       {product.active ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
                       {product.active ? 'Ativo' : 'Desativado'}
                     </span>
@@ -266,7 +285,7 @@ const ProductsPage = () => {
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
                       <button onClick={() => openEditProduct(product)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors" title="Editar"><Edit3 size={16} /></button>
-                      <button onClick={() => handleDeleteProduct(product.id)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" title="Excluir"><Trash2 size={16} /></button>
+                      <button onClick={() => handleDeleteClick(product)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" title="Excluir"><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
@@ -291,7 +310,7 @@ const ProductsPage = () => {
               <h2 className="text-xl font-black text-slate-900">{editingProduct ? 'Editar Produto' : 'Novo Produto'}</h2>
               <button onClick={() => setShowProductModal(false)} className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100"><X size={20} /></button>
             </div>
-            <form onSubmit={handleSaveProduct} className="flex-1 overflow-y-auto p-6 space-y-6">
+            <form id="product-form" onSubmit={handleSaveProduct} className="flex-1 overflow-y-auto p-6 space-y-6">
               <div className="space-y-3">
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Foto do Produto (máx. 350 KB)</label>
                 <div className="flex items-center gap-4">
@@ -336,7 +355,7 @@ const ProductsPage = () => {
             </form>
             <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50 rounded-b-[2rem]">
               <button type="button" onClick={() => setShowProductModal(false)} className="px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-black text-sm hover:bg-slate-50 transition-all">Cancelar</button>
-              <button type="submit" form={editingProduct ? undefined : 'product-form'} className="px-6 py-3 bg-[#0094EB] text-white rounded-xl font-black text-sm hover:bg-[#0E4787] transition-all flex items-center gap-2" disabled={isSaving}>
+              <button type="submit" form="product-form" className="px-6 py-3 bg-[#0094EB] text-white rounded-xl font-black text-sm hover:bg-[#0E4787] transition-all flex items-center gap-2" disabled={isSaving}>
                 {isSaving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
                 {isSaving ? 'Salvando...' : 'Salvar'}
               </button>
@@ -369,10 +388,6 @@ const ProductsPage = () => {
                   ) : (
                     <>
                       <div className="flex items-center gap-3 flex-1">
-                        <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border", cat.active ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-rose-50 text-rose-600 border-rose-100")}>
-                          {cat.active ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
-                          {cat.active ? 'Ativo' : 'Inativo'}
-                        </span>
                         <span className="font-bold text-slate-800">{cat.name}</span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -502,6 +517,14 @@ const ProductsPage = () => {
           </div>
         </div>
       )}
+
+      <ConfirmDeleteDialog
+        isOpen={deleteModal.isOpen}
+        title="EXCLUIR PRODUTO"
+        itemName={deleteModal.productTitle}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };
