@@ -14,6 +14,7 @@ import CommentsPage from './pages/CommentsPage';
 import IntegrationPage from './pages/IntegrationPage';
 import SettingsPage from './pages/SettingsPage';
 import StoryDetailsPage from './pages/StoryDetailsPage';
+import StoriesReportPage from './pages/StoriesReportPage';
 import NotFound from './pages/NotFound';
 
 const App = () => {
@@ -21,12 +22,12 @@ const App = () => {
     <BrowserRouter>
       <AppLayout>
         <Routes>
-          {/* Redirecionamento da Home para Dashboard conforme solicitado */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/stories" element={<StoriesPage />} />
           <Route path="/stories/:id" element={<StoryDetailsPage />} />
+          <Route path="/stories/report" element={<StoriesReportPage />} />
           <Route path="/gallery" element={<VideoGalleryPage />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/medidas" element={<MedidasPage />} />
