@@ -72,8 +72,6 @@ const VideoEditPage = () => {
           const stories = await db.stories.getAll();
           const usedStories = stories.filter(s => storyIds.includes(s.id));
           setUsedInStories(usedStories);
-        } else {
-          setVideo(null);
         }
       } catch (e) {
         showError('Erro ao carregar dados');
@@ -128,6 +126,39 @@ const VideoEditPage = () => {
     }
     const allowedTypes = ['video/mp4', 'video/mov', 'video/webm'];
     return allowedTypes.includes(file.type);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (!validateFile(file)) {
+      showError('Formato de vídeo inválido. Envie um arquivo MP4, MOV ou WEBM.');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFormData({ ...formData, video_file: reader.result as File });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      showError('Formato de imagem inválido. Use JPG, PNG ou WEBP.');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFormData({ ...formData, thumbnail_url: reader.result as string });
+    };
+    reader.readAsDataURL(file);
   };
 
   const validateForm = (): { isValid: boolean; errors: Record<string, string> } => {
@@ -212,8 +243,6 @@ const VideoEditPage = () => {
     if (!isValid) {
       // Show field errors
       Object.entries(errors).forEach(([field, message]) => {
-        // We'd need to set field-specific errors in a real app, 
-        // but for simplicity we'll just show a general message
         showError(message);
       });
       return;
@@ -285,101 +314,120 @@ const VideoEditPage = () => {
       </div>
 
       <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm">
-        <form onSubmit={handleSave} className="space-y-6">
-          <div className="space-y-4">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Título do Vídeo</label>
-            <input 
-              type="text" 
-              value={formData.title} 
-              onChange={e => setFormData({...formData, title: e.target.value})} 
-              className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" 
-            />
-          </div>
-
-          <div className="space-y-4">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Origem do Vídeo</label>
-            <select 
-              value={formData.origin} 
-              onChange={handleOriginChange}
-              className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
-            >
-              <option value="url">URL do vídeo</option>
-              <option value="instagram">Instagram</option>
-              <option value="tiktok">TikTok</option>
-              <option value="upload">Upload de vídeo</option>
-            </select>
-          </div>
-
-          {/* URL do vídeo */}
-          {formData.origin === 'url' && (
-            <div className="space-y-4">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">URL do vídeo</label>
-              <input 
-                type="url" 
-                value={formData.video_url} 
-                onChange={e => setFormData({...formData, video_url: e.target.value})} 
-                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" 
-              />
-            </div>
-          )}
-
-          {/* Instagram */}
-          {formData.origin === 'instagram' && (
-            <div className="space-y-4">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Link do Instagram</label>
-              <input 
-                type="text" 
-                value={formData.instagram_link} 
-                onChange={e => setFormData({...formData, instagram_link: e.target.value})} 
-                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" 
-              />
-            </div>
-          )}
-
-          {/* TikTok */}
-          {formData.origin === 'tiktok' && (
-            <div className="space-y-4">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Link do TikTok</label>
-              <input 
-                type="text" 
-                value={formData.tiktok_link} 
-                onChange={e => setFormData({...formData, tiktok_link: e.target.value})} 
-                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" 
-              />
-            </div>
-          )}
-
-          {/* Upload de vídeo */}
-          {formData.origin === 'upload' && (
-            <div className="space-y-4">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Arquivo de vídeo</label>
-              <input 
-                type="file" 
-                accept="video/mp4,video/mov,video/webm" 
-                onChange={handleFileUpload} 
-                className="block w-full text-xs text-slate-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:bg-[#EAF6FF] file:text-[#0094EB] file:font-black file:cursor-pointer hover:file:bg-[#0094EB] hover:file:text-white transition-all"
-              />
-              {formData.video_file && (
-                <div className="text-sm text-slate-500 mt-1">
-                  {formData.video_file.size > 30 * 1024 * 1024 
-                    ? 'O vídeo deve ter no máximo 30MB.' 
-                    : `Tamanho: ${(formData.video_file.size / (1024 * 1024)).toFixed(1)}MB`}
-                </div>
+         <form onSubmit={handleSave} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Título do Vídeo</label>
+                 <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" />
+              </div>
+              <div className="space-y-4">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">URL do Vídeo</label>
+                 <input type="url" value={formData.video_url} onChange={e => setFormData({...formData, video_url: e.target.value})} className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" />
               </div>
             </div>
-          )}
 
-          {/* Thumbnail */}
-          <div className="space-y-4">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Capa do Vídeo (Thumbnail)</label>
-            <div className="flex items-center gap-4">
-              <div className="h-24 w-24 rounded-2xl overflow-hidden bg-slate-200 border border-slate-300 shrink-0 flex items-center justify-center">
-                {formData.thumbnail_url ? (
-                  <img src={formData.thumbnail_url} className="w-full h-full object-cover" alt="Capa" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-slate-200 text-[10px] font-black text-slate-400">
-                    Sem capa
+            <div className="space-y-4">
+               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Origem do Vídeo</label>
+               <select 
+                 value={formData.origin} 
+                 onChange={handleOriginChange}
+                 className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
+               >
+                 <option value="url">URL do vídeo</option>
+                 <option value="instagram">Instagram</option>
+                 <option value="tiktok">TikTok</option>
+                 <option value="upload">Upload de vídeo</option>
+               </select>
+            </div>
+
+            {/* URL do vídeo */}
+            {formData.origin === 'url' && (
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">URL do vídeo</label>
+                <input 
+                  type="url" 
+                  value={formData.video_url} 
+                  onChange={e => setFormData({...formData, video_url: e.target.value})} 
+                  className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" 
+                />
+              </div>
+            )}
+
+            {/* Instagram */}
+            {formData.origin === 'instagram' && (
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Link do Instagram</label>
+                <input 
+                  type="text" 
+                  value={formData.instagram_link} 
+                  onChange={e => setFormData({...formData, instagram_link: e.target.value})} 
+                  className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" 
+                />
+              </div>
+            )}
+
+            {/* TikTok */}
+            {formData.origin === 'tiktok' && (
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Link do TikTok</label>
+                <input 
+                  type="text" 
+                  value={formData.tiktok_link} 
+                  onChange={e => setFormData({...formData, tiktok_link: e.target.value})} 
+                  className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" 
+                />
+              </div>
+            )}
+
+            {/* Upload de vídeo */}
+            {formData.origin === 'upload' && (
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Arquivo de vídeo</label>
+                <input 
+                  type="file" 
+                  accept="video/mp4,video/mov,video/webm" 
+                  onChange={handleFileUpload} 
+                  className="block w-full text-xs text-slate-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:bg-[#EAF6FF] file:text-[#0094EB] file:font-black file:cursor-pointer hover:file:bg-[#0094EB] hover:file:text-white transition-all"
+                />
+                {formData.video_file && (
+                  <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm">
+                    <div className="font-medium text-gray-700">
+                      Arquivo selecionado:
+                    </div>
+                    <div className="text-gray-600">
+                      {formData.video_file.name}
+                    </div>
+                    <div
+                      className={
+                        formData.video_file.size > 30 * 1024 * 1024
+                          ? "mt-1 font-medium text-red-600"
+                          : "mt-1 text-gray-500"
+                      }
+                    >
+                      {formData.video_file.size > 30 * 1024 * 1024 ? (
+                        <span>O vídeo deve ter no máximo 30MB.</span>
+                      ) : (
+                        <span>
+                          Tamanho:{" "}
+                          {(formData.video_file.size / (1024 * 1024)).toFixed(1)}MB
+                        </span>
+                      )}
+                    </div>
                   </div>
+                )}
+              </div>
+            )}
+
+            {/* Thumbnail */}
+            <div className="space-y-4">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Capa do Vídeo (Thumbnail)</label>
+              <div className="flex items-center gap-4">
+                <div className="h-24 w-24 rounded-2xl overflow-hidden bg-slate-200 border border-slate-300 shrink-0 flex items-center justify-center">
+                  {formData.thumbnail_url ? (
+                    <img src={formData.thumbnail_url} className="w-full h-full object-cover" alt="Capa" />
+                  ) : (
+                    <span className="text-xs font-bold text-slate-400">Sem capa</span>
+                  )}
                 </div>
                 <div className="flex-1 space-y-3">
                   <input 
@@ -413,8 +461,6 @@ const VideoEditPage = () => {
                 ))}
               </select>
             </div>
-
-            {/* Modelo vinculado */}
             <div className="space-y-4">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Modelo/Medida Vinculado</label>
               <select 
@@ -428,8 +474,6 @@ const VideoEditPage = () => {
                 ))}
               </select>
             </div>
-
-            {/* Status */}
             <div className="space-y-4">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</label>
               <select 
@@ -441,8 +485,7 @@ const VideoEditPage = () => {
                 <option value="false">Inativo</option>
               </select>
             </div>
-
-            {/* Usado em Stories */}
+            
             {usedInStories.length > 0 && (
               <div className="space-y-4 pt-4 border-t border-slate-200">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Usado em Stories</label>
@@ -465,8 +508,7 @@ const VideoEditPage = () => {
                 <p className="text-sm font-bold text-slate-600">Não</p>
               </div>
             )}
-          </form>
-        </div>
+         </form>
       </div>
       <SuccessDialog isOpen={showSuccessModal} description="Vídeo salvo com sucesso." onClose={() => navigate('/gallery')} />
     </div>
