@@ -197,13 +197,21 @@ const VideoPerformancePage = () => {
         </div>
       </div>
 
-      {/* Modal Visualizar Vídeo Redimensionado */}
+      {/* Modal Visualizar Vídeo Redimensionado - FIXED PLAYER */}
       <CustomDialog isOpen={isViewModalOpen} type="form" title="Visualizar Vídeo" maxWidth="max-w-4xl" onCancel={() => setIsViewModalOpen(false)}>
         {viewingVideo && (
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="lg:w-[240px] shrink-0 mx-auto lg:mx-0">
               <div className="aspect-[9/16] bg-slate-950 rounded-[1.5rem] overflow-hidden shadow-lg relative border-[4px] border-slate-900 max-h-[60vh]">
-                <video src={viewingVideo.video_url} className="w-full h-full object-cover" poster={viewingVideo.thumbnail_url} controls autoPlay loop />
+                {/* FIXED: Use object-fit: contain and responsive dimensions */}
+                <video 
+                  src={viewingVideo.video_url} 
+                  className="w-full max-w-full h-auto max-h-[400px] object-fit contain" 
+                  poster={viewingVideo.thumbnail_url} 
+                  controls 
+                  autoPlay 
+                  loop
+                />
               </div>
             </div>
             <div className="flex-1 flex flex-col pt-1">

@@ -10,6 +10,7 @@ interface ConfirmDeleteDialogProps {
   onConfirm: () => void;
   onCancel: () => void;
   isLoading?: boolean;
+  usedInStories?: boolean; // New prop to indicate if the item is used in stories
 }
 
 const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
@@ -18,7 +19,8 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
   itemName,
   onConfirm,
   onCancel,
-  isLoading
+  isLoading,
+  usedInStories = false
 }) => {
   const [inputValue, setInputValue] = useState('');
 
@@ -45,6 +47,14 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
           <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={18} />
           <p className="text-xs font-bold text-amber-800 leading-relaxed">
             Esta ação é irreversível. O item <span className="font-black">"{itemName}"</span> será removido permanentemente.
+            {usedInStories && (
+              <>
+                <br />
+                <span className="block mt-1">
+                  Atenção: Este vídeo está sendo usado em um ou mais Stories. Sua exclusão removerá o vínculo desses stories.
+                </span>
+              </>
+            )}
           </p>
         </div>
 
