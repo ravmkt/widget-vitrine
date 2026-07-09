@@ -15,11 +15,14 @@ import {
   Calendar,
   BarChart3,
   TrendingUp,
-  ExternalLink
+  ExternalLink,
+  Filter
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import CustomDialog from '@/components/CustomDialog';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const VideoGalleryPage = () => {
   const [videos, setVideos] = useState<Video[]>([]);
@@ -139,7 +142,6 @@ const VideoGalleryPage = () => {
         </button>
       </div>
 
-      {/* Barra de Filtros */}
       <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 flex flex-col md:flex-row gap-4 shadow-sm">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -161,38 +163,44 @@ const VideoGalleryPage = () => {
         </select>
       </div>
 
-      {/* Grid de Vídeos */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {filteredVideos.map(video => (
-          <div key={video.id} className="bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col">
-            <div className="aspect-[9/16] bg-slate-900 relative cursor-pointer" onClick={() => handleView(video)}>
-               <img src={video.thumbnail_url} className="w-full h-full object-cover opacity-80" alt={video.title} />
-               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all bg-black/40">
-                  <Play size={40} className="text-white fill-white scale-110" />
-               </div>
-               <div className="absolute top-4 left-4">
-                  <span className="bg-white/10 backdrop-blur-md text-white text-[9px] font-black uppercase px-2 py-1 rounded-lg border border-white/20">
-                    {video.source_type}
-                  </span>
-               </div>
-            </div>
-            <div className="p-6 flex-1 flex flex-col">
-               <h4 className="font-bold text-slate-800 truncate text-sm mb-4">{video.title}</h4>
-               <div className="mt-auto space-y-2">
-                 <button 
-                   onClick={() => handleView(video)}
-                   className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#EAF6FF] text-[#0094EB] text-xs font-black transition-all hover:bg-blue-100"
-                 >
-                   <Eye size={14} /> Ver vídeo
-                 </button>
-                 <div className="flex gap-2">
-                    <button onClick={() => handleEdit(video)} className="flex-1 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500 transition-colors flex justify-center"><Edit3 size={16} /></button>
-                    <button className="flex-1 p-2.5 rounded-xl bg-slate-50 hover:bg-red-50 text-red-500 transition-colors flex justify-center"><Trash2 size={16} /></button>
+      <div className="space-y-6">
+        <h3 className="text-xl font-black text-slate-800 flex items-center gap-2 px-2">
+          <Filter size={20} className="text-[#0094EB]" />
+          Resultados do Período
+        </h3>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {filteredVideos.map(video => (
+            <div key={video.id} className="bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col">
+              <div className="aspect-[9/16] bg-slate-900 relative cursor-pointer" onClick={() => handleView(video)}>
+                 <img src={video.thumbnail_url} className="w-full h-full object-cover opacity-80" alt={video.title} />
+                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all bg-black/40">
+                    <Play size={40} className="text-white fill-white scale-110" />
                  </div>
-               </div>
+                 <div className="absolute top-4 left-4">
+                    <span className="bg-white/10 backdrop-blur-md text-white text-[9px] font-black uppercase px-2 py-1 rounded-lg border border-white/20">
+                      {video.source_type}
+                    </span>
+                 </div>
+              </div>
+              <div className="p-6 flex-1 flex flex-col">
+                 <h4 className="font-bold text-slate-800 truncate text-sm mb-4">{video.title}</h4>
+                 <div className="mt-auto space-y-2">
+                   <button 
+                     onClick={() => handleView(video)}
+                     className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#0094EB] hover:bg-[#0E4787] text-white text-xs font-black shadow-lg shadow-blue-100 transition-all active:scale-95"
+                   >
+                     <Eye size={14} /> Ver vídeo
+                   </button>
+                   <div className="flex gap-2">
+                      <button onClick={() => handleEdit(video)} className="flex-1 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500 transition-colors flex justify-center"><Edit3 size={16} /></button>
+                      <button className="flex-1 p-2.5 rounded-xl bg-slate-50 hover:bg-red-50 text-red-500 transition-colors flex justify-center"><Trash2 size={16} /></button>
+                   </div>
+                 </div>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Modal de Visualização (Ver Vídeo) */}
