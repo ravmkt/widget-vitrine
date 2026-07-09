@@ -14,7 +14,10 @@ import {
   CheckCircle2,
   Menu,
   ArrowDown,
-  ArrowUp
+  ArrowUp,
+  ArrowLeft,
+  MessageCircle,
+  TrendingUp
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import CustomDialog from '@/components/CustomDialog';
