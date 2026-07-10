@@ -194,14 +194,14 @@ const StoriesPage = () => {
     }
   };
 
-  const getFormatLabel = (format: string) => {
+  function getFormatLabel(format: string) {
     switch (format) {
       case 'floating_widget': return 'Flutuante';
       case 'carousel': return 'Carrossel';
       case 'grid': return 'Grade';
       default: return format;
     }
-  };
+  }
 
   const getFormatIcon = (format: string) => {
     switch (format) {
