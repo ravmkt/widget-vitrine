@@ -255,11 +255,12 @@ const StoryPreviewPage = () => {
   }
 
   const modelData = model?.measures?.length ? model.measures : [];
+  const hideSocialCounts = true;
 
   return (
     <div className="fixed inset-0 bg-neutral-950 flex items-center justify-center overflow-hidden">
-      <div className="story-modal-content relative h-full w-full max-w-[420px] overflow-hidden bg-black sm:aspect-[9/16] sm:max-h-[90vh] sm:rounded-[36px]">
-        <div className="absolute left-4 right-4 top-3 z-[80] flex gap-1.5">
+      <div className="story-viewer story-modal-content relative h-full w-full max-w-[420px] overflow-hidden bg-black sm:aspect-[9/16] sm:max-h-[90vh] sm:rounded-[36px]">
+        <div className="progress-bars story-progress absolute left-4 right-4 top-3 z-[80] flex gap-1.5">
           {videos.map((video, idx) => (
             <div key={video.id} className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/20">
               <div
