@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, Story, Video, Product } from '@/lib/db';
@@ -101,6 +99,45 @@ const StoriesPage = () => {
     setIsViewingModalOpen(true);
   };
 
+  const handlePreviewStory = (storyId: string) => {
+    if (!storyId) return;
+    window.open(`/stories/preview/${storyId}`, "_blank", "noopener,noreferrer");
+  };
+
+  const handleDeleteClick = (video: Video) => {
+    const checkUsedInStories = async () => {
+      try {
+        const storyVideos = await db.storyVideos.getAll();
+        const isUsed = storyVideos.some(sv => sv.video_id === video.id);
+        setDeleteModal({
+          isOpen: true,
+          videoId: video.id,
+          videoTitle: video.title,
+          usedInStories: isUsed
+        });
+      } catch (e) {
+        setDeleteModal({
+          isOpen: true,
+          videoId: video.id,
+          videoTitle: video.title,
+          usedInStories: false
+        });
+      }
+    };
+    checkUsedInStories();
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await db.videos.delete(deleteModal.videoId);
+      setVideos(prev => prev.filter(v => v.id !== deleteModal.videoId));
+      showSuccess('Vídeo removido permanentemente.');
+      setDeleteModal(prev => ({ ...prev, isOpen: false }));
+    } catch (e) {
+      showError('Erro ao excluir o vídeo.');
+    }
+  };
+
   if (loading) return null;
 
   return (
@@ -138,7 +175,7 @@ const StoriesPage = () => {
             <select 
               value={productFilter} 
               onChange={(e) => setProductFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 text-xs font-bold outline-none focus:border-[#0094EB]"
+              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold outline-none focus:border-[#0094EB]"
             >
               <option value="all">Todos os Produtos</option>
               {products.map(p => (
@@ -149,7 +186,7 @@ const StoriesPage = () => {
             <select 
               value={orderBy} 
               onChange={(e) => setOrderBy(e.target.value)}
-              className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 text-xs font-bold outline-none"
+              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold outline-none"
             >
               <option value="recent">Mais Recentes</option>
               <option value="oldest">Mais Antigos</option>
@@ -168,48 +205,88 @@ const StoriesPage = () => {
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {processedVideos.map(video => {
-          // ... existing video card rendering ...
+          const { views, likes, comments, engagement } = video.metrics;
+          const productName = products.find(p => p.id === (video as any).product_id)?.name || 'Produto não vinculado';
+          
           return (
             <div key={video.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm group">
-              {/* ... existing card content ... */}
-              <div className="flex gap-2">
-                <button 
-                  type="button"
-                  onClick={() => handleViewVideo(video)}
-                  className="flex-1 bg-[#EAF6FF] text-[#0094EB] py-3 rounded-xl text-xs font-black transition-all"
-                  title="Ver vídeo"
-                >
-                  Ver
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => navigate(`/stories/${video.id}/edit`)}
-                  className="p-3 bg-[#EAF6FF] text-[#0094EB] hover:bg-[#0094EB] hover:text-white rounded-xl transition-all"
-                  title="Editar"
-                >
-                  <Edit3 size={18} />
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => handleDeleteClick(video)}
-                  className="p-3 bg-white border border-slate-200 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
-                  title="Excluir"
-                >
-                  <Trash2 size={18} />
-                </button>
-                {/* NEW Preview button */}
-                <button 
-                  type="button"
-                  onClick={() => window.open(`/stories/preview/${video.id}`, '_blank')}
-                  className="p-3 bg-[#EAF6FF] text-[#0094EB] hover:bg-[#0094EB] hover:text-white rounded-xl transition-all"
-                  title="Preview"
-                >
-                  <Eye size={18} />
-                </button>
+              <div className="aspect-[9/16] bg-slate-900 relative cursor-pointer" onClick={() => handleViewVideo(video)}>
+                 {video.thumbnail_url ? (
+                   <img src={video.thumbnail_url} className="w-full h-full object-cover opacity-80" alt={video.title} />
+                 ) : (
+                   <video src={video.video_url} className="w-full h-full object-cover opacity-80" muted preload="metadata" />
+                 )}
+                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all bg-black/40">
+                    <PlayCircle size={32} className="text-white fill-white" />
+                 </div>
+              </div>
+              <div className="p-4">
+                 <h4 className="font-bold text-slate-800 truncate text-sm mb-3">{video.title}</h4>
+                 
+                 <div className="flex items-center gap-2 mb-4 text-slate-600">
+                   <Film className="text-[#0094EB]" size={18} />
+                   <span className="text-sm font-semibold text-slate-700 truncate">{productName}</span>
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-y-3 gap-x-2 mb-4">
+                   <div className="flex items-center gap-2">
+                     <Eye className="text-[#0094EB]" size={18} />
+                     <span className="text-sm font-semibold text-slate-700">{views.toLocaleString()}</span>
+                   </div>
+                   <div className="flex items-center gap-2">
+                     <CheckCircle2 className="text-[#0094EB]" size={18} />
+                     <span className="text-sm font-semibold text-slate-700">{likes.toLocaleString()}</span>
+                   </div>
+                   <div className="flex items-center gap-2">
+                     <MessageCircle className="text-[#0094EB]" size={18} />
+                     <span className="text-sm font-semibold text-slate-700">{comments.toLocaleString()}</span>
+                   </div>
+                   <div className="flex items-center gap-2">
+                     <TrendingUp className="text-[#0094EB]" size={18} />
+                     <span className="text-sm font-semibold text-slate-700">{engagement.toFixed(1)}%</span>
+                   </div>
+                 </div>
+
+                 <div className="flex gap-2">
+                    <button 
+                      type="button"
+                      onClick={() => handleViewVideo(video)}
+                      className="flex-1 bg-[#EAF6FF] text-[#0094EB] py-3 rounded-xl text-xs font-black transition-all"
+                      title="Ver"
+                    >
+                      Ver
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => navigate(`/stories/${video.id}/edit`)}
+                      className="p-3 bg-[#EAF6FF] text-[#0094EB] hover:bg-[#0094EB] hover:text-white rounded-xl transition-all"
+                      title="Editar"
+                    >
+                      <Edit3 size={18} />
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => handleDeleteClick(video)}
+                      className="p-3 bg-white border border-slate-200 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                      title="Excluir"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                    {/* NEW Preview button */}
+                    <button 
+                      type="button"
+                      onClick={() => handlePreviewStory(video.id)}
+                      className="p-3 bg-[#EAF6FF] text-[#0094EB] hover:bg-[#0094EB] hover:text-white rounded-xl transition-all"
+                      title="Preview"
+                    >
+                      <Eye size={18} />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <CustomDialog isOpen={isViewModalOpen} type="form" title="Visualizar Vídeo" maxWidth="max-w-3xl" onCancel={() => setIsViewingModalOpen(false)}>
