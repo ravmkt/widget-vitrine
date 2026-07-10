@@ -53,7 +53,9 @@ const CommentsPage = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const EMOJIS = [
-    '😀', '😍', '🔥', '👏', '❤️', '😂', '😮', '😢', '👍', '🙏', '🎉', '💪', '🚀', '🤩', '😎', '✨', '💜', '🙌', '🥰', '💯', '🛍️'
+    "😀", "😁", "😂", "🤣", "😊", "😍", "😘", "😎",
+    "👍", "👏", "🙌", "🙏", "💪", "🔥", "❤️", "💙",
+    "✨", "🎉", "✅", "⭐", "😢", "😡", "🤔", "👀"
   ];
 
   // Normalize status function
@@ -97,6 +99,7 @@ const CommentsPage = () => {
   }, []);
 
   const storeName = generalSettings?.store_name || "Loja";
+  const storeLogo = generalSettings?.logo_url || null;
 
   const loadData = async () => {
     try {
@@ -241,6 +244,9 @@ const CommentsPage = () => {
     setCommentText("");
     setShowEmoji(false);
     showSuccess("Comentário enviado");
+    
+    // Close the modal after successful submission
+    setEditingCommentId(null);
   };
 
   const insertEmojiAtCursor = (emoji: string) => {
@@ -420,6 +426,11 @@ const CommentsPage = () => {
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
               Resposta ao comentário de {storeName}
             </p>
+            {storeLogo && (
+              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#0094EB] flex items-center justify-center">
+                <img src={storeLogo} alt="Logo da loja" className="w-full h-full object-cover" />
+              </div>
+            )}
             <p className="text-sm text-slate-600 font-medium italic">
               "{comments.find((c) => c.id === editingCommentId)?.text}"
             </p>
@@ -434,24 +445,31 @@ const CommentsPage = () => {
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
               placeholder="Escreva aqui a resposta pública..."
             />
+            {/* Emoji button */}
             <button
               type="button"
-              onClick={() => setShowEmoji((prev) => !prev)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowEmoji((prev) => !prev);
+              }}
               className="absolute right-3 top-2 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
             >
               <Smile className="h-4 w-4" />
             </button>
             {showEmoji && (
-              <div className="absolute bottom-full right-0 mb-2 grid w-64 grid-cols-7 gap-1 rounded-2xl border border-white/10 bg-black p-3 shadow-2xl">
+              <div 
+                className="absolute bottom-full right-0 mb-2 grid w-64 grid-cols-7 gap-1 rounded-2xl border border-white/10 bg-black p-3 shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
                 {EMOJIS.map((item) => (
                   <button
                     key={item}
                     type="button"
-                    onClick={() => insertEmojiAtCursor(item)}
-                    className={cn(
-                      "rounded-xl p-2 text-lg hover:bg-white/10",
-                      emoji === item && "bg-violet-600"
-                    )}
+                    onClick={() => {
+                      insertEmojiAtCursor(item);
+                      setShowEmoji(false);
+                    }}
+                    className="rounded-xl p-2 text-lg hover:bg-white/10"
                   >
                     {item}
                   </button>
