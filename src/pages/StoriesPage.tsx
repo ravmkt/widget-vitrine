@@ -237,23 +237,7 @@ const StoriesPage = () => {
                   <tr key={story.id} className="hover:bg-slate-50/50 transition-colors align-middle">
                     <td className="px-6 py-4">
                       <div className="min-w-0">
-                        <div className="flex items-center gap-3">
-                          <h3 className="text-sm font-black text-slate-800 truncate max-w-xs">{story.title}</h3>
-                          <button
-                            type="button"
-                            onClick={() => handleToggleStatus(story)}
-                            className={cn(
-                              "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
-                              isStoryActive(story)
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-                                : "bg-slate-100 text-slate-500 border-slate-200"
-                            )}
-                            title={isStoryActive(story) ? 'Story ativo' : 'Story desativado'}
-                          >
-                            {isStoryActive(story) ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
-                            {isStoryActive(story) ? 'Ativo' : 'Desativado'}
-                          </button>
-                        </div>
+                        <h3 className="text-sm font-black text-slate-800 truncate max-w-xs">{story.title}</h3>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -266,15 +250,20 @@ const StoriesPage = () => {
                     <td className="px-6 py-4 text-center font-black text-slate-800">{views}</td>
                     <td className="px-6 py-4 text-center font-black text-slate-800">{clicks}</td>
                     <td className="px-6 py-4 text-center">
-                      <span className={cn(
-                        "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
-                        isStoryActive(story)
-                          ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                          : "bg-rose-50 text-rose-600 border-rose-100"
-                      )}>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStatus(story)}
+                        className={cn(
+                          "inline-flex h-[112px] w-[112px] min-w-[112px] items-center justify-center gap-1 rounded-full px-4 py-1 text-[10px] font-black uppercase tracking-wider border transition-all mx-auto",
+                          isStoryActive(story)
+                            ? "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100"
+                            : "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100"
+                        )}
+                        title={isStoryActive(story) ? 'Story ativo' : 'Story desativado'}
+                      >
                         {isStoryActive(story) ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
                         {isStoryActive(story) ? 'Ativo' : 'Desativado'}
-                      </span>
+                      </button>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
