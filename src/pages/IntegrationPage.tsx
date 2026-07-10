@@ -75,11 +75,6 @@ const IntegrationPage = () => {
               <Blocks className="text-[#0094EB]" size={24} />
               <h3 className="text-2xl font-black text-slate-800 tracking-tight">Google Tag Manager</h3>
             </div>
-            <div className="space-y-4">
-               <p className="text-sm text-slate-700 font-bold">Passo 1: <span className="text-slate-500 font-medium">Acesse sua conta do GTM e selecione o container da sua loja.</span></p>
-               <p className="text-sm text-slate-700 font-bold">Passo 2: <span className="text-slate-500 font-medium">Crie uma nova tag do tipo HTML personalizado.</span></p>
-               <p className="text-sm text-slate-700 font-bold">Passo 3: <span className="text-slate-500 font-medium">Cole o código abaixo, configure o acionador para todas as páginas e publique as alterações.</span></p>
-            </div>
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 relative group overflow-hidden shadow-2xl">
                <pre className="text-xs md:text-sm font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap leading-relaxed">
                  {gtmCode}
@@ -95,22 +90,22 @@ const IntegrationPage = () => {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
-          <div className="p-8 rounded-[2rem] bg-blue-50 border border-blue-100 group hover:scale-105 transition-all">
-            <Globe className="text-[#0094EB] mb-4" size={28} />
-            <h4 className="font-black text-slate-800 mb-2">Passo 1</h4>
-            <p className="text-xs text-slate-500 font-bold leading-relaxed">Acesse as configurações de scripts da sua loja.</p>
-          </div>
-          <div className="p-8 rounded-[2rem] bg-slate-50 border border-slate-100 group hover:scale-105 transition-all">
-            <Code className="text-slate-400 mb-4" size={28} />
-            <h4 className="font-black text-slate-800 mb-2">Passo 2</h4>
-            <p className="text-xs text-slate-500 font-bold leading-relaxed">Vá até a seção do Cabeçalho (Header).</p>
-          </div>
-          <div className="p-8 rounded-[2rem] bg-emerald-50 border border-emerald-100 group hover:scale-105 transition-all">
-            <CheckCircle2 className="text-emerald-500 mb-4" size={28} />
-            <h4 className="font-black text-slate-800 mb-2">Passo 3</h4>
-            <p className="text-xs text-slate-500 font-bold leading-relaxed">Cole o código e salve as alterações.</p>
-          </div>
-        </div>
+      <div className="p-8 rounded-[2rem] bg-blue-50 border border-blue-100 group hover:scale-105 transition-all">
+        <Globe className="text-[#0094EB] mb-4" size={28} />
+        <h4 className="font-black text-slate-800 mb-2">Passo 1</h4>
+        <p className="text-xs text-slate-500 font-bold leading-relaxed">Acesse sua conta do GTM e selecione o container da sua loja.</p>
+      </div>
+      <div className="p-8 rounded-[2rem] bg-slate-50 border border-slate-100 group hover:scale-105 transition-all">
+        <Code className="text-slate-400 mb-4" size={28} />
+        <h4 className="font-black text-slate-800 mb-2">Passo 2</h4>
+        <p className="text-xs text-slate-500 font-bold leading-relaxed">Crie uma nova tag do tipo HTML personalizado.</p>
+      </div>
+      <div className="p-8 rounded-[2rem] bg-emerald-50 border border-emerald-100 group hover:scale-105 transition-all">
+        <CheckCircle2 className="text-emerald-500 mb-4" size={28} />
+        <h4 className="font-black text-slate-800 mb-2">Passo 3</h4>
+        <p className="text-xs text-slate-500 font-bold leading-relaxed">Cole o código abaixo, configure o acionador para todas as páginas e publique as alterações.</p>
+      </div>
+    </div>
 
         <div className="mt-16 p-6 bg-amber-50 border border-amber-100 rounded-[2rem] flex gap-5 items-start">
            <AlertTriangle className="text-amber-500 shrink-0" size={24} />
