@@ -16,8 +16,6 @@ import {
   Pause,
   ExternalLink,
   Smile,
-  Check,
-  Send,
 } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
 import { cn } from '@/lib/utils';
@@ -46,8 +44,6 @@ const getVideoLikeCount = (videoId?: string) => (videoId ? (readLikes()[videoId]
 const getVideoCommentCount = (videoId?: string) => (videoId ? readComments().filter((item) => item.videoId === videoId).length : 0);
 
 const StoryPreviewPage = () => {
-  console.log('RENDERING_PUBLIC_STORY_PREVIEW_NEW_VIEWER');
-
   const { id } = useParams();
   const videoRef = useRef<HTMLVideoElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -234,19 +230,13 @@ const StoryPreviewPage = () => {
   }
 
   return (
-    <div className="fixed inset-0 z-[999999] bg-black flex items-center justify-center overflow-hidden">
-      <div className="fixed left-0 top-0 z-[999999] bg-red-600 px-3 py-3 text-white text-[16px] font-black">
-        NEW_STORY_VIEWER_ACTIVE_ROUTE_PREVIEW
-      </div>
-      <div className="relative h-full w-full max-w-[390px] overflow-hidden bg-black sm:aspect-[9/16] sm:max-h-[100dvh]">
+    <div className="fixed inset-0 bg-neutral-950 flex items-center justify-center overflow-hidden">
+      <div className="relative h-full w-full max-w-[430px] overflow-hidden bg-black sm:aspect-[9/16] sm:max-h-[90vh] sm:rounded-[36px]">
         <div className="absolute left-4 right-4 top-3 z-[80] flex gap-1.5">
           {videos.map((video, idx) => (
-            <div key={video.id} className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/25">
+            <div key={video.id} className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/20">
               <div
-                className={cn(
-                  'h-full rounded-full bg-white transition-all',
-                  idx < activeVideoIdx ? 'w-full' : idx === activeVideoIdx ? 'bg-violet-400' : 'w-0'
-                )}
+                className={cn('h-full rounded-full bg-white transition-all', idx < activeVideoIdx ? 'w-full' : idx === activeVideoIdx ? 'bg-violet-400' : 'w-0')}
                 style={idx === activeVideoIdx ? { width: `${progress}%` } : undefined}
               />
             </div>
@@ -297,7 +287,7 @@ const StoryPreviewPage = () => {
           <ChevronRight className="h-7 w-7" />
         </button>
 
-        <div className="absolute right-4 top-24 z-[90] flex flex-col gap-3">
+        <div className="absolute right-4 top-1/2 z-[90] flex -translate-y-1/2 flex-col gap-3">
           <button onClick={handleTogglePlay} className="rounded-full bg-black/55 p-3 text-white backdrop-blur-md">
             {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
           </button>
@@ -341,7 +331,7 @@ const StoryPreviewPage = () => {
 
         {showComments && (
           <div className="absolute inset-0 z-[95] bg-black/85 p-4">
-            <div className="mx-auto flex h-full max-w-md flex-col rounded-[28px] bg-slate-950 p-4 text-white">
+            <div className="mx-auto flex h-full max-w-md flex-col rounded-[28px] bg-slate-950 p-4 text-white shadow-2xl">
               <div className="mb-3 flex items-center justify-between">
                 <h4 className="text-lg font-black">Comentários</h4>
                 <button onClick={() => setShowComments(false)}>
@@ -360,7 +350,9 @@ const StoryPreviewPage = () => {
                 <input value={commentName} onChange={(e) => setCommentName(e.target.value)} placeholder="Seu nome" className="w-full rounded-2xl bg-white/10 p-3 text-sm text-white outline-none" />
                 <div className="relative">
                   <textarea ref={textareaRef} value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="Escreva seu comentário..." className="min-h-24 w-full rounded-2xl bg-white/10 p-3 text-sm text-white outline-none" />
-                  <button type="button" onClick={() => setShowEmoji((v) => !v)} className="absolute right-3 top-3 text-white"><Smile /></button>
+                  <button type="button" onClick={() => setShowEmoji((v) => !v)} className="absolute right-3 top-3 text-white">
+                    <Smile />
+                  </button>
                 </div>
                 {showEmoji && (
                   <div className="grid grid-cols-6 gap-2 rounded-2xl bg-white/10 p-3 text-xl">
@@ -376,10 +368,6 @@ const StoryPreviewPage = () => {
             </div>
           </div>
         )}
-
-        <div className="pointer-events-none absolute bottom-2 left-3 z-[999999] text-[10px] font-black text-white/60">
-          NEW_STORY_VIEWER_ACTIVE_ROUTE_PREVIEW
-        </div>
       </div>
     </div>
   );
