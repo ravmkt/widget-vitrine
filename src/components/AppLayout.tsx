@@ -1,6 +1,5 @@
 import React from 'react';
 import { AppSidebar } from './AppSidebar';
-import Navbar from './Navbar';
 import FloatingSupportButton from './FloatingSupportButton';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 
@@ -14,7 +13,6 @@ export function AppLayout({ children }: AppLayoutProps) {
       <div className="flex min-h-screen w-full bg-[#F7FAFC]">
         <AppSidebar />
         <SidebarInset className="flex flex-col flex-1">
-          <Navbar />
           <main className="flex-1 p-4 md:p-8 animate-fade-in relative">
             <div className="mx-auto max-w-7xl">
               {children}
