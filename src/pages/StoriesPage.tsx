@@ -141,7 +141,7 @@ const StoriesPage = () => {
 
   const getFormatLabel = (format: string) => {
     switch (format) {
-      case 'floating_widget': return 'Widget Fixo';
+      case 'floating_widget': return 'Flutuante';
       case 'carousel': return 'Carrossel';
       case 'grid': return 'Grade';
       default: return format;
@@ -156,6 +156,8 @@ const StoriesPage = () => {
       default: return <PlayCircle size={14} />;
     }
   };
+
+  const getTypeBadgeClass = () => "inline-flex h-7 w-[120px] min-w-[120px] items-center justify-center gap-1.5 rounded-lg border border-slate-100 bg-slate-50 px-[10px] text-xs font-bold text-[#0094EB] whitespace-nowrap";
 
   if (loading) return null;
 
@@ -240,8 +242,8 @@ const StoriesPage = () => {
                         <h3 className="text-sm font-black text-slate-800 truncate max-w-xs">{story.title}</h3>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-[#0094EB] text-xs font-bold border border-slate-100">
+                    <td className="px-6 py-4 text-center">
+                      <span className={getTypeBadgeClass()}>
                         {getFormatIcon(story.format)} {getFormatLabel(story.format)}
                       </span>
                     </td>
