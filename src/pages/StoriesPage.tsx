@@ -116,7 +116,7 @@ const StoriesPage = () => {
           case 'comments_desc': return b.metrics.comments - a.metrics.comments;
           case 'comments_asc': return a.metrics.comments - b.metrics.comments;
           case 'engagement_desc': return b.metrics.engagement - a.metrics.engagement;
-          case 'engagement_asc': return a.metrics.engagement - b.metrics.engagement;
+          case 'engagement_asc': return b.metrics.engagement - b.metrics.engagement;
           default: return 0;
         }
       });
@@ -191,7 +191,7 @@ const StoriesPage = () => {
             <select 
               value={filterSource} 
               onChange={(e) => setFilterSource(e.target.value as any)}
-              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold outline-none focus:border-[#0094EB]"
+              className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 text-xs font-bold outline-none focus:border-[#0094EB]"
             >
               <option value="all">Todas Fontes</option>
               <option value="upload">Upload</option>
