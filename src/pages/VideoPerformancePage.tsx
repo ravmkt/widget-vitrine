@@ -126,7 +126,7 @@ const VideoPerformancePage = () => {
 
   const getHeaderClass = (align: 'left' | 'center' | 'right' = 'left') =>
     cn(
-      'cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest hover:opacity-75',
+      'cursor-pointer select-none whitespace-nowrap px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest hover:opacity-75',
       align === 'center' && 'text-center',
       align === 'right' && 'text-right'
     );
@@ -227,8 +227,8 @@ const VideoPerformancePage = () => {
       </div>
 
       <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="overflow-x-hidden">
+          <table className="w-full max-w-full table-fixed text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
                 <th onClick={() => handleSort('nome')} className={getHeaderClass()}>
@@ -252,9 +252,6 @@ const VideoPerformancePage = () => {
                 <th onClick={() => handleSort('conversoes')} className={getHeaderClass('center')}>
                   <span className="inline-flex items-center gap-1 justify-center">Conversões {sortIcon('conversoes')}</span>
                 </th>
-                <th onClick={() => handleSort('engajamento')} className={getHeaderClass('center')}>
-                  <span className="inline-flex items-center gap-1 justify-center">Engajamento {sortIcon('engajamento')}</span>
-                </th>
                 <th className={getHeaderClass('right')}>Ver</th>
                 <th className={getHeaderClass('right')}>Editar</th>
               </tr>
@@ -262,8 +259,8 @@ const VideoPerformancePage = () => {
             <tbody className="divide-y divide-slate-100">
               {sortedVideoStats.map((v: any) => (
                 <tr key={v.id} className="hover:bg-slate-50/50 transition-colors align-middle">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3 min-w-[240px]">
+                  <td className="px-3 py-4">
+                    <div className="flex items-center gap-3 min-w-0">
                       <img
                         src={v.thumbnail_url || ''}
                         className="h-14 w-14 rounded-xl object-cover shrink-0 bg-slate-200 border border-slate-200"
@@ -276,17 +273,16 @@ const VideoPerformancePage = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-center font-black text-slate-800">{Number(v.metrics.views || 0).toLocaleString()}</td>
-                  <td className="px-6 py-4 text-center font-black text-slate-800">{Number(v.metrics.comments || 0).toLocaleString()}</td>
-                  <td className="px-6 py-4 text-center font-black text-slate-800">{Number(v.metrics.likes || 0).toLocaleString()}</td>
-                  <td className="px-6 py-4 text-center font-black text-slate-800">{Number(v.metrics.ctr || 0).toFixed(1).replace('.', ',')}%</td>
-                  <td className="px-6 py-4 text-center font-black text-slate-800">{Number(v.metrics.clicks || 0).toLocaleString()}</td>
-                  <td className="px-6 py-4 text-center font-black text-slate-800">{Number(v.metrics.conversions || 0).toLocaleString()}</td>
-                  <td className="px-6 py-4 text-center font-black text-slate-800">{v.metrics.engagement}%</td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-3 py-4 text-center font-black text-slate-800">{Number(v.metrics.views || 0).toLocaleString()}</td>
+                  <td className="px-3 py-4 text-center font-black text-slate-800">{Number(v.metrics.comments || 0).toLocaleString()}</td>
+                  <td className="px-3 py-4 text-center font-black text-slate-800">{Number(v.metrics.likes || 0).toLocaleString()}</td>
+                  <td className="px-3 py-4 text-center font-black text-slate-800">{Number(v.metrics.ctr || 0).toFixed(1).replace('.', ',')}%</td>
+                  <td className="px-3 py-4 text-center font-black text-slate-800">{Number(v.metrics.clicks || 0).toLocaleString()}</td>
+                  <td className="px-3 py-4 text-center font-black text-slate-800">{Number(v.metrics.conversions || 0).toLocaleString()}</td>
+                  <td className="px-3 py-4 text-right">
                     <button onClick={() => handleOpenPlayer(v)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors" title="Ver"><Eye size={16} /></button>
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-3 py-4 text-right">
                     <button onClick={() => navigate(`/videos/${v.id}/edit`)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors" title="Editar"><Edit3 size={16} /></button>
                   </td>
                 </tr>
