@@ -74,14 +74,11 @@ const StoriesPage = () => {
   useEffect(() => { loadData(); }, []);
 
   const isStoryActive = (story: Story) => {
-    const item = story as Story & { is_active?: boolean; active?: boolean; enabled?: boolean; status?: string; inactive?: boolean; disabled?: boolean; is_inactive?: boolean };
-    if (typeof item.is_active === 'boolean') return item.is_active;
-    if (typeof item.active === 'boolean') return item.active;
-    if (typeof item.enabled === 'boolean') return item.enabled;
-    if (typeof item.status === 'string') return item.status === 'active' || item.status === 'ativo';
-    if (typeof item.inactive === 'boolean') return !item.inactive;
-    if (typeof item.disabled === 'boolean') return !item.disabled;
-    if (typeof item.is_inactive === 'boolean') return !item.is_inactive;
+    const item = story as Story & { is_active?: boolean; active?: boolean; status?: string; enabled?: boolean };
+    if (item.is_active === true) return true;
+    if (item.active === true) return true;
+    if (item.enabled === true) return true;
+    if (item.status === 'active' || item.status === 'ativo') return true;
     return false;
   };
 
@@ -98,15 +95,12 @@ const StoriesPage = () => {
     try {
       const currentActive = isStoryActive(story);
       const nextActive = !currentActive;
-      const item = story as Story & { is_active?: boolean; active?: boolean; enabled?: boolean; status?: string; inactive?: boolean; disabled?: boolean; is_inactive?: boolean };
-      const updated = { ...story } as Story & Record<string, any>;
-      if (typeof item.is_active === 'boolean') updated.is_active = nextActive;
-      if (typeof item.active === 'boolean') updated.active = nextActive;
-      if (typeof item.enabled === 'boolean') updated.enabled = nextActive;
-      if (typeof item.status === 'string') updated.status = nextActive ? 'active' : 'inactive';
-      if (typeof item.inactive === 'boolean') updated.inactive = !nextActive;
-      if (typeof item.disabled === 'boolean') updated.disabled = !nextActive;
-      if (typeof item.is_inactive === 'boolean') updated.is_inactive = !nextActive;
+      const updated = {
+        ...story,
+        active: nextActive,
+        is_active: nextActive,
+        status: nextActive ? 'active' : 'inactive'
+      } as Story & Record<string, any>;
       await db.stories.save(updated as Story);
       setStories(prev =>
         prev.map(item =>
