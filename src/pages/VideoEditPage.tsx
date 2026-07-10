@@ -84,10 +84,9 @@ const VideoEditPage = () => {
   const handleOriginChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setFormData(prev => {
       const newData = { ...prev, origin: e.target.value as any };
-      if (e.target.value === 'url') newData.video_file = null;
-      if (e.target.value === 'instagram') newData.instagram_link = '';
-      if (e.target.value === 'tiktok') newData.tiktok_link = '';
-      if (e.target.value === 'upload') newData.video_file = null;
+      // Reset thumbnail when origin changes
+      newData.thumbnail_url = '';
+      newData.video_file = null;
       return newData;
     });
   };
@@ -184,16 +183,6 @@ const VideoEditPage = () => {
       isValid = false;
     }
 
-    if (!formData.product_id) {
-      errors.product_id = 'O produto vinculado é obrigatório.';
-      isValid = false;
-    }
-
-    if (!formData.model_id) {
-      errors.model_id = 'O modelo vinculado é obrigatório.';
-      isValid = false;
-    }
-
     if (!formData.origin) {
       errors.origin = 'Selecione a origem do vídeo.';
       isValid = false;
@@ -224,7 +213,7 @@ const VideoEditPage = () => {
         errors.tiktok_link = 'Informe o link do TikTok.';
         isValid = false;
       } else if (!validateTikTokLink(formData.tiktok_link)) {
-        errors.tiktok_link = 'Link do TikTok inválido (ex: tiktok.com ou www.tiktok.com).';
+        errors.tiktoktok.com or www.tiktok_link = 'Link do TikTok inválido (ex: tiktok.com ou www.tiktok.com).';
         isValid = false;
       }
     }
@@ -263,6 +252,8 @@ const VideoEditPage = () => {
         tiktok_link: formData.tiktok_link,
         thumbnail_url: formData.thumbnail_url,
         active: formData.active,
+        model_id: formData.model_id ? formData.model_id : null,
+        product_id: formData.product_id ? formData.product_id : null,
         updated_at: new Date().toISOString()
       };
 
@@ -273,9 +264,6 @@ const VideoEditPage = () => {
           store_id: '11111111-1111-1111-1111-111111111111',
           created_at: new Date().toISOString()
         };
-        if (formData.product_id) (newVideo as any).product_id = formData.product_id;
-        if (formData.model_id) (newVideo as any).model_id = formData.model_id;
-
         await db.videos.save(newVideo);
       } else {
         if (!video) return;
@@ -283,11 +271,6 @@ const VideoEditPage = () => {
           ...video,
           ...videoData
         };
-        if (formData.product_id) (updatedVideo as any).product_id = formData.product_id;
-        else (updatedVideo as any).product_id = undefined;
-        if (formData.model_id) (updatedVideo as any).model_id = formData.model_id;
-        else (updatedVideo as any).model_id = undefined;
-
         await db.videos.save(updatedVideo);
       }
 
@@ -338,7 +321,7 @@ const VideoEditPage = () => {
               <option value="url">URL do vídeo</option>
               <option value="instagram">Instagram</option>
               <option value="tiktok">TikTok</option>
-              <option value="upload">Upload de vídeo</option>
+              <option value="upload">Upload de vídeo</option
             </select>
           </div>
 
