@@ -1,11 +1,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { 
-  ChevronRight, 
-  Bell, 
-  User, 
-  HelpCircle
-} from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { SidebarTrigger } from './ui/sidebar';
 
 const Navbar = () => {
@@ -39,20 +34,6 @@ const Navbar = () => {
            </div>
         </div>
 
-        <div className="flex items-center gap-2 md:gap-5">
-          <div className="flex items-center gap-1">
-            <button className="p-2.5 rounded-xl text-[#64748B] hover:bg-[#F1F5F9] transition-colors relative">
-              <Bell size={18} />
-              <span className="absolute top-2.5 right-2.5 h-2 w-2 bg-[#0094EB] rounded-full border-2 border-white" />
-            </button>
-            <button className="p-2.5 rounded-xl text-[#64748B] hover:bg-[#F1F5F9] transition-colors">
-              <HelpCircle size={18} />
-            </button>
-            <button className="p-2.5 rounded-xl text-[#64748B] hover:bg-[#F1F5F9] transition-colors">
-              <User size={18} />
-            </button>
-          </div>
-        </div>
 
       </div>
     </header>
