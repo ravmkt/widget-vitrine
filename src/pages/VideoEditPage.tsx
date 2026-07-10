@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db, Video, Product, SizingModel, Story } from '@/lib/db';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
@@ -16,6 +16,8 @@ const VideoEditPage = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [video, setVideo] = useState<Video | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState('');
   const [models, setModels] = useState<SizingModel[]>([]);
   const [usedInStories, setUsedInStories] = useState<Story[]>([]);
 
@@ -37,13 +39,15 @@ const VideoEditPage = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [allVideos, allProducts, allModels] = await Promise.all([
+        const [allVideos, allModels, allProducts] = await Promise.all([
           db.videos.getAll(),
-          db.products.getAll(),
-          db.sizingModels.getAll()
+          db.sizingModels.getAll(),
+          db.products.getAll()
         ]);
-        setProducts(allProducts);
         setModels(allModels);
+        setProducts(allProducts);
+        setProductsLoading(false);
+        setProductsError('');
 
         if (!isCreate && id) {
           const v = await db.videos.getById(id!);
@@ -61,7 +65,7 @@ const VideoEditPage = () => {
             product_id: v.product_id || '',
             model_id: v.model_id || '',
             active: v.active ?? true,
-            origin: (v.source_type as any) || 'url',
+            origin: (v.source_type as any) || 'external_url',
             video_file: null,
           });
 
@@ -74,9 +78,10 @@ const VideoEditPage = () => {
           setUsedInStories(usedStories);
         }
       } catch (e) {
-        showError('Erro ao carregar dados');
+        setProductsError('Não foi possível carregar os produtos.');
       } finally {
         setLoading(false);
+        setProductsLoading(false);
       }
     };
     loadData();
@@ -266,22 +271,22 @@ const VideoEditPage = () => {
         updated_at: new Date().toISOString()
       };
 
-      if (isCreate) {
-        const newVideo: Video = {
-          ...videoData,
-          id: Math.random().toString(36).substr(2, 9),
-          store_id: '11111111-1111-1111-1111-111111111111',
-          created_at: new Date().toISOString()
-        } as Video;
-        await db.videos.save(newVideo);
-      } else {
-        if (!video) return;
-        const updatedVideo: Video = {
-          ...video,
-          ...videoData
-        };
-        await db.videos.save(updatedVideo);
-      }
+    if (isCreate) {
+      const newVideo: Video = {
+        ...videoData,
+        id: Math.random().toString(36).substr(2, 9),
+        store_id: '11111111-1111-1111-1111-111111111111',
+        created_at: new Date().toISOString()
+      } as Video;
+      await db.videos.save(newVideo);
+    } else {
+      if (!video) return;
+      const updatedVideo: Video = {
+        ...video,
+        ...videoData
+      };
+      await db.videos.save(updatedVideo);
+    }
 
       setShowSuccessModal(true);
     } catch (e) {
@@ -433,10 +438,21 @@ const VideoEditPage = () => {
               onChange={e => setFormData({ ...formData, product_id: e.target.value })}
               className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
             >
-              <option value="">Nenhum</option>
-              {products.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
+              <option value="">Nenhum produto vinculado</option>
+              {productsLoading ? (
+                <option value="" disabled>Carregando produtos...</option>
+              ) : productsError ? (
+                <option value="" disabled>{productsError}</option>
+              ) : products.length === 0 ? (
+                <option value="" disabled>Nenhum produto cadastrado</option>
+              ) : (
+                products.map(p => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                    {typeof p.price === 'number' ? ` - ${p.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}` : ''}
+                  </option>
+                ))
+              )}
             </select>
           </div>
 
