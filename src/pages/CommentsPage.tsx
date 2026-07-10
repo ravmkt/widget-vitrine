@@ -21,14 +21,26 @@ import {
   Smile,
   CheckCircle2,
   XCircle,
+  X,
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import CustomDialog from "@/components/CustomDialog";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import { cn } from "@/lib/utils";
 
+// Extended Comment type with replies
+interface CommentWithReplies extends Comment {
+  replies?: Array<{
+    id: string;
+    user_name: string;
+    text: string;
+    created_at: string;
+    user_logo?: string;
+  }>;
+}
+
 const CommentsPage = () => {
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [comments, setComments] = useState<CommentWithReplies[]>([]);
   const [videos, setVideos] = useState<Video[]>([]);
   const [generalSettings, setGeneralSettings] = useState<GeneralSettings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -214,7 +226,7 @@ const CommentsPage = () => {
     setDeleteModal(prev => ({ ...prev, isOpen: false }));
   };
 
-  const handleReply = (e: React.MouseEvent, comment: Comment) => {
+  const handleReply = (e: React.MouseEvent, comment: CommentWithReplies) => {
     e.stopPropagation();
     setEditingCommentId(comment.id);
     setTimeout(() => {
@@ -229,24 +241,33 @@ const CommentsPage = () => {
       showError("Digite um comentário");
       return;
     }
-    const newComment = {
+
+    const newReply = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      story_id: comments.find(c => c.id === editingCommentId)?.story_id || "",
-      video_id: comments.find(c => c.id === editingCommentId)?.video_id || "",
-      user_name: storeName, // Automatic store name
+      user_name: storeName,
       text,
-      status: "pending",
       created_at: new Date().toISOString(),
+      user_logo: storeLogo,
     };
 
-    await db.comments.save(newComment);
-    setComments(prev => [...prev, newComment]);
+    // Update the comment with the new reply
+    setComments(prev => prev.map(c => {
+      if (c.id === editingCommentId) {
+        const updated = {
+          ...c,
+          replies: [...(c.replies || []), newReply],
+        };
+        // Persist to localStorage/db
+        db.comments.save(updated);
+        return updated;
+      }
+      return c;
+    }));
+
     setCommentText("");
     setShowEmoji(false);
-    showSuccess("Comentário enviado");
-    
-    // Close the modal after successful submission
     setEditingCommentId(null);
+    showSuccess("Resposta enviada");
   };
 
   const insertEmojiAtCursor = (emoji: string) => {
@@ -352,8 +373,33 @@ const CommentsPage = () => {
                     </td>
                     <td className="px-6 py-4">
                       <p className="text-sm text-slate-600 mb-1">"{row.text}"</p>
+                      
+                      {/* Replies displayed inside the comment */}
+                      {row.replies && row.replies.length > 0 && (
+                        <div className="mt-3 ml-4 border-l-2 border-[#0094EB]/20 pl-3 space-y-2">
+                          {row.replies.map((reply) => (
+                            <div key={reply.id} className="bg-blue-50/50 rounded-xl p-3">
+                              <div className="flex items-center gap-2 mb-1">
+                                {reply.user_logo ? (
+                                  <img src={reply.user_logo} alt={reply.user_name} className="w-6 h-6 rounded-full object-cover border border-[#0094EB]" />
+                                ) : (
+                                  <div className="w-6 h-6 rounded-full bg-[#0094EB] flex items-center justify-center text-white font-black text-xs">
+                                    {reply.user_name?.charAt(0).toUpperCase()}
+                                  </div>
+                                )}
+                                <span className="font-bold text-xs text-slate-700">{reply.user_name}</span>
+                                <span className="text-[9px] text-slate-400">
+                                  {new Date(reply.created_at).toLocaleString('pt-BR')}
+                                </span>
+                              </div>
+                              <p className="text-sm text-slate-600 ml-8">{reply.text}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
                       {video && (
-                        <div className="flex items-center gap-1 text-[10px] font-black text-[#0094EB] uppercase tracking-wider">
+                        <div className="flex items-center gap-1 text-[10px] font-black text-[#0094EB] uppercase tracking-wider mt-2">
                           <VideoIcon size={12} /> VÍDEO:{" "}
                           <span
                             onClick={(e) => {
@@ -435,47 +481,51 @@ const CommentsPage = () => {
               "{comments.find((c) => c.id === editingCommentId)?.text}"
             </p>
           </div>
-          <div className="relative">
+          <div className="relative w-full">
             <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Sua Resposta</label>
-            <textarea
-              ref={textareaRef}
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              rows={3}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
-              placeholder="Escreva aqui a resposta pública..."
-            />
-            {/* Emoji button */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowEmoji((prev) => !prev);
-              }}
-              className="absolute right-3 top-2 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
-            >
-              <Smile className="h-4 w-4" />
-            </button>
-            {showEmoji && (
-              <div 
-                className="absolute bottom-full right-0 mb-2 grid w-64 grid-cols-7 gap-1 rounded-2xl border border-white/10 bg-black p-3 shadow-2xl"
-                onClick={(e) => e.stopPropagation()}
+            <div className="relative">
+              <textarea
+                ref={textareaRef}
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                rows={3}
+                className="w-full px-4 py-3 pr-12 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
+                placeholder="Escreva aqui a resposta pública..."
+              />
+              {/* Emoji button - visible inside textarea area */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowEmoji((prev) => !prev);
+                }}
+                className="absolute right-3 bottom-3 rounded-full bg-[#0094EB] p-2 text-white hover:bg-[#0E4787] transition-colors shadow-lg z-10"
+                aria-label="Inserir emoji"
               >
-                {EMOJIS.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() => {
-                      insertEmojiAtCursor(item);
-                      setShowEmoji(false);
-                    }}
-                    className="rounded-xl p-2 text-lg hover:bg-white/10"
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
-            )}
+                <span className="text-lg">😊</span>
+              </button>
+              {/* Emoji panel - high z-index to appear above modal */}
+              {showEmoji && (
+                <div 
+                  className="absolute bottom-full right-0 mb-2 grid w-64 grid-cols-7 gap-1 rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl z-[99999]"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {EMOJIS.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => {
+                        insertEmojiAtCursor(item);
+                        setShowEmoji(false);
+                      }}
+                      className="rounded-xl p-2 text-lg hover:bg-slate-100 transition-colors"
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </CustomDialog>
