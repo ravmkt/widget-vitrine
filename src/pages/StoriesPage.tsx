@@ -201,45 +201,23 @@ const StoriesPage = () => {
         </div>
       </div>
 
-      <div className="space-y-4">
-        {filteredStories.map((story) => (
-          <div key={story.id} className="bg-white border border-slate-200 rounded-[2rem] p-6 hover:border-[#0094EB]/30 transition-all shadow-sm group">
-            <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-              
-              {/* Nome e Info Principal */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-1">
-                  <h3 className="text-xl font-black text-slate-800 truncate">{story.title}</h3>
-                  <button
-                    type="button"
-                    onClick={() => handleToggleStatus(story)}
-                    className={cn(
-                      "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all",
-                      isStoryActive(story)
-                        ? "bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100"
-                        : "bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200"
-                    )}
-                    title={isStoryActive(story) ? 'Story ativo' : 'Story desativado'}
-                  >
-                    {isStoryActive(story) ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                    {isStoryActive(story) ? 'ATIVO' : 'DESATIVADO'}
-                  </button>
-                </div>
-                <div className="flex flex-wrap items-center gap-y-2 gap-x-4">
-                  <div className="flex items-center gap-1.5 text-[10px] font-black text-[#0094EB] uppercase tracking-widest">
-                    {getFormatIcon(story.format)} {getFormatLabel(story.format)}
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    <Film size={12} /> {videoCounts[story.id] || 0} {(videoCounts[story.id] || 0) === 1 ? 'Vídeo' : 'Vídeos'}
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    <MapPin size={12} /> {locations[story.id] || 'Página Geral'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Métricas Reais */}
-              {(() => {
+      <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Nome</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Tipo</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center">Vídeos</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Local</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center">Visualizações</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center">Cliques</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center">Status</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredStories.map((story) => {
                 const views =
                   (story as any).views_count ??
                   (story as any).view_count ??
@@ -256,67 +234,82 @@ const StoriesPage = () => {
                   0;
 
                 return (
-                  <div className="flex flex-wrap gap-6 lg:px-8 border-l border-slate-100 lg:border-slate-100 border-none">
-                    <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">VISUALIZAÇÕES</p>
-                      <div className="flex items-center gap-2">
-                        <Eye size={14} className="text-[#0094EB]" />
-                        <span className="text-lg font-black text-slate-800">{views}</span>
+                  <tr key={story.id} className="hover:bg-slate-50/50 transition-colors align-middle">
+                    <td className="px-6 py-4">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-sm font-black text-slate-800 truncate max-w-xs">{story.title}</h3>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStatus(story)}
+                            className={cn(
+                              "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
+                              isStoryActive(story)
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                                : "bg-slate-100 text-slate-500 border-slate-200"
+                            )}
+                            title={isStoryActive(story) ? 'Story ativo' : 'Story desativado'}
+                          >
+                            {isStoryActive(story) ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
+                            {isStoryActive(story) ? 'Ativo' : 'Desativado'}
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">CLIQUES</p>
-                      <div className="flex items-center gap-2">
-                        <MousePointer2 size={14} className="text-violet-500" />
-                        <span className="text-lg font-black text-slate-800">{clicks}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-[#0094EB] text-xs font-bold border border-slate-100">
+                        {getFormatIcon(story.format)} {getFormatLabel(story.format)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center font-black text-slate-800">{videoCounts[story.id] || 0}</td>
+                    <td className="px-6 py-4 text-sm font-bold text-slate-600 truncate max-w-[180px]">{locations[story.id] || 'Página Geral'}</td>
+                    <td className="px-6 py-4 text-center font-black text-slate-800">{views}</td>
+                    <td className="px-6 py-4 text-center font-black text-slate-800">{clicks}</td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={cn(
+                        "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
+                        isStoryActive(story)
+                          ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                          : "bg-rose-50 text-rose-600 border-rose-100"
+                      )}>
+                        {isStoryActive(story) ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
+                        {isStoryActive(story) ? 'Ativo' : 'Desativado'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => window.open(`/stories/preview/${story.id}`, "_blank", "noopener,noreferrer")}
+                          className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors"
+                          title="Preview Story"
+                        >
+                          <Eye size={16} />
+                        </button>
+                        <button
+                          onClick={() => navigate(`/stories/${story.id}`)}
+                          className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors"
+                          title="Editar Story"
+                        >
+                          <Edit3 size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(story)}
+                          className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                          title="Excluir Story"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
-                    </div>
-                  </div>
+                    </td>
+                  </tr>
                 );
-              })()}
-
-              {/* Ações */}
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => window.open(`/stories/preview/${story.id}`, "_blank", "noopener,noreferrer")}
-                  className="p-3 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-2xl transition-all"
-                  title="Preview Story"
-                >
-                  <Eye size={20} />
-                </button>
-                <button
-                  onClick={() => handleToggleStatus(story)}
-                  className={cn(
-                    "px-4 py-3 rounded-2xl text-[10px] font-black uppercase transition-all",
-                    isStoryActive(story)
-                      ? "bg-emerald-500 text-white hover:bg-emerald-600"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  )}
-                >
-                  {isStoryActive(story) ? 'ATIVO' : 'DESATIVADO'}
-                </button>
-                <button
-                  onClick={() => navigate(`/stories/${story.id}`)}
-                  className="p-3 bg-[#EAF6FF] text-[#0094EB] hover:bg-[#0094EB] hover:text-white rounded-2xl transition-all"
-                  title="Editar Story"
-                >
-                  <Edit3 size={20} />
-                </button>
-                <button
-                  onClick={() => handleDeleteClick(story)}
-                  className="p-3 bg-white border border-slate-200 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all"
-                  title="Excluir Story"
-                >
-                  <Trash2 size={20} />
-                </button>
-              </div>
-
-            </div>
-          </div>
-        ))}
+              })}
+            </tbody>
+          </table>
+        </div>
 
         {filteredStories.length === 0 && (
-          <div className="p-20 text-center bg-slate-50 rounded-[3rem] border border-dashed border-slate-200">
+          <div className="p-12 text-center">
             <PlayCircle size={48} className="mx-auto text-slate-300 mb-4" />
             <p className="text-slate-500 font-bold">Nenhum Story encontrado.</p>
           </div>
