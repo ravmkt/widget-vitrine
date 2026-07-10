@@ -279,17 +279,17 @@ const SettingsPage = () => {
             <CardTitle className="text-xl font-black text-slate-800">2. Módulos</CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
-            <div className="flex items-center gap-3">
-              <Switch checked={settings?.widget_enabled ?? true} onCheckedChange={(c) => setSettings(prev => ({ ...prev, widget_enabled: c }))} className="w-[60px] h-[30px]" />
-              <div><Label className="text-sm font-bold text-slate-700">Ativar Vitrine de Vídeos</Label><p className="text-xs text-slate-500 mt-1">Controla a renderização pública do carrossel/grade na loja.</p></div>
+            <div className="flex items-start gap-3">
+              <Switch checked={settings?.widget_enabled ?? true} onCheckedChange={(c) => setSettings(prev => ({ ...prev, widget_enabled: c }))} />
+              <div className="pt-0.5"><Label className="text-sm font-bold text-slate-700">Ativar Vitrine de Vídeos</Label><p className="text-xs text-slate-500 mt-1">Controla a renderização pública do carrossel/grade na loja.</p></div>
             </div>
-            <div className="flex items-center gap-3">
-              <Switch checked={settings?.whatsapp_enabled ?? true} onCheckedChange={(c) => setSettings(prev => ({ ...prev, whatsapp_enabled: c }))} className="w-[60px] h-[30px]" />
-              <div><Label className="text-sm font-bold text-slate-700">Ativar WhatsApp</Label><p className="text-xs text-slate-500 mt-1">Exibe botão de WhatsApp nos vídeos.</p></div>
+            <div className="flex items-start gap-3">
+              <Switch checked={settings?.whatsapp_enabled ?? true} onCheckedChange={(c) => setSettings(prev => ({ ...prev, whatsapp_enabled: c }))} />
+              <div className="pt-0.5"><Label className="text-sm font-bold text-slate-700">Ativar WhatsApp</Label><p className="text-xs text-slate-500 mt-1">Exibe botão de WhatsApp nos vídeos.</p></div>
             </div>
-            <div className="flex items-center gap-3">
-              <Switch checked={settings?.stories_enabled ?? true} onCheckedChange={(c) => setSettings(prev => ({ ...prev, stories_enabled: c }))} className="w-[60px] h-[30px]" />
-              <div><Label className="text-sm font-bold text-slate-700">Ativar Analytics</Label><p className="text-xs text-slate-500 mt-1">Coleta métricas de visualização e engajamento.</p></div>
+            <div className="flex items-start gap-3">
+              <Switch checked={settings?.stories_enabled ?? true} onCheckedChange={(c) => setSettings(prev => ({ ...prev, stories_enabled: c }))} />
+              <div className="pt-0.5"><Label className="text-sm font-bold text-slate-700">Ativar Analytics</Label><p className="text-xs text-slate-500 mt-1">Coleta métricas de visualização e engajamento.</p></div>
             </div>
           </CardContent>
         </Card>
