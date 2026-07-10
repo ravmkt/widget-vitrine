@@ -125,7 +125,7 @@ const DashboardPage = () => {
         <MetricCard title="Visualizações" value={dashboardData.totals.views.toLocaleString()} change="+12.5%" icon={Eye} />
         <MetricCard title="Cliques em CTA" value={dashboardData.totals.clicks.toLocaleString()} change="+8.3%" icon={MousePointerClick} />
         <MetricCard title="Conversões" value={dashboardData.totals.sales.toLocaleString()} change="+15.1%" icon={CheckCircle2} isConversion />
-        <MetricCard title="Faturamento" value={dashboardData.totals.revenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} change="+5.4%" icon={ShoppingBag} />
+        <MetricCard title="CTR" value="12.4%" change="+5.4%" icon={MousePointerClick} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
