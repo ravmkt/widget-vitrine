@@ -271,15 +271,24 @@ const StoryPreviewPage = () => {
           ))}
         </div>
 
-        <div className="absolute left-0 right-0 top-0 z-[80] flex items-start justify-between bg-gradient-to-b from-black/80 to-transparent p-5 pt-8">
-          <div className="min-w-0 pr-16">
+        <div className="absolute left-0 right-0 top-0 z-[80] flex items-start justify-between bg-gradient-to-b from-black/80 to-transparent p-4 pt-4">
+          <div className="min-w-0 pr-4">
             <h3 className="truncate text-sm font-black text-white">{story.title}</h3>
             <p className="text-[10px] font-bold uppercase text-white/65">
               {story.title} • {activeVideoIdx + 1}/{videos.length || 1}
             </p>
           </div>
-          <button type="button" onClick={close} className="rounded-full bg-black/40 p-2 text-white backdrop-blur-md">
-            <X className="h-5 w-5" />
+        </div>
+
+        <div className="absolute right-3 top-4 z-[90] flex items-center gap-1.5">
+          <button onClick={handleToggleMute} className="flex h-[34px] w-[34px] min-h-[34px] min-w-[34px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm">
+            {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+          </button>
+          <button onClick={handleTogglePlay} className="flex h-[34px] w-[34px] min-h-[34px] min-w-[34px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm">
+            {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          </button>
+          <button type="button" onClick={close} className="flex h-[34px] w-[34px] min-h-[34px] min-w-[34px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm">
+            <X className="h-4 w-4" />
           </button>
         </div>
 
@@ -303,16 +312,16 @@ const StoryPreviewPage = () => {
         <button
           type="button"
           onClick={goPrev}
-          className="absolute left-3 top-1/2 z-[85] flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white"
+          className="absolute left-3 top-1/2 z-[85] flex h-[42px] w-[42px] min-h-[42px] min-w-[42px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/80 bg-black/20 text-white backdrop-blur-sm"
         >
-          <ChevronLeft className="h-7 w-7" />
+          <ChevronLeft className="h-6 w-6" />
         </button>
         <button
           type="button"
           onClick={goNext}
-          className="absolute right-3 top-1/2 z-[85] flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white"
+          className="absolute right-3 top-1/2 z-[85] flex h-[42px] w-[42px] min-h-[42px] min-w-[42px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/80 bg-black/20 text-white backdrop-blur-sm"
         >
-          <ChevronRight className="h-7 w-7" />
+          <ChevronRight className="h-6 w-6" />
         </button>
 
         <div className="absolute right-4 top-14 z-[90] flex flex-col gap-3">
@@ -324,39 +333,33 @@ const StoryPreviewPage = () => {
           </button>
         </div>
 
-        <div className={`absolute right-4 ${socialButtonsTop} z-[90] flex -translate-y-1/2 flex-col gap-3`}>
-          <button onClick={handleTogglePlay} className="flex h-[52px] w-[52px] min-h-[52px] min-w-[52px] flex-shrink-0 items-center justify-center rounded-full bg-black/55 p-0 text-white backdrop-blur-md">
-            {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-          </button>
-          <button onClick={handleToggleMute} className="flex h-[52px] w-[52px] min-h-[52px] min-w-[52px] flex-shrink-0 items-center justify-center rounded-full bg-black/55 p-0 text-white backdrop-blur-md">
-            {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-          </button>
-          <div className="flex flex-col items-center">
-            <button onClick={handleLike} className="flex h-[52px] w-[52px] min-h-[52px] min-w-[52px] flex-shrink-0 items-center justify-center rounded-full bg-black/55 p-0 text-white backdrop-blur-md">
+        <div className={`absolute right-4 ${socialButtonsTop} z-[90] flex -translate-y-1/2 flex-col gap-2.5`}>
+          <div className="flex flex-col items-center gap-1">
+            <button onClick={handleLike} className="flex h-[44px] w-[44px] min-h-[44px] min-w-[44px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/22 p-0 text-white backdrop-blur-sm">
               <Heart className={cn('h-5 w-5', liked ? 'fill-rose-500 text-rose-500' : 'text-white')} />
             </button>
-            <span className="mt-1 text-[10px] font-black text-white">{likeCount}</span>
+            <span className="text-[11px] font-semibold text-white text-center drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{likeCount}</span>
           </div>
-          <div className="flex flex-col items-center">
-            <button onClick={() => setShowComments(true)} className="flex h-[52px] w-[52px] min-h-[52px] min-w-[52px] flex-shrink-0 items-center justify-center rounded-full bg-black/55 p-0 text-white backdrop-blur-md">
+          <div className="flex flex-col items-center gap-1">
+            <button onClick={() => setShowComments(true)} className="flex h-[44px] w-[44px] min-h-[44px] min-w-[44px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/22 p-0 text-white backdrop-blur-sm">
               <MessageCircle className="h-5 w-5" />
             </button>
-            <span className="mt-1 text-[10px] font-black text-white">{commentCount}</span>
+            <span className="text-[11px] font-semibold text-white text-center drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{commentCount}</span>
           </div>
-          <button onClick={handleShare} className="flex h-[52px] w-[52px] min-h-[52px] min-w-[52px] flex-shrink-0 items-center justify-center rounded-full bg-black/55 p-0 text-white backdrop-blur-md">
+          <button onClick={handleShare} className="flex h-[44px] w-[44px] min-h-[44px] min-w-[44px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/22 p-0 text-white backdrop-blur-sm">
             <Share2 className="h-5 w-5" />
           </button>
-          <button onClick={handleWhatsApp} className="flex h-[52px] w-[52px] min-h-[52px] min-w-[52px] flex-shrink-0 items-center justify-center rounded-full bg-[#25D366] p-0 text-white backdrop-blur-md">
+          {model && (
+            <button onClick={() => setModelModalOpen(true)} className="flex h-[44px] w-[44px] min-h-[44px] min-w-[44px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/22 p-0 text-white backdrop-blur-sm" title="Medidas" aria-label="Medidas">
+              <Ruler className="h-5 w-5" />
+            </button>
+          )}
+          <button onClick={handleWhatsApp} className="flex h-[44px] w-[44px] min-h-[44px] min-w-[44px] flex-shrink-0 items-center justify-center rounded-full bg-[#25D366] p-0 text-white backdrop-blur-sm">
             <svg viewBox="0 0 24 24" className="h-5 w-5 fill-white" aria-hidden="true">
               <path d="M16.6 13.2c-.3-.2-1.7-.8-2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.8 0c-.4-.2-1.4-.5-2.6-1.6-.9-.8-1.6-1.8-1.8-2.2-.2-.4 0-.6.2-.8l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6s-.7-1.7-1-2.3c-.3-.6-.6-.5-.8-.5h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.8s1.3 3.2 1.5 3.4c.2.2 2.3 3.6 5.6 5.1.8.4 1.5.6 2.1.8.9.3 1.7.3 2.3.2.7-.1 1.7-.7 2-1.3.3-.6.3-1.1.2-1.3-.1-.2-.3-.3-.6-.5z" />
               <path d="M20 4A10 10 0 0 0 3.6 16.2L2 22l5.9-1.5A10 10 0 1 0 20 4zm-7.9 15.4c-1.6 0-3.2-.4-4.6-1.3l-.3-.2-3.5.9.9-3.4-.2-.3A8.1 8.1 0 1 1 12.1 19.4z" />
             </svg>
           </button>
-          {model && (
-            <button onClick={() => setModelModalOpen(true)} className="flex h-[52px] w-[52px] min-h-[52px] min-w-[52px] flex-shrink-0 items-center justify-center rounded-full bg-black/55 p-0 text-white backdrop-blur-md" title="Medidas" aria-label="Medidas">
-              <Ruler className="h-5 w-5" />
-            </button>
-          )}
         </div>
 
         {product && (
@@ -383,7 +386,7 @@ const StoryPreviewPage = () => {
         )}
 
         {showComments && (
-          <div className="absolute inset-0 z-[95] bg-black/70 p-4 backdrop-blur-[2px]">
+          <div className="absolute inset-0 z-[95] bg-black/70 p-4 backdrop-blur-[2px] flex items-center justify-center">
             <div className="mx-auto flex w-[calc(100%-48px)] max-w-[380px] max-h-[70vh] flex-col rounded-[28px] bg-white p-5 text-slate-900 shadow-2xl overflow-hidden">
               <div className="mb-4 flex items-center justify-between">
                 <h4 className="text-lg font-black text-slate-900">Comentários</h4>
