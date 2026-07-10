@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { db, Story, Video } from '@/lib/db';
 import {
   X,
@@ -16,6 +16,7 @@ import {
   Pause,
   ExternalLink,
   Smile,
+  Ruler,
 } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
 import { cn } from '@/lib/utils';
@@ -43,8 +44,21 @@ const getVideoPosterUrl = (video?: Video | null) => video?.thumbnail_url || vide
 const getVideoLikeCount = (videoId?: string) => (videoId ? (readLikes()[videoId]?.count ?? 0) : 0);
 const getVideoCommentCount = (videoId?: string) => (videoId ? readComments().filter((item) => item.videoId === videoId).length : 0);
 
+const getProduct = async (productId?: string | null) => {
+  if (!productId) return null;
+  const product = await db.products.getById(productId);
+  return product || null;
+};
+
+const getModel = async (modelId?: string | null) => {
+  if (!modelId) return null;
+  const model = await db.sizingModels.getById(modelId);
+  return model || null;
+};
+
 const StoryPreviewPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -62,13 +76,24 @@ const StoryPreviewPage = () => {
   const [commentText, setCommentText] = useState('');
   const [showEmoji, setShowEmoji] = useState(false);
   const [product, setProduct] = useState<any | null>(null);
+  const [model, setModel] = useState<any | null>(null);
   const [settings, setSettings] = useState<any | null>(null);
   const [progress, setProgress] = useState(0);
+  const [modelModalOpen, setModelModalOpen] = useState(false);
 
   const currentVideo = videos[activeVideoIdx] || null;
   const currentUrl = getVideoUrl(currentVideo);
   const posterUrl = getVideoPosterUrl(currentVideo);
   const commentCount = useMemo(() => getVideoCommentCount(currentVideo?.id), [currentVideo?.id, comments]);
+
+  const loadLinkedData = async (currentStory: Story | null, currentVideoItem: Video | null) => {
+    const relation: any = currentStory ? await (db as any).storyProducts?.getAll?.().then((rels: any[]) => rels?.find((item: any) => item.story_id === currentStory.id && item.video_id === currentVideoItem?.id)) : null;
+    const productId = currentVideoItem && ((currentVideoItem as any).product_id || (currentVideoItem as any).productId || relation?.product_id || relation?.productId);
+    const modelId = currentVideoItem && ((currentVideoItem as any).model_id || (currentVideoItem as any).modelId || (currentVideoItem as any).measurement_id || relation?.model_id || relation?.modelId);
+    const [resolvedProduct, resolvedModel] = await Promise.all([getProduct(productId || null), getModel(modelId || null)]);
+    setProduct(resolvedProduct);
+    setModel(resolvedModel);
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -96,13 +121,6 @@ const StoryPreviewPage = () => {
 
         const genSettings = (await db.generalSettings.getAll(store.id))[0];
         if (mounted) setSettings(genSettings || null);
-
-        const rels = await (db as any).storyProducts?.getAll?.();
-        const relation = Array.isArray(rels) ? rels.find((item: any) => item.story_id === id && item.video_id === relationVideos[0]?.id) : null;
-        if (relation?.product_id) {
-          const prod = await db.products.getById(relation.product_id);
-          if (mounted) setProduct(prod || null);
-        }
       } catch (e) {
         console.error(e);
       } finally {
@@ -123,9 +141,10 @@ const StoryPreviewPage = () => {
     setLiked(Boolean(likes[currentVideo.id]?.liked));
     setComments(readComments().filter((item) => item.videoId === currentVideo.id));
     setProgress(0);
+    loadLinkedData(story, currentVideo);
   }, [currentVideo?.id]);
 
-  const close = () => window.history.length > 1 ? window.history.back() : (window.location.href = '/');
+  const close = () => window.history.length > 1 ? window.history.back() : navigate('/');
 
   const handleTogglePlay = async () => {
     if (!videoRef.current) return;
@@ -229,6 +248,8 @@ const StoryPreviewPage = () => {
     return <div className="fixed inset-0 flex items-center justify-center bg-black text-white">Story não encontrado</div>;
   }
 
+  const modelData = model?.measures?.length ? model.measures : [];
+
   return (
     <div className="fixed inset-0 bg-neutral-950 flex items-center justify-center overflow-hidden">
       <div className="relative h-full w-full max-w-[430px] overflow-hidden bg-black sm:aspect-[9/16] sm:max-h-[90vh] sm:rounded-[36px]">
@@ -308,6 +329,11 @@ const StoryPreviewPage = () => {
           <button onClick={handleWhatsApp} className="rounded-full bg-[#25D366] p-3 text-white backdrop-blur-md">
             WA
           </button>
+          {model && (
+            <button onClick={() => setModelModalOpen(true)} className="rounded-full bg-black/55 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
+              Medidas
+            </button>
+          )}
         </div>
 
         {product && (
@@ -321,9 +347,13 @@ const StoryPreviewPage = () => {
                 <p className="mt-1 text-base font-black text-violet-700">
                   {Number(product.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </p>
-                <a href={product.product_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 rounded-full bg-violet-600 px-4 py-2 text-[11px] font-black text-white">
+                <button
+                  type="button"
+                  onClick={() => window.open(product.product_url || '/products', '_blank', 'noopener,noreferrer')}
+                  className="mt-2 inline-flex items-center gap-1 rounded-full bg-violet-600 px-4 py-2 text-[11px] font-black text-white"
+                >
                   Ver produto <ExternalLink className="h-3.5 w-3.5" />
-                </a>
+                </button>
               </div>
             </div>
           </div>
@@ -368,6 +398,43 @@ const StoryPreviewPage = () => {
             </div>
           </div>
         )}
+
+        {model && modelModalOpen && (
+          <div className="absolute inset-0 z-[96] bg-black/85 p-4">
+            <div className="mx-auto flex h-full max-w-md flex-col rounded-[28px] bg-white p-5 text-slate-900 shadow-2xl">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Medidas da modelo</p>
+                  <h4 className="text-lg font-black">{model.name}</h4>
+                </div>
+                <button onClick={() => setModelModalOpen(false)} className="rounded-full bg-slate-100 p-2">
+                  <X />
+                </button>
+              </div>
+              <div className="flex-1 space-y-3 overflow-auto">
+                {(model.measures || []).map((measure: any, idx: number) => (
+                  <div key={`${measure.name}-${idx}`} className="flex items-center justify-between rounded-2xl bg-slate-50 p-3">
+                    <span className="font-bold text-slate-700">{measure.name}</span>
+                    <span className="font-black text-slate-950">{measure.value}{measure.unit || ''}</span>
+                  </div>
+                ))}
+                {(!model.measures || model.measures.length === 0) && (
+                  <p className="text-sm text-slate-500">Sem medidas cadastradas.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="pointer-events-none absolute bottom-2 left-3 z-[999999] text-[10px] font-black text-white/60">
+          DEBUG STORY VIEWER ATIVO
+        </div>
+        <div className="pointer-events-none absolute bottom-6 left-3 z-[999999] text-[10px] font-black text-white/60">
+          Produto: {product ? `SIM - ${product.name}` : 'NÃO'}
+        </div>
+        <div className="pointer-events-none absolute bottom-10 left-3 z-[999999] text-[10px] font-black text-white/60">
+          Modelo: {model ? `SIM - ${model.name}` : 'NÃO'}
+        </div>
       </div>
     </div>
   );
