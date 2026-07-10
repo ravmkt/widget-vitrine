@@ -55,51 +55,53 @@ const StoryPreviewPage = () => {
   const activeVideo = videos[activeVideoIdx];
 
   return (
-    <div className="fixed inset-0 bg-slate-950">
-      {activeVideo ? (
-        <video
-          key={activeVideo.id}
-          src={activeVideo.video_url}
-          poster={activeVideo.thumbnail_url}
-          className="w-full h-full object-cover"
-          controls
-          autoPlay
-          muted
-        />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center text-white text-sm font-bold">
-          Sem vídeos vinculados
-        </div>
-      )}
-
-      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/70 to-transparent">
-        <span className="text-white font-bold text-sm truncate">{story.title}</span>
-      </div>
-
-      {videos.length > 1 && (
-        <div className="absolute bottom-4 left-0 right-0 flex gap-2 justify-center overflow-x-auto px-4">
-          {videos.map((v, idx) => (
-            <button
-              key={v.id}
-              onClick={() => setActiveVideoIdx(idx)}
-              className={`w-12 h-12 rounded-full overflow-hidden border-2 shrink-0 ${
-                idx === activeVideoIdx ? 'border-white' : 'border-transparent opacity-70'
-              }`}
-            >
-              <img src={v.thumbnail_url} className="w-full h-full object-cover" alt={v.title} />
-            </button>
-          ))}
-        </div>
-      )}
-
-      {story.cta_enabled && (
-        <div className="absolute bottom-20 left-4 right-4 z-10">
-          <div className="flex items-center gap-2 text-white text-xs font-bold bg-black/40 rounded-xl px-3 py-2 w-fit">
-            <MousePointer2 size={14} />
-            {story.cta_text || 'Comprar Agora'}
+    <div className="fixed inset-0 bg-black flex items-center justify-center overflow-hidden p-0">
+      <div className="relative w-full h-full max-w-[420px] max-h-screen aspect-[9/16] bg-black overflow-hidden flex items-center justify-center">
+        {activeVideo ? (
+          <video
+            key={activeVideo.id}
+            src={activeVideo.video_url}
+            poster={activeVideo.thumbnail_url}
+            className="w-full h-full object-contain bg-black"
+            controls
+            autoPlay
+            muted
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-white text-sm font-bold bg-black">
+            Sem vídeos vinculados
           </div>
+        )}
+
+        <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/70 to-transparent">
+          <span className="text-white font-bold text-sm truncate">{story.title}</span>
         </div>
-      )}
+
+        {videos.length > 1 && (
+          <div className="absolute bottom-4 left-0 right-0 flex gap-2 justify-center overflow-x-auto px-4">
+            {videos.map((v, idx) => (
+              <button
+                key={v.id}
+                onClick={() => setActiveVideoIdx(idx)}
+                className={`w-12 h-12 rounded-full overflow-hidden border-2 shrink-0 ${
+                  idx === activeVideoIdx ? 'border-white' : 'border-transparent opacity-70'
+                }`}
+              >
+                <img src={v.thumbnail_url} className="w-full h-full object-cover" alt={v.title} />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {story.cta_enabled && (
+          <div className="absolute bottom-20 left-4 right-4 z-10">
+            <div className="flex items-center gap-2 text-white text-xs font-bold bg-black/40 rounded-xl px-3 py-2 w-fit">
+              <MousePointer2 size={14} />
+              {story.cta_text || 'Comprar Agora'}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

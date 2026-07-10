@@ -205,13 +205,20 @@ const StoriesPage = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-1">
                   <h3 className="text-xl font-black text-slate-800 truncate">{story.title}</h3>
-                  <span className={cn(
-                    "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5",
-                    story.active ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-slate-50 text-slate-400 border border-slate-200"
-                  )}>
-                    {story.active ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                    {story.active ? 'Ativo' : 'Inativo'}
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleStatus(story)}
+                    className={cn(
+                      "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all",
+                      isStoryActive(story)
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100"
+                        : "bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200"
+                    )}
+                    title={isStoryActive(story) ? 'Desativar Story' : 'Ativar Story'}
+                  >
+                    {isStoryActive(story) ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                    {isStoryActive(story) ? 'ATIVO' : 'DESATIVADO'}
+                  </button>
                 </div>
                 <div className="flex flex-wrap items-center gap-y-2 gap-x-4">
                   <div className="flex items-center gap-1.5 text-[10px] font-black text-[#0094EB] uppercase tracking-widest">
