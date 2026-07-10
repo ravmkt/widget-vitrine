@@ -58,6 +58,7 @@ const StoriesPage = () => {
 
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
     try {
@@ -73,10 +74,14 @@ const StoriesPage = () => {
       setLoading(false);
     }
   };
-  loadData();
+  
+  const [videos, setVideos] = useState<Video[]>([]);
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const processedVideos = useMemo(() => {
-    // ... existing processing logic ...
     return videos
       .filter(v => {
         const matchesSearch = (v.title || '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -85,18 +90,41 @@ const StoriesPage = () => {
         return matchesSearch && matchesSource && matchesProduct;
       })
       .map(v => {
-        // ... existing metrics calculation ...
-        return { ...v, metrics: { /* ... */ } };
+        const seed = v.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const days = 30;
+        let views = 0, likes = 0, comments = 0;
+        for (let i = 0; i < days; i++) {
+          const daySeed = (seed + i * 7) % 1000;
+          const dailyViews = 15 + (daySeed % 40);
+          const dailyLikes = Math.floor(dailyViews * (0.10 + (daySeed % 15) / 100));
+          const dailyComments = Math.floor(dailyLikes * (0.05 + (daySeed % 5) / 100));
+          views += dailyViews;
+          likes += dailyLikes;
+          comments += dailyComments;
+        }
+        const engagement = views > 0 ? ((likes + comments) / views) * 100 : 0;
+        return { ...v, metrics: { views, likes, comments, engagement } };
       })
       .sort((a, b) => {
-        // ... existing sort logic ...
-        return 0;
+        switch (orderBy) {
+          case 'recent': return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+          case 'oldest': return new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
+          case 'views_desc': return b.metrics.views - a.metrics.views;
+          case 'views_asc': return a.metrics.views - b.metrics.views;
+          case 'likes_desc': return b.metrics.likes - a.metrics.likes;
+          case 'likes_asc': return a.metrics.likes - b.metrics.likes;
+          case 'comments_desc': return b.metrics.comments - a.metrics.comments;
+          case 'comments_asc': return a.metrics.comments - b.metrics.comments;
+          case 'engagement_desc': return b.metrics.engagement - a.metrics.engagement;
+          case 'engagement_asc': return a.metrics.engagement - b.metrics.engagement;
+          default: return 0;
+        }
       });
   }, [videos, products, searchTerm, filterSource, productFilter, orderBy]);
 
   const handleViewVideo = (video: Video) => {
     setViewingVideo(video);
-    setIsViewingModalOpen(true);
+    setIsViewModalOpen(true);
   };
 
   const handlePreviewStory = (storyId: string) => {
@@ -272,7 +300,6 @@ const StoriesPage = () => {
                     >
                       <Trash2 size={18} />
                     </button>
-                    {/* NEW Preview button */}
                     <button 
                       type="button"
                       onClick={() => handlePreviewStory(video.id)}
@@ -289,7 +316,7 @@ const StoriesPage = () => {
         })}
       </div>
 
-      <CustomDialog isOpen={isViewModalOpen} type="form" title="Visualizar Vídeo" maxWidth="max-w-3xl" onCancel={() => setIsViewingModalOpen(false)}>
+      <CustomDialog isOpen={isViewModalOpen} type="form" title="Visualizar Vídeo" maxWidth="max-w-3xl" onCancel={() => setIsViewModalOpen(false)}>
         {viewingVideo && (
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="w-[240px] mx-auto shrink-0">
@@ -312,7 +339,21 @@ const StoriesPage = () => {
               )}
             </div>
             <div className="flex-1 flex flex-col pt-1">
-              {/* ... existing preview content ... */}
+              <div className="mb-4">
+                <h3 className="text-lg font-black text-slate-900 mb-1">{viewingVideo.title}</h3>
+                <span className="bg-blue-50 text-[#0094EB] px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest">{viewingVideo.source_type}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mb-6">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                  <p className="text-[8px] font-black text-slate-400 uppercase">Status</p>
+                  <p className="text-xs font-black text-emerald-600">Ativo</p>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                  <p className="text-[8px] font-black text-slate-400 uppercase">Vídeo ID</p>
+                  <p className="text-[10px] font-bold text-slate-500">{viewingVideo.id?.substr(0,8) || '---'}</p>
+                </div>
+              </div>
+              <button onClick={() => setIsViewModalOpen(false)} className="w-full py-3 bg-[#0094EB] text-white rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2">Fechar</button>
             </div>
           </div>
         )}
