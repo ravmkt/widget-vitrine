@@ -81,6 +81,8 @@ const SettingsPage = () => {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string>("");
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -101,6 +103,7 @@ const SettingsPage = () => {
 
         if (data?.length) {
           setSettings(data[0]);
+          setLogoPreview(data[0].store_logo_url || "");
         } else {
           setSettings(DEFAULT_SETTINGS);
         }
@@ -115,6 +118,31 @@ const SettingsPage = () => {
     fetchSettings();
   }, []);
 
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 500 * 1024) {
+      toast.error('A imagem deve ter no máximo 500 KB.');
+      return;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Formato inválido. Use JPG, PNG ou WEBP.');
+      return;
+    }
+
+    setSelectedLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  };
+
+  const handleRemoveLogo = () => {
+    setSelectedLogoFile(null);
+    setLogoPreview("");
+    setSettings(prev => ({ ...prev, store_logo_url: null }));
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -123,28 +151,57 @@ const SettingsPage = () => {
         return;
       }
 
+      let finalLogoUrl = settings.store_logo_url || "";
+
+      if (selectedLogoFile) {
+        const fileExt = selectedLogoFile.name.split(".").pop();
+        const fileName = `logos/logo-${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("store-assets")
+          .upload(fileName, selectedLogoFile, {
+            cacheControl: "3600",
+            upsert: true,
+          });
+
+        if (uploadError) {
+          console.error("Erro ao enviar logo:", uploadError);
+          toast.error("Erro ao enviar o logotipo");
+          return;
+        }
+
+        const { data } = supabase.storage
+          .from("store-assets")
+          .getPublicUrl(fileName);
+
+        finalLogoUrl = data.publicUrl;
+      }
+
+      const settingsToSave = {
+        ...settings,
+        store_logo_url: finalLogoUrl,
+        updated_at: new Date().toISOString(),
+      };
+
       const { error } = settings.id
         ? await supabase
             .from('app_settings')
-            .update({
-              ...settings,
-              updated_at: new Date().toISOString(),
-            })
+            .update(settingsToSave)
             .eq('id', settings.id)
         : await supabase
             .from('app_settings')
             .insert({
-              ...settings,
+              ...settingsToSave,
               id: crypto.randomUUID(),
               created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
             });
 
       if (error) throw error;
 
       toast.success('Settings saved successfully');
+      setSelectedLogoFile(null);
     } catch (err) {
-      console.error('Error saving settings:', err);
+      console.error("Erro completo ao salvar configurações:", err);
       toast.error('Failed to save settings');
     } finally {
       setSaving(false);
@@ -199,8 +256,8 @@ const SettingsPage = () => {
                 <div className="space-y-3">
                   <div className="flex items-center gap-4">
                     <div className="h-20 w-20 rounded-2xl overflow-hidden bg-slate-200 border border-slate-300 flex items-center justify-center">
-                      {settings?.store_logo_url ? (
-                        <img src={settings.store_logo_url} className="w-full h-full object-cover" alt="Logo" />
+                      {logoPreview ? (
+                        <img src={logoPreview} className="w-full h-full object-cover" alt="Logo" />
                       ) : (
                         <Image className="w-8 h-8 text-slate-400" />
                       )}
@@ -210,31 +267,18 @@ const SettingsPage = () => {
                         <Input
                           type="file"
                           accept="image/jpeg,image/png,image/webp"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            if (file.size > 500 * 1024) { toast.error('A imagem deve ter no máximo 500 KB.'); return; }
-                            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-                            if (!allowedTypes.includes(file.type)) { toast.error('Formato inválido. Use JPG, PNG ou WEBP.'); return; }
-                            const reader = new FileReader();
-                            reader.onload = () => { setSettings(prev => ({ ...prev, store_logo_url: reader.result as string })); };
-                            reader.readAsDataURL(file);
-                          }}
+                          onChange={handleLogoChange}
                           className="flex-1 text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-[#EAF6FF] file:text-[#0094EB] file:font-bold file:cursor-pointer hover:file:bg-[#0094EB] hover:file:text-white transition-all"
                         />
-                        <Button variant="outline" size="icon" onClick={() => { setSettings(prev => ({ ...prev, store_logo_url: null })); toast.success('Logo removida'); }}><X size={20} className="text-rose-600" /></Button>
+                        <Button variant="outline" size="icon" onClick={handleRemoveLogo}><X size={20} className="text-rose-600" /></Button>
                       </div>
-                      {settings?.store_logo_url && (
+                      {logoPreview && (
                         <p className="text-xs text-slate-500 mt-1">
-                          {(new URL(settings.store_logo_url)).pathname.split('/').pop()}
+                          {(new URL(logoPreview)).pathname.split('/').pop()}
                         </p>
                       )}
                     </div>
                   </div>
-                  <Input
-                    type="hidden"
-                    value={settings?.store_logo_url ?? ''}
-                  />
                 </div>
               </div>
               <div className="space-y-4">
