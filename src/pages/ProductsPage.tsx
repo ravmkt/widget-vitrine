@@ -313,10 +313,11 @@ const ProductsPage = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <span
+                    <button
+                      type="button"
                       onClick={() => handleToggleStatus(product)}
                       className={cn(
-                        "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border cursor-pointer transition-all",
+                        "inline-flex h-8 w-[112px] min-w-[112px] items-center justify-center gap-1 rounded-lg px-4 text-[10px] font-black uppercase tracking-wider border cursor-pointer transition-all mx-auto",
                         (product as any).active
                           ? "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100"
                           : "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100"
@@ -324,7 +325,7 @@ const ProductsPage = () => {
                     >
                       {(product as any).active ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
                       {(product as any).active ? 'Ativo' : 'Desativado'}
-                    </span>
+                    </button>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
