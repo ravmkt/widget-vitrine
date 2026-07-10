@@ -204,28 +204,52 @@ const StoriesPage = () => {
               </div>
 
               {/* Métricas Reais */}
-              <div className="flex gap-8 lg:px-8 border-l border-slate-100 lg:border-slate-100 border-none">
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Visualizações</p>
-                  <div className="flex items-center gap-2">
-                    <Eye size={14} className="text-[#0094EB]" />
-                    <span className="text-lg font-black text-slate-800">{story.view_count || 0}</span>
-                  </div>
-                </div>
-                {story.click_count !== undefined && (
-                  <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Cliques</p>
-                    <div className="flex items-center gap-2">
-                      <MousePointer2 size={14} className="text-violet-500" />
-                      <span className="text-lg font-black text-slate-800">{story.click_count || 0}</span>
+              {(() => {
+                const views =
+                  (story as any).views_count ??
+                  (story as any).view_count ??
+                  (story as any).views ??
+                  (story as any).visualizacoes ??
+                  (story as any).visualizations ??
+                  0;
+
+                const clicks =
+                  (story as any).clicks_count ??
+                  (story as any).click_count ??
+                  (story as any).clicks ??
+                  (story as any).cliques ??
+                  0;
+
+                return (
+                  <div className="flex flex-wrap gap-6 lg:px-8 border-l border-slate-100 lg:border-slate-100 border-none">
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">VISUALIZAÇÕES</p>
+                      <div className="flex items-center gap-2">
+                        <Eye size={14} className="text-[#0094EB]" />
+                        <span className="text-lg font-black text-slate-800">{views}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">CLIQUES</p>
+                      <div className="flex items-center gap-2">
+                        <MousePointer2 size={14} className="text-violet-500" />
+                        <span className="text-lg font-black text-slate-800">{clicks}</span>
+                      </div>
                     </div>
                   </div>
-                )}
-              </div>
+                );
+              })()}
 
               {/* Ações */}
               <div className="flex items-center gap-2 shrink-0">
-                <button 
+                <button
+                  onClick={() => window.open(`/stories/preview/${story.id}`, "_blank", "noopener,noreferrer")}
+                  className="p-3 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-2xl transition-all"
+                  title="Preview Story"
+                >
+                  <Eye size={20} />
+                </button>
+                <button
                   onClick={() => handleToggleStatus(story)}
                   className={cn(
                     "px-4 py-3 rounded-2xl text-[10px] font-black uppercase transition-all",
@@ -234,14 +258,14 @@ const StoriesPage = () => {
                 >
                   {story.active ? 'Desativar' : 'Ativar'}
                 </button>
-                <button 
+                <button
                   onClick={() => navigate(`/stories/${story.id}`)}
                   className="p-3 bg-[#EAF6FF] text-[#0094EB] hover:bg-[#0094EB] hover:text-white rounded-2xl transition-all"
                   title="Editar Story"
                 >
                   <Edit3 size={20} />
                 </button>
-                <button 
+                <button
                   onClick={() => handleDeleteClick(story)}
                   className="p-3 bg-white border border-slate-200 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all"
                   title="Excluir Story"
