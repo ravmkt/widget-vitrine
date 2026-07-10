@@ -76,17 +76,28 @@ const StoriesPage = () => {
   const filteredStories = useMemo(() => {
     return stories.filter(s => {
       const matchesSearch = s.title.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = filterStatus === 'all' || (filterStatus === 'active' ? s.active : !s.active);
+      const isActive = Boolean((s as any).is_active ?? (s as any).active ?? (s as any).status === 'active' ?? (s as any).enabled);
+      const matchesStatus =
+        filterStatus === 'all' ||
+        (filterStatus === 'active' ? isActive : !isActive);
       return matchesSearch && matchesStatus;
     });
   }, [stories, searchTerm, filterStatus]);
 
   const handleToggleStatus = async (story: Story) => {
     try {
-      const updated = { ...story, active: !story.active };
-      await db.stories.save(updated);
-      setStories(prev => prev.map(s => s.id === story.id ? updated : s));
-      showSuccess(`Story ${updated.active ? 'ativado' : 'desativado'} com sucesso.`);
+      const isActive = Boolean((story as any).is_active ?? (story as any).active ?? (story as any).status === 'active' ?? (story as any).enabled);
+      const nextStatus = !isActive;
+      const updated = {
+        ...story,
+        is_active: nextStatus,
+        active: nextStatus,
+        enabled: nextStatus,
+        status: nextStatus ? 'active' : 'inactive'
+      };
+      await db.stories.save(updated as Story);
+      setStories(prev => prev.map(s => s.id === story.id ? ({ ...s, ...updated } as Story) : s));
+      showSuccess(nextStatus ? 'Story ativado com sucesso.' : 'Story desativado com sucesso.');
     } catch (e) {
       showError('Erro ao alterar status.');
     }
@@ -253,10 +264,12 @@ const StoriesPage = () => {
                   onClick={() => handleToggleStatus(story)}
                   className={cn(
                     "px-4 py-3 rounded-2xl text-[10px] font-black uppercase transition-all",
-                    story.active ? "bg-slate-100 text-slate-600 hover:bg-slate-200" : "bg-emerald-500 text-white hover:bg-emerald-600"
+                    Boolean((story as any).is_active ?? (story as any).active ?? (story as any).status === 'active' ?? (story as any).enabled)
+                      ? "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      : "bg-emerald-500 text-white hover:bg-emerald-600"
                   )}
                 >
-                  {story.active ? 'Desativar' : 'Ativar'}
+                  {Boolean((story as any).is_active ?? (story as any).active ?? (story as any).status === 'active' ?? (story as any).enabled) ? 'Desativar' : 'Ativar'}
                 </button>
                 <button
                   onClick={() => navigate(`/stories/${story.id}`)}

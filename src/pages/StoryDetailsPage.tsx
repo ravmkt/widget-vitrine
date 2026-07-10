@@ -233,23 +233,11 @@ const StoryDetailsPage = () => {
   };
 
   const handleDeleteLocation = async (locationId: string) => {
-    try {
-      await db.displayLocations.delete(locationId);
-      setLocations(prev => prev.filter(l => l.id !== locationId));
-      showSuccess('Localização removida com sucesso!');
-    } catch (e) {
-      showError('Erro ao remover localização.');
-    }
+    setLocations(prev => prev.filter(l => l.id !== locationId));
   };
 
   const handleDeleteRule = async (ruleId: string) => {
-    try {
-      await db.pageRules.delete(ruleId);
-      setRules(prev => prev.filter(r => r.id !== ruleId));
-      showSuccess('Regra removida com sucesso!');
-    } catch (e) {
-      showError('Erro ao remover regra.');
-    }
+    setRules(prev => prev.filter(r => r.id !== ruleId));
   };
 
   if (loading) return null;
@@ -400,7 +388,7 @@ const StoryDetailsPage = () => {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
                 <MapPin className="text-orange-500" size={18} />
-                <h4 className="text-sm font-black text-slate-800 uppercase">Onde Aparece</h4>
+                <h4 className="text-sm font-black text-slate-800 uppercase">ONDE APARECE</h4>
               </div>
               <button type="button" onClick={handleAddLocation} className="p-1.5 bg-orange-50 text-orange-500 rounded-lg hover:bg-orange-100"><Plus size={16}/></button>
             </div>
@@ -455,7 +443,7 @@ const StoryDetailsPage = () => {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
                 <Globe className="text-emerald-500" size={18} />
-                <h4 className="text-sm font-black text-slate-800 uppercase">Quando Aparece</h4>
+                <h4 className="text-sm font-black text-slate-800 uppercase">QUANDO APARECE</h4>
               </div>
               <button type="button" onClick={handleAddRule} className="p-1.5 bg-emerald-50 text-emerald-500 rounded-lg hover:bg-emerald-100"><Plus size={16}/></button>
             </div>
