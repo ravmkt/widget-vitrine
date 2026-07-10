@@ -214,7 +214,7 @@ const StoriesPage = () => {
                         ? "bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100"
                         : "bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200"
                     )}
-                    title={isStoryActive(story) ? 'Desativar Story' : 'Ativar Story'}
+                    title={isStoryActive(story) ? 'Story ativo' : 'Story desativado'}
                   >
                     {isStoryActive(story) ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
                     {isStoryActive(story) ? 'ATIVO' : 'DESATIVADO'}
