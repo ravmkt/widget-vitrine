@@ -24,6 +24,7 @@ interface CommentWithReplies extends Comment {
     created_at: string;
     is_store_reply?: boolean;
   }>;
+  is_store_reply?: boolean;
 }
 
 const CommentsPage = () => {
@@ -85,22 +86,23 @@ const CommentsPage = () => {
     return value;
   };
 
+  const loadComments = async () => {
+    try {
+      const [allComments, allVideos] = await Promise.all([
+        db.comments.getAll(),
+        db.videos.getAll(),
+      ]);
+      setComments(allComments || []);
+      setVideos(allVideos);
+    } catch (error) {
+      showError("Erro ao carregar comentários.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [allComments, allVideos] = await Promise.all([
-          db.comments.getAll(),
-          db.videos.getAll(),
-        ]);
-        setComments(allComments || []);
-        setVideos(allVideos);
-      } catch (error) {
-        showError("Erro ao carregar comentários.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
+    loadComments();
   }, []);
 
   const getStatusLabel = (status: Comment["status"]) => {
@@ -137,7 +139,7 @@ const CommentsPage = () => {
   const handleStatusChange = async (commentId: string, newStatus: Comment["status"]) => {
     try {
       await db.comments.save({ ...comments.find(c => c.id === commentId)!, status: newStatus });
-      loadData();
+      loadComments();
       showSuccess("Status atualizado com sucesso!");
     } catch (error) {
       showError("Erro ao atualizar status.");
@@ -166,7 +168,7 @@ const CommentsPage = () => {
     if (!deleteModal.commentId) return;
     try {
       await db.comments.delete(deleteModal.commentId);
-      loadData();
+      loadComments();
       setDeleteModal(prev => ({ ...prev, isOpen: false }));
       showSuccess("Comentário excluído com sucesso!");
     } catch (error) {

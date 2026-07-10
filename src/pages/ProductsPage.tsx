@@ -111,10 +111,10 @@ const ProductsPage = () => {
     setIsSaving(true);
     setTimeout(() => {
       if (editingProduct) {
-        setProducts(prev => prev.map(p => p.id === editingProduct.id ? { ...p, ...formData, price: parseFloat(formData.price), image: formData.image_url || p.image } : p));
+        setProducts(prev => prev.map(p => p.id === editingProduct.id ? { ...p, ...formData, price: parseFloat(formData.price), image: formData.image_url || p.image, video: p.video || '' } : p));
         showSuccess('Produto atualizado com sucesso!');
       } else {
-        const newProduct = { id: Date.now().toString(), ...formData, price: parseFloat(formData.price), image: formData.image_url || 'https://via.placeholder.com/200', origin: 'manual' as const };
+        const newProduct = { id: Date.now().toString(), ...formData, price: parseFloat(formData.price), image: formData.image_url || 'https://via.placeholder.com/200', video: '', origin: 'manual' as const };
         setProducts(prev => [newProduct, ...prev]);
         showSuccess('Produto criado com sucesso!');
       }

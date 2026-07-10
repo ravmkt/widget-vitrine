@@ -808,7 +808,7 @@ export default function StoriesWidgetPage() {
 
         if (!mounted) return;
 
-        setStoreName(currentStore.name || currentStore.title || '');
+        setStoreName((currentStore as any).name || '');
 
         const genSettings = (
           await db.generalSettings.getAll(currentStore.id)

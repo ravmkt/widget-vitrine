@@ -176,7 +176,6 @@ const AppearancePage = () => {
     border_style: string;
     color: string;
     show_play_icon: boolean;
-    show_product: boolean;
     hide_stories: boolean;
     auto_center: boolean;
     carousel_view_mode: string;
@@ -234,7 +233,6 @@ const AppearancePage = () => {
     border_style: "",
     color: "",
     show_play_icon: true,
-    show_product: true,
     hide_stories: false,
     auto_center: false,
     carousel_view_mode: "preview",
@@ -244,6 +242,12 @@ const AppearancePage = () => {
     allow_close: false,
     object_fit: "cover",
     z_index: "",
+    desktop_columns: 1,
+    desktop_rows: 1,
+    desktop_gap: 16,
+    mobile_columns: 1,
+    mobile_rows: 1,
+    mobile_gap: 12,
   });
 
   const loadData = async () => {
@@ -337,7 +341,6 @@ const AppearancePage = () => {
       border_style: "",
       color: "",
       show_play_icon: true,
-      show_product: true,
       hide_stories: false,
       auto_center: false,
       carousel_view_mode: "preview",
@@ -347,13 +350,49 @@ const AppearancePage = () => {
       allow_close: false,
       object_fit: "cover",
       z_index: "",
+      desktop_columns: 1,
+      desktop_rows: 1,
+      desktop_gap: 16,
+      mobile_columns: 1,
+      mobile_rows: 1,
+      mobile_gap: 12,
     });
     setShowModal(true);
   };
 
   const handleEditStyle = (style: Appearance) => {
     setEditingStyle(style);
-    setFormData({ ...style });
+    setFormData({
+      ...style,
+      useGlobalAppearance: false,
+      width: "",
+      unit: 'px',
+      height: "",
+      position: "",
+      bottom_spacing: "",
+      left_spacing: "",
+      cta_text: "",
+      cta_size: "",
+      cta_duration: "",
+      border_style: "",
+      color: "",
+      show_play_icon: true,
+      hide_stories: false,
+      auto_center: false,
+      carousel_view_mode: "preview",
+      margin_top: "",
+      margin_bottom: "",
+      draggable: false,
+      allow_close: false,
+      object_fit: "cover",
+      z_index: "",
+      desktop_columns: 1,
+      desktop_rows: 1,
+      desktop_gap: 16,
+      mobile_columns: 1,
+      mobile_rows: 1,
+      mobile_gap: 12,
+    });
     setShowModal(true);
   };
 
@@ -368,9 +407,19 @@ const AppearancePage = () => {
       updated_at: new Date().toISOString(),
     };
 
+    const stylePayload = {
+      ...styleToSave,
+      desktop_columns: formData.desktop_columns,
+      desktop_rows: formData.desktop_rows,
+      desktop_gap: formData.desktop_gap,
+      mobile_columns: formData.mobile_columns,
+      mobile_rows: formData.mobile_rows,
+      mobile_gap: formData.mobile_gap,
+    } as Appearance & Record<string, unknown>;
+
     try {
       if (editingStyle) {
-        await db.appearances.save(styleToSave);
+        await db.appearances.save(stylePayload as Appearance);
         showSuccess("Estilo atualizado com sucesso!");
       } else {
         const newStyle: Appearance = {
@@ -378,7 +427,7 @@ const AppearancePage = () => {
           id: Date.now().toString(),
           created_at: new Date().toISOString(),
         };
-        await db.appearances.save(newStyle);
+        await db.appearances.save({ ...newStyle, desktop_columns: formData.desktop_columns, desktop_rows: formData.desktop_rows, desktop_gap: formData.desktop_gap, mobile_columns: formData.mobile_columns, mobile_rows: formData.mobile_rows, mobile_gap: formData.mobile_gap } as Appearance);
         showSuccess("Estilo criado com sucesso!");
       }
       setShowModal(false);

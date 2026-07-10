@@ -24,32 +24,34 @@ import NotFound from './pages/NotFound';
 const App = () => {
   return (
     <BrowserRouter>
-      <AppLayout>
-        <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/stories" element={<StoriesPage />} />
-          <Route path="/stories/new" element={<StoryDetailsPage />} />
-          <Route path="/stories/:id" element={<StoryDetailsPage />} />
-          <Route path="/stories/preview/:id" element={<StoryPreviewPage />} />
-          
-          {/* Rotas de Vídeos */}
-          <Route path="/gallery" element={<VideoGalleryPage />} />
-          <Route path="/videos/new" element={<VideoEditPage />} />
-          <Route path="/videos/:id/edit" element={<VideoEditPage />} />
-          <Route path="/videos/performance" element={<VideoPerformancePage />} />
-          
-          <Route path="/products" element={<ProductsPage />} />
-          <Route path="/medidas" element={<MedidasPage />} />
-          <Route path="/appearance" element={<AppearancePage />} />
-          <Route path="/comments" element={<CommentsPage />} />
-          <Route path="/integration" element={<IntegrationPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </AppLayout>
+      <Routes>
+        <Route path="/stories/preview/:id" element={<StoryPreviewPage />} />
+        <Route
+          path="/*"
+          element={
+            <AppLayout>
+              <Routes>
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/stories" element={<StoriesPage />} />
+                <Route path="/stories/new" element={<StoryDetailsPage />} />
+                <Route path="/stories/:id" element={<StoryDetailsPage />} />
+                <Route path="/gallery" element={<VideoGalleryPage />} />
+                <Route path="/videos/new" element={<VideoEditPage />} />
+                <Route path="/videos/:id/edit" element={<VideoEditPage />} />
+                <Route path="/videos/performance" element={<VideoPerformancePage />} />
+                <Route path="/products" element={<ProductsPage />} />
+                <Route path="/medidas" element={<MedidasPage />} />
+                <Route path="/appearance" element={<AppearancePage />} />
+                <Route path="/comments" element={<CommentsPage />} />
+                <Route path="/integration" element={<IntegrationPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AppLayout>
+          }
+        />
+      </Routes>
       <Toaster richColors position="top-right" closeButton />
     </BrowserRouter>
   );

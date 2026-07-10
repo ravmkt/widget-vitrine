@@ -73,28 +73,40 @@ const StoriesPage = () => {
 
   useEffect(() => { loadData(); }, []);
 
+  const isStoryActive = (story: Story) => {
+    const item = story as Story & { is_active?: boolean; active?: boolean; enabled?: boolean; status?: string; inactive?: boolean; disabled?: boolean; is_inactive?: boolean };
+    if (typeof item.is_active === 'boolean') return item.is_active;
+    if (typeof item.active === 'boolean') return item.active;
+    if (typeof item.enabled === 'boolean') return item.enabled;
+    if (typeof item.status === 'string') return item.status === 'active' || item.status === 'ativo';
+    if (typeof item.inactive === 'boolean') return !item.inactive;
+    if (typeof item.disabled === 'boolean') return !item.disabled;
+    if (typeof item.is_inactive === 'boolean') return !item.is_inactive;
+    return false;
+  };
+
   const filteredStories = useMemo(() => {
     return stories.filter(s => {
       const matchesSearch = s.title.toLowerCase().includes(searchTerm.toLowerCase());
-      const isActive = Boolean((s as any).is_active ?? (s as any).active ?? (s as any).status === 'active' ?? (s as any).enabled);
-      const matchesStatus =
-        filterStatus === 'all' ||
-        (filterStatus === 'active' ? isActive : !isActive);
+      const active = isStoryActive(s);
+      const matchesStatus = filterStatus === 'all' || (filterStatus === 'active' ? active : !active);
       return matchesSearch && matchesStatus;
     });
   }, [stories, searchTerm, filterStatus]);
 
   const handleToggleStatus = async (story: Story) => {
     try {
-      const isActive = Boolean((story as any).is_active ?? (story as any).active ?? (story as any).status === 'active' ?? (story as any).enabled);
-      const nextStatus = !isActive;
-      const updated = {
-        ...story,
-        is_active: nextStatus,
-        active: nextStatus,
-        enabled: nextStatus,
-        status: nextStatus ? 'active' : 'inactive'
-      };
+      const active = isStoryActive(story);
+      const nextStatus = !active;
+      const item = story as Story & { is_active?: boolean; active?: boolean; enabled?: boolean; status?: string; inactive?: boolean; disabled?: boolean; is_inactive?: boolean };
+      const updated = { ...story } as Story & Record<string, any>;
+      if (typeof item.is_active === 'boolean') updated.is_active = nextStatus;
+      if (typeof item.active === 'boolean') updated.active = nextStatus;
+      if (typeof item.enabled === 'boolean') updated.enabled = nextStatus;
+      if (typeof item.status === 'string') updated.status = nextStatus ? 'active' : 'inactive';
+      if (typeof item.inactive === 'boolean') updated.inactive = !nextStatus;
+      if (typeof item.disabled === 'boolean') updated.disabled = !nextStatus;
+      if (typeof item.is_inactive === 'boolean') updated.is_inactive = !nextStatus;
       await db.stories.save(updated as Story);
       setStories(prev => prev.map(s => s.id === story.id ? ({ ...s, ...updated } as Story) : s));
       showSuccess(nextStatus ? 'Story ativado com sucesso.' : 'Story desativado com sucesso.');
@@ -264,12 +276,12 @@ const StoriesPage = () => {
                   onClick={() => handleToggleStatus(story)}
                   className={cn(
                     "px-4 py-3 rounded-2xl text-[10px] font-black uppercase transition-all",
-                    Boolean((story as any).is_active ?? (story as any).active ?? (story as any).status === 'active' ?? (story as any).enabled)
+                    isStoryActive(story)
                       ? "bg-slate-100 text-slate-600 hover:bg-slate-200"
                       : "bg-emerald-500 text-white hover:bg-emerald-600"
                   )}
                 >
-                  {Boolean((story as any).is_active ?? (story as any).active ?? (story as any).status === 'active' ?? (story as any).enabled) ? 'Desativar' : 'Ativar'}
+                  {isStoryActive(story) ? 'Desativar' : 'Ativar'}
                 </button>
                 <button
                   onClick={() => navigate(`/stories/${story.id}`)}

@@ -28,7 +28,7 @@ const VideoEditPage = () => {
     product_id: '',
     model_id: '',
     active: true,
-    origin: 'url' as 'url' | 'instagram' | 'tiktok' | 'upload',
+    origin: 'external_url' as 'external_url' | 'instagram' | 'tiktok' | 'upload',
     video_file: null as File | null,
   });
 
@@ -197,7 +197,7 @@ const VideoEditPage = () => {
       isValid = false;
     }
 
-    if (formData.origin === 'url') {
+    if (formData.origin === 'external_url') {
       if (!formData.video_url?.trim()) {
         errors.video_url = 'Informe a URL do vídeo.';
         isValid = false;
@@ -254,7 +254,7 @@ const VideoEditPage = () => {
 
       const videoData: Partial<Video> = {
         title: formData.title.trim(),
-        source_type: formData.origin,
+        source_type: formData.origin === 'external_url' ? 'external_url' : formData.origin,
         video_url: formData.video_url,
         instagram_link: formData.instagram_link,
         tiktok_link: formData.tiktok_link,
@@ -298,7 +298,7 @@ const VideoEditPage = () => {
     <div className="space-y-8 animate-fade-in pb-20">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate(isCreate ? '/gallery' : -1)} className="p-2 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-all"><ArrowLeft size={18} /></button>
+          <button onClick={() => navigate(isCreate ? '/gallery' : String(-1))} className="p-2 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-all"><ArrowLeft size={18} /></button>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">
             {isCreate ? 'Novo Vídeo' : 'Editar Vídeo'}
           </h1>
@@ -328,14 +328,14 @@ const VideoEditPage = () => {
               onChange={handleOriginChange}
               className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
             >
-              <option value="url">URL do vídeo</option>
+              <option value="external_url">URL do vídeo</option>
               <option value="instagram">Instagram</option>
               <option value="tiktok">TikTok</option>
               <option value="upload">Upload de vídeo</option>
             </select>
           </div>
 
-          {formData.origin === 'url' && (
+          {formData.origin === 'external_url' && (
             <div className="space-y-4">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">URL do vídeo</label>
               <input
