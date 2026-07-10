@@ -84,9 +84,12 @@ const VideoEditPage = () => {
   const handleOriginChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setFormData(prev => {
       const newData = { ...prev, origin: e.target.value as any };
-      // Reset thumbnail when origin changes
+      // Reset thumbnail and video file when origin changes
       newData.thumbnail_url = '';
       newData.video_file = null;
+      newData.video_url = '';
+      newData.instagram_link = '';
+      newData.tiktok_link = '';
       return newData;
     });
   };
@@ -135,7 +138,7 @@ const VideoEditPage = () => {
 
     const reader = new FileReader();
     reader.onload = () => {
-      setFormData({ ...formData, video_file: reader.result as File });
+      setFormData({ ...formData, video_file: file });
     };
     reader.readAsDataURL(file);
   };
@@ -213,7 +216,7 @@ const VideoEditPage = () => {
         errors.tiktok_link = 'Informe o link do TikTok.';
         isValid = false;
       } else if (!validateTikTokLink(formData.tiktok_link)) {
-        errors.tiktoktok.com or www.tiktok_link = 'Link do TikTok inválido (ex: tiktok.com ou www.tiktok.com).';
+        errors.tiktok_link = 'Link do TikTok inválido (ex: tiktok.com ou www.tiktok.com).';
         isValid = false;
       }
     }
@@ -252,8 +255,8 @@ const VideoEditPage = () => {
         tiktok_link: formData.tiktok_link,
         thumbnail_url: formData.thumbnail_url,
         active: formData.active,
-        model_id: formData.model_id ? formData.model_id : null,
-        product_id: formData.product_id ? formData.product_id : null,
+        model_id: formData.model_id || null,
+        product_id: formData.product_id || null,
         updated_at: new Date().toISOString()
       };
 
@@ -263,7 +266,7 @@ const VideoEditPage = () => {
           id: Math.random().toString(36).substr(2, 9),
           store_id: '11111111-1111-1111-1111-111111111111',
           created_at: new Date().toISOString()
-        };
+        } as Video;
         await db.videos.save(newVideo);
       } else {
         if (!video) return;
@@ -276,6 +279,7 @@ const VideoEditPage = () => {
 
       setShowSuccessModal(true);
     } catch (e) {
+      console.error('Save error:', e);
       showError('Erro ao salvar vídeo');
     } finally {
       setIsSaving(false);
@@ -321,7 +325,7 @@ const VideoEditPage = () => {
               <option value="url">URL do vídeo</option>
               <option value="instagram">Instagram</option>
               <option value="tiktok">TikTok</option>
-              <option value="upload">Upload de vídeo</option
+              <option value="upload">Upload de vídeo</option>
             </select>
           </div>
 
@@ -411,7 +415,7 @@ const VideoEditPage = () => {
           </div>
 
           <div className="space-y-4">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Produto Vinculado</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Produto Vinculado (opcional)</label>
             <select
               value={formData.product_id}
               onChange={e => setFormData({ ...formData, product_id: e.target.value })}
@@ -425,7 +429,7 @@ const VideoEditPage = () => {
           </div>
 
           <div className="space-y-4">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Modelo/Medida Vinculado</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Modelo/Medida Vinculado (opcional)</label>
             <select
               value={formData.model_id}
               onChange={e => setFormData({ ...formData, model_id: e.target.value })}
