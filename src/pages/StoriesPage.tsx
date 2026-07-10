@@ -289,11 +289,11 @@ const StoriesPage = () => {
                   className={cn(
                     "px-4 py-3 rounded-2xl text-[10px] font-black uppercase transition-all",
                     isStoryActive(story)
-                      ? "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                      : "bg-emerald-500 text-white hover:bg-emerald-600"
+                      ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   )}
                 >
-                  {isStoryActive(story) ? 'Desativar' : 'Ativar'}
+                  {isStoryActive(story) ? 'ATIVO' : 'DESATIVADO'}
                 </button>
                 <button
                   onClick={() => navigate(`/stories/${story.id}`)}
