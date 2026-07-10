@@ -20,7 +20,6 @@ import {
   Minus,
   Smile,
   CheckCircle2,
-  X,
   XCircle,
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
@@ -43,8 +42,8 @@ const CommentsPage = () => {
   const [commentText, setCommentText] = useState("");
   const [commentAuthor, setCommentAuthor] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
-  const [showStatusOptions, setShowStatusOptions] = useState(false);
-  const [statusOptionsAnchorEl, setStatusOptionsAnchorEl] = useState<null | HTMLElement>(null);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [statusDropdownPosition, setStatusDropdownPosition] = useState({ top: 0, left: 0 });
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; commentId: string | null }>({
     isOpen: false,
     commentId: null,
@@ -130,19 +129,21 @@ const CommentsPage = () => {
     }
   };
 
-  const openStatusOptions = (anchorEl: HTMLElement | null, commentId: string) => {
-    setStatusOptionsAnchorEl(anchorEl);
+  const openStatusDropdown = (e: React.MouseEvent, commentId: string) => {
+    e.stopPropagation();
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    setStatusDropdownPosition({ top: rect.bottom + 8, left: rect.left });
     setEditingCommentId(commentId);
-    setShowStatusOptions(true);
+    setShowStatusDropdown(true);
   };
 
-  const closeStatusOptions = () => {
-    setShowStatusOptions(false);
+  const closeStatusDropdown = () => {
+    setShowStatusDropdown(false);
     setEditingCommentId(null);
-    setStatusOptionsAnchorEl(null);
   };
 
-  const handleDeleteClick = (comment: Comment) => {
+  const handleDeleteClick = (e: React.MouseEvent, comment: Comment) => {
+    e.stopPropagation();
     setDeleteModal({
       isOpen: true,
       commentId: comment.id,
@@ -165,7 +166,8 @@ const CommentsPage = () => {
     setDeleteModal(prev => ({ ...prev, isOpen: false }));
   };
 
-  const handleReply = (comment: Comment) => {
+  const handleReply = (e: React.MouseEvent, comment: Comment) => {
+    e.stopPropagation();
     setEditingCommentId(comment.id);
     setTimeout(() => {
       textareaRef.current?.focus();
@@ -271,43 +273,7 @@ const CommentsPage = () => {
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 flex flex-col md:flex-row gap-4 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-black text-slate-800 uppercase tracking-widest">Colunas</h3>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => handleSort("author")}
-              className={cn(
-                "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                isSortedBy("author") ? "bg-[#0094EB] text-white" : "text-slate-400 hover:text-slate-600"
-              )}
-            >
-              Autor {isSortedBy("author") && sortDirectionIcon("author")}
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSort("video_title")}
-              className={cn(
-                "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                isSortedBy("video_title") ? "bg-[#0094EB] text-white" : "text-slate-400 hover:text-slate-600"
-              )}
-            >
-              Conteúdo/Vídeo {isSortedBy("video_title") && sortDirectionIcon("video_title")}
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSort("status")}
-              className={cn(
-                "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                isSortedBy("status") ? "bg-[#0094EB] text-white" : "text-slate-400 hover:text-slate-600"
-              )}
-            >
-              Status {isSortedBy("status") && sortDirectionIcon("status")}
-            </button>
-          </div>
-        </div>
-
+      <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -323,7 +289,6 @@ const CommentsPage = () => {
                 <tr
                   key={row.id}
                   className="hover:bg-slate-50/50 transition-colors"
-                  onClick={() => !editingCommentId && !showStatusOptions && handleReply(row)}
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -341,7 +306,7 @@ const CommentsPage = () => {
                   </td>
                   <td className="px-6 py-4 text-center">
                     <span
-                      onClick={() => openStatusOptions(row.id ? document.getElementById(`status-badge-${row.id}`) : null, row.id)}
+                      onClick={(e) => openStatusDropdown(e, row.id)}
                       className={cn(
                         "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border cursor-pointer",
                         getStatusColor(row.status)
@@ -350,17 +315,12 @@ const CommentsPage = () => {
                     >
                       {getStatusLabel(row.status)}
                     </span>
-                    {showStatusOptions && editingCommentId === row.id && (
-                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-[1000]">
-                        <XCircle size={12} className="text-rose-500" />
-                      </div>
-                    )}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
                       <button
                         type="button"
-                        onClick={() => handleReply(row)}
+                        onClick={(e) => handleReply(e, row)}
                         className="p-2 text-[#0094EB] hover:bg-blue-50 rounded-lg transition-colors"
                         title="Responder"
                       >
@@ -368,7 +328,7 @@ const CommentsPage = () => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleDeleteClick(row)}
+                        onClick={(e) => handleDeleteClick(e, row)}
                         className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
                         title="Excluir"
                       >
@@ -385,7 +345,7 @@ const CommentsPage = () => {
 
       {/* ==================== MODAL PARA RESPOSTA ==================== */}
       <CustomDialog
-        isOpen={!!editingCommentId && !showStatusOptions}
+        isOpen={!!editingCommentId && !showStatusDropdown}
         type="form"
         title="Responder Comentário"
         maxWidth="max-w-lg"
@@ -445,35 +405,34 @@ const CommentsPage = () => {
         </div>
       </CustomDialog>
 
-      {/* ==================== STATUS OPTIONS POPUP ==================== */}
-      {showStatusOptions && editingCommentId && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[2rem] shadow-2xl max-w-md max-h-[80vh] flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-slate-100">
-              <h3 className="text-lg font-black text-slate-900">Alterar Status</h3>
-              <button onClick={() => closeStatusOptions()} className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {["Pendente", "Aprovado", "Rejeitado"].map((option) => (
-                <div
-                  key={option}
-                  className="p-3 bg-slate-50 border border-slate-100 rounded-2xl cursor-pointer hover:bg-slate-100"
-                  onClick={() => {
-                    const statusMap: Record<string, Comment["status"]> = {
-                      Pendente: "pending",
-                      Aprovado: "approved",
-                      Rejeitado: "rejected",
-                    };
-                    handleStatusChange(editingCommentId!, statusMap[option]);
-                    closeStatusOptions();
-                  }}
-                >
-                  <span className="font-bold text-slate-800">{option}</span>
-                </div>
-              ))}
-            </div>
+      {/* ==================== STATUS DROPDOWN ==================== */}
+      {showStatusDropdown && editingCommentId && (
+        <div 
+          className="fixed inset-0 z-[9999] flex items-start justify-start"
+          style={{ top: statusDropdownPosition.top, left: statusDropdownPosition.left }}
+          onClick={closeStatusDropdown}
+        >
+          <div 
+            className="bg-white rounded-xl shadow-2xl border border-slate-200 p-2 min-w-[120px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {["Pendente", "Aprovado", "Rejeitado"].map((option) => (
+              <div
+                key={option}
+                className="p-2 hover:bg-slate-50 rounded-lg cursor-pointer"
+                onClick={() => {
+                  const statusMap: Record<string, Comment["status"]> = {
+                    Pendente: "pending",
+                    Aprovado: "approved",
+                    Rejeitado: "rejected",
+                  };
+                  handleStatusChange(editingCommentId!, statusMap[option]);
+                  closeStatusDropdown();
+                }}
+              >
+                <span className="text-sm font-bold text-slate-800">{option}</span>
+              </div>
+            ))}
           </div>
         </div>
       )}
