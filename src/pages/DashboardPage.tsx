@@ -173,9 +173,9 @@ const DashboardPage = () => {
             ))}
           </div>
           
-          <button 
+          <button
             onClick={() => navigate('/videos/performance')}
-            className="w-full mt-8 py-4 bg-slate-950 hover:bg-slate-800 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-slate-200"
+            className="w-full mt-8 py-4 bg-[#0094EB] hover:bg-[#0077c2] text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-slate-200"
           >
             Ver relatório completo
           </button>
