@@ -16,8 +16,9 @@ import CommentsPage from './pages/CommentsPage';
 import IntegrationPage from './pages/IntegrationPage';
 import SettingsPage from './pages/SettingsPage';
 import StoryDetailsPage from './pages/StoryDetailsPage';
-import VideoPerformancePage from './pages/VideoPerformancePage'; // Renomeado
-import VideoEditPage from './pages/VideoEditPage'; // Nova página
+import VideoPerformancePage from './pages/VideoPerformancePage';
+import VideoEditPage from './pages/VideoEditPage';
+import StoryPreviewPage from './pages/StoryPreviewPage';
 import NotFound from './pages/NotFound';
 
 const App = () => {
@@ -31,6 +32,7 @@ const App = () => {
           <Route path="/stories" element={<StoriesPage />} />
           <Route path="/stories/new" element={<StoryDetailsPage />} />
           <Route path="/stories/:id" element={<StoryDetailsPage />} />
+          <Route path="/stories/preview/:id" element={<StoryPreviewPage />} />
           
           {/* Rotas de Vídeos */}
           <Route path="/gallery" element={<VideoGalleryPage />} />
