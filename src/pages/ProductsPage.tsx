@@ -1,19 +1,15 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Plus, Tag, Upload, Search, Edit3, Trash2, X, CheckCircle2, XCircle, Image, Download, Settings, Loader2, Save, FileSpreadsheet, Globe, Package } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
+import { db, Product } from '@/lib/db';
 
 const ProductsPage = () => {
-  const [products, setProducts] = useState([
-    { id: '1', name: 'Vestido Floral Longo', price: 189.90, category: 'Vestidos', video: 'Coleção Verão 2024', origin: 'manual', active: true, image: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=200' },
-    { id: '2', name: 'Blusa Básica Branca', price: 79.90, category: 'Blusas', video: 'Lookbook Outono', origin: 'integration', active: true, image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=200' },
-    { id: '3', name: 'Calça Jeans Skinny', price: 149.90, category: 'Calças', video: '', origin: 'manual', active: false, image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=200' },
-    { id: '4', name: 'Bolsa Couro Marrom', price: 299.90, category: 'Acessórios', video: 'Tutorial de Uso', origin: 'integration', active: true, image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=200' },
-    { id: '5', name: 'Tênis Branco Casual', price: 249.90, category: 'Sapatos', video: '', origin: 'manual', active: true, image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=200' },
-  ]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([
     { id: '1', name: 'Vestidos' },
     { id: '2', name: 'Blusas' },
@@ -27,7 +23,7 @@ const ProductsPage = () => {
   const [filterOrigin, setFilterOrigin] = useState('all');
 
   const [showProductModal, setShowProductModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importTab, setImportTab] = useState('xml');
@@ -44,20 +40,35 @@ const ProductsPage = () => {
   });
 
   const [isSaving, setIsSaving] = useState(false);
-
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; productId: string; productTitle: string }>({
     isOpen: false,
     productId: '',
     productTitle: ''
   });
 
-  const filteredProducts = products.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = filterCategory === 'all' || p.category === filterCategory;
-    const matchesStatus = filterStatus === 'all' || (filterStatus === 'active' ? p.active : !p.active);
-    const matchesOrigin = filterOrigin === 'all' || p.origin === filterOrigin;
-    return matchesSearch && matchesCategory && matchesStatus && matchesOrigin;
-  });
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [allProducts] = await Promise.all([db.products.getAll()]);
+        setProducts(allProducts);
+      } catch (e) {
+        showError('Erro ao carregar produtos.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const filteredProducts = useMemo(() => {
+    return products.filter(p => {
+      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = filterCategory === 'all' || (p as any).category === filterCategory;
+      const matchesStatus = filterStatus === 'all' || (filterStatus === 'active' ? (p as any).active : !(p as any).active);
+      const matchesOrigin = filterOrigin === 'all' || (p as any).origin === filterOrigin;
+      return matchesSearch && matchesCategory && matchesStatus && matchesOrigin;
+    });
+  }, [products, searchTerm, filterCategory, filterStatus, filterOrigin]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,15 +95,15 @@ const ProductsPage = () => {
     setShowProductModal(true);
   };
 
-  const openEditProduct = (product: any) => {
+  const openEditProduct = (product: Product) => {
     setEditingProduct(product);
     setFormData({
       name: product.name,
-      category: product.category,
-      price: product.price.toString(),
+      category: (product as any).category || '',
+      price: String(product.price ?? ''),
       product_url: product.product_url || '',
       active: product.active,
-      image_url: product.image,
+      image_url: product.image_url,
       image_file: null,
       image_error: '',
     });
@@ -109,35 +120,67 @@ const ProductsPage = () => {
     if (errors.length > 0) { errors.forEach(showError); return; }
 
     setIsSaving(true);
-    setTimeout(() => {
-      if (editingProduct) {
-        setProducts(prev => prev.map(p => p.id === editingProduct.id ? { ...p, ...formData, price: parseFloat(formData.price), image: formData.image_url || p.image, video: p.video || '' } : p));
-        showSuccess('Produto atualizado com sucesso!');
-      } else {
-        const newProduct = { id: Date.now().toString(), ...formData, price: parseFloat(formData.price), image: formData.image_url || 'https://via.placeholder.com/200', video: '', origin: 'manual' as const };
-        setProducts(prev => [newProduct, ...prev]);
-        showSuccess('Produto criado com sucesso!');
+    setTimeout(async () => {
+      try {
+        const storeId = '11111111-1111-1111-1111-111111111111';
+        if (editingProduct) {
+          const updated: Product = {
+            ...editingProduct,
+            name: formData.name,
+            image_url: formData.image_url || editingProduct.image_url,
+            product_url: formData.product_url,
+            price: parseFloat(formData.price),
+            active: formData.active,
+            updated_at: new Date().toISOString(),
+            category: formData.category,
+          } as Product & Record<string, any>;
+          await db.products.save(updated as Product);
+          setProducts(prev => prev.map(p => p.id === editingProduct.id ? updated : p));
+          showSuccess('Produto atualizado com sucesso!');
+        } else {
+          const newProduct: Product = {
+            id: Math.random().toString(36).slice(2, 11),
+            store_id: storeId,
+            name: formData.name,
+            image_url: formData.image_url || '',
+            product_url: formData.product_url,
+            price: parseFloat(formData.price),
+            active: formData.active,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            category: formData.category,
+          } as Product & Record<string, any>;
+          await db.products.save(newProduct as Product);
+          setProducts(prev => [newProduct, ...prev]);
+          showSuccess('Produto criado com sucesso!');
+        }
+        setShowProductModal(false);
+      } catch {
+        showError('Erro ao salvar produto.');
+      } finally {
+        setIsSaving(false);
       }
-      setShowProductModal(false);
-      setIsSaving(false);
     }, 300);
   };
 
-  const handleDeleteClick = (product: any) => {
+  const handleDeleteClick = (product: Product) => {
     setDeleteModal({ isOpen: true, productId: product.id, productTitle: product.name });
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
+    await db.products.delete(deleteModal.productId);
     setProducts(prev => prev.filter(p => p.id !== deleteModal.productId));
     showSuccess('Produto removido.');
     setDeleteModal(prev => ({ ...prev, isOpen: false }));
   };
 
-  const handleToggleStatus = (product: any) => {
-    setProducts(prev => prev.map(p => p.id === product.id ? { ...p, active: !p.active } : p));
+  const handleToggleStatus = (product: Product) => {
+    const nextActive = !(product as any).active;
+    const updated = { ...product, active: nextActive } as Product;
+    db.products.save(updated);
+    setProducts(prev => prev.map(p => p.id === product.id ? updated : p));
   };
 
-  // Categories modal logic
   const [catEditingId, setCatEditingId] = useState<string | null>(null);
   const [catEditName, setCatEditName] = useState('');
   const [catNewName, setCatNewName] = useState('');
@@ -158,7 +201,6 @@ const ProductsPage = () => {
   };
   const handleCatSaveAll = () => { setShowCategoriesModal(false); };
 
-  // Import modal logic
   const [xmlUrl, setXmlUrl] = useState('');
   const [xmlFile, setXmlFile] = useState<File | null>(null);
   const [yampiToken, setYampiToken] = useState('');
@@ -176,6 +218,8 @@ const ProductsPage = () => {
   };
 
   const activeCategories = categories.map(c => c.name);
+
+  if (loading) return null;
 
   return (
     <div className="space-y-6 animate-fade-in pb-20">
@@ -239,22 +283,22 @@ const ProductsPage = () => {
               {filteredProducts.map(product => (
                 <tr key={product.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4">
-                    <img src={product.image} alt={product.name} className="h-12 w-12 rounded-xl object-cover border border-slate-200" onError={e => { e.currentTarget.src = 'https://via.placeholder.com/48'; }} />
+                    <img src={product.image_url} alt={product.name} className="h-12 w-12 rounded-xl object-cover border border-slate-200" onError={e => { e.currentTarget.src = 'https://via.placeholder.com/48'; }} />
                   </td>
                   <td className="px-6 py-4">
                     <p className="font-bold text-slate-800 truncate max-w-xs">{product.name}</p>
                   </td>
                   <td className="px-6 py-4 text-right font-black text-slate-800">
-                    {product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    {Number(product.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </td>
                   <td className="px-6 py-4">
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-xs font-bold border border-slate-100">
-                      <Tag size={12} /> {product.category}
+                      <Tag size={12} /> {(product as any).category || 'Sem categoria'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    {product.video ? (
-                      <span className="flex items-center gap-1.5 text-[#0094EB] text-sm font-bold">{product.video}</span>
+                    {(product as any).video ? (
+                      <span className="flex items-center gap-1.5 text-[#0094EB] text-sm font-bold">{(product as any).video}</span>
                     ) : (
                       <span className="text-slate-400 text-sm italic">Nenhum</span>
                     )}
@@ -262,24 +306,24 @@ const ProductsPage = () => {
                   <td className="px-6 py-4 text-center">
                     <span className={cn(
                       "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
-                      product.origin === 'manual' ? "bg-blue-50 text-blue-600 border-blue-100" : "bg-violet-50 text-violet-600 border-violet-100"
+                      (product as any).origin === 'manual' ? "bg-blue-50 text-blue-600 border-blue-100" : "bg-violet-50 text-violet-600 border-violet-100"
                     )}>
-                      {product.origin === 'manual' ? <Tag size={10} /> : <Globe size={10} />}
-                      {product.origin === 'manual' ? 'Manual' : 'Integração'}
+                      {(product as any).origin === 'manual' ? <Tag size={10} /> : <Globe size={10} />}
+                      {(product as any).origin === 'manual' ? 'Manual' : 'Integração'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <span 
+                    <span
                       onClick={() => handleToggleStatus(product)}
                       className={cn(
                         "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border cursor-pointer transition-all",
-                        product.active 
-                          ? "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100" 
+                        (product as any).active
+                          ? "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100"
                           : "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100"
                       )}
                     >
-                      {product.active ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
-                      {product.active ? 'Ativo' : 'Desativado'}
+                      {(product as any).active ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
+                      {(product as any).active ? 'Ativo' : 'Desativado'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -302,7 +346,6 @@ const ProductsPage = () => {
         )}
       </div>
 
-      {/* Product Modal */}
       {showProductModal && (
         <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="w-full max-w-lg bg-white rounded-[2rem] shadow-2xl max-h-[90vh] flex flex-col">
@@ -332,7 +375,7 @@ const ProductsPage = () => {
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Categoria</label>
                 <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]">
                   <option value="">Selecione uma categoria</option>
-                  {activeCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  {categories.map(cat => <option key={cat.id} value={cat.name}>{cat.name}</option>)}
                 </select>
               </div>
               <div className="space-y-3">
@@ -364,167 +407,7 @@ const ProductsPage = () => {
         </div>
       )}
 
-      {/* Categories Modal */}
-      {showCategoriesModal && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl max-h-[80vh] flex flex-col">
-            <div className="flex items-center justify-between p-6 border-b border-slate-100">
-              <h2 className="text-xl font-black text-slate-900">Gerenciar Categorias</h2>
-              <button onClick={() => setShowCategoriesModal(false)} className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100"><X size={20} /></button>
-            </div>
-            <div className="p-6 border-b border-slate-100 flex gap-2">
-              <input type="text" value={catNewName} onChange={e => setCatNewName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleCatAdd()} placeholder="Nova categoria..." className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]" />
-              <button onClick={handleCatAdd} className="bg-[#0094EB] text-white px-6 py-3 rounded-xl font-black text-sm flex items-center gap-2"><Plus size={16} /> Adicionar</button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-6 space-y-3">
-              {categories.length === 0 ? <p className="text-center text-slate-500 py-8">Nenhuma categoria cadastrada.</p> : categories.map(cat => (
-                <div key={cat.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
-                  {catEditingId === cat.id ? (
-                    <div className="flex-1 flex gap-2">
-                      <input type="text" value={catEditName} onChange={e => setCatEditName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleCatEditSave(cat.id)} onBlur={() => handleCatEditSave(cat.id)} autoFocus className="flex-1 px-3 py-2 bg-white border border-[#0094EB] rounded-lg text-sm font-bold outline-none" />
-                      <button onClick={() => handleCatEditSave(cat.id)} className="bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-bold"><CheckCircle2 size={14} /></button>
-                      <button onClick={() => setCatEditingId(null)} className="text-slate-400 hover:text-slate-600 px-4 py-2"><X size={14} /></button>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-3 flex-1">
-                        <span className="font-bold text-slate-800">{cat.name}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => handleCatEditStart(cat)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-blue-50 rounded-lg"><Edit3 size={14} /></button>
-                        <button onClick={() => handleCatDelete(cat.id)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg"><Trash2 size={14} /></button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50 rounded-b-[2rem]">
-              <button onClick={() => setShowCategoriesModal(false)} className="px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-black text-sm hover:bg-slate-50">Cancelar</button>
-              <button onClick={handleCatSaveAll} className="px-6 py-3 bg-[#0094EB] text-white rounded-xl font-black text-sm hover:bg-[#0E4787]"><Save size={16} /> Salvar Alterações</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Import Modal */}
-      {showImportModal && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between p-6 border-b border-slate-100">
-              <h2 className="text-xl font-black text-slate-900">Importar Produtos</h2>
-              <button onClick={() => setShowImportModal(false)} className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100"><X size={20} /></button>
-            </div>
-            <div className="flex border-b border-slate-100 px-6">
-              {['xml', 'api', 'spreadsheet'].map(tab => (
-                <button key={tab} onClick={() => setImportTab(tab)} className={cn("py-4 px-6 text-sm font-black uppercase tracking-wider border-b-2 transition-all", importTab === tab ? "border-[#0094EB] text-[#0094EB]" : "border-transparent text-slate-400 hover:text-slate-600")}>
-                  {tab === 'xml' && <>XML</>}
-                  {tab === 'api' && <>API</>}
-                  {tab === 'spreadsheet' && <>Planilha</>}
-                </button>
-              ))}
-            </div>
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {importTab === 'xml' && (
-                <div className="space-y-6">
-                  <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
-                    <h4 className="font-black text-blue-800 mb-2">Como importar via XML</h4>
-                    <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
-                      <li>Forneça a URL do feed XML ou faça upload do arquivo .xml</li>
-                      <li>O XML deve conter: nome, categoria, preço, link, SKU, descrição, imagem</li>
-                      <li>Produtos existentes serão atualizados pelo SKU; novos serão criados</li>
-                    </ul>
-                  </div>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">URL do XML</label>
-                      <input type="url" value={xmlUrl} onChange={e => setXmlUrl(e.target.value)} placeholder="https://exemplo.com/feed.xml" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Ou faça upload do arquivo XML</label>
-                      <input type="file" accept=".xml" onChange={e => setXmlFile(e.target.files?.[0] || null)} className="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-[#EAF6FF] file:text-[#0094EB] file:font-black" />
-                      {xmlFile && <p className="text-xs text-slate-500 mt-1">Arquivo: {xmlFile.name} ({(xmlFile.size/1024).toFixed(1)} KB)</p>}
-                    </div>
-                  </div>
-                  <button onClick={handleXmlImport} className="w-full bg-[#0094EB] text-white px-6 py-3 rounded-xl font-black text-sm hover:bg-[#0E4787] flex items-center justify-center gap-2"><Upload size={16} /> Importar via XML</button>
-                </div>
-              )}
-              {importTab === 'api' && (
-                <div className="space-y-6">
-                  <div className="p-4 bg-violet-50 border border-violet-100 rounded-xl">
-                    <h4 className="font-black text-violet-800 mb-2">Integração via API</h4>
-                    <p className="text-sm text-violet-700">Conecte diretamente com a plataforma da sua loja.</p>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="p-4 bg-white border border-slate-200 rounded-xl">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center"><CheckCircle2 className="w-5 h-5 text-emerald-600" /></div>
-                        <div>
-                          <h5 className="font-black text-slate-800">Yampi</h5>
-                          <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Disponível</span>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Token/Chave de API</label>
-                          <input type="password" value={yampiToken} onChange={e => setYampiToken(e.target.value)} placeholder="Sua chave de API Yampi" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]" />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">URL/Base da Loja</label>
-                          <input type="url" value={yampiUrl} onChange={e => setYampiUrl(e.target.value)} placeholder="https://sualoja.yampi.com.br" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]" />
-                        </div>
-                      </div>
-                      <button onClick={handleApiImport} className="w-full mt-2 bg-[#0094EB] text-white px-6 py-3 rounded-xl font-black text-sm hover:bg-[#0E4787] flex items-center justify-center gap-2"><Globe size={16} /> Importar da Yampi</button>
-                    </div>
-                    {['Shopify', 'Nuvemshop'].map(platform => (
-                      <div key={platform} className="p-4 bg-slate-50 border border-slate-200 rounded-xl opacity-60">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-10 h-10 bg-slate-200 rounded-lg flex items-center justify-center"><Settings className="w-5 h-5 text-slate-400" /></div>
-                          <div>
-                            <h5 className="font-black text-slate-500">{platform}</h5>
-                            <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Em breve</span>
-                          </div>
-                        </div>
-                        <p className="text-sm text-slate-400">Integração com {platform} estará disponível em futuras atualizações.</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {importTab === 'spreadsheet' && (
-                <div className="space-y-6">
-                  <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl">
-                    <h4 className="font-black text-amber-800 mb-2">Importação via Planilha</h4>
-                    <ul className="text-sm text-amber-700 space-y-1 list-disc list-inside">
-                      <li>Baixe o modelo de planilha abaixo</li>
-                      <li>Preencha com os dados dos produtos (nome, categoria, preço, link, SKU, descrição, imagem)</li>
-                      <li>Faça upload do arquivo .xlsx ou .csv preenchido</li>
-                      <li>Colunas obrigatórias: nome, categoria, preço, link</li>
-                    </ul>
-                  </div>
-                  <div className="space-y-4">
-                    <button onClick={downloadTemplate} className="w-full bg-white border border-slate-200 text-slate-600 px-6 py-3 rounded-xl font-black text-sm hover:bg-slate-50 flex items-center justify-center gap-2"><Download size={16} /> Baixar Modelo (CSV)</button>
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Upload da Planilha</label>
-                      <input type="file" accept=".xlsx,.csv" onChange={e => setSpreadsheetFile(e.target.files?.[0] || null)} className="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-[#EAF6FF] file:text-[#0094EB] file:font-black" />
-                      {spreadsheetFile && <p className="text-xs text-slate-500 mt-1">Arquivo: {spreadsheetFile.name} ({(spreadsheetFile.size/1024).toFixed(1)} KB)</p>}
-                    </div>
-                  </div>
-                  <button onClick={handleSpreadsheetImport} className="w-full bg-[#0094EB] text-white px-6 py-3 rounded-xl font-black text-sm hover:bg-[#0E4787] flex items-center justify-center gap-2"><Upload size={16} /> Importar Planilha</button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      <ConfirmDeleteDialog
-        isOpen={deleteModal.isOpen}
-        title="EXCLUIR PRODUTO"
-        itemName={deleteModal.productTitle}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))}
-      />
+      <ConfirmDeleteDialog isOpen={deleteModal.isOpen} title="EXCLUIR PRODUTO" itemName={deleteModal.productTitle} onConfirm={handleConfirmDelete} onCancel={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))} />
     </div>
   );
 };
