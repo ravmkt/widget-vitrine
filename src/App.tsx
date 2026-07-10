@@ -19,7 +19,6 @@ import StoryDetailsPage from './pages/StoryDetailsPage';
 import VideoPerformancePage from './pages/VideoPerformancePage'; // Renomeado
 import VideoEditPage from './pages/VideoEditPage'; // Nova página
 import NotFound from './pages/NotFound';
-import StoryPreviewPage from './pages/StoryPreviewPage'; // New preview page
 
 const App = () => {
   return (
@@ -32,9 +31,6 @@ const App = () => {
           <Route path="/stories" element={<StoriesPage />} />
           <Route path="/stories/new" element={<StoryDetailsPage />} />
           <Route path="/stories/:id" element={<StoryDetailsPage />} />
-          
-          {/* New preview route */}
-          <Route path="/stories/preview/:id" element={<StoryPreviewPage />} />
           
           {/* Rotas de Vídeos */}
           <Route path="/gallery" element={<VideoGalleryPage />} />

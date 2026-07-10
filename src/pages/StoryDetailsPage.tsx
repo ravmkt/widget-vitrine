@@ -7,7 +7,7 @@ import {
 import { 
   ArrowLeft, Save, X, Settings, Layout, Layers, MousePointer2, 
   Film, MapPin, Globe, CheckCircle2, XCircle, Plus, Trash2, 
-  Loader2, Eye
+  Loader2
 } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
@@ -252,16 +252,6 @@ const StoryDetailsPage = () => {
     }
   };
 
-  const handlePreview = () => {
-    if (!story && !isCreate) return;
-    
-    const storyId = story?.id || 'preview';
-    const baseUrl = window.location.origin;
-    const previewUrl = `${baseUrl}/stories/${storyId}`;
-    
-    window.open(previewUrl, '_blank');
-  };
-
   if (loading) return null;
 
   return (
@@ -280,13 +270,6 @@ const StoryDetailsPage = () => {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button 
-            onClick={handlePreview}
-            disabled={isCreate && (!formData.title || selectedVideoIds.length === 0)}
-            className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 px-6 py-3.5 rounded-2xl font-black text-sm shadow-sm transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Eye size={18} /> Preview
-          </button>
           <div className="hidden sm:flex items-center gap-2 mr-4">
             <span className={cn("text-[10px] font-black uppercase tracking-widest", formData.active ? "text-emerald-500" : "text-slate-400")}>
               {formData.active ? 'Status: Ativo' : 'Status: Inativo'}
