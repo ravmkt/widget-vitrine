@@ -38,6 +38,11 @@ import {
   Textarea,
 } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { RefreshCw } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { Copy } from 'lucide-react';
+import { X } from 'lucide-react';
+import { Image } from 'lucide-react';
 
 // Define the shape of our settings based on the app_settings table
 interface AppSettings {
@@ -512,7 +517,6 @@ const SettingsPage = () => {
                 placeholder="5545999629702"
                 value={settings?.whatsapp_number ?? ''}
                 onChange={(e) => {
-                  // Allow only numbers, +, -, (, ), and space
                   const value = e.target.value.replace(/[^\d+\-\(\) ]/g, '');
                   setSettings(prev => prev ? { ...prev, whatsapp_number: value } : null);
                 }}
@@ -547,7 +551,11 @@ const SettingsPage = () => {
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
               />
               <p className="text-xs text-slate-500 mt-1">
-                Use a tag <code className="bg-slate-200 px-1 rounded text-xs font-mono">{{'{{story_title'}}}}</code> para inserir automaticamente o título do vídeo.
+                Use a tag{" "}
+                <code className="bg-slate-200 px-1 rounded text-xs font-mono">
+                  {"{{story_title}}"}
+                </code>{" "}
+                para inserir automaticamente o título do vídeo.
               </p>
             </div>
           </CardContent>
@@ -581,12 +589,10 @@ const SettingsPage = () => {
                 type="number"
                 min={1}
                 max={100}
-                value={settings?.store_public_id ? '10' : '10'} // Placeholder, we don't have this field yet
+                value={settings?.store_public_id ? '10' : '10'}
                 onChange={(e) => {
                   const num = parseInt(e.target.value);
                   if (!isNaN(num) && num >= 1 && num <= 100) {
-                    // We don't have a field for this in our current settings, so we'll skip saving it for now
-                    // In a real implementation, you would add this field to the AppSettings interface and table
                     console.log('Videos per page:', num);
                   }
                 }}
@@ -601,9 +607,8 @@ const SettingsPage = () => {
                 Ordenação Padrão
               </Label>
               <Select
-                value={settings?.store_public_id ? 'recent' : 'recent'} // Placeholder
+                value={settings?.store_public_id ? 'recent' : 'recent'}
                 onValueChange={(value) => {
-                  // We don't have a field for this in our current settings, so we'll skip saving it for now
                   console.log('Default order:', value);
                 }}
               >
@@ -691,21 +696,5 @@ const SettingsPage = () => {
     </div>
   );
 };
-
-// Helper component for refresh icon (since we don't have it in lucide-react in the provided list, we'll use a custom one or use from lucide if available)
-// Since we don't see RefreshCw in the provided lucide imports, we'll use a placeholder or import from lucide if available in the project.
-// But to avoid errors, we'll use a simple div or check if it's available.
-// Given the constraints, we'll assume it's available or use an alternative.
-// If not available in the project, we'll need to adjust. For now, we'll use a placeholder.
-
-// Since we don't have the exact icon, we'll use a simple div for now and note that it should be replaced with the actual icon if available.
-// Alternatively, we can use the Lucide icon "RefreshCw" if it's installed (it is in lucide-react).
-// We'll import it from lucide-react.
-
-import { RefreshCw } from 'lucide-react';
-import { Loader2 } from 'lucide-react';
-import { Copy } from 'lucide-react';
-import { X } from 'lucide-react';
-import { Image } from 'lucide-react';
 
 export default SettingsPage;
