@@ -241,7 +241,11 @@ const VideoGalleryPage = () => {
           return (
             <div key={video.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm group">
               <div className="aspect-[9/16] bg-slate-900 relative cursor-pointer" onClick={() => handleViewVideo(video)}>
-                 <img src={video.thumbnail_url} className="w-full h-full object-cover opacity-80" alt={video.title} />
+                 {video.thumbnail_url ? (
+                   <img src={video.thumbnail_url} className="w-full h-full object-cover opacity-80" alt={video.title} />
+                 ) : (
+                   <video src={video.video_url} className="w-full h-full object-cover opacity-80" muted preload="metadata" />
+                 )}
                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all bg-black/40">
                     <Play size={32} className="text-white fill-white" />
                  </div>
@@ -288,13 +292,27 @@ const VideoGalleryPage = () => {
         {viewingVideo && (
           <div className="flex flex-col sm:flex-row gap-6">
             <div className="w-[240px] mx-auto shrink-0">
-               <video 
-                 src={viewingVideo.video_url} 
-                 className="w-full max-w-full h-auto max-h-[400px] rounded-2xl border-4 border-slate-900 shadow-xl" 
-                 controls 
-                 autoPlay 
-                 poster={viewingVideo.thumbnail_url}
-               />
+               {viewingVideo.video_url ? (
+                 <video 
+                   src={viewingVideo.video_url} 
+                   className="w-full max-w-full h-auto max-h-[400px] rounded-2xl border-4 border-slate-900 shadow-xl" 
+                   controls 
+                   autoPlay 
+                   poster={viewingVideo.thumbnail_url}
+                 />
+               ) : (
+                 <div className="w-full h-[400px] rounded-2xl border-4 border-slate-900 shadow-xl bg-slate-900 flex flex-col items-center justify-center gap-4 p-4">
+                   <p className="text-white text-sm font-bold text-center">
+                     {viewingVideo.source_type === 'instagram' ? 'Vídeo do Instagram' : viewingVideo.source_type === 'tiktok' ? 'Vídeo do TikTok' : 'Sem vídeo'}
+                   </p>
+                   {viewingVideo.instagram_link && (
+                     <a href={viewingVideo.instagram_link} target="_blank" rel="noreferrer" className="bg-[#0094EB] text-white px-4 py-2 rounded-xl text-xs font-black">Abrir no Instagram</a>
+                   )}
+                   {viewingVideo.tiktok_link && (
+                     <a href={viewingVideo.tiktok_link} target="_blank" rel="noreferrer" className="bg-[#0094EB] text-white px-4 py-2 rounded-xl text-xs font-black">Abrir no TikTok</a>
+                   )}
+                 </div>
+               )}
             </div>
             <div className="flex-1 flex flex-col pt-1">
               <div className="mb-4">

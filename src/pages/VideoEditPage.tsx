@@ -6,6 +6,7 @@ import { db, Video, Product, SizingModel, Story } from '@/lib/db';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
 import SuccessDialog from '@/components/SuccessDialog';
+import { generateVideoThumbnail } from '@/lib/video';
 
 const VideoEditPage = () => {
   const { id } = useParams();
@@ -53,14 +54,14 @@ const VideoEditPage = () => {
           setVideo(v);
           setFormData({
             title: v.title,
-            video_url: v.video_url,
+            video_url: v.video_url || '',
             instagram_link: v.instagram_link || '',
             tiktok_link: v.tiktok_link || '',
             thumbnail_url: v.thumbnail_url || '',
-            product_id: (v as any).product_id || '',
-            model_id: (v as any).model_id || '',
+            product_id: v.product_id || '',
+            model_id: v.model_id || '',
             active: v.active ?? true,
-            origin: 'url' as 'url' | 'instagram' | 'tiktok' | 'upload',
+            origin: (v.source_type as any) || 'url',
             video_file: null,
           });
 
@@ -84,12 +85,12 @@ const VideoEditPage = () => {
   const handleOriginChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setFormData(prev => {
       const newData = { ...prev, origin: e.target.value as any };
-      // Reset thumbnail and video file when origin changes
-      newData.thumbnail_url = '';
-      newData.video_file = null;
+      // Reset all source fields and thumbnail when origin changes
       newData.video_url = '';
       newData.instagram_link = '';
       newData.tiktok_link = '';
+      newData.thumbnail_url = '';
+      newData.video_file = null;
       return newData;
     });
   };
@@ -138,7 +139,12 @@ const VideoEditPage = () => {
 
     const reader = new FileReader();
     reader.onload = () => {
-      setFormData({ ...formData, video_file: file });
+      const dataUrl = reader.result as string;
+      setFormData(prev => ({ ...prev, video_file: file, video_url: dataUrl }));
+      // Auto-generate thumbnail from uploaded video
+      generateVideoThumbnail(dataUrl).then(thumb => {
+        if (thumb) setFormData(prev => ({ ...prev, thumbnail_url: thumb }));
+      });
     };
     reader.readAsDataURL(file);
   };
@@ -222,10 +228,8 @@ const VideoEditPage = () => {
     }
 
     if (formData.origin === 'upload') {
-      if (!formData.video_file) {
+      if (!formData.video_url) {
         errors.video_file = 'Envie um arquivo de vídeo.';
-        isValid = false;
-      } else if (!validateFile(formData.video_file)) {
         isValid = false;
       }
     }
@@ -249,12 +253,14 @@ const VideoEditPage = () => {
       setIsSaving(true);
 
       const videoData: Partial<Video> = {
-        title: formData.title,
+        title: formData.title.trim(),
+        source_type: formData.origin,
         video_url: formData.video_url,
         instagram_link: formData.instagram_link,
         tiktok_link: formData.tiktok_link,
         thumbnail_url: formData.thumbnail_url,
         active: formData.active,
+        status: formData.active ? 'active' : 'inactive',
         model_id: formData.model_id || null,
         product_id: formData.product_id || null,
         updated_at: new Date().toISOString()
@@ -374,6 +380,9 @@ const VideoEditPage = () => {
                 onChange={handleFileUpload}
                 className="block w-full text-xs text-slate-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:bg-[#EAF6FF] file:text-[#0094EB] file:font-black file:cursor-pointer hover:file:bg-[#0094EB] hover:file:text-white transition-all"
               />
+              {formData.video_url && (
+                <video src={formData.video_url} className="w-32 rounded-xl border border-slate-200" muted controls />
+              )}
               {formData.video_file && (
                 <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm">
                   <div className="font-medium text-gray-700">Arquivo selecionado:</div>
@@ -392,6 +401,8 @@ const VideoEditPage = () => {
               <div className="h-24 w-24 rounded-2xl overflow-hidden bg-slate-200 border border-slate-300 shrink-0 flex items-center justify-center">
                 {formData.thumbnail_url ? (
                   <img src={formData.thumbnail_url} className="w-full h-full object-cover" alt="Capa" />
+                ) : formData.video_url ? (
+                  <video src={formData.video_url} className="w-full h-full object-cover" muted />
                 ) : (
                   <span className="text-xs font-bold text-slate-400">Sem capa</span>
                 )}
@@ -407,11 +418,12 @@ const VideoEditPage = () => {
                   type="url"
                   value={formData.thumbnail_url}
                   onChange={e => setFormData({ ...formData, thumbnail_url: e.target.value })}
-                  placeholder="Ou cole a URL da capa"
+                  placeholder="Ou cole a URL da capa (opcional - gerada do vídeo)"
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
                 />
               </div>
             </div>
+            <p className="text-xs text-slate-400 font-medium">Se deixado em branco, um frame do vídeo será usado automaticamente.</p>
           </div>
 
           <div className="space-y-4">

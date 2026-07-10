@@ -173,7 +173,7 @@ const VideoPerformancePage = () => {
             <div key={v.id} className="bg-white border border-slate-100 rounded-2xl p-4 hover:bg-slate-50/50 transition-all">
               <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                 <div className="flex items-center gap-3 min-w-[200px]">
-                  <img src={v.thumbnail_url} className="h-12 w-12 rounded-xl object-cover shrink-0" alt={v.title} />
+                  <img src={v.thumbnail_url || ''} className="h-12 w-12 rounded-xl object-cover shrink-0 bg-slate-200" alt={v.title} onError={e => { e.currentTarget.style.display = 'none'; }} />
                   <div className="min-w-0">
                     <h4 className="text-sm font-black text-slate-800 truncate">{v.title}</h4>
                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{v.source_type}</p>
@@ -202,17 +202,30 @@ const VideoPerformancePage = () => {
         {viewingVideo && (
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="lg:w-[240px] shrink-0 mx-auto lg:mx-0">
-              <div className="aspect-[9/16] bg-slate-950 rounded-[1.5rem] overflow-hidden shadow-lg relative border-[4px] border-slate-900 max-h-[60vh]">
-                {/* FIXED: Use object-fit: contain and responsive dimensions */}
-                <video 
-                  src={viewingVideo.video_url} 
-                  className="w-full max-w-full h-auto max-h-[400px] object-fit contain" 
-                  poster={viewingVideo.thumbnail_url} 
-                  controls 
-                  autoPlay 
-                  loop
-                />
-              </div>
+              {viewingVideo.video_url ? (
+                <div className="aspect-[9/16] bg-slate-950 rounded-[1.5rem] overflow-hidden shadow-lg relative border-[4px] border-slate-900 max-h-[60vh]">
+                  <video 
+                    src={viewingVideo.video_url} 
+                    className="w-full max-w-full h-auto max-h-[400px] object-contain" 
+                    poster={viewingVideo.thumbnail_url} 
+                    controls 
+                    autoPlay 
+                    loop
+                  />
+                </div>
+              ) : (
+                <div className="aspect-[9/16] bg-slate-950 rounded-[1.5rem] overflow-hidden shadow-lg relative border-[4px] border-slate-900 max-h-[60vh] flex flex-col items-center justify-center gap-4 p-4">
+                  <p className="text-white text-sm font-bold text-center">
+                    {viewingVideo.source_type === 'instagram' ? 'Vídeo do Instagram' : viewingVideo.source_type === 'tiktok' ? 'Vídeo do TikTok' : 'Sem vídeo'}
+                  </p>
+                  {viewingVideo.instagram_link && (
+                    <a href={viewingVideo.instagram_link} target="_blank" rel="noreferrer" className="bg-[#0094EB] text-white px-4 py-2 rounded-xl text-xs font-black">Abrir no Instagram</a>
+                  )}
+                  {viewingVideo.tiktok_link && (
+                    <a href={viewingVideo.tiktok_link} target="_blank" rel="noreferrer" className="bg-[#0094EB] text-white px-4 py-2 rounded-xl text-xs font-black">Abrir no TikTok</a>
+                  )}
+                </div>
+              )}
             </div>
             <div className="flex-1 flex flex-col pt-1">
               <div className="mb-4">
