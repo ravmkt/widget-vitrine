@@ -232,18 +232,23 @@ const StoryDetailsPage = () => {
     setRules([...rules, newRule]);
   };
 
-  const handleDeleteSubItem = async () => {
+  const handleDeleteLocation = async (locationId: string) => {
     try {
-      if (deleteModal.type === 'location') {
-        await db.displayLocations.delete(deleteModal.id);
-        setLocations(prev => prev.filter(l => l.id !== deleteModal.id));
-      } else {
-        await db.pageRules.delete(deleteModal.id);
-        setRules(prev => prev.filter(r => r.id !== deleteModal.id));
-      }
-      setDeleteModal(prev => ({ ...prev, isOpen: false }));
+      await db.displayLocations.delete(locationId);
+      setLocations(prev => prev.filter(l => l.id !== locationId));
+      showSuccess('Localização removida com sucesso!');
     } catch (e) {
-      showError('Erro ao remover item.');
+      showError('Erro ao remover localização.');
+    }
+  };
+
+  const handleDeleteRule = async (ruleId: string) => {
+    try {
+      await db.pageRules.delete(ruleId);
+      setRules(prev => prev.filter(r => r.id !== ruleId));
+      showSuccess('Regra removida com sucesso!');
+    } catch (e) {
+      showError('Erro ao remover regra.');
     }
   };
 
@@ -405,7 +410,7 @@ const StoryDetailsPage = () => {
                 <div key={loc.id} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl relative group">
                   <button 
                     type="button" 
-                    onClick={() => setDeleteModal({ isOpen: true, type: 'location', id: loc.id, name: loc.selector })}
+                    onClick={() => handleDeleteLocation(loc.id)}
                     className="absolute -top-2 -right-2 w-6 h-6 bg-white border border-slate-200 text-rose-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-sm"
                   >
                     <X size={12}/>
@@ -460,7 +465,7 @@ const StoryDetailsPage = () => {
                 <div key={rule.id} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl relative group">
                   <button 
                     type="button" 
-                    onClick={() => setDeleteModal({ isOpen: true, type: 'rule', id: rule.id, name: rule.condition_type })}
+                    onClick={() => handleDeleteRule(rule.id)}
                     className="absolute -top-2 -right-2 w-6 h-6 bg-white border border-slate-200 text-rose-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-sm"
                   >
                     <X size={12}/>
@@ -507,7 +512,14 @@ const StoryDetailsPage = () => {
         isOpen={deleteModal.isOpen}
         title="Confirmar Exclusão"
         itemName={deleteModal.name}
-        onConfirm={handleDeleteSubItem}
+        onConfirm={() => {
+          if (deleteModal.type === 'location') {
+            handleDeleteLocation(deleteModal.id);
+          } else {
+            handleDeleteRule(deleteModal.id);
+          }
+          setDeleteModal(prev => ({ ...prev, isOpen: false }));
+        }}
         onCancel={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))}
       />
       <SuccessDialog isOpen={showSuccess} description={isCreate ? 'Story criado com sucesso.' : 'Story atualizado com sucesso.'} onClose={() => navigate('/stories')} />
