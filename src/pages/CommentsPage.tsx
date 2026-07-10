@@ -29,8 +29,7 @@ import { cn } from "@/lib/utils";
 const CommentsPage = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [videos, setVideos] = useState<Video[]>([]);
-  const [loading, setLoading] = useState] = useState(true);
-  const [searchTerm, setSearchTerm] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterVideo, setFilterVideo] = useState<string>("all");
@@ -166,7 +165,6 @@ const CommentsPage = () => {
 
   const handleReply = (comment: Comment) => {
     setEditingCommentId(comment.id);
-    // Focus the textarea when replying
     setTimeout(() => {
       textareaRef.current?.focus();
     }, 100);
@@ -299,8 +297,7 @@ const CommentsPage = () => {
               type="button"
               onClick={() => handleSort("status")}
               className={cn(
-                "px-4 py-2 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                isSortedBy-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
                 isSortedBy("status") ? "bg-[#0094EB] text-white" : "text-slate-400 hover:text-slate-600"
               )}
             >
