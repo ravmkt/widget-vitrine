@@ -242,13 +242,7 @@ const StoryDetailsPage = () => {
     }
   };
 
-  const handleDeleteRule = async (ruleId: string | undefined | null) => {
-    // Validate ruleId before attempting deletion
-    if (!ruleId) {
-      // Invalid ID - just remove from local state if needed
-      setRules(prev => prev.filter(r => r.id !== ruleId));
-      return;
-    }
+  const handleDeleteRule = async (ruleId: string) => {
     try {
       await db.pageRules.delete(ruleId);
       setRules(prev => prev.filter(r => r.id !== ruleId));
@@ -355,102 +349,104 @@ const StoryDetailsPage = () => {
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm">
-        <div className="flex items-center justify-between pb-6 border-b border-slate-100 mb-6">
-          <div className="flex items-center gap-3">
-            <Film className="text-[#0094EB]" size={20} />
-            <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">Conteúdo Selecionado</h3>
-          </div>
-          <span className="text-xs font-black text-slate-400 bg-slate-50 px-3 py-1 rounded-full">
-            {selectedVideoIds.length} Vídeos
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {allVideos.map(video => {
-            const isSelected = selectedVideoIds.includes(video.id);
-            return (
-              <button 
-                key={video.id} 
-                type="button"
-                onClick={() => handleToggleVideo(video.id)}
-                className={cn(
-                  "relative aspect-[9/16] rounded-2xl overflow-hidden border-2 transition-all group",
-                  isSelected ? "border-[#0094EB] shadow-lg shadow-blue-100 scale-[0.98]" : "border-transparent opacity-60 grayscale hover:opacity-100 hover:grayscale-0"
-                )}
-              >
-                <img src={video.thumbnail_url} className="w-full h-full object-cover" />
-                <div className={cn("absolute inset-0 flex items-center justify-center transition-all", isSelected ? "bg-[#0094EB]/20" : "bg-black/20")}>
-                  {isSelected ? (
-                    <div className="bg-[#0094EB] text-white p-1 rounded-full"><CheckCircle2 size={16}/></div>
-                  ) : (
-                    <Plus className="text-white opacity-0 group-hover:opacity-100" size={24}/>
-                  )}
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
-                  <p className="text-[9px] font-black text-white truncate">{video.title}</p>
-                </div>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Sidebar: Locais e Regras */}
-      <div className="space-y-8">
-        {/* Onde Aparece */}
-        <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <MapPin className="text-orange-500" size={18} />
-              <h4 className="text-sm font-black text-slate-800 uppercase">Onde Aparece</h4>
-            </div>
-            <button type="button" onClick={handleAddLocation} className="p-1.5 bg-orange-50 text-orange-500 rounded-lg hover:bg-orange-100"><Plus size={16}/></button>
-          </div>
-
-          <div className="space-y-4">
-            {locations.map((loc) => (
-              <div key={loc.id} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl relative group">
-                <button 
-                  type="button" 
-                  onClick={() => handleDeleteLocation(loc.id)}
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-white border border-slate-200 text-rose-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-sm"
-                >
-                  <X size={12}/>
-                </button>
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Seletor CSS</label>
-                    <input 
-                      type="text" value={loc.selector} 
-                      onChange={e => {
-                        const next = locations.map(l => l.id === loc.id ? {...l, selector: e.target.value} : l);
-                        setLocations(next);
-                      }}
-                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Posição</label>
-                    <select 
-                      value={loc.position} 
-                      onChange={e => {
-                        const next = locations.map(l => l.id === loc.id ? {...l, position: e.target.value as DisplayPosition} : l);
-                        setLocations(next);
-                      }}
-                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none"
-                    >
-                    <option value="fixed_bottom_right">Flutuante (Direita)</option>
-                    <option value="fixed_bottom_left">Flutuante (Esquerda)</option>
-                    <option value="after_element">Depois do Seletor</option>
-                    <option value="before_element">Antes do Seletor</option>
-                    <option value="inside_end">Dentro (Fim)</option>
-                  </select>
-                </div>
+          {/* Vídeos do Story */}
+          <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm">
+            <div className="flex items-center justify-between pb-6 border-b border-slate-100 mb-6">
+              <div className="flex items-center gap-3">
+                <Film className="text-[#0094EB]" size={20} />
+                <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">Conteúdo Selecionado</h3>
               </div>
+              <span className="text-xs font-black text-slate-400 bg-slate-50 px-3 py-1 rounded-full">
+                {selectedVideoIds.length} Vídeos
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {allVideos.map(video => {
+                const isSelected = selectedVideoIds.includes(video.id);
+                return (
+                  <button 
+                    key={video.id} 
+                    type="button"
+                    onClick={() => handleToggleVideo(video.id)}
+                    className={cn(
+                      "relative aspect-[9/16] rounded-2xl overflow-hidden border-2 transition-all group",
+                      isSelected ? "border-[#0094EB] shadow-lg shadow-blue-100 scale-[0.98]" : "border-transparent opacity-60 grayscale hover:opacity-100 hover:grayscale-0"
+                    )}
+                  >
+                    <img src={video.thumbnail_url} className="w-full h-full object-cover" />
+                    <div className={cn("absolute inset-0 flex items-center justify-center transition-all", isSelected ? "bg-[#0094EB]/20" : "bg-black/20")}>
+                      {isSelected ? (
+                        <div className="bg-[#0094EB] text-white p-1 rounded-full"><CheckCircle2 size={16}/></div>
+                      ) : (
+                        <Plus className="text-white opacity-0 group-hover:opacity-100" size={24}/>
+                      )}
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
+                      <p className="text-[9px] font-black text-white truncate">{video.title}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar: Locais e Regras */}
+        <div className="space-y-8">
+          {/* Onde Aparece */}
+          <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <MapPin className="text-orange-500" size={18} />
+                <h4 className="text-sm font-black text-slate-800 uppercase">Onde Aparece</h4>
+              </div>
+              <button type="button" onClick={handleAddLocation} className="p-1.5 bg-orange-50 text-orange-500 rounded-lg hover:bg-orange-100"><Plus size={16}/></button>
+            </div>
+
+            <div className="space-y-4">
+              {locations.map((loc) => (
+                <div key={loc.id} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl relative group">
+                  <button 
+                    type="button" 
+                    onClick={() => handleDeleteLocation(loc.id)}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-white border border-slate-200 text-rose-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-sm"
+                  >
+                    <X size={12}/>
+                  </button>
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Seletor CSS</label>
+                      <input 
+                        type="text" value={loc.selector} 
+                        onChange={e => {
+                          const next = locations.map(l => l.id === loc.id ? {...l, selector: e.target.value} : l);
+                          setLocations(next);
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none" 
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Posição</label>
+                      <select 
+                        value={loc.position} 
+                        onChange={e => {
+                          const next = locations.map(l => l.id === loc.id ? {...l, position: e.target.value as DisplayPosition} : l);
+                          setLocations(next);
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none"
+                      >
+                        <option value="fixed_bottom_right">Flutuante (Direita)</option>
+                        <option value="fixed_bottom_left">Flutuante (Esquerda)</option>
+                        <option value="after_element">Depois do Seletor</option>
+                        <option value="before_element">Antes do Seletor</option>
+                        <option value="inside_end">Dentro (Fim)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -500,7 +496,7 @@ const StoryDetailsPage = () => {
                             const next = rules.map(r => r.id === rule.id ? {...r, value: e.target.value} : r);
                             setRules(next);
                           }}
-                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none"
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none" 
                         />
                       </div>
                     )}
