@@ -360,11 +360,11 @@ const SettingsPage = () => {
 
         <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
           <CardHeader className="p-6">
-            <CardTitle className="text-xl font-black text-slate-800">5. Segurança</CardHeader>
+            <CardTitle className="text-xl font-black text-slate-800">5. Segurança</CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
             <div className="space-y-4">
-              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Token Público / API Key</Label>
+              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Token Público / API Keys</Label>
               <div className="flex items-center gap-3">
                 <Input
                   type="text"
