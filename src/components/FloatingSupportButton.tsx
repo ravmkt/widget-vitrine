@@ -13,11 +13,10 @@ const FloatingSupportButton = () => {
     <div className="fixed bottom-8 right-8 z-[9999]">
       <button
         onClick={handleSupportClick}
-        className="bg-[#25D366] hover:bg-[#128C7E] text-white flex items-center gap-2.5 px-6 py-3.5 rounded-full shadow-2xl shadow-emerald-500/20 transition-all active:scale-95 font-bold text-sm border-2 border-white/20"
+        className="flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-2xl shadow-emerald-500/20 transition-all active:scale-95 border-2 border-white/20 hover:bg-[#128C7E]"
         aria-label="Suporte via WhatsApp"
       >
-        <WhatsAppIcon size={20} />
-        <span>Suporte</span>
+        <WhatsAppIcon size={24} />
       </button>
     </div>
   );
