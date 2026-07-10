@@ -29,6 +29,7 @@ const App = () => {
           
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/stories" element={<StoriesPage />} />
+          <Route path="/stories/new" element={<StoryDetailsPage />} />
           <Route path="/stories/:id" element={<StoryDetailsPage />} />
           
           {/* Rotas de Vídeos */}

@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, Story, Video, DisplayLocation } from '@/lib/db';
@@ -137,7 +139,7 @@ const StoriesPage = () => {
           <p className="text-slate-500 font-medium mt-1">Gerencie as configurações de exibição e agrupamento de vídeos.</p>
         </div>
         <button 
-          onClick={() => { /* Aqui abriria o modal de novo story ou redirecionaria */ }}
+          onClick={() => navigate('/stories/new')}
           className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl transition-all flex items-center gap-2"
         >
           <Plus size={18} /> Novo Story

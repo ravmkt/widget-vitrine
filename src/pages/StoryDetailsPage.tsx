@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 const StoryDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const isCreate = !id || id === 'new';
 
   const [story, setStory] = useState<Story | null>(null);
   const [allVideos, setAllVideos] = useState<Video[]>([]);
@@ -52,6 +53,29 @@ const StoryDetailsPage = () => {
       const mainStore = stores[0];
       if (!mainStore) return;
 
+      const videos = await db.videos.getAll(mainStore.id);
+      setAllVideos(videos);
+      
+      const apps = await db.appearances.getAll(mainStore.id);
+      setAppearances(apps);
+
+      if (isCreate) {
+        setStory(null);
+        setFormData({
+          title: "",
+          format: 'carousel',
+          scroll_direction: 'horizontal',
+          active: true,
+          appearance_id: '',
+          position: 1,
+        });
+        setSelectedVideoIds([]);
+        setLocations([]);
+        setRules([]);
+        setLoading(false);
+        return;
+      }
+
       const fetchedStories = await db.stories.getAll(mainStore.id);
       const currentStory = fetchedStories.find((item) => item.id === id);
       if (!currentStory) {
@@ -69,17 +93,12 @@ const StoryDetailsPage = () => {
         position: currentStory.position || 1,
       });
 
-      const videos = await db.videos.getAll(mainStore.id);
-      setAllVideos(videos);
       const relations = await db.storyVideos.getAll();
       const storyVideoIds = relations
         .filter(rv => rv.story_id === id)
         .sort((a, b) => a.position - b.position)
         .map(rv => rv.video_id);
       setSelectedVideoIds(storyVideoIds);
-
-      const apps = await db.appearances.getAll(mainStore.id);
-      setAppearances(apps);
 
       const locs = await db.displayLocations.getAll();
       setLocations(locs.filter(l => l.story_id === id));
@@ -91,16 +110,57 @@ const StoryDetailsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, isCreate]);
 
   useEffect(() => { loadStoryData(); }, [loadStoryData]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!story || isSaving) return;
+    if (isSaving) return;
 
     try {
       setIsSaving(true);
+
+      if (isCreate) {
+        const stores = await db.stores.getAll();
+        const mainStore = stores[0];
+        const storeId = mainStore?.id || '11111111-1111-1111-1111-111111111111';
+
+        const newStory: Story = {
+          id: Math.random().toString(36).substr(2, 9),
+          store_id: storeId,
+          title: formData.title,
+          format: formData.format,
+          scroll_direction: formData.scroll_direction,
+          active: formData.active,
+          appearance_id: formData.appearance_id || undefined,
+          position: formData.position,
+          cta_enabled: false,
+          cta_type: 'none',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        await db.stories.save(newStory);
+
+        const newRelations: StoryVideo[] = selectedVideoIds.map((vid, idx) => ({
+          id: `rv-${newStory.id}-${vid}`,
+          story_id: newStory.id,
+          video_id: vid,
+          position: idx + 1,
+          is_cover: idx === 0,
+          created_at: new Date().toISOString()
+        }));
+        
+        const allRelations = await db.storyVideos.getAll();
+        localStorage.setItem('vidlytics_story_videos', JSON.stringify([...allRelations, ...newRelations]));
+        window.dispatchEvent(new Event('storage'));
+        
+        setShowSuccess(true);
+        return;
+      }
+
+      if (!story) return;
+
       const updatedStory: Story = {
         ...story,
         title: formData.title,
@@ -144,10 +204,13 @@ const StoryDetailsPage = () => {
   };
 
   const handleAddLocation = async () => {
+    if (!story && !isCreate) return;
+    const storeId = story?.store_id || '11111111-1111-1111-1111-111111111111';
+    const storyId = story?.id || (isCreate ? 'pending' : '');
     const newLoc: DisplayLocation = {
       id: Math.random().toString(36).substr(2, 9),
-      store_id: story!.store_id,
-      story_id: story!.id,
+      store_id: storeId,
+      story_id: storyId,
       selector: 'body',
       position: 'fixed_bottom_right'
     };
@@ -156,10 +219,13 @@ const StoryDetailsPage = () => {
   };
 
   const handleAddRule = async () => {
+    if (!story && !isCreate) return;
+    const storeId = story?.store_id || '11111111-1111-1111-1111-111111111111';
+    const storyId = story?.id || (isCreate ? 'pending' : '');
     const newRule: PageRule = {
       id: Math.random().toString(36).substr(2, 9),
-      store_id: story!.store_id,
-      story_id: story!.id,
+      store_id: storeId,
+      story_id: storyId,
       condition_type: 'all_pages'
     };
     await db.pageRules.save(newRule);
@@ -190,8 +256,12 @@ const StoryDetailsPage = () => {
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/stories')} className="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all"><ArrowLeft size={20}/></button>
           <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Editar Story</h1>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{formData.title}</p>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+              {isCreate ? 'Novo Story' : 'Editar Story'}
+            </h1>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+              {isCreate ? 'Criar novo story' : formData.title}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -440,7 +510,7 @@ const StoryDetailsPage = () => {
         onConfirm={handleDeleteSubItem}
         onCancel={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))}
       />
-      <SuccessDialog isOpen={showSuccess} description="Story atualizado com sucesso." onClose={() => navigate('/stories')} />
+      <SuccessDialog isOpen={showSuccess} description={isCreate ? 'Story criado com sucesso.' : 'Story atualizado com sucesso.'} onClose={() => navigate('/stories')} />
     </div>
   );
 };
