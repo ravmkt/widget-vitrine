@@ -185,17 +185,11 @@ const StoryPreviewPage = () => {
   };
 
   const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/stories/preview/${id}?storyId=${id}&videoId=${currentVideo?.id || ''}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: story?.title || 'Story', text: 'Olha esse produto que lindo', url: shareUrl });
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
-        showSuccess('Link copiado para compartilhar.');
-      }
-    } catch {
-      showError('Erro ao compartilhar');
-    }
+    const shareUrl = window.location.href;
+    const productName = product?.name || story?.title || 'Story';
+    const message = `Olha que lindo esse "${productName}" ${shareUrl}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const handleWhatsApp = () => {
@@ -249,6 +243,7 @@ const StoryPreviewPage = () => {
   }
 
   const modelData = model?.measures?.length ? model.measures : [];
+  const bodyBottomOffset = product ? 'bottom-44' : 'bottom-24';
 
   return (
     <div className="fixed inset-0 bg-neutral-950 flex items-center justify-center overflow-hidden">
@@ -308,30 +303,37 @@ const StoryPreviewPage = () => {
           <ChevronRight className="h-7 w-7" />
         </button>
 
-        <div className="absolute right-4 top-1/2 z-[90] flex -translate-y-1/2 flex-col gap-3">
-          <button onClick={handleTogglePlay} className="rounded-full bg-black/55 p-3 text-white backdrop-blur-md">
+        <div className={`absolute right-4 top-16 z-[90] flex flex-col gap-3 ${bodyBottomOffset}`}>
+          <button onClick={handleTogglePlay} className="flex h-[52px] w-[52px] min-h-[52px] min-w-[52px] flex-shrink-0 items-center justify-center rounded-full bg-black/55 p-0 text-white backdrop-blur-md">
             {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
           </button>
-          <button onClick={handleToggleMute} className="rounded-full bg-black/55 p-3 text-white backdrop-blur-md">
+          <button onClick={handleToggleMute} className="flex h-[52px] w-[52px] min-h-[52px] min-w-[52px] flex-shrink-0 items-center justify-center rounded-full bg-black/55 p-0 text-white backdrop-blur-md">
             {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
           </button>
-          <button onClick={handleLike} className="rounded-full bg-black/55 p-3 text-white backdrop-blur-md relative">
-            <Heart className={cn('h-5 w-5', liked ? 'fill-rose-500 text-rose-500' : '')} />
-            <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-black text-white">{likeCount}</span>
-          </button>
-          <button onClick={() => setShowComments(true)} className="rounded-full bg-black/55 p-3 text-white backdrop-blur-md relative">
-            <MessageCircle className="h-5 w-5" />
-            <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-black text-white">{commentCount}</span>
-          </button>
-          <button onClick={handleShare} className="rounded-full bg-black/55 p-3 text-white backdrop-blur-md">
+          <div className="flex flex-col items-center">
+            <button onClick={handleLike} className="flex h-[52px] w-[52px] min-h-[52px] min-w-[52px] flex-shrink-0 items-center justify-center rounded-full bg-black/55 p-0 text-white backdrop-blur-md">
+              <Heart className={cn('h-5 w-5', liked ? 'fill-rose-500 text-rose-500' : 'text-white')} />
+            </button>
+            <span className="mt-1 text-[10px] font-black text-white">{likeCount}</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <button onClick={() => setShowComments(true)} className="flex h-[52px] w-[52px] min-h-[52px] min-w-[52px] flex-shrink-0 items-center justify-center rounded-full bg-black/55 p-0 text-white backdrop-blur-md">
+              <MessageCircle className="h-5 w-5" />
+            </button>
+            <span className="mt-1 text-[10px] font-black text-white">{commentCount}</span>
+          </div>
+          <button onClick={handleShare} className="flex h-[52px] w-[52px] min-h-[52px] min-w-[52px] flex-shrink-0 items-center justify-center rounded-full bg-black/55 p-0 text-white backdrop-blur-md">
             <Share2 className="h-5 w-5" />
           </button>
-          <button onClick={handleWhatsApp} className="rounded-full bg-[#25D366] p-3 text-white backdrop-blur-md">
-            WA
+          <button onClick={handleWhatsApp} className="flex h-[52px] w-[52px] min-h-[52px] min-w-[52px] flex-shrink-0 items-center justify-center rounded-full bg-[#25D366] p-0 text-white backdrop-blur-md">
+            <svg viewBox="0 0 24 24" className="h-5 w-5 fill-white" aria-hidden="true">
+              <path d="M16.6 13.2c-.3-.2-1.7-.8-2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.8 0c-.4-.2-1.4-.5-2.6-1.6-.9-.8-1.6-1.8-1.8-2.2-.2-.4 0-.6.2-.8l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6s-.7-1.7-1-2.3c-.3-.6-.6-.5-.8-.5h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.8s1.3 3.2 1.5 3.4c.2.2 2.3 3.6 5.6 5.1.8.4 1.5.6 2.1.8.9.3 1.7.3 2.3.2.7-.1 1.7-.7 2-1.3.3-.6.3-1.1.2-1.3-.1-.2-.3-.3-.6-.5z" />
+              <path d="M20 4A10 10 0 0 0 3.6 16.2L2 22l5.9-1.5A10 10 0 1 0 20 4zm-7.9 15.4c-1.6 0-3.2-.4-4.6-1.3l-.3-.2-3.5.9.9-3.4-.2-.3A8.1 8.1 0 1 1 12.1 19.4z" />
+            </svg>
           </button>
           {model && (
-            <button onClick={() => setModelModalOpen(true)} className="rounded-full bg-black/55 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
-              Medidas
+            <button onClick={() => setModelModalOpen(true)} className="flex h-[52px] w-[52px] min-h-[52px] min-w-[52px] flex-shrink-0 items-center justify-center rounded-full bg-black/55 p-0 text-white backdrop-blur-md" title="Medidas" aria-label="Medidas">
+              <Ruler className="h-5 w-5" />
             </button>
           )}
         </div>
@@ -412,13 +414,13 @@ const StoryPreviewPage = () => {
                 </button>
               </div>
               <div className="flex-1 space-y-3 overflow-auto">
-                {(model.measures || []).map((measure: any, idx: number) => (
+                {(modelData || []).map((measure: any, idx: number) => (
                   <div key={`${measure.name}-${idx}`} className="flex items-center justify-between rounded-2xl bg-slate-50 p-3">
                     <span className="font-bold text-slate-700">{measure.name}</span>
                     <span className="font-black text-slate-950">{measure.value}{measure.unit || ''}</span>
                   </div>
                 ))}
-                {(!model.measures || model.measures.length === 0) && (
+                {(!modelData || modelData.length === 0) && (
                   <p className="text-sm text-slate-500">Sem medidas cadastradas.</p>
                 )}
               </div>
@@ -426,15 +428,6 @@ const StoryPreviewPage = () => {
           </div>
         )}
 
-        <div className="pointer-events-none absolute bottom-2 left-3 z-[999999] text-[10px] font-black text-white/60">
-          DEBUG STORY VIEWER ATIVO
-        </div>
-        <div className="pointer-events-none absolute bottom-6 left-3 z-[999999] text-[10px] font-black text-white/60">
-          Produto: {product ? `SIM - ${product.name}` : 'NÃO'}
-        </div>
-        <div className="pointer-events-none absolute bottom-10 left-3 z-[999999] text-[10px] font-black text-white/60">
-          Modelo: {model ? `SIM - ${model.name}` : 'NÃO'}
-        </div>
       </div>
     </div>
   );
