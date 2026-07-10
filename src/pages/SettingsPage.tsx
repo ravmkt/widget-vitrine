@@ -162,11 +162,12 @@ const SettingsPage = () => {
           .upload(fileName, selectedLogoFile, {
             cacheControl: "3600",
             upsert: true,
+            contentType: selectedLogoFile.type,
           });
 
         if (uploadError) {
-          console.error("Erro ao enviar logo:", uploadError);
-          toast.error("Erro ao enviar o logotipo");
+          console.error("Erro completo no upload do logo:", uploadError);
+          toast.error(`Erro ao enviar o logotipo: ${uploadError.message}`);
           return;
         }
 
@@ -333,12 +334,12 @@ const SettingsPage = () => {
               <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Número do WhatsApp</Label>
               <Input
                 type="tel"
-                placeholder="55998888888"
+                placeholder="5545998888888"
                 value={settings?.whatsapp_number ?? ''}
                 onChange={(e) => { const value = e.target.value.replace(/[^\d+\-\(\) ]/g, ''); setSettings(prev => ({ ...prev, whatsapp_number: value })); }}
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
               />
-              <p className="text-xs text-slate-500 mt-1">Informe o WhatsApp com código do país e DDD. Ex: 55998888888</p>
+              <p className="text-xs text-slate-500 mt-1">Informe o WhatsApp com código do país e DDD. Ex: 5545998888888</p>
             </div>
             <div className="space-y-4">
               <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mensagem Padrão de Contato</Label>
@@ -359,7 +360,7 @@ const SettingsPage = () => {
 
         <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
           <CardHeader className="p-6">
-            <CardTitle className="text-xl font-black text-slate-800">5. Segurança</CardTitle>
+            <CardTitle className="text-xl font-black text-slate-800">5. Segurança</CardHeader>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
             <div className="space-y-4">
