@@ -126,7 +126,7 @@ const VideoPerformancePage = () => {
 
   const getHeaderClass = (align: 'left' | 'center' | 'right' = 'left') =>
     cn(
-      'cursor-pointer select-none whitespace-nowrap px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest hover:opacity-75',
+      'cursor-pointer select-none whitespace-nowrap px-2 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest hover:opacity-75',
       align === 'center' && 'text-center',
       align === 'right' && 'text-right'
     );
@@ -231,35 +231,35 @@ const VideoPerformancePage = () => {
           <table className="w-full max-w-full table-fixed text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                <th onClick={() => handleSort('nome')} className={getHeaderClass()}>
+                <th onClick={() => handleSort('nome')} className={cn(getHeaderClass(), 'w-[38%]')}>
                   <span className="inline-flex items-center gap-1">Nome {sortIcon('nome')}</span>
                 </th>
-                <th onClick={() => handleSort('visualizacoes')} className={getHeaderClass('center')}>
+                <th onClick={() => handleSort('visualizacoes')} className={cn(getHeaderClass('center'), 'w-[10%]')}>
                   <span className="inline-flex items-center gap-1 justify-center">Visualizações {sortIcon('visualizacoes')}</span>
                 </th>
-                <th onClick={() => handleSort('comentarios')} className={getHeaderClass('center')}>
+                <th onClick={() => handleSort('comentarios')} className={cn(getHeaderClass('center'), 'w-[10%]')}>
                   <span className="inline-flex items-center gap-1 justify-center">Comentários {sortIcon('comentarios')}</span>
                 </th>
-                <th onClick={() => handleSort('curtidas')} className={getHeaderClass('center')}>
+                <th onClick={() => handleSort('curtidas')} className={cn(getHeaderClass('center'), 'w-[10%]')}>
                   <span className="inline-flex items-center gap-1 justify-center">Curtidas {sortIcon('curtidas')}</span>
                 </th>
-                <th onClick={() => handleSort('ctr')} className={getHeaderClass('center')}>
+                <th onClick={() => handleSort('ctr')} className={cn(getHeaderClass('center'), 'w-[8%]')}>
                   <span className="inline-flex items-center gap-1 justify-center">CTR {sortIcon('ctr')}</span>
                 </th>
-                <th onClick={() => handleSort('cliques')} className={getHeaderClass('center')}>
+                <th onClick={() => handleSort('cliques')} className={cn(getHeaderClass('center'), 'w-[10%]')}>
                   <span className="inline-flex items-center gap-1 justify-center">Cliques {sortIcon('cliques')}</span>
                 </th>
-                <th onClick={() => handleSort('conversoes')} className={getHeaderClass('center')}>
+                <th onClick={() => handleSort('conversoes')} className={cn(getHeaderClass('center'), 'w-[10%]')}>
                   <span className="inline-flex items-center gap-1 justify-center">Conversões {sortIcon('conversoes')}</span>
                 </th>
-                <th className={getHeaderClass('right')}>Ver</th>
-                <th className={getHeaderClass('right')}>Editar</th>
+                <th className={cn(getHeaderClass('right'), 'w-[6%]')}>Ver</th>
+                <th className={cn(getHeaderClass('right'), 'w-[6%]')}>Editar</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {sortedVideoStats.map((v: any) => (
                 <tr key={v.id} className="hover:bg-slate-50/50 transition-colors align-middle">
-                  <td className="px-3 py-4">
+                  <td className="px-2 py-4">
                     <div className="flex items-center gap-3 min-w-0">
                       <img
                         src={v.thumbnail_url || ''}
@@ -273,16 +273,16 @@ const VideoPerformancePage = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-3 py-4 text-center font-black text-slate-800">{Number(v.metrics.views || 0).toLocaleString()}</td>
-                  <td className="px-3 py-4 text-center font-black text-slate-800">{Number(v.metrics.comments || 0).toLocaleString()}</td>
-                  <td className="px-3 py-4 text-center font-black text-slate-800">{Number(v.metrics.likes || 0).toLocaleString()}</td>
-                  <td className="px-3 py-4 text-center font-black text-slate-800">{Number(v.metrics.ctr || 0).toFixed(1).replace('.', ',')}%</td>
-                  <td className="px-3 py-4 text-center font-black text-slate-800">{Number(v.metrics.clicks || 0).toLocaleString()}</td>
-                  <td className="px-3 py-4 text-center font-black text-slate-800">{Number(v.metrics.conversions || 0).toLocaleString()}</td>
-                  <td className="px-3 py-4 text-right">
+                  <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.views || 0).toLocaleString()}</td>
+                  <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.comments || 0).toLocaleString()}</td>
+                  <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.likes || 0).toLocaleString()}</td>
+                  <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.ctr || 0).toFixed(1).replace('.', ',')}%</td>
+                  <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.clicks || 0).toLocaleString()}</td>
+                  <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.conversions || 0).toLocaleString()}</td>
+                  <td className="px-2 py-4 text-right">
                     <button onClick={() => handleOpenPlayer(v)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors" title="Ver"><Eye size={16} /></button>
                   </td>
-                  <td className="px-3 py-4 text-right">
+                  <td className="px-2 py-4 text-right">
                     <button onClick={() => navigate(`/videos/${v.id}/edit`)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors" title="Editar"><Edit3 size={16} /></button>
                   </td>
                 </tr>
