@@ -255,11 +255,10 @@ const StoryPreviewPage = () => {
   }
 
   const modelData = model?.measures?.length ? model.measures : [];
-  const socialButtonsTop = product ? 'top-[52%]' : 'top-[48%]';
 
   return (
     <div className="fixed inset-0 bg-neutral-950 flex items-center justify-center overflow-hidden">
-      <div className="relative h-full w-full max-w-[430px] overflow-hidden bg-black sm:aspect-[9/16] sm:max-h-[90vh] sm:rounded-[36px]">
+      <div className="story-modal-content relative h-full w-full max-w-[420px] overflow-hidden bg-black sm:aspect-[9/16] sm:max-h-[90vh] sm:rounded-[36px]">
         <div className="absolute left-4 right-4 top-3 z-[80] flex gap-1.5">
           {videos.map((video, idx) => (
             <div key={video.id} className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/20">
@@ -272,22 +271,19 @@ const StoryPreviewPage = () => {
         </div>
 
         <div className="absolute left-0 right-0 top-0 z-[80] flex items-start justify-between bg-gradient-to-b from-black/80 to-transparent p-4 pt-4">
-          <div className="min-w-0 pr-4">
+          <div className="story-title min-w-0 pr-4">
             <h3 className="truncate text-sm font-black text-white">{story.title}</h3>
-            <p className="text-[10px] font-bold uppercase text-white/65">
-              {story.title} • {activeVideoIdx + 1}/{videos.length || 1}
-            </p>
           </div>
         </div>
 
-        <div className="absolute right-3 top-4 z-[90] flex items-center gap-1.5">
-          <button onClick={handleToggleMute} className="flex h-[34px] w-[34px] min-h-[34px] min-w-[34px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm">
+        <div className="top-actions absolute right-3 top-4 z-[90] flex items-center gap-1.5">
+          <button onClick={handleToggleMute} className="top-action-button flex h-[32px] w-[32px] min-h-[32px] min-w-[32px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm">
             {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </button>
-          <button onClick={handleTogglePlay} className="flex h-[34px] w-[34px] min-h-[34px] min-w-[34px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm">
+          <button onClick={handleTogglePlay} className="top-action-button flex h-[32px] w-[32px] min-h-[32px] min-w-[32px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm">
             {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
           </button>
-          <button type="button" onClick={close} className="flex h-[34px] w-[34px] min-h-[34px] min-w-[34px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm">
+          <button type="button" onClick={close} className="top-action-button flex h-[32px] w-[32px] min-h-[32px] min-w-[32px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -312,16 +308,16 @@ const StoryPreviewPage = () => {
         <button
           type="button"
           onClick={goPrev}
-          className="absolute left-3 top-1/2 z-[85] flex h-[42px] w-[42px] min-h-[42px] min-w-[42px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/80 bg-black/20 text-white backdrop-blur-sm"
+          className="nav-left nav-button absolute left-3 top-1/2 z-[85] flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/80 bg-black/15 text-white backdrop-blur-sm"
         >
-          <ChevronLeft className="h-6 w-6" />
+          <ChevronLeft className="h-5 w-5" />
         </button>
         <button
           type="button"
           onClick={goNext}
-          className="absolute right-3 top-1/2 z-[85] flex h-[42px] w-[42px] min-h-[42px] min-w-[42px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/80 bg-black/20 text-white backdrop-blur-sm"
+          className="nav-right nav-button absolute right-3 top-1/2 z-[85] flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/80 bg-black/15 text-white backdrop-blur-sm"
         >
-          <ChevronRight className="h-6 w-6" />
+          <ChevronRight className="h-5 w-5" />
         </button>
 
         <div className="absolute right-4 top-14 z-[90] flex flex-col gap-3">
@@ -333,29 +329,23 @@ const StoryPreviewPage = () => {
           </button>
         </div>
 
-        <div className={`absolute right-4 ${socialButtonsTop} z-[90] flex -translate-y-1/2 flex-col gap-2.5`}>
-          <div className="flex flex-col items-center gap-1">
-            <button onClick={handleLike} className="flex h-[44px] w-[44px] min-h-[44px] min-w-[44px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/22 p-0 text-white backdrop-blur-sm">
-              <Heart className={cn('h-5 w-5', liked ? 'fill-rose-500 text-rose-500' : 'text-white')} />
-            </button>
-            <span className="text-[11px] font-semibold text-white text-center drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{likeCount}</span>
-          </div>
-          <div className="flex flex-col items-center gap-1">
-            <button onClick={() => setShowComments(true)} className="flex h-[44px] w-[44px] min-h-[44px] min-w-[44px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/22 p-0 text-white backdrop-blur-sm">
-              <MessageCircle className="h-5 w-5" />
-            </button>
-            <span className="text-[11px] font-semibold text-white text-center drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{commentCount}</span>
-          </div>
-          <button onClick={handleShare} className="flex h-[44px] w-[44px] min-h-[44px] min-w-[44px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/22 p-0 text-white backdrop-blur-sm">
-            <Share2 className="h-5 w-5" />
+        <div className="social-actions absolute right-4 top-[58%] z-[90] flex -translate-y-1/2 flex-col items-center gap-2">
+          <button onClick={handleLike} className="social-button flex h-[38px] w-[38px] min-h-[38px] min-w-[38px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/16 p-0 text-white backdrop-blur-sm">
+            <Heart className={cn('h-[20px] w-[20px]', liked ? 'fill-rose-500 text-rose-500' : 'text-white')} />
+          </button>
+          <button onClick={() => setShowComments(true)} className="social-button flex h-[38px] w-[38px] min-h-[38px] min-w-[38px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/16 p-0 text-white backdrop-blur-sm">
+            <MessageCircle className="h-[20px] w-[20px]" />
+          </button>
+          <button onClick={handleShare} className="social-button flex h-[38px] w-[38px] min-h-[38px] min-w-[38px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/16 p-0 text-white backdrop-blur-sm">
+            <Share2 className="h-[20px] w-[20px]" />
           </button>
           {model && (
-            <button onClick={() => setModelModalOpen(true)} className="flex h-[44px] w-[44px] min-h-[44px] min-w-[44px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/22 p-0 text-white backdrop-blur-sm" title="Medidas" aria-label="Medidas">
-              <Ruler className="h-5 w-5" />
+            <button onClick={() => setModelModalOpen(true)} className="social-button flex h-[38px] w-[38px] min-h-[38px] min-w-[38px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/16 p-0 text-white backdrop-blur-sm" title="Medidas" aria-label="Medidas">
+              <Ruler className="h-[20px] w-[20px]" />
             </button>
           )}
-          <button onClick={handleWhatsApp} className="flex h-[44px] w-[44px] min-h-[44px] min-w-[44px] flex-shrink-0 items-center justify-center rounded-full bg-[#25D366] p-0 text-white backdrop-blur-sm">
-            <svg viewBox="0 0 24 24" className="h-5 w-5 fill-white" aria-hidden="true">
+          <button onClick={handleWhatsApp} className="whatsapp-button flex h-[38px] w-[38px] min-h-[38px] min-w-[38px] flex-shrink-0 items-center justify-center rounded-full bg-[#25D366] p-0 text-white backdrop-blur-sm">
+            <svg viewBox="0 0 24 24" className="h-[20px] w-[20px] fill-white" aria-hidden="true">
               <path d="M16.6 13.2c-.3-.2-1.7-.8-2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.8 0c-.4-.2-1.4-.5-2.6-1.6-.9-.8-1.6-1.8-1.8-2.2-.2-.4 0-.6.2-.8l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6s-.7-1.7-1-2.3c-.3-.6-.6-.5-.8-.5h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.8s1.3 3.2 1.5 3.4c.2.2 2.3 3.6 5.6 5.1.8.4 1.5.6 2.1.8.9.3 1.7.3 2.3.2.7-.1 1.7-.7 2-1.3.3-.6.3-1.1.2-1.3-.1-.2-.3-.3-.6-.5z" />
               <path d="M20 4A10 10 0 0 0 3.6 16.2L2 22l5.9-1.5A10 10 0 1 0 20 4zm-7.9 15.4c-1.6 0-3.2-.4-4.6-1.3l-.3-.2-3.5.9.9-3.4-.2-.3A8.1 8.1 0 1 1 12.1 19.4z" />
             </svg>
@@ -363,31 +353,29 @@ const StoryPreviewPage = () => {
         </div>
 
         {product && (
-          <div className="absolute bottom-0 left-0 right-0 z-[80] bg-gradient-to-t from-black/85 via-black/50 to-transparent p-4 pt-10">
-            <div className="flex items-center gap-3 rounded-3xl border border-white/20 bg-white/95 p-3">
-              <div className="h-20 w-20 overflow-hidden rounded-2xl bg-slate-200">
-                <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-black text-slate-950">{product.name}</p>
-                <p className="mt-1 text-base font-black text-violet-700">
-                  {Number(product.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => window.open(product.product_url || '/products', '_blank', 'noopener,noreferrer')}
-                  className="mt-2 inline-flex items-center gap-1 rounded-full bg-violet-600 px-4 py-2 text-[11px] font-black text-white"
-                >
-                  Ver produto <ExternalLink className="h-3.5 w-3.5" />
-                </button>
-              </div>
+          <div className="product-card absolute bottom-[18px] left-[12px] z-[80] w-[calc(100%-70px)] max-w-[285px] min-h-[76px] gap-[10px] rounded-[16px] bg-white/95 p-[10px_12px] shadow-lg backdrop-blur-sm sm:w-[calc(100%-84px)]">
+            <div className="h-[58px] w-[58px] overflow-hidden rounded-[2px] bg-slate-200">
+              <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
+            </div>
+            <div className="product-info min-w-0 flex-1">
+              <p className="product-name truncate text-sm font-medium text-slate-900">{product.name}</p>
+              <p className="product-price mt-[2px] text-sm font-medium text-slate-900">
+                {Number(product.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </p>
+              <button
+                type="button"
+                onClick={() => window.open(product.product_url || '/products', '_blank', 'noopener,noreferrer')}
+                className="product-button mt-2 inline-flex h-[22px] items-center gap-1 rounded-full bg-emerald-500 px-[10px] text-[10px] font-bold text-white"
+              >
+                Ver produto <ExternalLink className="h-3 w-3" />
+              </button>
             </div>
           </div>
         )}
 
         {showComments && (
-          <div className="absolute inset-0 z-[95] bg-black/70 p-4 backdrop-blur-[2px] flex items-center justify-center">
-            <div className="mx-auto flex w-[calc(100%-48px)] max-w-[380px] max-h-[70vh] flex-col rounded-[28px] bg-white p-5 text-slate-900 shadow-2xl overflow-hidden">
+          <div className="absolute inset-0 z-[95] flex items-center justify-center bg-black/70 p-4 backdrop-blur-[2px]">
+            <div className="mx-auto flex max-h-[70vh] w-[calc(100%-48px)] max-w-[380px] flex-col overflow-hidden rounded-[28px] bg-white p-5 text-slate-900 shadow-2xl">
               <div className="mb-4 flex items-center justify-between">
                 <h4 className="text-lg font-black text-slate-900">Comentários</h4>
                 <button onClick={() => setShowComments(false)} className="rounded-full bg-slate-100 p-2 text-slate-700">
@@ -426,8 +414,8 @@ const StoryPreviewPage = () => {
         )}
 
         {model && modelModalOpen && (
-          <div className="absolute inset-0 z-[96] bg-black/85 p-4">
-            <div className="mx-auto flex h-full max-w-md flex-col rounded-[28px] bg-white p-5 text-slate-900 shadow-2xl">
+          <div className="absolute inset-0 z-[96] flex items-center justify-center bg-black/85 p-4">
+            <div className="mx-auto flex max-h-[70vh] w-[calc(100%-48px)] max-w-[380px] flex-col overflow-hidden rounded-[28px] bg-white p-5 text-slate-900 shadow-2xl">
               <div className="mb-4 flex items-center justify-between">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Medidas da modelo</p>
