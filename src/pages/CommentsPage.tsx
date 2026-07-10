@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { db, Comment, Video } from "@/lib/db";
 import {
+  Search,
   MessageSquare,
   Trash2,
   Send,
@@ -19,6 +20,7 @@ import {
   Minus,
   Smile,
   CheckCircle2,
+  X,
   XCircle,
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
