@@ -23,6 +23,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { RefreshCw, Loader2, Copy, X, Image } from 'lucide-react';
 
+const LOGO_BUCKET = "store-assets";
+
 interface AppSettings {
   id: string;
   store_name: string | null;
@@ -158,7 +160,7 @@ const SettingsPage = () => {
         const fileName = `logos/logo-${Date.now()}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
-          .from("store-assets")
+          .from(LOGO_BUCKET)
           .upload(fileName, selectedLogoFile, {
             cacheControl: "3600",
             upsert: true,
@@ -167,12 +169,16 @@ const SettingsPage = () => {
 
         if (uploadError) {
           console.error("Erro completo no upload do logo:", uploadError);
-          toast.error(`Erro ao enviar o logotipo: ${uploadError.message}`);
+          if (uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('bucket')) {
+            toast.error(`Bucket '${LOGO_BUCKET}' não encontrado. Crie este bucket público no Supabase Storage.`);
+          } else {
+            toast.error(`Erro ao enviar o logotipo: ${uploadError.message}`);
+          }
           return;
         }
 
         const { data } = supabase.storage
-          .from("store-assets")
+          .from(LOGO_BUCKET)
           .getPublicUrl(fileName);
 
         finalLogoUrl = data.publicUrl;
