@@ -96,20 +96,31 @@ const StoriesPage = () => {
 
   const handleToggleStatus = async (story: Story) => {
     try {
-      const active = isStoryActive(story);
-      const nextStatus = !active;
+      const currentActive = isStoryActive(story);
+      const nextActive = !currentActive;
       const item = story as Story & { is_active?: boolean; active?: boolean; enabled?: boolean; status?: string; inactive?: boolean; disabled?: boolean; is_inactive?: boolean };
       const updated = { ...story } as Story & Record<string, any>;
-      if (typeof item.is_active === 'boolean') updated.is_active = nextStatus;
-      if (typeof item.active === 'boolean') updated.active = nextStatus;
-      if (typeof item.enabled === 'boolean') updated.enabled = nextStatus;
-      if (typeof item.status === 'string') updated.status = nextStatus ? 'active' : 'inactive';
-      if (typeof item.inactive === 'boolean') updated.inactive = !nextStatus;
-      if (typeof item.disabled === 'boolean') updated.disabled = !nextStatus;
-      if (typeof item.is_inactive === 'boolean') updated.is_inactive = !nextStatus;
+      if (typeof item.is_active === 'boolean') updated.is_active = nextActive;
+      if (typeof item.active === 'boolean') updated.active = nextActive;
+      if (typeof item.enabled === 'boolean') updated.enabled = nextActive;
+      if (typeof item.status === 'string') updated.status = nextActive ? 'active' : 'inactive';
+      if (typeof item.inactive === 'boolean') updated.inactive = !nextActive;
+      if (typeof item.disabled === 'boolean') updated.disabled = !nextActive;
+      if (typeof item.is_inactive === 'boolean') updated.is_inactive = !nextActive;
       await db.stories.save(updated as Story);
-      setStories(prev => prev.map(s => s.id === story.id ? ({ ...s, ...updated } as Story) : s));
-      showSuccess(nextStatus ? 'Story ativado com sucesso.' : 'Story desativado com sucesso.');
+      setStories(prev =>
+        prev.map(item =>
+          item.id === story.id
+            ? {
+                ...item,
+                active: nextActive,
+                is_active: nextActive,
+                status: nextActive ? 'active' : 'inactive'
+              } as Story
+            : item
+        )
+      );
+      showSuccess(nextActive ? 'Story ativado com sucesso.' : 'Story desativado com sucesso.');
     } catch (e) {
       showError('Erro ao alterar status.');
     }
