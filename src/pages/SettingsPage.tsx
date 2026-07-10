@@ -50,14 +50,48 @@ interface AppSettings {
   updated_at: string;
 }
 
+const DEFAULT_SETTINGS: AppSettings = {
+  id: '',
+  store_name: '',
+  store_url: '',
+  store_logo_url: '',
+  contact_email: '',
+  widget_enabled: true,
+  stories_enabled: true,
+  carousel_enabled: true,
+  floating_widget_enabled: true,
+  default_template: 'minimalista',
+  language: 'pt-BR',
+  timezone: 'America/Sao_Paulo',
+  whatsapp_number: '',
+  whatsapp_enabled: true,
+  whatsapp_message_template: 'Olá! Tenho interesse nesse produto que vi no vídeo: {{story_title}}',
+  open_product_new_tab: true,
+  pause_on_leave: true,
+  autoplay: true,
+  muted_by_default: true,
+  show_video_controls: false,
+  store_public_id: '',
+  public_live_key: '',
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+};
+
 const SettingsPage = () => {
-  const [settings, setSettings] = useState<AppSettings | null>(null);
+  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const fetchSettings = async () => {
       try {
+        setLoading(true);
+
+        if (!supabase) {
+          setSettings(DEFAULT_SETTINGS);
+          return;
+        }
+
         const { data, error } = await supabase
           .from('app_settings')
           .select('*')
@@ -68,36 +102,13 @@ const SettingsPage = () => {
         if (data?.length) {
           setSettings(data[0]);
         } else {
-          setSettings({
-            id: '',
-            store_name: null,
-            store_url: null,
-            store_logo_url: null,
-            contact_email: null,
-            widget_enabled: true,
-            stories_enabled: true,
-            carousel_enabled: true,
-            floating_widget_enabled: true,
-            default_template: 'minimalista',
-            language: 'pt-BR',
-            timezone: 'America/Sao_Paulo',
-            whatsapp_number: null,
-            whatsapp_enabled: true,
-            whatsapp_message_template: 'Olá! Tenho interesse nesse produto que vi no vídeo: {{story_title}}',
-            open_product_new_tab: true,
-            pause_on_leave: true,
-            autoplay: true,
-            muted_by_default: true,
-            show_video_controls: false,
-            store_public_id: null,
-            public_live_key: null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
+          setSettings(DEFAULT_SETTINGS);
         }
       } catch (err) {
         console.error('Error fetching settings:', err);
-        toast.error('Failed to load settings');
+        // Em caso de falha de conexão ou ausência de registro, usamos padrões vazios
+        // para não bloquear o preenchimento do formulário.
+        setSettings(DEFAULT_SETTINGS);
       } finally {
         setLoading(false);
       }
@@ -107,10 +118,13 @@ const SettingsPage = () => {
   }, []);
 
   const handleSave = async () => {
-    if (!settings) return;
-
     setSaving(true);
     try {
+      if (!supabase) {
+        toast.success('Configurações salvas localmente (sem backend)');
+        return;
+      }
+
       const { error } = settings.id
         ? await supabase
             .from('app_settings')
@@ -165,7 +179,7 @@ const SettingsPage = () => {
                   type="text"
                   placeholder="Nome da sua loja"
                   value={settings?.store_name ?? ''}
-                  onChange={(e) => setSettings(prev => prev ? { ...prev, store_name: e.target.value } : null)}
+                  onChange={(e) => setSettings(prev => ({ ...prev, store_name: e.target.value }))}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
                   required
                 />
@@ -176,7 +190,7 @@ const SettingsPage = () => {
                   type="url"
                   placeholder="https://sualoja.com"
                   value={settings?.store_url ?? ''}
-                  onChange={(e) => setSettings(prev => prev ? { ...prev, store_url: e.target.value } : null)}
+                  onChange={(e) => setSettings(prev => ({ ...prev, store_url: e.target.value }))}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
                   required
                 />
@@ -204,7 +218,7 @@ const SettingsPage = () => {
                     className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-600 break-all"
                   />
                   <Button variant="outline" size="icon" onClick={() => { navigator.clipboard.writeText(settings?.store_public_id ?? ''); toast.success('ID público copiado'); }}><Copy size={20} /></Button>
-                  <Button variant="outline" size="icon" onClick={() => { const newId = 'pub_live_' + Math.random().toString(36).substr(2, 24); setSettings(prev => prev ? { ...prev, store_public_id: newId } : null); toast.success('ID público regenerado'); }}><RefreshCw size={20} className="text-amber-600" /></Button>
+                  <Button variant="outline" size="icon" onClick={() => { const newId = 'pub_live_' + Math.random().toString(36).substr(2, 24); setSettings(prev => ({ ...prev, store_public_id: newId })); toast.success('ID público regenerado'); }}><RefreshCw size={20} className="text-amber-600" /></Button>
                 </div>
               </div>
 
@@ -227,12 +241,12 @@ const SettingsPage = () => {
                             const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
                             if (!allowedTypes.includes(file.type)) { toast.error('Formato inválido. Use JPG, PNG ou WEBP.'); return; }
                             const reader = new FileReader();
-                            reader.onload = () => { setSettings(prev => prev ? { ...prev, store_logo_url: reader.result as string } : null); };
+                            reader.onload = () => { setSettings(prev => ({ ...prev, store_logo_url: reader.result as string })); };
                             reader.readAsDataURL(file);
                           }}
                           className="flex-1 text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-[#EAF6FF] file:text-[#0094EB] file:font-bold file:cursor-pointer hover:file:bg-[#0094EB] hover:file:text-white transition-all"
                         />
-                        <Button variant="outline" size="icon" onClick={() => { setSettings(prev => prev ? { ...prev, store_logo_url: null } : null); toast.success('Logo removida'); }}><X size={20} className="text-rose-600" /></Button>
+                        <Button variant="outline" size="icon" onClick={() => { setSettings(prev => ({ ...prev, store_logo_url: null })); toast.success('Logo removida'); }}><X size={20} className="text-rose-600" /></Button>
                       </div>
                       {settings?.store_logo_url && (<p className="text-xs text-slate-500 mt-1">{(new URL(settings.store_logo_url)).pathname.split('/').pop()}</p>)}
                     </div>
@@ -241,7 +255,7 @@ const SettingsPage = () => {
                     type="url"
                     placeholder="Ou cole a URL da logo"
                     value={settings?.store_logo_url ?? ''}
-                    onChange={(e) => setSettings(prev => prev ? { ...prev, store_logo_url: e.target.value } : null)}
+                    onChange={(e) => setSettings(prev => ({ ...prev, store_logo_url: e.target.value }))}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0094EB]"
                   />
                 </div>
@@ -252,7 +266,7 @@ const SettingsPage = () => {
                   type="email"
                   placeholder="contato@sualoja.com"
                   value={settings?.contact_email ?? ''}
-                  onChange={(e) => setSettings(prev => prev ? { ...prev, contact_email: e.target.value } : null)}
+                  onChange={(e) => setSettings(prev => ({ ...prev, contact_email: e.target.value }))}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
                 />
               </div>
@@ -266,21 +280,21 @@ const SettingsPage = () => {
           </CardHeader>
           <CardContent className="p-6 space-y-6">
             <div className="flex items-center gap-3">
-              <Switch checked={settings?.widget_enabled ?? true} onCheckedChange={(checked) => setSettings(prev => prev ? { ...prev, widget_enabled: checked } : null)} className="w-[60px] h-[30px]" />
+              <Switch checked={settings?.widget_enabled ?? true} onCheckedChange={(checked) => setSettings(prev => ({ ...prev, widget_enabled: checked }))} className="w-[60px] h-[30px]" />
               <div>
                 <Label className="text-sm font-bold text-slate-700">Ativar Vitrine de Vídeos</Label>
                 <p className="text-xs text-slate-500 mt-1">Controla a renderização pública do carrossel/grade na loja.</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Switch checked={settings?.whatsapp_enabled ?? true} onCheckedChange={(checked) => setSettings(prev => prev ? { ...prev, whatsapp_enabled: checked } : null)} className="w-[60px] h-[30px]" />
+              <Switch checked={settings?.whatsapp_enabled ?? true} onCheckedChange={(checked) => setSettings(prev => ({ ...prev, whatsapp_enabled: checked }))} className="w-[60px] h-[30px]" />
               <div>
                 <Label className="text-sm font-bold text-slate-700">Ativar WhatsApp</Label>
                 <p className="text-xs text-slate-500 mt-1">Exibe botão de WhatsApp nos vídeos.</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Switch checked={settings?.stories_enabled ?? true} onCheckedChange={(checked) => setSettings(prev => prev ? { ...prev, stories_enabled: checked } : null)} className="w-[60px] h-[30px]" />
+              <Switch checked={settings?.stories_enabled ?? true} onCheckedChange={(checked) => setSettings(prev => ({ ...prev, stories_enabled: checked }))} className="w-[60px] h-[30px]" />
               <div>
                 <Label className="text-sm font-bold text-slate-700">Ativar Analytics</Label>
                 <p className="text-xs text-slate-500 mt-1">Coleta métricas de visualização e engajamento.</p>
@@ -300,7 +314,7 @@ const SettingsPage = () => {
                 type="tel"
                 placeholder="5545999629702"
                 value={settings?.whatsapp_number ?? ''}
-                onChange={(e) => { const value = e.target.value.replace(/[^\d+\-\(\) ]/g, ''); setSettings(prev => prev ? { ...prev, whatsapp_number: value } : null); }}
+                onChange={(e) => { const value = e.target.value.replace(/[^\d+\-\(\) ]/g, ''); setSettings(prev => ({ ...prev, whatsapp_number: value })); }}
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
               />
               <p className="text-xs text-slate-500 mt-1">Insira o número completo com DDD e código do país. Ex: 55 para Brasil.</p>
@@ -309,7 +323,7 @@ const SettingsPage = () => {
               <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mensagem Padrão de Contato</Label>
               <Textarea
                 value={settings?.whatsapp_message_template ?? 'Olá! Tenho interesse nesse produto que vi no vídeo: {{story_title}}'}
-                onChange={(e) => setSettings(prev => prev ? { ...prev, whatsapp_message_template: e.target.value } : null)}
+                onChange={(e) => setSettings(prev => ({ ...prev, whatsapp_message_template: e.target.value }))}
                 rows={4}
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
               />
@@ -333,7 +347,7 @@ const SettingsPage = () => {
                 type="text"
                 placeholder="Vitrine de Vídeos"
                 value={settings?.store_name ?? 'Vitrine de Vídeos'}
-                onChange={(e) => setSettings(prev => prev ? { ...prev, store_name: e.target.value } : null)}
+                onChange={(e) => setSettings(prev => ({ ...prev, store_name: e.target.value }))}
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
               />
             </div>
@@ -383,7 +397,7 @@ const SettingsPage = () => {
                   className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-600 break-all"
                 />
                 <Button variant="outline" size="icon" onClick={() => { navigator.clipboard.writeText(settings?.public_live_key ?? ''); toast.success('Token copiado'); }}><Copy size={20} /></Button>
-                <Button variant="outline" size="icon" onClick={() => { const newKey = 'pub_live_' + Math.random().toString(36).substr(2, 24); setSettings(prev => prev ? { ...prev, public_live_key: newKey } : null); toast.success('Token regenerado'); }}><RefreshCw size={20} className="text-amber-600" /></Button>
+                <Button variant="outline" size="icon" onClick={() => { const newKey = 'pub_live_' + Math.random().toString(36).substr(2, 24); setSettings(prev => ({ ...prev, public_live_key: newKey })); toast.success('Token regenerado'); }}><RefreshCw size={20} className="text-amber-600" /></Button>
               </div>
             </div>
           </CardContent>
