@@ -3,21 +3,23 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, Story, Video, DisplayLocation } from '@/lib/db';
-import { 
-  Plus, 
-  Search, 
-  PlayCircle, 
-  Layout, 
-  Layers, 
-  MousePointer2, 
-  Trash2, 
-  Edit3, 
-  Eye, 
-  MapPin, 
+import {
+  Plus,
+  Search,
+  PlayCircle,
+  Layout,
+  Layers,
+  MousePointer2,
+  Trash2,
+  Edit3,
+  Eye,
+  MapPin,
   Film,
   Filter,
   CheckCircle2,
-  XCircle
+  XCircle,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
@@ -33,6 +35,8 @@ const StoriesPage = () => {
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Estado de Exclusão
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; storyId: string; storyName: string }>({
@@ -90,6 +94,57 @@ const StoriesPage = () => {
       return matchesSearch && matchesStatus;
     });
   }, [stories, searchTerm, filterStatus]);
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection((current) => current === 'asc' ? 'desc' : 'asc');
+      return;
+    }
+    setSortColumn(column);
+    setSortDirection('asc');
+  };
+
+  const sortedStories = useMemo(() => {
+    const rows = [...filteredStories];
+    if (!sortColumn) return rows;
+
+    const getSortValue = (story: Story) => {
+      const active = isStoryActive(story);
+      switch (sortColumn) {
+        case 'nome':
+          return story.title || '';
+        case 'tipo':
+          return getFormatLabel(story.format) || '';
+        case 'videos':
+          return videoCounts[story.id] || 0;
+        case 'local':
+          return locations[story.id] || 'Página Geral';
+        case 'visualizacoes':
+          return Number((story as any).views_count ?? (story as any).view_count ?? (story as any).views ?? (story as any).visualizacoes ?? (story as any).visualizations ?? 0);
+        case 'cliques':
+          return Number((story as any).clicks_count ?? (story as any).click_count ?? (story as any).clicks ?? (story as any).cliques ?? 0);
+        case 'status':
+          return active ? 'Ativo' : 'Desativado';
+        default:
+          return '';
+      }
+    };
+
+    rows.sort((a, b) => {
+      const valueA = getSortValue(a);
+      const valueB = getSortValue(b);
+
+      if (typeof valueA === 'number' && typeof valueB === 'number') {
+        return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
+      }
+
+      return sortDirection === 'asc'
+        ? String(valueA).localeCompare(String(valueB), 'pt-BR')
+        : String(valueB).localeCompare(String(valueA), 'pt-BR');
+    });
+
+    return rows;
+  }, [filteredStories, sortColumn, sortDirection, videoCounts, locations]);
 
   const handleToggleStatus = async (story: Story) => {
     try {
@@ -208,18 +263,32 @@ const StoriesPage = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Nome</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Tipo</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center">Vídeos</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Local</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center">Visualizações</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center">Cliques</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center">Status</th>
+                <th onClick={() => handleSort('nome')} className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest hover:opacity-75">
+                  <span className="inline-flex items-center gap-1">Nome {sortColumn === 'nome' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</span>
+                </th>
+                <th onClick={() => handleSort('tipo')} className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest hover:opacity-75">
+                  <span className="inline-flex items-center gap-1">Tipo {sortColumn === 'tipo' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</span>
+                </th>
+                <th onClick={() => handleSort('videos')} className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center hover:opacity-75">
+                  <span className="inline-flex items-center gap-1 justify-center">Vídeos {sortColumn === 'videos' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</span>
+                </th>
+                <th onClick={() => handleSort('local')} className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest hover:opacity-75">
+                  <span className="inline-flex items-center gap-1">Local {sortColumn === 'local' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</span>
+                </th>
+                <th onClick={() => handleSort('visualizacoes')} className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center hover:opacity-75">
+                  <span className="inline-flex items-center gap-1 justify-center">Visualizações {sortColumn === 'visualizacoes' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</span>
+                </th>
+                <th onClick={() => handleSort('cliques')} className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center hover:opacity-75">
+                  <span className="inline-flex items-center gap-1 justify-center">Cliques {sortColumn === 'cliques' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</span>
+                </th>
+                <th onClick={() => handleSort('status')} className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center hover:opacity-75">
+                  <span className="inline-flex items-center gap-1 justify-center">Status {sortColumn === 'status' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</span>
+                </th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredStories.map((story) => {
+              {sortedStories.map((story) => {
                 const views =
                   (story as any).views_count ??
                   (story as any).view_count ??
