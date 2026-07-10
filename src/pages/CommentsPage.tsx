@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo, useRef } from "react";
-import { db, Comment, Video } from "@/lib/db";
+import { db, Comment, Video, GeneralSettings } from "@/lib/db";
 import {
   Search,
   MessageSquare,
@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 const CommentsPage = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [videos, setVideos] = useState<Video[]>([]);
+  const [generalSettings, setGeneralSettings] = useState<GeneralSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -40,7 +41,6 @@ const CommentsPage = () => {
   });
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [commentText, setCommentText] = useState("");
-  const [commentAuthor, setCommentAuthor] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [statusDropdownPosition, setStatusDropdownPosition] = useState({ top: 0, left: 0 });
@@ -48,11 +48,36 @@ const CommentsPage = () => {
     isOpen: false,
     commentId: null,
   });
+  const [viewingVideo, setViewingVideo] = useState<Video | null>(null);
+  const [isViewingModalOpen, setIsViewingModalOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const EMOJIS = [
     '😀', '😍', '🔥', '👏', '❤️', '😂', '😮', '😢', '👍', '🙏', '🎉', '💪', '🚀', '🤩', '😎', '✨', '💜', '🙌', '🥰', '💯', '🛍️'
   ];
+
+  // Load store name for automatic author
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [allComments, allVideos, settings] = await Promise.all([
+          db.comments.getAll(),
+          db.videos.getAll(),
+          db.generalSettings.getAll((await db.stores.getAll())[0]?.id || '')
+        ]);
+        setComments(allComments || []);
+        setVideos(allVideos);
+        setGeneralSettings(settings?.[0] || null);
+      } catch (error) {
+        showError("Erro ao carregar dados.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  const storeName = generalSettings?.store_name || "Loja";
 
   const loadData = async () => {
     try {
@@ -177,21 +202,15 @@ const CommentsPage = () => {
   const submitReply = async () => {
     if (!editingCommentId || !textareaRef.current) return;
     const text = commentText.trim();
-    const author = commentAuthor.trim();
-    if (!author) {
-      showError("Digite seu nome");
-      return;
-    }
     if (!text) {
       showError("Digite um comentário");
       return;
     }
-
     const newComment = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       story_id: comments.find(c => c.id === editingCommentId)?.story_id || "",
       video_id: comments.find(c => c.id === editingCommentId)?.video_id || "",
-      user_name: author,
+      user_name: storeName, // Automatic store name
       text,
       status: "pending",
       created_at: new Date().toISOString(),
@@ -200,7 +219,6 @@ const CommentsPage = () => {
     await db.comments.save(newComment);
     setComments(prev => [...prev, newComment]);
     setCommentText("");
-    setCommentAuthor("");
     setShowEmoji(false);
     showSuccess("Comentário enviado");
   };
@@ -208,14 +226,12 @@ const CommentsPage = () => {
   const insertEmojiAtCursor = (emoji: string) => {
     const el = textareaRef.current;
     if (!el) return;
-
     const start = el.selectionStart;
     const end = el.selectionEnd;
     const textBefore = el.value.substring(0, start);
     const textAfter = el.value.substring(end);
     const newValue = textBefore + emoji + textAfter;
     const newCursorPos = start + emoji.length;
-
     el.value = newValue;
     el.setSelectionRange(newCursorPos, newCursorPos);
     setCommentText(newValue);
@@ -226,6 +242,14 @@ const CommentsPage = () => {
       return crypto.randomUUID();
     }
     return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  };
+
+  const handleViewVideo = (row: any) => {
+    const video = videos.find(v => v.id === row.video_id) || null;
+    if (video) {
+      setViewingVideo(video);
+      setIsViewingModalOpen(true);
+    }
   };
 
   if (loading) return null;
@@ -303,6 +327,18 @@ const CommentsPage = () => {
                     <div className="flex items-center gap-1 text-[10px] font-black text-[#0094EB] uppercase tracking-wider">
                       <VideoIcon size={12} /> Vídeo: {videos.find((v) => v.id === row.video_id)?.title || "Desconhecido"}
                     </div>
+                    {/* Make video title clickable to open player */}
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewVideo(row);
+                      }}
+                      className="ml-1 cursor-pointer"
+                    >
+                      <span className="text-[#0094EB] font-medium hover:underline">
+                        {videos.find((v) => v.id === row.video_id)?.title || "Desconhecido"}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-center">
                     <span
@@ -315,6 +351,11 @@ const CommentsPage = () => {
                     >
                       {getStatusLabel(row.status)}
                     </span>
+                    {showStatusDropdown && editingCommentId === row.id && (
+                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-[1000]">
+                        <XCircle size={12} className="text-rose-500" />
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
@@ -352,7 +393,6 @@ const CommentsPage = () => {
         onCancel={() => {
           setEditingCommentId(null);
           setCommentText("");
-          setCommentAuthor("");
           setShowEmoji(false);
         }}
         onConfirm={submitReply}
@@ -361,7 +401,7 @@ const CommentsPage = () => {
         <div className="flex flex-col items-center">
           <div className="space-y-3">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
-              Resposta ao comentário de {comments.find((c) => c.id === editingCommentId)?.user_name || "Cliente"}
+              Resposta ao comentário de {storeName}
             </p>
             <p className="text-sm text-slate-600 font-medium italic">
               "{comments.find((c) => c.id === editingCommentId)?.text}"
@@ -377,9 +417,13 @@ const CommentsPage = () => {
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
               placeholder="Escreva aqui a resposta pública..."
             />
+            {/* Emoji button */}
             <button
               type="button"
-              onClick={() => setShowEmoji((prev) => !prev)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowEmoji((prev) => !prev);
+              }}
               className="absolute right-3 top-2 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
             >
               <Smile className="h-4 w-4" />
@@ -390,7 +434,9 @@ const CommentsPage = () => {
                   <button
                     key={item}
                     type="button"
-                    onClick={() => insertEmojiAtCursor(item)}
+                    onClick={() => {
+                      insertEmojiAtCursor(item);
+                    }}
                     className={cn(
                       "rounded-xl p-2 text-lg hover:bg-white/10",
                       emoji === item && "bg-violet-600"
@@ -436,6 +482,58 @@ const CommentsPage = () => {
           </div>
         </div>
       )}
+
+      {/* ==================== VIDEO PLAYER MODAL ==================== */}
+      <CustomDialog
+        isOpen={isViewingModalOpen}
+        type="form"
+        title="Visualizar Vídeo"
+        maxWidth="max-w-3xl"
+        onCancel={() => setIsViewingModalOpen(false)}
+      >
+        {viewingVideo && (
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="w-[240px] mx-auto shrink-0">
+              <div className="aspect-[9/16] bg-slate-950 rounded-[1.5rem] overflow-hidden shadow-lg relative border-[4px] border-slate-900 max-h-[60vh]">
+                <video
+                  src={viewingVideo.video_url}
+                  className="w-full max-w-full h-auto max-h-[400px] object-fit contain"
+                  poster={viewingVideo.thumbnail_url}
+                  controls
+                  autoPlay
+                  loop
+                />
+              </div>
+            </div>
+            <div className="flex-1 flex flex-col pt-1">
+              <div className="mb-4">
+                <h3 className="text-lg font-black text-slate-900 mb-1">{viewingVideo.title}</h3>
+                <span className="bg-blue-50 text-[#0094EB] px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest">
+                  {viewingVideo.source_type}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mb-6">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                  <p className="text-[8px] font-black text-slate-400 uppercase">Status</p>
+                  <p className="text-xs font-black text-emerald-600">Ativo</p>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                  <p className="text-[8px] font-black text-slate-400 uppercase">Vídeo ID</p>
+                  <p className="text-[10px] font-bold text-slate-500">
+                    {viewingVideo.id?.substr(0,8) || '---'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsViewingModalOpen(false)}
+                className="w-full py-3 bg-[#0094EB] text-white rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        )}
+      </CustomDialog>
 
       {/* ==================== CONFIRM DELETE MODAL ==================== */}
       <ConfirmDeleteDialog
