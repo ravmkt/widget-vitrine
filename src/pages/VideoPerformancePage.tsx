@@ -207,9 +207,9 @@ const VideoPerformancePage = () => {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <SummaryCard label="Visualizações" value={totals.views.toLocaleString()} icon={Eye} color="blue" trend="+12%" />
-        <SummaryCard label="Cliques (CTA)" value={totals.clicks.toLocaleString()} icon={MousePointer2} color="violet" trend="+5%" />
-        <SummaryCard label="Conversões" value={totals.conversions.toLocaleString()} icon={CheckCircle2} color="emerald" trend="+8%" />
+        <SummaryCard label="Visualizações" value={Number(totals.views || 0).toLocaleString()} icon={Eye} color="blue" trend="+12%" />
+<SummaryCard label="Cliques (CTA)" value={Number(totals.clicks || 0).toLocaleString()} icon={MousePointer2} color="violet" trend="+5%" />
+<SummaryCard label="Conversões" value={Number(totals.conversions || 0).toLocaleString()} icon={CheckCircle2} color="emerald" trend="+8%" />
         <SummaryCard label="CTR Geral" value={`${totals.ctr}%`} icon={TrendingUp} color="amber" />
       </div>
 
@@ -276,12 +276,12 @@ const VideoPerformancePage = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-center font-black text-slate-800">{v.metrics.views.toLocaleString()}</td>
-                  <td className="px-6 py-4 text-center font-black text-slate-800">{v.metrics.comments.toLocaleString()}</td>
-                  <td className="px-6 py-4 text-center font-black text-slate-800">{v.metrics.likes.toLocaleString()}</td>
-                  <td className="px-6 py-4 text-center font-black text-slate-800">{Number(v.metrics.ctr).toFixed(1).replace('.', ',')}%</td>
-                  <td className="px-6 py-4 text-center font-black text-slate-800">{v.metrics.clicks.toLocaleString()}</td>
-                  <td className="px-6 py-4 text-center font-black text-slate-800">{v.metrics.conversions.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-center font-black text-slate-800">{Number(v.metrics.views || 0).toLocaleString()}</td>
+                  <td className="px-6 py-4 text-center font-black text-slate-800">{Number(v.metrics.comments || 0).toLocaleString()}</td>
+                  <td className="px-6 py-4 text-center font-black text-slate-800">{Number(v.metrics.likes || 0).toLocaleString()}</td>
+                  <td className="px-6 py-4 text-center font-black text-slate-800">{Number(v.metrics.ctr || 0).toFixed(1).replace('.', ',')}%</td>
+                  <td className="px-6 py-4 text-center font-black text-slate-800">{Number(v.metrics.clicks || 0).toLocaleString()}</td>
+                  <td className="px-6 py-4 text-center font-black text-slate-800">{Number(v.metrics.conversions || 0).toLocaleString()}</td>
                   <td className="px-6 py-4 text-center font-black text-slate-800">{v.metrics.engagement}%</td>
                   <td className="px-6 py-4 text-right">
                     <button onClick={() => handleOpenPlayer(v)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors" title="Ver"><Eye size={16} /></button>
@@ -323,10 +323,10 @@ const VideoPerformancePage = () => {
                 <span className="bg-blue-50 text-[#0094EB] px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest">Conteúdo Real</span>
               </div>
               <div className="grid grid-cols-2 gap-3 mb-6">
-                <CompactMetric label="Views" value={(viewingVideo as any).metrics.views} />
-                <CompactMetric label="CTR" value={`${(viewingVideo as any).metrics.ctr}%`} color="text-[#0094EB]" />
-                <CompactMetric label="Conversões" value={(viewingVideo as any).metrics.conversions} color="text-emerald-600" />
-                <CompactMetric label="Engajamento" value={`${(viewingVideo as any).metrics.engagement}%`} color="text-violet-600" />
+                <CompactMetric label="Views" value={Number((viewingVideo as any).metrics?.views || 0)} />
+                <CompactMetric label="CTR" value={`${Number((viewingVideo as any).metrics?.ctr || 0).toFixed(1)}%`} color="text-[#0094EB]" />
+                <CompactMetric label="Conversões" value={Number((viewingVideo as any).metrics?.conversions || 0)} color="text-emerald-600" />
+                <CompactMetric label="Engajamento" value={`${(viewingVideo as any).metrics?.engagement || 0}%`} color="text-violet-600" />
               </div>
               <div className="mt-auto flex gap-2">
                 <button onClick={() => navigate(`/videos/${viewingVideo.id}/edit`)} className="flex-1 py-3 bg-[#0094EB] text-white rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2"><Edit3 size={14} /> Editar</button>
