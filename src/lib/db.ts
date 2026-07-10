@@ -5,6 +5,7 @@ export interface Video {
   id: string;
   store_id: string;
   title: string;
+  description?: string;
   source_type: 'upload' | 'instagram' | 'tiktok' | 'external_url' | 'mobile_upload' | 'gallery';
   video_url: string;
   thumbnail_url: string;
@@ -13,6 +14,11 @@ export interface Video {
   duration?: number;
   file_size?: number;
   status: 'active' | 'inactive';
+  active?: boolean;
+  instagram_link?: string;
+  tiktok_link?: string;
+  product_id?: string | null;
+  model_id?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -181,6 +187,14 @@ export interface GeneralSettings {
   whatsapp_button_enabled?: boolean;
   pause_on_invisible?: boolean;
   public_installation_key?: string;
+  // New fields for enhanced settings
+  widget_enabled?: boolean;
+  default_template?: string;
+  whatsapp_enabled?: boolean;
+  whatsapp_message_template?: string;
+  pause_on_leave?: boolean;
+  store_public_id?: string;
+  public_live_key?: string;
 }
 
 export interface Store {
@@ -241,6 +255,13 @@ const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   whatsapp_button_enabled: true,
   pause_on_invisible: true,
   public_installation_key: 'pub_live_vitrine_video_001',
+  widget_enabled: true,
+  default_template: 'minimalista',
+  whatsapp_enabled: true,
+  whatsapp_message_template: 'Olá! Tenho interesse nesse produto que vi no vídeo: {{story_title}}',
+  pause_on_leave: true,
+  store_public_id: 'store_11111111-1111-1111-1111-111111111111',
+  public_live_key: 'pub_live_' + Math.random().toString(36).substr(2, 24),
 };
 
 const DEFAULT_APPEARANCES: Appearance[] = [
