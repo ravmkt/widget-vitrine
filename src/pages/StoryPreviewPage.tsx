@@ -278,13 +278,13 @@ const StoryPreviewPage = () => {
         </div>
 
         <div className="top-actions absolute right-3 top-4 z-[90] flex items-center gap-1.5">
-          <button onClick={handleToggleMute} className="top-action-button flex h-[32px] w-[32px] min-h-[32px] min-w-[32px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm">
+          <button className="top-action-button only-top-control flex h-[32px] w-[32px] min-h-[32px] min-w-[32px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm" onClick={handleToggleMute}>
             {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </button>
-          <button onClick={handleTogglePlay} className="top-action-button flex h-[32px] w-[32px] min-h-[32px] min-w-[32px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm">
+          <button className="top-action-button only-top-control flex h-[32px] w-[32px] min-h-[32px] min-w-[32px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm" onClick={handleTogglePlay}>
             {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
           </button>
-          <button type="button" onClick={close} className="top-action-button flex h-[32px] w-[32px] min-h-[32px] min-w-[32px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm">
+          <button type="button" className="top-action-button only-top-control flex h-[32px] w-[32px] min-h-[32px] min-w-[32px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm" onClick={close}>
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -330,22 +330,22 @@ const StoryPreviewPage = () => {
           </button>
         </div>
 
-        <div className="social-actions absolute right-4 top-[58%] z-[90] flex -translate-y-1/2 flex-col items-center gap-2">
-          <button onClick={handleLike} className="social-button flex h-[38px] w-[38px] min-h-[38px] min-w-[38px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/16 p-0 text-white backdrop-blur-sm">
+        <div className="social-actions absolute right-4 top-[61%] z-[90] flex -translate-y-1/2 flex-col items-center gap-2">
+          <button onClick={handleLike} className="social-button flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/08 p-0 text-white backdrop-blur-sm">
             <Heart className={cn('h-[20px] w-[20px]', liked ? 'fill-rose-500 text-rose-500' : 'text-white')} />
           </button>
-          <button onClick={() => setShowComments(true)} className="social-button flex h-[38px] w-[38px] min-h-[38px] min-w-[38px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/16 p-0 text-white backdrop-blur-sm">
+          <button onClick={() => setShowComments(true)} className="social-button flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/08 p-0 text-white backdrop-blur-sm">
             <MessageCircle className="h-[20px] w-[20px]" />
           </button>
-          <button onClick={handleShare} className="social-button flex h-[38px] w-[38px] min-h-[38px] min-w-[38px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/16 p-0 text-white backdrop-blur-sm">
+          <button onClick={handleShare} className="social-button flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/08 p-0 text-white backdrop-blur-sm">
             <Share2 className="h-[20px] w-[20px]" />
           </button>
           {model && (
-            <button onClick={() => setModelModalOpen(true)} className="social-button flex h-[38px] w-[38px] min-h-[38px] min-w-[38px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/16 p-0 text-white backdrop-blur-sm" title="Medidas" aria-label="Medidas">
+            <button onClick={() => setModelModalOpen(true)} className="social-button flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/08 p-0 text-white backdrop-blur-sm" title="Medidas" aria-label="Medidas">
               <Ruler className="h-[20px] w-[20px]" />
             </button>
           )}
-          <button onClick={handleWhatsApp} className="whatsapp-button flex h-[38px] w-[38px] min-h-[38px] min-w-[38px] flex-shrink-0 items-center justify-center rounded-full bg-[#25D366] p-0 text-white backdrop-blur-sm">
+          <button onClick={handleWhatsApp} className="whatsapp-button flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] flex-shrink-0 items-center justify-center rounded-full bg-[#25D366] p-0 text-white backdrop-blur-sm">
             <svg viewBox="0 0 24 24" className="h-[20px] w-[20px] fill-white" aria-hidden="true">
               <path d="M16.6 13.2c-.3-.2-1.7-.8-2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.8 0c-.4-.2-1.4-.5-2.6-1.6-.9-.8-1.6-1.8-1.8-2.2-.2-.4 0-.6.2-.8l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6s-.7-1.7-1-2.3c-.3-.6-.6-.5-.8-.5h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.8s1.3 3.2 1.5 3.4c.2.2 2.3 3.6 5.6 5.1.8.4 1.5.6 2.1.8.9.3 1.7.3 2.3.2.7-.1 1.7-.7 2-1.3.3-.6.3-1.1.2-1.3-.1-.2-.3-.3-.6-.5z" />
               <path d="M20 4A10 10 0 0 0 3.6 16.2L2 22l5.9-1.5A10 10 0 1 0 20 4zm-7.9 15.4c-1.6 0-3.2-.4-4.6-1.3l-.3-.2-3.5.9.9-3.4-.2-.3A8.1 8.1 0 1 1 12.1 19.4z" />
@@ -354,8 +354,8 @@ const StoryPreviewPage = () => {
         </div>
 
         {product && (
-          <div className="product-card absolute bottom-[18px] left-[12px] z-[80] w-[calc(100%-70px)] max-w-[285px] min-h-[76px] gap-[10px] rounded-[16px] bg-white/95 p-[10px_12px] shadow-lg backdrop-blur-sm sm:w-[calc(100%-84px)]">
-            <div className="h-[58px] w-[58px] overflow-hidden rounded-[2px] bg-slate-200">
+          <div className="product-card absolute bottom-[17px] left-[13px] z-[55] flex h-[72px] w-[238px] min-h-[72px] max-h-[72px] gap-[9px] rounded-[16px] bg-white/95 p-[10px_10px] shadow-lg backdrop-blur-sm">
+            <div className="product-image h-[55px] w-[55px] overflow-hidden rounded-[2px] bg-slate-200">
               <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
             </div>
             <div className="product-info min-w-0 flex-1">
@@ -366,7 +366,7 @@ const StoryPreviewPage = () => {
               <button
                 type="button"
                 onClick={() => window.open(product.product_url || '/products', '_blank', 'noopener,noreferrer')}
-                className="product-button mt-2 inline-flex h-[22px] items-center gap-1 rounded-full bg-emerald-500 px-[10px] text-[10px] font-bold text-white"
+                className="product-button mt-1 inline-flex h-[18px] items-center gap-1 rounded-full bg-emerald-500 px-[9px] text-[9px] font-bold text-white"
               >
                 Ver produto <ExternalLink className="h-3 w-3" />
               </button>
