@@ -3,6 +3,36 @@ import { Code, Copy, Globe, Terminal, CheckCircle2, AlertTriangle, Blocks } from
 import { showSuccess } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 
+const scriptSteps = [
+  {
+    title: 'Passo 1',
+    description: 'Acesse o painel administrativo da sua loja.'
+  },
+  {
+    title: 'Passo 2',
+    description: 'Localize a área de scripts personalizados ou cabeçalho.'
+  },
+  {
+    title: 'Passo 3',
+    description: 'Cole o código abaixo no Head da loja e salve as alterações.'
+  }
+];
+
+const gtmSteps = [
+  {
+    title: 'Passo 1',
+    description: 'Acesse sua conta do GTM e selecione o container da sua loja.'
+  },
+  {
+    title: 'Passo 2',
+    description: 'Crie uma nova tag do tipo HTML personalizado.'
+  },
+  {
+    title: 'Passo 3',
+    description: 'Cole o código abaixo, configure o acionador para todas as páginas e publique as alterações.'
+  }
+];
+
 const IntegrationPage = () => {
   const [tab, setTab] = useState<'script' | 'gtm'>('script');
   const publicUrl = window.location.origin;
@@ -90,22 +120,46 @@ const IntegrationPage = () => {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
-      <div className="p-8 rounded-[2rem] bg-blue-50 border border-blue-100 group hover:scale-105 transition-all">
-        <Globe className="text-[#0094EB] mb-4" size={28} />
-        <h4 className="font-black text-slate-800 mb-2">Passo 1</h4>
-        <p className="text-xs text-slate-500 font-bold leading-relaxed">Acesse sua conta do GTM e selecione o container da sua loja.</p>
-      </div>
-      <div className="p-8 rounded-[2rem] bg-slate-50 border border-slate-100 group hover:scale-105 transition-all">
-        <Code className="text-slate-400 mb-4" size={28} />
-        <h4 className="font-black text-slate-800 mb-2">Passo 2</h4>
-        <p className="text-xs text-slate-500 font-bold leading-relaxed">Crie uma nova tag do tipo HTML personalizado.</p>
-      </div>
-      <div className="p-8 rounded-[2rem] bg-emerald-50 border border-emerald-100 group hover:scale-105 transition-all">
-        <CheckCircle2 className="text-emerald-500 mb-4" size={28} />
-        <h4 className="font-black text-slate-800 mb-2">Passo 3</h4>
-        <p className="text-xs text-slate-500 font-bold leading-relaxed">Cole o código abaixo, configure o acionador para todas as páginas e publique as alterações.</p>
-      </div>
-    </div>
+          {tab === 'script'
+            ? scriptSteps.map((step, index) => (
+                <div
+                  key={step.title}
+                  className={cn(
+                    'p-8 rounded-[2rem] border group hover:scale-105 transition-all',
+                    index === 0 ? 'bg-blue-50 border-blue-100' : index === 1 ? 'bg-slate-50 border-slate-100' : 'bg-emerald-50 border-emerald-100'
+                  )}
+                >
+                  {index === 0 ? (
+                    <Globe className="text-[#0094EB] mb-4" size={28} />
+                  ) : index === 1 ? (
+                    <Code className="text-slate-400 mb-4" size={28} />
+                  ) : (
+                    <CheckCircle2 className="text-emerald-500 mb-4" size={28} />
+                  )}
+                  <h4 className="font-black text-slate-800 mb-2">{step.title}</h4>
+                  <p className="text-xs text-slate-500 font-bold leading-relaxed">{step.description}</p>
+                </div>
+              ))
+            : gtmSteps.map((step, index) => (
+                <div
+                  key={step.title}
+                  className={cn(
+                    'p-8 rounded-[2rem] border group hover:scale-105 transition-all',
+                    index === 0 ? 'bg-blue-50 border-blue-100' : index === 1 ? 'bg-slate-50 border-slate-100' : 'bg-emerald-50 border-emerald-100'
+                  )}
+                >
+                  {index === 0 ? (
+                    <Globe className="text-[#0094EB] mb-4" size={28} />
+                  ) : index === 1 ? (
+                    <Code className="text-slate-400 mb-4" size={28} />
+                  ) : (
+                    <CheckCircle2 className="text-emerald-500 mb-4" size={28} />
+                  )}
+                  <h4 className="font-black text-slate-800 mb-2">{step.title}</h4>
+                  <p className="text-xs text-slate-500 font-bold leading-relaxed">{step.description}</p>
+                </div>
+              ))}
+        </div>
 
         <div className="mt-16 p-6 bg-amber-50 border border-amber-100 rounded-[2rem] flex gap-5 items-start">
            <AlertTriangle className="text-amber-500 shrink-0" size={24} />
