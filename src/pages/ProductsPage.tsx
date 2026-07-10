@@ -324,7 +324,7 @@ const ProductsPage = () => {
                       )}
                     >
                       {(product as any).active ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
-                      {(product as any).active ? 'Ativo' : 'Desativado'}
+                      {(product as any).active ? 'ATIVO' : 'DESATIVADO'}
                     </button>
                   </td>
                   <td className="px-6 py-4 text-right">

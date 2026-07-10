@@ -107,9 +107,9 @@ const CommentsPage = () => {
 
   const getStatusLabel = (status: Comment["status"]) => {
     switch (status) {
-      case "approved": return "Aprovado";
-      case "rejected": return "Rejeitado";
-      default: return "Pendente";
+      case "approved": return "ATIVO";
+      case "rejected": return "DESATIVADO";
+      default: return "DESATIVADO";
     }
   };
 
@@ -117,7 +117,7 @@ const CommentsPage = () => {
     switch (status) {
       case "approved": return "text-emerald-600 bg-emerald-50";
       case "rejected": return "text-rose-600 bg-rose-50";
-      default: return "text-amber-600 bg-amber-50";
+      default: return "text-rose-600 bg-rose-50";
     }
   };
 

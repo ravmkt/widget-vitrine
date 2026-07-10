@@ -124,7 +124,7 @@ const StoriesPage = () => {
         case 'cliques':
           return Number((story as any).clicks_count ?? (story as any).click_count ?? (story as any).clicks ?? (story as any).cliques ?? 0);
         case 'status':
-          return active ? 'Ativo' : 'Desativado';
+          return active ? 'ATIVO' : 'DESATIVADO';
         default:
           return '';
       }
@@ -333,7 +333,7 @@ const StoriesPage = () => {
                         title={isStoryActive(story) ? 'Story ativo' : 'Story desativado'}
                       >
                         {isStoryActive(story) ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
-                        {isStoryActive(story) ? 'Ativo' : 'Desativado'}
+                        {isStoryActive(story) ? 'ATIVO' : 'DESATIVADO'}
                       </button>
                     </td>
                     <td className="px-6 py-4 text-right">
