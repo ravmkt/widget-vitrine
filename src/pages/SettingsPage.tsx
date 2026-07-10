@@ -106,8 +106,6 @@ const SettingsPage = () => {
         }
       } catch (err) {
         console.error('Error fetching settings:', err);
-        // Em caso de falha de conexão ou ausência de registro, usamos padrões vazios
-        // para não bloquear o preenchimento do formulário.
         setSettings(DEFAULT_SETTINGS);
       } finally {
         setLoading(false);
@@ -197,37 +195,15 @@ const SettingsPage = () => {
               </div>
 
               <div className="space-y-4">
-                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ID de Loja Primário</Label>
-                <div className="flex items-center gap-3">
-                  <Input
-                    type="text"
-                    value={settings?.store_public_id ?? settings?.id ?? ''}
-                    readOnly
-                    className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-600 break-all"
-                  />
-                  <Button variant="outline" size="icon" onClick={() => { navigator.clipboard.writeText(settings?.store_public_id ?? settings?.id ?? ''); toast.success('ID copiado'); }}><Copy size={20} /></Button>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ID de Loja Público</Label>
-                <div className="flex items-center gap-3">
-                  <Input
-                    type="text"
-                    value={settings?.store_public_id ?? ''}
-                    readOnly
-                    className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-600 break-all"
-                  />
-                  <Button variant="outline" size="icon" onClick={() => { navigator.clipboard.writeText(settings?.store_public_id ?? ''); toast.success('ID público copiado'); }}><Copy size={20} /></Button>
-                  <Button variant="outline" size="icon" onClick={() => { const newId = 'pub_live_' + Math.random().toString(36).substr(2, 24); setSettings(prev => ({ ...prev, store_public_id: newId })); toast.success('ID público regenerado'); }}><RefreshCw size={20} className="text-amber-600" /></Button>
-                </div>
-              </div>
-
-              <div className="space-y-4">
                 <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Logo da Loja</Label>
                 <div className="space-y-3">
                   <div className="flex items-center gap-4">
                     <div className="h-20 w-20 rounded-2xl overflow-hidden bg-slate-200 border border-slate-300 flex items-center justify-center">
-                      {settings?.store_logo_url ? (<img src={settings.store_logo_url} className="w-full h-full object-cover" alt="Logo" />) : (<Image className="w-8 h-8 text-slate-400" />)}
+                      {settings?.store_logo_url ? (
+                        <img src={settings.store_logo_url} className="w-full h-full object-cover" alt="Logo" />
+                      ) : (
+                        <Image className="w-8 h-8 text-slate-400" />
+                      )}
                     </div>
                     <div className="flex-1 space-y-2">
                       <div className="flex gap-2">
@@ -248,15 +224,16 @@ const SettingsPage = () => {
                         />
                         <Button variant="outline" size="icon" onClick={() => { setSettings(prev => ({ ...prev, store_logo_url: null })); toast.success('Logo removida'); }}><X size={20} className="text-rose-600" /></Button>
                       </div>
-                      {settings?.store_logo_url && (<p className="text-xs text-slate-500 mt-1">{(new URL(settings.store_logo_url)).pathname.split('/').pop()}</p>)}
+                      {settings?.store_logo_url && (
+                        <p className="text-xs text-slate-500 mt-1">
+                          {(new URL(settings.store_logo_url)).pathname.split('/').pop()}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <Input
-                    type="url"
-                    placeholder="Ou cole a URL da logo"
+                    type="hidden"
                     value={settings?.store_logo_url ?? ''}
-                    onChange={(e) => setSettings(prev => ({ ...prev, store_logo_url: e.target.value }))}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0094EB]"
                   />
                 </div>
               </div>
@@ -312,12 +289,12 @@ const SettingsPage = () => {
               <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Número do WhatsApp</Label>
               <Input
                 type="tel"
-                placeholder="5545999629702"
+                placeholder="55998888888"
                 value={settings?.whatsapp_number ?? ''}
                 onChange={(e) => { const value = e.target.value.replace(/[^\d+\-\(\) ]/g, ''); setSettings(prev => ({ ...prev, whatsapp_number: value })); }}
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
               />
-              <p className="text-xs text-slate-500 mt-1">Insira o número completo com DDD e código do país. Ex: 55 para Brasil.</p>
+              <p className="text-xs text-slate-500 mt-1">Informe o WhatsApp com código do país e DDD. Ex: 55998888888</p>
             </div>
             <div className="space-y-4">
               <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mensagem Padrão de Contato</Label>
@@ -332,52 +309,6 @@ const SettingsPage = () => {
                 <code className="bg-slate-200 px-1 rounded text-xs font-mono">{"{{story_title}}"}</code>{" "}
                 para inserir automaticamente o título do vídeo.
               </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
-          <CardHeader className="p-6">
-            <CardTitle className="text-xl font-black text-slate-800">4. Comportamento</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 space-y-6">
-            <div className="space-y-4">
-              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Título Padrão da Vitrine</Label>
-              <Input
-                type="text"
-                placeholder="Vitrine de Vídeos"
-                value={settings?.store_name ?? 'Vitrine de Vídeos'}
-                onChange={(e) => setSettings(prev => ({ ...prev, store_name: e.target.value }))}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
-              />
-            </div>
-            <div className="space-y-4">
-              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quantidade de Vídeos por Página</Label>
-              <Input
-                type="number"
-                min={1}
-                max={100}
-                value="10"
-                onChange={(e) => { const num = parseInt(e.target.value); if (!isNaN(num) && num >= 1 && num <= 100) { console.log('Videos per page:', num); } }}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
-              />
-              <p className="text-xs text-slate-500 mt-1">Número entre 1 e 100</p>
-            </div>
-            <div className="space-y-4">
-              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ordenação Padrão</Label>
-              <Select value="recent" onValueChange={(value) => { console.log('Default order:', value); }}>
-                <SelectTrigger className="w-full"><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="recent">Mais Recentes</SelectItem>
-                  <SelectItem value="oldest">Mais Antigos</SelectItem>
-                  <SelectItem value="views_desc">Mais Visualizações</SelectItem>
-                  <SelectItem value="views_asc">Menos Visualizações</SelectItem>
-                  <SelectItem value="likes_desc">Mais Curtidas</SelectItem>
-                  <SelectItem value="likes_asc">Menos Curtidas</SelectItem>
-                  <SelectItem value="comments_desc">Mais Comentários</SelectItem>
-                  <SelectItem value="comments_asc">Menos Comentários</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </CardContent>
         </Card>
