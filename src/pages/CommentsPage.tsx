@@ -56,6 +56,25 @@ const CommentsPage = () => {
     '😀', '😍', '🔥', '👏', '❤️', '😂', '😮', '😢', '👍', '🙏', '🎉', '💪', '🚀', '🤩', '😎', '✨', '💜', '🙌', '🥰', '💯', '🛍️'
   ];
 
+  // Normalize status function
+  const normalizeStatus = (status?: string) => {
+    const value = String(status || "").toLowerCase().trim();
+
+    if (["pending", "pendente", "pendente aprovação", "em análise"].includes(value)) {
+      return "pending";
+    }
+
+    if (["approved", "aprovado", "aprovada"].includes(value)) {
+      return "approved";
+    }
+
+    if (["rejected", "rejeitado", "rejeitada"].includes(value)) {
+      return "rejected";
+    }
+
+    return value;
+  };
+
   // Load store name for automatic author
   useEffect(() => {
     const loadData = async () => {
@@ -116,10 +135,11 @@ const CommentsPage = () => {
     return comments.filter((c) => {
       const matchesSearch = (c.user_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
                             (c.text || "").toLowerCase().includes(searchTerm.toLowerCase());
+      const normalizedStatus = normalizeStatus(c.status);
       const matchesStatus = filterStatus === "all" || (
-        filterStatus === "Pendente" ? c.status === "pending" :
-        filterStatus === "Aprovado" ? c.status === "approved" :
-        c.status === "rejected"
+        filterStatus === "Pendente" ? normalizedStatus === "pending" :
+        filterStatus === "Aprovado" ? normalizedStatus === "approved" :
+        normalizedStatus === "rejected"
       );
       const matchesVideo = filterVideo === "all" || c.video_id === filterVideo;
       return matchesSearch && matchesStatus && matchesVideo;
@@ -309,76 +329,73 @@ const CommentsPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredComments.map((row) => (
-                <tr
-                  key={row.id}
-                  className="hover:bg-slate-50/50 transition-colors"
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-blue-50 text-[#0094EB] flex items-center justify-center font-black text-xs">
-                        {row.user_name ? row.user_name.charAt(0).toUpperCase() : "?"}
+              {filteredComments.map((row) => {
+                const video = videos.find(v => v.id === row.video_id);
+                return (
+                  <tr
+                    key={row.id}
+                    className="hover:bg-slate-50/50 transition-colors"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-blue-50 text-[#0094EB] flex items-center justify-center font-black text-xs">
+                          {row.user_name ? row.user_name.charAt(0).toUpperCase() : "?"}
+                        </div>
+                        <span className="font-bold text-slate-800 text-sm">{row.user_name}</span>
                       </div>
-                      <span className="font-bold text-slate-800 text-sm">{row.user_name}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="text-sm text-slate-600 mb-1">"{row.text}"</p>
-                    <div className="flex items-center gap-1 text-[10px] font-black text-[#0094EB] uppercase tracking-wider">
-                      <VideoIcon size={12} /> Vídeo: {videos.find((v) => v.id === row.video_id)?.title || "Desconhecido"}
-                    </div>
-                    {/* Make video title clickable to open player */}
-                    <div
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewVideo(row);
-                      }}
-                      className="ml-1 cursor-pointer"
-                    >
-                      <span className="text-[#0094EB] font-medium hover:underline">
-                        {videos.find((v) => v.id === row.video_id)?.title || "Desconhecido"}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <span
-                      onClick={(e) => openStatusDropdown(e, row.id)}
-                      className={cn(
-                        "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border cursor-pointer",
-                        getStatusColor(row.status)
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-sm text-slate-600 mb-1">"{row.text}"</p>
+                      {video && (
+                        <div className="flex items-center gap-1 text-[10px] font-black text-[#0094EB] uppercase tracking-wider">
+                          <VideoIcon size={12} /> VÍDEO:{" "}
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewVideo(row);
+                            }}
+                            className="cursor-pointer hover:underline"
+                          >
+                            {video.title}
+                          </span>
+                        </div>
                       )}
-                      id={`status-badge-${row.id}`}
-                    >
-                      {getStatusLabel(row.status)}
-                    </span>
-                    {showStatusDropdown && editingCommentId === row.id && (
-                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-[1000]">
-                        <XCircle size={12} className="text-rose-500" />
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span
+                        onClick={(e) => openStatusDropdown(e, row.id)}
+                        className={cn(
+                          "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border cursor-pointer",
+                          getStatusColor(row.status)
+                        )}
+                        id={`status-badge-${row.id}`}
+                      >
+                        {getStatusLabel(row.status)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => handleReply(e, row)}
+                          className="p-2 text-[#0094EB] hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Responder"
+                        >
+                          <MessageSquare size={18} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteClick(e, row)}
+                          className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                          title="Excluir"
+                        >
+                          <Trash2 size={18} />
+                        </button>
                       </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={(e) => handleReply(e, row)}
-                        className="p-2 text-[#0094EB] hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Responder"
-                      >
-                        <MessageSquare size={18} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => handleDeleteClick(e, row)}
-                        className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-                        title="Excluir"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -417,13 +434,9 @@ const CommentsPage = () => {
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
               placeholder="Escreva aqui a resposta pública..."
             />
-            {/* Emoji button */}
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowEmoji((prev) => !prev);
-              }}
+              onClick={() => setShowEmoji((prev) => !prev)}
               className="absolute right-3 top-2 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
             >
               <Smile className="h-4 w-4" />
@@ -434,9 +447,7 @@ const CommentsPage = () => {
                   <button
                     key={item}
                     type="button"
-                    onClick={() => {
-                      insertEmojiAtCursor(item);
-                    }}
+                    onClick={() => insertEmojiAtCursor(item)}
                     className={cn(
                       "rounded-xl p-2 text-lg hover:bg-white/10",
                       emoji === item && "bg-violet-600"
