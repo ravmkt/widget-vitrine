@@ -139,7 +139,7 @@ const StoryPreviewPage = () => {
     setLikeCount(getVideoLikeCount(currentVideo.id));
     const likes = readLikes();
     setLiked(Boolean(likes[currentVideo.id]?.liked));
-    setComments(readComments().filter((item) => item.videoId === currentVideo.id));
+    setComments(readComments().filter((item) => item.videoId === currentVideo.id || (item as any).video_id === currentVideo.id));
     setProgress(0);
     loadLinkedData(story, currentVideo);
   }, [currentVideo?.id]);
@@ -199,13 +199,25 @@ const StoryPreviewPage = () => {
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
-  const handleCommentSubmit = () => {
+  const handleCommentSubmit = async () => {
     const name = commentName.trim();
     const text = commentText.trim();
-    if (!name || !text || !currentVideo?.id) return;
-    const next = [...readComments(), { videoId: currentVideo.id, name, text, createdAt: new Date().toISOString() }];
-    saveComments(next);
-    setComments(next.filter((item) => item.videoId === currentVideo.id));
+    if (!name || !text || !currentVideo?.id || !story) return;
+
+    const newComment = {
+      id: crypto.randomUUID(),
+      video_id: currentVideo.id,
+      story_id: story.id,
+      user_name: name,
+      text,
+      status: 'pending' as const,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    await db.comments.save(newComment as any);
+    const next = await db.comments.getAll();
+    setComments(next.filter((item) => item.video_id === currentVideo.id || (item as any).videoId === currentVideo.id) as any);
     setCommentText('');
     setCommentName('');
     showSuccess('Comentário enviado com sucesso.');
@@ -243,7 +255,7 @@ const StoryPreviewPage = () => {
   }
 
   const modelData = model?.measures?.length ? model.measures : [];
-  const bodyBottomOffset = product ? 'bottom-44' : 'bottom-24';
+  const socialButtonsTop = product ? 'top-[52%]' : 'top-[48%]';
 
   return (
     <div className="fixed inset-0 bg-neutral-950 flex items-center justify-center overflow-hidden">
@@ -303,7 +315,16 @@ const StoryPreviewPage = () => {
           <ChevronRight className="h-7 w-7" />
         </button>
 
-        <div className={`absolute right-4 top-16 z-[90] flex flex-col gap-3 ${bodyBottomOffset}`}>
+        <div className="absolute right-4 top-14 z-[90] flex flex-col gap-3">
+          <button onClick={handleTogglePlay} className="flex h-[52px] w-[52px] min-h-[52px] min-w-[52px] flex-shrink-0 items-center justify-center rounded-full bg-black/55 p-0 text-white backdrop-blur-md">
+            {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+          </button>
+          <button onClick={handleToggleMute} className="flex h-[52px] w-[52px] min-h-[52px] min-w-[52px] flex-shrink-0 items-center justify-center rounded-full bg-black/55 p-0 text-white backdrop-blur-md">
+            {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+          </button>
+        </div>
+
+        <div className={`absolute right-4 ${socialButtonsTop} z-[90] flex -translate-y-1/2 flex-col gap-3`}>
           <button onClick={handleTogglePlay} className="flex h-[52px] w-[52px] min-h-[52px] min-w-[52px] flex-shrink-0 items-center justify-center rounded-full bg-black/55 p-0 text-white backdrop-blur-md">
             {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
           </button>
@@ -362,34 +383,34 @@ const StoryPreviewPage = () => {
         )}
 
         {showComments && (
-          <div className="absolute inset-0 z-[95] bg-black/85 p-4">
-            <div className="mx-auto flex h-full max-w-md flex-col rounded-[28px] bg-slate-950 p-4 text-white shadow-2xl">
-              <div className="mb-3 flex items-center justify-between">
-                <h4 className="text-lg font-black">Comentários</h4>
-                <button onClick={() => setShowComments(false)}>
-                  <X />
+          <div className="absolute inset-0 z-[95] bg-black/70 p-4 backdrop-blur-[2px]">
+            <div className="mx-auto flex w-[calc(100%-48px)] max-w-[380px] max-h-[70vh] flex-col rounded-[28px] bg-white p-5 text-slate-900 shadow-2xl overflow-hidden">
+              <div className="mb-4 flex items-center justify-between">
+                <h4 className="text-lg font-black text-slate-900">Comentários</h4>
+                <button onClick={() => setShowComments(false)} className="rounded-full bg-slate-100 p-2 text-slate-700">
+                  <X className="h-5 w-5" />
                 </button>
               </div>
-              <div className="flex-1 space-y-3 overflow-auto">
+              <div className="flex-1 space-y-3 overflow-y-auto pr-1">
                 {comments.map((item, index) => (
-                  <div key={index} className="rounded-2xl bg-white/5 p-3">
-                    <p className="text-xs font-black text-white/70">{item.name}</p>
-                    <p className="text-sm text-white">{item.text}</p>
+                  <div key={index} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                    <p className="text-xs font-black text-slate-500">{item.name}</p>
+                    <p className="text-sm text-slate-800">{item.text}</p>
                   </div>
                 ))}
               </div>
-              <div className="mt-4 space-y-2">
-                <input value={commentName} onChange={(e) => setCommentName(e.target.value)} placeholder="Seu nome" className="w-full rounded-2xl bg-white/10 p-3 text-sm text-white outline-none" />
+              <div className="mt-4 space-y-3 border-t border-slate-200 pt-4">
+                <input value={commentName} onChange={(e) => setCommentName(e.target.value)} placeholder="Seu nome" className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none placeholder:text-slate-400" />
                 <div className="relative">
-                  <textarea ref={textareaRef} value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="Escreva seu comentário..." className="min-h-24 w-full rounded-2xl bg-white/10 p-3 text-sm text-white outline-none" />
-                  <button type="button" onClick={() => setShowEmoji((v) => !v)} className="absolute right-3 top-3 text-white">
-                    <Smile />
+                  <textarea ref={textareaRef} value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="Escreva seu comentário..." className="min-h-24 w-full rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none placeholder:text-slate-400" />
+                  <button type="button" onClick={() => setShowEmoji((v) => !v)} className="absolute right-3 top-3 rounded-full bg-white p-1 text-slate-600 shadow-sm">
+                    <Smile className="h-5 w-5" />
                   </button>
                 </div>
                 {showEmoji && (
-                  <div className="grid grid-cols-6 gap-2 rounded-2xl bg-white/10 p-3 text-xl">
+                  <div className="grid grid-cols-6 gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-xl">
                     {EMOJIS.map((emoji) => (
-                      <button key={emoji} type="button" onClick={() => insertEmoji(emoji)}>{emoji}</button>
+                      <button key={emoji} type="button" onClick={() => insertEmoji(emoji)} className="rounded-lg bg-white p-1">{emoji}</button>
                     ))}
                   </div>
                 )}
