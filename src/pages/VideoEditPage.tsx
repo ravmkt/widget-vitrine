@@ -30,7 +30,7 @@ const VideoEditPage = () => {
     product_id: '',
     model_id: '',
     active: true,
-    origin: 'external_url' as 'external_url' | 'instagram' | 'tiktok' | 'upload',
+    origin: 'external_url' as 'external_url' | 'instagram' | 'youtube' | 'tiktok' | 'upload',
     video_file: null as File | null,
   });
 
@@ -109,18 +109,63 @@ const VideoEditPage = () => {
     }
   };
 
+  const normalizeVideoUrl = (value: string) => {
+    try {
+      const url = new URL(value.trim());
+      url.hash = '';
+      url.search = '';
+      if (url.hostname.startsWith('www.')) {
+        url.hostname = url.hostname.replace(/^www\./, '');
+      }
+      if (url.hostname === 'youtu.be' && !url.pathname.endsWith('/')) {
+        url.pathname = url.pathname.replace(/\/+$/, '');
+      }
+      return url.toString().replace(/\/$/, '');
+    } catch {
+      return value.trim();
+    }
+  };
+
   const validateInstagramLink = (link: string): boolean => {
     if (!link) return false;
-    const lowerLink = link.toLowerCase();
-    return lowerLink.includes('instagram.com') || lowerLink.includes('www.instagram.com');
+    try {
+      const url = new URL(link.trim());
+      const host = url.hostname.replace(/^www\./, '').toLowerCase();
+      if (host !== 'instagram.com') return false;
+      return /^\/(reel|p|tv)\/[A-Za-z0-9_-]+\/?$/.test(url.pathname);
+    } catch {
+      return false;
+    }
   };
 
   const validateTikTokLink = (link: string): boolean => {
     if (!link) return false;
-    const lowerLink = link.toLowerCase();
-    return lowerLink.includes('tiktok.com') ||
-      lowerLink.includes('www.tiktok.com') ||
-      lowerLink.includes('vm.tiktok.com');
+    try {
+      const url = new URL(link.trim());
+      const host = url.hostname.replace(/^www\./, '').toLowerCase();
+      if (host === 'vm.tiktok.com') {
+        return /^\/[A-Za-z0-9_-]+\/?$/.test(url.pathname);
+      }
+      if (host !== 'tiktok.com') return false;
+      return /^\/@[A-Za-z0-9._-]+\/video\/\d+\/?$/.test(url.pathname);
+    } catch {
+      return false;
+    }
+  };
+
+  const validateYouTubeLink = (link: string): boolean => {
+    if (!link) return false;
+    try {
+      const url = new URL(link.trim());
+      const host = url.hostname.replace(/^www\./, '').toLowerCase();
+      if (host === 'youtu.be') {
+        return /^\/[A-Za-z0-9_-]+\/?$/.test(url.pathname);
+      }
+      if (host !== 'youtube.com') return false;
+      return /^\/(shorts|watch)\/?$/.test(url.pathname) || url.pathname.startsWith('/shorts/') || url.pathname === '/watch';
+    } catch {
+      return false;
+    }
   };
 
   const validateFile = (file: File): boolean => {
@@ -217,7 +262,17 @@ const VideoEditPage = () => {
         errors.instagram_link = 'Informe o link do Instagram.';
         isValid = false;
       } else if (!validateInstagramLink(formData.instagram_link)) {
-        errors.instagram_link = 'Link do Instagram inválido (ex: instagram.com ou www.instagram.com).';
+        errors.instagram_link = 'Link do Instagram inválido.';
+        isValid = false;
+      }
+    }
+
+    if (formData.origin === 'youtube') {
+      if (!formData.video_url?.trim()) {
+        errors.video_url = 'Informe o link do YouTube Shorts.';
+        isValid = false;
+      } else if (!validateYouTubeLink(formData.video_url)) {
+        errors.video_url = 'Link do YouTube inválido.';
         isValid = false;
       }
     }
@@ -227,7 +282,7 @@ const VideoEditPage = () => {
         errors.tiktok_link = 'Informe o link do TikTok.';
         isValid = false;
       } else if (!validateTikTokLink(formData.tiktok_link)) {
-        errors.tiktok_link = 'Link do TikTok inválido (ex: tiktok.com ou www.tiktok.com).';
+        errors.tiktok_link = 'Link do TikTok inválido.';
         isValid = false;
       }
     }
@@ -257,12 +312,16 @@ const VideoEditPage = () => {
     try {
       setIsSaving(true);
 
+      const normalizedVideoUrl = formData.video_url ? normalizeVideoUrl(formData.video_url) : '';
+      const normalizedInstagramLink = formData.instagram_link ? normalizeVideoUrl(formData.instagram_link) : '';
+      const normalizedTikTokLink = formData.tiktok_link ? normalizeVideoUrl(formData.tiktok_link) : '';
+
       const videoData: Partial<Video> = {
         title: formData.title.trim(),
-        source_type: formData.origin === 'external_url' ? 'external_url' : formData.origin,
-        video_url: formData.video_url,
-        instagram_link: formData.instagram_link,
-        tiktok_link: formData.tiktok_link,
+        source_type: formData.origin as any,
+        video_url: formData.origin === 'external_url' || formData.origin === 'youtube' ? normalizedVideoUrl : normalizedVideoUrl,
+        instagram_link: formData.origin === 'instagram' ? normalizedInstagramLink : normalizedInstagramLink,
+        tiktok_link: formData.origin === 'tiktok' ? normalizedTikTokLink : normalizedTikTokLink,
         thumbnail_url: formData.thumbnail_url,
         active: formData.active,
         status: formData.active ? 'active' : 'inactive',
@@ -334,9 +393,10 @@ const VideoEditPage = () => {
               className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
             >
               <option value="external_url">URL do vídeo</option>
-              <option value="instagram">Instagram</option>
-              <option value="tiktok">TikTok</option>
-              <option value="upload">Upload de vídeo</option>
+                      <option value="instagram">Instagram</option>
+                      <option value="youtube">YouTube Shorts</option>
+                      <option value="tiktok">TikTok</option>
+                      <option value="upload">Upload de vídeo</option>
             </select>
           </div>
 
