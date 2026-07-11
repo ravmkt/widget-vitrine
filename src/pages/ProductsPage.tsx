@@ -317,8 +317,18 @@ const ProductsPage = () => {
                 <th onClick={() => handleSort('preco')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center w-32">Preço {sortColumn === 'preco' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</th>
                 <th onClick={() => handleSort('categoria')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center w-36">Categoria {sortColumn === 'categoria' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</th>
                 <th onClick={() => handleSort('video')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center w-48">Vídeo Vinculado {sortColumn === 'video' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</th>
-                <th onClick={() => handleSort('origem')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-28 text-center">Origem {sortColumn === 'origem' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</th>
-                <th onClick={() => handleSort('status')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-28 text-center">Status {sortColumn === 'status' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</th>
+                <th onClick={() => handleSort('origem')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-28 text-center">
+                  <div className="flex items-center justify-center text-center gap-1.5 w-full">
+                    <span>Origem</span>
+                    {sortColumn === 'origem' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                  </div>
+                </th>
+                <th onClick={() => handleSort('status')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-28 text-center">
+                  <div className="flex items-center justify-center text-center gap-1.5 w-full">
+                    <span>Status</span>
+                    {sortColumn === 'status' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                  </div>
+                </th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-48 text-center">Ações</th>
               </tr>
             </thead>
@@ -353,27 +363,31 @@ const ProductsPage = () => {
                     )}
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <span className={cn(
-                      "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
-                      (product as any).origin === 'manual' ? "bg-blue-50 text-blue-600 border-blue-100" : "bg-violet-50 text-violet-600 border-violet-100"
-                    )}>
-                      {(product as any).origin === 'manual' ? <Tag size={10} /> : <Globe size={10} />}
-                      {(product as any).origin === 'manual' ? 'Manual' : 'Integração'}
-                    </span>
+                    <div className="flex items-center justify-center text-center w-full">
+                      <span className={cn(
+                        "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
+                        (product as any).origin === 'manual' ? "bg-blue-50 text-blue-600 border-blue-100" : "bg-violet-50 text-violet-600 border-violet-100"
+                      )}>
+                        {(product as any).origin === 'manual' ? <Tag size={10} /> : <Globe size={10} />}
+                        {(product as any).origin === 'manual' ? 'Manual' : 'Integração'}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleStatus(product)}
-                      className={cn(
-                        "inline-flex h-8 w-[112px] min-w-[112px] items-center justify-center rounded-lg px-4 text-[10px] font-black uppercase tracking-wider border cursor-pointer transition-all mx-auto",
-                        (product as any).active
-                          ? "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100"
-                          : "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100"
-                      )}
-                    >
-                      {(product as any).active ? 'ATIVO' : 'DESATIVADO'}
-                    </button>
+                    <div className="flex items-center justify-center text-center w-full">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStatus(product)}
+                        className={cn(
+                          "inline-flex h-8 w-[112px] min-w-[112px] items-center justify-center rounded-lg px-4 text-[10px] font-black uppercase tracking-wider border cursor-pointer transition-all",
+                          (product as any).active
+                            ? "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100"
+                            : "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100"
+                        )}
+                      >
+                        {(product as any).active ? 'ATIVO' : 'DESATIVADO'}
+                      </button>
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex justify-center gap-2">
