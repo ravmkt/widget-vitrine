@@ -247,28 +247,26 @@ const VideoGalleryPage = () => {
           <table className="w-full max-w-full table-fixed text-left border-collapse" style={{ boxSizing: 'border-box' }}>
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                <th className={cn(getHeaderClass('foto'), 'w-[9%]')}>Foto</th>
-                <th onClick={() => handleSort('nome')} className={cn(getHeaderClass('nome'), 'w-[24%]')}>
+                <th className={cn(getHeaderClass('foto'), 'w-[72px]')}>Foto</th>
+                <th onClick={() => handleSort('nome')} className={cn(getHeaderClass('nome'), 'w-[28%]')}>
                   <span className="inline-flex items-center gap-1 max-w-full truncate">Nome {sortIcon('nome')}</span>
                 </th>
-                <th onClick={() => handleSort('produto')} className={cn(getHeaderClass('produto'), 'w-[18%]')}>
+                <th onClick={() => handleSort('produto')} className={cn(getHeaderClass('produto'), 'w-[20%]')}>
                   <span className="inline-flex items-center gap-1 max-w-full truncate">Produto vinculado {sortIcon('produto')}</span>
                 </th>
-                <th onClick={() => handleSort('visualizacoes')} className={cn(getHeaderClass('visualizacoes', 'center'), 'w-[11%]')}>
+                <th onClick={() => handleSort('visualizacoes')} className={cn(getHeaderClass('visualizacoes', 'center'), 'w-[110px]')}>
                   <span className="inline-flex items-center gap-1 justify-center max-w-full truncate">Visualizações {sortIcon('visualizacoes')}</span>
                 </th>
-                <th onClick={() => handleSort('comentarios')} className={cn(getHeaderClass('comentarios', 'center'), 'w-[11%]')}>
+                <th onClick={() => handleSort('comentarios')} className={cn(getHeaderClass('comentarios', 'center'), 'w-[100px]')}>
                   <span className="inline-flex items-center gap-1 justify-center max-w-full truncate">Comentários {sortIcon('comentarios')}</span>
                 </th>
-                <th onClick={() => handleSort('curtidas')} className={cn(getHeaderClass('curtidas', 'center'), 'w-[10%]')}>
+                <th onClick={() => handleSort('curtidas')} className={cn(getHeaderClass('curtidas', 'center'), 'w-[90px]')}>
                   <span className="inline-flex items-center gap-1 justify-center max-w-full truncate">Curtidas {sortIcon('curtidas')}</span>
                 </th>
-                <th onClick={() => handleSort('ctr')} className={cn(getHeaderClass('ctr', 'center'), 'w-[8%]')}>
+                <th onClick={() => handleSort('ctr')} className={cn(getHeaderClass('ctr', 'center'), 'w-[80px]')}>
                   <span className="inline-flex items-center gap-1 justify-center max-w-full truncate">CTR {sortIcon('ctr')}</span>
                 </th>
-                <th className={cn(getHeaderClass('acoes', 'right'), 'w-[3%]')}>Ver</th>
-                <th className={cn(getHeaderClass('acoes2', 'right'), 'w-[3%]')}>Editar</th>
-                <th className={cn(getHeaderClass('acoes3', 'right'), 'w-[3%]')}>Excluir</th>
+                <th className={cn(getHeaderClass('acoes', 'right'), 'w-[150px]')}>Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -314,14 +312,12 @@ const VideoGalleryPage = () => {
                     <td className="px-3 py-4 text-center font-black text-slate-800">{comments.toLocaleString('pt-BR')}</td>
                     <td className="px-3 py-4 text-center font-black text-slate-800">{likes.toLocaleString('pt-BR')}</td>
                     <td className="px-3 py-4 text-center font-black text-slate-800">{Number(ctrValue || 0).toFixed(2).replace('.', ',')}%</td>
-                    <td className="px-2 py-4 text-right">
-                      <button onClick={() => handleViewVideo(video)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors" title="Ver"><Eye size={16} /></button>
-                    </td>
-                    <td className="px-2 py-4 text-right">
-                      <button onClick={() => navigate(`/videos/${video.id}/edit`)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors" title="Editar"><Edit3 size={16} /></button>
-                    </td>
-                    <td className="px-2 py-4 text-right">
-                      <button onClick={() => handleDeleteClick(video)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" title="Excluir"><Trash2 size={16} /></button>
+                    <td className="px-3 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                        <button onClick={() => handleViewVideo(video)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors shrink-0" title="Ver"><Eye size={16} /></button>
+                        <button onClick={() => navigate(`/videos/${video.id}/edit`)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors shrink-0" title="Editar"><Edit3 size={16} /></button>
+                        <button onClick={() => handleDeleteClick(video)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors shrink-0" title="Excluir"><Trash2 size={16} /></button>
+                      </div>
                     </td>
                   </tr>
                 );
