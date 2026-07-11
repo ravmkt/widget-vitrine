@@ -16,7 +16,7 @@ const FloatingSupportButton = () => {
         className="flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-2xl shadow-emerald-500/20 transition-all active:scale-95 border-2 border-white/20 hover:bg-[#128C7E]"
         aria-label="Suporte via WhatsApp"
       >
-        <WhatsAppIcon size={24} />
+        <WhatsAppIcon size={30} />
       </button>
     </div>
   );

@@ -1,6 +1,6 @@
 import React from 'react';
 
-const WhatsAppIcon = ({ size = 28 }: { size?: number }) => (
+const WhatsAppIcon = ({ size = 32 }: { size?: number }) => (
   <svg
     width={size}
     height={size}

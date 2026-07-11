@@ -39,7 +39,7 @@ const WhatsAppFloatingButton = () => {
       aria-label="Suporte via WhatsApp"
       title="Suporte via WhatsApp"
     >
-      <WhatsAppIcon size={24} />
+      <WhatsAppIcon size={30} />
     </button>
   );
 };
