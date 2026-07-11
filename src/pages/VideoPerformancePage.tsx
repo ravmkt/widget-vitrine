@@ -77,7 +77,7 @@ const VideoPerformancePage = () => {
       conversions += dailyConversions;
     });
 
-    const ctr = views > 0 ? ((clicks / views) * 100).toFixed(1) : '0.0';
+    const ctr = views > 0 ? ((clicks / views) * 100) : 0;
     return { views, clicks, conversions, ctr };
   };
 
@@ -96,7 +96,7 @@ const VideoPerformancePage = () => {
           ...v,
           metrics: {
             ...metrics,
-            engagement: (parseFloat(metrics.ctr) * 1.3).toFixed(1)
+            engagement: Number((metrics.ctr * 1.3).toFixed(1))
           },
           trends: { views: viewDiff }
         };
