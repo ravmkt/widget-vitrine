@@ -34,6 +34,8 @@ const CommentsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterVideo, setFilterVideo] = useState<string>("all");
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [commentText, setCommentText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
@@ -137,6 +139,47 @@ const CommentsPage = () => {
       return matchesSearch && matchesStatus && matchesVideo;
     });
   }, [comments, searchTerm, filterStatus, filterVideo]);
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection((current) => current === 'asc' ? 'desc' : 'asc');
+      return;
+    }
+    setSortColumn(column);
+    setSortDirection('asc');
+  };
+
+  const sortedComments = useMemo(() => {
+    const rows = [...filteredComments];
+    if (!sortColumn) return rows;
+
+    const getSortValue = (comment: CommentWithReplies) => {
+      const normalizedStatus = normalizeStatus(comment.status);
+      switch (sortColumn) {
+        case 'autor':
+          return (comment.user_name || '').toLowerCase();
+        case 'status':
+          return normalizedStatus === 'pending' ? 1 : normalizedStatus === 'approved' ? 2 : 3;
+        default:
+          return '';
+      }
+    };
+
+    rows.sort((a, b) => {
+      const valueA = getSortValue(a);
+      const valueB = getSortValue(b);
+
+      if (typeof valueA === 'number' && typeof valueB === 'number') {
+        return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
+      }
+
+      return sortDirection === 'asc'
+        ? String(valueA).localeCompare(String(valueB), 'pt-BR')
+        : String(valueB).localeCompare(String(valueA), 'pt-BR');
+    });
+
+    return rows;
+  }, [filteredComments, sortColumn, sortDirection]);
 
   const handleStatusChange = async (commentId: string, newStatus: Comment["status"]) => {
     try {
@@ -265,14 +308,25 @@ const CommentsPage = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-20">Autor</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-20">
+                  <button type="button" onClick={() => handleSort('autor')} className="flex items-center gap-1.5 hover:text-slate-700 transition-colors">
+                    Autor
+                    {sortColumn === 'autor' && <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>}
+                  </button>
+                </th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-40">Conteúdo / Vídeo</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-28 text-center">Status</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-28 text-center">
+                  <button type="button" onClick={() => handleSort('status')} className="mx-auto flex items-center gap-1.5 hover:text-slate-700 transition-colors">
+                    Status
+                    {sortColumn === 'status' && <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>}
+                  </button>
+                </th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-36 text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredComments.map((row) => {
+              {sortedComments.map((row) => {
+
                 const video = videos.find(v => v.id === row.video_id);
                 const isMainStoreReply = row.is_store_reply === true;
                 const mainAuthorName = isMainStoreReply ? (storeName || "Loja") : row.user_name;
