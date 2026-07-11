@@ -457,6 +457,89 @@ const ProductsPage = () => {
         </div>
       )}
 
+      {showCategoriesModal && (
+        <div className="fixed inset-0 z-[99998] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+          <div className="flex w-full max-w-2xl flex-col rounded-[2rem] bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 p-6">
+              <h2 className="text-xl font-black text-slate-900">Gerenciar Categorias</h2>
+              <button type="button" onClick={() => setShowCategoriesModal(false)} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"><X size={20} /></button>
+            </div>
+            <div className="space-y-4 p-6">
+              <div className="flex gap-2">
+                <input value={catNewName} onChange={(e) => setCatNewName(e.target.value)} placeholder="Nova categoria" className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]" />
+                <button type="button" onClick={handleCatAdd} className="rounded-xl bg-[#0094EB] px-5 py-3 text-sm font-black text-white hover:bg-[#0E4787]">Adicionar</button>
+              </div>
+              <div className="max-h-[40vh] space-y-2 overflow-y-auto pr-1">
+                {categories.map((cat) => (
+                  <div key={cat.id} className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-3">
+                    {catEditingId === cat.id ? (
+                      <input value={catEditName} onChange={(e) => setCatEditName(e.target.value)} className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold outline-none" />
+                    ) : (
+                      <span className="flex-1 text-sm font-bold text-slate-800">{cat.name}</span>
+                    )}
+                    {catEditingId === cat.id ? (
+                      <button type="button" onClick={() => handleCatEditSave(cat.id)} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black text-white">Salvar</button>
+                    ) : (
+                      <button type="button" onClick={() => handleCatEditStart(cat)} className="rounded-xl bg-white px-4 py-2 text-xs font-black text-slate-600">Editar</button>
+                    )}
+                    <button type="button" onClick={() => handleCatDelete(cat.id)} className="rounded-xl bg-white px-4 py-2 text-xs font-black text-rose-500">Excluir</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 border-t border-slate-100 bg-slate-50/50 p-6">
+              <button type="button" onClick={() => setShowCategoriesModal(false)} className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-600">Cancelar</button>
+              <button type="button" onClick={handleCatSaveAll} className="rounded-xl bg-[#0094EB] px-5 py-3 text-sm font-black text-white hover:bg-[#0E4787]">Concluir</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showImportModal && (
+        <div className="fixed inset-0 z-[99998] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+          <div className="flex w-full max-w-2xl flex-col rounded-[2rem] bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 p-6">
+              <h2 className="text-xl font-black text-slate-900">Importar produtos</h2>
+              <button type="button" onClick={() => setShowImportModal(false)} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"><X size={20} /></button>
+            </div>
+            <div className="p-6 space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <button type="button" onClick={() => setImportTab('xml')} className={cn('rounded-xl border px-4 py-3 text-sm font-black', importTab === 'xml' ? 'border-[#0094EB] bg-[#EAF6FF] text-[#0094EB]' : 'border-slate-200 bg-white text-slate-600')}>XML</button>
+                <button type="button" onClick={() => setImportTab('api')} className={cn('rounded-xl border px-4 py-3 text-sm font-black', importTab === 'api' ? 'border-[#0094EB] bg-[#EAF6FF] text-[#0094EB]' : 'border-slate-200 bg-white text-slate-600')}>API Yampi</button>
+                <button type="button" onClick={() => setImportTab('sheet')} className={cn('rounded-xl border px-4 py-3 text-sm font-black', importTab === 'sheet' ? 'border-[#0094EB] bg-[#EAF6FF] text-[#0094EB]' : 'border-slate-200 bg-white text-slate-600')}>Planilha</button>
+              </div>
+              {importTab === 'xml' && (
+                <div className="space-y-4">
+                  <input value={xmlUrl} onChange={(e) => setXmlUrl(e.target.value)} placeholder="URL do XML" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]" />
+                  <input type="file" accept=".xml" onChange={(e) => setXmlFile(e.target.files?.[0] || null)} className="block w-full text-sm text-slate-500" />
+                  <div className="flex justify-end">
+                    <button type="button" onClick={handleXmlImport} className="rounded-xl bg-[#0094EB] px-5 py-3 text-sm font-black text-white hover:bg-[#0E4787]">Importar XML</button>
+                  </div>
+                </div>
+              )}
+              {importTab === 'api' && (
+                <div className="space-y-4">
+                  <input value={yampiToken} onChange={(e) => setYampiToken(e.target.value)} placeholder="Token Yampi" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]" />
+                  <input value={yampiUrl} onChange={(e) => setYampiUrl(e.target.value)} placeholder="URL da loja" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]" />
+                  <div className="flex justify-end">
+                    <button type="button" onClick={handleApiImport} className="rounded-xl bg-[#0094EB] px-5 py-3 text-sm font-black text-white hover:bg-[#0E4787]">Importar API</button>
+                  </div>
+                </div>
+              )}
+              {importTab === 'sheet' && (
+                <div className="space-y-4">
+                  <input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => setSpreadsheetFile(e.target.files?.[0] || null)} className="block w-full text-sm text-slate-500" />
+                  <div className="flex justify-end gap-3">
+                    <button type="button" onClick={downloadTemplate} className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-600">Baixar modelo</button>
+                    <button type="button" onClick={handleSpreadsheetImport} className="rounded-xl bg-[#0094EB] px-5 py-3 text-sm font-black text-white hover:bg-[#0E4787]">Importar planilha</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <ConfirmDeleteDialog isOpen={deleteModal.isOpen} title="EXCLUIR PRODUTO" itemName={deleteModal.productTitle} onConfirm={handleConfirmDelete} onCancel={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))} />
     </div>
   );
