@@ -283,7 +283,7 @@ const ProductsPage = () => {
               {filteredProducts.map(product => (
                 <tr key={product.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4">
-                    <img src={product.image_url} alt={product.name} className="h-12 w-12 rounded-xl object-cover border border-slate-200" onError={e => { e.currentTarget.src = 'https://via.placeholder.com/48'; }} />
+                    <img src={product.image_url} alt={product.name} className="h-14 w-14 rounded-xl object-cover border border-slate-200" onError={e => { e.currentTarget.src = 'https://via.placeholder.com/56'; }} />
                   </td>
                   <td className="px-6 py-4">
                     <p className="font-bold text-slate-800 truncate max-w-xs">{product.name}</p>
