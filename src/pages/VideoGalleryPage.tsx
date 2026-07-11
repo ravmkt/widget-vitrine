@@ -290,6 +290,20 @@ const VideoGalleryPage = () => {
                     </td>
                     <td className="px-6 py-4">
                       <p className="font-bold text-slate-800 truncate max-w-xs">{video.title}</p>
+                      <span className={cn(
+                        'inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border mt-1',
+                        video.source_type === 'upload' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                        video.source_type === 'external_url' ? 'bg-red-50 text-red-600 border-red-100' :
+                        video.source_type === 'tiktok' ? 'bg-slate-900 text-white border-slate-900' :
+                        video.source_type === 'instagram' ? 'bg-purple-50 text-purple-600 border-purple-100' :
+                        'bg-slate-50 text-slate-500 border-slate-100'
+                      )}>
+                        {video.source_type === 'upload' ? 'UPLOAD' :
+                         video.source_type === 'external_url' ? 'URL' :
+                         video.source_type === 'tiktok' ? 'TIKTOK' :
+                         video.source_type === 'instagram' ? 'INSTAGRAM' :
+                         (video.source_type || '').toUpperCase()}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-xs font-bold border border-slate-100">
