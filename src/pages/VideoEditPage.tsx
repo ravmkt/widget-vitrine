@@ -318,8 +318,8 @@ const VideoEditPage = () => {
 
       const videoData: Partial<Video> = {
         title: formData.title.trim(),
-        source_type: formData.origin as any,
-        video_url: formData.origin === 'external_url' || formData.origin === 'youtube' ? normalizedVideoUrl : normalizedVideoUrl,
+        source_type: formData.origin === 'youtube' ? 'external_url' : (formData.origin as any),
+        video_url: formData.origin === 'youtube' ? normalizedVideoUrl : normalizedVideoUrl,
         instagram_link: formData.origin === 'instagram' ? normalizedInstagramLink : normalizedInstagramLink,
         tiktok_link: formData.origin === 'tiktok' ? normalizedTikTokLink : normalizedTikTokLink,
         thumbnail_url: formData.thumbnail_url,
