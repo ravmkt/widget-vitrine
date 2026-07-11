@@ -98,16 +98,16 @@ const StoryDetailsPage = () => {
         position: currentStory.position || 1,
       });
 
-      const relations = await db.storyVideos.getAll();
+      const relations = await db.storyVideos.getAll(storeId);
       const storyVideoIds = relations
         .filter(rv => rv.story_id === id)
         .sort((a, b) => a.position - b.position)
         .map(rv => rv.video_id);
       setSelectedVideoIds(storyVideoIds);
 
-      const locs = await db.displayLocations.getAll();
+      const locs = await db.displayLocations.getAll(storeId);
       setLocations(locs.filter(l => l.story_id === id));
-      const rls = await db.pageRules.getAll();
+      const rls = await db.pageRules.getAll(storeId);
       setRules(rls.filter(r => r.story_id === id));
 
     } catch (error) {
@@ -150,6 +150,7 @@ const StoryDetailsPage = () => {
 
         const newRelations: StoryVideo[] = selectedVideoIds.map((vid, idx) => ({
           id: `rv-${newStory.id}-${vid}`,
+          store_id: storeId,
           story_id: newStory.id,
           video_id: vid,
           position: idx + 1,
@@ -157,7 +158,7 @@ const StoryDetailsPage = () => {
           created_at: new Date().toISOString()
         }));
         
-        const allRelations = await db.storyVideos.getAll();
+        const allRelations = await db.storyVideos.getAll(storeId);
         localStorage.setItem('vidlytics_story_videos', JSON.stringify([...allRelations, ...newRelations]));
         window.dispatchEvent(new Event('storage'));
         
@@ -179,10 +180,11 @@ const StoryDetailsPage = () => {
       };
       await db.stories.save(updatedStory);
 
-      const allRelations = await db.storyVideos.getAll();
+      const allRelations = await db.storyVideos.getAll(storeId);
       const otherRelations = allRelations.filter(rv => rv.story_id !== id);
       const newRelations: StoryVideo[] = selectedVideoIds.map((vid, idx) => ({
         id: `rv-${id}-${vid}`,
+        store_id: storeId,
         story_id: id!,
         video_id: vid,
         position: idx + 1,

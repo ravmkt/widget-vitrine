@@ -105,6 +105,7 @@ export interface Story {
 
 export interface StoryVideo {
   id: string;
+  store_id: string;
   story_id: string;
   video_id: string;
   position: number;
@@ -128,6 +129,7 @@ export interface Product {
 
 export interface StoryProduct {
   id: string;
+  store_id: string;
   story_id: string;
   video_id?: string;
   product_id: string;
@@ -138,6 +140,7 @@ export type CommentStatus = 'pending' | 'approved' | 'rejected' | 'spam';
 
 export interface Comment {
   id: string;
+  store_id: string;
   story_id: string;
   video_id?: string;
   user_name: string;
@@ -151,6 +154,7 @@ export type EventType = 'view' | 'play' | 'pause' | 'click' | 'cta_click' | 'pro
 
 export interface Metric {
   id: string;
+  store_id: string;
   story_id: string;
   video_id?: string;
   product_id?: string;
