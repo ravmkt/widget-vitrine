@@ -20,12 +20,13 @@ import {
   BarChart3,
   Clock,
 } from 'lucide-react';
-import { format, subDays, startOfDay, endOfDay, eachDayOfInterval, differenceInDays } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { db, Video } from '@/lib/db';
 import CustomDialog from '@/components/CustomDialog';
 import { DayPicker } from 'react-day-picker';
+import { aggregateVideoMetrics, buildVideoMetricsRows, getVideoInterval, VideoPeriod } from '@/lib/videoMetrics';
 
 const VideoPerformancePage = () => {
   const navigate = useNavigate();
@@ -36,9 +37,9 @@ const VideoPerformancePage = () => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const [filters, setFilters] = useState({
-    period: '30',
+    period: '30' as VideoPeriod,
     search: '',
-    customRange: { from: subDays(new Date(), 7), to: new Date() }
+    customRange: { from: undefined as Date | undefined, to: undefined as Date | undefined }
   });
 
   useEffect(() => {
@@ -50,69 +51,30 @@ const VideoPerformancePage = () => {
     load();
   }, []);
 
-  const activeInterval = useMemo(() => {
-    const now = new Date();
-    if (filters.period === 'today') return { start: startOfDay(now), end: endOfDay(now) };
-    if (filters.period === '7') return { start: startOfDay(subDays(now, 6)), end: endOfDay(now) };
-    if (filters.period === '30') return { start: startOfDay(subDays(now, 29)), end: endOfDay(now) };
-    return { start: startOfDay(filters.customRange.from), end: endOfDay(filters.customRange.to) };
-  }, [filters]);
-
-  const calculateVideoStats = (videoId: string, start: Date, end: Date) => {
-    const seed = videoId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const daysInterval = eachDayOfInterval({ start, end });
-
-    let views = 0;
-    let clicks = 0;
-    let conversions = 0;
-
-    daysInterval.forEach(date => {
-      const dateSeed = date.getDate() + date.getMonth() * 31 + (date.getFullYear() % 100) * 400;
-      const combinedSeed = (seed + dateSeed) % 1000;
-      const dailyViews = 15 + (combinedSeed % 40);
-      const dailyClicks = Math.floor(dailyViews * (0.10 + (combinedSeed % 15) / 100));
-      const dailyConversions = Math.floor(dailyClicks * (0.05 + (combinedSeed % 5) / 100));
-      views += dailyViews;
-      clicks += dailyClicks;
-      conversions += dailyConversions;
-    });
-
-    const ctr = views > 0 ? ((clicks / views) * 100) : 0;
-    return { views, clicks, conversions, ctr };
-  };
+  const activeInterval = useMemo(() => getVideoInterval(filters.period, filters.customRange), [filters]);
 
   const videoStats = useMemo(() => {
-    return videos
+    return buildVideoMetricsRows(videos, activeInterval)
       .filter(v => (v.title || '').toLowerCase().includes(filters.search.toLowerCase()))
       .map(v => {
-        const metrics = calculateVideoStats(v.id, activeInterval.start, activeInterval.end);
-        const duration = differenceInDays(activeInterval.end, activeInterval.start) + 1;
+        const duration = Math.max(1, Math.round((activeInterval.end.getTime() - activeInterval.start.getTime()) / 86400000) + 1);
         const prevStart = subDays(activeInterval.start, duration);
         const prevEnd = subDays(activeInterval.end, duration);
-        const prevMetrics = calculateVideoStats(v.id, prevStart, prevEnd);
-        const viewDiff = prevMetrics.views > 0 ? Math.round(((metrics.views - prevMetrics.views) / prevMetrics.views) * 100) : 0;
+        const prevMetrics = buildVideoMetricsRows([v], { start: prevStart, end: prevEnd })[0]?.metrics;
+        const viewDiff = prevMetrics && prevMetrics.views > 0 ? Math.round(((v.metrics.views - prevMetrics.views) / prevMetrics.views) * 100) : 0;
 
         return {
           ...v,
           metrics: {
-            ...metrics,
-            engagement: Number((metrics.ctr * 1.3).toFixed(1))
+            ...v.metrics,
+            engagement: Number((v.metrics.ctr * 1.3).toFixed(1))
           },
           trends: { views: viewDiff }
         };
       });
   }, [videos, filters.search, activeInterval]);
 
-  const totals = useMemo(() => {
-    const sum = videoStats.reduce((acc, curr) => ({
-      views: acc.views + curr.metrics.views,
-      clicks: acc.clicks + curr.metrics.clicks,
-      conversions: acc.conversions + curr.metrics.conversions
-    }), { views: 0, clicks: 0, conversions: 0 });
-
-    const ctr = sum.views > 0 ? ((sum.clicks / sum.views) * 100).toFixed(1) : '0.0';
-    return { ...sum, ctr };
-  }, [videoStats]);
+  const totals = useMemo(() => aggregateVideoMetrics(videoStats), [videoStats]);
 
   const handleOpenPlayer = (video: any) => {
     setViewingVideo(video);
@@ -193,7 +155,7 @@ const VideoPerformancePage = () => {
           {['today', '7', '30', 'custom'].map((p) => (
             <button
               key={p}
-              onClick={() => p === 'custom' ? setIsCalendarOpen(true) : setFilters(prev => ({ ...prev, period: p }))}
+              onClick={() => p === 'custom' ? setIsCalendarOpen(true) : setFilters(prev => ({ ...prev, period: p as VideoPeriod }))}
               className={cn(
                 'px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all',
                 filters.period === p ? 'bg-[#0094EB] text-white' : 'text-slate-400 hover:text-slate-600'
@@ -333,7 +295,7 @@ const VideoPerformancePage = () => {
 
       <CustomDialog isOpen={isCalendarOpen} type="form" title="Período" maxWidth="max-w-md" onCancel={() => setIsCalendarOpen(false)} onConfirm={() => setIsCalendarOpen(false)} confirmText="Aplicar Filtro">
         <div className="scale-90 origin-top">
-          <DayPicker mode="range" selected={filters.customRange} onSelect={(r) => r && setFilters(prev => ({ ...prev, period: 'custom', customRange: { from: r.from || prev.customRange.from, to: r.to || prev.customRange.to } }))} locale={ptBR} className="border-none" modifiersStyles={{ selected: { backgroundColor: '#0094EB', color: 'white' } }} />
+          <DayPicker mode="range" selected={filters.customRange} onSelect={(r) => r && setFilters(prev => ({ ...prev, period: 'custom' as VideoPeriod, customRange: { from: r.from || prev.customRange.from, to: r.to || prev.customRange.to } }))} locale={ptBR} className="border-none" modifiersStyles={{ selected: { backgroundColor: '#0094EB', color: 'white' } }} />
         </div>
       </CustomDialog>
     </div>

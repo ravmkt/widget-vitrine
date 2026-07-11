@@ -4,97 +4,52 @@ import { db, Video } from '@/lib/db';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Eye, MousePointerClick, ShoppingBag, CheckCircle2, Calendar, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format, subDays, startOfDay, endOfDay, eachDayOfInterval } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import CustomDialog from '@/components/CustomDialog';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
+import { aggregateVideoMetrics, buildVideoMetricsRows, getVideoInterval, VideoPeriod } from '@/lib/videoMetrics';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [selectedPeriod, setSelectedPeriod] = useState<'today' | '7' | '30' | 'custom'>('30');
+  const [selectedPeriod, setSelectedPeriod] = useState<VideoPeriod>('30');
   const [customRange, setCustomRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
-    from: subDays(new Date(), 7),
-    to: new Date(),
+    from: undefined,
+    to: undefined,
   });
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [videos, setVideos] = useState<Video[]>([]);
 
-  const activeInterval = useMemo(() => {
-    const now = new Date();
-    if (selectedPeriod === 'today') return { start: startOfDay(now), end: endOfDay(now) };
-    if (selectedPeriod === '7') return { start: startOfDay(subDays(now, 6)), end: endOfDay(now) };
-    if (selectedPeriod === '30') return { start: startOfDay(subDays(now, 29)), end: endOfDay(now) };
-    return { start: startOfDay(customRange.from || subDays(now, 7)), end: endOfDay(customRange.to || now) };
-  }, [selectedPeriod, customRange]);
-
-  // Gerador determinístico baseado na data para evitar números aleatórios bugados
-  const getDailyMetric = (date: Date, type: 'views' | 'clicks' | 'sales') => {
-    const day = date.getDate();
-    const month = date.getMonth();
-    const year = date.getFullYear();
-    const seed = (day * 13) + (month * 101) + (year % 100);
-    
-    if (type === 'views') return 120 + (seed % 300);
-    if (type === 'clicks') return Math.floor((120 + (seed % 300)) * (0.12 + (seed % 8) / 100));
-    return Math.floor((120 + (seed % 300)) * (0.02 + (seed % 3) / 100));
-  };
-
-  const calculateVideoMetrics = (videoId: string) => {
-    const end = new Date();
-    const start = subDays(end, 30);
-    const seed = videoId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const daysInterval = eachDayOfInterval({ start, end });
-
-    let views = 0;
-    let clicks = 0;
-    let comments = 0;
-
-    daysInterval.forEach(date => {
-      const dateSeed = date.getDate() + date.getMonth() * 31 + (date.getFullYear() % 100) * 400;
-      const combinedSeed = (seed + dateSeed) % 1000;
-      const dailyViews = 15 + (combinedSeed % 40);
-      const dailyClicks = Math.floor(dailyViews * (0.10 + (combinedSeed % 15) / 100));
-      const dailyComments = Math.floor(dailyClicks * (0.05 + (combinedSeed % 5) / 100));
-      views += dailyViews;
-      clicks += dailyClicks;
-      comments += dailyComments;
-    });
-
-    return { views, clicks, comments };
-  };
+  const activeInterval = useMemo(() => getVideoInterval(selectedPeriod, customRange), [selectedPeriod, customRange]);
 
   const dashboardData = useMemo(() => {
-    const days = eachDayOfInterval({ start: activeInterval.start, end: activeInterval.end });
-    
+    const days = Array.from({ length: Math.max(1, Math.ceil((activeInterval.end.getTime() - activeInterval.start.getTime()) / 86400000) + 1) }, (_, index) => {
+      const date = new Date(activeInterval.start);
+      date.setDate(activeInterval.start.getDate() + index);
+      return date;
+    });
+
     const flow = days.map(day => {
-      const views = getDailyMetric(day, 'views');
-      const clicks = getDailyMetric(day, 'clicks');
-      const sales = getDailyMetric(day, 'sales');
-      
+      const dayIndex = day.getDate() + day.getMonth() * 31 + (day.getFullYear() % 100) * 400;
+      const views = 120 + (dayIndex % 300);
+      const clicks = Math.floor(views * (0.12 + (dayIndex % 8) / 100));
+      const sales = Math.floor(views * (0.02 + (dayIndex % 3) / 100));
+
       return {
         name: format(day, 'dd/MM', { locale: ptBR }),
-        views, clicks, sales,
-        revenue: sales * 89.9
+        views,
+        clicks,
+        sales,
+        revenue: sales * 89.9,
       };
     });
 
-    const totals = flow.reduce((acc, curr) => ({
-      views: acc.views + curr.views,
-      clicks: acc.clicks + curr.clicks,
-      sales: acc.sales + curr.sales,
-      revenue: acc.revenue + curr.revenue
-    }), { views: 0, clicks: 0, sales: 0, revenue: 0 });
+    const rows = buildVideoMetricsRows(videos, activeInterval);
+    const totals = aggregateVideoMetrics(rows);
 
-    const topVideos = [...videos]
-      .map((video) => {
-        const metrics = calculateVideoMetrics(video.id);
-        const clicks = Number((video as any).clicks_count ?? (video as any).click_count ?? (video as any).clicks ?? metrics.clicks ?? 0);
-        const views = Number((video as any).views_count ?? (video as any).view_count ?? (video as any).views ?? metrics.views ?? 0);
-        const ctr = views > 0 ? Number(((clicks / views) * 100).toFixed(1)) : 0;
-        return { ...video, metrics: { views, clicks, ctr } };
-      })
+    const topVideos = [...rows]
       .sort((a, b) => b.metrics.views - a.metrics.views)
       .slice(0, 4)
       .map((video) => ({
@@ -154,7 +109,7 @@ const DashboardPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard title="Visualizações" value={dashboardData.totals.views.toLocaleString()} change="+12.5%" icon={Eye} />
         <MetricCard title="Cliques em CTA" value={dashboardData.totals.clicks.toLocaleString()} change="+8.3%" icon={MousePointerClick} />
-        <MetricCard title="Conversões" value={dashboardData.totals.sales.toLocaleString()} change="+15.1%" icon={CheckCircle2} isConversion />
+        <MetricCard title="Conversões" value={dashboardData.totals.conversions.toLocaleString()} change="+15.1%" icon={CheckCircle2} isConversion />
         <MetricCard title="CTR" value="12.4%" change="+5.4%" icon={MousePointerClick} />
       </div>
 
@@ -201,7 +156,7 @@ const DashboardPage = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Taxa (CTR)</p>
-                    <p className="text-sm font-black text-slate-900">{item.ctr}%</p>
+                    <p className="text-sm font-black text-slate-900">{item.ctr.toFixed(1).replace('.', ',')}%</p>
                   </div>
                 </div>
               </div>
