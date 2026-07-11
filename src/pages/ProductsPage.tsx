@@ -314,9 +314,9 @@ const ProductsPage = () => {
               <tr className="bg-slate-50 border-b border-slate-200">
                 <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-[80px]">Foto</th>
                 <th onClick={() => handleSort('produto')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Produto {sortColumn === 'produto' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</th>
-                <th onClick={() => handleSort('preco')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right w-32">Preço {sortColumn === 'preco' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</th>
-                <th onClick={() => handleSort('categoria')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-36">Categoria {sortColumn === 'categoria' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</th>
-                <th onClick={() => handleSort('video')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-48">Vídeo Vinculado {sortColumn === 'video' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</th>
+                <th onClick={() => handleSort('preco')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center w-32">Preço {sortColumn === 'preco' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</th>
+                <th onClick={() => handleSort('categoria')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center w-36">Categoria {sortColumn === 'categoria' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</th>
+                <th onClick={() => handleSort('video')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center w-48">Vídeo Vinculado {sortColumn === 'video' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</th>
                 <th onClick={() => handleSort('origem')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-28 text-center">Origem {sortColumn === 'origem' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</th>
                 <th onClick={() => handleSort('status')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-28 text-center">Status {sortColumn === 'status' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-48 text-center">Ações</th>
@@ -337,17 +337,17 @@ const ProductsPage = () => {
                   <td className="px-6 py-4">
                     <p className="font-bold text-slate-800 truncate max-w-xs">{product.name}</p>
                   </td>
-                  <td className="px-6 py-4 text-right font-black text-slate-800">
+                  <td className="px-6 py-4 text-center font-black text-slate-800">
                     {Number(product.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-xs font-bold border border-slate-100">
-                      <Tag size={12} /> {(product as any).category || 'Sem categoria'}
+                  <td className="px-6 py-4 text-center">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-xs font-bold border border-slate-100 max-w-full truncate">
+                      <Tag size={12} className="shrink-0" /> <span className="truncate">{(product as any).category || 'Sem categoria'}</span>
                     </span>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 text-center">
                     {(product as any).video ? (
-                      <span className="flex items-center gap-1.5 text-[#0094EB] text-sm font-bold">{(product as any).video}</span>
+                      <span className="inline-flex max-w-full items-center gap-1.5 text-[#0094EB] text-sm font-bold truncate">{(product as any).video}</span>
                     ) : (
                       <span className="text-slate-400 text-sm italic">Nenhum</span>
                     )}
