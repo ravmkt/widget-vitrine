@@ -215,6 +215,9 @@ const SettingsPage = () => {
       if (error) throw error;
       toast.success('Configurações salvas com sucesso');
       setSelectedLogoFile(null);
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new Event('focus'));
+
     } catch (err) {
       console.error("Erro completo ao salvar configurações:", err);
       toast.error('Falha ao salvar configurações');

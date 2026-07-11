@@ -24,8 +24,10 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 
 const menuItems = [
   { title: "Visão Geral", url: "/dashboard", icon: LayoutDashboard },
@@ -42,9 +44,42 @@ const menuItems = [
 
 export function AppSidebar() {
   const location = useLocation();
+  const [storeName, setStoreName] = useState('');
+  const [storeLogoUrl, setStoreLogoUrl] = useState('');
+
+  useEffect(() => {
+    const fetchStoreSettings = async () => {
+      try {
+        if (!supabase) return;
+        const { data, error } = await supabase
+          .from('app_settings')
+          .select('settings')
+          .limit(1)
+          .maybeSingle();
+        if (error) throw error;
+        setStoreName(data?.settings?.store_name || '');
+        setStoreLogoUrl(data?.settings?.store_logo_url || '');
+      } catch (err) {
+        console.error('Error fetching sidebar store settings:', err);
+      }
+    };
+    fetchStoreSettings();
+
+    const handleSettingsUpdated = () => {
+      fetchStoreSettings();
+    };
+
+    window.addEventListener('storage', handleSettingsUpdated);
+    window.addEventListener('focus', handleSettingsUpdated);
+    return () => {
+      window.removeEventListener('storage', handleSettingsUpdated);
+      window.removeEventListener('focus', handleSettingsUpdated);
+    };
+  }, []);
 
   return (
     <Sidebar className="border-r border-[#E2E8F0] bg-white shadow-none">
+
       <SidebarHeader className="p-6">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 bg-[#0094EB] rounded-lg flex items-center justify-center text-white shadow-md shadow-blue-100">
@@ -87,11 +122,15 @@ export function AppSidebar() {
 
       <SidebarFooter className="p-6 border-t border-[#F1F5F9]">
         <div className="flex items-center gap-3 mb-4">
-          <div className="h-9 w-9 rounded-full bg-[#F1F5F9] border border-[#E2E8F0] flex items-center justify-center text-[#64748B]">
-            <User size={18} />
+          <div className="h-9 w-9 rounded-full bg-[#F1F5F9] border border-[#E2E8F0] flex items-center justify-center text-[#64748B] overflow-hidden shrink-0">
+            {storeLogoUrl ? (
+              <img src={storeLogoUrl} alt={storeName || 'Loja'} className="h-full w-full object-cover" />
+            ) : (
+              <User size={18} />
+            )}
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="text-xs font-bold text-[#0F172A] truncate">Admin</span>
+            <span className="text-xs font-bold text-[#0F172A] truncate">{storeName || 'Admin'}</span>
             <span className="text-[10px] font-bold text-[#0094EB] uppercase">Plano Pro</span>
           </div>
         </div>
