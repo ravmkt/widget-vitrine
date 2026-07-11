@@ -25,9 +25,10 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import React, { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+import { signOut } from '@/lib/auth';
 
 const menuItems = [
   { title: "Visão Geral", url: "/dashboard", icon: LayoutDashboard },
@@ -44,6 +45,7 @@ const menuItems = [
 
 export function AppSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [storeName, setStoreName] = useState('');
   const [storeLogoUrl, setStoreLogoUrl] = useState('');
 
@@ -134,7 +136,13 @@ export function AppSidebar() {
             <span className="text-[10px] font-bold text-[#0094EB] uppercase">Plano Pro</span>
           </div>
         </div>
-        <button className="flex w-full items-center gap-2 px-3 py-2 rounded-xl text-[#64748B] hover:bg-red-50 hover:text-red-500 transition-colors text-sm font-bold">
+        <button
+          onClick={async () => {
+            await signOut();
+            navigate('/login');
+          }}
+          className="flex w-full items-center gap-2 px-3 py-2 rounded-xl text-[#64748B] hover:bg-red-50 hover:text-red-500 transition-colors text-sm font-bold"
+        >
           <LogOut size={16} />
           Sair do Painel
         </button>
