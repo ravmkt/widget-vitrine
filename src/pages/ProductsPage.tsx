@@ -266,10 +266,10 @@ const ProductsPage = () => {
 
       <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full table-fixed text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-20">Foto</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-[80px]">Foto</th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Produto</th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right w-32">Preço</th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-36">Categoria</th>
@@ -283,7 +283,13 @@ const ProductsPage = () => {
               {filteredProducts.map(product => (
                 <tr key={product.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4">
-                    <img src={product.image_url} alt={product.name} className="h-14 w-14 rounded-xl object-cover border border-slate-200" onError={e => { e.currentTarget.src = 'https://via.placeholder.com/56'; }} />
+                    {product.image_url ? (
+                      <img src={product.image_url} alt={product.name} className="h-14 w-14 min-h-[56px] min-w-[56px] rounded-xl object-cover border border-slate-200" onError={e => { e.currentTarget.style.display = 'none'; }} />
+                    ) : (
+                      <div className="h-14 w-14 min-h-[56px] min-w-[56px] rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 shrink-0">
+                        <Package size={18} />
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <p className="font-bold text-slate-800 truncate max-w-xs">{product.name}</p>
