@@ -303,7 +303,7 @@ const VideoEditPage = () => {
     <div className="space-y-8 animate-fade-in pb-20">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate(isCreate ? '/gallery' : String(-1))} className="p-2 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-all"><ArrowLeft size={18} /></button>
+          <button onClick={() => navigate('/gallery')} className="p-2 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-all"><ArrowLeft size={18} /></button>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">
             {isCreate ? 'Novo Vídeo' : 'Editar Vídeo'}
           </h1>
