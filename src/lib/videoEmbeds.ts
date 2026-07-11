@@ -1,5 +1,37 @@
 export type VideoPlatform = 'youtube' | 'instagram' | 'tiktok';
 
+export const getExternalVideoData = (video: { source_type?: string; platform?: string; external_id?: string; video_url?: string; instagram_link?: string; tiktok_link?: string; source_url?: string }) => {
+  const sourceUrl = (video.source_url || video.video_url || video.instagram_link || video.tiktok_link || '').trim();
+  const platform = (video.platform as VideoPlatform | undefined) || null;
+  const externalId = (video.external_id || '').trim();
+
+  if (!sourceUrl) {
+    return { platform: null, externalId: '', embedUrl: null, sourceUrl: '' };
+  }
+
+  const inferred = parseVideoPlatform(sourceUrl);
+  const finalPlatform = platform || inferred.platform;
+  const finalExternalId = externalId || inferred.externalId;
+
+  if (!finalPlatform || !finalExternalId) {
+    return { platform: finalPlatform, externalId: finalExternalId, embedUrl: null, sourceUrl };
+  }
+
+  if (finalPlatform === 'youtube') {
+    return { platform: finalPlatform, externalId: finalExternalId, embedUrl: `https://www.youtube.com/embed/${finalExternalId}`, sourceUrl };
+  }
+
+  if (finalPlatform === 'instagram') {
+    return { platform: finalPlatform, externalId: finalExternalId, embedUrl: `https://www.instagram.com/reel/${finalExternalId}/embed`, sourceUrl };
+  }
+
+  if (finalPlatform === 'tiktok') {
+    return { platform: finalPlatform, externalId: finalExternalId, embedUrl: `https://www.tiktok.com/embed/v2/${finalExternalId}`, sourceUrl };
+  }
+
+  return { platform: finalPlatform, externalId: finalExternalId, embedUrl: null, sourceUrl };
+};
+
 export const parseVideoPlatform = (url: string): { platform: VideoPlatform | null; externalId: string; embedUrl: string; sourceUrl: string } => {
   const sourceUrl = url.trim();
 

@@ -27,7 +27,7 @@ import { db, Video } from '@/lib/db';
 import CustomDialog from '@/components/CustomDialog';
 import { DayPicker } from 'react-day-picker';
 import { aggregateVideoMetrics, buildVideoMetricsRows, getVideoInterval, VideoPeriod } from '@/lib/videoMetrics';
-import { parseVideoPlatform } from '@/lib/videoEmbeds';
+import { getExternalVideoData } from '@/lib/videoEmbeds';
 
 const VideoPerformancePage = () => {
   const navigate = useNavigate();
@@ -35,6 +35,7 @@ const VideoPerformancePage = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewingVideo, setViewingVideo] = useState<Video | null>(null);
+  const [showExternalPlayer, setShowExternalPlayer] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const [filters, setFilters] = useState({
@@ -79,6 +80,7 @@ const VideoPerformancePage = () => {
 
   const handleOpenPlayer = (video: any) => {
     setViewingVideo(video);
+    setShowExternalPlayer(false);
     setIsViewModalOpen(true);
   };
 
@@ -254,63 +256,146 @@ const VideoPerformancePage = () => {
       </div>
 
       <CustomDialog isOpen={isViewModalOpen} type="form" title="Visualizar Vídeo" maxWidth="max-w-4xl" onCancel={() => setIsViewModalOpen(false)}>
-        {viewingVideo && (
-          <div className="flex flex-col lg:flex-row gap-6">
-            <div className="lg:w-[240px] shrink-0 mx-auto lg:mx-0">
-              {viewingVideo.source_type === 'upload' && viewingVideo.video_url ? (
-                <div className="aspect-[9/16] bg-slate-950 rounded-[1.5rem] overflow-hidden shadow-lg relative border-[4px] border-slate-900 max-h-[60vh]">
-                  <video
-                    src={viewingVideo.video_url}
-                    className="w-full max-w-full h-auto max-h-[400px] object-contain"
-                    poster={viewingVideo.thumbnail_url}
-                    controls
-                    autoPlay
-                    loop
-                  />
+        {viewingVideo && (() => {
+          const isExternalVideo = viewingVideo.source_type === 'external_url';
+          const externalData = isExternalVideo ? getExternalVideoData(viewingVideo as any) : null;
+          const platformLabel = externalData ? (externalData.platform === 'youtube' ? 'YouTube Shorts' : externalData.platform === 'instagram' ? 'Instagram Reel' : externalData.platform === 'tiktok' ? 'TikTok' : 'Vídeo externo') : '';
+          const platformButtonLabel = externalData ? (externalData.platform === 'youtube' ? 'Abrir no YouTube' : externalData.platform === 'instagram' ? 'Abrir no Instagram' : externalData.platform === 'tiktok' ? 'Abrir no TikTok' : 'Abrir vídeo na plataforma') : 'Abrir vídeo na plataforma';
+
+          if (!isExternalVideo) {
+            return (
+              <div className="flex flex-col lg:flex-row gap-6">
+                <div className="lg:w-[240px] shrink-0 mx-auto lg:mx-0">
+                  {viewingVideo.video_url ? (
+                    <div className="aspect-[9/16] bg-slate-950 rounded-[1.5rem] overflow-hidden shadow-lg relative border-[4px] border-slate-900 max-h-[60vh]">
+                      <video
+                        src={viewingVideo.video_url}
+                        className="w-full max-w-full h-auto max-h-[400px] object-contain"
+                        poster={viewingVideo.thumbnail_url}
+                        controls
+                        autoPlay
+                        loop
+                      />
+                    </div>
+                  ) : (
+                    <div className="aspect-[9/16] bg-slate-950 rounded-[1.5rem] overflow-hidden shadow-lg relative border-[4px] border-slate-900 max-h-[60vh] flex flex-col items-center justify-center gap-4 p-4">
+                      <p className="text-white text-sm font-bold text-center">Sem vídeo</p>
+                    </div>
+                  )}
                 </div>
-              ) : (() => {
-                const embed = parseVideoPlatform((viewingVideo as any).video_url || (viewingVideo as any).instagram_link || (viewingVideo as any).tiktok_link || '');
-                if (embed.platform) {
-                  return (
-                    <div className="space-y-3">
+                <div className="flex-1 flex flex-col pt-1">
+                  <div className="mb-4">
+                    <h3 className="text-xl font-black text-slate-900 mb-1">{viewingVideo.title}</h3>
+                    <span className="bg-blue-50 text-[#0094EB] px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest">Conteúdo Real</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mb-6">
+                    <CompactMetric label="Views" value={Number((viewingVideo as any).metrics?.views || 0)} />
+                    <CompactMetric label="CTR" value={`${Number((viewingVideo as any).metrics?.ctr || 0).toFixed(1)}%`} color="text-[#0094EB]" />
+                    <CompactMetric label="Conversões" value={Number((viewingVideo as any).metrics?.conversions || 0)} color="text-emerald-600" />
+                    <CompactMetric label="Engajamento" value={`${(viewingVideo as any).metrics?.engagement || 0}%`} color="text-violet-600" />
+                  </div>
+                  <div className="mt-auto flex gap-2">
+                    <button onClick={() => navigate(`/videos/${viewingVideo.id}/edit`)} className="flex-1 py-3 bg-[#0094EB] text-white rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2"><Edit3 size={14} /> Editar</button>
+                    <button onClick={() => setIsViewModalOpen(false)} className="px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-black text-xs">Fechar</button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div className="flex flex-col lg:flex-row gap-6">
+              <div className="w-full lg:max-w-[420px] mx-auto lg:mx-0 shrink-0 space-y-4">
+                <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white font-black text-sm">
+                      {(externalData?.platform || 'v').charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{platformLabel}</p>
+                      <h3 className="truncate text-lg font-black text-slate-900">{viewingVideo.title}</h3>
+                    </div>
+                  </div>
+                  <p className="text-sm text-slate-600">Este vídeo será exibido usando o player oficial da plataforma.</p>
+                  <p className="text-xs leading-5 text-slate-500">Vídeos de redes sociais são exibidos através do player oficial da plataforma. Alguns elementos da plataforma podem aparecer.</p>
+                  <div className="flex flex-col gap-2">
+                    {!showExternalPlayer && externalData?.embedUrl ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowExternalPlayer(true)}
+                        className="inline-flex items-center justify-center rounded-xl bg-[#0094EB] px-4 py-3 text-xs font-black text-white transition-colors hover:bg-[#0E4787]"
+                      >
+                        Assistir no app
+                      </button>
+                    ) : null}
+                    <a
+                      href={externalData?.sourceUrl || (viewingVideo as any).video_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-black text-slate-600 transition-colors hover:bg-slate-50"
+                    >
+                      {platformButtonLabel}
+                    </a>
+                  </div>
+                </div>
+                {showExternalPlayer && externalData?.embedUrl ? (
+                  <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-black shadow-xl">
+                    <div className="aspect-[9/16] w-full max-w-[420px] bg-black">
                       <iframe
-                        src={embed.embedUrl}
-                        className="w-full h-[400px] rounded-[1.5rem] border-[4px] border-slate-900 shadow-lg bg-black"
-                        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                        src={externalData.embedUrl}
+                        className="h-full w-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         allowFullScreen
+                        loading="lazy"
+                        referrerPolicy="strict-origin-when-cross-origin"
                         title={viewingVideo.title}
                       />
-                      <a href={embed.sourceUrl} target="_blank" rel="noreferrer" className="block text-center text-xs font-black text-[#0094EB] hover:underline">
-                        Abrir vídeo na plataforma
-                      </a>
                     </div>
-                  );
-                }
-                return (
-                  <div className="aspect-[9/16] bg-slate-950 rounded-[1.5rem] overflow-hidden shadow-lg relative border-[4px] border-slate-900 max-h-[60vh] flex flex-col items-center justify-center gap-4 p-4">
-                    <p className="text-white text-sm font-bold text-center">Sem vídeo</p>
                   </div>
-                );
-              })()}
+                ) : (
+                  <div className="rounded-[1.75rem] border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
+                    {externalData?.embedUrl ? (
+                      <p className="text-sm font-bold text-slate-600">Clique em “Assistir no app” para carregar a prévia oficial.</p>
+                    ) : (
+                      <>
+                        <p className="text-sm font-bold text-slate-700">Não foi possível carregar a prévia deste vídeo.</p>
+                        <p className="mt-1 text-xs text-slate-500">Abra o vídeo na plataforma original para assistir.</p>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 flex flex-col pt-1">
+                <div className="mb-4">
+                  <h3 className="text-xl font-black text-slate-900 mb-1">{viewingVideo.title}</h3>
+                  <span className="bg-blue-50 text-[#0094EB] px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest">{platformLabel}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Plataforma</p>
+                    <p className="mt-1 text-sm font-black text-slate-800">{platformLabel}</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">ID Externo</p>
+                    <p className="mt-1 text-sm font-black text-slate-800">{externalData?.externalId || '—'}</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Status</p>
+                    <p className="mt-1 text-sm font-black text-slate-800">{viewingVideo.active ? 'Ativo' : 'Desativado'}</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Tipo</p>
+                    <p className="mt-1 text-sm font-black text-slate-800">{viewingVideo.source_type}</p>
+                  </div>
+                </div>
+                <div className="mt-auto flex gap-2">
+                  <button onClick={() => navigate(`/videos/${viewingVideo.id}/edit`)} className="flex-1 py-3 bg-[#0094EB] text-white rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2"><Edit3 size={14} /> Editar</button>
+                  <button onClick={() => setIsViewModalOpen(false)} className="px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-black text-xs">Fechar</button>
+                </div>
+              </div>
             </div>
-            <div className="flex-1 flex flex-col pt-1">
-              <div className="mb-4">
-                <h3 className="text-xl font-black text-slate-900 mb-1">{viewingVideo.title}</h3>
-                <span className="bg-blue-50 text-[#0094EB] px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest">Conteúdo Real</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                <CompactMetric label="Views" value={Number((viewingVideo as any).metrics?.views || 0)} />
-                <CompactMetric label="CTR" value={`${Number((viewingVideo as any).metrics?.ctr || 0).toFixed(1)}%`} color="text-[#0094EB]" />
-                <CompactMetric label="Conversões" value={Number((viewingVideo as any).metrics?.conversions || 0)} color="text-emerald-600" />
-                <CompactMetric label="Engajamento" value={`${(viewingVideo as any).metrics?.engagement || 0}%`} color="text-violet-600" />
-              </div>
-              <div className="mt-auto flex gap-2">
-                <button onClick={() => navigate(`/videos/${viewingVideo.id}/edit`)} className="flex-1 py-3 bg-[#0094EB] text-white rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2"><Edit3 size={14} /> Editar</button>
-                <button onClick={() => setIsViewModalOpen(false)} className="px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-black text-xs">Fechar</button>
-              </div>
-            </div>
-          </div>
-        )}
+          );
+        })()}
       </CustomDialog>
 
       <CustomDialog isOpen={isCalendarOpen} type="form" title="Período" maxWidth="max-w-md" onCancel={() => setIsCalendarOpen(false)} onConfirm={() => setIsCalendarOpen(false)} confirmText="Aplicar Filtro">
