@@ -27,6 +27,7 @@ import { db, Video } from '@/lib/db';
 import CustomDialog from '@/components/CustomDialog';
 import { DayPicker } from 'react-day-picker';
 import { aggregateVideoMetrics, buildVideoMetricsRows, getVideoInterval, VideoPeriod } from '@/lib/videoMetrics';
+import { parseVideoPlatform } from '@/lib/videoEmbeds';
 
 const VideoPerformancePage = () => {
   const navigate = useNavigate();
@@ -256,7 +257,7 @@ const VideoPerformancePage = () => {
         {viewingVideo && (
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="lg:w-[240px] shrink-0 mx-auto lg:mx-0">
-              {viewingVideo.video_url ? (
+              {viewingVideo.source_type === 'upload' && viewingVideo.video_url ? (
                 <div className="aspect-[9/16] bg-slate-950 rounded-[1.5rem] overflow-hidden shadow-lg relative border-[4px] border-slate-900 max-h-[60vh]">
                   <video
                     src={viewingVideo.video_url}
@@ -267,11 +268,30 @@ const VideoPerformancePage = () => {
                     loop
                   />
                 </div>
-              ) : (
-                <div className="aspect-[9/16] bg-slate-950 rounded-[1.5rem] overflow-hidden shadow-lg relative border-[4px] border-slate-900 max-h-[60vh] flex flex-col items-center justify-center gap-4 p-4">
-                  <p className="text-white text-sm font-bold text-center">Sem vídeo</p>
-                </div>
-              )}
+              ) : (() => {
+                const embed = parseVideoPlatform((viewingVideo as any).video_url || (viewingVideo as any).instagram_link || (viewingVideo as any).tiktok_link || '');
+                if (embed.platform) {
+                  return (
+                    <div className="space-y-3">
+                      <iframe
+                        src={embed.embedUrl}
+                        className="w-full h-[400px] rounded-[1.5rem] border-[4px] border-slate-900 shadow-lg bg-black"
+                        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                        allowFullScreen
+                        title={viewingVideo.title}
+                      />
+                      <a href={embed.sourceUrl} target="_blank" rel="noreferrer" className="block text-center text-xs font-black text-[#0094EB] hover:underline">
+                        Abrir vídeo na plataforma
+                      </a>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="aspect-[9/16] bg-slate-950 rounded-[1.5rem] overflow-hidden shadow-lg relative border-[4px] border-slate-900 max-h-[60vh] flex flex-col items-center justify-center gap-4 p-4">
+                    <p className="text-white text-sm font-bold text-center">Sem vídeo</p>
+                  </div>
+                );
+              })()}
             </div>
             <div className="flex-1 flex flex-col pt-1">
               <div className="mb-4">

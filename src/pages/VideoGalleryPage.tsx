@@ -21,6 +21,7 @@ import CustomDialog from '@/components/CustomDialog';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import { cn } from '@/lib/utils';
 import { subDays, eachDayOfInterval } from 'date-fns';
+import { parseVideoPlatform } from '@/lib/videoEmbeds';
 
 const VideoGalleryPage = () => {
   const navigate = useNavigate();
@@ -338,7 +339,7 @@ const VideoGalleryPage = () => {
         {viewingVideo && (
           <div className="flex flex-col sm:flex-row gap-6">
             <div className="w-[240px] mx-auto shrink-0">
-              {viewingVideo.video_url ? (
+              {viewingVideo.source_type === 'upload' && viewingVideo.video_url ? (
                 <video
                   src={viewingVideo.video_url}
                   className="w-full max-w-full h-auto max-h-[400px] rounded-2xl border-4 border-slate-900 shadow-xl"
@@ -346,13 +347,30 @@ const VideoGalleryPage = () => {
                   autoPlay
                   poster={viewingVideo.thumbnail_url}
                 />
-              ) : (
-                <div className="w-full h-[400px] rounded-2xl border-4 border-slate-900 shadow-xl bg-slate-900 flex flex-col items-center justify-center gap-4 p-4">
-                  <p className="text-white text-sm font-bold text-center">
-                    {viewingVideo.source_type === 'instagram' ? 'Vídeo do Instagram' : viewingVideo.source_type === 'tiktok' ? 'Vídeo do TikTok' : 'Sem vídeo'}
-                  </p>
-                </div>
-              )}
+              ) : (() => {
+                const embed = parseVideoPlatform((viewingVideo as any).video_url || (viewingVideo as any).instagram_link || (viewingVideo as any).tiktok_link || '');
+                if (embed.platform) {
+                  return (
+                    <div className="space-y-3">
+                      <iframe
+                        src={embed.embedUrl}
+                        className="w-full h-[400px] rounded-2xl border-4 border-slate-900 shadow-xl bg-black"
+                        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                        allowFullScreen
+                        title={viewingVideo.title}
+                      />
+                      <a href={embed.sourceUrl} target="_blank" rel="noreferrer" className="block text-center text-xs font-black text-[#0094EB] hover:underline">
+                        Abrir vídeo na plataforma
+                      </a>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="w-full h-[400px] rounded-2xl border-4 border-slate-900 shadow-xl bg-slate-900 flex flex-col items-center justify-center gap-4 p-4">
+                    <p className="text-white text-sm font-bold text-center">Sem vídeo</p>
+                  </div>
+                );
+              })()}
             </div>
             <div className="flex-1 flex flex-col pt-1">
               <div className="mb-4">
