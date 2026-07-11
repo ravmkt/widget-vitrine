@@ -316,6 +316,11 @@ const VideoEditPage = () => {
       return;
     }
 
+    if (!storeId) {
+      showError('Não foi possível identificar a loja atual.');
+      return;
+    }
+
     try {
       setIsSaving(true);
 
@@ -323,6 +328,7 @@ const VideoEditPage = () => {
       const normalizedInstagramLink = formData.instagram_link ? normalizeVideoUrl(formData.instagram_link) : '';
       const normalizedTikTokLink = formData.tiktok_link ? normalizeVideoUrl(formData.tiktok_link) : '';
 
+      const safeStoreId = storeId;
       const videoData: Partial<Video> = {
         title: formData.title.trim(),
         source_type: formData.origin === 'youtube' ? 'external_url' : (formData.origin as any),
@@ -334,6 +340,7 @@ const VideoEditPage = () => {
         status: formData.active ? 'active' : 'inactive',
         model_id: formData.model_id || null,
         product_id: formData.product_id || null,
+        store_id: safeStoreId,
         updated_at: new Date().toISOString()
       };
 
@@ -341,7 +348,7 @@ const VideoEditPage = () => {
       const newVideo: Video = {
         ...videoData,
         id: Math.random().toString(36).substr(2, 9),
-        store_id: storeId || '11111111-1111-1111-1111-111111111111',
+        store_id: safeStoreId,
         created_at: new Date().toISOString()
       } as Video;
       await db.videos.save(newVideo);

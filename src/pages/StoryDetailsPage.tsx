@@ -81,7 +81,7 @@ const StoryDetailsPage = () => {
         return;
       }
 
-      const fetchedStories = await db.stories.getAll(storeId || undefined);
+      const fetchedStories = await db.stories.getAll(storeId);
       const currentStory = fetchedStories.find((item) => item.id === id);
       if (!currentStory) {
         setStory(null);
@@ -127,13 +127,14 @@ const StoryDetailsPage = () => {
       setIsSaving(true);
 
       if (isCreate) {
-        const stores = await db.stores.getAll();
-        const mainStore = stores[0];
-        const storeId = mainStore?.id || '11111111-1111-1111-1111-111111111111';
-
-        const newStory: Story = {
-          id: Math.random().toString(36).substr(2, 9),
-          store_id: storeId,
+        if (!storeId) {
+          showError('Não foi possível identificar a loja atual.');
+          return;
+        }
+  
+          const newStory: Story = {
+            id: Math.random().toString(36).substr(2, 9),
+            store_id: storeId,
           title: formData.title,
           format: formData.format,
           scroll_direction: formData.scroll_direction,
@@ -210,7 +211,10 @@ const StoryDetailsPage = () => {
 
   const handleAddLocation = async () => {
     if (!story && !isCreate) return;
-    const storeId = story?.store_id || '11111111-1111-1111-1111-111111111111';
+    if (!storeId) {
+      showError('Não foi possível identificar a loja atual.');
+      return;
+    }
     const storyId = story?.id || (isCreate ? 'pending' : '');
     const newLoc: DisplayLocation = {
       id: Math.random().toString(36).substr(2, 9),
@@ -225,7 +229,10 @@ const StoryDetailsPage = () => {
 
   const handleAddRule = async () => {
     if (!story && !isCreate) return;
-    const storeId = story?.store_id || '11111111-1111-1111-1111-111111111111';
+    if (!storeId) {
+      showError('Não foi possível identificar a loja atual.');
+      return;
+    }
     const storyId = story?.id || (isCreate ? 'pending' : '');
     const newRule: PageRule = {
       id: Math.random().toString(36).substr(2, 9),
