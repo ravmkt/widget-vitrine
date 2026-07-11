@@ -325,14 +325,13 @@ const StoriesPage = () => {
                         type="button"
                         onClick={() => handleToggleStatus(story)}
                         className={cn(
-                          "inline-flex h-8 w-[112px] min-w-[112px] items-center justify-center gap-1 rounded-lg px-4 text-[10px] font-black uppercase tracking-wider border transition-all mx-auto",
+                          "inline-flex h-8 w-[112px] min-w-[112px] items-center justify-center rounded-lg px-4 text-[10px] font-black uppercase tracking-wider border transition-all mx-auto",
                           isStoryActive(story)
                             ? "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100"
                             : "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100"
                         )}
                         title={isStoryActive(story) ? 'Story ativo' : 'Story desativado'}
                       >
-                        {isStoryActive(story) ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
                         {isStoryActive(story) ? 'ATIVO' : 'DESATIVADO'}
                       </button>
                     </td>
