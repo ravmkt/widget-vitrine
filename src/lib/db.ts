@@ -375,6 +375,17 @@ const createCrudFunctions = <T extends { id: string; store_id?: string; created_
   };
 };
 
+export const resolveStoreId = async (storeId?: string) => {
+  if (storeId) return storeId;
+  const stores = await db.stores.getAll();
+  return stores[0]?.id || '11111111-1111-1111-1111-111111111111';
+};
+
+export const withStoreId = async <T extends { store_id?: string }>(item: T, storeId?: string) => ({
+  ...item,
+  store_id: item.store_id || (await resolveStoreId(storeId)),
+});
+
 export const db = {
   stores: createCrudFunctions<Store>('stores', memoryStores),
   generalSettings: createCrudFunctions<GeneralSettings>('general_settings', memoryGeneralSettings),
@@ -389,4 +400,8 @@ export const db = {
   comments: createCrudFunctions<Comment>('comments', memoryComments),
   metrics: createCrudFunctions<Metric>('metrics', memoryMetrics),
   sizingModels: createCrudFunctions<SizingModel>('sizing_models', memorySizingModels),
+  profiles: createCrudFunctions<{ id: string; user_id: string; name: string; email: string; created_at?: string }>('profiles', []),
+  storeMembers: createCrudFunctions<{ id: string; store_id: string; user_id: string; role: 'owner' | 'admin' | 'member'; created_at?: string }>('store_members', []),
+  subscriptions: createCrudFunctions<{ id: string; store_id: string; plan_name: string; status: 'trialing' | 'active' | 'past_due' | 'canceled'; current_period_start?: string; current_period_end?: string; created_at?: string }>('subscriptions', []),
+  usageCounters: createCrudFunctions<{ id: string; store_id: string; month: string; videos_count: number; views_count: number; users_count: number; created_at?: string; updated_at?: string }>('usage_counters', []),
 };
