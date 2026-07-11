@@ -2,7 +2,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
   db, Story, Video, Appearance, StoryFormat, ScrollDirection,
-  DisplayLocation, PageRule, StoryVideo, ConditionType, DisplayPosition
+  DisplayLocation, PageRule, StoryVideo, ConditionType, DisplayPosition,
+  replaceStoryRelations
 } from '@/lib/db';
 import { useTenant } from '@/context/TenantContext';
 import { 
@@ -100,15 +101,15 @@ const StoryDetailsPage = () => {
 
       const relations = await db.storyVideos.getAll(storeId);
       const storyVideoIds = relations
-        .filter(rv => rv.story_id === id)
+        .filter(rv => rv.story_id === id && rv.store_id === storeId)
         .sort((a, b) => a.position - b.position)
         .map(rv => rv.video_id);
       setSelectedVideoIds(storyVideoIds);
 
       const locs = await db.displayLocations.getAll(storeId);
-      setLocations(locs.filter(l => l.story_id === id));
+      setLocations(locs.filter(l => l.story_id === id && l.store_id === storeId));
       const rls = await db.pageRules.getAll(storeId);
-      setRules(rls.filter(r => r.story_id === id));
+      setRules(rls.filter(r => r.story_id === id && r.store_id === storeId));
 
     } catch (error) {
       showError('Erro ao carregar os dados do Story.');
@@ -158,8 +159,7 @@ const StoryDetailsPage = () => {
           created_at: new Date().toISOString()
         }));
         
-        const allRelations = await db.storyVideos.getAll(storeId);
-        localStorage.setItem('vidlytics_story_videos', JSON.stringify([...allRelations, ...newRelations]));
+        await replaceStoryRelations('story_videos', storeId, newStory.id, newRelations);
         window.dispatchEvent(new Event('storage'));
         
         setShowSuccess(true);
@@ -170,6 +170,7 @@ const StoryDetailsPage = () => {
 
       const updatedStory: Story = {
         ...story,
+        store_id: storeId,
         title: formData.title,
         format: formData.format,
         scroll_direction: formData.scroll_direction,
@@ -180,8 +181,6 @@ const StoryDetailsPage = () => {
       };
       await db.stories.save(updatedStory);
 
-      const allRelations = await db.storyVideos.getAll(storeId);
-      const otherRelations = allRelations.filter(rv => rv.story_id !== id);
       const newRelations: StoryVideo[] = selectedVideoIds.map((vid, idx) => ({
         id: `rv-${id}-${vid}`,
         store_id: storeId,
@@ -192,7 +191,7 @@ const StoryDetailsPage = () => {
         created_at: new Date().toISOString()
       }));
       
-      localStorage.setItem('vidlytics_story_videos', JSON.stringify([...otherRelations, ...newRelations]));
+      await replaceStoryRelations('story_videos', storeId, id!, newRelations);
       window.dispatchEvent(new Event('storage'));
       
       setShowSuccess(true);

@@ -390,6 +390,18 @@ export const withStoreId = async <T extends { store_id?: string }>(item: T, stor
   store_id: item.store_id || (await resolveStoreId(storeId)),
 });
 
+export const replaceStoryRelations = async <T extends { id: string; store_id: string; story_id: string }>(
+  tableName: 'story_videos' | 'story_products',
+  storeId: string,
+  storyId: string,
+  relations: T[],
+) => {
+  const local = localStorage.getItem(`vidlytics_${tableName}`);
+  const items = local ? JSON.parse(local) : [];
+  const preserved = items.filter((item: T) => !(item.store_id === storeId && item.story_id === storyId));
+  localStorage.setItem(`vidlytics_${tableName}`, JSON.stringify([...preserved, ...relations.map((relation) => ({ ...relation, store_id: storeId }))]));
+};
+
 export const db = {
   stores: createCrudFunctions<Store>('stores', memoryStores),
   generalSettings: createCrudFunctions<GeneralSettings>('general_settings', memoryGeneralSettings),
