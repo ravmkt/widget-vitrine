@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { db } from '@/lib/db';
+import { db, Video } from '@/lib/db';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Eye, MousePointerClick, ShoppingBag, CheckCircle2, Calendar, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -19,6 +19,7 @@ const DashboardPage = () => {
     to: new Date(),
   });
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [videos, setVideos] = useState<Video[]>([]);
 
   const activeInterval = useMemo(() => {
     const now = new Date();
@@ -38,6 +39,30 @@ const DashboardPage = () => {
     if (type === 'views') return 120 + (seed % 300);
     if (type === 'clicks') return Math.floor((120 + (seed % 300)) * (0.12 + (seed % 8) / 100));
     return Math.floor((120 + (seed % 300)) * (0.02 + (seed % 3) / 100));
+  };
+
+  const calculateVideoMetrics = (videoId: string) => {
+    const end = new Date();
+    const start = subDays(end, 30);
+    const seed = videoId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const daysInterval = eachDayOfInterval({ start, end });
+
+    let views = 0;
+    let clicks = 0;
+    let comments = 0;
+
+    daysInterval.forEach(date => {
+      const dateSeed = date.getDate() + date.getMonth() * 31 + (date.getFullYear() % 100) * 400;
+      const combinedSeed = (seed + dateSeed) % 1000;
+      const dailyViews = 15 + (combinedSeed % 40);
+      const dailyClicks = Math.floor(dailyViews * (0.10 + (combinedSeed % 15) / 100));
+      const dailyComments = Math.floor(dailyClicks * (0.05 + (combinedSeed % 5) / 100));
+      views += dailyViews;
+      clicks += dailyClicks;
+      comments += dailyComments;
+    });
+
+    return { views, clicks, comments };
   };
 
   const dashboardData = useMemo(() => {
@@ -62,26 +87,31 @@ const DashboardPage = () => {
       revenue: acc.revenue + curr.revenue
     }), { views: 0, clicks: 0, sales: 0, revenue: 0 });
 
-    const stories = [
-      { name: "Coleção Outono 🍂", weight: 0.35, ctr: 18.2 },
-      { name: "Oferta Relâmpago ⚡", weight: 0.25, ctr: 22.0 },
-      { name: "Unboxing Vestido Max", weight: 0.20, ctr: 15.5 },
-      { name: "Provador Casual", weight: 0.15, ctr: 14.0 },
-    ].map(s => {
-      const currentViews = Math.floor(totals.views * s.weight);
-      return {
-        ...s,
-        views: currentViews,
-        ctr: s.ctr
-      };
-    });
+    const topVideos = [...videos]
+      .map((video) => {
+        const metrics = calculateVideoMetrics(video.id);
+        const clicks = Number((video as any).clicks_count ?? (video as any).click_count ?? (video as any).clicks ?? metrics.clicks ?? 0);
+        const views = Number((video as any).views_count ?? (video as any).view_count ?? (video as any).views ?? metrics.views ?? 0);
+        const ctr = views > 0 ? Number(((clicks / views) * 100).toFixed(1)) : 0;
+        return { ...video, metrics: { views, clicks, ctr } };
+      })
+      .sort((a, b) => b.metrics.views - a.metrics.views)
+      .slice(0, 4)
+      .map((video) => ({
+        id: video.id,
+        name: video.title,
+        thumbnail: video.thumbnail_url || video.image_url || '',
+        views: video.metrics.views,
+        ctr: video.metrics.ctr,
+      }));
 
-    return { flow, totals, stories };
-  }, [activeInterval]);
+    return { flow, totals, topVideos };
+  }, [activeInterval, videos]);
 
   useEffect(() => {
     const init = async () => {
-      await new Promise(r => setTimeout(r, 400));
+      const allVideos = await db.videos.getAll();
+      setVideos(allVideos);
       setLoading(false);
     };
     init();
@@ -152,11 +182,16 @@ const DashboardPage = () => {
         <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm flex flex-col">
           <h3 className="text-lg font-black text-slate-800 mb-8">Performance de Vídeos</h3>
           <div className="space-y-6 flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
-            {dashboardData.stories.map((item, i) => (
-              <div key={i} className="flex flex-col gap-3 p-4 rounded-3xl bg-slate-50 border border-slate-100 hover:border-[#0094EB]/30 transition-all">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-black text-slate-800 truncate">{item.name}</p>
-                  <span className="text-[10px] font-black text-slate-400">RANK #{i+1}</span>
+            {dashboardData.topVideos.map((item, i) => (
+              <div key={item.id} className="flex flex-col gap-3 p-4 rounded-3xl bg-slate-50 border border-slate-100 hover:border-[#0094EB]/30 transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-2xl bg-slate-200 overflow-hidden shrink-0">
+                    {item.thumbnail ? <img src={item.thumbnail} alt={item.name} className="h-full w-full object-cover" /> : null}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-black text-slate-800 truncate">{item.name}</p>
+                    <span className="text-[10px] font-black text-slate-400">RANK #{i+1}</span>
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
