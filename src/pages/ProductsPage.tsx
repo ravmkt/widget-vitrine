@@ -313,17 +313,17 @@ const ProductsPage = () => {
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
                 <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-[80px]">Foto</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Produto</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right w-32">Preço</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-36">Categoria</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-48">Vídeo Vinculado</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-28 text-center">Origem</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-28 text-center">Status</th>
+                <th onClick={() => handleSort('produto')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Produto {sortColumn === 'produto' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</th>
+                <th onClick={() => handleSort('preco')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right w-32">Preço {sortColumn === 'preco' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</th>
+                <th onClick={() => handleSort('categoria')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-36">Categoria {sortColumn === 'categoria' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</th>
+                <th onClick={() => handleSort('video')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-48">Vídeo Vinculado {sortColumn === 'video' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</th>
+                <th onClick={() => handleSort('origem')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-28 text-center">Origem {sortColumn === 'origem' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</th>
+                <th onClick={() => handleSort('status')} className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-28 text-center">Status {sortColumn === 'status' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-48 text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredProducts.map(product => (
+              {sortedProducts.map(product => (
                 <tr key={product.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4 align-middle">
                     <div className="h-14 w-14 min-h-[56px] min-w-[56px] rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
