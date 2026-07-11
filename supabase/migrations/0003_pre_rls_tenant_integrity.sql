@@ -97,8 +97,27 @@ create index if not exists idx_metrics_store_video on public.metrics(store_id, v
 create index if not exists idx_metrics_store_story on public.metrics(store_id, story_id);
 
 create index if not exists idx_products_store_active on public.products(store_id, active);
-create index if exists idx_videos_store_status on public.videos(store_id, status);
-create index if exists idx_stories_store_active on public.stories(store_id, active);
+create index if not exists idx_videos_store_status on public.videos(store_id, status);
+create index if not exists idx_stories_store_active on public.stories(store_id, active);
+
+-- Preflight: detect tenant store_id values that do not resolve to a real store.
+do $$
+begin
+  if exists (select 1 from public.videos v left join public.stores s on s.id = v.store_id where v.store_id is not null and s.id is null) then raise exception 'videos has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.stories st left join public.stores s on s.id = st.store_id where st.store_id is not null and s.id is null) then raise exception 'stories has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.products p left join public.stores s on s.id = p.store_id where p.store_id is not null and s.id is null) then raise exception 'products has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.appearances a left join public.stores s on s.id = a.store_id where a.store_id is not null and s.id is null) then raise exception 'appearances has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.sizing_models sm left join public.stores s on s.id = sm.store_id where sm.store_id is not null and s.id is null) then raise exception 'sizing_models has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.comments c left join public.stores s on s.id = c.store_id where c.store_id is not null and s.id is null) then raise exception 'comments has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.metrics m left join public.stores s on s.id = m.store_id where m.store_id is not null and s.id is null) then raise exception 'metrics has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.story_videos sv left join public.stores s on s.id = sv.store_id where sv.store_id is not null and s.id is null) then raise exception 'story_videos has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.story_products sp left join public.stores s on s.id = sp.store_id where sp.store_id is not null and s.id is null) then raise exception 'story_products has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.display_locations dl left join public.stores s on s.id = dl.store_id where dl.store_id is not null and s.id is null) then raise exception 'display_locations has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.page_rules pr left join public.stores s on s.id = pr.store_id where pr.store_id is not null and s.id is null) then raise exception 'page_rules has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.general_settings gs left join public.stores s on s.id = gs.store_id where gs.store_id is not null and s.id is null) then raise exception 'general_settings has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.subscriptions sub left join public.stores s on s.id = sub.store_id where sub.store_id is not null and s.id is null) then raise exception 'subscriptions has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.usage_counters uc left join public.stores s on s.id = uc.store_id where uc.store_id is not null and s.id is null) then raise exception 'usage_counters has store_id values that do not exist in stores'; end if;
+end $$;
 
 -- Preflight: detect remaining NULL store_id values before enforcing NOT NULL.
 do $$
@@ -124,15 +143,38 @@ do $$
 begin
   if exists (select 1 from public.story_videos sv left join public.stories s on s.id = sv.story_id where sv.story_id is not null and s.id is null) then raise exception 'story_videos has orphaned story_id rows'; end if;
   if exists (select 1 from public.story_videos sv left join public.videos v on v.id = sv.video_id where sv.video_id is not null and v.id is null) then raise exception 'story_videos has orphaned video_id rows'; end if;
+  if exists (select 1 from public.story_videos sv left join public.stories s on s.id = sv.story_id left join public.videos v on v.id = sv.video_id where sv.store_id is not null and ((s.id is not null and sv.store_id <> s.store_id) or (v.id is not null and sv.store_id <> v.store_id))) then raise exception 'story_videos has rows where store_id does not match stories.store_id or videos.store_id'; end if;
   if exists (select 1 from public.story_products sp left join public.stories s on s.id = sp.story_id where sp.story_id is not null and s.id is null) then raise exception 'story_products has orphaned story_id rows'; end if;
   if exists (select 1 from public.story_products sp left join public.products p on p.id = sp.product_id where sp.product_id is not null and p.id is null) then raise exception 'story_products has orphaned product_id rows'; end if;
+  if exists (select 1 from public.story_products sp left join public.stories s on s.id = sp.story_id left join public.products p on p.id = sp.product_id where sp.store_id is not null and ((s.id is not null and sp.store_id <> s.store_id) or (p.id is not null and sp.store_id <> p.store_id))) then raise exception 'story_products has rows where store_id does not match stories.store_id or products.store_id'; end if;
   if exists (select 1 from public.display_locations dl left join public.stories s on s.id = dl.story_id where dl.story_id is not null and s.id is null) then raise exception 'display_locations has orphaned story_id rows'; end if;
+  if exists (select 1 from public.display_locations dl left join public.stories s on s.id = dl.story_id where dl.store_id is not null and s.id is not null and dl.store_id <> s.store_id) then raise exception 'display_locations has rows where store_id does not match stories.store_id'; end if;
   if exists (select 1 from public.page_rules pr left join public.stories s on s.id = pr.story_id where pr.story_id is not null and s.id is null) then raise exception 'page_rules has orphaned story_id rows'; end if;
+  if exists (select 1 from public.page_rules pr left join public.stories s on s.id = pr.story_id where pr.store_id is not null and s.id is not null and pr.store_id <> s.store_id) then raise exception 'page_rules has rows where store_id does not match stories.store_id'; end if;
   if exists (select 1 from public.comments c left join public.stories s on s.id = c.story_id where c.story_id is not null and s.id is null) then raise exception 'comments has orphaned story_id rows'; end if;
   if exists (select 1 from public.comments c left join public.videos v on v.id = c.video_id where c.video_id is not null and v.id is null) then raise exception 'comments has orphaned video_id rows'; end if;
+  if exists (select 1 from public.comments c left join public.stories s on s.id = c.story_id where c.story_id is not null and c.store_id is not null and s.id is not null and c.store_id <> s.store_id) then raise exception 'comments has rows where store_id does not match stories.store_id'; end if;
+  if exists (select 1 from public.comments c left join public.videos v on v.id = c.video_id where c.video_id is not null and c.store_id is not null and v.id is not null and c.store_id <> v.store_id) then raise exception 'comments has rows where store_id does not match videos.store_id'; end if;
   if exists (select 1 from public.metrics m left join public.stories s on s.id = m.story_id where m.story_id is not null and s.id is null) then raise exception 'metrics has orphaned story_id rows'; end if;
   if exists (select 1 from public.metrics m left join public.videos v on v.id = m.video_id where m.video_id is not null and v.id is null) then raise exception 'metrics has orphaned video_id rows'; end if;
   if exists (select 1 from public.metrics m left join public.products p on p.id = m.product_id where m.product_id is not null and p.id is null) then raise exception 'metrics has orphaned product_id rows'; end if;
+  if exists (select 1 from public.metrics m left join public.stories s on s.id = m.story_id where m.story_id is not null and m.store_id is not null and s.id is not null and m.store_id <> s.store_id) then raise exception 'metrics has rows where store_id does not match stories.store_id'; end if;
+  if exists (select 1 from public.metrics m left join public.videos v on v.id = m.video_id where m.video_id is not null and m.store_id is not null and v.id is not null and m.store_id <> v.store_id) then raise exception 'metrics has rows where store_id does not match videos.store_id'; end if;
+  if exists (select 1 from public.metrics m left join public.products p on p.id = m.product_id where m.product_id is not null and m.store_id is not null and p.id is not null and m.store_id <> p.store_id) then raise exception 'metrics has rows where store_id does not match products.store_id'; end if;
+  if exists (select 1 from public.videos v left join public.stores s on s.id = v.store_id where v.store_id is not null and s.id is null) then raise exception 'videos has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.stories st left join public.stores s on s.id = st.store_id where st.store_id is not null and s.id is null) then raise exception 'stories has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.products p left join public.stores s on s.id = p.store_id where p.store_id is not null and s.id is null) then raise exception 'products has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.appearances a left join public.stores s on s.id = a.store_id where a.store_id is not null and s.id is null) then raise exception 'appearances has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.sizing_models sm left join public.stores s on s.id = sm.store_id where sm.store_id is not null and s.id is null) then raise exception 'sizing_models has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.comments c left join public.stores s on s.id = c.store_id where c.store_id is not null and s.id is null) then raise exception 'comments has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.metrics m left join public.stores s on s.id = m.store_id where m.store_id is not null and s.id is null) then raise exception 'metrics has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.story_videos sv left join public.stores s on s.id = sv.store_id where sv.store_id is not null and s.id is null) then raise exception 'story_videos has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.story_products sp left join public.stores s on s.id = sp.store_id where sp.store_id is not null and s.id is null) then raise exception 'story_products has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.display_locations dl left join public.stores s on s.id = dl.store_id where dl.store_id is not null and s.id is null) then raise exception 'display_locations has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.page_rules pr left join public.stores s on s.id = pr.store_id where pr.store_id is not null and s.id is null) then raise exception 'page_rules has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.general_settings gs left join public.stores s on s.id = gs.store_id where gs.store_id is not null and s.id is null) then raise exception 'general_settings has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.subscriptions sub left join public.stores s on s.id = sub.store_id where sub.store_id is not null and s.id is null) then raise exception 'subscriptions has store_id values that do not exist in stores'; end if;
+  if exists (select 1 from public.usage_counters uc left join public.stores s on s.id = uc.store_id where uc.store_id is not null and s.id is null) then raise exception 'usage_counters has store_id values that do not exist in stores'; end if;
 end $$;
 
 -- Preflight: detect duplicates before unique constraints.
