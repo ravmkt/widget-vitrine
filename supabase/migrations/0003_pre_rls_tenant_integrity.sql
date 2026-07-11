@@ -95,9 +95,70 @@ create index if not exists idx_comments_store_video on public.comments(store_id,
 create index if not exists idx_metrics_store_created_at on public.metrics(store_id, created_at);
 create index if not exists idx_metrics_store_video on public.metrics(store_id, video_id);
 create index if not exists idx_metrics_store_story on public.metrics(store_id, story_id);
+
 create index if not exists idx_products_store_active on public.products(store_id, active);
-create index if not exists idx_videos_store_status on public.videos(store_id, status);
-create index if not exists idx_stories_store_active on public.stories(store_id, active);
+create index if exists idx_videos_store_status on public.videos(store_id, status);
+create index if exists idx_stories_store_active on public.stories(store_id, active);
+
+-- Preflight: detect remaining NULL store_id values before enforcing NOT NULL.
+do $$
+begin
+  if exists (select 1 from public.videos where store_id is null) then raise exception 'videos still has rows without store_id after backfill'; end if;
+  if exists (select 1 from public.stories where store_id is null) then raise exception 'stories still has rows without store_id after backfill'; end if;
+  if exists (select 1 from public.products where store_id is null) then raise exception 'products still has rows without store_id after backfill'; end if;
+  if exists (select 1 from public.appearances where store_id is null) then raise exception 'appearances still has rows without store_id after backfill'; end if;
+  if exists (select 1 from public.sizing_models where store_id is null) then raise exception 'sizing_models still has rows without store_id after backfill'; end if;
+  if exists (select 1 from public.comments where store_id is null) then raise exception 'comments still has rows without store_id after backfill'; end if;
+  if exists (select 1 from public.metrics where store_id is null) then raise exception 'metrics still has rows without store_id after backfill'; end if;
+  if exists (select 1 from public.story_videos where store_id is null) then raise exception 'story_videos still has rows without store_id after backfill'; end if;
+  if exists (select 1 from public.story_products where store_id is null) then raise exception 'story_products still has rows without store_id after backfill'; end if;
+  if exists (select 1 from public.display_locations where store_id is null) then raise exception 'display_locations still has rows without store_id after backfill'; end if;
+  if exists (select 1 from public.page_rules where store_id is null) then raise exception 'page_rules still has rows without store_id after backfill'; end if;
+  if exists (select 1 from public.general_settings where store_id is null) then raise exception 'general_settings still has rows without store_id after backfill'; end if;
+  if exists (select 1 from public.subscriptions where store_id is null) then raise exception 'subscriptions still has rows without store_id after backfill'; end if;
+  if exists (select 1 from public.usage_counters where store_id is null) then raise exception 'usage_counters still has rows without store_id after backfill'; end if;
+end $$;
+
+-- Preflight: detect orphaned relations before adding/depending on FKs.
+do $$
+begin
+  if exists (select 1 from public.story_videos sv left join public.stories s on s.id = sv.story_id where sv.story_id is not null and s.id is null) then raise exception 'story_videos has orphaned story_id rows'; end if;
+  if exists (select 1 from public.story_videos sv left join public.videos v on v.id = sv.video_id where sv.video_id is not null and v.id is null) then raise exception 'story_videos has orphaned video_id rows'; end if;
+  if exists (select 1 from public.story_products sp left join public.stories s on s.id = sp.story_id where sp.story_id is not null and s.id is null) then raise exception 'story_products has orphaned story_id rows'; end if;
+  if exists (select 1 from public.story_products sp left join public.products p on p.id = sp.product_id where sp.product_id is not null and p.id is null) then raise exception 'story_products has orphaned product_id rows'; end if;
+  if exists (select 1 from public.display_locations dl left join public.stories s on s.id = dl.story_id where dl.story_id is not null and s.id is null) then raise exception 'display_locations has orphaned story_id rows'; end if;
+  if exists (select 1 from public.page_rules pr left join public.stories s on s.id = pr.story_id where pr.story_id is not null and s.id is null) then raise exception 'page_rules has orphaned story_id rows'; end if;
+  if exists (select 1 from public.comments c left join public.stories s on s.id = c.story_id where c.story_id is not null and s.id is null) then raise exception 'comments has orphaned story_id rows'; end if;
+  if exists (select 1 from public.comments c left join public.videos v on v.id = c.video_id where c.video_id is not null and v.id is null) then raise exception 'comments has orphaned video_id rows'; end if;
+  if exists (select 1 from public.metrics m left join public.stories s on s.id = m.story_id where m.story_id is not null and s.id is null) then raise exception 'metrics has orphaned story_id rows'; end if;
+  if exists (select 1 from public.metrics m left join public.videos v on v.id = m.video_id where m.video_id is not null and v.id is null) then raise exception 'metrics has orphaned video_id rows'; end if;
+  if exists (select 1 from public.metrics m left join public.products p on p.id = m.product_id where m.product_id is not null and p.id is null) then raise exception 'metrics has orphaned product_id rows'; end if;
+end $$;
+
+-- Preflight: detect duplicates before unique constraints.
+do $$
+begin
+  if exists (
+    select 1
+    from public.store_members
+    group by store_id, user_id
+    having count(*) > 1
+  ) then raise exception 'store_members has duplicate (store_id, user_id) rows'; end if;
+
+  if exists (
+    select 1
+    from public.general_settings
+    group by store_id
+    having count(*) > 1
+  ) then raise exception 'general_settings has duplicate store_id rows'; end if;
+
+  if exists (
+    select 1
+    from public.usage_counters
+    group by store_id, month
+    having count(*) > 1
+  ) then raise exception 'usage_counters has duplicate (store_id, month) rows'; end if;
+end $$;
 
 alter table public.store_members
   drop constraint if exists store_members_store_id_user_id_key;
@@ -194,17 +255,45 @@ do $$ begin
   alter table public.metrics add constraint metrics_product_id_fkey foreign key (product_id) references public.products(id);
 exception when duplicate_object then null; end $$;
 
-alter table public.videos alter column store_id set not null;
-alter table public.stories alter column store_id set not null;
-alter table public.products alter column store_id set not null;
-alter table public.appearances alter column store_id set not null;
-alter table public.sizing_models alter column store_id set not null;
-alter table public.comments alter column store_id set not null;
-alter table public.metrics alter column store_id set not null;
-alter table public.story_videos alter column store_id set not null;
-alter table public.story_products alter column store_id set not null;
-alter table public.display_locations alter column store_id set not null;
-alter table public.page_rules alter column store_id set not null;
-alter table public.general_settings alter column store_id set not null;
-alter table public.subscriptions alter column store_id set not null;
-alter table public.usage_counters alter column store_id set not null;
+do $$ begin
+  alter table public.videos alter column store_id set not null;
+exception when others then raise exception 'videos still has rows without store_id after backfill'; end $$;
+do $$ begin
+  alter table public.stories alter column store_id set not null;
+exception when others then raise exception 'stories still has rows without store_id after backfill'; end $$;
+do $$ begin
+  alter table public.products alter column store_id set not null;
+exception when others then raise exception 'products still has rows without store_id after backfill'; end $$;
+do $$ begin
+  alter table public.appearances alter column store_id set not null;
+exception when others then raise exception 'appearances still has rows without store_id after backfill'; end $$;
+do $$ begin
+  alter table public.sizing_models alter column store_id set not null;
+exception when others then raise exception 'sizing_models still has rows without store_id after backfill'; end $$;
+do $$ begin
+  alter table public.comments alter column store_id set not null;
+exception when others then raise exception 'comments still has rows without store_id after backfill'; end $$;
+do $$ begin
+  alter table public.metrics alter column store_id set not null;
+exception when others then raise exception 'metrics still has rows without store_id after backfill'; end $$;
+do $$ begin
+  alter table public.story_videos alter column store_id set not null;
+exception when others then raise exception 'story_videos still has rows without store_id after backfill'; end $$;
+do $$ begin
+  alter table public.story_products alter column store_id set not null;
+exception when others then raise exception 'story_products still has rows without store_id after backfill'; end $$;
+do $$ begin
+  alter table public.display_locations alter column store_id set not null;
+exception when others then raise exception 'display_locations still has rows without store_id after backfill'; end $$;
+do $$ begin
+  alter table public.page_rules alter column store_id set not null;
+exception when others then raise exception 'page_rules still has rows without store_id after backfill'; end $$;
+do $$ begin
+  alter table public.general_settings alter column store_id set not null;
+exception when others then raise exception 'general_settings still has rows without store_id after backfill'; end $$;
+do $$ begin
+  alter table public.subscriptions alter column store_id set not null;
+exception when others then raise exception 'subscriptions still has rows without store_id after backfill'; end $$;
+do $$ begin
+  alter table public.usage_counters alter column store_id set not null;
+exception when others then raise exception 'usage_counters still has rows without store_id after backfill'; end $$;
