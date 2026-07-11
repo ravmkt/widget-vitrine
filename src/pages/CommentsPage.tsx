@@ -106,18 +106,20 @@ const CommentsPage = () => {
   }, []);
 
   const getStatusLabel = (status: Comment["status"]) => {
-    switch (status) {
-      case "approved": return "ATIVO";
-      case "rejected": return "DESATIVADO";
-      default: return "DESATIVADO";
+    switch (normalizeStatus(status)) {
+      case "pending": return "Pendente";
+      case "approved": return "Aprovado";
+      case "rejected": return "Rejeitado";
+      default: return "Pendente";
     }
   };
 
   const getStatusColor = (status: Comment["status"]) => {
-    switch (status) {
-      case "approved": return "text-emerald-600 bg-emerald-50";
-      case "rejected": return "text-rose-600 bg-rose-50";
-      default: return "text-rose-600 bg-rose-50";
+    switch (normalizeStatus(status)) {
+      case "pending": return "text-amber-700 bg-amber-50 border-amber-200";
+      case "approved": return "text-emerald-700 bg-emerald-50 border-emerald-200";
+      case "rejected": return "text-rose-700 bg-rose-50 border-rose-200";
+      default: return "text-amber-700 bg-amber-50 border-amber-200";
     }
   };
 
