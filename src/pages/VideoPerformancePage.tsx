@@ -3,7 +3,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft,
   Search,
   Calendar,
   TrendingUp,
@@ -185,9 +184,9 @@ const VideoPerformancePage = () => {
   return (
     <div className="space-y-6 animate-fade-in pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/dashboard')} className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all"><ArrowLeft size={18}/></button>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Performance de Vídeos</h1>
+        <div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Performance de Vídeos</h1>
+          <p className="text-slate-500 font-medium mt-1">Acompanhe as métricas de visualização e engajamento dos seus vídeos.</p>
         </div>
 
         <div className="flex bg-white border border-slate-200 rounded-xl p-1 gap-1 shadow-sm">
