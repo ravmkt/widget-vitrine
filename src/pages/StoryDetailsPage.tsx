@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { 
-  db, Story, Video, Appearance, StoryFormat, ScrollDirection, 
-  DisplayLocation, PageRule, StoryVideo, ConditionType, DisplayPosition 
+import {
+  db, Story, Video, Appearance, StoryFormat, ScrollDirection,
+  DisplayLocation, PageRule, StoryVideo, ConditionType, DisplayPosition
 } from '@/lib/db';
+import { useTenant } from '@/context/TenantContext';
 import { 
   ArrowLeft, Save, X, Settings, Layout, Layers, MousePointer2, 
   Film, MapPin, Globe, CheckCircle2, XCircle, Plus, Trash2, 
@@ -15,6 +16,7 @@ import SuccessDialog from '@/components/SuccessDialog';
 import { cn } from '@/lib/utils';
 
 const StoryDetailsPage = () => {
+  const { storeId, loading: tenantLoading } = useTenant();
   const { id } = useParams();
   const navigate = useNavigate();
   const isCreate = !id || id === 'new';
@@ -49,14 +51,17 @@ const StoryDetailsPage = () => {
   const loadStoryData = useCallback(async () => {
     try {
       setLoading(true);
-      const stores = await db.stores.getAll();
-      const mainStore = stores[0];
-      if (!mainStore) return;
+      if (!storeId) {
+        setAllVideos([]);
+        setAppearances([]);
+        setLoading(false);
+        return;
+      }
 
-      const videos = await db.videos.getAll(mainStore.id);
+      const videos = await db.videos.getAll(storeId);
       setAllVideos(videos);
       
-      const apps = await db.appearances.getAll(mainStore.id);
+      const apps = await db.appearances.getAll(storeId);
       setAppearances(apps);
 
       if (isCreate) {
@@ -76,7 +81,7 @@ const StoryDetailsPage = () => {
         return;
       }
 
-      const fetchedStories = await db.stories.getAll(mainStore.id);
+      const fetchedStories = await db.stories.getAll(storeId || undefined);
       const currentStory = fetchedStories.find((item) => item.id === id);
       if (!currentStory) {
         setStory(null);

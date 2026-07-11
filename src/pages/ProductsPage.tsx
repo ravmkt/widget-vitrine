@@ -6,9 +6,12 @@ import { showError, showSuccess } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import { db, Product } from '@/lib/db';
+import { useTenant } from '@/context/TenantContext';
 
 const ProductsPage = () => {
+  const { storeId, loading: tenantLoading } = useTenant();
   const [products, setProducts] = useState<Product[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([
     { id: '1', name: 'Vestidos' },
@@ -49,7 +52,11 @@ const ProductsPage = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const [allProducts] = await Promise.all([db.products.getAll()]);
+        if (!storeId) {
+          setProducts([]);
+          return;
+        }
+        const allProducts = await db.products.getAll(storeId);
         setProducts(allProducts);
       } catch (e) {
         showError('Erro ao carregar produtos.');
@@ -57,8 +64,8 @@ const ProductsPage = () => {
         setLoading(false);
       }
     };
-    load();
-  }, []);
+    if (!tenantLoading) load();
+  }, [storeId, tenantLoading]);
 
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc'|'desc'>('asc');
@@ -165,7 +172,7 @@ const ProductsPage = () => {
     setIsSaving(true);
     setTimeout(async () => {
       try {
-        const storeId = '11111111-1111-1111-1111-111111111111';
+        const currentStoreId = storeId || editingProduct?.store_id || '';
         if (editingProduct) {
           const updated: Product = {
             ...editingProduct,
@@ -183,7 +190,7 @@ const ProductsPage = () => {
         } else {
           const newProduct: Product = {
             id: Math.random().toString(36).slice(2, 11),
-            store_id: storeId,
+            store_id: currentStoreId,
             name: formData.name,
             image_url: formData.image_url || '',
             product_url: formData.product_url,

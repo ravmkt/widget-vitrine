@@ -7,8 +7,10 @@ import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
 import SuccessDialog from '@/components/SuccessDialog';
 import { generateVideoThumbnail } from '@/lib/video';
+import { useTenant } from '@/context/TenantContext';
 
 const VideoEditPage = () => {
+  const { storeId, loading: tenantLoading } = useTenant();
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -39,10 +41,15 @@ const VideoEditPage = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
+        if (!storeId) {
+          setLoading(false);
+          setProductsLoading(false);
+          return;
+        }
         const [allVideos, allModels, allProducts] = await Promise.all([
-          db.videos.getAll(),
-          db.sizingModels.getAll(),
-          db.products.getAll()
+          db.videos.getAll(storeId),
+          db.sizingModels.getAll(storeId),
+          db.products.getAll(storeId)
         ]);
         setModels(allModels);
         setProducts(allProducts);
@@ -84,8 +91,8 @@ const VideoEditPage = () => {
         setProductsLoading(false);
       }
     };
-    loadData();
-  }, [id, navigate, isCreate]);
+    if (!tenantLoading) loadData();
+  }, [id, navigate, isCreate, storeId, tenantLoading]);
 
   const handleOriginChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setFormData(prev => {
@@ -334,7 +341,7 @@ const VideoEditPage = () => {
       const newVideo: Video = {
         ...videoData,
         id: Math.random().toString(36).substr(2, 9),
-        store_id: '11111111-1111-1111-1111-111111111111',
+        store_id: storeId || '11111111-1111-1111-1111-111111111111',
         created_at: new Date().toISOString()
       } as Video;
       await db.videos.save(newVideo);
