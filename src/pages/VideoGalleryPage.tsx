@@ -189,7 +189,7 @@ const VideoGalleryPage = () => {
 
   const getHeaderClass = (column: string, align: 'left' | 'center' | 'right' = 'left') =>
     cn(
-      'cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest hover:opacity-75',
+      'cursor-pointer select-none whitespace-nowrap px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest hover:opacity-75',
       align === 'center' && 'text-center',
       align === 'right' && 'text-right'
     );
@@ -242,33 +242,33 @@ const VideoGalleryPage = () => {
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+      <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm max-w-full">
+        <div className="w-full max-w-full overflow-x-hidden" style={{ boxSizing: 'border-box' }}>
+          <table className="w-full max-w-full table-fixed text-left border-collapse" style={{ boxSizing: 'border-box' }}>
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                <th className={getHeaderClass('foto')}>Foto</th>
-                <th onClick={() => handleSort('nome')} className={getHeaderClass('nome')}>
-                  <span className="inline-flex items-center gap-1">Nome {sortIcon('nome')}</span>
+                <th className={cn(getHeaderClass('foto'), 'w-[9%]')}>Foto</th>
+                <th onClick={() => handleSort('nome')} className={cn(getHeaderClass('nome'), 'w-[24%]')}>
+                  <span className="inline-flex items-center gap-1 max-w-full truncate">Nome {sortIcon('nome')}</span>
                 </th>
-                <th onClick={() => handleSort('produto')} className={getHeaderClass('produto')}>
-                  <span className="inline-flex items-center gap-1">Produto vinculado {sortIcon('produto')}</span>
+                <th onClick={() => handleSort('produto')} className={cn(getHeaderClass('produto'), 'w-[18%]')}>
+                  <span className="inline-flex items-center gap-1 max-w-full truncate">Produto vinculado {sortIcon('produto')}</span>
                 </th>
-                <th onClick={() => handleSort('visualizacoes')} className={getHeaderClass('visualizacoes', 'center')}>
-                  <span className="inline-flex items-center gap-1 justify-center">Visualizações {sortIcon('visualizacoes')}</span>
+                <th onClick={() => handleSort('visualizacoes')} className={cn(getHeaderClass('visualizacoes', 'center'), 'w-[11%]')}>
+                  <span className="inline-flex items-center gap-1 justify-center max-w-full truncate">Visualizações {sortIcon('visualizacoes')}</span>
                 </th>
-                <th onClick={() => handleSort('comentarios')} className={getHeaderClass('comentarios', 'center')}>
-                  <span className="inline-flex items-center gap-1 justify-center">Comentários {sortIcon('comentarios')}</span>
+                <th onClick={() => handleSort('comentarios')} className={cn(getHeaderClass('comentarios', 'center'), 'w-[11%]')}>
+                  <span className="inline-flex items-center gap-1 justify-center max-w-full truncate">Comentários {sortIcon('comentarios')}</span>
                 </th>
-                <th onClick={() => handleSort('curtidas')} className={getHeaderClass('curtidas', 'center')}>
-                  <span className="inline-flex items-center gap-1 justify-center">Curtidas {sortIcon('curtidas')}</span>
+                <th onClick={() => handleSort('curtidas')} className={cn(getHeaderClass('curtidas', 'center'), 'w-[10%]')}>
+                  <span className="inline-flex items-center gap-1 justify-center max-w-full truncate">Curtidas {sortIcon('curtidas')}</span>
                 </th>
-                <th onClick={() => handleSort('ctr')} className={getHeaderClass('ctr', 'center')}>
-                  <span className="inline-flex items-center gap-1 justify-center">CTR {sortIcon('ctr')}</span>
+                <th onClick={() => handleSort('ctr')} className={cn(getHeaderClass('ctr', 'center'), 'w-[8%]')}>
+                  <span className="inline-flex items-center gap-1 justify-center max-w-full truncate">CTR {sortIcon('ctr')}</span>
                 </th>
-                <th className={getHeaderClass('acoes', 'right')}>Ver</th>
-                <th className={getHeaderClass('acoes2', 'right')}>Editar</th>
-                <th className={getHeaderClass('acoes3', 'right')}>Excluir</th>
+                <th className={cn(getHeaderClass('acoes', 'right'), 'w-[3%]')}>Ver</th>
+                <th className={cn(getHeaderClass('acoes2', 'right'), 'w-[3%]')}>Editar</th>
+                <th className={cn(getHeaderClass('acoes3', 'right'), 'w-[3%]')}>Excluir</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -279,19 +279,19 @@ const VideoGalleryPage = () => {
 
                 return (
                   <tr key={video.id} className="hover:bg-slate-50/50 transition-colors align-middle">
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-4">
                       {thumb ? (
-                        <img src={thumb} alt={video.title} className="h-14 w-14 rounded-xl object-cover border border-slate-200" />
+                        <img src={thumb} alt={video.title} className="h-12 w-12 rounded-xl object-cover border border-slate-200" />
                       ) : (
-                        <div className="h-14 w-14 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
+                        <div className="h-12 w-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
                           <Film size={18} />
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4">
-                      <p className="font-bold text-slate-800 truncate max-w-xs">{video.title}</p>
+                    <td className="px-3 py-4 min-w-0">
+                      <p className="font-bold text-slate-800 truncate max-w-full">{video.title}</p>
                       <span className={cn(
-                        'inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border mt-1',
+                        'inline-flex max-w-full items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border mt-1 truncate',
                         video.source_type === 'upload' ? 'bg-blue-50 text-blue-600 border-blue-100' :
                         video.source_type === 'external_url' ? 'bg-red-50 text-red-600 border-red-100' :
                         video.source_type === 'tiktok' ? 'bg-slate-900 text-white border-slate-900' :
@@ -305,22 +305,22 @@ const VideoGalleryPage = () => {
                          (video.source_type || '').toUpperCase()}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-xs font-bold border border-slate-100">
-                        <Film size={12} /> {productName}
+                    <td className="px-3 py-4 min-w-0">
+                      <span className="inline-flex max-w-full items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-xs font-bold border border-slate-100 truncate">
+                        <Film size={12} className="shrink-0" /> <span className="truncate">{productName}</span>
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-center font-black text-slate-800">{views.toLocaleString('pt-BR')}</td>
-                    <td className="px-6 py-4 text-center font-black text-slate-800">{comments.toLocaleString('pt-BR')}</td>
-                    <td className="px-6 py-4 text-center font-black text-slate-800">{likes.toLocaleString('pt-BR')}</td>
-                    <td className="px-6 py-4 text-center font-black text-slate-800">{Number(ctrValue || 0).toFixed(2).replace('.', ',')}%</td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-3 py-4 text-center font-black text-slate-800">{views.toLocaleString('pt-BR')}</td>
+                    <td className="px-3 py-4 text-center font-black text-slate-800">{comments.toLocaleString('pt-BR')}</td>
+                    <td className="px-3 py-4 text-center font-black text-slate-800">{likes.toLocaleString('pt-BR')}</td>
+                    <td className="px-3 py-4 text-center font-black text-slate-800">{Number(ctrValue || 0).toFixed(2).replace('.', ',')}%</td>
+                    <td className="px-2 py-4 text-right">
                       <button onClick={() => handleViewVideo(video)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors" title="Ver"><Eye size={16} /></button>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-2 py-4 text-right">
                       <button onClick={() => navigate(`/videos/${video.id}/edit`)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors" title="Editar"><Edit3 size={16} /></button>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-2 py-4 text-right">
                       <button onClick={() => handleDeleteClick(video)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" title="Excluir"><Trash2 size={16} /></button>
                     </td>
                   </tr>
