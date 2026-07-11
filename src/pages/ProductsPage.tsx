@@ -275,10 +275,10 @@ const ProductsPage = () => {
           <button onClick={openNewProduct} className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-xl font-black text-sm shadow-md transition-all flex items-center gap-2">
             <Plus size={18} /> Novo produto
           </button>
-          <button onClick={() => setShowCategoriesModal(true)} className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 px-6 py-3 rounded-xl font-black text-sm shadow-sm transition-all flex items-center gap-2">
+          <button onClick={() => setShowCategoriesModal(true)} className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-xl font-black text-sm shadow-md transition-all flex items-center gap-2">
             <Tag size={18} /> Categorias
           </button>
-          <button onClick={() => setShowImportModal(true)} className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 px-6 py-3 rounded-xl font-black text-sm shadow-sm transition-all flex items-center gap-2">
+          <button onClick={() => setShowImportModal(true)} className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-xl font-black text-sm shadow-md transition-all flex items-center gap-2">
             <Upload size={18} /> Importar produtos
           </button>
         </div>
