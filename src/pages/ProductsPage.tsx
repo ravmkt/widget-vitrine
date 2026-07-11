@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Plus, Tag, Upload, Search, Edit3, Trash2, X, CheckCircle2, XCircle, Image, Download, Settings, Loader2, Save, FileSpreadsheet, Globe, Package } from 'lucide-react';
+import { Plus, Tag, Upload, Search, Edit3, Trash2, X, CheckCircle2, XCircle, Image, Download, Settings, Loader2, Save, FileSpreadsheet, Globe, Package, ChevronUp, ChevronDown } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
@@ -60,6 +60,9 @@ const ProductsPage = () => {
     load();
   }, []);
 
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc'|'desc'>('asc');
+
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
       const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -69,6 +72,46 @@ const ProductsPage = () => {
       return matchesSearch && matchesCategory && matchesStatus && matchesOrigin;
     });
   }, [products, searchTerm, filterCategory, filterStatus, filterOrigin]);
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(dir => dir === 'asc' ? 'desc' : 'asc');
+      return;
+    }
+    setSortColumn(column);
+    setSortDirection('asc');
+  };
+
+  const sortedProducts = useMemo(() => {
+    const rows = [...filteredProducts];
+    if (!sortColumn) return rows;
+
+    const getValue = (p: Product) => {
+      switch (sortColumn) {
+        case 'produto': return p.name || '';
+        case 'preco': return Number(p.price || 0);
+        case 'categoria': return (p as any).category || '';
+        case 'video': return ((p as any).video || '').toString() || '';
+        case 'origem': return (p as any).origin || '';
+        case 'status': return (p as any).active ? 'ATIVO' : 'DESATIVADO';
+        default: return '';
+      }
+    };
+
+    rows.sort((a, b) => {
+      const va = getValue(a);
+      const vb = getValue(b);
+      if (typeof va === 'number' && typeof vb === 'number') {
+        return sortDirection === 'asc' ? va - vb : vb - va;
+      }
+      if (va === '' && vb !== '') return 1;
+      if (vb === '' && va !== '') return -1;
+      return sortDirection === 'asc'
+        ? String(va).localeCompare(String(vb), 'pt-BR')
+        : String(vb).localeCompare(String(va), 'pt-BR');
+    });
+    return rows;
+  }, [filteredProducts, sortColumn, sortDirection]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -282,14 +325,14 @@ const ProductsPage = () => {
             <tbody className="divide-y divide-slate-100">
               {filteredProducts.map(product => (
                 <tr key={product.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-6 py-4">
-                    {product.image_url ? (
-                      <img src={product.image_url} alt={product.name} className="h-14 w-14 min-h-[56px] min-w-[56px] rounded-xl object-cover border border-slate-200" onError={e => { e.currentTarget.style.display = 'none'; }} />
-                    ) : (
-                      <div className="h-14 w-14 min-h-[56px] min-w-[56px] rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 shrink-0">
-                        <Package size={18} />
-                      </div>
-                    )}
+                  <td className="px-6 py-4 align-middle">
+                    <div className="h-14 w-14 min-h-[56px] min-w-[56px] rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
+                      {product.image_url ? (
+                        <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" onError={e => { e.currentTarget.style.display = 'none'; }} />
+                      ) : (
+                        <Package size={18} className="text-slate-400" />
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <p className="font-bold text-slate-800 truncate max-w-xs">{product.name}</p>
