@@ -266,7 +266,7 @@ const VideoGalleryPage = () => {
                 <th onClick={() => handleSort('ctr')} className={cn(getHeaderClass('ctr', 'center'), 'w-[80px]')}>
                   <span className="inline-flex items-center gap-1 justify-center max-w-full truncate">CTR {sortIcon('ctr')}</span>
                 </th>
-                <th className={cn(getHeaderClass('acoes', 'right'), 'w-[150px]')}>Ações</th>
+                <th className={cn(getHeaderClass('acoes', 'center'), 'w-[150px]')}>Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -312,8 +312,8 @@ const VideoGalleryPage = () => {
                     <td className="px-3 py-4 text-center font-black text-slate-800">{comments.toLocaleString('pt-BR')}</td>
                     <td className="px-3 py-4 text-center font-black text-slate-800">{likes.toLocaleString('pt-BR')}</td>
                     <td className="px-3 py-4 text-center font-black text-slate-800">{Number(ctrValue || 0).toFixed(2).replace('.', ',')}%</td>
-                    <td className="px-3 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                    <td className="px-3 py-4 text-center">
+                      <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                         <button onClick={() => handleViewVideo(video)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors shrink-0" title="Ver"><Eye size={16} /></button>
                         <button onClick={() => navigate(`/videos/${video.id}/edit`)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors shrink-0" title="Editar"><Edit3 size={16} /></button>
                         <button onClick={() => handleDeleteClick(video)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors shrink-0" title="Excluir"><Trash2 size={16} /></button>

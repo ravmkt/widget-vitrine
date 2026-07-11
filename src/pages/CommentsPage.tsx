@@ -321,7 +321,7 @@ const CommentsPage = () => {
                     {sortColumn === 'status' && <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>}
                   </button>
                 </th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-36 text-right">Ações</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-36 text-center">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -390,8 +390,8 @@ const CommentsPage = () => {
                     <td className="px-6 py-4 text-center">
                       <span onClick={(e) => openStatusDropdown(e, row.id)} className={cn("px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border cursor-pointer", getStatusColor(row.status))} id={`status-badge-${row.id}`}>{getStatusLabel(row.status)}</span>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
+                    <td className="px-6 py-4 text-center">
+                      <div className="flex justify-center gap-2">
                         <button type="button" onClick={(e) => handleReply(e, row)} className="p-2 text-[#0094EB] hover:bg-blue-50 rounded-lg transition-colors" title="Responder"><MessageSquare size={18} /></button>
                         <button type="button" onClick={(e) => handleDeleteClick(e, row)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" title="Excluir"><Trash2 size={18} /></button>
                       </div>

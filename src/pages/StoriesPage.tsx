@@ -284,7 +284,7 @@ const StoriesPage = () => {
                 <th onClick={() => handleSort('status')} className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center hover:opacity-75">
                   <span className="inline-flex items-center gap-1 justify-center">Status {sortColumn === 'status' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</span>
                 </th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right">Ações</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -336,8 +336,8 @@ const StoriesPage = () => {
                         {isStoryActive(story) ? 'ATIVO' : 'DESATIVADO'}
                       </button>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
+                    <td className="px-6 py-4 text-center">
+                      <div className="flex justify-center gap-2">
                         <button
                           onClick={() => window.open(`/stories/preview/${story.id}`, "_blank", "noopener,noreferrer")}
                           className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors"
