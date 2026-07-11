@@ -126,15 +126,15 @@ const StoryDetailsPage = () => {
     try {
       setIsSaving(true);
 
+      if (!storeId) {
+        showError('Não foi possível identificar a loja atual.');
+        return;
+      }
+
       if (isCreate) {
-        if (!storeId) {
-          showError('Não foi possível identificar a loja atual.');
-          return;
-        }
-  
-          const newStory: Story = {
-            id: Math.random().toString(36).substr(2, 9),
-            store_id: storeId,
+        const newStory: Story = {
+          id: Math.random().toString(36).substr(2, 9),
+          store_id: storeId,
           title: formData.title,
           format: formData.format,
           scroll_direction: formData.scroll_direction,

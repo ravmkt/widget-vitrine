@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { db, Comment, Video } from "@/lib/db";
+import { useTenant } from "@/context/TenantContext";
 import { supabase } from "@/lib/supabase";
 import {
   Search,
@@ -28,6 +29,7 @@ interface CommentWithReplies extends Comment {
 }
 
 const CommentsPage = () => {
+  const { storeId, loading: tenantLoading } = useTenant();
   const [comments, setComments] = useState<CommentWithReplies[]>([]);
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,9 +92,14 @@ const CommentsPage = () => {
 
   const loadComments = async () => {
     try {
+      if (!storeId) {
+        setComments([]);
+        setVideos([]);
+        return;
+      }
       const [allComments, allVideos] = await Promise.all([
-        db.comments.getAll(),
-        db.videos.getAll(),
+        db.comments.getAll(storeId),
+        db.videos.getAll(storeId),
       ]);
       setComments(allComments || []);
       setVideos(allVideos);
@@ -104,8 +111,8 @@ const CommentsPage = () => {
   };
 
   useEffect(() => {
-    loadComments();
-  }, []);
+    if (!tenantLoading) loadComments();
+  }, [storeId, tenantLoading]);
 
   const getStatusLabel = (status: Comment["status"]) => {
     switch (normalizeStatus(status)) {
@@ -183,7 +190,12 @@ const CommentsPage = () => {
 
   const handleStatusChange = async (commentId: string, newStatus: Comment["status"]) => {
     try {
-      await db.comments.save({ ...comments.find(c => c.id === commentId)!, status: newStatus });
+      const current = comments.find(c => c.id === commentId);
+      if (!current || !storeId) {
+        showError("Não foi possível identificar a loja atual.");
+        return;
+      }
+      await db.comments.save({ ...(current as Comment & Record<string, unknown>), status: newStatus, store_id: storeId } as Comment);
       loadComments();
       showSuccess("Status atualizado com sucesso!");
     } catch (error) {
@@ -245,7 +257,7 @@ const CommentsPage = () => {
     setComments(prev => prev.map(c => {
       if (c.id === editingCommentId) {
         const updated = { ...c, replies: [...(c.replies || []), newReply] };
-        db.comments.save(updated);
+        db.comments.save(updated as Comment);
         return updated;
       }
       return c;

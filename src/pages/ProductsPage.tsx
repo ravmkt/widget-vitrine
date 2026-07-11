@@ -167,15 +167,20 @@ const ProductsPage = () => {
     if (!formData.category) errors.push('Categoria é obrigatória.');
     if (!formData.price || parseFloat(formData.price) <= 0) errors.push('Preço válido é obrigatório.');
     if (formData.image_error) errors.push(formData.image_error);
+    if (!storeId) errors.push('Não foi possível identificar a loja atual.');
     if (errors.length > 0) { errors.forEach(showError); return; }
 
     setIsSaving(true);
     setTimeout(async () => {
       try {
-        const currentStoreId = storeId || editingProduct?.store_id || '';
+        if (!storeId) {
+          showError('Não foi possível identificar a loja atual.');
+          return;
+        }
         if (editingProduct) {
           const updated: Product = {
             ...editingProduct,
+            store_id: storeId,
             name: formData.name,
             image_url: formData.image_url || editingProduct.image_url,
             product_url: formData.product_url,
@@ -190,7 +195,7 @@ const ProductsPage = () => {
         } else {
           const newProduct: Product = {
             id: Math.random().toString(36).slice(2, 11),
-            store_id: currentStoreId,
+            store_id: storeId,
             name: formData.name,
             image_url: formData.image_url || '',
             product_url: formData.product_url,

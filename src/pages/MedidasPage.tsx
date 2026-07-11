@@ -7,8 +7,10 @@ import { showError, showSuccess } from '@/utils/toast';
 import CustomDialog from '@/components/CustomDialog';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import { cn } from '@/lib/utils';
+import { useTenant } from '@/context/TenantContext';
 
 const MedidasPage = () => {
+  const { storeId, loading: tenantLoading } = useTenant();
   const [models, setModels] = useState<SizingModel[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -29,14 +31,18 @@ const MedidasPage = () => {
 
   const loadData = async () => {
     try {
-      const list = await db.sizingModels.getAll();
+      if (!storeId) {
+        setModels([]);
+        return;
+      }
+      const list = await db.sizingModels.getAll(storeId);
       setModels(list);
     } catch (e) {
       showError('Erro ao carregar modelos de medidas.');
     }
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { if (!tenantLoading) loadData(); }, [storeId, tenantLoading]);
 
   const resetForm = () => {
     setFormData({
@@ -145,6 +151,10 @@ const MedidasPage = () => {
 
     try {
       setIsSaving(true);
+      if (!storeId) {
+        showError('Não foi possível identificar a loja atual.');
+        return;
+      }
       
       const measures = [
         { name: 'Altura', value: Number(formData.height), unit: 'cm' as const },
@@ -155,7 +165,7 @@ const MedidasPage = () => {
 
       const modelData: SizingModel = {
         id: editingModel?.id || Math.random().toString(36).substr(2, 9),
-        store_id: '11111111-1111-1111-1111-111111111111',
+        store_id: storeId,
         name: formData.name.trim(),
         image_url: formData.image_url || undefined,
         measures,
@@ -163,7 +173,7 @@ const MedidasPage = () => {
         updated_at: new Date().toISOString()
       };
 
-      await db.sizingModels.save(modelData);
+      await db.sizingModels.save({ ...modelData, store_id: storeId });
       showSuccess(editingModel ? 'Modelo atualizado com sucesso!' : 'Modelo criado com sucesso!');
       setIsModalOpen(false);
       loadData();

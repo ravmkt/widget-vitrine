@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { db, Appearance, Store } from "@/lib/db";
+import { useTenant } from "@/context/TenantContext";
 import {
   Sparkles,
   Plus,
@@ -152,6 +153,7 @@ const FormField = ({
 };
 
 const AppearancePage = () => {
+  const { storeId, loading: tenantLoading } = useTenant();
   const [appearances, setAppearances] = useState<Appearance[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: string; name: string }>({
@@ -252,12 +254,12 @@ const AppearancePage = () => {
 
   const loadData = async () => {
     try {
-      const stores = await db.stores.getAll();
-      const mainStore = stores[0];
-      if (mainStore) {
-        const list = await db.appearances.getAll(mainStore.id);
-        setAppearances(list);
+      if (!storeId) {
+        setAppearances([]);
+        return;
       }
+      const list = await db.appearances.getAll(storeId);
+      setAppearances(list);
     } catch (error) {
       showError("Erro ao carregar estilos.");
     } finally {
@@ -266,14 +268,18 @@ const AppearancePage = () => {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (!tenantLoading) loadData();
+  }, [storeId, tenantLoading]);
 
   const handleSetDefault = async (id: string) => {
     try {
+      if (!storeId) {
+        showError("Não foi possível identificar a loja atual.");
+        return;
+      }
       const styles = [...appearances];
       for (const style of styles) {
-        await db.appearances.save({ ...style, is_default: style.id === id });
+        await db.appearances.save({ ...style, store_id: storeId, is_default: style.id === id });
       }
       showSuccess("Estilo padrão atualizado!");
       loadData();
@@ -301,7 +307,7 @@ const AppearancePage = () => {
     setEditingStyle(null);
     setFormData({
       id: "",
-      store_id: "11111111-1111-1111-1111-111111111111",
+      store_id: storeId,
       name: "",
       is_default: false,
       primary_color: "#0094EB",
@@ -418,16 +424,21 @@ const AppearancePage = () => {
     } as Appearance & Record<string, unknown>;
 
     try {
+      if (!storeId) {
+        showError("Não foi possível identificar a loja atual.");
+        return;
+      }
       if (editingStyle) {
-        await db.appearances.save(stylePayload as Appearance);
+        await db.appearances.save({ ...stylePayload, store_id: storeId } as Appearance);
         showSuccess("Estilo atualizado com sucesso!");
       } else {
         const newStyle: Appearance = {
           ...styleToSave,
           id: Date.now().toString(),
+          store_id: storeId,
           created_at: new Date().toISOString(),
         };
-        await db.appearances.save({ ...newStyle, desktop_columns: formData.desktop_columns, desktop_rows: formData.desktop_rows, desktop_gap: formData.desktop_gap, mobile_columns: formData.mobile_columns, mobile_rows: formData.mobile_rows, mobile_gap: formData.mobile_gap } as Appearance);
+        await db.appearances.save({ ...newStyle, store_id: storeId, desktop_columns: formData.desktop_columns, desktop_rows: formData.desktop_rows, desktop_gap: formData.desktop_gap, mobile_columns: formData.mobile_columns, mobile_rows: formData.mobile_rows, mobile_gap: formData.mobile_gap } as Appearance);
         showSuccess("Estilo criado com sucesso!");
       }
       setShowModal(false);
