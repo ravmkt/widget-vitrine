@@ -353,8 +353,8 @@ const createCrudFunctions = <T extends { id: string; store_id?: string; created_
       const items = local ? JSON.parse(local) : memoryArray;
       return storeId ? items.filter((item: T) => item.store_id === storeId) : items;
     },
-    async getById(id: string): Promise<T | null> {
-      const items = await this.getAll();
+    async getById(id: string, storeId?: string): Promise<T | null> {
+      const items = await this.getAll(storeId);
       return items.find((item: T) => item.id === id) || null;
     },
     async save(item: T): Promise<T> {
