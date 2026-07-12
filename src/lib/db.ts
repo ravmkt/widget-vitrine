@@ -379,6 +379,59 @@ const initLocalStorage = () => {
 
 initLocalStorage();
 
+/**
+ * Garante que a loja exista na tabela `stores` do Supabase.
+ *
+ * Isso evita o erro:
+ * insert or update on table "videos" violates foreign key constraint "videos_store_id_fkey"
+ */
+const ensureSupabaseStoreExists = async (storeId?: string) => {
+  if (!isSupabaseConfigured || !storeId) return;
+
+  const { data: existingStore, error: selectError } = await supabase
+    .from('stores' as any)
+    .select('id')
+    .eq('id', storeId)
+    .maybeSingle();
+
+  if (selectError) {
+    console.error('Erro ao verificar loja no Supabase:', selectError);
+    throw selectError;
+  }
+
+  if (existingStore) return;
+
+  let localStore: Store | null = null;
+
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const local = localStorage.getItem('vidlytics_stores');
+      const stores = local ? JSON.parse(local) as Store[] : [];
+
+      localStore = stores.find(store => store.id === storeId) || null;
+    }
+  } catch (error) {
+    console.warn('Não foi possível buscar loja no localStorage:', error);
+  }
+
+  const storeToInsert: Store = {
+    id: storeId,
+    name: localStore?.name || DEFAULT_STORE.name || 'Loja',
+    domain: localStore?.domain || DEFAULT_STORE.domain || 'loja.com.br',
+    active: localStore?.active ?? true,
+    created_at: localStore?.created_at || new Date().toISOString(),
+  };
+
+  const { error: insertError } = await supabase
+    .from('stores' as any)
+    .insert(storeToInsert as any);
+
+  if (insertError) {
+    console.error('Erro ao criar loja no Supabase:', insertError);
+    throw insertError;
+  }
+};
+
 const createCrudFunctions = <
   T extends {
     id: string;
@@ -509,6 +562,17 @@ const createSupabaseCrudFunctions = <
         return localFallback.save(item);
       }
 
+      /**
+       * Antes de salvar qualquer registro com store_id no Supabase,
+       * garante que a loja exista na tabela `stores`.
+       *
+       * Principalmente necessário para `videos`,
+       * pois a tabela possui FK `videos_store_id_fkey`.
+       */
+      if (tableName !== 'stores' && item.store_id) {
+        await ensureSupabaseStoreExists(item.store_id);
+      }
+
       const now = new Date().toISOString();
 
       const payload = {
@@ -558,7 +622,7 @@ export const resolveStoreId = async (storeId?: string) => {
 
   const stores = await db.stores.getAll();
 
-  return stores[0]?.id || '11111111-1111-1111-1111-111111111111';
+  return stores[0]?.id || DEFAULT_STORE.id;
 };
 
 export const withStoreId = async <T extends { store_id?: string }>(
@@ -607,6 +671,7 @@ export const db = {
 
   // Vídeos agora usam Supabase quando configurado.
   // Isso evita salvar base64/blob no localStorage.
+  // Também garante que o store_id exista na tabela stores antes de salvar.
   videos: createSupabaseCrudFunctions<Video>('videos', memoryVideos),
 
   stories: createCrudFunctions<Story>('stories', memoryStories),
