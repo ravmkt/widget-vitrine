@@ -2,75 +2,55 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, Video } from '@/lib/db';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Eye, MousePointerClick, ShoppingBag, CheckCircle2, Calendar, TrendingUp, TrendingDown } from 'lucide-react';
+import { Eye, MousePointerClick, ShoppingBag, CheckCircle2, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import CustomDialog from '@/components/CustomDialog';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
-import { aggregateVideoMetrics, buildVideoMetricsRows, getVideoInterval, VideoPeriod } from '@/lib/videoMetrics';
+import { getDashboardMetrics, getMetricsFlow, getVideoMetricsRows, type AnalyticsInterval } from '@/lib/analytics';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [selectedPeriod, setSelectedPeriod] = useState<VideoPeriod>('30');
+  const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsInterval>('30');
   const [customRange, setCustomRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: undefined,
     to: undefined,
   });
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [videos, setVideos] = useState<Video[]>([]);
+  const [storeId, setStoreId] = useState('');
+  const [dashboardMetrics, setDashboardMetrics] = useState({ views: 0, plays: 0, pauses: 0, clicks: 0, ctaClicks: 0, productClicks: 0, whatsappClicks: 0, likes: 0, shares: 0, comments: 0, closes: 0, conversions: 0, ctr: 0 });
+  const [flow, setFlow] = useState<any[]>([]);
+  const [topVideos, setTopVideos] = useState<any[]>([]);
 
-  const activeInterval = useMemo(() => getVideoInterval(selectedPeriod, customRange), [selectedPeriod, customRange]);
-
-  const dashboardData = useMemo(() => {
-    const days = Array.from({ length: Math.max(1, Math.ceil((activeInterval.end.getTime() - activeInterval.start.getTime()) / 86400000) + 1) }, (_, index) => {
-      const date = new Date(activeInterval.start);
-      date.setDate(activeInterval.start.getDate() + index);
-      return date;
-    });
-
-    const flow = days.map(day => {
-      const dayIndex = day.getDate() + day.getMonth() * 31 + (day.getFullYear() % 100) * 400;
-      const views = 120 + (dayIndex % 300);
-      const clicks = Math.floor(views * (0.12 + (dayIndex % 8) / 100));
-      const sales = Math.floor(views * (0.02 + (dayIndex % 3) / 100));
-
-      return {
-        name: format(day, 'dd/MM', { locale: ptBR }),
-        views,
-        clicks,
-        sales,
-        revenue: sales * 89.9,
-      };
-    });
-
-    const rows = buildVideoMetricsRows(videos, activeInterval);
-    const totals = aggregateVideoMetrics(rows);
-
-    const topVideos = [...rows]
-      .sort((a, b) => b.metrics.views - a.metrics.views)
-      .slice(0, 4)
-      .map((video) => ({
-        id: video.id,
-        name: video.title,
-        thumbnail: video.thumbnail_url || video.image_url || '',
-        views: video.metrics.views,
-        ctr: video.metrics.ctr,
-      }));
-
-    return { flow, totals, topVideos };
-  }, [activeInterval, videos]);
+  const activeInterval = useMemo(() => selectedPeriod, [selectedPeriod]);
 
   useEffect(() => {
     const init = async () => {
       const allVideos = await db.videos.getAll();
+      const store = allVideos[0]?.store_id || (await db.stores.getAll())[0]?.id || '';
       setVideos(allVideos);
+      setStoreId(store);
       setLoading(false);
     };
     init();
   }, []);
+
+  useEffect(() => {
+    if (!storeId) return;
+    const loadMetrics = async () => {
+      const metrics = await getDashboardMetrics(storeId, activeInterval, customRange);
+      const flowRows = await getMetricsFlow(storeId, activeInterval, customRange);
+      const rows = await getVideoMetricsRows(storeId, videos, activeInterval, customRange);
+      setDashboardMetrics(metrics);
+      setFlow(flowRows);
+      setTopVideos([...rows].sort((a, b) => b.metrics.views - a.metrics.views).slice(0, 4));
+    };
+    loadMetrics();
+  }, [storeId, activeInterval, customRange, videos]);
 
   if (loading) return null;
 
@@ -80,7 +60,7 @@ const DashboardPage = () => {
         <div>
           <h1 className="text-3xl font-black tracking-tight text-slate-900">Visão Geral</h1>
           <p className="text-slate-500 font-medium mt-1">
-            Métricas de <span className="text-[#0094EB] font-bold">{format(activeInterval.start, "dd/MM")}</span> até <span className="text-[#0094EB] font-bold">{format(activeInterval.end, "dd/MM")}</span>
+            Métricas de <span className="text-[#0094EB] font-bold">{format(new Date(), "dd/MM")}</span> com dados reais do Supabase
           </p>
         </div>
 
@@ -93,10 +73,10 @@ const DashboardPage = () => {
           ].map((p) => (
             <button
               key={p.id}
-              onClick={() => p.id === 'custom' ? setIsCalendarOpen(true) : setSelectedPeriod(p.id as any)}
+              onClick={() => p.id === 'custom' ? setIsCalendarOpen(true) : setSelectedPeriod(p.id as AnalyticsInterval)}
               className={cn(
-                "px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2",
-                selectedPeriod === p.id ? "bg-[#0094EB] text-white shadow-lg" : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                'px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2',
+                selectedPeriod === p.id ? 'bg-[#0094EB] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
               )}
             >
               {p.icon && <p.icon size={14} />}
@@ -107,10 +87,10 @@ const DashboardPage = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard title="Visualizações" value={dashboardData.totals.views.toLocaleString()} change="+12.5%" icon={Eye} />
-        <MetricCard title="Cliques em CTA" value={dashboardData.totals.clicks.toLocaleString()} change="+8.3%" icon={MousePointerClick} />
-        <MetricCard title="Conversões" value={dashboardData.totals.conversions.toLocaleString()} change="+15.1%" icon={CheckCircle2} isConversion />
-        <MetricCard title="CTR" value="12.4%" change="+5.4%" icon={MousePointerClick} />
+        <MetricCard title="Visualizações" value={dashboardMetrics.views.toLocaleString()} icon={Eye} />
+        <MetricCard title="Cliques em CTA" value={dashboardMetrics.ctaClicks.toLocaleString()} icon={MousePointerClick} />
+        <MetricCard title="Conversões" value={dashboardMetrics.conversions.toLocaleString()} icon={CheckCircle2} isConversion />
+        <MetricCard title="CTR" value={`${dashboardMetrics.ctr.toFixed(1).replace('.', ',')}%`} icon={MousePointerClick} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
@@ -118,7 +98,7 @@ const DashboardPage = () => {
           <h3 className="text-lg font-black text-slate-800 mb-8">Fluxo de Performance de Vídeos</h3>
           <div className="h-[340px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={dashboardData.flow}>
+              <AreaChart data={flow}>
                 <defs>
                   <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#0094EB" stopOpacity={0.15}/><stop offset="95%" stopColor="#0094EB" stopOpacity={0}/>
@@ -137,32 +117,32 @@ const DashboardPage = () => {
         <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm flex flex-col">
           <h3 className="text-lg font-black text-slate-800 mb-8">Performance de Vídeos</h3>
           <div className="space-y-6 flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
-            {dashboardData.topVideos.map((item, i) => (
+            {topVideos.map((item, i) => (
               <div key={item.id} className="flex flex-col gap-3 p-4 rounded-3xl bg-slate-50 border border-slate-100 hover:border-[#0094EB]/30 transition-all">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-2xl bg-slate-200 overflow-hidden shrink-0">
-                    {item.thumbnail ? <img src={item.thumbnail} alt={item.name} className="h-full w-full object-cover" /> : null}
+                    {item.thumbnail_url ? <img src={item.thumbnail_url} alt={item.title} className="h-full w-full object-cover" /> : null}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-black text-slate-800 truncate">{item.name}</p>
+                    <p className="text-sm font-black text-slate-800 truncate">{item.title}</p>
                     <span className="text-[10px] font-black text-slate-400">RANK #{i+1}</span>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Visualizações</p>
-                    <p className="text-sm font-black text-slate-900">{item.views.toLocaleString()}</p>
+                    <p className="text-sm font-black text-slate-900">{item.metrics.views.toLocaleString()}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Taxa (CTR)</p>
-                    <p className="text-sm font-black text-slate-900">{item.ctr.toFixed(1).replace('.', ',')}%</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">CTR</p>
+                    <p className="text-sm font-black text-slate-900">{item.metrics.ctr.toFixed(1).replace('.', ',')}%</p>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-          
+
           <button
             onClick={() => navigate('/videos/performance')}
             className="w-full mt-8 py-4 bg-[#0094EB] hover:bg-[#0077c2] text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-slate-200"
@@ -185,13 +165,12 @@ const DashboardPage = () => {
   );
 };
 
-const MetricCard = ({ title, value, change, icon: Icon, isConversion = false }: any) => (
+const MetricCard = ({ title, value, icon: Icon, isConversion = false }: any) => (
   <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
     <div className="flex items-start justify-between mb-6">
-      <div className={cn("p-4 rounded-2xl transition-all group-hover:scale-110", isConversion ? 'bg-emerald-50 text-emerald-500' : 'bg-blue-50 text-[#0094EB]')}>
+      <div className={cn('p-4 rounded-2xl transition-all group-hover:scale-110', isConversion ? 'bg-emerald-50 text-emerald-500' : 'bg-blue-50 text-[#0094EB]')}>
         <Icon size={24} />
       </div>
-      <span className="text-[11px] font-black text-emerald-500 bg-emerald-50 px-3 py-1 rounded-full">{change}</span>
     </div>
     <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">{title}</p>
     <h2 className="text-2xl font-black text-slate-900">{value}</h2>

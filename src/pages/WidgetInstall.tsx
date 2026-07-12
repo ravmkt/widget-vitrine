@@ -1,26 +1,30 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Code, Copy, CheckCircle2, Globe, AlertTriangle } from "lucide-react";
+import { Copy, CheckCircle2, Globe, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { showSuccess } from "@/utils/toast";
+import { db } from "@/lib/db";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 export default function WidgetInstall() {
   const [copied, setCopied] = useState(false);
-  
-  // Captura a URL pública da variável de ambiente ou usa o origin atual como fallback
-  // No build de produção, VITE_WIDGET_PUBLIC_URL deve ser definida (ex: https://meu-app.vercel.app)
   const publicUrl = import.meta.env.VITE_WIDGET_PUBLIC_URL || window.location.origin;
-  
-  // Se for localhost, avisamos o usuário ou usamos um placeholder
   const isLocal = publicUrl.includes('localhost') || publicUrl.includes('127.0.0.1');
   const displayUrl = isLocal ? "https://seu-dominio-publico.com" : publicUrl;
+  const snippetStoreId = localStorage.getItem('vidlytics_selected_store_id') || '11111111-1111-1111-1111-111111111111';
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+  const hasSupabase = !!supabase && isSupabaseConfigured;
 
-  const licenseId = "11111111-1111-1111-1111-111111111111"; // ID Exemplo ou dinâmico do banco
-  
   const scriptCode = `<script>
+window.VIDLYTICS_CONFIG = {
+  storeId: "${snippetStoreId}",
+  supabaseUrl: "${supabaseUrl}",
+  supabaseAnonKey: "${supabaseAnonKey}"
+};
 (function() {
   var script = document.createElement('script');
-  script.src = '${displayUrl}/widget.js?licenseId=${licenseId}';
+  script.src = '${displayUrl}/widget.js';
   script.async = true;
   script.charset = 'UTF-8';
   document.head.appendChild(script);
@@ -51,6 +55,16 @@ export default function WidgetInstall() {
         </div>
       )}
 
+      {!isSupabaseConfigured && (
+        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-blue-600 mt-0.5" />
+          <div className="text-sm text-blue-800">
+            <p className="font-bold">Supabase não configurado</p>
+            <p className="opacity-80">O snippet manterá o fallback local, mas para analytics real você precisa definir a URL e a anon key pública.</p>
+          </div>
+        </div>
+      )}
+
       <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-slate-950 text-white">
         <CardContent className="p-8">
           <div className="flex items-center justify-between mb-6">
@@ -60,16 +74,16 @@ export default function WidgetInstall() {
               </div>
               <span className="text-xs font-black uppercase tracking-widest text-slate-400">Script de Integração Yampi</span>
             </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleCopy}
               className="text-slate-400 hover:text-white hover:bg-white/10 rounded-xl font-bold"
             >
               <Copy className="mr-2 h-4 w-4" /> {copied ? "Copiado!" : "Copiar Código"}
             </Button>
           </div>
-          
+
           <div className="relative">
             <pre className="p-6 bg-black/40 rounded-2xl text-emerald-400 font-mono text-xs md:text-sm overflow-x-auto border border-white/5 leading-relaxed">
               {scriptCode}
