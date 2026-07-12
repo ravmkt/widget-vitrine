@@ -56,6 +56,42 @@ type CommentItem = {
   updated_at?: string;
 };
 
+type LikeRecord = Record<string, { liked: boolean; count: number }>;
+
+const getAllSafe = async <T,>(collection: any, storeId?: string): Promise<T[]> => {
+  if (!collection?.getAll) return [];
+
+  try {
+    if (storeId) return await collection.getAll(storeId);
+    return await collection.getAll();
+  } catch {
+    try {
+      return await collection.getAll();
+    } catch {
+      return [];
+    }
+  }
+};
+
+const getByIdSafe = async <T,>(
+  collection: any,
+  id?: string | null,
+  storeId?: string,
+): Promise<T | null> => {
+  if (!collection?.getById || !id) return null;
+
+  try {
+    if (storeId) return await collection.getById(id, storeId);
+    return await collection.getById(id);
+  } catch {
+    try {
+      return await collection.getById(id);
+    } catch {
+      return null;
+    }
+  }
+};
+
 const readLocalComments = (): CommentItem[] => {
   try {
     return JSON.parse(localStorage.getItem('story_video_comments') || '[]');
@@ -68,7 +104,15 @@ const saveLocalComments = (comments: CommentItem[]) => {
   localStorage.setItem('story_video_comments', JSON.stringify(comments));
 };
 
-const readLikes = (): Record<string, { liked: boolean; count: number }> => {
+const mergeLocalCommentsByVideo = (videoId: string, comments: CommentItem[]) => {
+  const previous = readLocalComments().filter(
+    item => getCommentVideoId(item) !== videoId,
+  );
+
+  saveLocalComments([...previous, ...comments]);
+};
+
+const readLikes = (): LikeRecord => {
   try {
     return JSON.parse(localStorage.getItem('story_video_likes') || '{}');
   } catch {
@@ -76,28 +120,87 @@ const readLikes = (): Record<string, { liked: boolean; count: number }> => {
   }
 };
 
-const saveLikes = (likes: Record<string, { liked: boolean; count: number }>) => {
+const saveLikes = (likes: LikeRecord) => {
   localStorage.setItem('story_video_likes', JSON.stringify(likes));
 };
 
-const getVideoUrl = (video?: Video | null) => video?.video_url || '';
+const getVideoUrl = (video?: Video | null) => {
+  const item = video as any;
 
-const getVideoPosterUrl = (video?: Video | null) =>
-  video?.thumbnail_url || video?.poster_url || video?.image_url || '';
+  return item?.video_url || item?.videoUrl || item?.url || '';
+};
 
-const getVideoLikeCount = (videoId?: string) =>
-  videoId ? readLikes()[videoId]?.count ?? 0 : 0;
+const getVideoPosterUrl = (video?: Video | null) => {
+  const item = video as any;
 
-const getCommentVideoId = (comment: CommentItem) =>
-  comment.video_id || comment.videoId || '';
+  return (
+    item?.thumbnail_url ||
+    item?.thumbnailUrl ||
+    item?.poster_url ||
+    item?.posterUrl ||
+    item?.image_url ||
+    item?.imageUrl ||
+    ''
+  );
+};
 
-const getCommentName = (comment: CommentItem) =>
-  comment.user_name || comment.name || 'Visitante';
+const getProductImageUrl = (product?: any) => {
+  if (!product) return '';
 
-const getVideoCommentCount = (videoId?: string, comments: CommentItem[] = []) => {
+  return (
+    product.image_url ||
+    product.imageUrl ||
+    product.thumbnail_url ||
+    product.thumbnailUrl ||
+    product.poster_url ||
+    product.posterUrl ||
+    product.cover_url ||
+    product.coverUrl ||
+    ''
+  );
+};
+
+const getVideoLikeCount = (videoId?: string) => {
+  if (!videoId) return 0;
+
+  return readLikes()[videoId]?.count ?? 0;
+};
+
+const getCommentVideoId = (comment: CommentItem) => {
+  return comment.video_id || comment.videoId || '';
+};
+
+const getCommentName = (comment: CommentItem) => {
+  return comment.user_name || comment.name || 'Visitante';
+};
+
+const getVideoCommentCount = (
+  videoId?: string,
+  comments: CommentItem[] = [],
+) => {
   if (!videoId) return 0;
 
   return comments.filter(item => getCommentVideoId(item) === videoId).length;
+};
+
+const parseMeasures = (model: any): any[] => {
+  if (!model) return [];
+
+  if (Array.isArray(model.measures)) return model.measures;
+  if (Array.isArray(model.measurements)) return model.measurements;
+  if (Array.isArray(model.items)) return model.items;
+
+  try {
+    if (typeof model.measures === 'string') {
+      const parsed = JSON.parse(model.measures);
+
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {
+    return [];
+  }
+
+  return [];
 };
 
 export default function StoriesWidgetPage() {
@@ -113,13 +216,18 @@ export default function StoriesWidgetPage() {
   const [loading, setLoading] = useState(true);
   const [resolvedStoreId, setResolvedStoreId] = useState('');
   const [storeName, setStoreName] = useState('');
+
   const [stories, setStories] = useState<any[]>([]);
-  const [storyVideosMap, setStoryVideosMap] = useState<Map<string, Video[]>>(new Map());
+  const [storyVideosMap, setStoryVideosMap] = useState<Map<string, Video[]>>(
+    new Map(),
+  );
+
   const [storyIdx, setStoryIdx] = useState<number | null>(null);
   const [videoIdx, setVideoIdx] = useState(0);
 
   const [playing, setPlaying] = useState(true);
   const [muted, setMuted] = useState(true);
+
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
 
@@ -140,26 +248,34 @@ export default function StoriesWidgetPage() {
   const story = stories[storyIdx ?? -1] ?? null;
   const currentVideos = story ? storyVideosMap.get(story.id) || [] : [];
   const currentVideo = currentVideos[videoIdx] ?? null;
+
   const currentUrl = getVideoUrl(currentVideo);
   const posterUrl = getVideoPosterUrl(currentVideo);
+  const productImageUrl = getProductImageUrl(product);
 
   const activeCommentCount = useMemo(
     () => getVideoCommentCount(currentVideo?.id, comments),
     [currentVideo?.id, comments],
   );
 
-  const modelData = model?.measures?.length ? model.measures : [];
+  const modelData = useMemo(() => parseMeasures(model), [model]);
 
   const loadComments = async (videoId: string, currentStoreId: string) => {
     try {
-      const dbComments = await db.comments.getAll(currentStoreId);
+      const dbComments = await getAllSafe<CommentItem>(
+        (db as any).comments,
+        currentStoreId,
+      );
 
-      const filtered = (dbComments || []).filter(
-        (item: any) => item.video_id === videoId || item.videoId === videoId,
-      ) as CommentItem[];
+      const filtered = (dbComments || []).filter((item: any) => {
+        const sameVideo = getCommentVideoId(item) === videoId;
+        const sameStore = !item.store_id || item.store_id === currentStoreId;
+
+        return sameVideo && sameStore;
+      });
 
       setComments(filtered);
-      saveLocalComments(filtered);
+      mergeLocalCommentsByVideo(videoId, filtered);
     } catch (error) {
       console.error('Erro ao carregar comentários:', error);
 
@@ -183,32 +299,44 @@ export default function StoriesWidgetPage() {
         return;
       }
 
-      const relations = await (db as any).storyProducts?.getAll?.(currentStoreId);
+      const relations = await getAllSafe<any>(
+        (db as any).storyProducts,
+        currentStoreId,
+      );
 
       const relation = Array.isArray(relations)
-        ? relations.find(
-            (item: any) =>
-              item.story_id === currentStory.id &&
-              item.video_id === currentVideoItem.id,
-          )
+        ? relations.find((item: any) => {
+            const sameStory = item.story_id === currentStory.id;
+            const sameVideo = item.video_id === currentVideoItem.id;
+            const sameStore = !item.store_id || item.store_id === currentStoreId;
+
+            return sameStory && sameVideo && sameStore;
+          })
         : null;
 
+      const videoAny = currentVideoItem as any;
+
       const productId =
-        (currentVideoItem as any).product_id ||
-        (currentVideoItem as any).productId ||
+        videoAny.product_id ||
+        videoAny.productId ||
         relation?.product_id ||
         relation?.productId ||
         null;
 
       const modelId =
-        (currentVideoItem as any).model_id ||
-        (currentVideoItem as any).modelId ||
-        (currentVideoItem as any).measurement_id ||
+        videoAny.model_id ||
+        videoAny.modelId ||
+        videoAny.measurement_id ||
+        videoAny.measurementId ||
+        relation?.model_id ||
+        relation?.modelId ||
+        relation?.measurement_id ||
+        relation?.measurementId ||
         null;
 
       const [resolvedProduct, resolvedModel] = await Promise.all([
-        productId ? db.products.getById(productId, currentStoreId) : null,
-        modelId ? db.sizingModels.getById(modelId, currentStoreId) : null,
+        getByIdSafe<any>((db as any).products, productId, currentStoreId),
+        getByIdSafe<any>((db as any).sizingModels, modelId, currentStoreId),
       ]);
 
       setProduct(resolvedProduct || null);
@@ -228,69 +356,96 @@ export default function StoriesWidgetPage() {
         setLoading(true);
 
         const currentStoreId = await resolveStoreId(storeId);
-        const storeList = await db.stores.getAll();
+        const storeList = await getAllSafe<any>((db as any).stores);
+
         const currentStore =
           storeList.find((store: any) => store.id === currentStoreId) ||
           storeList.find((store: any) => store.id === storeId) ||
           storeList[0];
 
+        if (!mounted) return;
+
         if (!currentStore) {
-          if (mounted) setLoading(false);
+          setStories([]);
+          setStoryVideosMap(new Map());
+          setStoryIdx(null);
           return;
         }
-
-        if (!mounted) return;
 
         setResolvedStoreId(currentStoreId);
         setStoreName(currentStore.name || '');
 
-        const genSettings = (await db.generalSettings.getAll(currentStoreId))[0];
+        const [settingsList, allStories, storyRelations, allVideos] =
+          await Promise.all([
+            getAllSafe<any>((db as any).generalSettings, currentStoreId),
+            getAllSafe<any>((db as any).stories, currentStoreId),
+            getAllSafe<any>((db as any).storyVideos, currentStoreId),
+            getAllSafe<Video>((db as any).videos, currentStoreId),
+          ]);
 
         if (!mounted) return;
 
-        setSettings(genSettings || null);
-        setMuted(genSettings?.muted_by_default ?? true);
+        const genSettings = settingsList[0] || null;
 
-        const allStories = await db.stories.getAll(currentStoreId);
+        setSettings(genSettings);
+        setMuted(genSettings?.muted_by_default ?? true);
 
         const activeStories = allStories
           .filter((item: any) => item.active !== false)
-          .sort((a: any, b: any) => Number(a.position || 0) - Number(b.position || 0));
+          .sort(
+            (a: any, b: any) =>
+              Number(a.position || 0) - Number(b.position || 0),
+          );
 
         const filteredStories = storyIdParam
           ? activeStories.filter((item: any) => item.id === storyIdParam)
           : activeStories;
 
-        const storyVids = await db.storyVideos.getAll(currentStoreId);
-        const allVids = await db.videos.getAll(currentStoreId);
-
         const map = new Map<string, Video[]>();
 
-        filteredStories.forEach((st: any) => {
-          const relationVideos = storyVids
-            .filter((sv: any) => sv.story_id === st.id)
-            .sort((a: any, b: any) => Number(a.position || 0) - Number(b.position || 0))
-            .map((sv: any) => allVids.find((video: any) => video.id === sv.video_id))
+        filteredStories.forEach((currentStory: any) => {
+          const relationVideos = storyRelations
+            .filter((relation: any) => {
+              const sameStory = relation.story_id === currentStory.id;
+              const sameStore =
+                !relation.store_id || relation.store_id === currentStoreId;
+
+              return sameStory && sameStore;
+            })
+            .sort(
+              (a: any, b: any) =>
+                Number(a.position || 0) - Number(b.position || 0),
+            )
+            .map((relation: any) =>
+              allVideos.find((video: any) => video.id === relation.video_id),
+            )
             .filter(Boolean) as Video[];
 
-          map.set(st.id, relationVideos);
+          map.set(currentStory.id, relationVideos);
         });
 
-        if (!mounted) return;
+        let startStoryIdx = filteredStories.length > 0 ? 0 : null;
+        let startVideoIdx = 0;
+
+        if (videoIdParam && filteredStories.length > 0) {
+          for (let index = 0; index < filteredStories.length; index += 1) {
+            const videos = map.get(filteredStories[index].id) || [];
+            const foundVideoIdx = videos.findIndex(
+              video => video.id === videoIdParam,
+            );
+
+            if (foundVideoIdx >= 0) {
+              startStoryIdx = index;
+              startVideoIdx = foundVideoIdx;
+              break;
+            }
+          }
+        }
 
         setStories(filteredStories);
         setStoryVideosMap(map);
-
-        if (filteredStories.length > 0) {
-          const startStoryIdx = 0;
-          const startVideos = map.get(filteredStories[0].id) || [];
-          const foundVideoIdx = videoIdParam
-            ? startVideos.findIndex(video => video.id === videoIdParam)
-            : 0;
-
-          setStoryIdx(startStoryIdx);
-          setVideoIdx(foundVideoIdx >= 0 ? foundVideoIdx : 0);
-        }
+        setStoryIdx(startStoryIdx);
+        setVideoIdx(startVideoIdx);
       } catch (error) {
         console.error('Erro ao carregar widget de Stories:', error);
         showError('Erro ao carregar Stories.');
@@ -317,20 +472,14 @@ export default function StoriesWidgetPage() {
     setCommentName('');
     setProgress(0);
 
-    loadLinkedData(story, currentVideo, resolvedStoreId);
-  }, [story?.id, currentVideo?.id, resolvedStoreId]);
-
-  useEffect(() => {
-    if (!currentVideo?.id || !resolvedStoreId) return;
-
-    setLikeCount(getVideoLikeCount(currentVideo.id));
-
     const likes = readLikes();
 
+    setLikeCount(getVideoLikeCount(currentVideo.id));
     setLiked(Boolean(likes[currentVideo.id]?.liked));
 
     loadComments(currentVideo.id, resolvedStoreId);
-  }, [currentVideo?.id, resolvedStoreId]);
+    loadLinkedData(story, currentVideo, resolvedStoreId);
+  }, [story?.id, currentVideo?.id, resolvedStoreId]);
 
   useEffect(() => {
     const el = videoRef.current;
@@ -371,6 +520,7 @@ export default function StoriesWidgetPage() {
       }
     } catch (error) {
       console.error('Erro ao controlar vídeo:', error);
+      setPlaying(false);
     }
   };
 
@@ -407,52 +557,87 @@ export default function StoriesWidgetPage() {
   };
 
   const goNext = () => {
-    if (!story || currentVideos.length === 0) return;
+    if (storyIdx === null || stories.length === 0) return;
 
-    if (videoIdx < currentVideos.length - 1) {
+    const videos = storyVideosMap.get(stories[storyIdx]?.id) || [];
+
+    if (videos.length > 0 && videoIdx < videos.length - 1) {
       setVideoIdx(value => value + 1);
-    } else {
-      setVideoIdx(0);
+      return;
     }
+
+    const nextStoryIdx = storyIdx < stories.length - 1 ? storyIdx + 1 : 0;
+
+    setStoryIdx(nextStoryIdx);
+    setVideoIdx(0);
   };
 
   const goPrev = () => {
+    if (storyIdx === null || stories.length === 0) return;
+
     if (videoIdx > 0) {
       setVideoIdx(value => value - 1);
+      return;
     }
+
+    const prevStoryIdx = storyIdx > 0 ? storyIdx - 1 : stories.length - 1;
+    const prevStoryVideos = storyVideosMap.get(stories[prevStoryIdx]?.id) || [];
+
+    setStoryIdx(prevStoryIdx);
+    setVideoIdx(Math.max(0, prevStoryVideos.length - 1));
   };
 
   const handleCommentSubmit = async () => {
     const name = commentName.trim();
     const text = commentText.trim();
 
-    if (!name || !text || !currentVideo?.id || !story || !resolvedStoreId) return;
+    if (!name) {
+      showError('Informe seu nome.');
+      return;
+    }
+
+    if (!text) {
+      showError('Escreva um comentário.');
+      return;
+    }
+
+    if (!currentVideo?.id || !story || !resolvedStoreId) {
+      showError('Não foi possível identificar o vídeo.');
+      return;
+    }
+
+    const now = new Date().toISOString();
+
+    const newComment: CommentItem = {
+      id: generateUuid(),
+      store_id: resolvedStoreId,
+      video_id: currentVideo.id,
+      story_id: story.id,
+      user_name: name,
+      name,
+      text,
+      status: 'pending',
+      created_at: now,
+      updated_at: now,
+    };
 
     try {
-      const now = new Date().toISOString();
+      await (db as any).comments.save(newComment);
 
-      const newComment = {
-        id: generateUuid(),
-        store_id: resolvedStoreId,
-        video_id: currentVideo.id,
-        story_id: story.id,
-        user_name: name,
-        text,
-        status: 'pending' as const,
-        created_at: now,
-        updated_at: now,
-      };
+      const next = await getAllSafe<CommentItem>(
+        (db as any).comments,
+        resolvedStoreId,
+      );
 
-      await db.comments.save(newComment as any);
+      const filtered = (next || []).filter((item: any) => {
+        const sameVideo = getCommentVideoId(item) === currentVideo.id;
+        const sameStore = !item.store_id || item.store_id === resolvedStoreId;
 
-      const next = await db.comments.getAll(resolvedStoreId);
-
-      const filtered = (next || []).filter(
-        (item: any) => item.video_id === currentVideo.id || item.videoId === currentVideo.id,
-      ) as CommentItem[];
+        return sameVideo && sameStore;
+      });
 
       setComments(filtered);
-      saveLocalComments(filtered);
+      mergeLocalCommentsByVideo(currentVideo.id, filtered);
       setCommentText('');
       setCommentName('');
       setShowEmoji(false);
@@ -460,7 +645,23 @@ export default function StoriesWidgetPage() {
       showSuccess('Comentário enviado com sucesso.');
     } catch (error) {
       console.error('Erro ao enviar comentário:', error);
-      showError('Erro ao enviar comentário.');
+
+      const localComments = readLocalComments().filter(
+        item => getCommentVideoId(item) !== currentVideo.id,
+      );
+
+      const nextComments = [...localComments, newComment];
+
+      saveLocalComments(nextComments);
+      setComments(
+        nextComments.filter(item => getCommentVideoId(item) === currentVideo.id),
+      );
+
+      setCommentText('');
+      setCommentName('');
+      setShowEmoji(false);
+
+      showSuccess('Comentário enviado com sucesso.');
     }
   };
 
@@ -469,7 +670,9 @@ export default function StoriesWidgetPage() {
       story?.id || ''
     }&videoId=${currentVideo?.id || ''}`;
 
-    const shareText = `Olha esse produto que lindo${product?.name ? `: ${product.name}` : ''}`;
+    const shareText = `Olha esse produto que lindo${
+      product?.name ? `: ${product.name}` : ''
+    }`;
 
     try {
       if (navigator.share) {
@@ -478,9 +681,15 @@ export default function StoriesWidgetPage() {
           text: shareText,
           url: shareUrl,
         });
-      } else {
+      } else if (navigator.clipboard) {
         await navigator.clipboard.writeText(shareUrl);
         showSuccess('Link copiado para compartilhar.');
+      } else {
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(
+          `${shareText}\n${shareUrl}`,
+        )}`;
+
+        window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
       }
     } catch {
       showError('Erro ao compartilhar.');
@@ -488,10 +697,16 @@ export default function StoriesWidgetPage() {
   };
 
   const handleWhatsApp = () => {
-    const phone = String(settings?.whatsapp_number || settings?.whatsapp || '').replace(/\D/g, '');
+    const phone = String(
+      settings?.whatsapp_number ||
+        settings?.whatsapp ||
+        settings?.phone ||
+        '',
+    ).replace(/\D/g, '');
 
     const link =
       product?.product_url ||
+      product?.url ||
       `${window.location.origin}${window.location.pathname}?storyId=${
         story?.id || ''
       }&videoId=${currentVideo?.id || ''}`;
@@ -545,28 +760,44 @@ export default function StoriesWidgetPage() {
   }
 
   return (
-    <div className="fixed inset-0 bg-black flex items-center justify-center overflow-hidden">
+    <div className="fixed inset-0 flex items-center justify-center overflow-hidden bg-black">
       <div className="relative h-full w-full max-w-[420px] overflow-hidden bg-black sm:aspect-[9/16] sm:max-h-screen">
         <div className="absolute left-4 right-4 top-3 z-50 flex gap-1.5">
-          {currentVideos.map((video, idx) => (
-            <div key={video.id} className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/25">
+          {currentVideos.length > 0 ? (
+            currentVideos.map((video, idx) => (
               <div
-                className={cn(
-                  'h-full rounded-full bg-white transition-all',
-                  idx < videoIdx ? 'w-full' : idx === videoIdx ? 'bg-violet-400' : 'w-0',
-                )}
-                style={idx === videoIdx ? { width: `${progress}%` } : undefined}
-              />
-            </div>
-          ))}
+                key={video.id}
+                className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/25"
+              >
+                <div
+                  className={cn(
+                    'h-full rounded-full bg-white transition-all',
+                    idx < videoIdx
+                      ? 'w-full'
+                      : idx === videoIdx
+                        ? 'bg-violet-400'
+                        : 'w-0',
+                  )}
+                  style={idx === videoIdx ? { width: `${progress}%` } : undefined}
+                />
+              </div>
+            ))
+          ) : (
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/25" />
+          )}
         </div>
 
         <div className="absolute left-0 right-0 top-0 z-40 flex items-start justify-between bg-gradient-to-b from-black/70 to-transparent p-5 pt-8">
           <div className="min-w-0 pr-16">
-            <h3 className="truncate text-sm font-black text-white">{story.title}</h3>
+            <h3 className="truncate text-sm font-black text-white">
+              {story.title}
+            </h3>
+
             <p className="text-[10px] font-bold uppercase text-white/65">
               {storeName}
-              {currentVideos.length > 1 ? ` • ${videoIdx + 1}/${currentVideos.length}` : ''}
+              {currentVideos.length > 1
+                ? ` • ${videoIdx + 1}/${currentVideos.length}`
+                : ''}
             </p>
           </div>
 
@@ -574,6 +805,7 @@ export default function StoriesWidgetPage() {
             type="button"
             onClick={close}
             className="rounded-full bg-black/40 p-2 text-white backdrop-blur-md"
+            aria-label="Fechar"
           >
             <X className="h-5 w-5" />
           </button>
@@ -581,6 +813,7 @@ export default function StoriesWidgetPage() {
 
         {currentUrl && !videoError ? (
           <video
+            key={currentVideo?.id}
             ref={videoRef}
             src={currentUrl}
             poster={posterUrl || undefined}
@@ -594,50 +827,73 @@ export default function StoriesWidgetPage() {
             onError={() => setVideoError(true)}
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-white/70">
+          <div className="flex h-full items-center justify-center px-8 text-center text-white/70">
             Nenhum vídeo vinculado
           </div>
         )}
 
-        <button
-          type="button"
-          className="absolute left-3 top-1/2 z-50 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white"
-          onClick={goPrev}
-        >
-          <ChevronLeft className="h-7 w-7" />
-        </button>
+        {stories.length > 1 || currentVideos.length > 1 ? (
+          <>
+            <button
+              type="button"
+              className="absolute left-3 top-1/2 z-50 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white"
+              onClick={goPrev}
+              aria-label="Anterior"
+            >
+              <ChevronLeft className="h-7 w-7" />
+            </button>
 
-        <button
-          type="button"
-          className="absolute right-3 top-1/2 z-50 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white"
-          onClick={goNext}
-        >
-          <ChevronRight className="h-7 w-7" />
-        </button>
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 z-50 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white"
+              onClick={goNext}
+              aria-label="Próximo"
+            >
+              <ChevronRight className="h-7 w-7" />
+            </button>
+          </>
+        ) : null}
 
         <div className="absolute right-4 top-24 z-50 flex flex-col gap-3">
           <button
             type="button"
             onClick={handleTogglePlay}
             className="rounded-full bg-black/55 p-3 text-white backdrop-blur-md"
+            aria-label={playing ? 'Pausar' : 'Reproduzir'}
           >
-            {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+            {playing ? (
+              <Pause className="h-5 w-5" />
+            ) : (
+              <Play className="h-5 w-5" />
+            )}
           </button>
 
           <button
             type="button"
             onClick={handleToggleMute}
             className="rounded-full bg-black/55 p-3 text-white backdrop-blur-md"
+            aria-label={muted ? 'Ativar som' : 'Desativar som'}
           >
-            {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+            {muted ? (
+              <VolumeX className="h-5 w-5" />
+            ) : (
+              <Volume2 className="h-5 w-5" />
+            )}
           </button>
 
           <button
             type="button"
             onClick={handleLike}
-            className="rounded-full bg-black/55 p-3 text-white backdrop-blur-md relative"
+            className="relative rounded-full bg-black/55 p-3 text-white backdrop-blur-md"
+            aria-label="Curtir"
           >
-            <Heart className={cn('h-5 w-5', liked ? 'fill-rose-500 text-rose-500' : '')} />
+            <Heart
+              className={cn(
+                'h-5 w-5',
+                liked ? 'fill-rose-500 text-rose-500' : '',
+              )}
+            />
+
             <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-black text-white">
               {likeCount}
             </span>
@@ -646,9 +902,11 @@ export default function StoriesWidgetPage() {
           <button
             type="button"
             onClick={() => setShowComments(true)}
-            className="rounded-full bg-black/55 p-3 text-white backdrop-blur-md relative"
+            className="relative rounded-full bg-black/55 p-3 text-white backdrop-blur-md"
+            aria-label="Comentários"
           >
             <MessageCircle className="h-5 w-5" />
+
             <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-black text-white">
               {activeCommentCount}
             </span>
@@ -658,6 +916,7 @@ export default function StoriesWidgetPage() {
             type="button"
             onClick={handleShare}
             className="rounded-full bg-black/55 p-3 text-white backdrop-blur-md"
+            aria-label="Compartilhar"
           >
             <Share2 className="h-5 w-5" />
           </button>
@@ -677,9 +936,17 @@ export default function StoriesWidgetPage() {
           <button
             type="button"
             onClick={handleWhatsApp}
-            className="rounded-full bg-[#25D366] px-3 py-3 text-xs font-black text-white backdrop-blur-md"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-[#25D366] text-white backdrop-blur-md"
+            aria-label="WhatsApp"
           >
-            WA
+            <svg
+              viewBox="0 0 24 24"
+              className="h-5 w-5 fill-white"
+              aria-hidden="true"
+            >
+              <path d="M16.6 13.2c-.3-.2-1.7-.8-2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.8 0c-.4-.2-1.4-.5-2.6-1.6-.9-.8-1.6-1.8-1.8-2.2-.2-.4 0-.6.2-.8l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6s-.7-1.7-1-2.3c-.3-.6-.6-.5-.8-.5h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.8s1.3 3.2 1.5 3.4c.2.2 2.3 3.6 5.6 5.1.8.4 1.5.6 2.1.8.9.3 1.7.3 2.3.2.7-.1 1.7-.7 2-1.3.3-.6.3-1.1.2-1.3-.1-.2-.3-.3-.6-.5z" />
+              <path d="M20 4A10 10 0 0 0 3.6 16.2L2 22l5.9-1.5A10 10 0 1 0 20 4zm-7.9 15.4c-1.6 0-3.2-.4-4.6-1.3l-.3-.2-3.5.9.9-3.4-.2-.3A8.1 8.1 0 1 1 12.1 19.4z" />
+            </svg>
           </button>
         </div>
 
@@ -687,15 +954,22 @@ export default function StoriesWidgetPage() {
           <div className="absolute bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-black/85 via-black/50 to-transparent p-4 pt-10">
             <div className="flex items-center gap-3 rounded-3xl border border-white/20 bg-white/95 p-3">
               <div className="h-20 w-20 overflow-hidden rounded-2xl bg-slate-200">
-                <img
-                  src={product.image_url}
-                  alt={product.name}
-                  className="h-full w-full object-cover"
-                />
+                {productImageUrl ? (
+                  <img
+                    src={productImageUrl}
+                    alt={product.name || 'Produto'}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-slate-200" />
+                )}
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-black text-slate-950">{product.name}</p>
+                <p className="truncate text-sm font-black text-slate-950">
+                  {product.name || 'Produto'}
+                </p>
+
                 <p className="mt-1 text-base font-black text-violet-700">
                   {Number(product.price || 0).toLocaleString('pt-BR', {
                     style: 'currency',
@@ -704,7 +978,7 @@ export default function StoriesWidgetPage() {
                 </p>
 
                 <a
-                  href={product.product_url || '#'}
+                  href={product.product_url || product.url || '#'}
                   target="_blank"
                   rel="noreferrer"
                   className="mt-2 inline-flex items-center gap-1 rounded-full bg-violet-600 px-4 py-2 text-[11px] font-black text-white"
@@ -721,20 +995,35 @@ export default function StoriesWidgetPage() {
             <div className="mx-auto flex h-full max-w-md flex-col rounded-[28px] bg-slate-950 p-4 text-white">
               <div className="mb-3 flex items-center justify-between">
                 <h4 className="text-lg font-black">Comentários</h4>
-                <button type="button" onClick={() => setShowComments(false)}>
+
+                <button
+                  type="button"
+                  onClick={() => setShowComments(false)}
+                  aria-label="Fechar comentários"
+                >
                   <X />
                 </button>
               </div>
 
               <div className="flex-1 space-y-3 overflow-auto">
                 {comments.length === 0 && (
-                  <p className="text-sm text-white/50">Nenhum comentário ainda.</p>
+                  <p className="text-sm text-white/50">
+                    Nenhum comentário ainda.
+                  </p>
                 )}
 
                 {comments.map((item, index) => (
-                  <div key={item.id || index} className="rounded-2xl bg-white/5 p-3">
-                    <p className="text-xs font-black text-white/70">{getCommentName(item)}</p>
-                    <p className="text-sm text-white">{item.text}</p>
+                  <div
+                    key={item.id || `${item.created_at || item.createdAt}-${index}`}
+                    className="rounded-2xl bg-white/5 p-3"
+                  >
+                    <p className="text-xs font-black text-white/70">
+                      {getCommentName(item)}
+                    </p>
+
+                    <p className="whitespace-pre-wrap text-sm text-white">
+                      {item.text}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -742,7 +1031,7 @@ export default function StoriesWidgetPage() {
               <div className="mt-4 space-y-2">
                 <input
                   value={commentName}
-                  onChange={e => setCommentName(e.target.value)}
+                  onChange={event => setCommentName(event.target.value)}
                   placeholder="Seu nome"
                   className="w-full rounded-2xl bg-white/10 p-3 text-sm text-white outline-none placeholder:text-white/40"
                 />
@@ -751,15 +1040,16 @@ export default function StoriesWidgetPage() {
                   <textarea
                     ref={textareaRef}
                     value={commentText}
-                    onChange={e => setCommentText(e.target.value)}
+                    onChange={event => setCommentText(event.target.value)}
                     placeholder="Escreva seu comentário..."
-                    className="min-h-24 w-full rounded-2xl bg-white/10 p-3 text-sm text-white outline-none placeholder:text-white/40"
+                    className="min-h-24 w-full resize-none rounded-2xl bg-white/10 p-3 pr-12 text-sm text-white outline-none placeholder:text-white/40"
                   />
 
                   <button
                     type="button"
                     onClick={() => setShowEmoji(value => !value)}
                     className="absolute right-3 top-3 text-white"
+                    aria-label="Emoji"
                   >
                     <Smile />
                   </button>
@@ -768,7 +1058,12 @@ export default function StoriesWidgetPage() {
                 {showEmoji && (
                   <div className="grid grid-cols-6 gap-2 rounded-2xl bg-white/10 p-3 text-xl">
                     {EMOJIS.map(emoji => (
-                      <button key={emoji} type="button" onClick={() => insertEmoji(emoji)}>
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => insertEmoji(emoji)}
+                        className="rounded-lg p-1"
+                      >
                         {emoji}
                       </button>
                     ))}
@@ -795,34 +1090,43 @@ export default function StoriesWidgetPage() {
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                     Medidas da modelo
                   </p>
-                  <h4 className="text-lg font-black">{model.name}</h4>
+
+                  <h4 className="text-lg font-black">
+                    {model.name || 'Modelo'}
+                  </h4>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => setShowMeasures(false)}
                   className="rounded-full bg-slate-100 p-2"
+                  aria-label="Fechar medidas"
                 >
                   <X />
                 </button>
               </div>
 
               <div className="flex-1 space-y-3 overflow-auto">
-                {(modelData || []).map((measure: any, idx: number) => (
-                  <div
-                    key={`${measure.name}-${idx}`}
-                    className="flex items-center justify-between rounded-2xl bg-slate-50 p-3"
-                  >
-                    <span className="font-bold text-slate-700">{measure.name}</span>
-                    <span className="font-black text-slate-950">
-                      {measure.value}
-                      {measure.unit || ''}
-                    </span>
-                  </div>
-                ))}
+                {modelData.length > 0 ? (
+                  modelData.map((measure: any, idx: number) => (
+                    <div
+                      key={`${measure.name || measure.label || idx}-${idx}`}
+                      className="flex items-center justify-between rounded-2xl bg-slate-50 p-3"
+                    >
+                      <span className="font-bold text-slate-700">
+                        {measure.name || measure.label || `Medida ${idx + 1}`}
+                      </span>
 
-                {(!modelData || modelData.length === 0) && (
-                  <p className="text-sm text-slate-500">Sem medidas cadastradas.</p>
+                      <span className="font-black text-slate-950">
+                        {measure.value || measure.size || '-'}
+                        {measure.unit || ''}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-slate-500">
+                    Sem medidas cadastradas.
+                  </p>
                 )}
               </div>
             </div>
