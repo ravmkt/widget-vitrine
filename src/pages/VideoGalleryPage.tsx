@@ -246,7 +246,11 @@ const resolveSafeStoreId = async () => {
 
   const handleConfirmDelete = async () => {
     try {
-      await db.videos.delete(deleteModal.videoId);
+      try {
+  await (db.videos as any).delete(deleteModal.videoId, resolvedStoreId);
+} catch {
+  await db.videos.delete(deleteModal.videoId);
+}
       setVideos(prev => prev.filter(v => v.id !== deleteModal.videoId));
       showSuccess('Vídeo removido permanentemente.');
       setDeleteModal(prev => ({ ...prev, isOpen: false }));
