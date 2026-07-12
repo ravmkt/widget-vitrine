@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   db,
   Story,
@@ -37,12 +37,87 @@ import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import SuccessDialog from '@/components/SuccessDialog';
 import { cn } from '@/lib/utils';
 
+const getAllSafe = async <T,>(collection: any, storeId?: string): Promise<T[]> => {
+  if (!collection?.getAll) return [];
+
+  try {
+    if (storeId) {
+      return await collection.getAll(storeId);
+    }
+
+    return await collection.getAll();
+  } catch {
+    try {
+      return await collection.getAll();
+    } catch {
+      return [];
+    }
+  }
+};
+
+const getByIdSafe = async <T,>(
+  collection: any,
+  id?: string,
+  storeId?: string,
+): Promise<T | null> => {
+  if (!collection?.getById || !id) return null;
+
+  try {
+    if (storeId) {
+      return await collection.getById(id, storeId);
+    }
+
+    return await collection.getById(id);
+  } catch {
+    try {
+      return await collection.getById(id);
+    } catch {
+      return null;
+    }
+  }
+};
+
+const deleteSafe = async (collection: any, id: string, storeId?: string) => {
+  if (!collection?.delete || !id) return;
+
+  try {
+    if (storeId) {
+      await collection.delete(id, storeId);
+      return;
+    }
+
+    await collection.delete(id);
+  } catch {
+    try {
+      await collection.delete(id);
+    } catch {
+      // ignora erro de fallback
+    }
+  }
+};
+
+const getVideoPosterUrl = (video: Video) => {
+  const item = video as any;
+
+  return (
+    item.thumbnail_url ||
+    item.thumbnailUrl ||
+    item.poster_url ||
+    item.posterUrl ||
+    item.image_url ||
+    item.imageUrl ||
+    ''
+  );
+};
+
 const StoryDetailsPage = () => {
   const { storeId, loading: tenantLoading } = useTenant();
   const { id } = useParams();
   const navigate = useNavigate();
 
   const isCreate = !id || id === 'new';
+
+  const [resolvedStoreId, setResolvedStoreId] = useState('');
 
   const [story, setStory] = useState<Story | null>(null);
   const [allVideos, setAllVideos] = useState<Video[]>([]);
@@ -76,20 +151,24 @@ const StoryDetailsPage = () => {
     name: '',
   });
 
+  const selectedVideosCount = useMemo(() => selectedVideoIds.length, [selectedVideoIds]);
+
   const loadStoryData = useCallback(async () => {
+    if (tenantLoading) return;
+
     try {
       setLoading(true);
 
-      if (tenantLoading) {
-        return;
-      }
+      const finalStoreId = await resolveStoreId(storeId);
 
-      const resolvedStoreId = await resolveStoreId(storeId);
+      setResolvedStoreId(finalStoreId);
 
-      const videos = await db.videos.getAll(resolvedStoreId);
+      const [videos, apps] = await Promise.all([
+        getAllSafe<Video>((db as any).videos, finalStoreId),
+        getAllSafe<Appearance>((db as any).appearances, finalStoreId),
+      ]);
+
       setAllVideos(videos);
-
-      const apps = await db.appearances.getAll(resolvedStoreId);
       setAppearances(apps);
 
       if (isCreate) {
@@ -110,58 +189,72 @@ const StoryDetailsPage = () => {
 
       if (!id || !isValidUuid(id)) {
         setStory(null);
+        setSelectedVideoIds([]);
+        setLocations([]);
+        setRules([]);
         return;
       }
 
-      const currentStory = await db.stories.getById(id, resolvedStoreId);
+      const currentStory = await getByIdSafe<Story>(
+        (db as any).stories,
+        id,
+        finalStoreId,
+      );
 
       if (!currentStory) {
         setStory(null);
+        setSelectedVideoIds([]);
+        setLocations([]);
+        setRules([]);
         return;
       }
 
       setStory(currentStory);
 
       setFormData({
-        title: currentStory.title,
-        format: currentStory.format,
+        title: currentStory.title || '',
+        format: currentStory.format || 'carousel',
         scroll_direction: currentStory.scroll_direction || 'horizontal',
-        active: currentStory.active,
+        active: Boolean(currentStory.active),
         appearance_id: currentStory.appearance_id || '',
         position: currentStory.position || 1,
       });
 
-      const relations = await db.storyVideos.getAll(resolvedStoreId);
+      const [relations, locs, rls] = await Promise.all([
+        getAllSafe<StoryVideo>((db as any).storyVideos, finalStoreId),
+        getAllSafe<DisplayLocation>((db as any).displayLocations, finalStoreId),
+        getAllSafe<PageRule>((db as any).pageRules, finalStoreId),
+      ]);
 
       const storyVideoIds = relations
-        .filter(
-          relation =>
-            relation.story_id === currentStory.id &&
-            relation.store_id === resolvedStoreId,
-        )
-        .sort((a, b) => a.position - b.position)
-        .map(relation => relation.video_id);
+        .filter((relation: any) => {
+          const sameStory = relation.story_id === currentStory.id;
+          const sameStore = !relation.store_id || relation.store_id === finalStoreId;
+
+          return sameStory && sameStore;
+        })
+        .sort((a: any, b: any) => Number(a.position || 0) - Number(b.position || 0))
+        .map((relation: any) => relation.video_id)
+        .filter(Boolean);
 
       setSelectedVideoIds(storyVideoIds);
 
-      const locs = await db.displayLocations.getAll(resolvedStoreId);
-
       setLocations(
-        locs.filter(
-          location =>
-            location.story_id === currentStory.id &&
-            location.store_id === resolvedStoreId,
-        ),
+        locs.filter((location: any) => {
+          const sameStory = location.story_id === currentStory.id;
+          const sameStore = !location.store_id || location.store_id === finalStoreId;
+
+          return sameStory && sameStore;
+        }),
       );
 
-      const rls = await db.pageRules.getAll(resolvedStoreId);
-
       setRules(
-        rls.filter(
-          rule =>
-            rule.story_id === currentStory.id &&
-            rule.store_id === resolvedStoreId,
-        ),
+        rls.filter((rule: any) => {
+          const sameStory = rule.story_id === currentStory.id;
+          const sameStore = !rule.store_id || rule.store_id === finalStoreId;
+
+          return sameStory && sameStore;
+        }),
       );
     } catch (error) {
       console.error('Erro ao carregar Story:', error);
@@ -179,60 +272,86 @@ const StoryDetailsPage = () => {
     targetStoryId: string,
     targetStoreId: string,
   ) => {
-    const existingLocations = await db.displayLocations.getAll(targetStoreId);
+    const now = new Date().toISOString();
 
-    const locationsToDelete = existingLocations.filter(
-      location =>
-        location.story_id === targetStoryId &&
-        location.store_id === targetStoreId,
+    const existingLocations = await getAllSafe<DisplayLocation>(
+      (db as any).displayLocations,
+      targetStoreId,
     );
+
+    const locationsToDelete = existingLocations.filter((location: any) => {
+      const sameStory = location.story_id === targetStoryId;
+      const sameStore = !location.store_id || location.store_id === targetStoreId;
+
+      return sameStory && sameStore;
+    });
 
     await Promise.all(
-      locationsToDelete.map(location => db.displayLocations.delete(location.id)),
+      locationsToDelete.map((location: any) =>
+        deleteSafe((db as any).displayLocations, location.id, targetStoreId),
+      ),
     );
 
-    const normalizedLocations: DisplayLocation[] = locations.map(location => ({
+    const normalizedLocations = locations.map((location: any) => ({
       ...location,
       id: isValidUuid(location.id) ? location.id : generateUuid(),
       store_id: targetStoreId,
       story_id: targetStoryId,
       selector: location.selector || 'body',
       position: location.position || 'fixed_bottom_right',
-    }));
+      created_at: location.created_at || now,
+      updated_at: now,
+    })) as DisplayLocation[];
 
     await Promise.all(
-      normalizedLocations.map(location => db.displayLocations.save(location)),
+      normalizedLocations.map((location) =>
+        (db as any).displayLocations.save(location),
+      ),
     );
 
-    const existingRules = await db.pageRules.getAll(targetStoreId);
-
-    const rulesToDelete = existingRules.filter(
-      rule => rule.story_id === targetStoryId && rule.store_id === targetStoreId,
+    const existingRules = await getAllSafe<PageRule>(
+      (db as any).pageRules,
+      targetStoreId,
     );
 
-    await Promise.all(rulesToDelete.map(rule => db.pageRules.delete(rule.id)));
+    const rulesToDelete = existingRules.filter((rule: any) => {
+      const sameStory = rule.story_id === targetStoryId;
+      const sameStore = !rule.store_id || rule.store_id === targetStoreId;
 
-    const normalizedRules: PageRule[] = rules.map(rule => ({
+      return sameStory && sameStore;
+    });
+
+    await Promise.all(
+      rulesToDelete.map((rule: any) =>
+        deleteSafe((db as any).pageRules, rule.id, targetStoreId),
+      ),
+    );
+
+    const normalizedRules = rules.map((rule: any) => ({
       ...rule,
       id: isValidUuid(rule.id) ? rule.id : generateUuid(),
       store_id: targetStoreId,
       story_id: targetStoryId,
       condition_type: rule.condition_type || 'all_pages',
-      value: rule.value || undefined,
-    }));
+      value: rule.value || '',
+      created_at: rule.created_at || now,
+      updated_at: now,
+    })) as PageRule[];
 
-    await Promise.all(normalizedRules.map(rule => db.pageRules.save(rule)));
+    await Promise.all(
+      normalizedRules.map((rule) => (db as any).pageRules.save(rule)),
+    );
   };
 
-  const handleSave = async (e?: React.FormEvent) => {
-    e?.preventDefault();
+  const handleSave = async (event?: FormEvent) => {
+    event?.preventDefault();
 
     if (isSaving) return;
 
     try {
       setIsSaving(true);
 
-      const resolvedStoreId = await resolveStoreId(storeId);
+      const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
 
       if (!formData.title.trim()) {
         showError('Informe o nome do Story.');
@@ -241,96 +360,47 @@ const StoryDetailsPage = () => {
 
       const now = new Date().toISOString();
 
-      if (isCreate) {
-        const newStoryPayload: Story = {
-          id: generateUuid(),
-          store_id: resolvedStoreId,
-          title: formData.title.trim(),
-          format: formData.format,
-          scroll_direction: formData.scroll_direction,
-          active: formData.active,
-          appearance_id: formData.appearance_id || null,
-          position: formData.position || 1,
-          cta_enabled: false,
-          cta_type: 'none',
-          cta_text: '',
-          cta_url: '',
-          whatsapp_message: '',
-          view_count: 0,
-          click_count: 0,
-          created_at: now,
-          updated_at: now,
-        };
-
-        const savedStory = await db.stories.save(newStoryPayload);
-
-        const newRelations: StoryVideo[] = selectedVideoIds.map(
-          (videoId, index) => ({
-            id: generateUuid(),
-            store_id: resolvedStoreId,
-            story_id: savedStory.id,
-            video_id: videoId,
-            position: index + 1,
-            is_cover: index === 0,
-            created_at: now,
-          }),
-        );
-
-        await replaceStoryRelations(
-          'story_videos',
-          resolvedStoreId,
-          savedStory.id,
-          newRelations,
-        );
-
-        await saveLocationsAndRules(savedStory.id, resolvedStoreId);
-
-        window.dispatchEvent(new Event('storage'));
-
-        setStory(savedStory);
-        setSuccessOpen(true);
-        return;
-      }
-
-      if (!story) {
-        showError('Story não encontrado.');
-        return;
-      }
-
-      const updatedStory: Story = {
-        ...story,
-        store_id: resolvedStoreId,
+      const storyPayload: Story = {
+        ...(story || ({} as Story)),
+        id: story?.id || generateUuid(),
+        store_id: finalStoreId,
         title: formData.title.trim(),
         format: formData.format,
         scroll_direction: formData.scroll_direction,
         active: formData.active,
         appearance_id: formData.appearance_id || null,
-        position: formData.position || 1,
+        position: Number(formData.position || 1),
+        cta_enabled: story?.cta_enabled ?? false,
+        cta_type: story?.cta_type || 'none',
+        cta_text: story?.cta_text || '',
+        cta_url: story?.cta_url || '',
+        whatsapp_message: story?.whatsapp_message || '',
+        view_count: story?.view_count ?? 0,
+        click_count: story?.click_count ?? 0,
+        created_at: story?.created_at || now,
         updated_at: now,
       };
 
-      const savedStory = await db.stories.save(updatedStory);
+      const savedStory = await (db as any).stories.save(storyPayload);
 
-      const newRelations: StoryVideo[] = selectedVideoIds.map(
-        (videoId, index) => ({
-          id: generateUuid(),
-          store_id: resolvedStoreId,
-          story_id: savedStory.id,
-          video_id: videoId,
-          position: index + 1,
-          is_cover: index === 0,
-          created_at: now,
-        }),
-      );
+      const newRelations: StoryVideo[] = selectedVideoIds.map((videoId, index) => ({
+        id: generateUuid(),
+        store_id: finalStoreId,
+        story_id: savedStory.id,
+        video_id: videoId,
+        position: index + 1,
+        is_cover: index === 0,
+        created_at: now,
+      }));
 
       await replaceStoryRelations(
         'story_videos',
-        resolvedStoreId,
+        finalStoreId,
         savedStory.id,
         newRelations,
       );
 
-      await saveLocationsAndRules(savedStory.id, resolvedStoreId);
+      await saveLocationsAndRules(savedStory.id, finalStoreId);
 
       window.dispatchEvent(new Event('storage'));
 
@@ -345,75 +415,128 @@ const StoryDetailsPage = () => {
   };
 
   const handleToggleVideo = (videoId: string) => {
-    setSelectedVideoIds(prev =>
+    setSelectedVideoIds((prev) =>
       prev.includes(videoId)
-        ? prev.filter(currentId => currentId !== videoId)
+        ? prev.filter((currentId) => currentId !== videoId)
         : [...prev, videoId],
     );
   };
 
   const handleAddLocation = async () => {
-    const resolvedStoreId = await resolveStoreId(storeId);
+    const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
 
-    const newLocation: DisplayLocation = {
+    const newLocation = {
       id: generateUuid(),
-      store_id: resolvedStoreId,
-      story_id: story?.id || generateUuid(),
+      store_id: finalStoreId,
+      story_id: story?.id || '',
       selector: 'body',
       position: 'fixed_bottom_right',
-    };
+    } as DisplayLocation;
 
-    setLocations(prev => [...prev, newLocation]);
+    setLocations((prev) => [...prev, newLocation]);
   };
 
   const handleAddRule = async () => {
-    const resolvedStoreId = await resolveStoreId(storeId);
+    const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
 
-    const newRule: PageRule = {
+    const newRule = {
       id: generateUuid(),
-      store_id: resolvedStoreId,
-      story_id: story?.id || generateUuid(),
+      store_id: finalStoreId,
+      story_id: story?.id || '',
       condition_type: 'all_pages',
       value: '',
-    };
+    } as PageRule;
 
-    setRules(prev => [...prev, newRule]);
+    setRules((prev) => [...prev, newRule]);
   };
 
   const handleDeleteLocation = (locationId: string) => {
-    setLocations(prev => prev.filter(location => location.id !== locationId));
+    setLocations((prev) => prev.filter((location) => location.id !== locationId));
   };
 
   const handleDeleteRule = (ruleId: string) => {
-    setRules(prev => prev.filter(rule => rule.id !== ruleId));
+    setRules((prev) => prev.filter((rule) => rule.id !== ruleId));
   };
 
-  if (loading || tenantLoading) return null;
+  const openDeleteLocationModal = (location: DisplayLocation) => {
+    setDeleteModal({
+      isOpen: true,
+      type: 'location',
+      id: location.id,
+      name: location.selector || 'Local de exibição',
+    });
+  };
+
+  const openDeleteRuleModal = (rule: PageRule) => {
+    setDeleteModal({
+      isOpen: true,
+      type: 'rule',
+      id: rule.id,
+      name: rule.condition_type || 'Regra de exibição',
+    });
+  };
+
+  const handleSuccessClose = () => {
+    navigate('/stories');
+  };
+
+  if (loading || tenantLoading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-[#0094EB]" />
+      </div>
+    );
+  }
+
+  if (!isCreate && !story) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <button
+          type="button"
+          onClick={() => navigate('/stories')}
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 transition-all hover:bg-slate-50"
+        >
+          <ArrowLeft size={18} />
+          Voltar
+        </button>
+
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-10 text-center shadow-sm">
+          <h1 className="text-xl font-black text-slate-900">
+            Story não encontrado
+          </h1>
+          <p className="mt-2 text-sm font-bold text-slate-500">
+            Não foi possível localizar esse Story para a loja atual.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fade-in pb-20">
-      <div className="flex items-center justify-between mb-8">
+      <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
+            type="button"
             onClick={() => navigate('/stories')}
-            className="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all"
+            className="rounded-xl border border-slate-200 bg-white p-2.5 transition-all hover:bg-slate-50"
           >
             <ArrowLeft size={20} />
           </button>
 
           <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+            <h1 className="text-2xl font-black tracking-tight text-slate-900">
               {isCreate ? 'Novo Story' : 'Editar Story'}
             </h1>
 
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
               {isCreate ? 'Criar novo story' : formData.title}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 mr-4">
+          <div className="mr-4 hidden items-center gap-2 sm:flex">
             <span
               className={cn(
                 'text-[10px] font-black uppercase tracking-widest',
@@ -426,19 +549,19 @@ const StoryDetailsPage = () => {
             <button
               type="button"
               onClick={() =>
-                setFormData(prev => ({
+                setFormData((prev) => ({
                   ...prev,
                   active: !prev.active,
                 }))
               }
               className={cn(
-                'w-12 h-6 rounded-full p-1 transition-all duration-300',
+                'h-6 w-12 rounded-full p-1 transition-all duration-300',
                 formData.active ? 'bg-emerald-500' : 'bg-slate-300',
               )}
             >
               <div
                 className={cn(
-                  'bg-white w-4 h-4 rounded-full transition-all duration-300',
+                  'h-4 w-4 rounded-full bg-white transition-all duration-300',
                   formData.active ? 'translate-x-6' : 'translate-x-0',
                 )}
               />
@@ -447,9 +570,9 @@ const StoryDetailsPage = () => {
 
           <button
             type="button"
-            onClick={handleSave}
+            onClick={() => handleSave()}
             disabled={isSaving}
-            className="bg-[#0094EB] hover:bg-[#0E4787] disabled:opacity-60 text-white px-8 py-3.5 rounded-2xl font-black text-sm shadow-xl shadow-blue-100 transition-all flex items-center gap-2"
+            className="flex items-center gap-2 rounded-2xl bg-[#0094EB] px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-blue-100 transition-all hover:bg-[#0E4787] disabled:opacity-60"
           >
             {isSaving ? (
               <Loader2 className="animate-spin" size={18} />
@@ -463,55 +586,57 @@ const StoryDetailsPage = () => {
       </div>
 
       <form onSubmit={handleSave}>
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_350px]">
           <div className="space-y-8">
-            <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm">
-              <div className="flex items-center gap-3 pb-6 border-b border-slate-100 mb-6">
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+              <div className="mb-6 flex items-center gap-3 border-b border-slate-100 pb-6">
                 <Layout className="text-[#0094EB]" size={20} />
-                <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">
+                <h3 className="text-lg font-black uppercase tracking-tight text-slate-800">
                   Design e Formato
                 </h3>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                     Nome do Bloco
                   </label>
 
                   <input
                     type="text"
                     value={formData.title}
-                    onChange={e =>
-                      setFormData(prev => ({
+                    onChange={(event) =>
+                      setFormData((prev) => ({
                         ...prev,
-                        title: e.target.value,
+                        title: event.target.value,
                       }))
                     }
-                    className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:border-[#0094EB]"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none focus:border-[#0094EB]"
+                    placeholder="Ex: Lançamentos"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                     Posição / Ordem
                   </label>
 
                   <input
                     type="number"
+                    min={1}
                     value={formData.position}
-                    onChange={e =>
-                      setFormData(prev => ({
+                    onChange={(event) =>
+                      setFormData((prev) => ({
                         ...prev,
-                        position: Number(e.target.value),
+                        position: Number(event.target.value || 1),
                       }))
                     }
-                    className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:border-[#0094EB]"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none focus:border-[#0094EB]"
                   />
                 </div>
 
-                <div className="md:col-span-2 space-y-4 pt-4">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <div className="space-y-4 pt-4 md:col-span-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                     Formato de Exibição
                   </label>
 
@@ -524,46 +649,51 @@ const StoryDetailsPage = () => {
                         icon: MousePointer2,
                         label: 'Flutuante',
                       },
-                    ].map(format => (
-                      <button
-                        key={format.id}
-                        type="button"
-                        onClick={() =>
-                          setFormData(prev => ({
-                            ...prev,
-                            format: format.id as StoryFormat,
-                          }))
-                        }
-                        className={cn(
-                          'flex flex-col items-center gap-3 p-6 rounded-3xl border-2 transition-all',
-                          formData.format === format.id
-                            ? 'border-[#0094EB] bg-blue-50 text-[#0094EB]'
-                            : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200',
-                        )}
-                      >
-                        <format.icon size={24} />
-                        <span className="text-[10px] font-black uppercase">
-                          {format.label}
-                        </span>
-                      </button>
-                    ))}
+                    ].map((format) => {
+                      const Icon = format.icon;
+
+                      return (
+                        <button
+                          key={format.id}
+                          type="button"
+                          onClick={() =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              format: format.id as StoryFormat,
+                            }))
+                          }
+                          className={cn(
+                            'flex flex-col items-center gap-3 rounded-3xl border-2 p-6 transition-all',
+                            formData.format === format.id
+                              ? 'border-[#0094EB] bg-blue-50 text-[#0094EB]'
+                              : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200',
+                          )}
+                        >
+                          <Icon size={24} />
+
+                          <span className="text-[10px] font-black uppercase">
+                            {format.label}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
                 <div className="space-y-2 pt-4">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                     Direção de Rolagem
                   </label>
 
                   <select
                     value={formData.scroll_direction}
-                    onChange={e =>
-                      setFormData(prev => ({
+                    onChange={(event) =>
+                      setFormData((prev) => ({
                         ...prev,
-                        scroll_direction: e.target.value as ScrollDirection,
+                        scroll_direction: event.target.value as ScrollDirection,
                       }))
                     }
-                    className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none"
                   >
                     <option value="horizontal">Horizontal</option>
                     <option value="vertical">Vertical</option>
@@ -571,23 +701,23 @@ const StoryDetailsPage = () => {
                 </div>
 
                 <div className="space-y-2 pt-4">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                     Estilo Visual / Aparência
                   </label>
 
                   <select
                     value={formData.appearance_id}
-                    onChange={e =>
-                      setFormData(prev => ({
+                    onChange={(event) =>
+                      setFormData((prev) => ({
                         ...prev,
-                        appearance_id: e.target.value,
+                        appearance_id: event.target.value,
                       }))
                     }
-                    className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none"
                   >
                     <option value="">Seguir Padrão do App</option>
 
-                    {appearances.map(app => (
+                    {appearances.map((app) => (
                       <option key={app.id} value={app.id}>
                         {app.name} {app.is_default ? '(Padrão)' : ''}
                       </option>
@@ -597,71 +727,78 @@ const StoryDetailsPage = () => {
               </div>
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm">
-              <div className="flex items-center justify-between pb-6 border-b border-slate-100 mb-6">
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+              <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-6">
                 <div className="flex items-center gap-3">
                   <Film className="text-[#0094EB]" size={20} />
-                  <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">
+                  <h3 className="text-lg font-black uppercase tracking-tight text-slate-800">
                     Conteúdo Selecionado
                   </h3>
                 </div>
 
-                <span className="text-xs font-black text-slate-400 bg-slate-50 px-3 py-1 rounded-full">
-                  {selectedVideoIds.length} Vídeos
+                <span className="rounded-full bg-slate-50 px-3 py-1 text-xs font-black text-slate-400">
+                  {selectedVideosCount} Vídeos
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {allVideos.map(video => {
-                  const isSelected = selectedVideoIds.includes(video.id);
+              {allVideos.length > 0 ? (
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5">
+                  {allVideos.map((video) => {
+                    const isSelected = selectedVideoIds.includes(video.id);
+                    const posterUrl = getVideoPosterUrl(video);
 
-                  return (
-                    <button
-                      key={video.id}
-                      type="button"
-                      onClick={() => handleToggleVideo(video.id)}
-                      className={cn(
-                        'relative aspect-[9/16] rounded-2xl overflow-hidden border-2 transition-all group',
-                        isSelected
-                          ? 'border-[#0094EB] shadow-lg shadow-blue-100 scale-[0.98]'
-                          : 'border-transparent opacity-60 grayscale hover:opacity-100 hover:grayscale-0',
-                      )}
-                    >
-                      <img
-                        src={video.thumbnail_url || video.poster_url || video.image_url}
-                        alt={video.title}
-                        className="w-full h-full object-cover"
-                      />
-
-                      <div
+                    return (
+                      <button
+                        key={video.id}
+                        type="button"
+                        onClick={() => handleToggleVideo(video.id)}
                         className={cn(
-                          'absolute inset-0 flex items-center justify-center transition-all',
-                          isSelected ? 'bg-[#0094EB]/20' : 'bg-black/20',
+                          'group relative aspect-[9/16] overflow-hidden rounded-2xl border-2 transition-all',
+                          isSelected
+                            ? 'scale-[0.98] border-[#0094EB] shadow-lg shadow-blue-100'
+                            : 'border-transparent opacity-60 grayscale hover:opacity-100 hover:grayscale-0',
                         )}
                       >
-                        {isSelected ? (
-                          <div className="bg-[#0094EB] text-white p-1 rounded-full">
-                            <CheckCircle2 size={16} />
-                          </div>
-                        ) : (
-                          <Plus
-                            className="text-white opacity-0 group-hover:opacity-100"
-                            size={24}
+                        {posterUrl ? (
+                          <img
+                            src={posterUrl}
+                            alt={video.title || 'Vídeo'}
+                            className="h-full w-full object-cover"
                           />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-slate-200 text-slate-400">
+                            <Film size={24} />
+                          </div>
                         )}
-                      </div>
 
-                      <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
-                        <p className="text-[9px] font-black text-white truncate">
-                          {video.title}
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+                        <div
+                          className={cn(
+                            'absolute inset-0 flex items-center justify-center transition-all',
+                            isSelected ? 'bg-[#0094EB]/20' : 'bg-black/20',
+                          )}
+                        >
+                          {isSelected ? (
+                            <div className="rounded-full bg-[#0094EB] p-1 text-white">
+                              <CheckCircle2 size={16} />
+                            </div>
+                          ) : (
+                            <Plus
+                              className="text-white opacity-0 group-hover:opacity-100"
+                              size={24}
+                            />
+                          )}
+                        </div>
 
-              {allVideos.length === 0 && (
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                          <p className="truncate text-[9px] font-black text-white">
+                            {video.title || 'Sem título'}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
                 <div className="p-10 text-center text-sm font-bold text-slate-400">
                   Nenhum vídeo cadastrado para esta loja.
                 </div>
@@ -670,11 +807,11 @@ const StoryDetailsPage = () => {
           </div>
 
           <div className="space-y-8">
-            <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <MapPin className="text-orange-500" size={18} />
-                  <h4 className="text-sm font-black text-slate-800 uppercase">
+                  <h4 className="text-sm font-black uppercase text-slate-800">
                     Onde Aparece
                   </h4>
                 </div>
@@ -682,71 +819,71 @@ const StoryDetailsPage = () => {
                 <button
                   type="button"
                   onClick={handleAddLocation}
-                  className="p-1.5 bg-orange-50 text-orange-500 rounded-lg hover:bg-orange-100"
+                  className="rounded-lg bg-orange-50 p-1.5 text-orange-500 hover:bg-orange-100"
                 >
                   <Plus size={16} />
                 </button>
               </div>
 
               <div className="space-y-4">
-                {locations.map(location => (
+                {locations.map((location) => (
                   <div
                     key={location.id}
-                    className="p-4 bg-slate-50 border border-slate-100 rounded-2xl relative group"
+                    className="group relative rounded-2xl border border-slate-100 bg-slate-50 p-4"
                   >
                     <button
                       type="button"
-                      onClick={() => handleDeleteLocation(location.id)}
-                      className="absolute -top-2 -right-2 w-6 h-6 bg-white border border-slate-200 text-rose-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-sm"
+                      onClick={() => openDeleteLocationModal(location)}
+                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-rose-500 opacity-0 shadow-sm transition-all group-hover:opacity-100"
                     >
                       <X size={12} />
                     </button>
 
                     <div className="space-y-3">
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
                           Seletor CSS
                         </label>
 
                         <input
                           type="text"
-                          value={location.selector}
-                          onChange={e => {
-                            const next = locations.map(item =>
+                          value={location.selector || ''}
+                          onChange={(event) => {
+                            const next = locations.map((item) =>
                               item.id === location.id
                                 ? {
                                     ...item,
-                                    selector: e.target.value,
+                                    selector: event.target.value,
                                   }
                                 : item,
                             );
 
                             setLocations(next);
                           }}
-                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none"
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
                           Posição
                         </label>
 
                         <select
-                          value={location.position}
-                          onChange={e => {
-                            const next = locations.map(item =>
+                          value={location.position || 'fixed_bottom_right'}
+                          onChange={(event) => {
+                            const next = locations.map((item) =>
                               item.id === location.id
                                 ? {
                                     ...item,
-                                    position: e.target.value as DisplayPosition,
+                                    position: event.target.value as DisplayPosition,
                                   }
                                 : item,
                             );
 
                             setLocations(next);
                           }}
-                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none"
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
                         >
                           <option value="fixed_bottom_right">
                             Flutuante / Direita
@@ -781,11 +918,11 @@ const StoryDetailsPage = () => {
               </div>
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Globe className="text-emerald-500" size={18} />
-                  <h4 className="text-sm font-black text-slate-800 uppercase">
+                  <h4 className="text-sm font-black uppercase text-slate-800">
                     Quando Aparece
                   </h4>
                 </div>
@@ -793,48 +930,47 @@ const StoryDetailsPage = () => {
                 <button
                   type="button"
                   onClick={handleAddRule}
-                  className="p-1.5 bg-emerald-50 text-emerald-500 rounded-lg hover:bg-emerald-100"
+                  className="rounded-lg bg-emerald-50 p-1.5 text-emerald-500 hover:bg-emerald-100"
                 >
                   <Plus size={16} />
                 </button>
               </div>
 
               <div className="space-y-4">
-                {rules.map(rule => (
+                {rules.map((rule) => (
                   <div
                     key={rule.id}
-                    className="p-4 bg-slate-50 border border-slate-100 rounded-2xl relative group"
+                    className="group relative rounded-2xl border border-slate-100 bg-slate-50 p-4"
                   >
                     <button
                       type="button"
-                      onClick={() => handleDeleteRule(rule.id)}
-                      className="absolute -top-2 -right-2 w-6 h-6 bg-white border border-slate-200 text-rose-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-sm"
+                      onClick={() => openDeleteRuleModal(rule)}
+                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-rose-500 opacity-0 shadow-sm transition-all group-hover:opacity-100"
                     >
                       <X size={12} />
                     </button>
 
                     <div className="space-y-3">
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
                           Tipo de Regra
                         </label>
 
                         <select
-                          value={rule.condition_type}
-                          onChange={e => {
-                            const next = rules.map(item =>
+                          value={rule.condition_type || 'all_pages'}
+                          onChange={(event) => {
+                            const next = rules.map((item) =>
                               item.id === rule.id
                                 ? {
                                     ...item,
-                                    condition_type: e.target
-                                      .value as ConditionType,
+                                    condition_type: event.target.value as ConditionType,
                                   }
                                 : item,
                             );
 
                             setRules(next);
                           }}
-                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none"
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
                         >
                           <option value="all_pages">Todas as Páginas</option>
                           <option value="home_only">Apenas Home</option>
@@ -862,26 +998,27 @@ const StoryDetailsPage = () => {
                         'regex',
                       ].includes(rule.condition_type) && (
                         <div className="space-y-1">
-                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
                             Valor do Filtro
                           </label>
 
                           <input
                             type="text"
                             value={rule.value || ''}
-                            onChange={e => {
-                              const next = rules.map(item =>
+                            onChange={(event) => {
+                              const next = rules.map((item) =>
                                 item.id === rule.id
                                   ? {
                                       ...item,
-                                      value: e.target.value,
+                                      value: event.target.value,
                                     }
                                   : item,
                               );
 
                               setRules(next);
                             }}
-                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
+                            placeholder="Ex: /produto"
                           />
                         </div>
                       )}
@@ -911,13 +1048,13 @@ const StoryDetailsPage = () => {
             handleDeleteRule(deleteModal.id);
           }
 
-          setDeleteModal(prev => ({
+          setDeleteModal((prev) => ({
             ...prev,
             isOpen: false,
           }));
         }}
         onCancel={() =>
-          setDeleteModal(prev => ({
+          setDeleteModal((prev) => ({
             ...prev,
             isOpen: false,
           }))
@@ -929,7 +1066,7 @@ const StoryDetailsPage = () => {
         description={
           isCreate ? 'Story criado com sucesso.' : 'Story atualizado com sucesso.'
         }
-        onClose={() => navigate('/stories')}
+        onClose={handleSuccessClose}
       />
     </div>
   );
