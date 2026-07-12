@@ -2,7 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { db, Video, Product } from '@/lib/db';
+import { db, Video, Product, resolveStoreId } from '@/lib/db';
+import { useTenant } from '@/context/TenantContext';
 import {
   Plus,
   Search,
