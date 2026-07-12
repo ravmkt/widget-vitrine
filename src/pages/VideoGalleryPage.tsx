@@ -77,6 +77,38 @@ const [resolvedStoreId, setResolvedStoreId] = useState('');
     return { views, likes, comments };
   };
 
+const resolveSafeStoreId = async () => {
+  try {
+    const candidate =
+      tenantStoreId ||
+      localStorage.getItem('current_store_id') ||
+      localStorage.getItem('store_id') ||
+      localStorage.getItem('selected_store_id') ||
+      '';
+
+    const resolved = await resolveStoreId(candidate || undefined);
+
+    if (resolved) {
+      return resolved;
+    }
+  } catch {
+    // fallback abaixo
+  }
+
+  try {
+    const stores = await db.stores.getAll();
+
+    if (stores?.[0]?.id) {
+      return stores[0].id;
+    }
+  } catch {
+    // sem fallback
+  }
+
+  return '';
+};
+
+
   useEffect(() => {
     const loadData = async () => {
       try {
