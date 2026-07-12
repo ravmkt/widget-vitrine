@@ -110,22 +110,52 @@ const resolveSafeStoreId = async () => {
 
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [allVideos, allProducts] = await Promise.all([
-          db.videos.getAll(),
-          db.products.getAll()
-        ]);
-        setVideos(allVideos);
-        setProducts(allProducts);
-      } catch (e) {
-        showError('Erro ao carregar vídeos.');
-      } finally {
-        setLoading(false);
+  let mounted = true;
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+
+      const safeStoreId = await resolveSafeStoreId();
+
+      if (!mounted) return;
+
+      if (!safeStoreId) {
+        setVideos([]);
+        setProducts([]);
+        setResolvedStoreId('');
+        showError('Não foi possível identificar a loja atual.');
+        return;
       }
-    };
+
+      setResolvedStoreId(safeStoreId);
+
+      const [allVideos, allProducts] = await Promise.all([
+        db.videos.getAll(safeStoreId),
+        db.products.getAll(safeStoreId),
+      ]);
+
+      if (!mounted) return;
+
+      setVideos(allVideos || []);
+      setProducts(allProducts || []);
+    } catch (e) {
+      console.error('Erro ao carregar vídeos:', e);
+      showError('Erro ao carregar vídeos.');
+    } finally {
+      if (mounted) setLoading(false);
+    }
+  };
+
+  if (!tenantLoading) {
     loadData();
-  }, []);
+  }
+
+  return () => {
+    mounted = false;
+  };
+}, [tenantLoading, tenantStoreId]);
+
 
   const getVideoMetrics = (video: Video) => {
     const base = calculateVideoMetrics(video.id);
