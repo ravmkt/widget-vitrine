@@ -224,7 +224,7 @@ const resolveSafeStoreId = async () => {
   const handleDeleteClick = (video: Video) => {
     const checkUsedInStories = async () => {
       try {
-        const storyVideos = await db.storyVideos.getAll();
+        const storyVideos = await db.storyVideos.getAll(resolvedStoreId);
         const isUsed = storyVideos.some(sv => sv.video_id === video.id);
         setDeleteModal({
           isOpen: true,
