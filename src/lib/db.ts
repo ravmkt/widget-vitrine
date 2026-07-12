@@ -261,7 +261,6 @@ export const isSupabaseConfigured =
   !!import.meta.env.VITE_SUPABASE_ANON_KEY &&
   !!supabase;
 
-// Branding Vitrine Vídeo
 const DEFAULT_STORE: Store = {
   id: '11111111-1111-1111-1111-111111111111',
   name: 'Loja Exemplo',
@@ -332,7 +331,6 @@ const DEFAULT_APPEARANCES: Appearance[] = [
   },
 ];
 
-// Fallback de memória e inicialização local
 let memoryStores = [DEFAULT_STORE];
 let memoryGeneralSettings = [DEFAULT_GENERAL_SETTINGS];
 let memoryAppearances = [...DEFAULT_APPEARANCES];
@@ -379,16 +377,6 @@ const initLocalStorage = () => {
 
 initLocalStorage();
 
-/**
- * Garante que a loja exista na tabela `stores` do Supabase.
- *
- * Isso evita o erro:
- * insert or update on table "videos" violates foreign key constraint "videos_store_id_fkey"
- *
- * Importante:
- * A tabela `stores` no Supabase não possui a coluna `active`,
- * então NÃO enviamos `active` nem `created_at` no insert.
- */
 const ensureSupabaseStoreExists = async (storeId?: string) => {
   if (!isSupabaseConfigured || !storeId) return;
 
@@ -421,7 +409,6 @@ const ensureSupabaseStoreExists = async (storeId?: string) => {
   const storeToInsert = {
     id: storeId,
     name: localStore?.name || DEFAULT_STORE.name || 'Loja',
-    domain: localStore?.domain || DEFAULT_STORE.domain || 'loja.com.br',
   };
 
   const { error: insertError } = await supabase
@@ -564,13 +551,6 @@ const createSupabaseCrudFunctions = <
         return localFallback.save(item);
       }
 
-      /**
-       * Antes de salvar qualquer registro com store_id no Supabase,
-       * garante que a loja exista na tabela `stores`.
-       *
-       * Principalmente necessário para `videos`,
-       * pois a tabela possui FK `videos_store_id_fkey`.
-       */
       if (tableName !== 'stores' && item.store_id) {
         await ensureSupabaseStoreExists(item.store_id);
       }
@@ -671,9 +651,6 @@ export const db = {
   generalSettings: createCrudFunctions<GeneralSettings>('general_settings', memoryGeneralSettings),
   appearances: createCrudFunctions<Appearance>('appearances', memoryAppearances),
 
-  // Vídeos agora usam Supabase quando configurado.
-  // Isso evita salvar base64/blob no localStorage.
-  // Também garante que o store_id exista na tabela stores antes de salvar.
   videos: createSupabaseCrudFunctions<Video>('videos', memoryVideos),
 
   stories: createCrudFunctions<Story>('stories', memoryStories),
