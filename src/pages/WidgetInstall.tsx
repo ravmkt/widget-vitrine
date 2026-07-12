@@ -14,16 +14,10 @@ export default function WidgetInstall() {
   const displayUrl = isLocal ? "https://seu-dominio-publico.com" : publicUrl;
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-  const hasSupabase = isSupabaseConfigured;
-  const snippetStoreId = storeId || '';
-
-  if (!snippetStoreId) {
-    return <div className="text-slate-500">Selecione uma loja ativa para gerar o snippet do widget.</div>;
-  }
 
   const scriptCode = `<script>
 window.VIDLYTICS_CONFIG = {
-  storeId: "${snippetStoreId}",
+  storeId: "${storeId || ''}",
   supabaseUrl: "${supabaseUrl}",
   supabaseAnonKey: "${supabaseAnonKey}"
 };
@@ -65,7 +59,7 @@ window.VIDLYTICS_CONFIG = {
           <AlertTriangle className="h-5 w-5 text-blue-600 mt-0.5" />
           <div className="text-sm text-blue-800">
             <p className="font-bold">Supabase não configurado</p>
-            <p className="opacity-80">O snippet depende do store ativo no tenant atual. Sem Supabase, o widget mantém fallback local apenas para métricas já registradas no navegador.</p>
+            <p className="opacity-80">O snippet precisa das credenciais públicas para carregar stories e vídeos reais do Supabase.</p>
           </div>
         </div>
       )}
