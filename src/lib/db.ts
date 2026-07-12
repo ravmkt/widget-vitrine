@@ -384,6 +384,10 @@ initLocalStorage();
  *
  * Isso evita o erro:
  * insert or update on table "videos" violates foreign key constraint "videos_store_id_fkey"
+ *
+ * Importante:
+ * A tabela `stores` no Supabase não possui a coluna `active`,
+ * então NÃO enviamos `active` nem `created_at` no insert.
  */
 const ensureSupabaseStoreExists = async (storeId?: string) => {
   if (!isSupabaseConfigured || !storeId) return;
@@ -406,7 +410,7 @@ const ensureSupabaseStoreExists = async (storeId?: string) => {
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
       const local = localStorage.getItem('vidlytics_stores');
-      const stores = local ? JSON.parse(local) as Store[] : [];
+      const stores = local ? (JSON.parse(local) as Store[]) : [];
 
       localStore = stores.find(store => store.id === storeId) || null;
     }
@@ -414,12 +418,10 @@ const ensureSupabaseStoreExists = async (storeId?: string) => {
     console.warn('Não foi possível buscar loja no localStorage:', error);
   }
 
-  const storeToInsert: Store = {
+  const storeToInsert = {
     id: storeId,
     name: localStore?.name || DEFAULT_STORE.name || 'Loja',
     domain: localStore?.domain || DEFAULT_STORE.domain || 'loja.com.br',
-    active: localStore?.active ?? true,
-    created_at: localStore?.created_at || new Date().toISOString(),
   };
 
   const { error: insertError } = await supabase
