@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { db, Video, Product, SizingModel, Story } from '@/lib/db';
+import { db, Video, Product, SizingModel, Story, resolveStoreId } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { showError } from '@/utils/toast';
@@ -35,6 +35,48 @@ const getFileExtension = (file: File, fallback: string) => {
   if (file.type === 'image/webp') return 'webp';
 
   return fallback;
+};
+
+const resolveSafeStoreId = async (candidate?: string | null) => {
+  try {
+    const resolved = await resolveStoreId(candidate || undefined);
+
+    if (resolved) {
+      return resolved;
+    }
+  } catch {
+    // fallback abaixo
+  }
+
+  try {
+    const localCurrentStoreId =
+      localStorage.getItem('current_store_id') ||
+      localStorage.getItem('store_id') ||
+      localStorage.getItem('selected_store_id') ||
+      '';
+
+    if (localCurrentStoreId) {
+      const resolved = await resolveStoreId(localCurrentStoreId);
+
+      if (resolved) {
+        return resolved;
+      }
+    }
+  } catch {
+    // fallback abaixo
+  }
+
+  try {
+    const stores = await db.stores.getAll();
+
+    if (stores?.[0]?.id) {
+      return stores[0].id;
+    }
+  } catch {
+    // sem loja
+  }
+
+  return '';
 };
 
 const uploadFileToSupabase = async (
@@ -74,11 +116,12 @@ const uploadDataUrlToSupabase = async (
   const response = await fetch(dataUrl);
   const blob = await response.blob();
 
-  const extension = blob.type === 'image/png'
-    ? 'png'
-    : blob.type === 'image/webp'
-      ? 'webp'
-      : 'jpg';
+  const extension =
+    blob.type === 'image/png'
+      ? 'png'
+      : blob.type === 'image/webp'
+        ? 'webp'
+        : 'jpg';
 
   const file = new File([blob], `thumbnail-${Date.now()}.${extension}`, {
     type: blob.type || 'image/jpeg',
@@ -92,10 +135,11 @@ const isTemporaryUrl = (url: string) => {
 };
 
 const VideoEditPage = () => {
-  const { storeId, loading: tenantLoading } = useTenant();
-  const { id } = useParams();
+  const { storeId: tenantStoreId, loading: tenantLoading } = useTenant();
+  const { id, storeId: paramStoreId } = useParams<{ id?: string; storeId?: string }>();
   const navigate = useNavigate();
 
+  const [resolvedStoreId, setResolvedStoreId] = useState('');
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -122,27 +166,49 @@ const VideoEditPage = () => {
 
   const isCreate = !id;
 
+  const getCurrentStoreId = async () => {
+    const candidate = tenantStoreId || paramStoreId || resolvedStoreId || '';
+    return resolveSafeStoreId(candidate);
+  };
+
   useEffect(() => {
+    let mounted = true;
+
     const loadData = async () => {
       try {
-        if (!storeId) {
-          setLoading(false);
+        setLoading(true);
+        setProductsLoading(true);
+
+        const safeStoreId = await getCurrentStoreId();
+
+        if (!mounted) return;
+
+        if (!safeStoreId) {
+          setResolvedStoreId('');
+          setProducts([]);
+          setModels([]);
           setProductsLoading(false);
+          setLoading(false);
           return;
         }
 
+        setResolvedStoreId(safeStoreId);
+
         const [allModels, allProducts] = await Promise.all([
-          db.sizingModels.getAll(storeId),
-          db.products.getAll(storeId),
+          db.sizingModels.getAll(safeStoreId),
+          db.products.getAll(safeStoreId),
         ]);
 
-        setModels(allModels);
-        setProducts(allProducts);
-        setProductsLoading(false);
+        if (!mounted) return;
+
+        setModels(allModels || []);
+        setProducts(allProducts || []);
         setProductsError('');
 
         if (!isCreate && id) {
-          const v = await db.videos.getById(id, storeId);
+          const v = await db.videos.getById(id, safeStoreId);
+
+          if (!mounted) return;
 
           if (!v) {
             navigate('/gallery');
@@ -152,7 +218,7 @@ const VideoEditPage = () => {
           setVideo(v);
 
           setFormData({
-            title: v.title,
+            title: v.title || '',
             video_url: v.video_url || '',
             instagram_link: v.instagram_link || '',
             tiktok_link: v.tiktok_link || '',
@@ -160,34 +226,44 @@ const VideoEditPage = () => {
             product_id: v.product_id || '',
             model_id: v.model_id || '',
             active: v.active ?? true,
-            origin: (v.source_type as any) || 'external_url',
+            origin: ((v.source_type as any) || 'external_url') === 'external_url'
+              ? 'external_url'
+              : ((v.source_type as any) || 'external_url'),
             video_file: null,
             thumbnail_file: null,
           });
 
-          const storyVideos = await db.storyVideos.getAll(storeId);
+          const storyVideos = await db.storyVideos.getAll(safeStoreId);
           const storyIds = storyVideos
             .filter(sv => sv.video_id === id)
             .map(sv => sv.story_id);
 
-          const stories = await db.stories.getAll(storeId);
+          const stories = await db.stories.getAll(safeStoreId);
           const usedStories = stories.filter(s => storyIds.includes(s.id));
 
-          setUsedInStories(usedStories);
+          if (mounted) {
+            setUsedInStories(usedStories);
+          }
         }
       } catch (e) {
         console.error('Load error:', e);
         setProductsError('Não foi possível carregar os produtos.');
       } finally {
-        setLoading(false);
-        setProductsLoading(false);
+        if (mounted) {
+          setLoading(false);
+          setProductsLoading(false);
+        }
       }
     };
 
     if (!tenantLoading) {
       loadData();
     }
-  }, [id, navigate, isCreate, storeId, tenantLoading]);
+
+    return () => {
+      mounted = false;
+    };
+  }, [id, navigate, isCreate, tenantStoreId, paramStoreId, tenantLoading]);
 
   const handleOriginChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setFormData(prev => ({
@@ -474,15 +550,17 @@ const VideoEditPage = () => {
       return;
     }
 
-    if (!storeId) {
+    const safeStoreId = resolvedStoreId || await getCurrentStoreId();
+
+    if (!safeStoreId) {
       showError('Não foi possível identificar a loja atual.');
       return;
     }
 
+    setResolvedStoreId(safeStoreId);
+
     try {
       setIsSaving(true);
-
-      const safeStoreId = storeId;
 
       let finalVideoUrl = '';
       let finalThumbnailUrl = formData.thumbnail_url || '';
@@ -551,6 +629,8 @@ const VideoEditPage = () => {
         ? 'external_url'
         : formData.origin;
 
+      const now = new Date().toISOString();
+
       const videoData: Partial<Video> = {
         title: formData.title.trim(),
         source_type: sourceType as Video['source_type'],
@@ -563,7 +643,7 @@ const VideoEditPage = () => {
         model_id: formData.model_id || null,
         product_id: formData.product_id || null,
         store_id: safeStoreId,
-        updated_at: new Date().toISOString(),
+        updated_at: now,
       };
 
       if (isCreate) {
@@ -571,7 +651,7 @@ const VideoEditPage = () => {
           ...videoData,
           id: createSafeId(),
           store_id: safeStoreId,
-          created_at: new Date().toISOString(),
+          created_at: now,
         } as Video;
 
         await db.videos.save(newVideo);
@@ -581,6 +661,8 @@ const VideoEditPage = () => {
         const updatedVideo: Video = {
           ...video,
           ...videoData,
+          store_id: video.store_id || safeStoreId,
+          updated_at: now,
         };
 
         await db.videos.save(updatedVideo);
@@ -595,7 +677,7 @@ const VideoEditPage = () => {
     }
   };
 
-  if (loading) return null;
+  if (loading || tenantLoading) return null;
 
   const thumbnailInputValue = formData.thumbnail_url && !isTemporaryUrl(formData.thumbnail_url)
     ? formData.thumbnail_url
@@ -619,8 +701,8 @@ const VideoEditPage = () => {
 
         <button
           onClick={handleSave}
-          disabled={isSaving}
-          className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-8 py-3.5 rounded-2xl font-black text-sm shadow-xl shadow-blue-100 transition-all flex items-center gap-2"
+          disabled={isSaving || tenantLoading}
+          className="bg-[#0094EB] hover:bg-[#0E4787] disabled:opacity-60 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-2xl font-black text-sm shadow-xl shadow-blue-100 transition-all flex items-center gap-2"
         >
           {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
           {isSaving ? 'Salvando...' : 'Salvar Alterações'}
