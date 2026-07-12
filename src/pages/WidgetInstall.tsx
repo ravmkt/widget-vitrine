@@ -3,18 +3,23 @@ import { Copy, CheckCircle2, Globe, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { showSuccess } from "@/utils/toast";
-import { db } from "@/lib/db";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { isSupabaseConfigured } from "@/lib/supabase";
+import { useTenant } from "@/context/TenantContext";
 
 export default function WidgetInstall() {
   const [copied, setCopied] = useState(false);
+  const { storeId } = useTenant();
   const publicUrl = import.meta.env.VITE_WIDGET_PUBLIC_URL || window.location.origin;
   const isLocal = publicUrl.includes('localhost') || publicUrl.includes('127.0.0.1');
   const displayUrl = isLocal ? "https://seu-dominio-publico.com" : publicUrl;
-  const snippetStoreId = localStorage.getItem('vidlytics_selected_store_id') || '11111111-1111-1111-1111-111111111111';
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-  const hasSupabase = !!supabase && isSupabaseConfigured;
+  const hasSupabase = isSupabaseConfigured;
+  const snippetStoreId = storeId || '';
+
+  if (!snippetStoreId) {
+    return <div className="text-slate-500">Selecione uma loja ativa para gerar o snippet do widget.</div>;
+  }
 
   const scriptCode = `<script>
 window.VIDLYTICS_CONFIG = {
@@ -60,7 +65,7 @@ window.VIDLYTICS_CONFIG = {
           <AlertTriangle className="h-5 w-5 text-blue-600 mt-0.5" />
           <div className="text-sm text-blue-800">
             <p className="font-bold">Supabase não configurado</p>
-            <p className="opacity-80">O snippet manterá o fallback local, mas para analytics real você precisa definir a URL e a anon key pública.</p>
+            <p className="opacity-80">O snippet depende do store ativo no tenant atual. Sem Supabase, o widget mantém fallback local apenas para métricas já registradas no navegador.</p>
           </div>
         </div>
       )}

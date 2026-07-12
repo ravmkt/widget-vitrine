@@ -10,9 +10,11 @@ import CustomDialog from '@/components/CustomDialog';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import { getDashboardMetrics, getMetricsFlow, getVideoMetricsRows, type AnalyticsInterval } from '@/lib/analytics';
+import { useTenant } from '@/context/TenantContext';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
+  const { storeId } = useTenant();
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsInterval>('30');
   const [customRange, setCustomRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
@@ -21,7 +23,6 @@ const DashboardPage = () => {
   });
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [videos, setVideos] = useState<Video[]>([]);
-  const [storeId, setStoreId] = useState('');
   const [dashboardMetrics, setDashboardMetrics] = useState({ views: 0, plays: 0, pauses: 0, clicks: 0, ctaClicks: 0, productClicks: 0, whatsappClicks: 0, likes: 0, shares: 0, comments: 0, closes: 0, conversions: 0, ctr: 0 });
   const [flow, setFlow] = useState<any[]>([]);
   const [topVideos, setTopVideos] = useState<any[]>([]);
@@ -30,14 +31,12 @@ const DashboardPage = () => {
 
   useEffect(() => {
     const init = async () => {
-      const allVideos = await db.videos.getAll();
-      const store = allVideos[0]?.store_id || (await db.stores.getAll())[0]?.id || '';
+      const allVideos = storeId ? await db.videos.getAll(storeId) : [];
       setVideos(allVideos);
-      setStoreId(store);
       setLoading(false);
     };
     init();
-  }, []);
+  }, [storeId]);
 
   useEffect(() => {
     if (!storeId) return;

@@ -107,23 +107,31 @@ export const trackMetric = async (metric: Partial<Metric> & { store_id: string; 
   };
 
   if (isSupabaseConfigured && supabase) {
-    await supabase.from('metrics').insert(payload);
-    return;
+    try {
+      const { error } = await supabase.from('metrics').insert(payload);
+      if (!error) return;
+    } catch (error) {
+      console.error('Failed to insert metric into Supabase', error);
+    }
   }
 
-  await db.metrics.save({
-    id: crypto.randomUUID(),
-    store_id: payload.store_id,
-    story_id: payload.story_id ?? '',
-    video_id: payload.video_id ?? undefined,
-    product_id: payload.product_id ?? undefined,
-    event_type: payload.event_type,
-    page_url: payload.page_url ?? '',
-    device_type: payload.device_type ?? '',
-    browser: payload.browser ?? '',
-    referrer: payload.referrer ?? undefined,
-    created_at: new Date().toISOString(),
-  } as Metric);
+  try {
+    await db.metrics.save({
+      id: crypto.randomUUID(),
+      store_id: payload.store_id,
+      story_id: payload.story_id ?? '',
+      video_id: payload.video_id ?? undefined,
+      product_id: payload.product_id ?? undefined,
+      event_type: payload.event_type,
+      page_url: payload.page_url ?? '',
+      device_type: payload.device_type ?? '',
+      browser: payload.browser ?? '',
+      referrer: payload.referrer ?? undefined,
+      created_at: new Date().toISOString(),
+    } as Metric);
+  } catch (error) {
+    console.error('Failed to persist local metric fallback', error);
+  }
 };
 
 export const getMetricsByStore = async (storeId: string, interval: AnalyticsInterval, customRange?: { from?: Date; to?: Date }) => {

@@ -29,6 +29,18 @@ create table if not exists public.metrics (
   created_at timestamptz not null default now()
 );
 
+alter table public.metrics
+  add constraint if not exists metrics_store_id_fkey foreign key (store_id) references public.stores(id) on delete cascade;
+
+alter table public.metrics
+  add constraint if not exists metrics_story_id_fkey foreign key (story_id) references public.stories(id) on delete set null;
+
+alter table public.metrics
+  add constraint if not exists metrics_video_id_fkey foreign key (video_id) references public.videos(id) on delete set null;
+
+alter table public.metrics
+  add constraint if not exists metrics_product_id_fkey foreign key (product_id) references public.products(id) on delete set null;
+
 alter table public.metrics enable row level security;
 
 drop policy if exists "metrics_select_store_members" on public.metrics;
@@ -51,7 +63,14 @@ create policy "metrics_select_store_members"
 create policy "metrics_insert_public"
   on public.metrics
   for insert
-  with check (true);
+  with check (
+    store_id is not null
+    and exists (
+      select 1
+      from public.stores s
+      where s.id = metrics.store_id
+    )
+  );
 
 create policy "metrics_update_none"
   on public.metrics

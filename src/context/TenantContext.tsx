@@ -28,20 +28,13 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       const members = await db.storeMembers.getAll();
-      const userMembers = members
-        .filter((item) => item.user_id === user.id)
-        .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')));
-
-      const member = userMembers[0];
-      if (!member) {
-        setCurrentStore(null);
-        setLoading(false);
-        return;
-      }
-
+      const userMembers = members.filter((item) => item.user_id === user.id);
       const stores = await db.stores.getAll();
-      // Multi-store selector UI will come later; for now we use the oldest membership deterministically.
-      setCurrentStore(stores.find((store) => store.id === member.store_id) || null);
+      const membershipStore = userMembers.length > 0
+        ? stores.find((store) => store.id === userMembers[0].store_id) || null
+        : null;
+
+      setCurrentStore(membershipStore);
       setLoading(false);
     };
     load();
