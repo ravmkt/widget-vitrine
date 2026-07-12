@@ -236,6 +236,7 @@ export interface Store {
   name: string;
   domain: string;
   active: boolean;
+  owner_user_id?: string;
   created_at?: string;
 }
 
@@ -393,6 +394,20 @@ const ensureSupabaseStoreExists = async (storeId?: string) => {
 
   if (existingStore) return;
 
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) {
+    console.error('Erro ao buscar usuário autenticado:', userError);
+    throw userError;
+  }
+
+  if (!user) {
+    throw new Error('Usuário não autenticado. Faça login antes de criar uma loja no Supabase.');
+  }
+
   let localStore: Store | null = null;
 
   try {
@@ -406,9 +421,21 @@ const ensureSupabaseStoreExists = async (storeId?: string) => {
     console.warn('Não foi possível buscar loja no localStorage:', error);
   }
 
+  /**
+   * Importante:
+   *
+   * Sua tabela `stores` no Supabase está exigindo a coluna `owner_user_id`.
+   * Ela também aparentemente NÃO possui a coluna `domain`.
+   *
+   * Por isso, aqui enviamos apenas:
+   * - id
+   * - name
+   * - owner_user_id
+   */
   const storeToInsert = {
     id: storeId,
     name: localStore?.name || DEFAULT_STORE.name || 'Loja',
+    owner_user_id: user.id,
   };
 
   const { error: insertError } = await supabase
