@@ -150,6 +150,12 @@ export interface Product {
   active: boolean;
   created_at?: string;
   updated_at?: string;
+
+  /**
+   * Este campo pode existir no front, mas será removido automaticamente
+   * antes de salvar se a tabela products não tiver a coluna origin.
+   */
+  origin?: 'manual' | 'integration' | string;
 }
 
 export interface StoryProduct {
@@ -465,6 +471,236 @@ const TABLE_UUID_FIELDS: Record<string, Record<string, UuidMode>> = {
   },
 };
 
+/**
+ * Campos permitidos por tabela.
+ *
+ * Esta parte corrige o erro:
+ * "Could not find the 'origin' column of 'products' in the schema cache"
+ *
+ * Também evita erros ao salvar stories com campos extras como:
+ * is_active, status, enabled, views_count, clicks_count, etc.
+ */
+const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
+  stores: ['id', 'name', 'domain', 'active', 'owner_user_id', 'created_at'],
+
+  videos: [
+    'id',
+    'store_id',
+    'title',
+    'description',
+    'source_type',
+    'video_url',
+    'thumbnail_url',
+    'poster_url',
+    'image_url',
+    'duration',
+    'file_size',
+    'status',
+    'active',
+    'instagram_link',
+    'tiktok_link',
+    'product_id',
+    'model_id',
+    'created_at',
+    'updated_at',
+  ],
+
+  stories: [
+    'id',
+    'store_id',
+    'title',
+    'format',
+    'scroll_direction',
+    'active',
+    'appearance_id',
+    'model_id',
+    'cta_enabled',
+    'cta_text',
+    'cta_type',
+    'cta_url',
+    'whatsapp_message',
+    'view_count',
+    'click_count',
+    'position',
+    'created_at',
+    'updated_at',
+  ],
+
+  story_videos: [
+    'id',
+    'store_id',
+    'story_id',
+    'video_id',
+    'position',
+    'is_cover',
+    'created_at',
+  ],
+
+  products: [
+    'id',
+    'store_id',
+    'name',
+    'image_url',
+    'product_url',
+    'price',
+    'sku',
+    'short_description',
+    'active',
+    'created_at',
+    'updated_at',
+  ],
+
+  story_products: [
+    'id',
+    'store_id',
+    'story_id',
+    'video_id',
+    'product_id',
+    'created_at',
+  ],
+
+  display_locations: [
+    'id',
+    'store_id',
+    'story_id',
+    'selector',
+    'position',
+    'created_at',
+    'updated_at',
+  ],
+
+  page_rules: [
+    'id',
+    'store_id',
+    'story_id',
+    'condition_type',
+    'value',
+    'created_at',
+    'updated_at',
+  ],
+
+  comments: [
+    'id',
+    'store_id',
+    'story_id',
+    'video_id',
+    'user_name',
+    'user_email',
+    'text',
+    'status',
+    'created_at',
+  ],
+
+  metrics: [
+    'id',
+    'store_id',
+    'story_id',
+    'video_id',
+    'product_id',
+    'event_type',
+    'page_url',
+    'device_type',
+    'browser',
+    'referrer',
+    'created_at',
+  ],
+
+  sizing_models: [
+    'id',
+    'store_id',
+    'name',
+    'image_url',
+    'measures',
+    'size_name',
+    'created_at',
+    'updated_at',
+  ],
+
+  general_settings: [
+    'id',
+    'store_id',
+    'store_name',
+    'store_url',
+    'logo_url',
+    'contact_email',
+    'whatsapp_number',
+    'whatsapp_default_message',
+    'app_enabled',
+    'stories_enabled',
+    'carousel_enabled',
+    'floating_widget_enabled',
+    'default_appearance_id',
+    'timezone',
+    'language',
+    'open_product_new_tab',
+    'autoplay',
+    'muted_by_default',
+    'show_video_controls',
+    'created_at',
+    'updated_at',
+    'whatsapp_button_enabled',
+    'pause_on_invisible',
+    'public_installation_key',
+    'widget_enabled',
+    'default_template',
+    'whatsapp_enabled',
+    'whatsapp_message_template',
+    'pause_on_leave',
+    'store_public_id',
+    'public_live_key',
+  ],
+
+  appearances: [
+    'id',
+    'store_id',
+    'name',
+    'is_default',
+    'primary_color',
+    'secondary_color',
+    'text_color',
+    'background_color',
+    'button_color',
+    'border_radius',
+    'shadow_enabled',
+    'font_family',
+    'widget_shape',
+    'widget_size',
+    'widget_animation',
+    'carousel_card_shape',
+    'carousel_visible_items',
+    'carousel_gap',
+    'show_title',
+    'show_play_button',
+    'show_product',
+    'show_like_button',
+    'show_comment_button',
+    'show_share_button',
+    'show_whatsapp_button',
+    'show_product_button',
+    'created_at',
+    'updated_at',
+  ],
+};
+
+const sanitizeTablePayload = <T extends Record<string, any>>(
+  tableName: string,
+  item: T,
+): T => {
+  const allowedFields = TABLE_ALLOWED_FIELDS[tableName];
+
+  if (!allowedFields) return item;
+
+  const clean: Record<string, any> = {};
+
+  Object.entries(item).forEach(([key, value]) => {
+    if (allowedFields.includes(key)) {
+      clean[key] = value;
+    }
+  });
+
+  return clean as T;
+};
+
 const normalizeUuidPayload = <T extends Record<string, any>>(
   tableName: string,
   item: T,
@@ -475,10 +711,6 @@ const normalizeUuidPayload = <T extends Record<string, any>>(
   Object.entries(uuidFields).forEach(([field, mode]) => {
     const value = payload[field];
 
-    /**
-     * ID principal:
-     * - Se vier vazio ou inválido, gera um UUID novo.
-     */
     if (field === 'id') {
       if (isEmptyValue(value) || !isValidUuid(value)) {
         payload[field] = generateUuid();
@@ -487,11 +719,6 @@ const normalizeUuidPayload = <T extends Record<string, any>>(
       return;
     }
 
-    /**
-     * Campos obrigatórios:
-     * - Se vierem vazios ou inválidos, não dá para salvar com segurança.
-     * - Exemplo: story_id, video_id, product_id em tabela de relação.
-     */
     if (mode === 'required') {
       if (isEmptyValue(value) || !isValidUuid(value)) {
         throw new Error(
@@ -504,11 +731,6 @@ const normalizeUuidPayload = <T extends Record<string, any>>(
       return;
     }
 
-    /**
-     * Campos opcionais:
-     * - Se vierem vazios ou inválidos, converte para null.
-     * - Isso evita erro: invalid input syntax for type uuid.
-     */
     if (mode === 'optional') {
       if (isEmptyValue(value) || !isValidUuid(value)) {
         payload[field] = null;
@@ -529,6 +751,16 @@ const removeUndefinedValues = <T extends Record<string, any>>(item: T): T => {
   });
 
   return clean as T;
+};
+
+const preparePayloadForSave = <T extends Record<string, any>>(
+  tableName: string,
+  item: T,
+): T => {
+  return normalizeUuidPayload(
+    tableName,
+    sanitizeTablePayload(tableName, removeUndefinedValues(item)),
+  );
 };
 
 const initLocalStorage = () => {
@@ -615,11 +847,13 @@ const ensureSupabaseStoreExists = async (storeId?: string) => {
     console.warn('Não foi possível buscar loja no localStorage:', error);
   }
 
-  const storeToInsert = {
+  const storeToInsert = sanitizeTablePayload('stores', {
     id: storeId,
     name: localStore?.name || DEFAULT_STORE.name || 'Loja',
+    domain: localStore?.domain || DEFAULT_STORE.domain,
+    active: localStore?.active ?? true,
     owner_user_id: user.id,
-  };
+  });
 
   const { error: insertError } = await supabase
     .from('stores' as any)
@@ -649,7 +883,7 @@ const createCrudFunctions = <
           ? localStorage.getItem(`vidlytics_${tableName}`)
           : null;
 
-      const items = local ? JSON.parse(local) : memoryArray;
+      const items: T[] = local ? JSON.parse(local) : memoryArray;
 
       return storeId
         ? items.filter((item: T) => item.store_id === storeId)
@@ -666,10 +900,7 @@ const createCrudFunctions = <
       const now = new Date().toISOString();
       const items = await this.getAll();
 
-      const normalizedItem = normalizeUuidPayload(
-        tableName,
-        removeUndefinedValues(item as any),
-      ) as T;
+      const normalizedItem = preparePayloadForSave(tableName, item as any) as T;
 
       const index = items.findIndex((s: T) => s.id === normalizedItem.id);
 
@@ -782,26 +1013,16 @@ const createSupabaseCrudFunctions = <
       const originalId = item.id;
       const originalIdIsValid = isValidUuid(originalId);
 
-      const payload = normalizeUuidPayload(
-        tableName,
-        removeUndefinedValues({
-          ...item,
-          created_at: item.created_at || now,
-          updated_at: now,
-        } as any),
-      );
+      const payload = preparePayloadForSave(tableName, {
+        ...item,
+        created_at: item.created_at || now,
+        updated_at: now,
+      } as any);
 
       if (tableName !== 'stores' && payload.store_id) {
         await ensureSupabaseStoreExists(payload.store_id);
       }
 
-      /**
-       * Se o ID original era válido, tentamos atualizar primeiro.
-       * Se não existir registro, fazemos insert.
-       *
-       * Se o ID original era inválido/local temporário, fazemos insert direto
-       * com UUID novo.
-       */
       if (originalIdIsValid) {
         const { data: existingItem, error: selectError } = await supabase
           .from(tableName as any)
@@ -870,25 +1091,39 @@ const createSupabaseCrudFunctions = <
   };
 };
 
-export const resolveStoreId = async (storeId?: string) => {
-  if (storeId && isValidUuid(storeId)) return storeId;
+export const resolveStoreId = async (storeId?: string | null): Promise<string> => {
+  if (storeId && isValidUuid(storeId)) {
+    return storeId;
+  }
 
-  const stores = await db.stores.getAll();
-  const firstValidStore = stores.find(store => isValidUuid(store.id));
+  try {
+    const stores = await db.stores.getAll();
+    const firstValidStore = stores.find(store => isValidUuid(store.id));
 
-  return firstValidStore?.id || DEFAULT_STORE.id;
+    if (firstValidStore?.id) {
+      return firstValidStore.id;
+    }
+  } catch (error) {
+    console.warn('Não foi possível buscar loja atual, usando loja padrão:', error);
+  }
+
+  return DEFAULT_STORE.id;
 };
 
 export const withStoreId = async <T extends { store_id?: string }>(
   item: T,
-  storeId?: string,
-) => ({
-  ...item,
-  store_id:
+  storeId?: string | null,
+): Promise<T & { store_id: string }> => {
+  const resolvedStoreId =
     item.store_id && isValidUuid(item.store_id)
       ? item.store_id
-      : await resolveStoreId(storeId),
-});
+      : await resolveStoreId(storeId);
+
+  return {
+    ...item,
+    store_id: resolvedStoreId,
+  };
+};
 
 export const replaceStoryRelations = async <
   T extends {
@@ -910,9 +1145,6 @@ export const replaceStoryRelations = async <
     throw new Error(`storyId inválido em replaceStoryRelations: ${storyId}`);
   }
 
-  /**
-   * Versão Supabase.
-   */
   if (isSupabaseConfigured) {
     await ensureSupabaseStoreExists(storeId);
 
@@ -930,7 +1162,7 @@ export const replaceStoryRelations = async <
     if (!relations.length) return;
 
     const payload = relations.map(relation =>
-      normalizeUuidPayload(tableName, {
+      preparePayloadForSave(tableName, {
         ...relation,
         id: isValidUuid(relation.id) ? relation.id : generateUuid(),
         store_id: storeId,
@@ -950,9 +1182,6 @@ export const replaceStoryRelations = async <
     return;
   }
 
-  /**
-   * Versão localStorage.
-   */
   const local =
     typeof window !== 'undefined'
       ? localStorage.getItem(`vidlytics_${tableName}`)
@@ -965,7 +1194,7 @@ export const replaceStoryRelations = async <
   );
 
   const normalizedRelations = relations.map(relation =>
-    normalizeUuidPayload(tableName, {
+    preparePayloadForSave(tableName, {
       ...relation,
       id: isValidUuid(relation.id) ? relation.id : generateUuid(),
       store_id: storeId,
@@ -982,20 +1211,26 @@ export const replaceStoryRelations = async <
 };
 
 export const db = {
-  stores: createCrudFunctions<Store>('stores', memoryStores),
+  stores: createSupabaseCrudFunctions<Store>('stores', memoryStores),
+
   generalSettings: createCrudFunctions<GeneralSettings>(
     'general_settings',
     memoryGeneralSettings,
   ),
+
   appearances: createCrudFunctions<Appearance>('appearances', memoryAppearances),
 
   videos: createSupabaseCrudFunctions<Video>('videos', memoryVideos),
+
   stories: createSupabaseCrudFunctions<Story>('stories', memoryStories),
+
   storyVideos: createSupabaseCrudFunctions<StoryVideo>(
     'story_videos',
     memoryStoryVideos,
   ),
+
   products: createSupabaseCrudFunctions<Product>('products', memoryProducts),
+
   storyProducts: createSupabaseCrudFunctions<StoryProduct>(
     'story_products',
     memoryStoryProducts,
@@ -1005,9 +1240,13 @@ export const db = {
     'display_locations',
     memoryDisplayLocations,
   ),
+
   pageRules: createCrudFunctions<PageRule>('page_rules', memoryPageRules),
+
   comments: createCrudFunctions<Comment>('comments', memoryComments),
+
   metrics: createCrudFunctions<Metric>('metrics', memoryMetrics),
+
   sizingModels: createCrudFunctions<SizingModel>(
     'sizing_models',
     memorySizingModels,
@@ -1049,4 +1288,10 @@ export const db = {
     created_at?: string;
     updated_at?: string;
   }>('usage_counters', []),
+
+  resolveStoreId,
+
+  withStoreId,
+
+  replaceStoryRelations,
 };
