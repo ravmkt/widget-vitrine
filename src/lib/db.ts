@@ -1,12 +1,18 @@
 import { supabase } from './supabase';
 
-// Interfaces (Mantidas conforme solicitado)
+// Interfaces
 export interface Video {
   id: string;
   store_id: string;
   title: string;
   description?: string;
-  source_type: 'upload' | 'instagram' | 'tiktok' | 'external_url' | 'mobile_upload' | 'gallery';
+  source_type:
+    | 'upload'
+    | 'instagram'
+    | 'tiktok'
+    | 'external_url'
+    | 'mobile_upload'
+    | 'gallery';
   video_url: string;
   thumbnail_url: string;
   poster_url?: string;
@@ -108,8 +114,8 @@ export interface Story {
   format: StoryFormat;
   scroll_direction?: ScrollDirection;
   active: boolean;
-  appearance_id?: string;
-  model_id?: string;
+  appearance_id?: string | null;
+  model_id?: string | null;
   cta_enabled: boolean;
   cta_text?: string;
   cta_type: CTAType;
@@ -150,7 +156,7 @@ export interface StoryProduct {
   id: string;
   store_id: string;
   story_id: string;
-  video_id?: string;
+  video_id?: string | null;
   product_id: string;
   created_at?: string;
 }
@@ -210,7 +216,7 @@ export interface GeneralSettings {
   stories_enabled: boolean;
   carousel_enabled: boolean;
   floating_widget_enabled: boolean;
-  default_appearance_id?: string;
+  default_appearance_id?: string | null;
   timezone: string;
   language: string;
   open_product_new_tab: boolean;
@@ -262,19 +268,27 @@ export const isSupabaseConfigured =
   !!import.meta.env.VITE_SUPABASE_ANON_KEY &&
   !!supabase;
 
+/**
+ * UUIDs fixos válidos.
+ */
+const DEFAULT_STORE_ID = '11111111-1111-4111-8111-111111111111';
+const DEFAULT_GENERAL_SETTINGS_ID = '22222222-2222-4222-8222-222222222222';
+const DEFAULT_APPEARANCE_ID = '33333333-3333-4333-8333-333333333333';
+
 const DEFAULT_STORE: Store = {
-  id: '11111111-1111-1111-1111-111111111111',
+  id: DEFAULT_STORE_ID,
   name: 'Loja Exemplo',
   domain: 'lojaexemplo.com.br',
   active: true,
 };
 
 const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
-  id: 'gs1',
+  id: DEFAULT_GENERAL_SETTINGS_ID,
   store_id: DEFAULT_STORE.id,
   store_name: DEFAULT_STORE.name,
   store_url: DEFAULT_STORE.domain,
-  logo_url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=100&q=80',
+  logo_url:
+    'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=100&q=80',
   contact_email: 'contato@vitrinevideo.com.br',
   whatsapp_number: '5545999629702',
   whatsapp_default_message: 'Olá! Tenho interesse no vídeo: {{story_title}}',
@@ -282,7 +296,7 @@ const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   stories_enabled: true,
   carousel_enabled: true,
   floating_widget_enabled: true,
-  default_appearance_id: 'ap1',
+  default_appearance_id: DEFAULT_APPEARANCE_ID,
   timezone: 'America/Sao_Paulo',
   language: 'pt-BR',
   open_product_new_tab: true,
@@ -295,15 +309,16 @@ const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   widget_enabled: true,
   default_template: 'minimalista',
   whatsapp_enabled: true,
-  whatsapp_message_template: 'Olá! Tenho interesse nesse produto que vi no vídeo: {{story_title}}',
+  whatsapp_message_template:
+    'Olá! Tenho interesse nesse produto que vi no vídeo: {{story_title}}',
   pause_on_leave: true,
-  store_public_id: 'store_11111111-1111-1111-1111-111111111111',
-  public_live_key: 'pub_live_' + Math.random().toString(36).substr(2, 24),
+  store_public_id: `store_${DEFAULT_STORE_ID}`,
+  public_live_key: `pub_live_${Math.random().toString(36).substring(2, 26)}`,
 };
 
 const DEFAULT_APPEARANCES: Appearance[] = [
   {
-    id: 'ap1',
+    id: DEFAULT_APPEARANCE_ID,
     store_id: DEFAULT_STORE.id,
     name: 'Estilo Vitrine Azul',
     is_default: true,
@@ -346,12 +361,185 @@ let memoryComments: Comment[] = [];
 let memoryMetrics: Metric[] = [];
 let memorySizingModels: SizingModel[] = [];
 
+/**
+ * Helpers de UUID
+ */
+export const isValidUuid = (value: unknown): value is string => {
+  if (!value || typeof value !== 'string') return false;
+
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value,
+  );
+};
+
+export const generateUuid = (): string => {
+  if (
+    typeof crypto !== 'undefined' &&
+    typeof crypto.randomUUID === 'function'
+  ) {
+    return crypto.randomUUID();
+  }
+
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, char => {
+    const random = (Math.random() * 16) | 0;
+    const value = char === 'x' ? random : (random & 0x3) | 0x8;
+
+    return value.toString(16);
+  });
+};
+
+const isEmptyValue = (value: unknown) =>
+  value === undefined || value === null || value === '';
+
+type UuidMode = 'required' | 'optional';
+
+const TABLE_UUID_FIELDS: Record<string, Record<string, UuidMode>> = {
+  stores: {
+    id: 'required',
+    owner_user_id: 'optional',
+  },
+  videos: {
+    id: 'required',
+    store_id: 'required',
+    product_id: 'optional',
+    model_id: 'optional',
+  },
+  stories: {
+    id: 'required',
+    store_id: 'required',
+    appearance_id: 'optional',
+    model_id: 'optional',
+  },
+  story_videos: {
+    id: 'required',
+    store_id: 'required',
+    story_id: 'required',
+    video_id: 'required',
+  },
+  products: {
+    id: 'required',
+    store_id: 'required',
+  },
+  story_products: {
+    id: 'required',
+    store_id: 'required',
+    story_id: 'required',
+    video_id: 'optional',
+    product_id: 'required',
+  },
+  display_locations: {
+    id: 'required',
+    store_id: 'required',
+    story_id: 'required',
+  },
+  page_rules: {
+    id: 'required',
+    store_id: 'required',
+    story_id: 'required',
+  },
+  comments: {
+    id: 'required',
+    store_id: 'required',
+    story_id: 'required',
+    video_id: 'optional',
+  },
+  metrics: {
+    id: 'required',
+    store_id: 'required',
+    story_id: 'required',
+    video_id: 'optional',
+    product_id: 'optional',
+  },
+  sizing_models: {
+    id: 'required',
+    store_id: 'required',
+  },
+  general_settings: {
+    id: 'required',
+    store_id: 'required',
+    default_appearance_id: 'optional',
+  },
+  appearances: {
+    id: 'required',
+    store_id: 'required',
+  },
+};
+
+const normalizeUuidPayload = <T extends Record<string, any>>(
+  tableName: string,
+  item: T,
+): T => {
+  const payload: Record<string, any> = { ...item };
+  const uuidFields = TABLE_UUID_FIELDS[tableName] || { id: 'required' };
+
+  Object.entries(uuidFields).forEach(([field, mode]) => {
+    const value = payload[field];
+
+    /**
+     * ID principal:
+     * - Se vier vazio ou inválido, gera um UUID novo.
+     */
+    if (field === 'id') {
+      if (isEmptyValue(value) || !isValidUuid(value)) {
+        payload[field] = generateUuid();
+      }
+
+      return;
+    }
+
+    /**
+     * Campos obrigatórios:
+     * - Se vierem vazios ou inválidos, não dá para salvar com segurança.
+     * - Exemplo: story_id, video_id, product_id em tabela de relação.
+     */
+    if (mode === 'required') {
+      if (isEmptyValue(value) || !isValidUuid(value)) {
+        throw new Error(
+          `Campo UUID obrigatório inválido em "${tableName}.${field}": ${String(
+            value,
+          )}`,
+        );
+      }
+
+      return;
+    }
+
+    /**
+     * Campos opcionais:
+     * - Se vierem vazios ou inválidos, converte para null.
+     * - Isso evita erro: invalid input syntax for type uuid.
+     */
+    if (mode === 'optional') {
+      if (isEmptyValue(value) || !isValidUuid(value)) {
+        payload[field] = null;
+      }
+    }
+  });
+
+  return payload as T;
+};
+
+const removeUndefinedValues = <T extends Record<string, any>>(item: T): T => {
+  const clean: Record<string, any> = {};
+
+  Object.entries(item).forEach(([key, value]) => {
+    if (value !== undefined) {
+      clean[key] = value;
+    }
+  });
+
+  return clean as T;
+};
+
 const initLocalStorage = () => {
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
       const items = [
         { key: 'vidlytics_stores', default: [DEFAULT_STORE] },
-        { key: 'vidlytics_general_settings', default: [DEFAULT_GENERAL_SETTINGS] },
+        {
+          key: 'vidlytics_general_settings',
+          default: [DEFAULT_GENERAL_SETTINGS],
+        },
         { key: 'vidlytics_appearances', default: DEFAULT_APPEARANCES },
         { key: 'vidlytics_videos', default: [] },
         { key: 'vidlytics_stories', default: [] },
@@ -381,6 +569,10 @@ initLocalStorage();
 const ensureSupabaseStoreExists = async (storeId?: string) => {
   if (!isSupabaseConfigured || !storeId) return;
 
+  if (!isValidUuid(storeId)) {
+    throw new Error(`store_id inválido: ${storeId}`);
+  }
+
   const { data: existingStore, error: selectError } = await supabase
     .from('stores' as any)
     .select('id')
@@ -405,7 +597,9 @@ const ensureSupabaseStoreExists = async (storeId?: string) => {
   }
 
   if (!user) {
-    throw new Error('Usuário não autenticado. Faça login antes de criar uma loja no Supabase.');
+    throw new Error(
+      'Usuário não autenticado. Faça login antes de criar uma loja no Supabase.',
+    );
   }
 
   let localStore: Store | null = null;
@@ -421,17 +615,6 @@ const ensureSupabaseStoreExists = async (storeId?: string) => {
     console.warn('Não foi possível buscar loja no localStorage:', error);
   }
 
-  /**
-   * Importante:
-   *
-   * Sua tabela `stores` no Supabase está exigindo a coluna `owner_user_id`.
-   * Ela também aparentemente NÃO possui a coluna `domain`.
-   *
-   * Por isso, aqui enviamos apenas:
-   * - id
-   * - name
-   * - owner_user_id
-   */
   const storeToInsert = {
     id: storeId,
     name: localStore?.name || DEFAULT_STORE.name || 'Loja',
@@ -454,14 +637,18 @@ const createCrudFunctions = <
     store_id?: string;
     created_at?: string;
     updated_at?: string;
-  }
+  },
 >(
   tableName: string,
   memoryArray: T[],
 ) => {
   return {
     async getAll(storeId?: string): Promise<T[]> {
-      const local = localStorage.getItem(`vidlytics_${tableName}`);
+      const local =
+        typeof window !== 'undefined'
+          ? localStorage.getItem(`vidlytics_${tableName}`)
+          : null;
+
       const items = local ? JSON.parse(local) : memoryArray;
 
       return storeId
@@ -478,10 +665,16 @@ const createCrudFunctions = <
     async save(item: T): Promise<T> {
       const now = new Date().toISOString();
       const items = await this.getAll();
-      const index = items.findIndex((s: T) => s.id === item.id);
+
+      const normalizedItem = normalizeUuidPayload(
+        tableName,
+        removeUndefinedValues(item as any),
+      ) as T;
+
+      const index = items.findIndex((s: T) => s.id === normalizedItem.id);
 
       const updatedItem = {
-        ...item,
+        ...normalizedItem,
         updated_at: now,
       };
 
@@ -490,11 +683,13 @@ const createCrudFunctions = <
       } else {
         items.push({
           ...updatedItem,
-          created_at: item.created_at || now,
+          created_at: normalizedItem.created_at || now,
         });
       }
 
-      localStorage.setItem(`vidlytics_${tableName}`, JSON.stringify(items));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`vidlytics_${tableName}`, JSON.stringify(items));
+      }
 
       return updatedItem as T;
     },
@@ -503,7 +698,12 @@ const createCrudFunctions = <
       const items = await this.getAll();
       const filtered = items.filter((s: T) => s.id !== id);
 
-      localStorage.setItem(`vidlytics_${tableName}`, JSON.stringify(filtered));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(
+          `vidlytics_${tableName}`,
+          JSON.stringify(filtered),
+        );
+      }
 
       return true;
     },
@@ -516,7 +716,7 @@ const createSupabaseCrudFunctions = <
     store_id?: string;
     created_at?: string;
     updated_at?: string;
-  }
+  },
 >(
   tableName: string,
   fallbackMemoryArray: T[],
@@ -529,9 +729,7 @@ const createSupabaseCrudFunctions = <
         return localFallback.getAll(storeId);
       }
 
-      let query = supabase
-        .from(tableName as any)
-        .select('*');
+      let query = supabase.from(tableName as any).select('*');
 
       if (storeId) {
         query = query.eq('store_id', storeId);
@@ -554,10 +752,11 @@ const createSupabaseCrudFunctions = <
         return localFallback.getById(id, storeId);
       }
 
-      let query = supabase
-        .from(tableName as any)
-        .select('*')
-        .eq('id', id);
+      if (!isValidUuid(id)) {
+        return null;
+      }
+
+      let query = supabase.from(tableName as any).select('*').eq('id', id);
 
       if (storeId) {
         query = query.eq('store_id', storeId);
@@ -578,28 +777,68 @@ const createSupabaseCrudFunctions = <
         return localFallback.save(item);
       }
 
-      if (tableName !== 'stores' && item.store_id) {
-        await ensureSupabaseStoreExists(item.store_id);
-      }
-
       const now = new Date().toISOString();
 
-      const payload = {
-        ...item,
-        created_at: item.created_at || now,
-        updated_at: now,
-      };
+      const originalId = item.id;
+      const originalIdIsValid = isValidUuid(originalId);
+
+      const payload = normalizeUuidPayload(
+        tableName,
+        removeUndefinedValues({
+          ...item,
+          created_at: item.created_at || now,
+          updated_at: now,
+        } as any),
+      );
+
+      if (tableName !== 'stores' && payload.store_id) {
+        await ensureSupabaseStoreExists(payload.store_id);
+      }
+
+      /**
+       * Se o ID original era válido, tentamos atualizar primeiro.
+       * Se não existir registro, fazemos insert.
+       *
+       * Se o ID original era inválido/local temporário, fazemos insert direto
+       * com UUID novo.
+       */
+      if (originalIdIsValid) {
+        const { data: existingItem, error: selectError } = await supabase
+          .from(tableName as any)
+          .select('id')
+          .eq('id', payload.id)
+          .maybeSingle();
+
+        if (selectError) {
+          console.error(`Erro ao verificar ${tableName}:`, selectError);
+          throw selectError;
+        }
+
+        if (existingItem) {
+          const { data, error } = await supabase
+            .from(tableName as any)
+            .update(payload as any)
+            .eq('id', payload.id)
+            .select()
+            .single();
+
+          if (error) {
+            console.error(`Erro ao atualizar ${tableName}:`, error);
+            throw error;
+          }
+
+          return data as T;
+        }
+      }
 
       const { data, error } = await supabase
         .from(tableName as any)
-        .upsert(payload as any, {
-          onConflict: 'id',
-        })
+        .insert(payload as any)
         .select()
         .single();
 
       if (error) {
-        console.error(`Erro ao salvar ${tableName}:`, error);
+        console.error(`Erro ao inserir ${tableName}:`, error);
         throw error;
       }
 
@@ -609,6 +848,11 @@ const createSupabaseCrudFunctions = <
     async delete(id: string): Promise<boolean> {
       if (!isSupabaseConfigured) {
         return localFallback.delete(id);
+      }
+
+      if (!isValidUuid(id)) {
+        console.warn(`ID inválido ignorado ao deletar ${tableName}:`, id);
+        return true;
       }
 
       const { error } = await supabase
@@ -627,11 +871,12 @@ const createSupabaseCrudFunctions = <
 };
 
 export const resolveStoreId = async (storeId?: string) => {
-  if (storeId) return storeId;
+  if (storeId && isValidUuid(storeId)) return storeId;
 
   const stores = await db.stores.getAll();
+  const firstValidStore = stores.find(store => isValidUuid(store.id));
 
-  return stores[0]?.id || DEFAULT_STORE.id;
+  return firstValidStore?.id || DEFAULT_STORE.id;
 };
 
 export const withStoreId = async <T extends { store_id?: string }>(
@@ -639,7 +884,10 @@ export const withStoreId = async <T extends { store_id?: string }>(
   storeId?: string,
 ) => ({
   ...item,
-  store_id: item.store_id || (await resolveStoreId(storeId)),
+  store_id:
+    item.store_id && isValidUuid(item.store_id)
+      ? item.store_id
+      : await resolveStoreId(storeId),
 });
 
 export const replaceStoryRelations = async <
@@ -647,48 +895,123 @@ export const replaceStoryRelations = async <
     id: string;
     store_id: string;
     story_id: string;
-  }
+  },
 >(
   tableName: 'story_videos' | 'story_products',
   storeId: string,
   storyId: string,
   relations: T[],
 ) => {
-  const local = localStorage.getItem(`vidlytics_${tableName}`);
+  if (!isValidUuid(storeId)) {
+    throw new Error(`storeId inválido em replaceStoryRelations: ${storeId}`);
+  }
+
+  if (!isValidUuid(storyId)) {
+    throw new Error(`storyId inválido em replaceStoryRelations: ${storyId}`);
+  }
+
+  /**
+   * Versão Supabase.
+   */
+  if (isSupabaseConfigured) {
+    await ensureSupabaseStoreExists(storeId);
+
+    const { error: deleteError } = await supabase
+      .from(tableName as any)
+      .delete()
+      .eq('store_id', storeId)
+      .eq('story_id', storyId);
+
+    if (deleteError) {
+      console.error(`Erro ao limpar relações em ${tableName}:`, deleteError);
+      throw deleteError;
+    }
+
+    if (!relations.length) return;
+
+    const payload = relations.map(relation =>
+      normalizeUuidPayload(tableName, {
+        ...relation,
+        id: isValidUuid(relation.id) ? relation.id : generateUuid(),
+        store_id: storeId,
+        story_id: storyId,
+      } as any),
+    );
+
+    const { error: insertError } = await supabase
+      .from(tableName as any)
+      .insert(payload as any);
+
+    if (insertError) {
+      console.error(`Erro ao inserir relações em ${tableName}:`, insertError);
+      throw insertError;
+    }
+
+    return;
+  }
+
+  /**
+   * Versão localStorage.
+   */
+  const local =
+    typeof window !== 'undefined'
+      ? localStorage.getItem(`vidlytics_${tableName}`)
+      : null;
+
   const items = local ? JSON.parse(local) : [];
 
   const preserved = items.filter(
     (item: T) => !(item.store_id === storeId && item.story_id === storyId),
   );
 
-  localStorage.setItem(
-    `vidlytics_${tableName}`,
-    JSON.stringify([
-      ...preserved,
-      ...relations.map(relation => ({
-        ...relation,
-        store_id: storeId,
-      })),
-    ]),
+  const normalizedRelations = relations.map(relation =>
+    normalizeUuidPayload(tableName, {
+      ...relation,
+      id: isValidUuid(relation.id) ? relation.id : generateUuid(),
+      store_id: storeId,
+      story_id: storyId,
+    } as any),
   );
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(
+      `vidlytics_${tableName}`,
+      JSON.stringify([...preserved, ...normalizedRelations]),
+    );
+  }
 };
 
 export const db = {
   stores: createCrudFunctions<Store>('stores', memoryStores),
-  generalSettings: createCrudFunctions<GeneralSettings>('general_settings', memoryGeneralSettings),
+  generalSettings: createCrudFunctions<GeneralSettings>(
+    'general_settings',
+    memoryGeneralSettings,
+  ),
   appearances: createCrudFunctions<Appearance>('appearances', memoryAppearances),
 
   videos: createSupabaseCrudFunctions<Video>('videos', memoryVideos),
   stories: createSupabaseCrudFunctions<Story>('stories', memoryStories),
-  storyVideos: createSupabaseCrudFunctions<StoryVideo>('story_videos', memoryStoryVideos),
+  storyVideos: createSupabaseCrudFunctions<StoryVideo>(
+    'story_videos',
+    memoryStoryVideos,
+  ),
   products: createSupabaseCrudFunctions<Product>('products', memoryProducts),
-  storyProducts: createSupabaseCrudFunctions<StoryProduct>('story_products', memoryStoryProducts),
+  storyProducts: createSupabaseCrudFunctions<StoryProduct>(
+    'story_products',
+    memoryStoryProducts,
+  ),
 
-  displayLocations: createCrudFunctions<DisplayLocation>('display_locations', memoryDisplayLocations),
+  displayLocations: createCrudFunctions<DisplayLocation>(
+    'display_locations',
+    memoryDisplayLocations,
+  ),
   pageRules: createCrudFunctions<PageRule>('page_rules', memoryPageRules),
   comments: createCrudFunctions<Comment>('comments', memoryComments),
   metrics: createCrudFunctions<Metric>('metrics', memoryMetrics),
-  sizingModels: createCrudFunctions<SizingModel>('sizing_models', memorySizingModels),
+  sizingModels: createCrudFunctions<SizingModel>(
+    'sizing_models',
+    memorySizingModels,
+  ),
 
   profiles: createCrudFunctions<{
     id: string;
