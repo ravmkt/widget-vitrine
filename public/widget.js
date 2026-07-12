@@ -107,19 +107,19 @@
 
     if (storeId && supabaseUrl && supabaseAnonKey) {
       try {
-        const storiesResponse = await supabaseFetch(`stories?select=* &store_id=eq.${encodeURIComponent(storeId)}&active=eq.true&order=position.asc`, { method: 'GET' });
+        const storiesResponse = await supabaseFetch(`stories?select=*&store_id=eq.${encodeURIComponent(storeId)}&active=eq.true&order=position.asc`, { method: 'GET' });
         const storyData = storiesResponse ? await storiesResponse.json() : [];
         stories = Array.isArray(storyData) ? storyData : storiesFallback;
 
         const storyIds = stories.map((story) => story.id);
         if (storyIds.length > 0) {
-          const storyVideosResponse = await supabaseFetch(`story_videos?select=* &store_id=eq.${encodeURIComponent(storeId)}`, { method: 'GET' });
+          const storyVideosResponse = await supabaseFetch(`story_videos?select=*&store_id=eq.${encodeURIComponent(storeId)}`, { method: 'GET' });
           const storyVideosData = storyVideosResponse ? await storyVideosResponse.json() : [];
           storyVideos = Array.isArray(storyVideosData) ? storyVideosData : storyVideosFallback;
 
           const videoIds = storyVideos.map((item) => item.video_id);
           if (videoIds.length > 0) {
-            const videosResponse = await supabaseFetch(`videos?select=* &store_id=eq.${encodeURIComponent(storeId)}`, { method: 'GET' });
+            const videosResponse = await supabaseFetch(`videos?select=*&store_id=eq.${encodeURIComponent(storeId)}`, { method: 'GET' });
             const videoData = videosResponse ? await videosResponse.json() : [];
             videos = Array.isArray(videoData) ? videoData.filter((video) => videoIds.includes(video.id)) : videosFallback;
           }
