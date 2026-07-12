@@ -54,7 +54,16 @@ export interface Appearance {
   updated_at?: string;
 }
 
-export type DisplayPosition = 'before_element' | 'after_element' | 'inside_start' | 'inside_end' | 'replace_element' | 'fixed_bottom_right' | 'fixed_bottom_left' | 'fixed_top_right' | 'fixed_top_left';
+export type DisplayPosition =
+  | 'before_element'
+  | 'after_element'
+  | 'inside_start'
+  | 'inside_end'
+  | 'replace_element'
+  | 'fixed_bottom_right'
+  | 'fixed_bottom_left'
+  | 'fixed_top_right'
+  | 'fixed_top_left';
 
 export interface DisplayLocation {
   id: string;
@@ -66,7 +75,17 @@ export interface DisplayLocation {
   updated_at?: string;
 }
 
-export type ConditionType = 'contains' | 'equals' | 'not_equals' | 'starts_with' | 'ends_with' | 'regex' | 'all_pages' | 'home_only' | 'product_pages' | 'category_pages';
+export type ConditionType =
+  | 'contains'
+  | 'equals'
+  | 'not_equals'
+  | 'starts_with'
+  | 'ends_with'
+  | 'regex'
+  | 'all_pages'
+  | 'home_only'
+  | 'product_pages'
+  | 'category_pages';
 
 export interface PageRule {
   id: string;
@@ -150,7 +169,19 @@ export interface Comment {
   created_at?: string;
 }
 
-export type EventType = 'view' | 'play' | 'pause' | 'click' | 'cta_click' | 'product_click' | 'whatsapp_click' | 'like' | 'share' | 'comment' | 'close' | 'conversion';
+export type EventType =
+  | 'view'
+  | 'play'
+  | 'pause'
+  | 'click'
+  | 'cta_click'
+  | 'product_click'
+  | 'whatsapp_click'
+  | 'like'
+  | 'share'
+  | 'comment'
+  | 'close'
+  | 'conversion';
 
 export interface Metric {
   id: string;
@@ -191,7 +222,6 @@ export interface GeneralSettings {
   whatsapp_button_enabled?: boolean;
   pause_on_invisible?: boolean;
   public_installation_key?: string;
-  // New fields for enhanced settings
   widget_enabled?: boolean;
   default_template?: string;
   whatsapp_enabled?: boolean;
@@ -226,12 +256,15 @@ export interface SizingModel {
   updated_at?: string;
 }
 
-export const isSupabaseConfigured = !!import.meta.env.VITE_SUPABASE_URL && !!import.meta.env.VITE_SUPABASE_ANON_KEY && !!supabase;
+export const isSupabaseConfigured =
+  !!import.meta.env.VITE_SUPABASE_URL &&
+  !!import.meta.env.VITE_SUPABASE_ANON_KEY &&
+  !!supabase;
 
 // Branding Vitrine Vídeo
 const DEFAULT_STORE: Store = {
   id: '11111111-1111-1111-1111-111111111111',
-  name: 'Loja Exemplo', // Useanny removido do branding primário
+  name: 'Loja Exemplo',
   domain: 'lojaexemplo.com.br',
   active: true,
 };
@@ -296,10 +329,10 @@ const DEFAULT_APPEARANCES: Appearance[] = [
     show_share_button: true,
     show_whatsapp_button: true,
     show_product_button: true,
-  }
+  },
 ];
 
-// Fallback de memória e inicialização local (simplificado)
+// Fallback de memória e inicialização local
 let memoryStores = [DEFAULT_STORE];
 let memoryGeneralSettings = [DEFAULT_GENERAL_SETTINGS];
 let memoryAppearances = [...DEFAULT_APPEARANCES];
@@ -332,18 +365,28 @@ const initLocalStorage = () => {
         { key: 'vidlytics_metrics', default: [] },
         { key: 'vidlytics_sizing_models', default: [] },
       ];
+
       items.forEach(item => {
         if (!localStorage.getItem(item.key)) {
           localStorage.setItem(item.key, JSON.stringify(item.default));
         }
       });
     }
-  } catch (e) {}
+  } catch (e) {
+    console.warn('Não foi possível inicializar localStorage:', e);
+  }
 };
 
 initLocalStorage();
 
-const createCrudFunctions = <T extends { id: string; store_id?: string; created_at?: string; updated_at?: string }>(
+const createCrudFunctions = <
+  T extends {
+    id: string;
+    store_id?: string;
+    created_at?: string;
+    updated_at?: string;
+  }
+>(
   tableName: string,
   memoryArray: T[],
 ) => {
@@ -351,29 +394,160 @@ const createCrudFunctions = <T extends { id: string; store_id?: string; created_
     async getAll(storeId?: string): Promise<T[]> {
       const local = localStorage.getItem(`vidlytics_${tableName}`);
       const items = local ? JSON.parse(local) : memoryArray;
-      return storeId ? items.filter((item: T) => item.store_id === storeId) : items;
+
+      return storeId
+        ? items.filter((item: T) => item.store_id === storeId)
+        : items;
     },
+
     async getById(id: string, storeId?: string): Promise<T | null> {
       const items = await this.getAll(storeId);
+
       return items.find((item: T) => item.id === id) || null;
     },
+
     async save(item: T): Promise<T> {
       const now = new Date().toISOString();
       const items = await this.getAll();
       const index = items.findIndex((s: T) => s.id === item.id);
-      const updatedItem = { ...item, updated_at: now };
+
+      const updatedItem = {
+        ...item,
+        updated_at: now,
+      };
+
       if (index >= 0) {
         items[index] = updatedItem;
       } else {
-        items.push({ ...updatedItem, created_at: now });
+        items.push({
+          ...updatedItem,
+          created_at: item.created_at || now,
+        });
       }
+
       localStorage.setItem(`vidlytics_${tableName}`, JSON.stringify(items));
-      return updatedItem;
+
+      return updatedItem as T;
     },
+
     async delete(id: string): Promise<boolean> {
       const items = await this.getAll();
       const filtered = items.filter((s: T) => s.id !== id);
+
       localStorage.setItem(`vidlytics_${tableName}`, JSON.stringify(filtered));
+
+      return true;
+    },
+  };
+};
+
+const createSupabaseCrudFunctions = <
+  T extends {
+    id: string;
+    store_id?: string;
+    created_at?: string;
+    updated_at?: string;
+  }
+>(
+  tableName: string,
+  fallbackMemoryArray: T[],
+) => {
+  const localFallback = createCrudFunctions<T>(tableName, fallbackMemoryArray);
+
+  return {
+    async getAll(storeId?: string): Promise<T[]> {
+      if (!isSupabaseConfigured) {
+        return localFallback.getAll(storeId);
+      }
+
+      let query = supabase
+        .from(tableName as any)
+        .select('*');
+
+      if (storeId) {
+        query = query.eq('store_id', storeId);
+      }
+
+      query = query.order('created_at', { ascending: false });
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error(`Erro ao buscar ${tableName}:`, error);
+        throw error;
+      }
+
+      return (data || []) as T[];
+    },
+
+    async getById(id: string, storeId?: string): Promise<T | null> {
+      if (!isSupabaseConfigured) {
+        return localFallback.getById(id, storeId);
+      }
+
+      let query = supabase
+        .from(tableName as any)
+        .select('*')
+        .eq('id', id);
+
+      if (storeId) {
+        query = query.eq('store_id', storeId);
+      }
+
+      const { data, error } = await query.maybeSingle();
+
+      if (error) {
+        console.error(`Erro ao buscar ${tableName} por ID:`, error);
+        throw error;
+      }
+
+      return data as T | null;
+    },
+
+    async save(item: T): Promise<T> {
+      if (!isSupabaseConfigured) {
+        return localFallback.save(item);
+      }
+
+      const now = new Date().toISOString();
+
+      const payload = {
+        ...item,
+        created_at: item.created_at || now,
+        updated_at: now,
+      };
+
+      const { data, error } = await supabase
+        .from(tableName as any)
+        .upsert(payload as any, {
+          onConflict: 'id',
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error(`Erro ao salvar ${tableName}:`, error);
+        throw error;
+      }
+
+      return data as T;
+    },
+
+    async delete(id: string): Promise<boolean> {
+      if (!isSupabaseConfigured) {
+        return localFallback.delete(id);
+      }
+
+      const { error } = await supabase
+        .from(tableName as any)
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error(`Erro ao deletar ${tableName}:`, error);
+        throw error;
+      }
+
       return true;
     },
   };
@@ -381,16 +555,27 @@ const createCrudFunctions = <T extends { id: string; store_id?: string; created_
 
 export const resolveStoreId = async (storeId?: string) => {
   if (storeId) return storeId;
+
   const stores = await db.stores.getAll();
+
   return stores[0]?.id || '11111111-1111-1111-1111-111111111111';
 };
 
-export const withStoreId = async <T extends { store_id?: string }>(item: T, storeId?: string) => ({
+export const withStoreId = async <T extends { store_id?: string }>(
+  item: T,
+  storeId?: string,
+) => ({
   ...item,
   store_id: item.store_id || (await resolveStoreId(storeId)),
 });
 
-export const replaceStoryRelations = async <T extends { id: string; store_id: string; story_id: string }>(
+export const replaceStoryRelations = async <
+  T extends {
+    id: string;
+    store_id: string;
+    story_id: string;
+  }
+>(
   tableName: 'story_videos' | 'story_products',
   storeId: string,
   storyId: string,
@@ -398,15 +583,32 @@ export const replaceStoryRelations = async <T extends { id: string; store_id: st
 ) => {
   const local = localStorage.getItem(`vidlytics_${tableName}`);
   const items = local ? JSON.parse(local) : [];
-  const preserved = items.filter((item: T) => !(item.store_id === storeId && item.story_id === storyId));
-  localStorage.setItem(`vidlytics_${tableName}`, JSON.stringify([...preserved, ...relations.map((relation) => ({ ...relation, store_id: storeId }))]));
+
+  const preserved = items.filter(
+    (item: T) => !(item.store_id === storeId && item.story_id === storyId),
+  );
+
+  localStorage.setItem(
+    `vidlytics_${tableName}`,
+    JSON.stringify([
+      ...preserved,
+      ...relations.map(relation => ({
+        ...relation,
+        store_id: storeId,
+      })),
+    ]),
+  );
 };
 
 export const db = {
   stores: createCrudFunctions<Store>('stores', memoryStores),
   generalSettings: createCrudFunctions<GeneralSettings>('general_settings', memoryGeneralSettings),
   appearances: createCrudFunctions<Appearance>('appearances', memoryAppearances),
-  videos: createCrudFunctions<Video>('videos', memoryVideos),
+
+  // Vídeos agora usam Supabase quando configurado.
+  // Isso evita salvar base64/blob no localStorage.
+  videos: createSupabaseCrudFunctions<Video>('videos', memoryVideos),
+
   stories: createCrudFunctions<Story>('stories', memoryStories),
   storyVideos: createCrudFunctions<StoryVideo>('story_videos', memoryStoryVideos),
   products: createCrudFunctions<Product>('products', memoryProducts),
@@ -416,8 +618,41 @@ export const db = {
   comments: createCrudFunctions<Comment>('comments', memoryComments),
   metrics: createCrudFunctions<Metric>('metrics', memoryMetrics),
   sizingModels: createCrudFunctions<SizingModel>('sizing_models', memorySizingModels),
-  profiles: createCrudFunctions<{ id: string; user_id: string; name: string; email: string; created_at?: string }>('profiles', []),
-  storeMembers: createCrudFunctions<{ id: string; store_id: string; user_id: string; role: 'owner' | 'admin' | 'member'; created_at?: string }>('store_members', []),
-  subscriptions: createCrudFunctions<{ id: string; store_id: string; plan_name: string; status: 'trialing' | 'active' | 'past_due' | 'canceled'; current_period_start?: string; current_period_end?: string; created_at?: string }>('subscriptions', []),
-  usageCounters: createCrudFunctions<{ id: string; store_id: string; month: string; videos_count: number; views_count: number; users_count: number; created_at?: string; updated_at?: string }>('usage_counters', []),
+
+  profiles: createCrudFunctions<{
+    id: string;
+    user_id: string;
+    name: string;
+    email: string;
+    created_at?: string;
+  }>('profiles', []),
+
+  storeMembers: createCrudFunctions<{
+    id: string;
+    store_id: string;
+    user_id: string;
+    role: 'owner' | 'admin' | 'member';
+    created_at?: string;
+  }>('store_members', []),
+
+  subscriptions: createCrudFunctions<{
+    id: string;
+    store_id: string;
+    plan_name: string;
+    status: 'trialing' | 'active' | 'past_due' | 'canceled';
+    current_period_start?: string;
+    current_period_end?: string;
+    created_at?: string;
+  }>('subscriptions', []),
+
+  usageCounters: createCrudFunctions<{
+    id: string;
+    store_id: string;
+    month: string;
+    videos_count: number;
+    views_count: number;
+    users_count: number;
+    created_at?: string;
+    updated_at?: string;
+  }>('usage_counters', []),
 };
