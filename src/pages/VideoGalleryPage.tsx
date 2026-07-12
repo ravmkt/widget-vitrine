@@ -26,6 +26,8 @@ import { getExternalVideoData } from '@/lib/videoEmbeds';
 
 const VideoGalleryPage = () => {
   const navigate = useNavigate();
+  const { storeId: tenantStoreId, loading: tenantLoading } = useTenant();
+const [resolvedStoreId, setResolvedStoreId] = useState('');
   const [loading, setLoading] = useState(true);
   const [videos, setVideos] = useState<Video[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
