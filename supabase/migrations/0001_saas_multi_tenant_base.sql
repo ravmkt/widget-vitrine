@@ -1,3 +1,14 @@
+create extension if not exists "pgcrypto";
+
+create table if not exists public.stores (
+  id uuid primary key default gen_random_uuid(),
+  owner_user_id uuid,
+  name text not null default 'Minha loja',
+  slug text unique,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists public.profiles (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null unique,
@@ -37,18 +48,52 @@ create table if not exists public.usage_counters (
   unique (store_id, month)
 );
 
-alter table public.stores add column if not exists owner_user_id uuid;
-alter table public.videos add column if not exists store_id uuid;
-alter table public.stories add column if not exists store_id uuid;
-alter table public.products add column if not exists store_id uuid;
-alter table public.comments add column if not exists store_id uuid;
-alter table public.metrics add column if not exists store_id uuid;
-alter table public.appearances add column if not exists store_id uuid;
-alter table public.display_locations add column if not exists store_id uuid;
-alter table public.page_rules add column if not exists store_id uuid;
-alter table public.story_products add column if not exists store_id uuid;
-alter table public.story_videos add column if not exists store_id uuid;
-alter table public.sizing_models add column if not exists store_id uuid;
+do $$
+begin
+  if to_regclass('public.videos') is not null then
+    alter table public.videos add column if not exists store_id uuid;
+  end if;
+
+  if to_regclass('public.stories') is not null then
+    alter table public.stories add column if not exists store_id uuid;
+  end if;
+
+  if to_regclass('public.products') is not null then
+    alter table public.products add column if not exists store_id uuid;
+  end if;
+
+  if to_regclass('public.comments') is not null then
+    alter table public.comments add column if not exists store_id uuid;
+  end if;
+
+  if to_regclass('public.metrics') is not null then
+    alter table public.metrics add column if not exists store_id uuid;
+  end if;
+
+  if to_regclass('public.appearances') is not null then
+    alter table public.appearances add column if not exists store_id uuid;
+  end if;
+
+  if to_regclass('public.display_locations') is not null then
+    alter table public.display_locations add column if not exists store_id uuid;
+  end if;
+
+  if to_regclass('public.page_rules') is not null then
+    alter table public.page_rules add column if not exists store_id uuid;
+  end if;
+
+  if to_regclass('public.story_products') is not null then
+    alter table public.story_products add column if not exists store_id uuid;
+  end if;
+
+  if to_regclass('public.story_videos') is not null then
+    alter table public.story_videos add column if not exists store_id uuid;
+  end if;
+
+  if to_regclass('public.sizing_models') is not null then
+    alter table public.sizing_models add column if not exists store_id uuid;
+  end if;
+end $$;
 
 create index if not exists idx_profiles_user_id on public.profiles(user_id);
 create index if not exists idx_store_members_store_id on public.store_members(store_id);
