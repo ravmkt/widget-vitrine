@@ -680,9 +680,11 @@ export const db = {
 
   videos: createSupabaseCrudFunctions<Video>('videos', memoryVideos),
 
-  stories: createCrudFunctions<Story>('stories', memoryStories),
-  storyVideos: createCrudFunctions<StoryVideo>('story_videos', memoryStoryVideos),
-  products: createCrudFunctions<Product>('products', memoryProducts),
+  stories: createSupabaseCrudFunctions<Story>('stories', memoryStories),
+storyVideos: createSupabaseCrudFunctions<StoryVideo>('story_videos', memoryStoryVideos),
+products: createSupabaseCrudFunctions<Product>('products', memoryProducts),
+storyProducts: createSupabaseCrudFunctions<StoryProduct>('story_products', memoryStoryProducts),
+
   storyProducts: createCrudFunctions<StoryProduct>('story_products', memoryStoryProducts),
   displayLocations: createCrudFunctions<DisplayLocation>('display_locations', memoryDisplayLocations),
   pageRules: createCrudFunctions<PageRule>('page_rules', memoryPageRules),
