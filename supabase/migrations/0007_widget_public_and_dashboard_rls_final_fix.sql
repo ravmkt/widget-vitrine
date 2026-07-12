@@ -133,6 +133,7 @@ create policy "store_members_dashboard_insert"
     (
       public.is_store_admin(store_members.store_id)
       and store_members.user_id <> auth.uid()
+      and store_members.role in ('admin', 'member')
     )
     or (
       public.is_store_owner(store_members.store_id)
@@ -156,7 +157,7 @@ create policy "store_members_dashboard_update"
     public.is_store_owner(store_members.store_id)
     or (
       public.is_store_admin(store_members.store_id)
-      and store_members.role <> 'owner'
+      and store_members.role in ('admin', 'member')
     )
   );
 
@@ -306,7 +307,9 @@ create policy "videos_public_select_active"
     and exists (
       select 1
       from public.story_videos sv
-      join public.stories s on s.id = sv.story_id
+      join public.stories s
+        on s.id = sv.story_id
+       and s.store_id = sv.store_id
       where sv.video_id = videos.id
         and sv.store_id = videos.store_id
         and s.active = true
@@ -402,7 +405,9 @@ create policy "products_public_select_active"
     and exists (
       select 1
       from public.story_products sp
-      join public.stories s on s.id = sp.story_id
+      join public.stories s
+        on s.id = sp.story_id
+       and s.store_id = sp.store_id
       where sp.product_id = products.id
         and sp.store_id = products.store_id
         and s.active = true
