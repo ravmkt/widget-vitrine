@@ -13,6 +13,8 @@ import {
   Film,
   ChevronUp,
   ChevronDown,
+  Play,
+  ExternalLink,
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import CustomDialog from '@/components/CustomDialog';
@@ -20,6 +22,145 @@ import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import { cn } from '@/lib/utils';
 import { subDays, eachDayOfInterval } from 'date-fns';
 import { getExternalVideoData } from '@/lib/videoEmbeds';
+
+const getSafeExternalData = (video: Video | null) => {
+  if (!video) return null;
+
+  try {
+    return getExternalVideoData(video as any) as any;
+  } catch {
+    return null;
+  }
+};
+
+const getVideoThumbnail = (video: Video | null) => {
+  if (!video) return '';
+
+  const externalData = getSafeExternalData(video);
+
+  const directThumb =
+    video.thumbnail_url ||
+    (video as any).poster_url ||
+    (video as any).image_url ||
+    (video as any).cover_url ||
+    (video as any).thumb_url ||
+    externalData?.thumbnailUrl ||
+    externalData?.thumbnail_url ||
+    '';
+
+  if (directThumb) return directThumb;
+
+  if (externalData?.platform === 'youtube' && externalData?.externalId) {
+    return `https://img.youtube.com/vi/${externalData.externalId}/hqdefault.jpg`;
+  }
+
+  return '';
+};
+
+const getSourceLabel = (sourceType?: string | null) => {
+  if (sourceType === 'upload') return 'UPLOAD';
+  if (sourceType === 'external_url') return 'URL';
+  if (sourceType === 'tiktok') return 'TIKTOK';
+  if (sourceType === 'instagram') return 'INSTAGRAM';
+
+  return (sourceType || 'VÍDEO').toUpperCase();
+};
+
+const isExternalSource = (video: Video | null) => {
+  if (!video) return false;
+
+  const sourceType = video.source_type || '';
+  const externalData = getSafeExternalData(video);
+
+  return (
+    sourceType === 'external_url' ||
+    sourceType === 'instagram' ||
+    sourceType === 'tiktok' ||
+    Boolean(externalData?.embedUrl || externalData?.sourceUrl)
+  );
+};
+
+const VideoThumb = ({
+  video,
+  onClick,
+  size = 'table',
+}: {
+  video: Video;
+  onClick: () => void;
+  size?: 'table' | 'large';
+}) => {
+  const thumb = getVideoThumbnail(video);
+  const videoUrl = (video as any).video_url || '';
+  const canUseVideoPreview = !thumb && videoUrl && video.source_type === 'upload';
+
+  const wrapperClass =
+    size === 'large'
+      ? 'aspect-[9/16] w-full overflow-hidden rounded-[1.75rem] border border-slate-200 bg-slate-950 shadow-xl'
+      : 'h-12 w-12 overflow-hidden rounded-xl border border-slate-200 bg-slate-100';
+
+  const playClass =
+    size === 'large'
+      ? 'h-14 w-14 rounded-full bg-white/95 text-[#0094EB] shadow-xl'
+      : 'h-7 w-7 rounded-full bg-white/95 text-[#0094EB] shadow-md';
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'group relative block shrink-0 transition-all hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[#0094EB]/30',
+        wrapperClass,
+      )}
+      title={`Visualizar ${video.title}`}
+    >
+      {thumb ? (
+        <img
+          src={thumb}
+          alt={video.title}
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          loading="lazy"
+        />
+      ) : canUseVideoPreview ? (
+        <video
+          src={videoUrl}
+          className="h-full w-full object-cover"
+          muted
+          playsInline
+          preload="metadata"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400">
+          <Film size={size === 'large' ? 42 : 18} />
+        </div>
+      )}
+
+      <div className="absolute inset-0 bg-black/20 opacity-100 transition-opacity group-hover:bg-black/30" />
+
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className={cn('inline-flex items-center justify-center', playClass)}>
+          <Play
+            size={size === 'large' ? 26 : 14}
+            className="ml-0.5 fill-current"
+          />
+        </span>
+      </div>
+
+      {size === 'large' && (
+        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-2">
+          <span className="truncate rounded-full bg-black/60 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur">
+            {getSourceLabel(video.source_type)}
+          </span>
+
+          {isExternalSource(video) && (
+            <span className="rounded-full bg-white/90 p-2 text-slate-700">
+              <ExternalLink size={14} />
+            </span>
+          )}
+        </div>
+      )}
+    </button>
+  );
+};
 
 const VideoGalleryPage = () => {
   const navigate = useNavigate();
@@ -464,18 +605,12 @@ const VideoGalleryPage = () => {
       </div>
 
       <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm max-w-full">
-        <div
-          className="w-full max-w-full overflow-x-hidden"
-          style={{ boxSizing: 'border-box' }}
-        >
-          <table
-            className="w-full max-w-full table-fixed text-left border-collapse"
-            style={{ boxSizing: 'border-box' }}
-          >
+        <div className="w-full max-w-full overflow-x-auto">
+          <table className="w-full min-w-[980px] table-fixed text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                <th className={cn(getHeaderClass('foto'), 'w-[72px]')}>
-                  Foto
+                <th className={cn(getHeaderClass('preview'), 'w-[78px]')}>
+                  Vídeo
                 </th>
 
                 <th
@@ -551,29 +686,16 @@ const VideoGalleryPage = () => {
                   products.find(p => p.id === (video as any).product_id)?.name ||
                   'Sem produto';
 
-                const thumb =
-                  video.thumbnail_url ||
-                  (video as any).poster_url ||
-                  (video as any).image_url ||
-                  '';
-
                 return (
                   <tr
                     key={video.id}
                     className="hover:bg-slate-50/50 transition-colors align-middle"
                   >
                     <td className="px-3 py-4">
-                      {thumb ? (
-                        <img
-                          src={thumb}
-                          alt={video.title}
-                          className="h-12 w-12 rounded-xl object-cover border border-slate-200"
-                        />
-                      ) : (
-                        <div className="h-12 w-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
-                          <Film size={18} />
-                        </div>
-                      )}
+                      <VideoThumb
+                        video={video}
+                        onClick={() => handleViewVideo(video)}
+                      />
                     </td>
 
                     <td className="px-3 py-4 min-w-0">
@@ -596,15 +718,7 @@ const VideoGalleryPage = () => {
                             'bg-slate-50 text-slate-500 border-slate-100',
                         )}
                       >
-                        {video.source_type === 'upload'
-                          ? 'UPLOAD'
-                          : video.source_type === 'external_url'
-                            ? 'URL'
-                            : video.source_type === 'tiktok'
-                              ? 'TIKTOK'
-                              : video.source_type === 'instagram'
-                                ? 'INSTAGRAM'
-                                : (video.source_type || '').toUpperCase()}
+                        {getSourceLabel(video.source_type)}
                       </span>
                     </td>
 
@@ -689,10 +803,9 @@ const VideoGalleryPage = () => {
         onCancel={() => setIsViewModalOpen(false)}
       >
         {viewingVideo && (() => {
-          const isExternalVideo = viewingVideo.source_type === 'external_url';
-          const externalData = isExternalVideo
-            ? getExternalVideoData(viewingVideo as any)
-            : null;
+          const externalData = getSafeExternalData(viewingVideo);
+          const isExternalVideo = isExternalSource(viewingVideo);
+          const modalThumb = getVideoThumbnail(viewingVideo);
 
           const platformLabel = externalData
             ? externalData.platform === 'youtube'
@@ -702,7 +815,7 @@ const VideoGalleryPage = () => {
                 : externalData.platform === 'tiktok'
                   ? 'TikTok'
                   : 'Vídeo externo'
-            : '';
+            : getSourceLabel(viewingVideo.source_type);
 
           const platformButtonLabel = externalData
             ? externalData.platform === 'youtube'
@@ -723,17 +836,29 @@ const VideoGalleryPage = () => {
                       <video
                         src={viewingVideo.video_url}
                         className="w-full max-w-full h-auto max-h-[400px] object-contain"
-                        poster={viewingVideo.thumbnail_url}
+                        poster={modalThumb || undefined}
                         controls
                         autoPlay
                         loop
+                        playsInline
                       />
                     </div>
                   ) : (
                     <div className="aspect-[9/16] bg-slate-950 rounded-[1.5rem] overflow-hidden shadow-lg relative border-[4px] border-slate-900 max-h-[60vh] flex flex-col items-center justify-center gap-4 p-4">
-                      <p className="text-white text-sm font-bold text-center">
-                        Sem vídeo
-                      </p>
+                      {modalThumb ? (
+                        <img
+                          src={modalThumb}
+                          alt={viewingVideo.title}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <>
+                          <Film size={42} className="text-slate-500" />
+                          <p className="text-white text-sm font-bold text-center">
+                            Sem vídeo
+                          </p>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -821,6 +946,48 @@ const VideoGalleryPage = () => {
           return (
             <div className="flex flex-col lg:flex-row gap-6">
               <div className="w-full lg:max-w-[420px] mx-auto lg:mx-0 shrink-0 space-y-4">
+                {!showExternalPlayer ? (
+                  modalThumb ? (
+                    <VideoThumb
+                      video={viewingVideo}
+                      size="large"
+                      onClick={() => {
+                        if (externalData?.embedUrl) {
+                          setShowExternalPlayer(true);
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className="rounded-[1.75rem] border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+                      <Film size={42} className="mx-auto mb-3 text-slate-300" />
+
+                      <p className="text-sm font-bold text-slate-700">
+                        Prévia indisponível
+                      </p>
+
+                      <p className="mt-1 text-xs text-slate-500">
+                        Abra o vídeo na plataforma original para assistir.
+                      </p>
+                    </div>
+                  )
+                ) : null}
+
+                {showExternalPlayer && externalData?.embedUrl ? (
+                  <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-black shadow-xl">
+                    <div className="aspect-[9/16] w-full max-w-[420px] bg-black">
+                      <iframe
+                        src={externalData.embedUrl}
+                        className="h-full w-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                        loading="lazy"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        title={viewingVideo.title}
+                      />
+                    </div>
+                  </div>
+                ) : null}
+
                 <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white font-black text-sm">
@@ -843,7 +1010,7 @@ const VideoGalleryPage = () => {
                   </p>
 
                   <p className="text-xs leading-5 text-slate-500">
-                    Vídeos de redes sociais são exibidos através do player oficial da plataforma.
+                    Vídeos de redes sociais são exibidos através do player oficial.
                     Alguns elementos da plataforma podem aparecer.
                   </p>
 
@@ -862,46 +1029,13 @@ const VideoGalleryPage = () => {
                       href={externalData?.sourceUrl || (viewingVideo as any).video_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-black text-slate-600 transition-colors hover:bg-slate-50"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-black text-slate-600 transition-colors hover:bg-slate-50"
                     >
                       {platformButtonLabel}
+                      <ExternalLink size={14} />
                     </a>
                   </div>
                 </div>
-
-                {showExternalPlayer && externalData?.embedUrl ? (
-                  <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-black shadow-xl">
-                    <div className="aspect-[9/16] w-full max-w-[420px] bg-black">
-                      <iframe
-                        src={externalData.embedUrl}
-                        className="h-full w-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        allowFullScreen
-                        loading="lazy"
-                        referrerPolicy="strict-origin-when-cross-origin"
-                        title={viewingVideo.title}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="rounded-[1.75rem] border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
-                    {externalData?.embedUrl ? (
-                      <p className="text-sm font-bold text-slate-600">
-                        Clique em “Assistir no app” para carregar a prévia oficial.
-                      </p>
-                    ) : (
-                      <>
-                        <p className="text-sm font-bold text-slate-700">
-                          Não foi possível carregar a prévia deste vídeo.
-                        </p>
-
-                        <p className="mt-1 text-xs text-slate-500">
-                          Abra o vídeo na plataforma original para assistir.
-                        </p>
-                      </>
-                    )}
-                  </div>
-                )}
               </div>
 
               <div className="flex-1 flex flex-col pt-1">
@@ -931,7 +1065,7 @@ const VideoGalleryPage = () => {
                       ID Externo
                     </p>
 
-                    <p className="mt-1 text-sm font-black text-slate-800">
+                    <p className="mt-1 text-sm font-black text-slate-800 break-all">
                       {externalData?.externalId || '—'}
                     </p>
                   </div>
@@ -942,7 +1076,7 @@ const VideoGalleryPage = () => {
                     </p>
 
                     <p className="mt-1 text-sm font-black text-slate-800">
-                      {viewingVideo.active ? 'Ativo' : 'Desativado'}
+                      {(viewingVideo as any).active === false ? 'Desativado' : 'Ativo'}
                     </p>
                   </div>
 
@@ -952,7 +1086,7 @@ const VideoGalleryPage = () => {
                     </p>
 
                     <p className="mt-1 text-sm font-black text-slate-800">
-                      {viewingVideo.source_type}
+                      {getSourceLabel(viewingVideo.source_type)}
                     </p>
                   </div>
                 </div>
