@@ -4,7 +4,12 @@ import React from 'react';
 import { Film } from 'lucide-react';
 import { Video } from '@/lib/db';
 import { cn } from '@/lib/utils';
-import { getExternalVideoData } from '@/lib/videoEmbeds';
+import {
+  getExternalVideoData,
+  getVideoUrl,
+  isDirectVideoUrl,
+  getYouTubeThumbnailUrl,
+} from '@/lib/videoEmbeds';
 
 type VideoThumbnailProps = {
   video: Video;
@@ -32,8 +37,11 @@ const getBestThumbnailUrl = (video: Video) => {
     return directThumb;
   }
 
-  try {
-    if (video.source_type === 'external_url') {
+  if (video.source_type !== 'upload') {
+    const youTubeThumb = getYouTubeThumbnailUrl(video as any);
+    if (youTubeThumb) return youTubeThumb;
+
+    try {
       const externalData = getExternalVideoData(video as any) as any;
 
       return (
@@ -44,9 +52,9 @@ const getBestThumbnailUrl = (video: Video) => {
         externalData?.poster_url ||
         ''
       );
+    } catch {
+      // ignora fallback externo
     }
-  } catch {
-    // ignora fallback externo
   }
 
   return '';
@@ -58,7 +66,7 @@ const VideoThumbnail = ({
   iconSize = 18,
 }: VideoThumbnailProps) => {
   const thumbnailUrl = getBestThumbnailUrl(video);
-  const videoUrl = (video as any).video_url || '';
+  const videoUrl = getVideoUrl(video as any);
 
   if (thumbnailUrl) {
     return (
@@ -74,7 +82,7 @@ const VideoThumbnail = ({
     );
   }
 
-  if (videoUrl) {
+  if (videoUrl && (video.source_type === 'upload' || isDirectVideoUrl(videoUrl))) {
     return (
       <video
         src={`${videoUrl}#t=0.1`}

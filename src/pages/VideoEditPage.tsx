@@ -153,13 +153,11 @@ const VideoEditPage = () => {
   const [formData, setFormData] = useState({
     title: '',
     video_url: '',
-    instagram_link: '',
-    tiktok_link: '',
     thumbnail_url: '',
     product_id: '',
     model_id: '',
     active: true,
-    origin: 'external_url' as 'external_url' | 'instagram' | 'youtube' | 'tiktok' | 'upload',
+    origin: 'external_url' as 'external_url' | 'upload',
     video_file: null as File | null,
     thumbnail_file: null as File | null,
   });
@@ -217,18 +215,16 @@ const VideoEditPage = () => {
 
           setVideo(v);
 
+          const mappedOrigin = v.source_type === 'upload' ? 'upload' : 'external_url';
+
           setFormData({
             title: v.title || '',
             video_url: v.video_url || '',
-            instagram_link: v.instagram_link || '',
-            tiktok_link: v.tiktok_link || '',
             thumbnail_url: v.thumbnail_url || '',
             product_id: v.product_id || '',
             model_id: v.model_id || '',
             active: v.active ?? true,
-            origin: ((v.source_type as any) || 'external_url') === 'external_url'
-              ? 'external_url'
-              : ((v.source_type as any) || 'external_url'),
+            origin: mappedOrigin,
             video_file: null,
             thumbnail_file: null,
           });
@@ -268,10 +264,8 @@ const VideoEditPage = () => {
   const handleOriginChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setFormData(prev => ({
       ...prev,
-      origin: e.target.value as any,
+      origin: e.target.value as 'external_url' | 'upload',
       video_url: '',
-      instagram_link: '',
-      tiktok_link: '',
       thumbnail_url: '',
       video_file: null,
       thumbnail_file: null,
@@ -309,61 +303,6 @@ const VideoEditPage = () => {
       return url.toString().replace(/\/$/, '');
     } catch {
       return value.trim();
-    }
-  };
-
-  const validateInstagramLink = (link: string): boolean => {
-    if (!link) return false;
-
-    try {
-      const url = new URL(link.trim());
-      const host = url.hostname.replace(/^www\./, '').toLowerCase();
-
-      if (host !== 'instagram.com') return false;
-
-      return /^\/(reel|p|tv)\/[A-Za-z0-9_-]+\/?$/.test(url.pathname);
-    } catch {
-      return false;
-    }
-  };
-
-  const validateTikTokLink = (link: string): boolean => {
-    if (!link) return false;
-
-    try {
-      const url = new URL(link.trim());
-      const host = url.hostname.replace(/^www\./, '').toLowerCase();
-
-      if (host === 'vm.tiktok.com') {
-        return /^\/[A-Za-z0-9_-]+\/?$/.test(url.pathname);
-      }
-
-      if (host !== 'tiktok.com') return false;
-
-      return /^\/@[A-Za-z0-9._-]+\/video\/\d+\/?$/.test(url.pathname);
-    } catch {
-      return false;
-    }
-  };
-
-  const validateYouTubeLink = (link: string): boolean => {
-    if (!link) return false;
-
-    try {
-      const url = new URL(link.trim());
-      const host = url.hostname.replace(/^www\./, '').toLowerCase();
-
-      if (host === 'youtu.be') {
-        return /^\/[A-Za-z0-9_-]+\/?$/.test(url.pathname);
-      }
-
-      if (host !== 'youtube.com') return false;
-
-      return /^\/(shorts|watch)\/?$/.test(url.pathname) ||
-        url.pathname.startsWith('/shorts/') ||
-        url.pathname === '/watch';
-    } catch {
-      return false;
     }
   };
 
@@ -491,36 +430,6 @@ const VideoEditPage = () => {
       }
     }
 
-    if (formData.origin === 'instagram') {
-      if (!formData.instagram_link?.trim()) {
-        errors.instagram_link = 'Informe o link do Instagram.';
-        isValid = false;
-      } else if (!validateInstagramLink(formData.instagram_link)) {
-        errors.instagram_link = 'Link do Instagram inválido.';
-        isValid = false;
-      }
-    }
-
-    if (formData.origin === 'youtube') {
-      if (!formData.video_url?.trim()) {
-        errors.video_url = 'Informe o link do YouTube Shorts.';
-        isValid = false;
-      } else if (!validateYouTubeLink(formData.video_url)) {
-        errors.video_url = 'Link do YouTube inválido.';
-        isValid = false;
-      }
-    }
-
-    if (formData.origin === 'tiktok') {
-      if (!formData.tiktok_link?.trim()) {
-        errors.tiktok_link = 'Informe o link do TikTok.';
-        isValid = false;
-      } else if (!validateTikTokLink(formData.tiktok_link)) {
-        errors.tiktok_link = 'Link do TikTok inválido.';
-        isValid = false;
-      }
-    }
-
     if (formData.origin === 'upload') {
       if (!formData.video_file && !formData.video_url) {
         errors.video_file = 'Envie um arquivo de vídeo.';
@@ -565,18 +474,6 @@ const VideoEditPage = () => {
       let finalVideoUrl = '';
       let finalThumbnailUrl = formData.thumbnail_url || '';
 
-      const normalizedExternalVideoUrl = formData.video_url
-        ? normalizeVideoUrl(formData.video_url)
-        : '';
-
-      const normalizedInstagramLink = formData.instagram_link
-        ? normalizeVideoUrl(formData.instagram_link)
-        : '';
-
-      const normalizedTikTokLink = formData.tiktok_link
-        ? normalizeVideoUrl(formData.tiktok_link)
-        : '';
-
       if (formData.origin === 'upload') {
         if (formData.video_file) {
           finalVideoUrl = await uploadFileToSupabase(
@@ -603,11 +500,9 @@ const VideoEditPage = () => {
         } else if (finalThumbnailUrl.startsWith('blob:')) {
           finalThumbnailUrl = '';
         }
-      } else if (formData.origin === 'external_url' || formData.origin === 'youtube') {
-        finalVideoUrl = normalizedExternalVideoUrl;
-      }
+      } else if (formData.origin === 'external_url') {
+        finalVideoUrl = normalizeVideoUrl(formData.video_url);
 
-      if (formData.origin !== 'upload') {
         if (formData.thumbnail_file) {
           finalThumbnailUrl = await uploadFileToSupabase(
             formData.thumbnail_file,
@@ -625,18 +520,17 @@ const VideoEditPage = () => {
         }
       }
 
-      const sourceType = formData.origin === 'youtube'
-        ? 'external_url'
-        : formData.origin;
+      const sourceType: Video['source_type'] =
+        formData.origin === 'upload' ? 'upload' : 'external_url';
 
       const now = new Date().toISOString();
 
       const videoData: Partial<Video> = {
         title: formData.title.trim(),
-        source_type: sourceType as Video['source_type'],
+        source_type: sourceType,
         video_url: finalVideoUrl,
-        instagram_link: formData.origin === 'instagram' ? normalizedInstagramLink : '',
-        tiktok_link: formData.origin === 'tiktok' ? normalizedTikTokLink : '',
+        instagram_link: '',
+        tiktok_link: '',
         thumbnail_url: finalThumbnailUrl,
         active: formData.active,
         status: formData.active ? 'active' : 'inactive',
@@ -735,9 +629,6 @@ const VideoEditPage = () => {
               className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
             >
               <option value="external_url">URL do vídeo</option>
-              <option value="instagram">Instagram</option>
-              <option value="youtube">YouTube Shorts</option>
-              <option value="tiktok">TikTok</option>
               <option value="upload">Upload de vídeo</option>
             </select>
           </div>
@@ -752,51 +643,7 @@ const VideoEditPage = () => {
                 type="url"
                 value={formData.video_url}
                 onChange={e => setFormData({ ...formData, video_url: e.target.value })}
-                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
-              />
-            </div>
-          )}
-
-          {formData.origin === 'instagram' && (
-            <div className="space-y-4">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                Link do Instagram
-              </label>
-
-              <input
-                type="text"
-                value={formData.instagram_link}
-                onChange={e => setFormData({ ...formData, instagram_link: e.target.value })}
-                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
-              />
-            </div>
-          )}
-
-          {formData.origin === 'youtube' && (
-            <div className="space-y-4">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                Link do YouTube Shorts
-              </label>
-
-              <input
-                type="url"
-                value={formData.video_url}
-                onChange={e => setFormData({ ...formData, video_url: e.target.value })}
-                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
-              />
-            </div>
-          )}
-
-          {formData.origin === 'tiktok' && (
-            <div className="space-y-4">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                Link do TikTok
-              </label>
-
-              <input
-                type="text"
-                value={formData.tiktok_link}
-                onChange={e => setFormData({ ...formData, tiktok_link: e.target.value })}
+                placeholder="Cole o link do YouTube, Vimeo ou arquivo .mp4"
                 className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
               />
             </div>

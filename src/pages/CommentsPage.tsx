@@ -467,7 +467,7 @@ const CommentsPage = () => {
             <div className="flex-1 flex flex-col pt-1">
               <div className="mb-4">
                 <h3 className="text-lg font-black text-slate-900 mb-1">{viewingVideo.title}</h3>
-                <span className="bg-blue-50 text-[#0094EB] px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest">{viewingVideo.source_type}</span>
+                <span className="bg-blue-50 text-[#0094EB] px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest">{viewingVideo.source_type === 'upload' ? 'UPLOAD' : 'URL'}</span>
               </div>
               <div className="grid grid-cols-2 gap-2 mb-6">
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center"><p className="text-[8px] font-black text-slate-400 uppercase">Status</p><p className="text-xs font-black text-emerald-600">Ativo</p></div>

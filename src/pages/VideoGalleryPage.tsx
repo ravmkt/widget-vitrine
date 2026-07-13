@@ -21,30 +21,17 @@ import CustomDialog from '@/components/CustomDialog';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import { cn } from '@/lib/utils';
 import { subDays, eachDayOfInterval } from 'date-fns';
-import { getExternalVideoData } from '@/lib/videoEmbeds';
-
-const VIDEO_FILE_REGEX = /\.(mp4|webm|ogg|mov|m4v|m3u8)(\?.*)?$/i;
-
-const getVideoUrl = (video: Video | null) => {
-  if (!video) return '';
-
-  return (
-    (video as any).video_url ||
-    (video as any).url ||
-    (video as any).source_url ||
-    (video as any).external_url ||
-    ''
-  );
-};
-
-const isDirectVideoUrl = (url?: string | null) => {
-  if (!url) return false;
-
-  return VIDEO_FILE_REGEX.test(url);
-};
+import {
+  getExternalVideoData,
+  getVideoUrl,
+  isDirectVideoUrl,
+  getYouTubeThumbnailUrl,
+  extractYouTubeId,
+} from '@/lib/videoEmbeds';
 
 const getSafeExternalData = (video: Video | null) => {
   if (!video) return null;
+  if (video.source_type === 'upload') return null;
 
   try {
     return getExternalVideoData(video as any) as any;
@@ -56,22 +43,24 @@ const getSafeExternalData = (video: Video | null) => {
 const getVideoThumbnail = (video: Video | null) => {
   if (!video) return '';
 
-  const externalData = getSafeExternalData(video);
-
   const directThumb =
     video.thumbnail_url ||
     (video as any).poster_url ||
     (video as any).image_url ||
     (video as any).cover_url ||
     (video as any).thumb_url ||
-    externalData?.thumbnailUrl ||
-    externalData?.thumbnail_url ||
     '';
 
   if (directThumb) return directThumb;
 
-  if (externalData?.platform === 'youtube' && externalData?.externalId) {
-    return `https://img.youtube.com/vi/${externalData.externalId}/hqdefault.jpg`;
+  if (video.source_type !== 'upload') {
+    const youTubeThumb = getYouTubeThumbnailUrl(video as any);
+    if (youTubeThumb) return youTubeThumb;
+
+    const externalData = getSafeExternalData(video);
+    if (externalData?.thumbnailUrl || externalData?.thumbnail_url) {
+      return externalData.thumbnailUrl || externalData.thumbnail_url;
+    }
   }
 
   return '';
@@ -86,16 +75,13 @@ const getSourceLabel = (sourceType?: string | null) => {
 
 const isExternalSource = (video: Video | null) => {
   if (!video) return false;
-
-  if (video.source_type === 'upload') return false;
-
-  return ['external_url', 'instagram', 'tiktok'].includes(video.source_type || '');
+  return video.source_type === 'external_url';
 };
 
 const canPlayInsideApp = (video: Video | null) => {
   if (!video) return false;
 
-  const url = getVideoUrl(video);
+  const url = getVideoUrl(video as any);
 
   if (video.source_type === 'upload' && url) return true;
 
@@ -120,7 +106,7 @@ const VideoThumb = ({
   size?: 'table' | 'large';
 }) => {
   const thumb = getVideoThumbnail(video);
-  const videoUrl = getVideoUrl(video);
+  const videoUrl = getVideoUrl(video as any);
   const canUseVideoPreview =
     !thumb &&
     Boolean(videoUrl) &&
@@ -360,24 +346,21 @@ const VideoGalleryPage = () => {
       (video as any).views_count ??
       (video as any).view_count ??
       (video as any).views ??
-      base.views ??
-      0,
+      base.views ?? 0,
     );
 
     const comments = Number(
       (video as any).comments_count ??
       (video as any).comment_count ??
       (video as any).comments ??
-      base.comments ??
-      0,
+      base.comments ?? 0,
     );
 
     const likes = Number(
       (video as any).likes_count ??
       (video as any).like_count ??
       (video as any).likes ??
-      base.likes ??
-      0,
+      base.likes ?? 0,
     );
 
     const clicks = Number(
@@ -425,11 +408,7 @@ const VideoGalleryPage = () => {
 
         const matchesSource =
           filterSource === 'all' ||
-          v.source_type === filterSource ||
-          (
-            filterSource === 'external_url' &&
-            ['external_url', 'instagram', 'tiktok'].includes(v.source_type || '')
-          );
+          v.source_type === filterSource;
 
         const matchesProduct =
           productFilter === 'all' ||
@@ -744,7 +723,7 @@ const VideoGalleryPage = () => {
                   products.find(p => p.id === (video as any).product_id)?.name ||
                   'Sem produto';
 
-                const isUrlLike = ['external_url', 'instagram', 'tiktok'].includes(video.source_type || '');
+                const isUrlLike = video.source_type === 'external_url';
 
                 return (
                   <tr
@@ -770,7 +749,7 @@ const VideoGalleryPage = () => {
                             'bg-blue-50 text-blue-600 border-blue-100',
                           isUrlLike &&
                             'bg-red-50 text-red-600 border-red-100',
-                          !['upload', 'external_url', 'tiktok', 'instagram'].includes(video.source_type || '') &&
+                          video.source_type !== 'upload' && !isUrlLike &&
                             'bg-slate-50 text-slate-500 border-slate-100',
                         )}
                       >
@@ -860,39 +839,35 @@ const VideoGalleryPage = () => {
         onCancel={() => setIsViewModalOpen(false)}
       >
         {viewingVideo && (() => {
-          const videoUrl = getVideoUrl(viewingVideo);
+          const videoUrl = getVideoUrl(viewingVideo as any);
           const externalData = getSafeExternalData(viewingVideo);
           const modalThumb = getVideoThumbnail(viewingVideo);
           const modalMetrics = viewingVideo.metrics || getVideoMetrics(viewingVideo);
+          const youTubeId = extractYouTubeId(videoUrl);
 
+          // upload → sempre player HTML5
           const shouldUseNativePlayer =
-            (viewingVideo.source_type === 'upload' && Boolean(videoUrl)) ||
-            isDirectVideoUrl(videoUrl);
+            viewingVideo.source_type === 'upload' && Boolean(videoUrl);
 
-          const isExternalVideo = isExternalSource(viewingVideo);
-          const canPlayInApp = canPlayInsideApp(viewingVideo);
+          // external_url + arquivo direto → player HTML5
+          const shouldUseNativeForDirect =
+            viewingVideo.source_type === 'external_url' && isDirectVideoUrl(videoUrl);
 
-          const platformLabel = externalData
-            ? externalData.platform === 'youtube'
-              ? 'YouTube Shorts'
-              : externalData.platform === 'instagram'
-                ? 'Instagram Reel'
-                : externalData.platform === 'tiktok'
-                  ? 'TikTok'
-                  : 'Vídeo externo'
-            : getSourceLabel(viewingVideo.source_type);
+          // external_url + YouTube → embed iframe automático
+          const shouldUseYouTubeEmbed =
+            viewingVideo.source_type === 'external_url' && Boolean(youTubeId);
 
-          const platformButtonLabel = externalData
-            ? externalData.platform === 'youtube'
-              ? 'Abrir no YouTube'
-              : externalData.platform === 'instagram'
-                ? 'Abrir no Instagram'
-                : externalData.platform === 'tiktok'
-                  ? 'Abrir no TikTok'
-                  : 'Abrir vídeo na plataforma'
-            : 'Abrir vídeo na plataforma';
+          // Indica se há algum player interno possível
+          const canPlayInApp = shouldUseNativePlayer || shouldUseNativeForDirect || shouldUseYouTubeEmbed;
 
-          if (shouldUseNativePlayer || !isExternalVideo) {
+          // Só mostra "Abrir na plataforma" se não houver player interno
+          const showPlatformButton = !canPlayInApp;
+
+          const embedUrl = youTubeId
+            ? `https://www.youtube.com/embed/${youTubeId}`
+            : externalData?.embedUrl || '';
+
+          if (shouldUseNativePlayer || shouldUseNativeForDirect) {
             return (
               <div className="flex flex-col lg:flex-row gap-6">
                 <div className="lg:w-[240px] shrink-0 mx-auto lg:mx-0">
@@ -936,7 +911,7 @@ const VideoGalleryPage = () => {
                     </h3>
 
                     <span className="bg-blue-50 text-[#0094EB] px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest">
-                      Conteúdo Real
+                      {getSourceLabel(viewingVideo.source_type)}
                     </span>
                   </div>
 
@@ -1005,42 +980,14 @@ const VideoGalleryPage = () => {
             );
           }
 
-          return (
-            <div className="flex flex-col lg:flex-row gap-6">
-              <div className="w-full lg:max-w-[420px] mx-auto lg:mx-0 shrink-0 space-y-4">
-                {!showExternalPlayer ? (
-                  modalThumb ? (
-                    <VideoThumb
-                      video={viewingVideo}
-                      size="large"
-                      onClick={() => {
-                        if (externalData?.embedUrl) {
-                          setShowExternalPlayer(true);
-                        }
-                      }}
-                    />
-                  ) : (
-                    <div className="rounded-[1.75rem] border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
-                      <Film size={42} className="mx-auto mb-3 text-slate-300" />
-
-                      <p className="text-sm font-bold text-slate-700">
-                        Prévia indisponível
-                      </p>
-
-                      <p className="mt-1 text-xs text-slate-500">
-                        {canPlayInApp
-                          ? 'Clique em assistir no app para visualizar.'
-                          : 'Abra o vídeo na plataforma original para assistir.'}
-                      </p>
-                    </div>
-                  )
-                ) : null}
-
-                {showExternalPlayer && externalData?.embedUrl ? (
+          if (shouldUseYouTubeEmbed) {
+            return (
+              <div className="flex flex-col lg:flex-row gap-6">
+                <div className="w-full lg:max-w-[420px] mx-auto lg:mx-0 shrink-0">
                   <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-black shadow-xl">
                     <div className="aspect-[9/16] w-full max-w-[420px] bg-black">
                       <iframe
-                        src={externalData.embedUrl}
+                        src={embedUrl}
                         className="h-full w-full"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         allowFullScreen
@@ -1050,7 +997,107 @@ const VideoGalleryPage = () => {
                       />
                     </div>
                   </div>
-                ) : null}
+                </div>
+
+                <div className="flex-1 flex flex-col pt-1">
+                  <div className="mb-4">
+                    <h3 className="text-xl font-black text-slate-900 mb-1">
+                      {viewingVideo.title}
+                    </h3>
+
+                    <span className="bg-blue-50 text-[#0094EB] px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest">
+                      YouTube
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mb-6">
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                        Views
+                      </p>
+
+                      <p className="mt-1 text-sm font-black text-slate-800">
+                        {modalMetrics.views.toLocaleString('pt-BR')}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                        CTR
+                      </p>
+
+                      <p className="mt-1 text-sm font-black text-[#0094EB]">
+                        {Number(modalMetrics.ctrValue || 0).toFixed(1).replace('.', ',')}%
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                        Conversões
+                      </p>
+
+                      <p className="mt-1 text-sm font-black text-emerald-600">
+                        {modalMetrics.conversions.toLocaleString('pt-BR')}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                        Engajamento
+                      </p>
+
+                      <p className="mt-1 text-sm font-black text-violet-600">
+                        {`${Number(modalMetrics.engagement || 0).toFixed(1).replace('.', ',')}%`}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-auto flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/videos/${viewingVideo.id}/edit`)}
+                      className="flex-1 py-3 bg-[#0094EB] text-white rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2"
+                    >
+                      <Edit3 size={14} />
+                      Editar
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsViewModalOpen(false)}
+                      className="px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-black text-xs"
+                    >
+                      Fechar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          // Fallback: nenhum player interno — mostra "Abrir na plataforma"
+          return (
+            <div className="flex flex-col lg:flex-row gap-6">
+              <div className="w-full lg:max-w-[420px] mx-auto lg:mx-0 shrink-0 space-y-4">
+                {modalThumb ? (
+                  <VideoThumb
+                    video={viewingVideo}
+                    size="large"
+                    onClick={() => {}}
+                  />
+                ) : (
+                  <div className="rounded-[1.75rem] border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+                    <Film size={42} className="mx-auto mb-3 text-slate-300" />
+
+                    <p className="text-sm font-bold text-slate-700">
+                      Prévia indisponível
+                    </p>
+
+                    <p className="mt-1 text-xs text-slate-500">
+                      Abra o vídeo na plataforma original para assistir.
+                    </p>
+                  </div>
+                )}
 
                 <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                   <div className="flex items-center gap-3">
@@ -1060,7 +1107,7 @@ const VideoGalleryPage = () => {
 
                     <div className="min-w-0 flex-1">
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        {platformLabel}
+                        Vídeo externo
                       </p>
 
                       <h3 className="truncate text-lg font-black text-slate-900">
@@ -1070,35 +1117,20 @@ const VideoGalleryPage = () => {
                   </div>
 
                   <p className="text-sm text-slate-600">
-                    Este vídeo será exibido usando o player oficial da plataforma.
+                    Este vídeo não pode ser reproduzido dentro do app. Abra na plataforma original.
                   </p>
 
-                  <p className="text-xs leading-5 text-slate-500">
-                    Links externos com suporte a incorporação podem ser exibidos dentro do app.
-                    Caso contrário, abra na plataforma original.
-                  </p>
-
-                  <div className="flex flex-col gap-2">
-                    {!showExternalPlayer && externalData?.embedUrl ? (
-                      <button
-                        type="button"
-                        onClick={() => setShowExternalPlayer(true)}
-                        className="inline-flex items-center justify-center rounded-xl bg-[#0094EB] px-4 py-3 text-xs font-black text-white transition-colors hover:bg-[#0E4787]"
-                      >
-                        Assistir no app
-                      </button>
-                    ) : null}
-
+                  {showPlatformButton && videoUrl && (
                     <a
-                      href={externalData?.sourceUrl || videoUrl}
+                      href={videoUrl}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-black text-slate-600 transition-colors hover:bg-slate-50"
                     >
-                      {platformButtonLabel}
+                      Abrir vídeo na plataforma
                       <ExternalLink size={14} />
                     </a>
-                  </div>
+                  )}
                 </div>
               </div>
 
@@ -1109,7 +1141,7 @@ const VideoGalleryPage = () => {
                   </h3>
 
                   <span className="bg-blue-50 text-[#0094EB] px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest">
-                    {platformLabel}
+                    {getSourceLabel(viewingVideo.source_type)}
                   </span>
                 </div>
 
@@ -1120,17 +1152,7 @@ const VideoGalleryPage = () => {
                     </p>
 
                     <p className="mt-1 text-sm font-black text-slate-800">
-                      {platformLabel}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                      ID Externo
-                    </p>
-
-                    <p className="mt-1 text-sm font-black text-slate-800 break-all">
-                      {externalData?.externalId || '—'}
+                      Externo
                     </p>
                   </div>
 
