@@ -620,26 +620,30 @@ const normalizeAppearance = (
   });
 
   const carouselConfig = normalizeResponsiveConfig<CarouselConfig>({
-    rawValue: anyItem.carousel_config,
-    desktopDefault: createDefaultCarouselDesktopConfig(),
-    mobileDefault: createDefaultCarouselMobileConfig(),
-    sameForAll: globalAppearance,
-    legacyDesktop: {
-      gap: safeNumber(item.carousel_gap, defaults.carousel_gap, 0),
-      card_shape:
-        item.carousel_card_shape || defaults.carousel_card_shape || 'rounded',
-      view_mode: anyItem.carousel_view_mode ?? defaults.carousel_view_mode,
-      margin_top: anyItem.margin_top ?? defaults.margin_top,
-      margin_bottom: anyItem.margin_bottom ?? defaults.margin_bottom,
-      visible_items: safeNumber(
-        item.carousel_visible_items,
-        defaults.carousel_visible_items || 4,
-        1,
-      ),
-      show_product: item.show_product ?? defaults.show_product,
-      show_play_icon: anyItem.show_play_icon ?? item.show_play_button ?? true,
-    },
-  });
+  rawValue: anyItem.carousel_config,
+  desktopDefault: createDefaultCarouselDesktopConfig(),
+  mobileDefault: createDefaultCarouselMobileConfig(),
+  sameForAll: globalAppearance,
+  legacyDesktop: {
+    gap: safeNumber(item.carousel_gap, defaults.carousel_gap, 0),
+    card_shape:
+      item.carousel_card_shape || defaults.carousel_card_shape || 'rounded',
+    view_mode: anyItem.carousel_view_mode ?? defaults.carousel_view_mode,
+    margin_top: anyItem.margin_top ?? defaults.margin_top,
+    margin_bottom: anyItem.margin_bottom ?? defaults.margin_bottom,
+    visible_items: safeNumber(
+      item.carousel_visible_items,
+      defaults.carousel_visible_items || 4,
+      1,
+    ),
+    show_product: item.show_product ?? defaults.show_product,
+    show_play_icon: anyItem.show_play_icon ?? item.show_play_button ?? true,
+    auto_center: anyItem.auto_center ?? defaults.auto_center ?? false,
+  },
+  legacyMobile: {
+    auto_center: anyItem.auto_center ?? defaults.auto_center ?? false,
+  },
+});
 
   const gridConfig = normalizeResponsiveConfig<GridConfig>({
     rawValue: anyItem.grid_config,
