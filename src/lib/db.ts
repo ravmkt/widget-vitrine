@@ -471,15 +471,6 @@ const TABLE_UUID_FIELDS: Record<string, Record<string, UuidMode>> = {
   },
 };
 
-/**
- * Campos permitidos por tabela.
- *
- * Esta parte corrige o erro:
- * "Could not find the 'origin' column of 'products' in the schema cache"
- *
- * Também evita erros ao salvar stories com campos extras como:
- * is_active, status, enabled, views_count, clicks_count, etc.
- */
 const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
   stores: ['id', 'name', 'domain', 'active', 'owner_user_id', 'created_at'],
 
@@ -865,6 +856,95 @@ const ensureSupabaseStoreExists = async (storeId?: string) => {
   }
 };
 
+/**
+ * Corrige foreign keys opcionais antes de salvar no Supabase.
+ *
+ * Problema resolvido:
+ * Ao salvar um vídeo com model_id apontando para um modelo que existe apenas
+ * no localStorage, o Supabase retorna:
+ *
+ * "Key is not present in table sizing_models"
+ *
+ * Agora, se model_id não existir na tabela sizing_models, ele será salvo como null.
+ */
+const normalizeSupabaseRelationsBeforeSave = async <
+  T extends Record<string, any>,
+>(
+  tableName: string,
+  payload: T,
+): Promise<T> => {
+  if (!isSupabaseConfigured) return payload;
+
+  const normalizedPayload: Record<string, any> = { ...payload };
+
+  if (
+    (tableName === 'videos' || tableName === 'stories') &&
+    normalizedPayload.model_id
+  ) {
+    if (!isValidUuid(normalizedPayload.model_id)) {
+      normalizedPayload.model_id = null;
+      return normalizedPayload as T;
+    }
+
+    let query = supabase
+      .from('sizing_models' as any)
+      .select('id')
+      .eq('id', normalizedPayload.model_id);
+
+    if (normalizedPayload.store_id && isValidUuid(normalizedPayload.store_id)) {
+      query = query.eq('store_id', normalizedPayload.store_id);
+    }
+
+    const { data: existingModel, error } = await query.maybeSingle();
+
+    if (error) {
+      console.error('Erro ao verificar model_id em sizing_models:', error);
+      throw error;
+    }
+
+    if (!existingModel) {
+      console.warn(
+        `model_id "${normalizedPayload.model_id}" não encontrado em sizing_models. Salvando como null.`,
+      );
+
+      normalizedPayload.model_id = null;
+    }
+  }
+
+  if (tableName === 'videos' && normalizedPayload.product_id) {
+    if (!isValidUuid(normalizedPayload.product_id)) {
+      normalizedPayload.product_id = null;
+      return normalizedPayload as T;
+    }
+
+    let query = supabase
+      .from('products' as any)
+      .select('id')
+      .eq('id', normalizedPayload.product_id);
+
+    if (normalizedPayload.store_id && isValidUuid(normalizedPayload.store_id)) {
+      query = query.eq('store_id', normalizedPayload.store_id);
+    }
+
+    const { data: existingProduct, error } = await query.maybeSingle();
+
+    if (error) {
+      console.error('Erro ao verificar product_id em products:', error);
+      throw error;
+    }
+
+    if (!existingProduct) {
+      console.warn(
+        `product_id "${normalizedPayload.product_id}" não encontrado em products. Salvando como null.`,
+      );
+
+      normalizedPayload.product_id = null;
+    }
+  }
+
+  return normalizedPayload as T;
+};
+
 const createCrudFunctions = <
   T extends {
     id: string;
@@ -1013,7 +1093,7 @@ const createSupabaseCrudFunctions = <
       const originalId = item.id;
       const originalIdIsValid = isValidUuid(originalId);
 
-      const payload = preparePayloadForSave(tableName, {
+      let payload = preparePayloadForSave(tableName, {
         ...item,
         created_at: item.created_at || now,
         updated_at: now,
@@ -1022,6 +1102,8 @@ const createSupabaseCrudFunctions = <
       if (tableName !== 'stores' && payload.store_id) {
         await ensureSupabaseStoreExists(payload.store_id);
       }
+
+      payload = await normalizeSupabaseRelationsBeforeSave(tableName, payload);
 
       if (originalIdIsValid) {
         const { data: existingItem, error: selectError } = await supabase
@@ -1091,7 +1173,9 @@ const createSupabaseCrudFunctions = <
   };
 };
 
-export const resolveStoreId = async (storeId?: string | null): Promise<string> => {
+export const resolveStoreId = async (
+  storeId?: string | null,
+): Promise<string> => {
   if (storeId && isValidUuid(storeId)) {
     return storeId;
   }
@@ -1247,7 +1331,16 @@ export const db = {
 
   metrics: createCrudFunctions<Metric>('metrics', memoryMetrics),
 
-  sizingModels: createCrudFunctions<SizingModel>(
+  /**
+   * IMPORTANTE:
+   *
+   * Antes estava usando createCrudFunctions, ou seja, salvava somente no localStorage.
+   * Agora usa createSupabaseCrudFunctions para criar o registro real na tabela sizing_models.
+   *
+   * Isso corrige o erro:
+   * videos_model_id_fkey -> Key is not present in table "sizing_models"
+   */
+  sizingModels: createSupabaseCrudFunctions<SizingModel>(
     'sizing_models',
     memorySizingModels,
   ),
