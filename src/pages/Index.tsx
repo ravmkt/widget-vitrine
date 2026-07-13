@@ -1,5 +1,9 @@
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, Film, GalleryVertical, Settings, Palette, ShoppingBag, BarChart3, MessageSquare, Link2 } from 'lucide-react';
+import {
+  BarChart3,
+  Link2,
+  ShoppingBag,
+} from 'lucide-react';
 
 const Index = () => {
   return (
@@ -8,6 +12,7 @@ const Index = () => {
         <header className="flex items-center justify-between border-b border-white/10 pb-6">
           <div>
             <p className="text-sm font-medium text-violet-400">Bem-vindo</p>
+
             <h1 className="mt-1 text-2xl font-bold tracking-tight">
               Painel Principal
             </h1>
@@ -33,8 +38,9 @@ const Index = () => {
 
             <p className="mt-5 max-w-xl text-base leading-7 text-slate-400">
               Esta é a tela inicial do aplicativo. A partir daqui, você poderá
-              acessar seus stories, criar novos conteúdos, gerenciar vídeos, produtos, customizar aparências e ajustar as
-              configurações do sistema.
+              acessar seus stories, criar novos conteúdos, gerenciar vídeos,
+              produtos, customizar aparências e ajustar as configurações do
+              sistema.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -58,31 +64,43 @@ const Index = () => {
             <div className="grid gap-4">
               <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
                 <p className="text-sm text-slate-400">Módulo</p>
-                <h3 className="mt-2 text-xl font-bold flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-violet-400" /> Medidas
+
+                <h3 className="mt-2 flex items-center gap-2 text-xl font-bold">
+                  <BarChart3 className="h-5 w-5 text-violet-400" />
+                  Medidas
                 </h3>
+
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Área avançada de Analytics com funis completos e logs detalhados de eventos.
+                  Área avançada de Analytics com funis completos e logs
+                  detalhados de eventos.
                 </p>
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
                 <p className="text-sm text-slate-400">Módulo</p>
-                <h3 className="mt-2 text-xl font-bold flex items-center gap-2">
-                  <Link2 className="w-5 h-5 text-violet-400" /> Integração
+
+                <h3 className="mt-2 flex items-center gap-2 text-xl font-bold">
+                  <Link2 className="h-5 w-5 text-violet-400" />
+                  Integração
                 </h3>
+
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Instale o widget de stories em qualquer plataforma de e-commerce com script direto ou GTM.
+                  Instale o widget de stories em qualquer plataforma de
+                  e-commerce com script direto ou GTM.
                 </p>
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
                 <p className="text-sm text-slate-400">Módulo</p>
-                <h3 className="mt-2 text-xl font-bold flex items-center gap-2">
-                  <ShoppingBag className="w-5 h-5 text-violet-400" /> Produtos
+
+                <h3 className="mt-2 flex items-center gap-2 text-xl font-bold">
+                  <ShoppingBag className="h-5 w-5 text-violet-400" />
+                  Produtos
                 </h3>
+
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Gerencie os produtos da loja e vincule-os diretamente às chamadas de ação dos vídeos.
+                  Gerencie os produtos da loja e vincule-os diretamente às
+                  chamadas de ação dos vídeos.
                 </p>
               </div>
             </div>
