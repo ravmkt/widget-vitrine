@@ -138,7 +138,6 @@ const StoryDetailsPage = () => {
     scroll_direction: 'horizontal' as ScrollDirection,
     active: true,
     appearance_id: '',
-    position: 1,
   });
 
   const [deleteModal, setDeleteModal] = useState<{
@@ -184,7 +183,6 @@ const StoryDetailsPage = () => {
           scroll_direction: 'horizontal',
           active: true,
           appearance_id: '',
-          position: 1,
         });
         setSelectedVideoIds([]);
         setLocations([]);
@@ -225,7 +223,6 @@ const StoryDetailsPage = () => {
           currentStory.appearance_id && isValidUuid(currentStory.appearance_id)
             ? currentStory.appearance_id
             : '',
-        position: currentStory.position || 1,
       });
 
       const [relations, locs, rls] = await Promise.all([
@@ -380,7 +377,7 @@ const StoryDetailsPage = () => {
         isValidUuid(videoId),
       );
 
-      const storyPayload: Story = {
+      const storyPayload = {
         ...(story || ({} as Story)),
         id: story?.id && isValidUuid(story.id) ? story.id : generateUuid(),
         store_id: finalStoreId,
@@ -392,7 +389,6 @@ const StoryDetailsPage = () => {
           formData.appearance_id && isValidUuid(formData.appearance_id)
             ? formData.appearance_id
             : null,
-        position: Number(formData.position || 1),
         cta_enabled: story?.cta_enabled ?? false,
         cta_type: story?.cta_type || 'none',
         cta_text: story?.cta_text || '',
@@ -402,7 +398,7 @@ const StoryDetailsPage = () => {
         click_count: story?.click_count ?? 0,
         created_at: story?.created_at || now,
         updated_at: now,
-      };
+      } as Story;
 
       const savedStory = await (db as any).stories.save(storyPayload);
 
@@ -625,7 +621,7 @@ const StoryDetailsPage = () => {
               </div>
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="space-y-2">
+                <div className="space-y-2 md:col-span-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                     Nome do Bloco
                   </label>
@@ -641,25 +637,6 @@ const StoryDetailsPage = () => {
                     }
                     className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none focus:border-[#0094EB]"
                     placeholder="Ex: Lançamentos"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    Posição / Ordem
-                  </label>
-
-                  <input
-                    type="number"
-                    min={1}
-                    value={formData.position}
-                    onChange={(event) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        position: Number(event.target.value || 1),
-                      }))
-                    }
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none focus:border-[#0094EB]"
                   />
                 </div>
 
