@@ -162,6 +162,25 @@ const VideoThumb = ({
   );
 };
 
+type VideoMetrics = {
+  views: number;
+  comments: number;
+  likes: number;
+  clicks: number;
+  conversions: number;
+  ctr: number;
+  ctrValue: number;
+  engagement: number;
+};
+
+type VideoWithMetrics = Video & {
+  metrics?: VideoMetrics;
+};
+
+type ProcessedVideo = Video & {
+  metrics: VideoMetrics;
+};
+
 const VideoGalleryPage = () => {
   const navigate = useNavigate();
   const { storeId: tenantStoreId, loading: tenantLoading } = useTenant();
@@ -177,7 +196,7 @@ const VideoGalleryPage = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [viewingVideo, setViewingVideo] = useState<Video | null>(null);
+  const [viewingVideo, setViewingVideo] = useState<VideoWithMetrics | null>(null);
   const [showExternalPlayer, setShowExternalPlayer] = useState(false);
 
   const [deleteModal, setDeleteModal] = useState<{
@@ -301,7 +320,7 @@ const VideoGalleryPage = () => {
     };
   }, [tenantLoading, resolveSafeStoreId]);
 
-  const getVideoMetrics = (video: Video) => {
+  const getVideoMetrics = (video: Video): VideoMetrics => {
     const base = calculateVideoMetrics(video.id);
 
     const views = Number(
@@ -364,7 +383,7 @@ const VideoGalleryPage = () => {
     };
   };
 
-  const processedVideos = useMemo(() => {
+  const processedVideos = useMemo<ProcessedVideo[]>(() => {
     return videos
       .filter(v => {
         const matchesSearch = (v.title || '')
@@ -392,13 +411,13 @@ const VideoGalleryPage = () => {
             : new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime();
         }
 
-        const getSortValue = (video: any) => {
+        const getSortValue = (video: ProcessedVideo) => {
           switch (sortColumn) {
             case 'nome':
               return video.title || '';
 
             case 'produto':
-              return products.find(p => p.id === video.product_id)?.name || 'Sem produto';
+              return products.find(p => p.id === (video as any).product_id)?.name || 'Sem produto';
 
             case 'visualizacoes':
               return Number(video.metrics.views || 0);
@@ -450,8 +469,12 @@ const VideoGalleryPage = () => {
     setSortDirection(column === 'recent' ? 'desc' : 'asc');
   };
 
-  const handleViewVideo = (video: Video) => {
-    setViewingVideo(video);
+  const handleViewVideo = (video: VideoWithMetrics) => {
+    setViewingVideo({
+      ...video,
+      metrics: video.metrics || getVideoMetrics(video),
+    });
+
     setShowExternalPlayer(false);
     setIsViewModalOpen(true);
   };
@@ -680,7 +703,7 @@ const VideoGalleryPage = () => {
                   comments,
                   likes,
                   ctrValue,
-                } = video.metrics as any;
+                } = video.metrics;
 
                 const productName =
                   products.find(p => p.id === (video as any).product_id)?.name ||
@@ -725,6 +748,7 @@ const VideoGalleryPage = () => {
                     <td className="px-3 py-4 min-w-0">
                       <span className="inline-flex max-w-full items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-xs font-bold border border-slate-100 truncate">
                         <Film size={12} className="shrink-0" />
+
                         <span className="truncate">
                           {productName}
                         </span>
@@ -806,6 +830,7 @@ const VideoGalleryPage = () => {
           const externalData = getSafeExternalData(viewingVideo);
           const isExternalVideo = isExternalSource(viewingVideo);
           const modalThumb = getVideoThumbnail(viewingVideo);
+          const modalMetrics = viewingVideo.metrics || getVideoMetrics(viewingVideo);
 
           const platformLabel = externalData
             ? externalData.platform === 'youtube'
@@ -854,6 +879,7 @@ const VideoGalleryPage = () => {
                       ) : (
                         <>
                           <Film size={42} className="text-slate-500" />
+
                           <p className="text-white text-sm font-bold text-center">
                             Sem vídeo
                           </p>
@@ -881,7 +907,7 @@ const VideoGalleryPage = () => {
                       </p>
 
                       <p className="mt-1 text-sm font-black text-slate-800">
-                        {Number((viewingVideo as any).metrics?.views || 0).toLocaleString('pt-BR')}
+                        {modalMetrics.views.toLocaleString('pt-BR')}
                       </p>
                     </div>
 
@@ -891,11 +917,7 @@ const VideoGalleryPage = () => {
                       </p>
 
                       <p className="mt-1 text-sm font-black text-[#0094EB]">
-                        {Number(
-                          (viewingVideo as any).metrics?.ctr ??
-                          (viewingVideo as any).metrics?.ctrValue ??
-                          0,
-                        ).toFixed(1).replace('.', ',')}%
+                        {Number(modalMetrics.ctrValue || 0).toFixed(1).replace('.', ',')}%
                       </p>
                     </div>
 
@@ -905,7 +927,7 @@ const VideoGalleryPage = () => {
                       </p>
 
                       <p className="mt-1 text-sm font-black text-emerald-600">
-                        {Number((viewingVideo as any).metrics?.conversions || 0).toLocaleString('pt-BR')}
+                        {modalMetrics.conversions.toLocaleString('pt-BR')}
                       </p>
                     </div>
 
@@ -915,7 +937,7 @@ const VideoGalleryPage = () => {
                       </p>
 
                       <p className="mt-1 text-sm font-black text-violet-600">
-                        {`${Number((viewingVideo as any).metrics?.engagement || 0).toFixed(1).replace('.', ',')}%`}
+                        {`${Number(modalMetrics.engagement || 0).toFixed(1).replace('.', ',')}%`}
                       </p>
                     </div>
                   </div>
