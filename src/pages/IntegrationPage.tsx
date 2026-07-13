@@ -17,14 +17,35 @@ const IntegrationPage = () => {
   const { storeId } = useTenant();
   const [copied, setCopied] = useState(false);
 
-  const publicUrl =
-    import.meta.env.VITE_WIDGET_PUBLIC_URL || window.location.origin;
+  const publicUrl = useMemo(() => {
+    const envUrl = import.meta.env.VITE_WIDGET_PUBLIC_URL || '';
 
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+    if (envUrl) {
+      return String(envUrl).replace(/\/$/, '');
+    }
+
+    if (typeof window !== 'undefined') {
+      return window.location.origin.replace(/\/$/, '');
+    }
+
+    return '';
+  }, []);
+
+  const supabaseUrl = String(import.meta.env.VITE_SUPABASE_URL || '').replace(
+    /\/$/,
+    ''
+  );
+
+  const supabaseAnonKey = String(
+    import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+  );
 
   const isLocal =
     publicUrl.includes('localhost') || publicUrl.includes('127.0.0.1');
+
+  const hasStoreId = Boolean(storeId);
+  const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey);
+  const canInstall = hasStoreId && hasSupabaseConfig && Boolean(publicUrl);
 
   const scriptCode = useMemo(() => {
     return `<script>
@@ -53,7 +74,21 @@ window.VIDLYTICS_CONFIG = {
 
   const handleCopyScript = async () => {
     try {
-      await navigator.clipboard.writeText(scriptCode);
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(scriptCode);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = scriptCode;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        textarea.style.top = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+      }
+
       setCopied(true);
 
       window.setTimeout(() => {
@@ -88,20 +123,54 @@ window.VIDLYTICS_CONFIG = {
             <CheckCircle2 className="h-5 w-5" />
             Plataforma selecionada
           </div>
+
           <p className="mt-1 text-sm font-semibold text-emerald-900">Yampi</p>
         </div>
       </div>
 
+      {!hasStoreId && (
+        <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+
+          <div className="text-sm text-red-800">
+            <p className="font-bold">Loja não identificada</p>
+
+            <p className="mt-1 opacity-80">
+              O <strong>storeId</strong> não foi encontrado no contexto da loja.
+              Sem ele, o widget não saberá quais vídeos carregar.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {!hasSupabaseConfig && (
+        <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+
+          <div className="text-sm text-red-800">
+            <p className="font-bold">Configuração do Supabase ausente</p>
+
+            <p className="mt-1 opacity-80">
+              Verifique se as variáveis{' '}
+              <strong>VITE_SUPABASE_URL</strong> e{' '}
+              <strong>VITE_SUPABASE_ANON_KEY</strong> estão configuradas no
+              ambiente.
+            </p>
+          </div>
+        </div>
+      )}
+
       {isLocal && (
         <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <AlertTriangle className="mt-0.5 h-5 w-5 text-amber-600" />
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+
           <div className="text-sm text-amber-800">
             <p className="font-bold">URL pública ausente</p>
+
             <p className="mt-1 opacity-80">
               O widget está usando uma URL local. Para funcionar dentro da loja
               Yampi, configure uma URL pública de produção, por exemplo a URL da
-              Vercel, na variável{' '}
-              <strong>VITE_WIDGET_PUBLIC_URL</strong>.
+              Vercel, na variável <strong>VITE_WIDGET_PUBLIC_URL</strong>.
             </p>
           </div>
         </div>
@@ -118,7 +187,7 @@ window.VIDLYTICS_CONFIG = {
           </h2>
 
           <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
-            Exiba um vídeo fixo no canto da tela, ideal para destaque,
+            Exiba vídeos fixos no canto da tela, ideal para destaque,
             lançamento, oferta ou apresentação rápida de produto.
           </p>
         </div>
@@ -171,7 +240,8 @@ window.VIDLYTICS_CONFIG = {
           <button
             type="button"
             onClick={handleCopyScript}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-slate-800"
+            disabled={!canInstall}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {copied ? (
               <>
@@ -245,14 +315,21 @@ window.VIDLYTICS_CONFIG = {
 
               <div className="mt-2 flex flex-wrap gap-2">
                 <code className="rounded-lg bg-white px-2 py-1 text-xs font-bold text-slate-700">
+                  main
+                </code>
+
+                <code className="rounded-lg bg-white px-2 py-1 text-xs font-bold text-slate-700">
                   .main-content
                 </code>
+
                 <code className="rounded-lg bg-white px-2 py-1 text-xs font-bold text-slate-700">
                   #banner-principal
                 </code>
+
                 <code className="rounded-lg bg-white px-2 py-1 text-xs font-bold text-slate-700">
                   .product-description
                 </code>
+
                 <code className="rounded-lg bg-white px-2 py-1 text-xs font-bold text-slate-700">
                   .vitrine
                 </code>
@@ -310,7 +387,7 @@ window.VIDLYTICS_CONFIG = {
 
           <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="mt-0.5 h-5 w-5 text-amber-600" />
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
 
               <div>
                 <p className="text-sm font-black text-amber-900">
