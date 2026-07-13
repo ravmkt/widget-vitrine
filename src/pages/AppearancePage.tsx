@@ -19,12 +19,21 @@ import { cn } from '@/lib/utils';
 
 type DeviceType = 'desktop' | 'mobile';
 
+type FloatingPosition =
+  | 'left'
+  | 'right'
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-right';
+
 type ExtendedAppearance = Appearance & {
   useGlobalAppearance: boolean;
   width: string;
   unit: 'px' | 'percent';
   height: string;
   position: string;
+  floating_position: FloatingPosition;
   bottom_spacing: string;
   left_spacing: string;
   cta_text: string;
@@ -55,6 +64,42 @@ const isValidHexColor = (value?: string) => {
   return /^#[0-9A-Fa-f]{6}$/.test(value || '');
 };
 
+const positionToFloatingPosition = (position: string): FloatingPosition => {
+  switch (position) {
+    case 'fixed_bottom_left':
+      return 'left';
+
+    case 'fixed_top_left':
+      return 'top-left';
+
+    case 'fixed_top_right':
+      return 'top-right';
+
+    case 'fixed_bottom_right':
+    default:
+      return 'right';
+  }
+};
+
+const floatingPositionToPosition = (floatingPosition?: string): string => {
+  switch (floatingPosition) {
+    case 'left':
+    case 'bottom-left':
+      return 'fixed_bottom_left';
+
+    case 'top-left':
+      return 'fixed_top_left';
+
+    case 'top-right':
+      return 'fixed_top_right';
+
+    case 'right':
+    case 'bottom-right':
+    default:
+      return 'fixed_bottom_right';
+  }
+};
+
 const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
   const now = new Date().toISOString();
 
@@ -73,7 +118,7 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
     border_radius: '12px',
     shadow_enabled: true,
     font_family: 'Inter, sans-serif',
-    widget_shape: 'circle',
+    widget_shape: 'portrait',
     widget_size: 'medium',
     widget_animation: 'none',
 
@@ -98,6 +143,7 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
     unit: 'px',
     height: '',
     position: 'fixed_bottom_right',
+    floating_position: 'right',
     bottom_spacing: '',
     left_spacing: '',
     cta_text: '',
@@ -132,29 +178,38 @@ const normalizeAppearance = (
   const defaults = createDefaultFormData(storeId);
   const item = style as Appearance & Partial<ExtendedAppearance>;
 
+  const savedFloatingPosition =
+    item.floating_position ||
+    positionToFloatingPosition(item.position || defaults.position);
+
   return {
     ...defaults,
     ...item,
+
     id: item.id || '',
     store_id: item.store_id || storeId || '',
     name: item.name || '',
     is_default: Boolean(item.is_default),
+
     primary_color: item.primary_color || defaults.primary_color,
     secondary_color: item.secondary_color || defaults.secondary_color,
     text_color: item.text_color || defaults.text_color,
     background_color: item.background_color || defaults.background_color,
     button_color: item.button_color || defaults.button_color,
+
     border_radius: item.border_radius || defaults.border_radius,
     shadow_enabled: item.shadow_enabled ?? defaults.shadow_enabled,
     font_family: item.font_family || defaults.font_family,
     widget_shape: item.widget_shape || defaults.widget_shape,
     widget_size: item.widget_size || defaults.widget_size,
     widget_animation: item.widget_animation || defaults.widget_animation,
+
     carousel_card_shape:
       item.carousel_card_shape || defaults.carousel_card_shape,
     carousel_visible_items:
       item.carousel_visible_items || defaults.carousel_visible_items,
     carousel_gap: item.carousel_gap ?? defaults.carousel_gap,
+
     show_title: item.show_title ?? defaults.show_title,
     show_play_button: item.show_play_button ?? defaults.show_play_button,
     show_product: item.show_product ?? defaults.show_product,
@@ -166,6 +221,7 @@ const normalizeAppearance = (
       item.show_whatsapp_button ?? defaults.show_whatsapp_button,
     show_product_button:
       item.show_product_button ?? defaults.show_product_button,
+
     created_at: item.created_at || defaults.created_at,
     updated_at: item.updated_at || defaults.updated_at,
 
@@ -174,7 +230,10 @@ const normalizeAppearance = (
     width: item.width ?? defaults.width,
     unit: item.unit ?? defaults.unit,
     height: item.height ?? defaults.height,
-    position: item.position ?? defaults.position,
+
+    position: item.position || floatingPositionToPosition(savedFloatingPosition),
+    floating_position: savedFloatingPosition as FloatingPosition,
+
     bottom_spacing: item.bottom_spacing ?? defaults.bottom_spacing,
     left_spacing: item.left_spacing ?? defaults.left_spacing,
     cta_text: item.cta_text ?? defaults.cta_text,
@@ -373,6 +432,7 @@ const AppearancePage = () => {
 
   const [showModal, setShowModal] = useState(false);
   const [editingStyle, setEditingStyle] = useState<Appearance | null>(null);
+
   const [formData, setFormData] = useState<ExtendedAppearance>(() =>
     createDefaultFormData(storeId),
   );
@@ -393,7 +453,6 @@ const AppearancePage = () => {
       }
 
       const list = await db.appearances.getAll(storeId);
-
       setAppearances(list || []);
     } catch (error) {
       console.error('Erro ao carregar estilos:', error);
@@ -450,6 +509,7 @@ const AppearancePage = () => {
       await db.appearances.delete(deleteModal.id);
 
       showSuccess('Estilo excluído com sucesso.');
+
       setDeleteModal(prev => ({
         ...prev,
         isOpen: false,
@@ -480,6 +540,14 @@ const AppearancePage = () => {
     setShowModal(true);
   };
 
+  const handlePositionChange = (position: string) => {
+    setFormData(prev => ({
+      ...prev,
+      position,
+      floating_position: positionToFloatingPosition(position),
+    }));
+  };
+
   const handleSaveStyle = async () => {
     if (saving) return;
 
@@ -504,10 +572,18 @@ const AppearancePage = () => {
         id,
         store_id: storeId,
         name: formData.name.trim(),
+
+        position: formData.position,
+        floating_position:
+          formData.floating_position ||
+          positionToFloatingPosition(formData.position),
+
         show_play_button: formData.show_play_icon,
         updated_at: now,
         created_at: formData.created_at || now,
-      } as Appearance;
+      } as Appearance & {
+        floating_position: FloatingPosition;
+      };
 
       if (stylePayload.is_default) {
         await Promise.all(
@@ -524,7 +600,7 @@ const AppearancePage = () => {
         );
       }
 
-      await db.appearances.save(stylePayload);
+      await db.appearances.save(stylePayload as Appearance);
 
       showSuccess(
         editingStyle
@@ -752,7 +828,8 @@ const AppearancePage = () => {
                 </h2>
 
                 <p className="mt-1 text-sm font-medium text-slate-500">
-                  Configure a aparência dos widgets, carrosséis, grades e player.
+                  Configure a aparência dos widgets, carrosséis, grades e
+                  player.
                 </p>
               </div>
 
@@ -844,7 +921,7 @@ const AppearancePage = () => {
                         </select>
                       </FormField>
 
-                      <FormField label="Tamanho">
+                      <FormField label="Tamanho/Largura">
                         <input
                           type="text"
                           value={formData.width}
@@ -855,6 +932,21 @@ const AppearancePage = () => {
                             })
                           }
                           placeholder="Ex: 80px"
+                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
+                        />
+                      </FormField>
+
+                      <FormField label="Altura">
+                        <input
+                          type="text"
+                          value={formData.height}
+                          onChange={e =>
+                            setFormData({
+                              ...formData,
+                              height: e.target.value,
+                            })
+                          }
+                          placeholder="Ex: 110px"
                           className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
                         />
                       </FormField>
@@ -877,40 +969,50 @@ const AppearancePage = () => {
                       <FormField label="Posição">
                         <select
                           value={formData.position}
-                          onChange={e =>
-                            setFormData({
-                              ...formData,
-                              position: e.target.value,
-                            })
-                          }
+                          onChange={e => handlePositionChange(e.target.value)}
                           className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
                         >
                           <option value="fixed_bottom_right">
-                            Flutuante (Direita)
+                            Flutuante Inferior Direita
                           </option>
                           <option value="fixed_bottom_left">
-                            Flutuante (Esquerda)
+                            Flutuante Inferior Esquerda
                           </option>
                           <option value="fixed_top_right">
-                            Flutuante (Topo Direita)
+                            Flutuante Topo Direita
                           </option>
                           <option value="fixed_top_left">
-                            Flutuante (Topo Esquerda)
+                            Flutuante Topo Esquerda
                           </option>
                         </select>
                       </FormField>
 
-                      <FormField label="Chamada para ação">
+                      <FormField label="Distância inferior">
                         <input
                           type="text"
-                          value={formData.cta_text}
+                          value={formData.bottom_spacing}
                           onChange={e =>
                             setFormData({
                               ...formData,
-                              cta_text: e.target.value,
+                              bottom_spacing: e.target.value,
                             })
                           }
-                          placeholder="Ex: Ver vídeos"
+                          placeholder="Ex: 20px"
+                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
+                        />
+                      </FormField>
+
+                      <FormField label="Distância esquerda">
+                        <input
+                          type="text"
+                          value={formData.left_spacing}
+                          onChange={e =>
+                            setFormData({
+                              ...formData,
+                              left_spacing: e.target.value,
+                            })
+                          }
+                          placeholder="Ex: 20px"
                           className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
                         />
                       </FormField>
@@ -928,7 +1030,7 @@ const AppearancePage = () => {
                         />
                       </FormField>
 
-                      <FormField label="Largura da borda">
+                      <FormField label="Largura/estilo da borda">
                         <input
                           type="text"
                           value={formData.border_style}
@@ -939,6 +1041,21 @@ const AppearancePage = () => {
                             })
                           }
                           placeholder="Ex: 2px solid"
+                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
+                        />
+                      </FormField>
+
+                      <FormField label="Z-index">
+                        <input
+                          type="text"
+                          value={formData.z_index}
+                          onChange={e =>
+                            setFormData({
+                              ...formData,
+                              z_index: e.target.value,
+                            })
+                          }
+                          placeholder="Ex: 2147483647"
                           className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
                         />
                       </FormField>
@@ -990,88 +1107,23 @@ const AppearancePage = () => {
                         </select>
                       </FormField>
 
-                      <FormField label="Altura">
-                        <input
-                          type="text"
-                          value={formData.height}
+                      <FormField label="Modo de visualização do carrossel">
+                        <select
+                          value={formData.carousel_view_mode}
                           onChange={e =>
                             setFormData({
                               ...formData,
-                              height: e.target.value,
-                            })
-                          }
-                          placeholder="Ex: 220px"
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
-                        />
-                      </FormField>
-
-                      <FormField label="Largura">
-                        <input
-                          type="text"
-                          value={formData.width}
-                          onChange={e =>
-                            setFormData({
-                              ...formData,
-                              width: e.target.value,
-                            })
-                          }
-                          placeholder="Ex: 160px"
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
-                        />
-                      </FormField>
-
-                      <FormField label="Raio da borda">
-                        <input
-                          type="text"
-                          value={formData.border_radius}
-                          onChange={e =>
-                            setFormData({
-                              ...formData,
-                              border_radius: e.target.value,
+                              carousel_view_mode: e.target.value,
                             })
                           }
                           className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                        />
-                      </FormField>
-
-                      <FormField label="Largura da borda">
-                        <input
-                          type="text"
-                          value={formData.border_style}
-                          onChange={e =>
-                            setFormData({
-                              ...formData,
-                              border_style: e.target.value,
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                        />
-                      </FormField>
-
-                      <FormField label="Exibir produto no carrossel">
-                        <ToggleSwitch
-                          label="Exibir produto no carrossel"
-                          checked={formData.show_product}
-                          onChange={e =>
-                            setFormData({
-                              ...formData,
-                              show_product: e.target.checked,
-                            })
-                          }
-                        />
-                      </FormField>
-
-                      <FormField label="Mostrar botão play">
-                        <ToggleSwitch
-                          label="Mostrar botão play"
-                          checked={formData.show_play_icon}
-                          onChange={e =>
-                            setFormData({
-                              ...formData,
-                              show_play_icon: e.target.checked,
-                            })
-                          }
-                        />
+                        >
+                          <option value="preview">
+                            Preview, vídeo no hover
+                          </option>
+                          <option value="poster">Poster/imagem apenas</option>
+                          <option value="custom">Personalizado</option>
+                        </select>
                       </FormField>
 
                       <FormField label="Margem superior">
@@ -1106,23 +1158,30 @@ const AppearancePage = () => {
                         />
                       </FormField>
 
-                      <FormField label="Modo de visualização do carrossel">
-                        <select
-                          value={formData.carousel_view_mode}
+                      <FormField label="Exibir produto no carrossel">
+                        <ToggleSwitch
+                          label="Exibir produto no carrossel"
+                          checked={formData.show_product}
                           onChange={e =>
                             setFormData({
                               ...formData,
-                              carousel_view_mode: e.target.value,
+                              show_product: e.target.checked,
                             })
                           }
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                        >
-                          <option value="preview">
-                            Preview (vídeo no hover)
-                          </option>
-                          <option value="poster">Poster/imagem apenas</option>
-                          <option value="custom">Personalizado</option>
-                        </select>
+                        />
+                      </FormField>
+
+                      <FormField label="Mostrar botão play">
+                        <ToggleSwitch
+                          label="Mostrar botão play"
+                          checked={formData.show_play_icon}
+                          onChange={e =>
+                            setFormData({
+                              ...formData,
+                              show_play_icon: e.target.checked,
+                            })
+                          }
+                        />
                       </FormField>
                     </div>
                   </div>
@@ -1170,119 +1229,6 @@ const AppearancePage = () => {
                           className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
                         />
                       </FormField>
-
-                      <FormField label="Forma">
-                        <select
-                          value={formData.widget_shape}
-                          onChange={e =>
-                            setFormData({
-                              ...formData,
-                              widget_shape: e.target.value as any,
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                        >
-                          <option value="circle">Circular</option>
-                          <option value="square">Quadrado</option>
-                          <option value="portrait">Retrato</option>
-                        </select>
-                      </FormField>
-
-                      <FormField label="Altura">
-                        <input
-                          type="text"
-                          value={formData.height}
-                          onChange={e =>
-                            setFormData({
-                              ...formData,
-                              height: e.target.value,
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                        />
-                      </FormField>
-
-                      <FormField label="Largura">
-                        <input
-                          type="text"
-                          value={formData.width}
-                          onChange={e =>
-                            setFormData({
-                              ...formData,
-                              width: e.target.value,
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                        />
-                      </FormField>
-
-                      <FormField label="Raio da borda">
-                        <input
-                          type="text"
-                          value={formData.border_radius}
-                          onChange={e =>
-                            setFormData({
-                              ...formData,
-                              border_radius: e.target.value,
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                        />
-                      </FormField>
-
-                      <FormField label="Chamada para ação">
-                        <input
-                          type="text"
-                          value={formData.cta_text}
-                          onChange={e =>
-                            setFormData({
-                              ...formData,
-                              cta_text: e.target.value,
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                        />
-                      </FormField>
-
-                      <FormField label="Largura da borda">
-                        <input
-                          type="text"
-                          value={formData.border_style}
-                          onChange={e =>
-                            setFormData({
-                              ...formData,
-                              border_style: e.target.value,
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                        />
-                      </FormField>
-
-                      <FormField label="Exibir produto">
-                        <ToggleSwitch
-                          label="Exibir produto"
-                          checked={formData.show_product}
-                          onChange={e =>
-                            setFormData({
-                              ...formData,
-                              show_product: e.target.checked,
-                            })
-                          }
-                        />
-                      </FormField>
-
-                      <FormField label="Mostrar botão play">
-                        <ToggleSwitch
-                          label="Mostrar botão play"
-                          checked={formData.show_play_icon}
-                          onChange={e =>
-                            setFormData({
-                              ...formData,
-                              show_play_icon: e.target.checked,
-                            })
-                          }
-                        />
-                      </FormField>
                     </div>
                   </div>
                 </div>
@@ -1325,6 +1271,19 @@ const AppearancePage = () => {
                         setFormData({
                           ...formData,
                           text_color: e.target.value,
+                        })
+                      }
+                    />
+                  </FormField>
+
+                  <FormField label="Cor do fundo">
+                    <ColorInput
+                      label="Cor do fundo"
+                      value={formData.background_color}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          background_color: e.target.value,
                         })
                       }
                     />
@@ -1382,6 +1341,19 @@ const AppearancePage = () => {
 
               <SectionCard title="4. Player Interativo e Modal">
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <FormField label="Mostrar título">
+                    <ToggleSwitch
+                      label="Mostrar título"
+                      checked={formData.show_title}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          show_title: e.target.checked,
+                        })
+                      }
+                    />
+                  </FormField>
+
                   <FormField label="Mostrar botão curtir">
                     <ToggleSwitch
                       label="Mostrar botão curtir"
@@ -1408,14 +1380,27 @@ const AppearancePage = () => {
                     />
                   </FormField>
 
-                  <FormField label="Mostrar botão produto">
+                  <FormField label="Mostrar produto">
                     <ToggleSwitch
-                      label="Mostrar botão produto"
+                      label="Mostrar produto"
                       checked={formData.show_product}
                       onChange={e =>
                         setFormData({
                           ...formData,
                           show_product: e.target.checked,
+                        })
+                      }
+                    />
+                  </FormField>
+
+                  <FormField label="Mostrar botão produto">
+                    <ToggleSwitch
+                      label="Mostrar botão produto"
+                      checked={formData.show_product_button}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          show_product_button: e.target.checked,
                         })
                       }
                     />
@@ -1442,6 +1427,32 @@ const AppearancePage = () => {
                         setFormData({
                           ...formData,
                           show_comment_button: e.target.checked,
+                        })
+                      }
+                    />
+                  </FormField>
+
+                  <FormField label="Ocultar stories">
+                    <ToggleSwitch
+                      label="Ocultar stories"
+                      checked={formData.hide_stories}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          hide_stories: e.target.checked,
+                        })
+                      }
+                    />
+                  </FormField>
+
+                  <FormField label="Sombra">
+                    <ToggleSwitch
+                      label="Ativar sombra"
+                      checked={formData.shadow_enabled}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          shadow_enabled: e.target.checked,
                         })
                       }
                     />
