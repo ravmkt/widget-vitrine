@@ -1,6 +1,11 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {
   db,
   Appearance,
@@ -27,7 +32,6 @@ import {
   Heart,
   MessageCircle,
   Share2,
-  ShoppingBag,
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
@@ -159,8 +163,17 @@ type ExtendedAppearance = Appearance & {
   font_size: string;
 };
 
+type PreviewColors = {
+  primary: string;
+  secondary: string;
+  text: string;
+  background: string;
+  button: string;
+  floatingBorder: string;
+};
+
 const inputClass =
-  'w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 outline-none placeholder:text-slate-400 transition focus:border-[#0094EB] focus:bg-white focus:ring-4 focus:ring-blue-100';
+  'w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 outline-none placeholder:text-slate-400 transition focus:border-[#0094EB] focus:bg-white focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-50';
 
 const selectClass = inputClass;
 
@@ -246,6 +259,17 @@ const safeNumber = (
   return parsed;
 };
 
+const limitNumber = (
+  value: unknown,
+  fallback: number,
+  min: number,
+  max: number,
+) => {
+  const parsed = safeNumber(value, fallback, min);
+
+  return Math.min(max, Math.max(min, parsed));
+};
+
 const cssSize = (value: unknown, fallback = '0px') => {
   if (value === null || value === undefined) return fallback;
 
@@ -274,17 +298,6 @@ const cssBorder = (borderStyle: string, color: string) => {
   }
 
   return `${style} ${color}`;
-};
-
-const limitNumber = (
-  value: unknown,
-  fallback: number,
-  min: number,
-  max: number,
-) => {
-  const parsed = safeNumber(value, fallback, min);
-
-  return Math.min(max, Math.max(min, parsed));
 };
 
 const getCircleSize = (width: string, height: string) => {
@@ -363,7 +376,7 @@ const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
   visible_items: 4,
   show_product: true,
   show_play_icon: true,
-  auto_center: carouselDesktop.auto_center,
+  auto_center: false,
 });
 
 const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
@@ -605,6 +618,9 @@ const normalizeAppearance = (
         anyItem.right_spacing ??
         anyItem.spacing_right ??
         anyItem.offset_right ??
+        anyItem.left_spacing ??
+        anyItem.spacing_left ??
+        anyItem.offset_left ??
         defaults.right_spacing,
       border_color: anyItem.color || item.primary_color || defaults.color,
       border_style: anyItem.border_style ?? defaults.border_style,
@@ -620,30 +636,30 @@ const normalizeAppearance = (
   });
 
   const carouselConfig = normalizeResponsiveConfig<CarouselConfig>({
-  rawValue: anyItem.carousel_config,
-  desktopDefault: createDefaultCarouselDesktopConfig(),
-  mobileDefault: createDefaultCarouselMobileConfig(),
-  sameForAll: globalAppearance,
-  legacyDesktop: {
-    gap: safeNumber(item.carousel_gap, defaults.carousel_gap, 0),
-    card_shape:
-      item.carousel_card_shape || defaults.carousel_card_shape || 'rounded',
-    view_mode: anyItem.carousel_view_mode ?? defaults.carousel_view_mode,
-    margin_top: anyItem.margin_top ?? defaults.margin_top,
-    margin_bottom: anyItem.margin_bottom ?? defaults.margin_bottom,
-    visible_items: safeNumber(
-      item.carousel_visible_items,
-      defaults.carousel_visible_items || 4,
-      1,
-    ),
-    show_product: item.show_product ?? defaults.show_product,
-    show_play_icon: anyItem.show_play_icon ?? item.show_play_button ?? true,
-    auto_center: carouselDesktop.auto_center ?? anyItem.auto_center ?? defaults.auto_center,
-  },
-  legacyMobile: {
-    auto_center: carouselDesktop.auto_center ?? anyItem.auto_center ?? defaults.auto_center,
-  },
-});
+    rawValue: anyItem.carousel_config,
+    desktopDefault: createDefaultCarouselDesktopConfig(),
+    mobileDefault: createDefaultCarouselMobileConfig(),
+    sameForAll: globalAppearance,
+    legacyDesktop: {
+      gap: safeNumber(item.carousel_gap, defaults.carousel_gap, 0),
+      card_shape:
+        item.carousel_card_shape || defaults.carousel_card_shape || 'rounded',
+      view_mode: anyItem.carousel_view_mode ?? defaults.carousel_view_mode,
+      margin_top: anyItem.margin_top ?? defaults.margin_top,
+      margin_bottom: anyItem.margin_bottom ?? defaults.margin_bottom,
+      visible_items: safeNumber(
+        item.carousel_visible_items,
+        defaults.carousel_visible_items || 4,
+        1,
+      ),
+      show_product: item.show_product ?? defaults.show_product,
+      show_play_icon: anyItem.show_play_icon ?? item.show_play_button ?? true,
+      auto_center: anyItem.auto_center ?? defaults.auto_center ?? false,
+    },
+    legacyMobile: {
+      auto_center: anyItem.auto_center ?? defaults.auto_center ?? false,
+    },
+  });
 
   const gridConfig = normalizeResponsiveConfig<GridConfig>({
     rawValue: anyItem.grid_config,
@@ -651,20 +667,29 @@ const normalizeAppearance = (
     mobileDefault: createDefaultGridMobileConfig(),
     sameForAll: globalAppearance,
     legacyDesktop: {
-      columns: safeNumber(
+      columns: limitNumber(
         anyItem.desktop_columns,
         defaults.desktop_columns,
         1,
+        4,
       ),
       rows: safeNumber(anyItem.desktop_rows, defaults.desktop_rows, 1),
       gap: safeNumber(anyItem.desktop_gap, defaults.desktop_gap, 0),
     },
     legacyMobile: {
-      columns: safeNumber(anyItem.mobile_columns, defaults.mobile_columns, 1),
+      columns: limitNumber(
+        anyItem.mobile_columns,
+        defaults.mobile_columns,
+        1,
+        4,
+      ),
       rows: safeNumber(anyItem.mobile_rows, defaults.mobile_rows, 1),
       gap: safeNumber(anyItem.mobile_gap, defaults.mobile_gap, 0),
     },
   });
+
+  gridConfig.desktop.columns = limitNumber(gridConfig.desktop.columns, 4, 1, 4);
+  gridConfig.mobile.columns = limitNumber(gridConfig.mobile.columns, 2, 1, 4);
 
   const modalRaw = parseJsonIfNeeded<ModalConfig>(anyItem.modal_config);
 
@@ -785,7 +810,7 @@ const normalizeAppearance = (
     color: floatingDesktop.border_color || item.primary_color || defaults.color,
     show_play_icon: floatingDesktop.show_play_icon,
     hide_stories: modalConfig.hide_stories,
-    auto_center: anyItem.auto_center ?? defaults.auto_center,
+    auto_center: carouselDesktop.auto_center ?? defaults.auto_center,
     carousel_view_mode: carouselDesktop.view_mode,
     margin_top: carouselDesktop.margin_top,
     margin_bottom: carouselDesktop.margin_bottom,
@@ -826,6 +851,66 @@ const deleteAppearanceSafe = async (id: string, storeId?: string) => {
   } catch {
     await db.appearances.delete(id);
   }
+};
+
+const syncGlobalConfig = (
+  checked: boolean,
+  prev: ExtendedAppearance,
+): ExtendedAppearance => {
+  if (checked) {
+    return {
+      ...prev,
+      useGlobalAppearance: true,
+      use_global_appearance: true,
+      floating_config: {
+        same_for_all: true,
+        desktop: prev.floating_config.desktop,
+        mobile: prev.floating_config.desktop,
+      },
+      carousel_config: {
+        same_for_all: true,
+        desktop: prev.carousel_config.desktop,
+        mobile: prev.carousel_config.desktop,
+      },
+      grid_config: {
+        same_for_all: true,
+        desktop: {
+          ...prev.grid_config.desktop,
+          columns: limitNumber(prev.grid_config.desktop.columns, 4, 1, 4),
+        },
+        mobile: {
+          ...prev.grid_config.desktop,
+          columns: limitNumber(prev.grid_config.desktop.columns, 4, 1, 4),
+        },
+      },
+    };
+  }
+
+  return {
+    ...prev,
+    useGlobalAppearance: false,
+    use_global_appearance: false,
+    floating_config: {
+      ...prev.floating_config,
+      same_for_all: false,
+    },
+    carousel_config: {
+      ...prev.carousel_config,
+      same_for_all: false,
+    },
+    grid_config: {
+      ...prev.grid_config,
+      same_for_all: false,
+      desktop: {
+        ...prev.grid_config.desktop,
+        columns: limitNumber(prev.grid_config.desktop.columns, 4, 1, 4),
+      },
+      mobile: {
+        ...prev.grid_config.mobile,
+        columns: limitNumber(prev.grid_config.mobile.columns, 2, 1, 4),
+      },
+    },
+  };
 };
 
 const ToggleSwitch = ({
@@ -1061,7 +1146,7 @@ const PreviewCard = ({
     formData.useGlobalAppearance,
   );
 
-  const colors = {
+  const colors: PreviewColors = {
     primary: isValidHexColor(formData.primary_color)
       ? formData.primary_color
       : '#0094EB',
@@ -1127,9 +1212,7 @@ const PreviewCard = ({
         <CarouselPreview carousel={carousel} colors={colors} />
       )}
 
-      {activeTab === 'grid' && (
-        <GridPreview grid={grid} colors={colors} />
-      )}
+      {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} />}
 
       {activeTab === 'modal' && (
         <ModalPreview formData={formData} colors={colors} />
@@ -1147,19 +1230,11 @@ const FloatingPreview = ({
   colors,
 }: {
   floating: FloatingConfig;
-  colors: {
-    primary: string;
-    secondary: string;
-    text: string;
-    background: string;
-    button: string;
-    floatingBorder: string;
-  };
+  colors: PreviewColors;
 }) => {
   const width = cssSize(floating.width, '80px');
   const height = cssSize(floating.height, '80px');
   const circleSize = getCircleSize(width, height);
-
   const lateralSpacing = cssSize(floating.left_spacing, '20px');
 
   const positionStyle: React.CSSProperties = {};
@@ -1217,7 +1292,7 @@ const FloatingPreview = ({
                 ? '999px'
                 : cssSize(floating.border_radius, '12px'),
             border: cssBorder(floating.border_style, colors.floatingBorder),
-            zIndex: 5,
+            zIndex: safeNumber(floating.z_index, 5, 1),
             ...positionStyle,
           }}
         >
@@ -1225,6 +1300,7 @@ const FloatingPreview = ({
             className="absolute inset-0"
             style={{
               background: `linear-gradient(160deg, ${colors.primary}, ${colors.secondary})`,
+              objectFit: floating.object_fit as React.CSSProperties['objectFit'],
             }}
           />
 
@@ -1245,8 +1321,18 @@ const FloatingPreview = ({
       <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
         <PreviewInfo label="Tamanho" value={`${width} x ${height}`} />
         <PreviewInfo label="Forma" value={floating.shape} />
-        <PreviewInfo label="Raio" value={cssSize(floating.border_radius)} />
-        <PreviewInfo label="Borda" value={floating.border_style} />
+        <PreviewInfo
+          label="Raio"
+          value={
+            floating.shape === 'circle'
+              ? 'Ignorado no circular'
+              : cssSize(floating.border_radius)
+          }
+        />
+        <PreviewInfo
+          label="Borda"
+          value={cssBorder(floating.border_style, colors.floatingBorder)}
+        />
       </div>
     </div>
   );
@@ -1257,17 +1343,12 @@ const CarouselPreview = ({
   colors,
 }: {
   carousel: CarouselConfig;
-  colors: {
-    primary: string;
-    secondary: string;
-    text: string;
-    background: string;
-    button: string;
-    floatingBorder: string;
-  };
+  colors: PreviewColors;
 }) => {
+  const visibleItems = safeNumber(carousel.visible_items, 1, 1);
+
   const items = Array.from({
-    length: Math.max(1, Math.min(Number(carousel.visible_items) || 1, 8)),
+    length: Math.max(1, Math.min(visibleItems, 8)),
   });
 
   const isCircle = carousel.card_shape === 'circle';
@@ -1285,60 +1366,70 @@ const CarouselPreview = ({
           </div>
 
           <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black text-slate-500">
-            {carousel.visible_items} itens
+            {visibleItems} itens
           </span>
         </div>
 
         <div
-          className={cn(
-            'flex overflow-hidden',
-            carousel.auto_center && 'justify-center',
-          )}
+          className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-3"
           style={{
-            gap: `${carousel.gap || 0}px`,
             marginTop: cssSize(carousel.margin_top, '0px'),
             marginBottom: cssSize(carousel.margin_bottom, '0px'),
           }}
         >
-          {items.map((_, index) => (
-            <div
-              key={index}
-              className={cn(
-                'relative shrink-0 overflow-hidden border shadow-sm',
-                isCircle && 'h-24 w-24 rounded-full',
-                isSquare && !isCircle && 'h-24 w-24 rounded-2xl',
-                !isCircle && !isSquare && 'h-32 w-20 rounded-2xl',
-              )}
-              style={{
-                borderColor: colors.primary,
-                background:
-                  index % 2 === 0
-                    ? `linear-gradient(160deg, ${colors.primary}, #dbeafe)`
-                    : `linear-gradient(160deg, ${colors.secondary}, #f8fafc)`,
-              }}
-            >
-              {carousel.show_play_icon && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
-                    <PlaySquare size={16} />
+          <div
+            className={cn(
+              'flex overflow-hidden',
+              carousel.auto_center && 'justify-center',
+            )}
+            style={{
+              gap: `${safeNumber(carousel.gap, 0, 0)}px`,
+            }}
+          >
+            {items.map((_, index) => (
+              <div
+                key={index}
+                className={cn(
+                  'relative shrink-0 overflow-hidden border shadow-sm',
+                  isCircle && 'h-24 w-24 rounded-full',
+                  isSquare && !isCircle && 'h-24 w-24 rounded-2xl',
+                  !isCircle && !isSquare && 'h-32 w-20 rounded-2xl',
+                )}
+                style={{
+                  borderColor: colors.primary,
+                  background:
+                    index % 2 === 0
+                      ? `linear-gradient(160deg, ${colors.primary}, #dbeafe)`
+                      : `linear-gradient(160deg, ${colors.secondary}, #f8fafc)`,
+                }}
+              >
+                {carousel.show_play_icon && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
+                      <PlaySquare size={16} />
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {carousel.show_product && !isCircle && (
-                <div className="absolute bottom-2 left-2 right-2 rounded-lg bg-white/90 px-2 py-1 text-center text-[10px] font-black text-slate-700">
-                  Produto
-                </div>
-              )}
-            </div>
-          ))}
+                {carousel.show_product && !isCircle && (
+                  <div className="absolute bottom-2 left-2 right-2 rounded-lg bg-white/90 px-2 py-1 text-center text-[10px] font-black text-slate-700">
+                    Produto
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
         <PreviewInfo label="Espaçamento" value={`${carousel.gap}px`} />
-        <PreviewInfo label="Itens" value={`${carousel.visible_items}`} />
+        <PreviewInfo label="Itens" value={`${visibleItems}`} />
         <PreviewInfo label="Margem topo" value={cssSize(carousel.margin_top)} />
+        <PreviewInfo
+          label="Margem inferior"
+          value={cssSize(carousel.margin_bottom)}
+        />
         <PreviewInfo
           label="Centralizar"
           value={carousel.auto_center ? 'Sim' : 'Não'}
@@ -1353,14 +1444,7 @@ const GridPreview = ({
   colors,
 }: {
   grid: GridConfig;
-  colors: {
-    primary: string;
-    secondary: string;
-    text: string;
-    background: string;
-    button: string;
-    floatingBorder: string;
-  };
+  colors: PreviewColors;
 }) => {
   const columns = limitNumber(grid.columns, 4, 1, 4);
   const rows = safeNumber(grid.rows, 1, 1);
@@ -1390,7 +1474,7 @@ const GridPreview = ({
           className="grid"
           style={{
             gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
-            gap: `${grid.gap || 0}px`,
+            gap: `${safeNumber(grid.gap, 0, 0)}px`,
           }}
         >
           {items.map((_, index) => (
@@ -1423,14 +1507,7 @@ const ModalPreview = ({
   colors,
 }: {
   formData: ExtendedAppearance;
-  colors: {
-    primary: string;
-    secondary: string;
-    text: string;
-    background: string;
-    button: string;
-    floatingBorder: string;
-  };
+  colors: PreviewColors;
 }) => {
   return (
     <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
@@ -1467,7 +1544,7 @@ const ModalPreview = ({
               </h4>
             )}
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {formData.modal_config.show_like_button && (
                 <PreviewIcon icon={<Heart size={14} />} />
               )}
@@ -1523,14 +1600,7 @@ const VisualPreview = ({
   colors,
 }: {
   formData: ExtendedAppearance;
-  colors: {
-    primary: string;
-    secondary: string;
-    text: string;
-    background: string;
-    button: string;
-    floatingBorder: string;
-  };
+  colors: PreviewColors;
 }) => {
   return (
     <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
@@ -1612,6 +1682,262 @@ const PreviewInfo = ({ label, value }: { label: string; value: string }) => (
     <p className="mt-1 truncate font-black text-slate-700">{value}</p>
   </div>
 );
+
+const AppearancePage = () => {
+  const tenantContext = useTenant() as any;
+
+  const storeId =
+    tenantContext?.storeId ||
+    tenantContext?.store?.id ||
+    tenantContext?.tenant?.store_id ||
+    tenantContext?.tenant?.id ||
+    tenantContext?.tenantId ||
+    '';
+
+  const tenantLoading =
+    tenantContext?.loading ||
+    tenantContext?.isLoading ||
+    tenantContext?.tenantLoading ||
+    false;
+
+  const [resolvedStoreId, setResolvedStoreId] = useState<string>('');
+  const [appearances, setAppearances] = useState<Appearance[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const [showModal, setShowModal] = useState(false);
+  const [editingStyle, setEditingStyle] = useState<Appearance | null>(null);
+  const [formData, setFormData] = useState<ExtendedAppearance>(() =>
+    createDefaultFormData(storeId),
+  );
+
+  const [floatingDevice, setFloatingDevice] =
+    useState<DeviceType>('desktop');
+  const [carouselDevice, setCarouselDevice] =
+    useState<DeviceType>('desktop');
+  const [gridDevice, setGridDevice] = useState<DeviceType>('desktop');
+  const [activeTab, setActiveTab] = useState<ModalTab>('basic');
+
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    id: '',
+    name: '',
+  });
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      const finalStoreId =
+        resolvedStoreId || (await resolveStoreId(storeId));
+
+      if (!finalStoreId) {
+        setAppearances([]);
+        return;
+      }
+
+      setResolvedStoreId(finalStoreId);
+
+      const styles = await getAppearancesSafe(finalStoreId);
+
+      setAppearances(styles);
+    } catch (error) {
+      console.error('Erro ao carregar aparências:', error);
+      showError('Erro ao carregar aparências.');
+      setAppearances([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [resolvedStoreId, storeId]);
+
+  useEffect(() => {
+    if (!tenantLoading) {
+      loadData();
+    }
+  }, [tenantLoading, loadData]);
+
+  const updateFloatingConfig = (patch: Partial<FloatingConfig>) => {
+    setFormData(prev => {
+      const device = prev.useGlobalAppearance ? 'desktop' : floatingDevice;
+      const current = prev.floating_config[device];
+
+      let updatedDeviceConfig: FloatingConfig = {
+        ...current,
+        ...patch,
+      };
+
+      if (patch.position) {
+        updatedDeviceConfig = {
+          ...updatedDeviceConfig,
+          position: normalizePosition(patch.position),
+          floating_position: positionToFloatingPosition(patch.position),
+        };
+      }
+
+      if (patch.floating_position) {
+        updatedDeviceConfig = {
+          ...updatedDeviceConfig,
+          floating_position: normalizeFloatingPosition(
+            patch.floating_position,
+          ),
+          position: floatingPositionToPosition(patch.floating_position),
+        };
+      }
+
+      const nextConfig: ResponsiveConfig<FloatingConfig> =
+        prev.useGlobalAppearance
+          ? {
+              same_for_all: true,
+              desktop: updatedDeviceConfig,
+              mobile: updatedDeviceConfig,
+            }
+          : {
+              ...prev.floating_config,
+              same_for_all: false,
+              [device]: updatedDeviceConfig,
+            };
+
+      const desktop = nextConfig.desktop;
+
+      return {
+        ...prev,
+        floating_config: nextConfig,
+        width: desktop.width,
+        height: desktop.height,
+        border_radius: desktop.border_radius,
+        widget_shape: desktop.shape as any,
+        position: desktop.position,
+        floating_position: desktop.floating_position,
+        bottom_spacing: desktop.bottom_spacing,
+        top_spacing: desktop.top_spacing,
+        left_spacing: desktop.left_spacing,
+        right_spacing: desktop.right_spacing,
+        color: desktop.border_color,
+        border_style: desktop.border_style,
+        show_play_icon: desktop.show_play_icon,
+        draggable: desktop.draggable,
+        allow_close: desktop.allow_close,
+        object_fit: desktop.object_fit,
+        z_index: desktop.z_index,
+      };
+    });
+  };
+
+  const updateCarouselConfig = (patch: Partial<CarouselConfig>) => {
+    setFormData(prev => {
+      const device = prev.useGlobalAppearance ? 'desktop' : carouselDevice;
+      const current = prev.carousel_config[device];
+
+      const updatedDeviceConfig: CarouselConfig = {
+        ...current,
+        ...patch,
+        gap: safeNumber(patch.gap ?? current.gap, current.gap || 0, 0),
+        visible_items: safeNumber(
+          patch.visible_items ?? current.visible_items,
+          current.visible_items || 1,
+          1,
+        ),
+        auto_center: patch.auto_center ?? current.auto_center ?? false,
+      };
+
+      const nextConfig: ResponsiveConfig<CarouselConfig> =
+        prev.useGlobalAppearance
+          ? {
+              same_for_all: true,
+              desktop: updatedDeviceConfig,
+              mobile: updatedDeviceConfig,
+            }
+          : {
+              ...prev.carousel_config,
+              same_for_all: false,
+              [device]: updatedDeviceConfig,
+            };
+
+      const desktop = nextConfig.desktop;
+
+      return {
+        ...prev,
+        carousel_config: nextConfig,
+        carousel_gap: desktop.gap,
+        carousel_card_shape: desktop.card_shape as any,
+        carousel_view_mode: desktop.view_mode,
+        margin_top: desktop.margin_top,
+        margin_bottom: desktop.margin_bottom,
+        carousel_visible_items: desktop.visible_items,
+        show_product: desktop.show_product,
+        show_play_button: desktop.show_play_icon,
+        auto_center: desktop.auto_center,
+      };
+    });
+  };
+
+  const updateGridConfig = (patch: Partial<GridConfig>) => {
+    setFormData(prev => {
+      const device = prev.useGlobalAppearance ? 'desktop' : gridDevice;
+      const current = prev.grid_config[device];
+
+      const updatedDeviceConfig: GridConfig = {
+        ...current,
+        ...patch,
+        columns: limitNumber(
+          patch.columns ?? current.columns,
+          current.columns || 1,
+          1,
+          4,
+        ),
+        rows: safeNumber(patch.rows ?? current.rows, current.rows || 1, 1),
+        gap: safeNumber(patch.gap ?? current.gap, current.gap || 0, 0),
+      };
+
+      const nextConfig: ResponsiveConfig<GridConfig> =
+        prev.useGlobalAppearance
+          ? {
+              same_for_all: true,
+              desktop: updatedDeviceConfig,
+              mobile: updatedDeviceConfig,
+            }
+          : {
+              ...prev.grid_config,
+              same_for_all: false,
+              [device]: updatedDeviceConfig,
+            };
+
+      return {
+        ...prev,
+        grid_config: nextConfig,
+        desktop_columns: nextConfig.desktop.columns,
+        desktop_rows: nextConfig.desktop.rows,
+        desktop_gap: nextConfig.desktop.gap,
+        mobile_columns: nextConfig.mobile.columns,
+        mobile_rows: nextConfig.mobile.rows,
+        mobile_gap: nextConfig.mobile.gap,
+      };
+    });
+  };
+
+  const updateModalConfig = (patch: Partial<ModalConfig>) => {
+    setFormData(prev => {
+      const modalConfig: ModalConfig = {
+        ...prev.modal_config,
+        ...patch,
+      };
+
+      return {
+        ...prev,
+        modal_config: modalConfig,
+        show_title: modalConfig.show_title,
+        show_play_button: modalConfig.show_play_button,
+        show_product: modalConfig.show_product,
+        show_like_button: modalConfig.show_like_button,
+        show_comment_button: modalConfig.show_comment_button,
+        show_share_button: modalConfig.show_share_button,
+        show_whatsapp_button: modalConfig.show_whatsapp_button,
+        show_product_button: modalConfig.show_product_button,
+        hide_stories: modalConfig.hide_stories,
+        shadow_enabled: modalConfig.shadow_enabled,
+      };
+    });
+  };
 
   const handleSetDefault = async (id: string) => {
     try {
@@ -1728,6 +2054,16 @@ const PreviewInfo = ({ label, value }: { label: string; value: string }) => (
       const gridConfig: ResponsiveConfig<GridConfig> = {
         ...formData.grid_config,
         same_for_all: formData.useGlobalAppearance,
+      };
+
+      gridConfig.desktop = {
+        ...gridConfig.desktop,
+        columns: limitNumber(gridConfig.desktop.columns, 4, 1, 4),
+      };
+
+      gridConfig.mobile = {
+        ...gridConfig.mobile,
+        columns: limitNumber(gridConfig.mobile.columns, 2, 1, 4),
       };
 
       if (formData.useGlobalAppearance) {
@@ -2378,7 +2714,15 @@ const PreviewInfo = ({ label, value }: { label: string; value: string }) => (
                             }
                             placeholder="Ex: 12px"
                             className={inputClass}
+                            disabled={activeFloatingConfig.shape === 'circle'}
                           />
+
+                          {activeFloatingConfig.shape === 'circle' && (
+                            <p className="text-xs font-semibold text-slate-400">
+                              No formato circular, o raio é fixo para manter o
+                              círculo perfeito.
+                            </p>
+                          )}
                         </FormField>
 
                         <FormField label="Posição do widget">
@@ -2435,19 +2779,19 @@ const PreviewInfo = ({ label, value }: { label: string; value: string }) => (
                         </FormField>
 
                         <FormField label="Distância lateral">
-  <input
-    type="text"
-    value={activeFloatingConfig.left_spacing}
-    onChange={e =>
-      updateFloatingConfig({
-        left_spacing: e.target.value,
-        right_spacing: e.target.value,
-      })
-    }
-    placeholder="Ex: 20px"
-    className={inputClass}
-  />
-</FormField>
+                          <input
+                            type="text"
+                            value={activeFloatingConfig.left_spacing}
+                            onChange={e =>
+                              updateFloatingConfig({
+                                left_spacing: e.target.value,
+                                right_spacing: e.target.value,
+                              })
+                            }
+                            placeholder="Ex: 20px"
+                            className={inputClass}
+                          />
+                        </FormField>
 
                         <FormField label="Cor da borda">
                           <ColorInput
@@ -2547,7 +2891,7 @@ const PreviewInfo = ({ label, value }: { label: string; value: string }) => (
                   {activeTab === 'carousel' && (
                     <SectionCard
                       title="Carrossel"
-                      description="Configure a exibição dos vídeos em carrossel, quantidade de itens e margens."
+                      description="Configure a exibição dos vídeos em carrossel, quantidade de itens, centralização e margens."
                     >
                       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
                         <h4 className="text-sm font-black text-slate-800">
@@ -2685,21 +3029,22 @@ const PreviewInfo = ({ label, value }: { label: string; value: string }) => (
                             }
                           />
                         </FormField>
+
+                        <FormField label="Centralizar automático">
+                          <ToggleSwitch
+                            label="Centralizar carrossel automaticamente"
+                            checked={activeCarouselConfig.auto_center}
+                            onChange={e =>
+                              updateCarouselConfig({
+                                auto_center: e.target.checked,
+                              })
+                            }
+                            description="Quando ativado, os cards ficam centralizados dentro da área disponível."
+                          />
+                        </FormField>
                       </div>
                     </SectionCard>
                   )}
-<FormField label="Centralizar automático">
-  <ToggleSwitch
-    label="Centralizar carrossel automaticamente"
-    checked={activeCarouselConfig.auto_center}
-    onChange={e =>
-      updateCarouselConfig({
-        auto_center: e.target.checked,
-      })
-    }
-    description="Quando ativado, os cards ficam centralizados dentro da área disponível."
-  />
-</FormField>
 
                   {activeTab === 'grid' && (
                     <SectionCard
@@ -2726,10 +3071,11 @@ const PreviewInfo = ({ label, value }: { label: string; value: string }) => (
                           <input
                             type="number"
                             min="1"
-                            value={activeGridConfig.columns}
+                            max="4"
+                            value={Math.min(activeGridConfig.columns, 4)}
                             onChange={e =>
                               updateGridConfig({
-                                columns: safeNumber(e.target.value, 1, 1),
+                                columns: limitNumber(e.target.value, 1, 1, 4),
                               })
                             }
                             className={inputClass}
@@ -2900,12 +3246,12 @@ const PreviewInfo = ({ label, value }: { label: string; value: string }) => (
 
                 <div className="xl:sticky xl:top-0 xl:self-start">
                   <PreviewCard
-  formData={formData}
-  floatingDevice={floatingDevice}
-  carouselDevice={carouselDevice}
-  gridDevice={gridDevice}
-  activeTab={activeTab}
-/>
+                    formData={formData}
+                    floatingDevice={floatingDevice}
+                    carouselDevice={carouselDevice}
+                    gridDevice={gridDevice}
+                    activeTab={activeTab}
+                  />
                 </div>
               </div>
             </div>
