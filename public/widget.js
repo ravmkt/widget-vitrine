@@ -2,33 +2,16 @@
  * Vidlytics Widget — widget.js
  *
  * Widget público de vídeo commerce.
- * Carrega stories, vídeos e aparência real da loja via Supabase.
- *
- * Configuração:
- *
- *   window.VIDLYTICS_CONFIG = {
- *     storeId: "ID_DA_LOJA",
- *     supabaseUrl: "https://...",
- *     supabaseAnonKey: "...",
- *     position: "bottom-right",
- *     widgets: { floatingVideo: true, carousel: true, gallery: true }
- *   };
  */
 (function () {
   if (window.__vidlytics_widget_initialized) return;
   window.__vidlytics_widget_initialized = true;
 
-  /* ------------------------------------------------------------------ */
-  /*  Config                                                             */
-  /* ------------------------------------------------------------------ */
-
   var config = window.VIDLYTICS_CONFIG || {};
   var storeId = config.storeId || config.lojaId || null;
   var supabaseUrl = (config.supabaseUrl || '').replace(/\/$/, '');
   var supabaseAnonKey = config.supabaseAnonKey || '';
-
   var fallbackPosition = config.position || 'fixed_bottom_right';
-
   var widgetsCfg = config.widgets || {};
 
   var enableFloating =
@@ -47,14 +30,43 @@
       : config.gallery !== false;
 
   var hasSupabase = Boolean(supabaseUrl && supabaseAnonKey);
-
   var currentAppearance = {};
 
-  /* ------------------------------------------------------------------ */
-  /*  Utils                                                              */
-  /* ------------------------------------------------------------------ */
-
   var VIDEO_FILE_REGEX = /\.(mp4|webm|ogg|mov|m4v|m3u8)(\?.*)?$/i;
+
+  function firstDefined() {
+    for (var i = 0; i < arguments.length; i += 1) {
+      if (
+        arguments[i] !== undefined &&
+        arguments[i] !== null &&
+        arguments[i] !== ''
+      ) {
+        return arguments[i];
+      }
+    }
+
+    return undefined;
+  }
+
+  function toCssUnit(value, fallback) {
+    var finalValue = firstDefined(value, fallback);
+
+    if (finalValue === undefined || finalValue === null || finalValue === '') {
+      return fallback || '20px';
+    }
+
+    if (typeof finalValue === 'number') {
+      return finalValue + 'px';
+    }
+
+    var str = String(finalValue).trim();
+
+    if (/^\d+(\.\d+)?$/.test(str)) {
+      return str + 'px';
+    }
+
+    return str;
+  }
 
   function getVideoUrl(video) {
     if (!video) return '';
@@ -130,45 +142,10 @@
     if (direct) return direct;
 
     if (video.source_type !== 'upload') {
-      var ytThumb = getYouTubeThumbnail(getVideoUrl(video));
-      if (ytThumb) return ytThumb;
+      return getYouTubeThumbnail(getVideoUrl(video));
     }
 
     return '';
-  }
-
-  function firstDefined() {
-    for (var i = 0; i < arguments.length; i += 1) {
-      if (
-        arguments[i] !== undefined &&
-        arguments[i] !== null &&
-        arguments[i] !== ''
-      ) {
-        return arguments[i];
-      }
-    }
-
-    return undefined;
-  }
-
-  function toCssUnit(value, fallback) {
-    var finalValue = firstDefined(value, fallback);
-
-    if (finalValue === undefined || finalValue === null || finalValue === '') {
-      return fallback || '20px';
-    }
-
-    if (typeof finalValue === 'number') {
-      return finalValue + 'px';
-    }
-
-    var str = String(finalValue).trim();
-
-    if (/^\d+(\.\d+)?$/.test(str)) {
-      return str + 'px';
-    }
-
-    return str;
   }
 
   function normalizePositionValue(value) {
@@ -180,45 +157,18 @@
       .replace(/\s+/g, '_')
       .replace(/-/g, '_');
 
-    if (normalized === 'left') {
-      return 'fixed_bottom_left';
-    }
+    if (normalized === 'left') return 'fixed_bottom_left';
+    if (normalized === 'right') return 'fixed_bottom_right';
 
-    if (normalized === 'right') {
-      return 'fixed_bottom_right';
-    }
+    if (normalized === 'bottom_left') return 'fixed_bottom_left';
+    if (normalized === 'bottom_right') return 'fixed_bottom_right';
+    if (normalized === 'top_left') return 'fixed_top_left';
+    if (normalized === 'top_right') return 'fixed_top_right';
 
-    if (normalized === 'bottom_left') {
-      return 'fixed_bottom_left';
-    }
-
-    if (normalized === 'bottom_right') {
-      return 'fixed_bottom_right';
-    }
-
-    if (normalized === 'top_left') {
-      return 'fixed_top_left';
-    }
-
-    if (normalized === 'top_right') {
-      return 'fixed_top_right';
-    }
-
-    if (normalized === 'fixed_bottom_left') {
-      return 'fixed_bottom_left';
-    }
-
-    if (normalized === 'fixed_bottom_right') {
-      return 'fixed_bottom_right';
-    }
-
-    if (normalized === 'fixed_top_left') {
-      return 'fixed_top_left';
-    }
-
-    if (normalized === 'fixed_top_right') {
-      return 'fixed_top_right';
-    }
+    if (normalized === 'fixed_bottom_left') return 'fixed_bottom_left';
+    if (normalized === 'fixed_bottom_right') return 'fixed_bottom_right';
+    if (normalized === 'fixed_top_left') return 'fixed_top_left';
+    if (normalized === 'fixed_top_right') return 'fixed_top_right';
 
     return 'fixed_bottom_right';
   }
@@ -227,10 +177,12 @@
     appearance = appearance || {};
 
     return normalizePositionValue(
-      appearance.floating_position ||
-        appearance.widget_position ||
-        appearance.position ||
+      firstDefined(
+        appearance.position,
+        appearance.widget_position,
+        appearance.floating_position,
         fallbackPosition
+      )
     );
   }
 
@@ -239,7 +191,6 @@
     var width = appearance.width || '';
 
     if (width) return toCssUnit(width, width);
-
     if (size === 'small') return '52px';
     if (size === 'large') return '76px';
 
@@ -255,6 +206,7 @@
 
     if (shape === 'portrait') {
       var numeric = parseInt(width, 10);
+
       if (!Number.isNaN(numeric)) {
         return Math.round(numeric * 1.45) + 'px';
       }
@@ -290,10 +242,6 @@
     return appearance.font_family || 'Inter, system-ui, sans-serif';
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  Storage helpers                                                    */
-  /* ------------------------------------------------------------------ */
-
   function getStorageItem(key, fallback) {
     try {
       var item = localStorage.getItem(key);
@@ -309,10 +257,6 @@
     } catch (e) {}
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  Supabase fetch                                                     */
-  /* ------------------------------------------------------------------ */
-
   function supabaseFetch(path, options) {
     if (!hasSupabase) return Promise.reject(new Error('No Supabase config'));
 
@@ -323,8 +267,8 @@
     };
 
     if (options && options.headers) {
-      Object.keys(options.headers).forEach(function (k) {
-        headers[k] = options.headers[k];
+      Object.keys(options.headers).forEach(function (key) {
+        headers[key] = options.headers[key];
       });
     }
 
@@ -334,10 +278,6 @@
       body: options && options.body ? options.body : undefined,
     });
   }
-
-  /* ------------------------------------------------------------------ */
-  /*  Metric tracking                                                    */
-  /* ------------------------------------------------------------------ */
 
   function trackMetric(metric) {
     var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
@@ -382,10 +322,6 @@
       }),
     }).catch(function () {});
   }
-
-  /* ------------------------------------------------------------------ */
-  /*  Page rule matching                                                 */
-  /* ------------------------------------------------------------------ */
 
   function matchesRule(rule) {
     var href = window.location.href;
@@ -445,14 +381,9 @@
     }
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  Data readers                                                       */
-  /* ------------------------------------------------------------------ */
-
   function readAppearance() {
     if (!storeId || !hasSupabase) {
-      var local = getStorageItem('vidlytics_appearance', {});
-      return Promise.resolve(local || {});
+      return Promise.resolve(getStorageItem('vidlytics_appearance', {}) || {});
     }
 
     return supabaseFetch(
@@ -461,8 +392,8 @@
         '&is_default=eq.true&limit=1',
       { method: 'GET' }
     )
-      .then(function (r) {
-        return r.ok ? r.json() : [];
+      .then(function (response) {
+        return response.ok ? response.json() : [];
       })
       .then(function (items) {
         if (items && items.length) return items[0];
@@ -473,8 +404,8 @@
             '&limit=1',
           { method: 'GET' }
         )
-          .then(function (r) {
-            return r.ok ? r.json() : [];
+          .then(function (response) {
+            return response.ok ? response.json() : [];
           })
           .then(function (fallbackItems) {
             return fallbackItems && fallbackItems.length
@@ -504,8 +435,8 @@
         '&active=eq.true&order=position.asc',
       { method: 'GET' }
     )
-      .then(function (r) {
-        return r.ok ? r.json() : [];
+      .then(function (response) {
+        return response.ok ? response.json() : [];
       })
       .catch(function () {
         return [];
@@ -521,8 +452,8 @@
       'story_videos?select=*&store_id=eq.' + encodeURIComponent(storeId),
       { method: 'GET' }
     )
-      .then(function (r) {
-        return r.ok ? r.json() : [];
+      .then(function (response) {
+        return response.ok ? response.json() : [];
       })
       .catch(function () {
         return [];
@@ -538,8 +469,8 @@
       'videos?select=*&store_id=eq.' + encodeURIComponent(storeId),
       { method: 'GET' }
     )
-      .then(function (r) {
-        return r.ok ? r.json() : [];
+      .then(function (response) {
+        return response.ok ? response.json() : [];
       })
       .catch(function () {
         return [];
@@ -555,8 +486,8 @@
       'story_products?select=*&store_id=eq.' + encodeURIComponent(storeId),
       { method: 'GET' }
     )
-      .then(function (r) {
-        return r.ok ? r.json() : [];
+      .then(function (response) {
+        return response.ok ? response.json() : [];
       })
       .catch(function () {
         return [];
@@ -572,8 +503,8 @@
       'products?select=*&store_id=eq.' + encodeURIComponent(storeId),
       { method: 'GET' }
     )
-      .then(function (r) {
-        return r.ok ? r.json() : [];
+      .then(function (response) {
+        return response.ok ? response.json() : [];
       })
       .catch(function () {
         return [];
@@ -589,17 +520,13 @@
       'page_rules?select=*&store_id=eq.' + encodeURIComponent(storeId),
       { method: 'GET' }
     )
-      .then(function (r) {
-        return r.ok ? r.json() : [];
+      .then(function (response) {
+        return response.ok ? response.json() : [];
       })
       .catch(function () {
         return [];
       });
   }
-
-  /* ------------------------------------------------------------------ */
-  /*  DOM helpers                                                        */
-  /* ------------------------------------------------------------------ */
 
   function createEl(tag, className) {
     var el = document.createElement(tag);
@@ -612,8 +539,8 @@
 
     var pos = normalizePositionFromAppearance(appearance);
 
-    var spacing = toCssUnit(
-      firstDefined(appearance.spacing, appearance.offset),
+    var defaultSpacing = toCssUnit(
+      firstDefined(appearance.spacing, appearance.offset, '20px'),
       '20px'
     );
 
@@ -622,7 +549,7 @@
         appearance.bottom_spacing,
         appearance.spacing_bottom,
         appearance.offset_bottom,
-        spacing
+        defaultSpacing
       ),
       '20px'
     );
@@ -632,7 +559,7 @@
         appearance.top_spacing,
         appearance.spacing_top,
         appearance.offset_top,
-        spacing
+        defaultSpacing
       ),
       '20px'
     );
@@ -642,7 +569,7 @@
         appearance.left_spacing,
         appearance.spacing_left,
         appearance.offset_left,
-        spacing
+        defaultSpacing
       ),
       '20px'
     );
@@ -652,7 +579,7 @@
         appearance.right_spacing,
         appearance.spacing_right,
         appearance.offset_right,
-        spacing
+        defaultSpacing
       ),
       '20px'
     );
@@ -660,38 +587,32 @@
     el.style.position = 'fixed';
     el.style.zIndex = String(appearance.z_index || '2147483647');
 
-    el.style.left = 'auto';
-    el.style.right = 'auto';
     el.style.top = 'auto';
+    el.style.right = 'auto';
     el.style.bottom = 'auto';
+    el.style.left = 'auto';
 
-    switch (pos) {
-      case 'fixed_bottom_left':
-        el.style.left = leftSpacing;
-        el.style.bottom = bottomSpacing;
-        break;
-
-      case 'fixed_top_left':
-        el.style.left = leftSpacing;
-        el.style.top = topSpacing;
-        break;
-
-      case 'fixed_top_right':
-        el.style.right = rightSpacing;
-        el.style.top = topSpacing;
-        break;
-
-      case 'fixed_bottom_right':
-      default:
-        el.style.right = rightSpacing;
-        el.style.bottom = bottomSpacing;
-        break;
+    if (pos === 'fixed_top_left') {
+      el.style.top = topSpacing;
+      el.style.left = leftSpacing;
+      return;
     }
-  }
 
-  /* ------------------------------------------------------------------ */
-  /*  Modal / Player                                                     */
-  /* ------------------------------------------------------------------ */
+    if (pos === 'fixed_top_right') {
+      el.style.top = topSpacing;
+      el.style.right = rightSpacing;
+      return;
+    }
+
+    if (pos === 'fixed_bottom_left') {
+      el.style.bottom = bottomSpacing;
+      el.style.left = leftSpacing;
+      return;
+    }
+
+    el.style.bottom = bottomSpacing;
+    el.style.right = rightSpacing;
+  }
 
   var overlay = null;
   var modalContent = null;
@@ -809,8 +730,8 @@
 
     var orderedVideos = relations
       .map(function (rel) {
-        return activeVideos.find(function (v) {
-          return v.id === rel.video_id;
+        return activeVideos.find(function (video) {
+          return video.id === rel.video_id;
         });
       })
       .filter(Boolean);
@@ -823,8 +744,8 @@
       if (rel.is_cover) coverVideoId = rel.video_id;
     });
 
-    var currentIndex = orderedVideos.findIndex(function (v) {
-      return v.id === coverVideoId;
+    var currentIndex = orderedVideos.findIndex(function (video) {
+      return video.id === coverVideoId;
     });
 
     if (currentIndex < 0) currentIndex = 0;
@@ -834,12 +755,12 @@
         return sp.story_id === story.id;
       })
       .map(function (sp) {
-        return products.find(function (p) {
-          return p.id === sp.product_id;
+        return products.find(function (product) {
+          return product.id === sp.product_id;
         });
       })
-      .filter(function (p) {
-        return p && (p.active === undefined || p.active);
+      .filter(function (product) {
+        return product && (product.active === undefined || product.active);
       });
 
     function resolveCta() {
@@ -1049,9 +970,8 @@
     renderCurrent();
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  Floating bubbles                                                   */
-  /* ------------------------------------------------------------------ */
+  var readStoryProductsData = [];
+  var readProductsData = [];
 
   function renderFloatingBubbles(stories, storyVideoMap, activeVideos, coverMap) {
     var existingRoot = document.getElementById('vidlytics-widget-root');
@@ -1059,7 +979,8 @@
 
     var appearance = currentAppearance || {};
     var position = normalizePositionFromAppearance(appearance);
-    var isLeftPosition = position === 'fixed_bottom_left' || position === 'fixed_top_left';
+    var isLeftPosition =
+      position === 'fixed_bottom_left' || position === 'fixed_top_left';
 
     var root = createEl('div', 'vidlytics-widget-root');
     root.id = 'vidlytics-widget-root';
@@ -1086,8 +1007,8 @@
         null;
 
       var coverVideo = coverRelation
-        ? activeVideos.find(function (v) {
-            return v.id === coverRelation.video_id;
+        ? activeVideos.find(function (video) {
+            return video.id === coverRelation.video_id;
           })
         : null;
 
@@ -1189,10 +1110,6 @@
     document.body.appendChild(root);
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  Carousel                                                           */
-  /* ------------------------------------------------------------------ */
-
   function renderCarousel(stories, storyVideoMap, activeVideos) {
     var existing = document.getElementById('vidlytics-carousel-root');
     if (existing) existing.remove();
@@ -1211,11 +1128,17 @@
     container.style.WebkitOverflowScrolling = 'touch';
 
     if (appearance.margin_top) {
-      container.style.marginTop = toCssUnit(appearance.margin_top, appearance.margin_top);
+      container.style.marginTop = toCssUnit(
+        appearance.margin_top,
+        appearance.margin_top
+      );
     }
 
     if (appearance.margin_bottom) {
-      container.style.marginBottom = toCssUnit(appearance.margin_bottom, appearance.margin_bottom);
+      container.style.marginBottom = toCssUnit(
+        appearance.margin_bottom,
+        appearance.margin_bottom
+      );
     }
 
     stories.forEach(function (story) {
@@ -1231,8 +1154,8 @@
         null;
 
       var coverVideo = coverRelation
-        ? activeVideos.find(function (v) {
-            return v.id === coverRelation.video_id;
+        ? activeVideos.find(function (video) {
+            return video.id === coverRelation.video_id;
           })
         : null;
 
@@ -1320,17 +1243,6 @@
     document.body.appendChild(container);
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  Data shared between renderers                                      */
-  /* ------------------------------------------------------------------ */
-
-  var readStoryProductsData = [];
-  var readProductsData = [];
-
-  /* ------------------------------------------------------------------ */
-  /*  Main render                                                        */
-  /* ------------------------------------------------------------------ */
-
   function renderWidget() {
     return Promise.all([
       readAppearance(),
@@ -1355,7 +1267,6 @@
         readProductsData = products;
 
         if (!stories.length) return;
-
         if (currentAppearance.hide_stories) return;
 
         var activeVideos = videos.filter(function (video) {
@@ -1387,8 +1298,8 @@
           var rels = storyVideoMap.get(story.id) || [];
 
           return rels.some(function (rel) {
-            return activeVideos.some(function (v) {
-              return v.id === rel.video_id;
+            return activeVideos.some(function (video) {
+              return video.id === rel.video_id;
             });
           });
         });
@@ -1429,13 +1340,8 @@
       });
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  Init                                                               */
-  /* ------------------------------------------------------------------ */
-
   function init() {
     if (!storeId) return;
-
     renderWidget();
   }
 
