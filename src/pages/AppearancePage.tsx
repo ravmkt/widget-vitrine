@@ -363,7 +363,7 @@ const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
   visible_items: 4,
   show_product: true,
   show_play_icon: true,
-  auto_center: false,
+  auto_center: carouselDesktop.auto_center,
 });
 
 const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
