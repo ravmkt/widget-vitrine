@@ -1035,11 +1035,13 @@ const PreviewCard = ({
   floatingDevice,
   carouselDevice,
   gridDevice,
+  activeTab,
 }: {
   formData: ExtendedAppearance;
   floatingDevice: DeviceType;
   carouselDevice: DeviceType;
   gridDevice: DeviceType;
+  activeTab: ModalTab;
 }) => {
   const floating = getActiveResponsiveConfig(
     formData.floating_config,
@@ -1059,192 +1061,413 @@ const PreviewCard = ({
     formData.useGlobalAppearance,
   );
 
-  const primaryColor = isValidHexColor(formData.primary_color)
-    ? formData.primary_color
-    : '#0094EB';
+  const colors = {
+    primary: isValidHexColor(formData.primary_color)
+      ? formData.primary_color
+      : '#0094EB',
+    secondary: isValidHexColor(formData.secondary_color)
+      ? formData.secondary_color
+      : '#0094EB',
+    text: isValidHexColor(formData.text_color)
+      ? formData.text_color
+      : '#0F172A',
+    background: isValidHexColor(formData.background_color)
+      ? formData.background_color
+      : '#FFFFFF',
+    button: isValidHexColor(formData.button_color)
+      ? formData.button_color
+      : '#0094EB',
+    floatingBorder: isValidHexColor(floating.border_color)
+      ? floating.border_color
+      : '#0094EB',
+  };
 
-  const secondaryColor = isValidHexColor(formData.secondary_color)
-    ? formData.secondary_color
-    : primaryColor;
+  const titleByTab: Record<ModalTab, string> = {
+    basic: 'Resumo do estilo',
+    visual: 'Identidade visual',
+    floating: 'Preview do flutuante',
+    carousel: 'Preview do carrossel',
+    grid: 'Preview da grade',
+    modal: 'Preview do player/modal',
+  };
 
-  const textColor = isValidHexColor(formData.text_color)
-    ? formData.text_color
-    : '#0F172A';
-
-  const backgroundColor = isValidHexColor(formData.background_color)
-    ? formData.background_color
-    : '#FFFFFF';
-
-  const buttonColor = isValidHexColor(formData.button_color)
-    ? formData.button_color
-    : primaryColor;
-
-  const floatingBorderColor = isValidHexColor(floating.border_color)
-    ? floating.border_color
-    : primaryColor;
-
-  const previewItems = Array.from({
-    length: Math.max(1, Math.min(Number(carousel.visible_items) || 1, 5)),
-  });
-
-  const gridItems = Array.from({
-    length: Math.max(1, Math.min((grid.columns || 1) * (grid.rows || 1), 8)),
-  });
+  const descriptionByTab: Record<ModalTab, string> = {
+    basic: 'Visualização geral do estilo selecionado.',
+    visual: 'Cores, fonte, fundo e botão.',
+    floating: 'Tamanho, forma, borda e posição do widget.',
+    carousel: 'Formato dos cards, espaçamento, margens e centralização.',
+    grid: 'Colunas, linhas e espaçamento da grade.',
+    modal: 'Botões e elementos exibidos no player/modal.',
+  };
 
   return (
     <aside className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-5 flex items-start justify-between gap-3">
         <div>
           <h3 className="text-base font-black text-slate-900">
-            Preview em tempo real
+            {titleByTab[activeTab]}
           </h3>
 
           <p className="mt-1 text-xs font-medium text-slate-500">
-            As alterações aparecem aqui enquanto você edita.
+            {descriptionByTab[activeTab]}
           </p>
         </div>
 
         <span
           className="h-8 w-8 rounded-full border border-slate-200 shadow-sm"
-          style={{ backgroundColor: primaryColor }}
+          style={{ backgroundColor: colors.primary }}
         />
       </div>
 
-      <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-3">
+      {activeTab === 'floating' && (
+        <FloatingPreview floating={floating} colors={colors} />
+      )}
+
+      {activeTab === 'carousel' && (
+        <CarouselPreview carousel={carousel} colors={colors} />
+      )}
+
+      {activeTab === 'grid' && (
+        <GridPreview grid={grid} colors={colors} />
+      )}
+
+      {activeTab === 'modal' && (
+        <ModalPreview formData={formData} colors={colors} />
+      )}
+
+      {(activeTab === 'basic' || activeTab === 'visual') && (
+        <VisualPreview formData={formData} colors={colors} />
+      )}
+    </aside>
+  );
+};
+
+const FloatingPreview = ({
+  floating,
+  colors,
+}: {
+  floating: FloatingConfig;
+  colors: {
+    primary: string;
+    secondary: string;
+    text: string;
+    background: string;
+    button: string;
+    floatingBorder: string;
+  };
+}) => {
+  const width = cssSize(floating.width, '80px');
+  const height = cssSize(floating.height, '80px');
+  const circleSize = getCircleSize(width, height);
+
+  const lateralSpacing = cssSize(floating.left_spacing, '20px');
+
+  const positionStyle: React.CSSProperties = {};
+
+  if (
+    floating.position === 'fixed_bottom_right' ||
+    floating.position === 'fixed_bottom_left'
+  ) {
+    positionStyle.bottom = cssSize(floating.bottom_spacing, '20px');
+  }
+
+  if (
+    floating.position === 'fixed_top_right' ||
+    floating.position === 'fixed_top_left'
+  ) {
+    positionStyle.top = cssSize(floating.top_spacing, '20px');
+  }
+
+  if (
+    floating.position === 'fixed_bottom_left' ||
+    floating.position === 'fixed_top_left'
+  ) {
+    positionStyle.left = lateralSpacing;
+  }
+
+  if (
+    floating.position === 'fixed_bottom_right' ||
+    floating.position === 'fixed_top_right'
+  ) {
+    positionStyle.right = lateralSpacing;
+  }
+
+  return (
+    <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
+      <div className="relative h-[520px] overflow-hidden rounded-[1rem] border border-slate-200 bg-white">
+        <div className="p-5">
+          <div className="h-3 w-28 rounded-full bg-slate-200" />
+          <div className="mt-2 h-3 w-48 rounded-full bg-slate-100" />
+
+          <div className="mt-8 grid grid-cols-2 gap-4">
+            <div className="h-24 rounded-2xl bg-slate-100" />
+            <div className="h-24 rounded-2xl bg-slate-100" />
+            <div className="h-24 rounded-2xl bg-slate-100" />
+            <div className="h-24 rounded-2xl bg-slate-100" />
+          </div>
+        </div>
+
         <div
-          className="relative min-h-[520px] overflow-hidden rounded-[1rem] border border-slate-200 p-4"
+          className="absolute flex items-center justify-center overflow-hidden bg-white shadow-xl"
           style={{
-            backgroundColor,
-            color: textColor,
-            fontFamily: formData.font_family,
-            fontSize: formData.font_size || '14px',
-            boxShadow: formData.modal_config.shadow_enabled
-              ? '0 18px 45px rgba(15, 23, 42, 0.12)'
-              : 'none',
+            width: floating.shape === 'circle' ? circleSize : width,
+            height: floating.shape === 'circle' ? circleSize : height,
+            borderRadius:
+              floating.shape === 'circle'
+                ? '999px'
+                : cssSize(floating.border_radius, '12px'),
+            border: cssBorder(floating.border_style, colors.floatingBorder),
+            zIndex: 5,
+            ...positionStyle,
           }}
         >
-          <div className="mb-4">
-            <div className="h-3 w-24 rounded-full bg-slate-200" />
-            <div className="mt-2 h-3 w-40 rounded-full bg-slate-100" />
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(160deg, ${colors.primary}, ${colors.secondary})`,
+            }}
+          />
+
+          {floating.show_play_icon && (
+            <div className="relative z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
+              <PlaySquare size={16} />
+            </div>
+          )}
+
+          {floating.allow_close && (
+            <div className="absolute right-1 top-1 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
+              <X size={12} />
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+        <PreviewInfo label="Tamanho" value={`${width} x ${height}`} />
+        <PreviewInfo label="Forma" value={floating.shape} />
+        <PreviewInfo label="Raio" value={cssSize(floating.border_radius)} />
+        <PreviewInfo label="Borda" value={floating.border_style} />
+      </div>
+    </div>
+  );
+};
+
+const CarouselPreview = ({
+  carousel,
+  colors,
+}: {
+  carousel: CarouselConfig;
+  colors: {
+    primary: string;
+    secondary: string;
+    text: string;
+    background: string;
+    button: string;
+    floatingBorder: string;
+  };
+}) => {
+  const items = Array.from({
+    length: Math.max(1, Math.min(Number(carousel.visible_items) || 1, 8)),
+  });
+
+  const isCircle = carousel.card_shape === 'circle';
+  const isSquare = carousel.card_shape === 'square';
+
+  return (
+    <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
+      <div className="rounded-[1rem] border border-slate-200 bg-white p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h4 className="text-sm font-black text-slate-900">Stories</h4>
+            <p className="text-xs font-medium text-slate-500">
+              Carrossel de vídeos
+            </p>
           </div>
 
-          {!formData.modal_config.hide_stories && (
-            <div className="mb-5">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-black uppercase tracking-widest text-slate-400">
-                  Stories
-                </span>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black text-slate-500">
+            {carousel.visible_items} itens
+          </span>
+        </div>
 
-                <span className="text-[10px] font-black text-slate-400">
-                  {carousel.visible_items} itens
-                </span>
-              </div>
-
-              <div
-                className="flex overflow-hidden"
-                style={{
-                  gap: `${carousel.gap || 0}px`,
-                  marginTop: carousel.margin_top,
-                  marginBottom: carousel.margin_bottom,
-                }}
-              >
-                {previewItems.map((_, index) => (
-                  <div
-                    key={index}
-                    className="relative h-28 min-w-[62px] overflow-hidden border bg-white shadow-sm"
-                    style={{
-                      borderRadius:
-                        carousel.card_shape === 'square'
-                          ? '6px'
-                          : carousel.card_shape === 'circle'
-                            ? '999px'
-                            : '16px',
-                      borderColor: secondaryColor,
-                    }}
-                  >
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        background:
-                          index % 2 === 0
-                            ? `linear-gradient(160deg, ${primaryColor}, #dbeafe)`
-                            : `linear-gradient(160deg, ${secondaryColor}, #f8fafc)`,
-                      }}
-                    />
-
-                    {carousel.show_play_icon && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
-                          <PlaySquare size={15} />
-                        </div>
-                      </div>
-                    )}
-
-                    {carousel.show_product && (
-                      <div className="absolute bottom-1 left-1 right-1 rounded-md bg-white/90 px-1 py-0.5 text-center text-[9px] font-black text-slate-700">
-                        Produto
-                      </div>
-                    )}
+        <div
+          className={cn(
+            'flex overflow-hidden',
+            carousel.auto_center && 'justify-center',
+          )}
+          style={{
+            gap: `${carousel.gap || 0}px`,
+            marginTop: cssSize(carousel.margin_top, '0px'),
+            marginBottom: cssSize(carousel.margin_bottom, '0px'),
+          }}
+        >
+          {items.map((_, index) => (
+            <div
+              key={index}
+              className={cn(
+                'relative shrink-0 overflow-hidden border shadow-sm',
+                isCircle && 'h-24 w-24 rounded-full',
+                isSquare && !isCircle && 'h-24 w-24 rounded-2xl',
+                !isCircle && !isSquare && 'h-32 w-20 rounded-2xl',
+              )}
+              style={{
+                borderColor: colors.primary,
+                background:
+                  index % 2 === 0
+                    ? `linear-gradient(160deg, ${colors.primary}, #dbeafe)`
+                    : `linear-gradient(160deg, ${colors.secondary}, #f8fafc)`,
+              }}
+            >
+              {carousel.show_play_icon && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
+                    <PlaySquare size={16} />
                   </div>
-                ))}
+                </div>
+              )}
+
+              {carousel.show_product && !isCircle && (
+                <div className="absolute bottom-2 left-2 right-2 rounded-lg bg-white/90 px-2 py-1 text-center text-[10px] font-black text-slate-700">
+                  Produto
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+        <PreviewInfo label="Espaçamento" value={`${carousel.gap}px`} />
+        <PreviewInfo label="Itens" value={`${carousel.visible_items}`} />
+        <PreviewInfo label="Margem topo" value={cssSize(carousel.margin_top)} />
+        <PreviewInfo
+          label="Centralizar"
+          value={carousel.auto_center ? 'Sim' : 'Não'}
+        />
+      </div>
+    </div>
+  );
+};
+
+const GridPreview = ({
+  grid,
+  colors,
+}: {
+  grid: GridConfig;
+  colors: {
+    primary: string;
+    secondary: string;
+    text: string;
+    background: string;
+    button: string;
+    floatingBorder: string;
+  };
+}) => {
+  const columns = limitNumber(grid.columns, 4, 1, 4);
+  const rows = safeNumber(grid.rows, 1, 1);
+  const totalItems = Math.max(1, Math.min(columns * rows, 20));
+
+  const items = Array.from({
+    length: totalItems,
+  });
+
+  return (
+    <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
+      <div className="rounded-[1rem] border border-slate-200 bg-white p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h4 className="text-sm font-black text-slate-900">Grade</h4>
+            <p className="text-xs font-medium text-slate-500">
+              Máximo de 4 colunas
+            </p>
+          </div>
+
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black text-slate-500">
+            {columns} x {rows}
+          </span>
+        </div>
+
+        <div
+          className="grid"
+          style={{
+            gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+            gap: `${grid.gap || 0}px`,
+          }}
+        >
+          {items.map((_, index) => (
+            <div
+              key={index}
+              className="h-24 rounded-2xl border border-slate-200"
+              style={{
+                background:
+                  index % 2 === 0
+                    ? `linear-gradient(135deg, ${colors.primary}25, #ffffff)`
+                    : `linear-gradient(135deg, ${colors.secondary}25, #ffffff)`,
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+        <PreviewInfo label="Colunas" value={`${columns}`} />
+        <PreviewInfo label="Linhas" value={`${rows}`} />
+        <PreviewInfo label="Espaçamento" value={`${grid.gap}px`} />
+        <PreviewInfo label="Limite" value="4 colunas" />
+      </div>
+    </div>
+  );
+};
+
+const ModalPreview = ({
+  formData,
+  colors,
+}: {
+  formData: ExtendedAppearance;
+  colors: {
+    primary: string;
+    secondary: string;
+    text: string;
+    background: string;
+    button: string;
+    floatingBorder: string;
+  };
+}) => {
+  return (
+    <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
+      <div
+        className="rounded-[1rem] border border-slate-200 bg-white p-5"
+        style={{
+          backgroundColor: colors.background,
+          color: colors.text,
+          fontFamily: formData.font_family,
+          fontSize: cssSize(formData.font_size, '14px'),
+          boxShadow: formData.modal_config.shadow_enabled
+            ? '0 18px 45px rgba(15, 23, 42, 0.12)'
+            : 'none',
+        }}
+      >
+        <div
+          className="relative h-[380px] overflow-hidden rounded-3xl"
+          style={{
+            background: `linear-gradient(160deg, ${colors.primary}, ${colors.secondary})`,
+          }}
+        >
+          {formData.modal_config.show_play_button && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-lg">
+                <PlaySquare size={26} />
               </div>
             </div>
           )}
 
-          <div className="mb-5">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs font-black uppercase tracking-widest text-slate-400">
-                Grade
-              </span>
-
-              <span className="text-[10px] font-black text-slate-400">
-                {grid.columns} x {grid.rows}
-              </span>
-            </div>
-
-            <div
-              className="grid"
-              style={{
-                gridTemplateColumns: `repeat(${Math.max(
-                  1,
-                  Math.min(grid.columns || 1, 4),
-                )}, minmax(0, 1fr))`,
-                gap: `${grid.gap || 0}px`,
-              }}
-            >
-              {gridItems.map((_, index) => (
-                <div
-                  key={index}
-                  className="h-16 rounded-xl border border-slate-200 bg-slate-50"
-                  style={{
-                    background:
-                      index % 2 === 0
-                        ? `linear-gradient(135deg, ${primaryColor}20, #ffffff)`
-                        : `linear-gradient(135deg, ${secondaryColor}20, #ffffff)`,
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="absolute bottom-4 left-4 right-4 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-lg">
+          <div className="absolute bottom-0 left-0 right-0 space-y-3 bg-gradient-to-t from-black/70 to-transparent p-5">
             {formData.modal_config.show_title && (
-              <p className="mb-2 text-sm font-black" style={{ color: textColor }}>
+              <h4 className="text-lg font-black text-white">
                 Player / Modal
-              </p>
+              </h4>
             )}
 
             <div className="flex items-center gap-2">
-              {formData.modal_config.show_play_button && (
-                <button
-                  type="button"
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-white"
-                  style={{ backgroundColor: buttonColor }}
-                >
-                  <PlaySquare size={16} />
-                </button>
-              )}
-
               {formData.modal_config.show_like_button && (
                 <PreviewIcon icon={<Heart size={14} />} />
               )}
@@ -1257,103 +1480,126 @@ const PreviewCard = ({
                 <PreviewIcon icon={<Share2 size={14} />} />
               )}
 
-              {formData.modal_config.show_product && (
-                <div className="ml-auto flex items-center gap-2 rounded-xl bg-slate-50 px-2 py-1">
-                  <ShoppingBag size={14} className="text-slate-500" />
-                  <span className="text-[10px] font-black text-slate-600">
-                    Produto
-                  </span>
-                </div>
+              {formData.modal_config.show_whatsapp_button && (
+                <PreviewIcon label="WhatsApp" />
               )}
             </div>
 
-            {formData.modal_config.show_product_button && (
-              <button
-                type="button"
-                className="mt-3 w-full rounded-xl px-3 py-2 text-xs font-black text-white"
-                style={{ backgroundColor: buttonColor }}
-              >
-                Comprar agora
-              </button>
-            )}
-          </div>
+            {formData.modal_config.show_product && (
+              <div className="rounded-2xl bg-white p-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-slate-100" />
 
-          <div
-            className={cn(
-              'absolute flex items-center justify-center overflow-hidden bg-white shadow-xl',
-              floating.allow_close && 'pr-2',
-            )}
-            style={{
-              width: floating.width,
-              height: floating.height,
-              borderRadius:
-                floating.shape === 'circle'
-                  ? '999px'
-                  : floating.shape === 'square'
-                    ? '8px'
-                    : floating.border_radius,
-              border: `${floating.border_style} ${floatingBorderColor}`,
-              right:
-                floating.position === 'fixed_bottom_right' ||
-                floating.position === 'fixed_top_right'
-                  ? '16px'
-                  : undefined,
-              left:
-                floating.position === 'fixed_bottom_left' ||
-                floating.position === 'fixed_top_left'
-                  ? '16px'
-                  : undefined,
-              bottom:
-                floating.position === 'fixed_bottom_right' ||
-                floating.position === 'fixed_bottom_left'
-                  ? '16px'
-                  : undefined,
-              top:
-                floating.position === 'fixed_top_right' ||
-                floating.position === 'fixed_top_left'
-                  ? '16px'
-                  : undefined,
-            }}
-          >
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `linear-gradient(160deg, ${primaryColor}, ${secondaryColor})`,
-                objectFit: floating.object_fit as any,
-              }}
-            />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-black text-slate-900">
+                      Produto exemplo
+                    </p>
+                    <p className="text-[10px] font-bold text-slate-500">
+                      R$ 99,90
+                    </p>
+                  </div>
+                </div>
 
-            {floating.show_play_icon && (
-              <div className="relative z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
-                <PlaySquare size={16} />
-              </div>
-            )}
-
-            {floating.allow_close && (
-              <div className="absolute right-1 top-1 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
-                <X size={12} />
+                {formData.modal_config.show_product_button && (
+                  <button
+                    type="button"
+                    className="mt-3 w-full rounded-xl px-3 py-2 text-xs font-black text-white"
+                    style={{ backgroundColor: colors.button }}
+                  >
+                    Comprar agora
+                  </button>
+                )}
               </div>
             )}
           </div>
         </div>
       </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-        <PreviewInfo label="Flutuante" value={`${floating.width} x ${floating.height}`} />
-        <PreviewInfo label="Borda" value={floating.border_radius} />
-        <PreviewInfo label="Carrossel" value={`${carousel.visible_items} itens`} />
-        <PreviewInfo label="Grade" value={`${grid.columns} col.`} />
-      </div>
-    </aside>
+    </div>
   );
 };
 
-const PreviewIcon = ({ icon }: { icon: React.ReactNode }) => (
+const VisualPreview = ({
+  formData,
+  colors,
+}: {
+  formData: ExtendedAppearance;
+  colors: {
+    primary: string;
+    secondary: string;
+    text: string;
+    background: string;
+    button: string;
+    floatingBorder: string;
+  };
+}) => {
+  return (
+    <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
+      <div
+        className="rounded-[1rem] border border-slate-200 p-5"
+        style={{
+          backgroundColor: colors.background,
+          color: colors.text,
+          fontFamily: formData.font_family,
+          fontSize: cssSize(formData.font_size, '14px'),
+        }}
+      >
+        <div className="mb-5 flex items-center gap-3">
+          <div
+            className="h-12 w-12 rounded-2xl"
+            style={{ backgroundColor: colors.primary }}
+          />
+
+          <div>
+            <h4 className="font-black">Preview visual</h4>
+            <p className="text-xs font-medium opacity-70">
+              Fonte, cores e botões
+            </p>
+          </div>
+        </div>
+
+        <div
+          className="mb-5 rounded-2xl p-4"
+          style={{
+            background: `linear-gradient(135deg, ${colors.primary}25, ${colors.secondary}25)`,
+          }}
+        >
+          <p className="font-black">Título do widget</p>
+          <p className="mt-1 text-sm opacity-70">
+            Exemplo de texto usando a identidade visual configurada.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          className="w-full rounded-2xl px-4 py-3 text-sm font-black text-white"
+          style={{ backgroundColor: colors.button }}
+        >
+          Botão principal
+        </button>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+        <PreviewInfo label="Principal" value={colors.primary} />
+        <PreviewInfo label="Secundária" value={colors.secondary} />
+        <PreviewInfo label="Texto" value={colors.text} />
+        <PreviewInfo label="Fonte" value={formData.font_family} />
+      </div>
+    </div>
+  );
+};
+
+const PreviewIcon = ({
+  icon,
+  label,
+}: {
+  icon?: React.ReactNode;
+  label?: string;
+}) => (
   <button
     type="button"
-    className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-500"
+    className="flex h-9 min-w-9 items-center justify-center rounded-full border border-white/30 bg-white/90 px-3 text-xs font-black text-slate-600"
   >
-    {icon}
+    {icon || label}
   </button>
 );
 
@@ -1362,257 +1608,10 @@ const PreviewInfo = ({ label, value }: { label: string; value: string }) => (
     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
       {label}
     </p>
+
     <p className="mt-1 truncate font-black text-slate-700">{value}</p>
   </div>
 );
-
-const AppearancePage = () => {
-  const { storeId, loading: tenantLoading } = useTenant();
-
-  const [resolvedStoreId, setResolvedStoreId] = useState('');
-  const [appearances, setAppearances] = useState<Appearance[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
-  const [deleteModal, setDeleteModal] = useState<{
-    isOpen: boolean;
-    id: string;
-    name: string;
-  }>({
-    isOpen: false,
-    id: '',
-    name: '',
-  });
-
-  const [showModal, setShowModal] = useState(false);
-  const [editingStyle, setEditingStyle] = useState<Appearance | null>(null);
-  const [activeTab, setActiveTab] = useState<ModalTab>('basic');
-
-  const [formData, setFormData] = useState<ExtendedAppearance>(() =>
-    createDefaultFormData(storeId),
-  );
-
-  const [floatingDevice, setFloatingDevice] =
-    useState<DeviceType>('desktop');
-  const [carouselDevice, setCarouselDevice] =
-    useState<DeviceType>('desktop');
-  const [gridDevice, setGridDevice] = useState<DeviceType>('desktop');
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-
-      if (tenantLoading) return;
-
-      const finalStoreId = await resolveStoreId(storeId);
-      setResolvedStoreId(finalStoreId);
-
-      if (!finalStoreId) {
-        setAppearances([]);
-        return;
-      }
-
-      const list = await getAppearancesSafe(finalStoreId);
-      setAppearances(list || []);
-    } catch (error) {
-      console.error('Erro ao carregar estilos:', error);
-      showError('Erro ao carregar estilos.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!tenantLoading) {
-      loadData();
-    }
-  }, [storeId, tenantLoading]);
-
-  const syncGlobalConfig = (
-    checked: boolean,
-    prev: ExtendedAppearance,
-  ): ExtendedAppearance => {
-    const floatingDesktop = prev.floating_config.desktop;
-    const carouselDesktop = prev.carousel_config.desktop;
-    const gridDesktop = prev.grid_config.desktop;
-
-    return {
-      ...prev,
-      useGlobalAppearance: checked,
-      use_global_appearance: checked,
-      floating_config: {
-        same_for_all: checked,
-        desktop: floatingDesktop,
-        mobile: checked ? floatingDesktop : prev.floating_config.mobile,
-      },
-      carousel_config: {
-        same_for_all: checked,
-        desktop: carouselDesktop,
-        mobile: checked ? carouselDesktop : prev.carousel_config.mobile,
-      },
-      grid_config: {
-        same_for_all: checked,
-        desktop: gridDesktop,
-        mobile: checked ? gridDesktop : prev.grid_config.mobile,
-      },
-    };
-  };
-
-  const updateFloatingConfig = (patch: Partial<FloatingConfig>) => {
-    setFormData(prev => {
-      const device = prev.useGlobalAppearance ? 'desktop' : floatingDevice;
-      const current = prev.floating_config[device];
-
-      const updatedDeviceConfig: FloatingConfig = {
-        ...current,
-        ...patch,
-      };
-
-      if (patch.position) {
-        updatedDeviceConfig.floating_position = positionToFloatingPosition(
-          patch.position,
-        );
-      }
-
-      const nextConfig: ResponsiveConfig<FloatingConfig> =
-        prev.useGlobalAppearance
-          ? {
-              same_for_all: true,
-              desktop: updatedDeviceConfig,
-              mobile: updatedDeviceConfig,
-            }
-          : {
-              ...prev.floating_config,
-              same_for_all: false,
-              [device]: updatedDeviceConfig,
-            };
-
-      const desktop = nextConfig.desktop;
-
-      return {
-        ...prev,
-        floating_config: nextConfig,
-        widget_shape: desktop.shape as any,
-        width: desktop.width,
-        height: desktop.height,
-        border_radius: desktop.border_radius,
-        position: desktop.position,
-        floating_position: desktop.floating_position,
-        bottom_spacing: desktop.bottom_spacing,
-        top_spacing: desktop.top_spacing,
-        left_spacing: desktop.left_spacing,
-        right_spacing: desktop.right_spacing,
-        color: desktop.border_color,
-        border_style: desktop.border_style,
-        show_play_icon: desktop.show_play_icon,
-        object_fit: desktop.object_fit,
-        draggable: desktop.draggable,
-        allow_close: desktop.allow_close,
-        z_index: desktop.z_index,
-      };
-    });
-  };
-
-  const updateCarouselConfig = (patch: Partial<CarouselConfig>) => {
-    setFormData(prev => {
-      const device = prev.useGlobalAppearance ? 'desktop' : carouselDevice;
-      const current = prev.carousel_config[device];
-
-      const updatedDeviceConfig: CarouselConfig = {
-        ...current,
-        ...patch,
-      };
-
-      const nextConfig: ResponsiveConfig<CarouselConfig> =
-        prev.useGlobalAppearance
-          ? {
-              same_for_all: true,
-              desktop: updatedDeviceConfig,
-              mobile: updatedDeviceConfig,
-            }
-          : {
-              ...prev.carousel_config,
-              same_for_all: false,
-              [device]: updatedDeviceConfig,
-            };
-
-      const desktop = nextConfig.desktop;
-
-      return {
-  ...prev,
-  carousel_config: nextConfig,
-  carousel_gap: desktop.gap,
-  carousel_card_shape: desktop.card_shape as any,
-  carousel_view_mode: desktop.view_mode,
-  margin_top: desktop.margin_top,
-  margin_bottom: desktop.margin_bottom,
-  carousel_visible_items: desktop.visible_items,
-  show_product: desktop.show_product,
-  show_play_button: desktop.show_play_icon,
-  auto_center: desktop.auto_center,
-};
-    });
-  };
-
-  const updateGridConfig = (patch: Partial<GridConfig>) => {
-    setFormData(prev => {
-      const device = prev.useGlobalAppearance ? 'desktop' : gridDevice;
-      const current = prev.grid_config[device];
-
-      const updatedDeviceConfig: GridConfig = {
-        ...current,
-        ...patch,
-      };
-
-      const nextConfig: ResponsiveConfig<GridConfig> =
-        prev.useGlobalAppearance
-          ? {
-              same_for_all: true,
-              desktop: updatedDeviceConfig,
-              mobile: updatedDeviceConfig,
-            }
-          : {
-              ...prev.grid_config,
-              same_for_all: false,
-              [device]: updatedDeviceConfig,
-            };
-
-      return {
-        ...prev,
-        grid_config: nextConfig,
-        desktop_columns: nextConfig.desktop.columns,
-        desktop_rows: nextConfig.desktop.rows,
-        desktop_gap: nextConfig.desktop.gap,
-        mobile_columns: nextConfig.mobile.columns,
-        mobile_rows: nextConfig.mobile.rows,
-        mobile_gap: nextConfig.mobile.gap,
-      };
-    });
-  };
-
-  const updateModalConfig = (patch: Partial<ModalConfig>) => {
-    setFormData(prev => {
-      const nextModalConfig: ModalConfig = {
-        ...prev.modal_config,
-        ...patch,
-      };
-
-      return {
-        ...prev,
-        modal_config: nextModalConfig,
-        show_title: nextModalConfig.show_title,
-        show_play_button: nextModalConfig.show_play_button,
-        show_product: nextModalConfig.show_product,
-        show_like_button: nextModalConfig.show_like_button,
-        show_comment_button: nextModalConfig.show_comment_button,
-        show_share_button: nextModalConfig.show_share_button,
-        show_whatsapp_button: nextModalConfig.show_whatsapp_button,
-        show_product_button: nextModalConfig.show_product_button,
-        hide_stories: nextModalConfig.hide_stories,
-        shadow_enabled: nextModalConfig.shadow_enabled,
-      };
-    });
-  };
 
   const handleSetDefault = async (id: string) => {
     try {
