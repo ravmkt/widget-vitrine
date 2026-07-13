@@ -47,6 +47,8 @@ type ModalTab =
   | 'grid'
   | 'modal';
 
+type WidgetShape = 'circle' | 'square' | 'portrait';
+
 type FloatingPosition =
   | 'left'
   | 'right'
@@ -68,7 +70,7 @@ type ResponsiveConfig<T> = {
 };
 
 type FloatingConfig = {
-  shape: 'circle' | 'square' | 'portrait';
+  shape: WidgetShape;
   width: string;
   height: string;
   border_radius: string;
@@ -89,7 +91,7 @@ type FloatingConfig = {
 
 type CarouselConfig = {
   gap: number;
-  card_shape: string;
+  card_shape: WidgetShape;
   view_mode: string;
   margin_top: string;
   margin_bottom: string;
@@ -103,6 +105,7 @@ type GridConfig = {
   columns: number;
   rows: number;
   gap: number;
+  card_shape: WidgetShape;
 };
 
 type ModalConfig = {
@@ -179,6 +182,22 @@ const selectClass = inputClass;
 
 const isValidHexColor = (value?: string) =>
   /^#[0-9A-Fa-f]{6}$/.test(value || '');
+
+const isValidWidgetShape = (value?: string): value is WidgetShape =>
+  value === 'circle' || value === 'square' || value === 'portrait';
+
+const normalizeWidgetShape = (
+  value: unknown,
+  fallback: WidgetShape = 'portrait',
+): WidgetShape => {
+  const text = String(value || '').trim();
+
+  if (isValidWidgetShape(text)) return text;
+
+  if (text === 'rounded' || text === 'custom') return 'portrait';
+
+  return fallback;
+};
 
 const isValidPositionValue = (value?: string): value is PositionValue =>
   value === 'fixed_bottom_right' ||
@@ -336,11 +355,14 @@ const normalizeBorderWidth = (value: unknown, fallback = '0') => {
 const normalizeFloatingShapeValues = (
   config: FloatingConfig,
 ): FloatingConfig => {
-  if (config.shape === 'portrait') {
+  const shape = normalizeWidgetShape(config.shape);
+
+  if (shape === 'portrait') {
     const width = formatNumberLikeCurrent(config.width, '80');
 
     return {
       ...config,
+      shape,
       width,
       height: getPortraitHeightFromWidth(width),
       border_radius: normalizeBorderWidth(config.border_radius, '12'),
@@ -348,11 +370,12 @@ const normalizeFloatingShapeValues = (
     };
   }
 
-  if (config.shape === 'square') {
+  if (shape === 'square') {
     const size = formatNumberLikeCurrent(config.width, '80');
 
     return {
       ...config,
+      shape,
       width: size,
       height: size,
       border_radius: normalizeBorderWidth(config.border_radius, '12'),
@@ -367,10 +390,23 @@ const normalizeFloatingShapeValues = (
 
   return {
     ...config,
+    shape,
     border_radius: circleSize,
     border_style: normalizeBorderWidth(config.border_style, '2'),
   };
 };
+
+const normalizeCarouselConfigShape = (
+  config: CarouselConfig,
+): CarouselConfig => ({
+  ...config,
+  card_shape: normalizeWidgetShape(config.card_shape, 'portrait'),
+});
+
+const normalizeGridConfigShape = (config: GridConfig): GridConfig => ({
+  ...config,
+  card_shape: normalizeWidgetShape(config.card_shape, 'portrait'),
+});
 
 const parseJsonIfNeeded = <T,>(value: unknown): Partial<T> | null => {
   if (!value) return null;
@@ -430,7 +466,7 @@ const createDefaultFloatingMobileConfig = (): FloatingConfig => ({
 
 const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
   gap: 16,
-  card_shape: 'rounded',
+  card_shape: 'portrait',
   view_mode: 'preview',
   margin_top: '0',
   margin_bottom: '0',
@@ -442,7 +478,7 @@ const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
 
 const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
   gap: 12,
-  card_shape: 'rounded',
+  card_shape: 'portrait',
   view_mode: 'preview',
   margin_top: '0',
   margin_bottom: '0',
@@ -456,12 +492,14 @@ const createDefaultGridDesktopConfig = (): GridConfig => ({
   columns: 4,
   rows: 1,
   gap: 16,
+  card_shape: 'portrait',
 });
 
 const createDefaultGridMobileConfig = (): GridConfig => ({
   columns: 2,
   rows: 2,
   gap: 12,
+  card_shape: 'portrait',
 });
 
 const createDefaultModalConfig = (): ModalConfig => ({
@@ -652,9 +690,7 @@ const normalizeAppearance = (
     mobileDefault: createDefaultFloatingMobileConfig(),
     sameForAll: globalAppearance,
     legacyDesktop: {
-      shape:
-        (item.widget_shape as FloatingConfig['shape']) ||
-        defaults.widget_shape,
+      shape: normalizeWidgetShape(item.widget_shape, defaults.widget_shape),
       width: anyItem.width ?? defaults.width,
       height: anyItem.height ?? defaults.height,
       border_radius: item.border_radius || defaults.border_radius,
@@ -706,8 +742,10 @@ const normalizeAppearance = (
     sameForAll: globalAppearance,
     legacyDesktop: {
       gap: safeNumber(item.carousel_gap, defaults.carousel_gap, 0),
-      card_shape:
-        item.carousel_card_shape || defaults.carousel_card_shape || 'rounded',
+      card_shape: normalizeWidgetShape(
+        item.carousel_card_shape,
+        defaults.carousel_card_shape as WidgetShape,
+      ),
       view_mode: anyItem.carousel_view_mode ?? defaults.carousel_view_mode,
       margin_top: anyItem.margin_top ?? defaults.margin_top,
       margin_bottom: anyItem.margin_bottom ?? defaults.margin_bottom,
@@ -725,6 +763,9 @@ const normalizeAppearance = (
     },
   });
 
+  carouselConfig.desktop = normalizeCarouselConfigShape(carouselConfig.desktop);
+  carouselConfig.mobile = normalizeCarouselConfigShape(carouselConfig.mobile);
+
   const gridConfig = normalizeResponsiveConfig<GridConfig>({
     rawValue: anyItem.grid_config,
     desktopDefault: createDefaultGridDesktopConfig(),
@@ -739,6 +780,7 @@ const normalizeAppearance = (
       ),
       rows: safeNumber(anyItem.desktop_rows, defaults.desktop_rows, 1),
       gap: safeNumber(anyItem.desktop_gap, defaults.desktop_gap, 0),
+      card_shape: normalizeWidgetShape(anyItem.grid_card_shape, 'portrait'),
     },
     legacyMobile: {
       columns: limitNumber(
@@ -749,8 +791,12 @@ const normalizeAppearance = (
       ),
       rows: safeNumber(anyItem.mobile_rows, defaults.mobile_rows, 1),
       gap: safeNumber(anyItem.mobile_gap, defaults.mobile_gap, 0),
+      card_shape: normalizeWidgetShape(anyItem.grid_card_shape, 'portrait'),
     },
   });
+
+  gridConfig.desktop = normalizeGridConfigShape(gridConfig.desktop);
+  gridConfig.mobile = normalizeGridConfigShape(gridConfig.mobile);
 
   gridConfig.desktop.columns = limitNumber(gridConfig.desktop.columns, 4, 1, 4);
   gridConfig.mobile.columns = limitNumber(gridConfig.mobile.columns, 2, 1, 4);
@@ -1189,6 +1235,18 @@ const PreviewInfo = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
+const getShapeLabel = (shape: WidgetShape) => {
+  switch (shape) {
+    case 'circle':
+      return 'Círculo';
+    case 'square':
+      return 'Quadrado';
+    case 'portrait':
+    default:
+      return 'Retrato 9:16';
+  }
+};
+
 const FloatingPreview = ({
   floating,
   colors,
@@ -1293,7 +1351,7 @@ const FloatingPreview = ({
           <PreviewInfo label="Tamanho" value={`${width} x ${height}`} />
         )}
 
-        <PreviewInfo label="Forma" value={floating.shape} />
+        <PreviewInfo label="Forma" value={getShapeLabel(floating.shape)} />
 
         <PreviewInfo
           label="Raio da borda"
@@ -1317,13 +1375,15 @@ const CarouselPreview = ({
   colors: PreviewColors;
 }) => {
   const visibleItems = safeNumber(carousel.visible_items, 1, 1);
+  const shape = normalizeWidgetShape(carousel.card_shape, 'portrait');
 
   const items = Array.from({
     length: Math.max(1, Math.min(visibleItems, 8)),
   });
 
-  const isCircle = carousel.card_shape === 'circle';
-  const isSquare = carousel.card_shape === 'square';
+  const isCircle = shape === 'circle';
+  const isSquare = shape === 'square';
+  const isPortrait = shape === 'portrait';
 
   return (
     <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
@@ -1363,10 +1423,11 @@ const CarouselPreview = ({
                 className={cn(
                   'relative shrink-0 overflow-hidden border shadow-sm',
                   isCircle && 'h-24 w-24 rounded-full',
-                  isSquare && !isCircle && 'h-24 w-24 rounded-2xl',
-                  !isCircle && !isSquare && 'h-32 w-20 rounded-2xl',
+                  isSquare && 'h-24 w-24 rounded-2xl',
+                  isPortrait && 'h-[142px] w-20 rounded-2xl',
                 )}
                 style={{
+                  aspectRatio: isPortrait ? '9 / 16' : '1 / 1',
                   borderColor: colors.primary,
                   background:
                     index % 2 === 0
@@ -1394,6 +1455,7 @@ const CarouselPreview = ({
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+        <PreviewInfo label="Forma" value={getShapeLabel(shape)} />
         <PreviewInfo label="Espaçamento" value={`${carousel.gap}px`} />
         <PreviewInfo label="Itens" value={`${visibleItems}`} />
         <PreviewInfo label="Margem topo" value={cssSize(carousel.margin_top)} />
@@ -1419,11 +1481,16 @@ const GridPreview = ({
 }) => {
   const columns = limitNumber(grid.columns, 4, 1, 4);
   const rows = safeNumber(grid.rows, 1, 1);
+  const shape = normalizeWidgetShape(grid.card_shape, 'portrait');
   const totalItems = Math.max(1, Math.min(columns * rows, 20));
 
   const items = Array.from({
     length: totalItems,
   });
+
+  const isCircle = shape === 'circle';
+  const isSquare = shape === 'square';
+  const isPortrait = shape === 'portrait';
 
   return (
     <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
@@ -1457,25 +1524,39 @@ const GridPreview = ({
             {items.map((_, index) => (
               <div
                 key={index}
-                className="relative h-28 overflow-hidden rounded-2xl border shadow-sm"
-                style={{
-                  borderColor: colors.primary,
-                  background:
-                    index % 2 === 0
-                      ? `linear-gradient(160deg, ${colors.primary}, ${colors.secondary})`
-                      : `linear-gradient(160deg, ${colors.secondary}, ${colors.primary})`,
-                }}
+                className="flex min-w-0 justify-center"
               >
-                <div className="absolute inset-0 bg-white/10" />
+                <div
+                  className={cn(
+                    'relative overflow-hidden border shadow-sm',
+                    isCircle && 'rounded-full',
+                    isSquare && 'rounded-2xl',
+                    isPortrait && 'rounded-2xl',
+                  )}
+                  style={{
+                    width: isPortrait ? '72%' : '100%',
+                    maxWidth: isPortrait ? '90px' : '120px',
+                    aspectRatio: isPortrait ? '9 / 16' : '1 / 1',
+                    borderColor: colors.primary,
+                    background:
+                      index % 2 === 0
+                        ? `linear-gradient(160deg, ${colors.primary}, ${colors.secondary})`
+                        : `linear-gradient(160deg, ${colors.secondary}, ${colors.primary})`,
+                  }}
+                >
+                  <div className="absolute inset-0 bg-white/10" />
 
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
-                    <PlaySquare size={16} />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
+                      <PlaySquare size={16} />
+                    </div>
                   </div>
-                </div>
 
-                <div className="absolute bottom-2 left-2 right-2 rounded-lg bg-white/90 px-2 py-1 text-center text-[10px] font-black text-slate-700">
-                  Vídeo
+                  {!isCircle && (
+                    <div className="absolute bottom-2 left-2 right-2 rounded-lg bg-white/90 px-2 py-1 text-center text-[10px] font-black text-slate-700">
+                      Vídeo
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -1484,6 +1565,7 @@ const GridPreview = ({
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+        <PreviewInfo label="Forma" value={getShapeLabel(shape)} />
         <PreviewInfo label="Colunas" value={`${columns}`} />
         <PreviewInfo label="Linhas" value={`${rows}`} />
         <PreviewInfo label="Espaçamento" value={`${grid.gap}px`} />
@@ -1761,7 +1843,7 @@ const PreviewCard = ({
     visual: 'Cores, fonte, fundo e botão.',
     floating: 'Tamanho, forma, borda e posição do widget.',
     carousel: 'Formato dos cards, espaçamento, margens e centralização.',
-    grid: 'Colunas, linhas e espaçamento da grade.',
+    grid: 'Colunas, linhas, formato e espaçamento da grade.',
     modal: 'Botões e elementos exibidos no player/modal.',
   };
 
@@ -1952,7 +2034,7 @@ const AppearancePage = () => {
       const device = prev.useGlobalAppearance ? 'desktop' : carouselDevice;
       const current = prev.carousel_config[device];
 
-      const updatedDeviceConfig: CarouselConfig = {
+      const updatedDeviceConfig: CarouselConfig = normalizeCarouselConfigShape({
         ...current,
         ...patch,
         gap: safeNumber(patch.gap ?? current.gap, current.gap || 0, 0),
@@ -1962,7 +2044,7 @@ const AppearancePage = () => {
           1,
         ),
         auto_center: patch.auto_center ?? current.auto_center ?? false,
-      };
+      });
 
       const nextConfig: ResponsiveConfig<CarouselConfig> =
         prev.useGlobalAppearance
@@ -2000,7 +2082,7 @@ const AppearancePage = () => {
       const device = prev.useGlobalAppearance ? 'desktop' : gridDevice;
       const current = prev.grid_config[device];
 
-      const updatedDeviceConfig: GridConfig = {
+      const updatedDeviceConfig: GridConfig = normalizeGridConfigShape({
         ...current,
         ...patch,
         columns: limitNumber(
@@ -2011,7 +2093,7 @@ const AppearancePage = () => {
         ),
         rows: safeNumber(patch.rows ?? current.rows, current.rows || 1, 1),
         gap: safeNumber(patch.gap ?? current.gap, current.gap || 0, 0),
-      };
+      });
 
       const nextConfig: ResponsiveConfig<GridConfig> =
         prev.useGlobalAppearance
@@ -2174,11 +2256,15 @@ const AppearancePage = () => {
 
       const carouselConfig: ResponsiveConfig<CarouselConfig> = {
         ...formData.carousel_config,
+        desktop: normalizeCarouselConfigShape(formData.carousel_config.desktop),
+        mobile: normalizeCarouselConfigShape(formData.carousel_config.mobile),
         same_for_all: formData.useGlobalAppearance,
       };
 
       const gridConfig: ResponsiveConfig<GridConfig> = {
         ...formData.grid_config,
+        desktop: normalizeGridConfigShape(formData.grid_config.desktop),
+        mobile: normalizeGridConfigShape(formData.grid_config.mobile),
         same_for_all: formData.useGlobalAppearance,
       };
 
@@ -2208,7 +2294,10 @@ const AppearancePage = () => {
 
       floatingConfig.desktop = {
         ...floatingConfig.desktop,
-        border_style: normalizeBorderWidth(floatingConfig.desktop.border_style, '2'),
+        border_style: normalizeBorderWidth(
+          floatingConfig.desktop.border_style,
+          '2',
+        ),
         position: normalizedPosition,
         floating_position: normalizedFloatingPosition,
       };
@@ -2218,7 +2307,10 @@ const AppearancePage = () => {
       } else {
         floatingConfig.mobile = {
           ...floatingConfig.mobile,
-          border_style: normalizeBorderWidth(floatingConfig.mobile.border_style, '2'),
+          border_style: normalizeBorderWidth(
+            floatingConfig.mobile.border_style,
+            '2',
+          ),
         };
       }
 
@@ -2796,8 +2888,7 @@ const AppearancePage = () => {
                           <select
                             value={activeFloatingConfig.shape}
                             onChange={e => {
-                              const shape = e.target
-                                .value as FloatingConfig['shape'];
+                              const shape = e.target.value as WidgetShape;
 
                               if (shape === 'portrait') {
                                 const width = formatNumberLikeCurrent(
@@ -3168,7 +3259,7 @@ const AppearancePage = () => {
                   {activeTab === 'carousel' && (
                     <SectionCard
                       title="Carrossel"
-                      description="Configure a exibição dos vídeos em carrossel, quantidade de itens, centralização e margens."
+                      description="Configure a exibição dos vídeos em carrossel, quantidade de itens, formato, centralização e margens."
                     >
                       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
                         <h4 className="text-sm font-black text-slate-800">
@@ -3186,6 +3277,29 @@ const AppearancePage = () => {
                       </div>
 
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <FormField label="Forma">
+                          <select
+                            value={activeCarouselConfig.card_shape}
+                            onChange={e =>
+                              updateCarouselConfig({
+                                card_shape: e.target.value as WidgetShape,
+                              })
+                            }
+                            className={selectClass}
+                          >
+                            <option value="circle">Circular</option>
+                            <option value="square">Quadrado</option>
+                            <option value="portrait">Retrato 9:16</option>
+                          </select>
+
+                          {activeCarouselConfig.card_shape === 'portrait' && (
+                            <p className="text-xs font-semibold text-slate-400">
+                              No formato retrato, os cards ficam fixos na
+                              proporção 9:16.
+                            </p>
+                          )}
+                        </FormField>
+
                         <FormField label="Espaçamento">
                           <input
                             type="number"
@@ -3218,23 +3332,6 @@ const AppearancePage = () => {
                             }
                             className={inputClass}
                           />
-                        </FormField>
-
-                        <FormField label="Forma">
-                          <select
-                            value={activeCarouselConfig.card_shape}
-                            onChange={e =>
-                              updateCarouselConfig({
-                                card_shape: e.target.value,
-                              })
-                            }
-                            className={selectClass}
-                          >
-                            <option value="rounded">Arredondado</option>
-                            <option value="square">Quadrado</option>
-                            <option value="circle">Circular</option>
-                            <option value="custom">Personalizado</option>
-                          </select>
                         </FormField>
 
                         <FormField label="Modo de visualização">
@@ -3334,7 +3431,7 @@ const AppearancePage = () => {
                   {activeTab === 'grid' && (
                     <SectionCard
                       title="Grade"
-                      description="Configure quantidade de colunas, linhas e espaçamento da grade de vídeos."
+                      description="Configure quantidade de colunas, linhas, formato e espaçamento da grade de vídeos."
                     >
                       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
                         <h4 className="text-sm font-black text-slate-800">
@@ -3352,6 +3449,29 @@ const AppearancePage = () => {
                       </div>
 
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <FormField label="Forma">
+                          <select
+                            value={activeGridConfig.card_shape}
+                            onChange={e =>
+                              updateGridConfig({
+                                card_shape: e.target.value as WidgetShape,
+                              })
+                            }
+                            className={selectClass}
+                          >
+                            <option value="circle">Circular</option>
+                            <option value="square">Quadrado</option>
+                            <option value="portrait">Retrato 9:16</option>
+                          </select>
+
+                          {activeGridConfig.card_shape === 'portrait' && (
+                            <p className="text-xs font-semibold text-slate-400">
+                              No formato retrato, os itens da grade ficam fixos
+                              na proporção 9:16.
+                            </p>
+                          )}
+                        </FormField>
+
                         <FormField label="Colunas">
                           <input
                             type="number"
