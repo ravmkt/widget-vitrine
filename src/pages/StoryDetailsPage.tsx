@@ -37,7 +37,10 @@ import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import SuccessDialog from '@/components/SuccessDialog';
 import { cn } from '@/lib/utils';
 
-const getAllSafe = async <T,>(collection: any, storeId?: string): Promise<T[]> => {
+const getAllSafe = async <T,>(
+  collection: any,
+  storeId?: string,
+): Promise<T[]> => {
   if (!collection?.getAll) return [];
 
   try {
@@ -151,7 +154,10 @@ const StoryDetailsPage = () => {
     name: '',
   });
 
-  const selectedVideosCount = useMemo(() => selectedVideoIds.length, [selectedVideoIds]);
+  const selectedVideosCount = useMemo(
+    () => selectedVideoIds.length,
+    [selectedVideoIds],
+  );
 
   const loadStoryData = useCallback(async () => {
     if (tenantLoading) return;
@@ -216,7 +222,10 @@ const StoryDetailsPage = () => {
         format: currentStory.format || 'carousel',
         scroll_direction: currentStory.scroll_direction || 'horizontal',
         active: Boolean(currentStory.active),
-        appearance_id: currentStory.appearance_id || '',
+        appearance_id:
+          currentStory.appearance_id && isValidUuid(currentStory.appearance_id)
+            ? currentStory.appearance_id
+            : '',
         position: currentStory.position || 1,
       });
 
@@ -229,20 +238,24 @@ const StoryDetailsPage = () => {
       const storyVideoIds = relations
         .filter((relation: any) => {
           const sameStory = relation.story_id === currentStory.id;
-          const sameStore = !relation.store_id || relation.store_id === finalStoreId;
+          const sameStore =
+            !relation.store_id || relation.store_id === finalStoreId;
 
           return sameStory && sameStore;
         })
-        .sort((a: any, b: any) => Number(a.position || 0) - Number(b.position || 0))
+        .sort(
+          (a: any, b: any) => Number(a.position || 0) - Number(b.position || 0),
+        )
         .map((relation: any) => relation.video_id)
-        .filter(Boolean);
+        .filter((videoId: any) => videoId && isValidUuid(videoId));
 
       setSelectedVideoIds(storyVideoIds);
 
       setLocations(
         locs.filter((location: any) => {
           const sameStory = location.story_id === currentStory.id;
-          const sameStore = !location.store_id || location.store_id === finalStoreId;
+          const sameStore =
+            !location.store_id || location.store_id === finalStoreId;
 
           return sameStory && sameStore;
         }),
@@ -281,7 +294,8 @@ const StoryDetailsPage = () => {
 
     const locationsToDelete = existingLocations.filter((location: any) => {
       const sameStory = location.story_id === targetStoryId;
-      const sameStore = !location.store_id || location.store_id === targetStoreId;
+      const sameStore =
+        !location.store_id || location.store_id === targetStoreId;
 
       return sameStory && sameStore;
     });
@@ -360,15 +374,22 @@ const StoryDetailsPage = () => {
 
       const now = new Date().toISOString();
 
+      const validSelectedVideoIds = selectedVideoIds.filter((videoId) =>
+        isValidUuid(videoId),
+      );
+
       const storyPayload: Story = {
         ...(story || ({} as Story)),
-        id: story?.id || generateUuid(),
+        id: story?.id && isValidUuid(story.id) ? story.id : generateUuid(),
         store_id: finalStoreId,
         title: formData.title.trim(),
         format: formData.format,
         scroll_direction: formData.scroll_direction,
         active: formData.active,
-        appearance_id: formData.appearance_id || null,
+        appearance_id:
+          formData.appearance_id && isValidUuid(formData.appearance_id)
+            ? formData.appearance_id
+            : null,
         position: Number(formData.position || 1),
         cta_enabled: story?.cta_enabled ?? false,
         cta_type: story?.cta_type || 'none',
@@ -383,15 +404,17 @@ const StoryDetailsPage = () => {
 
       const savedStory = await (db as any).stories.save(storyPayload);
 
-      const newRelations: StoryVideo[] = selectedVideoIds.map((videoId, index) => ({
-        id: generateUuid(),
-        store_id: finalStoreId,
-        story_id: savedStory.id,
-        video_id: videoId,
-        position: index + 1,
-        is_cover: index === 0,
-        created_at: now,
-      }));
+      const newRelations: StoryVideo[] = validSelectedVideoIds.map(
+        (videoId, index) => ({
+          id: generateUuid(),
+          store_id: finalStoreId,
+          story_id: savedStory.id,
+          video_id: videoId,
+          position: index + 1,
+          is_cover: index === 0,
+          created_at: now,
+        }),
+      );
 
       await replaceStoryRelations(
         'story_videos',
@@ -415,6 +438,8 @@ const StoryDetailsPage = () => {
   };
 
   const handleToggleVideo = (videoId: string) => {
+    if (!isValidUuid(videoId)) return;
+
     setSelectedVideoIds((prev) =>
       prev.includes(videoId)
         ? prev.filter((currentId) => currentId !== videoId)
@@ -451,7 +476,9 @@ const StoryDetailsPage = () => {
   };
 
   const handleDeleteLocation = (locationId: string) => {
-    setLocations((prev) => prev.filter((location) => location.id !== locationId));
+    setLocations((prev) =>
+      prev.filter((location) => location.id !== locationId),
+    );
   };
 
   const handleDeleteRule = (ruleId: string) => {
@@ -717,11 +744,13 @@ const StoryDetailsPage = () => {
                   >
                     <option value="">Seguir Padrão do App</option>
 
-                    {appearances.map((app) => (
-                      <option key={app.id} value={app.id}>
-                        {app.name} {app.is_default ? '(Padrão)' : ''}
-                      </option>
-                    ))}
+                    {appearances
+                      .filter((app) => app.id && isValidUuid(app.id))
+                      .map((app) => (
+                        <option key={app.id} value={app.id}>
+                          {app.name} {app.is_default ? '(Padrão)' : ''}
+                        </option>
+                      ))}
                   </select>
                 </div>
               </div>
@@ -876,7 +905,8 @@ const StoryDetailsPage = () => {
                               item.id === location.id
                                 ? {
                                     ...item,
-                                    position: event.target.value as DisplayPosition,
+                                    position:
+                                      event.target.value as DisplayPosition,
                                   }
                                 : item,
                             );
@@ -963,7 +993,8 @@ const StoryDetailsPage = () => {
                               item.id === rule.id
                                 ? {
                                     ...item,
-                                    condition_type: event.target.value as ConditionType,
+                                    condition_type:
+                                      event.target.value as ConditionType,
                                   }
                                 : item,
                             );
