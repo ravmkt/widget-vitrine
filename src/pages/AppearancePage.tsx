@@ -1539,17 +1539,18 @@ const AppearancePage = () => {
       const desktop = nextConfig.desktop;
 
       return {
-        ...prev,
-        carousel_config: nextConfig,
-        carousel_gap: desktop.gap,
-        carousel_card_shape: desktop.card_shape as any,
-        carousel_view_mode: desktop.view_mode,
-        margin_top: desktop.margin_top,
-        margin_bottom: desktop.margin_bottom,
-        carousel_visible_items: desktop.visible_items,
-        show_product: desktop.show_product,
-        show_play_button: desktop.show_play_icon,
-      };
+  ...prev,
+  carousel_config: nextConfig,
+  carousel_gap: desktop.gap,
+  carousel_card_shape: desktop.card_shape as any,
+  carousel_view_mode: desktop.view_mode,
+  margin_top: desktop.margin_top,
+  margin_bottom: desktop.margin_bottom,
+  carousel_visible_items: desktop.visible_items,
+  show_product: desktop.show_product,
+  show_play_button: desktop.show_play_icon,
+  auto_center: desktop.auto_center,
+};
     });
   };
 
