@@ -38,8 +38,70 @@ type PositionValue =
   | 'fixed_top_right'
   | 'fixed_top_left';
 
+type ResponsiveConfig<T> = {
+  same_for_all: boolean;
+  desktop: T;
+  mobile: T;
+};
+
+type FloatingConfig = {
+  shape: 'circle' | 'square' | 'portrait';
+  width: string;
+  height: string;
+  border_radius: string;
+  position: PositionValue;
+  floating_position: FloatingPosition;
+  bottom_spacing: string;
+  top_spacing: string;
+  left_spacing: string;
+  right_spacing: string;
+  border_color: string;
+  border_style: string;
+  show_play_icon: boolean;
+  object_fit: string;
+  draggable: boolean;
+  allow_close: boolean;
+  z_index: string;
+};
+
+type CarouselConfig = {
+  gap: number;
+  card_shape: string;
+  view_mode: string;
+  margin_top: string;
+  margin_bottom: string;
+  visible_items: number;
+  show_product: boolean;
+  show_play_icon: boolean;
+};
+
+type GridConfig = {
+  columns: number;
+  rows: number;
+  gap: number;
+};
+
+type ModalConfig = {
+  show_title: boolean;
+  show_play_button: boolean;
+  show_product: boolean;
+  show_like_button: boolean;
+  show_comment_button: boolean;
+  show_share_button: boolean;
+  show_whatsapp_button: boolean;
+  show_product_button: boolean;
+  hide_stories: boolean;
+  shadow_enabled: boolean;
+};
+
 type ExtendedAppearance = Appearance & {
   useGlobalAppearance: boolean;
+
+  floating_config: ResponsiveConfig<FloatingConfig>;
+  carousel_config: ResponsiveConfig<CarouselConfig>;
+  grid_config: ResponsiveConfig<GridConfig>;
+  modal_config: ModalConfig;
+
   width: string;
   unit: 'px' | 'percent';
   height: string;
@@ -164,8 +226,196 @@ const normalizeFloatingPosition = (
   return positionToFloatingPosition(position);
 };
 
+const safeNumber = (
+  value: unknown,
+  fallback: number,
+  min?: number,
+): number => {
+  const parsed = Number(value);
+
+  if (Number.isNaN(parsed)) {
+    return fallback;
+  }
+
+  if (typeof min === 'number' && parsed < min) {
+    return min;
+  }
+
+  return parsed;
+};
+
+const parseJsonIfNeeded = <T,>(value: unknown): Partial<T> | null => {
+  if (!value) return null;
+
+  if (typeof value === 'object') {
+    return value as Partial<T>;
+  }
+
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value) as Partial<T>;
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+};
+
+const createDefaultFloatingDesktopConfig = (): FloatingConfig => ({
+  shape: 'portrait',
+  width: '80px',
+  height: '110px',
+  border_radius: '12px',
+  position: 'fixed_bottom_right',
+  floating_position: 'bottom-right',
+  bottom_spacing: '20px',
+  top_spacing: '20px',
+  left_spacing: '20px',
+  right_spacing: '20px',
+  border_color: '#0094EB',
+  border_style: '2px solid',
+  show_play_icon: true,
+  object_fit: 'cover',
+  draggable: false,
+  allow_close: false,
+  z_index: '2147483647',
+});
+
+const createDefaultFloatingMobileConfig = (): FloatingConfig => ({
+  shape: 'portrait',
+  width: '64px',
+  height: '88px',
+  border_radius: '12px',
+  position: 'fixed_bottom_right',
+  floating_position: 'bottom-right',
+  bottom_spacing: '16px',
+  top_spacing: '16px',
+  left_spacing: '16px',
+  right_spacing: '16px',
+  border_color: '#0094EB',
+  border_style: '2px solid',
+  show_play_icon: true,
+  object_fit: 'cover',
+  draggable: false,
+  allow_close: false,
+  z_index: '2147483647',
+});
+
+const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
+  gap: 16,
+  card_shape: 'rounded',
+  view_mode: 'preview',
+  margin_top: '0',
+  margin_bottom: '0',
+  visible_items: 4,
+  show_product: true,
+  show_play_icon: true,
+});
+
+const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
+  gap: 12,
+  card_shape: 'rounded',
+  view_mode: 'preview',
+  margin_top: '0',
+  margin_bottom: '0',
+  visible_items: 2,
+  show_product: true,
+  show_play_icon: true,
+});
+
+const createDefaultGridDesktopConfig = (): GridConfig => ({
+  columns: 4,
+  rows: 1,
+  gap: 16,
+});
+
+const createDefaultGridMobileConfig = (): GridConfig => ({
+  columns: 2,
+  rows: 2,
+  gap: 12,
+});
+
+const createDefaultModalConfig = (): ModalConfig => ({
+  show_title: true,
+  show_play_button: true,
+  show_product: true,
+  show_like_button: true,
+  show_comment_button: true,
+  show_share_button: true,
+  show_whatsapp_button: true,
+  show_product_button: true,
+  hide_stories: false,
+  shadow_enabled: true,
+});
+
+const createResponsiveConfig = <T,>(
+  desktop: T,
+  mobile: T,
+  sameForAll = false,
+): ResponsiveConfig<T> => ({
+  same_for_all: sameForAll,
+  desktop,
+  mobile,
+});
+
+const normalizeResponsiveConfig = <T extends Record<string, any>>({
+  rawValue,
+  desktopDefault,
+  mobileDefault,
+  legacyDesktop = {},
+  legacyMobile = {},
+  sameForAll = false,
+}: {
+  rawValue: unknown;
+  desktopDefault: T;
+  mobileDefault: T;
+  legacyDesktop?: Partial<T>;
+  legacyMobile?: Partial<T>;
+  sameForAll?: boolean;
+}): ResponsiveConfig<T> => {
+  const parsed = parseJsonIfNeeded<ResponsiveConfig<T>>(rawValue);
+
+  const parsedDesktop = parsed?.desktop || {};
+  const parsedMobile = parsed?.mobile || {};
+
+  return {
+    same_for_all: Boolean(parsed?.same_for_all ?? sameForAll),
+    desktop: {
+      ...desktopDefault,
+      ...legacyDesktop,
+      ...parsedDesktop,
+    },
+    mobile: {
+      ...mobileDefault,
+      ...legacyMobile,
+      ...parsedMobile,
+    },
+  };
+};
+
+const getActiveResponsiveConfig = <T,>(
+  config: ResponsiveConfig<T>,
+  device: DeviceType,
+  useGlobalAppearance: boolean,
+): T => {
+  if (useGlobalAppearance || config.same_for_all) {
+    return config.desktop;
+  }
+
+  return config[device];
+};
+
 const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
   const now = new Date().toISOString();
+
+  const floatingDesktop = createDefaultFloatingDesktopConfig();
+  const floatingMobile = createDefaultFloatingMobileConfig();
+  const carouselDesktop = createDefaultCarouselDesktopConfig();
+  const carouselMobile = createDefaultCarouselMobileConfig();
+  const gridDesktop = createDefaultGridDesktopConfig();
+  const gridMobile = createDefaultGridMobileConfig();
+  const modalConfig = createDefaultModalConfig();
 
   return {
     id: '',
@@ -179,63 +429,69 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
     background_color: '#FFFFFF',
     button_color: '#0094EB',
 
-    border_radius: '12px',
-    shadow_enabled: true,
+    border_radius: floatingDesktop.border_radius,
+    shadow_enabled: modalConfig.shadow_enabled,
     font_family: 'Inter, sans-serif',
-    widget_shape: 'portrait',
+    widget_shape: floatingDesktop.shape,
     widget_size: 'medium',
     widget_animation: 'none',
 
-    carousel_card_shape: 'rounded',
-    carousel_visible_items: 4,
-    carousel_gap: 16,
+    carousel_card_shape: carouselDesktop.card_shape as any,
+    carousel_visible_items: carouselDesktop.visible_items,
+    carousel_gap: carouselDesktop.gap,
 
-    show_title: true,
-    show_play_button: true,
-    show_product: true,
-    show_like_button: true,
-    show_comment_button: true,
-    show_share_button: true,
-    show_whatsapp_button: true,
-    show_product_button: true,
+    show_title: modalConfig.show_title,
+    show_play_button: modalConfig.show_play_button,
+    show_product: modalConfig.show_product,
+    show_like_button: modalConfig.show_like_button,
+    show_comment_button: modalConfig.show_comment_button,
+    show_share_button: modalConfig.show_share_button,
+    show_whatsapp_button: modalConfig.show_whatsapp_button,
+    show_product_button: modalConfig.show_product_button,
 
     created_at: now,
     updated_at: now,
 
     useGlobalAppearance: false,
-    width: '',
+
+    floating_config: createResponsiveConfig(floatingDesktop, floatingMobile),
+    carousel_config: createResponsiveConfig(carouselDesktop, carouselMobile),
+    grid_config: createResponsiveConfig(gridDesktop, gridMobile),
+    modal_config: modalConfig,
+
+    width: floatingDesktop.width,
     unit: 'px',
-    height: '',
+    height: floatingDesktop.height,
 
-    position: 'fixed_bottom_right',
-    floating_position: 'bottom-right',
+    position: floatingDesktop.position,
+    floating_position: floatingDesktop.floating_position,
 
-    bottom_spacing: '',
-    top_spacing: '',
-    left_spacing: '',
-    right_spacing: '',
+    bottom_spacing: floatingDesktop.bottom_spacing,
+    top_spacing: floatingDesktop.top_spacing,
+    left_spacing: floatingDesktop.left_spacing,
+    right_spacing: floatingDesktop.right_spacing,
 
     cta_text: '',
     cta_size: '',
     cta_duration: '',
-    border_style: '',
-    color: '#0094EB',
-    show_play_icon: true,
-    hide_stories: false,
+    border_style: floatingDesktop.border_style,
+    color: floatingDesktop.border_color,
+    show_play_icon: floatingDesktop.show_play_icon,
+    hide_stories: modalConfig.hide_stories,
     auto_center: false,
-    carousel_view_mode: 'preview',
-    margin_top: '',
-    margin_bottom: '',
-    draggable: false,
-    allow_close: false,
-    object_fit: 'cover',
-    z_index: '',
-    desktop_columns: 1,
-    desktop_rows: 1,
-    desktop_gap: 16,
-    mobile_columns: 1,
-    mobile_rows: 1,
-    mobile_gap: 12,
+    carousel_view_mode: carouselDesktop.view_mode,
+    margin_top: carouselDesktop.margin_top,
+    margin_bottom: carouselDesktop.margin_bottom,
+    draggable: floatingDesktop.draggable,
+    allow_close: floatingDesktop.allow_close,
+    object_fit: floatingDesktop.object_fit,
+    z_index: floatingDesktop.z_index,
+    desktop_columns: gridDesktop.columns,
+    desktop_rows: gridDesktop.rows,
+    desktop_gap: gridDesktop.gap,
+    mobile_columns: gridMobile.columns,
+    mobile_rows: gridMobile.rows,
+    mobile_gap: gridMobile.gap,
     font_size: '14px',
   } as ExtendedAppearance;
 };
@@ -258,6 +514,150 @@ const normalizeAppearance = (
     normalizedPosition,
   );
 
+  const globalAppearance = Boolean(
+    anyItem.useGlobalAppearance ??
+      anyItem.use_global_appearance ??
+      anyItem.floating_config?.same_for_all ??
+      anyItem.carousel_config?.same_for_all ??
+      anyItem.grid_config?.same_for_all ??
+      defaults.useGlobalAppearance,
+  );
+
+  const floatingConfig = normalizeResponsiveConfig<FloatingConfig>({
+    rawValue: anyItem.floating_config,
+    desktopDefault: createDefaultFloatingDesktopConfig(),
+    mobileDefault: createDefaultFloatingMobileConfig(),
+    sameForAll: globalAppearance,
+    legacyDesktop: {
+      shape: (item.widget_shape as FloatingConfig['shape']) || defaults.widget_shape,
+      width: anyItem.width ?? defaults.width,
+      height: anyItem.height ?? defaults.height,
+      border_radius: item.border_radius || defaults.border_radius,
+      position: normalizedPosition,
+      floating_position: normalizedFloatingPosition,
+      bottom_spacing:
+        anyItem.bottom_spacing ??
+        anyItem.spacing_bottom ??
+        anyItem.offset_bottom ??
+        defaults.bottom_spacing,
+      top_spacing:
+        anyItem.top_spacing ??
+        anyItem.spacing_top ??
+        anyItem.offset_top ??
+        anyItem.bottom_spacing ??
+        defaults.top_spacing,
+      left_spacing:
+        anyItem.left_spacing ??
+        anyItem.spacing_left ??
+        anyItem.offset_left ??
+        defaults.left_spacing,
+      right_spacing:
+        anyItem.right_spacing ??
+        anyItem.spacing_right ??
+        anyItem.offset_right ??
+        anyItem.left_spacing ??
+        defaults.right_spacing,
+      border_color: anyItem.color || item.primary_color || defaults.color,
+      border_style: anyItem.border_style ?? defaults.border_style,
+      show_play_icon: anyItem.show_play_icon ?? item.show_play_button ?? true,
+      object_fit: anyItem.object_fit ?? defaults.object_fit,
+      draggable: anyItem.draggable ?? defaults.draggable,
+      allow_close: anyItem.allow_close ?? defaults.allow_close,
+      z_index: anyItem.z_index ?? defaults.z_index,
+    },
+    legacyMobile: {
+      border_color: anyItem.color || item.primary_color || defaults.color,
+    },
+  });
+
+  const carouselConfig = normalizeResponsiveConfig<CarouselConfig>({
+    rawValue: anyItem.carousel_config,
+    desktopDefault: createDefaultCarouselDesktopConfig(),
+    mobileDefault: createDefaultCarouselMobileConfig(),
+    sameForAll: globalAppearance,
+    legacyDesktop: {
+      gap: safeNumber(item.carousel_gap, defaults.carousel_gap, 0),
+      card_shape:
+        item.carousel_card_shape || defaults.carousel_card_shape || 'rounded',
+      view_mode: anyItem.carousel_view_mode ?? defaults.carousel_view_mode,
+      margin_top: anyItem.margin_top ?? defaults.margin_top,
+      margin_bottom: anyItem.margin_bottom ?? defaults.margin_bottom,
+      visible_items: safeNumber(
+        item.carousel_visible_items,
+        defaults.carousel_visible_items || 4,
+        1,
+      ),
+      show_product: item.show_product ?? defaults.show_product,
+      show_play_icon: anyItem.show_play_icon ?? item.show_play_button ?? true,
+    },
+  });
+
+  const gridConfig = normalizeResponsiveConfig<GridConfig>({
+    rawValue: anyItem.grid_config,
+    desktopDefault: createDefaultGridDesktopConfig(),
+    mobileDefault: createDefaultGridMobileConfig(),
+    sameForAll: globalAppearance,
+    legacyDesktop: {
+      columns: safeNumber(
+        anyItem.desktop_columns,
+        defaults.desktop_columns,
+        1,
+      ),
+      rows: safeNumber(anyItem.desktop_rows, defaults.desktop_rows, 1),
+      gap: safeNumber(anyItem.desktop_gap, defaults.desktop_gap, 0),
+    },
+    legacyMobile: {
+      columns: safeNumber(anyItem.mobile_columns, defaults.mobile_columns, 1),
+      rows: safeNumber(anyItem.mobile_rows, defaults.mobile_rows, 1),
+      gap: safeNumber(anyItem.mobile_gap, defaults.mobile_gap, 0),
+    },
+  });
+
+  const modalRaw = parseJsonIfNeeded<ModalConfig>(anyItem.modal_config);
+
+  const modalConfig: ModalConfig = {
+    ...createDefaultModalConfig(),
+    ...modalRaw,
+    show_title: item.show_title ?? modalRaw?.show_title ?? defaults.show_title,
+    show_play_button:
+      item.show_play_button ??
+      modalRaw?.show_play_button ??
+      defaults.show_play_button,
+    show_product:
+      item.show_product ?? modalRaw?.show_product ?? defaults.show_product,
+    show_like_button:
+      item.show_like_button ??
+      modalRaw?.show_like_button ??
+      defaults.show_like_button,
+    show_comment_button:
+      item.show_comment_button ??
+      modalRaw?.show_comment_button ??
+      defaults.show_comment_button,
+    show_share_button:
+      item.show_share_button ??
+      modalRaw?.show_share_button ??
+      defaults.show_share_button,
+    show_whatsapp_button:
+      item.show_whatsapp_button ??
+      modalRaw?.show_whatsapp_button ??
+      defaults.show_whatsapp_button,
+    show_product_button:
+      item.show_product_button ??
+      modalRaw?.show_product_button ??
+      defaults.show_product_button,
+    hide_stories:
+      anyItem.hide_stories ?? modalRaw?.hide_stories ?? defaults.hide_stories,
+    shadow_enabled:
+      item.shadow_enabled ??
+      modalRaw?.shadow_enabled ??
+      defaults.shadow_enabled,
+  };
+
+  const floatingDesktop = floatingConfig.desktop;
+  const carouselDesktop = carouselConfig.desktop;
+  const gridDesktop = gridConfig.desktop;
+  const gridMobile = gridConfig.mobile;
+
   return {
     ...defaults,
     ...item,
@@ -273,91 +673,78 @@ const normalizeAppearance = (
     background_color: item.background_color || defaults.background_color,
     button_color: item.button_color || defaults.button_color,
 
-    border_radius: item.border_radius || defaults.border_radius,
-    shadow_enabled: item.shadow_enabled ?? defaults.shadow_enabled,
+    border_radius: floatingDesktop.border_radius || defaults.border_radius,
+    shadow_enabled: modalConfig.shadow_enabled,
     font_family: item.font_family || defaults.font_family,
-    widget_shape: item.widget_shape || defaults.widget_shape,
+    widget_shape: floatingDesktop.shape as any,
     widget_size: item.widget_size || defaults.widget_size,
     widget_animation: item.widget_animation || defaults.widget_animation,
 
-    carousel_card_shape:
-      item.carousel_card_shape || defaults.carousel_card_shape,
-    carousel_visible_items:
-      item.carousel_visible_items || defaults.carousel_visible_items,
-    carousel_gap: item.carousel_gap ?? defaults.carousel_gap,
+    carousel_card_shape: carouselDesktop.card_shape as any,
+    carousel_visible_items: carouselDesktop.visible_items,
+    carousel_gap: carouselDesktop.gap,
 
-    show_title: item.show_title ?? defaults.show_title,
-    show_play_button: item.show_play_button ?? defaults.show_play_button,
-    show_product: item.show_product ?? defaults.show_product,
-    show_like_button: item.show_like_button ?? defaults.show_like_button,
-    show_comment_button:
-      item.show_comment_button ?? defaults.show_comment_button,
-    show_share_button: item.show_share_button ?? defaults.show_share_button,
-    show_whatsapp_button:
-      item.show_whatsapp_button ?? defaults.show_whatsapp_button,
-    show_product_button:
-      item.show_product_button ?? defaults.show_product_button,
+    show_title: modalConfig.show_title,
+    show_play_button: modalConfig.show_play_button,
+    show_product: modalConfig.show_product,
+    show_like_button: modalConfig.show_like_button,
+    show_comment_button: modalConfig.show_comment_button,
+    show_share_button: modalConfig.show_share_button,
+    show_whatsapp_button: modalConfig.show_whatsapp_button,
+    show_product_button: modalConfig.show_product_button,
 
     created_at: item.created_at || defaults.created_at,
     updated_at: item.updated_at || defaults.updated_at,
 
-    useGlobalAppearance:
-      anyItem.useGlobalAppearance ?? defaults.useGlobalAppearance,
-    width: anyItem.width ?? defaults.width,
+    useGlobalAppearance: globalAppearance,
+
+    floating_config: {
+      ...floatingConfig,
+      same_for_all: globalAppearance,
+    },
+    carousel_config: {
+      ...carouselConfig,
+      same_for_all: globalAppearance,
+    },
+    grid_config: {
+      ...gridConfig,
+      same_for_all: globalAppearance,
+    },
+    modal_config: modalConfig,
+
+    width: floatingDesktop.width ?? defaults.width,
     unit: anyItem.unit ?? defaults.unit,
-    height: anyItem.height ?? defaults.height,
+    height: floatingDesktop.height ?? defaults.height,
 
-    position: normalizedPosition,
-    floating_position: normalizedFloatingPosition,
+    position: floatingDesktop.position,
+    floating_position: floatingDesktop.floating_position,
 
-    bottom_spacing:
-      anyItem.bottom_spacing ??
-      anyItem.spacing_bottom ??
-      anyItem.offset_bottom ??
-      defaults.bottom_spacing,
-
-    top_spacing:
-      anyItem.top_spacing ??
-      anyItem.spacing_top ??
-      anyItem.offset_top ??
-      anyItem.bottom_spacing ??
-      defaults.top_spacing,
-
-    left_spacing:
-      anyItem.left_spacing ??
-      anyItem.spacing_left ??
-      anyItem.offset_left ??
-      defaults.left_spacing,
-
-    right_spacing:
-      anyItem.right_spacing ??
-      anyItem.spacing_right ??
-      anyItem.offset_right ??
-      anyItem.left_spacing ??
-      defaults.right_spacing,
+    bottom_spacing: floatingDesktop.bottom_spacing,
+    top_spacing: floatingDesktop.top_spacing,
+    left_spacing: floatingDesktop.left_spacing,
+    right_spacing: floatingDesktop.right_spacing,
 
     cta_text: anyItem.cta_text ?? defaults.cta_text,
     cta_size: anyItem.cta_size ?? defaults.cta_size,
     cta_duration: anyItem.cta_duration ?? defaults.cta_duration,
-    border_style: anyItem.border_style ?? defaults.border_style,
-    color: anyItem.color || item.primary_color || defaults.color,
-    show_play_icon: anyItem.show_play_icon ?? item.show_play_button ?? true,
-    hide_stories: anyItem.hide_stories ?? defaults.hide_stories,
+    border_style: floatingDesktop.border_style,
+    color: floatingDesktop.border_color || item.primary_color || defaults.color,
+    show_play_icon: floatingDesktop.show_play_icon,
+    hide_stories: modalConfig.hide_stories,
     auto_center: anyItem.auto_center ?? defaults.auto_center,
-    carousel_view_mode:
-      anyItem.carousel_view_mode ?? defaults.carousel_view_mode,
-    margin_top: anyItem.margin_top ?? defaults.margin_top,
-    margin_bottom: anyItem.margin_bottom ?? defaults.margin_bottom,
-    draggable: anyItem.draggable ?? defaults.draggable,
-    allow_close: anyItem.allow_close ?? defaults.allow_close,
-    object_fit: anyItem.object_fit ?? defaults.object_fit,
-    z_index: anyItem.z_index ?? defaults.z_index,
-    desktop_columns: anyItem.desktop_columns ?? defaults.desktop_columns,
-    desktop_rows: anyItem.desktop_rows ?? defaults.desktop_rows,
-    desktop_gap: anyItem.desktop_gap ?? defaults.desktop_gap,
-    mobile_columns: anyItem.mobile_columns ?? defaults.mobile_columns,
-    mobile_rows: anyItem.mobile_rows ?? defaults.mobile_rows,
-    mobile_gap: anyItem.mobile_gap ?? defaults.mobile_gap,
+    carousel_view_mode: carouselDesktop.view_mode,
+    margin_top: carouselDesktop.margin_top,
+    margin_bottom: carouselDesktop.margin_bottom,
+    draggable: floatingDesktop.draggable,
+    allow_close: floatingDesktop.allow_close,
+    object_fit: floatingDesktop.object_fit,
+    z_index: floatingDesktop.z_index,
+    desktop_columns: gridDesktop.columns,
+    desktop_rows: gridDesktop.rows,
+    desktop_gap: gridDesktop.gap,
+    mobile_columns: gridMobile.columns,
+    mobile_rows: gridMobile.rows,
+    mobile_gap: gridMobile.gap,
     font_size: anyItem.font_size ?? defaults.font_size,
   } as ExtendedAppearance;
 };
@@ -498,6 +885,14 @@ const DeviceTabs = ({
   );
 };
 
+const GlobalDeviceNotice = () => {
+  return (
+    <div className="w-fit rounded-xl border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-xs font-bold text-blue-200">
+      Aplicando a mesma aparência em Desktop e Mobile.
+    </div>
+  );
+};
+
 const SectionCard = ({
   title,
   children,
@@ -601,6 +996,189 @@ const AppearancePage = () => {
     }
   }, [storeId, tenantLoading]);
 
+  const syncGlobalConfig = (
+    checked: boolean,
+    prev: ExtendedAppearance,
+  ): ExtendedAppearance => {
+    const floatingDesktop = prev.floating_config.desktop;
+    const carouselDesktop = prev.carousel_config.desktop;
+    const gridDesktop = prev.grid_config.desktop;
+
+    return {
+      ...prev,
+      useGlobalAppearance: checked,
+      floating_config: {
+        same_for_all: checked,
+        desktop: floatingDesktop,
+        mobile: checked ? floatingDesktop : prev.floating_config.mobile,
+      },
+      carousel_config: {
+        same_for_all: checked,
+        desktop: carouselDesktop,
+        mobile: checked ? carouselDesktop : prev.carousel_config.mobile,
+      },
+      grid_config: {
+        same_for_all: checked,
+        desktop: gridDesktop,
+        mobile: checked ? gridDesktop : prev.grid_config.mobile,
+      },
+    };
+  };
+
+  const updateFloatingConfig = (patch: Partial<FloatingConfig>) => {
+    setFormData(prev => {
+      const device = prev.useGlobalAppearance ? 'desktop' : floatingDevice;
+      const current = prev.floating_config[device];
+
+      const updatedDeviceConfig: FloatingConfig = {
+        ...current,
+        ...patch,
+      };
+
+      if (patch.position) {
+        updatedDeviceConfig.floating_position = positionToFloatingPosition(
+          patch.position,
+        );
+      }
+
+      const nextConfig: ResponsiveConfig<FloatingConfig> =
+        prev.useGlobalAppearance
+          ? {
+              same_for_all: true,
+              desktop: updatedDeviceConfig,
+              mobile: updatedDeviceConfig,
+            }
+          : {
+              ...prev.floating_config,
+              same_for_all: false,
+              [device]: updatedDeviceConfig,
+            };
+
+      const desktop = nextConfig.desktop;
+
+      return {
+        ...prev,
+        floating_config: nextConfig,
+        widget_shape: desktop.shape as any,
+        width: desktop.width,
+        height: desktop.height,
+        border_radius: desktop.border_radius,
+        position: desktop.position,
+        floating_position: desktop.floating_position,
+        bottom_spacing: desktop.bottom_spacing,
+        top_spacing: desktop.top_spacing,
+        left_spacing: desktop.left_spacing,
+        right_spacing: desktop.right_spacing,
+        color: desktop.border_color,
+        border_style: desktop.border_style,
+        show_play_icon: desktop.show_play_icon,
+        object_fit: desktop.object_fit,
+        draggable: desktop.draggable,
+        allow_close: desktop.allow_close,
+        z_index: desktop.z_index,
+      };
+    });
+  };
+
+  const updateCarouselConfig = (patch: Partial<CarouselConfig>) => {
+    setFormData(prev => {
+      const device = prev.useGlobalAppearance ? 'desktop' : carouselDevice;
+      const current = prev.carousel_config[device];
+
+      const updatedDeviceConfig: CarouselConfig = {
+        ...current,
+        ...patch,
+      };
+
+      const nextConfig: ResponsiveConfig<CarouselConfig> =
+        prev.useGlobalAppearance
+          ? {
+              same_for_all: true,
+              desktop: updatedDeviceConfig,
+              mobile: updatedDeviceConfig,
+            }
+          : {
+              ...prev.carousel_config,
+              same_for_all: false,
+              [device]: updatedDeviceConfig,
+            };
+
+      const desktop = nextConfig.desktop;
+
+      return {
+        ...prev,
+        carousel_config: nextConfig,
+        carousel_gap: desktop.gap,
+        carousel_card_shape: desktop.card_shape as any,
+        carousel_view_mode: desktop.view_mode,
+        margin_top: desktop.margin_top,
+        margin_bottom: desktop.margin_bottom,
+        carousel_visible_items: desktop.visible_items,
+        show_product: desktop.show_product,
+        show_play_button: desktop.show_play_icon,
+      };
+    });
+  };
+
+  const updateGridConfig = (patch: Partial<GridConfig>) => {
+    setFormData(prev => {
+      const device = prev.useGlobalAppearance ? 'desktop' : gridDevice;
+      const current = prev.grid_config[device];
+
+      const updatedDeviceConfig: GridConfig = {
+        ...current,
+        ...patch,
+      };
+
+      const nextConfig: ResponsiveConfig<GridConfig> = prev.useGlobalAppearance
+        ? {
+            same_for_all: true,
+            desktop: updatedDeviceConfig,
+            mobile: updatedDeviceConfig,
+          }
+        : {
+            ...prev.grid_config,
+            same_for_all: false,
+            [device]: updatedDeviceConfig,
+          };
+
+      return {
+        ...prev,
+        grid_config: nextConfig,
+        desktop_columns: nextConfig.desktop.columns,
+        desktop_rows: nextConfig.desktop.rows,
+        desktop_gap: nextConfig.desktop.gap,
+        mobile_columns: nextConfig.mobile.columns,
+        mobile_rows: nextConfig.mobile.rows,
+        mobile_gap: nextConfig.mobile.gap,
+      };
+    });
+  };
+
+  const updateModalConfig = (patch: Partial<ModalConfig>) => {
+    setFormData(prev => {
+      const nextModalConfig: ModalConfig = {
+        ...prev.modal_config,
+        ...patch,
+      };
+
+      return {
+        ...prev,
+        modal_config: nextModalConfig,
+        show_title: nextModalConfig.show_title,
+        show_play_button: nextModalConfig.show_play_button,
+        show_product: nextModalConfig.show_product,
+        show_like_button: nextModalConfig.show_like_button,
+        show_comment_button: nextModalConfig.show_comment_button,
+        show_share_button: nextModalConfig.show_share_button,
+        show_whatsapp_button: nextModalConfig.show_whatsapp_button,
+        show_product_button: nextModalConfig.show_product_button,
+        hide_stories: nextModalConfig.hide_stories,
+        shadow_enabled: nextModalConfig.shadow_enabled,
+      };
+    });
+  };
+
   const handleSetDefault = async (id: string) => {
     try {
       const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
@@ -679,14 +1257,6 @@ const AppearancePage = () => {
     setShowModal(true);
   };
 
-  const handlePositionChange = (position: PositionValue) => {
-    setFormData(prev => ({
-      ...prev,
-      position,
-      floating_position: positionToFloatingPosition(position),
-    }));
-  };
-
   const handleSaveStyle = async () => {
     if (saving) return;
 
@@ -708,45 +1278,116 @@ const AppearancePage = () => {
       const now = new Date().toISOString();
       const id = editingStyle?.id || formData.id || generateUuid();
 
+      const floatingConfig: ResponsiveConfig<FloatingConfig> = {
+        ...formData.floating_config,
+        same_for_all: formData.useGlobalAppearance,
+      };
+
+      const carouselConfig: ResponsiveConfig<CarouselConfig> = {
+        ...formData.carousel_config,
+        same_for_all: formData.useGlobalAppearance,
+      };
+
+      const gridConfig: ResponsiveConfig<GridConfig> = {
+        ...formData.grid_config,
+        same_for_all: formData.useGlobalAppearance,
+      };
+
+      if (formData.useGlobalAppearance) {
+        floatingConfig.mobile = floatingConfig.desktop;
+        carouselConfig.mobile = carouselConfig.desktop;
+        gridConfig.mobile = gridConfig.desktop;
+      }
+
+      const floatingDesktop = floatingConfig.desktop;
+      const carouselDesktop = carouselConfig.desktop;
+      const gridDesktop = gridConfig.desktop;
+      const gridMobile = gridConfig.mobile;
+      const modalConfig = formData.modal_config;
+
       const normalizedPosition = normalizePosition(
-        formData.position,
-        formData.floating_position,
+        floatingDesktop.position,
+        floatingDesktop.floating_position,
       );
 
       const normalizedFloatingPosition =
         positionToFloatingPosition(normalizedPosition);
 
-      const verticalSpacing =
-        formData.bottom_spacing || formData.top_spacing || '';
-
-      const lateralSpacing =
-        formData.left_spacing || formData.right_spacing || '';
-
       const stylePayload = {
         ...formData,
+
         id,
         store_id: finalStoreId,
         name: formData.name.trim(),
+        is_default: formData.is_default,
+
+        useGlobalAppearance: formData.useGlobalAppearance,
+        floating_config: {
+          ...floatingConfig,
+          desktop: {
+            ...floatingDesktop,
+            position: normalizedPosition,
+            floating_position: normalizedFloatingPosition,
+          },
+        },
+        carousel_config: carouselConfig,
+        grid_config: gridConfig,
+        modal_config: modalConfig,
+
+        widget_shape: floatingDesktop.shape,
+        width: floatingDesktop.width,
+        height: floatingDesktop.height,
+        border_radius: floatingDesktop.border_radius,
 
         position: normalizedPosition,
         floating_position: normalizedFloatingPosition,
 
-        bottom_spacing: verticalSpacing,
-        top_spacing: verticalSpacing,
-        left_spacing: lateralSpacing,
-        right_spacing: lateralSpacing,
+        bottom_spacing: floatingDesktop.bottom_spacing,
+        top_spacing: floatingDesktop.top_spacing,
+        left_spacing: floatingDesktop.left_spacing,
+        right_spacing: floatingDesktop.right_spacing,
 
-        color: formData.color || formData.primary_color,
-        show_play_button: formData.show_play_icon,
+        color: floatingDesktop.border_color || formData.primary_color,
+        border_style: floatingDesktop.border_style,
+        show_play_icon: floatingDesktop.show_play_icon,
+        draggable: floatingDesktop.draggable,
+        allow_close: floatingDesktop.allow_close,
+        object_fit: floatingDesktop.object_fit,
+        z_index: floatingDesktop.z_index,
+
+        carousel_gap: carouselDesktop.gap,
+        carousel_card_shape: carouselDesktop.card_shape,
+        carousel_view_mode: carouselDesktop.view_mode,
+        carousel_visible_items: carouselDesktop.visible_items,
+        margin_top: carouselDesktop.margin_top,
+        margin_bottom: carouselDesktop.margin_bottom,
+
+        desktop_columns: gridDesktop.columns,
+        desktop_rows: gridDesktop.rows,
+        desktop_gap: gridDesktop.gap,
+        mobile_columns: gridMobile.columns,
+        mobile_rows: gridMobile.rows,
+        mobile_gap: gridMobile.gap,
+
+        show_title: modalConfig.show_title,
+        show_play_button: modalConfig.show_play_button,
+        show_product: modalConfig.show_product,
+        show_like_button: modalConfig.show_like_button,
+        show_comment_button: modalConfig.show_comment_button,
+        show_share_button: modalConfig.show_share_button,
+        show_whatsapp_button: modalConfig.show_whatsapp_button,
+        show_product_button: modalConfig.show_product_button,
+        hide_stories: modalConfig.hide_stories,
+        shadow_enabled: modalConfig.shadow_enabled,
+
         updated_at: now,
         created_at: formData.created_at || editingStyle?.created_at || now,
       } as Appearance & {
-        position: PositionValue;
-        floating_position: FloatingPosition;
-        bottom_spacing: string;
-        top_spacing: string;
-        left_spacing: string;
-        right_spacing: string;
+        useGlobalAppearance: boolean;
+        floating_config: ResponsiveConfig<FloatingConfig>;
+        carousel_config: ResponsiveConfig<CarouselConfig>;
+        grid_config: ResponsiveConfig<GridConfig>;
+        modal_config: ModalConfig;
       };
 
       if (stylePayload.is_default) {
@@ -792,58 +1433,23 @@ const AppearancePage = () => {
     setEditingStyle(null);
   };
 
-  const gridColumns =
-    gridDevice === 'desktop'
-      ? formData.desktop_columns
-      : formData.mobile_columns;
+  const activeFloatingConfig = getActiveResponsiveConfig(
+    formData.floating_config,
+    floatingDevice,
+    formData.useGlobalAppearance,
+  );
 
-  const gridRows =
-    gridDevice === 'desktop' ? formData.desktop_rows : formData.mobile_rows;
+  const activeCarouselConfig = getActiveResponsiveConfig(
+    formData.carousel_config,
+    carouselDevice,
+    formData.useGlobalAppearance,
+  );
 
-  const gridGap =
-    gridDevice === 'desktop' ? formData.desktop_gap : formData.mobile_gap;
-
-  const updateGridColumns = (value: number) => {
-    if (gridDevice === 'desktop') {
-      setFormData(prev => ({
-        ...prev,
-        desktop_columns: value,
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        mobile_columns: value,
-      }));
-    }
-  };
-
-  const updateGridRows = (value: number) => {
-    if (gridDevice === 'desktop') {
-      setFormData(prev => ({
-        ...prev,
-        desktop_rows: value,
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        mobile_rows: value,
-      }));
-    }
-  };
-
-  const updateGridGap = (value: number) => {
-    if (gridDevice === 'desktop') {
-      setFormData(prev => ({
-        ...prev,
-        desktop_gap: value,
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        mobile_gap: value,
-      }));
-    }
-  };
+  const activeGridConfig = getActiveResponsiveConfig(
+    formData.grid_config,
+    gridDevice,
+    formData.useGlobalAppearance,
+  );
 
   if (loading || tenantLoading) {
     return (
@@ -862,7 +1468,8 @@ const AppearancePage = () => {
           </h1>
 
           <p className="mt-1 font-medium text-slate-500">
-            Customize o design dos widgets e carrosséis de vídeo da sua loja.
+            Customize o design dos widgets, carrosséis, grades e player da sua
+            loja.
           </p>
         </div>
 
@@ -928,7 +1535,7 @@ const AppearancePage = () => {
                         <div
                           className="h-8 w-8 rounded-lg border border-slate-200 shadow-sm"
                           style={{
-                            backgroundColor: app.primary_color,
+                            backgroundColor: app.primary_color || '#0094EB',
                           }}
                         />
 
@@ -1050,37 +1657,47 @@ const AppearancePage = () => {
                   <ToggleSwitch
                     label="Usar aparência em todos os dispositivos"
                     checked={formData.useGlobalAppearance}
-                    onChange={e =>
-                      setFormData({
-                        ...formData,
-                        useGlobalAppearance: e.target.checked,
-                      })
-                    }
-                    description="Quando ativado, a mesma aparência será aplicada no mobile e no desktop."
+                    onChange={e => {
+                      const checked = e.target.checked;
+
+                      setFormData(prev => syncGlobalConfig(checked, prev));
+
+                      if (checked) {
+                        setFloatingDevice('desktop');
+                        setCarouselDevice('desktop');
+                        setGridDevice('desktop');
+                      }
+                    }}
+                    description="Quando ativado, as configurações de Desktop serão aplicadas também no Mobile."
                   />
                 </FormField>
               </SectionCard>
 
               <SectionCard title="2. Configurações">
-                <div className="space-y-8">
+                <div className="space-y-10">
                   <div className="space-y-4">
-                    <h4 className="text-sm font-black text-white">
-                      Flutuante
-                    </h4>
+                    <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+                      <h4 className="text-sm font-black text-white">
+                        Flutuante
+                      </h4>
 
-                    <DeviceTabs
-                      activeDevice={floatingDevice}
-                      onChange={setFloatingDevice}
-                    />
+                      {formData.useGlobalAppearance ? (
+                        <GlobalDeviceNotice />
+                      ) : (
+                        <DeviceTabs
+                          activeDevice={floatingDevice}
+                          onChange={setFloatingDevice}
+                        />
+                      )}
+                    </div>
 
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <FormField label="Forma">
                         <select
-                          value={formData.widget_shape}
+                          value={activeFloatingConfig.shape}
                           onChange={e =>
-                            setFormData({
-                              ...formData,
-                              widget_shape: e.target.value as any,
+                            updateFloatingConfig({
+                              shape: e.target.value as FloatingConfig['shape'],
                             })
                           }
                           className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
@@ -1091,13 +1708,12 @@ const AppearancePage = () => {
                         </select>
                       </FormField>
 
-                      <FormField label="Tamanho/Largura">
+                      <FormField label="Largura">
                         <input
                           type="text"
-                          value={formData.width}
+                          value={activeFloatingConfig.width}
                           onChange={e =>
-                            setFormData({
-                              ...formData,
+                            updateFloatingConfig({
                               width: e.target.value,
                             })
                           }
@@ -1109,10 +1725,9 @@ const AppearancePage = () => {
                       <FormField label="Altura">
                         <input
                           type="text"
-                          value={formData.height}
+                          value={activeFloatingConfig.height}
                           onChange={e =>
-                            setFormData({
-                              ...formData,
+                            updateFloatingConfig({
                               height: e.target.value,
                             })
                           }
@@ -1124,10 +1739,9 @@ const AppearancePage = () => {
                       <FormField label="Raio da borda">
                         <input
                           type="text"
-                          value={formData.border_radius}
+                          value={activeFloatingConfig.border_radius}
                           onChange={e =>
-                            setFormData({
-                              ...formData,
+                            updateFloatingConfig({
                               border_radius: e.target.value,
                             })
                           }
@@ -1138,11 +1752,11 @@ const AppearancePage = () => {
 
                       <FormField label="Posição do widget flutuante">
                         <select
-                          value={formData.position}
+                          value={activeFloatingConfig.position}
                           onChange={e =>
-                            handlePositionChange(
-                              e.target.value as PositionValue,
-                            )
+                            updateFloatingConfig({
+                              position: e.target.value as PositionValue,
+                            })
                           }
                           className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
                         >
@@ -1161,16 +1775,26 @@ const AppearancePage = () => {
                         </select>
                       </FormField>
 
-                      <FormField label="Distância inferior/superior">
+                      <FormField label="Distância inferior">
                         <input
                           type="text"
-                          value={
-                            formData.bottom_spacing || formData.top_spacing
-                          }
+                          value={activeFloatingConfig.bottom_spacing}
                           onChange={e =>
-                            setFormData({
-                              ...formData,
+                            updateFloatingConfig({
                               bottom_spacing: e.target.value,
+                            })
+                          }
+                          placeholder="Ex: 20px"
+                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
+                        />
+                      </FormField>
+
+                      <FormField label="Distância superior">
+                        <input
+                          type="text"
+                          value={activeFloatingConfig.top_spacing}
+                          onChange={e =>
+                            updateFloatingConfig({
                               top_spacing: e.target.value,
                             })
                           }
@@ -1179,16 +1803,26 @@ const AppearancePage = () => {
                         />
                       </FormField>
 
-                      <FormField label="Distância lateral">
+                      <FormField label="Distância esquerda">
                         <input
                           type="text"
-                          value={
-                            formData.left_spacing || formData.right_spacing
-                          }
+                          value={activeFloatingConfig.left_spacing}
                           onChange={e =>
-                            setFormData({
-                              ...formData,
+                            updateFloatingConfig({
                               left_spacing: e.target.value,
+                            })
+                          }
+                          placeholder="Ex: 20px"
+                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
+                        />
+                      </FormField>
+
+                      <FormField label="Distância direita">
+                        <input
+                          type="text"
+                          value={activeFloatingConfig.right_spacing}
+                          onChange={e =>
+                            updateFloatingConfig({
                               right_spacing: e.target.value,
                             })
                           }
@@ -1200,11 +1834,10 @@ const AppearancePage = () => {
                       <FormField label="Cor da borda">
                         <ColorInput
                           label="Cor da borda"
-                          value={formData.color}
+                          value={activeFloatingConfig.border_color}
                           onChange={e =>
-                            setFormData({
-                              ...formData,
-                              color: e.target.value,
+                            updateFloatingConfig({
+                              border_color: e.target.value,
                             })
                           }
                         />
@@ -1213,10 +1846,9 @@ const AppearancePage = () => {
                       <FormField label="Largura/estilo da borda">
                         <input
                           type="text"
-                          value={formData.border_style}
+                          value={activeFloatingConfig.border_style}
                           onChange={e =>
-                            setFormData({
-                              ...formData,
+                            updateFloatingConfig({
                               border_style: e.target.value,
                             })
                           }
@@ -1225,13 +1857,28 @@ const AppearancePage = () => {
                         />
                       </FormField>
 
+                      <FormField label="Object fit">
+                        <select
+                          value={activeFloatingConfig.object_fit}
+                          onChange={e =>
+                            updateFloatingConfig({
+                              object_fit: e.target.value,
+                            })
+                          }
+                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        >
+                          <option value="cover">Cover</option>
+                          <option value="contain">Contain</option>
+                          <option value="fill">Fill</option>
+                        </select>
+                      </FormField>
+
                       <FormField label="Z-index">
                         <input
                           type="text"
-                          value={formData.z_index}
+                          value={activeFloatingConfig.z_index}
                           onChange={e =>
-                            setFormData({
-                              ...formData,
+                            updateFloatingConfig({
                               z_index: e.target.value,
                             })
                           }
@@ -1239,18 +1886,60 @@ const AppearancePage = () => {
                           className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
                         />
                       </FormField>
+
+                      <FormField label="Mostrar botão play">
+                        <ToggleSwitch
+                          label="Mostrar botão play no flutuante"
+                          checked={activeFloatingConfig.show_play_icon}
+                          onChange={e =>
+                            updateFloatingConfig({
+                              show_play_icon: e.target.checked,
+                            })
+                          }
+                        />
+                      </FormField>
+
+                      <FormField label="Permitir arrastar">
+                        <ToggleSwitch
+                          label="Permitir arrastar widget"
+                          checked={activeFloatingConfig.draggable}
+                          onChange={e =>
+                            updateFloatingConfig({
+                              draggable: e.target.checked,
+                            })
+                          }
+                        />
+                      </FormField>
+
+                      <FormField label="Permitir fechar">
+                        <ToggleSwitch
+                          label="Permitir fechar widget"
+                          checked={activeFloatingConfig.allow_close}
+                          onChange={e =>
+                            updateFloatingConfig({
+                              allow_close: e.target.checked,
+                            })
+                          }
+                        />
+                      </FormField>
                     </div>
                   </div>
 
                   <div className="space-y-4">
-                    <h4 className="text-sm font-black text-white">
-                      Carrossel
-                    </h4>
+                    <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+                      <h4 className="text-sm font-black text-white">
+                        Carrossel
+                      </h4>
 
-                    <DeviceTabs
-                      activeDevice={carouselDevice}
-                      onChange={setCarouselDevice}
-                    />
+                      {formData.useGlobalAppearance ? (
+                        <GlobalDeviceNotice />
+                      ) : (
+                        <DeviceTabs
+                          activeDevice={carouselDevice}
+                          onChange={setCarouselDevice}
+                        />
+                      )}
+                    </div>
 
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <FormField label="Espaçamento">
@@ -1258,11 +1947,25 @@ const AppearancePage = () => {
                           type="number"
                           min="0"
                           step="1"
-                          value={formData.carousel_gap}
+                          value={activeCarouselConfig.gap}
                           onChange={e =>
-                            setFormData({
-                              ...formData,
-                              carousel_gap: Number(e.target.value),
+                            updateCarouselConfig({
+                              gap: safeNumber(e.target.value, 0, 0),
+                            })
+                          }
+                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                        />
+                      </FormField>
+
+                      <FormField label="Itens visíveis">
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={activeCarouselConfig.visible_items}
+                          onChange={e =>
+                            updateCarouselConfig({
+                              visible_items: safeNumber(e.target.value, 1, 1),
                             })
                           }
                           className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
@@ -1271,11 +1974,10 @@ const AppearancePage = () => {
 
                       <FormField label="Forma">
                         <select
-                          value={formData.carousel_card_shape}
+                          value={activeCarouselConfig.card_shape}
                           onChange={e =>
-                            setFormData({
-                              ...formData,
-                              carousel_card_shape: e.target.value as any,
+                            updateCarouselConfig({
+                              card_shape: e.target.value,
                             })
                           }
                           className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
@@ -1287,13 +1989,12 @@ const AppearancePage = () => {
                         </select>
                       </FormField>
 
-                      <FormField label="Modo de visualização do carrossel">
+                      <FormField label="Modo de visualização">
                         <select
-                          value={formData.carousel_view_mode}
+                          value={activeCarouselConfig.view_mode}
                           onChange={e =>
-                            setFormData({
-                              ...formData,
-                              carousel_view_mode: e.target.value,
+                            updateCarouselConfig({
+                              view_mode: e.target.value,
                             })
                           }
                           className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
@@ -1308,43 +2009,38 @@ const AppearancePage = () => {
 
                       <FormField label="Margem superior">
                         <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={formData.margin_top}
+                          type="text"
+                          value={activeCarouselConfig.margin_top}
                           onChange={e =>
-                            setFormData({
-                              ...formData,
+                            updateCarouselConfig({
                               margin_top: e.target.value,
                             })
                           }
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                          placeholder="Ex: 20px ou 20"
+                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
                         />
                       </FormField>
 
                       <FormField label="Margem inferior">
                         <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={formData.margin_bottom}
+                          type="text"
+                          value={activeCarouselConfig.margin_bottom}
                           onChange={e =>
-                            setFormData({
-                              ...formData,
+                            updateCarouselConfig({
                               margin_bottom: e.target.value,
                             })
                           }
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+                          placeholder="Ex: 20px ou 20"
+                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
                         />
                       </FormField>
 
                       <FormField label="Exibir produto no carrossel">
                         <ToggleSwitch
                           label="Exibir produto no carrossel"
-                          checked={formData.show_product}
+                          checked={activeCarouselConfig.show_product}
                           onChange={e =>
-                            setFormData({
-                              ...formData,
+                            updateCarouselConfig({
                               show_product: e.target.checked,
                             })
                           }
@@ -1353,11 +2049,10 @@ const AppearancePage = () => {
 
                       <FormField label="Mostrar botão play">
                         <ToggleSwitch
-                          label="Mostrar botão play"
-                          checked={formData.show_play_icon}
+                          label="Mostrar botão play no carrossel"
+                          checked={activeCarouselConfig.show_play_icon}
                           onChange={e =>
-                            setFormData({
-                              ...formData,
+                            updateCarouselConfig({
                               show_play_icon: e.target.checked,
                             })
                           }
@@ -1367,21 +2062,29 @@ const AppearancePage = () => {
                   </div>
 
                   <div className="space-y-4">
-                    <h4 className="text-sm font-black text-white">Grade</h4>
+                    <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+                      <h4 className="text-sm font-black text-white">Grade</h4>
 
-                    <DeviceTabs
-                      activeDevice={gridDevice}
-                      onChange={setGridDevice}
-                    />
+                      {formData.useGlobalAppearance ? (
+                        <GlobalDeviceNotice />
+                      ) : (
+                        <DeviceTabs
+                          activeDevice={gridDevice}
+                          onChange={setGridDevice}
+                        />
+                      )}
+                    </div>
 
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <FormField label="Colunas">
                         <input
                           type="number"
                           min="1"
-                          value={gridColumns}
+                          value={activeGridConfig.columns}
                           onChange={e =>
-                            updateGridColumns(Number(e.target.value))
+                            updateGridConfig({
+                              columns: safeNumber(e.target.value, 1, 1),
+                            })
                           }
                           className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
                         />
@@ -1391,9 +2094,11 @@ const AppearancePage = () => {
                         <input
                           type="number"
                           min="1"
-                          value={gridRows}
+                          value={activeGridConfig.rows}
                           onChange={e =>
-                            updateGridRows(Number(e.target.value))
+                            updateGridConfig({
+                              rows: safeNumber(e.target.value, 1, 1),
+                            })
                           }
                           className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
                         />
@@ -1404,8 +2109,12 @@ const AppearancePage = () => {
                           type="number"
                           min="0"
                           step="1"
-                          value={gridGap}
-                          onChange={e => updateGridGap(Number(e.target.value))}
+                          value={activeGridConfig.gap}
+                          onChange={e =>
+                            updateGridConfig({
+                              gap: safeNumber(e.target.value, 0, 0),
+                            })
+                          }
                           className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
                         />
                       </FormField>
@@ -1524,11 +2233,22 @@ const AppearancePage = () => {
                   <FormField label="Mostrar título">
                     <ToggleSwitch
                       label="Mostrar título"
-                      checked={formData.show_title}
+                      checked={formData.modal_config.show_title}
                       onChange={e =>
-                        setFormData({
-                          ...formData,
+                        updateModalConfig({
                           show_title: e.target.checked,
+                        })
+                      }
+                    />
+                  </FormField>
+
+                  <FormField label="Mostrar botão play">
+                    <ToggleSwitch
+                      label="Mostrar botão play"
+                      checked={formData.modal_config.show_play_button}
+                      onChange={e =>
+                        updateModalConfig({
+                          show_play_button: e.target.checked,
                         })
                       }
                     />
@@ -1537,10 +2257,9 @@ const AppearancePage = () => {
                   <FormField label="Mostrar botão curtir">
                     <ToggleSwitch
                       label="Mostrar botão curtir"
-                      checked={formData.show_like_button}
+                      checked={formData.modal_config.show_like_button}
                       onChange={e =>
-                        setFormData({
-                          ...formData,
+                        updateModalConfig({
                           show_like_button: e.target.checked,
                         })
                       }
@@ -1550,10 +2269,9 @@ const AppearancePage = () => {
                   <FormField label="Mostrar botão WhatsApp">
                     <ToggleSwitch
                       label="Mostrar botão WhatsApp"
-                      checked={formData.show_whatsapp_button}
+                      checked={formData.modal_config.show_whatsapp_button}
                       onChange={e =>
-                        setFormData({
-                          ...formData,
+                        updateModalConfig({
                           show_whatsapp_button: e.target.checked,
                         })
                       }
@@ -1563,10 +2281,9 @@ const AppearancePage = () => {
                   <FormField label="Mostrar produto">
                     <ToggleSwitch
                       label="Mostrar produto"
-                      checked={formData.show_product}
+                      checked={formData.modal_config.show_product}
                       onChange={e =>
-                        setFormData({
-                          ...formData,
+                        updateModalConfig({
                           show_product: e.target.checked,
                         })
                       }
@@ -1576,10 +2293,9 @@ const AppearancePage = () => {
                   <FormField label="Mostrar botão produto">
                     <ToggleSwitch
                       label="Mostrar botão produto"
-                      checked={formData.show_product_button}
+                      checked={formData.modal_config.show_product_button}
                       onChange={e =>
-                        setFormData({
-                          ...formData,
+                        updateModalConfig({
                           show_product_button: e.target.checked,
                         })
                       }
@@ -1589,10 +2305,9 @@ const AppearancePage = () => {
                   <FormField label="Mostrar botão compartilhar">
                     <ToggleSwitch
                       label="Mostrar botão compartilhar"
-                      checked={formData.show_share_button}
+                      checked={formData.modal_config.show_share_button}
                       onChange={e =>
-                        setFormData({
-                          ...formData,
+                        updateModalConfig({
                           show_share_button: e.target.checked,
                         })
                       }
@@ -1602,10 +2317,9 @@ const AppearancePage = () => {
                   <FormField label="Mostrar botão comentários">
                     <ToggleSwitch
                       label="Mostrar botão comentários"
-                      checked={formData.show_comment_button}
+                      checked={formData.modal_config.show_comment_button}
                       onChange={e =>
-                        setFormData({
-                          ...formData,
+                        updateModalConfig({
                           show_comment_button: e.target.checked,
                         })
                       }
@@ -1615,10 +2329,9 @@ const AppearancePage = () => {
                   <FormField label="Ocultar stories">
                     <ToggleSwitch
                       label="Ocultar stories"
-                      checked={formData.hide_stories}
+                      checked={formData.modal_config.hide_stories}
                       onChange={e =>
-                        setFormData({
-                          ...formData,
+                        updateModalConfig({
                           hide_stories: e.target.checked,
                         })
                       }
@@ -1628,10 +2341,9 @@ const AppearancePage = () => {
                   <FormField label="Sombra">
                     <ToggleSwitch
                       label="Ativar sombra"
-                      checked={formData.shadow_enabled}
+                      checked={formData.modal_config.shadow_enabled}
                       onChange={e =>
-                        setFormData({
-                          ...formData,
+                        updateModalConfig({
                           shadow_enabled: e.target.checked,
                         })
                       }
