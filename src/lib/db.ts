@@ -1302,7 +1302,10 @@ export const db = {
     memoryGeneralSettings,
   ),
 
-  appearances: createCrudFunctions<Appearance>('appearances', memoryAppearances),
+  appearances: createSupabaseCrudFunctions<Appearance>(
+  'appearances',
+  memoryAppearances,
+),
 
   videos: createSupabaseCrudFunctions<Video>('videos', memoryVideos),
 
