@@ -44,15 +44,14 @@ type ExtendedAppearance = Appearance & {
   unit: 'px' | 'percent';
   height: string;
 
-  /**
-   * Posição visual do widget flutuante.
-   * Este é o único local onde a posição do widget deve ser controlada.
-   */
   position: PositionValue;
   floating_position: FloatingPosition;
 
   bottom_spacing: string;
+  top_spacing: string;
   left_spacing: string;
+  right_spacing: string;
+
   cta_text: string;
   cta_size: string;
   cta_duration: string;
@@ -108,7 +107,7 @@ const positionToFloatingPosition = (
 ): FloatingPosition => {
   switch (position) {
     case 'fixed_bottom_left':
-      return 'left';
+      return 'bottom-left';
 
     case 'fixed_top_left':
       return 'top-left';
@@ -118,7 +117,7 @@ const positionToFloatingPosition = (
 
     case 'fixed_bottom_right':
     default:
-      return 'right';
+      return 'bottom-right';
   }
 };
 
@@ -208,14 +207,14 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
     unit: 'px',
     height: '',
 
-    /**
-     * Posição do widget flutuante agora fica centralizada na Aparência.
-     */
     position: 'fixed_bottom_right',
-    floating_position: 'right',
+    floating_position: 'bottom-right',
 
     bottom_spacing: '',
+    top_spacing: '',
     left_spacing: '',
+    right_spacing: '',
+
     cta_text: '',
     cta_size: '',
     cta_duration: '',
@@ -247,14 +246,15 @@ const normalizeAppearance = (
 ): ExtendedAppearance => {
   const defaults = createDefaultFormData(storeId);
   const item = style as Appearance & Partial<ExtendedAppearance>;
+  const anyItem = item as any;
 
   const normalizedPosition = normalizePosition(
-    item.position,
-    item.floating_position,
+    anyItem.position,
+    anyItem.floating_position,
   );
 
   const normalizedFloatingPosition = normalizeFloatingPosition(
-    item.floating_position,
+    anyItem.floating_position,
     normalizedPosition,
   );
 
@@ -302,39 +302,63 @@ const normalizeAppearance = (
     updated_at: item.updated_at || defaults.updated_at,
 
     useGlobalAppearance:
-      item.useGlobalAppearance ?? defaults.useGlobalAppearance,
-    width: item.width ?? defaults.width,
-    unit: item.unit ?? defaults.unit,
-    height: item.height ?? defaults.height,
+      anyItem.useGlobalAppearance ?? defaults.useGlobalAppearance,
+    width: anyItem.width ?? defaults.width,
+    unit: anyItem.unit ?? defaults.unit,
+    height: anyItem.height ?? defaults.height,
 
     position: normalizedPosition,
     floating_position: normalizedFloatingPosition,
 
-    bottom_spacing: item.bottom_spacing ?? defaults.bottom_spacing,
-    left_spacing: item.left_spacing ?? defaults.left_spacing,
-    cta_text: item.cta_text ?? defaults.cta_text,
-    cta_size: item.cta_size ?? defaults.cta_size,
-    cta_duration: item.cta_duration ?? defaults.cta_duration,
-    border_style: item.border_style ?? defaults.border_style,
-    color: item.color || item.primary_color || defaults.color,
-    show_play_icon: item.show_play_icon ?? item.show_play_button ?? true,
-    hide_stories: item.hide_stories ?? defaults.hide_stories,
-    auto_center: item.auto_center ?? defaults.auto_center,
+    bottom_spacing:
+      anyItem.bottom_spacing ??
+      anyItem.spacing_bottom ??
+      anyItem.offset_bottom ??
+      defaults.bottom_spacing,
+
+    top_spacing:
+      anyItem.top_spacing ??
+      anyItem.spacing_top ??
+      anyItem.offset_top ??
+      anyItem.bottom_spacing ??
+      defaults.top_spacing,
+
+    left_spacing:
+      anyItem.left_spacing ??
+      anyItem.spacing_left ??
+      anyItem.offset_left ??
+      defaults.left_spacing,
+
+    right_spacing:
+      anyItem.right_spacing ??
+      anyItem.spacing_right ??
+      anyItem.offset_right ??
+      anyItem.left_spacing ??
+      defaults.right_spacing,
+
+    cta_text: anyItem.cta_text ?? defaults.cta_text,
+    cta_size: anyItem.cta_size ?? defaults.cta_size,
+    cta_duration: anyItem.cta_duration ?? defaults.cta_duration,
+    border_style: anyItem.border_style ?? defaults.border_style,
+    color: anyItem.color || item.primary_color || defaults.color,
+    show_play_icon: anyItem.show_play_icon ?? item.show_play_button ?? true,
+    hide_stories: anyItem.hide_stories ?? defaults.hide_stories,
+    auto_center: anyItem.auto_center ?? defaults.auto_center,
     carousel_view_mode:
-      item.carousel_view_mode ?? defaults.carousel_view_mode,
-    margin_top: item.margin_top ?? defaults.margin_top,
-    margin_bottom: item.margin_bottom ?? defaults.margin_bottom,
-    draggable: item.draggable ?? defaults.draggable,
-    allow_close: item.allow_close ?? defaults.allow_close,
-    object_fit: item.object_fit ?? defaults.object_fit,
-    z_index: item.z_index ?? defaults.z_index,
-    desktop_columns: item.desktop_columns ?? defaults.desktop_columns,
-    desktop_rows: item.desktop_rows ?? defaults.desktop_rows,
-    desktop_gap: item.desktop_gap ?? defaults.desktop_gap,
-    mobile_columns: item.mobile_columns ?? defaults.mobile_columns,
-    mobile_rows: item.mobile_rows ?? defaults.mobile_rows,
-    mobile_gap: item.mobile_gap ?? defaults.mobile_gap,
-    font_size: item.font_size ?? defaults.font_size,
+      anyItem.carousel_view_mode ?? defaults.carousel_view_mode,
+    margin_top: anyItem.margin_top ?? defaults.margin_top,
+    margin_bottom: anyItem.margin_bottom ?? defaults.margin_bottom,
+    draggable: anyItem.draggable ?? defaults.draggable,
+    allow_close: anyItem.allow_close ?? defaults.allow_close,
+    object_fit: anyItem.object_fit ?? defaults.object_fit,
+    z_index: anyItem.z_index ?? defaults.z_index,
+    desktop_columns: anyItem.desktop_columns ?? defaults.desktop_columns,
+    desktop_rows: anyItem.desktop_rows ?? defaults.desktop_rows,
+    desktop_gap: anyItem.desktop_gap ?? defaults.desktop_gap,
+    mobile_columns: anyItem.mobile_columns ?? defaults.mobile_columns,
+    mobile_rows: anyItem.mobile_rows ?? defaults.mobile_rows,
+    mobile_gap: anyItem.mobile_gap ?? defaults.mobile_gap,
+    font_size: anyItem.font_size ?? defaults.font_size,
   } as ExtendedAppearance;
 };
 
@@ -682,7 +706,6 @@ const AppearancePage = () => {
       setSaving(true);
 
       const now = new Date().toISOString();
-
       const id = editingStyle?.id || formData.id || generateUuid();
 
       const normalizedPosition = normalizePosition(
@@ -693,18 +716,25 @@ const AppearancePage = () => {
       const normalizedFloatingPosition =
         positionToFloatingPosition(normalizedPosition);
 
+      const verticalSpacing =
+        formData.bottom_spacing || formData.top_spacing || '';
+
+      const lateralSpacing =
+        formData.left_spacing || formData.right_spacing || '';
+
       const stylePayload = {
         ...formData,
         id,
         store_id: finalStoreId,
         name: formData.name.trim(),
 
-        /**
-         * A posição do widget flutuante é salva somente aqui,
-         * na Aparência.
-         */
         position: normalizedPosition,
         floating_position: normalizedFloatingPosition,
+
+        bottom_spacing: verticalSpacing,
+        top_spacing: verticalSpacing,
+        left_spacing: lateralSpacing,
+        right_spacing: lateralSpacing,
 
         color: formData.color || formData.primary_color,
         show_play_button: formData.show_play_icon,
@@ -713,6 +743,10 @@ const AppearancePage = () => {
       } as Appearance & {
         position: PositionValue;
         floating_position: FloatingPosition;
+        bottom_spacing: string;
+        top_spacing: string;
+        left_spacing: string;
+        right_spacing: string;
       };
 
       if (stylePayload.is_default) {
@@ -1130,11 +1164,14 @@ const AppearancePage = () => {
                       <FormField label="Distância inferior/superior">
                         <input
                           type="text"
-                          value={formData.bottom_spacing}
+                          value={
+                            formData.bottom_spacing || formData.top_spacing
+                          }
                           onChange={e =>
                             setFormData({
                               ...formData,
                               bottom_spacing: e.target.value,
+                              top_spacing: e.target.value,
                             })
                           }
                           placeholder="Ex: 20px"
@@ -1145,11 +1182,14 @@ const AppearancePage = () => {
                       <FormField label="Distância lateral">
                         <input
                           type="text"
-                          value={formData.left_spacing}
+                          value={
+                            formData.left_spacing || formData.right_spacing
+                          }
                           onChange={e =>
                             setFormData({
                               ...formData,
                               left_spacing: e.target.value,
+                              right_spacing: e.target.value,
                             })
                           }
                           placeholder="Ex: 20px"
