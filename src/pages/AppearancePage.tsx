@@ -1008,7 +1008,7 @@ const stylePayload = {
                         />
                       </FormField>
 
-                      <FormField label="Distância esquerda">
+                      <FormField label="Distância lateral">
                         <input
                           type="text"
                           value={formData.left_spacing}
