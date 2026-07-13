@@ -1,7 +1,12 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { db, Appearance } from '@/lib/db';
+import {
+  db,
+  Appearance,
+  generateUuid,
+  resolveStoreId,
+} from '@/lib/db';
 import { useTenant } from '@/context/TenantContext';
 import {
   Plus,
@@ -27,13 +32,25 @@ type FloatingPosition =
   | 'bottom-left'
   | 'bottom-right';
 
+type PositionValue =
+  | 'fixed_bottom_right'
+  | 'fixed_bottom_left'
+  | 'fixed_top_right'
+  | 'fixed_top_left';
+
 type ExtendedAppearance = Appearance & {
   useGlobalAppearance: boolean;
   width: string;
   unit: 'px' | 'percent';
   height: string;
-  position: string;
+
+  /**
+   * Posição visual do widget flutuante.
+   * Este é o único local onde a posição do widget deve ser controlada.
+   */
+  position: PositionValue;
   floating_position: FloatingPosition;
+
   bottom_spacing: string;
   left_spacing: string;
   cta_text: string;
@@ -64,7 +81,31 @@ const isValidHexColor = (value?: string) => {
   return /^#[0-9A-Fa-f]{6}$/.test(value || '');
 };
 
-const positionToFloatingPosition = (position: string): FloatingPosition => {
+const isValidPositionValue = (value?: string): value is PositionValue => {
+  return (
+    value === 'fixed_bottom_right' ||
+    value === 'fixed_bottom_left' ||
+    value === 'fixed_top_right' ||
+    value === 'fixed_top_left'
+  );
+};
+
+const isValidFloatingPosition = (
+  value?: string,
+): value is FloatingPosition => {
+  return (
+    value === 'left' ||
+    value === 'right' ||
+    value === 'top-left' ||
+    value === 'top-right' ||
+    value === 'bottom-left' ||
+    value === 'bottom-right'
+  );
+};
+
+const positionToFloatingPosition = (
+  position?: string,
+): FloatingPosition => {
   switch (position) {
     case 'fixed_bottom_left':
       return 'left';
@@ -81,7 +122,9 @@ const positionToFloatingPosition = (position: string): FloatingPosition => {
   }
 };
 
-const floatingPositionToPosition = (floatingPosition?: string): string => {
+const floatingPositionToPosition = (
+  floatingPosition?: string,
+): PositionValue => {
   switch (floatingPosition) {
     case 'left':
     case 'bottom-left':
@@ -98,6 +141,28 @@ const floatingPositionToPosition = (floatingPosition?: string): string => {
     default:
       return 'fixed_bottom_right';
   }
+};
+
+const normalizePosition = (
+  position?: string,
+  floatingPosition?: string,
+): PositionValue => {
+  if (isValidPositionValue(position)) {
+    return position;
+  }
+
+  return floatingPositionToPosition(floatingPosition);
+};
+
+const normalizeFloatingPosition = (
+  floatingPosition?: string,
+  position?: string,
+): FloatingPosition => {
+  if (isValidFloatingPosition(floatingPosition)) {
+    return floatingPosition;
+  }
+
+  return positionToFloatingPosition(position);
 };
 
 const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
@@ -142,8 +207,13 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
     width: '',
     unit: 'px',
     height: '',
+
+    /**
+     * Posição do widget flutuante agora fica centralizada na Aparência.
+     */
     position: 'fixed_bottom_right',
     floating_position: 'right',
+
     bottom_spacing: '',
     left_spacing: '',
     cta_text: '',
@@ -178,9 +248,15 @@ const normalizeAppearance = (
   const defaults = createDefaultFormData(storeId);
   const item = style as Appearance & Partial<ExtendedAppearance>;
 
-  const savedFloatingPosition =
-    item.floating_position ||
-    positionToFloatingPosition(item.position || defaults.position);
+  const normalizedPosition = normalizePosition(
+    item.position,
+    item.floating_position,
+  );
+
+  const normalizedFloatingPosition = normalizeFloatingPosition(
+    item.floating_position,
+    normalizedPosition,
+  );
 
   return {
     ...defaults,
@@ -231,8 +307,8 @@ const normalizeAppearance = (
     unit: item.unit ?? defaults.unit,
     height: item.height ?? defaults.height,
 
-    position: item.position || floatingPositionToPosition(savedFloatingPosition),
-    floating_position: savedFloatingPosition as FloatingPosition,
+    position: normalizedPosition,
+    floating_position: normalizedFloatingPosition,
 
     bottom_spacing: item.bottom_spacing ?? defaults.bottom_spacing,
     left_spacing: item.left_spacing ?? defaults.left_spacing,
@@ -260,6 +336,31 @@ const normalizeAppearance = (
     mobile_gap: item.mobile_gap ?? defaults.mobile_gap,
     font_size: item.font_size ?? defaults.font_size,
   } as ExtendedAppearance;
+};
+
+const getAppearancesSafe = async (storeId: string): Promise<Appearance[]> => {
+  try {
+    return await db.appearances.getAll(storeId);
+  } catch {
+    try {
+      return await db.appearances.getAll();
+    } catch {
+      return [];
+    }
+  }
+};
+
+const deleteAppearanceSafe = async (id: string, storeId?: string) => {
+  try {
+    if (storeId) {
+      await (db.appearances as any).delete(id, storeId);
+      return;
+    }
+
+    await db.appearances.delete(id);
+  } catch {
+    await db.appearances.delete(id);
+  }
 };
 
 const ToggleSwitch = ({
@@ -312,7 +413,9 @@ const ColorInput = ({
     <div className="flex items-center gap-2">
       <div
         className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-slate-100"
-        style={{ backgroundColor: safeColor }}
+        style={{
+          backgroundColor: safeColor,
+        }}
       >
         <input
           type="color"
@@ -416,6 +519,7 @@ const FormField = ({
 const AppearancePage = () => {
   const { storeId, loading: tenantLoading } = useTenant();
 
+  const [resolvedStoreId, setResolvedStoreId] = useState('');
   const [appearances, setAppearances] = useState<Appearance[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -447,12 +551,17 @@ const AppearancePage = () => {
     try {
       setLoading(true);
 
-      if (!storeId) {
+      if (tenantLoading) return;
+
+      const finalStoreId = await resolveStoreId(storeId);
+      setResolvedStoreId(finalStoreId);
+
+      if (!finalStoreId) {
         setAppearances([]);
         return;
       }
 
-      const list = await db.appearances.getAll(storeId);
+      const list = await getAppearancesSafe(finalStoreId);
       setAppearances(list || []);
     } catch (error) {
       console.error('Erro ao carregar estilos:', error);
@@ -470,7 +579,9 @@ const AppearancePage = () => {
 
   const handleSetDefault = async (id: string) => {
     try {
-      if (!storeId) {
+      const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
+
+      if (!finalStoreId) {
         showError('Não foi possível identificar a loja atual.');
         return;
       }
@@ -481,7 +592,7 @@ const AppearancePage = () => {
         appearances.map(style =>
           db.appearances.save({
             ...style,
-            store_id: storeId,
+            store_id: finalStoreId,
             is_default: style.id === id,
             updated_at: now,
           } as Appearance),
@@ -506,7 +617,9 @@ const AppearancePage = () => {
 
   const handleConfirmDelete = async () => {
     try {
-      await db.appearances.delete(deleteModal.id);
+      const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
+
+      await deleteAppearanceSafe(deleteModal.id, finalStoreId);
 
       showSuccess('Estilo excluído com sucesso.');
 
@@ -522,9 +635,11 @@ const AppearancePage = () => {
     }
   };
 
-  const handleNewStyle = () => {
+  const handleNewStyle = async () => {
+    const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
+
     setEditingStyle(null);
-    setFormData(createDefaultFormData(storeId));
+    setFormData(createDefaultFormData(finalStoreId));
     setFloatingDevice('desktop');
     setCarouselDevice('desktop');
     setGridDevice('desktop');
@@ -533,14 +648,14 @@ const AppearancePage = () => {
 
   const handleEditStyle = (style: Appearance) => {
     setEditingStyle(style);
-    setFormData(normalizeAppearance(style, storeId));
+    setFormData(normalizeAppearance(style, resolvedStoreId || storeId));
     setFloatingDevice('desktop');
     setCarouselDevice('desktop');
     setGridDevice('desktop');
     setShowModal(true);
   };
 
-  const handlePositionChange = (position: string) => {
+  const handlePositionChange = (position: PositionValue) => {
     setFormData(prev => ({
       ...prev,
       position,
@@ -551,7 +666,9 @@ const AppearancePage = () => {
   const handleSaveStyle = async () => {
     if (saving) return;
 
-    if (!storeId) {
+    const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
+
+    if (!finalStoreId) {
       showError('Não foi possível identificar a loja atual.');
       return;
     }
@@ -565,31 +682,38 @@ const AppearancePage = () => {
       setSaving(true);
 
       const now = new Date().toISOString();
-      const id = editingStyle?.id || formData.id || Date.now().toString();
 
-      const { useGlobalAppearance, ...cleanFormData } = formData;
+      const id = editingStyle?.id || formData.id || generateUuid();
 
-const normalizedPosition =
-  formData.position || floatingPositionToPosition(formData.floating_position);
+      const normalizedPosition = normalizePosition(
+        formData.position,
+        formData.floating_position,
+      );
 
-const stylePayload = {
-  ...cleanFormData,
-  id,
-  store_id: storeId,
-  name: formData.name.trim(),
+      const normalizedFloatingPosition =
+        positionToFloatingPosition(normalizedPosition);
 
-  position: normalizedPosition,
-  floating_position: positionToFloatingPosition(normalizedPosition),
+      const stylePayload = {
+        ...formData,
+        id,
+        store_id: finalStoreId,
+        name: formData.name.trim(),
 
-  show_play_button: formData.show_play_icon,
-  updated_at: now,
-  created_at: formData.created_at || now,
-} as Appearance & {
-  position: string;
-  floating_position: FloatingPosition;
-};
+        /**
+         * A posição do widget flutuante é salva somente aqui,
+         * na Aparência.
+         */
+        position: normalizedPosition,
+        floating_position: normalizedFloatingPosition,
 
-
+        color: formData.color || formData.primary_color,
+        show_play_button: formData.show_play_icon,
+        updated_at: now,
+        created_at: formData.created_at || editingStyle?.created_at || now,
+      } as Appearance & {
+        position: PositionValue;
+        floating_position: FloatingPosition;
+      };
 
       if (stylePayload.is_default) {
         await Promise.all(
@@ -598,7 +722,7 @@ const stylePayload = {
             .map(style =>
               db.appearances.save({
                 ...style,
-                store_id: storeId,
+                store_id: finalStoreId,
                 is_default: false,
                 updated_at: now,
               } as Appearance),
@@ -607,6 +731,8 @@ const stylePayload = {
       }
 
       await db.appearances.save(stylePayload as Appearance);
+
+      window.dispatchEvent(new Event('storage'));
 
       showSuccess(
         editingStyle
@@ -685,8 +811,12 @@ const stylePayload = {
     }
   };
 
-  if (loading) {
-    return null;
+  if (loading || tenantLoading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-[#0094EB]" />
+      </div>
+    );
   }
 
   return (
@@ -972,28 +1102,32 @@ const stylePayload = {
                         />
                       </FormField>
 
-                      <FormField label="Posição">
+                      <FormField label="Posição do widget flutuante">
                         <select
                           value={formData.position}
-                          onChange={e => handlePositionChange(e.target.value)}
+                          onChange={e =>
+                            handlePositionChange(
+                              e.target.value as PositionValue,
+                            )
+                          }
                           className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
                         >
                           <option value="fixed_bottom_right">
-                            Flutuante Inferior Direita
+                            Inferior direita
                           </option>
                           <option value="fixed_bottom_left">
-                            Flutuante Inferior Esquerda
+                            Inferior esquerda
                           </option>
                           <option value="fixed_top_right">
-                            Flutuante Topo Direita
+                            Superior direita
                           </option>
                           <option value="fixed_top_left">
-                            Flutuante Topo Esquerda
+                            Superior esquerda
                           </option>
                         </select>
                       </FormField>
 
-                      <FormField label="Distância inferior">
+                      <FormField label="Distância inferior/superior">
                         <input
                           type="text"
                           value={formData.bottom_spacing}
