@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   db,
   Appearance,
@@ -17,12 +17,27 @@ import {
   X,
   Save,
   Loader2,
+  Palette,
+  Monitor,
+  Smartphone,
+  LayoutGrid,
+  PlaySquare,
+  Rows3,
+  Settings2,
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import { cn } from '@/lib/utils';
 
 type DeviceType = 'desktop' | 'mobile';
+
+type ModalTab =
+  | 'basic'
+  | 'visual'
+  | 'floating'
+  | 'carousel'
+  | 'grid'
+  | 'modal';
 
 type FloatingPosition =
   | 'left'
@@ -96,6 +111,7 @@ type ModalConfig = {
 
 type ExtendedAppearance = Appearance & {
   useGlobalAppearance: boolean;
+  use_global_appearance?: boolean;
 
   floating_config: ResponsiveConfig<FloatingConfig>;
   carousel_config: ResponsiveConfig<CarouselConfig>;
@@ -138,6 +154,9 @@ type ExtendedAppearance = Appearance & {
   font_size: string;
 };
 
+const inputClass =
+  'w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]';
+
 const isValidHexColor = (value?: string) => {
   return /^#[0-9A-Fa-f]{6}$/.test(value || '');
 };
@@ -170,13 +189,10 @@ const positionToFloatingPosition = (
   switch (position) {
     case 'fixed_bottom_left':
       return 'bottom-left';
-
     case 'fixed_top_left':
       return 'top-left';
-
     case 'fixed_top_right':
       return 'top-right';
-
     case 'fixed_bottom_right':
     default:
       return 'bottom-right';
@@ -190,13 +206,10 @@ const floatingPositionToPosition = (
     case 'left':
     case 'bottom-left':
       return 'fixed_bottom_left';
-
     case 'top-left':
       return 'fixed_top_left';
-
     case 'top-right':
       return 'fixed_top_right';
-
     case 'right':
     case 'bottom-right':
     default:
@@ -208,10 +221,7 @@ const normalizePosition = (
   position?: string,
   floatingPosition?: string,
 ): PositionValue => {
-  if (isValidPositionValue(position)) {
-    return position;
-  }
-
+  if (isValidPositionValue(position)) return position;
   return floatingPositionToPosition(floatingPosition);
 };
 
@@ -219,10 +229,7 @@ const normalizeFloatingPosition = (
   floatingPosition?: string,
   position?: string,
 ): FloatingPosition => {
-  if (isValidFloatingPosition(floatingPosition)) {
-    return floatingPosition;
-  }
-
+  if (isValidFloatingPosition(floatingPosition)) return floatingPosition;
   return positionToFloatingPosition(position);
 };
 
@@ -233,13 +240,8 @@ const safeNumber = (
 ): number => {
   const parsed = Number(value);
 
-  if (Number.isNaN(parsed)) {
-    return fallback;
-  }
-
-  if (typeof min === 'number' && parsed < min) {
-    return min;
-  }
+  if (Number.isNaN(parsed)) return fallback;
+  if (typeof min === 'number' && parsed < min) return min;
 
   return parsed;
 };
@@ -399,10 +401,7 @@ const getActiveResponsiveConfig = <T,>(
   device: DeviceType,
   useGlobalAppearance: boolean,
 ): T => {
-  if (useGlobalAppearance || config.same_for_all) {
-    return config.desktop;
-  }
-
+  if (useGlobalAppearance || config.same_for_all) return config.desktop;
   return config[device];
 };
 
@@ -453,6 +452,7 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
     updated_at: now,
 
     useGlobalAppearance: false,
+    use_global_appearance: false,
 
     floating_config: createResponsiveConfig(floatingDesktop, floatingMobile),
     carousel_config: createResponsiveConfig(carouselDesktop, carouselMobile),
@@ -529,7 +529,9 @@ const normalizeAppearance = (
     mobileDefault: createDefaultFloatingMobileConfig(),
     sameForAll: globalAppearance,
     legacyDesktop: {
-      shape: (item.widget_shape as FloatingConfig['shape']) || defaults.widget_shape,
+      shape:
+        (item.widget_shape as FloatingConfig['shape']) ||
+        defaults.widget_shape,
       width: anyItem.width ?? defaults.width,
       height: anyItem.height ?? defaults.height,
       border_radius: item.border_radius || defaults.border_radius,
@@ -544,7 +546,6 @@ const normalizeAppearance = (
         anyItem.top_spacing ??
         anyItem.spacing_top ??
         anyItem.offset_top ??
-        anyItem.bottom_spacing ??
         defaults.top_spacing,
       left_spacing:
         anyItem.left_spacing ??
@@ -555,7 +556,6 @@ const normalizeAppearance = (
         anyItem.right_spacing ??
         anyItem.spacing_right ??
         anyItem.offset_right ??
-        anyItem.left_spacing ??
         defaults.right_spacing,
       border_color: anyItem.color || item.primary_color || defaults.color,
       border_style: anyItem.border_style ?? defaults.border_style,
@@ -697,6 +697,7 @@ const normalizeAppearance = (
     updated_at: item.updated_at || defaults.updated_at,
 
     useGlobalAppearance: globalAppearance,
+    use_global_appearance: globalAppearance,
 
     floating_config: {
       ...floatingConfig,
@@ -823,7 +824,7 @@ const ColorInput = ({
   return (
     <div className="flex items-center gap-2">
       <div
-        className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-slate-100"
+        className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-lg border border-slate-700 bg-slate-100"
         style={{
           backgroundColor: safeColor,
         }}
@@ -841,7 +842,7 @@ const ColorInput = ({
         type="text"
         value={value}
         onChange={onChange}
-        className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
+        className={inputClass}
       />
     </div>
   );
@@ -855,17 +856,18 @@ const DeviceTabs = ({
   onChange: (device: DeviceType) => void;
 }) => {
   return (
-    <div className="flex w-fit rounded-lg bg-slate-900 p-1">
+    <div className="flex w-fit rounded-xl bg-slate-900 p-1">
       <button
         type="button"
         onClick={() => onChange('desktop')}
         className={cn(
-          'rounded-lg px-4 py-2 text-sm font-bold transition-all',
+          'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-all',
           activeDevice === 'desktop'
             ? 'bg-[#0094EB] text-white shadow-lg'
             : 'text-slate-400 hover:text-white',
         )}
       >
+        <Monitor size={15} />
         Desktop
       </button>
 
@@ -873,12 +875,13 @@ const DeviceTabs = ({
         type="button"
         onClick={() => onChange('mobile')}
         className={cn(
-          'rounded-lg px-4 py-2 text-sm font-bold transition-all',
+          'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-all',
           activeDevice === 'mobile'
             ? 'bg-[#0094EB] text-white shadow-lg'
             : 'text-slate-400 hover:text-white',
         )}
       >
+        <Smartphone size={15} />
         Mobile
       </button>
     </div>
@@ -888,17 +891,19 @@ const DeviceTabs = ({
 const GlobalDeviceNotice = () => {
   return (
     <div className="w-fit rounded-xl border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-xs font-bold text-blue-200">
-      Aplicando a mesma aparência em Desktop e Mobile.
+      Aplicando Desktop também no Mobile.
     </div>
   );
 };
 
 const SectionCard = ({
   title,
+  description,
   children,
   className,
 }: {
   title: string;
+  description?: string;
   children: React.ReactNode;
   className?: string;
 }) => {
@@ -909,7 +914,15 @@ const SectionCard = ({
         className,
       )}
     >
-      <h3 className="text-lg font-black text-white">{title}</h3>
+      <div>
+        <h3 className="text-lg font-black text-white">{title}</h3>
+        {description && (
+          <p className="mt-1 text-sm font-medium text-slate-500">
+            {description}
+          </p>
+        )}
+      </div>
+
       {children}
     </div>
   );
@@ -935,6 +948,34 @@ const FormField = ({
   );
 };
 
+const ModalTabButton = ({
+  active,
+  icon,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-black transition-all',
+        active
+          ? 'bg-[#0094EB] text-white shadow-lg'
+          : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800',
+      )}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+};
+
 const AppearancePage = () => {
   const { storeId, loading: tenantLoading } = useTenant();
 
@@ -955,6 +996,7 @@ const AppearancePage = () => {
 
   const [showModal, setShowModal] = useState(false);
   const [editingStyle, setEditingStyle] = useState<Appearance | null>(null);
+  const [activeTab, setActiveTab] = useState<ModalTab>('basic');
 
   const [formData, setFormData] = useState<ExtendedAppearance>(() =>
     createDefaultFormData(storeId),
@@ -1007,6 +1049,7 @@ const AppearancePage = () => {
     return {
       ...prev,
       useGlobalAppearance: checked,
+      use_global_appearance: checked,
       floating_config: {
         same_for_all: checked,
         desktop: floatingDesktop,
@@ -1130,17 +1173,18 @@ const AppearancePage = () => {
         ...patch,
       };
 
-      const nextConfig: ResponsiveConfig<GridConfig> = prev.useGlobalAppearance
-        ? {
-            same_for_all: true,
-            desktop: updatedDeviceConfig,
-            mobile: updatedDeviceConfig,
-          }
-        : {
-            ...prev.grid_config,
-            same_for_all: false,
-            [device]: updatedDeviceConfig,
-          };
+      const nextConfig: ResponsiveConfig<GridConfig> =
+        prev.useGlobalAppearance
+          ? {
+              same_for_all: true,
+              desktop: updatedDeviceConfig,
+              mobile: updatedDeviceConfig,
+            }
+          : {
+              ...prev.grid_config,
+              same_for_all: false,
+              [device]: updatedDeviceConfig,
+            };
 
       return {
         ...prev,
@@ -1245,6 +1289,7 @@ const AppearancePage = () => {
     setFloatingDevice('desktop');
     setCarouselDevice('desktop');
     setGridDevice('desktop');
+    setActiveTab('basic');
     setShowModal(true);
   };
 
@@ -1254,6 +1299,7 @@ const AppearancePage = () => {
     setFloatingDevice('desktop');
     setCarouselDevice('desktop');
     setGridDevice('desktop');
+    setActiveTab('basic');
     setShowModal(true);
   };
 
@@ -1269,6 +1315,7 @@ const AppearancePage = () => {
 
     if (!formData.name.trim()) {
       showError('Nome do estilo é obrigatório.');
+      setActiveTab('basic');
       return;
     }
 
@@ -1313,52 +1360,75 @@ const AppearancePage = () => {
       const normalizedFloatingPosition =
         positionToFloatingPosition(normalizedPosition);
 
-      const stylePayload = {
-        ...formData,
+      floatingConfig.desktop = {
+        ...floatingDesktop,
+        position: normalizedPosition,
+        floating_position: normalizedFloatingPosition,
+      };
 
+      if (formData.useGlobalAppearance) {
+        floatingConfig.mobile = floatingConfig.desktop;
+      }
+
+      const stylePayload = {
         id,
         store_id: finalStoreId,
         name: formData.name.trim(),
         is_default: formData.is_default,
 
-        useGlobalAppearance: formData.useGlobalAppearance,
-        floating_config: {
-          ...floatingConfig,
-          desktop: {
-            ...floatingDesktop,
-            position: normalizedPosition,
-            floating_position: normalizedFloatingPosition,
-          },
-        },
+        primary_color: formData.primary_color,
+        secondary_color: formData.secondary_color,
+        text_color: formData.text_color,
+        background_color: formData.background_color,
+        button_color: formData.button_color,
+
+        border_radius: floatingConfig.desktop.border_radius,
+        shadow_enabled: modalConfig.shadow_enabled,
+        font_family: formData.font_family,
+        widget_shape: floatingConfig.desktop.shape,
+        widget_size: formData.widget_size || 'medium',
+        widget_animation: formData.widget_animation || 'none',
+
+        carousel_card_shape: carouselDesktop.card_shape,
+        carousel_visible_items: carouselDesktop.visible_items,
+        carousel_gap: carouselDesktop.gap,
+
+        show_title: modalConfig.show_title,
+        show_play_button: modalConfig.show_play_button,
+        show_product: modalConfig.show_product,
+        show_like_button: modalConfig.show_like_button,
+        show_comment_button: modalConfig.show_comment_button,
+        show_share_button: modalConfig.show_share_button,
+        show_whatsapp_button: modalConfig.show_whatsapp_button,
+        show_product_button: modalConfig.show_product_button,
+
+        use_global_appearance: formData.useGlobalAppearance,
+        floating_config: floatingConfig,
         carousel_config: carouselConfig,
         grid_config: gridConfig,
         modal_config: modalConfig,
 
-        widget_shape: floatingDesktop.shape,
-        width: floatingDesktop.width,
-        height: floatingDesktop.height,
-        border_radius: floatingDesktop.border_radius,
+        width: floatingConfig.desktop.width,
+        height: floatingConfig.desktop.height,
+        unit: formData.unit || 'px',
 
         position: normalizedPosition,
         floating_position: normalizedFloatingPosition,
 
-        bottom_spacing: floatingDesktop.bottom_spacing,
-        top_spacing: floatingDesktop.top_spacing,
-        left_spacing: floatingDesktop.left_spacing,
-        right_spacing: floatingDesktop.right_spacing,
+        bottom_spacing: floatingConfig.desktop.bottom_spacing,
+        top_spacing: floatingConfig.desktop.top_spacing,
+        left_spacing: floatingConfig.desktop.left_spacing,
+        right_spacing: floatingConfig.desktop.right_spacing,
 
-        color: floatingDesktop.border_color || formData.primary_color,
-        border_style: floatingDesktop.border_style,
-        show_play_icon: floatingDesktop.show_play_icon,
-        draggable: floatingDesktop.draggable,
-        allow_close: floatingDesktop.allow_close,
-        object_fit: floatingDesktop.object_fit,
-        z_index: floatingDesktop.z_index,
+        color: floatingConfig.desktop.border_color || formData.primary_color,
+        border_style: floatingConfig.desktop.border_style,
+        show_play_icon: floatingConfig.desktop.show_play_icon,
+        draggable: floatingConfig.desktop.draggable,
+        allow_close: floatingConfig.desktop.allow_close,
+        object_fit: floatingConfig.desktop.object_fit,
+        z_index: floatingConfig.desktop.z_index,
 
-        carousel_gap: carouselDesktop.gap,
-        carousel_card_shape: carouselDesktop.card_shape,
         carousel_view_mode: carouselDesktop.view_mode,
-        carousel_visible_items: carouselDesktop.visible_items,
         margin_top: carouselDesktop.margin_top,
         margin_bottom: carouselDesktop.margin_bottom,
 
@@ -1369,25 +1439,11 @@ const AppearancePage = () => {
         mobile_rows: gridMobile.rows,
         mobile_gap: gridMobile.gap,
 
-        show_title: modalConfig.show_title,
-        show_play_button: modalConfig.show_play_button,
-        show_product: modalConfig.show_product,
-        show_like_button: modalConfig.show_like_button,
-        show_comment_button: modalConfig.show_comment_button,
-        show_share_button: modalConfig.show_share_button,
-        show_whatsapp_button: modalConfig.show_whatsapp_button,
-        show_product_button: modalConfig.show_product_button,
         hide_stories: modalConfig.hide_stories,
-        shadow_enabled: modalConfig.shadow_enabled,
+        font_size: formData.font_size,
 
         updated_at: now,
         created_at: formData.created_at || editingStyle?.created_at || now,
-      } as Appearance & {
-        useGlobalAppearance: boolean;
-        floating_config: ResponsiveConfig<FloatingConfig>;
-        carousel_config: ResponsiveConfig<CarouselConfig>;
-        grid_config: ResponsiveConfig<GridConfig>;
-        modal_config: ModalConfig;
       };
 
       if (stylePayload.is_default) {
@@ -1405,7 +1461,7 @@ const AppearancePage = () => {
         );
       }
 
-      await db.appearances.save(stylePayload as Appearance);
+      await db.appearances.save(stylePayload as unknown as Appearance);
 
       window.dispatchEvent(new Event('storage'));
 
@@ -1433,22 +1489,34 @@ const AppearancePage = () => {
     setEditingStyle(null);
   };
 
-  const activeFloatingConfig = getActiveResponsiveConfig(
-    formData.floating_config,
-    floatingDevice,
-    formData.useGlobalAppearance,
+  const activeFloatingConfig = useMemo(
+    () =>
+      getActiveResponsiveConfig(
+        formData.floating_config,
+        floatingDevice,
+        formData.useGlobalAppearance,
+      ),
+    [formData.floating_config, floatingDevice, formData.useGlobalAppearance],
   );
 
-  const activeCarouselConfig = getActiveResponsiveConfig(
-    formData.carousel_config,
-    carouselDevice,
-    formData.useGlobalAppearance,
+  const activeCarouselConfig = useMemo(
+    () =>
+      getActiveResponsiveConfig(
+        formData.carousel_config,
+        carouselDevice,
+        formData.useGlobalAppearance,
+      ),
+    [formData.carousel_config, carouselDevice, formData.useGlobalAppearance],
   );
 
-  const activeGridConfig = getActiveResponsiveConfig(
-    formData.grid_config,
-    gridDevice,
-    formData.useGlobalAppearance,
+  const activeGridConfig = useMemo(
+    () =>
+      getActiveResponsiveConfig(
+        formData.grid_config,
+        gridDevice,
+        formData.useGlobalAppearance,
+      ),
+    [formData.grid_config, gridDevice, formData.useGlobalAppearance],
   );
 
   if (loading || tenantLoading) {
@@ -1468,8 +1536,8 @@ const AppearancePage = () => {
           </h1>
 
           <p className="mt-1 font-medium text-slate-500">
-            Customize o design dos widgets, carrosséis, grades e player da sua
-            loja.
+            Customize a identidade visual, widgets, carrosséis, grades e player
+            da sua loja.
           </p>
         </div>
 
@@ -1605,8 +1673,8 @@ const AppearancePage = () => {
                 </h2>
 
                 <p className="mt-1 text-sm font-medium text-slate-500">
-                  Configure a aparência dos widgets, carrosséis, grades e
-                  player.
+                  Configure a identidade visual por área: global, flutuante,
+                  carrossel, grade e player.
                 </p>
               </div>
 
@@ -1621,736 +1689,812 @@ const AppearancePage = () => {
               </button>
             </div>
 
-            <div className="flex-1 space-y-6 overflow-y-auto p-6">
-              <SectionCard title="1. Dados Básicos">
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <FormField label="Nome do Estilo">
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={e =>
-                        setFormData({
-                          ...formData,
-                          name: e.target.value,
-                        })
-                      }
-                      placeholder="Ex: Estilo padrão"
-                      className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
-                    />
-                  </FormField>
+            <div className="border-b border-slate-100 bg-white px-6 py-4">
+              <div className="flex flex-wrap gap-2">
+                <ModalTabButton
+                  active={activeTab === 'basic'}
+                  icon={<Settings2 size={16} />}
+                  label="Básico"
+                  onClick={() => setActiveTab('basic')}
+                />
 
-                  <FormField label="Definir como padrão">
-                    <ToggleSwitch
-                      label="Definir como padrão da loja"
-                      checked={formData.is_default}
-                      onChange={e =>
-                        setFormData({
-                          ...formData,
-                          is_default: e.target.checked,
-                        })
-                      }
-                    />
-                  </FormField>
-                </div>
+                <ModalTabButton
+                  active={activeTab === 'visual'}
+                  icon={<Palette size={16} />}
+                  label="Identidade Visual"
+                  onClick={() => setActiveTab('visual')}
+                />
 
-                <FormField label="Usar aparência em todos os dispositivos">
-                  <ToggleSwitch
-                    label="Usar aparência em todos os dispositivos"
-                    checked={formData.useGlobalAppearance}
-                    onChange={e => {
-                      const checked = e.target.checked;
+                <ModalTabButton
+                  active={activeTab === 'floating'}
+                  icon={<PlaySquare size={16} />}
+                  label="Flutuante"
+                  onClick={() => setActiveTab('floating')}
+                />
 
-                      setFormData(prev => syncGlobalConfig(checked, prev));
+                <ModalTabButton
+                  active={activeTab === 'carousel'}
+                  icon={<Rows3 size={16} />}
+                  label="Carrossel"
+                  onClick={() => setActiveTab('carousel')}
+                />
 
-                      if (checked) {
-                        setFloatingDevice('desktop');
-                        setCarouselDevice('desktop');
-                        setGridDevice('desktop');
-                      }
-                    }}
-                    description="Quando ativado, as configurações de Desktop serão aplicadas também no Mobile."
-                  />
-                </FormField>
-              </SectionCard>
+                <ModalTabButton
+                  active={activeTab === 'grid'}
+                  icon={<LayoutGrid size={16} />}
+                  label="Grade"
+                  onClick={() => setActiveTab('grid')}
+                />
 
-              <SectionCard title="2. Configurações">
-                <div className="space-y-10">
-                  <div className="space-y-4">
-                    <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-                      <h4 className="text-sm font-black text-white">
-                        Flutuante
-                      </h4>
+                <ModalTabButton
+                  active={activeTab === 'modal'}
+                  icon={<PlaySquare size={16} />}
+                  label="Player / Modal"
+                  onClick={() => setActiveTab('modal')}
+                />
+              </div>
+            </div>
 
-                      {formData.useGlobalAppearance ? (
-                        <GlobalDeviceNotice />
-                      ) : (
-                        <DeviceTabs
-                          activeDevice={floatingDevice}
-                          onChange={setFloatingDevice}
-                        />
-                      )}
-                    </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              {activeTab === 'basic' && (
+                <SectionCard
+                  title="Dados Básicos"
+                  description="Defina o nome do estilo e o comportamento global entre Desktop e Mobile."
+                >
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <FormField label="Nome do Estilo">
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={e =>
+                          setFormData({
+                            ...formData,
+                            name: e.target.value,
+                          })
+                        }
+                        placeholder="Ex: Estilo padrão"
+                        className={inputClass}
+                      />
+                    </FormField>
 
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <FormField label="Forma">
-                        <select
-                          value={activeFloatingConfig.shape}
-                          onChange={e =>
-                            updateFloatingConfig({
-                              shape: e.target.value as FloatingConfig['shape'],
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                        >
-                          <option value="circle">Circular</option>
-                          <option value="square">Quadrado</option>
-                          <option value="portrait">Retrato</option>
-                        </select>
-                      </FormField>
-
-                      <FormField label="Largura">
-                        <input
-                          type="text"
-                          value={activeFloatingConfig.width}
-                          onChange={e =>
-                            updateFloatingConfig({
-                              width: e.target.value,
-                            })
-                          }
-                          placeholder="Ex: 80px"
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
-                        />
-                      </FormField>
-
-                      <FormField label="Altura">
-                        <input
-                          type="text"
-                          value={activeFloatingConfig.height}
-                          onChange={e =>
-                            updateFloatingConfig({
-                              height: e.target.value,
-                            })
-                          }
-                          placeholder="Ex: 110px"
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
-                        />
-                      </FormField>
-
-                      <FormField label="Raio da borda">
-                        <input
-                          type="text"
-                          value={activeFloatingConfig.border_radius}
-                          onChange={e =>
-                            updateFloatingConfig({
-                              border_radius: e.target.value,
-                            })
-                          }
-                          placeholder="Ex: 12px"
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
-                        />
-                      </FormField>
-
-                      <FormField label="Posição do widget flutuante">
-                        <select
-                          value={activeFloatingConfig.position}
-                          onChange={e =>
-                            updateFloatingConfig({
-                              position: e.target.value as PositionValue,
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                        >
-                          <option value="fixed_bottom_right">
-                            Inferior direita
-                          </option>
-                          <option value="fixed_bottom_left">
-                            Inferior esquerda
-                          </option>
-                          <option value="fixed_top_right">
-                            Superior direita
-                          </option>
-                          <option value="fixed_top_left">
-                            Superior esquerda
-                          </option>
-                        </select>
-                      </FormField>
-
-                      <FormField label="Distância inferior">
-                        <input
-                          type="text"
-                          value={activeFloatingConfig.bottom_spacing}
-                          onChange={e =>
-                            updateFloatingConfig({
-                              bottom_spacing: e.target.value,
-                            })
-                          }
-                          placeholder="Ex: 20px"
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
-                        />
-                      </FormField>
-
-                      <FormField label="Distância superior">
-                        <input
-                          type="text"
-                          value={activeFloatingConfig.top_spacing}
-                          onChange={e =>
-                            updateFloatingConfig({
-                              top_spacing: e.target.value,
-                            })
-                          }
-                          placeholder="Ex: 20px"
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
-                        />
-                      </FormField>
-
-                      <FormField label="Distância esquerda">
-                        <input
-                          type="text"
-                          value={activeFloatingConfig.left_spacing}
-                          onChange={e =>
-                            updateFloatingConfig({
-                              left_spacing: e.target.value,
-                            })
-                          }
-                          placeholder="Ex: 20px"
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
-                        />
-                      </FormField>
-
-                      <FormField label="Distância direita">
-                        <input
-                          type="text"
-                          value={activeFloatingConfig.right_spacing}
-                          onChange={e =>
-                            updateFloatingConfig({
-                              right_spacing: e.target.value,
-                            })
-                          }
-                          placeholder="Ex: 20px"
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
-                        />
-                      </FormField>
-
-                      <FormField label="Cor da borda">
-                        <ColorInput
-                          label="Cor da borda"
-                          value={activeFloatingConfig.border_color}
-                          onChange={e =>
-                            updateFloatingConfig({
-                              border_color: e.target.value,
-                            })
-                          }
-                        />
-                      </FormField>
-
-                      <FormField label="Largura/estilo da borda">
-                        <input
-                          type="text"
-                          value={activeFloatingConfig.border_style}
-                          onChange={e =>
-                            updateFloatingConfig({
-                              border_style: e.target.value,
-                            })
-                          }
-                          placeholder="Ex: 2px solid"
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
-                        />
-                      </FormField>
-
-                      <FormField label="Object fit">
-                        <select
-                          value={activeFloatingConfig.object_fit}
-                          onChange={e =>
-                            updateFloatingConfig({
-                              object_fit: e.target.value,
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                        >
-                          <option value="cover">Cover</option>
-                          <option value="contain">Contain</option>
-                          <option value="fill">Fill</option>
-                        </select>
-                      </FormField>
-
-                      <FormField label="Z-index">
-                        <input
-                          type="text"
-                          value={activeFloatingConfig.z_index}
-                          onChange={e =>
-                            updateFloatingConfig({
-                              z_index: e.target.value,
-                            })
-                          }
-                          placeholder="Ex: 2147483647"
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
-                        />
-                      </FormField>
-
-                      <FormField label="Mostrar botão play">
-                        <ToggleSwitch
-                          label="Mostrar botão play no flutuante"
-                          checked={activeFloatingConfig.show_play_icon}
-                          onChange={e =>
-                            updateFloatingConfig({
-                              show_play_icon: e.target.checked,
-                            })
-                          }
-                        />
-                      </FormField>
-
-                      <FormField label="Permitir arrastar">
-                        <ToggleSwitch
-                          label="Permitir arrastar widget"
-                          checked={activeFloatingConfig.draggable}
-                          onChange={e =>
-                            updateFloatingConfig({
-                              draggable: e.target.checked,
-                            })
-                          }
-                        />
-                      </FormField>
-
-                      <FormField label="Permitir fechar">
-                        <ToggleSwitch
-                          label="Permitir fechar widget"
-                          checked={activeFloatingConfig.allow_close}
-                          onChange={e =>
-                            updateFloatingConfig({
-                              allow_close: e.target.checked,
-                            })
-                          }
-                        />
-                      </FormField>
-                    </div>
+                    <FormField label="Definir como padrão">
+                      <ToggleSwitch
+                        label="Definir como padrão da loja"
+                        checked={formData.is_default}
+                        onChange={e =>
+                          setFormData({
+                            ...formData,
+                            is_default: e.target.checked,
+                          })
+                        }
+                      />
+                    </FormField>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-                      <h4 className="text-sm font-black text-white">
-                        Carrossel
-                      </h4>
+                  <FormField label="Usar aparência em todos os dispositivos">
+                    <ToggleSwitch
+                      label="Usar aparência em todos os dispositivos"
+                      checked={formData.useGlobalAppearance}
+                      onChange={e => {
+                        const checked = e.target.checked;
 
-                      {formData.useGlobalAppearance ? (
-                        <GlobalDeviceNotice />
-                      ) : (
-                        <DeviceTabs
-                          activeDevice={carouselDevice}
-                          onChange={setCarouselDevice}
-                        />
-                      )}
-                    </div>
+                        setFormData(prev => syncGlobalConfig(checked, prev));
 
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <FormField label="Espaçamento">
-                        <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={activeCarouselConfig.gap}
-                          onChange={e =>
-                            updateCarouselConfig({
-                              gap: safeNumber(e.target.value, 0, 0),
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                        />
-                      </FormField>
+                        if (checked) {
+                          setFloatingDevice('desktop');
+                          setCarouselDevice('desktop');
+                          setGridDevice('desktop');
+                        }
+                      }}
+                      description="Quando ativado, as configurações de Desktop serão aplicadas também no Mobile."
+                    />
+                  </FormField>
+                </SectionCard>
+              )}
 
-                      <FormField label="Itens visíveis">
-                        <input
-                          type="number"
-                          min="1"
-                          step="1"
-                          value={activeCarouselConfig.visible_items}
-                          onChange={e =>
-                            updateCarouselConfig({
-                              visible_items: safeNumber(e.target.value, 1, 1),
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                        />
-                      </FormField>
+              {activeTab === 'visual' && (
+                <SectionCard
+                  title="Identidade Visual"
+                  description="Configure as cores, fonte e elementos globais da experiência visual."
+                >
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <FormField label="Cor principal">
+                      <ColorInput
+                        label="Cor principal"
+                        value={formData.primary_color}
+                        onChange={e =>
+                          setFormData({
+                            ...formData,
+                            primary_color: e.target.value,
+                            secondary_color: e.target.value,
+                          })
+                        }
+                      />
+                    </FormField>
 
-                      <FormField label="Forma">
-                        <select
-                          value={activeCarouselConfig.card_shape}
-                          onChange={e =>
-                            updateCarouselConfig({
-                              card_shape: e.target.value,
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                        >
-                          <option value="rounded">Arredondado</option>
-                          <option value="square">Quadrado</option>
-                          <option value="circle">Circular</option>
-                          <option value="custom">Personalizado</option>
-                        </select>
-                      </FormField>
+                    <FormField label="Cor secundária">
+                      <ColorInput
+                        label="Cor secundária"
+                        value={formData.secondary_color}
+                        onChange={e =>
+                          setFormData({
+                            ...formData,
+                            secondary_color: e.target.value,
+                          })
+                        }
+                      />
+                    </FormField>
 
-                      <FormField label="Modo de visualização">
-                        <select
-                          value={activeCarouselConfig.view_mode}
-                          onChange={e =>
-                            updateCarouselConfig({
-                              view_mode: e.target.value,
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                        >
-                          <option value="preview">
-                            Preview, vídeo no hover
-                          </option>
-                          <option value="poster">Poster/imagem apenas</option>
-                          <option value="custom">Personalizado</option>
-                        </select>
-                      </FormField>
+                    <FormField label="Cor do texto">
+                      <ColorInput
+                        label="Cor do texto"
+                        value={formData.text_color}
+                        onChange={e =>
+                          setFormData({
+                            ...formData,
+                            text_color: e.target.value,
+                          })
+                        }
+                      />
+                    </FormField>
 
-                      <FormField label="Margem superior">
-                        <input
-                          type="text"
-                          value={activeCarouselConfig.margin_top}
-                          onChange={e =>
-                            updateCarouselConfig({
-                              margin_top: e.target.value,
-                            })
-                          }
-                          placeholder="Ex: 20px ou 20"
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
-                        />
-                      </FormField>
+                    <FormField label="Cor do fundo">
+                      <ColorInput
+                        label="Cor do fundo"
+                        value={formData.background_color}
+                        onChange={e =>
+                          setFormData({
+                            ...formData,
+                            background_color: e.target.value,
+                          })
+                        }
+                      />
+                    </FormField>
 
-                      <FormField label="Margem inferior">
-                        <input
-                          type="text"
-                          value={activeCarouselConfig.margin_bottom}
-                          onChange={e =>
-                            updateCarouselConfig({
-                              margin_bottom: e.target.value,
-                            })
-                          }
-                          placeholder="Ex: 20px ou 20"
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
-                        />
-                      </FormField>
+                    <FormField label="Cor do botão">
+                      <ColorInput
+                        label="Cor do botão"
+                        value={formData.button_color}
+                        onChange={e =>
+                          setFormData({
+                            ...formData,
+                            button_color: e.target.value,
+                          })
+                        }
+                      />
+                    </FormField>
 
-                      <FormField label="Exibir produto no carrossel">
-                        <ToggleSwitch
-                          label="Exibir produto no carrossel"
-                          checked={activeCarouselConfig.show_product}
-                          onChange={e =>
-                            updateCarouselConfig({
-                              show_product: e.target.checked,
-                            })
-                          }
-                        />
-                      </FormField>
+                    <FormField label="Fonte de texto">
+                      <select
+                        value={formData.font_family}
+                        onChange={e =>
+                          setFormData({
+                            ...formData,
+                            font_family: e.target.value,
+                          })
+                        }
+                        className={inputClass}
+                      >
+                        <option value="Inter, sans-serif">Inter</option>
+                        <option value="Roboto, sans-serif">Roboto</option>
+                        <option value="Open Sans, sans-serif">
+                          Open Sans
+                        </option>
+                        <option value="Lato, sans-serif">Lato</option>
+                        <option value="Montserrat, sans-serif">
+                          Montserrat
+                        </option>
+                        <option value="Poppins, sans-serif">Poppins</option>
+                      </select>
+                    </FormField>
 
-                      <FormField label="Mostrar botão play">
-                        <ToggleSwitch
-                          label="Mostrar botão play no carrossel"
-                          checked={activeCarouselConfig.show_play_icon}
-                          onChange={e =>
-                            updateCarouselConfig({
-                              show_play_icon: e.target.checked,
-                            })
-                          }
-                        />
-                      </FormField>
-                    </div>
+                    <FormField label="Tamanho do texto">
+                      <input
+                        type="text"
+                        value={formData.font_size}
+                        onChange={e =>
+                          setFormData({
+                            ...formData,
+                            font_size: e.target.value,
+                          })
+                        }
+                        placeholder="Ex: 14px"
+                        className={inputClass}
+                      />
+                    </FormField>
+                  </div>
+                </SectionCard>
+              )}
+
+              {activeTab === 'floating' && (
+                <SectionCard
+                  title="Widget Flutuante"
+                  description="Controle tamanho, posição, borda, play, fechamento e comportamento do widget flutuante."
+                >
+                  <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+                    <h4 className="text-sm font-black text-white">
+                      Configuração ativa
+                    </h4>
+
+                    {formData.useGlobalAppearance ? (
+                      <GlobalDeviceNotice />
+                    ) : (
+                      <DeviceTabs
+                        activeDevice={floatingDevice}
+                        onChange={setFloatingDevice}
+                      />
+                    )}
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-                      <h4 className="text-sm font-black text-white">Grade</h4>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <FormField label="Forma">
+                      <select
+                        value={activeFloatingConfig.shape}
+                        onChange={e =>
+                          updateFloatingConfig({
+                            shape: e.target.value as FloatingConfig['shape'],
+                          })
+                        }
+                        className={inputClass}
+                      >
+                        <option value="circle">Circular</option>
+                        <option value="square">Quadrado</option>
+                        <option value="portrait">Retrato</option>
+                      </select>
+                    </FormField>
 
-                      {formData.useGlobalAppearance ? (
-                        <GlobalDeviceNotice />
-                      ) : (
-                        <DeviceTabs
-                          activeDevice={gridDevice}
-                          onChange={setGridDevice}
-                        />
-                      )}
-                    </div>
+                    <FormField label="Largura">
+                      <input
+                        type="text"
+                        value={activeFloatingConfig.width}
+                        onChange={e =>
+                          updateFloatingConfig({
+                            width: e.target.value,
+                          })
+                        }
+                        placeholder="Ex: 80px"
+                        className={inputClass}
+                      />
+                    </FormField>
 
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <FormField label="Colunas">
-                        <input
-                          type="number"
-                          min="1"
-                          value={activeGridConfig.columns}
-                          onChange={e =>
-                            updateGridConfig({
-                              columns: safeNumber(e.target.value, 1, 1),
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                        />
-                      </FormField>
+                    <FormField label="Altura">
+                      <input
+                        type="text"
+                        value={activeFloatingConfig.height}
+                        onChange={e =>
+                          updateFloatingConfig({
+                            height: e.target.value,
+                          })
+                        }
+                        placeholder="Ex: 110px"
+                        className={inputClass}
+                      />
+                    </FormField>
 
-                      <FormField label="Linhas">
-                        <input
-                          type="number"
-                          min="1"
-                          value={activeGridConfig.rows}
-                          onChange={e =>
-                            updateGridConfig({
-                              rows: safeNumber(e.target.value, 1, 1),
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                        />
-                      </FormField>
+                    <FormField label="Raio da borda">
+                      <input
+                        type="text"
+                        value={activeFloatingConfig.border_radius}
+                        onChange={e =>
+                          updateFloatingConfig({
+                            border_radius: e.target.value,
+                          })
+                        }
+                        placeholder="Ex: 12px"
+                        className={inputClass}
+                      />
+                    </FormField>
 
-                      <FormField label="Espaçamento">
-                        <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={activeGridConfig.gap}
-                          onChange={e =>
-                            updateGridConfig({
-                              gap: safeNumber(e.target.value, 0, 0),
-                            })
-                          }
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                        />
-                      </FormField>
-                    </div>
+                    <FormField label="Posição do widget">
+                      <select
+                        value={activeFloatingConfig.position}
+                        onChange={e =>
+                          updateFloatingConfig({
+                            position: e.target.value as PositionValue,
+                          })
+                        }
+                        className={inputClass}
+                      >
+                        <option value="fixed_bottom_right">
+                          Inferior direita
+                        </option>
+                        <option value="fixed_bottom_left">
+                          Inferior esquerda
+                        </option>
+                        <option value="fixed_top_right">
+                          Superior direita
+                        </option>
+                        <option value="fixed_top_left">
+                          Superior esquerda
+                        </option>
+                      </select>
+                    </FormField>
+
+                    <FormField label="Distância inferior">
+                      <input
+                        type="text"
+                        value={activeFloatingConfig.bottom_spacing}
+                        onChange={e =>
+                          updateFloatingConfig({
+                            bottom_spacing: e.target.value,
+                          })
+                        }
+                        placeholder="Ex: 20px"
+                        className={inputClass}
+                      />
+                    </FormField>
+
+                    <FormField label="Distância superior">
+                      <input
+                        type="text"
+                        value={activeFloatingConfig.top_spacing}
+                        onChange={e =>
+                          updateFloatingConfig({
+                            top_spacing: e.target.value,
+                          })
+                        }
+                        placeholder="Ex: 20px"
+                        className={inputClass}
+                      />
+                    </FormField>
+
+                    <FormField label="Distância esquerda">
+                      <input
+                        type="text"
+                        value={activeFloatingConfig.left_spacing}
+                        onChange={e =>
+                          updateFloatingConfig({
+                            left_spacing: e.target.value,
+                          })
+                        }
+                        placeholder="Ex: 20px"
+                        className={inputClass}
+                      />
+                    </FormField>
+
+                    <FormField label="Distância direita">
+                      <input
+                        type="text"
+                        value={activeFloatingConfig.right_spacing}
+                        onChange={e =>
+                          updateFloatingConfig({
+                            right_spacing: e.target.value,
+                          })
+                        }
+                        placeholder="Ex: 20px"
+                        className={inputClass}
+                      />
+                    </FormField>
+
+                    <FormField label="Cor da borda">
+                      <ColorInput
+                        label="Cor da borda"
+                        value={activeFloatingConfig.border_color}
+                        onChange={e =>
+                          updateFloatingConfig({
+                            border_color: e.target.value,
+                          })
+                        }
+                      />
+                    </FormField>
+
+                    <FormField label="Largura/estilo da borda">
+                      <input
+                        type="text"
+                        value={activeFloatingConfig.border_style}
+                        onChange={e =>
+                          updateFloatingConfig({
+                            border_style: e.target.value,
+                          })
+                        }
+                        placeholder="Ex: 2px solid"
+                        className={inputClass}
+                      />
+                    </FormField>
+
+                    <FormField label="Object fit">
+                      <select
+                        value={activeFloatingConfig.object_fit}
+                        onChange={e =>
+                          updateFloatingConfig({
+                            object_fit: e.target.value,
+                          })
+                        }
+                        className={inputClass}
+                      >
+                        <option value="cover">Cover</option>
+                        <option value="contain">Contain</option>
+                        <option value="fill">Fill</option>
+                      </select>
+                    </FormField>
+
+                    <FormField label="Z-index">
+                      <input
+                        type="text"
+                        value={activeFloatingConfig.z_index}
+                        onChange={e =>
+                          updateFloatingConfig({
+                            z_index: e.target.value,
+                          })
+                        }
+                        placeholder="Ex: 2147483647"
+                        className={inputClass}
+                      />
+                    </FormField>
+
+                    <FormField label="Mostrar botão play">
+                      <ToggleSwitch
+                        label="Mostrar botão play no flutuante"
+                        checked={activeFloatingConfig.show_play_icon}
+                        onChange={e =>
+                          updateFloatingConfig({
+                            show_play_icon: e.target.checked,
+                          })
+                        }
+                      />
+                    </FormField>
+
+                    <FormField label="Permitir arrastar">
+                      <ToggleSwitch
+                        label="Permitir arrastar widget"
+                        checked={activeFloatingConfig.draggable}
+                        onChange={e =>
+                          updateFloatingConfig({
+                            draggable: e.target.checked,
+                          })
+                        }
+                      />
+                    </FormField>
+
+                    <FormField label="Permitir fechar">
+                      <ToggleSwitch
+                        label="Permitir fechar widget"
+                        checked={activeFloatingConfig.allow_close}
+                        onChange={e =>
+                          updateFloatingConfig({
+                            allow_close: e.target.checked,
+                          })
+                        }
+                      />
+                    </FormField>
                   </div>
-                </div>
-              </SectionCard>
+                </SectionCard>
+              )}
 
-              <SectionCard title="3. Cores e Tipografia">
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <FormField label="Cor principal">
-                    <ColorInput
-                      label="Cor principal"
-                      value={formData.primary_color}
-                      onChange={e =>
-                        setFormData({
-                          ...formData,
-                          primary_color: e.target.value,
-                          secondary_color: e.target.value,
-                        })
-                      }
-                    />
-                  </FormField>
+              {activeTab === 'carousel' && (
+                <SectionCard
+                  title="Carrossel"
+                  description="Configure a exibição dos vídeos em carrossel, quantidade de itens e margens."
+                >
+                  <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+                    <h4 className="text-sm font-black text-white">
+                      Configuração ativa
+                    </h4>
 
-                  <FormField label="Cor secundária">
-                    <ColorInput
-                      label="Cor secundária"
-                      value={formData.secondary_color}
-                      onChange={e =>
-                        setFormData({
-                          ...formData,
-                          secondary_color: e.target.value,
-                        })
-                      }
-                    />
-                  </FormField>
+                    {formData.useGlobalAppearance ? (
+                      <GlobalDeviceNotice />
+                    ) : (
+                      <DeviceTabs
+                        activeDevice={carouselDevice}
+                        onChange={setCarouselDevice}
+                      />
+                    )}
+                  </div>
 
-                  <FormField label="Cor do texto">
-                    <ColorInput
-                      label="Cor do texto"
-                      value={formData.text_color}
-                      onChange={e =>
-                        setFormData({
-                          ...formData,
-                          text_color: e.target.value,
-                        })
-                      }
-                    />
-                  </FormField>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <FormField label="Espaçamento">
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={activeCarouselConfig.gap}
+                        onChange={e =>
+                          updateCarouselConfig({
+                            gap: safeNumber(e.target.value, 0, 0),
+                          })
+                        }
+                        className={inputClass}
+                      />
+                    </FormField>
 
-                  <FormField label="Cor do fundo">
-                    <ColorInput
-                      label="Cor do fundo"
-                      value={formData.background_color}
-                      onChange={e =>
-                        setFormData({
-                          ...formData,
-                          background_color: e.target.value,
-                        })
-                      }
-                    />
-                  </FormField>
+                    <FormField label="Itens visíveis">
+                      <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={activeCarouselConfig.visible_items}
+                        onChange={e =>
+                          updateCarouselConfig({
+                            visible_items: safeNumber(e.target.value, 1, 1),
+                          })
+                        }
+                        className={inputClass}
+                      />
+                    </FormField>
 
-                  <FormField label="Cor do botão">
-                    <ColorInput
-                      label="Cor do botão"
-                      value={formData.button_color}
-                      onChange={e =>
-                        setFormData({
-                          ...formData,
-                          button_color: e.target.value,
-                        })
-                      }
-                    />
-                  </FormField>
+                    <FormField label="Forma">
+                      <select
+                        value={activeCarouselConfig.card_shape}
+                        onChange={e =>
+                          updateCarouselConfig({
+                            card_shape: e.target.value,
+                          })
+                        }
+                        className={inputClass}
+                      >
+                        <option value="rounded">Arredondado</option>
+                        <option value="square">Quadrado</option>
+                        <option value="circle">Circular</option>
+                        <option value="custom">Personalizado</option>
+                      </select>
+                    </FormField>
 
-                  <FormField label="Fonte de texto">
-                    <select
-                      value={formData.font_family}
-                      onChange={e =>
-                        setFormData({
-                          ...formData,
-                          font_family: e.target.value,
-                        })
-                      }
-                      className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#0094EB]"
-                    >
-                      <option value="Inter, sans-serif">Inter</option>
-                      <option value="Roboto, sans-serif">Roboto</option>
-                      <option value="Open Sans, sans-serif">Open Sans</option>
-                      <option value="Lato, sans-serif">Lato</option>
-                      <option value="Montserrat, sans-serif">Montserrat</option>
-                      <option value="Poppins, sans-serif">Poppins</option>
-                    </select>
-                  </FormField>
+                    <FormField label="Modo de visualização">
+                      <select
+                        value={activeCarouselConfig.view_mode}
+                        onChange={e =>
+                          updateCarouselConfig({
+                            view_mode: e.target.value,
+                          })
+                        }
+                        className={inputClass}
+                      >
+                        <option value="preview">Preview, vídeo no hover</option>
+                        <option value="poster">Poster/imagem apenas</option>
+                        <option value="custom">Personalizado</option>
+                      </select>
+                    </FormField>
 
-                  <FormField label="Tamanho do texto">
-                    <input
-                      type="text"
-                      value={formData.font_size}
-                      onChange={e =>
-                        setFormData({
-                          ...formData,
-                          font_size: e.target.value,
-                        })
-                      }
-                      placeholder="Ex: 14px"
-                      className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]"
-                    />
-                  </FormField>
-                </div>
-              </SectionCard>
+                    <FormField label="Margem superior">
+                      <input
+                        type="text"
+                        value={activeCarouselConfig.margin_top}
+                        onChange={e =>
+                          updateCarouselConfig({
+                            margin_top: e.target.value,
+                          })
+                        }
+                        placeholder="Ex: 20px ou 20"
+                        className={inputClass}
+                      />
+                    </FormField>
 
-              <SectionCard title="4. Player Interativo e Modal">
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <FormField label="Mostrar título">
-                    <ToggleSwitch
-                      label="Mostrar título"
-                      checked={formData.modal_config.show_title}
-                      onChange={e =>
-                        updateModalConfig({
-                          show_title: e.target.checked,
-                        })
-                      }
-                    />
-                  </FormField>
+                    <FormField label="Margem inferior">
+                      <input
+                        type="text"
+                        value={activeCarouselConfig.margin_bottom}
+                        onChange={e =>
+                          updateCarouselConfig({
+                            margin_bottom: e.target.value,
+                          })
+                        }
+                        placeholder="Ex: 20px ou 20"
+                        className={inputClass}
+                      />
+                    </FormField>
 
-                  <FormField label="Mostrar botão play">
-                    <ToggleSwitch
-                      label="Mostrar botão play"
-                      checked={formData.modal_config.show_play_button}
-                      onChange={e =>
-                        updateModalConfig({
-                          show_play_button: e.target.checked,
-                        })
-                      }
-                    />
-                  </FormField>
+                    <FormField label="Exibir produto">
+                      <ToggleSwitch
+                        label="Exibir produto no carrossel"
+                        checked={activeCarouselConfig.show_product}
+                        onChange={e =>
+                          updateCarouselConfig({
+                            show_product: e.target.checked,
+                          })
+                        }
+                      />
+                    </FormField>
 
-                  <FormField label="Mostrar botão curtir">
-                    <ToggleSwitch
-                      label="Mostrar botão curtir"
-                      checked={formData.modal_config.show_like_button}
-                      onChange={e =>
-                        updateModalConfig({
-                          show_like_button: e.target.checked,
-                        })
-                      }
-                    />
-                  </FormField>
+                    <FormField label="Mostrar botão play">
+                      <ToggleSwitch
+                        label="Mostrar botão play no carrossel"
+                        checked={activeCarouselConfig.show_play_icon}
+                        onChange={e =>
+                          updateCarouselConfig({
+                            show_play_icon: e.target.checked,
+                          })
+                        }
+                      />
+                    </FormField>
+                  </div>
+                </SectionCard>
+              )}
 
-                  <FormField label="Mostrar botão WhatsApp">
-                    <ToggleSwitch
-                      label="Mostrar botão WhatsApp"
-                      checked={formData.modal_config.show_whatsapp_button}
-                      onChange={e =>
-                        updateModalConfig({
-                          show_whatsapp_button: e.target.checked,
-                        })
-                      }
-                    />
-                  </FormField>
+              {activeTab === 'grid' && (
+                <SectionCard
+                  title="Grade"
+                  description="Configure quantidade de colunas, linhas e espaçamento da grade de vídeos."
+                >
+                  <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+                    <h4 className="text-sm font-black text-white">
+                      Configuração ativa
+                    </h4>
 
-                  <FormField label="Mostrar produto">
-                    <ToggleSwitch
-                      label="Mostrar produto"
-                      checked={formData.modal_config.show_product}
-                      onChange={e =>
-                        updateModalConfig({
-                          show_product: e.target.checked,
-                        })
-                      }
-                    />
-                  </FormField>
+                    {formData.useGlobalAppearance ? (
+                      <GlobalDeviceNotice />
+                    ) : (
+                      <DeviceTabs
+                        activeDevice={gridDevice}
+                        onChange={setGridDevice}
+                      />
+                    )}
+                  </div>
 
-                  <FormField label="Mostrar botão produto">
-                    <ToggleSwitch
-                      label="Mostrar botão produto"
-                      checked={formData.modal_config.show_product_button}
-                      onChange={e =>
-                        updateModalConfig({
-                          show_product_button: e.target.checked,
-                        })
-                      }
-                    />
-                  </FormField>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <FormField label="Colunas">
+                      <input
+                        type="number"
+                        min="1"
+                        value={activeGridConfig.columns}
+                        onChange={e =>
+                          updateGridConfig({
+                            columns: safeNumber(e.target.value, 1, 1),
+                          })
+                        }
+                        className={inputClass}
+                      />
+                    </FormField>
 
-                  <FormField label="Mostrar botão compartilhar">
-                    <ToggleSwitch
-                      label="Mostrar botão compartilhar"
-                      checked={formData.modal_config.show_share_button}
-                      onChange={e =>
-                        updateModalConfig({
-                          show_share_button: e.target.checked,
-                        })
-                      }
-                    />
-                  </FormField>
+                    <FormField label="Linhas">
+                      <input
+                        type="number"
+                        min="1"
+                        value={activeGridConfig.rows}
+                        onChange={e =>
+                          updateGridConfig({
+                            rows: safeNumber(e.target.value, 1, 1),
+                          })
+                        }
+                        className={inputClass}
+                      />
+                    </FormField>
 
-                  <FormField label="Mostrar botão comentários">
-                    <ToggleSwitch
-                      label="Mostrar botão comentários"
-                      checked={formData.modal_config.show_comment_button}
-                      onChange={e =>
-                        updateModalConfig({
-                          show_comment_button: e.target.checked,
-                        })
-                      }
-                    />
-                  </FormField>
+                    <FormField label="Espaçamento">
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={activeGridConfig.gap}
+                        onChange={e =>
+                          updateGridConfig({
+                            gap: safeNumber(e.target.value, 0, 0),
+                          })
+                        }
+                        className={inputClass}
+                      />
+                    </FormField>
+                  </div>
+                </SectionCard>
+              )}
 
-                  <FormField label="Ocultar stories">
-                    <ToggleSwitch
-                      label="Ocultar stories"
-                      checked={formData.modal_config.hide_stories}
-                      onChange={e =>
-                        updateModalConfig({
-                          hide_stories: e.target.checked,
-                        })
-                      }
-                    />
-                  </FormField>
+              {activeTab === 'modal' && (
+                <SectionCard
+                  title="Player Interativo e Modal"
+                  description="Controle quais botões e elementos aparecem dentro do player/modal."
+                >
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <FormField label="Mostrar título">
+                      <ToggleSwitch
+                        label="Mostrar título"
+                        checked={formData.modal_config.show_title}
+                        onChange={e =>
+                          updateModalConfig({
+                            show_title: e.target.checked,
+                          })
+                        }
+                      />
+                    </FormField>
 
-                  <FormField label="Sombra">
-                    <ToggleSwitch
-                      label="Ativar sombra"
-                      checked={formData.modal_config.shadow_enabled}
-                      onChange={e =>
-                        updateModalConfig({
-                          shadow_enabled: e.target.checked,
-                        })
-                      }
-                    />
-                  </FormField>
-                </div>
-              </SectionCard>
+                    <FormField label="Mostrar botão play">
+                      <ToggleSwitch
+                        label="Mostrar botão play"
+                        checked={formData.modal_config.show_play_button}
+                        onChange={e =>
+                          updateModalConfig({
+                            show_play_button: e.target.checked,
+                          })
+                        }
+                      />
+                    </FormField>
+
+                    <FormField label="Mostrar botão curtir">
+                      <ToggleSwitch
+                        label="Mostrar botão curtir"
+                        checked={formData.modal_config.show_like_button}
+                        onChange={e =>
+                          updateModalConfig({
+                            show_like_button: e.target.checked,
+                          })
+                        }
+                      />
+                    </FormField>
+
+                    <FormField label="Mostrar botão WhatsApp">
+                      <ToggleSwitch
+                        label="Mostrar botão WhatsApp"
+                        checked={formData.modal_config.show_whatsapp_button}
+                        onChange={e =>
+                          updateModalConfig({
+                            show_whatsapp_button: e.target.checked,
+                          })
+                        }
+                      />
+                    </FormField>
+
+                    <FormField label="Mostrar produto">
+                      <ToggleSwitch
+                        label="Mostrar produto"
+                        checked={formData.modal_config.show_product}
+                        onChange={e =>
+                          updateModalConfig({
+                            show_product: e.target.checked,
+                          })
+                        }
+                      />
+                    </FormField>
+
+                    <FormField label="Mostrar botão produto">
+                      <ToggleSwitch
+                        label="Mostrar botão produto"
+                        checked={formData.modal_config.show_product_button}
+                        onChange={e =>
+                          updateModalConfig({
+                            show_product_button: e.target.checked,
+                          })
+                        }
+                      />
+                    </FormField>
+
+                    <FormField label="Mostrar botão compartilhar">
+                      <ToggleSwitch
+                        label="Mostrar botão compartilhar"
+                        checked={formData.modal_config.show_share_button}
+                        onChange={e =>
+                          updateModalConfig({
+                            show_share_button: e.target.checked,
+                          })
+                        }
+                      />
+                    </FormField>
+
+                    <FormField label="Mostrar botão comentários">
+                      <ToggleSwitch
+                        label="Mostrar botão comentários"
+                        checked={formData.modal_config.show_comment_button}
+                        onChange={e =>
+                          updateModalConfig({
+                            show_comment_button: e.target.checked,
+                          })
+                        }
+                      />
+                    </FormField>
+
+                    <FormField label="Ocultar stories">
+                      <ToggleSwitch
+                        label="Ocultar stories"
+                        checked={formData.modal_config.hide_stories}
+                        onChange={e =>
+                          updateModalConfig({
+                            hide_stories: e.target.checked,
+                          })
+                        }
+                      />
+                    </FormField>
+
+                    <FormField label="Sombra">
+                      <ToggleSwitch
+                        label="Ativar sombra"
+                        checked={formData.modal_config.shadow_enabled}
+                        onChange={e =>
+                          updateModalConfig({
+                            shadow_enabled: e.target.checked,
+                          })
+                        }
+                      />
+                    </FormField>
+                  </div>
+                </SectionCard>
+              )}
             </div>
 
             <div className="flex flex-col gap-3 border-t border-slate-100 bg-white p-6 sm:flex-row sm:justify-end">
