@@ -92,6 +92,7 @@ type CarouselConfig = {
   visible_items: number;
   show_product: boolean;
   show_play_icon: boolean;
+  auto_center: boolean;
 };
 
 type GridConfig = {
