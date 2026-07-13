@@ -24,6 +24,10 @@ import {
   PlaySquare,
   Rows3,
   Settings2,
+  Heart,
+  MessageCircle,
+  Share2,
+  ShoppingBag,
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
@@ -155,33 +159,28 @@ type ExtendedAppearance = Appearance & {
 };
 
 const inputClass =
-  'w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-slate-600 focus:border-[#0094EB]';
+  'w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 outline-none placeholder:text-slate-400 transition focus:border-[#0094EB] focus:bg-white focus:ring-4 focus:ring-blue-100';
 
-const isValidHexColor = (value?: string) => {
-  return /^#[0-9A-Fa-f]{6}$/.test(value || '');
-};
+const selectClass = inputClass;
 
-const isValidPositionValue = (value?: string): value is PositionValue => {
-  return (
-    value === 'fixed_bottom_right' ||
-    value === 'fixed_bottom_left' ||
-    value === 'fixed_top_right' ||
-    value === 'fixed_top_left'
-  );
-};
+const isValidHexColor = (value?: string) =>
+  /^#[0-9A-Fa-f]{6}$/.test(value || '');
+
+const isValidPositionValue = (value?: string): value is PositionValue =>
+  value === 'fixed_bottom_right' ||
+  value === 'fixed_bottom_left' ||
+  value === 'fixed_top_right' ||
+  value === 'fixed_top_left';
 
 const isValidFloatingPosition = (
   value?: string,
-): value is FloatingPosition => {
-  return (
-    value === 'left' ||
-    value === 'right' ||
-    value === 'top-left' ||
-    value === 'top-right' ||
-    value === 'bottom-left' ||
-    value === 'bottom-right'
-  );
-};
+): value is FloatingPosition =>
+  value === 'left' ||
+  value === 'right' ||
+  value === 'top-left' ||
+  value === 'top-right' ||
+  value === 'bottom-left' ||
+  value === 'bottom-right';
 
 const positionToFloatingPosition = (
   position?: string,
@@ -249,9 +248,7 @@ const safeNumber = (
 const parseJsonIfNeeded = <T,>(value: unknown): Partial<T> | null => {
   if (!value) return null;
 
-  if (typeof value === 'object') {
-    return value as Partial<T>;
-  }
+  if (typeof value === 'object') return value as Partial<T>;
 
   if (typeof value === 'string') {
     try {
@@ -378,20 +375,17 @@ const normalizeResponsiveConfig = <T extends Record<string, any>>({
 }): ResponsiveConfig<T> => {
   const parsed = parseJsonIfNeeded<ResponsiveConfig<T>>(rawValue);
 
-  const parsedDesktop = parsed?.desktop || {};
-  const parsedMobile = parsed?.mobile || {};
-
   return {
     same_for_all: Boolean(parsed?.same_for_all ?? sameForAll),
     desktop: {
       ...desktopDefault,
       ...legacyDesktop,
-      ...parsedDesktop,
+      ...(parsed?.desktop || {}),
     },
     mobile: {
       ...mobileDefault,
       ...legacyMobile,
-      ...parsedMobile,
+      ...(parsed?.mobile || {}),
     },
   };
 };
@@ -787,16 +781,16 @@ const ToggleSwitch = ({
   description?: string;
 }) => {
   return (
-    <label className="flex cursor-pointer items-start gap-3">
+    <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-blue-200 hover:bg-blue-50/30">
       <input
         type="checkbox"
         checked={checked}
         onChange={onChange}
-        className="mt-0.5 h-5 w-5 rounded-lg bg-gray-50 text-gray-600 accent-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
+        className="mt-0.5 h-5 w-5 rounded border-slate-300 text-[#0094EB] accent-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
       />
 
       <span>
-        <span className="block text-sm font-medium text-slate-300">
+        <span className="block text-sm font-bold text-slate-800">
           {label}
         </span>
 
@@ -824,7 +818,7 @@ const ColorInput = ({
   return (
     <div className="flex items-center gap-2">
       <div
-        className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-lg border border-slate-700 bg-slate-100"
+        className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm"
         style={{
           backgroundColor: safeColor,
         }}
@@ -834,7 +828,7 @@ const ColorInput = ({
           aria-label={label}
           value={safeColor}
           onChange={onChange}
-          className="h-8 w-8 cursor-pointer appearance-none rounded-full text-transparent"
+          className="h-8 w-8 cursor-pointer appearance-none rounded-full border-0 bg-transparent text-transparent"
         />
       </div>
 
@@ -856,15 +850,15 @@ const DeviceTabs = ({
   onChange: (device: DeviceType) => void;
 }) => {
   return (
-    <div className="flex w-fit rounded-xl bg-slate-900 p-1">
+    <div className="flex w-fit rounded-xl border border-slate-200 bg-slate-100 p-1">
       <button
         type="button"
         onClick={() => onChange('desktop')}
         className={cn(
           'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-all',
           activeDevice === 'desktop'
-            ? 'bg-[#0094EB] text-white shadow-lg'
-            : 'text-slate-400 hover:text-white',
+            ? 'bg-[#0094EB] text-white shadow-sm'
+            : 'text-slate-500 hover:bg-white hover:text-slate-800',
         )}
       >
         <Monitor size={15} />
@@ -877,8 +871,8 @@ const DeviceTabs = ({
         className={cn(
           'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-all',
           activeDevice === 'mobile'
-            ? 'bg-[#0094EB] text-white shadow-lg'
-            : 'text-slate-400 hover:text-white',
+            ? 'bg-[#0094EB] text-white shadow-sm'
+            : 'text-slate-500 hover:bg-white hover:text-slate-800',
         )}
       >
         <Smartphone size={15} />
@@ -890,7 +884,7 @@ const DeviceTabs = ({
 
 const GlobalDeviceNotice = () => {
   return (
-    <div className="w-fit rounded-xl border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-xs font-bold text-blue-200">
+    <div className="w-fit rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-bold text-[#0094EB]">
       Aplicando Desktop também no Mobile.
     </div>
   );
@@ -910,12 +904,13 @@ const SectionCard = ({
   return (
     <div
       className={cn(
-        'space-y-6 rounded-[1.5rem] bg-slate-950 p-6',
+        'space-y-6 rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm',
         className,
       )}
     >
       <div>
-        <h3 className="text-lg font-black text-white">{title}</h3>
+        <h3 className="text-lg font-black text-slate-900">{title}</h3>
+
         {description && (
           <p className="mt-1 text-sm font-medium text-slate-500">
             {description}
@@ -939,7 +934,7 @@ const FormField = ({
 }) => {
   return (
     <div className={cn('space-y-3', className)}>
-      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400">
+      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500">
         {label}
       </label>
 
@@ -966,7 +961,7 @@ const ModalTabButton = ({
       className={cn(
         'flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-black transition-all',
         active
-          ? 'bg-[#0094EB] text-white shadow-lg'
+          ? 'bg-[#0094EB] text-white shadow-lg shadow-blue-500/20'
           : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800',
       )}
     >
@@ -975,6 +970,342 @@ const ModalTabButton = ({
     </button>
   );
 };
+
+const PreviewCard = ({
+  formData,
+  floatingDevice,
+  carouselDevice,
+  gridDevice,
+}: {
+  formData: ExtendedAppearance;
+  floatingDevice: DeviceType;
+  carouselDevice: DeviceType;
+  gridDevice: DeviceType;
+}) => {
+  const floating = getActiveResponsiveConfig(
+    formData.floating_config,
+    floatingDevice,
+    formData.useGlobalAppearance,
+  );
+
+  const carousel = getActiveResponsiveConfig(
+    formData.carousel_config,
+    carouselDevice,
+    formData.useGlobalAppearance,
+  );
+
+  const grid = getActiveResponsiveConfig(
+    formData.grid_config,
+    gridDevice,
+    formData.useGlobalAppearance,
+  );
+
+  const primaryColor = isValidHexColor(formData.primary_color)
+    ? formData.primary_color
+    : '#0094EB';
+
+  const secondaryColor = isValidHexColor(formData.secondary_color)
+    ? formData.secondary_color
+    : primaryColor;
+
+  const textColor = isValidHexColor(formData.text_color)
+    ? formData.text_color
+    : '#0F172A';
+
+  const backgroundColor = isValidHexColor(formData.background_color)
+    ? formData.background_color
+    : '#FFFFFF';
+
+  const buttonColor = isValidHexColor(formData.button_color)
+    ? formData.button_color
+    : primaryColor;
+
+  const floatingBorderColor = isValidHexColor(floating.border_color)
+    ? floating.border_color
+    : primaryColor;
+
+  const previewItems = Array.from({
+    length: Math.max(1, Math.min(Number(carousel.visible_items) || 1, 5)),
+  });
+
+  const gridItems = Array.from({
+    length: Math.max(1, Math.min((grid.columns || 1) * (grid.rows || 1), 8)),
+  });
+
+  return (
+    <aside className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-base font-black text-slate-900">
+            Preview em tempo real
+          </h3>
+
+          <p className="mt-1 text-xs font-medium text-slate-500">
+            As alterações aparecem aqui enquanto você edita.
+          </p>
+        </div>
+
+        <span
+          className="h-8 w-8 rounded-full border border-slate-200 shadow-sm"
+          style={{ backgroundColor: primaryColor }}
+        />
+      </div>
+
+      <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-3">
+        <div
+          className="relative min-h-[520px] overflow-hidden rounded-[1rem] border border-slate-200 p-4"
+          style={{
+            backgroundColor,
+            color: textColor,
+            fontFamily: formData.font_family,
+            fontSize: formData.font_size || '14px',
+            boxShadow: formData.modal_config.shadow_enabled
+              ? '0 18px 45px rgba(15, 23, 42, 0.12)'
+              : 'none',
+          }}
+        >
+          <div className="mb-4">
+            <div className="h-3 w-24 rounded-full bg-slate-200" />
+            <div className="mt-2 h-3 w-40 rounded-full bg-slate-100" />
+          </div>
+
+          {!formData.modal_config.hide_stories && (
+            <div className="mb-5">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+                  Stories
+                </span>
+
+                <span className="text-[10px] font-black text-slate-400">
+                  {carousel.visible_items} itens
+                </span>
+              </div>
+
+              <div
+                className="flex overflow-hidden"
+                style={{
+                  gap: `${carousel.gap || 0}px`,
+                  marginTop: carousel.margin_top,
+                  marginBottom: carousel.margin_bottom,
+                }}
+              >
+                {previewItems.map((_, index) => (
+                  <div
+                    key={index}
+                    className="relative h-28 min-w-[62px] overflow-hidden border bg-white shadow-sm"
+                    style={{
+                      borderRadius:
+                        carousel.card_shape === 'square'
+                          ? '6px'
+                          : carousel.card_shape === 'circle'
+                            ? '999px'
+                            : '16px',
+                      borderColor: secondaryColor,
+                    }}
+                  >
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background:
+                          index % 2 === 0
+                            ? `linear-gradient(160deg, ${primaryColor}, #dbeafe)`
+                            : `linear-gradient(160deg, ${secondaryColor}, #f8fafc)`,
+                      }}
+                    />
+
+                    {carousel.show_play_icon && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
+                          <PlaySquare size={15} />
+                        </div>
+                      </div>
+                    )}
+
+                    {carousel.show_product && (
+                      <div className="absolute bottom-1 left-1 right-1 rounded-md bg-white/90 px-1 py-0.5 text-center text-[9px] font-black text-slate-700">
+                        Produto
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="mb-5">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+                Grade
+              </span>
+
+              <span className="text-[10px] font-black text-slate-400">
+                {grid.columns} x {grid.rows}
+              </span>
+            </div>
+
+            <div
+              className="grid"
+              style={{
+                gridTemplateColumns: `repeat(${Math.max(
+                  1,
+                  Math.min(grid.columns || 1, 4),
+                )}, minmax(0, 1fr))`,
+                gap: `${grid.gap || 0}px`,
+              }}
+            >
+              {gridItems.map((_, index) => (
+                <div
+                  key={index}
+                  className="h-16 rounded-xl border border-slate-200 bg-slate-50"
+                  style={{
+                    background:
+                      index % 2 === 0
+                        ? `linear-gradient(135deg, ${primaryColor}20, #ffffff)`
+                        : `linear-gradient(135deg, ${secondaryColor}20, #ffffff)`,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="absolute bottom-4 left-4 right-4 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-lg">
+            {formData.modal_config.show_title && (
+              <p className="mb-2 text-sm font-black" style={{ color: textColor }}>
+                Player / Modal
+              </p>
+            )}
+
+            <div className="flex items-center gap-2">
+              {formData.modal_config.show_play_button && (
+                <button
+                  type="button"
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-white"
+                  style={{ backgroundColor: buttonColor }}
+                >
+                  <PlaySquare size={16} />
+                </button>
+              )}
+
+              {formData.modal_config.show_like_button && (
+                <PreviewIcon icon={<Heart size={14} />} />
+              )}
+
+              {formData.modal_config.show_comment_button && (
+                <PreviewIcon icon={<MessageCircle size={14} />} />
+              )}
+
+              {formData.modal_config.show_share_button && (
+                <PreviewIcon icon={<Share2 size={14} />} />
+              )}
+
+              {formData.modal_config.show_product && (
+                <div className="ml-auto flex items-center gap-2 rounded-xl bg-slate-50 px-2 py-1">
+                  <ShoppingBag size={14} className="text-slate-500" />
+                  <span className="text-[10px] font-black text-slate-600">
+                    Produto
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {formData.modal_config.show_product_button && (
+              <button
+                type="button"
+                className="mt-3 w-full rounded-xl px-3 py-2 text-xs font-black text-white"
+                style={{ backgroundColor: buttonColor }}
+              >
+                Comprar agora
+              </button>
+            )}
+          </div>
+
+          <div
+            className={cn(
+              'absolute flex items-center justify-center overflow-hidden bg-white shadow-xl',
+              floating.allow_close && 'pr-2',
+            )}
+            style={{
+              width: floating.width,
+              height: floating.height,
+              borderRadius:
+                floating.shape === 'circle'
+                  ? '999px'
+                  : floating.shape === 'square'
+                    ? '8px'
+                    : floating.border_radius,
+              border: `${floating.border_style} ${floatingBorderColor}`,
+              right:
+                floating.position === 'fixed_bottom_right' ||
+                floating.position === 'fixed_top_right'
+                  ? '16px'
+                  : undefined,
+              left:
+                floating.position === 'fixed_bottom_left' ||
+                floating.position === 'fixed_top_left'
+                  ? '16px'
+                  : undefined,
+              bottom:
+                floating.position === 'fixed_bottom_right' ||
+                floating.position === 'fixed_bottom_left'
+                  ? '16px'
+                  : undefined,
+              top:
+                floating.position === 'fixed_top_right' ||
+                floating.position === 'fixed_top_left'
+                  ? '16px'
+                  : undefined,
+            }}
+          >
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(160deg, ${primaryColor}, ${secondaryColor})`,
+                objectFit: floating.object_fit as any,
+              }}
+            />
+
+            {floating.show_play_icon && (
+              <div className="relative z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
+                <PlaySquare size={16} />
+              </div>
+            )}
+
+            {floating.allow_close && (
+              <div className="absolute right-1 top-1 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
+                <X size={12} />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+        <PreviewInfo label="Flutuante" value={`${floating.width} x ${floating.height}`} />
+        <PreviewInfo label="Borda" value={floating.border_radius} />
+        <PreviewInfo label="Carrossel" value={`${carousel.visible_items} itens`} />
+        <PreviewInfo label="Grade" value={`${grid.columns} col.`} />
+      </div>
+    </aside>
+  );
+};
+
+const PreviewIcon = ({ icon }: { icon: React.ReactNode }) => (
+  <button
+    type="button"
+    className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-500"
+  >
+    {icon}
+  </button>
+);
+
+const PreviewInfo = ({ label, value }: { label: string; value: string }) => (
+  <div className="rounded-xl bg-slate-50 p-3">
+    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+      {label}
+    </p>
+    <p className="mt-1 truncate font-black text-slate-700">{value}</p>
+  </div>
+);
 
 const AppearancePage = () => {
   const { storeId, loading: tenantLoading } = useTenant();
@@ -1346,22 +1677,16 @@ const AppearancePage = () => {
         gridConfig.mobile = gridConfig.desktop;
       }
 
-      const floatingDesktop = floatingConfig.desktop;
-      const carouselDesktop = carouselConfig.desktop;
-      const gridDesktop = gridConfig.desktop;
-      const gridMobile = gridConfig.mobile;
-      const modalConfig = formData.modal_config;
-
       const normalizedPosition = normalizePosition(
-        floatingDesktop.position,
-        floatingDesktop.floating_position,
+        floatingConfig.desktop.position,
+        floatingConfig.desktop.floating_position,
       );
 
       const normalizedFloatingPosition =
         positionToFloatingPosition(normalizedPosition);
 
       floatingConfig.desktop = {
-        ...floatingDesktop,
+        ...floatingConfig.desktop,
         position: normalizedPosition,
         floating_position: normalizedFloatingPosition,
       };
@@ -1369,6 +1694,12 @@ const AppearancePage = () => {
       if (formData.useGlobalAppearance) {
         floatingConfig.mobile = floatingConfig.desktop;
       }
+
+      const floatingDesktop = floatingConfig.desktop;
+      const carouselDesktop = carouselConfig.desktop;
+      const gridDesktop = gridConfig.desktop;
+      const gridMobile = gridConfig.mobile;
+      const modalConfig = formData.modal_config;
 
       const stylePayload = {
         id,
@@ -1382,10 +1713,10 @@ const AppearancePage = () => {
         background_color: formData.background_color,
         button_color: formData.button_color,
 
-        border_radius: floatingConfig.desktop.border_radius,
+        border_radius: floatingDesktop.border_radius,
         shadow_enabled: modalConfig.shadow_enabled,
         font_family: formData.font_family,
-        widget_shape: floatingConfig.desktop.shape,
+        widget_shape: floatingDesktop.shape,
         widget_size: formData.widget_size || 'medium',
         widget_animation: formData.widget_animation || 'none',
 
@@ -1408,25 +1739,25 @@ const AppearancePage = () => {
         grid_config: gridConfig,
         modal_config: modalConfig,
 
-        width: floatingConfig.desktop.width,
-        height: floatingConfig.desktop.height,
+        width: floatingDesktop.width,
+        height: floatingDesktop.height,
         unit: formData.unit || 'px',
 
         position: normalizedPosition,
         floating_position: normalizedFloatingPosition,
 
-        bottom_spacing: floatingConfig.desktop.bottom_spacing,
-        top_spacing: floatingConfig.desktop.top_spacing,
-        left_spacing: floatingConfig.desktop.left_spacing,
-        right_spacing: floatingConfig.desktop.right_spacing,
+        bottom_spacing: floatingDesktop.bottom_spacing,
+        top_spacing: floatingDesktop.top_spacing,
+        left_spacing: floatingDesktop.left_spacing,
+        right_spacing: floatingDesktop.right_spacing,
 
-        color: floatingConfig.desktop.border_color || formData.primary_color,
-        border_style: floatingConfig.desktop.border_style,
-        show_play_icon: floatingConfig.desktop.show_play_icon,
-        draggable: floatingConfig.desktop.draggable,
-        allow_close: floatingConfig.desktop.allow_close,
-        object_fit: floatingConfig.desktop.object_fit,
-        z_index: floatingConfig.desktop.z_index,
+        color: floatingDesktop.border_color || formData.primary_color,
+        border_style: floatingDesktop.border_style,
+        show_play_icon: floatingDesktop.show_play_icon,
+        draggable: floatingDesktop.draggable,
+        allow_close: floatingDesktop.allow_close,
+        object_fit: floatingDesktop.object_fit,
+        z_index: floatingDesktop.z_index,
 
         carousel_view_mode: carouselDesktop.view_mode,
         margin_top: carouselDesktop.margin_top,
@@ -1665,8 +1996,8 @@ const AppearancePage = () => {
 
       {showModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="flex max-h-[90vh] w-full max-w-6xl flex-col rounded-[2rem] bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 p-6">
+          <div className="flex max-h-[92vh] w-full max-w-7xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 bg-white p-6">
               <div>
                 <h2 className="text-xl font-black text-slate-900">
                   {editingStyle ? 'Editar Estilo' : 'Criar Novo Estilo'}
@@ -1689,7 +2020,7 @@ const AppearancePage = () => {
               </button>
             </div>
 
-            <div className="border-b border-slate-100 bg-white px-6 py-4">
+            <div className="border-b border-slate-100 bg-slate-50/70 px-6 py-4">
               <div className="flex flex-wrap gap-2">
                 <ModalTabButton
                   active={activeTab === 'basic'}
@@ -1735,766 +2066,788 @@ const AppearancePage = () => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6">
-              {activeTab === 'basic' && (
-                <SectionCard
-                  title="Dados Básicos"
-                  description="Defina o nome do estilo e o comportamento global entre Desktop e Mobile."
-                >
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <FormField label="Nome do Estilo">
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            name: e.target.value,
-                          })
-                        }
-                        placeholder="Ex: Estilo padrão"
-                        className={inputClass}
-                      />
-                    </FormField>
+            <div className="flex-1 overflow-y-auto bg-slate-50/60 p-6">
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
+                <div className="space-y-6">
+                  {activeTab === 'basic' && (
+                    <SectionCard
+                      title="Dados Básicos"
+                      description="Defina o nome do estilo e o comportamento global entre Desktop e Mobile."
+                    >
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <FormField label="Nome do Estilo">
+                          <input
+                            type="text"
+                            value={formData.name}
+                            onChange={e =>
+                              setFormData({
+                                ...formData,
+                                name: e.target.value,
+                              })
+                            }
+                            placeholder="Ex: Estilo padrão"
+                            className={inputClass}
+                          />
+                        </FormField>
 
-                    <FormField label="Definir como padrão">
-                      <ToggleSwitch
-                        label="Definir como padrão da loja"
-                        checked={formData.is_default}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            is_default: e.target.checked,
-                          })
-                        }
-                      />
-                    </FormField>
-                  </div>
+                        <FormField label="Definir como padrão">
+                          <ToggleSwitch
+                            label="Definir como padrão da loja"
+                            checked={formData.is_default}
+                            onChange={e =>
+                              setFormData({
+                                ...formData,
+                                is_default: e.target.checked,
+                              })
+                            }
+                          />
+                        </FormField>
+                      </div>
 
-                  <FormField label="Usar aparência em todos os dispositivos">
-                    <ToggleSwitch
-                      label="Usar aparência em todos os dispositivos"
-                      checked={formData.useGlobalAppearance}
-                      onChange={e => {
-                        const checked = e.target.checked;
+                      <FormField label="Usar aparência em todos os dispositivos">
+                        <ToggleSwitch
+                          label="Usar aparência em todos os dispositivos"
+                          checked={formData.useGlobalAppearance}
+                          onChange={e => {
+                            const checked = e.target.checked;
 
-                        setFormData(prev => syncGlobalConfig(checked, prev));
+                            setFormData(prev =>
+                              syncGlobalConfig(checked, prev),
+                            );
 
-                        if (checked) {
-                          setFloatingDevice('desktop');
-                          setCarouselDevice('desktop');
-                          setGridDevice('desktop');
-                        }
-                      }}
-                      description="Quando ativado, as configurações de Desktop serão aplicadas também no Mobile."
-                    />
-                  </FormField>
-                </SectionCard>
-              )}
+                            if (checked) {
+                              setFloatingDevice('desktop');
+                              setCarouselDevice('desktop');
+                              setGridDevice('desktop');
+                            }
+                          }}
+                          description="Quando ativado, as configurações de Desktop serão aplicadas também no Mobile."
+                        />
+                      </FormField>
+                    </SectionCard>
+                  )}
 
-              {activeTab === 'visual' && (
-                <SectionCard
-                  title="Identidade Visual"
-                  description="Configure as cores, fonte e elementos globais da experiência visual."
-                >
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <FormField label="Cor principal">
-                      <ColorInput
-                        label="Cor principal"
-                        value={formData.primary_color}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            primary_color: e.target.value,
-                            secondary_color: e.target.value,
-                          })
-                        }
-                      />
-                    </FormField>
+                  {activeTab === 'visual' && (
+                    <SectionCard
+                      title="Identidade Visual"
+                      description="Configure as cores, fonte e elementos globais da experiência visual."
+                    >
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <FormField label="Cor principal">
+                          <ColorInput
+                            label="Cor principal"
+                            value={formData.primary_color}
+                            onChange={e =>
+                              setFormData({
+                                ...formData,
+                                primary_color: e.target.value,
+                                secondary_color: e.target.value,
+                              })
+                            }
+                          />
+                        </FormField>
 
-                    <FormField label="Cor secundária">
-                      <ColorInput
-                        label="Cor secundária"
-                        value={formData.secondary_color}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            secondary_color: e.target.value,
-                          })
-                        }
-                      />
-                    </FormField>
+                        <FormField label="Cor secundária">
+                          <ColorInput
+                            label="Cor secundária"
+                            value={formData.secondary_color}
+                            onChange={e =>
+                              setFormData({
+                                ...formData,
+                                secondary_color: e.target.value,
+                              })
+                            }
+                          />
+                        </FormField>
 
-                    <FormField label="Cor do texto">
-                      <ColorInput
-                        label="Cor do texto"
-                        value={formData.text_color}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            text_color: e.target.value,
-                          })
-                        }
-                      />
-                    </FormField>
+                        <FormField label="Cor do texto">
+                          <ColorInput
+                            label="Cor do texto"
+                            value={formData.text_color}
+                            onChange={e =>
+                              setFormData({
+                                ...formData,
+                                text_color: e.target.value,
+                              })
+                            }
+                          />
+                        </FormField>
 
-                    <FormField label="Cor do fundo">
-                      <ColorInput
-                        label="Cor do fundo"
-                        value={formData.background_color}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            background_color: e.target.value,
-                          })
-                        }
-                      />
-                    </FormField>
+                        <FormField label="Cor do fundo">
+                          <ColorInput
+                            label="Cor do fundo"
+                            value={formData.background_color}
+                            onChange={e =>
+                              setFormData({
+                                ...formData,
+                                background_color: e.target.value,
+                              })
+                            }
+                          />
+                        </FormField>
 
-                    <FormField label="Cor do botão">
-                      <ColorInput
-                        label="Cor do botão"
-                        value={formData.button_color}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            button_color: e.target.value,
-                          })
-                        }
-                      />
-                    </FormField>
+                        <FormField label="Cor do botão">
+                          <ColorInput
+                            label="Cor do botão"
+                            value={formData.button_color}
+                            onChange={e =>
+                              setFormData({
+                                ...formData,
+                                button_color: e.target.value,
+                              })
+                            }
+                          />
+                        </FormField>
 
-                    <FormField label="Fonte de texto">
-                      <select
-                        value={formData.font_family}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            font_family: e.target.value,
-                          })
-                        }
-                        className={inputClass}
-                      >
-                        <option value="Inter, sans-serif">Inter</option>
-                        <option value="Roboto, sans-serif">Roboto</option>
-                        <option value="Open Sans, sans-serif">
-                          Open Sans
-                        </option>
-                        <option value="Lato, sans-serif">Lato</option>
-                        <option value="Montserrat, sans-serif">
-                          Montserrat
-                        </option>
-                        <option value="Poppins, sans-serif">Poppins</option>
-                      </select>
-                    </FormField>
+                        <FormField label="Fonte de texto">
+                          <select
+                            value={formData.font_family}
+                            onChange={e =>
+                              setFormData({
+                                ...formData,
+                                font_family: e.target.value,
+                              })
+                            }
+                            className={selectClass}
+                          >
+                            <option value="Inter, sans-serif">Inter</option>
+                            <option value="Roboto, sans-serif">Roboto</option>
+                            <option value="Open Sans, sans-serif">
+                              Open Sans
+                            </option>
+                            <option value="Lato, sans-serif">Lato</option>
+                            <option value="Montserrat, sans-serif">
+                              Montserrat
+                            </option>
+                            <option value="Poppins, sans-serif">Poppins</option>
+                          </select>
+                        </FormField>
 
-                    <FormField label="Tamanho do texto">
-                      <input
-                        type="text"
-                        value={formData.font_size}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            font_size: e.target.value,
-                          })
-                        }
-                        placeholder="Ex: 14px"
-                        className={inputClass}
-                      />
-                    </FormField>
-                  </div>
-                </SectionCard>
-              )}
+                        <FormField label="Tamanho do texto">
+                          <input
+                            type="text"
+                            value={formData.font_size}
+                            onChange={e =>
+                              setFormData({
+                                ...formData,
+                                font_size: e.target.value,
+                              })
+                            }
+                            placeholder="Ex: 14px"
+                            className={inputClass}
+                          />
+                        </FormField>
+                      </div>
+                    </SectionCard>
+                  )}
 
-              {activeTab === 'floating' && (
-                <SectionCard
-                  title="Widget Flutuante"
-                  description="Controle tamanho, posição, borda, play, fechamento e comportamento do widget flutuante."
-                >
-                  <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-                    <h4 className="text-sm font-black text-white">
-                      Configuração ativa
-                    </h4>
+                  {activeTab === 'floating' && (
+                    <SectionCard
+                      title="Widget Flutuante"
+                      description="Controle tamanho, posição, borda, play, fechamento e comportamento do widget flutuante."
+                    >
+                      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+                        <h4 className="text-sm font-black text-slate-800">
+                          Configuração ativa
+                        </h4>
 
-                    {formData.useGlobalAppearance ? (
-                      <GlobalDeviceNotice />
-                    ) : (
-                      <DeviceTabs
-                        activeDevice={floatingDevice}
-                        onChange={setFloatingDevice}
-                      />
-                    )}
-                  </div>
+                        {formData.useGlobalAppearance ? (
+                          <GlobalDeviceNotice />
+                        ) : (
+                          <DeviceTabs
+                            activeDevice={floatingDevice}
+                            onChange={setFloatingDevice}
+                          />
+                        )}
+                      </div>
 
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <FormField label="Forma">
-                      <select
-                        value={activeFloatingConfig.shape}
-                        onChange={e =>
-                          updateFloatingConfig({
-                            shape: e.target.value as FloatingConfig['shape'],
-                          })
-                        }
-                        className={inputClass}
-                      >
-                        <option value="circle">Circular</option>
-                        <option value="square">Quadrado</option>
-                        <option value="portrait">Retrato</option>
-                      </select>
-                    </FormField>
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <FormField label="Forma">
+                          <select
+                            value={activeFloatingConfig.shape}
+                            onChange={e =>
+                              updateFloatingConfig({
+                                shape: e.target
+                                  .value as FloatingConfig['shape'],
+                              })
+                            }
+                            className={selectClass}
+                          >
+                            <option value="circle">Circular</option>
+                            <option value="square">Quadrado</option>
+                            <option value="portrait">Retrato</option>
+                          </select>
+                        </FormField>
 
-                    <FormField label="Largura">
-                      <input
-                        type="text"
-                        value={activeFloatingConfig.width}
-                        onChange={e =>
-                          updateFloatingConfig({
-                            width: e.target.value,
-                          })
-                        }
-                        placeholder="Ex: 80px"
-                        className={inputClass}
-                      />
-                    </FormField>
+                        <FormField label="Largura">
+                          <input
+                            type="text"
+                            value={activeFloatingConfig.width}
+                            onChange={e =>
+                              updateFloatingConfig({
+                                width: e.target.value,
+                              })
+                            }
+                            placeholder="Ex: 80px"
+                            className={inputClass}
+                          />
+                        </FormField>
 
-                    <FormField label="Altura">
-                      <input
-                        type="text"
-                        value={activeFloatingConfig.height}
-                        onChange={e =>
-                          updateFloatingConfig({
-                            height: e.target.value,
-                          })
-                        }
-                        placeholder="Ex: 110px"
-                        className={inputClass}
-                      />
-                    </FormField>
+                        <FormField label="Altura">
+                          <input
+                            type="text"
+                            value={activeFloatingConfig.height}
+                            onChange={e =>
+                              updateFloatingConfig({
+                                height: e.target.value,
+                              })
+                            }
+                            placeholder="Ex: 110px"
+                            className={inputClass}
+                          />
+                        </FormField>
 
-                    <FormField label="Raio da borda">
-                      <input
-                        type="text"
-                        value={activeFloatingConfig.border_radius}
-                        onChange={e =>
-                          updateFloatingConfig({
-                            border_radius: e.target.value,
-                          })
-                        }
-                        placeholder="Ex: 12px"
-                        className={inputClass}
-                      />
-                    </FormField>
+                        <FormField label="Raio da borda">
+                          <input
+                            type="text"
+                            value={activeFloatingConfig.border_radius}
+                            onChange={e =>
+                              updateFloatingConfig({
+                                border_radius: e.target.value,
+                              })
+                            }
+                            placeholder="Ex: 12px"
+                            className={inputClass}
+                          />
+                        </FormField>
 
-                    <FormField label="Posição do widget">
-                      <select
-                        value={activeFloatingConfig.position}
-                        onChange={e =>
-                          updateFloatingConfig({
-                            position: e.target.value as PositionValue,
-                          })
-                        }
-                        className={inputClass}
-                      >
-                        <option value="fixed_bottom_right">
-                          Inferior direita
-                        </option>
-                        <option value="fixed_bottom_left">
-                          Inferior esquerda
-                        </option>
-                        <option value="fixed_top_right">
-                          Superior direita
-                        </option>
-                        <option value="fixed_top_left">
-                          Superior esquerda
-                        </option>
-                      </select>
-                    </FormField>
+                        <FormField label="Posição do widget">
+                          <select
+                            value={activeFloatingConfig.position}
+                            onChange={e =>
+                              updateFloatingConfig({
+                                position: e.target.value as PositionValue,
+                              })
+                            }
+                            className={selectClass}
+                          >
+                            <option value="fixed_bottom_right">
+                              Inferior direita
+                            </option>
+                            <option value="fixed_bottom_left">
+                              Inferior esquerda
+                            </option>
+                            <option value="fixed_top_right">
+                              Superior direita
+                            </option>
+                            <option value="fixed_top_left">
+                              Superior esquerda
+                            </option>
+                          </select>
+                        </FormField>
 
-                    <FormField label="Distância inferior">
-                      <input
-                        type="text"
-                        value={activeFloatingConfig.bottom_spacing}
-                        onChange={e =>
-                          updateFloatingConfig({
-                            bottom_spacing: e.target.value,
-                          })
-                        }
-                        placeholder="Ex: 20px"
-                        className={inputClass}
-                      />
-                    </FormField>
+                        <FormField label="Distância inferior">
+                          <input
+                            type="text"
+                            value={activeFloatingConfig.bottom_spacing}
+                            onChange={e =>
+                              updateFloatingConfig({
+                                bottom_spacing: e.target.value,
+                              })
+                            }
+                            placeholder="Ex: 20px"
+                            className={inputClass}
+                          />
+                        </FormField>
 
-                    <FormField label="Distância superior">
-                      <input
-                        type="text"
-                        value={activeFloatingConfig.top_spacing}
-                        onChange={e =>
-                          updateFloatingConfig({
-                            top_spacing: e.target.value,
-                          })
-                        }
-                        placeholder="Ex: 20px"
-                        className={inputClass}
-                      />
-                    </FormField>
+                        <FormField label="Distância superior">
+                          <input
+                            type="text"
+                            value={activeFloatingConfig.top_spacing}
+                            onChange={e =>
+                              updateFloatingConfig({
+                                top_spacing: e.target.value,
+                              })
+                            }
+                            placeholder="Ex: 20px"
+                            className={inputClass}
+                          />
+                        </FormField>
 
-                    <FormField label="Distância esquerda">
-                      <input
-                        type="text"
-                        value={activeFloatingConfig.left_spacing}
-                        onChange={e =>
-                          updateFloatingConfig({
-                            left_spacing: e.target.value,
-                          })
-                        }
-                        placeholder="Ex: 20px"
-                        className={inputClass}
-                      />
-                    </FormField>
+                        <FormField label="Distância esquerda">
+                          <input
+                            type="text"
+                            value={activeFloatingConfig.left_spacing}
+                            onChange={e =>
+                              updateFloatingConfig({
+                                left_spacing: e.target.value,
+                              })
+                            }
+                            placeholder="Ex: 20px"
+                            className={inputClass}
+                          />
+                        </FormField>
 
-                    <FormField label="Distância direita">
-                      <input
-                        type="text"
-                        value={activeFloatingConfig.right_spacing}
-                        onChange={e =>
-                          updateFloatingConfig({
-                            right_spacing: e.target.value,
-                          })
-                        }
-                        placeholder="Ex: 20px"
-                        className={inputClass}
-                      />
-                    </FormField>
+                        <FormField label="Distância direita">
+                          <input
+                            type="text"
+                            value={activeFloatingConfig.right_spacing}
+                            onChange={e =>
+                              updateFloatingConfig({
+                                right_spacing: e.target.value,
+                              })
+                            }
+                            placeholder="Ex: 20px"
+                            className={inputClass}
+                          />
+                        </FormField>
 
-                    <FormField label="Cor da borda">
-                      <ColorInput
-                        label="Cor da borda"
-                        value={activeFloatingConfig.border_color}
-                        onChange={e =>
-                          updateFloatingConfig({
-                            border_color: e.target.value,
-                          })
-                        }
-                      />
-                    </FormField>
+                        <FormField label="Cor da borda">
+                          <ColorInput
+                            label="Cor da borda"
+                            value={activeFloatingConfig.border_color}
+                            onChange={e =>
+                              updateFloatingConfig({
+                                border_color: e.target.value,
+                              })
+                            }
+                          />
+                        </FormField>
 
-                    <FormField label="Largura/estilo da borda">
-                      <input
-                        type="text"
-                        value={activeFloatingConfig.border_style}
-                        onChange={e =>
-                          updateFloatingConfig({
-                            border_style: e.target.value,
-                          })
-                        }
-                        placeholder="Ex: 2px solid"
-                        className={inputClass}
-                      />
-                    </FormField>
+                        <FormField label="Largura/estilo da borda">
+                          <input
+                            type="text"
+                            value={activeFloatingConfig.border_style}
+                            onChange={e =>
+                              updateFloatingConfig({
+                                border_style: e.target.value,
+                              })
+                            }
+                            placeholder="Ex: 2px solid"
+                            className={inputClass}
+                          />
+                        </FormField>
 
-                    <FormField label="Object fit">
-                      <select
-                        value={activeFloatingConfig.object_fit}
-                        onChange={e =>
-                          updateFloatingConfig({
-                            object_fit: e.target.value,
-                          })
-                        }
-                        className={inputClass}
-                      >
-                        <option value="cover">Cover</option>
-                        <option value="contain">Contain</option>
-                        <option value="fill">Fill</option>
-                      </select>
-                    </FormField>
+                        <FormField label="Object fit">
+                          <select
+                            value={activeFloatingConfig.object_fit}
+                            onChange={e =>
+                              updateFloatingConfig({
+                                object_fit: e.target.value,
+                              })
+                            }
+                            className={selectClass}
+                          >
+                            <option value="cover">Cover</option>
+                            <option value="contain">Contain</option>
+                            <option value="fill">Fill</option>
+                          </select>
+                        </FormField>
 
-                    <FormField label="Z-index">
-                      <input
-                        type="text"
-                        value={activeFloatingConfig.z_index}
-                        onChange={e =>
-                          updateFloatingConfig({
-                            z_index: e.target.value,
-                          })
-                        }
-                        placeholder="Ex: 2147483647"
-                        className={inputClass}
-                      />
-                    </FormField>
+                        <FormField label="Z-index">
+                          <input
+                            type="text"
+                            value={activeFloatingConfig.z_index}
+                            onChange={e =>
+                              updateFloatingConfig({
+                                z_index: e.target.value,
+                              })
+                            }
+                            placeholder="Ex: 2147483647"
+                            className={inputClass}
+                          />
+                        </FormField>
 
-                    <FormField label="Mostrar botão play">
-                      <ToggleSwitch
-                        label="Mostrar botão play no flutuante"
-                        checked={activeFloatingConfig.show_play_icon}
-                        onChange={e =>
-                          updateFloatingConfig({
-                            show_play_icon: e.target.checked,
-                          })
-                        }
-                      />
-                    </FormField>
+                        <FormField label="Mostrar botão play">
+                          <ToggleSwitch
+                            label="Mostrar botão play no flutuante"
+                            checked={activeFloatingConfig.show_play_icon}
+                            onChange={e =>
+                              updateFloatingConfig({
+                                show_play_icon: e.target.checked,
+                              })
+                            }
+                          />
+                        </FormField>
 
-                    <FormField label="Permitir arrastar">
-                      <ToggleSwitch
-                        label="Permitir arrastar widget"
-                        checked={activeFloatingConfig.draggable}
-                        onChange={e =>
-                          updateFloatingConfig({
-                            draggable: e.target.checked,
-                          })
-                        }
-                      />
-                    </FormField>
+                        <FormField label="Permitir arrastar">
+                          <ToggleSwitch
+                            label="Permitir arrastar widget"
+                            checked={activeFloatingConfig.draggable}
+                            onChange={e =>
+                              updateFloatingConfig({
+                                draggable: e.target.checked,
+                              })
+                            }
+                          />
+                        </FormField>
 
-                    <FormField label="Permitir fechar">
-                      <ToggleSwitch
-                        label="Permitir fechar widget"
-                        checked={activeFloatingConfig.allow_close}
-                        onChange={e =>
-                          updateFloatingConfig({
-                            allow_close: e.target.checked,
-                          })
-                        }
-                      />
-                    </FormField>
-                  </div>
-                </SectionCard>
-              )}
+                        <FormField label="Permitir fechar">
+                          <ToggleSwitch
+                            label="Permitir fechar widget"
+                            checked={activeFloatingConfig.allow_close}
+                            onChange={e =>
+                              updateFloatingConfig({
+                                allow_close: e.target.checked,
+                              })
+                            }
+                          />
+                        </FormField>
+                      </div>
+                    </SectionCard>
+                  )}
 
-              {activeTab === 'carousel' && (
-                <SectionCard
-                  title="Carrossel"
-                  description="Configure a exibição dos vídeos em carrossel, quantidade de itens e margens."
-                >
-                  <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-                    <h4 className="text-sm font-black text-white">
-                      Configuração ativa
-                    </h4>
+                  {activeTab === 'carousel' && (
+                    <SectionCard
+                      title="Carrossel"
+                      description="Configure a exibição dos vídeos em carrossel, quantidade de itens e margens."
+                    >
+                      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+                        <h4 className="text-sm font-black text-slate-800">
+                          Configuração ativa
+                        </h4>
 
-                    {formData.useGlobalAppearance ? (
-                      <GlobalDeviceNotice />
-                    ) : (
-                      <DeviceTabs
-                        activeDevice={carouselDevice}
-                        onChange={setCarouselDevice}
-                      />
-                    )}
-                  </div>
+                        {formData.useGlobalAppearance ? (
+                          <GlobalDeviceNotice />
+                        ) : (
+                          <DeviceTabs
+                            activeDevice={carouselDevice}
+                            onChange={setCarouselDevice}
+                          />
+                        )}
+                      </div>
 
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <FormField label="Espaçamento">
-                      <input
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={activeCarouselConfig.gap}
-                        onChange={e =>
-                          updateCarouselConfig({
-                            gap: safeNumber(e.target.value, 0, 0),
-                          })
-                        }
-                        className={inputClass}
-                      />
-                    </FormField>
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <FormField label="Espaçamento">
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={activeCarouselConfig.gap}
+                            onChange={e =>
+                              updateCarouselConfig({
+                                gap: safeNumber(e.target.value, 0, 0),
+                              })
+                            }
+                            className={inputClass}
+                          />
+                        </FormField>
 
-                    <FormField label="Itens visíveis">
-                      <input
-                        type="number"
-                        min="1"
-                        step="1"
-                        value={activeCarouselConfig.visible_items}
-                        onChange={e =>
-                          updateCarouselConfig({
-                            visible_items: safeNumber(e.target.value, 1, 1),
-                          })
-                        }
-                        className={inputClass}
-                      />
-                    </FormField>
+                        <FormField label="Itens visíveis">
+                          <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            value={activeCarouselConfig.visible_items}
+                            onChange={e =>
+                              updateCarouselConfig({
+                                visible_items: safeNumber(
+                                  e.target.value,
+                                  1,
+                                  1,
+                                ),
+                              })
+                            }
+                            className={inputClass}
+                          />
+                        </FormField>
 
-                    <FormField label="Forma">
-                      <select
-                        value={activeCarouselConfig.card_shape}
-                        onChange={e =>
-                          updateCarouselConfig({
-                            card_shape: e.target.value,
-                          })
-                        }
-                        className={inputClass}
-                      >
-                        <option value="rounded">Arredondado</option>
-                        <option value="square">Quadrado</option>
-                        <option value="circle">Circular</option>
-                        <option value="custom">Personalizado</option>
-                      </select>
-                    </FormField>
+                        <FormField label="Forma">
+                          <select
+                            value={activeCarouselConfig.card_shape}
+                            onChange={e =>
+                              updateCarouselConfig({
+                                card_shape: e.target.value,
+                              })
+                            }
+                            className={selectClass}
+                          >
+                            <option value="rounded">Arredondado</option>
+                            <option value="square">Quadrado</option>
+                            <option value="circle">Circular</option>
+                            <option value="custom">Personalizado</option>
+                          </select>
+                        </FormField>
 
-                    <FormField label="Modo de visualização">
-                      <select
-                        value={activeCarouselConfig.view_mode}
-                        onChange={e =>
-                          updateCarouselConfig({
-                            view_mode: e.target.value,
-                          })
-                        }
-                        className={inputClass}
-                      >
-                        <option value="preview">Preview, vídeo no hover</option>
-                        <option value="poster">Poster/imagem apenas</option>
-                        <option value="custom">Personalizado</option>
-                      </select>
-                    </FormField>
+                        <FormField label="Modo de visualização">
+                          <select
+                            value={activeCarouselConfig.view_mode}
+                            onChange={e =>
+                              updateCarouselConfig({
+                                view_mode: e.target.value,
+                              })
+                            }
+                            className={selectClass}
+                          >
+                            <option value="preview">
+                              Preview, vídeo no hover
+                            </option>
+                            <option value="poster">Poster/imagem apenas</option>
+                            <option value="custom">Personalizado</option>
+                          </select>
+                        </FormField>
 
-                    <FormField label="Margem superior">
-                      <input
-                        type="text"
-                        value={activeCarouselConfig.margin_top}
-                        onChange={e =>
-                          updateCarouselConfig({
-                            margin_top: e.target.value,
-                          })
-                        }
-                        placeholder="Ex: 20px ou 20"
-                        className={inputClass}
-                      />
-                    </FormField>
+                        <FormField label="Margem superior">
+                          <input
+                            type="text"
+                            value={activeCarouselConfig.margin_top}
+                            onChange={e =>
+                              updateCarouselConfig({
+                                margin_top: e.target.value,
+                              })
+                            }
+                            placeholder="Ex: 20px ou 20"
+                            className={inputClass}
+                          />
+                        </FormField>
 
-                    <FormField label="Margem inferior">
-                      <input
-                        type="text"
-                        value={activeCarouselConfig.margin_bottom}
-                        onChange={e =>
-                          updateCarouselConfig({
-                            margin_bottom: e.target.value,
-                          })
-                        }
-                        placeholder="Ex: 20px ou 20"
-                        className={inputClass}
-                      />
-                    </FormField>
+                        <FormField label="Margem inferior">
+                          <input
+                            type="text"
+                            value={activeCarouselConfig.margin_bottom}
+                            onChange={e =>
+                              updateCarouselConfig({
+                                margin_bottom: e.target.value,
+                              })
+                            }
+                            placeholder="Ex: 20px ou 20"
+                            className={inputClass}
+                          />
+                        </FormField>
 
-                    <FormField label="Exibir produto">
-                      <ToggleSwitch
-                        label="Exibir produto no carrossel"
-                        checked={activeCarouselConfig.show_product}
-                        onChange={e =>
-                          updateCarouselConfig({
-                            show_product: e.target.checked,
-                          })
-                        }
-                      />
-                    </FormField>
+                        <FormField label="Exibir produto">
+                          <ToggleSwitch
+                            label="Exibir produto no carrossel"
+                            checked={activeCarouselConfig.show_product}
+                            onChange={e =>
+                              updateCarouselConfig({
+                                show_product: e.target.checked,
+                              })
+                            }
+                          />
+                        </FormField>
 
-                    <FormField label="Mostrar botão play">
-                      <ToggleSwitch
-                        label="Mostrar botão play no carrossel"
-                        checked={activeCarouselConfig.show_play_icon}
-                        onChange={e =>
-                          updateCarouselConfig({
-                            show_play_icon: e.target.checked,
-                          })
-                        }
-                      />
-                    </FormField>
-                  </div>
-                </SectionCard>
-              )}
+                        <FormField label="Mostrar botão play">
+                          <ToggleSwitch
+                            label="Mostrar botão play no carrossel"
+                            checked={activeCarouselConfig.show_play_icon}
+                            onChange={e =>
+                              updateCarouselConfig({
+                                show_play_icon: e.target.checked,
+                              })
+                            }
+                          />
+                        </FormField>
+                      </div>
+                    </SectionCard>
+                  )}
 
-              {activeTab === 'grid' && (
-                <SectionCard
-                  title="Grade"
-                  description="Configure quantidade de colunas, linhas e espaçamento da grade de vídeos."
-                >
-                  <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-                    <h4 className="text-sm font-black text-white">
-                      Configuração ativa
-                    </h4>
+                  {activeTab === 'grid' && (
+                    <SectionCard
+                      title="Grade"
+                      description="Configure quantidade de colunas, linhas e espaçamento da grade de vídeos."
+                    >
+                      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+                        <h4 className="text-sm font-black text-slate-800">
+                          Configuração ativa
+                        </h4>
 
-                    {formData.useGlobalAppearance ? (
-                      <GlobalDeviceNotice />
-                    ) : (
-                      <DeviceTabs
-                        activeDevice={gridDevice}
-                        onChange={setGridDevice}
-                      />
-                    )}
-                  </div>
+                        {formData.useGlobalAppearance ? (
+                          <GlobalDeviceNotice />
+                        ) : (
+                          <DeviceTabs
+                            activeDevice={gridDevice}
+                            onChange={setGridDevice}
+                          />
+                        )}
+                      </div>
 
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <FormField label="Colunas">
-                      <input
-                        type="number"
-                        min="1"
-                        value={activeGridConfig.columns}
-                        onChange={e =>
-                          updateGridConfig({
-                            columns: safeNumber(e.target.value, 1, 1),
-                          })
-                        }
-                        className={inputClass}
-                      />
-                    </FormField>
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <FormField label="Colunas">
+                          <input
+                            type="number"
+                            min="1"
+                            value={activeGridConfig.columns}
+                            onChange={e =>
+                              updateGridConfig({
+                                columns: safeNumber(e.target.value, 1, 1),
+                              })
+                            }
+                            className={inputClass}
+                          />
+                        </FormField>
 
-                    <FormField label="Linhas">
-                      <input
-                        type="number"
-                        min="1"
-                        value={activeGridConfig.rows}
-                        onChange={e =>
-                          updateGridConfig({
-                            rows: safeNumber(e.target.value, 1, 1),
-                          })
-                        }
-                        className={inputClass}
-                      />
-                    </FormField>
+                        <FormField label="Linhas">
+                          <input
+                            type="number"
+                            min="1"
+                            value={activeGridConfig.rows}
+                            onChange={e =>
+                              updateGridConfig({
+                                rows: safeNumber(e.target.value, 1, 1),
+                              })
+                            }
+                            className={inputClass}
+                          />
+                        </FormField>
 
-                    <FormField label="Espaçamento">
-                      <input
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={activeGridConfig.gap}
-                        onChange={e =>
-                          updateGridConfig({
-                            gap: safeNumber(e.target.value, 0, 0),
-                          })
-                        }
-                        className={inputClass}
-                      />
-                    </FormField>
-                  </div>
-                </SectionCard>
-              )}
+                        <FormField label="Espaçamento">
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={activeGridConfig.gap}
+                            onChange={e =>
+                              updateGridConfig({
+                                gap: safeNumber(e.target.value, 0, 0),
+                              })
+                            }
+                            className={inputClass}
+                          />
+                        </FormField>
+                      </div>
+                    </SectionCard>
+                  )}
 
-              {activeTab === 'modal' && (
-                <SectionCard
-                  title="Player Interativo e Modal"
-                  description="Controle quais botões e elementos aparecem dentro do player/modal."
-                >
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <FormField label="Mostrar título">
-                      <ToggleSwitch
-                        label="Mostrar título"
-                        checked={formData.modal_config.show_title}
-                        onChange={e =>
-                          updateModalConfig({
-                            show_title: e.target.checked,
-                          })
-                        }
-                      />
-                    </FormField>
+                  {activeTab === 'modal' && (
+                    <SectionCard
+                      title="Player Interativo e Modal"
+                      description="Controle quais botões e elementos aparecem dentro do player/modal."
+                    >
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <FormField label="Mostrar título">
+                          <ToggleSwitch
+                            label="Mostrar título"
+                            checked={formData.modal_config.show_title}
+                            onChange={e =>
+                              updateModalConfig({
+                                show_title: e.target.checked,
+                              })
+                            }
+                          />
+                        </FormField>
 
-                    <FormField label="Mostrar botão play">
-                      <ToggleSwitch
-                        label="Mostrar botão play"
-                        checked={formData.modal_config.show_play_button}
-                        onChange={e =>
-                          updateModalConfig({
-                            show_play_button: e.target.checked,
-                          })
-                        }
-                      />
-                    </FormField>
+                        <FormField label="Mostrar botão play">
+                          <ToggleSwitch
+                            label="Mostrar botão play"
+                            checked={formData.modal_config.show_play_button}
+                            onChange={e =>
+                              updateModalConfig({
+                                show_play_button: e.target.checked,
+                              })
+                            }
+                          />
+                        </FormField>
 
-                    <FormField label="Mostrar botão curtir">
-                      <ToggleSwitch
-                        label="Mostrar botão curtir"
-                        checked={formData.modal_config.show_like_button}
-                        onChange={e =>
-                          updateModalConfig({
-                            show_like_button: e.target.checked,
-                          })
-                        }
-                      />
-                    </FormField>
+                        <FormField label="Mostrar botão curtir">
+                          <ToggleSwitch
+                            label="Mostrar botão curtir"
+                            checked={formData.modal_config.show_like_button}
+                            onChange={e =>
+                              updateModalConfig({
+                                show_like_button: e.target.checked,
+                              })
+                            }
+                          />
+                        </FormField>
 
-                    <FormField label="Mostrar botão WhatsApp">
-                      <ToggleSwitch
-                        label="Mostrar botão WhatsApp"
-                        checked={formData.modal_config.show_whatsapp_button}
-                        onChange={e =>
-                          updateModalConfig({
-                            show_whatsapp_button: e.target.checked,
-                          })
-                        }
-                      />
-                    </FormField>
+                        <FormField label="Mostrar botão WhatsApp">
+                          <ToggleSwitch
+                            label="Mostrar botão WhatsApp"
+                            checked={formData.modal_config.show_whatsapp_button}
+                            onChange={e =>
+                              updateModalConfig({
+                                show_whatsapp_button: e.target.checked,
+                              })
+                            }
+                          />
+                        </FormField>
 
-                    <FormField label="Mostrar produto">
-                      <ToggleSwitch
-                        label="Mostrar produto"
-                        checked={formData.modal_config.show_product}
-                        onChange={e =>
-                          updateModalConfig({
-                            show_product: e.target.checked,
-                          })
-                        }
-                      />
-                    </FormField>
+                        <FormField label="Mostrar produto">
+                          <ToggleSwitch
+                            label="Mostrar produto"
+                            checked={formData.modal_config.show_product}
+                            onChange={e =>
+                              updateModalConfig({
+                                show_product: e.target.checked,
+                              })
+                            }
+                          />
+                        </FormField>
 
-                    <FormField label="Mostrar botão produto">
-                      <ToggleSwitch
-                        label="Mostrar botão produto"
-                        checked={formData.modal_config.show_product_button}
-                        onChange={e =>
-                          updateModalConfig({
-                            show_product_button: e.target.checked,
-                          })
-                        }
-                      />
-                    </FormField>
+                        <FormField label="Mostrar botão produto">
+                          <ToggleSwitch
+                            label="Mostrar botão produto"
+                            checked={formData.modal_config.show_product_button}
+                            onChange={e =>
+                              updateModalConfig({
+                                show_product_button: e.target.checked,
+                              })
+                            }
+                          />
+                        </FormField>
 
-                    <FormField label="Mostrar botão compartilhar">
-                      <ToggleSwitch
-                        label="Mostrar botão compartilhar"
-                        checked={formData.modal_config.show_share_button}
-                        onChange={e =>
-                          updateModalConfig({
-                            show_share_button: e.target.checked,
-                          })
-                        }
-                      />
-                    </FormField>
+                        <FormField label="Mostrar botão compartilhar">
+                          <ToggleSwitch
+                            label="Mostrar botão compartilhar"
+                            checked={formData.modal_config.show_share_button}
+                            onChange={e =>
+                              updateModalConfig({
+                                show_share_button: e.target.checked,
+                              })
+                            }
+                          />
+                        </FormField>
 
-                    <FormField label="Mostrar botão comentários">
-                      <ToggleSwitch
-                        label="Mostrar botão comentários"
-                        checked={formData.modal_config.show_comment_button}
-                        onChange={e =>
-                          updateModalConfig({
-                            show_comment_button: e.target.checked,
-                          })
-                        }
-                      />
-                    </FormField>
+                        <FormField label="Mostrar botão comentários">
+                          <ToggleSwitch
+                            label="Mostrar botão comentários"
+                            checked={formData.modal_config.show_comment_button}
+                            onChange={e =>
+                              updateModalConfig({
+                                show_comment_button: e.target.checked,
+                              })
+                            }
+                          />
+                        </FormField>
 
-                    <FormField label="Ocultar stories">
-                      <ToggleSwitch
-                        label="Ocultar stories"
-                        checked={formData.modal_config.hide_stories}
-                        onChange={e =>
-                          updateModalConfig({
-                            hide_stories: e.target.checked,
-                          })
-                        }
-                      />
-                    </FormField>
+                        <FormField label="Ocultar stories">
+                          <ToggleSwitch
+                            label="Ocultar stories"
+                            checked={formData.modal_config.hide_stories}
+                            onChange={e =>
+                              updateModalConfig({
+                                hide_stories: e.target.checked,
+                              })
+                            }
+                          />
+                        </FormField>
 
-                    <FormField label="Sombra">
-                      <ToggleSwitch
-                        label="Ativar sombra"
-                        checked={formData.modal_config.shadow_enabled}
-                        onChange={e =>
-                          updateModalConfig({
-                            shadow_enabled: e.target.checked,
-                          })
-                        }
-                      />
-                    </FormField>
-                  </div>
-                </SectionCard>
-              )}
+                        <FormField label="Sombra">
+                          <ToggleSwitch
+                            label="Ativar sombra"
+                            checked={formData.modal_config.shadow_enabled}
+                            onChange={e =>
+                              updateModalConfig({
+                                shadow_enabled: e.target.checked,
+                              })
+                            }
+                          />
+                        </FormField>
+                      </div>
+                    </SectionCard>
+                  )}
+                </div>
+
+                <div className="xl:sticky xl:top-0 xl:self-start">
+                  <PreviewCard
+                    formData={formData}
+                    floatingDevice={floatingDevice}
+                    carouselDevice={carouselDevice}
+                    gridDevice={gridDevice}
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="flex flex-col gap-3 border-t border-slate-100 bg-white p-6 sm:flex-row sm:justify-end">
