@@ -29,6 +29,16 @@ export interface Video {
   updated_at?: string;
 }
 
+export type AppearanceDevice = 'desktop' | 'mobile';
+
+export type ResponsiveAppearanceConfig<
+  T extends Record<string, any> = Record<string, any>,
+> = {
+  desktop: T;
+  mobile: T;
+  [key: string]: any;
+};
+
 export interface Appearance {
   id: string;
   store_id: string;
@@ -56,6 +66,26 @@ export interface Appearance {
   show_share_button: boolean;
   show_whatsapp_button: boolean;
   show_product_button: boolean;
+
+  /**
+   * Campo usado no Supabase.
+   */
+  use_global_appearance?: boolean;
+
+  /**
+   * Campo usado no front.
+   * Ele é convertido automaticamente para use_global_appearance antes de salvar.
+   */
+  useGlobalAppearance?: boolean;
+
+  /**
+   * Configurações responsivas novas.
+   */
+  floating_config?: ResponsiveAppearanceConfig;
+  carousel_config?: ResponsiveAppearanceConfig;
+  grid_config?: ResponsiveAppearanceConfig;
+  modal_config?: ResponsiveAppearanceConfig;
+
   created_at?: string;
   updated_at?: string;
 }
@@ -322,6 +352,11 @@ const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   public_live_key: `pub_live_${Math.random().toString(36).substring(2, 26)}`,
 };
 
+const DEFAULT_RESPONSIVE_CONFIG: ResponsiveAppearanceConfig = {
+  desktop: {},
+  mobile: {},
+};
+
 const DEFAULT_APPEARANCES: Appearance[] = [
   {
     id: DEFAULT_APPEARANCE_ID,
@@ -350,6 +385,12 @@ const DEFAULT_APPEARANCES: Appearance[] = [
     show_share_button: true,
     show_whatsapp_button: true,
     show_product_button: true,
+    use_global_appearance: true,
+    useGlobalAppearance: true,
+    floating_config: DEFAULT_RESPONSIVE_CONFIG,
+    carousel_config: DEFAULT_RESPONSIVE_CONFIG,
+    grid_config: DEFAULT_RESPONSIVE_CONFIG,
+    modal_config: DEFAULT_RESPONSIVE_CONFIG,
   },
 ];
 
@@ -642,49 +683,161 @@ const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
   ],
 
   appearances: [
-  'id',
-  'store_id',
-  'name',
-  'is_default',
-  'primary_color',
-  'secondary_color',
-  'text_color',
-  'background_color',
-  'button_color',
-  'border_radius',
-  'shadow_enabled',
-  'font_family',
-  'widget_shape',
-  'widget_size',
-  'widget_animation',
-  'carousel_card_shape',
-  'carousel_visible_items',
-  'carousel_gap',
-  'show_title',
-  'show_play_button',
-  'show_product',
-  'show_like_button',
-  'show_comment_button',
-  'show_share_button',
-  'show_whatsapp_button',
-  'show_product_button',
-  'created_at',
-  'updated_at',
-],
+    'id',
+    'store_id',
+    'name',
+    'is_default',
+    'primary_color',
+    'secondary_color',
+    'text_color',
+    'background_color',
+    'button_color',
+    'border_radius',
+    'shadow_enabled',
+    'font_family',
+    'widget_shape',
+    'widget_size',
+    'widget_animation',
+    'carousel_card_shape',
+    'carousel_visible_items',
+    'carousel_gap',
+    'show_title',
+    'show_play_button',
+    'show_product',
+    'show_like_button',
+    'show_comment_button',
+    'show_share_button',
+    'show_whatsapp_button',
+    'show_product_button',
 
+    /**
+     * Novos campos da tela AppearancePage.
+     *
+     * No front pode existir useGlobalAppearance,
+     * mas no Supabase salvamos como use_global_appearance.
+     */
+    'use_global_appearance',
+    'floating_config',
+    'carousel_config',
+    'grid_config',
+    'modal_config',
+
+    'created_at',
+    'updated_at',
+  ],
+};
+
+const normalizeAppearancePayloadBeforeSave = <T extends Record<string, any>>(
+  item: T,
+): T => {
+  const payload: Record<string, any> = { ...item };
+
+  /**
+   * Compatibilidade:
+   * - Front usa useGlobalAppearance.
+   * - Banco usa use_global_appearance.
+   */
+  if (
+    payload.useGlobalAppearance !== undefined &&
+    payload.use_global_appearance === undefined
+  ) {
+    payload.use_global_appearance = payload.useGlobalAppearance;
+  }
+
+  /**
+   * Nunca envia camelCase para o Supabase/localStorage sanitizado,
+   * pois a coluna real deve ser snake_case.
+   */
+  delete payload.useGlobalAppearance;
+
+  return payload as T;
+};
+
+const normalizeTablePayloadBeforeSave = <T extends Record<string, any>>(
+  tableName: string,
+  item: T,
+): T => {
+  if (tableName === 'appearances') {
+    return normalizeAppearancePayloadBeforeSave(item);
+  }
+
+  return item;
+};
+
+const normalizeResponsiveConfigForClient = (
+  value: unknown,
+): ResponsiveAppearanceConfig => {
+  if (!value || typeof value !== 'object') {
+    return {
+      desktop: {},
+      mobile: {},
+    };
+  }
+
+  const config = value as Record<string, any>;
+
+  return {
+    ...config,
+    desktop:
+      config.desktop && typeof config.desktop === 'object'
+        ? config.desktop
+        : {},
+    mobile:
+      config.mobile && typeof config.mobile === 'object' ? config.mobile : {},
+  };
+};
+
+const normalizeTableItemForClient = <T extends Record<string, any>>(
+  tableName: string,
+  item: T,
+): T => {
+  if (tableName !== 'appearances') {
+    return item;
+  }
+
+  const appearance: Record<string, any> = { ...item };
+
+  appearance.useGlobalAppearance =
+    appearance.useGlobalAppearance ??
+    appearance.use_global_appearance ??
+    true;
+
+  appearance.use_global_appearance =
+    appearance.use_global_appearance ??
+    appearance.useGlobalAppearance ??
+    true;
+
+  appearance.floating_config = normalizeResponsiveConfigForClient(
+    appearance.floating_config,
+  );
+
+  appearance.carousel_config = normalizeResponsiveConfigForClient(
+    appearance.carousel_config,
+  );
+
+  appearance.grid_config = normalizeResponsiveConfigForClient(
+    appearance.grid_config,
+  );
+
+  appearance.modal_config = normalizeResponsiveConfigForClient(
+    appearance.modal_config,
+  );
+
+  return appearance as T;
 };
 
 const sanitizeTablePayload = <T extends Record<string, any>>(
   tableName: string,
   item: T,
 ): T => {
+  const normalizedItem = normalizeTablePayloadBeforeSave(tableName, item);
   const allowedFields = TABLE_ALLOWED_FIELDS[tableName];
 
-  if (!allowedFields) return item;
+  if (!allowedFields) return normalizedItem;
 
   const clean: Record<string, any> = {};
 
-  Object.entries(item).forEach(([key, value]) => {
+  Object.entries(normalizedItem).forEach(([key, value]) => {
     if (allowedFields.includes(key)) {
       clean[key] = value;
     }
@@ -882,7 +1035,10 @@ const ensureSupabaseAppearanceExists = async (
     await query.maybeSingle();
 
   if (selectError) {
-    console.error('Erro ao verificar appearance_id em appearances:', selectError);
+    console.error(
+      'Erro ao verificar appearance_id em appearances:',
+      selectError,
+    );
     throw selectError;
   }
 
@@ -930,7 +1086,10 @@ const ensureSupabaseAppearanceExists = async (
     .single();
 
   if (insertError) {
-    console.error('Erro ao migrar aparência local para o Supabase:', insertError);
+    console.error(
+      'Erro ao migrar aparência local para o Supabase:',
+      insertError,
+    );
     throw insertError;
   }
 
@@ -1061,9 +1220,13 @@ const createCrudFunctions = <
 
       const items: T[] = local ? JSON.parse(local) : memoryArray;
 
-      return storeId
+      const filteredItems = storeId
         ? items.filter((item: T) => item.store_id === storeId)
         : items;
+
+      return filteredItems.map(item =>
+        normalizeTableItemForClient(tableName, item as any),
+      ) as T[];
     },
 
     async getById(id: string, storeId?: string): Promise<T | null> {
@@ -1098,7 +1261,10 @@ const createCrudFunctions = <
         localStorage.setItem(`vidlytics_${tableName}`, JSON.stringify(items));
       }
 
-      return updatedItem as T;
+      return normalizeTableItemForClient(
+        tableName,
+        updatedItem as any,
+      ) as T;
     },
 
     async delete(id: string): Promise<boolean> {
@@ -1151,7 +1317,9 @@ const createSupabaseCrudFunctions = <
         throw error;
       }
 
-      return (data || []) as T[];
+      return ((data || []) as T[]).map(item =>
+        normalizeTableItemForClient(tableName, item as any),
+      ) as T[];
     },
 
     async getById(id: string, storeId?: string): Promise<T | null> {
@@ -1176,7 +1344,9 @@ const createSupabaseCrudFunctions = <
         throw error;
       }
 
-      return data as T | null;
+      if (!data) return null;
+
+      return normalizeTableItemForClient(tableName, data as any) as T;
     },
 
     async save(item: T): Promise<T> {
@@ -1226,7 +1396,7 @@ const createSupabaseCrudFunctions = <
             throw error;
           }
 
-          return data as T;
+          return normalizeTableItemForClient(tableName, data as any) as T;
         }
       }
 
@@ -1241,7 +1411,7 @@ const createSupabaseCrudFunctions = <
         throw error;
       }
 
-      return data as T;
+      return normalizeTableItemForClient(tableName, data as any) as T;
     },
 
     async delete(id: string): Promise<boolean> {
@@ -1284,7 +1454,10 @@ export const resolveStoreId = async (
       return firstValidStore.id;
     }
   } catch (error) {
-    console.warn('Não foi possível buscar loja atual, usando loja padrão:', error);
+    console.warn(
+      'Não foi possível buscar loja atual, usando loja padrão:',
+      error,
+    );
   }
 
   return DEFAULT_STORE.id;
