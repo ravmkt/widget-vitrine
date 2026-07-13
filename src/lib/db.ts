@@ -856,17 +856,6 @@ const ensureSupabaseStoreExists = async (storeId?: string) => {
   }
 };
 
-/**
- * Corrige foreign keys opcionais antes de salvar no Supabase.
- *
- * Problema resolvido:
- * Ao salvar um vídeo com model_id apontando para um modelo que existe apenas
- * no localStorage, o Supabase retorna:
- *
- * "Key is not present in table sizing_models"
- *
- * Agora, se model_id não existir na tabela sizing_models, ele será salvo como null.
- */
 const ensureSupabaseAppearanceExists = async (
   appearanceId?: string | null,
   storeId?: string,
@@ -946,6 +935,24 @@ const ensureSupabaseAppearanceExists = async (
 
   return insertedAppearance?.id || appearanceId;
 };
+
+/**
+ * Corrige foreign keys opcionais antes de salvar no Supabase.
+ *
+ * Problemas resolvidos:
+ *
+ * 1. Ao salvar vídeos ou stories com model_id apontando para modelo inexistente,
+ *    o Supabase retornava erro de foreign key.
+ *
+ * 2. Ao salvar Story com appearance_id de uma aparência que estava apenas no
+ *    localStorage, o Supabase retornava erro de foreign key.
+ *
+ * Agora:
+ * - model_id inexistente vira null;
+ * - product_id inexistente vira null;
+ * - appearance_id é verificado e, se existir no localStorage, é migrado para
+ *   o Supabase automaticamente.
+ */
 const normalizeSupabaseRelationsBeforeSave = async <
   T extends Record<string, any>,
 >(
@@ -962,6 +969,7 @@ const normalizeSupabaseRelationsBeforeSave = async <
   ) {
     if (!isValidUuid(normalizedPayload.model_id)) {
       normalizedPayload.model_id = null;
+
       return normalizedPayload as T;
     }
 
@@ -990,9 +998,17 @@ const normalizeSupabaseRelationsBeforeSave = async <
     }
   }
 
+  if (tableName === 'stories' && normalizedPayload.appearance_id) {
+    normalizedPayload.appearance_id = await ensureSupabaseAppearanceExists(
+      normalizedPayload.appearance_id,
+      normalizedPayload.store_id,
+    );
+  }
+
   if (tableName === 'videos' && normalizedPayload.product_id) {
     if (!isValidUuid(normalizedPayload.product_id)) {
       normalizedPayload.product_id = null;
+
       return normalizedPayload as T;
     }
 
@@ -1382,9 +1398,9 @@ export const db = {
   ),
 
   appearances: createSupabaseCrudFunctions<Appearance>(
-  'appearances',
-  memoryAppearances,
-),
+    'appearances',
+    memoryAppearances,
+  ),
 
   videos: createSupabaseCrudFunctions<Video>('videos', memoryVideos),
 
