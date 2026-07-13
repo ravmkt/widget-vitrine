@@ -1,296 +1,1105 @@
+/**
+ * Vidlytics Widget — widget.js
+ *
+ * Widget público de vídeo commerce.
+ * Carrega stories e vídeos reais da loja via Supabase.
+ *
+ * Configuração (antes de carregar este script):
+ *
+ *   window.VIDLYTICS_CONFIG = {
+ *     storeId: "ID_DA_LOJA",         // ou "lojaId"
+ *     supabaseUrl: "https://...",     // URL do projeto Supabase
+ *     supabaseAnonKey: "...",         // Chave anônima do Supabase
+ *     position: "bottom-right",       // bottom-right | bottom-left | top-right | top-left
+ *     widgets: { floatingVideo: true, carousel: true, gallery: true }
+ *   };
+ *
+ * Nenhum dado mockado é incluído.
+ */
 (function () {
-  const currentScript = document.currentScript;
+  if (window.__vidlytics_widget_initialized) return;
+  window.__vidlytics_widget_initialized = true;
 
-  const config = {
-    loja: currentScript?.getAttribute("data-loja") || "Minha Loja",
-    cor: currentScript?.getAttribute("data-cor") || "#111827",
-    whatsapp: currentScript?.getAttribute("data-whatsapp") || "5541999999999",
-  };
+  /* ------------------------------------------------------------------ */
+  /*  Config                                                             */
+  /* ------------------------------------------------------------------ */
 
-  const produtos = [
-    {
-      nome: "Tênis Esportivo",
-      preco: "R$ 199,90",
-      imagem: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400",
-      descricao: "Confortável, moderno e ideal para o dia a dia.",
-    },
-    {
-      nome: "Relógio Premium",
-      preco: "R$ 349,90",
-      imagem: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400",
-      descricao: "Design elegante para qualquer ocasião.",
-    },
-    {
-      nome: "Fone Bluetooth",
-      preco: "R$ 129,90",
-      imagem: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
-      descricao: "Som de qualidade com bateria de longa duração.",
-    },
-  ];
+  var config = window.VIDLYTICS_CONFIG || {};
+  var storeId = config.storeId || config.lojaId || null;
+  var supabaseUrl = (config.supabaseUrl || '').replace(/\/$/, '');
+  var supabaseAnonKey = config.supabaseAnonKey || '';
+  var position = config.position || 'bottom-right';
+  var widgetsCfg = config.widgets || {};
+  var enableFloating =
+    widgetsCfg.floatingVideo !== undefined
+      ? widgetsCfg.floatingVideo
+      : config.floatingVideo !== false;
+  var enableCarousel =
+    widgetsCfg.carousel !== undefined
+      ? widgetsCfg.carousel
+      : config.carousel !== false;
+  var enableGallery =
+    widgetsCfg.gallery !== undefined
+      ? widgetsCfg.gallery
+      : config.gallery !== false;
 
-  const style = document.createElement("style");
+  var hasSupabase = Boolean(supabaseUrl && supabaseAnonKey);
 
-  style.innerHTML = `
-    #vitrine-widget-button {
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      z-index: 999999;
-      background: ${config.cor};
-      color: #ffffff;
-      border: none;
-      border-radius: 999px;
-      padding: 14px 20px;
-      font-family: Arial, sans-serif;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
-      transition: all 0.2s ease;
+  /* ------------------------------------------------------------------ */
+  /*  Utils                                                              */
+  /* ------------------------------------------------------------------ */
+
+  var VIDEO_FILE_REGEX = /\.(mp4|webm|ogg|mov|m4v|m3u8)(\?.*)?$/i;
+
+  function getVideoUrl(video) {
+    if (!video) return '';
+    return (
+      video.video_url ||
+      video.url ||
+      video.source_url ||
+      video.external_url ||
+      video.file_url ||
+      video.public_url ||
+      ''
+    );
+  }
+
+  function isDirectVideoUrl(url) {
+    if (!url) return false;
+    return VIDEO_FILE_REGEX.test(url);
+  }
+
+  function extractYouTubeId(url) {
+    if (!url) return '';
+    try {
+      var parsed = new URL(url.trim());
+      var host = parsed.hostname.replace(/^www\./, '').toLowerCase();
+      if (host === 'youtu.be') {
+        return parsed.pathname.replace(/^\//, '').split('/')[0] || '';
+      }
+      if (host === 'youtube.com' || host === 'm.youtube.com') {
+        if (parsed.pathname.indexOf('/shorts/') === 0) {
+          return parsed.pathname.split('/')[2] || '';
+        }
+        if (parsed.pathname.indexOf('/embed/') === 0) {
+          return parsed.pathname.replace(/^\/embed\//, '').split('/')[0] || '';
+        }
+        if (parsed.pathname === '/watch') {
+          return parsed.searchParams.get('v') || '';
+        }
+      }
+    } catch (e) {
+      return '';
+    }
+    return '';
+  }
+
+  function getYouTubeEmbedUrl(url) {
+    var id = extractYouTubeId(url);
+    return id ? 'https://www.youtube.com/embed/' + id : '';
+  }
+
+  function getYouTubeThumbnail(url) {
+    var id = extractYouTubeId(url);
+    return id ? 'https://img.youtube.com/vi/' + id + '/hqdefault.jpg' : '';
+  }
+
+  function getVideoThumbnail(video) {
+    if (!video) return '';
+    var direct =
+      video.thumbnail_url ||
+      video.poster_url ||
+      video.image_url ||
+      video.cover_url ||
+      video.thumb_url ||
+      '';
+    if (direct) return direct;
+
+    if (video.source_type !== 'upload') {
+      var ytThumb = getYouTubeThumbnail(getVideoUrl(video));
+      if (ytThumb) return ytThumb;
+    }
+    return '';
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Storage helpers                                                    */
+  /* ------------------------------------------------------------------ */
+
+  function getStorageItem(key, fallback) {
+    try {
+      var item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  function setStorageItem(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {}
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Supabase fetch                                                     */
+  /* ------------------------------------------------------------------ */
+
+  function supabaseFetch(path, options) {
+    if (!hasSupabase) return Promise.reject(new Error('No Supabase config'));
+
+    var headers = {
+      apikey: supabaseAnonKey,
+      Authorization: 'Bearer ' + supabaseAnonKey,
+      'Content-Type': 'application/json',
+    };
+
+    if (options && options.headers) {
+      Object.keys(options.headers).forEach(function (k) {
+        headers[k] = options.headers[k];
+      });
     }
 
-    #vitrine-widget-button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.3);
+    return fetch(supabaseUrl + '/rest/v1/' + path, {
+      method: (options && options.method) || 'GET',
+      headers: headers,
+      body: options && options.body ? options.body : undefined,
+    });
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Metric tracking                                                    */
+  /* ------------------------------------------------------------------ */
+
+  function trackMetric(metric) {
+    var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
+    var nextMetric = {
+      id:
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : Date.now() + '-' + Math.random().toString(36).slice(2),
+      store_id: storeId,
+      story_id: metric.story_id || null,
+      video_id: metric.video_id || null,
+      product_id: metric.product_id || null,
+      event_type: metric.event_type,
+      page_url: metric.page_url || window.location.href,
+      device_type:
+        metric.device_type ||
+        (window.innerWidth < 768 ? 'mobile' : 'desktop'),
+      browser: metric.browser || navigator.userAgent,
+      referrer: metric.referrer || document.referrer || null,
+      created_at: new Date().toISOString(),
+    };
+
+    fallbackMetrics.push(nextMetric);
+    setStorageItem('vidlytics_metrics', fallbackMetrics);
+
+    if (!storeId || !hasSupabase) return Promise.resolve();
+
+    return supabaseFetch('metrics', {
+      method: 'POST',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        store_id: storeId,
+        story_id: nextMetric.story_id,
+        video_id: nextMetric.video_id,
+        product_id: nextMetric.product_id,
+        event_type: nextMetric.event_type,
+        page_url: nextMetric.page_url,
+        device_type: nextMetric.device_type,
+        browser: nextMetric.browser,
+        referrer: nextMetric.referrer,
+      }),
+    }).catch(function () {});
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Page rule matching                                                 */
+  /* ------------------------------------------------------------------ */
+
+  function matchesRule(rule) {
+    var href = window.location.href;
+    var path = window.location.pathname || '/';
+    var value = String(rule.value || '');
+
+    switch (rule.condition_type) {
+      case 'all_pages':
+        return true;
+      case 'home_only':
+        return (
+          path === '/' ||
+          path === '/home' ||
+          path === '/index.html' ||
+          path === ''
+        );
+      case 'product_pages':
+        return (
+          path.indexOf('/product') !== -1 ||
+          path.indexOf('/products') !== -1 ||
+          path.indexOf('/produto') !== -1 ||
+          path.indexOf('/produtos') !== -1
+        );
+      case 'category_pages':
+        return (
+          path.indexOf('/category') !== -1 ||
+          path.indexOf('/categories') !== -1 ||
+          path.indexOf('/categoria') !== -1 ||
+          path.indexOf('/colecao') !== -1 ||
+          path.indexOf('/collections') !== -1
+        );
+      case 'contains':
+        return href.indexOf(value) !== -1;
+      case 'equals':
+        return href === value;
+      case 'starts_with':
+        return href.indexOf(value) === 0;
+      case 'ends_with':
+        return href.lastIndexOf(value) === href.length - value.length;
+      case 'regex':
+        try {
+          return new RegExp(value).test(href);
+        } catch (e) {
+          return false;
+        }
+      default:
+        return true;
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Data readers                                                       */
+  /* ------------------------------------------------------------------ */
+
+  function readStories() {
+    if (!storeId || !hasSupabase) {
+      return getStorageItem('vidlytics_stories', []).filter(function (story) {
+        return (
+          (!storeId || story.store_id === storeId) && story.active !== false
+        );
+      });
+    }
+    return supabaseFetch(
+      'stories?select=*&store_id=eq.' +
+        encodeURIComponent(storeId) +
+        '&active=eq.true&order=position.asc',
+      { method: 'GET' }
+    )
+      .then(function (r) {
+        return r.ok ? r.json() : [];
+      })
+      .catch(function () {
+        return [];
+      });
+  }
+
+  function readStoryVideos() {
+    if (!storeId || !hasSupabase) {
+      return getStorageItem('vidlytics_story_videos', []);
+    }
+    return supabaseFetch(
+      'story_videos?select=*&store_id=eq.' + encodeURIComponent(storeId),
+      { method: 'GET' }
+    )
+      .then(function (r) {
+        return r.ok ? r.json() : [];
+      })
+      .catch(function () {
+        return [];
+      });
+  }
+
+  function readVideos() {
+    if (!storeId || !hasSupabase) {
+      return getStorageItem('vidlytics_videos', []);
+    }
+    return supabaseFetch(
+      'videos?select=*&store_id=eq.' + encodeURIComponent(storeId),
+      { method: 'GET' }
+    )
+      .then(function (r) {
+        return r.ok ? r.json() : [];
+      })
+      .catch(function () {
+        return [];
+      });
+  }
+
+  function readStoryProducts() {
+    if (!storeId || !hasSupabase) {
+      return getStorageItem('vidlytics_story_products', []);
+    }
+    return supabaseFetch(
+      'story_products?select=*&store_id=eq.' + encodeURIComponent(storeId),
+      { method: 'GET' }
+    )
+      .then(function (r) {
+        return r.ok ? r.json() : [];
+      })
+      .catch(function () {
+        return [];
+      });
+  }
+
+  function readProducts() {
+    if (!storeId || !hasSupabase) {
+      return getStorageItem('vidlytics_products', []);
+    }
+    return supabaseFetch(
+      'products?select=*&store_id=eq.' + encodeURIComponent(storeId),
+      { method: 'GET' }
+    )
+      .then(function (r) {
+        return r.ok ? r.json() : [];
+      })
+      .catch(function () {
+        return [];
+      });
+  }
+
+  function readPageRules() {
+    if (!storeId || !hasSupabase) {
+      return getStorageItem('vidlytics_page_rules', []);
+    }
+    return supabaseFetch(
+      'page_rules?select=*&store_id=eq.' + encodeURIComponent(storeId),
+      { method: 'GET' }
+    )
+      .then(function (r) {
+        return r.ok ? r.json() : [];
+      })
+      .catch(function () {
+        return [];
+      });
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  DOM helpers                                                        */
+  /* ------------------------------------------------------------------ */
+
+  function applyPosition(el, pos) {
+    el.style.position = 'fixed';
+    el.style.zIndex = '2147483647';
+
+    switch (pos) {
+      case 'bottom-left':
+        el.style.left = '20px';
+        el.style.bottom = '20px';
+        el.style.right = 'auto';
+        el.style.top = 'auto';
+        break;
+      case 'top-right':
+        el.style.right = '20px';
+        el.style.top = '20px';
+        el.style.left = 'auto';
+        el.style.bottom = 'auto';
+        break;
+      case 'top-left':
+        el.style.left = '20px';
+        el.style.top = '20px';
+        el.style.right = 'auto';
+        el.style.bottom = 'auto';
+        break;
+      case 'bottom-right':
+      default:
+        el.style.right = '20px';
+        el.style.bottom = '20px';
+        el.style.left = 'auto';
+        el.style.top = 'auto';
+        break;
+    }
+  }
+
+  function createEl(tag, className) {
+    var el = document.createElement(tag);
+    if (className) el.className = className;
+    return el;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Modal / Player                                                     */
+  /* ------------------------------------------------------------------ */
+
+  var overlay = null;
+  var modalContent = null;
+
+  function ensureModal() {
+    if (overlay) return;
+
+    overlay = createEl('div', 'vidlytics-overlay');
+    overlay.style.display = 'none';
+    overlay.style.position = 'fixed';
+    overlay.style.inset = '0';
+    overlay.style.background = 'rgba(15, 23, 42, 0.7)';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.zIndex = '2147483647';
+    overlay.style.padding = '20px';
+
+    var modal = createEl('div', 'vidlytics-modal');
+    modal.style.width = 'min(92vw, 420px)';
+    modal.style.maxHeight = '88vh';
+    modal.style.overflow = 'hidden';
+    modal.style.background = '#fff';
+    modal.style.borderRadius = '24px';
+    modal.style.boxShadow = '0 24px 80px rgba(15, 23, 42, 0.3)';
+    modal.style.display = 'flex';
+    modal.style.flexDirection = 'column';
+
+    modalContent = createEl('div', 'vidlytics-modal-content');
+    modal.appendChild(modalContent);
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener('click', function (event) {
+      if (event.target === overlay) closeOverlay();
+    });
+  }
+
+  function closeOverlay() {
+    if (overlay) overlay.style.display = 'none';
+    if (modalContent) modalContent.innerHTML = '';
+  }
+
+  function buildVideoPlayer(video, storyId) {
+    var url = getVideoUrl(video);
+    var ytId = extractYouTubeId(url);
+    var isUpload = video.source_type === 'upload';
+    var isDirect = isDirectVideoUrl(url);
+
+    /* YouTube embed */
+    if (!isUpload && ytId) {
+      var iframe = createEl('iframe');
+      iframe.src = getYouTubeEmbedUrl(url);
+      iframe.style.width = '100%';
+      iframe.style.aspectRatio = '9 / 16';
+      iframe.style.objectFit = 'cover';
+      iframe.style.borderRadius = '18px';
+      iframe.style.border = 'none';
+      iframe.allow =
+        'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      iframe.allowFullscreen = true;
+      iframe.loading = 'lazy';
+      iframe.title = video.title || 'Vídeo';
+      return { el: iframe, type: 'youtube' };
     }
 
-    #vitrine-widget-panel {
-      position: fixed;
-      right: 20px;
-      bottom: 80px;
-      width: 360px;
-      max-width: calc(100vw - 40px);
-      max-height: 75vh;
-      background: #ffffff;
-      border-radius: 18px;
-      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.25);
-      z-index: 999999;
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-      display: none;
-      border: 1px solid #e5e7eb;
+    /* HTML5 player (upload or direct file) */
+    if ((isUpload || isDirect) && url) {
+      var media = createEl('video');
+      media.src = url;
+      media.controls = true;
+      media.autoplay = true;
+      media.playsInline = true;
+      media.style.width = '100%';
+      media.style.aspectRatio = '9 / 16';
+      media.style.objectFit = 'cover';
+      media.style.borderRadius = '18px';
+
+      var thumb = getVideoThumbnail(video);
+      if (thumb) media.poster = thumb;
+
+      media.addEventListener('play', function () {
+        trackMetric({
+          event_type: 'play',
+          story_id: storyId,
+          video_id: video.id,
+          page_url: window.location.href,
+        });
+      });
+
+      return { el: media, type: 'html5' };
     }
 
-    #vitrine-widget-panel.vitrine-open {
-      display: block;
-      animation: vitrineFadeIn 0.2s ease;
+    /* Fallback: link externo */
+    var link = createEl('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = 'Abrir vídeo';
+    link.style.display = 'inline-block';
+    link.style.padding = '12px 20px';
+    link.style.background = '#0094EB';
+    link.style.color = '#fff';
+    link.style.borderRadius = '999px';
+    link.style.fontWeight = '800';
+    link.style.fontSize = '13px';
+    link.style.textDecoration = 'none';
+    return { el: link, type: 'link' };
+  }
+
+  function openStory(story, storyVideoMap, activeVideos, storyProducts, products) {
+    ensureModal();
+
+    var relations = (storyVideoMap.get(story.id) || []).slice().sort(function (a, b) {
+      return Number(a.position || 0) - Number(b.position || 0);
+    });
+
+    var orderedVideos = relations
+      .map(function (rel) {
+        return activeVideos.find(function (v) {
+          return v.id === rel.video_id;
+        });
+      })
+      .filter(Boolean);
+
+    if (!orderedVideos.length) return;
+
+    var coverVideoId = null;
+    relations.forEach(function (rel) {
+      if (rel.is_cover) coverVideoId = rel.video_id;
+    });
+
+    var currentIndex = Math.max(
+      0,
+      orderedVideos.findIndex(function (v) {
+        return v.id === coverVideoId;
+      })
+    );
+    if (currentIndex < 0) currentIndex = 0;
+
+    var activeProducts = storyProducts
+      .filter(function (sp) {
+        return sp.story_id === story.id;
+      })
+      .map(function (sp) {
+        return products.find(function (p) {
+          return p.id === sp.product_id;
+        });
+      })
+      .filter(function (p) {
+        return p && (p.active === undefined || p.active);
+      });
+
+    function resolveCta() {
+      if (story.cta_enabled && story.cta_url) {
+        return {
+          text: story.cta_text || 'Saiba mais',
+          url: story.cta_url,
+          type: story.cta_type || 'custom',
+        };
+      }
+      if (activeProducts.length) {
+        return {
+          text: 'Comprar agora',
+          url: activeProducts[0].product_url,
+          type: 'product',
+        };
+      }
+      return null;
     }
 
-    @keyframes vitrineFadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
+    function renderCurrent() {
+      var video = orderedVideos[currentIndex];
+      if (!video) return;
+
+      modalContent.innerHTML = '';
+
+      /* Header */
+      var header = createEl('div');
+      header.style.display = 'flex';
+      header.style.alignItems = 'center';
+      header.style.justifyContent = 'space-between';
+      header.style.padding = '14px 16px';
+      header.style.borderBottom = '1px solid #e2e8f0';
+
+      var titleWrap = createEl('div');
+      titleWrap.innerHTML =
+        '<div style="font-weight:800;color:#0f172a;font-size:14px">' +
+        (story.title || 'Story') +
+        '</div>' +
+        '<div style="font-size:12px;color:#64748b">' +
+        (currentIndex + 1) +
+        '/' +
+        orderedVideos.length +
+        '</div>';
+
+      var closeBtn = createEl('button');
+      closeBtn.type = 'button';
+      closeBtn.textContent = '×';
+      closeBtn.style.border = 'none';
+      closeBtn.style.background = 'transparent';
+      closeBtn.style.fontSize = '24px';
+      closeBtn.style.lineHeight = '1';
+      closeBtn.style.cursor = 'pointer';
+      closeBtn.style.color = '#0f172a';
+      closeBtn.addEventListener('click', closeOverlay);
+
+      header.appendChild(titleWrap);
+      header.appendChild(closeBtn);
+
+      /* Body */
+      var body = createEl('div');
+      body.style.padding = '16px';
+      body.style.display = 'grid';
+      body.style.gap = '12px';
+
+      var playerResult = buildVideoPlayer(video, story.id);
+      body.appendChild(playerResult.el);
+
+      /* Navigation */
+      var nav = createEl('div');
+      nav.style.display = 'flex';
+      nav.style.justifyContent = 'space-between';
+      nav.style.gap = '10px';
+
+      var prevBtn = createEl('button');
+      prevBtn.type = 'button';
+      prevBtn.textContent = 'Anterior';
+      prevBtn.style.flex = '1';
+      prevBtn.style.border = 'none';
+      prevBtn.style.borderRadius = '999px';
+      prevBtn.style.padding = '10px 14px';
+      prevBtn.style.fontWeight = '800';
+      prevBtn.style.cursor = 'pointer';
+      prevBtn.style.background = '#e2e8f0';
+      prevBtn.disabled = currentIndex === 0;
+      prevBtn.style.opacity = currentIndex === 0 ? '0.5' : '1';
+      prevBtn.addEventListener('click', function () {
+        if (currentIndex > 0) {
+          currentIndex -= 1;
+          renderCurrent();
+        }
+      });
+
+      var nextBtn = createEl('button');
+      nextBtn.type = 'button';
+      nextBtn.textContent =
+        currentIndex === orderedVideos.length - 1 ? 'Fechar' : 'Próximo';
+      nextBtn.style.flex = '1';
+      nextBtn.style.border = 'none';
+      nextBtn.style.borderRadius = '999px';
+      nextBtn.style.padding = '10px 14px';
+      nextBtn.style.fontWeight = '800';
+      nextBtn.style.cursor = 'pointer';
+      nextBtn.style.background = '#0094EB';
+      nextBtn.style.color = '#fff';
+      nextBtn.addEventListener('click', function () {
+        if (currentIndex < orderedVideos.length - 1) {
+          currentIndex += 1;
+          renderCurrent();
+        } else {
+          closeOverlay();
+        }
+      });
+
+      nav.appendChild(prevBtn);
+      nav.appendChild(nextBtn);
+      body.appendChild(nav);
+
+      /* CTA button */
+      var cta = resolveCta();
+      if (cta) {
+        var ctaBtn = createEl('button');
+        ctaBtn.type = 'button';
+        ctaBtn.textContent = cta.text;
+        ctaBtn.style.border = 'none';
+        ctaBtn.style.borderRadius = '999px';
+        ctaBtn.style.padding = '12px 16px';
+        ctaBtn.style.fontWeight = '800';
+        ctaBtn.style.cursor = 'pointer';
+        ctaBtn.style.background =
+          cta.type === 'whatsapp' ? '#25D366' : '#111827';
+        ctaBtn.style.color = '#fff';
+        ctaBtn.addEventListener('click', function () {
+          trackMetric({
+            event_type:
+              cta.type === 'whatsapp' ? 'whatsapp_click' : 'cta_click',
+            story_id: story.id,
+            video_id: video.id,
+            product_id: activeProducts[0] ? activeProducts[0].id : null,
+            page_url: window.location.href,
+          });
+          window.open(cta.url, '_blank', 'noopener,noreferrer');
+        });
+        body.appendChild(ctaBtn);
       }
 
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .vitrine-header {
-      background: ${config.cor};
-      color: #ffffff;
-      padding: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .vitrine-header-title {
-      font-size: 16px;
-      font-weight: 700;
-      margin: 0;
-    }
-
-    .vitrine-header-subtitle {
-      font-size: 12px;
-      opacity: 0.85;
-      margin-top: 4px;
-    }
-
-    .vitrine-close {
-      background: rgba(255, 255, 255, 0.15);
-      color: #ffffff;
-      border: none;
-      width: 30px;
-      height: 30px;
-      border-radius: 999px;
-      cursor: pointer;
-      font-size: 18px;
-      line-height: 30px;
-    }
-
-    .vitrine-body {
-      padding: 14px;
-      overflow-y: auto;
-      max-height: calc(75vh - 72px);
-      background: #f9fafb;
-    }
-
-    .vitrine-product {
-      display: flex;
-      gap: 12px;
-      background: #ffffff;
-      border-radius: 14px;
-      padding: 12px;
-      margin-bottom: 12px;
-      border: 1px solid #e5e7eb;
-    }
-
-    .vitrine-product:last-child {
-      margin-bottom: 0;
-    }
-
-    .vitrine-product-image {
-      width: 82px;
-      height: 82px;
-      object-fit: cover;
-      border-radius: 12px;
-      background: #f3f4f6;
-      flex-shrink: 0;
-    }
-
-    .vitrine-product-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .vitrine-product-name {
-      font-size: 14px;
-      font-weight: 700;
-      color: #111827;
-      margin: 0 0 4px;
-    }
-
-    .vitrine-product-description {
-      font-size: 12px;
-      color: #6b7280;
-      margin: 0 0 8px;
-      line-height: 1.3;
-    }
-
-    .vitrine-product-price {
-      font-size: 15px;
-      font-weight: 800;
-      color: ${config.cor};
-      margin-bottom: 8px;
-    }
-
-    .vitrine-buy-button {
-      display: inline-block;
-      background: ${config.cor};
-      color: #ffffff;
-      text-decoration: none;
-      border-radius: 999px;
-      padding: 7px 12px;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .vitrine-footer {
-      text-align: center;
-      font-size: 11px;
-      color: #9ca3af;
-      margin-top: 12px;
-    }
-
-    @media (max-width: 480px) {
-      #vitrine-widget-panel {
-        right: 10px;
-        bottom: 75px;
-        width: calc(100vw - 20px);
+      /* Product card */
+      if (activeProducts.length) {
+        var product = activeProducts[0];
+        var productCard = createEl('div');
+        productCard.style.display = 'flex';
+        productCard.style.alignItems = 'center';
+        productCard.style.gap = '12px';
+        productCard.style.border = '1px solid #e2e8f0';
+        productCard.style.borderRadius = '18px';
+        productCard.style.padding = '12px';
+        productCard.style.background = '#fff';
+        productCard.style.cursor = 'pointer';
+        productCard.innerHTML =
+          '<img src="' +
+          (product.image_url || '') +
+          '" alt="' +
+          (product.name || '') +
+          '" style="width:72px;height:72px;object-fit:cover;border-radius:14px;background:#e2e8f0;" />' +
+          '<div style="min-width:0;flex:1">' +
+          '<div style="font-weight:800;color:#0f172a;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
+          (product.name || '') +
+          '</div>' +
+          '<div style="margin-top:4px;font-weight:800;color:#7c3aed;font-size:16px;">' +
+          Number(product.price || 0).toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+          }) +
+          '</div></div>';
+        productCard.addEventListener('click', function () {
+          trackMetric({
+            event_type: 'product_click',
+            story_id: story.id,
+            video_id: video.id,
+            product_id: product.id,
+            page_url: window.location.href,
+          });
+          window.open(product.product_url, '_blank', 'noopener,noreferrer');
+        });
+        body.appendChild(productCard);
       }
 
-      #vitrine-widget-button {
-        right: 10px;
-        bottom: 15px;
+      modalContent.appendChild(header);
+      modalContent.appendChild(body);
+      overlay.style.display = 'flex';
+    }
+
+    renderCurrent();
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Floating bubbles                                                   */
+  /* ------------------------------------------------------------------ */
+
+  function renderFloatingBubbles(stories, storyVideoMap, activeVideos, coverMap) {
+    var existingRoot = document.getElementById('vidlytics-widget-root');
+    if (existingRoot) existingRoot.remove();
+
+    var root = createEl('div', 'vidlytics-widget-root');
+    root.id = 'vidlytics-widget-root';
+    root.style.fontFamily = 'Inter, system-ui, sans-serif';
+    applyPosition(root, position);
+
+    var bubbles = createEl('div', 'vidlytics-bubbles');
+    bubbles.style.display = 'flex';
+    bubbles.style.gap = '10px';
+    bubbles.style.alignItems = 'flex-end';
+    bubbles.style.flexDirection = 'column';
+
+    stories.forEach(function (story) {
+      var relations = (storyVideoMap.get(story.id) || []).slice().sort(function (a, b) {
+        return Number(a.position || 0) - Number(b.position || 0);
+      });
+
+      var coverRelation = relations.find(function (item) {
+        return item.is_cover;
+      }) || relations[0] || null;
+
+      var coverVideo = coverRelation
+        ? activeVideos.find(function (v) {
+            return v.id === coverRelation.video_id;
+          })
+        : null;
+
+      var thumb = coverVideo ? getVideoThumbnail(coverVideo) : '';
+
+      var bubble = createEl('button', 'vidlytics-bubble');
+      bubble.type = 'button';
+      bubble.style.border = 'none';
+      bubble.style.background = 'transparent';
+      bubble.style.padding = '0';
+      bubble.style.cursor = 'pointer';
+      bubble.style.display = 'grid';
+      bubble.style.justifyItems = 'center';
+      bubble.style.gap = '6px';
+
+      var ring = createEl('div');
+      ring.style.width = '62px';
+      ring.style.height = '62px';
+      ring.style.borderRadius = '999px';
+      ring.style.padding = '2px';
+      ring.style.background = 'linear-gradient(135deg, #0094EB, #EC4899)';
+
+      var inner = createEl('div');
+      inner.style.width = '100%';
+      inner.style.height = '100%';
+      inner.style.borderRadius = '999px';
+      inner.style.overflow = 'hidden';
+      inner.style.background = '#e2e8f0';
+      inner.style.display = 'grid';
+      inner.style.placeItems = 'center';
+
+      if (thumb) {
+        var img = createEl('img');
+        img.src = thumb;
+        img.alt = story.title || 'Story';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        inner.appendChild(img);
+      } else {
+        inner.textContent = (story.title || 'S').slice(0, 1).toUpperCase();
+        inner.style.fontWeight = '800';
+        inner.style.color = '#0f172a';
       }
-    }
-  `;
 
-  document.head.appendChild(style);
+      ring.appendChild(inner);
+      bubble.appendChild(ring);
 
-  const panel = document.createElement("div");
-  panel.id = "vitrine-widget-panel";
+      var label = createEl('span');
+      label.textContent = story.title || 'Story';
+      label.style.maxWidth = '74px';
+      label.style.fontSize = '11px';
+      label.style.fontWeight = '700';
+      label.style.color = '#0f172a';
+      label.style.textAlign = 'center';
+      label.style.whiteSpace = 'nowrap';
+      label.style.overflow = 'hidden';
+      label.style.textOverflow = 'ellipsis';
+      bubble.appendChild(label);
 
-  const produtosHtml = produtos
-    .map((produto) => {
-      const mensagem = encodeURIComponent(
-        `Olá! Tenho interesse no produto: ${produto.nome} - ${produto.preco}`
-      );
+      bubble.addEventListener('click', function () {
+        openStory(
+          story,
+          storyVideoMap,
+          activeVideos,
+          readStoryProductsData,
+          readProductsData
+        );
+      });
 
-      const whatsappUrl = `https://wa.me/${config.whatsapp}?text=${mensagem}`;
+      bubbles.appendChild(bubble);
 
-      return `
-        <div class="vitrine-product">
-          <img 
-            class="vitrine-product-image" 
-            src="${produto.imagem}" 
-            alt="${produto.nome}"
-          />
+      trackMetric({
+        event_type: 'view',
+        story_id: story.id,
+        video_id: coverVideo ? coverVideo.id : null,
+        page_url: window.location.href,
+      });
+    });
 
-          <div class="vitrine-product-info">
-            <h3 class="vitrine-product-name">${produto.nome}</h3>
-            <p class="vitrine-product-description">${produto.descricao}</p>
-            <div class="vitrine-product-price">${produto.preco}</div>
-            <a 
-              class="vitrine-buy-button" 
-              href="${whatsappUrl}" 
-              target="_blank" 
-              rel="noopener noreferrer"
-            >
-              Comprar
-            </a>
-          </div>
-        </div>
-      `;
-    })
-    .join("");
+    root.appendChild(bubbles);
+    document.body.appendChild(root);
+  }
 
-  panel.innerHTML = `
-    <div class="vitrine-header">
-      <div>
-        <p class="vitrine-header-title">${config.loja}</p>
-        <div class="vitrine-header-subtitle">Veja nossos produtos em destaque</div>
-      </div>
+  /* ------------------------------------------------------------------ */
+  /*  Carousel (horizontal stories strip)                                */
+  /* ------------------------------------------------------------------ */
 
-      <button class="vitrine-close" type="button" aria-label="Fechar">
-        ×
-      </button>
-    </div>
+  function renderCarousel(stories, storyVideoMap, activeVideos) {
+    var existing = document.getElementById('vidlytics-carousel-root');
+    if (existing) existing.remove();
 
-    <div class="vitrine-body">
-      ${produtosHtml}
+    var container = createEl('div', 'vidlytics-carousel-root');
+    container.id = 'vidlytics-carousel-root';
+    container.style.fontFamily = 'Inter, system-ui, sans-serif';
+    container.style.maxWidth = '100%';
+    container.style.overflowX = 'auto';
+    container.style.padding = '12px 16px';
+    container.style.display = 'flex';
+    container.style.gap = '14px';
+    container.style.scrollSnapType = 'x mandatory';
+    container.style.WebkitOverflowScrolling = 'touch';
 
-      <div class="vitrine-footer">
-        Widget Vitrine
-      </div>
-    </div>
-  `;
+    stories.forEach(function (story) {
+      var relations = (storyVideoMap.get(story.id) || []).slice().sort(function (a, b) {
+        return Number(a.position || 0) - Number(b.position || 0);
+      });
 
-  const button = document.createElement("button");
-  button.id = "vitrine-widget-button";
-  button.type = "button";
-  button.innerText = "Ver produtos";
+      var coverRelation = relations.find(function (item) {
+        return item.is_cover;
+      }) || relations[0] || null;
 
-  document.body.appendChild(panel);
-  document.body.appendChild(button);
+      var coverVideo = coverRelation
+        ? activeVideos.find(function (v) {
+            return v.id === coverRelation.video_id;
+          })
+        : null;
 
-  const closeButton = panel.querySelector(".vitrine-close");
+      var thumb = coverVideo ? getVideoThumbnail(coverVideo) : '';
 
-  button.addEventListener("click", function () {
-    panel.classList.toggle("vitrine-open");
+      var card = createEl('button', 'vidlytics-carousel-card');
+      card.type = 'button';
+      card.style.border = 'none';
+      card.style.background = 'transparent';
+      card.style.padding = '0';
+      card.style.cursor = 'pointer';
+      card.style.flexShrink = '0';
+      card.style.scrollSnapAlign = 'start';
+      card.style.display = 'flex';
+      card.style.flexDirection = 'column';
+      card.style.gap = '6px';
 
-    if (panel.classList.contains("vitrine-open")) {
-      button.innerText = "Fechar vitrine";
-    } else {
-      button.innerText = "Ver produtos";
-    }
-  });
+      var mediaBox = createEl('div');
+      mediaBox.style.width = '120px';
+      mediaBox.style.height = '180px';
+      mediaBox.style.borderRadius = '16px';
+      mediaBox.style.overflow = 'hidden';
+      mediaBox.style.background = '#e2e8f0';
+      mediaBox.style.display = 'grid';
+      mediaBox.style.placeItems = 'center';
 
-  closeButton.addEventListener("click", function () {
-    panel.classList.remove("vitrine-open");
-    button.innerText = "Ver produtos";
-  });
+      if (thumb) {
+        var img = createEl('img');
+        img.src = thumb;
+        img.alt = story.title || 'Story';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        mediaBox.appendChild(img);
+      } else {
+        mediaBox.textContent = (story.title || 'S').slice(0, 1).toUpperCase();
+        mediaBox.style.fontWeight = '800';
+        mediaBox.style.fontSize = '24px';
+        mediaBox.style.color = '#64748b';
+      }
+
+      card.appendChild(mediaBox);
+
+      var label = createEl('span');
+      label.textContent = story.title || 'Story';
+      label.style.maxWidth = '120px';
+      label.style.fontSize = '12px';
+      label.style.fontWeight = '700';
+      label.style.color = '#0f172a';
+      label.style.whiteSpace = 'nowrap';
+      label.style.overflow = 'hidden';
+      label.style.textOverflow = 'ellipsis';
+      card.appendChild(label);
+
+      card.addEventListener('click', function () {
+        openStory(
+          story,
+          storyVideoMap,
+          activeVideos,
+          readStoryProductsData,
+          readProductsData
+        );
+      });
+
+      container.appendChild(card);
+
+      trackMetric({
+        event_type: 'impression',
+        story_id: story.id,
+        video_id: coverVideo ? coverVideo.id : null,
+        page_url: window.location.href,
+      });
+    });
+
+    /* Insert carousel at end of body (store theme can move it via CSS selector) */
+    document.body.appendChild(container);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Data shared between renderers                                      */
+  /* ------------------------------------------------------------------ */
+
+  var readStoryProductsData = [];
+  var readProductsData = [];
+
+  /* ------------------------------------------------------------------ */
+  /*  Main render                                                        */
+  /* ------------------------------------------------------------------ */
+
+  function renderWidget() {
+    return Promise.all([
+      readStories(),
+      readStoryVideos(),
+      readVideos(),
+      readStoryProducts(),
+      readProducts(),
+      readPageRules(),
+    ])
+      .then(function (results) {
+        var stories = results[0] || [];
+        var storyVideos = results[1] || [];
+        var videos = results[2] || [];
+        var storyProducts = results[3] || [];
+        var products = results[4] || [];
+        var pageRules = results[5] || [];
+
+        readStoryProductsData = storyProducts;
+        readProductsData = products;
+
+        if (!stories.length) return;
+
+        /* Filter active videos */
+        var activeVideos = videos.filter(function (video) {
+          var statusOk = 'status' in video ? video.status === 'active' : true;
+          var activeOk = 'active' in video ? video.active !== false : true;
+          var hasUrl = Boolean(getVideoUrl(video));
+          return statusOk && activeOk && hasUrl;
+        });
+
+        if (!activeVideos.length) return;
+
+        /* Build story → videos map */
+        var storyVideoMap = new Map();
+        var coverMap = new Map();
+
+        storyVideos.forEach(function (item) {
+          if (!storyVideoMap.has(item.story_id)) {
+            storyVideoMap.set(item.story_id, []);
+          }
+          storyVideoMap.get(item.story_id).push(item);
+          if (item.is_cover) coverMap.set(item.story_id, item.video_id);
+        });
+
+        /* Filter stories that have at least one active video */
+        var storiesWithVideos = stories.filter(function (story) {
+          var rels = storyVideoMap.get(story.id) || [];
+          return rels.some(function (rel) {
+            return activeVideos.some(function (v) {
+              return v.id === rel.video_id;
+            });
+          });
+        });
+
+        if (!storiesWithVideos.length) return;
+
+        /* Apply page rules */
+        var applicableStories = storiesWithVideos.filter(function (story) {
+          var rulesForStory = pageRules.filter(function (rule) {
+            return rule.story_id === story.id;
+          });
+          if (!rulesForStory.length) return true;
+          return rulesForStory.some(matchesRule);
+        });
+
+        if (!applicableStories.length) return;
+
+        /* Floating video bubbles */
+        if (enableFloating) {
+          renderFloatingBubbles(
+            applicableStories,
+            storyVideoMap,
+            activeVideos,
+            coverMap
+          );
+        }
+
+        /* Carousel strip */
+        if (enableCarousel) {
+          renderCarousel(applicableStories, storyVideoMap, activeVideos);
+        }
+      })
+      .catch(function (e) {
+        /* Silent fail on production widget */
+      });
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Init                                                               */
+  /* ------------------------------------------------------------------ */
+
+  function init() {
+    if (!storeId) return;
+
+    renderWidget();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
 })();
