@@ -638,10 +638,10 @@ const normalizeAppearance = (
     ),
     show_product: item.show_product ?? defaults.show_product,
     show_play_icon: anyItem.show_play_icon ?? item.show_play_button ?? true,
-    auto_center: anyItem.auto_center ?? defaults.auto_center ?? false,
+    auto_center: carouselDesktop.auto_center ?? anyItem.auto_center ?? defaults.auto_center,
   },
   legacyMobile: {
-    auto_center: anyItem.auto_center ?? defaults.auto_center ?? false,
+    auto_center: carouselDesktop.auto_center ?? anyItem.auto_center ?? defaults.auto_center,
   },
 });
 
