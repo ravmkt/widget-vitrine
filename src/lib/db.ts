@@ -867,6 +867,85 @@ const ensureSupabaseStoreExists = async (storeId?: string) => {
  *
  * Agora, se model_id não existir na tabela sizing_models, ele será salvo como null.
  */
+const ensureSupabaseAppearanceExists = async (
+  appearanceId?: string | null,
+  storeId?: string,
+): Promise<string | null> => {
+  if (!isSupabaseConfigured) {
+    return appearanceId || null;
+  }
+
+  if (!appearanceId || !isValidUuid(appearanceId)) {
+    return null;
+  }
+
+  let query = supabase
+    .from('appearances' as any)
+    .select('id')
+    .eq('id', appearanceId);
+
+  if (storeId && isValidUuid(storeId)) {
+    query = query.eq('store_id', storeId);
+  }
+
+  const { data: existingAppearance, error: selectError } =
+    await query.maybeSingle();
+
+  if (selectError) {
+    console.error('Erro ao verificar appearance_id em appearances:', selectError);
+    throw selectError;
+  }
+
+  if (existingAppearance) {
+    return appearanceId;
+  }
+
+  let localAppearance: Appearance | null = null;
+
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const local = localStorage.getItem('vidlytics_appearances');
+      const appearances = local ? (JSON.parse(local) as Appearance[]) : [];
+
+      localAppearance =
+        appearances.find(appearance => appearance.id === appearanceId) || null;
+    }
+  } catch (error) {
+    console.warn('Não foi possível buscar aparência no localStorage:', error);
+  }
+
+  if (!localAppearance) {
+    console.warn(
+      `appearance_id "${appearanceId}" não encontrado em appearances. Salvando Story sem aparência vinculada.`,
+    );
+
+    return null;
+  }
+
+  const now = new Date().toISOString();
+
+  const payload = preparePayloadForSave('appearances', {
+    ...localAppearance,
+    id: appearanceId,
+    store_id:
+      storeId && isValidUuid(storeId) ? storeId : localAppearance.store_id,
+    created_at: localAppearance.created_at || now,
+    updated_at: now,
+  } as any);
+
+  const { data: insertedAppearance, error: insertError } = await supabase
+    .from('appearances' as any)
+    .upsert(payload as any, { onConflict: 'id' })
+    .select('id')
+    .single();
+
+  if (insertError) {
+    console.error('Erro ao migrar aparência local para o Supabase:', insertError);
+    throw insertError;
+  }
+
+  return insertedAppearance?.id || appearanceId;
+};
 const normalizeSupabaseRelationsBeforeSave = async <
   T extends Record<string, any>,
 >(
