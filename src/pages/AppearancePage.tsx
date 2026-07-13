@@ -2449,20 +2449,6 @@ const PreviewInfo = ({ label, value }: { label: string; value: string }) => (
   />
 </FormField>
 
-                        <FormField label="Distância direita">
-                          <input
-                            type="text"
-                            value={activeFloatingConfig.right_spacing}
-                            onChange={e =>
-                              updateFloatingConfig({
-                                right_spacing: e.target.value,
-                              })
-                            }
-                            placeholder="Ex: 20px"
-                            className={inputClass}
-                          />
-                        </FormField>
-
                         <FormField label="Cor da borda">
                           <ColorInput
                             label="Cor da borda"
