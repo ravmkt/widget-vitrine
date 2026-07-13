@@ -2901,11 +2901,12 @@ const PreviewInfo = ({ label, value }: { label: string; value: string }) => (
 
                 <div className="xl:sticky xl:top-0 xl:self-start">
                   <PreviewCard
-                    formData={formData}
-                    floatingDevice={floatingDevice}
-                    carouselDevice={carouselDevice}
-                    gridDevice={gridDevice}
-                  />
+  formData={formData}
+  floatingDevice={floatingDevice}
+  carouselDevice={carouselDevice}
+  gridDevice={gridDevice}
+  activeTab={activeTab}
+/>
                 </div>
               </div>
             </div>
