@@ -567,23 +567,29 @@ const AppearancePage = () => {
       const now = new Date().toISOString();
       const id = editingStyle?.id || formData.id || Date.now().toString();
 
-      const stylePayload = {
-        ...formData,
-        id,
-        store_id: storeId,
-        name: formData.name.trim(),
+      const {
+  position,
+  useGlobalAppearance,
+  ...cleanFormData
+} = formData;
 
-        position: formData.position,
-        floating_position:
-          formData.floating_position ||
-          positionToFloatingPosition(formData.position),
+const stylePayload = {
+  ...cleanFormData,
+  id,
+  store_id: storeId,
+  name: formData.name.trim(),
 
-        show_play_button: formData.show_play_icon,
-        updated_at: now,
-        created_at: formData.created_at || now,
-      } as Appearance & {
-        floating_position: FloatingPosition;
-      };
+  floating_position:
+    formData.floating_position ||
+    positionToFloatingPosition(formData.position),
+
+  show_play_button: formData.show_play_icon,
+  updated_at: now,
+  created_at: formData.created_at || now,
+} as Appearance & {
+  floating_position: FloatingPosition;
+};
+
 
       if (stylePayload.is_default) {
         await Promise.all(
