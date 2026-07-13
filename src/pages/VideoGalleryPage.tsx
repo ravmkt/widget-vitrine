@@ -23,6 +23,26 @@ import { cn } from '@/lib/utils';
 import { subDays, eachDayOfInterval } from 'date-fns';
 import { getExternalVideoData } from '@/lib/videoEmbeds';
 
+const VIDEO_FILE_REGEX = /\.(mp4|webm|ogg|mov|m4v|m3u8)(\?.*)?$/i;
+
+const getVideoUrl = (video: Video | null) => {
+  if (!video) return '';
+
+  return (
+    (video as any).video_url ||
+    (video as any).url ||
+    (video as any).source_url ||
+    (video as any).external_url ||
+    ''
+  );
+};
+
+const isDirectVideoUrl = (url?: string | null) => {
+  if (!url) return false;
+
+  return VIDEO_FILE_REGEX.test(url);
+};
+
 const getSafeExternalData = (video: Video | null) => {
   if (!video) return null;
 
@@ -60,24 +80,34 @@ const getVideoThumbnail = (video: Video | null) => {
 const getSourceLabel = (sourceType?: string | null) => {
   if (sourceType === 'upload') return 'UPLOAD';
   if (sourceType === 'external_url') return 'URL';
-  if (sourceType === 'tiktok') return 'TIKTOK';
-  if (sourceType === 'instagram') return 'INSTAGRAM';
 
-  return (sourceType || 'VÍDEO').toUpperCase();
+  return 'VÍDEO';
 };
 
 const isExternalSource = (video: Video | null) => {
   if (!video) return false;
 
-  const sourceType = video.source_type || '';
-  const externalData = getSafeExternalData(video);
+  if (video.source_type === 'upload') return false;
 
-  return (
-    sourceType === 'external_url' ||
-    sourceType === 'instagram' ||
-    sourceType === 'tiktok' ||
-    Boolean(externalData?.embedUrl || externalData?.sourceUrl)
-  );
+  return ['external_url', 'instagram', 'tiktok'].includes(video.source_type || '');
+};
+
+const canPlayInsideApp = (video: Video | null) => {
+  if (!video) return false;
+
+  const url = getVideoUrl(video);
+
+  if (video.source_type === 'upload' && url) return true;
+
+  if (video.source_type === 'external_url') {
+    if (isDirectVideoUrl(url)) return true;
+
+    const externalData = getSafeExternalData(video);
+
+    if (externalData?.embedUrl) return true;
+  }
+
+  return false;
 };
 
 const VideoThumb = ({
@@ -90,8 +120,11 @@ const VideoThumb = ({
   size?: 'table' | 'large';
 }) => {
   const thumb = getVideoThumbnail(video);
-  const videoUrl = (video as any).video_url || '';
-  const canUseVideoPreview = !thumb && videoUrl && video.source_type === 'upload';
+  const videoUrl = getVideoUrl(video);
+  const canUseVideoPreview =
+    !thumb &&
+    Boolean(videoUrl) &&
+    (video.source_type === 'upload' || isDirectVideoUrl(videoUrl));
 
   const wrapperClass =
     size === 'large'
@@ -151,7 +184,7 @@ const VideoThumb = ({
             {getSourceLabel(video.source_type)}
           </span>
 
-          {isExternalSource(video) && (
+          {isExternalSource(video) && !isDirectVideoUrl(videoUrl) && (
             <span className="rounded-full bg-white/90 p-2 text-slate-700">
               <ExternalLink size={14} />
             </span>
@@ -190,7 +223,7 @@ const VideoGalleryPage = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterSource, setFilterSource] = useState<'all' | 'upload' | 'instagram' | 'tiktok' | 'external_url'>('all');
+  const [filterSource, setFilterSource] = useState<'all' | 'upload' | 'external_url'>('all');
   const [productFilter, setProductFilter] = useState<string>('all');
   const [sortColumn, setSortColumn] = useState<string | null>('recent');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -392,7 +425,11 @@ const VideoGalleryPage = () => {
 
         const matchesSource =
           filterSource === 'all' ||
-          v.source_type === filterSource;
+          v.source_type === filterSource ||
+          (
+            filterSource === 'external_url' &&
+            ['external_url', 'instagram', 'tiktok'].includes(v.source_type || '')
+          );
 
         const matchesProduct =
           productFilter === 'all' ||
@@ -606,9 +643,7 @@ const VideoGalleryPage = () => {
           >
             <option value="all">Todas Fontes</option>
             <option value="upload">Upload</option>
-            <option value="instagram">Instagram</option>
-            <option value="tiktok">TikTok</option>
-            <option value="external_url">URL Externa</option>
+            <option value="external_url">URL</option>
           </select>
 
           <select
@@ -709,6 +744,8 @@ const VideoGalleryPage = () => {
                   products.find(p => p.id === (video as any).product_id)?.name ||
                   'Sem produto';
 
+                const isUrlLike = ['external_url', 'instagram', 'tiktok'].includes(video.source_type || '');
+
                 return (
                   <tr
                     key={video.id}
@@ -731,12 +768,8 @@ const VideoGalleryPage = () => {
                           'inline-flex max-w-full items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border mt-1 truncate',
                           video.source_type === 'upload' &&
                             'bg-blue-50 text-blue-600 border-blue-100',
-                          video.source_type === 'external_url' &&
+                          isUrlLike &&
                             'bg-red-50 text-red-600 border-red-100',
-                          video.source_type === 'tiktok' &&
-                            'bg-slate-900 text-white border-slate-900',
-                          video.source_type === 'instagram' &&
-                            'bg-purple-50 text-purple-600 border-purple-100',
                           !['upload', 'external_url', 'tiktok', 'instagram'].includes(video.source_type || '') &&
                             'bg-slate-50 text-slate-500 border-slate-100',
                         )}
@@ -827,10 +860,17 @@ const VideoGalleryPage = () => {
         onCancel={() => setIsViewModalOpen(false)}
       >
         {viewingVideo && (() => {
+          const videoUrl = getVideoUrl(viewingVideo);
           const externalData = getSafeExternalData(viewingVideo);
-          const isExternalVideo = isExternalSource(viewingVideo);
           const modalThumb = getVideoThumbnail(viewingVideo);
           const modalMetrics = viewingVideo.metrics || getVideoMetrics(viewingVideo);
+
+          const shouldUseNativePlayer =
+            (viewingVideo.source_type === 'upload' && Boolean(videoUrl)) ||
+            isDirectVideoUrl(videoUrl);
+
+          const isExternalVideo = isExternalSource(viewingVideo);
+          const canPlayInApp = canPlayInsideApp(viewingVideo);
 
           const platformLabel = externalData
             ? externalData.platform === 'youtube'
@@ -852,14 +892,14 @@ const VideoGalleryPage = () => {
                   : 'Abrir vídeo na plataforma'
             : 'Abrir vídeo na plataforma';
 
-          if (!isExternalVideo) {
+          if (shouldUseNativePlayer || !isExternalVideo) {
             return (
               <div className="flex flex-col lg:flex-row gap-6">
                 <div className="lg:w-[240px] shrink-0 mx-auto lg:mx-0">
-                  {viewingVideo.video_url ? (
+                  {videoUrl ? (
                     <div className="aspect-[9/16] bg-slate-950 rounded-[1.5rem] overflow-hidden shadow-lg relative border-[4px] border-slate-900 max-h-[60vh]">
                       <video
-                        src={viewingVideo.video_url}
+                        src={videoUrl}
                         className="w-full max-w-full h-auto max-h-[400px] object-contain"
                         poster={modalThumb || undefined}
                         controls
@@ -988,7 +1028,9 @@ const VideoGalleryPage = () => {
                       </p>
 
                       <p className="mt-1 text-xs text-slate-500">
-                        Abra o vídeo na plataforma original para assistir.
+                        {canPlayInApp
+                          ? 'Clique em assistir no app para visualizar.'
+                          : 'Abra o vídeo na plataforma original para assistir.'}
                       </p>
                     </div>
                   )
@@ -1032,8 +1074,8 @@ const VideoGalleryPage = () => {
                   </p>
 
                   <p className="text-xs leading-5 text-slate-500">
-                    Vídeos de redes sociais são exibidos através do player oficial.
-                    Alguns elementos da plataforma podem aparecer.
+                    Links externos com suporte a incorporação podem ser exibidos dentro do app.
+                    Caso contrário, abra na plataforma original.
                   </p>
 
                   <div className="flex flex-col gap-2">
@@ -1048,7 +1090,7 @@ const VideoGalleryPage = () => {
                     ) : null}
 
                     <a
-                      href={externalData?.sourceUrl || (viewingVideo as any).video_url}
+                      href={externalData?.sourceUrl || videoUrl}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-black text-slate-600 transition-colors hover:bg-slate-50"
