@@ -138,23 +138,27 @@
   }
 
   function normalizePositionFromAppearance(appearance) {
-    var floatingPosition = appearance.floating_position || '';
-    var oldPosition = appearance.position || '';
+  var floating = appearance && appearance.floating_position;
 
-    if (floatingPosition === 'left') return 'bottom-left';
-    if (floatingPosition === 'right') return 'bottom-right';
-    if (floatingPosition === 'top-left') return 'top-left';
-    if (floatingPosition === 'top-right') return 'top-right';
-    if (floatingPosition === 'bottom-left') return 'bottom-left';
-    if (floatingPosition === 'bottom-right') return 'bottom-right';
-
-    if (oldPosition === 'fixed_bottom_left') return 'bottom-left';
-    if (oldPosition === 'fixed_bottom_right') return 'bottom-right';
-    if (oldPosition === 'fixed_top_left') return 'top-left';
-    if (oldPosition === 'fixed_top_right') return 'top-right';
-
-    return fallbackPosition || 'bottom-right';
+  if (floating === 'left' || floating === 'bottom-left') {
+    return 'fixed_bottom_left';
   }
+
+  if (floating === 'right' || floating === 'bottom-right') {
+    return 'fixed_bottom_right';
+  }
+
+  if (floating === 'top-left') {
+    return 'fixed_top_left';
+  }
+
+  if (floating === 'top-right') {
+    return 'fixed_top_right';
+  }
+
+  return fallbackPosition || 'fixed_bottom_right';
+}
+
 
   function getWidgetSize(appearance) {
     var size = appearance.widget_size || 'medium';
