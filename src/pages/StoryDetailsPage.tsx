@@ -11,7 +11,6 @@ import {
   PageRule,
   StoryVideo,
   ConditionType,
-  DisplayPosition,
   replaceStoryRelations,
   resolveStoreId,
   generateUuid,
@@ -306,16 +305,19 @@ const StoryDetailsPage = () => {
       ),
     );
 
-    const normalizedLocations = locations.map((location: any) => ({
-      ...location,
-      id: isValidUuid(location.id) ? location.id : generateUuid(),
-      store_id: targetStoreId,
-      story_id: targetStoryId,
-      selector: location.selector || 'body',
-      position: location.position || 'fixed_bottom_right',
-      created_at: location.created_at || now,
-      updated_at: now,
-    })) as DisplayLocation[];
+    const normalizedLocations = locations.map((location: any) => {
+      const { position: _position, ...locationWithoutPosition } = location;
+
+      return {
+        ...locationWithoutPosition,
+        id: isValidUuid(location.id) ? location.id : generateUuid(),
+        store_id: targetStoreId,
+        story_id: targetStoryId,
+        selector: location.selector || 'body',
+        created_at: location.created_at || now,
+        updated_at: now,
+      };
+    });
 
     await Promise.all(
       normalizedLocations.map((location) =>
@@ -455,7 +457,6 @@ const StoryDetailsPage = () => {
       store_id: finalStoreId,
       story_id: story?.id || '',
       selector: 'body',
-      position: 'fixed_bottom_right',
     } as DisplayLocation;
 
     setLocations((prev) => [...prev, newLocation]);
@@ -868,74 +869,29 @@ const StoryDetailsPage = () => {
                       <X size={12} />
                     </button>
 
-                    <div className="space-y-3">
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                          Seletor CSS
-                        </label>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                        Seletor CSS
+                      </label>
 
-                        <input
-                          type="text"
-                          value={location.selector || ''}
-                          onChange={(event) => {
-                            const next = locations.map((item) =>
-                              item.id === location.id
-                                ? {
-                                    ...item,
-                                    selector: event.target.value,
-                                  }
-                                : item,
-                            );
+                      <input
+                        type="text"
+                        value={location.selector || ''}
+                        onChange={(event) => {
+                          const next = locations.map((item) =>
+                            item.id === location.id
+                              ? {
+                                  ...item,
+                                  selector: event.target.value,
+                                }
+                              : item,
+                          );
 
-                            setLocations(next);
-                          }}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                          Posição
-                        </label>
-
-                        <select
-                          value={location.position || 'fixed_bottom_right'}
-                          onChange={(event) => {
-                            const next = locations.map((item) =>
-                              item.id === location.id
-                                ? {
-                                    ...item,
-                                    position:
-                                      event.target.value as DisplayPosition,
-                                  }
-                                : item,
-                            );
-
-                            setLocations(next);
-                          }}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
-                        >
-                          <option value="fixed_bottom_right">
-                            Flutuante / Direita
-                          </option>
-                          <option value="fixed_bottom_left">
-                            Flutuante / Esquerda
-                          </option>
-                          <option value="fixed_top_right">
-                            Flutuante / Topo Direita
-                          </option>
-                          <option value="fixed_top_left">
-                            Flutuante / Topo Esquerda
-                          </option>
-                          <option value="after_element">Depois do Seletor</option>
-                          <option value="before_element">Antes do Seletor</option>
-                          <option value="inside_start">Dentro / Início</option>
-                          <option value="inside_end">Dentro / Fim</option>
-                          <option value="replace_element">
-                            Substituir Elemento
-                          </option>
-                        </select>
-                      </div>
+                          setLocations(next);
+                        }}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
+                        placeholder="Ex: body, .product-info, #main"
+                      />
                     </div>
                   </div>
                 ))}
