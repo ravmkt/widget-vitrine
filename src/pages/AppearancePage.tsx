@@ -567,11 +567,10 @@ const AppearancePage = () => {
       const now = new Date().toISOString();
       const id = editingStyle?.id || formData.id || Date.now().toString();
 
-      const {
-  position,
-  useGlobalAppearance,
-  ...cleanFormData
-} = formData;
+      const { useGlobalAppearance, ...cleanFormData } = formData;
+
+const normalizedPosition =
+  formData.position || floatingPositionToPosition(formData.floating_position);
 
 const stylePayload = {
   ...cleanFormData,
@@ -579,16 +578,17 @@ const stylePayload = {
   store_id: storeId,
   name: formData.name.trim(),
 
-  floating_position:
-    formData.floating_position ||
-    positionToFloatingPosition(formData.position),
+  position: normalizedPosition,
+  floating_position: positionToFloatingPosition(normalizedPosition),
 
   show_play_button: formData.show_play_icon,
   updated_at: now,
   created_at: formData.created_at || now,
 } as Appearance & {
+  position: string;
   floating_position: FloatingPosition;
 };
+
 
 
       if (stylePayload.is_default) {
