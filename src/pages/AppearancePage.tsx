@@ -245,6 +245,57 @@ const safeNumber = (
   return parsed;
 };
 
+const cssSize = (value: unknown, fallback = '0px') => {
+  if (value === null || value === undefined) return fallback;
+
+  const text = String(value).trim();
+
+  if (!text) return fallback;
+
+  if (/^-?\d+(\.\d+)?$/.test(text)) {
+    return `${text}px`;
+  }
+
+  return text;
+};
+
+const cssBorder = (borderStyle: string, color: string) => {
+  const style = borderStyle?.trim() || '0px solid';
+
+  if (
+    /#[0-9A-Fa-f]{3,8}/.test(style) ||
+    /rgb\(/.test(style) ||
+    /rgba\(/.test(style) ||
+    /hsl\(/.test(style) ||
+    /hsla\(/.test(style)
+  ) {
+    return style;
+  }
+
+  return `${style} ${color}`;
+};
+
+const limitNumber = (
+  value: unknown,
+  fallback: number,
+  min: number,
+  max: number,
+) => {
+  const parsed = safeNumber(value, fallback, min);
+
+  return Math.min(max, Math.max(min, parsed));
+};
+
+const getCircleSize = (width: string, height: string) => {
+  const widthMatch = width.match(/^(\d+(\.\d+)?)px$/);
+  const heightMatch = height.match(/^(\d+(\.\d+)?)px$/);
+
+  if (widthMatch && heightMatch) {
+    return `${Math.min(Number(widthMatch[1]), Number(heightMatch[1]))}px`;
+  }
+
+  return width;
+};
 
 const parseJsonIfNeeded = <T,>(value: unknown): Partial<T> | null => {
   if (!value) return null;
