@@ -27,7 +27,7 @@
   var supabaseUrl = (config.supabaseUrl || '').replace(/\/$/, '');
   var supabaseAnonKey = config.supabaseAnonKey || '';
 
-  var fallbackPosition = config.position || 'bottom-right';
+  var fallbackPosition = config.position || 'fixed_bottom_right';
 
   var widgetsCfg = config.widgets || {};
 
@@ -137,34 +137,108 @@
     return '';
   }
 
-  function normalizePositionFromAppearance(appearance) {
-  var floating = appearance && appearance.floating_position;
+  function firstDefined() {
+    for (var i = 0; i < arguments.length; i += 1) {
+      if (
+        arguments[i] !== undefined &&
+        arguments[i] !== null &&
+        arguments[i] !== ''
+      ) {
+        return arguments[i];
+      }
+    }
 
-  if (floating === 'left' || floating === 'bottom-left') {
-    return 'fixed_bottom_left';
+    return undefined;
   }
 
-  if (floating === 'right' || floating === 'bottom-right') {
+  function toCssUnit(value, fallback) {
+    var finalValue = firstDefined(value, fallback);
+
+    if (finalValue === undefined || finalValue === null || finalValue === '') {
+      return fallback || '20px';
+    }
+
+    if (typeof finalValue === 'number') {
+      return finalValue + 'px';
+    }
+
+    var str = String(finalValue).trim();
+
+    if (/^\d+(\.\d+)?$/.test(str)) {
+      return str + 'px';
+    }
+
+    return str;
+  }
+
+  function normalizePositionValue(value) {
+    var raw = value || fallbackPosition || 'fixed_bottom_right';
+
+    var normalized = String(raw)
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '_')
+      .replace(/-/g, '_');
+
+    if (normalized === 'left') {
+      return 'fixed_bottom_left';
+    }
+
+    if (normalized === 'right') {
+      return 'fixed_bottom_right';
+    }
+
+    if (normalized === 'bottom_left') {
+      return 'fixed_bottom_left';
+    }
+
+    if (normalized === 'bottom_right') {
+      return 'fixed_bottom_right';
+    }
+
+    if (normalized === 'top_left') {
+      return 'fixed_top_left';
+    }
+
+    if (normalized === 'top_right') {
+      return 'fixed_top_right';
+    }
+
+    if (normalized === 'fixed_bottom_left') {
+      return 'fixed_bottom_left';
+    }
+
+    if (normalized === 'fixed_bottom_right') {
+      return 'fixed_bottom_right';
+    }
+
+    if (normalized === 'fixed_top_left') {
+      return 'fixed_top_left';
+    }
+
+    if (normalized === 'fixed_top_right') {
+      return 'fixed_top_right';
+    }
+
     return 'fixed_bottom_right';
   }
 
-  if (floating === 'top-left') {
-    return 'fixed_top_left';
+  function normalizePositionFromAppearance(appearance) {
+    appearance = appearance || {};
+
+    return normalizePositionValue(
+      appearance.floating_position ||
+        appearance.widget_position ||
+        appearance.position ||
+        fallbackPosition
+    );
   }
-
-  if (floating === 'top-right') {
-    return 'fixed_top_right';
-  }
-
-  return fallbackPosition || 'fixed_bottom_right';
-}
-
 
   function getWidgetSize(appearance) {
     var size = appearance.widget_size || 'medium';
     var width = appearance.width || '';
 
-    if (width) return width;
+    if (width) return toCssUnit(width, width);
 
     if (size === 'small') return '52px';
     if (size === 'large') return '76px';
@@ -177,7 +251,7 @@
     var height = appearance.height || '';
     var width = getWidgetSize(appearance);
 
-    if (height) return height;
+    if (height) return toCssUnit(height, height);
 
     if (shape === 'portrait') {
       var numeric = parseInt(width, 10);
@@ -534,12 +608,57 @@
   }
 
   function applyPosition(el, appearance) {
+    appearance = appearance || {};
+
     var pos = normalizePositionFromAppearance(appearance);
 
-    el.style.position = 'fixed';
-    el.style.zIndex = appearance.z_index || '2147483647';
+    var spacing = toCssUnit(
+      firstDefined(appearance.spacing, appearance.offset),
+      '20px'
+    );
 
-    var spacing = appearance.bottom_spacing || '20px';
+    var bottomSpacing = toCssUnit(
+      firstDefined(
+        appearance.bottom_spacing,
+        appearance.spacing_bottom,
+        appearance.offset_bottom,
+        spacing
+      ),
+      '20px'
+    );
+
+    var topSpacing = toCssUnit(
+      firstDefined(
+        appearance.top_spacing,
+        appearance.spacing_top,
+        appearance.offset_top,
+        spacing
+      ),
+      '20px'
+    );
+
+    var leftSpacing = toCssUnit(
+      firstDefined(
+        appearance.left_spacing,
+        appearance.spacing_left,
+        appearance.offset_left,
+        spacing
+      ),
+      '20px'
+    );
+
+    var rightSpacing = toCssUnit(
+      firstDefined(
+        appearance.right_spacing,
+        appearance.spacing_right,
+        appearance.offset_right,
+        spacing
+      ),
+      '20px'
+    );
+
+    el.style.position = 'fixed';
+    el.style.zIndex = String(appearance.z_index || '2147483647');
 
     el.style.left = 'auto';
     el.style.right = 'auto';
@@ -547,25 +666,25 @@
     el.style.bottom = 'auto';
 
     switch (pos) {
-      case 'bottom-left':
-        el.style.left = appearance.left_spacing || '20px';
-        el.style.bottom = spacing;
+      case 'fixed_bottom_left':
+        el.style.left = leftSpacing;
+        el.style.bottom = bottomSpacing;
         break;
 
-      case 'top-right':
-        el.style.right = '20px';
-        el.style.top = '20px';
+      case 'fixed_top_left':
+        el.style.left = leftSpacing;
+        el.style.top = topSpacing;
         break;
 
-      case 'top-left':
-        el.style.left = appearance.left_spacing || '20px';
-        el.style.top = '20px';
+      case 'fixed_top_right':
+        el.style.right = rightSpacing;
+        el.style.top = topSpacing;
         break;
 
-      case 'bottom-right':
+      case 'fixed_bottom_right':
       default:
-        el.style.right = '20px';
-        el.style.bottom = spacing;
+        el.style.right = rightSpacing;
+        el.style.bottom = bottomSpacing;
         break;
     }
   }
@@ -826,7 +945,8 @@
       nextBtn.style.padding = '10px 14px';
       nextBtn.style.fontWeight = '800';
       nextBtn.style.cursor = 'pointer';
-      nextBtn.style.background = currentAppearance.button_color || getPrimaryColor(currentAppearance);
+      nextBtn.style.background =
+        currentAppearance.button_color || getPrimaryColor(currentAppearance);
       nextBtn.style.color = '#fff';
 
       nextBtn.addEventListener('click', function () {
@@ -938,6 +1058,8 @@
     if (existingRoot) existingRoot.remove();
 
     var appearance = currentAppearance || {};
+    var position = normalizePositionFromAppearance(appearance);
+    var isLeftPosition = position === 'fixed_bottom_left' || position === 'fixed_top_left';
 
     var root = createEl('div', 'vidlytics-widget-root');
     root.id = 'vidlytics-widget-root';
@@ -948,7 +1070,7 @@
     var bubbles = createEl('div', 'vidlytics-bubbles');
     bubbles.style.display = 'flex';
     bubbles.style.gap = '10px';
-    bubbles.style.alignItems = 'flex-end';
+    bubbles.style.alignItems = isLeftPosition ? 'flex-start' : 'flex-end';
     bubbles.style.flexDirection = 'column';
 
     stories.forEach(function (story) {
@@ -995,7 +1117,8 @@
         ')';
 
       if (appearance.border_style) {
-        ring.style.border = appearance.border_style + ' ' + getPrimaryColor(appearance);
+        ring.style.border =
+          appearance.border_style + ' ' + getPrimaryColor(appearance);
       }
 
       if (appearance.shadow_enabled !== false) {
@@ -1088,11 +1211,11 @@
     container.style.WebkitOverflowScrolling = 'touch';
 
     if (appearance.margin_top) {
-      container.style.marginTop = appearance.margin_top + 'px';
+      container.style.marginTop = toCssUnit(appearance.margin_top, appearance.margin_top);
     }
 
     if (appearance.margin_bottom) {
-      container.style.marginBottom = appearance.margin_bottom + 'px';
+      container.style.marginBottom = toCssUnit(appearance.margin_bottom, appearance.margin_bottom);
     }
 
     stories.forEach(function (story) {
@@ -1128,8 +1251,8 @@
       card.style.gap = '6px';
 
       var mediaBox = createEl('div');
-      mediaBox.style.width = appearance.width || '120px';
-      mediaBox.style.height = appearance.height || '180px';
+      mediaBox.style.width = toCssUnit(appearance.width || '120px', '120px');
+      mediaBox.style.height = toCssUnit(appearance.height || '180px', '180px');
 
       if (appearance.carousel_card_shape === 'circle') {
         mediaBox.style.borderRadius = '999px';
@@ -1164,7 +1287,7 @@
       if (appearance.show_title !== false) {
         var label = createEl('span');
         label.textContent = story.title || 'Story';
-        label.style.maxWidth = appearance.width || '120px';
+        label.style.maxWidth = toCssUnit(appearance.width || '120px', '120px');
         label.style.fontSize = appearance.font_size || '12px';
         label.style.fontWeight = '700';
         label.style.color = getTextColor(appearance);
