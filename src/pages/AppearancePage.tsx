@@ -270,6 +270,45 @@ const limitNumber = (
   return Math.min(max, Math.max(min, parsed));
 };
 
+const toNumberInputValue = (value: unknown) => {
+  if (value === null || value === undefined) return '';
+
+  const text = String(value).trim();
+  const match = text.match(/-?\d+(\.\d+)?/);
+
+  return match ? match[0] : '';
+};
+
+const extractNumericCssSize = (value: unknown, fallback = '0px') => {
+  const numeric = toNumberInputValue(value);
+
+  if (!numeric) return fallback;
+
+  return `${numeric}px`;
+};
+
+const formatNumberLikeCurrent = (value: unknown, fallback = '0') => {
+  const numeric = toNumberInputValue(value);
+
+  return numeric || fallback;
+};
+
+const getPortraitHeightFromWidth = (width: unknown) => {
+  const numeric = Number(toNumberInputValue(width));
+
+  if (!numeric || Number.isNaN(numeric)) return '142';
+
+  return String(Math.round((numeric * 16) / 9));
+};
+
+const getPortraitWidthFromHeight = (height: unknown) => {
+  const numeric = Number(toNumberInputValue(height));
+
+  if (!numeric || Number.isNaN(numeric)) return '80';
+
+  return String(Math.round((numeric * 9) / 16));
+};
+
 const cssSize = (value: unknown, fallback = '0px') => {
   if (value === null || value === undefined) return fallback;
 
@@ -284,31 +323,53 @@ const cssSize = (value: unknown, fallback = '0px') => {
   return text;
 };
 
-const cssBorder = (borderStyle: string, color: string) => {
-  const style = borderStyle?.trim() || '0px solid';
+const cssBorder = (borderWidth: string, color: string) => {
+  const width = extractNumericCssSize(borderWidth, '0px');
 
-  if (
-    /#[0-9A-Fa-f]{3,8}/.test(style) ||
-    /rgb\(/.test(style) ||
-    /rgba\(/.test(style) ||
-    /hsl\(/.test(style) ||
-    /hsla\(/.test(style)
-  ) {
-    return style;
-  }
-
-  return `${style} ${color}`;
+  return `${width} solid ${color}`;
 };
 
-const getCircleSize = (width: string, height: string) => {
-  const widthMatch = width.match(/^(\d+(\.\d+)?)px$/);
-  const heightMatch = height.match(/^(\d+(\.\d+)?)px$/);
+const normalizeBorderWidth = (value: unknown, fallback = '0') => {
+  return toNumberInputValue(value) || fallback;
+};
 
-  if (widthMatch && heightMatch) {
-    return `${Math.min(Number(widthMatch[1]), Number(heightMatch[1]))}px`;
+const normalizeFloatingShapeValues = (
+  config: FloatingConfig,
+): FloatingConfig => {
+  if (config.shape === 'portrait') {
+    const width = formatNumberLikeCurrent(config.width, '80');
+
+    return {
+      ...config,
+      width,
+      height: getPortraitHeightFromWidth(width),
+      border_radius: normalizeBorderWidth(config.border_radius, '12'),
+      border_style: normalizeBorderWidth(config.border_style, '2'),
+    };
   }
 
-  return width;
+  if (config.shape === 'square') {
+    const size = formatNumberLikeCurrent(config.width, '80');
+
+    return {
+      ...config,
+      width: size,
+      height: size,
+      border_radius: normalizeBorderWidth(config.border_radius, '12'),
+      border_style: normalizeBorderWidth(config.border_style, '2'),
+    };
+  }
+
+  const circleSize =
+    toNumberInputValue(config.border_radius) ||
+    toNumberInputValue(config.width) ||
+    '80';
+
+  return {
+    ...config,
+    border_radius: circleSize,
+    border_style: normalizeBorderWidth(config.border_style, '2'),
+  };
 };
 
 const parseJsonIfNeeded = <T,>(value: unknown): Partial<T> | null => {
@@ -329,17 +390,17 @@ const parseJsonIfNeeded = <T,>(value: unknown): Partial<T> | null => {
 
 const createDefaultFloatingDesktopConfig = (): FloatingConfig => ({
   shape: 'portrait',
-  width: '80px',
-  height: '110px',
-  border_radius: '12px',
+  width: '80',
+  height: '142',
+  border_radius: '12',
   position: 'fixed_bottom_right',
   floating_position: 'bottom-right',
-  bottom_spacing: '20px',
-  top_spacing: '20px',
-  left_spacing: '20px',
-  right_spacing: '20px',
+  bottom_spacing: '20',
+  top_spacing: '20',
+  left_spacing: '20',
+  right_spacing: '20',
   border_color: '#0094EB',
-  border_style: '2px solid',
+  border_style: '2',
   show_play_icon: true,
   object_fit: 'cover',
   draggable: false,
@@ -349,17 +410,17 @@ const createDefaultFloatingDesktopConfig = (): FloatingConfig => ({
 
 const createDefaultFloatingMobileConfig = (): FloatingConfig => ({
   shape: 'portrait',
-  width: '64px',
-  height: '88px',
-  border_radius: '12px',
+  width: '64',
+  height: '114',
+  border_radius: '12',
   position: 'fixed_bottom_right',
   floating_position: 'bottom-right',
-  bottom_spacing: '16px',
-  top_spacing: '16px',
-  left_spacing: '16px',
-  right_spacing: '16px',
+  bottom_spacing: '16',
+  top_spacing: '16',
+  left_spacing: '16',
+  right_spacing: '16',
   border_color: '#0094EB',
-  border_style: '2px solid',
+  border_style: '2',
   show_play_icon: true,
   object_fit: 'cover',
   draggable: false,
@@ -554,7 +615,7 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
     mobile_columns: gridMobile.columns,
     mobile_rows: gridMobile.rows,
     mobile_gap: gridMobile.gap,
-    font_size: '14px',
+    font_size: '14',
   } as ExtendedAppearance;
 };
 
@@ -634,6 +695,9 @@ const normalizeAppearance = (
       border_color: anyItem.color || item.primary_color || defaults.color,
     },
   });
+
+  floatingConfig.desktop = normalizeFloatingShapeValues(floatingConfig.desktop);
+  floatingConfig.mobile = normalizeFloatingShapeValues(floatingConfig.mobile);
 
   const carouselConfig = normalizeResponsiveConfig<CarouselConfig>({
     rawValue: anyItem.carousel_config,
@@ -1115,115 +1179,15 @@ const ModalTabButton = ({
   );
 };
 
-const PreviewCard = ({
-  formData,
-  floatingDevice,
-  carouselDevice,
-  gridDevice,
-  activeTab,
-}: {
-  formData: ExtendedAppearance;
-  floatingDevice: DeviceType;
-  carouselDevice: DeviceType;
-  gridDevice: DeviceType;
-  activeTab: ModalTab;
-}) => {
-  const floating = getActiveResponsiveConfig(
-    formData.floating_config,
-    floatingDevice,
-    formData.useGlobalAppearance,
-  );
+const PreviewInfo = ({ label, value }: { label: string; value: string }) => (
+  <div className="rounded-xl bg-slate-50 p-3">
+    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+      {label}
+    </p>
 
-  const carousel = getActiveResponsiveConfig(
-    formData.carousel_config,
-    carouselDevice,
-    formData.useGlobalAppearance,
-  );
-
-  const grid = getActiveResponsiveConfig(
-    formData.grid_config,
-    gridDevice,
-    formData.useGlobalAppearance,
-  );
-
-  const colors: PreviewColors = {
-    primary: isValidHexColor(formData.primary_color)
-      ? formData.primary_color
-      : '#0094EB',
-    secondary: isValidHexColor(formData.secondary_color)
-      ? formData.secondary_color
-      : '#0094EB',
-    text: isValidHexColor(formData.text_color)
-      ? formData.text_color
-      : '#0F172A',
-    background: isValidHexColor(formData.background_color)
-      ? formData.background_color
-      : '#FFFFFF',
-    button: isValidHexColor(formData.button_color)
-      ? formData.button_color
-      : '#0094EB',
-    floatingBorder: isValidHexColor(floating.border_color)
-      ? floating.border_color
-      : '#0094EB',
-  };
-
-  const titleByTab: Record<ModalTab, string> = {
-    basic: 'Resumo do estilo',
-    visual: 'Identidade visual',
-    floating: 'Preview do flutuante',
-    carousel: 'Preview do carrossel',
-    grid: 'Preview da grade',
-    modal: 'Preview do player/modal',
-  };
-
-  const descriptionByTab: Record<ModalTab, string> = {
-    basic: 'Visualização geral do estilo selecionado.',
-    visual: 'Cores, fonte, fundo e botão.',
-    floating: 'Tamanho, forma, borda e posição do widget.',
-    carousel: 'Formato dos cards, espaçamento, margens e centralização.',
-    grid: 'Colunas, linhas e espaçamento da grade.',
-    modal: 'Botões e elementos exibidos no player/modal.',
-  };
-
-  return (
-    <aside className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-base font-black text-slate-900">
-            {titleByTab[activeTab]}
-          </h3>
-
-          <p className="mt-1 text-xs font-medium text-slate-500">
-            {descriptionByTab[activeTab]}
-          </p>
-        </div>
-
-        <span
-          className="h-8 w-8 rounded-full border border-slate-200 shadow-sm"
-          style={{ backgroundColor: colors.primary }}
-        />
-      </div>
-
-      {activeTab === 'floating' && (
-        <FloatingPreview floating={floating} colors={colors} />
-      )}
-
-      {activeTab === 'carousel' && (
-        <CarouselPreview carousel={carousel} colors={colors} />
-      )}
-
-      {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} />}
-
-      {activeTab === 'modal' && (
-        <ModalPreview formData={formData} colors={colors} />
-      )}
-
-      {(activeTab === 'basic' || activeTab === 'visual') && (
-        <VisualPreview formData={formData} colors={colors} />
-      )}
-    </aside>
-  );
-};
+    <p className="mt-1 truncate font-black text-slate-700">{value}</p>
+  </div>
+);
 
 const FloatingPreview = ({
   floating,
@@ -1232,9 +1196,15 @@ const FloatingPreview = ({
   floating: FloatingConfig;
   colors: PreviewColors;
 }) => {
+  const isCircle = floating.shape === 'circle';
+
   const width = cssSize(floating.width, '80px');
-  const height = cssSize(floating.height, '80px');
-  const circleSize = getCircleSize(width, height);
+  const height = cssSize(floating.height, '142px');
+  const circleSize = cssSize(floating.border_radius || floating.width, '80px');
+
+  const finalWidth = isCircle ? circleSize : width;
+  const finalHeight = isCircle ? circleSize : height;
+
   const lateralSpacing = cssSize(floating.left_spacing, '20px');
 
   const positionStyle: React.CSSProperties = {};
@@ -1285,12 +1255,11 @@ const FloatingPreview = ({
         <div
           className="absolute flex items-center justify-center overflow-hidden bg-white shadow-xl"
           style={{
-            width: floating.shape === 'circle' ? circleSize : width,
-            height: floating.shape === 'circle' ? circleSize : height,
-            borderRadius:
-              floating.shape === 'circle'
-                ? '999px'
-                : cssSize(floating.border_radius, '12px'),
+            width: finalWidth,
+            height: finalHeight,
+            borderRadius: isCircle
+              ? '999px'
+              : cssSize(floating.border_radius, '12px'),
             border: cssBorder(floating.border_style, colors.floatingBorder),
             zIndex: safeNumber(floating.z_index, 5, 1),
             ...positionStyle,
@@ -1300,7 +1269,6 @@ const FloatingPreview = ({
             className="absolute inset-0"
             style={{
               background: `linear-gradient(160deg, ${colors.primary}, ${colors.secondary})`,
-              objectFit: floating.object_fit as React.CSSProperties['objectFit'],
             }}
           />
 
@@ -1319,19 +1287,22 @@ const FloatingPreview = ({
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-        <PreviewInfo label="Tamanho" value={`${width} x ${height}`} />
+        {isCircle ? (
+          <PreviewInfo label="Raio/Tamanho" value={circleSize} />
+        ) : (
+          <PreviewInfo label="Tamanho" value={`${width} x ${height}`} />
+        )}
+
         <PreviewInfo label="Forma" value={floating.shape} />
+
         <PreviewInfo
-          label="Raio"
-          value={
-            floating.shape === 'circle'
-              ? 'Ignorado no circular'
-              : cssSize(floating.border_radius)
-          }
+          label="Raio da borda"
+          value={isCircle ? 'Circular fixo' : cssSize(floating.border_radius)}
         />
+
         <PreviewInfo
           label="Borda"
-          value={cssBorder(floating.border_style, colors.floatingBorder)}
+          value={`${extractNumericCssSize(floating.border_style)} solid`}
         />
       </div>
     </div>
@@ -1471,24 +1442,44 @@ const GridPreview = ({
         </div>
 
         <div
-          className="grid"
+          className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 p-3"
           style={{
-            gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
-            gap: `${safeNumber(grid.gap, 0, 0)}px`,
+            padding: `${Math.max(8, safeNumber(grid.gap, 0, 0))}px`,
           }}
         >
-          {items.map((_, index) => (
-            <div
-              key={index}
-              className="h-24 rounded-2xl border border-slate-200"
-              style={{
-                background:
-                  index % 2 === 0
-                    ? `linear-gradient(135deg, ${colors.primary}25, #ffffff)`
-                    : `linear-gradient(135deg, ${colors.secondary}25, #ffffff)`,
-              }}
-            />
-          ))}
+          <div
+            className="grid"
+            style={{
+              gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+              gap: `${safeNumber(grid.gap, 0, 0)}px`,
+            }}
+          >
+            {items.map((_, index) => (
+              <div
+                key={index}
+                className="relative h-28 overflow-hidden rounded-2xl border shadow-sm"
+                style={{
+                  borderColor: colors.primary,
+                  background:
+                    index % 2 === 0
+                      ? `linear-gradient(160deg, ${colors.primary}, ${colors.secondary})`
+                      : `linear-gradient(160deg, ${colors.secondary}, ${colors.primary})`,
+                }}
+              >
+                <div className="absolute inset-0 bg-white/10" />
+
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
+                    <PlaySquare size={16} />
+                  </div>
+                </div>
+
+                <div className="absolute bottom-2 left-2 right-2 rounded-lg bg-white/90 px-2 py-1 text-center text-[10px] font-black text-slate-700">
+                  Vídeo
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -1511,84 +1502,130 @@ const ModalPreview = ({
 }) => {
   return (
     <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
-      <div
-        className="rounded-[1rem] border border-slate-200 bg-white p-5"
-        style={{
-          backgroundColor: colors.background,
-          color: colors.text,
-          fontFamily: formData.font_family,
-          fontSize: cssSize(formData.font_size, '14px'),
-          boxShadow: formData.modal_config.shadow_enabled
-            ? '0 18px 45px rgba(15, 23, 42, 0.12)'
-            : 'none',
-        }}
-      >
+      <div className="rounded-[1rem] border border-slate-200 bg-white p-4">
         <div
-          className="relative h-[380px] overflow-hidden rounded-3xl"
+          className="relative mx-auto h-[560px] max-w-[320px] overflow-hidden rounded-[1.75rem] border border-slate-900/10 shadow-xl"
           style={{
             background: `linear-gradient(160deg, ${colors.primary}, ${colors.secondary})`,
+            color: '#FFFFFF',
+            fontFamily: formData.font_family,
+            fontSize: cssSize(formData.font_size, '14px'),
+            boxShadow: formData.modal_config.shadow_enabled
+              ? '0 22px 55px rgba(15, 23, 42, 0.22)'
+              : 'none',
           }}
         >
+          <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/10 to-black/75" />
+
+          <div className="absolute left-4 right-4 top-4 z-20 flex items-start justify-between gap-3">
+            {formData.modal_config.show_title && (
+              <h4 className="line-clamp-2 text-lg font-black text-white drop-shadow">
+                Blusa vermelha
+              </h4>
+            )}
+
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-white/70 bg-black/20 text-white backdrop-blur"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="absolute left-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/80 bg-black/10 text-2xl text-white backdrop-blur"
+          >
+            ‹
+          </button>
+
+          <button
+            type="button"
+            className="absolute right-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/80 bg-black/10 text-2xl text-white backdrop-blur"
+          >
+            ›
+          </button>
+
+          <div className="absolute right-4 top-[58%] z-20 flex -translate-y-1/2 flex-col items-center gap-3">
+            {formData.modal_config.show_like_button && (
+              <button
+                type="button"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/80 bg-black/10 text-white backdrop-blur"
+              >
+                <Heart size={24} />
+              </button>
+            )}
+
+            {formData.modal_config.show_comment_button && (
+              <button
+                type="button"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/80 bg-black/10 text-white backdrop-blur"
+              >
+                <MessageCircle size={24} />
+              </button>
+            )}
+
+            {formData.modal_config.show_share_button && (
+              <button
+                type="button"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/80 bg-black/10 text-white backdrop-blur"
+              >
+                <Share2 size={24} />
+              </button>
+            )}
+
+            {formData.modal_config.show_whatsapp_button && (
+              <button
+                type="button"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-green-500 text-sm font-black text-white shadow-lg"
+              >
+                W
+              </button>
+            )}
+          </div>
+
           {formData.modal_config.show_play_button && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-lg">
-                <PlaySquare size={26} />
+            <div className="absolute left-1/2 top-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur">
+                <PlaySquare size={28} />
               </div>
             </div>
           )}
 
-          <div className="absolute bottom-0 left-0 right-0 space-y-3 bg-gradient-to-t from-black/70 to-transparent p-5">
-            {formData.modal_config.show_title && (
-              <h4 className="text-lg font-black text-white">
-                Player / Modal
-              </h4>
-            )}
+          {formData.modal_config.show_product && (
+            <div className="absolute bottom-4 left-4 right-4 z-30 rounded-2xl border border-slate-900/10 bg-white/95 p-3 text-slate-900 shadow-xl backdrop-blur">
+              <div className="flex items-center gap-3">
+                <div
+                  className="h-16 w-16 shrink-0 rounded-xl"
+                  style={{
+                    background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+                  }}
+                />
 
-            <div className="flex flex-wrap items-center gap-2">
-              {formData.modal_config.show_like_button && (
-                <PreviewIcon icon={<Heart size={14} />} />
-              )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-black">
+                    Blusa vermelha
+                  </p>
 
-              {formData.modal_config.show_comment_button && (
-                <PreviewIcon icon={<MessageCircle size={14} />} />
-              )}
+                  <p className="text-sm font-black text-slate-700">
+                    R$ 259,90
+                  </p>
 
-              {formData.modal_config.show_share_button && (
-                <PreviewIcon icon={<Share2 size={14} />} />
-              )}
-
-              {formData.modal_config.show_whatsapp_button && (
-                <PreviewIcon label="WhatsApp" />
-              )}
-            </div>
-
-            {formData.modal_config.show_product && (
-              <div className="rounded-2xl bg-white p-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-slate-100" />
-
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-black text-slate-900">
-                      Produto exemplo
-                    </p>
-                    <p className="text-[10px] font-bold text-slate-500">
-                      R$ 99,90
-                    </p>
-                  </div>
+                  {formData.modal_config.show_product_button && (
+                    <button
+                      type="button"
+                      className="mt-2 w-full rounded-lg px-3 py-2 text-xs font-black text-white"
+                      style={{ backgroundColor: colors.button }}
+                    >
+                      Ver produto &gt;
+                    </button>
+                  )}
                 </div>
-
-                {formData.modal_config.show_product_button && (
-                  <button
-                    type="button"
-                    className="mt-3 w-full rounded-xl px-3 py-2 text-xs font-black text-white"
-                    style={{ backgroundColor: colors.button }}
-                  >
-                    Comprar agora
-                  </button>
-                )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1658,30 +1695,115 @@ const VisualPreview = ({
   );
 };
 
-const PreviewIcon = ({
-  icon,
-  label,
+const PreviewCard = ({
+  formData,
+  floatingDevice,
+  carouselDevice,
+  gridDevice,
+  activeTab,
 }: {
-  icon?: React.ReactNode;
-  label?: string;
-}) => (
-  <button
-    type="button"
-    className="flex h-9 min-w-9 items-center justify-center rounded-full border border-white/30 bg-white/90 px-3 text-xs font-black text-slate-600"
-  >
-    {icon || label}
-  </button>
-);
+  formData: ExtendedAppearance;
+  floatingDevice: DeviceType;
+  carouselDevice: DeviceType;
+  gridDevice: DeviceType;
+  activeTab: ModalTab;
+}) => {
+  const floating = getActiveResponsiveConfig(
+    formData.floating_config,
+    floatingDevice,
+    formData.useGlobalAppearance,
+  );
 
-const PreviewInfo = ({ label, value }: { label: string; value: string }) => (
-  <div className="rounded-xl bg-slate-50 p-3">
-    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-      {label}
-    </p>
+  const carousel = getActiveResponsiveConfig(
+    formData.carousel_config,
+    carouselDevice,
+    formData.useGlobalAppearance,
+  );
 
-    <p className="mt-1 truncate font-black text-slate-700">{value}</p>
-  </div>
-);
+  const grid = getActiveResponsiveConfig(
+    formData.grid_config,
+    gridDevice,
+    formData.useGlobalAppearance,
+  );
+
+  const colors: PreviewColors = {
+    primary: isValidHexColor(formData.primary_color)
+      ? formData.primary_color
+      : '#0094EB',
+    secondary: isValidHexColor(formData.secondary_color)
+      ? formData.secondary_color
+      : '#0094EB',
+    text: isValidHexColor(formData.text_color)
+      ? formData.text_color
+      : '#0F172A',
+    background: isValidHexColor(formData.background_color)
+      ? formData.background_color
+      : '#FFFFFF',
+    button: isValidHexColor(formData.button_color)
+      ? formData.button_color
+      : '#0094EB',
+    floatingBorder: isValidHexColor(floating.border_color)
+      ? floating.border_color
+      : '#0094EB',
+  };
+
+  const titleByTab: Record<ModalTab, string> = {
+    basic: 'Resumo do estilo',
+    visual: 'Identidade visual',
+    floating: 'Preview do flutuante',
+    carousel: 'Preview do carrossel',
+    grid: 'Preview da grade',
+    modal: 'Preview do player/modal',
+  };
+
+  const descriptionByTab: Record<ModalTab, string> = {
+    basic: 'Visualização geral do estilo selecionado.',
+    visual: 'Cores, fonte, fundo e botão.',
+    floating: 'Tamanho, forma, borda e posição do widget.',
+    carousel: 'Formato dos cards, espaçamento, margens e centralização.',
+    grid: 'Colunas, linhas e espaçamento da grade.',
+    modal: 'Botões e elementos exibidos no player/modal.',
+  };
+
+  return (
+    <aside className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-base font-black text-slate-900">
+            {titleByTab[activeTab]}
+          </h3>
+
+          <p className="mt-1 text-xs font-medium text-slate-500">
+            {descriptionByTab[activeTab]}
+          </p>
+        </div>
+
+        <span
+          className="h-8 w-8 rounded-full border border-slate-200 shadow-sm"
+          style={{ backgroundColor: colors.primary }}
+        />
+      </div>
+
+      {activeTab === 'floating' && (
+        <FloatingPreview floating={floating} colors={colors} />
+      )}
+
+      {activeTab === 'carousel' && (
+        <CarouselPreview carousel={carousel} colors={colors} />
+      )}
+
+      {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} />}
+
+      {activeTab === 'modal' && (
+        <ModalPreview formData={formData} colors={colors} />
+      )}
+
+      {(activeTab === 'basic' || activeTab === 'visual') && (
+        <VisualPreview formData={formData} colors={colors} />
+      )}
+    </aside>
+  );
+};
 
 const AppearancePage = () => {
   const tenantContext = useTenant() as any;
@@ -1784,6 +1906,8 @@ const AppearancePage = () => {
         };
       }
 
+      updatedDeviceConfig = normalizeFloatingShapeValues(updatedDeviceConfig);
+
       const nextConfig: ResponsiveConfig<FloatingConfig> =
         prev.useGlobalAppearance
           ? {
@@ -1865,7 +1989,7 @@ const AppearancePage = () => {
         margin_bottom: desktop.margin_bottom,
         carousel_visible_items: desktop.visible_items,
         show_product: desktop.show_product,
-        show_play_button: desktop.show_play_icon,
+        show_play_icon: desktop.show_play_icon,
         auto_center: desktop.auto_center,
       };
     });
@@ -2043,6 +2167,8 @@ const AppearancePage = () => {
 
       const floatingConfig: ResponsiveConfig<FloatingConfig> = {
         ...formData.floating_config,
+        desktop: normalizeFloatingShapeValues(formData.floating_config.desktop),
+        mobile: normalizeFloatingShapeValues(formData.floating_config.mobile),
         same_for_all: formData.useGlobalAppearance,
       };
 
@@ -2082,12 +2208,18 @@ const AppearancePage = () => {
 
       floatingConfig.desktop = {
         ...floatingConfig.desktop,
+        border_style: normalizeBorderWidth(floatingConfig.desktop.border_style, '2'),
         position: normalizedPosition,
         floating_position: normalizedFloatingPosition,
       };
 
       if (formData.useGlobalAppearance) {
         floatingConfig.mobile = floatingConfig.desktop;
+      } else {
+        floatingConfig.mobile = {
+          ...floatingConfig.mobile,
+          border_style: normalizeBorderWidth(floatingConfig.mobile.border_style, '2'),
+        };
       }
 
       const floatingDesktop = floatingConfig.desktop;
@@ -2621,15 +2753,17 @@ const AppearancePage = () => {
 
                         <FormField label="Tamanho do texto">
                           <input
-                            type="text"
-                            value={formData.font_size}
+                            type="number"
+                            min="8"
+                            step="1"
+                            value={toNumberInputValue(formData.font_size)}
                             onChange={e =>
                               setFormData({
                                 ...formData,
                                 font_size: e.target.value,
                               })
                             }
-                            placeholder="Ex: 14px"
+                            placeholder="Ex: 14"
                             className={inputClass}
                           />
                         </FormField>
@@ -2661,12 +2795,54 @@ const AppearancePage = () => {
                         <FormField label="Forma">
                           <select
                             value={activeFloatingConfig.shape}
-                            onChange={e =>
+                            onChange={e => {
+                              const shape = e.target
+                                .value as FloatingConfig['shape'];
+
+                              if (shape === 'portrait') {
+                                const width = formatNumberLikeCurrent(
+                                  activeFloatingConfig.width,
+                                  '80',
+                                );
+
+                                updateFloatingConfig({
+                                  shape,
+                                  width,
+                                  height: getPortraitHeightFromWidth(width),
+                                });
+
+                                return;
+                              }
+
+                              if (shape === 'square') {
+                                const size = formatNumberLikeCurrent(
+                                  activeFloatingConfig.width,
+                                  '80',
+                                );
+
+                                updateFloatingConfig({
+                                  shape,
+                                  width: size,
+                                  height: size,
+                                });
+
+                                return;
+                              }
+
+                              const size =
+                                toNumberInputValue(
+                                  activeFloatingConfig.border_radius,
+                                ) ||
+                                toNumberInputValue(
+                                  activeFloatingConfig.width,
+                                ) ||
+                                '80';
+
                               updateFloatingConfig({
-                                shape: e.target
-                                  .value as FloatingConfig['shape'],
-                              })
-                            }
+                                shape,
+                                border_radius: size,
+                              });
+                            }}
                             className={selectClass}
                           >
                             <option value="circle">Circular</option>
@@ -2675,52 +2851,129 @@ const AppearancePage = () => {
                           </select>
                         </FormField>
 
-                        <FormField label="Largura">
-                          <input
-                            type="text"
-                            value={activeFloatingConfig.width}
-                            onChange={e =>
-                              updateFloatingConfig({
-                                width: e.target.value,
-                              })
-                            }
-                            placeholder="Ex: 80px"
-                            className={inputClass}
-                          />
-                        </FormField>
+                        {activeFloatingConfig.shape !== 'circle' && (
+                          <>
+                            <FormField label="Largura">
+                              <input
+                                type="number"
+                                min="1"
+                                step="1"
+                                value={toNumberInputValue(
+                                  activeFloatingConfig.width,
+                                )}
+                                onChange={e => {
+                                  const value = e.target.value;
 
-                        <FormField label="Altura">
-                          <input
-                            type="text"
-                            value={activeFloatingConfig.height}
-                            onChange={e =>
-                              updateFloatingConfig({
-                                height: e.target.value,
-                              })
-                            }
-                            placeholder="Ex: 110px"
-                            className={inputClass}
-                          />
-                        </FormField>
+                                  if (
+                                    activeFloatingConfig.shape === 'portrait'
+                                  ) {
+                                    updateFloatingConfig({
+                                      width: value,
+                                      height:
+                                        getPortraitHeightFromWidth(value),
+                                    });
 
-                        <FormField label="Raio da borda">
+                                    return;
+                                  }
+
+                                  if (activeFloatingConfig.shape === 'square') {
+                                    updateFloatingConfig({
+                                      width: value,
+                                      height: value,
+                                    });
+
+                                    return;
+                                  }
+
+                                  updateFloatingConfig({
+                                    width: value,
+                                  });
+                                }}
+                                placeholder="Ex: 80"
+                                className={inputClass}
+                              />
+                            </FormField>
+
+                            <FormField label="Altura">
+                              <input
+                                type="number"
+                                min="1"
+                                step="1"
+                                value={toNumberInputValue(
+                                  activeFloatingConfig.height,
+                                )}
+                                onChange={e => {
+                                  const value = e.target.value;
+
+                                  if (
+                                    activeFloatingConfig.shape === 'portrait'
+                                  ) {
+                                    updateFloatingConfig({
+                                      height: value,
+                                      width: getPortraitWidthFromHeight(value),
+                                    });
+
+                                    return;
+                                  }
+
+                                  if (activeFloatingConfig.shape === 'square') {
+                                    updateFloatingConfig({
+                                      height: value,
+                                      width: value,
+                                    });
+
+                                    return;
+                                  }
+
+                                  updateFloatingConfig({
+                                    height: value,
+                                  });
+                                }}
+                                placeholder="Ex: 142"
+                                className={inputClass}
+                              />
+                            </FormField>
+                          </>
+                        )}
+
+                        <FormField
+                          label={
+                            activeFloatingConfig.shape === 'circle'
+                              ? 'Raio/Tamanho do círculo'
+                              : 'Raio da borda'
+                          }
+                        >
                           <input
-                            type="text"
-                            value={activeFloatingConfig.border_radius}
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={toNumberInputValue(
+                              activeFloatingConfig.border_radius,
+                            )}
                             onChange={e =>
                               updateFloatingConfig({
                                 border_radius: e.target.value,
                               })
                             }
-                            placeholder="Ex: 12px"
+                            placeholder={
+                              activeFloatingConfig.shape === 'circle'
+                                ? 'Ex: 80'
+                                : 'Ex: 12'
+                            }
                             className={inputClass}
-                            disabled={activeFloatingConfig.shape === 'circle'}
                           />
+
+                          {activeFloatingConfig.shape === 'portrait' && (
+                            <p className="text-xs font-semibold text-slate-400">
+                              No formato retrato, largura e altura ficam
+                              travadas na proporção 9:16.
+                            </p>
+                          )}
 
                           {activeFloatingConfig.shape === 'circle' && (
                             <p className="text-xs font-semibold text-slate-400">
-                              No formato circular, o raio é fixo para manter o
-                              círculo perfeito.
+                              No formato circular, o tamanho é controlado apenas
+                              por este campo.
                             </p>
                           )}
                         </FormField>
@@ -2752,43 +3005,55 @@ const AppearancePage = () => {
 
                         <FormField label="Distância inferior">
                           <input
-                            type="text"
-                            value={activeFloatingConfig.bottom_spacing}
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={toNumberInputValue(
+                              activeFloatingConfig.bottom_spacing,
+                            )}
                             onChange={e =>
                               updateFloatingConfig({
                                 bottom_spacing: e.target.value,
                               })
                             }
-                            placeholder="Ex: 20px"
+                            placeholder="Ex: 20"
                             className={inputClass}
                           />
                         </FormField>
 
                         <FormField label="Distância superior">
                           <input
-                            type="text"
-                            value={activeFloatingConfig.top_spacing}
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={toNumberInputValue(
+                              activeFloatingConfig.top_spacing,
+                            )}
                             onChange={e =>
                               updateFloatingConfig({
                                 top_spacing: e.target.value,
                               })
                             }
-                            placeholder="Ex: 20px"
+                            placeholder="Ex: 20"
                             className={inputClass}
                           />
                         </FormField>
 
                         <FormField label="Distância lateral">
                           <input
-                            type="text"
-                            value={activeFloatingConfig.left_spacing}
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={toNumberInputValue(
+                              activeFloatingConfig.left_spacing,
+                            )}
                             onChange={e =>
                               updateFloatingConfig({
                                 left_spacing: e.target.value,
                                 right_spacing: e.target.value,
                               })
                             }
-                            placeholder="Ex: 20px"
+                            placeholder="Ex: 20"
                             className={inputClass}
                           />
                         </FormField>
@@ -2805,18 +3070,26 @@ const AppearancePage = () => {
                           />
                         </FormField>
 
-                        <FormField label="Largura/estilo da borda">
+                        <FormField label="Largura da borda">
                           <input
-                            type="text"
-                            value={activeFloatingConfig.border_style}
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={toNumberInputValue(
+                              activeFloatingConfig.border_style,
+                            )}
                             onChange={e =>
                               updateFloatingConfig({
                                 border_style: e.target.value,
                               })
                             }
-                            placeholder="Ex: 2px solid"
+                            placeholder="Ex: 2"
                             className={inputClass}
                           />
+
+                          <p className="text-xs font-semibold text-slate-400">
+                            O estilo da borda será sempre sólido.
+                          </p>
                         </FormField>
 
                         <FormField label="Object fit">
@@ -2837,8 +3110,12 @@ const AppearancePage = () => {
 
                         <FormField label="Z-index">
                           <input
-                            type="text"
-                            value={activeFloatingConfig.z_index}
+                            type="number"
+                            min="1"
+                            step="1"
+                            value={toNumberInputValue(
+                              activeFloatingConfig.z_index,
+                            )}
                             onChange={e =>
                               updateFloatingConfig({
                                 z_index: e.target.value,
@@ -2980,28 +3257,36 @@ const AppearancePage = () => {
 
                         <FormField label="Margem superior">
                           <input
-                            type="text"
-                            value={activeCarouselConfig.margin_top}
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={toNumberInputValue(
+                              activeCarouselConfig.margin_top,
+                            )}
                             onChange={e =>
                               updateCarouselConfig({
                                 margin_top: e.target.value,
                               })
                             }
-                            placeholder="Ex: 20px ou 20"
+                            placeholder="Ex: 20"
                             className={inputClass}
                           />
                         </FormField>
 
                         <FormField label="Margem inferior">
                           <input
-                            type="text"
-                            value={activeCarouselConfig.margin_bottom}
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={toNumberInputValue(
+                              activeCarouselConfig.margin_bottom,
+                            )}
                             onChange={e =>
                               updateCarouselConfig({
                                 margin_bottom: e.target.value,
                               })
                             }
-                            placeholder="Ex: 20px ou 20"
+                            placeholder="Ex: 20"
                             className={inputClass}
                           />
                         </FormField>
@@ -3072,6 +3357,7 @@ const AppearancePage = () => {
                             type="number"
                             min="1"
                             max="4"
+                            step="1"
                             value={Math.min(activeGridConfig.columns, 4)}
                             onChange={e =>
                               updateGridConfig({
@@ -3086,6 +3372,7 @@ const AppearancePage = () => {
                           <input
                             type="number"
                             min="1"
+                            step="1"
                             value={activeGridConfig.rows}
                             onChange={e =>
                               updateGridConfig({
