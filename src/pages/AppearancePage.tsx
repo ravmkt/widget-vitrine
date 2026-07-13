@@ -2688,6 +2688,18 @@ const PreviewInfo = ({ label, value }: { label: string; value: string }) => (
                       </div>
                     </SectionCard>
                   )}
+<FormField label="Centralizar automático">
+  <ToggleSwitch
+    label="Centralizar carrossel automaticamente"
+    checked={activeCarouselConfig.auto_center}
+    onChange={e =>
+      updateCarouselConfig({
+        auto_center: e.target.checked,
+      })
+    }
+    description="Quando ativado, os cards ficam centralizados dentro da área disponível."
+  />
+</FormField>
 
                   {activeTab === 'grid' && (
                     <SectionCard
