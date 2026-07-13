@@ -2434,19 +2434,20 @@ const PreviewInfo = ({ label, value }: { label: string; value: string }) => (
                           />
                         </FormField>
 
-                        <FormField label="Distância esquerda">
-                          <input
-                            type="text"
-                            value={activeFloatingConfig.left_spacing}
-                            onChange={e =>
-                              updateFloatingConfig({
-                                left_spacing: e.target.value,
-                              })
-                            }
-                            placeholder="Ex: 20px"
-                            className={inputClass}
-                          />
-                        </FormField>
+                        <FormField label="Distância lateral">
+  <input
+    type="text"
+    value={activeFloatingConfig.left_spacing}
+    onChange={e =>
+      updateFloatingConfig({
+        left_spacing: e.target.value,
+        right_spacing: e.target.value,
+      })
+    }
+    placeholder="Ex: 20px"
+    className={inputClass}
+  />
+</FormField>
 
                         <FormField label="Distância direita">
                           <input
