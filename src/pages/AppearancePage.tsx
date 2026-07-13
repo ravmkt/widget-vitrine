@@ -527,7 +527,7 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
     color: floatingDesktop.border_color,
     show_play_icon: floatingDesktop.show_play_icon,
     hide_stories: modalConfig.hide_stories,
-    auto_center: false,
+    auto_center: carouselDesktop.auto_center,
     carousel_view_mode: carouselDesktop.view_mode,
     margin_top: carouselDesktop.margin_top,
     margin_bottom: carouselDesktop.margin_bottom,
