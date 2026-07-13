@@ -1822,6 +1822,7 @@ const AppearancePage = () => {
         carousel_view_mode: carouselDesktop.view_mode,
         margin_top: carouselDesktop.margin_top,
         margin_bottom: carouselDesktop.margin_bottom,
+        auto_center: carouselDesktop.auto_center,
 
         desktop_columns: gridDesktop.columns,
         desktop_rows: gridDesktop.rows,
