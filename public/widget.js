@@ -2,16 +2,20 @@
  * Vidlytics Widget — widget.js
  *
  * Widget público de vídeo commerce.
- * Versão corrigida: TOP RIGHT PORTRAIT 9:16 - 2026071407
+ * Versão corrigida definitiva:
+ * - Floating TOP RIGHT
+ * - Formato retrato 9:16
+ * - Protegido contra CSS externo usando Shadow DOM
+ * - 202607141248
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - TOP RIGHT PORTRAIT 9:16 - 2026071407');
+  console.log('VIDLYTICS WIDGET CARREGADO - SHADOW DOM PORTRAIT 9:16 - 202607141248');
 
   if (window.__vidlytics_widget_initialized) return;
   window.__vidlytics_widget_initialized = true;
 
   var config = window.VIDLYTICS_CONFIG || {};
-  var storeId = config.storeId || config.lojaId || null;
+  var storeId = config.storeId || config.lojaId || config.licenseId || null;
   var supabaseUrl = (config.supabaseUrl || '').replace(/\/$/, '');
   var supabaseAnonKey = config.supabaseAnonKey || '';
   var widgetsCfg = config.widgets || {};
@@ -33,28 +37,22 @@
 
   var hasSupabase = Boolean(supabaseUrl && supabaseAnonKey);
   var currentAppearance = {};
+  var overlay = null;
+  var modalContent = null;
+  var readStoryProductsData = [];
+  var readProductsData = [];
 
   var VIDEO_FILE_REGEX = /\.(mp4|webm|ogg|mov|m4v|m3u8)(\?.*)?$/i;
 
   var FORCE_FLOATING = {
     top: '20px',
     right: '23px',
-    bottom: 'auto',
-    left: 'auto',
-    inset: '20px 23px auto auto',
     width: '85px',
     height: '151px',
-    widthNumber: 85,
-    heightNumber: 151,
-    radius: '11px',
-    innerRadius: '9px',
+    radius: '12px',
+    innerRadius: '10px',
     zIndex: '2147483647'
   };
-
-  var overlay = null;
-  var modalContent = null;
-  var readStoryProductsData = [];
-  var readProductsData = [];
 
   function createEl(tag, className) {
     var el = document.createElement(tag);
@@ -564,290 +562,6 @@
     return '';
   }
 
-  function injectForceFloatingCss() {
-    var oldStyle = document.getElementById('vidlytics-force-floating-css');
-    if (oldStyle) oldStyle.remove();
-
-    var style = document.createElement('style');
-    style.id = 'vidlytics-force-floating-css';
-
-    style.innerHTML =
-      '#vidlytics-widget-root,' +
-      '.vidlytics-widget-root{' +
-      'position:fixed!important;' +
-      'top:' + FORCE_FLOATING.top + '!important;' +
-      'right:' + FORCE_FLOATING.right + '!important;' +
-      'bottom:auto!important;' +
-      'left:auto!important;' +
-      'inset:' + FORCE_FLOATING.inset + '!important;' +
-      'z-index:' + FORCE_FLOATING.zIndex + '!important;' +
-      'font-family:Inter,system-ui,sans-serif!important;' +
-      'pointer-events:auto!important;' +
-      'transform:none!important;' +
-      'width:' + FORCE_FLOATING.width + '!important;' +
-      'min-width:' + FORCE_FLOATING.width + '!important;' +
-      'max-width:' + FORCE_FLOATING.width + '!important;' +
-      'height:auto!important;' +
-      'min-height:0!important;' +
-      'max-height:none!important;' +
-      'overflow:visible!important;' +
-      'background:transparent!important;' +
-      'border:0!important;' +
-      'box-shadow:none!important;' +
-      '}' +
-
-      '#vidlytics-widget-root *,' +
-      '.vidlytics-widget-root *{' +
-      'box-sizing:border-box!important;' +
-      '}' +
-
-      '#vidlytics-widget-root .vidlytics-bubbles,' +
-      '.vidlytics-widget-root .vidlytics-bubbles{' +
-      'display:flex!important;' +
-      'flex-direction:column!important;' +
-      'align-items:flex-end!important;' +
-      'justify-content:flex-start!important;' +
-      'gap:10px!important;' +
-      'width:' + FORCE_FLOATING.width + '!important;' +
-      'min-width:' + FORCE_FLOATING.width + '!important;' +
-      'max-width:' + FORCE_FLOATING.width + '!important;' +
-      'overflow:visible!important;' +
-      '}' +
-
-      '#vidlytics-widget-root button.vidlytics-bubble,' +
-      '#vidlytics-widget-root .vidlytics-bubble,' +
-      '.vidlytics-widget-root button.vidlytics-bubble,' +
-      '.vidlytics-widget-root .vidlytics-bubble{' +
-      'width:' + FORCE_FLOATING.width + '!important;' +
-      'min-width:' + FORCE_FLOATING.width + '!important;' +
-      'max-width:' + FORCE_FLOATING.width + '!important;' +
-      'height:auto!important;' +
-      'min-height:0!important;' +
-      'max-height:none!important;' +
-      'border:0!important;' +
-      'background:transparent!important;' +
-      'padding:0!important;' +
-      'margin:0!important;' +
-      'cursor:pointer!important;' +
-      'display:flex!important;' +
-      'flex-direction:column!important;' +
-      'align-items:center!important;' +
-      'justify-content:flex-start!important;' +
-      'gap:4px!important;' +
-      'outline:none!important;' +
-      'border-radius:0!important;' +
-      'overflow:visible!important;' +
-      'appearance:none!important;' +
-      '-webkit-appearance:none!important;' +
-      'box-shadow:none!important;' +
-      'clip-path:none!important;' +
-      '}' +
-
-      '#vidlytics-widget-root .vidlytics-bubble-ring,' +
-      '.vidlytics-widget-root .vidlytics-bubble-ring{' +
-      'width:' + FORCE_FLOATING.width + '!important;' +
-      'height:' + FORCE_FLOATING.height + '!important;' +
-      'min-width:' + FORCE_FLOATING.width + '!important;' +
-      'min-height:' + FORCE_FLOATING.height + '!important;' +
-      'max-width:' + FORCE_FLOATING.width + '!important;' +
-      'max-height:' + FORCE_FLOATING.height + '!important;' +
-      'aspect-ratio:9/16!important;' +
-      'border-radius:' + FORCE_FLOATING.radius + '!important;' +
-      'padding:2px!important;' +
-      'overflow:hidden!important;' +
-      'display:block!important;' +
-      'box-sizing:border-box!important;' +
-      'clip-path:none!important;' +
-      '}' +
-
-      '#vidlytics-widget-root .vidlytics-bubble-inner,' +
-      '.vidlytics-widget-root .vidlytics-bubble-inner,' +
-      '#vidlytics-widget-root .vidlytics-bubble-ring > div,' +
-      '.vidlytics-widget-root .vidlytics-bubble-ring > div{' +
-      'width:100%!important;' +
-      'height:100%!important;' +
-      'min-width:100%!important;' +
-      'min-height:100%!important;' +
-      'max-width:100%!important;' +
-      'max-height:100%!important;' +
-      'border-radius:' + FORCE_FLOATING.innerRadius + '!important;' +
-      'overflow:hidden!important;' +
-      'background:#e2e8f0!important;' +
-      'display:block!important;' +
-      'box-sizing:border-box!important;' +
-      'clip-path:none!important;' +
-      '}' +
-
-      '#vidlytics-widget-root .vidlytics-bubble-img,' +
-      '#vidlytics-widget-root .vidlytics-bubble img,' +
-      '#vidlytics-widget-root img.vidlytics-bubble-img,' +
-      '#vidlytics-widget-root video,' +
-      '.vidlytics-widget-root .vidlytics-bubble-img,' +
-      '.vidlytics-widget-root .vidlytics-bubble img,' +
-      '.vidlytics-widget-root img.vidlytics-bubble-img,' +
-      '.vidlytics-widget-root video{' +
-      'width:100%!important;' +
-      'height:100%!important;' +
-      'min-width:100%!important;' +
-      'min-height:100%!important;' +
-      'max-width:100%!important;' +
-      'max-height:100%!important;' +
-      'object-fit:cover!important;' +
-      'object-position:center!important;' +
-      'display:block!important;' +
-      'border-radius:' + FORCE_FLOATING.innerRadius + '!important;' +
-      'clip-path:none!important;' +
-      'overflow:hidden!important;' +
-      'aspect-ratio:auto!important;' +
-      '}' +
-
-      '#vidlytics-widget-root .vidlytics-bubble-label,' +
-      '.vidlytics-widget-root .vidlytics-bubble-label{' +
-      'width:' + FORCE_FLOATING.width + '!important;' +
-      'max-width:' + FORCE_FLOATING.width + '!important;' +
-      'font-size:11px!important;' +
-      'line-height:12px!important;' +
-      'font-weight:700!important;' +
-      'text-align:center!important;' +
-      'white-space:nowrap!important;' +
-      'overflow:hidden!important;' +
-      'text-overflow:ellipsis!important;' +
-      'display:block!important;' +
-      '}';
-
-    document.head.appendChild(style);
-  }
-
-  function forceFloatingStyles() {
-    injectForceFloatingCss();
-
-    var root = document.getElementById('vidlytics-widget-root');
-    if (!root) return;
-
-    setImportant(root, 'position', 'fixed');
-    setImportant(root, 'inset', FORCE_FLOATING.inset);
-    setImportant(root, 'top', FORCE_FLOATING.top);
-    setImportant(root, 'right', FORCE_FLOATING.right);
-    setImportant(root, 'bottom', FORCE_FLOATING.bottom);
-    setImportant(root, 'left', FORCE_FLOATING.left);
-    setImportant(root, 'z-index', FORCE_FLOATING.zIndex);
-    setImportant(root, 'pointer-events', 'auto');
-    setImportant(root, 'transform', 'none');
-    setImportant(root, 'width', FORCE_FLOATING.width);
-    setImportant(root, 'min-width', FORCE_FLOATING.width);
-    setImportant(root, 'max-width', FORCE_FLOATING.width);
-    setImportant(root, 'height', 'auto');
-    setImportant(root, 'min-height', '0');
-    setImportant(root, 'max-height', 'none');
-    setImportant(root, 'overflow', 'visible');
-    setImportant(root, 'background', 'transparent');
-    setImportant(root, 'border', '0');
-    setImportant(root, 'box-shadow', 'none');
-
-    var bubbles = root.querySelector('.vidlytics-bubbles');
-
-    if (bubbles) {
-      setImportant(bubbles, 'display', 'flex');
-      setImportant(bubbles, 'flex-direction', 'column');
-      setImportant(bubbles, 'align-items', 'flex-end');
-      setImportant(bubbles, 'justify-content', 'flex-start');
-      setImportant(bubbles, 'gap', '10px');
-      setImportant(bubbles, 'width', FORCE_FLOATING.width);
-      setImportant(bubbles, 'min-width', FORCE_FLOATING.width);
-      setImportant(bubbles, 'max-width', FORCE_FLOATING.width);
-      setImportant(bubbles, 'overflow', 'visible');
-    }
-
-    Array.prototype.forEach.call(root.querySelectorAll('.vidlytics-bubble'), function (button) {
-      setImportant(button, 'width', FORCE_FLOATING.width);
-      setImportant(button, 'min-width', FORCE_FLOATING.width);
-      setImportant(button, 'max-width', FORCE_FLOATING.width);
-      setImportant(button, 'height', 'auto');
-      setImportant(button, 'min-height', '0');
-      setImportant(button, 'max-height', 'none');
-      setImportant(button, 'border', '0');
-      setImportant(button, 'background', 'transparent');
-      setImportant(button, 'padding', '0');
-      setImportant(button, 'margin', '0');
-      setImportant(button, 'cursor', 'pointer');
-      setImportant(button, 'display', 'flex');
-      setImportant(button, 'flex-direction', 'column');
-      setImportant(button, 'align-items', 'center');
-      setImportant(button, 'justify-content', 'flex-start');
-      setImportant(button, 'gap', '4px');
-      setImportant(button, 'outline', 'none');
-      setImportant(button, 'border-radius', '0');
-      setImportant(button, 'overflow', 'visible');
-      setImportant(button, 'box-shadow', 'none');
-      setImportant(button, 'clip-path', 'none');
-      setImportant(button, 'appearance', 'none');
-      setImportant(button, '-webkit-appearance', 'none');
-    });
-
-    Array.prototype.forEach.call(root.querySelectorAll('.vidlytics-bubble-ring'), function (ring) {
-      setImportant(ring, 'width', FORCE_FLOATING.width);
-      setImportant(ring, 'height', FORCE_FLOATING.height);
-      setImportant(ring, 'min-width', FORCE_FLOATING.width);
-      setImportant(ring, 'min-height', FORCE_FLOATING.height);
-      setImportant(ring, 'max-width', FORCE_FLOATING.width);
-      setImportant(ring, 'max-height', FORCE_FLOATING.height);
-      setImportant(ring, 'aspect-ratio', '9 / 16');
-      setImportant(ring, 'border-radius', FORCE_FLOATING.radius);
-      setImportant(ring, 'padding', '2px');
-      setImportant(ring, 'overflow', 'hidden');
-      setImportant(ring, 'display', 'block');
-      setImportant(ring, 'box-sizing', 'border-box');
-      setImportant(ring, 'clip-path', 'none');
-    });
-
-    Array.prototype.forEach.call(root.querySelectorAll('.vidlytics-bubble-inner'), function (inner) {
-      setImportant(inner, 'width', '100%');
-      setImportant(inner, 'height', '100%');
-      setImportant(inner, 'min-width', '100%');
-      setImportant(inner, 'min-height', '100%');
-      setImportant(inner, 'max-width', '100%');
-      setImportant(inner, 'max-height', '100%');
-      setImportant(inner, 'border-radius', FORCE_FLOATING.innerRadius);
-      setImportant(inner, 'overflow', 'hidden');
-      setImportant(inner, 'background', '#e2e8f0');
-      setImportant(inner, 'display', 'block');
-      setImportant(inner, 'box-sizing', 'border-box');
-      setImportant(inner, 'clip-path', 'none');
-    });
-
-    Array.prototype.forEach.call(
-      root.querySelectorAll('.vidlytics-bubble-img, .vidlytics-bubble img, img.vidlytics-bubble-img, video'),
-      function (img) {
-        setImportant(img, 'width', '100%');
-        setImportant(img, 'height', '100%');
-        setImportant(img, 'min-width', '100%');
-        setImportant(img, 'min-height', '100%');
-        setImportant(img, 'max-width', '100%');
-        setImportant(img, 'max-height', '100%');
-        setImportant(img, 'object-fit', 'cover');
-        setImportant(img, 'object-position', 'center');
-        setImportant(img, 'display', 'block');
-        setImportant(img, 'border-radius', FORCE_FLOATING.innerRadius);
-        setImportant(img, 'clip-path', 'none');
-        setImportant(img, 'overflow', 'hidden');
-        setImportant(img, 'aspect-ratio', 'auto');
-      }
-    );
-
-    Array.prototype.forEach.call(root.querySelectorAll('.vidlytics-bubble-label'), function (label) {
-      setImportant(label, 'width', FORCE_FLOATING.width);
-      setImportant(label, 'max-width', FORCE_FLOATING.width);
-      setImportant(label, 'font-size', '11px');
-      setImportant(label, 'line-height', '12px');
-      setImportant(label, 'font-weight', '700');
-      setImportant(label, 'text-align', 'center');
-      setImportant(label, 'white-space', 'nowrap');
-      setImportant(label, 'overflow', 'hidden');
-      setImportant(label, 'text-overflow', 'ellipsis');
-      setImportant(label, 'display', 'block');
-    });
-  }
-
   function readAppearance() {
     if (!storeId || !hasSupabase) {
       return Promise.resolve(getStorageItem('vidlytics_appearance', {}) || {});
@@ -1054,51 +768,305 @@
     }
   }
 
-  function ensureModal() {
-    if (overlay) return;
+  function getOrCreateShadowRoot() {
+    var existingRoot = document.getElementById('vidlytics-widget-root');
 
-    var modalConfig = normalizeModalAppearanceConfig(currentAppearance);
+    if (existingRoot) {
+      existingRoot.remove();
+    }
 
-    overlay = createEl('div', 'vidlytics-overlay');
-    overlay.style.display = 'none';
-    overlay.style.position = 'fixed';
-    overlay.style.inset = '0';
-    overlay.style.background = 'rgba(15, 23, 42, 0.7)';
-    overlay.style.alignItems = 'center';
-    overlay.style.justifyContent = 'center';
-    overlay.style.zIndex = '2147483647';
-    overlay.style.padding = '20px';
+    var host = createEl('div', 'vidlytics-widget-root');
+    host.id = 'vidlytics-widget-root';
 
-    var modal = createEl('div', 'vidlytics-modal');
-    modal.style.width = 'min(92vw, 420px)';
-    modal.style.maxHeight = '88vh';
-    modal.style.overflow = 'hidden';
-    modal.style.background =
-      currentAppearance.background_color ||
-      currentAppearance.backgroundColor ||
-      '#fff';
-    modal.style.borderRadius = '24px';
-    modal.style.boxShadow = modalConfig.shadow_enabled
-      ? '0 24px 80px rgba(15, 23, 42, 0.3)'
-      : 'none';
-    modal.style.display = 'flex';
-    modal.style.flexDirection = 'column';
-    modal.style.fontFamily = getFontFamily(currentAppearance);
+    setImportant(host, 'position', 'fixed');
+    setImportant(host, 'top', FORCE_FLOATING.top);
+    setImportant(host, 'right', FORCE_FLOATING.right);
+    setImportant(host, 'bottom', 'auto');
+    setImportant(host, 'left', 'auto');
+    setImportant(host, 'z-index', FORCE_FLOATING.zIndex);
+    setImportant(host, 'width', FORCE_FLOATING.width);
+    setImportant(host, 'min-width', FORCE_FLOATING.width);
+    setImportant(host, 'max-width', FORCE_FLOATING.width);
+    setImportant(host, 'height', 'auto');
+    setImportant(host, 'min-height', '0');
+    setImportant(host, 'max-height', 'none');
+    setImportant(host, 'overflow', 'visible');
+    setImportant(host, 'background', 'transparent');
+    setImportant(host, 'border', '0');
+    setImportant(host, 'box-shadow', 'none');
+    setImportant(host, 'pointer-events', 'auto');
+    setImportant(host, 'transform', 'none');
 
-    modalContent = createEl('div', 'vidlytics-modal-content');
-    modal.appendChild(modalContent);
+    document.body.appendChild(host);
 
-    overlay.appendChild(modal);
-    document.body.appendChild(overlay);
+    var shadow = host.attachShadow({ mode: 'open' });
 
-    overlay.addEventListener('click', function (event) {
-      if (event.target === overlay) closeOverlay();
-    });
+    return {
+      host: host,
+      shadow: shadow
+    };
   }
 
-  function closeOverlay() {
-    if (overlay) overlay.style.display = 'none';
-    if (modalContent) modalContent.innerHTML = '';
+  function buildShadowCss(appearance) {
+    var primary = getPrimaryColor(appearance);
+    var secondary = getSecondaryColor(appearance);
+    var text = getTextColor(appearance);
+    var font = getFontFamily(appearance);
+    var modalConfig = normalizeModalAppearanceConfig(appearance);
+
+    return ''
+      + ':host{'
+      + 'all:initial!important;'
+      + 'position:fixed!important;'
+      + 'top:' + FORCE_FLOATING.top + '!important;'
+      + 'right:' + FORCE_FLOATING.right + '!important;'
+      + 'bottom:auto!important;'
+      + 'left:auto!important;'
+      + 'z-index:' + FORCE_FLOATING.zIndex + '!important;'
+      + 'width:' + FORCE_FLOATING.width + '!important;'
+      + 'min-width:' + FORCE_FLOATING.width + '!important;'
+      + 'max-width:' + FORCE_FLOATING.width + '!important;'
+      + 'height:auto!important;'
+      + 'overflow:visible!important;'
+      + 'background:transparent!important;'
+      + 'pointer-events:auto!important;'
+      + 'font-family:' + font + '!important;'
+      + '}'
+
+      + '*,*::before,*::after{'
+      + 'box-sizing:border-box!important;'
+      + '}'
+
+      + '.vl-bubbles{'
+      + 'width:' + FORCE_FLOATING.width + '!important;'
+      + 'display:flex!important;'
+      + 'flex-direction:column!important;'
+      + 'align-items:flex-end!important;'
+      + 'justify-content:flex-start!important;'
+      + 'gap:10px!important;'
+      + 'overflow:visible!important;'
+      + '}'
+
+      + '.vl-bubble{'
+      + 'all:unset!important;'
+      + 'width:' + FORCE_FLOATING.width + '!important;'
+      + 'min-width:' + FORCE_FLOATING.width + '!important;'
+      + 'max-width:' + FORCE_FLOATING.width + '!important;'
+      + 'height:auto!important;'
+      + 'display:flex!important;'
+      + 'flex-direction:column!important;'
+      + 'align-items:center!important;'
+      + 'justify-content:flex-start!important;'
+      + 'gap:4px!important;'
+      + 'cursor:pointer!important;'
+      + 'overflow:visible!important;'
+      + 'pointer-events:auto!important;'
+      + '}'
+
+      + '.vl-ring{'
+      + 'width:' + FORCE_FLOATING.width + '!important;'
+      + 'height:' + FORCE_FLOATING.height + '!important;'
+      + 'min-width:' + FORCE_FLOATING.width + '!important;'
+      + 'min-height:' + FORCE_FLOATING.height + '!important;'
+      + 'max-width:' + FORCE_FLOATING.width + '!important;'
+      + 'max-height:' + FORCE_FLOATING.height + '!important;'
+      + 'aspect-ratio:9/16!important;'
+      + 'border-radius:' + FORCE_FLOATING.radius + '!important;'
+      + 'padding:2px!important;'
+      + 'overflow:hidden!important;'
+      + 'display:block!important;'
+      + 'background:linear-gradient(135deg,' + primary + ',' + secondary + ')!important;'
+      + 'box-shadow:' + (modalConfig.shadow_enabled !== false ? '0 12px 30px rgba(15,23,42,.18)' : 'none') + '!important;'
+      + 'clip-path:none!important;'
+      + '}'
+
+      + '.vl-inner{'
+      + 'width:100%!important;'
+      + 'height:100%!important;'
+      + 'border-radius:' + FORCE_FLOATING.innerRadius + '!important;'
+      + 'overflow:hidden!important;'
+      + 'background:#e2e8f0!important;'
+      + 'display:flex!important;'
+      + 'align-items:center!important;'
+      + 'justify-content:center!important;'
+      + 'font-weight:800!important;'
+      + 'font-size:24px!important;'
+      + 'color:' + text + '!important;'
+      + 'clip-path:none!important;'
+      + '}'
+
+      + '.vl-img{'
+      + 'width:100%!important;'
+      + 'height:100%!important;'
+      + 'min-width:100%!important;'
+      + 'min-height:100%!important;'
+      + 'max-width:100%!important;'
+      + 'max-height:100%!important;'
+      + 'object-fit:cover!important;'
+      + 'object-position:center!important;'
+      + 'display:block!important;'
+      + 'border-radius:' + FORCE_FLOATING.innerRadius + '!important;'
+      + 'clip-path:none!important;'
+      + 'overflow:hidden!important;'
+      + '}'
+
+      + '.vl-label{'
+      + 'width:' + FORCE_FLOATING.width + '!important;'
+      + 'max-width:' + FORCE_FLOATING.width + '!important;'
+      + 'font-family:' + font + '!important;'
+      + 'font-size:11px!important;'
+      + 'line-height:12px!important;'
+      + 'font-weight:700!important;'
+      + 'color:' + text + '!important;'
+      + 'text-align:center!important;'
+      + 'white-space:nowrap!important;'
+      + 'overflow:hidden!important;'
+      + 'text-overflow:ellipsis!important;'
+      + 'display:block!important;'
+      + '}'
+
+      + '.vl-overlay{'
+      + 'position:fixed!important;'
+      + 'inset:0!important;'
+      + 'width:100vw!important;'
+      + 'height:100vh!important;'
+      + 'background:rgba(15,23,42,.7)!important;'
+      + 'display:none!important;'
+      + 'align-items:center!important;'
+      + 'justify-content:center!important;'
+      + 'padding:20px!important;'
+      + 'z-index:' + FORCE_FLOATING.zIndex + '!important;'
+      + 'font-family:' + font + '!important;'
+      + '}'
+
+      + '.vl-overlay.is-open{'
+      + 'display:flex!important;'
+      + '}'
+
+      + '.vl-modal{'
+      + 'width:min(92vw,420px)!important;'
+      + 'max-height:88vh!important;'
+      + 'overflow:hidden!important;'
+      + 'background:#fff!important;'
+      + 'border-radius:24px!important;'
+      + 'box-shadow:' + (modalConfig.shadow_enabled !== false ? '0 24px 80px rgba(15,23,42,.3)' : 'none') + '!important;'
+      + 'display:flex!important;'
+      + 'flex-direction:column!important;'
+      + '}'
+
+      + '.vl-header{'
+      + 'display:flex!important;'
+      + 'align-items:center!important;'
+      + 'justify-content:space-between!important;'
+      + 'padding:14px 16px!important;'
+      + 'border-bottom:1px solid #e2e8f0!important;'
+      + '}'
+
+      + '.vl-title{'
+      + 'font-weight:800!important;'
+      + 'color:' + text + '!important;'
+      + 'font-size:14px!important;'
+      + '}'
+
+      + '.vl-count{'
+      + 'font-size:12px!important;'
+      + 'color:#64748b!important;'
+      + '}'
+
+      + '.vl-close{'
+      + 'all:unset!important;'
+      + 'font-size:28px!important;'
+      + 'line-height:1!important;'
+      + 'cursor:pointer!important;'
+      + 'color:' + text + '!important;'
+      + '}'
+
+      + '.vl-body{'
+      + 'padding:16px!important;'
+      + 'display:grid!important;'
+      + 'gap:12px!important;'
+      + 'overflow:auto!important;'
+      + '}'
+
+      + '.vl-player{'
+      + 'width:100%!important;'
+      + 'aspect-ratio:9/16!important;'
+      + 'border-radius:18px!important;'
+      + 'overflow:hidden!important;'
+      + 'background:#000!important;'
+      + '}'
+
+      + '.vl-player video,.vl-player iframe{'
+      + 'width:100%!important;'
+      + 'height:100%!important;'
+      + 'border:0!important;'
+      + 'display:block!important;'
+      + 'object-fit:cover!important;'
+      + '}'
+
+      + '.vl-nav{'
+      + 'display:flex!important;'
+      + 'gap:10px!important;'
+      + '}'
+
+      + '.vl-btn{'
+      + 'all:unset!important;'
+      + 'flex:1!important;'
+      + 'text-align:center!important;'
+      + 'border-radius:999px!important;'
+      + 'padding:10px 14px!important;'
+      + 'font-weight:800!important;'
+      + 'font-size:13px!important;'
+      + 'cursor:pointer!important;'
+      + 'background:#e2e8f0!important;'
+      + 'color:#0f172a!important;'
+      + '}'
+
+      + '.vl-btn-primary{'
+      + 'background:' + primary + '!important;'
+      + 'color:#fff!important;'
+      + '}'
+
+      + '.vl-product{'
+      + 'display:flex!important;'
+      + 'align-items:center!important;'
+      + 'gap:12px!important;'
+      + 'border:1px solid #e2e8f0!important;'
+      + 'border-radius:18px!important;'
+      + 'padding:12px!important;'
+      + 'background:#fff!important;'
+      + 'cursor:pointer!important;'
+      + '}'
+
+      + '.vl-product-img{'
+      + 'width:72px!important;'
+      + 'height:72px!important;'
+      + 'border-radius:14px!important;'
+      + 'object-fit:cover!important;'
+      + 'background:#e2e8f0!important;'
+      + 'flex:0 0 auto!important;'
+      + '}'
+
+      + '.vl-product-info{'
+      + 'min-width:0!important;'
+      + 'flex:1!important;'
+      + '}'
+
+      + '.vl-product-name{'
+      + 'font-weight:800!important;'
+      + 'font-size:14px!important;'
+      + 'color:#0f172a!important;'
+      + 'white-space:nowrap!important;'
+      + 'overflow:hidden!important;'
+      + 'text-overflow:ellipsis!important;'
+      + '}'
+
+      + '.vl-product-price{'
+      + 'margin-top:4px!important;'
+      + 'font-weight:800!important;'
+      + 'font-size:16px!important;'
+      + 'color:#7c3aed!important;'
+      + '}';
   }
 
   function buildVideoPlayer(video, storyId) {
@@ -1108,21 +1076,23 @@
       video.source_type === 'upload' || video.sourceType === 'upload';
     var isDirect = isDirectVideoUrl(url);
 
+    var wrapper = createEl('div', 'vl-player');
+
     if (!isUpload && ytId) {
       var iframe = createEl('iframe');
       iframe.src = getYouTubeEmbedUrl(url);
-      iframe.style.width = '100%';
-      iframe.style.aspectRatio = '9 / 16';
-      iframe.style.objectFit = 'cover';
-      iframe.style.borderRadius = '18px';
-      iframe.style.border = 'none';
       iframe.allow =
         'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
       iframe.allowFullscreen = true;
       iframe.loading = 'lazy';
       iframe.title = video.title || video.name || 'Vídeo';
 
-      return { el: iframe, type: 'youtube' };
+      wrapper.appendChild(iframe);
+
+      return {
+        el: wrapper,
+        type: 'youtube'
+      };
     }
 
     if ((isUpload || isDirect) && url) {
@@ -1131,10 +1101,6 @@
       media.controls = true;
       media.autoplay = true;
       media.playsInline = true;
-      media.style.width = '100%';
-      media.style.aspectRatio = '9 / 16';
-      media.style.objectFit = 'cover';
-      media.style.borderRadius = '18px';
 
       var thumb = getVideoThumbnail(video);
       if (thumb) media.poster = thumb;
@@ -1148,7 +1114,12 @@
         });
       });
 
-      return { el: media, type: 'html5' };
+      wrapper.appendChild(media);
+
+      return {
+        el: wrapper,
+        type: 'html5'
+      };
     }
 
     var link = createEl('a');
@@ -1156,20 +1127,28 @@
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
     link.textContent = 'Abrir vídeo';
-    link.style.display = 'inline-block';
-    link.style.padding = '12px 20px';
-    link.style.background = getPrimaryColor(currentAppearance);
-    link.style.color = '#fff';
-    link.style.borderRadius = '999px';
-    link.style.fontWeight = '800';
-    link.style.fontSize = '13px';
-    link.style.textDecoration = 'none';
+    link.className = 'vl-btn vl-btn-primary';
 
-    return { el: link, type: 'link' };
+    wrapper.appendChild(link);
+
+    return {
+      el: wrapper,
+      type: 'link'
+    };
+  }
+
+  function closeOverlay() {
+    if (overlay) {
+      overlay.className = 'vl-overlay';
+    }
+
+    if (modalContent) {
+      modalContent.innerHTML = '';
+    }
   }
 
   function openStory(story, storyVideoMap, activeVideos, storyProducts, products) {
-    ensureModal();
+    if (!overlay || !modalContent) return;
 
     var relations = (storyVideoMap.get(story.id) || [])
       .slice()
@@ -1240,70 +1219,43 @@
 
       modalContent.innerHTML = '';
 
-      var header = createEl('div');
-      header.style.display = 'flex';
-      header.style.alignItems = 'center';
-      header.style.justifyContent = 'space-between';
-      header.style.padding = '14px 16px';
-      header.style.borderBottom = '1px solid #e2e8f0';
-
+      var header = createEl('div', 'vl-header');
       var titleWrap = createEl('div');
 
       if (modalConfig.show_title) {
-        var title = createEl('div');
+        var title = createEl('div', 'vl-title');
         title.textContent = story.title || story.name || 'Story';
-        title.style.fontWeight = '800';
-        title.style.color = getTextColor(currentAppearance);
-        title.style.fontSize = '14px';
 
-        var count = createEl('div');
+        var count = createEl('div', 'vl-count');
         count.textContent = currentIndex + 1 + '/' + orderedVideos.length;
-        count.style.fontSize = '12px';
-        count.style.color = '#64748b';
 
         titleWrap.appendChild(title);
         titleWrap.appendChild(count);
       }
 
-      var closeBtn = createEl('button');
+      var closeBtn = createEl('button', 'vl-close');
       closeBtn.type = 'button';
       closeBtn.textContent = '×';
-      closeBtn.style.border = 'none';
-      closeBtn.style.background = 'transparent';
-      closeBtn.style.fontSize = '24px';
-      closeBtn.style.lineHeight = '1';
-      closeBtn.style.cursor = 'pointer';
-      closeBtn.style.color = getTextColor(currentAppearance);
       closeBtn.addEventListener('click', closeOverlay);
 
       header.appendChild(titleWrap);
       header.appendChild(closeBtn);
 
-      var body = createEl('div');
-      body.style.padding = '16px';
-      body.style.display = 'grid';
-      body.style.gap = '12px';
+      var body = createEl('div', 'vl-body');
 
       var playerResult = buildVideoPlayer(video, story.id);
       body.appendChild(playerResult.el);
 
-      var nav = createEl('div');
-      nav.style.display = 'flex';
-      nav.style.justifyContent = 'space-between';
-      nav.style.gap = '10px';
+      var nav = createEl('div', 'vl-nav');
 
-      var prevBtn = createEl('button');
+      var prevBtn = createEl('button', 'vl-btn');
       prevBtn.type = 'button';
       prevBtn.textContent = 'Anterior';
-      prevBtn.style.flex = '1';
-      prevBtn.style.border = 'none';
-      prevBtn.style.borderRadius = '999px';
-      prevBtn.style.padding = '10px 14px';
-      prevBtn.style.fontWeight = '800';
-      prevBtn.style.cursor = 'pointer';
-      prevBtn.style.background = '#e2e8f0';
       prevBtn.disabled = currentIndex === 0;
-      prevBtn.style.opacity = currentIndex === 0 ? '0.5' : '1';
+
+      if (currentIndex === 0) {
+        prevBtn.style.opacity = '0.5';
+      }
 
       prevBtn.addEventListener('click', function () {
         if (currentIndex > 0) {
@@ -1312,21 +1264,10 @@
         }
       });
 
-      var nextBtn = createEl('button');
+      var nextBtn = createEl('button', 'vl-btn vl-btn-primary');
       nextBtn.type = 'button';
       nextBtn.textContent =
         currentIndex === orderedVideos.length - 1 ? 'Fechar' : 'Próximo';
-      nextBtn.style.flex = '1';
-      nextBtn.style.border = 'none';
-      nextBtn.style.borderRadius = '999px';
-      nextBtn.style.padding = '10px 14px';
-      nextBtn.style.fontWeight = '800';
-      nextBtn.style.cursor = 'pointer';
-      nextBtn.style.background =
-        currentAppearance.button_color ||
-        currentAppearance.buttonColor ||
-        getPrimaryColor(currentAppearance);
-      nextBtn.style.color = '#fff';
 
       nextBtn.addEventListener('click', function () {
         if (currentIndex < orderedVideos.length - 1) {
@@ -1344,21 +1285,9 @@
       var cta = resolveCta();
 
       if (cta) {
-        var ctaBtn = createEl('button');
+        var ctaBtn = createEl('button', 'vl-btn vl-btn-primary');
         ctaBtn.type = 'button';
         ctaBtn.textContent = cta.text;
-        ctaBtn.style.border = 'none';
-        ctaBtn.style.borderRadius = '999px';
-        ctaBtn.style.padding = '12px 16px';
-        ctaBtn.style.fontWeight = '800';
-        ctaBtn.style.cursor = 'pointer';
-        ctaBtn.style.background =
-          cta.type === 'whatsapp'
-            ? '#25D366'
-            : currentAppearance.button_color ||
-              currentAppearance.buttonColor ||
-              '#111827';
-        ctaBtn.style.color = '#fff';
 
         ctaBtn.addEventListener('click', function () {
           trackMetric({
@@ -1379,41 +1308,20 @@
       if (activeProducts.length && modalConfig.show_product !== false) {
         var product = activeProducts[0];
 
-        var productCard = createEl('div');
-        productCard.style.display = 'flex';
-        productCard.style.alignItems = 'center';
-        productCard.style.gap = '12px';
-        productCard.style.border = '1px solid #e2e8f0';
-        productCard.style.borderRadius = '18px';
-        productCard.style.padding = '12px';
-        productCard.style.background = '#fff';
-        productCard.style.cursor = 'pointer';
+        var productCard = createEl('div', 'vl-product');
 
-        var productImg = createEl('img');
+        var productImg = createEl('img', 'vl-product-img');
         productImg.src = normalizeMediaUrl(
           product.image_url || product.imageUrl || ''
         );
         productImg.alt = product.name || '';
-        productImg.style.width = '72px';
-        productImg.style.height = '72px';
-        productImg.style.objectFit = 'cover';
-        productImg.style.borderRadius = '14px';
-        productImg.style.background = '#e2e8f0';
 
-        var productInfo = createEl('div');
-        productInfo.style.minWidth = '0';
-        productInfo.style.flex = '1';
+        var productInfo = createEl('div', 'vl-product-info');
 
-        var productName = createEl('div');
+        var productName = createEl('div', 'vl-product-name');
         productName.textContent = product.name || '';
-        productName.style.fontWeight = '800';
-        productName.style.color = '#0f172a';
-        productName.style.fontSize = '14px';
-        productName.style.whiteSpace = 'nowrap';
-        productName.style.overflow = 'hidden';
-        productName.style.textOverflow = 'ellipsis';
 
-        var productPrice = createEl('div');
+        var productPrice = createEl('div', 'vl-product-price');
         productPrice.textContent = Number(product.price || 0).toLocaleString(
           'pt-BR',
           {
@@ -1421,10 +1329,6 @@
             currency: 'BRL'
           }
         );
-        productPrice.style.marginTop = '4px';
-        productPrice.style.fontWeight = '800';
-        productPrice.style.color = '#7c3aed';
-        productPrice.style.fontSize = '16px';
 
         productInfo.appendChild(productName);
         productInfo.appendChild(productPrice);
@@ -1452,51 +1356,36 @@
       modalContent.appendChild(header);
       modalContent.appendChild(body);
 
-      overlay.style.display = 'flex';
+      overlay.className = 'vl-overlay is-open';
     }
 
     renderCurrent();
   }
 
   function renderFloatingBubbles(stories, storyVideoMap, activeVideos) {
-    injectForceFloatingCss();
-
-    var existingRoot = document.getElementById('vidlytics-widget-root');
-    if (existingRoot) existingRoot.remove();
-
     var appearance = currentAppearance || {};
     var modalConfig = normalizeModalAppearanceConfig(appearance);
+    var shadowData = getOrCreateShadowRoot();
+    var shadow = shadowData.shadow;
 
-    var root = createEl('div', 'vidlytics-widget-root');
-    root.id = 'vidlytics-widget-root';
+    var style = createEl('style');
+    style.textContent = buildShadowCss(appearance);
 
-    setImportant(root, 'font-family', getFontFamily(appearance));
-    setImportant(root, 'pointer-events', 'auto');
-    setImportant(root, 'position', 'fixed');
-    setImportant(root, 'inset', FORCE_FLOATING.inset);
-    setImportant(root, 'top', FORCE_FLOATING.top);
-    setImportant(root, 'right', FORCE_FLOATING.right);
-    setImportant(root, 'bottom', FORCE_FLOATING.bottom);
-    setImportant(root, 'left', FORCE_FLOATING.left);
-    setImportant(root, 'z-index', FORCE_FLOATING.zIndex);
-    setImportant(root, 'transform', 'none');
-    setImportant(root, 'width', FORCE_FLOATING.width);
-    setImportant(root, 'min-width', FORCE_FLOATING.width);
-    setImportant(root, 'max-width', FORCE_FLOATING.width);
-    setImportant(root, 'height', 'auto');
-    setImportant(root, 'overflow', 'visible');
+    var bubbles = createEl('div', 'vl-bubbles');
 
-    var bubbles = createEl('div', 'vidlytics-bubbles');
+    overlay = createEl('div', 'vl-overlay');
 
-    setImportant(bubbles, 'display', 'flex');
-    setImportant(bubbles, 'gap', '10px');
-    setImportant(bubbles, 'align-items', 'flex-end');
-    setImportant(bubbles, 'justify-content', 'flex-start');
-    setImportant(bubbles, 'flex-direction', 'column');
-    setImportant(bubbles, 'width', FORCE_FLOATING.width);
-    setImportant(bubbles, 'min-width', FORCE_FLOATING.width);
-    setImportant(bubbles, 'max-width', FORCE_FLOATING.width);
-    setImportant(bubbles, 'overflow', 'visible');
+    var modal = createEl('div', 'vl-modal');
+    modalContent = createEl('div');
+
+    modal.appendChild(modalContent);
+    overlay.appendChild(modal);
+
+    overlay.addEventListener('click', function (event) {
+      if (event.target === overlay) {
+        closeOverlay();
+      }
+    });
 
     stories.forEach(function (story) {
       var relations = (storyVideoMap.get(story.id) || [])
@@ -1520,110 +1409,24 @@
 
       var thumb = getStoryThumbnail(story, coverVideo, coverRelation);
 
-      var bubble = createEl('button', 'vidlytics-bubble');
+      var bubble = createEl('button', 'vl-bubble');
       bubble.type = 'button';
+      bubble.setAttribute('aria-label', story.title || story.name || 'Story');
 
-      setImportant(bubble, 'width', FORCE_FLOATING.width);
-      setImportant(bubble, 'min-width', FORCE_FLOATING.width);
-      setImportant(bubble, 'max-width', FORCE_FLOATING.width);
-      setImportant(bubble, 'height', 'auto');
-      setImportant(bubble, 'min-height', '0');
-      setImportant(bubble, 'max-height', 'none');
-      setImportant(bubble, 'border', '0');
-      setImportant(bubble, 'background', 'transparent');
-      setImportant(bubble, 'padding', '0');
-      setImportant(bubble, 'margin', '0');
-      setImportant(bubble, 'cursor', 'pointer');
-      setImportant(bubble, 'display', 'flex');
-      setImportant(bubble, 'flex-direction', 'column');
-      setImportant(bubble, 'align-items', 'center');
-      setImportant(bubble, 'justify-content', 'flex-start');
-      setImportant(bubble, 'gap', '4px');
-      setImportant(bubble, 'outline', 'none');
-      setImportant(bubble, 'border-radius', '0');
-      setImportant(bubble, 'overflow', 'visible');
-      setImportant(bubble, 'box-shadow', 'none');
-      setImportant(bubble, 'clip-path', 'none');
-      setImportant(bubble, 'appearance', 'none');
-      setImportant(bubble, '-webkit-appearance', 'none');
-
-      var ring = createEl('div', 'vidlytics-bubble-ring');
-
-      setImportant(ring, 'width', FORCE_FLOATING.width);
-      setImportant(ring, 'height', FORCE_FLOATING.height);
-      setImportant(ring, 'min-width', FORCE_FLOATING.width);
-      setImportant(ring, 'min-height', FORCE_FLOATING.height);
-      setImportant(ring, 'max-width', FORCE_FLOATING.width);
-      setImportant(ring, 'max-height', FORCE_FLOATING.height);
-      setImportant(ring, 'aspect-ratio', '9 / 16');
-      setImportant(ring, 'border-radius', FORCE_FLOATING.radius);
-      setImportant(ring, 'padding', '2px');
-      setImportant(ring, 'overflow', 'hidden');
-      setImportant(ring, 'display', 'block');
-      setImportant(ring, 'clip-path', 'none');
-      setImportant(ring, 'box-sizing', 'border-box');
-
-      setImportant(
-        ring,
-        'background',
-        'linear-gradient(135deg, ' +
-          getPrimaryColor(appearance) +
-          ', ' +
-          getSecondaryColor(appearance) +
-          ')'
-      );
-
-      if (modalConfig.shadow_enabled !== false) {
-        setImportant(ring, 'box-shadow', '0 12px 30px rgba(15, 23, 42, 0.18)');
-      } else {
-        setImportant(ring, 'box-shadow', 'none');
-      }
-
-      var inner = createEl('div', 'vidlytics-bubble-inner');
-
-      setImportant(inner, 'width', '100%');
-      setImportant(inner, 'height', '100%');
-      setImportant(inner, 'min-width', '100%');
-      setImportant(inner, 'min-height', '100%');
-      setImportant(inner, 'max-width', '100%');
-      setImportant(inner, 'max-height', '100%');
-      setImportant(inner, 'border-radius', FORCE_FLOATING.innerRadius);
-      setImportant(inner, 'overflow', 'hidden');
-      setImportant(inner, 'background', '#e2e8f0');
-      setImportant(inner, 'display', 'block');
-      setImportant(inner, 'box-sizing', 'border-box');
-      setImportant(inner, 'clip-path', 'none');
+      var ring = createEl('div', 'vl-ring');
+      var inner = createEl('div', 'vl-inner');
 
       if (thumb) {
-        var img = createEl('img', 'vidlytics-bubble-img');
+        var img = createEl('img', 'vl-img');
         img.src = thumb;
         img.alt = story.title || story.name || 'Story';
         img.loading = 'lazy';
-
-        setImportant(img, 'width', '100%');
-        setImportant(img, 'height', '100%');
-        setImportant(img, 'min-width', '100%');
-        setImportant(img, 'min-height', '100%');
-        setImportant(img, 'max-width', '100%');
-        setImportant(img, 'max-height', '100%');
-        setImportant(img, 'object-fit', 'cover');
-        setImportant(img, 'object-position', 'center');
-        setImportant(img, 'display', 'block');
-        setImportant(img, 'border-radius', FORCE_FLOATING.innerRadius);
-        setImportant(img, 'clip-path', 'none');
-        setImportant(img, 'overflow', 'hidden');
-        setImportant(img, 'aspect-ratio', 'auto');
 
         img.onerror = function () {
           inner.innerHTML = '';
           inner.textContent = (story.title || story.name || 'S')
             .slice(0, 1)
             .toUpperCase();
-          setImportant(inner, 'font-weight', '800');
-          setImportant(inner, 'color', getTextColor(appearance));
-          setImportant(inner, 'display', 'flex');
-          setImportant(inner, 'align-items', 'center');
-          setImportant(inner, 'justify-content', 'center');
         };
 
         inner.appendChild(img);
@@ -1631,32 +1434,14 @@
         inner.textContent = (story.title || story.name || 'S')
           .slice(0, 1)
           .toUpperCase();
-        setImportant(inner, 'font-weight', '800');
-        setImportant(inner, 'color', getTextColor(appearance));
-        setImportant(inner, 'display', 'flex');
-        setImportant(inner, 'align-items', 'center');
-        setImportant(inner, 'justify-content', 'center');
       }
 
       ring.appendChild(inner);
       bubble.appendChild(ring);
 
       if (modalConfig.show_title !== false) {
-        var label = createEl('span', 'vidlytics-bubble-label');
+        var label = createEl('span', 'vl-label');
         label.textContent = story.title || story.name || 'Story';
-
-        setImportant(label, 'width', FORCE_FLOATING.width);
-        setImportant(label, 'max-width', FORCE_FLOATING.width);
-        setImportant(label, 'font-size', '11px');
-        setImportant(label, 'line-height', '12px');
-        setImportant(label, 'font-weight', '700');
-        setImportant(label, 'color', getTextColor(appearance));
-        setImportant(label, 'text-align', 'center');
-        setImportant(label, 'white-space', 'nowrap');
-        setImportant(label, 'overflow', 'hidden');
-        setImportant(label, 'text-overflow', 'ellipsis');
-        setImportant(label, 'display', 'block');
-
         bubble.appendChild(label);
       }
 
@@ -1680,15 +1465,9 @@
       });
     });
 
-    root.appendChild(bubbles);
-    document.body.appendChild(root);
-
-    forceFloatingStyles();
-
-    setTimeout(forceFloatingStyles, 50);
-    setTimeout(forceFloatingStyles, 300);
-    setTimeout(forceFloatingStyles, 1000);
-    setTimeout(forceFloatingStyles, 2500);
+    shadow.appendChild(style);
+    shadow.appendChild(bubbles);
+    shadow.appendChild(overlay);
   }
 
   function renderCarousel(stories, storyVideoMap, activeVideos) {
@@ -1698,16 +1477,63 @@
     var appearance = currentAppearance || {};
     var modalConfig = normalizeModalAppearanceConfig(appearance);
 
-    var container = createEl('div', 'vidlytics-carousel-root');
-    container.id = 'vidlytics-carousel-root';
-    container.style.fontFamily = getFontFamily(appearance);
-    container.style.maxWidth = '100%';
-    container.style.overflowX = 'auto';
-    container.style.padding = '12px 16px';
-    container.style.display = 'flex';
-    container.style.gap = '14px';
-    container.style.scrollSnapType = 'x mandatory';
-    container.style.WebkitOverflowScrolling = 'touch';
+    var host = createEl('div', 'vidlytics-carousel-root');
+    host.id = 'vidlytics-carousel-root';
+
+    var shadow = host.attachShadow({ mode: 'open' });
+
+    var style = createEl('style');
+    style.textContent =
+      '*{box-sizing:border-box!important;}' +
+      '.carousel{' +
+      'font-family:' + getFontFamily(appearance) + '!important;' +
+      'max-width:100%!important;' +
+      'overflow-x:auto!important;' +
+      'padding:12px 16px!important;' +
+      'display:flex!important;' +
+      'gap:14px!important;' +
+      'scroll-snap-type:x mandatory!important;' +
+      '-webkit-overflow-scrolling:touch!important;' +
+      '}' +
+      '.card{' +
+      'all:unset!important;' +
+      'cursor:pointer!important;' +
+      'flex-shrink:0!important;' +
+      'scroll-snap-align:start!important;' +
+      'display:flex!important;' +
+      'flex-direction:column!important;' +
+      'gap:6px!important;' +
+      '}' +
+      '.media{' +
+      'width:120px!important;' +
+      'height:180px!important;' +
+      'border-radius:16px!important;' +
+      'overflow:hidden!important;' +
+      'background:#e2e8f0!important;' +
+      'display:grid!important;' +
+      'place-items:center!important;' +
+      'font-weight:800!important;' +
+      'font-size:24px!important;' +
+      'color:#64748b!important;' +
+      'box-shadow:' + (modalConfig.shadow_enabled !== false ? '0 10px 24px rgba(15,23,42,.14)' : 'none') + '!important;' +
+      '}' +
+      '.media img{' +
+      'width:100%!important;' +
+      'height:100%!important;' +
+      'object-fit:cover!important;' +
+      'display:block!important;' +
+      '}' +
+      '.label{' +
+      'max-width:120px!important;' +
+      'font-size:12px!important;' +
+      'font-weight:700!important;' +
+      'color:' + getTextColor(appearance) + '!important;' +
+      'white-space:nowrap!important;' +
+      'overflow:hidden!important;' +
+      'text-overflow:ellipsis!important;' +
+      '}';
+
+    var container = createEl('div', 'carousel');
 
     stories.forEach(function (story) {
       var relations = (storyVideoMap.get(story.id) || [])
@@ -1731,50 +1557,22 @@
 
       var thumb = getStoryThumbnail(story, coverVideo, coverRelation);
 
-      var card = createEl('button', 'vidlytics-carousel-card');
+      var card = createEl('button', 'card');
       card.type = 'button';
-      card.style.border = 'none';
-      card.style.background = 'transparent';
-      card.style.padding = '0';
-      card.style.cursor = 'pointer';
-      card.style.flexShrink = '0';
-      card.style.scrollSnapAlign = 'start';
-      card.style.display = 'flex';
-      card.style.flexDirection = 'column';
-      card.style.gap = '6px';
 
-      var mediaBox = createEl('div');
-      mediaBox.style.width = '120px';
-      mediaBox.style.height = '180px';
-      mediaBox.style.borderRadius = '16px';
-      mediaBox.style.overflow = 'hidden';
-      mediaBox.style.background = '#e2e8f0';
-      mediaBox.style.display = 'grid';
-      mediaBox.style.placeItems = 'center';
-
-      if (modalConfig.shadow_enabled !== false) {
-        mediaBox.style.boxShadow = '0 10px 24px rgba(15, 23, 42, 0.14)';
-      } else {
-        mediaBox.style.boxShadow = 'none';
-      }
+      var mediaBox = createEl('div', 'media');
 
       if (thumb) {
         var img = createEl('img');
         img.src = thumb;
         img.alt = story.title || story.name || 'Story';
         img.loading = 'lazy';
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'cover';
 
         img.onerror = function () {
           mediaBox.innerHTML = '';
           mediaBox.textContent = (story.title || story.name || 'S')
             .slice(0, 1)
             .toUpperCase();
-          mediaBox.style.fontWeight = '800';
-          mediaBox.style.fontSize = '24px';
-          mediaBox.style.color = '#64748b';
         };
 
         mediaBox.appendChild(img);
@@ -1782,24 +1580,13 @@
         mediaBox.textContent = (story.title || story.name || 'S')
           .slice(0, 1)
           .toUpperCase();
-        mediaBox.style.fontWeight = '800';
-        mediaBox.style.fontSize = '24px';
-        mediaBox.style.color = '#64748b';
       }
 
       card.appendChild(mediaBox);
 
       if (modalConfig.show_title !== false) {
-        var label = createEl('span');
+        var label = createEl('span', 'label');
         label.textContent = story.title || story.name || 'Story';
-        label.style.maxWidth = '120px';
-        label.style.fontSize = '12px';
-        label.style.fontWeight = '700';
-        label.style.color = getTextColor(appearance);
-        label.style.whiteSpace = 'nowrap';
-        label.style.overflow = 'hidden';
-        label.style.textOverflow = 'ellipsis';
-
         card.appendChild(label);
       }
 
@@ -1823,12 +1610,35 @@
       });
     });
 
-    document.body.appendChild(container);
+    shadow.appendChild(style);
+    shadow.appendChild(container);
+
+    document.body.appendChild(host);
+  }
+
+  function forceHostPosition() {
+    var host = document.getElementById('vidlytics-widget-root');
+    if (!host) return;
+
+    setImportant(host, 'position', 'fixed');
+    setImportant(host, 'top', FORCE_FLOATING.top);
+    setImportant(host, 'right', FORCE_FLOATING.right);
+    setImportant(host, 'bottom', 'auto');
+    setImportant(host, 'left', 'auto');
+    setImportant(host, 'z-index', FORCE_FLOATING.zIndex);
+    setImportant(host, 'width', FORCE_FLOATING.width);
+    setImportant(host, 'min-width', FORCE_FLOATING.width);
+    setImportant(host, 'max-width', FORCE_FLOATING.width);
+    setImportant(host, 'height', 'auto');
+    setImportant(host, 'overflow', 'visible');
+    setImportant(host, 'background', 'transparent');
+    setImportant(host, 'border', '0');
+    setImportant(host, 'box-shadow', 'none');
+    setImportant(host, 'pointer-events', 'auto');
+    setImportant(host, 'transform', 'none');
   }
 
   function renderWidget() {
-    injectForceFloatingCss();
-
     return Promise.all([
       readAppearance(),
       readStories(),
@@ -1918,7 +1728,12 @@
           // Reservado para implementação futura de galeria.
         }
 
-        forceFloatingStyles();
+        forceHostPosition();
+
+        setTimeout(forceHostPosition, 100);
+        setTimeout(forceHostPosition, 500);
+        setTimeout(forceHostPosition, 1500);
+        setTimeout(forceHostPosition, 3000);
       })
       .catch(function (error) {
         console.error('Erro no Vidlytics Widget:', error);
@@ -1937,7 +1752,7 @@
 
       setTimeout(function () {
         scheduled = false;
-        forceFloatingStyles();
+        forceHostPosition();
       }, 150);
     }
 
@@ -1952,8 +1767,7 @@
         if (
           mutation.type === 'attributes' &&
           mutation.target &&
-          mutation.target.closest &&
-          mutation.target.closest('#vidlytics-widget-root')
+          mutation.target.id === 'vidlytics-widget-root'
         ) {
           shouldForce = true;
         }
@@ -1973,16 +1787,18 @@
   }
 
   function init() {
-    if (!storeId) return;
+    if (!storeId) {
+      console.warn('Vidlytics Widget: storeId não informado.');
+      return;
+    }
 
-    injectForceFloatingCss();
     initMutationObserver();
     renderWidget();
 
-    setTimeout(forceFloatingStyles, 300);
-    setTimeout(forceFloatingStyles, 1000);
-    setTimeout(forceFloatingStyles, 3000);
-    setTimeout(forceFloatingStyles, 5000);
+    setTimeout(forceHostPosition, 300);
+    setTimeout(forceHostPosition, 1000);
+    setTimeout(forceHostPosition, 3000);
+    setTimeout(forceHostPosition, 5000);
   }
 
   if (document.readyState === 'loading') {
