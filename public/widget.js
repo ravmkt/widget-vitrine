@@ -2,10 +2,10 @@
  * Vidlytics Widget — widget.js
  *
  * Widget público de vídeo commerce.
- * Versão corrigida: TOP RIGHT PORTRAIT 9:16 - 2026071406
+ * Versão corrigida: TOP RIGHT PORTRAIT 9:16 - 2026071407
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - TOP RIGHT PORTRAIT 9:16 - 2026071406');
+  console.log('VIDLYTICS WIDGET CARREGADO - TOP RIGHT PORTRAIT 9:16 - 2026071407');
 
   if (window.__vidlytics_widget_initialized) return;
   window.__vidlytics_widget_initialized = true;
@@ -575,18 +575,25 @@
       '#vidlytics-widget-root,' +
       '.vidlytics-widget-root{' +
       'position:fixed!important;' +
-      'inset:' + FORCE_FLOATING.inset + '!important;' +
       'top:' + FORCE_FLOATING.top + '!important;' +
       'right:' + FORCE_FLOATING.right + '!important;' +
       'bottom:auto!important;' +
       'left:auto!important;' +
+      'inset:' + FORCE_FLOATING.inset + '!important;' +
       'z-index:' + FORCE_FLOATING.zIndex + '!important;' +
       'font-family:Inter,system-ui,sans-serif!important;' +
       'pointer-events:auto!important;' +
       'transform:none!important;' +
       'width:' + FORCE_FLOATING.width + '!important;' +
-      'height:auto!important;' +
+      'min-width:' + FORCE_FLOATING.width + '!important;' +
       'max-width:' + FORCE_FLOATING.width + '!important;' +
+      'height:auto!important;' +
+      'min-height:0!important;' +
+      'max-height:none!important;' +
+      'overflow:visible!important;' +
+      'background:transparent!important;' +
+      'border:0!important;' +
+      'box-shadow:none!important;' +
       '}' +
 
       '#vidlytics-widget-root *,' +
@@ -602,9 +609,14 @@
       'justify-content:flex-start!important;' +
       'gap:10px!important;' +
       'width:' + FORCE_FLOATING.width + '!important;' +
+      'min-width:' + FORCE_FLOATING.width + '!important;' +
+      'max-width:' + FORCE_FLOATING.width + '!important;' +
+      'overflow:visible!important;' +
       '}' +
 
+      '#vidlytics-widget-root button.vidlytics-bubble,' +
       '#vidlytics-widget-root .vidlytics-bubble,' +
+      '.vidlytics-widget-root button.vidlytics-bubble,' +
       '.vidlytics-widget-root .vidlytics-bubble{' +
       'width:' + FORCE_FLOATING.width + '!important;' +
       'min-width:' + FORCE_FLOATING.width + '!important;' +
@@ -628,6 +640,7 @@
       'appearance:none!important;' +
       '-webkit-appearance:none!important;' +
       'box-shadow:none!important;' +
+      'clip-path:none!important;' +
       '}' +
 
       '#vidlytics-widget-root .vidlytics-bubble-ring,' +
@@ -648,7 +661,9 @@
       '}' +
 
       '#vidlytics-widget-root .vidlytics-bubble-inner,' +
-      '.vidlytics-widget-root .vidlytics-bubble-inner{' +
+      '.vidlytics-widget-root .vidlytics-bubble-inner,' +
+      '#vidlytics-widget-root .vidlytics-bubble-ring > div,' +
+      '.vidlytics-widget-root .vidlytics-bubble-ring > div{' +
       'width:100%!important;' +
       'height:100%!important;' +
       'min-width:100%!important;' +
@@ -666,9 +681,11 @@
       '#vidlytics-widget-root .vidlytics-bubble-img,' +
       '#vidlytics-widget-root .vidlytics-bubble img,' +
       '#vidlytics-widget-root img.vidlytics-bubble-img,' +
+      '#vidlytics-widget-root video,' +
       '.vidlytics-widget-root .vidlytics-bubble-img,' +
       '.vidlytics-widget-root .vidlytics-bubble img,' +
-      '.vidlytics-widget-root img.vidlytics-bubble-img{' +
+      '.vidlytics-widget-root img.vidlytics-bubble-img,' +
+      '.vidlytics-widget-root video{' +
       'width:100%!important;' +
       'height:100%!important;' +
       'min-width:100%!important;' +
@@ -717,8 +734,15 @@
     setImportant(root, 'pointer-events', 'auto');
     setImportant(root, 'transform', 'none');
     setImportant(root, 'width', FORCE_FLOATING.width);
-    setImportant(root, 'height', 'auto');
+    setImportant(root, 'min-width', FORCE_FLOATING.width);
     setImportant(root, 'max-width', FORCE_FLOATING.width);
+    setImportant(root, 'height', 'auto');
+    setImportant(root, 'min-height', '0');
+    setImportant(root, 'max-height', 'none');
+    setImportant(root, 'overflow', 'visible');
+    setImportant(root, 'background', 'transparent');
+    setImportant(root, 'border', '0');
+    setImportant(root, 'box-shadow', 'none');
 
     var bubbles = root.querySelector('.vidlytics-bubbles');
 
@@ -729,6 +753,9 @@
       setImportant(bubbles, 'justify-content', 'flex-start');
       setImportant(bubbles, 'gap', '10px');
       setImportant(bubbles, 'width', FORCE_FLOATING.width);
+      setImportant(bubbles, 'min-width', FORCE_FLOATING.width);
+      setImportant(bubbles, 'max-width', FORCE_FLOATING.width);
+      setImportant(bubbles, 'overflow', 'visible');
     }
 
     Array.prototype.forEach.call(root.querySelectorAll('.vidlytics-bubble'), function (button) {
@@ -752,6 +779,9 @@
       setImportant(button, 'border-radius', '0');
       setImportant(button, 'overflow', 'visible');
       setImportant(button, 'box-shadow', 'none');
+      setImportant(button, 'clip-path', 'none');
+      setImportant(button, 'appearance', 'none');
+      setImportant(button, '-webkit-appearance', 'none');
     });
 
     Array.prototype.forEach.call(root.querySelectorAll('.vidlytics-bubble-ring'), function (ring) {
@@ -786,7 +816,7 @@
     });
 
     Array.prototype.forEach.call(
-      root.querySelectorAll('.vidlytics-bubble-img, .vidlytics-bubble img, img.vidlytics-bubble-img'),
+      root.querySelectorAll('.vidlytics-bubble-img, .vidlytics-bubble img, img.vidlytics-bubble-img, video'),
       function (img) {
         setImportant(img, 'width', '100%');
         setImportant(img, 'height', '100%');
@@ -1451,7 +1481,10 @@
     setImportant(root, 'z-index', FORCE_FLOATING.zIndex);
     setImportant(root, 'transform', 'none');
     setImportant(root, 'width', FORCE_FLOATING.width);
+    setImportant(root, 'min-width', FORCE_FLOATING.width);
+    setImportant(root, 'max-width', FORCE_FLOATING.width);
     setImportant(root, 'height', 'auto');
+    setImportant(root, 'overflow', 'visible');
 
     var bubbles = createEl('div', 'vidlytics-bubbles');
 
@@ -1461,6 +1494,9 @@
     setImportant(bubbles, 'justify-content', 'flex-start');
     setImportant(bubbles, 'flex-direction', 'column');
     setImportant(bubbles, 'width', FORCE_FLOATING.width);
+    setImportant(bubbles, 'min-width', FORCE_FLOATING.width);
+    setImportant(bubbles, 'max-width', FORCE_FLOATING.width);
+    setImportant(bubbles, 'overflow', 'visible');
 
     stories.forEach(function (story) {
       var relations = (storyVideoMap.get(story.id) || [])
@@ -1488,7 +1524,11 @@
       bubble.type = 'button';
 
       setImportant(bubble, 'width', FORCE_FLOATING.width);
+      setImportant(bubble, 'min-width', FORCE_FLOATING.width);
+      setImportant(bubble, 'max-width', FORCE_FLOATING.width);
       setImportant(bubble, 'height', 'auto');
+      setImportant(bubble, 'min-height', '0');
+      setImportant(bubble, 'max-height', 'none');
       setImportant(bubble, 'border', '0');
       setImportant(bubble, 'background', 'transparent');
       setImportant(bubble, 'padding', '0');
@@ -1503,6 +1543,9 @@
       setImportant(bubble, 'border-radius', '0');
       setImportant(bubble, 'overflow', 'visible');
       setImportant(bubble, 'box-shadow', 'none');
+      setImportant(bubble, 'clip-path', 'none');
+      setImportant(bubble, 'appearance', 'none');
+      setImportant(bubble, '-webkit-appearance', 'none');
 
       var ring = createEl('div', 'vidlytics-bubble-ring');
 
@@ -1540,6 +1583,10 @@
 
       setImportant(inner, 'width', '100%');
       setImportant(inner, 'height', '100%');
+      setImportant(inner, 'min-width', '100%');
+      setImportant(inner, 'min-height', '100%');
+      setImportant(inner, 'max-width', '100%');
+      setImportant(inner, 'max-height', '100%');
       setImportant(inner, 'border-radius', FORCE_FLOATING.innerRadius);
       setImportant(inner, 'overflow', 'hidden');
       setImportant(inner, 'background', '#e2e8f0');
@@ -1555,12 +1602,17 @@
 
         setImportant(img, 'width', '100%');
         setImportant(img, 'height', '100%');
+        setImportant(img, 'min-width', '100%');
+        setImportant(img, 'min-height', '100%');
+        setImportant(img, 'max-width', '100%');
+        setImportant(img, 'max-height', '100%');
         setImportant(img, 'object-fit', 'cover');
         setImportant(img, 'object-position', 'center');
         setImportant(img, 'display', 'block');
         setImportant(img, 'border-radius', FORCE_FLOATING.innerRadius);
         setImportant(img, 'clip-path', 'none');
         setImportant(img, 'overflow', 'hidden');
+        setImportant(img, 'aspect-ratio', 'auto');
 
         img.onerror = function () {
           inner.innerHTML = '';
@@ -1886,13 +1938,28 @@
       setTimeout(function () {
         scheduled = false;
         forceFloatingStyles();
-      }, 100);
+      }, 150);
     }
 
-    var observer = new MutationObserver(function () {
-      var root = document.getElementById('vidlytics-widget-root');
+    var observer = new MutationObserver(function (mutations) {
+      var shouldForce = false;
 
-      if (root) {
+      mutations.forEach(function (mutation) {
+        if (mutation.type === 'childList') {
+          shouldForce = true;
+        }
+
+        if (
+          mutation.type === 'attributes' &&
+          mutation.target &&
+          mutation.target.closest &&
+          mutation.target.closest('#vidlytics-widget-root')
+        ) {
+          shouldForce = true;
+        }
+      });
+
+      if (shouldForce) {
         scheduleForce();
       }
     });
@@ -1915,6 +1982,7 @@
     setTimeout(forceFloatingStyles, 300);
     setTimeout(forceFloatingStyles, 1000);
     setTimeout(forceFloatingStyles, 3000);
+    setTimeout(forceFloatingStyles, 5000);
   }
 
   if (document.readyState === 'loading') {
