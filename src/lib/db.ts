@@ -845,6 +845,22 @@ const normalizeTableItemForClient = <T extends Record<string, any>>(
   tableName: string,
   item: T,
 ): T => {
+  if (tableName === 'general_settings') {
+    const settings: Record<string, any> = { ...item };
+
+    settings.defaultAppearanceId =
+      settings.defaultAppearanceId ??
+      settings.default_appearance_id ??
+      null;
+
+    settings.mutedByDefault =
+      settings.mutedByDefault ??
+      settings.muted_by_default ??
+      true;
+
+    return settings as T;
+  }
+
   if (tableName !== 'appearances') {
     return item;
   }
