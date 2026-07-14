@@ -1865,7 +1865,7 @@ var widgetRadius = '11px';
       setImportant(ring, 'min-height', widgetHeight);
       setImportant(ring, 'max-width', widgetWidth);
       setImportant(ring, 'max-height', widgetHeight);
-      setImportant(ring, 'border-radius', widgetRadius);
+      setImportant(ring, 'border-radius', '11px');
       setImportant(
         ring,
         'padding',
