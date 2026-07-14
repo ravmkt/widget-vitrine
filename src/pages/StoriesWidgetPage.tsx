@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { db, Video, resolveStoreId, generateUuid } from '@/lib/db';
 import {
@@ -64,6 +64,7 @@ type ModalAppearanceConfig = {
   show_product: boolean;
   show_like_button: boolean;
   show_comment_button: boolean;
+  show_comments_button: boolean;
   show_share_button: boolean;
   show_whatsapp_button: boolean;
   show_product_button: boolean;
@@ -77,6 +78,7 @@ const createDefaultModalAppearanceConfig = (): ModalAppearanceConfig => ({
   show_product: true,
   show_like_button: true,
   show_comment_button: true,
+  show_comments_button: true,
   show_share_button: true,
   show_whatsapp_button: true,
   show_product_button: true,
@@ -105,74 +107,186 @@ const parseJsonIfNeeded = <T,>(value: unknown): Partial<T> | null => {
 const normalizeModalAppearanceConfig = (
   appearance?: any | null,
 ): ModalAppearanceConfig => {
-  const rawModalConfig = parseJsonIfNeeded<ModalAppearanceConfig>(
-    appearance?.modal_config || appearance?.modalConfig,
-  );
+  const rawPlayerConfig =
+    parseJsonIfNeeded<ModalAppearanceConfig>(
+      appearance?.player_config || appearance?.playerConfig,
+    ) || {};
+
+  const rawModalConfig =
+    parseJsonIfNeeded<ModalAppearanceConfig>(
+      appearance?.modal_config || appearance?.modalConfig,
+    ) || {};
+
+  const config: any = {
+    ...createDefaultModalAppearanceConfig(),
+    ...rawModalConfig,
+    ...rawPlayerConfig,
+  };
 
   return {
     ...createDefaultModalAppearanceConfig(),
-    ...rawModalConfig,
 
     show_title:
       appearance?.show_title ??
       appearance?.showTitle ??
-      rawModalConfig?.show_title ??
+      config?.show_title ??
       true,
 
     show_play_button:
       appearance?.show_play_button ??
       appearance?.showPlayButton ??
-      rawModalConfig?.show_play_button ??
+      config?.show_play_button ??
       true,
 
     show_product:
       appearance?.show_product ??
       appearance?.showProduct ??
-      rawModalConfig?.show_product ??
+      config?.show_product ??
       true,
 
     show_like_button:
       appearance?.show_like_button ??
       appearance?.showLikeButton ??
-      rawModalConfig?.show_like_button ??
+      config?.show_like_button ??
       true,
 
     show_comment_button:
       appearance?.show_comment_button ??
+      appearance?.show_comments_button ??
       appearance?.showCommentButton ??
-      rawModalConfig?.show_comment_button ??
+      appearance?.showCommentsButton ??
+      config?.show_comment_button ??
+      config?.show_comments_button ??
+      true,
+
+    show_comments_button:
+      appearance?.show_comments_button ??
+      appearance?.show_comment_button ??
+      appearance?.showCommentsButton ??
+      appearance?.showCommentButton ??
+      config?.show_comments_button ??
+      config?.show_comment_button ??
       true,
 
     show_share_button:
       appearance?.show_share_button ??
       appearance?.showShareButton ??
-      rawModalConfig?.show_share_button ??
+      config?.show_share_button ??
       true,
 
     show_whatsapp_button:
       appearance?.show_whatsapp_button ??
       appearance?.showWhatsappButton ??
-      rawModalConfig?.show_whatsapp_button ??
+      config?.show_whatsapp_button ??
       true,
 
     show_product_button:
       appearance?.show_product_button ??
       appearance?.showProductButton ??
-      rawModalConfig?.show_product_button ??
+      config?.show_product_button ??
       true,
 
     hide_stories:
       appearance?.hide_stories ??
       appearance?.hideStories ??
-      rawModalConfig?.hide_stories ??
+      config?.hide_stories ??
       false,
 
     shadow_enabled:
       appearance?.shadow_enabled ??
       appearance?.shadowEnabled ??
-      rawModalConfig?.shadow_enabled ??
+      appearance?.shadow ??
+      config?.shadow_enabled ??
+      config?.shadow ??
       true,
   };
+};
+
+const getAppearanceValue = (
+  appearance: any,
+  keys: string[],
+  fallback: any,
+) => {
+  for (const key of keys) {
+    if (
+      appearance?.[key] !== undefined &&
+      appearance?.[key] !== null &&
+      appearance?.[key] !== ''
+    ) {
+      return appearance[key];
+    }
+  }
+
+  return fallback;
+};
+
+const toCssSize = (value: unknown, fallback = '14px') => {
+  if (value === undefined || value === null || value === '') {
+    return fallback;
+  }
+
+  const text = String(value).trim();
+
+  if (/^-?\d+(\.\d+)?$/.test(text)) {
+    return `${text}px`;
+  }
+
+  return text;
+};
+
+const getPrimaryColor = (appearance: any) => {
+  return getAppearanceValue(
+    appearance,
+    ['primary_color', 'primaryColor', 'button_color', 'buttonColor'],
+    '#0094EB',
+  );
+};
+
+const getSecondaryColor = (appearance: any) => {
+  return getAppearanceValue(
+    appearance,
+    ['secondary_color', 'secondaryColor'],
+    getPrimaryColor(appearance),
+  );
+};
+
+const getTextColor = (appearance: any) => {
+  return getAppearanceValue(
+    appearance,
+    ['text_color', 'textColor'],
+    '#0F172A',
+  );
+};
+
+const getBackgroundColor = (appearance: any) => {
+  return getAppearanceValue(
+    appearance,
+    ['background_color', 'backgroundColor'],
+    '#FFFFFF',
+  );
+};
+
+const getButtonColor = (appearance: any) => {
+  return getAppearanceValue(
+    appearance,
+    ['button_color', 'buttonColor', 'primary_color', 'primaryColor'],
+    '#0094EB',
+  );
+};
+
+const getFontFamily = (appearance: any) => {
+  return getAppearanceValue(
+    appearance,
+    ['font_family', 'fontFamily'],
+    'Inter, sans-serif',
+  );
+};
+
+const getFontSize = (appearance: any) => {
+  return toCssSize(
+    getAppearanceValue(appearance, ['font_size', 'fontSize'], 14),
+    '14px',
+  );
 };
 
 const getAllSafe = async <T,>(collection: any, storeId?: string): Promise<T[]> => {
@@ -403,19 +517,17 @@ export default function StoriesWidgetPage() {
     [appearance],
   );
 
-  const primaryColor =
-    appearance?.primary_color ||
-    appearance?.primaryColor ||
-    appearance?.button_color ||
-    appearance?.buttonColor ||
-    '#8b5cf6';
+  const primaryColor = getPrimaryColor(appearance);
+  const secondaryColor = getSecondaryColor(appearance);
+  const textColor = getTextColor(appearance);
+  const backgroundColor = getBackgroundColor(appearance);
+  const buttonColor = getButtonColor(appearance);
+  const fontFamily = getFontFamily(appearance);
+  const fontSize = getFontSize(appearance);
 
-  const buttonColor =
-    appearance?.button_color ||
-    appearance?.buttonColor ||
-    appearance?.primary_color ||
-    appearance?.primaryColor ||
-    '#8b5cf6';
+  const actionButtonStyle: CSSProperties = {
+    backgroundColor: primaryColor,
+  };
 
   const activeCommentCount = useMemo(
     () => getVideoCommentCount(currentVideo?.id, comments),
@@ -573,6 +685,9 @@ export default function StoriesWidgetPage() {
             (item: any) =>
               item.is_default === true ||
               item.isDefault === true ||
+              item.default === true ||
+              item.is_active === true ||
+              item.isActive === true ||
               item.active === true,
           ) ||
           appearancesList?.[0] ||
@@ -954,7 +1069,13 @@ export default function StoriesWidgetPage() {
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-black">
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-black"
+      style={{
+        fontFamily,
+        fontSize,
+      }}
+    >
       <div className="relative h-full w-full max-w-[420px] overflow-hidden bg-black sm:aspect-[9/16] sm:max-h-screen">
         {!modalConfig.hide_stories && (
           <div
@@ -972,7 +1093,7 @@ export default function StoriesWidgetPage() {
                 >
                   <div
                     className={cn(
-                      'h-full rounded-full bg-white transition-all',
+                      'h-full rounded-full transition-all',
                       idx < videoIdx
                         ? 'w-full'
                         : idx === videoIdx
@@ -1086,7 +1207,8 @@ export default function StoriesWidgetPage() {
             <button
               type="button"
               onClick={handleTogglePlay}
-              className="rounded-full bg-black/55 p-3 text-white backdrop-blur-md transition hover:bg-black/70"
+              className="rounded-full p-3 text-white backdrop-blur-md transition hover:brightness-110"
+              style={actionButtonStyle}
               aria-label={playing ? 'Pausar' : 'Reproduzir'}
             >
               {playing ? (
@@ -1100,7 +1222,8 @@ export default function StoriesWidgetPage() {
           <button
             type="button"
             onClick={handleToggleMute}
-            className="rounded-full bg-black/55 p-3 text-white backdrop-blur-md transition hover:bg-black/70"
+            className="rounded-full p-3 text-white backdrop-blur-md transition hover:brightness-110"
+            style={actionButtonStyle}
             aria-label={muted ? 'Ativar som' : 'Desativar som'}
           >
             {muted ? (
@@ -1114,7 +1237,8 @@ export default function StoriesWidgetPage() {
             <button
               type="button"
               onClick={handleLike}
-              className="relative rounded-full bg-black/55 p-3 text-white backdrop-blur-md transition hover:bg-black/70"
+              className="relative rounded-full p-3 text-white backdrop-blur-md transition hover:brightness-110"
+              style={actionButtonStyle}
               aria-label="Curtir"
             >
               <Heart
@@ -1130,11 +1254,13 @@ export default function StoriesWidgetPage() {
             </button>
           )}
 
-          {modalConfig.show_comment_button && (
+          {(modalConfig.show_comment_button ||
+            modalConfig.show_comments_button) && (
             <button
               type="button"
               onClick={() => setShowComments(true)}
-              className="relative rounded-full bg-black/55 p-3 text-white backdrop-blur-md transition hover:bg-black/70"
+              className="relative rounded-full p-3 text-white backdrop-blur-md transition hover:brightness-110"
+              style={actionButtonStyle}
               aria-label="Comentários"
             >
               <MessageCircle className="h-5 w-5" />
@@ -1149,7 +1275,8 @@ export default function StoriesWidgetPage() {
             <button
               type="button"
               onClick={handleShare}
-              className="rounded-full bg-black/55 p-3 text-white backdrop-blur-md transition hover:bg-black/70"
+              className="rounded-full p-3 text-white backdrop-blur-md transition hover:brightness-110"
+              style={actionButtonStyle}
               aria-label="Compartilhar"
             >
               <Share2 className="h-5 w-5" />
@@ -1160,7 +1287,8 @@ export default function StoriesWidgetPage() {
             <button
               type="button"
               onClick={() => setShowMeasures(true)}
-              className="rounded-full bg-black/55 p-3 text-white backdrop-blur-md transition hover:bg-black/70"
+              className="rounded-full p-3 text-white backdrop-blur-md transition hover:brightness-110"
+              style={actionButtonStyle}
               title="Medidas"
               aria-label="Medidas"
             >
@@ -1196,9 +1324,12 @@ export default function StoriesWidgetPage() {
           >
             <div
               className={cn(
-                'flex items-center gap-3 rounded-3xl border border-white/20 bg-white/95 p-3',
+                'flex items-center gap-3 rounded-3xl border border-white/20 p-3',
                 modalConfig.shadow_enabled && 'shadow-2xl',
               )}
+              style={{
+                backgroundColor,
+              }}
             >
               <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-slate-200">
                 {productImageUrl ? (
@@ -1213,11 +1344,21 @@ export default function StoriesWidgetPage() {
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-black text-slate-950">
+                <p
+                  className="truncate text-sm font-black"
+                  style={{
+                    color: textColor,
+                  }}
+                >
                   {product.name || 'Produto'}
                 </p>
 
-                <p className="mt-1 text-base font-black text-violet-700">
+                <p
+                  className="mt-1 text-base font-black"
+                  style={{
+                    color: secondaryColor || primaryColor,
+                  }}
+                >
                   {productPrice.toLocaleString('pt-BR', {
                     style: 'currency',
                     currency: 'BRL',
