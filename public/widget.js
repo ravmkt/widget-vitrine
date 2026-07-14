@@ -599,26 +599,33 @@
   }
 
   function trackMetric(metric) {
-    var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
+  var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
 
-    var nextMetric = {
-      id:
-        typeof crypto !== 'undefined' && crypto.randomUUID
-          ? crypto.randomUUID()
-          : Date.now() + '-' + Math.random().toString(36).slice(2),
-      store_id: storeId,
-      story_id: metric.story_id || null,
-      video_id: metric.video_id || null,
-      product_id: metric.product_id || null,
-      event_type: metric.event_type,
-      page_url: metric.page_url || window.location.href,
-      device_type:
-        metric.device_type ||
-        (window.innerWidth < 768 ? 'mobile' : 'desktop'),
-      browser: metric.browser || navigator.userAgent,
-      referrer: metric.referrer || document.referrer || null,
-      created_at: new Date().toISOString(),
-    };
+  var nextMetric = {
+    id:
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : Date.now() + '-' + Math.random().toString(36).slice(2),
+    store_id: storeId,
+    story_id: metric.story_id || null,
+    video_id: metric.video_id || null,
+    product_id: metric.product_id || null,
+    event_type: metric.event_type,
+    page_url: metric.page_url || window.location.href,
+    device_type:
+      metric.device_type ||
+      (window.innerWidth < 768 ? 'mobile' : 'desktop'),
+    browser: metric.browser || navigator.userAgent,
+    referrer: metric.referrer || document.referrer || null,
+    created_at: new Date().toISOString(),
+  };
+
+  fallbackMetrics.push(nextMetric);
+  setStorageItem('vidlytics_metrics', fallbackMetrics);
+
+  return Promise.resolve();
+}
+
 
     fallbackMetrics.push(nextMetric);
     setStorageItem('vidlytics_metrics', fallbackMetrics);
