@@ -2275,34 +2275,38 @@ const AppearancePage = () => {
   };
 
   const handleSetDefault = async (id: string) => {
-    try {
-      const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
+  try {
+    const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
 
-      if (!finalStoreId) {
-        showError('Não foi possível identificar a loja atual.');
-        return;
-      }
-
-      const now = new Date().toISOString();
-
-      await Promise.all(
-        appearances.map(style =>
-          db.appearances.save({
-            ...style,
-            store_id: finalStoreId,
-            is_default: style.id === id,
-            updated_at: now,
-          } as Appearance),
-        ),
-      );
-
-      showSuccess('Estilo padrão atualizado!');
-      await loadData();
-    } catch (error) {
-      console.error('Erro ao definir padrão:', error);
-      showError('Erro ao definir padrão.');
+    if (!finalStoreId) {
+      showError('Não foi possível identificar a loja atual.');
+      return;
     }
-  };
+
+    const now = new Date().toISOString();
+
+    await Promise.all(
+      appearances.map(style =>
+        db.appearances.save({
+          ...style,
+          store_id: finalStoreId,
+          is_default: style.id === id,
+          updated_at: now,
+        } as Appearance),
+      ),
+    );
+
+    await syncDefaultAppearanceId(finalStoreId, id);
+
+    window.dispatchEvent(new Event('storage'));
+
+    showSuccess('Estilo padrão atualizado!');
+    await loadData();
+  } catch (error) {
+    console.error('Erro ao definir padrão:', error);
+    showError('Erro ao definir padrão.');
+  }
+};
 
   const handleDeleteClick = (app: Appearance) => {
     setDeleteModal({
