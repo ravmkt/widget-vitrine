@@ -897,102 +897,96 @@
     return '';
   }
 
-  function readAppearance() {
-    if (!storeId || !hasSupabase) {
-      return Promise.resolve(getStorageItem('vidlytics_appearance', {}) || {});
-    }
-
-    return supabaseFetch(
-      'appearances?select=*&store_id=eq.' +
-        encodeURIComponent(storeId) +
-        '&is_default=eq.true&limit=1',
-      { method: 'GET' }
-    )
-      .then(function (response) {
-        return response.ok ? response.json() : [];
-      })
-      .then(function (items) {
-        if (items && items.length) return items[0];
-
-        return supabaseFetch(
-          'appearances?select=*&store_id=eq.' +
-            encodeURIComponent(storeId) +
-            '&limit=1',
-          { method: 'GET' }
-        )
-          .then(function (response) {
-            return response.ok ? response.json() : [];
-          })
-          .then(function (fallbackItems) {
-            return fallbackItems && fallbackItems.length
-              ? fallbackItems[0]
-              : {};
-          });
-      })
-      .catch(function () {
-        return {};
-      });
+  function function readAppearance() {
+  if (!storeId || !hasSupabase) {
+    return Promise.resolve(getStorageItem('vidlytics_appearance', {}) || {});
   }
 
-  function readStories() {
-    if (!storeId || !hasSupabase) {
-      return Promise.resolve(
-        getStorageItem('vidlytics_stories', []).filter(function (story) {
-          return (
-            (!storeId || idsEqual(story.store_id, storeId)) &&
-            story.active !== false
-          );
+  function normalizeAppearanceItem(item) {
+    if (!item || typeof item !== 'object') return {};
+
+    var merged = {};
+
+    [
+      item,
+      parseJsonIfNeeded(item.config),
+      parseJsonIfNeeded(item.settings),
+      parseJsonIfNeeded(item.style),
+      parseJsonIfNeeded(item.styles),
+      parseJsonIfNeeded(item.appearance_config),
+      parseJsonIfNeeded(item.appearanceConfig),
+      parseJsonIfNeeded(item.floating),
+      parseJsonIfNeeded(item.floatingVideo),
+      parseJsonIfNeeded(item.floating_video),
+      parseJsonIfNeeded(item.widget),
+      parseJsonIfNeeded(item.widget_config),
+      parseJsonIfNeeded(item.widgetConfig)
+    ].forEach(function (src) {
+      if (!src || typeof src !== 'object') return;
+
+      Object.keys(src).forEach(function (key) {
+        if (
+          src[key] !== undefined &&
+          src[key] !== null &&
+          src[key] !== ''
+        ) {
+          merged[key] = src[key];
+        }
+      });
+    });
+
+    Object.keys(item).forEach(function (key) {
+      if (
+        item[key] !== undefined &&
+        item[key] !== null &&
+        item[key] !== ''
+      ) {
+        merged[key] = item[key];
+      }
+    });
+
+    return merged;
+  }
+
+  return supabaseFetch(
+    'appearances?select=*&store_id=eq.' +
+      encodeURIComponent(storeId) +
+      '&is_default=eq.true&limit=1',
+    { method: 'GET' }
+  )
+    .then(function (response) {
+      return response.ok ? response.json() : [];
+    })
+    .then(function (items) {
+      if (items && items.length) {
+        return normalizeAppearanceItem(items[0]);
+      }
+
+      return supabaseFetch(
+        'appearances?select=*&store_id=eq.' +
+          encodeURIComponent(storeId) +
+          '&order=updated_at.desc.nullslast,created_at.desc.nullslast&limit=1',
+        { method: 'GET' }
+      )
+        .then(function (response) {
+          return response.ok ? response.json() : [];
         })
-      );
-    }
+        .then(function (fallbackItems) {
+          return fallbackItems && fallbackItems.length
+            ? normalizeAppearanceItem(fallbackItems[0])
+            : {};
+        });
+    })
+    .then(function (appearance) {
+      console.log('VIDLYTICS APARÊNCIA NORMALIZADA:', appearance);
+      return appearance || {};
+    })
+    .catch(function (error) {
+      console.warn('Vidlytics Widget: erro ao carregar aparência:', error);
+      return {};
+    });
+}
 
-    return supabaseFetch(
-      'stories?select=*&store_id=eq.' +
-        encodeURIComponent(storeId) +
-        '&active=eq.true&order=position.asc',
-      { method: 'GET' }
-    )
-      .then(function (response) {
-        return response.ok ? response.json() : [];
-      })
-      .catch(function () {
-        return [];
-      });
-  }
-
-  function readStoryVideos() {
-    if (!storeId || !hasSupabase) {
-      return Promise.resolve(getStorageItem('vidlytics_story_videos', []));
-    }
-
-    return supabaseFetch(
-      'story_videos?select=*&store_id=eq.' + encodeURIComponent(storeId),
-      { method: 'GET' }
-    )
-      .then(function (response) {
-        return response.ok ? response.json() : [];
-      })
-      .catch(function () {
-        return [];
-      });
-  }
-
-  function readVideos() {
-    if (!storeId || !hasSupabase) {
-      return Promise.resolve(getStorageItem('vidlytics_videos', []));
-    }
-
-    return supabaseFetch(
-      'videos?select=*&store_id=eq.' + encodeURIComponent(storeId),
-      { method: 'GET' }
-    )
-      .then(function (response) {
-        return response.ok ? response.json() : [];
-      })
-      .catch(function () {
-        return [];
-      });
-  }
 
   function readStoryProducts() {
     if (!storeId || !hasSupabase) {
