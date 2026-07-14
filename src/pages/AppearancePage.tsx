@@ -1040,6 +1040,58 @@ const deleteAppearanceSafe = async (id: string, storeId?: string) => {
   }
 };
 
+const getGeneralSettingsSafe = async (storeId?: string): Promise<any[]> => {
+  const collection = (db as any).generalSettings;
+
+  if (!collection?.getAll) return [];
+
+  try {
+    if (storeId) return await collection.getAll(storeId);
+    return await collection.getAll();
+  } catch {
+    try {
+      return await collection.getAll();
+    } catch {
+      return [];
+    }
+  }
+};
+
+const saveGeneralSettingsSafe = async (payload: any) => {
+  const collection = (db as any).generalSettings;
+
+  if (!collection?.save) return;
+
+  await collection.save(payload);
+};
+
+const syncDefaultAppearanceId = async (
+  finalStoreId: string,
+  appearanceId: string | null,
+) => {
+  try {
+    const settingsList = await getGeneralSettingsSafe(finalStoreId);
+    const currentSettings = settingsList?.[0];
+
+    if (!currentSettings) {
+      console.warn(
+        'Nenhuma configuração geral encontrada para sincronizar default_appearance_id.',
+      );
+      return;
+    }
+
+    await saveGeneralSettingsSafe({
+      ...currentSettings,
+      store_id: currentSettings.store_id || finalStoreId,
+      default_appearance_id: appearanceId,
+      defaultAppearanceId: appearanceId,
+      updated_at: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Erro ao sincronizar default_appearance_id:', error);
+  }
+};
+
 const syncGlobalConfig = (
   checked: boolean,
   prev: ExtendedAppearance,
