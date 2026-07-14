@@ -1903,7 +1903,7 @@ var widgetRadius = '11px';
 
       setImportant(inner, 'width', '100%');
       setImportant(inner, 'height', '100%');
-      setImportant(inner, 'border-radius', widgetRadius);
+      setImportant(inner, 'border-radius', '11px');
       setImportant(inner, 'overflow', 'hidden');
       setImportant(inner, 'background', '#e2e8f0');
       setImportant(inner, 'display', 'grid');
