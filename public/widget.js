@@ -2,10 +2,10 @@
  * Vidlytics Widget — widget.js
  *
  * Widget público de vídeo commerce.
- * Versão corrigida: FORCE TOP RIGHT PORTRAIT - 2026071405
+ * Versão corrigida: TOP RIGHT PORTRAIT 9:16 - 2026071406
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - FORCE TOP RIGHT PORTRAIT - 2026071405');
+  console.log('VIDLYTICS WIDGET CARREGADO - TOP RIGHT PORTRAIT 9:16 - 2026071406');
 
   if (window.__vidlytics_widget_initialized) return;
   window.__vidlytics_widget_initialized = true;
@@ -44,7 +44,10 @@
     inset: '20px 23px auto auto',
     width: '85px',
     height: '151px',
+    widthNumber: 85,
+    heightNumber: 151,
     radius: '11px',
+    innerRadius: '9px',
     zIndex: '2147483647'
   };
 
@@ -52,6 +55,22 @@
   var modalContent = null;
   var readStoryProductsData = [];
   var readProductsData = [];
+
+  function createEl(tag, className) {
+    var el = document.createElement(tag);
+    if (className) el.className = className;
+    return el;
+  }
+
+  function setImportant(el, prop, value) {
+    if (!el || value === undefined || value === null || value === '') return;
+
+    try {
+      el.style.setProperty(prop, String(value), 'important');
+    } catch (e) {
+      el.style[prop] = value;
+    }
+  }
 
   function firstDefined() {
     for (var i = 0; i < arguments.length; i += 1) {
@@ -78,9 +97,7 @@
   function parseJsonIfNeeded(value) {
     if (!value) return {};
 
-    if (typeof value === 'object') {
-      return value;
-    }
+    if (typeof value === 'object') return value;
 
     if (typeof value === 'string') {
       try {
@@ -93,28 +110,8 @@
     return {};
   }
 
-  function isPlainObject(value) {
-    return (
-      value &&
-      typeof value === 'object' &&
-      Object.prototype.toString.call(value) === '[object Object]'
-    );
-  }
-
-  function setImportant(el, prop, value) {
-    if (!el || value === undefined || value === null || value === '') return;
-
-    try {
-      el.style.setProperty(prop, String(value), 'important');
-    } catch (e) {
-      el.style[prop] = value;
-    }
-  }
-
   function toBoolean(value, fallback) {
-    if (value === undefined || value === null || value === '') {
-      return fallback;
-    }
+    if (value === undefined || value === null || value === '') return fallback;
 
     if (typeof value === 'boolean') return value;
     if (typeof value === 'number') return value !== 0;
@@ -245,119 +242,51 @@
     }).catch(function () {});
   }
 
-  function buildAppearanceSources(appearance, context) {
+  function readAppearanceValue(appearance, names) {
     appearance = appearance || {};
 
-    var sources = [];
+    var sources = [
+      appearance,
+      parseJsonIfNeeded(appearance.config),
+      parseJsonIfNeeded(appearance.settings),
+      parseJsonIfNeeded(appearance.style),
+      parseJsonIfNeeded(appearance.styles),
+      parseJsonIfNeeded(appearance.appearance_config),
+      parseJsonIfNeeded(appearance.appearanceConfig),
+      parseJsonIfNeeded(appearance.floating),
+      parseJsonIfNeeded(appearance.floatingVideo),
+      parseJsonIfNeeded(appearance.floating_video),
+      parseJsonIfNeeded(appearance.widget),
+      parseJsonIfNeeded(appearance.widget_config),
+      parseJsonIfNeeded(appearance.widgetConfig)
+    ];
+
     var device = window.innerWidth < 768 ? 'mobile' : 'desktop';
 
-    function add(value) {
-      var obj = parseJsonIfNeeded(value);
+    sources.slice().forEach(function (src) {
+      if (!src || typeof src !== 'object') return;
 
-      if (isPlainObject(obj)) {
-        sources.push(obj);
-        return obj;
-      }
-
-      return null;
-    }
-
-    var root = add(appearance) || {};
-
-    [
-      'config',
-      'settings',
-      'style',
-      'styles',
-      'appearance_config',
-      'appearanceConfig',
-      'style_config',
-      'styleConfig',
-      'global_config',
-      'globalConfig',
-      'visual_config',
-      'visualConfig',
-      'identity_config',
-      'identityConfig',
-      'floating_config',
-      'floatingConfig',
-      'floating',
-      'floatingVideo',
-      'floating_video',
-      'floatingWidget',
-      'floating_widget',
-      'widget_config',
-      'widgetConfig',
-      'widget',
-      'desktop_config',
-      'desktopConfig',
-      'mobile_config',
-      'mobileConfig',
-      'desktop',
-      'mobile'
-    ].forEach(function (key) {
-      if (root[key] !== undefined) add(root[key]);
+      sources.push(parseJsonIfNeeded(src[device]));
+      sources.push(parseJsonIfNeeded(src[device + '_config']));
+      sources.push(parseJsonIfNeeded(src[device + 'Config']));
+      sources.push(parseJsonIfNeeded(src.floating));
+      sources.push(parseJsonIfNeeded(src.floatingVideo));
+      sources.push(parseJsonIfNeeded(src.floating_video));
+      sources.push(parseJsonIfNeeded(src.widget));
     });
-
-    var snapshot = sources.slice();
-
-    snapshot.forEach(function (src) {
-      if (!src) return;
-
-      if (context === 'floating') {
-        add(src.floating);
-        add(src.floatingVideo);
-        add(src.floating_video);
-        add(src.floatingWidget);
-        add(src.floating_widget);
-        add(src.widget);
-        add(src.widget_config);
-        add(src.widgetConfig);
-        add(src.floating_config);
-        add(src.floatingConfig);
-      }
-
-      if (context === 'carousel') {
-        add(src.carousel);
-        add(src.carousel_config);
-        add(src.carouselConfig);
-      }
-
-      add(src[device]);
-      add(src[device + '_config']);
-      add(src[device + 'Config']);
-
-      if (context === 'floating') {
-        add(src['floating_' + device]);
-        add(src['floating_' + device + '_config']);
-        add(src['floating' + device.charAt(0).toUpperCase() + device.slice(1)]);
-        add(src[device + '_floating']);
-        add(src[device + '_floating_config']);
-      }
-
-      if (context === 'carousel') {
-        add(src['carousel_' + device]);
-        add(src['carousel_' + device + '_config']);
-        add(src[device + '_carousel']);
-        add(src[device + '_carousel_config']);
-      }
-    });
-
-    return sources;
-  }
-
-  function readAppearanceValue(appearance, names, context) {
-    var sources = buildAppearanceSources(appearance, context);
 
     for (var i = 0; i < sources.length; i += 1) {
+      var src = sources[i];
+
+      if (!src || typeof src !== 'object') continue;
+
       for (var j = 0; j < names.length; j += 1) {
         if (
-          sources[i] &&
-          sources[i][names[j]] !== undefined &&
-          sources[i][names[j]] !== null &&
-          sources[i][names[j]] !== ''
+          src[names[j]] !== undefined &&
+          src[names[j]] !== null &&
+          src[names[j]] !== ''
         ) {
-          return sources[i][names[j]];
+          return src[names[j]];
         }
       }
     }
@@ -367,41 +296,39 @@
 
   function getPrimaryColor(appearance) {
     return (
-      readAppearanceValue(
-        appearance,
-        ['primary_color', 'primaryColor', 'color', 'cor_primaria'],
-        'floating'
-      ) || '#0094EB'
+      readAppearanceValue(appearance, [
+        'primary_color',
+        'primaryColor',
+        'color',
+        'cor_primaria'
+      ]) || '#0094EB'
     );
   }
 
   function getSecondaryColor(appearance) {
     return (
-      readAppearanceValue(
-        appearance,
-        ['secondary_color', 'secondaryColor', 'cor_secundaria'],
-        'floating'
-      ) || '#EC4899'
+      readAppearanceValue(appearance, [
+        'secondary_color',
+        'secondaryColor',
+        'cor_secundaria'
+      ]) || '#EC4899'
     );
   }
 
   function getTextColor(appearance) {
     return (
-      readAppearanceValue(
-        appearance,
-        ['text_color', 'textColor', 'cor_texto'],
-        'floating'
-      ) || '#0f172a'
+      readAppearanceValue(appearance, [
+        'text_color',
+        'textColor',
+        'cor_texto'
+      ]) || '#0f172a'
     );
   }
 
   function getFontFamily(appearance) {
     return (
-      readAppearanceValue(
-        appearance,
-        ['font_family', 'fontFamily', 'fonte'],
-        'floating'
-      ) || 'Inter, system-ui, sans-serif'
+      readAppearanceValue(appearance, ['font_family', 'fontFamily', 'fonte']) ||
+      'Inter, system-ui, sans-serif'
     );
   }
 
@@ -422,7 +349,6 @@
         ),
         true
       ),
-
       show_product: toBoolean(
         firstDefined(
           appearance.show_product,
@@ -432,27 +358,6 @@
         ),
         true
       ),
-
-      show_whatsapp_button: toBoolean(
-        firstDefined(
-          appearance.show_whatsapp_button,
-          appearance.showWhatsappButton,
-          rawConfig.show_whatsapp_button,
-          rawConfig.showWhatsappButton
-        ),
-        true
-      ),
-
-      show_product_button: toBoolean(
-        firstDefined(
-          appearance.show_product_button,
-          appearance.showProductButton,
-          rawConfig.show_product_button,
-          rawConfig.showProductButton
-        ),
-        true
-      ),
-
       hide_stories: toBoolean(
         firstDefined(
           appearance.hide_stories,
@@ -462,7 +367,6 @@
         ),
         false
       ),
-
       shadow_enabled: toBoolean(
         firstDefined(
           appearance.shadow_enabled,
@@ -657,28 +561,7 @@
     var videoThumb = getVideoThumbnail(coverVideo);
     if (videoThumb) return videoThumb;
 
-    if (story && story.videos && story.videos.length) {
-      videoThumb = getVideoThumbnail(story.videos[0]);
-      if (videoThumb) return videoThumb;
-    }
-
-    if (story && story.items && story.items.length) {
-      videoThumb = getVideoThumbnail(story.items[0]);
-      if (videoThumb) return videoThumb;
-    }
-
-    if (story && story.contents && story.contents.length) {
-      videoThumb = getVideoThumbnail(story.contents[0]);
-      if (videoThumb) return videoThumb;
-    }
-
     return '';
-  }
-
-  function createEl(tag, className) {
-    var el = document.createElement(tag);
-    if (className) el.className = className;
-    return el;
   }
 
   function injectForceFloatingCss() {
@@ -701,6 +584,9 @@
       'font-family:Inter,system-ui,sans-serif!important;' +
       'pointer-events:auto!important;' +
       'transform:none!important;' +
+      'width:' + FORCE_FLOATING.width + '!important;' +
+      'height:auto!important;' +
+      'max-width:' + FORCE_FLOATING.width + '!important;' +
       '}' +
 
       '#vidlytics-widget-root *,' +
@@ -715,6 +601,7 @@
       'align-items:flex-end!important;' +
       'justify-content:flex-start!important;' +
       'gap:10px!important;' +
+      'width:' + FORCE_FLOATING.width + '!important;' +
       '}' +
 
       '#vidlytics-widget-root .vidlytics-bubble,' +
@@ -725,7 +612,7 @@
       'height:auto!important;' +
       'min-height:0!important;' +
       'max-height:none!important;' +
-      'border:none!important;' +
+      'border:0!important;' +
       'background:transparent!important;' +
       'padding:0!important;' +
       'margin:0!important;' +
@@ -734,7 +621,7 @@
       'flex-direction:column!important;' +
       'align-items:center!important;' +
       'justify-content:flex-start!important;' +
-      'gap:6px!important;' +
+      'gap:4px!important;' +
       'outline:none!important;' +
       'border-radius:0!important;' +
       'overflow:visible!important;' +
@@ -751,7 +638,7 @@
       'min-height:' + FORCE_FLOATING.height + '!important;' +
       'max-width:' + FORCE_FLOATING.width + '!important;' +
       'max-height:' + FORCE_FLOATING.height + '!important;' +
-      'aspect-ratio:85/151!important;' +
+      'aspect-ratio:9/16!important;' +
       'border-radius:' + FORCE_FLOATING.radius + '!important;' +
       'padding:2px!important;' +
       'overflow:hidden!important;' +
@@ -768,7 +655,7 @@
       'min-height:100%!important;' +
       'max-width:100%!important;' +
       'max-height:100%!important;' +
-      'border-radius:' + FORCE_FLOATING.radius + '!important;' +
+      'border-radius:' + FORCE_FLOATING.innerRadius + '!important;' +
       'overflow:hidden!important;' +
       'background:#e2e8f0!important;' +
       'display:block!important;' +
@@ -791,7 +678,7 @@
       'object-fit:cover!important;' +
       'object-position:center!important;' +
       'display:block!important;' +
-      'border-radius:' + FORCE_FLOATING.radius + '!important;' +
+      'border-radius:' + FORCE_FLOATING.innerRadius + '!important;' +
       'clip-path:none!important;' +
       'overflow:hidden!important;' +
       'aspect-ratio:auto!important;' +
@@ -799,14 +686,16 @@
 
       '#vidlytics-widget-root .vidlytics-bubble-label,' +
       '.vidlytics-widget-root .vidlytics-bubble-label{' +
+      'width:' + FORCE_FLOATING.width + '!important;' +
       'max-width:' + FORCE_FLOATING.width + '!important;' +
       'font-size:11px!important;' +
-      'line-height:1.2!important;' +
+      'line-height:12px!important;' +
       'font-weight:700!important;' +
       'text-align:center!important;' +
       'white-space:nowrap!important;' +
       'overflow:hidden!important;' +
       'text-overflow:ellipsis!important;' +
+      'display:block!important;' +
       '}';
 
     document.head.appendChild(style);
@@ -827,6 +716,9 @@
     setImportant(root, 'z-index', FORCE_FLOATING.zIndex);
     setImportant(root, 'pointer-events', 'auto');
     setImportant(root, 'transform', 'none');
+    setImportant(root, 'width', FORCE_FLOATING.width);
+    setImportant(root, 'height', 'auto');
+    setImportant(root, 'max-width', FORCE_FLOATING.width);
 
     var bubbles = root.querySelector('.vidlytics-bubbles');
 
@@ -836,18 +728,17 @@
       setImportant(bubbles, 'align-items', 'flex-end');
       setImportant(bubbles, 'justify-content', 'flex-start');
       setImportant(bubbles, 'gap', '10px');
+      setImportant(bubbles, 'width', FORCE_FLOATING.width);
     }
 
-    var buttons = root.querySelectorAll('.vidlytics-bubble');
-
-    buttons.forEach(function (button) {
+    Array.prototype.forEach.call(root.querySelectorAll('.vidlytics-bubble'), function (button) {
       setImportant(button, 'width', FORCE_FLOATING.width);
       setImportant(button, 'min-width', FORCE_FLOATING.width);
       setImportant(button, 'max-width', FORCE_FLOATING.width);
       setImportant(button, 'height', 'auto');
       setImportant(button, 'min-height', '0');
       setImportant(button, 'max-height', 'none');
-      setImportant(button, 'border', 'none');
+      setImportant(button, 'border', '0');
       setImportant(button, 'background', 'transparent');
       setImportant(button, 'padding', '0');
       setImportant(button, 'margin', '0');
@@ -856,25 +747,21 @@
       setImportant(button, 'flex-direction', 'column');
       setImportant(button, 'align-items', 'center');
       setImportant(button, 'justify-content', 'flex-start');
-      setImportant(button, 'gap', '6px');
+      setImportant(button, 'gap', '4px');
       setImportant(button, 'outline', 'none');
       setImportant(button, 'border-radius', '0');
       setImportant(button, 'overflow', 'visible');
-      setImportant(button, 'appearance', 'none');
-      setImportant(button, '-webkit-appearance', 'none');
       setImportant(button, 'box-shadow', 'none');
     });
 
-    var rings = root.querySelectorAll('.vidlytics-bubble-ring');
-
-    rings.forEach(function (ring) {
+    Array.prototype.forEach.call(root.querySelectorAll('.vidlytics-bubble-ring'), function (ring) {
       setImportant(ring, 'width', FORCE_FLOATING.width);
       setImportant(ring, 'height', FORCE_FLOATING.height);
       setImportant(ring, 'min-width', FORCE_FLOATING.width);
       setImportant(ring, 'min-height', FORCE_FLOATING.height);
       setImportant(ring, 'max-width', FORCE_FLOATING.width);
       setImportant(ring, 'max-height', FORCE_FLOATING.height);
-      setImportant(ring, 'aspect-ratio', '85 / 151');
+      setImportant(ring, 'aspect-ratio', '9 / 16');
       setImportant(ring, 'border-radius', FORCE_FLOATING.radius);
       setImportant(ring, 'padding', '2px');
       setImportant(ring, 'overflow', 'hidden');
@@ -883,16 +770,14 @@
       setImportant(ring, 'clip-path', 'none');
     });
 
-    var inners = root.querySelectorAll('.vidlytics-bubble-inner');
-
-    inners.forEach(function (inner) {
+    Array.prototype.forEach.call(root.querySelectorAll('.vidlytics-bubble-inner'), function (inner) {
       setImportant(inner, 'width', '100%');
       setImportant(inner, 'height', '100%');
       setImportant(inner, 'min-width', '100%');
       setImportant(inner, 'min-height', '100%');
       setImportant(inner, 'max-width', '100%');
       setImportant(inner, 'max-height', '100%');
-      setImportant(inner, 'border-radius', FORCE_FLOATING.radius);
+      setImportant(inner, 'border-radius', FORCE_FLOATING.innerRadius);
       setImportant(inner, 'overflow', 'hidden');
       setImportant(inner, 'background', '#e2e8f0');
       setImportant(inner, 'display', 'block');
@@ -900,37 +785,36 @@
       setImportant(inner, 'clip-path', 'none');
     });
 
-    var imgs = root.querySelectorAll(
-      '.vidlytics-bubble-img, .vidlytics-bubble img, img.vidlytics-bubble-img'
+    Array.prototype.forEach.call(
+      root.querySelectorAll('.vidlytics-bubble-img, .vidlytics-bubble img, img.vidlytics-bubble-img'),
+      function (img) {
+        setImportant(img, 'width', '100%');
+        setImportant(img, 'height', '100%');
+        setImportant(img, 'min-width', '100%');
+        setImportant(img, 'min-height', '100%');
+        setImportant(img, 'max-width', '100%');
+        setImportant(img, 'max-height', '100%');
+        setImportant(img, 'object-fit', 'cover');
+        setImportant(img, 'object-position', 'center');
+        setImportant(img, 'display', 'block');
+        setImportant(img, 'border-radius', FORCE_FLOATING.innerRadius);
+        setImportant(img, 'clip-path', 'none');
+        setImportant(img, 'overflow', 'hidden');
+        setImportant(img, 'aspect-ratio', 'auto');
+      }
     );
 
-    imgs.forEach(function (img) {
-      setImportant(img, 'width', '100%');
-      setImportant(img, 'height', '100%');
-      setImportant(img, 'min-width', '100%');
-      setImportant(img, 'min-height', '100%');
-      setImportant(img, 'max-width', '100%');
-      setImportant(img, 'max-height', '100%');
-      setImportant(img, 'object-fit', 'cover');
-      setImportant(img, 'object-position', 'center');
-      setImportant(img, 'display', 'block');
-      setImportant(img, 'border-radius', FORCE_FLOATING.radius);
-      setImportant(img, 'clip-path', 'none');
-      setImportant(img, 'overflow', 'hidden');
-      setImportant(img, 'aspect-ratio', 'auto');
-    });
-
-    var labels = root.querySelectorAll('.vidlytics-bubble-label');
-
-    labels.forEach(function (label) {
+    Array.prototype.forEach.call(root.querySelectorAll('.vidlytics-bubble-label'), function (label) {
+      setImportant(label, 'width', FORCE_FLOATING.width);
       setImportant(label, 'max-width', FORCE_FLOATING.width);
       setImportant(label, 'font-size', '11px');
-      setImportant(label, 'line-height', '1.2');
+      setImportant(label, 'line-height', '12px');
       setImportant(label, 'font-weight', '700');
       setImportant(label, 'text-align', 'center');
       setImportant(label, 'white-space', 'nowrap');
       setImportant(label, 'overflow', 'hidden');
       setImportant(label, 'text-overflow', 'ellipsis');
+      setImportant(label, 'display', 'block');
     });
   }
 
@@ -1169,6 +1053,7 @@
       : 'none';
     modal.style.display = 'flex';
     modal.style.flexDirection = 'column';
+    modal.style.fontFamily = getFontFamily(currentAppearance);
 
     modalContent = createEl('div', 'vidlytics-modal-content');
     modal.appendChild(modalContent);
@@ -1463,8 +1348,8 @@
 
       if (activeProducts.length && modalConfig.show_product !== false) {
         var product = activeProducts[0];
-        var productCard = createEl('div');
 
+        var productCard = createEl('div');
         productCard.style.display = 'flex';
         productCard.style.alignItems = 'center';
         productCard.style.gap = '12px';
@@ -1475,7 +1360,9 @@
         productCard.style.cursor = 'pointer';
 
         var productImg = createEl('img');
-        productImg.src = normalizeMediaUrl(product.image_url || product.imageUrl || '');
+        productImg.src = normalizeMediaUrl(
+          product.image_url || product.imageUrl || ''
+        );
         productImg.alt = product.name || '';
         productImg.style.width = '72px';
         productImg.style.height = '72px';
@@ -1497,10 +1384,13 @@
         productName.style.textOverflow = 'ellipsis';
 
         var productPrice = createEl('div');
-        productPrice.textContent = Number(product.price || 0).toLocaleString('pt-BR', {
-          style: 'currency',
-          currency: 'BRL'
-        });
+        productPrice.textContent = Number(product.price || 0).toLocaleString(
+          'pt-BR',
+          {
+            style: 'currency',
+            currency: 'BRL'
+          }
+        );
         productPrice.style.marginTop = '4px';
         productPrice.style.fontWeight = '800';
         productPrice.style.color = '#7c3aed';
@@ -1560,6 +1450,8 @@
     setImportant(root, 'left', FORCE_FLOATING.left);
     setImportant(root, 'z-index', FORCE_FLOATING.zIndex);
     setImportant(root, 'transform', 'none');
+    setImportant(root, 'width', FORCE_FLOATING.width);
+    setImportant(root, 'height', 'auto');
 
     var bubbles = createEl('div', 'vidlytics-bubbles');
 
@@ -1568,6 +1460,7 @@
     setImportant(bubbles, 'align-items', 'flex-end');
     setImportant(bubbles, 'justify-content', 'flex-start');
     setImportant(bubbles, 'flex-direction', 'column');
+    setImportant(bubbles, 'width', FORCE_FLOATING.width);
 
     stories.forEach(function (story) {
       var relations = (storyVideoMap.get(story.id) || [])
@@ -1595,12 +1488,8 @@
       bubble.type = 'button';
 
       setImportant(bubble, 'width', FORCE_FLOATING.width);
-      setImportant(bubble, 'min-width', FORCE_FLOATING.width);
-      setImportant(bubble, 'max-width', FORCE_FLOATING.width);
       setImportant(bubble, 'height', 'auto');
-      setImportant(bubble, 'min-height', '0');
-      setImportant(bubble, 'max-height', 'none');
-      setImportant(bubble, 'border', 'none');
+      setImportant(bubble, 'border', '0');
       setImportant(bubble, 'background', 'transparent');
       setImportant(bubble, 'padding', '0');
       setImportant(bubble, 'margin', '0');
@@ -1609,12 +1498,10 @@
       setImportant(bubble, 'flex-direction', 'column');
       setImportant(bubble, 'align-items', 'center');
       setImportant(bubble, 'justify-content', 'flex-start');
-      setImportant(bubble, 'gap', '6px');
+      setImportant(bubble, 'gap', '4px');
       setImportant(bubble, 'outline', 'none');
       setImportant(bubble, 'border-radius', '0');
       setImportant(bubble, 'overflow', 'visible');
-      setImportant(bubble, 'appearance', 'none');
-      setImportant(bubble, '-webkit-appearance', 'none');
       setImportant(bubble, 'box-shadow', 'none');
 
       var ring = createEl('div', 'vidlytics-bubble-ring');
@@ -1625,12 +1512,14 @@
       setImportant(ring, 'min-height', FORCE_FLOATING.height);
       setImportant(ring, 'max-width', FORCE_FLOATING.width);
       setImportant(ring, 'max-height', FORCE_FLOATING.height);
-      setImportant(ring, 'aspect-ratio', '85 / 151');
+      setImportant(ring, 'aspect-ratio', '9 / 16');
       setImportant(ring, 'border-radius', FORCE_FLOATING.radius);
       setImportant(ring, 'padding', '2px');
       setImportant(ring, 'overflow', 'hidden');
       setImportant(ring, 'display', 'block');
       setImportant(ring, 'clip-path', 'none');
+      setImportant(ring, 'box-sizing', 'border-box');
+
       setImportant(
         ring,
         'background',
@@ -1640,7 +1529,6 @@
           getSecondaryColor(appearance) +
           ')'
       );
-      setImportant(ring, 'box-sizing', 'border-box');
 
       if (modalConfig.shadow_enabled !== false) {
         setImportant(ring, 'box-shadow', '0 12px 30px rgba(15, 23, 42, 0.18)');
@@ -1652,11 +1540,7 @@
 
       setImportant(inner, 'width', '100%');
       setImportant(inner, 'height', '100%');
-      setImportant(inner, 'min-width', '100%');
-      setImportant(inner, 'min-height', '100%');
-      setImportant(inner, 'max-width', '100%');
-      setImportant(inner, 'max-height', '100%');
-      setImportant(inner, 'border-radius', FORCE_FLOATING.radius);
+      setImportant(inner, 'border-radius', FORCE_FLOATING.innerRadius);
       setImportant(inner, 'overflow', 'hidden');
       setImportant(inner, 'background', '#e2e8f0');
       setImportant(inner, 'display', 'block');
@@ -1671,17 +1555,12 @@
 
         setImportant(img, 'width', '100%');
         setImportant(img, 'height', '100%');
-        setImportant(img, 'min-width', '100%');
-        setImportant(img, 'min-height', '100%');
-        setImportant(img, 'max-width', '100%');
-        setImportant(img, 'max-height', '100%');
         setImportant(img, 'object-fit', 'cover');
         setImportant(img, 'object-position', 'center');
         setImportant(img, 'display', 'block');
-        setImportant(img, 'border-radius', FORCE_FLOATING.radius);
+        setImportant(img, 'border-radius', FORCE_FLOATING.innerRadius);
         setImportant(img, 'clip-path', 'none');
         setImportant(img, 'overflow', 'hidden');
-        setImportant(img, 'aspect-ratio', 'auto');
 
         img.onerror = function () {
           inner.innerHTML = '';
@@ -1714,15 +1593,17 @@
         var label = createEl('span', 'vidlytics-bubble-label');
         label.textContent = story.title || story.name || 'Story';
 
+        setImportant(label, 'width', FORCE_FLOATING.width);
         setImportant(label, 'max-width', FORCE_FLOATING.width);
         setImportant(label, 'font-size', '11px');
-        setImportant(label, 'line-height', '1.2');
+        setImportant(label, 'line-height', '12px');
         setImportant(label, 'font-weight', '700');
         setImportant(label, 'color', getTextColor(appearance));
         setImportant(label, 'text-align', 'center');
         setImportant(label, 'white-space', 'nowrap');
         setImportant(label, 'overflow', 'hidden');
         setImportant(label, 'text-overflow', 'ellipsis');
+        setImportant(label, 'display', 'block');
 
         bubble.appendChild(label);
       }
