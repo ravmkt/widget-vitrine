@@ -67,7 +67,7 @@ export interface Appearance {
   show_share_button: boolean;
   show_whatsapp_button: boolean;
   show_product_button: boolean;
-  use_global_appearance?: boolean;
+  use_global_appearance: true,
   useGlobalAppearance?: boolean;
   floating_config?: ResponsiveAppearanceConfig;
   carousel_config?: ResponsiveAppearanceConfig;
