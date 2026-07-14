@@ -775,46 +775,52 @@
   }
 
   function normalizeFloatingPosition(value) {
-    var key = normalizeKey(value);
+  var key = normalizeKey(value);
 
-    if (
-      key === 'top-left' ||
-      key === 'left-top' ||
-      key === 'superior-esquerda' ||
-      key === 'canto-superior-esquerdo'
-    ) {
-      return 'top-left';
-    }
-
-    if (
-      key === 'top-right' ||
-      key === 'right-top' ||
-      key === 'superior-direita' ||
-      key === 'canto-superior-direito'
-    ) {
-      return 'top-right';
-    }
-
-    if (
-      key === 'bottom-left' ||
-      key === 'left-bottom' ||
-      key === 'inferior-esquerda' ||
-      key === 'canto-inferior-esquerdo'
-    ) {
-      return 'bottom-left';
-    }
-
-    if (
-      key === 'bottom-right' ||
-      key === 'right-bottom' ||
-      key === 'inferior-direita' ||
-      key === 'canto-inferior-direito'
-    ) {
-      return 'bottom-right';
-    }
-
-    return DEFAULT_APPEARANCE.floating_position;
+  if (
+    key === 'fixed-top-left' ||
+    key === 'top-left' ||
+    key === 'left-top' ||
+    key === 'superior-esquerda' ||
+    key === 'canto-superior-esquerdo'
+  ) {
+    return 'top-left';
   }
+
+  if (
+    key === 'fixed-top-right' ||
+    key === 'top-right' ||
+    key === 'right-top' ||
+    key === 'superior-direita' ||
+    key === 'canto-superior-direito'
+  ) {
+    return 'top-right';
+  }
+
+  if (
+    key === 'fixed-bottom-left' ||
+    key === 'bottom-left' ||
+    key === 'left' ||
+    key === 'left-bottom' ||
+    key === 'inferior-esquerda' ||
+    key === 'canto-inferior-esquerdo'
+  ) {
+    return 'bottom-left';
+  }
+
+  if (
+    key === 'fixed-bottom-right' ||
+    key === 'bottom-right' ||
+    key === 'right' ||
+    key === 'right-bottom' ||
+    key === 'inferior-direita' ||
+    key === 'canto-inferior-direito'
+  ) {
+    return 'bottom-right';
+  }
+
+  return DEFAULT_APPEARANCE.floating_position;
+}
 
   function normalizeFloatingShape(value) {
     var key = normalizeKey(value);
@@ -935,62 +941,80 @@
     if (shape === 'circle') radius = 999;
 
     var borderWidth = toNumber(
-      readAppearanceValue(appearance, [
-        'floating_border_width',
-        'floatingBorderWidth',
-        'border_width',
-        'borderWidth',
-        'largura_borda',
-        'larguraDaBorda',
-        'larguraBorda'
-      ]),
-      DEFAULT_APPEARANCE.floating_border_width
-    );
+  readAppearanceValue(appearance, [
+    'floating_border_width',
+    'floatingBorderWidth',
+    'border_width',
+    'borderWidth',
+    'border_style',
+    'borderStyle',
+    'largura_borda',
+    'larguraDaBorda',
+    'larguraBorda'
+  ]),
+  DEFAULT_APPEARANCE.floating_border_width
+);
 
     var top = toNumber(
-      readAppearanceValue(appearance, [
-        'floating_top',
-        'floatingTop',
-        'top',
-        'distance_top',
-        'distanceTop',
-        'distancia_superior',
-        'distanciaSuperior',
-        'offset_top',
-        'offsetTop'
-      ]),
-      DEFAULT_APPEARANCE.floating_top
-    );
+  readAppearanceValue(appearance, [
+    'floating_top',
+    'floatingTop',
+    'top',
+    'top_spacing',
+    'topSpacing',
+    'spacing_top',
+    'spacingTop',
+    'distance_top',
+    'distanceTop',
+    'distancia_superior',
+    'distanciaSuperior',
+    'offset_top',
+    'offsetTop'
+  ]),
+  DEFAULT_APPEARANCE.floating_top
+);
 
     var bottom = toNumber(
-      readAppearanceValue(appearance, [
-        'floating_bottom',
-        'floatingBottom',
-        'bottom',
-        'distance_bottom',
-        'distanceBottom',
-        'distancia_inferior',
-        'distanciaInferior',
-        'offset_bottom',
-        'offsetBottom'
-      ]),
-      DEFAULT_APPEARANCE.floating_bottom
-    );
+  readAppearanceValue(appearance, [
+    'floating_bottom',
+    'floatingBottom',
+    'bottom',
+    'bottom_spacing',
+    'bottomSpacing',
+    'spacing_bottom',
+    'spacingBottom',
+    'distance_bottom',
+    'distanceBottom',
+    'distancia_inferior',
+    'distanciaInferior',
+    'offset_bottom',
+    'offsetBottom'
+  ]),
+  DEFAULT_APPEARANCE.floating_bottom
+);
 
-    var side = toNumber(
-      readAppearanceValue(appearance, [
-        'floating_side',
-        'floatingSide',
-        'side',
-        'distance_side',
-        'distanceSide',
-        'distancia_lateral',
-        'distanciaLateral',
-        'offset_side',
-        'offsetSide'
-      ]),
-      DEFAULT_APPEARANCE.floating_side
-    );
+   var side = toNumber(
+  readAppearanceValue(appearance, [
+    'floating_side',
+    'floatingSide',
+    'side',
+    'left_spacing',
+    'leftSpacing',
+    'right_spacing',
+    'rightSpacing',
+    'spacing_left',
+    'spacingLeft',
+    'spacing_right',
+    'spacingRight',
+    'distance_side',
+    'distanceSide',
+    'distancia_lateral',
+    'distanciaLateral',
+    'offset_side',
+    'offsetSide'
+  ]),
+  DEFAULT_APPEARANCE.floating_side
+);
 
     var zIndex = toNumber(
       readAppearanceValue(appearance, [
@@ -1024,18 +1048,18 @@
   }
 
   function getPrimaryColor(appearance) {
-    return (
-      readAppearanceValue(appearance, [
-        'primary_color',
-        'primaryColor',
-        'color',
-        'cor_primaria',
-        'border_color',
-        'borderColor',
-        'cor_borda'
-      ]) || DEFAULT_APPEARANCE.primary_color
-    );
-  }
+  return (
+    readAppearanceValue(appearance, [
+      'color',
+      'border_color',
+      'borderColor',
+      'primary_color',
+      'primaryColor',
+      'cor_primaria',
+      'cor_borda'
+    ]) || DEFAULT_APPEARANCE.primary_color
+  );
+}
 
   function getSecondaryColor(appearance) {
     return (
