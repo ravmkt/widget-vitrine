@@ -1853,9 +1853,11 @@ setImportant(root, 'z-index', '2147483647');
 
       var ring = createEl('div', 'vidlytics-bubble-ring');
 
-      var widgetWidth = getWidgetSize(appearance);
-      var widgetHeight = getWidgetHeight(appearance);
-      var widgetRadius = getBorderRadius(appearance);
+// FORÇA FORMATO RETRATO
+var widgetWidth = '85px';
+var widgetHeight = '151px';
+var widgetRadius = '11px';
+
 
       setImportant(ring, 'width', widgetWidth);
       setImportant(ring, 'height', widgetHeight);
