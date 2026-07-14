@@ -7,12 +7,14 @@
  * - Suporta posição superior esquerda/direita e inferior esquerda/direita
  * - Suporta formato quadrado, retrato e circular
  * - Protegido contra CSS externo usando Shadow DOM
- * - 202607141330
+ * - Corrigido readStories/readStoryVideos/readVideos
+ * - Corrigido modalCfg para modalConfig
+ * - 202607141420
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - APARÊNCIA DINÂMICA - SHADOW DOM - 202607141330');
+  console.log('VIDLYTICS WIDGET CARREGADO - APARÊNCIA DINÂMICA - SHADOW DOM - 202607141420');
 
-  var VIDLYTICS_WIDGET_VERSION = 'dynamic-appearance-shadow-202607141330';
+  var VIDLYTICS_WIDGET_VERSION = 'dynamic-appearance-shadow-202607141420';
 
   if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) {
     return;
@@ -164,7 +166,9 @@
 
     if (typeof value === 'number' && !isNaN(value)) return value;
 
-    var parsed = parseFloat(String(value).replace(',', '.').replace('px', '').trim());
+    var parsed = parseFloat(
+      String(value).replace(',', '.').replace('px', '').trim()
+    );
 
     return isNaN(parsed) ? fallback : parsed;
   }
@@ -545,7 +549,7 @@
       if (shape === 'square' || shape === 'circle') {
         height = width;
       } else if (shape === 'portrait') {
-        height = Math.round(width * 16 / 9);
+        height = Math.round((width * 16) / 9);
       } else {
         height = DEFAULT_FLOATING.height;
       }
@@ -658,7 +662,8 @@
       width: px(width),
       height: px(height),
       radius: shape === 'circle' ? '999px' : px(radius),
-      innerRadius: shape === 'circle' ? '999px' : px(Math.max(radius - borderWidth, 0)),
+      innerRadius:
+        shape === 'circle' ? '999px' : px(Math.max(radius - borderWidth, 0)),
       borderWidth: px(borderWidth),
       zIndex: String(Math.round(zIndex)),
       alignItems: isRight ? 'flex-end' : 'flex-start'
@@ -898,95 +903,159 @@
   }
 
   function readAppearance() {
-  if (!storeId || !hasSupabase) {
-    return Promise.resolve(getStorageItem('vidlytics_appearance', {}) || {});
-  }
+    if (!storeId || !hasSupabase) {
+      return Promise.resolve(getStorageItem('vidlytics_appearance', {}) || {});
+    }
 
-  function normalizeAppearanceItem(item) {
-    if (!item || typeof item !== 'object') return {};
+    function normalizeAppearanceItem(item) {
+      if (!item || typeof item !== 'object') return {};
 
-    var merged = {};
+      var merged = {};
 
-    [
-      item,
-      parseJsonIfNeeded(item.config),
-      parseJsonIfNeeded(item.settings),
-      parseJsonIfNeeded(item.style),
-      parseJsonIfNeeded(item.styles),
-      parseJsonIfNeeded(item.appearance_config),
-      parseJsonIfNeeded(item.appearanceConfig),
-      parseJsonIfNeeded(item.floating),
-      parseJsonIfNeeded(item.floatingVideo),
-      parseJsonIfNeeded(item.floating_video),
-      parseJsonIfNeeded(item.widget),
-      parseJsonIfNeeded(item.widget_config),
-      parseJsonIfNeeded(item.widgetConfig)
-    ].forEach(function (src) {
-      if (!src || typeof src !== 'object') return;
+      [
+        item,
+        parseJsonIfNeeded(item.config),
+        parseJsonIfNeeded(item.settings),
+        parseJsonIfNeeded(item.style),
+        parseJsonIfNeeded(item.styles),
+        parseJsonIfNeeded(item.appearance_config),
+        parseJsonIfNeeded(item.appearanceConfig),
+        parseJsonIfNeeded(item.floating),
+        parseJsonIfNeeded(item.floatingVideo),
+        parseJsonIfNeeded(item.floating_video),
+        parseJsonIfNeeded(item.widget),
+        parseJsonIfNeeded(item.widget_config),
+        parseJsonIfNeeded(item.widgetConfig)
+      ].forEach(function (src) {
+        if (!src || typeof src !== 'object') return;
 
-      Object.keys(src).forEach(function (key) {
+        Object.keys(src).forEach(function (key) {
+          if (
+            src[key] !== undefined &&
+            src[key] !== null &&
+            src[key] !== ''
+          ) {
+            merged[key] = src[key];
+          }
+        });
+      });
+
+      Object.keys(item).forEach(function (key) {
         if (
-          src[key] !== undefined &&
-          src[key] !== null &&
-          src[key] !== ''
+          item[key] !== undefined &&
+          item[key] !== null &&
+          item[key] !== ''
         ) {
-          merged[key] = src[key];
+          merged[key] = item[key];
         }
       });
-    });
 
-    Object.keys(item).forEach(function (key) {
-      if (
-        item[key] !== undefined &&
-        item[key] !== null &&
-        item[key] !== ''
-      ) {
-        merged[key] = item[key];
-      }
-    });
+      return merged;
+    }
 
-    return merged;
+    return supabaseFetch(
+      'appearances?select=*&store_id=eq.' +
+        encodeURIComponent(storeId) +
+        '&is_default=eq.true&limit=1',
+      { method: 'GET' }
+    )
+      .then(function (response) {
+        return response.ok ? response.json() : [];
+      })
+      .then(function (items) {
+        if (items && items.length) {
+          return normalizeAppearanceItem(items[0]);
+        }
+
+        return supabaseFetch(
+          'appearances?select=*&store_id=eq.' +
+            encodeURIComponent(storeId) +
+            '&order=updated_at.desc.nullslast,created_at.desc.nullslast&limit=1',
+          { method: 'GET' }
+        )
+          .then(function (response) {
+            return response.ok ? response.json() : [];
+          })
+          .then(function (fallbackItems) {
+            return fallbackItems && fallbackItems.length
+              ? normalizeAppearanceItem(fallbackItems[0])
+              : {};
+          });
+      })
+      .then(function (appearance) {
+        console.log('VIDLYTICS APARÊNCIA NORMALIZADA:', appearance);
+        return appearance || {};
+      })
+      .catch(function (error) {
+        console.warn('Vidlytics Widget: erro ao carregar aparência:', error);
+        return {};
+      });
   }
 
-  return supabaseFetch(
-    'appearances?select=*&store_id=eq.' +
-      encodeURIComponent(storeId) +
-      '&is_default=eq.true&limit=1',
-    { method: 'GET' }
-  )
-    .then(function (response) {
-      return response.ok ? response.json() : [];
-    })
-    .then(function (items) {
-      if (items && items.length) {
-        return normalizeAppearanceItem(items[0]);
-      }
+  function readStories() {
+    if (!storeId || !hasSupabase) {
+      return Promise.resolve(getStorageItem('vidlytics_stories', []));
+    }
 
-      return supabaseFetch(
-        'appearances?select=*&store_id=eq.' +
-          encodeURIComponent(storeId) +
-          '&order=updated_at.desc.nullslast,created_at.desc.nullslast&limit=1',
-        { method: 'GET' }
-      )
-        .then(function (response) {
-          return response.ok ? response.json() : [];
-        })
-        .then(function (fallbackItems) {
-          return fallbackItems && fallbackItems.length
-            ? normalizeAppearanceItem(fallbackItems[0])
-            : {};
+    return supabaseFetch(
+      'stories?select=*&store_id=eq.' + encodeURIComponent(storeId),
+      { method: 'GET' }
+    )
+      .then(function (response) {
+        return response.ok ? response.json() : [];
+      })
+      .then(function (items) {
+        if (!Array.isArray(items)) return [];
+
+        return items.filter(function (story) {
+          var statusOk = 'status' in story ? story.status === 'active' : true;
+          var activeOk = 'active' in story ? story.active !== false : true;
+          var visibleOk = 'visible' in story ? story.visible !== false : true;
+
+          return statusOk && activeOk && visibleOk;
         });
-    })
-    .then(function (appearance) {
-      console.log('VIDLYTICS APARÊNCIA NORMALIZADA:', appearance);
-      return appearance || {};
-    })
-    .catch(function (error) {
-      console.warn('Vidlytics Widget: erro ao carregar aparência:', error);
-      return {};
-    });
-}
+      })
+      .catch(function (error) {
+        console.warn('Vidlytics Widget: erro ao carregar stories:', error);
+        return [];
+      });
+  }
 
+  function readStoryVideos() {
+    if (!storeId || !hasSupabase) {
+      return Promise.resolve(getStorageItem('vidlytics_story_videos', []));
+    }
+
+    return supabaseFetch(
+      'story_videos?select=*&store_id=eq.' + encodeURIComponent(storeId),
+      { method: 'GET' }
+    )
+      .then(function (response) {
+        return response.ok ? response.json() : [];
+      })
+      .catch(function (error) {
+        console.warn('Vidlytics Widget: erro ao carregar story_videos:', error);
+        return [];
+      });
+  }
+
+  function readVideos() {
+    if (!storeId || !hasSupabase) {
+      return Promise.resolve(getStorageItem('vidlytics_videos', []));
+    }
+
+    return supabaseFetch(
+      'videos?select=*&store_id=eq.' + encodeURIComponent(storeId),
+      { method: 'GET' }
+    )
+      .then(function (response) {
+        return response.ok ? response.json() : [];
+      })
+      .catch(function (error) {
+        console.warn('Vidlytics Widget: erro ao carregar videos:', error);
+        return [];
+      });
+  }
 
   function readStoryProducts() {
     if (!storeId || !hasSupabase) {
@@ -1285,7 +1354,7 @@
       + 'overflow:hidden!important;'
       + 'background:#fff!important;'
       + 'border-radius:24px!important;'
-            + 'box-shadow:' + (modalCfg.shadow_enabled !== false ? '0 24px 80px rgba(15,23,42,.3)' : 'none') + '!important;'
+      + 'box-shadow:' + (modalConfig.shadow_enabled !== false ? '0 24px 80px rgba(15,23,42,.3)' : 'none') + '!important;'
       + 'display:flex!important;'
       + 'flex-direction:column!important;'
       + '}'
@@ -1820,6 +1889,7 @@
 
     var style = createEl('style');
     style.textContent =
+      buildShadowCss(appearance) +
       '*{box-sizing:border-box!important;}' +
       '.carousel{' +
       'font-family:' + getFontFamily(appearance) + '!important;' +
@@ -1870,6 +1940,22 @@
       '}';
 
     var container = createEl('div', 'carousel');
+
+    if (!overlay || !modalContent) {
+      overlay = createEl('div', 'vl-overlay');
+
+      var modal = createEl('div', 'vl-modal');
+      modalContent = createEl('div');
+
+      modal.appendChild(modalContent);
+      overlay.appendChild(modal);
+
+      overlay.addEventListener('click', function (event) {
+        if (event.target === overlay) {
+          closeOverlay();
+        }
+      });
+    }
 
     stories.forEach(function (story) {
       var relations = (storyVideoMap.get(story.id) || [])
@@ -1949,6 +2035,10 @@
     shadow.appendChild(style);
     shadow.appendChild(container);
 
+    if (overlay && overlay.parentNode !== shadow) {
+      shadow.appendChild(overlay);
+    }
+
     document.body.appendChild(host);
   }
 
@@ -1973,7 +2063,10 @@
         currentAppearance = results[0] || {};
 
         console.log('VIDLYTICS APARÊNCIA CARREGADA:', currentAppearance);
-        console.log('VIDLYTICS FLOATING CONFIG:', getFloatingConfig(currentAppearance));
+        console.log(
+          'VIDLYTICS FLOATING CONFIG:',
+          getFloatingConfig(currentAppearance)
+        );
 
         var modalConfig = normalizeModalAppearanceConfig(currentAppearance);
 
