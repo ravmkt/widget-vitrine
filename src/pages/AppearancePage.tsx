@@ -2317,24 +2317,53 @@ const AppearancePage = () => {
   };
 
   const handleConfirmDelete = async () => {
-    try {
-      const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
+  try {
+    const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
 
-      await deleteAppearanceSafe(deleteModal.id, finalStoreId);
+    const deletedAppearance = appearances.find(
+      app => app.id === deleteModal.id,
+    );
 
-      showSuccess('Estilo excluído com sucesso.');
+    await deleteAppearanceSafe(deleteModal.id, finalStoreId);
 
-      setDeleteModal(prev => ({
-        ...prev,
-        isOpen: false,
-      }));
+    const remainingAppearances = appearances.filter(
+      app => app.id !== deleteModal.id,
+    );
 
-      await loadData();
-    } catch (error) {
-      console.error('Erro ao excluir estilo:', error);
-      showError('Erro ao excluir estilo.');
+    if (deletedAppearance?.is_default) {
+      const nextDefault = remainingAppearances[0];
+
+      if (nextDefault) {
+        const now = new Date().toISOString();
+
+        await db.appearances.save({
+          ...nextDefault,
+          store_id: finalStoreId,
+          is_default: true,
+          updated_at: now,
+        } as Appearance);
+
+        await syncDefaultAppearanceId(finalStoreId, nextDefault.id);
+      } else if (finalStoreId) {
+        await syncDefaultAppearanceId(finalStoreId, null);
+      }
     }
-  };
+
+    window.dispatchEvent(new Event('storage'));
+
+    showSuccess('Estilo excluído com sucesso.');
+
+    setDeleteModal(prev => ({
+      ...prev,
+      isOpen: false,
+    }));
+
+    await loadData();
+  } catch (error) {
+    console.error('Erro ao excluir estilo:', error);
+    showError('Erro ao excluir estilo.');
+  }
+};
 
   const handleNewStyle = async () => {
     const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
