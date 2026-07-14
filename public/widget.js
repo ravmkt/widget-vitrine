@@ -1788,6 +1788,15 @@
 
     applyPosition(root, appearance);
 
+    // FORÇA POSIÇÃO DO WIDGET FLUTUANTE
+setImportant(root, 'position', 'fixed');
+setImportant(root, 'top', '20px');
+setImportant(root, 'right', '23px');
+setImportant(root, 'bottom', 'auto');
+setImportant(root, 'left', 'auto');
+setImportant(root, 'z-index', '2147483647');
+
+
     var bubbles = createEl('div', 'vidlytics-bubbles');
 
     setImportant(bubbles, 'display', 'flex');
