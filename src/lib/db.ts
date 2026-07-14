@@ -1647,10 +1647,10 @@ export const replaceStoryRelations = async <
 export const db = {
   stores: createSupabaseCrudFunctions<Store>('stores', memoryStores),
 
-  generalSettings: createCrudFunctions<GeneralSettings>(
-    'general_settings',
-    memoryGeneralSettings,
-  ),
+  generalSettings: createSupabaseCrudFunctions<GeneralSettings>(
+  'general_settings',
+  memoryGeneralSettings,
+),
 
   appearances: createSupabaseCrudFunctions<Appearance>(
     'appearances',
