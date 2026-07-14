@@ -265,6 +265,12 @@ defaultAppearanceId?: string | null;
   open_product_new_tab: boolean;
   autoplay: boolean;
   muted_by_default: boolean;
+  /**
+ * Alias usado no front.
+ * No Supabase salvamos como muted_by_default.
+ */
+mutedByDefault?: boolean;
+
   show_video_controls: boolean;
   created_at?: string;
   updated_at?: string;
