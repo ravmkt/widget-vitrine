@@ -899,6 +899,20 @@ const initialAppearance = resolveAppearanceForStory(
   appearancesList || [],
   genSettings,
 );
+useEffect(() => {
+  if (!story) return;
+
+  const nextAppearance = resolveAppearanceForStory(
+    story,
+    appearances,
+    settings,
+  );
+
+  console.log('StoriesWidgetPage - Story atual:', story);
+  console.log('StoriesWidgetPage - Appearance aplicada:', nextAppearance);
+
+  setAppearance(nextAppearance);
+}, [story?.id, appearances, settings]);
 
 console.log('StoriesWidgetPage - Stories:', filteredStories);
 console.log('StoriesWidgetPage - Aparências:', appearancesList);
