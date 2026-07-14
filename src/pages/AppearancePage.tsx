@@ -265,6 +265,83 @@ const normalizeFloatingPosition = (
   return positionToFloatingPosition(position);
 };
 
+const mapAnyPositionToPositionValueForSave = (
+  value: unknown,
+): PositionValue | null => {
+  const text = String(value || '').trim();
+
+  const map: Record<string, PositionValue> = {
+    fixed_bottom_right: 'fixed_bottom_right',
+    fixed_bottom_left: 'fixed_bottom_left',
+    fixed_top_right: 'fixed_top_right',
+    fixed_top_left: 'fixed_top_left',
+
+    'bottom-right': 'fixed_bottom_right',
+    'bottom-left': 'fixed_bottom_left',
+    'top-right': 'fixed_top_right',
+    'top-left': 'fixed_top_left',
+
+    right: 'fixed_bottom_right',
+    left: 'fixed_bottom_left',
+
+    'Inferior direita': 'fixed_bottom_right',
+    'Inferior esquerda': 'fixed_bottom_left',
+    'Superior direita': 'fixed_top_right',
+    'Superior esquerda': 'fixed_top_left',
+
+    'inferior direita': 'fixed_bottom_right',
+    'inferior esquerda': 'fixed_bottom_left',
+    'superior direita': 'fixed_top_right',
+    'superior esquerda': 'fixed_top_left',
+  };
+
+  return map[text] || null;
+};
+
+const normalizePositionForSave = (
+  position?: unknown,
+  floatingPosition?: unknown,
+): PositionValue => {
+  return (
+    mapAnyPositionToPositionValueForSave(position) ||
+    mapAnyPositionToPositionValueForSave(floatingPosition) ||
+    'fixed_bottom_right'
+  );
+};
+
+const normalizeFloatingPositionForSave = (
+  position?: unknown,
+  floatingPosition?: unknown,
+): FloatingPosition => {
+  const normalizedPosition = normalizePositionForSave(
+    position,
+    floatingPosition,
+  );
+
+  return positionToFloatingPosition(normalizedPosition);
+};
+
+const normalizeFloatingConfigForSave = (
+  config: FloatingConfig,
+): FloatingConfig => {
+  const normalizedPosition = normalizePositionForSave(
+    config.position,
+    config.floating_position,
+  );
+
+  const normalizedFloatingPosition = normalizeFloatingPositionForSave(
+    normalizedPosition,
+    config.floating_position,
+  );
+
+  return normalizeFloatingShapeValues({
+    ...config,
+    border_style: normalizeBorderWidth(config.border_style, '2'),
+    position: normalizedPosition,
+    floating_position: normalizedFloatingPosition,
+  });
+};
+
 const safeNumber = (
   value: unknown,
   fallback: number,
