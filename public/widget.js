@@ -9,12 +9,13 @@
  * - Protegido contra CSS externo usando Shadow DOM
  * - Corrigido readStories/readStoryVideos/readVideos
  * - Corrigido modalCfg para modalConfig
- * - 202607141420
+ * - Corrigido renderCarousel sem herdar CSS fixo do floating
+ * - 202607141430
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - APARÊNCIA DINÂMICA - SHADOW DOM - 202607141420');
+  console.log('VIDLYTICS WIDGET CARREGADO - APARÊNCIA DINÂMICA - SHADOW DOM - 202607141430');
 
-  var VIDLYTICS_WIDGET_VERSION = 'dynamic-appearance-shadow-202607141420';
+  var VIDLYTICS_WIDGET_VERSION = 'dynamic-appearance-shadow-202607141430';
 
   if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) {
     return;
@@ -1330,6 +1331,17 @@
       + 'display:block!important;'
       + '}'
 
+      + buildModalCss(appearance);
+  }
+
+  function buildModalCss(appearance) {
+    var cfg = getFloatingConfig(appearance);
+    var primary = getPrimaryColor(appearance);
+    var text = getTextColor(appearance);
+    var font = getFontFamily(appearance);
+    var modalConfig = normalizeModalAppearanceConfig(appearance);
+
+    return ''
       + '.vl-overlay{'
       + 'position:fixed!important;'
       + 'inset:0!important;'
@@ -1881,6 +1893,9 @@
 
     var appearance = currentAppearance || {};
     var modalConfig = normalizeModalAppearanceConfig(appearance);
+    var primary = getPrimaryColor(appearance);
+    var text = getTextColor(appearance);
+    var font = getFontFamily(appearance);
 
     var host = createEl('div', 'vidlytics-carousel-root');
     host.id = 'vidlytics-carousel-root';
@@ -1888,11 +1903,24 @@
     var shadow = host.attachShadow({ mode: 'open' });
 
     var style = createEl('style');
+
     style.textContent =
-      buildShadowCss(appearance) +
+      ':host{' +
+      'all:initial!important;' +
+      'display:block!important;' +
+      'position:static!important;' +
+      'width:100%!important;' +
+      'max-width:100%!important;' +
+      'height:auto!important;' +
+      'z-index:auto!important;' +
+      'font-family:' + font + '!important;' +
+      '}' +
+
       '*{box-sizing:border-box!important;}' +
+
       '.carousel{' +
-      'font-family:' + getFontFamily(appearance) + '!important;' +
+      'font-family:' + font + '!important;' +
+      'width:100%!important;' +
       'max-width:100%!important;' +
       'overflow-x:auto!important;' +
       'padding:12px 16px!important;' +
@@ -1901,6 +1929,7 @@
       'scroll-snap-type:x mandatory!important;' +
       '-webkit-overflow-scrolling:touch!important;' +
       '}' +
+
       '.card{' +
       'all:unset!important;' +
       'cursor:pointer!important;' +
@@ -1910,6 +1939,7 @@
       'flex-direction:column!important;' +
       'gap:6px!important;' +
       '}' +
+
       '.media{' +
       'width:120px!important;' +
       'height:180px!important;' +
@@ -1923,23 +1953,29 @@
       'color:#64748b!important;' +
       'box-shadow:' + (modalConfig.shadow_enabled !== false ? '0 10px 24px rgba(15,23,42,.14)' : 'none') + '!important;' +
       '}' +
+
       '.media img{' +
       'width:100%!important;' +
       'height:100%!important;' +
       'object-fit:cover!important;' +
       'display:block!important;' +
       '}' +
+
       '.label{' +
       'max-width:120px!important;' +
       'font-size:12px!important;' +
       'font-weight:700!important;' +
-      'color:' + getTextColor(appearance) + '!important;' +
+      'color:' + text + '!important;' +
       'white-space:nowrap!important;' +
       'overflow:hidden!important;' +
       'text-overflow:ellipsis!important;' +
-      '}';
+      '}' +
+
+      buildModalCss(appearance);
 
     var container = createEl('div', 'carousel');
+
+    var carouselOwnsOverlay = false;
 
     if (!overlay || !modalContent) {
       overlay = createEl('div', 'vl-overlay');
@@ -1955,6 +1991,8 @@
           closeOverlay();
         }
       });
+
+      carouselOwnsOverlay = true;
     }
 
     stories.forEach(function (story) {
@@ -2035,7 +2073,7 @@
     shadow.appendChild(style);
     shadow.appendChild(container);
 
-    if (overlay && overlay.parentNode !== shadow) {
+    if (carouselOwnsOverlay) {
       shadow.appendChild(overlay);
     }
 
