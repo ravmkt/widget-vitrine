@@ -1285,7 +1285,7 @@
       + 'overflow:hidden!important;'
       + 'background:#fff!important;'
       + 'border-radius:24px!important;'
-      + 'box-shadow:' + (modalConfig.shadow_enabled !== false ? '0 24px 80px rgba(15,23,42,.3)' : 'none') + '!important;'
+      box-shadow:${modalCfg.shadow_enabled !== false ? '0 24px 80px rgba(15,23,42,.3)' : 'none'}!important;
       + 'display:flex!important;'
       + 'flex-direction:column!important;'
       + '}'
