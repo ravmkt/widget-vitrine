@@ -1,12 +1,12 @@
 /**
  * Vidlytics Widget — widget.js
- * Correção objetiva: fallback visual fixo + sem usar stores como aparência
- * Versão: 202607141520
+ * Correção: aparência controlada pela tela de configuração + fallback seguro
+ * Versão: 202607141555
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - FALLBACK VISUAL CORRIGIDO - 202607141520');
+  console.log('VIDLYTICS WIDGET CARREGADO - CONFIGURAÇÃO CONTROLA VISUAL - 202607141555');
 
-  var VIDLYTICS_WIDGET_VERSION = 'fallback-visual-corrigido-202607141520';
+  var VIDLYTICS_WIDGET_VERSION = 'config-controla-visual-202607141555';
 
   if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) return;
 
@@ -385,19 +385,393 @@
     return normalizeAppearanceItem(merged);
   }
 
+  function appearanceHasUsefulData(appearance) {
+    appearance = normalizeAppearanceItem(appearance || {});
+
+    var usefulNames = [
+      'floating_position',
+      'floatingPosition',
+      'position',
+      'posicao',
+      'posição',
+      'widget_position',
+      'widgetPosition',
+      'placement',
+      'floating_video_position',
+      'floatingVideoPosition',
+
+      'floating_shape',
+      'floatingShape',
+      'shape',
+      'form',
+      'forma',
+      'formato',
+      'widget_shape',
+      'widgetShape',
+      'floating_video_shape',
+      'floatingVideoShape',
+
+      'floating_width',
+      'floatingWidth',
+      'width',
+      'largura',
+      'widget_width',
+      'widgetWidth',
+      'floating_video_width',
+      'floatingVideoWidth',
+
+      'floating_height',
+      'floatingHeight',
+      'height',
+      'altura',
+      'widget_height',
+      'widgetHeight',
+      'floating_video_height',
+      'floatingVideoHeight',
+
+      'floating_radius',
+      'floatingRadius',
+      'border_radius',
+      'borderRadius',
+      'radius',
+      'raio',
+      'widget_radius',
+      'widgetRadius',
+
+      'floating_top',
+      'floatingTop',
+      'top',
+      'floating_bottom',
+      'floatingBottom',
+      'bottom',
+      'floating_side',
+      'floatingSide',
+      'side',
+
+      'distance_top',
+      'distanceTop',
+      'distancia_superior',
+      'distanciaSuperior',
+      'distance_bottom',
+      'distanceBottom',
+      'distancia_inferior',
+      'distanciaInferior',
+      'distance_side',
+      'distanceSide',
+      'distancia_lateral',
+      'distanciaLateral',
+
+      'floating_border_width',
+      'floatingBorderWidth',
+      'border_width',
+      'borderWidth',
+      'largura_borda',
+      'larguraBorda',
+
+      'primary_color',
+      'primaryColor',
+      'secondary_color',
+      'secondaryColor',
+      'border_color',
+      'borderColor',
+      'text_color',
+      'textColor',
+      'font_family',
+      'fontFamily',
+
+      'show_title',
+      'showTitle',
+      'show_product',
+      'showProduct',
+      'hide_stories',
+      'hideStories',
+      'shadow_enabled',
+      'shadowEnabled'
+    ];
+
+    for (var i = 0; i < usefulNames.length; i += 1) {
+      var value = readAppearanceValue(appearance, [usefulNames[i]]);
+
+      if (value !== undefined && value !== null && value !== '') {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  function extractAppearanceFromItem(item, allowDirectFields) {
+    if (!item) return {};
+
+    var merged = {};
+
+    [
+      item.appearance,
+      item.aparencia,
+      item.appearance_config,
+      item.appearanceConfig,
+      item.widget_appearance,
+      item.widgetAppearance,
+      item.widget_config,
+      item.widgetConfig,
+      item.settings,
+      item.config,
+      item.style,
+      item.styles,
+      item.data,
+      item.metadata,
+      item.customization,
+      item.customization_config,
+      item.theme,
+      item.theme_config,
+      item.floating,
+      item.floatingConfig,
+      item.floatingAppearance,
+      item.floating_video,
+      item.floatingVideo,
+      item.floatingVideoConfig,
+      item.floatingVideoAppearance
+    ].forEach(function (src) {
+      flattenAppearanceInto(merged, src, 0);
+    });
+
+    if (allowDirectFields) {
+      flattenAppearanceInto(merged, item, 0);
+    }
+
+    return normalizeAppearanceItem(merged);
+  }
+
+  function itemBelongsToStore(item) {
+    if (!item || !storeId) return false;
+
+    var possibleValues = [
+      item.store_id,
+      item.storeId,
+      item.loja_id,
+      item.lojaId,
+      item.license_id,
+      item.licenseId,
+      item.tenant_id,
+      item.tenantId,
+      item.account_id,
+      item.accountId,
+      item.shop_id,
+      item.shopId,
+      item.store,
+      item.loja,
+      item.slug,
+      item.store_slug,
+      item.storeSlug
+    ];
+
+    for (var i = 0; i < possibleValues.length; i += 1) {
+      if (
+        possibleValues[i] !== undefined &&
+        possibleValues[i] !== null &&
+        possibleValues[i] !== '' &&
+        String(possibleValues[i]) === String(storeId)
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  function chooseBestAppearance(candidates) {
+    if (!candidates || !candidates.length) return null;
+
+    var best = null;
+    var bestScore = -1;
+
+    candidates.forEach(function (candidate) {
+      var item = candidate.item;
+      var appearance = candidate.appearance;
+
+      if (!appearanceHasUsefulData(appearance)) return;
+
+      var score = 0;
+
+      if (itemBelongsToStore(item)) score += 1000;
+      if (item.active === true) score += 100;
+      if (item.enabled === true) score += 100;
+      if (String(item.status || '').toLowerCase() === 'active') score += 100;
+      if (item.is_default === true) score += 20;
+      if (item.default === true) score += 20;
+      if (item.updated_at) score += 10;
+      if (item.created_at) score += 5;
+
+      if (
+        !item.store_id &&
+        !item.storeId &&
+        !item.loja_id &&
+        !item.lojaId &&
+        !item.license_id &&
+        !item.licenseId
+      ) {
+        score += 1;
+      }
+
+      if (score > bestScore) {
+        bestScore = score;
+        best = candidate;
+      }
+    });
+
+    return best;
+  }
+
+  function fetchDbAppearance() {
+    if (!storeId || !hasSupabase) return Promise.resolve({});
+
+    var store = encodeURIComponent(storeId);
+
+    var paths = [
+      {
+        path: 'widget_appearances?select=*&store_id=eq.' + store + '&limit=50',
+        direct: true
+      },
+      {
+        path: 'widget_appearances?select=*&loja_id=eq.' + store + '&limit=50',
+        direct: true
+      },
+      {
+        path: 'appearance_settings?select=*&store_id=eq.' + store + '&limit=50',
+        direct: true
+      },
+      {
+        path: 'appearance_settings?select=*&loja_id=eq.' + store + '&limit=50',
+        direct: true
+      },
+      {
+        path: 'appearances?select=*&store_id=eq.' + store + '&limit=50',
+        direct: true
+      },
+      {
+        path: 'appearances?select=*&loja_id=eq.' + store + '&limit=50',
+        direct: true
+      },
+      {
+        path: 'widget_settings?select=*&store_id=eq.' + store + '&limit=50',
+        direct: true
+      },
+      {
+        path: 'widget_settings?select=*&loja_id=eq.' + store + '&limit=50',
+        direct: true
+      },
+      {
+        path: 'settings?select=*&store_id=eq.' + store + '&limit=50',
+        direct: true
+      },
+      {
+        path: 'settings?select=*&loja_id=eq.' + store + '&limit=50',
+        direct: true
+      },
+
+      /*
+       * Stores entra por último e SEM campos diretos.
+       * Assim evita usar a tabela stores como aparência indevidamente.
+       * Só pega se tiver appearance/config/settings dentro dela.
+       */
+      {
+        path: 'stores?select=*&id=eq.' + store + '&limit=1',
+        direct: false
+      },
+      {
+        path: 'stores?select=*&store_id=eq.' + store + '&limit=1',
+        direct: false
+      },
+      {
+        path: 'stores?select=*&loja_id=eq.' + store + '&limit=1',
+        direct: false
+      }
+    ];
+
+    var candidates = [];
+    var chain = Promise.resolve();
+
+    paths.forEach(function (entry) {
+      chain = chain.then(function () {
+        return fetchJson(entry.path).then(function (items) {
+          if (!items || !items.length) return;
+
+          console.log('VIDLYTICS DB APARÊNCIA TESTADA:', entry.path, items);
+
+          items.forEach(function (item) {
+            var appearance = extractAppearanceFromItem(item, entry.direct);
+
+            if (appearanceHasUsefulData(appearance)) {
+              candidates.push({
+                path: entry.path,
+                item: item,
+                appearance: appearance
+              });
+            }
+          });
+        });
+      });
+    });
+
+    return chain.then(function () {
+      var best = chooseBestAppearance(candidates);
+
+      if (!best) {
+        console.warn('VIDLYTICS: nenhuma aparência salva encontrada no banco. Usando fallback.');
+        return {};
+      }
+
+      console.log('VIDLYTICS DB APARÊNCIA ESCOLHIDA PATH:', best.path);
+      console.log('VIDLYTICS DB APARÊNCIA ESCOLHIDA RAW:', best.item);
+      console.log('VIDLYTICS DB APARÊNCIA ESCOLHIDA NORMALIZADA:', best.appearance);
+
+      return best.appearance;
+    });
+  }
+
   function readAppearance() {
-    var finalAppearance = {};
+    var configAppearance = normalizeAppearanceItem(getConfigAppearance());
+    var storageAppearance = normalizeAppearanceItem(getStorageAppearance());
 
-    mergeObject(finalAppearance, DEFAULT_APPEARANCE);
-    mergeObject(finalAppearance, getConfigAppearance());
-    mergeObject(finalAppearance, getStorageAppearance());
+    function buildFinalAppearance(dbAppearance) {
+      var finalAppearance = {};
 
-    finalAppearance = normalizeAppearanceItem(finalAppearance);
+      /*
+       * Ordem correta:
+       * 1. Fallback
+       * 2. Config local
+       * 3. LocalStorage
+       * 4. Banco/tela de configuração
+       *
+       * O banco vem por último porque a tela precisa controlar tudo.
+       */
+      mergeObject(finalAppearance, DEFAULT_APPEARANCE);
+      mergeObject(finalAppearance, configAppearance);
+      mergeObject(finalAppearance, storageAppearance);
 
-    console.log('VIDLYTICS APARÊNCIA FINAL APLICADA:', finalAppearance);
-    console.log('VIDLYTICS FLOATING CONFIG FINAL:', getFloatingConfig(finalAppearance));
+      if (appearanceHasUsefulData(dbAppearance)) {
+        mergeObject(finalAppearance, dbAppearance);
+      }
 
-    return Promise.resolve(finalAppearance);
+      finalAppearance = normalizeAppearanceItem(finalAppearance);
+
+      console.log('VIDLYTICS CONFIG APARÊNCIA:', configAppearance);
+      console.log('VIDLYTICS STORAGE APARÊNCIA:', storageAppearance);
+      console.log('VIDLYTICS DB APARÊNCIA:', dbAppearance || {});
+      console.log('VIDLYTICS APARÊNCIA FINAL APLICADA:', finalAppearance);
+      console.log('VIDLYTICS FLOATING CONFIG FINAL:', getFloatingConfig(finalAppearance));
+
+      return finalAppearance;
+    }
+
+    return fetchDbAppearance()
+      .then(function (dbAppearance) {
+        return buildFinalAppearance(dbAppearance || {});
+      })
+      .catch(function (error) {
+        console.warn('Vidlytics Widget: erro ao carregar aparência do banco:', error);
+        return buildFinalAppearance({});
+      });
   }
 
   function normalizeFloatingPosition(value) {
@@ -567,7 +941,8 @@
         'border_width',
         'borderWidth',
         'largura_borda',
-        'larguraDaBorda'
+        'larguraDaBorda',
+        'larguraBorda'
       ]),
       DEFAULT_APPEARANCE.floating_border_width
     );
@@ -580,6 +955,7 @@
         'distance_top',
         'distanceTop',
         'distancia_superior',
+        'distanciaSuperior',
         'offset_top',
         'offsetTop'
       ]),
@@ -594,6 +970,7 @@
         'distance_bottom',
         'distanceBottom',
         'distancia_inferior',
+        'distanciaInferior',
         'offset_bottom',
         'offsetBottom'
       ]),
@@ -608,6 +985,7 @@
         'distance_side',
         'distanceSide',
         'distancia_lateral',
+        'distanciaLateral',
         'offset_side',
         'offsetSide'
       ]),
@@ -739,25 +1117,7 @@
     fallbackMetrics.push(nextMetric);
     setStorageItem('vidlytics_metrics', fallbackMetrics);
 
-    if (!storeId || !hasSupabase) return Promise.resolve();
-
-    return supabaseFetch('metrics', {
-      method: 'POST',
-      headers: { Prefer: 'return=minimal' },
-      body: JSON.stringify({
-        store_id: nextMetric.store_id,
-        story_id: nextMetric.story_id,
-        video_id: nextMetric.video_id,
-        product_id: nextMetric.product_id,
-        event_type: nextMetric.event_type,
-        page_url: nextMetric.page_url,
-        device_type: nextMetric.device_type,
-        browser: nextMetric.browser,
-        referrer: nextMetric.referrer
-      })
-    })
-      .then(function () {})
-      .catch(function () {});
+    return Promise.resolve();
   }
 
   function readStories() {
