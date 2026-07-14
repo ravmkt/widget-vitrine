@@ -340,6 +340,83 @@ const getByIdSafe = async <T,>(
   }
 };
 
+const idsEqual = (a?: any, b?: any) => {
+  if (a === undefined || a === null || b === undefined || b === null) {
+    return false;
+  }
+
+  return String(a) === String(b);
+};
+
+const getStoryAppearanceId = (story?: any | null) => {
+  if (!story) return null;
+
+  return (
+    story.appearance_id ||
+    story.appearanceId ||
+    story.appearance?.id ||
+    story.style_id ||
+    story.styleId ||
+    null
+  );
+};
+
+const getSettingsDefaultAppearanceId = (settings?: any | null) => {
+  if (!settings) return null;
+
+  return (
+    settings.default_appearance_id ||
+    settings.defaultAppearanceId ||
+    settings.appearance_id ||
+    settings.appearanceId ||
+    null
+  );
+};
+
+const resolveAppearanceForStory = (
+  story: any | null,
+  appearancesList: any[] = [],
+  settings: any | null = null,
+) => {
+  if (!Array.isArray(appearancesList) || appearancesList.length === 0) {
+    return null;
+  }
+
+  const storyAppearanceId = getStoryAppearanceId(story);
+
+  if (storyAppearanceId) {
+    const storyAppearance = appearancesList.find((item: any) =>
+      idsEqual(item.id, storyAppearanceId),
+    );
+
+    if (storyAppearance) return storyAppearance;
+  }
+
+  const defaultAppearanceId = getSettingsDefaultAppearanceId(settings);
+
+  if (defaultAppearanceId) {
+    const settingsAppearance = appearancesList.find((item: any) =>
+      idsEqual(item.id, defaultAppearanceId),
+    );
+
+    if (settingsAppearance) return settingsAppearance;
+  }
+
+  return (
+    appearancesList.find(
+      (item: any) =>
+        item.is_default === true ||
+        item.isDefault === true ||
+        item.default === true ||
+        item.is_active === true ||
+        item.isActive === true ||
+        item.active === true,
+    ) ||
+    appearancesList[0] ||
+    null
+  );
+};
+
 const readLocalComments = (): CommentItem[] => {
   try {
     return JSON.parse(localStorage.getItem('story_video_comments') || '[]');
