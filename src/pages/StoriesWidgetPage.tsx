@@ -630,8 +630,9 @@ export default function StoriesWidgetPage() {
 
   const [product, setProduct] = useState<any | null>(null);
   const [settings, setSettings] = useState<any | null>(null);
-  const [appearances, setAppearances] = useState<any[]>([]);
-  const [model, setModel] = useState<any | null>(null);
+const [appearances, setAppearances] = useState<any[]>([]);
+const [appearance, setAppearance] = useState<any | null>(null);
+const [model, setModel] = useState<any | null>(null);
   const [showMeasures, setShowMeasures] = useState(false);
 
   const [videoError, setVideoError] = useState(false);
