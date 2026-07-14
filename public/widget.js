@@ -1,12 +1,12 @@
 /**
  * Vidlytics Widget — widget.js
- * Correção final: aparência não usa stores como config visual
- * Versão: 202607141430
+ * Correção objetiva: fallback visual fixo + sem usar stores como aparência
+ * Versão: 202607141520
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - CORREÇÃO FINAL APARÊNCIA - 202607141430');
+  console.log('VIDLYTICS WIDGET CARREGADO - FALLBACK VISUAL CORRIGIDO - 202607141520');
 
-  var VIDLYTICS_WIDGET_VERSION = 'dynamic-appearance-final-202607141430';
+  var VIDLYTICS_WIDGET_VERSION = 'fallback-visual-corrigido-202607141520';
 
   if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) return;
 
@@ -19,7 +19,6 @@
   } catch (e) {}
 
   window.__vidlytics_widget_loaded_version = VIDLYTICS_WIDGET_VERSION;
-  window.__vidlytics_widget_initialized = false;
 
   var config = window.VIDLYTICS_CONFIG || {};
   var storeId = config.storeId || config.lojaId || config.licenseId || null;
@@ -46,17 +45,25 @@
 
   var VIDEO_FILE_REGEX = /\.(mp4|webm|ogg|mov|m4v|m3u8)(\?.*)?$/i;
 
-  var DEFAULT_FLOATING = {
-    position: 'top-right',
-    shape: 'portrait',
-    top: 20,
-    bottom: 20,
-    side: 23,
-    width: 85,
-    height: 151,
-    radius: 12,
-    borderWidth: 2,
-    zIndex: 2147483647
+  var DEFAULT_APPEARANCE = {
+    floating_position: 'bottom-right',
+    floating_shape: 'portrait',
+    floating_top: 20,
+    floating_bottom: 24,
+    floating_side: 20,
+    floating_width: 85,
+    floating_height: 151,
+    floating_radius: 12,
+    floating_border_width: 2,
+    z_index: 2147483647,
+    primary_color: '#0094EB',
+    secondary_color: '#EC4899',
+    text_color: '#0f172a',
+    font_family: 'Inter, system-ui, sans-serif',
+    show_title: true,
+    show_product: true,
+    hide_stories: false,
+    shadow_enabled: true
   };
 
   function createEl(tag, className) {
@@ -378,377 +385,19 @@
     return normalizeAppearanceItem(merged);
   }
 
-  function appearanceHasUsefulData(appearance) {
-    appearance = normalizeAppearanceItem(appearance || {});
-
-    var usefulNames = [
-      'floating_position',
-      'floatingPosition',
-      'position',
-      'posicao',
-      'posição',
-      'widget_position',
-      'widgetPosition',
-      'placement',
-      'floating_video_position',
-      'floatingVideoPosition',
-
-      'floating_shape',
-      'floatingShape',
-      'shape',
-      'form',
-      'forma',
-      'formato',
-      'widget_shape',
-      'widgetShape',
-      'floating_video_shape',
-      'floatingVideoShape',
-
-      'floating_width',
-      'floatingWidth',
-      'width',
-      'largura',
-      'widget_width',
-      'widgetWidth',
-      'floating_video_width',
-      'floatingVideoWidth',
-
-      'floating_height',
-      'floatingHeight',
-      'height',
-      'altura',
-      'widget_height',
-      'widgetHeight',
-      'floating_video_height',
-      'floatingVideoHeight',
-
-      'floating_radius',
-      'floatingRadius',
-      'border_radius',
-      'borderRadius',
-      'radius',
-      'raio',
-      'widget_radius',
-      'widgetRadius',
-
-      'floating_top',
-      'floatingTop',
-      'top',
-      'floating_bottom',
-      'floatingBottom',
-      'bottom',
-      'floating_side',
-      'floatingSide',
-      'side',
-
-      'primary_color',
-      'primaryColor',
-      'secondary_color',
-      'secondaryColor',
-      'border_color',
-      'borderColor',
-      'text_color',
-      'textColor',
-      'font_family',
-      'fontFamily',
-
-      'show_title',
-      'showTitle',
-      'show_product',
-      'showProduct',
-      'hide_stories',
-      'hideStories',
-      'shadow_enabled',
-      'shadowEnabled'
-    ];
-
-    for (var i = 0; i < usefulNames.length; i += 1) {
-      var value = readAppearanceValue(appearance, [usefulNames[i]]);
-
-      if (value !== undefined && value !== null && value !== '') {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  function extractAppearanceFromItem(item) {
-    if (!item) return {};
-
-    var merged = {};
-
-    [
-      item.appearance,
-      item.aparencia,
-      item.appearance_config,
-      item.appearanceConfig,
-      item.widget_appearance,
-      item.widgetAppearance,
-      item.widget_config,
-      item.widgetConfig,
-      item.settings,
-      item.config,
-      item.style,
-      item.styles,
-      item.data,
-      item.metadata,
-      item.customization,
-      item.customization_config,
-      item.theme,
-      item.theme_config,
-      item.floating,
-      item.floatingConfig,
-      item.floatingAppearance,
-      item.floating_video,
-      item.floatingVideo,
-      item.floatingVideoConfig,
-      item.floatingVideoAppearance
-    ].forEach(function (src) {
-      flattenAppearanceInto(merged, src, 0);
-    });
-
-    flattenAppearanceInto(merged, item, 0);
-
-    return normalizeAppearanceItem(merged);
-  }
-
-  function valueMatchesStore(value, store) {
-    if (value === undefined || value === null || value === '') return false;
-    if (store === undefined || store === null || store === '') return false;
-
-    return String(value).trim() === String(store).trim();
-  }
-
-  function itemBelongsToStore(item, storeInfo) {
-    if (!item) return false;
-
-    var possibleStoreValues = [
-      storeId,
-      storeInfo && storeInfo.id,
-      storeInfo && storeInfo.store_id,
-      storeInfo && storeInfo.loja_id,
-      storeInfo && storeInfo.slug,
-      storeInfo && storeInfo.slug_loja,
-      storeInfo && storeInfo.name
-    ].filter(function (value) {
-      return value !== undefined && value !== null && value !== '';
-    });
-
-    var possibleItemValues = [
-      item.store_id,
-      item.storeId,
-      item.loja_id,
-      item.lojaId,
-      item.license_id,
-      item.licenseId,
-      item.tenant_id,
-      item.tenantId,
-      item.account_id,
-      item.accountId,
-      item.shop_id,
-      item.shopId,
-      item.store,
-      item.loja,
-      item.slug,
-      item.store_slug,
-      item.storeSlug
-    ].filter(function (value) {
-      return value !== undefined && value !== null && value !== '';
-    });
-
-    for (var i = 0; i < possibleItemValues.length; i += 1) {
-      for (var j = 0; j < possibleStoreValues.length; j += 1) {
-        if (valueMatchesStore(possibleItemValues[i], possibleStoreValues[j])) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
-
-  function chooseBestAppearance(items, storeInfo) {
-    if (!items || !items.length) return null;
-
-    var best = null;
-    var bestScore = -1;
-
-    items.forEach(function (item) {
-      var extracted = extractAppearanceFromItem(item);
-
-      if (!appearanceHasUsefulData(extracted)) return;
-
-      var score = 0;
-
-      if (itemBelongsToStore(item, storeInfo)) score += 100;
-      if (item.is_default === true) score += 20;
-      if (item.default === true) score += 20;
-      if (item.active === true) score += 10;
-      if (item.enabled === true) score += 10;
-      if (item.updated_at) score += 2;
-      if (item.created_at) score += 1;
-
-      if (score > bestScore) {
-        bestScore = score;
-        best = item;
-      }
-    });
-
-    return best;
-  }
-
-  function getStoreInfo() {
-    if (!storeId || !hasSupabase) return Promise.resolve({});
-
-    var store = encodeURIComponent(storeId);
-
-    return fetchJson('stores?select=*&id=eq.' + store + '&limit=1')
-      .then(function (items) {
-        if (items && items.length) return items[0];
-
-        return fetchJson('stores?select=*&store_id=eq.' + store + '&limit=1');
-      })
-      .then(function (items) {
-        if (!Array.isArray(items)) return items || {};
-        if (items.length) return items[0];
-
-        return fetchJson('stores?select=*&loja_id=eq.' + store + '&limit=1');
-      })
-      .then(function (items) {
-        if (!Array.isArray(items)) return items || {};
-        return items.length ? items[0] : {};
-      })
-      .catch(function () {
-        return {};
-      });
-  }
-
   function readAppearance() {
-    var configAppearance = normalizeAppearanceItem(getConfigAppearance());
-    var storageAppearance = normalizeAppearanceItem(getStorageAppearance());
+    var finalAppearance = {};
 
-    function fetchFirstDbAppearance() {
-      if (!storeId || !hasSupabase) return Promise.resolve({});
+    mergeObject(finalAppearance, DEFAULT_APPEARANCE);
+    mergeObject(finalAppearance, getConfigAppearance());
+    mergeObject(finalAppearance, getStorageAppearance());
 
-      var store = encodeURIComponent(storeId);
+    finalAppearance = normalizeAppearanceItem(finalAppearance);
 
-      return getStoreInfo().then(function (storeInfo) {
-        console.log('VIDLYTICS STORE INFO:', storeInfo || {});
+    console.log('VIDLYTICS APARÊNCIA FINAL APLICADA:', finalAppearance);
+    console.log('VIDLYTICS FLOATING CONFIG FINAL:', getFloatingConfig(finalAppearance));
 
-        var paths = [
-          'appearances?select=*&limit=200',
-          'appearance_settings?select=*&limit=200',
-          'widget_appearances?select=*&limit=200',
-          'widget_settings?select=*&limit=200',
-          'settings?select=*&limit=200',
-
-          'appearances?select=*&store_id=eq.' + store + '&limit=50',
-          'appearances?select=*&loja_id=eq.' + store + '&limit=50',
-          'appearance_settings?select=*&store_id=eq.' + store + '&limit=50',
-          'appearance_settings?select=*&loja_id=eq.' + store + '&limit=50',
-          'widget_appearances?select=*&store_id=eq.' + store + '&limit=50',
-          'widget_appearances?select=*&loja_id=eq.' + store + '&limit=50',
-          'widget_settings?select=*&store_id=eq.' + store + '&limit=50',
-          'widget_settings?select=*&loja_id=eq.' + store + '&limit=50',
-          'settings?select=*&store_id=eq.' + store + '&limit=50',
-          'settings?select=*&loja_id=eq.' + store + '&limit=50'
-        ];
-
-        var allCandidates = [];
-        var chain = Promise.resolve();
-
-        paths.forEach(function (path) {
-          chain = chain.then(function () {
-            return fetchJson(path).then(function (items) {
-              if (items && items.length) {
-                console.log('VIDLYTICS DB LISTA TESTADA:', path, items);
-
-                items.forEach(function (item) {
-                  allCandidates.push(item);
-                });
-              }
-            });
-          });
-        });
-
-        return chain.then(function () {
-          if (storeInfo && appearanceHasUsefulData(extractAppearanceFromItem(storeInfo))) {
-            allCandidates.push(storeInfo);
-          }
-
-          var best = chooseBestAppearance(allCandidates, storeInfo);
-
-          if (best) {
-            console.log('VIDLYTICS DB APARÊNCIA ESCOLHIDA:', best);
-            console.log('VIDLYTICS DB APARÊNCIA ESCOLHIDA NORMALIZADA:', extractAppearanceFromItem(best));
-            return best;
-          }
-
-          console.warn('VIDLYTICS: nenhuma aparência útil encontrada no Supabase. Usando config/localStorage/padrão.');
-
-          return {};
-        });
-      });
-    }
-
-    function buildFinalAppearance(dbRawAppearance) {
-      var dbAppearance = extractAppearanceFromItem(dbRawAppearance || {});
-      var finalAppearance = {};
-
-      mergeObject(finalAppearance, configAppearance);
-      mergeObject(finalAppearance, storageAppearance);
-
-      if (appearanceHasUsefulData(dbAppearance)) {
-        mergeObject(finalAppearance, dbAppearance);
-      }
-
-      finalAppearance = normalizeAppearanceItem(finalAppearance);
-
-      console.log('VIDLYTICS CONFIG APARÊNCIA:', configAppearance);
-      console.log('VIDLYTICS STORAGE APARÊNCIA:', storageAppearance);
-      console.log('VIDLYTICS DB RAW APARÊNCIA ESCOLHIDA:', dbRawAppearance || {});
-      console.log('VIDLYTICS DB APARÊNCIA NORMALIZADA:', dbAppearance);
-      console.log('VIDLYTICS APARÊNCIA FINAL ACHATADA:', finalAppearance);
-
-      console.log('VIDLYTICS DEBUG POSITION:', readAppearanceValue(finalAppearance, [
-        'floating_position',
-        'floatingPosition',
-        'position',
-        'posicao',
-        'posição',
-        'widget_position',
-        'widgetPosition',
-        'placement'
-      ]));
-
-      console.log('VIDLYTICS DEBUG SHAPE:', readAppearanceValue(finalAppearance, [
-        'floating_shape',
-        'floatingShape',
-        'shape',
-        'forma',
-        'formato',
-        'widget_shape',
-        'widgetShape'
-      ]));
-
-      console.log('VIDLYTICS DEBUG CONFIG:', getFloatingConfig(finalAppearance));
-
-      return finalAppearance;
-    }
-
-    if (!storeId || !hasSupabase) {
-      return Promise.resolve(buildFinalAppearance({}));
-    }
-
-    return fetchFirstDbAppearance()
-      .then(function (dbRawAppearance) {
-        return buildFinalAppearance(dbRawAppearance || {});
-      })
-      .catch(function (error) {
-        console.warn('Vidlytics Widget: erro ao carregar aparência:', error);
-        return buildFinalAppearance({});
-      });
+    return Promise.resolve(finalAppearance);
   }
 
   function normalizeFloatingPosition(value) {
@@ -790,7 +439,7 @@
       return 'bottom-right';
     }
 
-    return DEFAULT_FLOATING.position;
+    return DEFAULT_APPEARANCE.floating_position;
   }
 
   function normalizeFloatingShape(value) {
@@ -824,26 +473,11 @@
       return 'circle';
     }
 
-    return '';
+    return DEFAULT_APPEARANCE.floating_shape;
   }
 
   function getFloatingConfig(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
-
-    var rawShape = readAppearanceValue(appearance, [
-      'floating_shape',
-      'floatingShape',
-      'shape',
-      'form',
-      'forma',
-      'formato',
-      'widget_shape',
-      'widgetShape',
-      'floating_video_shape',
-      'floatingVideoShape'
-    ]);
-
-    var shape = normalizeFloatingShape(rawShape);
 
     var rawPosition = readAppearanceValue(appearance, [
       'floating_position',
@@ -858,7 +492,21 @@
       'floatingVideoPosition'
     ]);
 
+    var rawShape = readAppearanceValue(appearance, [
+      'floating_shape',
+      'floatingShape',
+      'shape',
+      'form',
+      'forma',
+      'formato',
+      'widget_shape',
+      'widgetShape',
+      'floating_video_shape',
+      'floatingVideoShape'
+    ]);
+
     var position = normalizeFloatingPosition(rawPosition);
+    var shape = normalizeFloatingShape(rawShape);
 
     var width = toNumber(
       readAppearanceValue(appearance, [
@@ -873,7 +521,7 @@
         'size',
         'tamanho'
       ]),
-      DEFAULT_FLOATING.width
+      DEFAULT_APPEARANCE.floating_width
     );
 
     var heightRaw = readAppearanceValue(appearance, [
@@ -888,13 +536,6 @@
     ]);
 
     var height = toNumber(heightRaw, null);
-
-    if (!shape && height) {
-      if (Math.abs(height - width) <= 2) shape = 'square';
-      else if (height > width) shape = 'portrait';
-    }
-
-    if (!shape) shape = DEFAULT_FLOATING.shape;
 
     if (!height) {
       if (shape === 'circle' || shape === 'square') height = width;
@@ -914,7 +555,7 @@
         'widget_radius',
         'widgetRadius'
       ]),
-      shape === 'circle' ? 999 : DEFAULT_FLOATING.radius
+      shape === 'circle' ? 999 : DEFAULT_APPEARANCE.floating_radius
     );
 
     if (shape === 'circle') radius = 999;
@@ -928,7 +569,7 @@
         'largura_borda',
         'larguraDaBorda'
       ]),
-      DEFAULT_FLOATING.borderWidth
+      DEFAULT_APPEARANCE.floating_border_width
     );
 
     var top = toNumber(
@@ -942,7 +583,7 @@
         'offset_top',
         'offsetTop'
       ]),
-      DEFAULT_FLOATING.top
+      DEFAULT_APPEARANCE.floating_top
     );
 
     var bottom = toNumber(
@@ -956,7 +597,7 @@
         'offset_bottom',
         'offsetBottom'
       ]),
-      DEFAULT_FLOATING.bottom
+      DEFAULT_APPEARANCE.floating_bottom
     );
 
     var side = toNumber(
@@ -970,7 +611,7 @@
         'offset_side',
         'offsetSide'
       ]),
-      DEFAULT_FLOATING.side
+      DEFAULT_APPEARANCE.floating_side
     );
 
     var zIndex = toNumber(
@@ -981,7 +622,7 @@
         'floating_z_index',
         'floatingZIndex'
       ]),
-      DEFAULT_FLOATING.zIndex
+      DEFAULT_APPEARANCE.z_index
     );
 
     var isTop = position.indexOf('top') === 0;
@@ -1014,7 +655,7 @@
         'border_color',
         'borderColor',
         'cor_borda'
-      ]) || '#0094EB'
+      ]) || DEFAULT_APPEARANCE.primary_color
     );
   }
 
@@ -1026,7 +667,7 @@
         'cor_secundaria',
         'gradient_color',
         'gradientColor'
-      ]) || '#EC4899'
+      ]) || DEFAULT_APPEARANCE.secondary_color
     );
   }
 
@@ -1036,7 +677,7 @@
         'text_color',
         'textColor',
         'cor_texto'
-      ]) || '#0f172a'
+      ]) || DEFAULT_APPEARANCE.text_color
     );
   }
 
@@ -1046,7 +687,7 @@
         'font_family',
         'fontFamily',
         'fonte'
-      ]) || 'Inter, system-ui, sans-serif'
+      ]) || DEFAULT_APPEARANCE.font_family
     );
   }
 
@@ -1056,19 +697,19 @@
     return {
       show_title: toBoolean(
         firstDefined(appearance.show_title, appearance.showTitle),
-        true
+        DEFAULT_APPEARANCE.show_title
       ),
       show_product: toBoolean(
         firstDefined(appearance.show_product, appearance.showProduct),
-        true
+        DEFAULT_APPEARANCE.show_product
       ),
       hide_stories: toBoolean(
         firstDefined(appearance.hide_stories, appearance.hideStories),
-        false
+        DEFAULT_APPEARANCE.hide_stories
       ),
       shadow_enabled: toBoolean(
         firstDefined(appearance.shadow_enabled, appearance.shadowEnabled),
-        true
+        DEFAULT_APPEARANCE.shadow_enabled
       )
     };
   }
@@ -1167,8 +808,10 @@
     switch (rule.condition_type) {
       case 'all_pages':
         return true;
+
       case 'home_only':
         return path === '/' || path === '/home' || path === '/index.html' || path === '';
+
       case 'product_pages':
         return (
           path.indexOf('/product') !== -1 ||
@@ -1176,6 +819,7 @@
           path.indexOf('/produto') !== -1 ||
           path.indexOf('/produtos') !== -1
         );
+
       case 'category_pages':
         return (
           path.indexOf('/category') !== -1 ||
@@ -1184,20 +828,26 @@
           path.indexOf('/colecao') !== -1 ||
           path.indexOf('/collections') !== -1
         );
+
       case 'contains':
         return href.indexOf(value) !== -1;
+
       case 'equals':
         return href === value;
+
       case 'starts_with':
         return href.indexOf(value) === 0;
+
       case 'ends_with':
         return href.lastIndexOf(value) === href.length - value.length;
+
       case 'regex':
         try {
           return new RegExp(value).test(href);
         } catch (e) {
           return false;
         }
+
       default:
         return true;
     }
