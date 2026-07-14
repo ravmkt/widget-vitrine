@@ -11,8 +11,17 @@
 (function () {
   console.log('VIDLYTICS WIDGET CARREGADO - SHADOW DOM PORTRAIT 9:16 - 202607141248');
 
-  if (window.__vidlytics_widget_initialized) return;
-  window.__vidlytics_widget_initialized = true;
+  var VIDLYTICS_WIDGET_VERSION = 'shadow-portrait-2026071416';
+
+if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) {
+  return;
+}
+
+window.__vidlytics_widget_loaded_version = VIDLYTICS_WIDGET_VERSION;
+
+// Não confiar na flag antiga, porque ela pode ter sido criada por uma versão circular anterior.
+window.__vidlytics_widget_initialized = false;
+
 
   var config = window.VIDLYTICS_CONFIG || {};
   var storeId = config.storeId || config.lojaId || config.licenseId || null;
