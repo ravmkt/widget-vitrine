@@ -67,15 +67,6 @@ export interface Appearance {
   show_share_button: boolean;
   show_whatsapp_button: boolean;
   show_product_button: boolean;
-  use_global_appearance: true,
-  useGlobalAppearance?: boolean;
-  floating_config?: ResponsiveAppearanceConfig;
-  carousel_config?: ResponsiveAppearanceConfig;
-  grid_config?: ResponsiveAppearanceConfig;
-  modal_config?: ResponsiveAppearanceConfig;
-  created_at?: string;
-  updated_at?: string;
-}
 
   /**
    * Campo usado no Supabase.
@@ -264,22 +255,23 @@ export interface GeneralSettings {
   floating_widget_enabled: boolean;
   default_appearance_id?: string | null;
 
-/**
- * Alias usado no front.
- * No Supabase salvamos como default_appearance_id.
- */
-defaultAppearanceId?: string | null;
+  /**
+   * Alias usado no front.
+   * No Supabase salvamos como default_appearance_id.
+   */
+  defaultAppearanceId?: string | null;
 
   timezone: string;
   language: string;
   open_product_new_tab: boolean;
   autoplay: boolean;
   muted_by_default: boolean;
+
   /**
- * Alias usado no front.
- * No Supabase salvamos como muted_by_default.
- */
-mutedByDefault?: boolean;
+   * Alias usado no front.
+   * No Supabase salvamos como muted_by_default.
+   */
+  mutedByDefault?: boolean;
 
   show_video_controls: boolean;
   created_at?: string;
@@ -386,6 +378,7 @@ const DEFAULT_APPEARANCES: Appearance[] = [
     store_id: DEFAULT_STORE.id,
     name: 'Estilo Vitrine Azul',
     is_default: true,
+    isDefault: true,
     primary_color: '#0094EB',
     secondary_color: '#0E4787',
     text_color: '#0F172A',
@@ -732,19 +725,11 @@ const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
     'show_share_button',
     'show_whatsapp_button',
     'show_product_button',
-
-    /**
-     * Novos campos da tela AppearancePage.
-     *
-     * No front pode existir useGlobalAppearance,
-     * mas no Supabase salvamos como use_global_appearance.
-     */
     'use_global_appearance',
     'floating_config',
     'carousel_config',
     'grid_config',
     'modal_config',
-
     'created_at',
     'updated_at',
   ],
@@ -881,51 +866,9 @@ const normalizeTableItemForClient = <T extends Record<string, any>>(
     appearance.useGlobalAppearance ??
     true;
 
-  appearance.isDefault =
-    appearance.isDefault ??
-    appearance.is_default ??
-    false;
+  appearance.isDefault = appearance.isDefault ?? appearance.is_default ?? false;
 
-  appearance.is_default =
-    appearance.is_default ??
-    appearance.isDefault ??
-    false;
-
-  appearance.floating_config = normalizeResponsiveConfigForClient(
-    appearance.floating_config,
-  );
-
-  appearance.carousel_config = normalizeResponsiveConfigForClient(
-    appearance.carousel_config,
-  );
-
-  appearance.grid_config = normalizeResponsiveConfigForClient(
-    appearance.grid_config,
-  );
-
-  appearance.modal_config = normalizeResponsiveConfigForClient(
-    appearance.modal_config,
-  );
-
-  return appearance as T;
-};
-
-
-  if (tableName !== 'appearances') {
-    return item;
-  }
-
-  const appearance: Record<string, any> = { ...item };
-
-  appearance.useGlobalAppearance =
-    appearance.useGlobalAppearance ??
-    appearance.use_global_appearance ??
-    true;
-
-  appearance.use_global_appearance =
-    appearance.use_global_appearance ??
-    appearance.useGlobalAppearance ??
-    true;
+  appearance.is_default = appearance.is_default ?? appearance.isDefault ?? false;
 
   appearance.floating_config = normalizeResponsiveConfigForClient(
     appearance.floating_config,
@@ -1285,16 +1228,16 @@ const normalizeSupabaseRelationsBeforeSave = async <
     );
   }
 
-if (
-  tableName === 'general_settings' &&
-  normalizedPayload.default_appearance_id
-) {
-  normalizedPayload.default_appearance_id =
-    await ensureSupabaseAppearanceExists(
-      normalizedPayload.default_appearance_id,
-      normalizedPayload.store_id,
-    );
-}
+  if (
+    tableName === 'general_settings' &&
+    normalizedPayload.default_appearance_id
+  ) {
+    normalizedPayload.default_appearance_id =
+      await ensureSupabaseAppearanceExists(
+        normalizedPayload.default_appearance_id,
+        normalizedPayload.store_id,
+      );
+  }
 
   if (tableName === 'videos' && normalizedPayload.product_id) {
     if (!isValidUuid(normalizedPayload.product_id)) {
@@ -1392,10 +1335,7 @@ const createCrudFunctions = <
         localStorage.setItem(`vidlytics_${tableName}`, JSON.stringify(items));
       }
 
-      return normalizeTableItemForClient(
-        tableName,
-        updatedItem as any,
-      ) as T;
+      return normalizeTableItemForClient(tableName, updatedItem as any) as T;
     },
 
     async delete(id: string): Promise<boolean> {
@@ -1698,9 +1638,9 @@ export const db = {
   stores: createSupabaseCrudFunctions<Store>('stores', memoryStores),
 
   generalSettings: createSupabaseCrudFunctions<GeneralSettings>(
-  'general_settings',
-  memoryGeneralSettings,
-),
+    'general_settings',
+    memoryGeneralSettings,
+  ),
 
   appearances: createSupabaseCrudFunctions<Appearance>(
     'appearances',
