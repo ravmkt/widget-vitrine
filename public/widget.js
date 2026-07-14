@@ -1860,7 +1860,7 @@ var widgetRadius = '11px';
 
 
       setImportant(ring, 'width', '85px');
-      setImportant(ring, 'height', widgetHeight);
+      setImportant(ring, 'height', '151px');
       setImportant(ring, 'min-width', widgetWidth);
       setImportant(ring, 'min-height', widgetHeight);
       setImportant(ring, 'max-width', widgetWidth);
