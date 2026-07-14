@@ -2,41 +2,40 @@
  * Vidlytics Widget — widget.js
  *
  * Widget público de vídeo commerce.
- * Versão corrigida definitiva:
- * - Floating TOP RIGHT
- * - Formato retrato 9:16
+ * Versão corrigida:
+ * - Floating dinâmico via painel de Aparência
+ * - Suporta posição superior esquerda/direita e inferior esquerda/direita
+ * - Suporta formato quadrado, retrato e circular
  * - Protegido contra CSS externo usando Shadow DOM
- * - 202607141248
+ * - 202607141330
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - SHADOW DOM PORTRAIT 9:16 - 202607141248');
+  console.log('VIDLYTICS WIDGET CARREGADO - APARÊNCIA DINÂMICA - SHADOW DOM - 202607141330');
 
-  var VIDLYTICS_WIDGET_VERSION = 'shadow-portrait-2026071416';
+  var VIDLYTICS_WIDGET_VERSION = 'dynamic-appearance-shadow-202607141330';
 
-if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) {
-  return;
-}
-try {
-  var oldRoot = document.getElementById('vidlytics-widget-root');
-  if (oldRoot) oldRoot.remove();
+  if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) {
+    return;
+  }
 
-  var oldCarousel = document.getElementById('vidlytics-carousel-root');
-  if (oldCarousel) oldCarousel.remove();
+  try {
+    var oldRoot = document.getElementById('vidlytics-widget-root');
+    if (oldRoot) oldRoot.remove();
 
-  var oldStyles = document.querySelectorAll(
-    '#vidlytics-force-floating-css, #vidlytics-portrait-lock-css'
-  );
+    var oldCarousel = document.getElementById('vidlytics-carousel-root');
+    if (oldCarousel) oldCarousel.remove();
 
-  Array.prototype.forEach.call(oldStyles, function (style) {
-    style.remove();
-  });
-} catch (e) {}
+    var oldStyles = document.querySelectorAll(
+      '#vidlytics-force-floating-css, #vidlytics-portrait-lock-css'
+    );
 
-window.__vidlytics_widget_loaded_version = VIDLYTICS_WIDGET_VERSION;
+    Array.prototype.forEach.call(oldStyles, function (style) {
+      style.remove();
+    });
+  } catch (e) {}
 
-// Não confiar na flag antiga, porque ela pode ter sido criada por uma versão circular anterior.
-window.__vidlytics_widget_initialized = false;
-
+  window.__vidlytics_widget_loaded_version = VIDLYTICS_WIDGET_VERSION;
+  window.__vidlytics_widget_initialized = false;
 
   var config = window.VIDLYTICS_CONFIG || {};
   var storeId = config.storeId || config.lojaId || config.licenseId || null;
@@ -68,14 +67,17 @@ window.__vidlytics_widget_initialized = false;
 
   var VIDEO_FILE_REGEX = /\.(mp4|webm|ogg|mov|m4v|m3u8)(\?.*)?$/i;
 
-  var FORCE_FLOATING = {
-    top: '20px',
-    right: '23px',
-    width: '85px',
-    height: '151px',
-    radius: '12px',
-    innerRadius: '10px',
-    zIndex: '2147483647'
+  var DEFAULT_FLOATING = {
+    position: 'top-right',
+    top: 20,
+    bottom: 20,
+    side: 23,
+    width: 85,
+    height: 151,
+    radius: 12,
+    borderWidth: 2,
+    zIndex: 2147483647,
+    shape: 'portrait'
   };
 
   function createEl(tag, className) {
@@ -155,6 +157,30 @@ window.__vidlytics_widget_initialized = false;
     }
 
     return fallback;
+  }
+
+  function toNumber(value, fallback) {
+    if (value === undefined || value === null || value === '') return fallback;
+
+    if (typeof value === 'number' && !isNaN(value)) return value;
+
+    var parsed = parseFloat(String(value).replace(',', '.').replace('px', '').trim());
+
+    return isNaN(parsed) ? fallback : parsed;
+  }
+
+  function px(value) {
+    return String(Math.round(Number(value) || 0)) + 'px';
+  }
+
+  function normalizeKey(value) {
+    return String(value || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/_/g, '-')
+      .replace(/\s+/g, '-');
   }
 
   function normalizeMediaUrl(url) {
@@ -295,6 +321,9 @@ window.__vidlytics_widget_initialized = false;
       sources.push(parseJsonIfNeeded(src.floatingVideo));
       sources.push(parseJsonIfNeeded(src.floating_video));
       sources.push(parseJsonIfNeeded(src.widget));
+      sources.push(parseJsonIfNeeded(src.flutuante));
+      sources.push(parseJsonIfNeeded(src.desktop));
+      sources.push(parseJsonIfNeeded(src.mobile));
     });
 
     for (var i = 0; i < sources.length; i += 1) {
@@ -322,7 +351,10 @@ window.__vidlytics_widget_initialized = false;
         'primary_color',
         'primaryColor',
         'color',
-        'cor_primaria'
+        'cor_primaria',
+        'border_color',
+        'borderColor',
+        'cor_borda'
       ]) || '#0094EB'
     );
   }
@@ -332,7 +364,9 @@ window.__vidlytics_widget_initialized = false;
       readAppearanceValue(appearance, [
         'secondary_color',
         'secondaryColor',
-        'cor_secundaria'
+        'cor_secundaria',
+        'gradient_color',
+        'gradientColor'
       ]) || '#EC4899'
     );
   }
@@ -352,6 +386,283 @@ window.__vidlytics_widget_initialized = false;
       readAppearanceValue(appearance, ['font_family', 'fontFamily', 'fonte']) ||
       'Inter, system-ui, sans-serif'
     );
+  }
+
+  function normalizeFloatingPosition(value) {
+    var key = normalizeKey(value);
+
+    if (
+      key === 'superior-esquerda' ||
+      key === 'top-left' ||
+      key === 'left-top' ||
+      key === 'canto-superior-esquerdo'
+    ) {
+      return 'top-left';
+    }
+
+    if (
+      key === 'superior-direita' ||
+      key === 'top-right' ||
+      key === 'right-top' ||
+      key === 'canto-superior-direito'
+    ) {
+      return 'top-right';
+    }
+
+    if (
+      key === 'inferior-esquerda' ||
+      key === 'bottom-left' ||
+      key === 'left-bottom' ||
+      key === 'canto-inferior-esquerdo'
+    ) {
+      return 'bottom-left';
+    }
+
+    if (
+      key === 'inferior-direita' ||
+      key === 'bottom-right' ||
+      key === 'right-bottom' ||
+      key === 'canto-inferior-direito'
+    ) {
+      return 'bottom-right';
+    }
+
+    return DEFAULT_FLOATING.position;
+  }
+
+  function normalizeFloatingShape(value) {
+    var key = normalizeKey(value);
+
+    if (
+      key === 'quadrado' ||
+      key === 'square' ||
+      key === 'retangular' ||
+      key === 'rectangle'
+    ) {
+      return 'square';
+    }
+
+    if (
+      key === 'retrato' ||
+      key === 'portrait' ||
+      key === 'vertical' ||
+      key === '9-16' ||
+      key === '9:16'
+    ) {
+      return 'portrait';
+    }
+
+    if (
+      key === 'circulo' ||
+      key === 'circle' ||
+      key === 'circular' ||
+      key === 'redondo'
+    ) {
+      return 'circle';
+    }
+
+    return '';
+  }
+
+  function getFloatingConfig(appearance) {
+    appearance = appearance || {};
+
+    var rawShape = readAppearanceValue(appearance, [
+      'floating_shape',
+      'floatingShape',
+      'shape',
+      'form',
+      'forma',
+      'formato',
+      'widget_shape',
+      'widgetShape'
+    ]);
+
+    var shape = normalizeFloatingShape(rawShape);
+
+    var rawPosition = readAppearanceValue(appearance, [
+      'floating_position',
+      'floatingPosition',
+      'position',
+      'posicao',
+      'posição',
+      'widget_position',
+      'widgetPosition',
+      'floating_video_position',
+      'floatingVideoPosition'
+    ]);
+
+    var position = normalizeFloatingPosition(rawPosition);
+
+    var width = toNumber(
+      readAppearanceValue(appearance, [
+        'floating_width',
+        'floatingWidth',
+        'width',
+        'largura',
+        'widget_width',
+        'widgetWidth',
+        'floating_video_width',
+        'floatingVideoWidth',
+        'desktop_width',
+        'desktopWidth',
+        'mobile_width',
+        'mobileWidth'
+      ]),
+      DEFAULT_FLOATING.width
+    );
+
+    var heightRaw = readAppearanceValue(appearance, [
+      'floating_height',
+      'floatingHeight',
+      'height',
+      'altura',
+      'widget_height',
+      'widgetHeight',
+      'floating_video_height',
+      'floatingVideoHeight',
+      'desktop_height',
+      'desktopHeight',
+      'mobile_height',
+      'mobileHeight'
+    ]);
+
+    var height = toNumber(heightRaw, null);
+
+    if (!shape && height) {
+      if (Math.abs(height - width) <= 2) {
+        shape = 'square';
+      } else if (height > width) {
+        shape = 'portrait';
+      }
+    }
+
+    if (!shape) {
+      shape = DEFAULT_FLOATING.shape;
+    }
+
+    if (!height) {
+      if (shape === 'square' || shape === 'circle') {
+        height = width;
+      } else if (shape === 'portrait') {
+        height = Math.round(width * 16 / 9);
+      } else {
+        height = DEFAULT_FLOATING.height;
+      }
+    }
+
+    if (shape === 'square' || shape === 'circle') {
+      height = height || width;
+    }
+
+    var radius = toNumber(
+      readAppearanceValue(appearance, [
+        'floating_radius',
+        'floatingRadius',
+        'border_radius',
+        'borderRadius',
+        'radius',
+        'raio',
+        'raio_borda',
+        'raioDaBorda',
+        'widget_radius',
+        'widgetRadius'
+      ]),
+      shape === 'circle' ? 999 : DEFAULT_FLOATING.radius
+    );
+
+    if (shape === 'circle') {
+      radius = 999;
+      height = width;
+    }
+
+    var borderWidth = toNumber(
+      readAppearanceValue(appearance, [
+        'floating_border_width',
+        'floatingBorderWidth',
+        'border_width',
+        'borderWidth',
+        'largura_borda',
+        'larguraDaBorda'
+      ]),
+      DEFAULT_FLOATING.borderWidth
+    );
+
+    var top = toNumber(
+      readAppearanceValue(appearance, [
+        'floating_top',
+        'floatingTop',
+        'top',
+        'distance_top',
+        'distanceTop',
+        'distancia_superior',
+        'distância_superior',
+        'distanciaSuperior'
+      ]),
+      DEFAULT_FLOATING.top
+    );
+
+    var bottom = toNumber(
+      readAppearanceValue(appearance, [
+        'floating_bottom',
+        'floatingBottom',
+        'bottom',
+        'distance_bottom',
+        'distanceBottom',
+        'distancia_inferior',
+        'distância_inferior',
+        'distanciaInferior'
+      ]),
+      DEFAULT_FLOATING.bottom
+    );
+
+    var side = toNumber(
+      readAppearanceValue(appearance, [
+        'floating_side',
+        'floatingSide',
+        'side',
+        'distance_side',
+        'distanceSide',
+        'distance_left',
+        'distanceLeft',
+        'distance_right',
+        'distanceRight',
+        'distancia_lateral',
+        'distância_lateral',
+        'distanciaLateral'
+      ]),
+      DEFAULT_FLOATING.side
+    );
+
+    var zIndex = toNumber(
+      readAppearanceValue(appearance, [
+        'z_index',
+        'zIndex',
+        'zindex',
+        'floating_z_index',
+        'floatingZIndex'
+      ]),
+      DEFAULT_FLOATING.zIndex
+    );
+
+    var isTop = position.indexOf('top') === 0;
+    var isRight = position.indexOf('right') !== -1;
+
+    return {
+      position: position,
+      shape: shape,
+      top: isTop ? px(top) : 'auto',
+      bottom: isTop ? 'auto' : px(bottom),
+      left: isRight ? 'auto' : px(side),
+      right: isRight ? px(side) : 'auto',
+      width: px(width),
+      height: px(height),
+      radius: shape === 'circle' ? '999px' : px(radius),
+      innerRadius: shape === 'circle' ? '999px' : px(Math.max(radius - borderWidth, 0)),
+      borderWidth: px(borderWidth),
+      zIndex: String(Math.round(zIndex)),
+      alignItems: isRight ? 'flex-end' : 'flex-start'
+    };
   }
 
   function normalizeModalAppearanceConfig(appearance) {
@@ -792,25 +1103,18 @@ window.__vidlytics_widget_initialized = false;
     }
   }
 
-  function getOrCreateShadowRoot() {
-    var existingRoot = document.getElementById('vidlytics-widget-root');
-
-    if (existingRoot) {
-      existingRoot.remove();
-    }
-
-    var host = createEl('div', 'vidlytics-widget-root');
-    host.id = 'vidlytics-widget-root';
+  function applyHostPosition(host, appearance) {
+    var cfg = getFloatingConfig(appearance || currentAppearance);
 
     setImportant(host, 'position', 'fixed');
-    setImportant(host, 'top', FORCE_FLOATING.top);
-    setImportant(host, 'right', FORCE_FLOATING.right);
-    setImportant(host, 'bottom', 'auto');
-    setImportant(host, 'left', 'auto');
-    setImportant(host, 'z-index', FORCE_FLOATING.zIndex);
-    setImportant(host, 'width', FORCE_FLOATING.width);
-    setImportant(host, 'min-width', FORCE_FLOATING.width);
-    setImportant(host, 'max-width', FORCE_FLOATING.width);
+    setImportant(host, 'top', cfg.top);
+    setImportant(host, 'right', cfg.right);
+    setImportant(host, 'bottom', cfg.bottom);
+    setImportant(host, 'left', cfg.left);
+    setImportant(host, 'z-index', cfg.zIndex);
+    setImportant(host, 'width', cfg.width);
+    setImportant(host, 'min-width', cfg.width);
+    setImportant(host, 'max-width', cfg.width);
     setImportant(host, 'height', 'auto');
     setImportant(host, 'min-height', '0');
     setImportant(host, 'max-height', 'none');
@@ -820,6 +1124,19 @@ window.__vidlytics_widget_initialized = false;
     setImportant(host, 'box-shadow', 'none');
     setImportant(host, 'pointer-events', 'auto');
     setImportant(host, 'transform', 'none');
+  }
+
+  function getOrCreateShadowRoot(appearance) {
+    var existingRoot = document.getElementById('vidlytics-widget-root');
+
+    if (existingRoot) {
+      existingRoot.remove();
+    }
+
+    var host = createEl('div', 'vidlytics-widget-root');
+    host.id = 'vidlytics-widget-root';
+
+    applyHostPosition(host, appearance);
 
     document.body.appendChild(host);
 
@@ -832,6 +1149,7 @@ window.__vidlytics_widget_initialized = false;
   }
 
   function buildShadowCss(appearance) {
+    var cfg = getFloatingConfig(appearance);
     var primary = getPrimaryColor(appearance);
     var secondary = getSecondaryColor(appearance);
     var text = getTextColor(appearance);
@@ -842,14 +1160,14 @@ window.__vidlytics_widget_initialized = false;
       + ':host{'
       + 'all:initial!important;'
       + 'position:fixed!important;'
-      + 'top:' + FORCE_FLOATING.top + '!important;'
-      + 'right:' + FORCE_FLOATING.right + '!important;'
-      + 'bottom:auto!important;'
-      + 'left:auto!important;'
-      + 'z-index:' + FORCE_FLOATING.zIndex + '!important;'
-      + 'width:' + FORCE_FLOATING.width + '!important;'
-      + 'min-width:' + FORCE_FLOATING.width + '!important;'
-      + 'max-width:' + FORCE_FLOATING.width + '!important;'
+      + 'top:' + cfg.top + '!important;'
+      + 'right:' + cfg.right + '!important;'
+      + 'bottom:' + cfg.bottom + '!important;'
+      + 'left:' + cfg.left + '!important;'
+      + 'z-index:' + cfg.zIndex + '!important;'
+      + 'width:' + cfg.width + '!important;'
+      + 'min-width:' + cfg.width + '!important;'
+      + 'max-width:' + cfg.width + '!important;'
       + 'height:auto!important;'
       + 'overflow:visible!important;'
       + 'background:transparent!important;'
@@ -862,10 +1180,10 @@ window.__vidlytics_widget_initialized = false;
       + '}'
 
       + '.vl-bubbles{'
-      + 'width:' + FORCE_FLOATING.width + '!important;'
+      + 'width:' + cfg.width + '!important;'
       + 'display:flex!important;'
       + 'flex-direction:column!important;'
-      + 'align-items:flex-end!important;'
+      + 'align-items:' + cfg.alignItems + '!important;'
       + 'justify-content:flex-start!important;'
       + 'gap:10px!important;'
       + 'overflow:visible!important;'
@@ -873,9 +1191,9 @@ window.__vidlytics_widget_initialized = false;
 
       + '.vl-bubble{'
       + 'all:unset!important;'
-      + 'width:' + FORCE_FLOATING.width + '!important;'
-      + 'min-width:' + FORCE_FLOATING.width + '!important;'
-      + 'max-width:' + FORCE_FLOATING.width + '!important;'
+      + 'width:' + cfg.width + '!important;'
+      + 'min-width:' + cfg.width + '!important;'
+      + 'max-width:' + cfg.width + '!important;'
       + 'height:auto!important;'
       + 'display:flex!important;'
       + 'flex-direction:column!important;'
@@ -888,15 +1206,15 @@ window.__vidlytics_widget_initialized = false;
       + '}'
 
       + '.vl-ring{'
-      + 'width:' + FORCE_FLOATING.width + '!important;'
-      + 'height:' + FORCE_FLOATING.height + '!important;'
-      + 'min-width:' + FORCE_FLOATING.width + '!important;'
-      + 'min-height:' + FORCE_FLOATING.height + '!important;'
-      + 'max-width:' + FORCE_FLOATING.width + '!important;'
-      + 'max-height:' + FORCE_FLOATING.height + '!important;'
-      + 'aspect-ratio:9/16!important;'
-      + 'border-radius:' + FORCE_FLOATING.radius + '!important;'
-      + 'padding:2px!important;'
+      + 'width:' + cfg.width + '!important;'
+      + 'height:' + cfg.height + '!important;'
+      + 'min-width:' + cfg.width + '!important;'
+      + 'min-height:' + cfg.height + '!important;'
+      + 'max-width:' + cfg.width + '!important;'
+      + 'max-height:' + cfg.height + '!important;'
+      + 'aspect-ratio:auto!important;'
+      + 'border-radius:' + cfg.radius + '!important;'
+      + 'padding:' + cfg.borderWidth + '!important;'
       + 'overflow:hidden!important;'
       + 'display:block!important;'
       + 'background:linear-gradient(135deg,' + primary + ',' + secondary + ')!important;'
@@ -907,7 +1225,7 @@ window.__vidlytics_widget_initialized = false;
       + '.vl-inner{'
       + 'width:100%!important;'
       + 'height:100%!important;'
-      + 'border-radius:' + FORCE_FLOATING.innerRadius + '!important;'
+      + 'border-radius:' + cfg.innerRadius + '!important;'
       + 'overflow:hidden!important;'
       + 'background:#e2e8f0!important;'
       + 'display:flex!important;'
@@ -929,14 +1247,14 @@ window.__vidlytics_widget_initialized = false;
       + 'object-fit:cover!important;'
       + 'object-position:center!important;'
       + 'display:block!important;'
-      + 'border-radius:' + FORCE_FLOATING.innerRadius + '!important;'
+      + 'border-radius:' + cfg.innerRadius + '!important;'
       + 'clip-path:none!important;'
       + 'overflow:hidden!important;'
       + '}'
 
       + '.vl-label{'
-      + 'width:' + FORCE_FLOATING.width + '!important;'
-      + 'max-width:' + FORCE_FLOATING.width + '!important;'
+      + 'width:' + cfg.width + '!important;'
+      + 'max-width:' + cfg.width + '!important;'
       + 'font-family:' + font + '!important;'
       + 'font-size:11px!important;'
       + 'line-height:12px!important;'
@@ -959,7 +1277,7 @@ window.__vidlytics_widget_initialized = false;
       + 'align-items:center!important;'
       + 'justify-content:center!important;'
       + 'padding:20px!important;'
-      + 'z-index:' + FORCE_FLOATING.zIndex + '!important;'
+      + 'z-index:' + cfg.zIndex + '!important;'
       + 'font-family:' + font + '!important;'
       + '}'
 
@@ -1389,7 +1707,7 @@ window.__vidlytics_widget_initialized = false;
   function renderFloatingBubbles(stories, storyVideoMap, activeVideos) {
     var appearance = currentAppearance || {};
     var modalConfig = normalizeModalAppearanceConfig(appearance);
-    var shadowData = getOrCreateShadowRoot();
+    var shadowData = getOrCreateShadowRoot(appearance);
     var shadow = shadowData.shadow;
 
     var style = createEl('style');
@@ -1644,22 +1962,7 @@ window.__vidlytics_widget_initialized = false;
     var host = document.getElementById('vidlytics-widget-root');
     if (!host) return;
 
-    setImportant(host, 'position', 'fixed');
-    setImportant(host, 'top', FORCE_FLOATING.top);
-    setImportant(host, 'right', FORCE_FLOATING.right);
-    setImportant(host, 'bottom', 'auto');
-    setImportant(host, 'left', 'auto');
-    setImportant(host, 'z-index', FORCE_FLOATING.zIndex);
-    setImportant(host, 'width', FORCE_FLOATING.width);
-    setImportant(host, 'min-width', FORCE_FLOATING.width);
-    setImportant(host, 'max-width', FORCE_FLOATING.width);
-    setImportant(host, 'height', 'auto');
-    setImportant(host, 'overflow', 'visible');
-    setImportant(host, 'background', 'transparent');
-    setImportant(host, 'border', '0');
-    setImportant(host, 'box-shadow', 'none');
-    setImportant(host, 'pointer-events', 'auto');
-    setImportant(host, 'transform', 'none');
+    applyHostPosition(host, currentAppearance || {});
   }
 
   function renderWidget() {
@@ -1674,6 +1977,9 @@ window.__vidlytics_widget_initialized = false;
     ])
       .then(function (results) {
         currentAppearance = results[0] || {};
+
+        console.log('VIDLYTICS APARÊNCIA CARREGADA:', currentAppearance);
+        console.log('VIDLYTICS FLOATING CONFIG:', getFloatingConfig(currentAppearance));
 
         var modalConfig = normalizeModalAppearanceConfig(currentAppearance);
 
