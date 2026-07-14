@@ -2,9 +2,10 @@
  * Vidlytics Widget — widget.js
  *
  * Widget público de vídeo commerce.
+ * Versão corrigida: FORCE TOP RIGHT PORTRAIT
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CORRIGIDO CARREGADO - FORCE TOP RIGHT PORTRAIT');
+  console.log('VIDLYTICS WIDGET CARREGADO - FORCE TOP RIGHT PORTRAIT - 2026071404');
 
   if (window.__vidlytics_widget_initialized) return;
   window.__vidlytics_widget_initialized = true;
@@ -38,11 +39,19 @@
   var FORCE_FLOATING = {
     top: '20px',
     right: '23px',
+    bottom: 'auto',
+    left: 'auto',
+    inset: '20px 23px auto auto',
     width: '85px',
     height: '151px',
     radius: '11px',
     zIndex: '2147483647'
   };
+
+  var overlay = null;
+  var modalContent = null;
+  var readStoryProductsData = [];
+  var readProductsData = [];
 
   function firstDefined() {
     for (var i = 0; i < arguments.length; i += 1) {
@@ -155,24 +164,85 @@
     return value;
   }
 
-  function toCssUnit(value, fallback) {
-    var finalValue = firstDefined(value, fallback);
+  function getStorageItem(key, fallback) {
+    try {
+      var item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
 
-    if (finalValue === undefined || finalValue === null || finalValue === '') {
-      return fallback || '20px';
+  function setStorageItem(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {}
+  }
+
+  function supabaseFetch(path, options) {
+    if (!hasSupabase) return Promise.reject(new Error('No Supabase config'));
+
+    var headers = {
+      apikey: supabaseAnonKey,
+      Authorization: 'Bearer ' + supabaseAnonKey,
+      'Content-Type': 'application/json'
+    };
+
+    if (options && options.headers) {
+      Object.keys(options.headers).forEach(function (key) {
+        headers[key] = options.headers[key];
+      });
     }
 
-    if (typeof finalValue === 'number') {
-      return finalValue + 'px';
-    }
+    return fetch(supabaseUrl + '/rest/v1/' + path, {
+      method: (options && options.method) || 'GET',
+      headers: headers,
+      body: options && options.body ? options.body : undefined
+    });
+  }
 
-    var str = String(finalValue).trim();
+  function trackMetric(metric) {
+    var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
 
-    if (/^-?\d+(\.\d+)?$/.test(str)) {
-      return str + 'px';
-    }
+    var nextMetric = {
+      id:
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : Date.now() + '-' + Math.random().toString(36).slice(2),
+      store_id: storeId,
+      story_id: metric.story_id || null,
+      video_id: metric.video_id || null,
+      product_id: metric.product_id || null,
+      event_type: metric.event_type,
+      page_url: metric.page_url || window.location.href,
+      device_type:
+        metric.device_type ||
+        (window.innerWidth < 768 ? 'mobile' : 'desktop'),
+      browser: metric.browser || navigator.userAgent,
+      referrer: metric.referrer || document.referrer || null,
+      created_at: new Date().toISOString()
+    };
 
-    return str;
+    fallbackMetrics.push(nextMetric);
+    setStorageItem('vidlytics_metrics', fallbackMetrics);
+
+    if (!storeId || !hasSupabase) return Promise.resolve();
+
+    return supabaseFetch('metrics', {
+      method: 'POST',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        store_id: nextMetric.store_id,
+        story_id: nextMetric.story_id,
+        video_id: nextMetric.video_id,
+        product_id: nextMetric.product_id,
+        event_type: nextMetric.event_type,
+        page_url: nextMetric.page_url,
+        device_type: nextMetric.device_type,
+        browser: nextMetric.browser,
+        referrer: nextMetric.referrer
+      })
+    }).catch(function () {});
   }
 
   function buildAppearanceSources(appearance, context) {
@@ -295,6 +365,116 @@
     return undefined;
   }
 
+  function getPrimaryColor(appearance) {
+    return (
+      readAppearanceValue(
+        appearance,
+        ['primary_color', 'primaryColor', 'color', 'cor_primaria'],
+        'floating'
+      ) || '#0094EB'
+    );
+  }
+
+  function getSecondaryColor(appearance) {
+    return (
+      readAppearanceValue(
+        appearance,
+        ['secondary_color', 'secondaryColor', 'cor_secundaria'],
+        'floating'
+      ) || '#EC4899'
+    );
+  }
+
+  function getTextColor(appearance) {
+    return (
+      readAppearanceValue(
+        appearance,
+        ['text_color', 'textColor', 'cor_texto'],
+        'floating'
+      ) || '#0f172a'
+    );
+  }
+
+  function getFontFamily(appearance) {
+    return (
+      readAppearanceValue(
+        appearance,
+        ['font_family', 'fontFamily', 'fonte'],
+        'floating'
+      ) || 'Inter, system-ui, sans-serif'
+    );
+  }
+
+  function normalizeModalAppearanceConfig(appearance) {
+    appearance = appearance || {};
+
+    var rawConfig = parseJsonIfNeeded(
+      firstDefined(appearance.modal_config, appearance.modalConfig, {})
+    );
+
+    return {
+      show_title: toBoolean(
+        firstDefined(
+          appearance.show_title,
+          appearance.showTitle,
+          rawConfig.show_title,
+          rawConfig.showTitle
+        ),
+        true
+      ),
+
+      show_product: toBoolean(
+        firstDefined(
+          appearance.show_product,
+          appearance.showProduct,
+          rawConfig.show_product,
+          rawConfig.showProduct
+        ),
+        true
+      ),
+
+      show_whatsapp_button: toBoolean(
+        firstDefined(
+          appearance.show_whatsapp_button,
+          appearance.showWhatsappButton,
+          rawConfig.show_whatsapp_button,
+          rawConfig.showWhatsappButton
+        ),
+        true
+      ),
+
+      show_product_button: toBoolean(
+        firstDefined(
+          appearance.show_product_button,
+          appearance.showProductButton,
+          rawConfig.show_product_button,
+          rawConfig.showProductButton
+        ),
+        true
+      ),
+
+      hide_stories: toBoolean(
+        firstDefined(
+          appearance.hide_stories,
+          appearance.hideStories,
+          rawConfig.hide_stories,
+          rawConfig.hideStories
+        ),
+        false
+      ),
+
+      shadow_enabled: toBoolean(
+        firstDefined(
+          appearance.shadow_enabled,
+          appearance.shadowEnabled,
+          rawConfig.shadow_enabled,
+          rawConfig.shadowEnabled
+        ),
+        true
+      )
+    };
+  }
+
   function getVideoUrl(video) {
     if (!video) return '';
 
@@ -327,7 +507,7 @@
     if (!url) return '';
 
     try {
-      var parsed = new URL(url.trim());
+      var parsed = new URL(String(url).trim());
       var host = parsed.hostname.replace(/^www\./, '').toLowerCase();
 
       if (host === 'youtu.be') {
@@ -495,253 +675,159 @@
     return '';
   }
 
-  function getPrimaryColor(appearance) {
-    return (
-      readAppearanceValue(
-        appearance,
-        ['primary_color', 'primaryColor', 'color', 'cor_primaria'],
-        'floating'
-      ) || '#0094EB'
-    );
+  function createEl(tag, className) {
+    var el = document.createElement(tag);
+    if (className) el.className = className;
+    return el;
   }
 
-  function getSecondaryColor(appearance) {
-    return (
-      readAppearanceValue(
-        appearance,
-        ['secondary_color', 'secondaryColor', 'cor_secundaria'],
-        'floating'
-      ) || '#EC4899'
-    );
+  function injectForceFloatingCss() {
+    if (document.getElementById('vidlytics-force-floating-css')) return;
+
+    var style = document.createElement('style');
+    style.id = 'vidlytics-force-floating-css';
+
+    style.innerHTML =
+      '#vidlytics-widget-root,' +
+      '.vidlytics-widget-root{' +
+      'position:fixed!important;' +
+      'inset:' +
+      FORCE_FLOATING.inset +
+      '!important;' +
+      'top:' +
+      FORCE_FLOATING.top +
+      '!important;' +
+      'right:' +
+      FORCE_FLOATING.right +
+      '!important;' +
+      'bottom:auto!important;' +
+      'left:auto!important;' +
+      'z-index:' +
+      FORCE_FLOATING.zIndex +
+      '!important;' +
+      'font-family:Inter,system-ui,sans-serif!important;' +
+      'pointer-events:auto!important;' +
+      '}' +
+      '#vidlytics-widget-root .vidlytics-bubbles{' +
+      'display:flex!important;' +
+      'flex-direction:column!important;' +
+      'align-items:flex-end!important;' +
+      'gap:10px!important;' +
+      '}' +
+      '#vidlytics-widget-root .vidlytics-bubble{' +
+      'border:none!important;' +
+      'background:transparent!important;' +
+      'padding:0!important;' +
+      'margin:0!important;' +
+      'cursor:pointer!important;' +
+      'display:grid!important;' +
+      'justify-items:center!important;' +
+      'gap:6px!important;' +
+      'outline:none!important;' +
+      '}' +
+      '#vidlytics-widget-root .vidlytics-bubble-ring{' +
+      'width:' +
+      FORCE_FLOATING.width +
+      '!important;' +
+      'height:' +
+      FORCE_FLOATING.height +
+      '!important;' +
+      'min-width:' +
+      FORCE_FLOATING.width +
+      '!important;' +
+      'min-height:' +
+      FORCE_FLOATING.height +
+      '!important;' +
+      'max-width:' +
+      FORCE_FLOATING.width +
+      '!important;' +
+      'max-height:' +
+      FORCE_FLOATING.height +
+      '!important;' +
+      'border-radius:' +
+      FORCE_FLOATING.radius +
+      '!important;' +
+      'overflow:hidden!important;' +
+      'box-sizing:border-box!important;' +
+      '}' +
+      '#vidlytics-widget-root .vidlytics-bubble-inner,' +
+      '#vidlytics-widget-root .vidlytics-bubble-img{' +
+      'border-radius:' +
+      FORCE_FLOATING.radius +
+      '!important;' +
+      'overflow:hidden!important;' +
+      '}' +
+      '#vidlytics-widget-root .vidlytics-bubble-img{' +
+      'width:100%!important;' +
+      'height:100%!important;' +
+      'object-fit:cover!important;' +
+      'display:block!important;' +
+      '}' +
+      '#vidlytics-widget-root .vidlytics-bubble-label{' +
+      'max-width:' +
+      FORCE_FLOATING.width +
+      '!important;' +
+      'font-size:11px!important;' +
+      'font-weight:700!important;' +
+      'text-align:center!important;' +
+      'white-space:nowrap!important;' +
+      'overflow:hidden!important;' +
+      'text-overflow:ellipsis!important;' +
+      '}';
+
+    document.head.appendChild(style);
   }
 
-  function getTextColor(appearance) {
-    return (
-      readAppearanceValue(
-        appearance,
-        ['text_color', 'textColor', 'cor_texto'],
-        'floating'
-      ) || '#0f172a'
-    );
-  }
+  function forceFloatingStyles() {
+    var root = document.getElementById('vidlytics-widget-root');
+    if (!root) return;
 
-  function getFontFamily(appearance) {
-    return (
-      readAppearanceValue(
-        appearance,
-        ['font_family', 'fontFamily', 'fonte'],
-        'floating'
-      ) || 'Inter, system-ui, sans-serif'
-    );
-  }
+    setImportant(root, 'position', 'fixed');
+    setImportant(root, 'inset', FORCE_FLOATING.inset);
+    setImportant(root, 'top', FORCE_FLOATING.top);
+    setImportant(root, 'right', FORCE_FLOATING.right);
+    setImportant(root, 'bottom', FORCE_FLOATING.bottom);
+    setImportant(root, 'left', FORCE_FLOATING.left);
+    setImportant(root, 'z-index', FORCE_FLOATING.zIndex);
+    setImportant(root, 'pointer-events', 'auto');
 
-  function getStorageItem(key, fallback) {
-    try {
-      var item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : fallback;
-    } catch (e) {
-      return fallback;
+    var bubbles = root.querySelector('.vidlytics-bubbles');
+    if (bubbles) {
+      setImportant(bubbles, 'display', 'flex');
+      setImportant(bubbles, 'flex-direction', 'column');
+      setImportant(bubbles, 'align-items', 'flex-end');
+      setImportant(bubbles, 'gap', '10px');
     }
-  }
 
-  function setStorageItem(key, value) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch (e) {}
-  }
-
-  function supabaseFetch(path, options) {
-    if (!hasSupabase) return Promise.reject(new Error('No Supabase config'));
-
-    var headers = {
-      apikey: supabaseAnonKey,
-      Authorization: 'Bearer ' + supabaseAnonKey,
-      'Content-Type': 'application/json'
-    };
-
-    if (options && options.headers) {
-      Object.keys(options.headers).forEach(function (key) {
-        headers[key] = options.headers[key];
-      });
-    }
-
-    return fetch(supabaseUrl + '/rest/v1/' + path, {
-      method: (options && options.method) || 'GET',
-      headers: headers,
-      body: options && options.body ? options.body : undefined
+    var rings = root.querySelectorAll('.vidlytics-bubble-ring');
+    rings.forEach(function (ring) {
+      setImportant(ring, 'width', FORCE_FLOATING.width);
+      setImportant(ring, 'height', FORCE_FLOATING.height);
+      setImportant(ring, 'min-width', FORCE_FLOATING.width);
+      setImportant(ring, 'min-height', FORCE_FLOATING.height);
+      setImportant(ring, 'max-width', FORCE_FLOATING.width);
+      setImportant(ring, 'max-height', FORCE_FLOATING.height);
+      setImportant(ring, 'border-radius', FORCE_FLOATING.radius);
+      setImportant(ring, 'overflow', 'hidden');
+      setImportant(ring, 'box-sizing', 'border-box');
     });
-  }
 
-  function trackMetric(metric) {
-    var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
-
-    var nextMetric = {
-      id:
-        typeof crypto !== 'undefined' && crypto.randomUUID
-          ? crypto.randomUUID()
-          : Date.now() + '-' + Math.random().toString(36).slice(2),
-      store_id: storeId,
-      story_id: metric.story_id || null,
-      video_id: metric.video_id || null,
-      product_id: metric.product_id || null,
-      event_type: metric.event_type,
-      page_url: metric.page_url || window.location.href,
-      device_type:
-        metric.device_type ||
-        (window.innerWidth < 768 ? 'mobile' : 'desktop'),
-      browser: metric.browser || navigator.userAgent,
-      referrer: metric.referrer || document.referrer || null,
-      created_at: new Date().toISOString()
-    };
-
-    fallbackMetrics.push(nextMetric);
-    setStorageItem('vidlytics_metrics', fallbackMetrics);
-
-    if (!storeId || !hasSupabase) return Promise.resolve();
-
-    return supabaseFetch('metrics', {
-      method: 'POST',
-      headers: { Prefer: 'return=minimal' },
-      body: JSON.stringify({
-        store_id: storeId,
-        story_id: nextMetric.story_id,
-        video_id: nextMetric.video_id,
-        product_id: nextMetric.product_id,
-        event_type: nextMetric.event_type,
-        page_url: nextMetric.page_url,
-        device_type: nextMetric.device_type,
-        browser: nextMetric.browser,
-        referrer: nextMetric.referrer
-      })
-    }).catch(function () {});
-  }
-
-  function normalizeModalAppearanceConfig(appearance) {
-    appearance = appearance || {};
-
-    var rawConfig = parseJsonIfNeeded(
-      firstDefined(appearance.modal_config, appearance.modalConfig, {})
+    var inners = root.querySelectorAll(
+      '.vidlytics-bubble-inner, .vidlytics-bubble-img'
     );
 
-    return {
-      show_title: toBoolean(
-        firstDefined(
-          appearance.show_title,
-          appearance.showTitle,
-          rawConfig.show_title,
-          rawConfig.showTitle
-        ),
-        true
-      ),
+    inners.forEach(function (inner) {
+      setImportant(inner, 'border-radius', FORCE_FLOATING.radius);
+      setImportant(inner, 'overflow', 'hidden');
+    });
 
-      show_product: toBoolean(
-        firstDefined(
-          appearance.show_product,
-          appearance.showProduct,
-          rawConfig.show_product,
-          rawConfig.showProduct
-        ),
-        true
-      ),
-
-      show_whatsapp_button: toBoolean(
-        firstDefined(
-          appearance.show_whatsapp_button,
-          appearance.showWhatsappButton,
-          rawConfig.show_whatsapp_button,
-          rawConfig.showWhatsappButton
-        ),
-        true
-      ),
-
-      show_product_button: toBoolean(
-        firstDefined(
-          appearance.show_product_button,
-          appearance.showProductButton,
-          rawConfig.show_product_button,
-          rawConfig.showProductButton
-        ),
-        true
-      ),
-
-      hide_stories: toBoolean(
-        firstDefined(
-          appearance.hide_stories,
-          appearance.hideStories,
-          rawConfig.hide_stories,
-          rawConfig.hideStories
-        ),
-        false
-      ),
-
-      shadow_enabled: toBoolean(
-        firstDefined(
-          appearance.shadow_enabled,
-          appearance.shadowEnabled,
-          rawConfig.shadow_enabled,
-          rawConfig.shadowEnabled
-        ),
-        true
-      )
-    };
-  }
-
-  function matchesRule(rule) {
-    var href = window.location.href;
-    var path = window.location.pathname || '/';
-    var value = String(rule.value || '');
-
-    switch (rule.condition_type) {
-      case 'all_pages':
-        return true;
-
-      case 'home_only':
-        return (
-          path === '/' ||
-          path === '/home' ||
-          path === '/index.html' ||
-          path === ''
-        );
-
-      case 'product_pages':
-        return (
-          path.indexOf('/product') !== -1 ||
-          path.indexOf('/products') !== -1 ||
-          path.indexOf('/produto') !== -1 ||
-          path.indexOf('/produtos') !== -1
-        );
-
-      case 'category_pages':
-        return (
-          path.indexOf('/category') !== -1 ||
-          path.indexOf('/categories') !== -1 ||
-          path.indexOf('/categoria') !== -1 ||
-          path.indexOf('/colecao') !== -1 ||
-          path.indexOf('/collections') !== -1
-        );
-
-      case 'contains':
-        return href.indexOf(value) !== -1;
-
-      case 'equals':
-        return href === value;
-
-      case 'starts_with':
-        return href.indexOf(value) === 0;
-
-      case 'ends_with':
-        return href.lastIndexOf(value) === href.length - value.length;
-
-      case 'regex':
-        try {
-          return new RegExp(value).test(href);
-        } catch (e) {
-          return false;
-        }
-
-      default:
-        return true;
-    }
+    var imgs = root.querySelectorAll('.vidlytics-bubble-img');
+    imgs.forEach(function (img) {
+      setImportant(img, 'width', '100%');
+      setImportant(img, 'height', '100%');
+      setImportant(img, 'object-fit', 'cover');
+      setImportant(img, 'display', 'block');
+    });
   }
 
   function readAppearance() {
@@ -892,163 +978,63 @@
       });
   }
 
-  function createEl(tag, className) {
-    var el = document.createElement(tag);
-    if (className) el.className = className;
-    return el;
-  }
+  function matchesRule(rule) {
+    var href = window.location.href;
+    var path = window.location.pathname || '/';
+    var value = String(rule.value || '');
 
-  function injectForceFloatingCss() {
-    var oldStyle = document.getElementById('vidlytics-force-floating-css');
-    if (oldStyle) oldStyle.remove();
+    switch (rule.condition_type) {
+      case 'all_pages':
+        return true;
 
-    var style = document.createElement('style');
-    style.id = 'vidlytics-force-floating-css';
+      case 'home_only':
+        return (
+          path === '/' ||
+          path === '/home' ||
+          path === '/index.html' ||
+          path === ''
+        );
 
-    style.innerHTML =
-      '' +
-      '#vidlytics-widget-root,' +
-      '.vidlytics-widget-root {' +
-      'position: fixed !important;' +
-      'top: ' +
-      FORCE_FLOATING.top +
-      ' !important;' +
-      'right: ' +
-      FORCE_FLOATING.right +
-      ' !important;' +
-      'bottom: auto !important;' +
-      'left: auto !important;' +
-      'z-index: ' +
-      FORCE_FLOATING.zIndex +
-      ' !important;' +
-      'font-family: Inter, system-ui, sans-serif !important;' +
-      'pointer-events: auto !important;' +
-      '}' +
-      '#vidlytics-widget-root .vidlytics-bubbles {' +
-      'display: flex !important;' +
-      'flex-direction: column !important;' +
-      'align-items: flex-end !important;' +
-      'gap: 10px !important;' +
-      '}' +
-      '#vidlytics-widget-root .vidlytics-bubble {' +
-      'border: none !important;' +
-      'background: transparent !important;' +
-      'padding: 0 !important;' +
-      'margin: 0 !important;' +
-      'cursor: pointer !important;' +
-      'display: grid !important;' +
-      'justify-items: center !important;' +
-      'gap: 6px !important;' +
-      'outline: none !important;' +
-      '}' +
-      '#vidlytics-widget-root .vidlytics-bubble-ring {' +
-      'width: ' +
-      FORCE_FLOATING.width +
-      ' !important;' +
-      'height: ' +
-      FORCE_FLOATING.height +
-      ' !important;' +
-      'min-width: ' +
-      FORCE_FLOATING.width +
-      ' !important;' +
-      'min-height: ' +
-      FORCE_FLOATING.height +
-      ' !important;' +
-      'max-width: ' +
-      FORCE_FLOATING.width +
-      ' !important;' +
-      'max-height: ' +
-      FORCE_FLOATING.height +
-      ' !important;' +
-      'border-radius: ' +
-      FORCE_FLOATING.radius +
-      ' !important;' +
-      'overflow: hidden !important;' +
-      'box-sizing: border-box !important;' +
-      '}' +
-      '#vidlytics-widget-root .vidlytics-bubble-inner,' +
-      '#vidlytics-widget-root .vidlytics-bubble-img {' +
-      'border-radius: ' +
-      FORCE_FLOATING.radius +
-      ' !important;' +
-      'overflow: hidden !important;' +
-      '}' +
-      '#vidlytics-widget-root .vidlytics-bubble-img {' +
-      'width: 100% !important;' +
-      'height: 100% !important;' +
-      'object-fit: cover !important;' +
-      'display: block !important;' +
-      '}' +
-      '#vidlytics-widget-root .vidlytics-bubble-label {' +
-      'max-width: ' +
-      FORCE_FLOATING.width +
-      ' !important;' +
-      'font-size: 11px !important;' +
-      'font-weight: 700 !important;' +
-      'text-align: center !important;' +
-      'white-space: nowrap !important;' +
-      'overflow: hidden !important;' +
-      'text-overflow: ellipsis !important;' +
-      '}';
+      case 'product_pages':
+        return (
+          path.indexOf('/product') !== -1 ||
+          path.indexOf('/products') !== -1 ||
+          path.indexOf('/produto') !== -1 ||
+          path.indexOf('/produtos') !== -1
+        );
 
-    document.head.appendChild(style);
-  }
+      case 'category_pages':
+        return (
+          path.indexOf('/category') !== -1 ||
+          path.indexOf('/categories') !== -1 ||
+          path.indexOf('/categoria') !== -1 ||
+          path.indexOf('/colecao') !== -1 ||
+          path.indexOf('/collections') !== -1
+        );
 
-  function forceFloatingStyles() {
-    injectForceFloatingCss();
+      case 'contains':
+        return href.indexOf(value) !== -1;
 
-    var root = document.getElementById('vidlytics-widget-root');
-    if (!root) return;
+      case 'equals':
+        return href === value;
 
-    setImportant(root, 'position', 'fixed');
-    setImportant(root, 'top', FORCE_FLOATING.top);
-    setImportant(root, 'right', FORCE_FLOATING.right);
-    setImportant(root, 'bottom', 'auto');
-    setImportant(root, 'left', 'auto');
-    setImportant(root, 'z-index', FORCE_FLOATING.zIndex);
-    setImportant(root, 'pointer-events', 'auto');
+      case 'starts_with':
+        return href.indexOf(value) === 0;
 
-    var bubbles = root.querySelector('.vidlytics-bubbles');
-    if (bubbles) {
-      setImportant(bubbles, 'display', 'flex');
-      setImportant(bubbles, 'flex-direction', 'column');
-      setImportant(bubbles, 'align-items', 'flex-end');
-      setImportant(bubbles, 'gap', '10px');
+      case 'ends_with':
+        return href.lastIndexOf(value) === href.length - value.length;
+
+      case 'regex':
+        try {
+          return new RegExp(value).test(href);
+        } catch (e) {
+          return false;
+        }
+
+      default:
+        return true;
     }
-
-    var rings = root.querySelectorAll('.vidlytics-bubble-ring');
-    rings.forEach(function (ring) {
-      setImportant(ring, 'width', FORCE_FLOATING.width);
-      setImportant(ring, 'height', FORCE_FLOATING.height);
-      setImportant(ring, 'min-width', FORCE_FLOATING.width);
-      setImportant(ring, 'min-height', FORCE_FLOATING.height);
-      setImportant(ring, 'max-width', FORCE_FLOATING.width);
-      setImportant(ring, 'max-height', FORCE_FLOATING.height);
-      setImportant(ring, 'border-radius', FORCE_FLOATING.radius);
-      setImportant(ring, 'overflow', 'hidden');
-      setImportant(ring, 'box-sizing', 'border-box');
-    });
-
-    var inners = root.querySelectorAll(
-      '.vidlytics-bubble-inner, .vidlytics-bubble-img'
-    );
-
-    inners.forEach(function (inner) {
-      setImportant(inner, 'border-radius', FORCE_FLOATING.radius);
-      setImportant(inner, 'overflow', 'hidden');
-    });
-
-    var imgs = root.querySelectorAll('.vidlytics-bubble-img');
-    imgs.forEach(function (img) {
-      setImportant(img, 'width', '100%');
-      setImportant(img, 'height', '100%');
-      setImportant(img, 'object-fit', 'cover');
-      setImportant(img, 'display', 'block');
-    });
   }
-
-  var overlay = null;
-  var modalContent = null;
 
   function ensureModal() {
     if (overlay) return;
@@ -1147,7 +1133,7 @@
     }
 
     var link = createEl('a');
-    link.href = url;
+    link.href = url || '#';
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
     link.textContent = 'Abrir vídeo';
@@ -1162,9 +1148,6 @@
 
     return { el: link, type: 'link' };
   }
-
-  var readStoryProductsData = [];
-  var readProductsData = [];
 
   function openStory(story, storyVideoMap, activeVideos, storyProducts, products) {
     ensureModal();
@@ -1219,7 +1202,7 @@
         };
       }
 
-      if (activeProducts.length) {
+      if (activeProducts.length && activeProducts[0].product_url) {
         return {
           text: 'Comprar agora',
           url: activeProducts[0].product_url,
@@ -1248,17 +1231,19 @@
       var titleWrap = createEl('div');
 
       if (modalConfig.show_title) {
-        titleWrap.innerHTML =
-          '<div style="font-weight:800;color:' +
-          getTextColor(currentAppearance) +
-          ';font-size:14px">' +
-          (story.title || story.name || 'Story') +
-          '</div>' +
-          '<div style="font-size:12px;color:#64748b">' +
-          (currentIndex + 1) +
-          '/' +
-          orderedVideos.length +
-          '</div>';
+        var title = createEl('div');
+        title.textContent = story.title || story.name || 'Story';
+        title.style.fontWeight = '800';
+        title.style.color = getTextColor(currentAppearance);
+        title.style.fontSize = '14px';
+
+        var count = createEl('div');
+        count.textContent = currentIndex + 1 + '/' + orderedVideos.length;
+        count.style.fontSize = '12px';
+        count.style.color = '#64748b';
+
+        titleWrap.appendChild(title);
+        titleWrap.appendChild(count);
       }
 
       var closeBtn = createEl('button');
@@ -1385,22 +1370,43 @@
         productCard.style.background = '#fff';
         productCard.style.cursor = 'pointer';
 
-        productCard.innerHTML =
-          '<img src="' +
-          normalizeMediaUrl(product.image_url || product.imageUrl || '') +
-          '" alt="' +
-          (product.name || '') +
-          '" style="width:72px;height:72px;object-fit:cover;border-radius:14px;background:#e2e8f0;" />' +
-          '<div style="min-width:0;flex:1">' +
-          '<div style="font-weight:800;color:#0f172a;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
-          (product.name || '') +
-          '</div>' +
-          '<div style="margin-top:4px;font-weight:800;color:#7c3aed;font-size:16px;">' +
-          Number(product.price || 0).toLocaleString('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-          }) +
-          '</div></div>';
+        var productImg = createEl('img');
+        productImg.src = normalizeMediaUrl(product.image_url || product.imageUrl || '');
+        productImg.alt = product.name || '';
+        productImg.style.width = '72px';
+        productImg.style.height = '72px';
+        productImg.style.objectFit = 'cover';
+        productImg.style.borderRadius = '14px';
+        productImg.style.background = '#e2e8f0';
+
+        var productInfo = createEl('div');
+        productInfo.style.minWidth = '0';
+        productInfo.style.flex = '1';
+
+        var productName = createEl('div');
+        productName.textContent = product.name || '';
+        productName.style.fontWeight = '800';
+        productName.style.color = '#0f172a';
+        productName.style.fontSize = '14px';
+        productName.style.whiteSpace = 'nowrap';
+        productName.style.overflow = 'hidden';
+        productName.style.textOverflow = 'ellipsis';
+
+        var productPrice = createEl('div');
+        productPrice.textContent = Number(product.price || 0).toLocaleString('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        });
+        productPrice.style.marginTop = '4px';
+        productPrice.style.fontWeight = '800';
+        productPrice.style.color = '#7c3aed';
+        productPrice.style.fontSize = '16px';
+
+        productInfo.appendChild(productName);
+        productInfo.appendChild(productPrice);
+
+        productCard.appendChild(productImg);
+        productCard.appendChild(productInfo);
 
         productCard.addEventListener('click', function () {
           trackMetric({
@@ -1411,7 +1417,9 @@
             page_url: window.location.href
           });
 
-          window.open(product.product_url, '_blank', 'noopener,noreferrer');
+          if (product.product_url) {
+            window.open(product.product_url, '_blank', 'noopener,noreferrer');
+          }
         });
 
         body.appendChild(productCard);
@@ -1441,10 +1449,11 @@
     setImportant(root, 'font-family', getFontFamily(appearance));
     setImportant(root, 'pointer-events', 'auto');
     setImportant(root, 'position', 'fixed');
+    setImportant(root, 'inset', FORCE_FLOATING.inset);
     setImportant(root, 'top', FORCE_FLOATING.top);
     setImportant(root, 'right', FORCE_FLOATING.right);
-    setImportant(root, 'bottom', 'auto');
-    setImportant(root, 'left', 'auto');
+    setImportant(root, 'bottom', FORCE_FLOATING.bottom);
+    setImportant(root, 'left', FORCE_FLOATING.left);
     setImportant(root, 'z-index', FORCE_FLOATING.zIndex);
 
     var bubbles = createEl('div', 'vidlytics-bubbles');
@@ -1605,6 +1614,7 @@
     setTimeout(forceFloatingStyles, 50);
     setTimeout(forceFloatingStyles, 300);
     setTimeout(forceFloatingStyles, 1000);
+    setTimeout(forceFloatingStyles, 2500);
   }
 
   function renderCarousel(stories, storyVideoMap, activeVideos) {
@@ -1844,9 +1854,25 @@
   function initMutationObserver() {
     if (!window.MutationObserver) return;
 
+    var scheduled = false;
+
+    function scheduleForce() {
+      if (scheduled) return;
+
+      scheduled = true;
+
+      setTimeout(function () {
+        scheduled = false;
+        forceFloatingStyles();
+      }, 100);
+    }
+
     var observer = new MutationObserver(function () {
       var root = document.getElementById('vidlytics-widget-root');
-      if (root) forceFloatingStyles();
+
+      if (root) {
+        scheduleForce();
+      }
     });
 
     observer.observe(document.documentElement, {
@@ -1863,6 +1889,10 @@
     injectForceFloatingCss();
     initMutationObserver();
     renderWidget();
+
+    setTimeout(forceFloatingStyles, 300);
+    setTimeout(forceFloatingStyles, 1000);
+    setTimeout(forceFloatingStyles, 3000);
   }
 
   if (document.readyState === 'loading') {
