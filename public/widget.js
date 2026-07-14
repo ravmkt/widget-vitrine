@@ -1909,6 +1909,47 @@ var widgetRadius = '11px';
       setImportant(inner, 'display', 'grid');
       setImportant(inner, 'place-items', 'center');
       setImportant(inner, 'box-sizing', 'border-box');
+function injectForceFloatingCss() {
+  if (document.getElementById('vidlytics-force-floating-css')) return;
+
+  var style = document.createElement('style');
+  style.id = 'vidlytics-force-floating-css';
+
+  style.innerHTML = `
+    #vidlytics-widget-root {
+      position: fixed !important;
+      top: 20px !important;
+      right: 23px !important;
+      bottom: auto !important;
+      left: auto !important;
+      z-index: 2147483647 !important;
+    }
+
+    #vidlytics-widget-root .vidlytics-bubble-ring {
+      width: 85px !important;
+      height: 151px !important;
+      min-width: 85px !important;
+      min-height: 151px !important;
+      max-width: 85px !important;
+      max-height: 151px !important;
+      border-radius: 11px !important;
+      overflow: hidden !important;
+    }
+
+    #vidlytics-widget-root .vidlytics-bubble-inner,
+    #vidlytics-widget-root .vidlytics-bubble-img {
+      border-radius: 11px !important;
+    }
+
+    #vidlytics-widget-root .vidlytics-bubble-img {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+    }
+  `;
+
+  document.head.appendChild(style);
+}
 
       if (thumb) {
         var img = createEl('img', 'vidlytics-bubble-img');
