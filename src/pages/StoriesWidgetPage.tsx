@@ -891,10 +891,25 @@ const [model, setModel] = useState<any | null>(null);
           }
         }
 
-        setStories(filteredStories);
-        setStoryVideosMap(map);
-        setStoryIdx(startStoryIdx);
-        setVideoIdx(startVideoIdx);
+        const initialStory =
+  startStoryIdx !== null ? filteredStories[startStoryIdx] : null;
+
+const initialAppearance = resolveAppearanceForStory(
+  initialStory,
+  appearancesList || [],
+  genSettings,
+);
+
+console.log('StoriesWidgetPage - Stories:', filteredStories);
+console.log('StoriesWidgetPage - Aparências:', appearancesList);
+console.log('StoriesWidgetPage - Configuração geral:', genSettings);
+console.log('StoriesWidgetPage - Aparência inicial:', initialAppearance);
+
+setStories(filteredStories);
+setStoryVideosMap(map);
+setStoryIdx(startStoryIdx);
+setVideoIdx(startVideoIdx);
+setAppearance(initialAppearance);
       } catch (error) {
         console.error('Erro ao carregar widget de Stories:', error);
         showError('Erro ao carregar Stories.');
