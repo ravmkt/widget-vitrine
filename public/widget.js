@@ -897,7 +897,7 @@
     return '';
   }
 
-  function function readAppearance() {
+  function readAppearance() {
   if (!storeId || !hasSupabase) {
     return Promise.resolve(getStorageItem('vidlytics_appearance', {}) || {});
   }
