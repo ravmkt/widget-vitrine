@@ -2361,35 +2361,22 @@ const AppearancePage = () => {
         gridConfig.mobile = gridConfig.desktop;
       }
 
-      const normalizedPosition = normalizePosition(
-        floatingConfig.desktop.position,
-        floatingConfig.desktop.floating_position,
+            floatingConfig.desktop = normalizeFloatingConfigForSave(
+        floatingConfig.desktop,
       );
 
-      const normalizedFloatingPosition =
-        positionToFloatingPosition(normalizedPosition);
-
-      floatingConfig.desktop = {
-        ...floatingConfig.desktop,
-        border_style: normalizeBorderWidth(
-          floatingConfig.desktop.border_style,
-          '2',
-        ),
-        position: normalizedPosition,
-        floating_position: normalizedFloatingPosition,
-      };
+      floatingConfig.mobile = normalizeFloatingConfigForSave(
+        floatingConfig.mobile,
+      );
 
       if (formData.useGlobalAppearance) {
         floatingConfig.mobile = floatingConfig.desktop;
-      } else {
-        floatingConfig.mobile = {
-          ...floatingConfig.mobile,
-          border_style: normalizeBorderWidth(
-            floatingConfig.mobile.border_style,
-            '2',
-          ),
-        };
       }
+
+      const normalizedPosition = floatingConfig.desktop.position;
+      const normalizedFloatingPosition =
+        floatingConfig.desktop.floating_position;
+
 
       const floatingDesktop = floatingConfig.desktop;
       const carouselDesktop = carouselConfig.desktop;
