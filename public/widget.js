@@ -1,12 +1,13 @@
 /**
  * Vidlytics Widget — widget.js
- * Correção: aparência controlada pela tela de configuração + fallback seguro
- * Versão: 202607141555
+ * Correção: aparência controlada pela seção Aparência do aplicativo
+ * Consulta apenas widget_appearances.store_id
+ * Versão: 202607141900
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - CONFIGURAÇÃO CONTROLA VISUAL - 202607141555');
+  console.log('VIDLYTICS WIDGET CARREGADO - APARÊNCIA VIA widget_appearances - 202607141900');
 
-  var VIDLYTICS_WIDGET_VERSION = 'config-controla-visual-202607141555';
+  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-appearances-only-202607141900';
 
   if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) return;
 
@@ -221,13 +222,18 @@
   function fetchJson(path) {
     return supabaseFetch(path, { method: 'GET' })
       .then(function (response) {
-        if (!response.ok) return [];
+        if (!response.ok) {
+          console.warn('VIDLYTICS FETCH ERRO:', path, response.status, response.statusText);
+          return [];
+        }
+
         return response.json();
       })
       .then(function (data) {
         return Array.isArray(data) ? data : [];
       })
-      .catch(function () {
+      .catch(function (error) {
+        console.warn('VIDLYTICS FETCH CATCH:', path, error);
         return [];
       });
   }
@@ -474,6 +480,7 @@
       'secondaryColor',
       'border_color',
       'borderColor',
+      'color',
       'text_color',
       'textColor',
       'font_family',
@@ -542,149 +549,26 @@
     return normalizeAppearanceItem(merged);
   }
 
-  function itemBelongsToStore(item) {
-    if (!item || !storeId) return false;
-
-    var possibleValues = [
-      item.store_id,
-      item.storeId,
-      item.loja_id,
-      item.lojaId,
-      item.license_id,
-      item.licenseId,
-      item.tenant_id,
-      item.tenantId,
-      item.account_id,
-      item.accountId,
-      item.shop_id,
-      item.shopId,
-      item.store,
-      item.loja,
-      item.slug,
-      item.store_slug,
-      item.storeSlug
-    ];
-
-    for (var i = 0; i < possibleValues.length; i += 1) {
-      if (
-        possibleValues[i] !== undefined &&
-        possibleValues[i] !== null &&
-        possibleValues[i] !== '' &&
-        String(possibleValues[i]) === String(storeId)
-      ) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  function chooseBestAppearance(candidates) {
-    if (!candidates || !candidates.length) return null;
-
-    var best = null;
-    var bestScore = -1;
-
-    candidates.forEach(function (candidate) {
-      var item = candidate.item;
-      var appearance = candidate.appearance;
-
-      if (!appearanceHasUsefulData(appearance)) return;
-
-      var score = 0;
-
-      if (itemBelongsToStore(item)) score += 1000;
-      if (item.active === true) score += 100;
-      if (item.enabled === true) score += 100;
-      if (String(item.status || '').toLowerCase() === 'active') score += 100;
-      if (item.is_default === true) score += 20;
-      if (item.default === true) score += 20;
-      if (item.updated_at) score += 10;
-      if (item.created_at) score += 5;
-
-      if (
-        !item.store_id &&
-        !item.storeId &&
-        !item.loja_id &&
-        !item.lojaId &&
-        !item.license_id &&
-        !item.licenseId
-      ) {
-        score += 1;
-      }
-
-      if (score > bestScore) {
-        bestScore = score;
-        best = candidate;
-      }
-    });
-
-    return best;
-  }
-
   function fetchDbAppearance() {
-  if (!storeId || !hasSupabase) return Promise.resolve({});
+    if (!storeId || !hasSupabase) return Promise.resolve({});
 
-  var store = encodeURIComponent(storeId);
+    var store = encodeURIComponent(storeId);
+    var path = 'widget_appearances?select=*&store_id=eq.' + store + '&limit=1';
 
-  var path = 'widget_appearances?select=*&store_id=eq.' + store + '&limit=1';
-
-  return fetchJson(path).then(function (items) {
-    if (!items || !items.length) {
-      console.warn('VIDLYTICS: nenhuma aparência encontrada em widget_appearances para store_id:', storeId);
-      return {};
-    }
-
-    var item = items[0];
-    var appearance = extractAppearanceFromItem(item, true);
-
-    console.log('VIDLYTICS DB APARÊNCIA PATH:', path);
-    console.log('VIDLYTICS DB APARÊNCIA RAW:', item);
-    console.log('VIDLYTICS DB APARÊNCIA NORMALIZADA:', appearance);
-
-    return appearanceHasUsefulData(appearance) ? appearance : {};
-  });
-}
-
-
-    var candidates = [];
-    var chain = Promise.resolve();
-
-    paths.forEach(function (entry) {
-      chain = chain.then(function () {
-        return fetchJson(entry.path).then(function (items) {
-          if (!items || !items.length) return;
-
-          console.log('VIDLYTICS DB APARÊNCIA TESTADA:', entry.path, items);
-
-          items.forEach(function (item) {
-            var appearance = extractAppearanceFromItem(item, entry.direct);
-
-            if (appearanceHasUsefulData(appearance)) {
-              candidates.push({
-                path: entry.path,
-                item: item,
-                appearance: appearance
-              });
-            }
-          });
-        });
-      });
-    });
-
-    return chain.then(function () {
-      var best = chooseBestAppearance(candidates);
-
-      if (!best) {
-        console.warn('VIDLYTICS: nenhuma aparência salva encontrada no banco. Usando fallback.');
+    return fetchJson(path).then(function (items) {
+      if (!items || !items.length) {
+        console.warn('VIDLYTICS: nenhuma aparência encontrada em widget_appearances para store_id:', storeId);
         return {};
       }
 
-      console.log('VIDLYTICS DB APARÊNCIA ESCOLHIDA PATH:', best.path);
-      console.log('VIDLYTICS DB APARÊNCIA ESCOLHIDA RAW:', best.item);
-      console.log('VIDLYTICS DB APARÊNCIA ESCOLHIDA NORMALIZADA:', best.appearance);
+      var item = items[0];
+      var appearance = extractAppearanceFromItem(item, true);
 
-      return best.appearance;
+      console.log('VIDLYTICS DB APARÊNCIA PATH:', path);
+      console.log('VIDLYTICS DB APARÊNCIA RAW:', item);
+      console.log('VIDLYTICS DB APARÊNCIA NORMALIZADA:', appearance);
+
+      return appearanceHasUsefulData(appearance) ? appearance : {};
     });
   }
 
@@ -695,15 +579,6 @@
     function buildFinalAppearance(dbAppearance) {
       var finalAppearance = {};
 
-      /*
-       * Ordem correta:
-       * 1. Fallback
-       * 2. Config local
-       * 3. LocalStorage
-       * 4. Banco/tela de configuração
-       *
-       * O banco vem por último porque a tela precisa controlar tudo.
-       */
       mergeObject(finalAppearance, DEFAULT_APPEARANCE);
       mergeObject(finalAppearance, configAppearance);
       mergeObject(finalAppearance, storageAppearance);
@@ -734,52 +609,52 @@
   }
 
   function normalizeFloatingPosition(value) {
-  var key = normalizeKey(value);
+    var key = normalizeKey(value);
 
-  if (
-    key === 'fixed-top-left' ||
-    key === 'top-left' ||
-    key === 'left-top' ||
-    key === 'superior-esquerda' ||
-    key === 'canto-superior-esquerdo'
-  ) {
-    return 'top-left';
+    if (
+      key === 'fixed-top-left' ||
+      key === 'top-left' ||
+      key === 'left-top' ||
+      key === 'superior-esquerda' ||
+      key === 'canto-superior-esquerdo'
+    ) {
+      return 'top-left';
+    }
+
+    if (
+      key === 'fixed-top-right' ||
+      key === 'top-right' ||
+      key === 'right-top' ||
+      key === 'superior-direita' ||
+      key === 'canto-superior-direito'
+    ) {
+      return 'top-right';
+    }
+
+    if (
+      key === 'fixed-bottom-left' ||
+      key === 'bottom-left' ||
+      key === 'left' ||
+      key === 'left-bottom' ||
+      key === 'inferior-esquerda' ||
+      key === 'canto-inferior-esquerdo'
+    ) {
+      return 'bottom-left';
+    }
+
+    if (
+      key === 'fixed-bottom-right' ||
+      key === 'bottom-right' ||
+      key === 'right' ||
+      key === 'right-bottom' ||
+      key === 'inferior-direita' ||
+      key === 'canto-inferior-direito'
+    ) {
+      return 'bottom-right';
+    }
+
+    return DEFAULT_APPEARANCE.floating_position;
   }
-
-  if (
-    key === 'fixed-top-right' ||
-    key === 'top-right' ||
-    key === 'right-top' ||
-    key === 'superior-direita' ||
-    key === 'canto-superior-direito'
-  ) {
-    return 'top-right';
-  }
-
-  if (
-    key === 'fixed-bottom-left' ||
-    key === 'bottom-left' ||
-    key === 'left' ||
-    key === 'left-bottom' ||
-    key === 'inferior-esquerda' ||
-    key === 'canto-inferior-esquerdo'
-  ) {
-    return 'bottom-left';
-  }
-
-  if (
-    key === 'fixed-bottom-right' ||
-    key === 'bottom-right' ||
-    key === 'right' ||
-    key === 'right-bottom' ||
-    key === 'inferior-direita' ||
-    key === 'canto-inferior-direito'
-  ) {
-    return 'bottom-right';
-  }
-
-  return DEFAULT_APPEARANCE.floating_position;
-}
 
   function normalizeFloatingShape(value) {
     var key = normalizeKey(value);
@@ -900,80 +775,80 @@
     if (shape === 'circle') radius = 999;
 
     var borderWidth = toNumber(
-  readAppearanceValue(appearance, [
-    'floating_border_width',
-    'floatingBorderWidth',
-    'border_width',
-    'borderWidth',
-    'border_style',
-    'borderStyle',
-    'largura_borda',
-    'larguraDaBorda',
-    'larguraBorda'
-  ]),
-  DEFAULT_APPEARANCE.floating_border_width
-);
+      readAppearanceValue(appearance, [
+        'floating_border_width',
+        'floatingBorderWidth',
+        'border_width',
+        'borderWidth',
+        'border_style',
+        'borderStyle',
+        'largura_borda',
+        'larguraDaBorda',
+        'larguraBorda'
+      ]),
+      DEFAULT_APPEARANCE.floating_border_width
+    );
 
     var top = toNumber(
-  readAppearanceValue(appearance, [
-    'floating_top',
-    'floatingTop',
-    'top',
-    'top_spacing',
-    'topSpacing',
-    'spacing_top',
-    'spacingTop',
-    'distance_top',
-    'distanceTop',
-    'distancia_superior',
-    'distanciaSuperior',
-    'offset_top',
-    'offsetTop'
-  ]),
-  DEFAULT_APPEARANCE.floating_top
-);
+      readAppearanceValue(appearance, [
+        'floating_top',
+        'floatingTop',
+        'top',
+        'top_spacing',
+        'topSpacing',
+        'spacing_top',
+        'spacingTop',
+        'distance_top',
+        'distanceTop',
+        'distancia_superior',
+        'distanciaSuperior',
+        'offset_top',
+        'offsetTop'
+      ]),
+      DEFAULT_APPEARANCE.floating_top
+    );
 
     var bottom = toNumber(
-  readAppearanceValue(appearance, [
-    'floating_bottom',
-    'floatingBottom',
-    'bottom',
-    'bottom_spacing',
-    'bottomSpacing',
-    'spacing_bottom',
-    'spacingBottom',
-    'distance_bottom',
-    'distanceBottom',
-    'distancia_inferior',
-    'distanciaInferior',
-    'offset_bottom',
-    'offsetBottom'
-  ]),
-  DEFAULT_APPEARANCE.floating_bottom
-);
+      readAppearanceValue(appearance, [
+        'floating_bottom',
+        'floatingBottom',
+        'bottom',
+        'bottom_spacing',
+        'bottomSpacing',
+        'spacing_bottom',
+        'spacingBottom',
+        'distance_bottom',
+        'distanceBottom',
+        'distancia_inferior',
+        'distanciaInferior',
+        'offset_bottom',
+        'offsetBottom'
+      ]),
+      DEFAULT_APPEARANCE.floating_bottom
+    );
 
-   var side = toNumber(
-  readAppearanceValue(appearance, [
-    'floating_side',
-    'floatingSide',
-    'side',
-    'left_spacing',
-    'leftSpacing',
-    'right_spacing',
-    'rightSpacing',
-    'spacing_left',
-    'spacingLeft',
-    'spacing_right',
-    'spacingRight',
-    'distance_side',
-    'distanceSide',
-    'distancia_lateral',
-    'distanciaLateral',
-    'offset_side',
-    'offsetSide'
-  ]),
-  DEFAULT_APPEARANCE.floating_side
-);
+    var side = toNumber(
+      readAppearanceValue(appearance, [
+        'floating_side',
+        'floatingSide',
+        'side',
+        'left_spacing',
+        'leftSpacing',
+        'right_spacing',
+        'rightSpacing',
+        'spacing_left',
+        'spacingLeft',
+        'spacing_right',
+        'spacingRight',
+        'distance_side',
+        'distanceSide',
+        'distancia_lateral',
+        'distanciaLateral',
+        'offset_side',
+        'offsetSide'
+      ]),
+      DEFAULT_APPEARANCE.floating_side
+    );
 
     var zIndex = toNumber(
       readAppearanceValue(appearance, [
@@ -1007,18 +882,18 @@
   }
 
   function getPrimaryColor(appearance) {
-  return (
-    readAppearanceValue(appearance, [
-      'color',
-      'border_color',
-      'borderColor',
-      'primary_color',
-      'primaryColor',
-      'cor_primaria',
-      'cor_borda'
-    ]) || DEFAULT_APPEARANCE.primary_color
-  );
-}
+    return (
+      readAppearanceValue(appearance, [
+        'color',
+        'border_color',
+        'borderColor',
+        'primary_color',
+        'primaryColor',
+        'cor_primaria',
+        'cor_borda'
+      ]) || DEFAULT_APPEARANCE.primary_color
+    );
+  }
 
   function getSecondaryColor(appearance) {
     return (
