@@ -74,6 +74,24 @@
     return {};
   }
 
+  function isPlainObject(value) {
+    return (
+      value &&
+      typeof value === 'object' &&
+      Object.prototype.toString.call(value) === '[object Object]'
+    );
+  }
+
+  function setImportant(el, prop, value) {
+    if (!el || value === undefined || value === null || value === '') return;
+
+    try {
+      el.style.setProperty(prop, String(value), 'important');
+    } catch (e) {
+      el.style[prop] = value;
+    }
+  }
+
   function toBoolean(value, fallback) {
     if (value === undefined || value === null || value === '') {
       return fallback;
@@ -145,11 +163,133 @@
 
     var str = String(finalValue).trim();
 
-    if (/^\d+(\.\d+)?$/.test(str)) {
+    if (/^-?\d+(\.\d+)?$/.test(str)) {
       return str + 'px';
     }
 
     return str;
+  }
+
+  function buildAppearanceSources(appearance, context) {
+    appearance = appearance || {};
+
+    var sources = [];
+    var device = window.innerWidth < 768 ? 'mobile' : 'desktop';
+
+    function add(value) {
+      var obj = parseJsonIfNeeded(value);
+
+      if (isPlainObject(obj)) {
+        sources.push(obj);
+        return obj;
+      }
+
+      return null;
+    }
+
+    var root = add(appearance) || {};
+
+    var directConfigKeys = [
+      'config',
+      'settings',
+      'style',
+      'styles',
+      'appearance_config',
+      'appearanceConfig',
+      'style_config',
+      'styleConfig',
+      'global_config',
+      'globalConfig',
+      'visual_config',
+      'visualConfig',
+      'identity_config',
+      'identityConfig',
+      'floating_config',
+      'floatingConfig',
+      'floating',
+      'floatingVideo',
+      'floating_video',
+      'floatingWidget',
+      'floating_widget',
+      'widget_config',
+      'widgetConfig',
+      'widget',
+      'desktop_config',
+      'desktopConfig',
+      'mobile_config',
+      'mobileConfig',
+      'desktop',
+      'mobile'
+    ];
+
+    directConfigKeys.forEach(function (key) {
+      if (root[key] !== undefined) add(root[key]);
+    });
+
+    var snapshot = sources.slice();
+
+    snapshot.forEach(function (src) {
+      if (!src) return;
+
+      if (context === 'floating') {
+        add(src.floating);
+        add(src.floatingVideo);
+        add(src.floating_video);
+        add(src.floatingWidget);
+        add(src.floating_widget);
+        add(src.widget);
+        add(src.widget_config);
+        add(src.widgetConfig);
+        add(src.floating_config);
+        add(src.floatingConfig);
+      }
+
+      if (context === 'carousel') {
+        add(src.carousel);
+        add(src.carousel_config);
+        add(src.carouselConfig);
+      }
+
+      add(src[device]);
+      add(src[device + '_config']);
+      add(src[device + 'Config']);
+
+      if (context === 'floating') {
+        add(src['floating_' + device]);
+        add(src['floating_' + device + '_config']);
+        add(src['floating' + device.charAt(0).toUpperCase() + device.slice(1)]);
+        add(src[device + '_floating']);
+        add(src[device + '_floating_config']);
+      }
+
+      if (context === 'carousel') {
+        add(src['carousel_' + device]);
+        add(src['carousel_' + device + '_config']);
+        add(src[device + '_carousel']);
+        add(src[device + '_carousel_config']);
+      }
+    });
+
+    return sources;
+  }
+
+  function readAppearanceValue(appearance, names, context) {
+    var sources = buildAppearanceSources(appearance, context);
+
+    for (var i = 0; i < sources.length; i += 1) {
+      for (var j = 0; j < names.length; j += 1) {
+        if (
+          sources[i] &&
+          sources[i][names[j]] !== undefined &&
+          sources[i][names[j]] !== null &&
+          sources[i][names[j]] !== ''
+        ) {
+          return sources[i][names[j]];
+        }
+      }
+    }
+
+    return undefined;
   }
 
   function getVideoUrl(video) {
@@ -371,10 +511,25 @@
     if (normalized === 'top_left') return 'fixed_top_left';
     if (normalized === 'top_right') return 'fixed_top_right';
 
+    if (normalized === 'right_top') return 'fixed_top_right';
+    if (normalized === 'left_top') return 'fixed_top_left';
+    if (normalized === 'right_bottom') return 'fixed_bottom_right';
+    if (normalized === 'left_bottom') return 'fixed_bottom_left';
+
+    if (normalized === 'upper_right') return 'fixed_top_right';
+    if (normalized === 'upper_left') return 'fixed_top_left';
+    if (normalized === 'lower_right') return 'fixed_bottom_right';
+    if (normalized === 'lower_left') return 'fixed_bottom_left';
+
     if (normalized === 'inferior_esquerda') return 'fixed_bottom_left';
     if (normalized === 'inferior_direita') return 'fixed_bottom_right';
     if (normalized === 'superior_esquerda') return 'fixed_top_left';
     if (normalized === 'superior_direita') return 'fixed_top_right';
+
+    if (normalized === 'canto_inferior_esquerdo') return 'fixed_bottom_left';
+    if (normalized === 'canto_inferior_direito') return 'fixed_bottom_right';
+    if (normalized === 'canto_superior_esquerdo') return 'fixed_top_left';
+    if (normalized === 'canto_superior_direito') return 'fixed_top_right';
 
     if (normalized === 'fixed_bottom_left') return 'fixed_bottom_left';
     if (normalized === 'fixed_bottom_right') return 'fixed_bottom_right';
@@ -387,19 +542,30 @@
   function normalizePositionFromAppearance(appearance) {
     appearance = appearance || {};
 
-    return normalizePositionValue(
-      firstDefined(
-        appearance.position,
-        appearance.widget_position,
-        appearance.widgetPosition,
-        appearance.floating_position,
-        appearance.floatingPosition,
-        appearance.posicao,
-        appearance.posicao_widget,
-        appearance.posicaoWidget,
-        fallbackPosition
-      )
+    var value = readAppearanceValue(
+      appearance,
+      [
+        'floating_position',
+        'floatingPosition',
+        'floating_widget_position',
+        'floatingWidgetPosition',
+        'widget_position',
+        'widgetPosition',
+        'position',
+        'posicao',
+        'posicao_widget',
+        'posicaoWidget',
+        'position_desktop',
+        'desktop_position',
+        'floating_position_desktop',
+        'floatingPositionDesktop',
+        'widget_position_desktop',
+        'widgetPositionDesktop'
+      ],
+      'floating'
     );
+
+    return normalizePositionValue(firstDefined(value, fallbackPosition));
   }
 
   function normalizeShapeValue(value) {
@@ -407,7 +573,9 @@
       .trim()
       .toLowerCase()
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, '_')
+      .replace(/-/g, '_');
 
     if (shape === 'retrato' || shape === 'portrait') return 'portrait';
     if (shape === 'retangulo' || shape === 'rectangle') return 'rectangle';
@@ -415,6 +583,8 @@
     if (shape === 'circulo' || shape === 'circle') return 'circle';
     if (shape === 'redondo') return 'circle';
     if (shape === 'pill') return 'pill';
+    if (shape === 'rounded') return 'rectangle';
+    if (shape === 'rounded_rectangle') return 'rectangle';
 
     return shape || 'circle';
   }
@@ -422,24 +592,38 @@
   function getCardShape(appearance, context) {
     appearance = appearance || {};
 
-    var shape = firstDefined(
-      context === 'carousel' ? appearance.carousel_card_shape : undefined,
-      context === 'carousel' ? appearance.carouselCardShape : undefined,
-      context === 'floating' ? appearance.floating_card_shape : undefined,
-      context === 'floating' ? appearance.floatingCardShape : undefined,
-      context === 'floating' ? appearance.floating_shape : undefined,
-      context === 'floating' ? appearance.floatingShape : undefined,
-      appearance.card_shape,
-      appearance.cardShape,
-      appearance.widget_shape,
-      appearance.widgetShape,
-      appearance.shape,
-      appearance.forma,
-      appearance.formato,
-      'circle'
-    );
+    var names =
+      context === 'carousel'
+        ? [
+            'carousel_card_shape',
+            'carouselCardShape',
+            'carousel_shape',
+            'carouselShape',
+            'card_shape',
+            'cardShape',
+            'shape',
+            'forma',
+            'formato'
+          ]
+        : [
+            'floating_card_shape',
+            'floatingCardShape',
+            'floating_shape',
+            'floatingShape',
+            'floating_forma',
+            'floatingFormato',
+            'widget_shape',
+            'widgetShape',
+            'card_shape',
+            'cardShape',
+            'shape',
+            'forma',
+            'formato'
+          ];
 
-    return normalizeShapeValue(shape);
+    var shape = readAppearanceValue(appearance, names, context);
+
+    return normalizeShapeValue(firstDefined(shape, 'circle'));
   }
 
   function getRadiusForShape(shape, fallback) {
@@ -454,23 +638,40 @@
   function getWidgetSize(appearance) {
     appearance = appearance || {};
 
-    var size = appearance.widget_size || appearance.widgetSize || 'medium';
+    var size = readAppearanceValue(
+      appearance,
+      ['widget_size', 'widgetSize', 'size', 'tamanho'],
+      'floating'
+    );
 
-    var width = firstDefined(
-      appearance.floating_width,
-      appearance.floatingWidth,
-      appearance.widget_width,
-      appearance.widgetWidth,
-      appearance.card_width,
-      appearance.cardWidth,
-      appearance.desktop_width,
-      appearance.desktopWidth,
-      appearance.width_desktop,
-      appearance.widthDesktop,
-      appearance.width,
-      appearance.largura,
-      appearance.largura_desktop,
-      ''
+    size = size || 'medium';
+
+    var width = readAppearanceValue(
+      appearance,
+      [
+        'floating_width',
+        'floatingWidth',
+        'floating_width_desktop',
+        'floatingWidthDesktop',
+        'desktop_floating_width',
+        'desktopFloatingWidth',
+        'widget_width',
+        'widgetWidth',
+        'widget_width_desktop',
+        'widgetWidthDesktop',
+        'card_width',
+        'cardWidth',
+        'desktop_width',
+        'desktopWidth',
+        'width_desktop',
+        'widthDesktop',
+        'width',
+        'largura',
+        'largura_desktop',
+        'larguraDesktop',
+        'largura_flutuante'
+      ],
+      'floating'
     );
 
     if (width) return toCssUnit(width, width);
@@ -485,21 +686,32 @@
 
     var shape = getCardShape(appearance, 'floating');
 
-    var height = firstDefined(
-      appearance.floating_height,
-      appearance.floatingHeight,
-      appearance.widget_height,
-      appearance.widgetHeight,
-      appearance.card_height,
-      appearance.cardHeight,
-      appearance.desktop_height,
-      appearance.desktopHeight,
-      appearance.height_desktop,
-      appearance.heightDesktop,
-      appearance.height,
-      appearance.altura,
-      appearance.altura_desktop,
-      ''
+    var height = readAppearanceValue(
+      appearance,
+      [
+        'floating_height',
+        'floatingHeight',
+        'floating_height_desktop',
+        'floatingHeightDesktop',
+        'desktop_floating_height',
+        'desktopFloatingHeight',
+        'widget_height',
+        'widgetHeight',
+        'widget_height_desktop',
+        'widgetHeightDesktop',
+        'card_height',
+        'cardHeight',
+        'desktop_height',
+        'desktopHeight',
+        'height_desktop',
+        'heightDesktop',
+        'height',
+        'altura',
+        'altura_desktop',
+        'alturaDesktop',
+        'altura_flutuante'
+      ],
+      'floating'
     );
 
     var width = getWidgetSize(appearance);
@@ -528,37 +740,70 @@
 
     var shape = getCardShape(appearance, 'floating');
 
-    return getRadiusForShape(
-      shape,
-      firstDefined(
-        appearance.floating_border_radius,
-        appearance.floatingBorderRadius,
-        appearance.widget_border_radius,
-        appearance.widgetBorderRadius,
-        appearance.border_radius,
-        appearance.borderRadius,
-        appearance.radius,
-        appearance.raio_da_borda,
-        appearance.raioDaBorda,
-        '12px'
-      )
+    var radius = readAppearanceValue(
+      appearance,
+      [
+        'floating_border_radius',
+        'floatingBorderRadius',
+        'floating_border_radius_desktop',
+        'floatingBorderRadiusDesktop',
+        'desktop_floating_border_radius',
+        'desktopFloatingBorderRadius',
+        'widget_border_radius',
+        'widgetBorderRadius',
+        'border_radius',
+        'borderRadius',
+        'radius',
+        'raio',
+        'raio_borda',
+        'raioBorda',
+        'raio_da_borda',
+        'raioDaBorda'
+      ],
+      'floating'
     );
+
+    return getRadiusForShape(shape, firstDefined(radius, '12px'));
   }
 
   function getPrimaryColor(appearance) {
-    return appearance.primary_color || appearance.primaryColor || appearance.color || '#0094EB';
+    return (
+      readAppearanceValue(
+        appearance,
+        ['primary_color', 'primaryColor', 'color', 'cor_primaria'],
+        'floating'
+      ) || '#0094EB'
+    );
   }
 
   function getSecondaryColor(appearance) {
-    return appearance.secondary_color || appearance.secondaryColor || '#EC4899';
+    return (
+      readAppearanceValue(
+        appearance,
+        ['secondary_color', 'secondaryColor', 'cor_secundaria'],
+        'floating'
+      ) || '#EC4899'
+    );
   }
 
   function getTextColor(appearance) {
-    return appearance.text_color || appearance.textColor || '#0f172a';
+    return (
+      readAppearanceValue(
+        appearance,
+        ['text_color', 'textColor', 'cor_texto'],
+        'floating'
+      ) || '#0f172a'
+    );
   }
 
   function getFontFamily(appearance) {
-    return appearance.font_family || appearance.fontFamily || 'Inter, system-ui, sans-serif';
+    return (
+      readAppearanceValue(
+        appearance,
+        ['font_family', 'fontFamily', 'fonte'],
+        'floating'
+      ) || 'Inter, system-ui, sans-serif'
+    );
   }
 
   function getStorageItem(key, fallback) {
@@ -582,7 +827,7 @@
     var headers = {
       apikey: supabaseAnonKey,
       Authorization: 'Bearer ' + supabaseAnonKey,
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json'
     };
 
     if (options && options.headers) {
@@ -594,38 +839,31 @@
     return fetch(supabaseUrl + '/rest/v1/' + path, {
       method: (options && options.method) || 'GET',
       headers: headers,
-      body: options && options.body ? options.body : undefined,
+      body: options && options.body ? options.body : undefined
     });
   }
 
   function trackMetric(metric) {
-  var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
+    var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
 
-  var nextMetric = {
-    id:
-      typeof crypto !== 'undefined' && crypto.randomUUID
-        ? crypto.randomUUID()
-        : Date.now() + '-' + Math.random().toString(36).slice(2),
-    store_id: storeId,
-    story_id: metric.story_id || null,
-    video_id: metric.video_id || null,
-    product_id: metric.product_id || null,
-    event_type: metric.event_type,
-    page_url: metric.page_url || window.location.href,
-    device_type:
-      metric.device_type ||
-      (window.innerWidth < 768 ? 'mobile' : 'desktop'),
-    browser: metric.browser || navigator.userAgent,
-    referrer: metric.referrer || document.referrer || null,
-    created_at: new Date().toISOString(),
-  };
-
-  fallbackMetrics.push(nextMetric);
-  setStorageItem('vidlytics_metrics', fallbackMetrics);
-
-  return Promise.resolve();
-}
-
+    var nextMetric = {
+      id:
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : Date.now() + '-' + Math.random().toString(36).slice(2),
+      store_id: storeId,
+      story_id: metric.story_id || null,
+      video_id: metric.video_id || null,
+      product_id: metric.product_id || null,
+      event_type: metric.event_type,
+      page_url: metric.page_url || window.location.href,
+      device_type:
+        metric.device_type ||
+        (window.innerWidth < 768 ? 'mobile' : 'desktop'),
+      browser: metric.browser || navigator.userAgent,
+      referrer: metric.referrer || document.referrer || null,
+      created_at: new Date().toISOString()
+    };
 
     fallbackMetrics.push(nextMetric);
     setStorageItem('vidlytics_metrics', fallbackMetrics);
@@ -644,8 +882,8 @@
         page_url: nextMetric.page_url,
         device_type: nextMetric.device_type,
         browser: nextMetric.browser,
-        referrer: nextMetric.referrer,
-      }),
+        referrer: nextMetric.referrer
+      })
     }).catch(function () {});
   }
 
@@ -755,7 +993,7 @@
           rawConfig.shadowEnabled
         ),
         true
-      ),
+      )
     };
   }
 
@@ -971,108 +1209,168 @@
     return el;
   }
 
+  function getSpacingValue(appearance, side) {
+    var names = [];
+
+    if (side === 'top') {
+      names = [
+        'top_spacing',
+        'spacing_top',
+        'offset_top',
+        'distance_top',
+        'top_distance',
+        'topDistance',
+        'floating_top_spacing',
+        'floatingTopSpacing',
+        'floating_distance_top',
+        'floatingDistanceTop',
+        'floating_top_distance',
+        'floatingTopDistance',
+        'distancia_superior',
+        'distanciaSuperior',
+        'top'
+      ];
+    }
+
+    if (side === 'bottom') {
+      names = [
+        'bottom_spacing',
+        'spacing_bottom',
+        'offset_bottom',
+        'distance_bottom',
+        'bottom_distance',
+        'bottomDistance',
+        'floating_bottom_spacing',
+        'floatingBottomSpacing',
+        'floating_distance_bottom',
+        'floatingDistanceBottom',
+        'floating_bottom_distance',
+        'floatingBottomDistance',
+        'distancia_inferior',
+        'distanciaInferior',
+        'bottom'
+      ];
+    }
+
+    if (side === 'left') {
+      names = [
+        'left_spacing',
+        'spacing_left',
+        'offset_left',
+        'distance_left',
+        'left_distance',
+        'leftDistance',
+        'distance_side',
+        'side_distance',
+        'sideDistance',
+        'floating_left_spacing',
+        'floatingLeftSpacing',
+        'floating_distance_left',
+        'floatingDistanceLeft',
+        'floating_left_distance',
+        'floatingLeftDistance',
+        'floating_side_distance',
+        'floatingSideDistance',
+        'distancia_lateral',
+        'distanciaLateral',
+        'distancia_esquerda',
+        'distanciaEsquerda',
+        'left'
+      ];
+    }
+
+    if (side === 'right') {
+      names = [
+        'right_spacing',
+        'spacing_right',
+        'offset_right',
+        'distance_right',
+        'right_distance',
+        'rightDistance',
+        'distance_side',
+        'side_distance',
+        'sideDistance',
+        'floating_right_spacing',
+        'floatingRightSpacing',
+        'floating_distance_right',
+        'floatingDistanceRight',
+        'floating_right_distance',
+        'floatingRightDistance',
+        'floating_side_distance',
+        'floatingSideDistance',
+        'distancia_lateral',
+        'distanciaLateral',
+        'distancia_direita',
+        'distanciaDireita',
+        'right'
+      ];
+    }
+
+    var defaultSpacing = readAppearanceValue(
+      appearance,
+      [
+        'spacing',
+        'offset',
+        'distance',
+        'floating_spacing',
+        'floatingSpacing',
+        'distancia'
+      ],
+      'floating'
+    );
+
+    var value = readAppearanceValue(appearance, names, 'floating');
+
+    return toCssUnit(firstDefined(value, defaultSpacing, '20px'), '20px');
+  }
+
   function applyPosition(el, appearance) {
     appearance = appearance || {};
 
     var pos = normalizePositionFromAppearance(appearance);
 
-    var defaultSpacing = toCssUnit(
-      firstDefined(appearance.spacing, appearance.offset, '20px'),
-      '20px'
+    var bottomSpacing = getSpacingValue(appearance, 'bottom');
+    var topSpacing = getSpacingValue(appearance, 'top');
+    var leftSpacing = getSpacingValue(appearance, 'left');
+    var rightSpacing = getSpacingValue(appearance, 'right');
+
+    setImportant(el, 'position', 'fixed');
+    setImportant(
+      el,
+      'z-index',
+      String(
+        firstDefined(
+          readAppearanceValue(appearance, ['z_index', 'zIndex'], 'floating'),
+          '2147483647'
+        )
+      )
     );
 
-    var bottomSpacing = toCssUnit(
-      firstDefined(
-        appearance.bottom_spacing,
-        appearance.spacing_bottom,
-        appearance.offset_bottom,
-        appearance.distance_bottom,
-        appearance.bottomDistance,
-        appearance.distancia_inferior,
-        appearance.distanciaInferior,
-        defaultSpacing
-      ),
-      '20px'
-    );
-
-    var topSpacing = toCssUnit(
-      firstDefined(
-        appearance.top_spacing,
-        appearance.spacing_top,
-        appearance.offset_top,
-        appearance.distance_top,
-        appearance.topDistance,
-        appearance.distancia_superior,
-        appearance.distanciaSuperior,
-        defaultSpacing
-      ),
-      '20px'
-    );
-
-    var leftSpacing = toCssUnit(
-      firstDefined(
-        appearance.left_spacing,
-        appearance.spacing_left,
-        appearance.offset_left,
-        appearance.distance_left,
-        appearance.leftDistance,
-        appearance.distance_side,
-        appearance.sideDistance,
-        appearance.distancia_lateral,
-        appearance.distanciaLateral,
-        appearance.distancia_esquerda,
-        appearance.distanciaEsquerda,
-        defaultSpacing
-      ),
-      '20px'
-    );
-
-    var rightSpacing = toCssUnit(
-      firstDefined(
-        appearance.right_spacing,
-        appearance.spacing_right,
-        appearance.offset_right,
-        appearance.distance_right,
-        appearance.rightDistance,
-        appearance.distance_side,
-        appearance.sideDistance,
-        appearance.distancia_lateral,
-        appearance.distanciaLateral,
-        appearance.distancia_direita,
-        appearance.distanciaDireita,
-        defaultSpacing
-      ),
-      '20px'
-    );
-
-    el.style.position = 'fixed';
-    el.style.zIndex = String(appearance.z_index || appearance.zIndex || '2147483647');
-
-    el.style.top = 'auto';
-    el.style.right = 'auto';
-    el.style.bottom = 'auto';
-    el.style.left = 'auto';
+    setImportant(el, 'top', 'auto');
+    setImportant(el, 'right', 'auto');
+    setImportant(el, 'bottom', 'auto');
+    setImportant(el, 'left', 'auto');
 
     if (pos === 'fixed_top_left') {
-      el.style.top = topSpacing;
-      el.style.left = leftSpacing;
+      setImportant(el, 'top', topSpacing);
+      setImportant(el, 'left', leftSpacing);
       return;
     }
 
     if (pos === 'fixed_top_right') {
-      el.style.top = topSpacing;
-      el.style.right = rightSpacing;
+      setImportant(el, 'top', topSpacing);
+      setImportant(el, 'right', rightSpacing);
       return;
     }
 
     if (pos === 'fixed_bottom_left') {
-      el.style.bottom = bottomSpacing;
-      el.style.left = leftSpacing;
+      setImportant(el, 'bottom', bottomSpacing);
+      setImportant(el, 'left', leftSpacing);
       return;
     }
 
-    el.style.bottom = bottomSpacing;
-    el.style.right = rightSpacing;
+    setImportant(el, 'bottom', bottomSpacing);
+    setImportant(el, 'right', rightSpacing);
   }
 
   var overlay = null;
@@ -1097,7 +1395,10 @@
     modal.style.width = 'min(92vw, 420px)';
     modal.style.maxHeight = '88vh';
     modal.style.overflow = 'hidden';
-    modal.style.background = currentAppearance.background_color || currentAppearance.backgroundColor || '#fff';
+    modal.style.background =
+      currentAppearance.background_color ||
+      currentAppearance.backgroundColor ||
+      '#fff';
     modal.style.borderRadius = '24px';
     modal.style.boxShadow = modalConfig.shadow_enabled
       ? '0 24px 80px rgba(15, 23, 42, 0.3)'
@@ -1163,7 +1464,7 @@
           event_type: 'play',
           story_id: storyId,
           video_id: video.id,
-          page_url: window.location.href,
+          page_url: window.location.href
         });
       });
 
@@ -1234,7 +1535,7 @@
         return {
           text: story.cta_text || 'Saiba mais',
           url: story.cta_url,
-          type: story.cta_type || 'custom',
+          type: story.cta_type || 'custom'
         };
       }
 
@@ -1242,7 +1543,7 @@
         return {
           text: 'Comprar agora',
           url: activeProducts[0].product_url,
-          type: 'product',
+          type: 'product'
         };
       }
 
@@ -1338,7 +1639,9 @@
       nextBtn.style.fontWeight = '800';
       nextBtn.style.cursor = 'pointer';
       nextBtn.style.background =
-        currentAppearance.button_color || currentAppearance.buttonColor || getPrimaryColor(currentAppearance);
+        currentAppearance.button_color ||
+        currentAppearance.buttonColor ||
+        getPrimaryColor(currentAppearance);
       nextBtn.style.color = '#fff';
 
       nextBtn.addEventListener('click', function () {
@@ -1385,7 +1688,9 @@
         ctaBtn.style.background =
           cta.type === 'whatsapp'
             ? '#25D366'
-            : currentAppearance.button_color || currentAppearance.buttonColor || '#111827';
+            : currentAppearance.button_color ||
+              currentAppearance.buttonColor ||
+              '#111827';
         ctaBtn.style.color = '#fff';
 
         ctaBtn.addEventListener('click', function () {
@@ -1395,7 +1700,7 @@
             story_id: story.id,
             video_id: video.id,
             product_id: activeProducts[0] ? activeProducts[0].id : null,
-            page_url: window.location.href,
+            page_url: window.location.href
           });
 
           window.open(cta.url, '_blank', 'noopener,noreferrer');
@@ -1432,7 +1737,7 @@
           '<div style="margin-top:4px;font-weight:800;color:#7c3aed;font-size:16px;">' +
           Number(product.price || 0).toLocaleString('pt-BR', {
             style: 'currency',
-            currency: 'BRL',
+            currency: 'BRL'
           }) +
           '</div></div>';
 
@@ -1443,7 +1748,7 @@
               story_id: story.id,
               video_id: video.id,
               product_id: product.id,
-              page_url: window.location.href,
+              page_url: window.location.href
             });
 
             window.open(product.product_url, '_blank', 'noopener,noreferrer');
@@ -1477,15 +1782,32 @@
 
     var root = createEl('div', 'vidlytics-widget-root');
     root.id = 'vidlytics-widget-root';
-    root.style.fontFamily = getFontFamily(appearance);
+
+    setImportant(root, 'font-family', getFontFamily(appearance));
+    setImportant(root, 'pointer-events', 'auto');
 
     applyPosition(root, appearance);
 
     var bubbles = createEl('div', 'vidlytics-bubbles');
-    bubbles.style.display = 'flex';
-    bubbles.style.gap = toCssUnit(firstDefined(appearance.floating_gap, appearance.floatingGap, 10), '10px');
-    bubbles.style.alignItems = isLeftPosition ? 'flex-start' : 'flex-end';
-    bubbles.style.flexDirection = 'column';
+
+    setImportant(bubbles, 'display', 'flex');
+    setImportant(
+      bubbles,
+      'gap',
+      toCssUnit(
+        firstDefined(
+          readAppearanceValue(
+            appearance,
+            ['floating_gap', 'floatingGap', 'gap', 'espacamento'],
+            'floating'
+          ),
+          10
+        ),
+        '10px'
+      )
+    );
+    setImportant(bubbles, 'align-items', isLeftPosition ? 'flex-start' : 'flex-end');
+    setImportant(bubbles, 'flex-direction', 'column');
 
     stories.forEach(function (story) {
       var relations = (storyVideoMap.get(story.id) || []).slice().sort(function (a, b) {
@@ -1509,87 +1831,136 @@
 
       var bubble = createEl('button', 'vidlytics-bubble');
       bubble.type = 'button';
-      bubble.style.border = 'none';
-      bubble.style.background = 'transparent';
-      bubble.style.padding = '0';
-      bubble.style.cursor = 'pointer';
-      bubble.style.display = 'grid';
-      bubble.style.justifyItems = 'center';
-      bubble.style.gap = '6px';
 
-      var ring = createEl('div');
-      ring.style.width = getWidgetSize(appearance);
-      ring.style.height = getWidgetHeight(appearance);
-      ring.style.borderRadius = getBorderRadius(appearance);
-      ring.style.padding = appearance.border_style || appearance.borderStyle ? '0' : '2px';
-      ring.style.overflow = 'hidden';
-      ring.style.background =
+      setImportant(bubble, 'border', 'none');
+      setImportant(bubble, 'background', 'transparent');
+      setImportant(bubble, 'padding', '0');
+      setImportant(bubble, 'margin', '0');
+      setImportant(bubble, 'cursor', 'pointer');
+      setImportant(bubble, 'display', 'grid');
+      setImportant(bubble, 'justify-items', 'center');
+      setImportant(bubble, 'gap', '6px');
+      setImportant(bubble, 'outline', 'none');
+
+      var ring = createEl('div', 'vidlytics-bubble-ring');
+
+      var widgetWidth = getWidgetSize(appearance);
+      var widgetHeight = getWidgetHeight(appearance);
+      var widgetRadius = getBorderRadius(appearance);
+
+      setImportant(ring, 'width', widgetWidth);
+      setImportant(ring, 'height', widgetHeight);
+      setImportant(ring, 'min-width', widgetWidth);
+      setImportant(ring, 'min-height', widgetHeight);
+      setImportant(ring, 'max-width', widgetWidth);
+      setImportant(ring, 'max-height', widgetHeight);
+      setImportant(ring, 'border-radius', widgetRadius);
+      setImportant(
+        ring,
+        'padding',
+        appearance.border_style || appearance.borderStyle ? '0' : '2px'
+      );
+      setImportant(ring, 'overflow', 'hidden');
+      setImportant(
+        ring,
+        'background',
         'linear-gradient(135deg, ' +
-        getPrimaryColor(appearance) +
-        ', ' +
-        getSecondaryColor(appearance) +
-        ')';
+          getPrimaryColor(appearance) +
+          ', ' +
+          getSecondaryColor(appearance) +
+          ')'
+      );
+      setImportant(ring, 'box-sizing', 'border-box');
 
       if (appearance.border_style || appearance.borderStyle) {
-        ring.style.border =
+        setImportant(
+          ring,
+          'border',
           firstDefined(appearance.border_style, appearance.borderStyle) +
-          ' ' +
-          getPrimaryColor(appearance);
+            ' ' +
+            getPrimaryColor(appearance)
+        );
       }
 
       if (modalConfig.shadow_enabled !== false) {
-        ring.style.boxShadow = '0 12px 30px rgba(15, 23, 42, 0.18)';
+        setImportant(ring, 'box-shadow', '0 12px 30px rgba(15, 23, 42, 0.18)');
       } else {
-        ring.style.boxShadow = 'none';
+        setImportant(ring, 'box-shadow', 'none');
       }
 
-      var inner = createEl('div');
-      inner.style.width = '100%';
-      inner.style.height = '100%';
-      inner.style.borderRadius = getBorderRadius(appearance);
-      inner.style.overflow = 'hidden';
-      inner.style.background = '#e2e8f0';
-      inner.style.display = 'grid';
-      inner.style.placeItems = 'center';
+      var inner = createEl('div', 'vidlytics-bubble-inner');
+
+      setImportant(inner, 'width', '100%');
+      setImportant(inner, 'height', '100%');
+      setImportant(inner, 'border-radius', widgetRadius);
+      setImportant(inner, 'overflow', 'hidden');
+      setImportant(inner, 'background', '#e2e8f0');
+      setImportant(inner, 'display', 'grid');
+      setImportant(inner, 'place-items', 'center');
+      setImportant(inner, 'box-sizing', 'border-box');
 
       if (thumb) {
-        var img = createEl('img');
+        var img = createEl('img', 'vidlytics-bubble-img');
         img.src = thumb;
         img.alt = story.title || story.name || 'Story';
         img.loading = 'lazy';
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = appearance.object_fit || appearance.objectFit || 'cover';
-        img.style.display = 'block';
+
+        setImportant(img, 'width', '100%');
+        setImportant(img, 'height', '100%');
+        setImportant(
+          img,
+          'object-fit',
+          readAppearanceValue(
+            appearance,
+            ['object_fit', 'objectFit', 'fit'],
+            'floating'
+          ) || 'cover'
+        );
+        setImportant(img, 'display', 'block');
+        setImportant(img, 'border-radius', 'inherit');
 
         img.onerror = function () {
           inner.innerHTML = '';
-          inner.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase();
-          inner.style.fontWeight = '800';
-          inner.style.color = getTextColor(appearance);
+          inner.textContent = (story.title || story.name || 'S')
+            .slice(0, 1)
+            .toUpperCase();
+          setImportant(inner, 'font-weight', '800');
+          setImportant(inner, 'color', getTextColor(appearance));
         };
 
         inner.appendChild(img);
       } else {
-        inner.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase();
-        inner.style.fontWeight = '800';
-        inner.style.color = getTextColor(appearance);
+        inner.textContent = (story.title || story.name || 'S')
+          .slice(0, 1)
+          .toUpperCase();
+        setImportant(inner, 'font-weight', '800');
+        setImportant(inner, 'color', getTextColor(appearance));
       }
 
       ring.appendChild(inner);
       bubble.appendChild(ring);
 
       if (modalConfig.show_title !== false) {
-        var label = createEl('span');
+        var label = createEl('span', 'vidlytics-bubble-label');
         label.textContent = story.title || story.name || 'Story';
-        label.style.maxWidth = getWidgetSize(appearance);
-        label.style.fontSize = appearance.font_size || appearance.fontSize || '11px';
-        label.style.fontWeight = '700';
-        label.style.color = getTextColor(appearance);
-        label.style.textAlign = 'center';
-        label.style.whiteSpace = 'nowrap';
-        label.style.overflow = 'hidden';
-        label.style.textOverflow = 'ellipsis';
+
+        setImportant(label, 'max-width', widgetWidth);
+        setImportant(
+          label,
+          'font-size',
+          readAppearanceValue(
+            appearance,
+            ['font_size', 'fontSize', 'tamanho_fonte'],
+            'floating'
+          ) || '11px'
+        );
+        setImportant(label, 'font-weight', '700');
+        setImportant(label, 'color', getTextColor(appearance));
+        setImportant(label, 'text-align', 'center');
+        setImportant(label, 'white-space', 'nowrap');
+        setImportant(label, 'overflow', 'hidden');
+        setImportant(label, 'text-overflow', 'ellipsis');
+
         bubble.appendChild(label);
       }
 
@@ -1609,7 +1980,7 @@
         event_type: 'view',
         story_id: story.id,
         video_id: coverVideo ? coverVideo.id : null,
-        page_url: window.location.href,
+        page_url: window.location.href
       });
     });
 
@@ -1631,7 +2002,17 @@
     container.style.overflowX = 'auto';
     container.style.padding = '12px 16px';
     container.style.display = 'flex';
-    container.style.gap = toCssUnit(appearance.carousel_gap || appearance.carouselGap || 14, '14px');
+    container.style.gap = toCssUnit(
+      firstDefined(
+        readAppearanceValue(
+          appearance,
+          ['carousel_gap', 'carouselGap', 'gap'],
+          'carousel'
+        ),
+        14
+      ),
+      '14px'
+    );
     container.style.scrollSnapType = 'x mandatory';
     container.style.WebkitOverflowScrolling = 'touch';
 
@@ -1687,11 +2068,18 @@
 
       var mediaWidth = toCssUnit(
         firstDefined(
-          appearance.card_width,
-          appearance.cardWidth,
-          appearance.carousel_width,
-          appearance.carouselWidth,
-          appearance.width,
+          readAppearanceValue(
+            appearance,
+            [
+              'card_width',
+              'cardWidth',
+              'carousel_width',
+              'carouselWidth',
+              'width',
+              'largura'
+            ],
+            'carousel'
+          ),
           '120px'
         ),
         '120px'
@@ -1699,18 +2087,23 @@
 
       var mediaHeight = toCssUnit(
         firstDefined(
-          appearance.card_height,
-          appearance.cardHeight,
-          appearance.carousel_height,
-          appearance.carouselHeight,
-          appearance.height,
+          readAppearanceValue(
+            appearance,
+            [
+              'card_height',
+              'cardHeight',
+              'carousel_height',
+              'carouselHeight',
+              'height',
+              'altura'
+            ],
+            'carousel'
+          ),
           cardShape === 'circle' || cardShape === 'square'
             ? mediaWidth
             : '180px'
         ),
-        cardShape === 'circle' || cardShape === 'square'
-          ? mediaWidth
-          : '180px'
+        cardShape === 'circle' || cardShape === 'square' ? mediaWidth : '180px'
       );
 
       if (cardShape === 'circle' || cardShape === 'square') {
@@ -1741,11 +2134,18 @@
         img.loading = 'lazy';
         img.style.width = '100%';
         img.style.height = '100%';
-        img.style.objectFit = appearance.object_fit || appearance.objectFit || 'cover';
+        img.style.objectFit =
+          readAppearanceValue(
+            appearance,
+            ['object_fit', 'objectFit', 'fit'],
+            'carousel'
+          ) || 'cover';
 
         img.onerror = function () {
           mediaBox.innerHTML = '';
-          mediaBox.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase();
+          mediaBox.textContent = (story.title || story.name || 'S')
+            .slice(0, 1)
+            .toUpperCase();
           mediaBox.style.fontWeight = '800';
           mediaBox.style.fontSize = '24px';
           mediaBox.style.color = '#64748b';
@@ -1753,7 +2153,9 @@
 
         mediaBox.appendChild(img);
       } else {
-        mediaBox.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase();
+        mediaBox.textContent = (story.title || story.name || 'S')
+          .slice(0, 1)
+          .toUpperCase();
         mediaBox.style.fontWeight = '800';
         mediaBox.style.fontSize = '24px';
         mediaBox.style.color = '#64748b';
@@ -1790,7 +2192,7 @@
         event_type: 'impression',
         story_id: story.id,
         video_id: coverVideo ? coverVideo.id : null,
-        page_url: window.location.href,
+        page_url: window.location.href
       });
     });
 
@@ -1805,7 +2207,7 @@
       readVideos(),
       readStoryProducts(),
       readProducts(),
-      readPageRules(),
+      readPageRules()
     ])
       .then(function (results) {
         currentAppearance = results[0] || {};
