@@ -766,6 +766,42 @@ const normalizeAppearancePayloadBeforeSave = <T extends Record<string, any>>(
   return payload as T;
 };
 
+const normalizeGeneralSettingsPayloadBeforeSave = <
+  T extends Record<string, any>,
+>(
+  item: T,
+): T => {
+  const payload: Record<string, any> = { ...item };
+
+  /**
+   * Compatibilidade:
+   * - Front pode usar defaultAppearanceId.
+   * - Banco usa default_appearance_id.
+   */
+  if (
+    payload.defaultAppearanceId !== undefined &&
+    payload.default_appearance_id === undefined
+  ) {
+    payload.default_appearance_id = payload.defaultAppearanceId;
+  }
+
+  /**
+   * Compatibilidade:
+   * - Front pode usar mutedByDefault.
+   * - Banco usa muted_by_default.
+   */
+  if (
+    payload.mutedByDefault !== undefined &&
+    payload.muted_by_default === undefined
+  ) {
+    payload.muted_by_default = payload.mutedByDefault;
+  }
+
+  delete payload.defaultAppearanceId;
+  delete payload.mutedByDefault;
+
+  return payload as T;
+};
 
 const normalizeTablePayloadBeforeSave = <T extends Record<string, any>>(
   tableName: string,
