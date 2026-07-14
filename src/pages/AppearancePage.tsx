@@ -2469,11 +2469,14 @@ const AppearancePage = () => {
       const gridMobile = gridConfig.mobile;
       const modalConfig = formData.modal_config;
 
-      const stylePayload = {
-        id,
-        store_id: finalStoreId,
-        name: formData.name.trim(),
-        is_default: formData.is_default,
+      const shouldBeDefault = formData.is_default || appearances.length === 0;
+
+const stylePayload = {
+  id,
+  store_id: finalStoreId,
+  name: formData.name.trim(),
+  is_default: shouldBeDefault,
+
 
         primary_color: formData.primary_color,
         secondary_color: formData.secondary_color,
