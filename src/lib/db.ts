@@ -44,6 +44,7 @@ export interface Appearance {
   store_id: string;
   name: string;
   is_default: boolean;
+  isDefault?: boolean;
   primary_color: string;
   secondary_color: string;
   text_color: string;
@@ -66,6 +67,15 @@ export interface Appearance {
   show_share_button: boolean;
   show_whatsapp_button: boolean;
   show_product_button: boolean;
+  use_global_appearance?: boolean;
+  useGlobalAppearance?: boolean;
+  floating_config?: ResponsiveAppearanceConfig;
+  carousel_config?: ResponsiveAppearanceConfig;
+  grid_config?: ResponsiveAppearanceConfig;
+  modal_config?: ResponsiveAppearanceConfig;
+  created_at?: string;
+  updated_at?: string;
+}
 
   /**
    * Campo usado no Supabase.
