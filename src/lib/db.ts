@@ -768,10 +768,20 @@ const normalizeAppearancePayloadBeforeSave = <T extends Record<string, any>>(
   }
 
   /**
+   * Compatibilidade:
+   * - Front pode usar isDefault.
+   * - Banco usa is_default.
+   */
+  if (payload.isDefault !== undefined && payload.is_default === undefined) {
+    payload.is_default = payload.isDefault;
+  }
+
+  /**
    * Nunca envia camelCase para o Supabase/localStorage sanitizado,
    * pois a coluna real deve ser snake_case.
    */
   delete payload.useGlobalAppearance;
+  delete payload.isDefault;
 
   return payload as T;
 };
