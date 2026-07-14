@@ -865,21 +865,51 @@ const normalizeTableItemForClient = <T extends Record<string, any>>(
   tableName: string,
   item: T,
 ): T => {
-  if (tableName === 'general_settings') {
-    const settings: Record<string, any> = { ...item };
-
-    settings.defaultAppearanceId =
-      settings.defaultAppearanceId ??
-      settings.default_appearance_id ??
-      null;
-
-    settings.mutedByDefault =
-      settings.mutedByDefault ??
-      settings.muted_by_default ??
-      true;
-
-    return settings as T;
+  if (tableName !== 'appearances') {
+    return item;
   }
+
+  const appearance: Record<string, any> = { ...item };
+
+  appearance.useGlobalAppearance =
+    appearance.useGlobalAppearance ??
+    appearance.use_global_appearance ??
+    true;
+
+  appearance.use_global_appearance =
+    appearance.use_global_appearance ??
+    appearance.useGlobalAppearance ??
+    true;
+
+  appearance.isDefault =
+    appearance.isDefault ??
+    appearance.is_default ??
+    false;
+
+  appearance.is_default =
+    appearance.is_default ??
+    appearance.isDefault ??
+    false;
+
+  appearance.floating_config = normalizeResponsiveConfigForClient(
+    appearance.floating_config,
+  );
+
+  appearance.carousel_config = normalizeResponsiveConfigForClient(
+    appearance.carousel_config,
+  );
+
+  appearance.grid_config = normalizeResponsiveConfigForClient(
+    appearance.grid_config,
+  );
+
+  appearance.modal_config = normalizeResponsiveConfigForClient(
+    appearance.modal_config,
+  );
+
+  return appearance as T;
+};
+
 
   if (tableName !== 'appearances') {
     return item;
