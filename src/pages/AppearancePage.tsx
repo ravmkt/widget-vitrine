@@ -2550,23 +2550,27 @@ const stylePayload = {
       };
 
       if (stylePayload.is_default) {
-        await Promise.all(
-          appearances
-            .filter(style => style.id !== id)
-            .map(style =>
-              db.appearances.save({
-                ...style,
-                store_id: finalStoreId,
-                is_default: false,
-                updated_at: now,
-              } as Appearance),
-            ),
-        );
-      }
+  await Promise.all(
+    appearances
+      .filter(style => style.id !== id)
+      .map(style =>
+        db.appearances.save({
+          ...style,
+          store_id: finalStoreId,
+          is_default: false,
+          updated_at: now,
+        } as Appearance),
+      ),
+  );
+}
 
-      await db.appearances.save(stylePayload as unknown as Appearance);
+await db.appearances.save(stylePayload as unknown as Appearance);
 
-      window.dispatchEvent(new Event('storage'));
+if (stylePayload.is_default) {
+  await syncDefaultAppearanceId(finalStoreId, id);
+}
+
+window.dispatchEvent(new Event('storage'));
 
       showSuccess(
         editingStyle
