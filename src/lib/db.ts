@@ -811,6 +811,10 @@ const normalizeTablePayloadBeforeSave = <T extends Record<string, any>>(
     return normalizeAppearancePayloadBeforeSave(item);
   }
 
+  if (tableName === 'general_settings') {
+    return normalizeGeneralSettingsPayloadBeforeSave(item);
+  }
+
   return item;
 };
 
