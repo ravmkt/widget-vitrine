@@ -766,6 +766,7 @@ const normalizeAppearancePayloadBeforeSave = <T extends Record<string, any>>(
   return payload as T;
 };
 
+
 const normalizeTablePayloadBeforeSave = <T extends Record<string, any>>(
   tableName: string,
   item: T,
