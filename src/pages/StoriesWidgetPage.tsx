@@ -104,6 +104,16 @@ const parseJsonIfNeeded = <T,>(value: unknown): Partial<T> | null => {
   return null;
 };
 
+const isValidHexColor = (value?: string) => {
+  return /^#[0-9A-Fa-f]{6}$/.test(value || '');
+};
+
+const safeColor = (value: unknown, fallback: string) => {
+  const text = String(value || '').trim();
+
+  return isValidHexColor(text) ? text : fallback;
+};
+
 const normalizeModalAppearanceConfig = (
   appearance?: any | null,
 ): ModalAppearanceConfig => {
@@ -117,87 +127,80 @@ const normalizeModalAppearanceConfig = (
       appearance?.modal_config || appearance?.modalConfig,
     ) || {};
 
-  const config: any = {
+  const merged: any = {
     ...createDefaultModalAppearanceConfig(),
     ...rawModalConfig,
     ...rawPlayerConfig,
   };
 
-  return {
-    ...createDefaultModalAppearanceConfig(),
+  const showCommentButton =
+    appearance?.show_comment_button ??
+    appearance?.show_comments_button ??
+    appearance?.showCommentButton ??
+    appearance?.showCommentsButton ??
+    merged?.show_comment_button ??
+    merged?.show_comments_button ??
+    true;
 
+  return {
     show_title:
       appearance?.show_title ??
       appearance?.showTitle ??
-      config?.show_title ??
+      merged?.show_title ??
       true,
 
     show_play_button:
       appearance?.show_play_button ??
       appearance?.showPlayButton ??
-      config?.show_play_button ??
+      merged?.show_play_button ??
       true,
 
     show_product:
       appearance?.show_product ??
       appearance?.showProduct ??
-      config?.show_product ??
+      merged?.show_product ??
       true,
 
     show_like_button:
       appearance?.show_like_button ??
       appearance?.showLikeButton ??
-      config?.show_like_button ??
+      merged?.show_like_button ??
       true,
 
-    show_comment_button:
-      appearance?.show_comment_button ??
-      appearance?.show_comments_button ??
-      appearance?.showCommentButton ??
-      appearance?.showCommentsButton ??
-      config?.show_comment_button ??
-      config?.show_comments_button ??
-      true,
+    show_comment_button: showCommentButton,
 
-    show_comments_button:
-      appearance?.show_comments_button ??
-      appearance?.show_comment_button ??
-      appearance?.showCommentsButton ??
-      appearance?.showCommentButton ??
-      config?.show_comments_button ??
-      config?.show_comment_button ??
-      true,
+    show_comments_button: showCommentButton,
 
     show_share_button:
       appearance?.show_share_button ??
       appearance?.showShareButton ??
-      config?.show_share_button ??
+      merged?.show_share_button ??
       true,
 
     show_whatsapp_button:
       appearance?.show_whatsapp_button ??
       appearance?.showWhatsappButton ??
-      config?.show_whatsapp_button ??
+      merged?.show_whatsapp_button ??
       true,
 
     show_product_button:
       appearance?.show_product_button ??
       appearance?.showProductButton ??
-      config?.show_product_button ??
+      merged?.show_product_button ??
       true,
 
     hide_stories:
       appearance?.hide_stories ??
       appearance?.hideStories ??
-      config?.hide_stories ??
+      merged?.hide_stories ??
       false,
 
     shadow_enabled:
       appearance?.shadow_enabled ??
       appearance?.shadowEnabled ??
       appearance?.shadow ??
-      config?.shadow_enabled ??
-      config?.shadow ??
+      merged?.shadow_enabled ??
+      merged?.shadow ??
       true,
   };
 };
@@ -235,41 +238,52 @@ const toCssSize = (value: unknown, fallback = '14px') => {
 };
 
 const getPrimaryColor = (appearance: any) => {
-  return getAppearanceValue(
-    appearance,
-    ['primary_color', 'primaryColor', 'button_color', 'buttonColor'],
+  return safeColor(
+    getAppearanceValue(
+      appearance,
+      ['primary_color', 'primaryColor', 'button_color', 'buttonColor'],
+      '#0094EB',
+    ),
     '#0094EB',
   );
 };
 
 const getSecondaryColor = (appearance: any) => {
-  return getAppearanceValue(
-    appearance,
-    ['secondary_color', 'secondaryColor'],
+  return safeColor(
+    getAppearanceValue(
+      appearance,
+      ['secondary_color', 'secondaryColor'],
+      getPrimaryColor(appearance),
+    ),
     getPrimaryColor(appearance),
   );
 };
 
 const getTextColor = (appearance: any) => {
-  return getAppearanceValue(
-    appearance,
-    ['text_color', 'textColor'],
+  return safeColor(
+    getAppearanceValue(appearance, ['text_color', 'textColor'], '#0F172A'),
     '#0F172A',
   );
 };
 
 const getBackgroundColor = (appearance: any) => {
-  return getAppearanceValue(
-    appearance,
-    ['background_color', 'backgroundColor'],
+  return safeColor(
+    getAppearanceValue(
+      appearance,
+      ['background_color', 'backgroundColor'],
+      '#FFFFFF',
+    ),
     '#FFFFFF',
   );
 };
 
 const getButtonColor = (appearance: any) => {
-  return getAppearanceValue(
-    appearance,
-    ['button_color', 'buttonColor', 'primary_color', 'primaryColor'],
+  return safeColor(
+    getAppearanceValue(
+      appearance,
+      ['button_color', 'buttonColor', 'primary_color', 'primaryColor'],
+      '#0094EB',
+    ),
     '#0094EB',
   );
 };
@@ -289,7 +303,10 @@ const getFontSize = (appearance: any) => {
   );
 };
 
-const getAllSafe = async <T,>(collection: any, storeId?: string): Promise<T[]> => {
+const getAllSafe = async <T,>(
+  collection: any,
+  storeId?: string,
+): Promise<T[]> => {
   if (!collection?.getAll) return [];
 
   try {
@@ -459,12 +476,53 @@ const parseMeasures = (model: any): any[] => {
   return [];
 };
 
+const findAppearanceForStory = ({
+  appearances,
+  story,
+  settings,
+  appearanceIdParam,
+}: {
+  appearances: any[];
+  story?: any | null;
+  settings?: any | null;
+  appearanceIdParam?: string | null;
+}) => {
+  if (!Array.isArray(appearances) || appearances.length === 0) {
+    return null;
+  }
+
+  const byId = (id?: string | null) => {
+    if (!id) return null;
+
+    return appearances.find((item: any) => item.id === id) || null;
+  };
+
+  return (
+    byId(appearanceIdParam) ||
+    byId(story?.appearance_id || story?.appearanceId) ||
+    byId(settings?.default_appearance_id || settings?.defaultAppearanceId) ||
+    appearances.find(
+      (item: any) =>
+        item.is_default === true ||
+        item.isDefault === true ||
+        item.default === true ||
+        item.is_active === true ||
+        item.isActive === true ||
+        item.active === true,
+    ) ||
+    appearances[0] ||
+    null
+  );
+};
+
 export default function StoriesWidgetPage() {
   const { storeId } = useParams();
   const [searchParams] = useSearchParams();
 
   const storyIdParam = searchParams.get('storyId') || searchParams.get('storyid');
   const videoIdParam = searchParams.get('videoId') || searchParams.get('videoid');
+  const appearanceIdParam =
+    searchParams.get('appearanceId') || searchParams.get('appearanceid');
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -495,7 +553,7 @@ export default function StoriesWidgetPage() {
 
   const [product, setProduct] = useState<any | null>(null);
   const [settings, setSettings] = useState<any | null>(null);
-  const [appearance, setAppearance] = useState<any | null>(null);
+  const [appearances, setAppearances] = useState<any[]>([]);
   const [model, setModel] = useState<any | null>(null);
   const [showMeasures, setShowMeasures] = useState(false);
 
@@ -505,6 +563,17 @@ export default function StoriesWidgetPage() {
   const story = stories[storyIdx ?? -1] ?? null;
   const currentVideos = story ? storyVideosMap.get(story.id) || [] : [];
   const currentVideo = currentVideos[videoIdx] ?? null;
+
+  const appearance = useMemo(
+    () =>
+      findAppearanceForStory({
+        appearances,
+        story,
+        settings,
+        appearanceIdParam,
+      }),
+    [appearances, story, settings, appearanceIdParam],
+  );
 
   const currentUrl = getVideoUrl(currentVideo);
   const posterUrl = getVideoPosterUrl(currentVideo);
@@ -527,6 +596,9 @@ export default function StoriesWidgetPage() {
 
   const actionButtonStyle: CSSProperties = {
     backgroundColor: primaryColor,
+    boxShadow: modalConfig.shadow_enabled
+      ? '0 10px 24px rgba(0,0,0,0.28)'
+      : 'none',
   };
 
   const activeCommentCount = useMemo(
@@ -655,7 +727,7 @@ export default function StoriesWidgetPage() {
           setResolvedStoreId('');
           setStoreName('');
           setSettings(null);
-          setAppearance(null);
+          setAppearances([]);
           return;
         }
 
@@ -680,22 +752,11 @@ export default function StoriesWidgetPage() {
 
         const genSettings = settingsList[0] || null;
 
-        const activeAppearance =
-          (appearancesList || []).find(
-            (item: any) =>
-              item.is_default === true ||
-              item.isDefault === true ||
-              item.default === true ||
-              item.is_active === true ||
-              item.isActive === true ||
-              item.active === true,
-          ) ||
-          appearancesList?.[0] ||
-          null;
-
         setSettings(genSettings);
-        setAppearance(activeAppearance);
-        setMuted(genSettings?.muted_by_default ?? genSettings?.mutedByDefault ?? true);
+        setAppearances(appearancesList || []);
+        setMuted(
+          genSettings?.muted_by_default ?? genSettings?.mutedByDefault ?? true,
+        );
 
         const activeStories = (allStories || [])
           .filter((item: any) => item.active !== false)
@@ -733,7 +794,8 @@ export default function StoriesWidgetPage() {
           map.set(currentStory.id, relationVideos);
         });
 
-        let startStoryIdx: number | null = filteredStories.length > 0 ? 0 : null;
+        let startStoryIdx: number | null =
+          filteredStories.length > 0 ? 0 : null;
         let startVideoIdx = 0;
 
         if (videoIdParam && filteredStories.length > 0) {
@@ -1076,7 +1138,14 @@ export default function StoriesWidgetPage() {
         fontSize,
       }}
     >
-      <div className="relative h-full w-full max-w-[420px] overflow-hidden bg-black sm:aspect-[9/16] sm:max-h-screen">
+      <div
+        className="relative h-full w-full max-w-[420px] overflow-hidden bg-black sm:aspect-[9/16] sm:max-h-screen"
+        style={{
+          boxShadow: modalConfig.shadow_enabled
+            ? '0 24px 80px rgba(0,0,0,0.45)'
+            : 'none',
+        }}
+      >
         {!modalConfig.hide_stories && (
           <div
             className="absolute top-3 z-50 flex gap-1.5"
