@@ -1235,6 +1235,17 @@ const normalizeSupabaseRelationsBeforeSave = async <
     );
   }
 
+if (
+  tableName === 'general_settings' &&
+  normalizedPayload.default_appearance_id
+) {
+  normalizedPayload.default_appearance_id =
+    await ensureSupabaseAppearanceExists(
+      normalizedPayload.default_appearance_id,
+      normalizedPayload.store_id,
+    );
+}
+
   if (tableName === 'videos' && normalizedPayload.product_id) {
     if (!isValidUuid(normalizedPayload.product_id)) {
       normalizedPayload.product_id = null;
