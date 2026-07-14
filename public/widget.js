@@ -71,12 +71,68 @@ window.__vidlytics_widget_initialized = false;
   var FORCE_FLOATING = {
     top: '20px',
     right: '23px',
+    bottom: 'auto',
+    left: 'auto',
     width: '85px',
     height: '151px',
     radius: '12px',
     innerRadius: '10px',
     zIndex: '2147483647'
   };
+
+  function applyAppearanceToForceFloating(appearance) {
+    if (!appearance) return;
+
+    var pos = appearance.floating_position || 'bottom-right';
+    var width = Number(appearance.floating_width) || 85;
+    var height = Number(appearance.floating_height) || 151;
+    var top = Number(appearance.floating_top) || 20;
+    var bottom = Number(appearance.floating_bottom) || 20;
+    var side = Number(appearance.floating_side) || 20;
+    var shape = appearance.floating_shape || 'portrait';
+
+    FORCE_FLOATING.width = width + 'px';
+    FORCE_FLOATING.height = height + 'px';
+
+    if (shape === 'circle') {
+      FORCE_FLOATING.radius = '50%';
+      FORCE_FLOATING.innerRadius = '50%';
+    } else if (shape === 'square') {
+      FORCE_FLOATING.radius = '0px';
+      FORCE_FLOATING.innerRadius = '0px';
+    } else {
+      FORCE_FLOATING.radius = '12px';
+      FORCE_FLOATING.innerRadius = '10px';
+    }
+
+    FORCE_FLOATING.top = 'auto';
+    FORCE_FLOATING.right = 'auto';
+    FORCE_FLOATING.bottom = 'auto';
+    FORCE_FLOATING.left = 'auto';
+
+    switch (pos) {
+      case 'bottom-right':
+        FORCE_FLOATING.bottom = bottom + 'px';
+        FORCE_FLOATING.right = side + 'px';
+        break;
+      case 'bottom-left':
+        FORCE_FLOATING.bottom = bottom + 'px';
+        FORCE_FLOATING.left = side + 'px';
+        break;
+      case 'top-right':
+        FORCE_FLOATING.top = top + 'px';
+        FORCE_FLOATING.right = side + 'px';
+        break;
+      case 'top-left':
+        FORCE_FLOATING.top = top + 'px';
+        FORCE_FLOATING.left = side + 'px';
+        break;
+      default:
+        FORCE_FLOATING.bottom = bottom + 'px';
+        FORCE_FLOATING.right = side + 'px';
+        break;
+    }
+  }
 
   function createEl(tag, className) {
     var el = document.createElement(tag);
@@ -588,13 +644,13 @@ window.__vidlytics_widget_initialized = false;
 
   function readAppearance() {
     if (!storeId || !hasSupabase) {
-      return Promise.resolve(getStorageItem('vidlytics_appearance', {}) || {});
+      return Promise.resolve(getStorageItem('vidlytics_widget_appearance', {}) || {});
     }
 
     return supabaseFetch(
-      'appearances?select=*&store_id=eq.' +
+      'widget_appearances?select=*&store_id=eq.' +
         encodeURIComponent(storeId) +
-        '&is_default=eq.true&limit=1',
+        '&active=eq.true&limit=1',
       { method: 'GET' }
     )
       .then(function (response) {
@@ -604,7 +660,7 @@ window.__vidlytics_widget_initialized = false;
         if (items && items.length) return items[0];
 
         return supabaseFetch(
-          'appearances?select=*&store_id=eq.' +
+          'widget_appearances?select=*&store_id=eq.' +
             encodeURIComponent(storeId) +
             '&limit=1',
           { method: 'GET' }
@@ -805,8 +861,8 @@ window.__vidlytics_widget_initialized = false;
     setImportant(host, 'position', 'fixed');
     setImportant(host, 'top', FORCE_FLOATING.top);
     setImportant(host, 'right', FORCE_FLOATING.right);
-    setImportant(host, 'bottom', 'auto');
-    setImportant(host, 'left', 'auto');
+    setImportant(host, 'bottom', FORCE_FLOATING.bottom);
+    setImportant(host, 'left', FORCE_FLOATING.left);
     setImportant(host, 'z-index', FORCE_FLOATING.zIndex);
     setImportant(host, 'width', FORCE_FLOATING.width);
     setImportant(host, 'min-width', FORCE_FLOATING.width);
@@ -844,8 +900,8 @@ window.__vidlytics_widget_initialized = false;
       + 'position:fixed!important;'
       + 'top:' + FORCE_FLOATING.top + '!important;'
       + 'right:' + FORCE_FLOATING.right + '!important;'
-      + 'bottom:auto!important;'
-      + 'left:auto!important;'
+      + 'bottom:' + FORCE_FLOATING.bottom + '!important;'
+      + 'left:' + FORCE_FLOATING.left + '!important;'
       + 'z-index:' + FORCE_FLOATING.zIndex + '!important;'
       + 'width:' + FORCE_FLOATING.width + '!important;'
       + 'min-width:' + FORCE_FLOATING.width + '!important;'
@@ -1647,8 +1703,8 @@ window.__vidlytics_widget_initialized = false;
     setImportant(host, 'position', 'fixed');
     setImportant(host, 'top', FORCE_FLOATING.top);
     setImportant(host, 'right', FORCE_FLOATING.right);
-    setImportant(host, 'bottom', 'auto');
-    setImportant(host, 'left', 'auto');
+    setImportant(host, 'bottom', FORCE_FLOATING.bottom);
+    setImportant(host, 'left', FORCE_FLOATING.left);
     setImportant(host, 'z-index', FORCE_FLOATING.zIndex);
     setImportant(host, 'width', FORCE_FLOATING.width);
     setImportant(host, 'min-width', FORCE_FLOATING.width);
@@ -1674,6 +1730,8 @@ window.__vidlytics_widget_initialized = false;
     ])
       .then(function (results) {
         currentAppearance = results[0] || {};
+
+        applyAppearanceToForceFloating(currentAppearance);
 
         var modalConfig = normalizeModalAppearanceConfig(currentAppearance);
 
