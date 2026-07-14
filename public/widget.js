@@ -2335,6 +2335,8 @@ function injectForceFloatingCss() {
 
         if (enableCarousel) {
           renderCarousel(applicableStories, storyVideoMap, activeVideos);
+          injectForceFloatingCss();
+
         }
 
         if (enableGallery) {
