@@ -48,6 +48,14 @@
     return undefined;
   }
 
+  function idsEqual(a, b) {
+    if (a === undefined || a === null || b === undefined || b === null) {
+      return false;
+    }
+
+    return String(a) === String(b);
+  }
+
   function parseJsonIfNeeded(value) {
     if (!value) return {};
 
@@ -96,6 +104,542 @@
     }
 
     return fallback;
+  }
+
+  function normalizeMediaUrl(url) {
+    if (!url) return '';
+
+    var value = String(url).trim();
+    if (!value) return '';
+
+    if (
+      value.indexOf('http://') === 0 ||
+      value.indexOf('https://') === 0 ||
+      value.indexOf('data:') === 0 ||
+      value.indexOf('blob:') === 0
+    ) {
+      return value;
+    }
+
+    if (value.indexOf('//') === 0) {
+      return window.location.protocol + value;
+    }
+
+    if (value.charAt(0) === '/' && supabaseUrl) {
+      return supabaseUrl + value;
+    }
+
+    return value;
+  }
+
+  function toCssUnit(value, fallback) {
+    var finalValue = firstDefined(value, fallback);
+
+    if (finalValue === undefined || finalValue === null || finalValue === '') {
+      return fallback || '20px';
+    }
+
+    if (typeof finalValue === 'number') {
+      return finalValue + 'px';
+    }
+
+    var str = String(finalValue).trim();
+
+    if (/^\d+(\.\d+)?$/.test(str)) {
+      return str + 'px';
+    }
+
+    return str;
+  }
+
+  function getVideoUrl(video) {
+    if (!video) return '';
+
+    return normalizeMediaUrl(
+      firstDefined(
+        video.video_url,
+        video.videoUrl,
+        video.url,
+        video.source_url,
+        video.sourceUrl,
+        video.external_url,
+        video.externalUrl,
+        video.file_url,
+        video.fileUrl,
+        video.public_url,
+        video.publicUrl,
+        video.video,
+        video.src,
+        ''
+      )
+    );
+  }
+
+  function isDirectVideoUrl(url) {
+    if (!url) return false;
+    return VIDEO_FILE_REGEX.test(url);
+  }
+
+  function extractYouTubeId(url) {
+    if (!url) return '';
+
+    try {
+      var parsed = new URL(url.trim());
+      var host = parsed.hostname.replace(/^www\./, '').toLowerCase();
+
+      if (host === 'youtu.be') {
+        return parsed.pathname.replace(/^\//, '').split('/')[0] || '';
+      }
+
+      if (host === 'youtube.com' || host === 'm.youtube.com') {
+        if (parsed.pathname.indexOf('/shorts/') === 0) {
+          return parsed.pathname.split('/')[2] || '';
+        }
+
+        if (parsed.pathname.indexOf('/embed/') === 0) {
+          return parsed.pathname.replace(/^\/embed\//, '').split('/')[0] || '';
+        }
+
+        if (parsed.pathname === '/watch') {
+          return parsed.searchParams.get('v') || '';
+        }
+      }
+    } catch (e) {
+      return '';
+    }
+
+    return '';
+  }
+
+  function getYouTubeEmbedUrl(url) {
+    var id = extractYouTubeId(url);
+    return id ? 'https://www.youtube.com/embed/' + id : '';
+  }
+
+  function getYouTubeThumbnail(url) {
+    var id = extractYouTubeId(url);
+    return id ? 'https://img.youtube.com/vi/' + id + '/hqdefault.jpg' : '';
+  }
+
+  function getThumbnailFromObject(obj) {
+    if (!obj) return '';
+
+    var meta = parseJsonIfNeeded(
+      firstDefined(
+        obj.metadata,
+        obj.meta,
+        obj.extra,
+        obj.data,
+        obj.settings,
+        obj.config,
+        {}
+      )
+    );
+
+    var direct = firstDefined(
+      obj.thumbnail_url,
+      obj.thumbnailUrl,
+      obj.thumbnail,
+      obj.thumb_url,
+      obj.thumbUrl,
+      obj.thumb,
+      obj.poster_url,
+      obj.posterUrl,
+      obj.poster,
+      obj.cover_url,
+      obj.coverUrl,
+      obj.cover,
+      obj.capa_url,
+      obj.capaUrl,
+      obj.capa,
+      obj.image_url,
+      obj.imageUrl,
+      obj.image,
+      obj.photo_url,
+      obj.photoUrl,
+      obj.picture_url,
+      obj.pictureUrl,
+      obj.preview_url,
+      obj.previewUrl,
+      obj.preview,
+      obj.frame_url,
+      obj.frameUrl,
+      obj.frame,
+      obj.public_thumbnail_url,
+      obj.publicThumbnailUrl,
+      obj.public_cover_url,
+      obj.publicCoverUrl,
+      meta.thumbnail_url,
+      meta.thumbnailUrl,
+      meta.thumbnail,
+      meta.thumb_url,
+      meta.thumbUrl,
+      meta.thumb,
+      meta.poster_url,
+      meta.posterUrl,
+      meta.poster,
+      meta.cover_url,
+      meta.coverUrl,
+      meta.cover,
+      meta.capa_url,
+      meta.capaUrl,
+      meta.capa,
+      meta.image_url,
+      meta.imageUrl,
+      meta.image,
+      meta.preview_url,
+      meta.previewUrl,
+      meta.preview,
+      ''
+    );
+
+    return normalizeMediaUrl(direct || '');
+  }
+
+  function getVideoThumbnail(video) {
+    if (!video) return '';
+
+    var direct = getThumbnailFromObject(video);
+    if (direct) return direct;
+
+    if (video.video && typeof video.video === 'object') {
+      direct = getThumbnailFromObject(video.video);
+      if (direct) return direct;
+    }
+
+    if (video.media && typeof video.media === 'object') {
+      direct = getThumbnailFromObject(video.media);
+      if (direct) return direct;
+    }
+
+    if (video.file && typeof video.file === 'object') {
+      direct = getThumbnailFromObject(video.file);
+      if (direct) return direct;
+    }
+
+    if (video.source_type !== 'upload' && video.sourceType !== 'upload') {
+      return getYouTubeThumbnail(getVideoUrl(video));
+    }
+
+    return '';
+  }
+
+  function getStoryThumbnail(story, coverVideo, coverRelation) {
+    var storyThumb = getThumbnailFromObject(story);
+    if (storyThumb) return storyThumb;
+
+    var relationThumb = getThumbnailFromObject(coverRelation);
+    if (relationThumb) return relationThumb;
+
+    var videoThumb = getVideoThumbnail(coverVideo);
+    if (videoThumb) return videoThumb;
+
+    if (story && story.videos && story.videos.length) {
+      videoThumb = getVideoThumbnail(story.videos[0]);
+      if (videoThumb) return videoThumb;
+    }
+
+    if (story && story.items && story.items.length) {
+      videoThumb = getVideoThumbnail(story.items[0]);
+      if (videoThumb) return videoThumb;
+    }
+
+    if (story && story.contents && story.contents.length) {
+      videoThumb = getVideoThumbnail(story.contents[0]);
+      if (videoThumb) return videoThumb;
+    }
+
+    return '';
+  }
+
+  function normalizePositionValue(value) {
+    var raw = value || fallbackPosition || 'fixed_bottom_right';
+
+    var normalized = String(raw)
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, '_')
+      .replace(/-/g, '_');
+
+    if (normalized === 'left') return 'fixed_bottom_left';
+    if (normalized === 'right') return 'fixed_bottom_right';
+
+    if (normalized === 'bottom_left') return 'fixed_bottom_left';
+    if (normalized === 'bottom_right') return 'fixed_bottom_right';
+    if (normalized === 'top_left') return 'fixed_top_left';
+    if (normalized === 'top_right') return 'fixed_top_right';
+
+    if (normalized === 'inferior_esquerda') return 'fixed_bottom_left';
+    if (normalized === 'inferior_direita') return 'fixed_bottom_right';
+    if (normalized === 'superior_esquerda') return 'fixed_top_left';
+    if (normalized === 'superior_direita') return 'fixed_top_right';
+
+    if (normalized === 'fixed_bottom_left') return 'fixed_bottom_left';
+    if (normalized === 'fixed_bottom_right') return 'fixed_bottom_right';
+    if (normalized === 'fixed_top_left') return 'fixed_top_left';
+    if (normalized === 'fixed_top_right') return 'fixed_top_right';
+
+    return 'fixed_bottom_right';
+  }
+
+  function normalizePositionFromAppearance(appearance) {
+    appearance = appearance || {};
+
+    return normalizePositionValue(
+      firstDefined(
+        appearance.position,
+        appearance.widget_position,
+        appearance.widgetPosition,
+        appearance.floating_position,
+        appearance.floatingPosition,
+        appearance.posicao,
+        appearance.posicao_widget,
+        appearance.posicaoWidget,
+        fallbackPosition
+      )
+    );
+  }
+
+  function normalizeShapeValue(value) {
+    var shape = String(value || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+    if (shape === 'retrato' || shape === 'portrait') return 'portrait';
+    if (shape === 'retangulo' || shape === 'rectangle') return 'rectangle';
+    if (shape === 'quadrado' || shape === 'square') return 'square';
+    if (shape === 'circulo' || shape === 'circle') return 'circle';
+    if (shape === 'redondo') return 'circle';
+    if (shape === 'pill') return 'pill';
+
+    return shape || 'circle';
+  }
+
+  function getCardShape(appearance, context) {
+    appearance = appearance || {};
+
+    var shape = firstDefined(
+      context === 'carousel' ? appearance.carousel_card_shape : undefined,
+      context === 'carousel' ? appearance.carouselCardShape : undefined,
+      context === 'floating' ? appearance.floating_card_shape : undefined,
+      context === 'floating' ? appearance.floatingCardShape : undefined,
+      context === 'floating' ? appearance.floating_shape : undefined,
+      context === 'floating' ? appearance.floatingShape : undefined,
+      appearance.card_shape,
+      appearance.cardShape,
+      appearance.widget_shape,
+      appearance.widgetShape,
+      appearance.shape,
+      appearance.forma,
+      appearance.formato,
+      'circle'
+    );
+
+    return normalizeShapeValue(shape);
+  }
+
+  function getRadiusForShape(shape, fallback) {
+    shape = normalizeShapeValue(shape);
+
+    if (shape === 'circle' || shape === 'pill') return '999px';
+    if (shape === 'square') return '0px';
+
+    return toCssUnit(fallback || '16px', '16px');
+  }
+
+  function getWidgetSize(appearance) {
+    appearance = appearance || {};
+
+    var size = appearance.widget_size || appearance.widgetSize || 'medium';
+
+    var width = firstDefined(
+      appearance.floating_width,
+      appearance.floatingWidth,
+      appearance.widget_width,
+      appearance.widgetWidth,
+      appearance.card_width,
+      appearance.cardWidth,
+      appearance.desktop_width,
+      appearance.desktopWidth,
+      appearance.width_desktop,
+      appearance.widthDesktop,
+      appearance.width,
+      appearance.largura,
+      appearance.largura_desktop,
+      ''
+    );
+
+    if (width) return toCssUnit(width, width);
+    if (size === 'small') return '52px';
+    if (size === 'large') return '76px';
+
+    return '62px';
+  }
+
+  function getWidgetHeight(appearance) {
+    appearance = appearance || {};
+
+    var shape = getCardShape(appearance, 'floating');
+
+    var height = firstDefined(
+      appearance.floating_height,
+      appearance.floatingHeight,
+      appearance.widget_height,
+      appearance.widgetHeight,
+      appearance.card_height,
+      appearance.cardHeight,
+      appearance.desktop_height,
+      appearance.desktopHeight,
+      appearance.height_desktop,
+      appearance.heightDesktop,
+      appearance.height,
+      appearance.altura,
+      appearance.altura_desktop,
+      ''
+    );
+
+    var width = getWidgetSize(appearance);
+
+    if (shape === 'circle' || shape === 'square') {
+      return width;
+    }
+
+    if (height) return toCssUnit(height, height);
+
+    if (shape === 'portrait' || shape === 'rectangle') {
+      var numeric = parseInt(width, 10);
+
+      if (!Number.isNaN(numeric)) {
+        return Math.round(numeric * 1.777) + 'px';
+      }
+
+      return '110px';
+    }
+
+    return width;
+  }
+
+  function getBorderRadius(appearance) {
+    appearance = appearance || {};
+
+    var shape = getCardShape(appearance, 'floating');
+
+    return getRadiusForShape(
+      shape,
+      firstDefined(
+        appearance.floating_border_radius,
+        appearance.floatingBorderRadius,
+        appearance.widget_border_radius,
+        appearance.widgetBorderRadius,
+        appearance.border_radius,
+        appearance.borderRadius,
+        appearance.radius,
+        appearance.raio_da_borda,
+        appearance.raioDaBorda,
+        '12px'
+      )
+    );
+  }
+
+  function getPrimaryColor(appearance) {
+    return appearance.primary_color || appearance.primaryColor || appearance.color || '#0094EB';
+  }
+
+  function getSecondaryColor(appearance) {
+    return appearance.secondary_color || appearance.secondaryColor || '#EC4899';
+  }
+
+  function getTextColor(appearance) {
+    return appearance.text_color || appearance.textColor || '#0f172a';
+  }
+
+  function getFontFamily(appearance) {
+    return appearance.font_family || appearance.fontFamily || 'Inter, system-ui, sans-serif';
+  }
+
+  function getStorageItem(key, fallback) {
+    try {
+      var item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  function setStorageItem(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {}
+  }
+
+  function supabaseFetch(path, options) {
+    if (!hasSupabase) return Promise.reject(new Error('No Supabase config'));
+
+    var headers = {
+      apikey: supabaseAnonKey,
+      Authorization: 'Bearer ' + supabaseAnonKey,
+      'Content-Type': 'application/json',
+    };
+
+    if (options && options.headers) {
+      Object.keys(options.headers).forEach(function (key) {
+        headers[key] = options.headers[key];
+      });
+    }
+
+    return fetch(supabaseUrl + '/rest/v1/' + path, {
+      method: (options && options.method) || 'GET',
+      headers: headers,
+      body: options && options.body ? options.body : undefined,
+    });
+  }
+
+  function trackMetric(metric) {
+    var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
+
+    var nextMetric = {
+      id:
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : Date.now() + '-' + Math.random().toString(36).slice(2),
+      store_id: storeId,
+      story_id: metric.story_id || null,
+      video_id: metric.video_id || null,
+      product_id: metric.product_id || null,
+      event_type: metric.event_type,
+      page_url: metric.page_url || window.location.href,
+      device_type:
+        metric.device_type ||
+        (window.innerWidth < 768 ? 'mobile' : 'desktop'),
+      browser: metric.browser || navigator.userAgent,
+      referrer: metric.referrer || document.referrer || null,
+      created_at: new Date().toISOString(),
+    };
+
+    fallbackMetrics.push(nextMetric);
+    setStorageItem('vidlytics_metrics', fallbackMetrics);
+
+    if (!storeId || !hasSupabase) return Promise.resolve();
+
+    return supabaseFetch('metrics', {
+      method: 'POST',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        store_id: storeId,
+        story_id: nextMetric.story_id,
+        video_id: nextMetric.video_id,
+        product_id: nextMetric.product_id,
+        event_type: nextMetric.event_type,
+        page_url: nextMetric.page_url,
+        device_type: nextMetric.device_type,
+        browser: nextMetric.browser,
+        referrer: nextMetric.referrer,
+      }),
+    }).catch(function () {});
   }
 
   function normalizeModalAppearanceConfig(appearance) {
@@ -208,325 +752,6 @@
     };
   }
 
-  function toCssUnit(value, fallback) {
-    var finalValue = firstDefined(value, fallback);
-
-    if (finalValue === undefined || finalValue === null || finalValue === '') {
-      return fallback || '20px';
-    }
-
-    if (typeof finalValue === 'number') {
-      return finalValue + 'px';
-    }
-
-    var str = String(finalValue).trim();
-
-    if (/^\d+(\.\d+)?$/.test(str)) {
-      return str + 'px';
-    }
-
-    return str;
-  }
-
-  function getVideoUrl(video) {
-    if (!video) return '';
-
-    return (
-      video.video_url ||
-      video.url ||
-      video.source_url ||
-      video.external_url ||
-      video.file_url ||
-      video.public_url ||
-      ''
-    );
-  }
-
-  function isDirectVideoUrl(url) {
-    if (!url) return false;
-    return VIDEO_FILE_REGEX.test(url);
-  }
-
-  function extractYouTubeId(url) {
-    if (!url) return '';
-
-    try {
-      var parsed = new URL(url.trim());
-      var host = parsed.hostname.replace(/^www\./, '').toLowerCase();
-
-      if (host === 'youtu.be') {
-        return parsed.pathname.replace(/^\//, '').split('/')[0] || '';
-      }
-
-      if (host === 'youtube.com' || host === 'm.youtube.com') {
-        if (parsed.pathname.indexOf('/shorts/') === 0) {
-          return parsed.pathname.split('/')[2] || '';
-        }
-
-        if (parsed.pathname.indexOf('/embed/') === 0) {
-          return parsed.pathname.replace(/^\/embed\//, '').split('/')[0] || '';
-        }
-
-        if (parsed.pathname === '/watch') {
-          return parsed.searchParams.get('v') || '';
-        }
-      }
-    } catch (e) {
-      return '';
-    }
-
-    return '';
-  }
-
-  function getYouTubeEmbedUrl(url) {
-    var id = extractYouTubeId(url);
-    return id ? 'https://www.youtube.com/embed/' + id : '';
-  }
-
-  function getYouTubeThumbnail(url) {
-    var id = extractYouTubeId(url);
-    return id ? 'https://img.youtube.com/vi/' + id + '/hqdefault.jpg' : '';
-  }
-
-  function getVideoThumbnail(video) {
-    if (!video) return '';
-
-    var direct =
-      video.thumbnail_url ||
-      video.poster_url ||
-      video.image_url ||
-      video.cover_url ||
-      video.thumb_url ||
-      '';
-
-    if (direct) return direct;
-
-    if (video.source_type !== 'upload') {
-      return getYouTubeThumbnail(getVideoUrl(video));
-    }
-
-    return '';
-  }
-
-  function normalizePositionValue(value) {
-    var raw = value || fallbackPosition || 'fixed_bottom_right';
-
-    var normalized = String(raw)
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, '_')
-      .replace(/-/g, '_');
-
-    if (normalized === 'left') return 'fixed_bottom_left';
-    if (normalized === 'right') return 'fixed_bottom_right';
-
-    if (normalized === 'bottom_left') return 'fixed_bottom_left';
-    if (normalized === 'bottom_right') return 'fixed_bottom_right';
-    if (normalized === 'top_left') return 'fixed_top_left';
-    if (normalized === 'top_right') return 'fixed_top_right';
-
-    if (normalized === 'fixed_bottom_left') return 'fixed_bottom_left';
-    if (normalized === 'fixed_bottom_right') return 'fixed_bottom_right';
-    if (normalized === 'fixed_top_left') return 'fixed_top_left';
-    if (normalized === 'fixed_top_right') return 'fixed_top_right';
-
-    return 'fixed_bottom_right';
-  }
-
-  function normalizePositionFromAppearance(appearance) {
-    appearance = appearance || {};
-
-    return normalizePositionValue(
-      firstDefined(
-        appearance.position,
-        appearance.widget_position,
-        appearance.floating_position,
-        fallbackPosition
-      )
-    );
-  }
-
-  function getCardShape(appearance, context) {
-    appearance = appearance || {};
-
-    var shape = firstDefined(
-      context === 'carousel' ? appearance.carousel_card_shape : undefined,
-      context === 'carousel' ? appearance.carouselCardShape : undefined,
-      appearance.card_shape,
-      appearance.cardShape,
-      appearance.widget_shape,
-      appearance.widgetShape,
-      'circle'
-    );
-
-    return String(shape).trim().toLowerCase();
-  }
-
-  function getRadiusForShape(shape, fallback) {
-    shape = String(shape || '').trim().toLowerCase();
-
-    if (shape === 'circle' || shape === 'pill') return '999px';
-    if (shape === 'square') return '0px';
-
-    return fallback || '16px';
-  }
-
-  function getWidgetSize(appearance) {
-    appearance = appearance || {};
-
-    var size = appearance.widget_size || 'medium';
-    var width = firstDefined(
-      appearance.widget_width,
-      appearance.widgetWidth,
-      appearance.card_width,
-      appearance.cardWidth,
-      appearance.width,
-      ''
-    );
-
-    if (width) return toCssUnit(width, width);
-    if (size === 'small') return '52px';
-    if (size === 'large') return '76px';
-
-    return '62px';
-  }
-
-  function getWidgetHeight(appearance) {
-    appearance = appearance || {};
-
-    var shape = getCardShape(appearance, 'floating');
-    var height = firstDefined(
-      appearance.widget_height,
-      appearance.widgetHeight,
-      appearance.card_height,
-      appearance.cardHeight,
-      appearance.height,
-      ''
-    );
-    var width = getWidgetSize(appearance);
-
-    if (shape === 'circle' || shape === 'square') {
-      return width;
-    }
-
-    if (height) return toCssUnit(height, height);
-
-    if (shape === 'portrait' || shape === 'rectangle' || shape === 'retangulo') {
-      var numeric = parseInt(width, 10);
-
-      if (!Number.isNaN(numeric)) {
-        return Math.round(numeric * 1.45) + 'px';
-      }
-
-      return '90px';
-    }
-
-    return width;
-  }
-
-  function getBorderRadius(appearance) {
-    var shape = getCardShape(appearance, 'floating');
-
-    return getRadiusForShape(shape, appearance.border_radius || '12px');
-  }
-
-  function getPrimaryColor(appearance) {
-    return appearance.primary_color || appearance.color || '#0094EB';
-  }
-
-  function getSecondaryColor(appearance) {
-    return appearance.secondary_color || '#EC4899';
-  }
-
-  function getTextColor(appearance) {
-    return appearance.text_color || '#0f172a';
-  }
-
-  function getFontFamily(appearance) {
-    return appearance.font_family || 'Inter, system-ui, sans-serif';
-  }
-
-  function getStorageItem(key, fallback) {
-    try {
-      var item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : fallback;
-    } catch (e) {
-      return fallback;
-    }
-  }
-
-  function setStorageItem(key, value) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch (e) {}
-  }
-
-  function supabaseFetch(path, options) {
-    if (!hasSupabase) return Promise.reject(new Error('No Supabase config'));
-
-    var headers = {
-      apikey: supabaseAnonKey,
-      Authorization: 'Bearer ' + supabaseAnonKey,
-      'Content-Type': 'application/json',
-    };
-
-    if (options && options.headers) {
-      Object.keys(options.headers).forEach(function (key) {
-        headers[key] = options.headers[key];
-      });
-    }
-
-    return fetch(supabaseUrl + '/rest/v1/' + path, {
-      method: (options && options.method) || 'GET',
-      headers: headers,
-      body: options && options.body ? options.body : undefined,
-    });
-  }
-
-  function trackMetric(metric) {
-    var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
-
-    var nextMetric = {
-      id:
-        typeof crypto !== 'undefined' && crypto.randomUUID
-          ? crypto.randomUUID()
-          : Date.now() + '-' + Math.random().toString(36).slice(2),
-      store_id: storeId,
-      story_id: metric.story_id || null,
-      video_id: metric.video_id || null,
-      product_id: metric.product_id || null,
-      event_type: metric.event_type,
-      page_url: metric.page_url || window.location.href,
-      device_type:
-        metric.device_type ||
-        (window.innerWidth < 768 ? 'mobile' : 'desktop'),
-      browser: metric.browser || navigator.userAgent,
-      referrer: metric.referrer || document.referrer || null,
-      created_at: new Date().toISOString(),
-    };
-
-    fallbackMetrics.push(nextMetric);
-    setStorageItem('vidlytics_metrics', fallbackMetrics);
-
-    if (!storeId || !hasSupabase) return Promise.resolve();
-
-    return supabaseFetch('metrics', {
-      method: 'POST',
-      headers: { Prefer: 'return=minimal' },
-      body: JSON.stringify({
-        store_id: storeId,
-        story_id: nextMetric.story_id,
-        video_id: nextMetric.video_id,
-        product_id: nextMetric.product_id,
-        event_type: nextMetric.event_type,
-        page_url: nextMetric.page_url,
-        device_type: nextMetric.device_type,
-        browser: nextMetric.browser,
-        referrer: nextMetric.referrer,
-      }),
-    }).catch(function () {});
-  }
-
   function matchesRule(rule) {
     var href = window.location.href;
     var path = window.location.pathname || '/';
@@ -627,7 +852,8 @@
       return Promise.resolve(
         getStorageItem('vidlytics_stories', []).filter(function (story) {
           return (
-            (!storeId || story.store_id === storeId) && story.active !== false
+            (!storeId || idsEqual(story.store_id, storeId)) &&
+            story.active !== false
           );
         })
       );
@@ -753,6 +979,10 @@
         appearance.bottom_spacing,
         appearance.spacing_bottom,
         appearance.offset_bottom,
+        appearance.distance_bottom,
+        appearance.bottomDistance,
+        appearance.distancia_inferior,
+        appearance.distanciaInferior,
         defaultSpacing
       ),
       '20px'
@@ -763,6 +993,10 @@
         appearance.top_spacing,
         appearance.spacing_top,
         appearance.offset_top,
+        appearance.distance_top,
+        appearance.topDistance,
+        appearance.distancia_superior,
+        appearance.distanciaSuperior,
         defaultSpacing
       ),
       '20px'
@@ -773,6 +1007,14 @@
         appearance.left_spacing,
         appearance.spacing_left,
         appearance.offset_left,
+        appearance.distance_left,
+        appearance.leftDistance,
+        appearance.distance_side,
+        appearance.sideDistance,
+        appearance.distancia_lateral,
+        appearance.distanciaLateral,
+        appearance.distancia_esquerda,
+        appearance.distanciaEsquerda,
         defaultSpacing
       ),
       '20px'
@@ -783,13 +1025,21 @@
         appearance.right_spacing,
         appearance.spacing_right,
         appearance.offset_right,
+        appearance.distance_right,
+        appearance.rightDistance,
+        appearance.distance_side,
+        appearance.sideDistance,
+        appearance.distancia_lateral,
+        appearance.distanciaLateral,
+        appearance.distancia_direita,
+        appearance.distanciaDireita,
         defaultSpacing
       ),
       '20px'
     );
 
     el.style.position = 'fixed';
-    el.style.zIndex = String(appearance.z_index || '2147483647');
+    el.style.zIndex = String(appearance.z_index || appearance.zIndex || '2147483647');
 
     el.style.top = 'auto';
     el.style.right = 'auto';
@@ -840,7 +1090,7 @@
     modal.style.width = 'min(92vw, 420px)';
     modal.style.maxHeight = '88vh';
     modal.style.overflow = 'hidden';
-    modal.style.background = currentAppearance.background_color || '#fff';
+    modal.style.background = currentAppearance.background_color || currentAppearance.backgroundColor || '#fff';
     modal.style.borderRadius = '24px';
     modal.style.boxShadow = modalConfig.shadow_enabled
       ? '0 24px 80px rgba(15, 23, 42, 0.3)'
@@ -867,7 +1117,7 @@
   function buildVideoPlayer(video, storyId) {
     var url = getVideoUrl(video);
     var ytId = extractYouTubeId(url);
-    var isUpload = video.source_type === 'upload';
+    var isUpload = video.source_type === 'upload' || video.sourceType === 'upload';
     var isDirect = isDirectVideoUrl(url);
 
     if (!isUpload && ytId) {
@@ -882,7 +1132,7 @@
         'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
       iframe.allowFullscreen = true;
       iframe.loading = 'lazy';
-      iframe.title = video.title || 'Vídeo';
+      iframe.title = video.title || video.name || 'Vídeo';
 
       return { el: iframe, type: 'youtube' };
     }
@@ -940,7 +1190,7 @@
     var orderedVideos = relations
       .map(function (rel) {
         return activeVideos.find(function (video) {
-          return video.id === rel.video_id;
+          return idsEqual(video.id, rel.video_id);
         });
       })
       .filter(Boolean);
@@ -954,18 +1204,18 @@
     });
 
     var currentIndex = orderedVideos.findIndex(function (video) {
-      return video.id === coverVideoId;
+      return idsEqual(video.id, coverVideoId);
     });
 
     if (currentIndex < 0) currentIndex = 0;
 
     var activeProducts = storyProducts
       .filter(function (sp) {
-        return sp.story_id === story.id;
+        return idsEqual(sp.story_id, story.id);
       })
       .map(function (sp) {
         return products.find(function (product) {
-          return product.id === sp.product_id;
+          return idsEqual(product.id, sp.product_id);
         });
       })
       .filter(function (product) {
@@ -1014,7 +1264,7 @@
           '<div style="font-weight:800;color:' +
           getTextColor(currentAppearance) +
           ';font-size:14px">' +
-          (story.title || 'Story') +
+          (story.title || story.name || 'Story') +
           '</div>' +
           '<div style="font-size:12px;color:#64748b">' +
           (currentIndex + 1) +
@@ -1081,7 +1331,7 @@
       nextBtn.style.fontWeight = '800';
       nextBtn.style.cursor = 'pointer';
       nextBtn.style.background =
-        currentAppearance.button_color || getPrimaryColor(currentAppearance);
+        currentAppearance.button_color || currentAppearance.buttonColor || getPrimaryColor(currentAppearance);
       nextBtn.style.color = '#fff';
 
       nextBtn.addEventListener('click', function () {
@@ -1128,7 +1378,7 @@
         ctaBtn.style.background =
           cta.type === 'whatsapp'
             ? '#25D366'
-            : currentAppearance.button_color || '#111827';
+            : currentAppearance.button_color || currentAppearance.buttonColor || '#111827';
         ctaBtn.style.color = '#fff';
 
         ctaBtn.addEventListener('click', function () {
@@ -1164,7 +1414,7 @@
 
         productCard.innerHTML =
           '<img src="' +
-          (product.image_url || '') +
+          normalizeMediaUrl(product.image_url || product.imageUrl || '') +
           '" alt="' +
           (product.name || '') +
           '" style="width:72px;height:72px;object-fit:cover;border-radius:14px;background:#e2e8f0;" />' +
@@ -1208,7 +1458,7 @@
   var readStoryProductsData = [];
   var readProductsData = [];
 
-  function renderFloatingBubbles(stories, storyVideoMap, activeVideos, coverMap) {
+  function renderFloatingBubbles(stories, storyVideoMap, activeVideos) {
     var existingRoot = document.getElementById('vidlytics-widget-root');
     if (existingRoot) existingRoot.remove();
 
@@ -1226,7 +1476,7 @@
 
     var bubbles = createEl('div', 'vidlytics-bubbles');
     bubbles.style.display = 'flex';
-    bubbles.style.gap = '10px';
+    bubbles.style.gap = toCssUnit(firstDefined(appearance.floating_gap, appearance.floatingGap, 10), '10px');
     bubbles.style.alignItems = isLeftPosition ? 'flex-start' : 'flex-end';
     bubbles.style.flexDirection = 'column';
 
@@ -1244,11 +1494,11 @@
 
       var coverVideo = coverRelation
         ? activeVideos.find(function (video) {
-            return video.id === coverRelation.video_id;
+            return idsEqual(video.id, coverRelation.video_id);
           })
         : null;
 
-      var thumb = coverVideo ? getVideoThumbnail(coverVideo) : '';
+      var thumb = getStoryThumbnail(story, coverVideo, coverRelation);
 
       var bubble = createEl('button', 'vidlytics-bubble');
       bubble.type = 'button';
@@ -1264,7 +1514,7 @@
       ring.style.width = getWidgetSize(appearance);
       ring.style.height = getWidgetHeight(appearance);
       ring.style.borderRadius = getBorderRadius(appearance);
-      ring.style.padding = appearance.border_style ? '0' : '2px';
+      ring.style.padding = appearance.border_style || appearance.borderStyle ? '0' : '2px';
       ring.style.overflow = 'hidden';
       ring.style.background =
         'linear-gradient(135deg, ' +
@@ -1273,9 +1523,11 @@
         getSecondaryColor(appearance) +
         ')';
 
-      if (appearance.border_style) {
+      if (appearance.border_style || appearance.borderStyle) {
         ring.style.border =
-          appearance.border_style + ' ' + getPrimaryColor(appearance);
+          firstDefined(appearance.border_style, appearance.borderStyle) +
+          ' ' +
+          getPrimaryColor(appearance);
       }
 
       if (modalConfig.shadow_enabled !== false) {
@@ -1296,13 +1548,23 @@
       if (thumb) {
         var img = createEl('img');
         img.src = thumb;
-        img.alt = story.title || 'Story';
+        img.alt = story.title || story.name || 'Story';
+        img.loading = 'lazy';
         img.style.width = '100%';
         img.style.height = '100%';
-        img.style.objectFit = appearance.object_fit || 'cover';
+        img.style.objectFit = appearance.object_fit || appearance.objectFit || 'cover';
+        img.style.display = 'block';
+
+        img.onerror = function () {
+          inner.innerHTML = '';
+          inner.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase();
+          inner.style.fontWeight = '800';
+          inner.style.color = getTextColor(appearance);
+        };
+
         inner.appendChild(img);
       } else {
-        inner.textContent = (story.title || 'S').slice(0, 1).toUpperCase();
+        inner.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase();
         inner.style.fontWeight = '800';
         inner.style.color = getTextColor(appearance);
       }
@@ -1312,9 +1574,9 @@
 
       if (modalConfig.show_title !== false) {
         var label = createEl('span');
-        label.textContent = story.title || 'Story';
-        label.style.maxWidth = '90px';
-        label.style.fontSize = appearance.font_size || '11px';
+        label.textContent = story.title || story.name || 'Story';
+        label.style.maxWidth = getWidgetSize(appearance);
+        label.style.fontSize = appearance.font_size || appearance.fontSize || '11px';
         label.style.fontWeight = '700';
         label.style.color = getTextColor(appearance);
         label.style.textAlign = 'center';
@@ -1362,21 +1624,21 @@
     container.style.overflowX = 'auto';
     container.style.padding = '12px 16px';
     container.style.display = 'flex';
-    container.style.gap = toCssUnit(appearance.carousel_gap || 14, '14px');
+    container.style.gap = toCssUnit(appearance.carousel_gap || appearance.carouselGap || 14, '14px');
     container.style.scrollSnapType = 'x mandatory';
     container.style.WebkitOverflowScrolling = 'touch';
 
-    if (appearance.margin_top) {
+    if (appearance.margin_top || appearance.marginTop) {
       container.style.marginTop = toCssUnit(
-        appearance.margin_top,
-        appearance.margin_top
+        firstDefined(appearance.margin_top, appearance.marginTop),
+        firstDefined(appearance.margin_top, appearance.marginTop)
       );
     }
 
-    if (appearance.margin_bottom) {
+    if (appearance.margin_bottom || appearance.marginBottom) {
       container.style.marginBottom = toCssUnit(
-        appearance.margin_bottom,
-        appearance.margin_bottom
+        firstDefined(appearance.margin_bottom, appearance.marginBottom),
+        firstDefined(appearance.margin_bottom, appearance.marginBottom)
       );
     }
 
@@ -1394,11 +1656,11 @@
 
       var coverVideo = coverRelation
         ? activeVideos.find(function (video) {
-            return video.id === coverRelation.video_id;
+            return idsEqual(video.id, coverRelation.video_id);
           })
         : null;
 
-      var thumb = coverVideo ? getVideoThumbnail(coverVideo) : '';
+      var thumb = getStoryThumbnail(story, coverVideo, coverRelation);
 
       var card = createEl('button', 'vidlytics-carousel-card');
       card.type = 'button';
@@ -1452,7 +1714,7 @@
       mediaBox.style.height = mediaHeight;
       mediaBox.style.borderRadius = getRadiusForShape(
         cardShape,
-        appearance.border_radius || '16px'
+        firstDefined(appearance.border_radius, appearance.borderRadius, '16px')
       );
       mediaBox.style.overflow = 'hidden';
       mediaBox.style.background = '#e2e8f0';
@@ -1468,13 +1730,23 @@
       if (thumb) {
         var img = createEl('img');
         img.src = thumb;
-        img.alt = story.title || 'Story';
+        img.alt = story.title || story.name || 'Story';
+        img.loading = 'lazy';
         img.style.width = '100%';
         img.style.height = '100%';
-        img.style.objectFit = appearance.object_fit || 'cover';
+        img.style.objectFit = appearance.object_fit || appearance.objectFit || 'cover';
+
+        img.onerror = function () {
+          mediaBox.innerHTML = '';
+          mediaBox.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase();
+          mediaBox.style.fontWeight = '800';
+          mediaBox.style.fontSize = '24px';
+          mediaBox.style.color = '#64748b';
+        };
+
         mediaBox.appendChild(img);
       } else {
-        mediaBox.textContent = (story.title || 'S').slice(0, 1).toUpperCase();
+        mediaBox.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase();
         mediaBox.style.fontWeight = '800';
         mediaBox.style.fontSize = '24px';
         mediaBox.style.color = '#64748b';
@@ -1484,9 +1756,9 @@
 
       if (modalConfig.show_title !== false) {
         var label = createEl('span');
-        label.textContent = story.title || 'Story';
+        label.textContent = story.title || story.name || 'Story';
         label.style.maxWidth = mediaWidth;
-        label.style.fontSize = appearance.font_size || '12px';
+        label.style.fontSize = appearance.font_size || appearance.fontSize || '12px';
         label.style.fontWeight = '700';
         label.style.color = getTextColor(appearance);
         label.style.whiteSpace = 'nowrap';
@@ -1557,18 +1829,15 @@
         if (!activeVideos.length) return;
 
         var storyVideoMap = new Map();
-        var coverMap = new Map();
 
         storyVideos.forEach(function (item) {
-          if (!storyVideoMap.has(item.story_id)) {
-            storyVideoMap.set(item.story_id, []);
+          var storyId = item.story_id;
+
+          if (!storyVideoMap.has(storyId)) {
+            storyVideoMap.set(storyId, []);
           }
 
-          storyVideoMap.get(item.story_id).push(item);
-
-          if (item.is_cover) {
-            coverMap.set(item.story_id, item.video_id);
-          }
+          storyVideoMap.get(storyId).push(item);
         });
 
         var storiesWithVideos = stories.filter(function (story) {
@@ -1576,7 +1845,7 @@
 
           return rels.some(function (rel) {
             return activeVideos.some(function (video) {
-              return video.id === rel.video_id;
+              return idsEqual(video.id, rel.video_id);
             });
           });
         });
@@ -1585,7 +1854,7 @@
 
         var applicableStories = storiesWithVideos.filter(function (story) {
           var rulesForStory = pageRules.filter(function (rule) {
-            return rule.story_id === story.id;
+            return idsEqual(rule.story_id, story.id);
           });
 
           if (!rulesForStory.length) return true;
@@ -1599,8 +1868,7 @@
           renderFloatingBubbles(
             applicableStories,
             storyVideoMap,
-            activeVideos,
-            coverMap
+            activeVideos
           );
         }
 
