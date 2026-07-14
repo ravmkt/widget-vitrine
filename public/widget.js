@@ -623,70 +623,29 @@
   }
 
   function fetchDbAppearance() {
-    if (!storeId || !hasSupabase) return Promise.resolve({});
+  if (!storeId || !hasSupabase) return Promise.resolve({});
 
-    var store = encodeURIComponent(storeId);
+  var store = encodeURIComponent(storeId);
 
-    var paths = [
-      {
-        path: 'widget_appearances?select=*&store_id=eq.' + store + '&limit=50',
-        direct: true
-      },
-      {
-        path: 'widget_appearances?select=*&loja_id=eq.' + store + '&limit=50',
-        direct: true
-      },
-      {
-        path: 'appearance_settings?select=*&store_id=eq.' + store + '&limit=50',
-        direct: true
-      },
-      {
-        path: 'appearance_settings?select=*&loja_id=eq.' + store + '&limit=50',
-        direct: true
-      },
-      {
-        path: 'appearances?select=*&store_id=eq.' + store + '&limit=50',
-        direct: true
-      },
-      {
-        path: 'appearances?select=*&loja_id=eq.' + store + '&limit=50',
-        direct: true
-      },
-      {
-        path: 'widget_settings?select=*&store_id=eq.' + store + '&limit=50',
-        direct: true
-      },
-      {
-        path: 'widget_settings?select=*&loja_id=eq.' + store + '&limit=50',
-        direct: true
-      },
-      {
-        path: 'settings?select=*&store_id=eq.' + store + '&limit=50',
-        direct: true
-      },
-      {
-        path: 'settings?select=*&loja_id=eq.' + store + '&limit=50',
-        direct: true
-      },
+  var path = 'widget_appearances?select=*&store_id=eq.' + store + '&limit=1';
 
-      /*
-       * Stores entra por último e SEM campos diretos.
-       * Assim evita usar a tabela stores como aparência indevidamente.
-       * Só pega se tiver appearance/config/settings dentro dela.
-       */
-      {
-        path: 'stores?select=*&id=eq.' + store + '&limit=1',
-        direct: false
-      },
-      {
-        path: 'stores?select=*&store_id=eq.' + store + '&limit=1',
-        direct: false
-      },
-      {
-        path: 'stores?select=*&loja_id=eq.' + store + '&limit=1',
-        direct: false
-      }
-    ];
+  return fetchJson(path).then(function (items) {
+    if (!items || !items.length) {
+      console.warn('VIDLYTICS: nenhuma aparência encontrada em widget_appearances para store_id:', storeId);
+      return {};
+    }
+
+    var item = items[0];
+    var appearance = extractAppearanceFromItem(item, true);
+
+    console.log('VIDLYTICS DB APARÊNCIA PATH:', path);
+    console.log('VIDLYTICS DB APARÊNCIA RAW:', item);
+    console.log('VIDLYTICS DB APARÊNCIA NORMALIZADA:', appearance);
+
+    return appearanceHasUsefulData(appearance) ? appearance : {};
+  });
+}
+
 
     var candidates = [];
     var chain = Promise.resolve();
