@@ -48,6 +48,166 @@
     return undefined;
   }
 
+  function parseJsonIfNeeded(value) {
+    if (!value) return {};
+
+    if (typeof value === 'object') {
+      return value;
+    }
+
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch (e) {
+        return {};
+      }
+    }
+
+    return {};
+  }
+
+  function toBoolean(value, fallback) {
+    if (value === undefined || value === null || value === '') {
+      return fallback;
+    }
+
+    if (typeof value === 'boolean') {
+      return value;
+    }
+
+    if (typeof value === 'number') {
+      return value !== 0;
+    }
+
+    var str = String(value).trim().toLowerCase();
+
+    if (str === 'true' || str === '1' || str === 'yes' || str === 'sim') {
+      return true;
+    }
+
+    if (
+      str === 'false' ||
+      str === '0' ||
+      str === 'no' ||
+      str === 'nao' ||
+      str === 'não'
+    ) {
+      return false;
+    }
+
+    return fallback;
+  }
+
+  function normalizeModalAppearanceConfig(appearance) {
+    appearance = appearance || {};
+
+    var rawConfig = parseJsonIfNeeded(
+      firstDefined(appearance.modal_config, appearance.modalConfig, {})
+    );
+
+    return {
+      show_title: toBoolean(
+        firstDefined(
+          appearance.show_title,
+          appearance.showTitle,
+          rawConfig.show_title,
+          rawConfig.showTitle
+        ),
+        true
+      ),
+
+      show_play_button: toBoolean(
+        firstDefined(
+          appearance.show_play_button,
+          appearance.showPlayButton,
+          rawConfig.show_play_button,
+          rawConfig.showPlayButton
+        ),
+        true
+      ),
+
+      show_product: toBoolean(
+        firstDefined(
+          appearance.show_product,
+          appearance.showProduct,
+          rawConfig.show_product,
+          rawConfig.showProduct
+        ),
+        true
+      ),
+
+      show_like_button: toBoolean(
+        firstDefined(
+          appearance.show_like_button,
+          appearance.showLikeButton,
+          rawConfig.show_like_button,
+          rawConfig.showLikeButton
+        ),
+        true
+      ),
+
+      show_comment_button: toBoolean(
+        firstDefined(
+          appearance.show_comment_button,
+          appearance.showCommentButton,
+          rawConfig.show_comment_button,
+          rawConfig.showCommentButton
+        ),
+        true
+      ),
+
+      show_share_button: toBoolean(
+        firstDefined(
+          appearance.show_share_button,
+          appearance.showShareButton,
+          rawConfig.show_share_button,
+          rawConfig.showShareButton
+        ),
+        true
+      ),
+
+      show_whatsapp_button: toBoolean(
+        firstDefined(
+          appearance.show_whatsapp_button,
+          appearance.showWhatsappButton,
+          rawConfig.show_whatsapp_button,
+          rawConfig.showWhatsappButton
+        ),
+        true
+      ),
+
+      show_product_button: toBoolean(
+        firstDefined(
+          appearance.show_product_button,
+          appearance.showProductButton,
+          rawConfig.show_product_button,
+          rawConfig.showProductButton
+        ),
+        true
+      ),
+
+      hide_stories: toBoolean(
+        firstDefined(
+          appearance.hide_stories,
+          appearance.hideStories,
+          rawConfig.hide_stories,
+          rawConfig.hideStories
+        ),
+        false
+      ),
+
+      shadow_enabled: toBoolean(
+        firstDefined(
+          appearance.shadow_enabled,
+          appearance.shadowEnabled,
+          rawConfig.shadow_enabled,
+          rawConfig.shadowEnabled
+        ),
+        true
+      ),
+    };
+  }
+
   function toCssUnit(value, fallback) {
     var finalValue = firstDefined(value, fallback);
 
@@ -186,9 +346,43 @@
     );
   }
 
+  function getCardShape(appearance, context) {
+    appearance = appearance || {};
+
+    var shape = firstDefined(
+      context === 'carousel' ? appearance.carousel_card_shape : undefined,
+      context === 'carousel' ? appearance.carouselCardShape : undefined,
+      appearance.card_shape,
+      appearance.cardShape,
+      appearance.widget_shape,
+      appearance.widgetShape,
+      'circle'
+    );
+
+    return String(shape).trim().toLowerCase();
+  }
+
+  function getRadiusForShape(shape, fallback) {
+    shape = String(shape || '').trim().toLowerCase();
+
+    if (shape === 'circle' || shape === 'pill') return '999px';
+    if (shape === 'square') return '0px';
+
+    return fallback || '16px';
+  }
+
   function getWidgetSize(appearance) {
+    appearance = appearance || {};
+
     var size = appearance.widget_size || 'medium';
-    var width = appearance.width || '';
+    var width = firstDefined(
+      appearance.widget_width,
+      appearance.widgetWidth,
+      appearance.card_width,
+      appearance.cardWidth,
+      appearance.width,
+      ''
+    );
 
     if (width) return toCssUnit(width, width);
     if (size === 'small') return '52px';
@@ -198,13 +392,26 @@
   }
 
   function getWidgetHeight(appearance) {
-    var shape = appearance.widget_shape || 'circle';
-    var height = appearance.height || '';
+    appearance = appearance || {};
+
+    var shape = getCardShape(appearance, 'floating');
+    var height = firstDefined(
+      appearance.widget_height,
+      appearance.widgetHeight,
+      appearance.card_height,
+      appearance.cardHeight,
+      appearance.height,
+      ''
+    );
     var width = getWidgetSize(appearance);
+
+    if (shape === 'circle' || shape === 'square') {
+      return width;
+    }
 
     if (height) return toCssUnit(height, height);
 
-    if (shape === 'portrait') {
+    if (shape === 'portrait' || shape === 'rectangle' || shape === 'retangulo') {
       var numeric = parseInt(width, 10);
 
       if (!Number.isNaN(numeric)) {
@@ -218,12 +425,9 @@
   }
 
   function getBorderRadius(appearance) {
-    var shape = appearance.widget_shape || 'circle';
+    var shape = getCardShape(appearance, 'floating');
 
-    if (shape === 'circle') return '999px';
-    if (shape === 'square') return '0px';
-
-    return appearance.border_radius || '12px';
+    return getRadiusForShape(shape, appearance.border_radius || '12px');
   }
 
   function getPrimaryColor(appearance) {
@@ -620,6 +824,8 @@
   function ensureModal() {
     if (overlay) return;
 
+    var modalConfig = normalizeModalAppearanceConfig(currentAppearance);
+
     overlay = createEl('div', 'vidlytics-overlay');
     overlay.style.display = 'none';
     overlay.style.position = 'fixed';
@@ -636,7 +842,9 @@
     modal.style.overflow = 'hidden';
     modal.style.background = currentAppearance.background_color || '#fff';
     modal.style.borderRadius = '24px';
-    modal.style.boxShadow = '0 24px 80px rgba(15, 23, 42, 0.3)';
+    modal.style.boxShadow = modalConfig.shadow_enabled
+      ? '0 24px 80px rgba(15, 23, 42, 0.3)'
+      : 'none';
     modal.style.display = 'flex';
     modal.style.flexDirection = 'column';
 
@@ -675,6 +883,7 @@
       iframe.allowFullscreen = true;
       iframe.loading = 'lazy';
       iframe.title = video.title || 'Vídeo';
+
       return { el: iframe, type: 'youtube' };
     }
 
@@ -787,6 +996,8 @@
       var video = orderedVideos[currentIndex];
       if (!video) return;
 
+      var modalConfig = normalizeModalAppearanceConfig(currentAppearance);
+
       modalContent.innerHTML = '';
 
       var header = createEl('div');
@@ -797,17 +1008,20 @@
       header.style.borderBottom = '1px solid #e2e8f0';
 
       var titleWrap = createEl('div');
-      titleWrap.innerHTML =
-        '<div style="font-weight:800;color:' +
-        getTextColor(currentAppearance) +
-        ';font-size:14px">' +
-        (story.title || 'Story') +
-        '</div>' +
-        '<div style="font-size:12px;color:#64748b">' +
-        (currentIndex + 1) +
-        '/' +
-        orderedVideos.length +
-        '</div>';
+
+      if (modalConfig.show_title) {
+        titleWrap.innerHTML =
+          '<div style="font-weight:800;color:' +
+          getTextColor(currentAppearance) +
+          ';font-size:14px">' +
+          (story.title || 'Story') +
+          '</div>' +
+          '<div style="font-size:12px;color:#64748b">' +
+          (currentIndex + 1) +
+          '/' +
+          orderedVideos.length +
+          '</div>';
+      }
 
       var closeBtn = createEl('button');
       closeBtn.type = 'button';
@@ -884,8 +1098,25 @@
       body.appendChild(nav);
 
       var cta = resolveCta();
+      var canShowCta = Boolean(cta);
 
-      if (cta) {
+      if (
+        cta &&
+        cta.type === 'whatsapp' &&
+        modalConfig.show_whatsapp_button === false
+      ) {
+        canShowCta = false;
+      }
+
+      if (
+        cta &&
+        cta.type === 'product' &&
+        modalConfig.show_product_button === false
+      ) {
+        canShowCta = false;
+      }
+
+      if (canShowCta) {
         var ctaBtn = createEl('button');
         ctaBtn.type = 'button';
         ctaBtn.textContent = cta.text;
@@ -916,7 +1147,7 @@
         body.appendChild(ctaBtn);
       }
 
-      if (activeProducts.length && currentAppearance.show_product !== false) {
+      if (activeProducts.length && modalConfig.show_product !== false) {
         var product = activeProducts[0];
         var productCard = createEl('div');
 
@@ -927,7 +1158,9 @@
         productCard.style.borderRadius = '18px';
         productCard.style.padding = '12px';
         productCard.style.background = '#fff';
-        productCard.style.cursor = 'pointer';
+        productCard.style.cursor = modalConfig.show_product_button
+          ? 'pointer'
+          : 'default';
 
         productCard.innerHTML =
           '<img src="' +
@@ -946,17 +1179,19 @@
           }) +
           '</div></div>';
 
-        productCard.addEventListener('click', function () {
-          trackMetric({
-            event_type: 'product_click',
-            story_id: story.id,
-            video_id: video.id,
-            product_id: product.id,
-            page_url: window.location.href,
-          });
+        if (modalConfig.show_product_button) {
+          productCard.addEventListener('click', function () {
+            trackMetric({
+              event_type: 'product_click',
+              story_id: story.id,
+              video_id: video.id,
+              product_id: product.id,
+              page_url: window.location.href,
+            });
 
-          window.open(product.product_url, '_blank', 'noopener,noreferrer');
-        });
+            window.open(product.product_url, '_blank', 'noopener,noreferrer');
+          });
+        }
 
         body.appendChild(productCard);
       }
@@ -978,6 +1213,7 @@
     if (existingRoot) existingRoot.remove();
 
     var appearance = currentAppearance || {};
+    var modalConfig = normalizeModalAppearanceConfig(appearance);
     var position = normalizePositionFromAppearance(appearance);
     var isLeftPosition =
       position === 'fixed_bottom_left' || position === 'fixed_top_left';
@@ -1042,8 +1278,10 @@
           appearance.border_style + ' ' + getPrimaryColor(appearance);
       }
 
-      if (appearance.shadow_enabled !== false) {
+      if (modalConfig.shadow_enabled !== false) {
         ring.style.boxShadow = '0 12px 30px rgba(15, 23, 42, 0.18)';
+      } else {
+        ring.style.boxShadow = 'none';
       }
 
       var inner = createEl('div');
@@ -1072,7 +1310,7 @@
       ring.appendChild(inner);
       bubble.appendChild(ring);
 
-      if (appearance.show_title !== false) {
+      if (modalConfig.show_title !== false) {
         var label = createEl('span');
         label.textContent = story.title || 'Story';
         label.style.maxWidth = '90px';
@@ -1115,6 +1353,7 @@
     if (existing) existing.remove();
 
     var appearance = currentAppearance || {};
+    var modalConfig = normalizeModalAppearanceConfig(appearance);
 
     var container = createEl('div', 'vidlytics-carousel-root');
     container.id = 'vidlytics-carousel-root';
@@ -1123,7 +1362,7 @@
     container.style.overflowX = 'auto';
     container.style.padding = '12px 16px';
     container.style.display = 'flex';
-    container.style.gap = (appearance.carousel_gap || 14) + 'px';
+    container.style.gap = toCssUnit(appearance.carousel_gap || 14, '14px');
     container.style.scrollSnapType = 'x mandatory';
     container.style.WebkitOverflowScrolling = 'touch';
 
@@ -1174,21 +1413,57 @@
       card.style.gap = '6px';
 
       var mediaBox = createEl('div');
-      mediaBox.style.width = toCssUnit(appearance.width || '120px', '120px');
-      mediaBox.style.height = toCssUnit(appearance.height || '180px', '180px');
 
-      if (appearance.carousel_card_shape === 'circle') {
-        mediaBox.style.borderRadius = '999px';
-      } else if (appearance.carousel_card_shape === 'square') {
-        mediaBox.style.borderRadius = '0px';
-      } else {
-        mediaBox.style.borderRadius = appearance.border_radius || '16px';
+      var cardShape = getCardShape(appearance, 'carousel');
+
+      var mediaWidth = toCssUnit(
+        firstDefined(
+          appearance.card_width,
+          appearance.cardWidth,
+          appearance.carousel_width,
+          appearance.carouselWidth,
+          appearance.width,
+          '120px'
+        ),
+        '120px'
+      );
+
+      var mediaHeight = toCssUnit(
+        firstDefined(
+          appearance.card_height,
+          appearance.cardHeight,
+          appearance.carousel_height,
+          appearance.carouselHeight,
+          appearance.height,
+          cardShape === 'circle' || cardShape === 'square'
+            ? mediaWidth
+            : '180px'
+        ),
+        cardShape === 'circle' || cardShape === 'square'
+          ? mediaWidth
+          : '180px'
+      );
+
+      if (cardShape === 'circle' || cardShape === 'square') {
+        mediaHeight = mediaWidth;
       }
 
+      mediaBox.style.width = mediaWidth;
+      mediaBox.style.height = mediaHeight;
+      mediaBox.style.borderRadius = getRadiusForShape(
+        cardShape,
+        appearance.border_radius || '16px'
+      );
       mediaBox.style.overflow = 'hidden';
       mediaBox.style.background = '#e2e8f0';
       mediaBox.style.display = 'grid';
       mediaBox.style.placeItems = 'center';
+
+      if (modalConfig.shadow_enabled !== false) {
+        mediaBox.style.boxShadow = '0 10px 24px rgba(15, 23, 42, 0.14)';
+      } else {
+        mediaBox.style.boxShadow = 'none';
+      }
 
       if (thumb) {
         var img = createEl('img');
@@ -1207,10 +1482,10 @@
 
       card.appendChild(mediaBox);
 
-      if (appearance.show_title !== false) {
+      if (modalConfig.show_title !== false) {
         var label = createEl('span');
         label.textContent = story.title || 'Story';
-        label.style.maxWidth = toCssUnit(appearance.width || '120px', '120px');
+        label.style.maxWidth = mediaWidth;
         label.style.fontSize = appearance.font_size || '12px';
         label.style.fontWeight = '700';
         label.style.color = getTextColor(appearance);
@@ -1256,6 +1531,8 @@
       .then(function (results) {
         currentAppearance = results[0] || {};
 
+        var modalConfig = normalizeModalAppearanceConfig(currentAppearance);
+
         var stories = results[1] || [];
         var storyVideos = results[2] || [];
         var videos = results[3] || [];
@@ -1267,7 +1544,7 @@
         readProductsData = products;
 
         if (!stories.length) return;
-        if (currentAppearance.hide_stories) return;
+        if (modalConfig.hide_stories) return;
 
         var activeVideos = videos.filter(function (video) {
           var statusOk = 'status' in video ? video.status === 'active' : true;
