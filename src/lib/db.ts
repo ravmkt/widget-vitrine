@@ -253,6 +253,13 @@ export interface GeneralSettings {
   carousel_enabled: boolean;
   floating_widget_enabled: boolean;
   default_appearance_id?: string | null;
+
+/**
+ * Alias usado no front.
+ * No Supabase salvamos como default_appearance_id.
+ */
+defaultAppearanceId?: string | null;
+
   timezone: string;
   language: string;
   open_product_new_tab: boolean;
