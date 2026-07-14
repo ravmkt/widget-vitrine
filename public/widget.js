@@ -16,6 +16,21 @@
 if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) {
   return;
 }
+try {
+  var oldRoot = document.getElementById('vidlytics-widget-root');
+  if (oldRoot) oldRoot.remove();
+
+  var oldCarousel = document.getElementById('vidlytics-carousel-root');
+  if (oldCarousel) oldCarousel.remove();
+
+  var oldStyles = document.querySelectorAll(
+    '#vidlytics-force-floating-css, #vidlytics-portrait-lock-css'
+  );
+
+  Array.prototype.forEach.call(oldStyles, function (style) {
+    style.remove();
+  });
+} catch (e) {}
 
 window.__vidlytics_widget_loaded_version = VIDLYTICS_WIDGET_VERSION;
 
