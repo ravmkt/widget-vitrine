@@ -1174,28 +1174,46 @@ function px(value, fallback) {
       'posição',
       'widget_position',
       'widgetPosition',
-      'placement'
+      'placement',
+      'floating_video_position',
+      'floatingVideoPosition'
     ],
     DEFAULT_APPEARANCE.floating_position
   );
-
-  var position = normalizeFloatingPosition(positionRaw);
 
   var shapeRaw = getValue(
     [
       'floating_shape',
       'floatingShape',
       'shape',
+      'form',
+      'forma',
       'formato',
       'widget_shape',
-      'widgetShape'
+      'widgetShape',
+      'floating_video_shape',
+      'floatingVideoShape'
     ],
     DEFAULT_APPEARANCE.floating_shape
   );
 
+  var position = normalizeFloatingPosition(positionRaw);
   var shape = normalizeFloatingShape(shapeRaw);
 
-  var width = toNumber(
+  var defaultWidth = DEFAULT_APPEARANCE.floating_width;
+  var defaultHeight = DEFAULT_APPEARANCE.floating_height;
+
+  if (shape === 'square') {
+    defaultWidth = 96;
+    defaultHeight = 96;
+  }
+
+  if (shape === 'circle') {
+    defaultWidth = 88;
+    defaultHeight = 88;
+  }
+
+  var widthNumber = toNumber(
     getValue(
       [
         'floating_width',
@@ -1203,14 +1221,16 @@ function px(value, fallback) {
         'width',
         'largura',
         'widget_width',
-        'widgetWidth'
+        'widgetWidth',
+        'floating_video_width',
+        'floatingVideoWidth'
       ],
-      DEFAULT_APPEARANCE.floating_width
+      defaultWidth
     ),
-    DEFAULT_APPEARANCE.floating_width
+    defaultWidth
   );
 
-  var height = toNumber(
+  var heightNumber = toNumber(
     getValue(
       [
         'floating_height',
@@ -1218,45 +1238,22 @@ function px(value, fallback) {
         'height',
         'altura',
         'widget_height',
-        'widgetHeight'
+        'widgetHeight',
+        'floating_video_height',
+        'floatingVideoHeight'
       ],
-      DEFAULT_APPEARANCE.floating_height
+      defaultHeight
     ),
-    DEFAULT_APPEARANCE.floating_height
+    defaultHeight
   );
-
-  if (shape === 'circle') {
-    height = width;
-  }
 
   if (shape === 'square') {
-    height = width;
+    heightNumber = widthNumber;
   }
-
-  var radiusFallback = DEFAULT_APPEARANCE.floating_border_radius;
 
   if (shape === 'circle') {
-    radiusFallback = 999;
+    heightNumber = widthNumber;
   }
-
-  var radiusNumber = toNumber(
-    getValue(
-      [
-        'floating_border_radius',
-        'floatingBorderRadius',
-        'floating_radius',
-        'floatingRadius',
-        'border_radius',
-        'borderRadius',
-        'radius',
-        'raio',
-        'widget_radius',
-        'widgetRadius'
-      ],
-      radiusFallback
-    ),
-    radiusFallback
-  );
 
   var borderWidthNumber = toNumber(
     getValue(
@@ -1273,12 +1270,40 @@ function px(value, fallback) {
     DEFAULT_APPEARANCE.floating_border_width
   );
 
+  var radiusValue = getValue(
+    [
+      'floating_border_radius',
+      'floatingBorderRadius',
+      'floating_radius',
+      'floatingRadius',
+      'widget_border_radius',
+      'widgetBorderRadius',
+      'widget_radius',
+      'widgetRadius',
+      'border_radius',
+      'borderRadius',
+      'radius',
+      'raio'
+    ],
+    DEFAULT_APPEARANCE.floating_border_radius
+  );
+
+  var radiusNumber = toNumber(radiusValue, DEFAULT_APPEARANCE.floating_border_radius);
+
+  if (shape === 'circle') {
+    radiusNumber = 999;
+  }
+
   var topNumber = toNumber(
     getValue(
       [
         'floating_top',
         'floatingTop',
         'top',
+        'top_spacing',
+        'topSpacing',
+        'spacing_top',
+        'spacingTop',
         'distance_top',
         'distanceTop',
         'distancia_superior',
@@ -1295,6 +1320,10 @@ function px(value, fallback) {
         'floating_bottom',
         'floatingBottom',
         'bottom',
+        'bottom_spacing',
+        'bottomSpacing',
+        'spacing_bottom',
+        'spacingBottom',
         'distance_bottom',
         'distanceBottom',
         'distancia_inferior',
@@ -1311,6 +1340,10 @@ function px(value, fallback) {
         'floating_side',
         'floatingSide',
         'side',
+        'left_spacing',
+        'leftSpacing',
+        'right_spacing',
+        'rightSpacing',
         'distance_side',
         'distanceSide',
         'distancia_lateral',
@@ -1321,43 +1354,41 @@ function px(value, fallback) {
     DEFAULT_APPEARANCE.floating_side
   );
 
-  var zIndex = toNumber(
+  var zIndexNumber = toNumber(
     getValue(
       [
         'z_index',
         'zIndex',
         'z-index',
-        'widget_z_index',
-        'widgetZIndex'
+        'floating_z_index',
+        'floatingZIndex'
       ],
       DEFAULT_APPEARANCE.z_index
     ),
     DEFAULT_APPEARANCE.z_index
   );
 
-  var objectFitRaw = String(
-    getValue(
-      [
-        'floating_object_fit',
-        'floatingObjectFit',
-        'object_fit',
-        'objectFit',
-        'image_fit',
-        'imageFit',
-        'fit'
-      ],
-      DEFAULT_APPEARANCE.floating_object_fit
-    )
-  )
+  var objectFitRaw = getValue(
+    [
+      'floating_object_fit',
+      'floatingObjectFit',
+      'object_fit',
+      'objectFit',
+      'fit',
+      'video_fit',
+      'videoFit'
+    ],
+    DEFAULT_APPEARANCE.floating_object_fit
+  );
+
+  var objectFit = String(objectFitRaw || 'cover')
     .trim()
     .toLowerCase()
     .replace(/_/g, '-');
 
-  var allowedObjectFits = ['cover', 'contain', 'fill', 'none', 'scale-down'];
-
-  var objectFit = allowedObjectFits.indexOf(objectFitRaw) !== -1
-    ? objectFitRaw
-    : DEFAULT_APPEARANCE.floating_object_fit;
+  if (['cover', 'contain', 'fill', 'none', 'scale-down'].indexOf(objectFit) === -1) {
+    objectFit = 'cover';
+  }
 
   var showPlayButton = toBoolean(
     getValue(
@@ -1366,8 +1397,11 @@ function px(value, fallback) {
         'showPlayButton',
         'floating_show_play_button',
         'floatingShowPlayButton',
-        'play_button_enabled',
-        'playButtonEnabled'
+        'play_button',
+        'playButton',
+        'mostrar_botao_play',
+        'mostrarBotaoPlay',
+        'mostrar_play'
       ],
       DEFAULT_APPEARANCE.show_play_button
     ),
@@ -1379,11 +1413,13 @@ function px(value, fallback) {
       [
         'allow_drag',
         'allowDrag',
+        'floating_allow_drag',
+        'floatingAllowDrag',
         'draggable',
-        'drag_enabled',
-        'dragEnabled',
-        'allow_floating_drag',
-        'allowFloatingDrag'
+        'arrastavel',
+        'arrastável',
+        'permitir_arrastar',
+        'permitirArrastar'
       ],
       DEFAULT_APPEARANCE.allow_drag
     ),
@@ -1395,13 +1431,14 @@ function px(value, fallback) {
       [
         'allow_close',
         'allowClose',
-        'closable',
-        'close_enabled',
-        'closeEnabled',
-        'show_close_button',
-        'showCloseButton',
-        'allow_floating_close',
-        'allowFloatingClose'
+        'floating_allow_close',
+        'floatingAllowClose',
+        'close_button',
+        'closeButton',
+        'floating_close_button',
+        'floatingCloseButton',
+        'permitir_fechar',
+        'permitirFechar'
       ],
       DEFAULT_APPEARANCE.allow_close
     ),
@@ -1412,7 +1449,7 @@ function px(value, fallback) {
   var right = 'auto';
   var bottom = 'auto';
   var left = 'auto';
-  var alignItems = 'center';
+  var alignItems = 'flex-end';
 
   if (position === 'top-left') {
     top = px(topNumber);
@@ -1438,15 +1475,10 @@ function px(value, fallback) {
     alignItems = 'flex-end';
   }
 
-  var radius = shape === 'circle'
-    ? '999px'
-    : px(radiusNumber);
-
+  var borderWidth = px(borderWidthNumber);
+  var radius = shape === 'circle' ? '999px' : px(radiusNumber);
   var innerRadiusNumber = Math.max(0, radiusNumber - borderWidthNumber);
-
-  var innerRadius = shape === 'circle'
-    ? '999px'
-    : px(innerRadiusNumber);
+  var innerRadius = shape === 'circle' ? '999px' : px(innerRadiusNumber);
 
   return {
     position: position,
@@ -1457,15 +1489,14 @@ function px(value, fallback) {
     bottom: bottom,
     left: left,
 
-    zIndex: zIndex,
+    zIndex: zIndexNumber,
 
-    width: px(width),
-    height: px(height),
+    width: px(widthNumber),
+    height: px(heightNumber),
 
     radius: radius,
     innerRadius: innerRadius,
-
-    borderWidth: px(borderWidthNumber),
+    borderWidth: borderWidth,
 
     alignItems: alignItems,
 
@@ -1475,6 +1506,7 @@ function px(value, fallback) {
     allowClose: allowClose
   };
 }
+
   
   function getBorderColor(appearance) {
   return readAppearanceValue(appearance, [
