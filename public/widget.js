@@ -1153,406 +1153,214 @@ function px(value, fallback) {
 }
 
   function getFloatingConfig(appearance) {
-  appearance = normalizeAppearanceItem(appearance || {});
+  appearance = appearance || {};
 
-  var rawPosition = readAppearanceValue(appearance, [
-    'floating_position',
-    'floatingPosition',
-    'position',
-    'posicao',
-    'posição',
-    'widget_position',
-    'widgetPosition',
-    'placement',
-    'floating_video_position',
-    'floatingVideoPosition'
-  ]);
-
-  var rawShape = readAppearanceValue(appearance, [
-    'floating_shape',
-    'floatingShape',
-    'shape',
-    'form',
-    'forma',
-    'formato',
-    'widget_shape',
-    'widgetShape',
-    'floating_video_shape',
-    'floatingVideoShape'
-  ]);
-
-  var position = normalizeFloatingPosition(rawPosition);
-  var shape = normalizeFloatingShape(rawShape);
-
-  var width = toNumber(
-    readAppearanceValue(appearance, [
-      'floating_width',
-      'floatingWidth',
-      'width',
-      'largura',
-      'widget_width',
-      'widgetWidth',
-      'floating_video_width',
-      'floatingVideoWidth',
-      'size',
-      'tamanho',
-      'widget_size',
-      'widgetSize'
-    ]),
-    DEFAULT_APPEARANCE.floating_width
-  );
-
-  var heightRaw = readAppearanceValue(appearance, [
-    'floating_height',
-    'floatingHeight',
-    'height',
-    'altura',
-    'widget_height',
-    'widgetHeight',
-    'floating_video_height',
-    'floatingVideoHeight'
-  ]);
-
-  var height = toNumber(heightRaw, null);
-
-  if (!height) {
-    if (shape === 'circle' || shape === 'square') {
-      height = width;
-    } else {
-      height = Math.round((width * 16) / 9);
+  function normalizeValue(value) {
+    if (value === undefined || value === null) {
+      return '';
     }
+
+    return String(value)
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '_')
+      .replace(/-/g, '_');
   }
 
-  if (shape === 'circle' || shape === 'square') {
-    height = width;
+  function parseBoolean(value, defaultValue) {
+    if (value === undefined || value === null || value === '') {
+      return defaultValue;
+    }
+
+    if (typeof value === 'boolean') {
+      return value;
+    }
+
+    if (typeof value === 'number') {
+      return value === 1;
+    }
+
+    var normalized = normalizeValue(value);
+
+    if (
+      normalized === 'true' ||
+      normalized === '1' ||
+      normalized === 'yes' ||
+      normalized === 'sim' ||
+      normalized === 's' ||
+      normalized === 'on' ||
+      normalized === 'ativo' ||
+      normalized === 'ativado'
+    ) {
+      return true;
+    }
+
+    if (
+      normalized === 'false' ||
+      normalized === '0' ||
+      normalized === 'no' ||
+      normalized === 'nao' ||
+      normalized === 'não' ||
+      normalized === 'n' ||
+      normalized === 'off' ||
+      normalized === 'inativo' ||
+      normalized === 'desativado'
+    ) {
+      return false;
+    }
+
+    return defaultValue;
   }
 
-  var borderWidth = toNumber(
-    readAppearanceValue(appearance, [
-      'floating_border_width',
-      'floatingBorderWidth',
-      'border_width',
-      'borderWidth',
-      'largura_borda',
-      'larguraDaBorda',
-      'larguraBorda'
-    ]),
-    DEFAULT_APPEARANCE.floating_border_width
-  );
+  function getValue(names, fallback) {
+    if (typeof readAppearanceValue === 'function') {
+      return readAppearanceValue(appearance, names, fallback);
+    }
 
-  var radius = toNumber(
-    readAppearanceValue(appearance, [
-      'floating_radius',
-      'floatingRadius',
-      'floating_border_radius',
-      'floatingBorderRadius',
-      'border_radius',
-      'borderRadius',
-      'widget_border_radius',
-      'widgetBorderRadius',
-      'radius',
-      'raio',
-      'widget_radius',
-      'widgetRadius',
-      'corner_radius',
-      'cornerRadius',
-      'border_radius_px',
-      'borderRadiusPx'
-    ]),
-    shape === 'circle' ? 999 : DEFAULT_APPEARANCE.floating_border_radius
-  );
+    for (var i = 0; i < names.length; i++) {
+      var name = names[i];
 
-  if (shape === 'circle') {
-    radius = 999;
+      if (
+        Object.prototype.hasOwnProperty.call(appearance, name) &&
+        appearance[name] !== undefined &&
+        appearance[name] !== null &&
+        appearance[name] !== ''
+      ) {
+        return appearance[name];
+      }
+    }
+
+    return fallback;
   }
 
-  var top = toNumber(
-    readAppearanceValue(appearance, [
-      'floating_top',
-      'floatingTop',
-      'top',
-      'top_spacing',
-      'topSpacing',
-      'spacing_top',
-      'spacingTop',
-      'distance_top',
-      'distanceTop',
-      'distancia_superior',
-      'distanciaSuperior',
-      'offset_top',
-      'offsetTop'
-    ]),
-    DEFAULT_APPEARANCE.floating_top
+  var defaultPosition = DEFAULT_APPEARANCE.floating_position || 'bottom_right';
+  var defaultObjectFit = DEFAULT_APPEARANCE.floating_object_fit || 'cover';
+  var defaultShowPlayButton = DEFAULT_APPEARANCE.show_play_button !== false;
+  var defaultAllowDrag = DEFAULT_APPEARANCE.allow_drag !== false;
+  var defaultAllowClose = DEFAULT_APPEARANCE.allow_close !== false;
+
+  var positionValue = getValue(
+    [
+      'floating_position',
+      'floatingPosition',
+      'position',
+      'posicao',
+      'posição',
+      'video_position',
+      'videoPosition',
+      'widget_position',
+      'widgetPosition'
+    ],
+    defaultPosition
   );
 
-  var bottom = toNumber(
-    readAppearanceValue(appearance, [
-      'floating_bottom',
-      'floatingBottom',
-      'bottom',
-      'bottom_spacing',
-      'bottomSpacing',
-      'spacing_bottom',
-      'spacingBottom',
-      'distance_bottom',
-      'distanceBottom',
-      'distancia_inferior',
-      'distanciaInferior',
-      'offset_bottom',
-      'offsetBottom'
-    ]),
-    DEFAULT_APPEARANCE.floating_bottom
-  );
-
-  var isTop = position.indexOf('top') === 0;
-  var isRight = position.indexOf('right') !== -1;
-
-  var side = toNumber(
-    readAppearanceValue(
-      appearance,
-      isRight
-        ? [
-            'right_spacing',
-            'rightSpacing',
-            'spacing_right',
-            'spacingRight',
-            'floating_side',
-            'floatingSide',
-            'side',
-            'distance_side',
-            'distanceSide',
-            'distancia_lateral',
-            'distanciaLateral',
-            'offset_side',
-            'offsetSide'
-          ]
-        : [
-            'left_spacing',
-            'leftSpacing',
-            'spacing_left',
-            'spacingLeft',
-            'floating_side',
-            'floatingSide',
-            'side',
-            'distance_side',
-            'distanceSide',
-            'distancia_lateral',
-            'distanciaLateral',
-            'offset_side',
-            'offsetSide'
-          ]
-    ),
-    DEFAULT_APPEARANCE.floating_side
-  );
-
-  var zIndex = toNumber(
-    readAppearanceValue(appearance, [
-      'z_index',
-      'zIndex',
-      'zindex',
-      'floating_z_index',
-      'floatingZIndex'
-    ]),
-    DEFAULT_APPEARANCE.z_index
-  );
-
-  return {
-    position: position,
-    shape: shape,
-
-    top: isTop ? px(top) : 'auto',
-    bottom: isTop ? 'auto' : px(bottom),
-    left: isRight ? 'auto' : px(side),
-    right: isRight ? px(side) : 'auto',
-
-    width: px(width),
-    height: px(height),
-
-    radius: shape === 'circle' ? '999px' : px(radius),
-    innerRadius: shape === 'circle' ? '999px' : px(Math.max(radius - borderWidth, 0)),
-
-    borderWidth: px(borderWidth),
-    zIndex: String(Math.round(zIndex)),
-    alignItems: isRight ? 'flex-end' : 'flex-start'
-  };
-}
-
-
-function normalizeObjectFit(value) {
-  var key = normalizeKey(value);
-
-  if (key === 'contain') return 'contain';
-  if (key === 'fill') return 'fill';
-  if (key === 'cover') return 'cover';
-  if (key === 'scale-down' || key === 'scaledown') return 'scale-down';
-  if (key === 'none') return 'none';
-
-  return DEFAULT_APPEARANCE.floating_object_fit;
-}
-
-function getFloatingBehaviorConfig(appearance) {
-  appearance = normalizeAppearanceItem(appearance || {});
-
-  var objectFit = normalizeObjectFit(
-    readAppearanceValue(appearance, [
+  var objectFitValue = getValue(
+    [
       'floating_object_fit',
       'floatingObjectFit',
       'object_fit',
       'objectFit',
-      'image_fit',
-      'imageFit',
-      'media_fit',
-      'mediaFit',
-      'thumbnail_fit',
-      'thumbnailFit',
-      'fit'
-    ])
+      'fit',
+      'video_fit',
+      'videoFit'
+    ],
+    defaultObjectFit
   );
 
-  var showPlayButton = toBoolean(
-    readAppearanceValue(appearance, [
+  var showPlayButtonValue = getValue(
+    [
       'show_play_button',
       'showPlayButton',
-
-      'show_player_button',
-      'showPlayerButton',
-
-      'play_button_enabled',
-      'playButtonEnabled',
-
-      'floating_play_button',
-      'floatingPlayButton',
-
       'floating_show_play_button',
       'floatingShowPlayButton',
-
-      'show_floating_play_button',
-      'showFloatingPlayButton',
-
-      'player_button',
-      'playerButton',
-
-      'mostrar_play',
-      'mostrarPlay',
+      'play_button',
+      'playButton',
       'mostrar_botao_play',
-      'mostrarBotaoPlay'
-    ]),
-    DEFAULT_APPEARANCE.show_play_button
+      'mostrarBotaoPlay',
+      'mostrar_play'
+    ],
+    defaultShowPlayButton
   );
 
-  var allowDrag = toBoolean(
-    readAppearanceValue(appearance, [
+  var allowDragValue = getValue(
+    [
       'allow_drag',
       'allowDrag',
-
-      'draggable',
-
-      'drag_enabled',
-      'dragEnabled',
-
-      'floating_draggable',
-      'floatingDraggable',
-
-      'allow_floating_drag',
-      'allowFloatingDrag',
-
       'floating_allow_drag',
       'floatingAllowDrag',
-
-      'floating_drag_enabled',
-      'floatingDragEnabled',
-
-      'permitir_arrastar',
-      'permitirArrastar',
-      'arrastar',
-      'arrastavel'
-    ]),
-    DEFAULT_APPEARANCE.allow_drag
-  );
-
-  var allowClose = toBoolean(
-    readAppearanceValue(appearance, [
-      'allow_close',
-      'allowClose',
-
-      'closable',
-
-      'close_enabled',
-      'closeEnabled',
-
-      'show_close_button',
-      'showCloseButton',
-
-      'floating_close_button',
-      'floatingCloseButton',
-
-      'allow_floating_close',
-      'allowFloatingClose',
-
-      'floating_allow_close',
-      'floatingAllowClose',
-
-      'floating_close_enabled',
-      'floatingCloseEnabled',
-
-      'permitir_fechar',
-      'permitirFechar',
-      'fechar',
-      'fechavel'
-    ]),
-    DEFAULT_APPEARANCE.allow_close
-  );
-
-  return {
-    objectFit: objectFit,
-    showPlayButton: showPlayButton,
-    allowDrag: allowDrag,
-    allowClose: allowClose
-  };
-}
-
-
-  
-
-  var allowDrag = toBoolean(
-    readAppearanceValue(appearance, [
-      'allow_drag',
-      'allowDrag',
       'draggable',
-      'drag_enabled',
-      'dragEnabled',
-      'floating_draggable',
-      'floatingDraggable',
+      'arrastavel',
+      'arrastável',
       'permitir_arrastar',
       'permitirArrastar'
-    ]),
-    DEFAULT_APPEARANCE.allow_drag
+    ],
+    defaultAllowDrag
   );
 
-  var allowClose = toBoolean(
-    readAppearanceValue(appearance, [
+  var allowCloseValue = getValue(
+    [
       'allow_close',
       'allowClose',
-      'closable',
-      'close_enabled',
-      'closeEnabled',
-      'show_close_button',
-      'showCloseButton',
+      'floating_allow_close',
+      'floatingAllowClose',
+      'close_button',
+      'closeButton',
       'floating_close_button',
       'floatingCloseButton',
       'permitir_fechar',
       'permitirFechar'
-    ]),
-    DEFAULT_APPEARANCE.allow_close
+    ],
+    defaultAllowClose
   );
 
+  var normalizedPosition = normalizeValue(positionValue);
+
+  var positionMap = {
+    'top_left': 'top_left',
+    'top_right': 'top_right',
+    'bottom_left': 'bottom_left',
+    'bottom_right': 'bottom_right',
+
+    'superior_esquerda': 'top_left',
+    'superior_direita': 'top_right',
+    'inferior_esquerda': 'bottom_left',
+    'inferior_direita': 'bottom_right',
+
+    'esquerda_superior': 'top_left',
+    'direita_superior': 'top_right',
+    'esquerda_inferior': 'bottom_left',
+    'direita_inferior': 'bottom_right'
+  };
+
+  var position = positionMap[normalizedPosition] || defaultPosition;
+
+  var normalizedObjectFit = normalizeValue(objectFitValue).replace(/_/g, '-');
+
+  var allowedObjectFit = [
+    'cover',
+    'contain',
+    'fill',
+    'none',
+    'scale-down'
+  ];
+
+  var objectFit = allowedObjectFit.indexOf(normalizedObjectFit) !== -1
+    ? normalizedObjectFit
+    : defaultObjectFit;
+
+  var showPlayButton = parseBoolean(showPlayButtonValue, defaultShowPlayButton);
+  var allowDrag = parseBoolean(allowDragValue, defaultAllowDrag);
+  var allowClose = parseBoolean(allowCloseValue, defaultAllowClose);
+
   return {
+    position: position,
     objectFit: objectFit,
     showPlayButton: showPlayButton,
     allowDrag: allowDrag,
     allowClose: allowClose
   };
 }
+
 
   function getPrimaryColor(appearance) {
     return (
