@@ -83,13 +83,83 @@ window.__vidlytics_widget_initialized = false;
   function applyAppearanceToForceFloating(appearance) {
     if (!appearance) return;
 
-    var pos = appearance.floating_position || 'bottom-right';
-    var width = Number(appearance.floating_width) || 85;
-    var height = Number(appearance.floating_height) || 151;
-    var top = Number(appearance.floating_top) || 20;
-    var bottom = Number(appearance.floating_bottom) || 20;
-    var side = Number(appearance.floating_side) || 20;
-    var shape = appearance.floating_shape || 'portrait';
+    function extractNum(val) {
+      if (!val) return 0;
+      var match = String(val).match(/-?\d+(\.\d+)?/);
+      return match ? Number(match[0]) : 0;
+    }
+
+    /* O painel salva configurações detalhadas dentro de floating_config (JSON) */
+    var floatingConfig = parseJsonIfNeeded(appearance.floating_config) || {};
+    var device = window.innerWidth < 768 ? 'mobile' : 'desktop';
+    var deviceConfig =
+      parseJsonIfNeeded(floatingConfig[device]) ||
+      parseJsonIfNeeded(floatingConfig.desktop) ||
+      {};
+
+    /* Posiçao: aceita "bottom-right" ou "fixed_bottom_right" */
+    var rawPos =
+      deviceConfig.floating_position ||
+      appearance.floating_position ||
+      deviceConfig.position ||
+      appearance.position ||
+      'fixed_bottom_right';
+
+    /* Normaliza para o formato "bottom-right" etc */
+    var pos = String(rawPos).replace(/^fixed_/, '');
+
+    /* Dimensões */
+    var rawWidth =
+      deviceConfig.width || appearance.width || appearance.floating_width || '85';
+    var rawHeight =
+      deviceConfig.height ||
+      appearance.height ||
+      appearance.floating_height ||
+      '';
+    var width = extractNum(rawWidth) || 85;
+    var height = extractNum(rawHeight) || Math.round((width * 16) / 9);
+
+    /* Spacing */
+    var rawBottom =
+      deviceConfig.bottom_spacing ||
+      appearance.bottom_spacing ||
+      appearance.floating_bottom ||
+      '20';
+    var rawTop =
+      deviceConfig.top_spacing ||
+      appearance.top_spacing ||
+      appearance.floating_top ||
+      '20';
+    var rawLeft =
+      deviceConfig.left_spacing ||
+      appearance.left_spacing ||
+      appearance.floating_side ||
+      '20';
+    var rawRight =
+      deviceConfig.right_spacing ||
+      appearance.right_spacing ||
+      appearance.floating_side ||
+      '20';
+    var bottom = extractNum(rawBottom) || 20;
+    var top = extractNum(rawTop) || 20;
+    var left = extractNum(rawLeft) || 20;
+    var right = extractNum(rawRight) || 20;
+
+    /* Shape */
+    var rawShape =
+      deviceConfig.shape ||
+      appearance.floating_shape ||
+      appearance.widget_shape ||
+      'portrait';
+    var shape = String(rawShape);
+    if (shape === 'rounded' || shape === 'custom') shape = 'portrait';
+
+    /* Border radius */
+    var rawRadius =
+      deviceConfig.border_radius ||
+      appearance.border_radius ||
+      '';
+    var radiusNum = extractNum(rawRadius);
 
     FORCE_FLOATING.width = width + 'px';
     FORCE_FLOATING.height = height + 'px';
@@ -100,6 +170,9 @@ window.__vidlytics_widget_initialized = false;
     } else if (shape === 'square') {
       FORCE_FLOATING.radius = '0px';
       FORCE_FLOATING.innerRadius = '0px';
+    } else if (radiusNum > 0) {
+      FORCE_FLOATING.radius = radiusNum + 'px';
+      FORCE_FLOATING.innerRadius = Math.max(0, radiusNum - 2) + 'px';
     } else {
       FORCE_FLOATING.radius = '12px';
       FORCE_FLOATING.innerRadius = '10px';
@@ -113,23 +186,23 @@ window.__vidlytics_widget_initialized = false;
     switch (pos) {
       case 'bottom-right':
         FORCE_FLOATING.bottom = bottom + 'px';
-        FORCE_FLOATING.right = side + 'px';
+        FORCE_FLOATING.right = right + 'px';
         break;
       case 'bottom-left':
         FORCE_FLOATING.bottom = bottom + 'px';
-        FORCE_FLOATING.left = side + 'px';
+        FORCE_FLOATING.left = left + 'px';
         break;
       case 'top-right':
         FORCE_FLOATING.top = top + 'px';
-        FORCE_FLOATING.right = side + 'px';
+        FORCE_FLOATING.right = right + 'px';
         break;
       case 'top-left':
         FORCE_FLOATING.top = top + 'px';
-        FORCE_FLOATING.left = side + 'px';
+        FORCE_FLOATING.left = left + 'px';
         break;
       default:
         FORCE_FLOATING.bottom = bottom + 'px';
-        FORCE_FLOATING.right = side + 'px';
+        FORCE_FLOATING.right = right + 'px';
         break;
     }
   }
@@ -644,38 +717,36 @@ window.__vidlytics_widget_initialized = false;
 
   function readAppearance() {
     if (!storeId || !hasSupabase) {
-      return Promise.resolve(getStorageItem('vidlytics_widget_appearance', {}) || {});
+      return Promise.resolve(getStorageItem('vidlytics_appearances', []) || []);
     }
 
-    return supabaseFetch(
-      'widget_appearances?select=*&store_id=eq.' +
-        encodeURIComponent(storeId) +
-        '&active=eq.true&limit=1',
-      { method: 'GET' }
-    )
-      .then(function (response) {
-        return response.ok ? response.json() : [];
-      })
-      .then(function (items) {
-        if (items && items.length) return items[0];
+    function tryTable(tableName) {
+      return supabaseFetch(
+        tableName +
+          '?select=*&store_id=eq.' +
+          encodeURIComponent(storeId) +
+          '&order=created_at.desc&limit=1',
+        { method: 'GET' }
+      )
+        .then(function (response) {
+          return response.ok ? response.json() : [];
+        })
+        .then(function (items) {
+          return items && items.length ? items[0] : null;
+        })
+        .catch(function () {
+          return null;
+        });
+    }
 
-        return supabaseFetch(
-          'widget_appearances?select=*&store_id=eq.' +
-            encodeURIComponent(storeId) +
-            '&limit=1',
-          { method: 'GET' }
-        )
-          .then(function (response) {
-            return response.ok ? response.json() : [];
-          })
-          .then(function (fallbackItems) {
-            return fallbackItems && fallbackItems.length
-              ? fallbackItems[0]
-              : {};
-          });
+    /* Tenta widget_appearances primeiro, depois appearances (tabela usada pelo painel) */
+    return tryTable('widget_appearances')
+      .then(function (item) {
+        if (item) return item;
+        return tryTable('appearances');
       })
-      .catch(function () {
-        return {};
+      .then(function (item) {
+        return item || {};
       });
   }
 
@@ -892,6 +963,8 @@ window.__vidlytics_widget_initialized = false;
     var secondary = getSecondaryColor(appearance);
     var text = getTextColor(appearance);
     var font = getFontFamily(appearance);
+    var bgColor = readAppearanceValue(appearance, ['background_color', 'backgroundColor']) || '#ffffff';
+    var btnColor = readAppearanceValue(appearance, ['button_color', 'buttonColor']) || primary;
     var modalConfig = normalizeModalAppearanceConfig(appearance);
 
     return ''
@@ -1027,7 +1100,7 @@ window.__vidlytics_widget_initialized = false;
       + 'width:min(92vw,420px)!important;'
       + 'max-height:88vh!important;'
       + 'overflow:hidden!important;'
-      + 'background:#fff!important;'
+      + 'background:' + bgColor + '!important;'
       + 'border-radius:24px!important;'
       + 'box-shadow:' + (modalConfig.shadow_enabled !== false ? '0 24px 80px rgba(15,23,42,.3)' : 'none') + '!important;'
       + 'display:flex!important;'
@@ -1103,7 +1176,7 @@ window.__vidlytics_widget_initialized = false;
       + '}'
 
       + '.vl-btn-primary{'
-      + 'background:' + primary + '!important;'
+      + 'background:' + btnColor + '!important;'
       + 'color:#fff!important;'
       + '}'
 
