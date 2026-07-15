@@ -54,7 +54,6 @@
   floating_side: 20,
   floating_width: 85,
   floating_height: 151,
-  floating_radius: 12,
   floating_border_radius: 12,
   floating_border_width: 2,
   floating_object_fit: 'cover',
@@ -1949,6 +1948,7 @@ var modalConfig = normalizeModalAppearanceConfig(appearance);
   var startTop = 0;
   var hostWidth = 0;
   var hostHeight = 0;
+  var activePointerId = null;
 
   setImportant(handle, 'touch-action', 'none');
 
@@ -1967,6 +1967,8 @@ var modalConfig = normalizeModalAppearanceConfig(appearance);
 
     dragging = true;
     moved = false;
+    activePointerId = event.pointerId;
+
     startX = event.clientX;
     startY = event.clientY;
     startLeft = rect.left;
@@ -1976,7 +1978,7 @@ var modalConfig = normalizeModalAppearanceConfig(appearance);
 
     try {
       handle.setPointerCapture(event.pointerId);
-    } catch (e) {}
+    } catch (error) {}
   });
 
   handle.addEventListener('pointermove', function (event) {
@@ -2006,36 +2008,22 @@ var modalConfig = normalizeModalAppearanceConfig(appearance);
     setImportant(host, 'position', 'fixed');
   });
 
-  function stopDrag(event) {
-    if (!dragging) return;
-
+  function stop() {
     dragging = false;
 
     try {
-      handle.releasePointerCapture(event.pointerId);
-    } catch (e) {}
+      if (activePointerId !== null) {
+        handle.releasePointerCapture(activePointerId);
+      }
+    } catch (error) {}
+
+    activePointerId = null;
   }
 
-  handle.addEventListener('pointerup', stopDrag);
-  handle.addEventListener('pointercancel', stopDrag);
-
-  handle.addEventListener(
-    'click',
-    function (event) {
-      if (!moved) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      if (event.stopImmediatePropagation) {
-        event.stopImmediatePropagation();
-      }
-
-      moved = false;
-    },
-    true
-  );
+  handle.addEventListener('pointerup', stop);
+  handle.addEventListener('pointercancel', stop);
 }
+
 
   function renderFloatingBubbles(stories, storyVideoMap, activeVideos) {
   var appearance = currentAppearance || {};
@@ -2162,8 +2150,10 @@ shadow.appendChild(overlay);
 if (behaviorConfig.allowDrag) {
   setupFloatingDrag(shadowData.host, bubbles);
 }
+}
 
-  function renderCarousel(stories, storyVideoMap, activeVideos) {
+function renderCarousel(stories, storyVideoMap, activeVideos) {
+
     var existing = document.getElementById('vidlytics-carousel-root');
     if (existing) existing.remove();
 
