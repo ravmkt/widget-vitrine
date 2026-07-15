@@ -1032,18 +1032,53 @@ if (directAllowClose !== undefined) {
     return DEFAULT_APPEARANCE.floating_shape;
   }
 
-  function toNumber(value, fallback = 0) {
-  if (value === null || value === undefined || value === '') {
+function px(value, fallback) {
+  if (value === undefined || value === null || value === '') {
+    value = fallback !== undefined ? fallback : 0;
+  }
+
+  if (typeof value === 'string') {
+    var trimmed = value.trim();
+
+    if (
+      trimmed === 'auto' ||
+      trimmed.indexOf('px') !== -1 ||
+      trimmed.indexOf('%') !== -1 ||
+      trimmed.indexOf('vh') !== -1 ||
+      trimmed.indexOf('vw') !== -1 ||
+      trimmed.indexOf('rem') !== -1 ||
+      trimmed.indexOf('em') !== -1
+    ) {
+      return trimmed;
+    }
+  }
+
+  var num = toNumber(value, fallback !== undefined ? fallback : 0);
+
+  return num + 'px';
+}
+    
+  function toNumber(value, fallback) {
+  if (value === undefined || value === null || value === '') {
     return fallback;
   }
 
-  const num = Number(value);
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : fallback;
+  }
 
-  return Number.isFinite(num) ? num : fallback;
+  var normalized = String(value)
+    .trim()
+    .replace('px', '')
+    .replace(',', '.');
+
+  var parsed = Number(normalized);
+
+  return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function toBool(value, fallback = false) {
-  if (value === null || value === undefined || value === '') {
+  function toBool(value, fallback) {
+  if (value === undefined || value === null || value === '') {
     return fallback;
   }
 
@@ -1055,19 +1090,79 @@ function toBool(value, fallback = false) {
     return value === 1;
   }
 
-  if (typeof value === 'string') {
-    const normalized = value.trim().toLowerCase();
+  var normalized = String(value).trim().toLowerCase();
 
-    if (['true', '1', 'yes', 'sim', 'on'].includes(normalized)) {
-      return true;
-    }
+  if (
+    normalized === 'true' ||
+    normalized === '1' ||
+    normalized === 'yes' ||
+    normalized === 'sim' ||
+    normalized === 'on'
+  ) {
+    return true;
+  }
 
-    if (['false', '0', 'no', 'nao', 'não', 'off'].includes(normalized)) {
-      return false;
-    }
+  if (
+    normalized === 'false' ||
+    normalized === '0' ||
+    normalized === 'no' ||
+    normalized === 'nao' ||
+    normalized === 'não' ||
+    normalized === 'off'
+  ) {
+    return false;
   }
 
   return fallback;
+}
+
+  function toNumber(value, fallback) {
+  if (value === undefined || value === null || value === '') {
+    return fallback;
+  }
+
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : fallback;
+  }
+
+  var normalized = String(value)
+    .trim()
+    .replace('px', '')
+    .replace(',', '.');
+
+  var parsed = Number(normalized);
+
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function toBool(value, fallback) {
+  return toBoolean(value, fallback);
+}
+
+function px(value, fallback) {
+  if (value === undefined || value === null || value === '') {
+    value = fallback !== undefined ? fallback : 0;
+  }
+
+  if (typeof value === 'string') {
+    var trimmed = value.trim();
+
+    if (
+      trimmed === 'auto' ||
+      trimmed.indexOf('px') !== -1 ||
+      trimmed.indexOf('%') !== -1 ||
+      trimmed.indexOf('vh') !== -1 ||
+      trimmed.indexOf('vw') !== -1 ||
+      trimmed.indexOf('rem') !== -1 ||
+      trimmed.indexOf('em') !== -1
+    ) {
+      return trimmed;
+    }
+  }
+
+  var num = toNumber(value, fallback !== undefined ? fallback : 0);
+
+  return num + 'px';
 }
 
   function getFloatingConfig(appearance) {
@@ -2298,9 +2393,21 @@ bubble.appendChild(ring);
         bubble.appendChild(label);
       }
 
-      bubble.addEventListener('click', function () {
-        openStory(story, storyVideoMap, activeVideos, readStoryProductsData, readProductsData);
-      });
+      bubble.addEventListener('click', function (event) {
+  if (floatingWasDragged) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    setTimeout(function () {
+      floatingWasDragged = false;
+    }, 100);
+
+    return;
+  }
+
+  openStory(story, storyVideoMap, activeVideos, readStoryProductsData, readProductsData);
+});
+
 
       bubbles.appendChild(bubble);
 
