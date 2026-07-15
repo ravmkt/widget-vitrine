@@ -1507,6 +1507,24 @@ function px(value, fallback) {
   };
 }
 
+  function getPrimaryColor(appearance) {
+  return readAppearanceValue(appearance, [
+    'primary_color',
+    'primaryColor',
+    'cor_primaria',
+    'corPrimaria'
+  ]) || DEFAULT_APPEARANCE.primary_color;
+}
+
+function getSecondaryColor(appearance) {
+  return readAppearanceValue(appearance, [
+    'secondary_color',
+    'secondaryColor',
+    'cor_secundaria',
+    'corSecundaria'
+  ]) || DEFAULT_APPEARANCE.secondary_color;
+}
+
   
   function getBorderColor(appearance) {
   return readAppearanceValue(appearance, [
@@ -2487,6 +2505,8 @@ var font = getFontFamily(appearance);
     host.id = 'vidlytics-carousel-root';
 
     var shadow = host.attachShadow({ mode: 'open' });
+  console.log('[VIDLYTICS] shadow criado:', shadow);
+
 
     var style = createEl('style');
     style.textContent =
