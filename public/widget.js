@@ -817,15 +817,18 @@ var directShowPlayButton = firstDefined(
   item.mostrarBotaoPlay
 );
 
-if (directShowPlayButton !== undefined) {
-  merged.show_play_button = directShowPlayButton;
-  merged.showPlayButton = directShowPlayButton;
-  merged.show_player_button = directShowPlayButton;
-  merged.play_button_enabled = directShowPlayButton;
-  merged.floating_play_button = directShowPlayButton;
-  merged.floating_show_play_button = directShowPlayButton;
-  merged.show_floating_play_button = directShowPlayButton;
+if (directShowPlayButton !== undefined && directShowPlayButton !== null) {
+  var playBool = toBoolean(directShowPlayButton, false);
+  console.log('VIDLYTICS DB show_play_button RAW:', directShowPlayButton, '→ BOOL:', playBool);
+  merged.show_play_button = playBool;
+  merged.showPlayButton = playBool;
+  merged.show_player_button = playBool;
+  merged.play_button_enabled = playBool;
+  merged.floating_play_button = playBool;
+  merged.floating_show_play_button = playBool;
+  merged.show_floating_play_button = playBool;
 }
+
 
 
 var directAllowDrag = firstDefined(
@@ -855,17 +858,18 @@ var directAllowDrag = firstDefined(
   item.arrastavel
 );
 
-if (directAllowDrag !== undefined) {
-  merged.allow_drag = directAllowDrag;
-  merged.allowDrag = directAllowDrag;
-  merged.draggable = directAllowDrag;
-  merged.drag_enabled = directAllowDrag;
-  merged.floating_draggable = directAllowDrag;
-  merged.allow_floating_drag = directAllowDrag;
-  merged.floating_allow_drag = directAllowDrag;
-  merged.floating_drag_enabled = directAllowDrag;
+if (directAllowDrag !== undefined && directAllowDrag !== null) {
+  var dragBool = toBoolean(directAllowDrag, false);
+  console.log('VIDLYTICS DB allow_drag RAW:', directAllowDrag, '→ BOOL:', dragBool);
+  merged.allow_drag = dragBool;
+  merged.allowDrag = dragBool;
+  merged.draggable = dragBool;
+  merged.drag_enabled = dragBool;
+  merged.floating_draggable = dragBool;
+  merged.allow_floating_drag = dragBool;
+  merged.floating_allow_drag = dragBool;
+  merged.floating_drag_enabled = dragBool;
 }
-
 
 var directAllowClose = firstDefined(
   item.allow_close,
@@ -897,17 +901,20 @@ var directAllowClose = firstDefined(
   item.fechavel
 );
 
-if (directAllowClose !== undefined) {
-  merged.allow_close = directAllowClose;
-  merged.allowClose = directAllowClose;
-  merged.closable = directAllowClose;
-  merged.close_enabled = directAllowClose;
-  merged.show_close_button = directAllowClose;
-  merged.floating_close_button = directAllowClose;
-  merged.allow_floating_close = directAllowClose;
-  merged.floating_allow_close = directAllowClose;
-  merged.floating_close_enabled = directAllowClose;
+if (directAllowClose !== undefined && directAllowClose !== null) {
+  var closeBool = toBoolean(directAllowClose, false);
+  console.log('VIDLYTICS DB allow_close RAW:', directAllowClose, '→ BOOL:', closeBool);
+  merged.allow_close = closeBool;
+  merged.allowClose = closeBool;
+  merged.closable = closeBool;
+  merged.close_enabled = closeBool;
+  merged.show_close_button = closeBool;
+  merged.floating_close_button = closeBool;
+  merged.allow_floating_close = closeBool;
+  merged.floating_allow_close = closeBool;
+  merged.floating_close_enabled = closeBool;
 }
+
 
 
     flattenAppearanceInto(merged, item, 0);
@@ -965,6 +972,13 @@ if (directAllowClose !== undefined) {
 
       console.log('VIDLYTICS DB APARÊNCIA RAW:', item);
       console.log('VIDLYTICS DB APARÊNCIA NORMALIZADA:', appearance);
+
+// NOVO: log específico para debug
+console.log('VIDLYTICS DB show_play_button VALUE:', 
+  firstDefined(item.show_play_button, item.showPlayButton, item.play_button_enabled, item.playButtonEnabled));
+console.log('VIDLYTICS DB allow_close VALUE:', 
+  firstDefined(item.allow_close, item.allowClose, item.closable, item.close_enabled, item.show_close_button));
+
 
       return appearanceHasUsefulData(appearance) ? appearance : null;
     });
