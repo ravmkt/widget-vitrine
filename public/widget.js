@@ -5,9 +5,9 @@
  * Versão: 202607141900
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - APARÊNCIA VIA widget_appearances - 202607151430');
+  console.log('VIDLYTICS WIDGET CARREGADO - APARÊNCIA VIA widget_appearances - 202607151435');
 
-var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-appearances-only-202607151430';
+var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-appearances-only-202607151435';
 
   if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) return;
 
