@@ -576,7 +576,7 @@ var floatingWasClosed = false;
 'closeEnabled',
 'show_close_button',
 'showCloseButton',
-'permitir_fechar'
+'permitir_fechar',
 
 'floating_show_play_button',
 'floatingShowPlayButton',
@@ -789,7 +789,7 @@ if (directObjectFit !== undefined) {
   merged.objectFit = directObjectFit;
 }
 
-vvar directShowPlayButton = firstDefined(
+var directShowPlayButton = firstDefined(
   item.show_play_button,
   item.showPlayButton,
 
@@ -1152,6 +1152,34 @@ function px(value, fallback) {
   return num + 'px';
 }
 
+  function getFloatingConfig(appearance) {
+  appearance = normalizeAppearanceItem(appearance || {});
+
+  var rawPosition = readAppearanceValue(appearance, [
+    'floating_position',
+    'floatingPosition',
+    'position',
+    'posicao',
+    'posição',
+    'widget_position',
+    'widgetPosition',
+    'placement',
+    'floating_video_position',
+    'floatingVideoPosition'
+  ]);
+
+  var rawShape = readAppearanceValue(appearance, [
+    'floating_shape',
+    'floatingShape',
+    'shape',
+    'form',
+    'forma',
+    'formato',
+    'widget_shape',
+    'widgetShape',
+    'floating_video_shape',
+    'floatingVideoShape'
+  ]);
 
   var position = normalizeFloatingPosition(rawPosition);
   var shape = normalizeFloatingShape(rawShape);
@@ -1199,47 +1227,44 @@ function px(value, fallback) {
     height = width;
   }
 
-  var radius = toNumber(
-  readAppearanceValue(appearance, [
-    'floating_radius',
-    'floatingRadius',
-    'floating_border_radius',
-    'floatingBorderRadius',
-    'border_radius',
-    'borderRadius',
-    'widget_border_radius',
-    'widgetBorderRadius',
-    'radius',
-    'raio',
-    'widget_radius',
-    'widgetRadius',
-    'corner_radius',
-    'cornerRadius',
-    'border_radius_px',
-    'borderRadiusPx'
-  ]),
-  shape === 'circle' ? 999 : DEFAULT_APPEARANCE.floating_border_radius
-);
-
-
-  if (shape === 'circle') {
-    radius = 999;
-  }
-
   var borderWidth = toNumber(
     readAppearanceValue(appearance, [
       'floating_border_width',
       'floatingBorderWidth',
       'border_width',
       'borderWidth',
-      'border_style',
-      'borderStyle',
       'largura_borda',
       'larguraDaBorda',
       'larguraBorda'
     ]),
     DEFAULT_APPEARANCE.floating_border_width
   );
+
+  var radius = toNumber(
+    readAppearanceValue(appearance, [
+      'floating_radius',
+      'floatingRadius',
+      'floating_border_radius',
+      'floatingBorderRadius',
+      'border_radius',
+      'borderRadius',
+      'widget_border_radius',
+      'widgetBorderRadius',
+      'radius',
+      'raio',
+      'widget_radius',
+      'widgetRadius',
+      'corner_radius',
+      'cornerRadius',
+      'border_radius_px',
+      'borderRadiusPx'
+    ]),
+    shape === 'circle' ? 999 : DEFAULT_APPEARANCE.floating_border_radius
+  );
+
+  if (shape === 'circle') {
+    radius = 999;
+  }
 
   var top = toNumber(
     readAppearanceValue(appearance, [
@@ -1334,19 +1359,24 @@ function px(value, fallback) {
   return {
     position: position,
     shape: shape,
+
     top: isTop ? px(top) : 'auto',
     bottom: isTop ? 'auto' : px(bottom),
     left: isRight ? 'auto' : px(side),
     right: isRight ? px(side) : 'auto',
+
     width: px(width),
     height: px(height),
+
     radius: shape === 'circle' ? '999px' : px(radius),
     innerRadius: shape === 'circle' ? '999px' : px(Math.max(radius - borderWidth, 0)),
+
     borderWidth: px(borderWidth),
     zIndex: String(Math.round(zIndex)),
     alignItems: isRight ? 'flex-end' : 'flex-start'
   };
 }
+
 
 function normalizeObjectFit(value) {
   var key = normalizeKey(value);
@@ -1482,21 +1512,7 @@ function getFloatingBehaviorConfig(appearance) {
 }
 
 
-  var showPlayButton = toBoolean(
-    readAppearanceValue(appearance, [
-      'show_play_button',
-      'showPlayButton',
-      'show_player_button',
-      'showPlayerButton',
-      'play_button_enabled',
-      'playButtonEnabled',
-      'floating_play_button',
-      'floatingPlayButton',
-      'mostrar_play',
-      'mostrarPlay'
-    ]),
-    DEFAULT_APPEARANCE.show_play_button
-  );
+  
 
   var allowDrag = toBoolean(
     readAppearanceValue(appearance, [
@@ -2390,7 +2406,7 @@ function getFloatingClosedStorageKey() {
     floatingWasClosed = true;
 setStorageItem(getFloatingClosedStorageKey(), true);
 setImportant(shadowData.host, 'display', 'none');
-
+});
 
   bubbles.appendChild(dismissButton);
 }
