@@ -578,6 +578,25 @@ var floatingWasClosed = false;
 'showCloseButton',
 'permitir_fechar'
 
+'floating_show_play_button',
+'floatingShowPlayButton',
+'show_floating_play_button',
+'showFloatingPlayButton',
+
+'allow_floating_drag',
+'allowFloatingDrag',
+'floating_allow_drag',
+'floatingAllowDrag',
+'floating_drag_enabled',
+'floatingDragEnabled',
+
+'allow_floating_close',
+'allowFloatingClose',
+'floating_allow_close',
+'floatingAllowClose',
+'floating_close_enabled',
+'floatingCloseEnabled'
+    
   ];
 
   for (var i = 0; i < usefulNames.length; i += 1) {
@@ -770,21 +789,32 @@ if (directObjectFit !== undefined) {
   merged.objectFit = directObjectFit;
 }
 
-var directShowPlayButton = firstDefined(
+vvar directShowPlayButton = firstDefined(
   item.show_play_button,
   item.showPlayButton,
+
   item.show_player_button,
   item.showPlayerButton,
+
   item.play_button_enabled,
   item.playButtonEnabled,
+
   item.floating_play_button,
   item.floatingPlayButton,
+
+  item.floating_show_play_button,
+  item.floatingShowPlayButton,
+
   item.show_floating_play_button,
   item.showFloatingPlayButton,
+
   item.player_button,
   item.playerButton,
+
   item.mostrar_play,
-  item.mostrarPlay
+  item.mostrarPlay,
+  item.mostrar_botao_play,
+  item.mostrarBotaoPlay
 );
 
 if (directShowPlayButton !== undefined) {
@@ -792,20 +822,37 @@ if (directShowPlayButton !== undefined) {
   merged.showPlayButton = directShowPlayButton;
   merged.show_player_button = directShowPlayButton;
   merged.play_button_enabled = directShowPlayButton;
+  merged.floating_play_button = directShowPlayButton;
+  merged.floating_show_play_button = directShowPlayButton;
+  merged.show_floating_play_button = directShowPlayButton;
 }
+
 
 var directAllowDrag = firstDefined(
   item.allow_drag,
   item.allowDrag,
+
   item.draggable,
+
   item.drag_enabled,
   item.dragEnabled,
+
   item.floating_draggable,
   item.floatingDraggable,
+
   item.allow_floating_drag,
   item.allowFloatingDrag,
+
+  item.floating_allow_drag,
+  item.floatingAllowDrag,
+
+  item.floating_drag_enabled,
+  item.floatingDragEnabled,
+
   item.permitir_arrastar,
-  item.permitirArrastar
+  item.permitirArrastar,
+  item.arrastar,
+  item.arrastavel
 );
 
 if (directAllowDrag !== undefined) {
@@ -813,22 +860,41 @@ if (directAllowDrag !== undefined) {
   merged.allowDrag = directAllowDrag;
   merged.draggable = directAllowDrag;
   merged.drag_enabled = directAllowDrag;
+  merged.floating_draggable = directAllowDrag;
+  merged.allow_floating_drag = directAllowDrag;
+  merged.floating_allow_drag = directAllowDrag;
+  merged.floating_drag_enabled = directAllowDrag;
 }
+
 
 var directAllowClose = firstDefined(
   item.allow_close,
   item.allowClose,
+
   item.closable,
+
   item.close_enabled,
   item.closeEnabled,
+
   item.show_close_button,
   item.showCloseButton,
+
   item.floating_close_button,
   item.floatingCloseButton,
+
   item.allow_floating_close,
   item.allowFloatingClose,
+
+  item.floating_allow_close,
+  item.floatingAllowClose,
+
+  item.floating_close_enabled,
+  item.floatingCloseEnabled,
+
   item.permitir_fechar,
-  item.permitirFechar
+  item.permitirFechar,
+  item.fechar,
+  item.fechavel
 );
 
 if (directAllowClose !== undefined) {
@@ -837,7 +903,12 @@ if (directAllowClose !== undefined) {
   merged.closable = directAllowClose;
   merged.close_enabled = directAllowClose;
   merged.show_close_button = directAllowClose;
+  merged.floating_close_button = directAllowClose;
+  merged.allow_floating_close = directAllowClose;
+  merged.floating_allow_close = directAllowClose;
+  merged.floating_close_enabled = directAllowClose;
 }
+
 
     flattenAppearanceInto(merged, item, 0);
   }
@@ -1032,90 +1103,6 @@ if (directAllowClose !== undefined) {
     return DEFAULT_APPEARANCE.floating_shape;
   }
 
-function px(value, fallback) {
-  if (value === undefined || value === null || value === '') {
-    value = fallback !== undefined ? fallback : 0;
-  }
-
-  if (typeof value === 'string') {
-    var trimmed = value.trim();
-
-    if (
-      trimmed === 'auto' ||
-      trimmed.indexOf('px') !== -1 ||
-      trimmed.indexOf('%') !== -1 ||
-      trimmed.indexOf('vh') !== -1 ||
-      trimmed.indexOf('vw') !== -1 ||
-      trimmed.indexOf('rem') !== -1 ||
-      trimmed.indexOf('em') !== -1
-    ) {
-      return trimmed;
-    }
-  }
-
-  var num = toNumber(value, fallback !== undefined ? fallback : 0);
-
-  return num + 'px';
-}
-    
-  function toNumber(value, fallback) {
-  if (value === undefined || value === null || value === '') {
-    return fallback;
-  }
-
-  if (typeof value === 'number') {
-    return Number.isFinite(value) ? value : fallback;
-  }
-
-  var normalized = String(value)
-    .trim()
-    .replace('px', '')
-    .replace(',', '.');
-
-  var parsed = Number(normalized);
-
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
-
-  function toBool(value, fallback) {
-  if (value === undefined || value === null || value === '') {
-    return fallback;
-  }
-
-  if (typeof value === 'boolean') {
-    return value;
-  }
-
-  if (typeof value === 'number') {
-    return value === 1;
-  }
-
-  var normalized = String(value).trim().toLowerCase();
-
-  if (
-    normalized === 'true' ||
-    normalized === '1' ||
-    normalized === 'yes' ||
-    normalized === 'sim' ||
-    normalized === 'on'
-  ) {
-    return true;
-  }
-
-  if (
-    normalized === 'false' ||
-    normalized === '0' ||
-    normalized === 'no' ||
-    normalized === 'nao' ||
-    normalized === 'não' ||
-    normalized === 'off'
-  ) {
-    return false;
-  }
-
-  return fallback;
-}
-
   function toNumber(value, fallback) {
   if (value === undefined || value === null || value === '') {
     return fallback;
@@ -1165,34 +1152,6 @@ function px(value, fallback) {
   return num + 'px';
 }
 
-  function getFloatingConfig(appearance) {
-  appearance = normalizeAppearanceItem(appearance || {});
-
-  var rawPosition = readAppearanceValue(appearance, [
-    'floating_position',
-    'floatingPosition',
-    'position',
-    'posicao',
-    'posição',
-    'widget_position',
-    'widgetPosition',
-    'placement',
-    'floating_video_position',
-    'floatingVideoPosition'
-  ]);
-
-  var rawShape = readAppearanceValue(appearance, [
-    'floating_shape',
-    'floatingShape',
-    'shape',
-    'form',
-    'forma',
-    'formato',
-    'widget_shape',
-    'widgetShape',
-    'floating_video_shape',
-    'floatingVideoShape'
-  ]);
 
   var position = normalizeFloatingPosition(rawPosition);
   var shape = normalizeFloatingShape(rawShape);
@@ -1419,6 +1378,109 @@ function getFloatingBehaviorConfig(appearance) {
       'fit'
     ])
   );
+
+  var showPlayButton = toBoolean(
+    readAppearanceValue(appearance, [
+      'show_play_button',
+      'showPlayButton',
+
+      'show_player_button',
+      'showPlayerButton',
+
+      'play_button_enabled',
+      'playButtonEnabled',
+
+      'floating_play_button',
+      'floatingPlayButton',
+
+      'floating_show_play_button',
+      'floatingShowPlayButton',
+
+      'show_floating_play_button',
+      'showFloatingPlayButton',
+
+      'player_button',
+      'playerButton',
+
+      'mostrar_play',
+      'mostrarPlay',
+      'mostrar_botao_play',
+      'mostrarBotaoPlay'
+    ]),
+    DEFAULT_APPEARANCE.show_play_button
+  );
+
+  var allowDrag = toBoolean(
+    readAppearanceValue(appearance, [
+      'allow_drag',
+      'allowDrag',
+
+      'draggable',
+
+      'drag_enabled',
+      'dragEnabled',
+
+      'floating_draggable',
+      'floatingDraggable',
+
+      'allow_floating_drag',
+      'allowFloatingDrag',
+
+      'floating_allow_drag',
+      'floatingAllowDrag',
+
+      'floating_drag_enabled',
+      'floatingDragEnabled',
+
+      'permitir_arrastar',
+      'permitirArrastar',
+      'arrastar',
+      'arrastavel'
+    ]),
+    DEFAULT_APPEARANCE.allow_drag
+  );
+
+  var allowClose = toBoolean(
+    readAppearanceValue(appearance, [
+      'allow_close',
+      'allowClose',
+
+      'closable',
+
+      'close_enabled',
+      'closeEnabled',
+
+      'show_close_button',
+      'showCloseButton',
+
+      'floating_close_button',
+      'floatingCloseButton',
+
+      'allow_floating_close',
+      'allowFloatingClose',
+
+      'floating_allow_close',
+      'floatingAllowClose',
+
+      'floating_close_enabled',
+      'floatingCloseEnabled',
+
+      'permitir_fechar',
+      'permitirFechar',
+      'fechar',
+      'fechavel'
+    ]),
+    DEFAULT_APPEARANCE.allow_close
+  );
+
+  return {
+    objectFit: objectFit,
+    showPlayButton: showPlayButton,
+    allowDrag: allowDrag,
+    allowClose: allowClose
+  };
+}
+
 
   var showPlayButton = toBoolean(
     readAppearanceValue(appearance, [
@@ -2287,11 +2349,25 @@ var modalConfig = normalizeModalAppearanceConfig(appearance);
   handle.addEventListener('pointercancel', stop);
 }
 
+function getFloatingClosedStorageKey() {
+  return 'vidlytics_floating_closed_' + String(storeId || 'default');
+}
+
   function renderFloatingBubbles(stories, storyVideoMap, activeVideos) {
   var appearance = currentAppearance || {};
   var modalConfig = normalizeModalAppearanceConfig(appearance);
   var behaviorConfig = getFloatingBehaviorConfig(appearance);
+
+    if (
+  behaviorConfig.allowClose &&
+  toBoolean(getStorageItem(getFloatingClosedStorageKey(), false), false)
+) {
+  floatingWasClosed = true;
+  return;
+}
+
     console.log('VIDLYTICS FLOATING BEHAVIOR FINAL:', behaviorConfig);
+    var floatingCfg = getFloatingConfig(appearance);
   var shadowData = getOrCreateShadowRoot(appearance);
   var shadow = shadowData.shadow;
 
@@ -2312,8 +2388,9 @@ var modalConfig = normalizeModalAppearanceConfig(appearance);
     event.stopPropagation();
 
     floatingWasClosed = true;
+setStorageItem(getFloatingClosedStorageKey(), true);
 setImportant(shadowData.host, 'display', 'none');
-  });
+
 
   bubbles.appendChild(dismissButton);
 }
@@ -2360,11 +2437,21 @@ setImportant(shadowData.host, 'display', 'none');
       var ring = createEl('div', 'vl-ring');
       var inner = createEl('div', 'vl-inner');
 
+      setImportant(ring, 'border-radius', floatingCfg.radius);
+setImportant(ring, 'overflow', 'hidden');
+
+setImportant(inner, 'border-radius', floatingCfg.innerRadius);
+setImportant(inner, 'overflow', 'hidden');
+
       if (thumb) {
         var img = createEl('img', 'vl-img');
         img.src = thumb;
         img.alt = story.title || story.name || 'Story';
         img.loading = 'lazy';
+
+        setImportant(img, 'border-radius', floatingCfg.innerRadius);
+setImportant(img, 'object-fit', behaviorConfig.objectFit);
+setImportant(img, 'overflow', 'hidden');
 
         img.onerror = function () {
           inner.innerHTML = '';
