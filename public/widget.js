@@ -604,11 +604,11 @@
 
   function tryTable(tableName, extraQuery) {
     var path =
-      tableName +
-      '?select=*&store_id=eq.' +
-      store +
-      (extraQuery || '') +
-      '&limit=1';
+  'widget_appearances' +
+  '?select=*&store_id=eq.' + store +
+  (extraQuery || '') +
+  '&order=updated_at.desc,created_at.desc' +
+  '&limit=1';
 
     return fetchJson(path).then(function (items) {
       if (!items || !items.length) return null;
