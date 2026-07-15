@@ -2429,11 +2429,7 @@ var font = getFontFamily(appearance);
   }
 
   function init() {
-    if (!storeId) {
-      console.warn('Vidlytics Widget: storeId não informado.');
-      return;
-    }
-
+  try {
     initMutationObserver();
     renderWidget();
 
@@ -2441,11 +2437,15 @@ var font = getFontFamily(appearance);
     setTimeout(forceHostPosition, 1000);
     setTimeout(forceHostPosition, 3000);
     setTimeout(forceHostPosition, 5000);
+  } catch (error) {
+    console.error('Vidlytics Widget: erro ao inicializar widget', error);
   }
+}
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init, { once: true });
-  } else {
-    init();
-  }
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
 })();
