@@ -743,6 +743,8 @@
       console.log('VIDLYTICS DB APARÊNCIA:', dbAppearance || {});
       console.log('VIDLYTICS APARÊNCIA FINAL APLICADA:', finalAppearance);
       console.log('VIDLYTICS FLOATING CONFIG FINAL:', getFloatingConfig(finalAppearance));
+      console.log('VIDLYTICS BORDER COLOR FINAL:', getBorderColor(finalAppearance));
+
 
       return finalAppearance;
     }
@@ -915,18 +917,36 @@
   }
 
   var radius = toNumber(
-    readAppearanceValue(appearance, [
-      'floating_radius',
-      'floatingRadius',
-      'border_radius',
-      'borderRadius',
-      'radius',
-      'raio',
-      'widget_radius',
-      'widgetRadius'
-    ]),
-    shape === 'circle' ? 999 : DEFAULT_APPEARANCE.floating_radius
-  );
+  readAppearanceValue(appearance, [
+    'floating_radius',
+    'floatingRadius',
+
+    'floating_border_radius',
+    'floatingBorderRadius',
+    'floating_video_radius',
+    'floatingVideoRadius',
+    'floating_video_border_radius',
+    'floatingVideoBorderRadius',
+
+    'border_radius',
+    'borderRadius',
+    'border-radius',
+
+    'widget_radius',
+    'widgetRadius',
+    'widget_border_radius',
+    'widgetBorderRadius',
+
+    'radius',
+    'raio',
+    'raio_borda',
+    'raioBorda',
+    'raio_da_borda',
+    'raioDaBorda'
+  ]),
+  shape === 'circle' ? 999 : DEFAULT_APPEARANCE.floating_radius
+);
+
 
   if (shape === 'circle') {
     radius = 999;
@@ -1080,6 +1100,26 @@
       ]) || DEFAULT_APPEARANCE.secondary_color
     );
   }
+
+  function getBorderColor(appearance) {
+  return readAppearanceValue(appearance, [
+    'floating_border_color',
+    'floatingBorderColor',
+    'floating_video_border_color',
+    'floatingVideoBorderColor',
+
+    'border_color',
+    'borderColor',
+    'border-color',
+
+    'widget_border_color',
+    'widgetBorderColor',
+
+    'cor_borda',
+    'corDaBorda',
+    'cor_da_borda'
+  ]);
+}
 
 function getBackgroundColor(appearance) {
   return (
@@ -1499,17 +1539,22 @@ function buildSharedCss(appearance) {
 function buildFloatingCss(appearance) {
     var cfg = getFloatingConfig(appearance);
     var primary = getPrimaryColor(appearance);
-    var secondary = getSecondaryColor(appearance);
-    var text = getTextColor(appearance);
-    var font = getFontFamily(appearance);
-    var modalConfig = normalizeModalAppearanceConfig(appearance);
+var secondary = getSecondaryColor(appearance);
+var borderColor = getBorderColor(appearance);
+var borderBackground = borderColor
+  ? borderColor
+  : 'linear-gradient(135deg,' + primary + ',' + secondary + ')';
+
+var text = getTextColor(appearance);
+var font = getFontFamily(appearance);
+var modalConfig = normalizeModalAppearanceConfig(appearance);
 
   return ''
       + ':host{all:initial!important;position:fixed!important;top:' + cfg.top + '!important;right:' + cfg.right + '!important;bottom:' + cfg.bottom + '!important;left:' + cfg.left + '!important;z-index:' + cfg.zIndex + '!important;width:' + cfg.width + '!important;min-width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;height:auto!important;overflow:visible!important;background:transparent!important;pointer-events:auto!important;font-family:' + font + '!important;}'
       + buildSharedCss(appearance)
       + '.vl-bubbles{width:' + cfg.width + '!important;display:flex!important;flex-direction:column!important;align-items:' + cfg.alignItems + '!important;justify-content:flex-start!important;gap:10px!important;overflow:visible!important;}'
       + '.vl-bubble{all:unset!important;width:' + cfg.width + '!important;min-width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;height:auto!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;gap:4px!important;cursor:pointer!important;overflow:visible!important;pointer-events:auto!important;}'
-      + '.vl-ring{width:' + cfg.width + '!important;height:' + cfg.height + '!important;min-width:' + cfg.width + '!important;min-height:' + cfg.height + '!important;max-width:' + cfg.width + '!important;max-height:' + cfg.height + '!important;border-radius:' + cfg.radius + '!important;padding:' + cfg.borderWidth + '!important;overflow:hidden!important;display:block!important;background:linear-gradient(135deg,' + primary + ',' + secondary + ')!important;box-shadow:' + (modalConfig.shadow_enabled !== false ? '0 12px 30px rgba(15,23,42,.18)' : 'none') + '!important;}'
+      + '.vl-ring{width:' + cfg.width + '!important;height:' + cfg.height + '!important;min-width:' + cfg.width + '!important;min-height:' + cfg.height + '!important;max-width:' + cfg.width + '!important;max-height:' + cfg.height + '!important;border-radius:' + cfg.radius + '!important;padding:' + cfg.borderWidth + '!important;overflow:hidden!important;display:block!important;background:' + borderBackground + '!important;box-shadow:' + (modalConfig.shadow_enabled !== false ? '0 12px 30px rgba(15,23,42,.18)' : 'none') + '!important;}'
       + '.vl-inner{width:100%!important;height:100%!important;border-radius:' + cfg.innerRadius + '!important;overflow:hidden!important;background:#e2e8f0!important;display:flex!important;align-items:center!important;justify-content:center!important;font-weight:800!important;font-size:24px!important;color:' + text + '!important;}'
       + '.vl-img{width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important;display:block!important;border-radius:' + cfg.innerRadius + '!important;}'
       + '.vl-label{width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;font-family:' + font + '!important;font-size:11px!important;line-height:12px!important;font-weight:700!important;color:' + text + '!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;display:block!important;}';
