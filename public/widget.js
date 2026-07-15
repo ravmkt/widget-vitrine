@@ -566,7 +566,88 @@
     flattenAppearanceInto(merged, src, 0);
   });
 
+  /**
+   * CAMPOS DIRETOS DA TABELA appearances
+   *
+   * No seu banco:
+   * widget_shape
+   * widget_size
+   * shadow_enabled
+   * font_family
+   */
   if (allowDirectFields) {
+    if (firstDefined(item.widget_shape, item.shape)) {
+      merged.shape = firstDefined(item.widget_shape, item.shape);
+      merged.widget_shape = firstDefined(item.widget_shape, item.shape);
+    }
+
+    if (firstDefined(item.widget_size, item.size)) {
+      merged.size = firstDefined(item.widget_size, item.size);
+      merged.widget_size = firstDefined(item.widget_size, item.size);
+    }
+
+    if (firstDefined(item.shadow_enabled, item.shadowEnabled) !== undefined) {
+      merged.shadow = firstDefined(item.shadow_enabled, item.shadowEnabled);
+      merged.shadow_enabled = firstDefined(item.shadow_enabled, item.shadowEnabled);
+      merged.shadowEnabled = firstDefined(item.shadow_enabled, item.shadowEnabled);
+    }
+
+    if (firstDefined(item.font_family, item.fontFamily)) {
+      merged.fontFamily = firstDefined(item.font_family, item.fontFamily);
+      merged.font_family = firstDefined(item.font_family, item.fontFamily);
+    }
+
+    /**
+     * CAMPOS DIRETOS DA TABELA widget_appearances
+     *
+     * No seu banco:
+     * floating_shape
+     * floating_width
+     * floating_height
+     * floating_radius
+     */
+    if (firstDefined(item.floating_shape, item.floatingShape)) {
+      merged.shape = firstDefined(item.floating_shape, item.floatingShape);
+      merged.widget_shape = firstDefined(item.floating_shape, item.floatingShape);
+      merged.floating_shape = firstDefined(item.floating_shape, item.floatingShape);
+    }
+
+    if (firstDefined(item.floating_width, item.floatingWidth)) {
+      merged.width = firstDefined(item.floating_width, item.floatingWidth);
+      merged.floating_width = firstDefined(item.floating_width, item.floatingWidth);
+    }
+
+    if (firstDefined(item.floating_height, item.floatingHeight)) {
+      merged.height = firstDefined(item.floating_height, item.floatingHeight);
+      merged.floating_height = firstDefined(item.floating_height, item.floatingHeight);
+    }
+
+    if (firstDefined(item.floating_radius, item.floatingRadius)) {
+      merged.radius = firstDefined(item.floating_radius, item.floatingRadius);
+      merged.borderRadius = firstDefined(item.floating_radius, item.floatingRadius);
+      merged.floating_radius = firstDefined(item.floating_radius, item.floatingRadius);
+    }
+
+    if (firstDefined(item.floating_position, item.floatingPosition)) {
+      merged.position = firstDefined(item.floating_position, item.floatingPosition);
+      merged.floating_position = firstDefined(item.floating_position, item.floatingPosition);
+    }
+
+    if (firstDefined(item.floating_top, item.floatingTop)) {
+      merged.top = firstDefined(item.floating_top, item.floatingTop);
+      merged.floating_top = firstDefined(item.floating_top, item.floatingTop);
+    }
+
+    if (firstDefined(item.floating_bottom, item.floatingBottom)) {
+      merged.bottom = firstDefined(item.floating_bottom, item.floatingBottom);
+      merged.floating_bottom = firstDefined(item.floating_bottom, item.floatingBottom);
+    }
+
+    if (firstDefined(item.floating_side, item.floatingSide)) {
+      merged.side = firstDefined(item.floating_side, item.floatingSide);
+      merged.floating_side = firstDefined(item.floating_side, item.floatingSide);
+    }
+
     flattenAppearanceInto(merged, item, 0);
   }
 
@@ -597,6 +678,7 @@
 }
 
 
+
   function fetchDbAppearance() {
   if (!storeId || !hasSupabase) return Promise.resolve({});
 
@@ -604,12 +686,12 @@
 
   function tryTable(tableName, extraQuery) {
     var path =
-  'widget_appearances' +
-  '?select=*&store_id=eq.' + store +
-  (extraQuery || '') +
-  '&order=updated_at.desc.nullslast,created_at.desc.nullslast' +
-
-  '&limit=1';
+      tableName +
+      '?select=*' +
+      '&store_id=eq.' + store +
+      (extraQuery || '') +
+      '&order=updated_at.desc.nullslast,created_at.desc.nullslast' +
+      '&limit=1';
 
     return fetchJson(path).then(function (items) {
       if (!items || !items.length) return null;
@@ -617,6 +699,7 @@
       var item = items[0];
       var appearance = extractAppearanceFromItem(item, true);
 
+      console.log('VIDLYTICS DB APARÊNCIA TABLE:', tableName);
       console.log('VIDLYTICS DB APARÊNCIA PATH:', path);
       console.log('VIDLYTICS DB APARÊNCIA RAW:', item);
       console.log('VIDLYTICS DB APARÊNCIA NORMALIZADA:', appearance);
@@ -625,34 +708,22 @@
     });
   }
 
-  return tryTable('widget_appearances', '&active=eq.true&status=eq.active')
+  return tryTable('appearances')
     .then(function (appearance) {
       if (appearance) return appearance;
 
-      return tryTable('widget_appearances', '');
+      return tryTable('widget_appearances');
     })
     .then(function (appearance) {
-      if (appearance) return appearance;
-
-      // Fallback para a tabela que o painel pode estar usando
-      return tryTable('appearances', '&active=eq.true&status=eq.active');
-    })
-    .then(function (appearance) {
-      if (appearance) return appearance;
-
-      return tryTable('appearances', '');
-    })
-    .then(function (appearance) {
-      if (!appearance) {
-        console.warn(
-          'VIDLYTICS: nenhuma aparência encontrada em widget_appearances nem em appearances para store_id:',
-          storeId
-        );
-      }
-
       return appearance || {};
+    })
+    .catch(function (err) {
+      console.warn('VIDLYTICS erro ao buscar aparência:', err);
+      return {};
     });
 }
+
+
 
 
   function readAppearance() {
