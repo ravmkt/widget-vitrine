@@ -607,7 +607,8 @@
   'widget_appearances' +
   '?select=*&store_id=eq.' + store +
   (extraQuery || '') +
-  '&order=updated_at.desc,created_at.desc' +
+  '&order=updated_at.desc.nullslast,created_at.desc.nullslast' +
+
   '&limit=1';
 
     return fetchJson(path).then(function (items) {
