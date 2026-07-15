@@ -684,43 +684,44 @@
 
   var store = encodeURIComponent(storeId);
 
+  function fetchDbAppearance() {
   function tryTable(tableName, extraQuery) {
-  var path =
-    tableName +
-    '?select=*' +
-    '&store_id=eq.' + encodeURIComponent(store) +
-    (extraQuery || '') +
-    '&order=updated_at.desc.nullslast,created_at.desc.nullslast' +
-    '&limit=1';
+    var path =
+      tableName +
+      '?select=*' +
+      '&store_id=eq.' + encodeURIComponent(store) +
+      (extraQuery || '') +
+      '&order=updated_at.desc.nullslast,created_at.desc.nullslast' +
+      '&limit=1';
 
-  console.log('VIDLYTICS DB APARÊNCIA');
-  console.log('TABLE:', tableName);
-  console.log('PATH:', path);
+    console.log('VIDLYTICS DB APARÊNCIA');
+    console.log('TABLE:', tableName);
+    console.log('PATH:', path);
 
-  return fetchJson(path).then(function (items) {
-    if (!items || !items.length) return null;
+    return fetchJson(path).then(function (items) {
+      if (!items || !items.length) return null;
 
-    var item = items[0];
-    var appearance = extractAppearanceFromItem(item, true);
+      var item = items[0];
+      var appearance = extractAppearanceFromItem(item, true);
 
-    console.log('VIDLYTICS DB APARÊNCIA RAW:', item);
-    console.log('VIDLYTICS DB APARÊNCIA NORMALIZADA:', appearance);
+      console.log('VIDLYTICS DB APARÊNCIA RAW:', item);
+      console.log('VIDLYTICS DB APARÊNCIA NORMALIZADA:', appearance);
 
-    return appearanceHasUsefulData(appearance) ? appearance : null;
-  });
-}
-
+      return appearanceHasUsefulData(appearance) ? appearance : null;
+    });
+  }
 
   return tryTable('appearances')
-  .then(function (appearance) {
-    if (appearance) return appearance;
+    .then(function (appearance) {
+      if (appearance) return appearance;
 
-    return tryTable('widget_appearances');
-  })
-  .then(function (appearance) {
-    return appearance || {};
-  });
+      return tryTable('widget_appearances');
+    })
+    .then(function (appearance) {
+      return appearance || {};
+    });
 }
+
 
   function readAppearance() {
     var configAppearance = normalizeAppearanceItem(getConfigAppearance());
