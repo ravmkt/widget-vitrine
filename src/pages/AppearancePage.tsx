@@ -12,6 +12,7 @@ import {
   generateUuid,
   resolveStoreId,
 } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 import { useTenant } from '@/context/TenantContext';
 import {
   Plus,
@@ -2565,6 +2566,36 @@ const stylePayload = {
 }
 
 await db.appearances.save(stylePayload as unknown as Appearance);
+
+/* Sincroniza com a tabela widget_appearances que o widget público lê */
+if (supabase) {
+  try {
+    await supabase
+      .from('widget_appearances')
+      .upsert({
+        store_id: finalStoreId,
+        status: 'active',
+        active: true,
+
+        floating_position: normalizedFloatingPosition,
+        floating_shape: floatingDesktop.shape,
+        floating_width: Number(toNumberInputValue(floatingDesktop.width)) || 85,
+        floating_height: Number(toNumberInputValue(floatingDesktop.height)) || Math.round(((Number(toNumberInputValue(floatingDesktop.width)) || 85) * 16) / 9),
+        floating_border_radius: Number(toNumberInputValue(floatingDesktop.border_radius)) || 12,
+        floating_border_width: Number(toNumberInputValue(floatingDesktop.border_style)) || 0,
+        floating_border_color: floatingDesktop.border_color || formData.primary_color,
+        floating_top: Number(toNumberInputValue(floatingDesktop.top_spacing)) || 20,
+        floating_bottom: Number(toNumberInputValue(floatingDesktop.bottom_spacing)) || 20,
+        floating_side: Number(toNumberInputValue(floatingDesktop.right_spacing)) || 20,
+
+        updated_at: now,
+      }, {
+        onConflict: 'store_id',
+      });
+  } catch (syncErr) {
+    console.warn('widget_appearances sync (não crítico):', syncErr);
+  }
+}
 
 if (stylePayload.is_default) {
   await syncDefaultAppearanceId(finalStoreId, id);
