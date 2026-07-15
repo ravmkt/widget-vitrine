@@ -685,42 +685,44 @@
   var store = encodeURIComponent(storeId);
 
   function tryTable(tableName, extraQuery) {
-    var path =
-      tableName +
-      '?select=*' +
-      '&store_id=eq.' + store +
-      (extraQuery || '') +
-      '&order=updated_at.desc.nullslast,created_at.desc.nullslast' +
-      '&limit=1';
+  var path =
+    tableName +
+    '?select=*' +
+    '&store_id=eq.' + encodeURIComponent(store) +
+    (extraQuery || '') +
+    '&order=updated_at.desc.nullslast,created_at.desc.nullslast' +
+    '&limit=1';
 
-    return fetchJson(path).then(function (items) {
-      if (!items || !items.length) return null;
+  console.log('VIDLYTICS DB APARÊNCIA');
+  console.log('TABLE:', tableName);
+  console.log('PATH:', path);
 
-      var item = items[0];
-      var appearance = extractAppearanceFromItem(item, true);
+  return fetchJson(path).then(function (items) {
+    if (!items || !items.length) return null;
 
-      console.log('VIDLYTICS DB APARÊNCIA TABLE:', tableName);
-      console.log('VIDLYTICS DB APARÊNCIA PATH:', path);
-      console.log('VIDLYTICS DB APARÊNCIA RAW:', item);
-      console.log('VIDLYTICS DB APARÊNCIA NORMALIZADA:', appearance);
+    var item = items[0];
+    var appearance = extractAppearanceFromItem(item, true);
 
-      return appearanceHasUsefulData(appearance) ? appearance : null;
-    });
-  }
+    console.log('VIDLYTICS DB APARÊNCIA RAW:', item);
+    console.log('VIDLYTICS DB APARÊNCIA NORMALIZADA:', appearance);
+
+    return appearanceHasUsefulData(appearance) ? appearance : null;
+  });
+}
+
 
   return tryTable('appearances')
     .then(function (appearance) {
       if (appearance) return appearance;
 
-      return tryTable('widget_appearances');
-    })
-    .then(function (appearance) {
-      return appearance || {};
-    })
-    .catch(function (err) {
-      console.warn('VIDLYTICS erro ao buscar aparência:', err);
-      return {};
-    });
+      return tryTable('appearances')
+  .then(function (appearance) {
+    if (appearance) return appearance;
+    return tryTable('widget_appearances');
+  })
+  .then(function (appearance) {
+    return appearance || {};
+  });
 }
 
 
