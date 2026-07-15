@@ -1,7 +1,7 @@
 /**
  * Vidlytics Widget — widget.js
  * Correção: aparência controlada pela seção Aparência do aplicativo
- * Consulta apenas widget_appearances.store_id
+ * Consulta widget_appearances.store_id com fallback para appearances.store_id
  * Versão: 202607141900
  */
 (function () {
@@ -528,31 +528,7 @@
 
   return false;
 }
-
-
-    var floatingConfig = parseJsonIfNeeded(
-  firstDefined(
-    item.floating_config,
-    item.floatingConfig,
-    item.config && item.config.floating_config,
-    item.settings && item.settings.floating_config
-  )
-);
-
-if (isPlainObject(floatingConfig)) {
-  var device = window.innerWidth < 768 ? 'mobile' : 'desktop';
-
-  if (isPlainObject(floatingConfig.desktop)) {
-    flattenAppearanceInto(merged, floatingConfig.desktop, 0);
-  }
-
-  if (isPlainObject(floatingConfig[device])) {
-    flattenAppearanceInto(merged, floatingConfig[device], 0);
-  }
-}
-
-    return false;
-  }
+  
 
   function extractAppearanceFromItem(item, allowDirectFields) {
   if (!item) return {};
@@ -1036,41 +1012,7 @@ function getBackgroundColor(appearance) {
       'bg_color',
       'bgColor',
       'modal_background',
-      'modalBackground'
-    ]) || '#ffffff'
-  );
-}
-
-function getButtonColor(appearance) {
-  return (
-    readAppearanceValue(appearance, [
-      'button_color',
-      'buttonColor',
-      'btn_color',
-      'btnColor',
-      'cta_color',
-      'ctaColor'
-    ]) || getPrimaryColor(appearance)
-  );
-}
-
-  function getTextColor(appearance) {
-    return (
-      readAppearanceValue(appearance, [
-        'text_color',
-        'textColor',
-        'cor_texto'
-      ]) || DEFAULT_APPEARANCE.text_color
-    );
-  }
-
-function getBackgroundColor(appearance) {
-  return (
-    readAppearanceValue(appearance, [
-      'background_color',
-      'backgroundColor',
-      'bg_color',
-      'bgColor',
+      'modalBackground',
       'modal_background_color',
       'modalBackgroundColor',
       'cor_fundo'
@@ -1091,6 +1033,16 @@ function getButtonColor(appearance) {
     ]) || getPrimaryColor(appearance)
   );
 }
+
+  function getTextColor(appearance) {
+    return (
+      readAppearanceValue(appearance, [
+        'text_color',
+        'textColor',
+        'cor_texto'
+      ]) || DEFAULT_APPEARANCE.text_color
+    );
+  }
 
   function getFontFamily(appearance) {
     return (
@@ -1438,35 +1390,34 @@ function getButtonColor(appearance) {
   }
 
 function buildSharedCss(appearance) {
-    var cfg = getFloatingConfig(appearance);
-    var primary = getPrimaryColor(appearance);
-    var bgColor = getBackgroundColor(appearance);
-    var buttonColor = getButtonColor(appearance);
-    var text = getTextColor(appearance);
-    var font = getFontFamily(appearance);
-    var modalConfig = normalizeModalAppearanceConfig(appearance);
+  var cfg = getFloatingConfig(appearance);
+  var bgColor = getBackgroundColor(appearance);
+  var buttonColor = getButtonColor(appearance);
+  var text = getTextColor(appearance);
+  var font = getFontFamily(appearance);
+  var modalConfig = normalizeModalAppearanceConfig(appearance);
 
-    return ''
-      + '*,*::before,*::after{box-sizing:border-box!important;}'
-      + '.vl-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;background:rgba(15,23,42,.7)!important;display:none!important;align-items:center!important;justify-content:center!important;padding:20px!important;z-index:' + cfg.zIndex + '!important;font-family:' + font + '!important;}'
-      + '.vl-overlay.is-open{display:flex!important;}'
-      + '.vl-modal{width:min(92vw,420px)!important;max-height:88vh!important;overflow:hidden!important;background:' + '.vl-modal{width:min(92vw,420px)!important;max-height:88vh!important;overflow:hidden!important;background:' + bgColor + '!important;border-radius:24px!important;box-shadow:' + (modalConfig.shadow_enabled !== false ? '0 24px 80px rgba(15,23,42,.3)' : 'none') + '!important;display:flex!important;flex-direction:column!important;}'
-      + '.vl-header{display:flex!important;align-items:center!important;justify-content:space-between!important;padding:14px 16px!important;border-bottom:1px solid #e2e8f0!important;}'
-      + '.vl-title{font-weight:800!important;color:' + text + '!important;font-size:14px!important;}'
-      + '.vl-count{font-size:12px!important;color:#64748b!important;}'
-      + '.vl-close{all:unset!important;font-size:28px!important;line-height:1!important;cursor:pointer!important;color:' + text + '!important;}'
-      + '.vl-body{padding:16px!important;display:grid!important;gap:12px!important;overflow:auto!important;}'
-      + '.vl-player{width:100%!important;aspect-ratio:9/16!important;border-radius:18px!important;overflow:hidden!important;background:#000!important;}'
-      + '.vl-player video,.vl-player iframe{width:100%!important;height:100%!important;border:0!important;display:block!important;object-fit:cover!important;}'
-      + '.vl-nav{display:flex!important;gap:10px!important;}'
-      + '.vl-btn{all:unset!important;flex:1!important;text-align:center!important;border-radius:999px!important;padding:10px 14px!important;font-weight:800!important;font-size:13px!important;cursor:pointer!important;background:#e2e8f0!important;color:#0f172a!important;}'
-      + '.vl-btn-primary{background:' + buttonColor + '!important;color:#fff!important;}'
-      + '.vl-product{display:flex!important;align-items:center!important;gap:12px!important;border:1px solid #e2e8f0!important;border-radius:18px!important;padding:12px!important;background:#fff!important;cursor:pointer!important;}'
-      + '.vl-product-img{width:72px!important;height:72px!important;border-radius:14px!important;object-fit:cover!important;background:#e2e8f0!important;flex:0 0 auto!important;}'
-      + '.vl-product-info{min-width:0!important;flex:1!important;}'
-      + '.vl-product-name{font-weight:800!important;font-size:14px!important;color:#0f172a!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}'
-      + '.vl-product-price{margin-top:4px!important;font-weight:800!important;font-size:16px!important;color:#7c3aed!important;}';
-  }
+  return ''
+    + '*,*::before,*::after{box-sizing:border-box!important;}'
+    + '.vl-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;background:rgba(15,23,42,.7)!important;display:none!important;align-items:center!important;justify-content:center!important;padding:20px!important;z-index:' + cfg.zIndex + '!important;font-family:' + font + '!important;}'
+    + '.vl-overlay.is-open{display:flex!important;}'
+    + '.vl-modal{width:min(92vw,420px)!important;max-height:88vh!important;overflow:hidden!important;background:' + bgColor + '!important;border-radius:24px!important;box-shadow:' + (modalConfig.shadow_enabled !== false ? '0 24px 80px rgba(15,23,42,.3)' : 'none') + '!important;display:flex!important;flex-direction:column!important;}'
+    + '.vl-header{display:flex!important;align-items:center!important;justify-content:space-between!important;padding:14px 16px!important;border-bottom:1px solid #e2e8f0!important;}'
+    + '.vl-title{font-weight:800!important;color:' + text + '!important;font-size:14px!important;}'
+    + '.vl-count{font-size:12px!important;color:#64748b!important;}'
+    + '.vl-close{all:unset!important;font-size:28px!important;line-height:1!important;cursor:pointer!important;color:' + text + '!important;}'
+    + '.vl-body{padding:16px!important;display:grid!important;gap:12px!important;overflow:auto!important;}'
+    + '.vl-player{width:100%!important;aspect-ratio:9/16!important;border-radius:18px!important;overflow:hidden!important;background:#000!important;}'
+    + '.vl-player video,.vl-player iframe{width:100%!important;height:100%!important;border:0!important;display:block!important;object-fit:cover!important;}'
+    + '.vl-nav{display:flex!important;gap:10px!important;}'
+    + '.vl-btn{all:unset!important;flex:1!important;text-align:center!important;border-radius:999px!important;padding:10px 14px!important;font-weight:800!important;font-size:13px!important;cursor:pointer!important;background:#e2e8f0!important;color:#0f172a!important;}'
+    + '.vl-btn-primary{background:' + buttonColor + '!important;color:#fff!important;}'
+    + '.vl-product{display:flex!important;align-items:center!important;gap:12px!important;border:1px solid #e2e8f0!important;border-radius:18px!important;padding:12px!important;background:#fff!important;cursor:pointer!important;}'
+    + '.vl-product-img{width:72px!important;height:72px!important;border-radius:14px!important;object-fit:cover!important;background:#e2e8f0!important;flex:0 0 auto!important;}'
+    + '.vl-product-info{min-width:0!important;flex:1!important;}'
+    + '.vl-product-name{font-weight:800!important;font-size:14px!important;color:#0f172a!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}'
+    + '.vl-product-price{margin-top:4px!important;font-weight:800!important;font-size:16px!important;color:#7c3aed!important;}';
+}
 
 function buildFloatingCss(appearance) {
     var cfg = getFloatingConfig(appearance);
@@ -1822,9 +1773,9 @@ function buildFloatingCss(appearance) {
 
     var appearance = currentAppearance || {};
     var modalConfig = normalizeModalAppearanceConfig(appearance);
-    var primary = getPrimaryColor(appearance);
-    var text = getTextColor(appearance);
-    var font = getFontFamily(appearance);
+var buttonColor = getButtonColor(appearance);
+var text = getTextColor(appearance);
+var font = getFontFamily(appearance);
 
     var host = createEl('div', 'vidlytics-carousel-root');
     host.id = 'vidlytics-carousel-root';
@@ -1837,7 +1788,7 @@ function buildFloatingCss(appearance) {
       + buildSharedCss(appearance)
       + '.carousel{font-family:' + font + '!important;width:100%!important;max-width:100%!important;overflow-x:auto!important;padding:12px 16px!important;display:flex!important;gap:14px!important;scroll-snap-type:x mandatory!important;-webkit-overflow-scrolling:touch!important;}'
       + '.card{all:unset!important;cursor:pointer!important;flex-shrink:0!important;scroll-snap-align:start!important;display:flex!important;flex-direction:column!important;gap:6px!important;}'
-      + '.media{width:120px!important;height:180px!important;border-radius:16px!important;overflow:hidden!important;background:#e2e8f0!important;display:grid!important;place-items:center!important;font-weight:800!important;font-size:24px!important;color:#64748b!important;box-shadow:' + (modalConfig.shadow_enabled !== false ? '0 10px 24px rgba(15,23,42,.14)' : 'none') + '!important;border:2px solid ' + primary + '!important;}'
+      + '.media{width:120px!important;height:180px!important;border-radius:16px!important;overflow:hidden!important;background:#e2e8f0!important;display:grid!important;place-items:center!important;font-weight:800!important;font-size:24px!important;color:#64748b!important;box-shadow:' + (modalConfig.shadow_enabled !== false ? '0 10px 24px rgba(15,23,42,.14)' : 'none') + '!important;border:2px solid ' + buttonColor + '!important;}'
       + '.media img{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;}'
       + '.label{max-width:120px!important;font-size:12px!important;font-weight:700!important;color:' + text + '!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}';
 
