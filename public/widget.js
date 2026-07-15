@@ -712,21 +712,15 @@
 
 
   return tryTable('appearances')
-    .then(function (appearance) {
-      if (appearance) return appearance;
-
-      return tryTable('appearances')
   .then(function (appearance) {
     if (appearance) return appearance;
+
     return tryTable('widget_appearances');
   })
   .then(function (appearance) {
     return appearance || {};
   });
 }
-
-
-
 
   function readAppearance() {
     var configAppearance = normalizeAppearanceItem(getConfigAppearance());
