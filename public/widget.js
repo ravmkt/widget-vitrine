@@ -392,174 +392,250 @@
   }
 
   function appearanceHasUsefulData(appearance) {
-    appearance = normalizeAppearanceItem(appearance || {});
+  appearance = normalizeAppearanceItem(appearance || {});
 
-    var usefulNames = [
-      'floating_position',
-      'floatingPosition',
-      'position',
-      'posicao',
-      'posição',
-      'widget_position',
-      'widgetPosition',
-      'placement',
-      'floating_video_position',
-      'floatingVideoPosition',
+  var usefulNames = [
+    'floating_position',
+    'floatingPosition',
+    'position',
+    'posicao',
+    'posição',
+    'widget_position',
+    'widgetPosition',
+    'placement',
+    'floating_video_position',
+    'floatingVideoPosition',
 
-      'floating_shape',
-      'floatingShape',
-      'shape',
-      'form',
-      'forma',
-      'formato',
-      'widget_shape',
-      'widgetShape',
-      'floating_video_shape',
-      'floatingVideoShape',
+    'floating_shape',
+    'floatingShape',
+    'shape',
+    'form',
+    'forma',
+    'formato',
+    'widget_shape',
+    'widgetShape',
+    'floating_video_shape',
+    'floatingVideoShape',
 
-      'floating_width',
-      'floatingWidth',
-      'width',
-      'largura',
-      'widget_width',
-      'widgetWidth',
-      'floating_video_width',
-      'floatingVideoWidth',
+    'floating_width',
+    'floatingWidth',
+    'width',
+    'largura',
+    'widget_width',
+    'widgetWidth',
+    'floating_video_width',
+    'floatingVideoWidth',
 
-      'floating_height',
-      'floatingHeight',
-      'height',
-      'altura',
-      'widget_height',
-      'widgetHeight',
-      'floating_video_height',
-      'floatingVideoHeight',
+    'floating_height',
+    'floatingHeight',
+    'height',
+    'altura',
+    'widget_height',
+    'widgetHeight',
+    'floating_video_height',
+    'floatingVideoHeight',
 
-      'floating_radius',
-      'floatingRadius',
-      'border_radius',
-      'borderRadius',
-      'radius',
-      'raio',
-      'widget_radius',
-      'widgetRadius',
+    'floating_radius',
+    'floatingRadius',
+    'border_radius',
+    'borderRadius',
+    'radius',
+    'raio',
+    'widget_radius',
+    'widgetRadius',
 
-      'floating_top',
-      'floatingTop',
-      'top',
-      'floating_bottom',
-      'floatingBottom',
-      'bottom',
-      'floating_side',
-      'floatingSide',
-      'side',
+    'floating_top',
+    'floatingTop',
+    'top',
+    'top_spacing',
+    'topSpacing',
+    'spacing_top',
+    'spacingTop',
 
-      'distance_top',
-      'distanceTop',
-      'distancia_superior',
-      'distanciaSuperior',
-      'distance_bottom',
-      'distanceBottom',
-      'distancia_inferior',
-      'distanciaInferior',
-      'distance_side',
-      'distanceSide',
-      'distancia_lateral',
-      'distanciaLateral',
+    'floating_bottom',
+    'floatingBottom',
+    'bottom',
+    'bottom_spacing',
+    'bottomSpacing',
+    'spacing_bottom',
+    'spacingBottom',
 
-      'floating_border_width',
-      'floatingBorderWidth',
-      'border_width',
-      'borderWidth',
-      'largura_borda',
-      'larguraBorda',
+    'floating_side',
+    'floatingSide',
+    'side',
+    'left_spacing',
+    'leftSpacing',
+    'right_spacing',
+    'rightSpacing',
 
-      'primary_color',
-      'primaryColor',
-      'secondary_color',
-      'secondaryColor',
-      'border_color',
-      'borderColor',
-      'color',
-      'text_color',
-      'textColor',
-      'font_family',
-      'fontFamily',
+    'distance_top',
+    'distanceTop',
+    'distancia_superior',
+    'distanciaSuperior',
+    'distance_bottom',
+    'distanceBottom',
+    'distancia_inferior',
+    'distanciaInferior',
+    'distance_side',
+    'distanceSide',
+    'distancia_lateral',
+    'distanciaLateral',
 
-      'show_title',
-      'showTitle',
-      'show_product',
-      'showProduct',
-      'hide_stories',
-      'hideStories',
-      'shadow_enabled',
-      'shadowEnabled'
-    ];
+    'floating_border_width',
+    'floatingBorderWidth',
+    'border_width',
+    'borderWidth',
+    'largura_borda',
+    'larguraBorda',
 
-    for (var i = 0; i < usefulNames.length; i += 1) {
-      var value = readAppearanceValue(appearance, [usefulNames[i]]);
+    'primary_color',
+    'primaryColor',
+    'secondary_color',
+    'secondaryColor',
+    'border_color',
+    'borderColor',
+    'color',
+    'text_color',
+    'textColor',
+    'font_family',
+    'fontFamily',
 
-      if (value !== undefined && value !== null && value !== '') {
-        return true;
-      }
+    'background_color',
+    'backgroundColor',
+    'button_color',
+    'buttonColor',
+
+    'show_title',
+    'showTitle',
+    'show_product',
+    'showProduct',
+    'hide_stories',
+    'hideStories',
+    'shadow_enabled',
+    'shadowEnabled',
+
+    'floating_config',
+    'floatingConfig'
+  ];
+
+  for (var i = 0; i < usefulNames.length; i += 1) {
+    var value = readAppearanceValue(appearance, [usefulNames[i]]);
+
+    if (value !== undefined && value !== null && value !== '') {
+      return true;
     }
+  }
+
+  return false;
+}
+
+
+    var floatingConfig = parseJsonIfNeeded(
+  firstDefined(
+    item.floating_config,
+    item.floatingConfig,
+    item.config && item.config.floating_config,
+    item.settings && item.settings.floating_config
+  )
+);
+
+if (isPlainObject(floatingConfig)) {
+  var device = window.innerWidth < 768 ? 'mobile' : 'desktop';
+
+  if (isPlainObject(floatingConfig.desktop)) {
+    flattenAppearanceInto(merged, floatingConfig.desktop, 0);
+  }
+
+  if (isPlainObject(floatingConfig[device])) {
+    flattenAppearanceInto(merged, floatingConfig[device], 0);
+  }
+}
 
     return false;
   }
 
   function extractAppearanceFromItem(item, allowDirectFields) {
-    if (!item) return {};
+  if (!item) return {};
 
-    var merged = {};
+  var merged = {};
 
-    [
-      item.appearance,
-      item.aparencia,
-      item.appearance_config,
-      item.appearanceConfig,
-      item.widget_appearance,
-      item.widgetAppearance,
-      item.widget_config,
-      item.widgetConfig,
-      item.settings,
-      item.config,
-      item.style,
-      item.styles,
-      item.data,
-      item.metadata,
-      item.customization,
-      item.customization_config,
-      item.theme,
-      item.theme_config,
-      item.floating,
-      item.floatingConfig,
-      item.floatingAppearance,
-      item.floating_video,
-      item.floatingVideo,
-      item.floatingVideoConfig,
-      item.floatingVideoAppearance
-    ].forEach(function (src) {
-      flattenAppearanceInto(merged, src, 0);
-    });
+  [
+    item.appearance,
+    item.aparencia,
+    item.appearance_config,
+    item.appearanceConfig,
+    item.widget_appearance,
+    item.widgetAppearance,
+    item.widget_config,
+    item.widgetConfig,
+    item.settings,
+    item.config,
+    item.style,
+    item.styles,
+    item.data,
+    item.metadata,
+    item.customization,
+    item.customization_config,
+    item.theme,
+    item.theme_config,
+    item.floating,
+    item.floating_config,
+    item.floatingConfig,
+    item.floatingAppearance,
+    item.floating_video,
+    item.floatingVideo,
+    item.floatingVideoConfig,
+    item.floatingVideoAppearance
+  ].forEach(function (src) {
+    flattenAppearanceInto(merged, src, 0);
+  });
 
-    if (allowDirectFields) {
-      flattenAppearanceInto(merged, item, 0);
-    }
-
-    return normalizeAppearanceItem(merged);
+  if (allowDirectFields) {
+    flattenAppearanceInto(merged, item, 0);
   }
 
-  function fetchDbAppearance() {
-    if (!storeId || !hasSupabase) return Promise.resolve({});
+  var floatingConfig = parseJsonIfNeeded(
+    firstDefined(
+      item.floating_config,
+      item.floatingConfig,
+      item.config && item.config.floating_config,
+      item.config && item.config.floatingConfig,
+      item.settings && item.settings.floating_config,
+      item.settings && item.settings.floatingConfig
+    )
+  );
 
-    var store = encodeURIComponent(storeId);
-    var path = 'widget_appearances?select=*&store_id=eq.' + store + '&limit=1';
+  if (isPlainObject(floatingConfig)) {
+    var device = window.innerWidth < 768 ? 'mobile' : 'desktop';
+
+    if (isPlainObject(floatingConfig.desktop)) {
+      flattenAppearanceInto(merged, floatingConfig.desktop, 0);
+    }
+
+    if (isPlainObject(floatingConfig[device])) {
+      flattenAppearanceInto(merged, floatingConfig[device], 0);
+    }
+  }
+
+  return normalizeAppearanceItem(merged);
+}
+
+
+  function fetchDbAppearance() {
+  if (!storeId || !hasSupabase) return Promise.resolve({});
+
+  var store = encodeURIComponent(storeId);
+
+  function tryTable(tableName, extraQuery) {
+    var path =
+      tableName +
+      '?select=*&store_id=eq.' +
+      store +
+      (extraQuery || '') +
+      '&limit=1';
 
     return fetchJson(path).then(function (items) {
-      if (!items || !items.length) {
-        console.warn('VIDLYTICS: nenhuma aparência encontrada em widget_appearances para store_id:', storeId);
-        return {};
-      }
+      if (!items || !items.length) return null;
 
       var item = items[0];
       var appearance = extractAppearanceFromItem(item, true);
@@ -568,9 +644,39 @@
       console.log('VIDLYTICS DB APARÊNCIA RAW:', item);
       console.log('VIDLYTICS DB APARÊNCIA NORMALIZADA:', appearance);
 
-      return appearanceHasUsefulData(appearance) ? appearance : {};
+      return appearanceHasUsefulData(appearance) ? appearance : null;
     });
   }
+
+  return tryTable('widget_appearances', '&active=eq.true&status=eq.active')
+    .then(function (appearance) {
+      if (appearance) return appearance;
+
+      return tryTable('widget_appearances', '');
+    })
+    .then(function (appearance) {
+      if (appearance) return appearance;
+
+      // Fallback para a tabela que o painel pode estar usando
+      return tryTable('appearances', '&active=eq.true&status=eq.active');
+    })
+    .then(function (appearance) {
+      if (appearance) return appearance;
+
+      return tryTable('appearances', '');
+    })
+    .then(function (appearance) {
+      if (!appearance) {
+        console.warn(
+          'VIDLYTICS: nenhuma aparência encontrada em widget_appearances nem em appearances para store_id:',
+          storeId
+        );
+      }
+
+      return appearance || {};
+    });
+}
+
 
   function readAppearance() {
     var configAppearance = normalizeAppearanceItem(getConfigAppearance());
@@ -827,28 +933,46 @@
       DEFAULT_APPEARANCE.floating_bottom
     );
 
-    var side = toNumber(
-      readAppearanceValue(appearance, [
-        'floating_side',
-        'floatingSide',
-        'side',
-        'left_spacing',
-        'leftSpacing',
-        'right_spacing',
-        'rightSpacing',
-        'spacing_left',
-        'spacingLeft',
-        'spacing_right',
-        'spacingRight',
-        'distance_side',
-        'distanceSide',
-        'distancia_lateral',
-        'distanciaLateral',
-        'offset_side',
-        'offsetSide'
-      ]),
-      DEFAULT_APPEARANCE.floating_side
-    );
+    var isTop = position.indexOf('top') === 0;
+var isRight = position.indexOf('right') !== -1;
+
+var side = toNumber(
+  readAppearanceValue(
+    appearance,
+    isRight
+      ? [
+          'right_spacing',
+          'rightSpacing',
+          'spacing_right',
+          'spacingRight',
+          'floating_side',
+          'floatingSide',
+          'side',
+          'distance_side',
+          'distanceSide',
+          'distancia_lateral',
+          'distanciaLateral',
+          'offset_side',
+          'offsetSide'
+        ]
+      : [
+          'left_spacing',
+          'leftSpacing',
+          'spacing_left',
+          'spacingLeft',
+          'floating_side',
+          'floatingSide',
+          'side',
+          'distance_side',
+          'distanceSide',
+          'distancia_lateral',
+          'distanciaLateral',
+          'offset_side',
+          'offsetSide'
+        ]
+  ),
+  DEFAULT_APPEARANCE.floating_side
+);
 
     var zIndex = toNumber(
       readAppearanceValue(appearance, [
@@ -860,9 +984,6 @@
       ]),
       DEFAULT_APPEARANCE.z_index
     );
-
-    var isTop = position.indexOf('top') === 0;
-    var isRight = position.indexOf('right') !== -1;
 
     return {
       position: position,
@@ -907,6 +1028,32 @@
     );
   }
 
+function getBackgroundColor(appearance) {
+  return (
+    readAppearanceValue(appearance, [
+      'background_color',
+      'backgroundColor',
+      'bg_color',
+      'bgColor',
+      'modal_background',
+      'modalBackground'
+    ]) || '#ffffff'
+  );
+}
+
+function getButtonColor(appearance) {
+  return (
+    readAppearanceValue(appearance, [
+      'button_color',
+      'buttonColor',
+      'btn_color',
+      'btnColor',
+      'cta_color',
+      'ctaColor'
+    ]) || getPrimaryColor(appearance)
+  );
+}
+
   function getTextColor(appearance) {
     return (
       readAppearanceValue(appearance, [
@@ -916,6 +1063,34 @@
       ]) || DEFAULT_APPEARANCE.text_color
     );
   }
+
+function getBackgroundColor(appearance) {
+  return (
+    readAppearanceValue(appearance, [
+      'background_color',
+      'backgroundColor',
+      'bg_color',
+      'bgColor',
+      'modal_background_color',
+      'modalBackgroundColor',
+      'cor_fundo'
+    ]) || '#ffffff'
+  );
+}
+
+function getButtonColor(appearance) {
+  return (
+    readAppearanceValue(appearance, [
+      'button_color',
+      'buttonColor',
+      'btn_color',
+      'btnColor',
+      'cta_color',
+      'ctaColor',
+      'cor_botao'
+    ]) || getPrimaryColor(appearance)
+  );
+}
 
   function getFontFamily(appearance) {
     return (
@@ -1262,9 +1437,11 @@
     };
   }
 
-  function buildSharedCss(appearance) {
+function buildSharedCss(appearance) {
     var cfg = getFloatingConfig(appearance);
     var primary = getPrimaryColor(appearance);
+    var bgColor = getBackgroundColor(appearance);
+    var buttonColor = getButtonColor(appearance);
     var text = getTextColor(appearance);
     var font = getFontFamily(appearance);
     var modalConfig = normalizeModalAppearanceConfig(appearance);
@@ -1273,7 +1450,7 @@
       + '*,*::before,*::after{box-sizing:border-box!important;}'
       + '.vl-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;background:rgba(15,23,42,.7)!important;display:none!important;align-items:center!important;justify-content:center!important;padding:20px!important;z-index:' + cfg.zIndex + '!important;font-family:' + font + '!important;}'
       + '.vl-overlay.is-open{display:flex!important;}'
-      + '.vl-modal{width:min(92vw,420px)!important;max-height:88vh!important;overflow:hidden!important;background:#fff!important;border-radius:24px!important;box-shadow:' + (modalConfig.shadow_enabled !== false ? '0 24px 80px rgba(15,23,42,.3)' : 'none') + '!important;display:flex!important;flex-direction:column!important;}'
+      + '.vl-modal{width:min(92vw,420px)!important;max-height:88vh!important;overflow:hidden!important;background:' + '.vl-modal{width:min(92vw,420px)!important;max-height:88vh!important;overflow:hidden!important;background:' + bgColor + '!important;border-radius:24px!important;box-shadow:' + (modalConfig.shadow_enabled !== false ? '0 24px 80px rgba(15,23,42,.3)' : 'none') + '!important;display:flex!important;flex-direction:column!important;}'
       + '.vl-header{display:flex!important;align-items:center!important;justify-content:space-between!important;padding:14px 16px!important;border-bottom:1px solid #e2e8f0!important;}'
       + '.vl-title{font-weight:800!important;color:' + text + '!important;font-size:14px!important;}'
       + '.vl-count{font-size:12px!important;color:#64748b!important;}'
@@ -1283,7 +1460,7 @@
       + '.vl-player video,.vl-player iframe{width:100%!important;height:100%!important;border:0!important;display:block!important;object-fit:cover!important;}'
       + '.vl-nav{display:flex!important;gap:10px!important;}'
       + '.vl-btn{all:unset!important;flex:1!important;text-align:center!important;border-radius:999px!important;padding:10px 14px!important;font-weight:800!important;font-size:13px!important;cursor:pointer!important;background:#e2e8f0!important;color:#0f172a!important;}'
-      + '.vl-btn-primary{background:' + primary + '!important;color:#fff!important;}'
+      + '.vl-btn-primary{background:' + buttonColor + '!important;color:#fff!important;}'
       + '.vl-product{display:flex!important;align-items:center!important;gap:12px!important;border:1px solid #e2e8f0!important;border-radius:18px!important;padding:12px!important;background:#fff!important;cursor:pointer!important;}'
       + '.vl-product-img{width:72px!important;height:72px!important;border-radius:14px!important;object-fit:cover!important;background:#e2e8f0!important;flex:0 0 auto!important;}'
       + '.vl-product-info{min-width:0!important;flex:1!important;}'
@@ -1291,7 +1468,7 @@
       + '.vl-product-price{margin-top:4px!important;font-weight:800!important;font-size:16px!important;color:#7c3aed!important;}';
   }
 
-  function buildFloatingCss(appearance) {
+function buildFloatingCss(appearance) {
     var cfg = getFloatingConfig(appearance);
     var primary = getPrimaryColor(appearance);
     var secondary = getSecondaryColor(appearance);
@@ -1299,7 +1476,7 @@
     var font = getFontFamily(appearance);
     var modalConfig = normalizeModalAppearanceConfig(appearance);
 
-    return ''
+  return ''
       + ':host{all:initial!important;position:fixed!important;top:' + cfg.top + '!important;right:' + cfg.right + '!important;bottom:' + cfg.bottom + '!important;left:' + cfg.left + '!important;z-index:' + cfg.zIndex + '!important;width:' + cfg.width + '!important;min-width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;height:auto!important;overflow:visible!important;background:transparent!important;pointer-events:auto!important;font-family:' + font + '!important;}'
       + buildSharedCss(appearance)
       + '.vl-bubbles{width:' + cfg.width + '!important;display:flex!important;flex-direction:column!important;align-items:' + cfg.alignItems + '!important;justify-content:flex-start!important;gap:10px!important;overflow:visible!important;}'
