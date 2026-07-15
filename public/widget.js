@@ -5,9 +5,9 @@
  * Versão: 202607141900
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - APARÊNCIA VIA widget_appearances - 202607141900');
+  console.log('VIDLYTICS WIDGET CARREGADO - APARÊNCIA VIA widget_appearances - 202607151305');
 
-  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-appearances-only-202607141900';
+  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-appearances-only-202607151305';
 
   if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) return;
 
@@ -682,14 +682,11 @@
   function fetchDbAppearance() {
   if (!storeId || !hasSupabase) return Promise.resolve({});
 
-  var store = encodeURIComponent(storeId);
-
-  function fetchDbAppearance() {
   function tryTable(tableName, extraQuery) {
     var path =
       tableName +
       '?select=*' +
-      '&store_id=eq.' + encodeURIComponent(store) +
+      '&store_id=eq.' + encodeURIComponent(storeId) +
       (extraQuery || '') +
       '&order=updated_at.desc.nullslast,created_at.desc.nullslast' +
       '&limit=1';
@@ -711,16 +708,17 @@
     });
   }
 
-  return tryTable('appearances')
+  return tryTable('widget_appearances')
     .then(function (appearance) {
       if (appearance) return appearance;
 
-      return tryTable('widget_appearances');
+      return tryTable('appearances');
     })
     .then(function (appearance) {
       return appearance || {};
     });
 }
+
 
 
   function readAppearance() {
@@ -842,210 +840,220 @@
   }
 
   function getFloatingConfig(appearance) {
-    appearance = normalizeAppearanceItem(appearance || {});
+  appearance = normalizeAppearanceItem(appearance || {});
 
-    var rawPosition = readAppearanceValue(appearance, [
-      'floating_position',
-      'floatingPosition',
-      'position',
-      'posicao',
-      'posição',
-      'widget_position',
-      'widgetPosition',
-      'placement',
-      'floating_video_position',
-      'floatingVideoPosition'
-    ]);
+  var rawPosition = readAppearanceValue(appearance, [
+    'floating_position',
+    'floatingPosition',
+    'position',
+    'posicao',
+    'posição',
+    'widget_position',
+    'widgetPosition',
+    'placement',
+    'floating_video_position',
+    'floatingVideoPosition'
+  ]);
 
-    var rawShape = readAppearanceValue(appearance, [
-      'floating_shape',
-      'floatingShape',
-      'shape',
-      'form',
-      'forma',
-      'formato',
-      'widget_shape',
-      'widgetShape',
-      'floating_video_shape',
-      'floatingVideoShape'
-    ]);
+  var rawShape = readAppearanceValue(appearance, [
+    'floating_shape',
+    'floatingShape',
+    'shape',
+    'form',
+    'forma',
+    'formato',
+    'widget_shape',
+    'widgetShape',
+    'floating_video_shape',
+    'floatingVideoShape'
+  ]);
 
-    var position = normalizeFloatingPosition(rawPosition);
-    var shape = normalizeFloatingShape(rawShape);
+  var position = normalizeFloatingPosition(rawPosition);
+  var shape = normalizeFloatingShape(rawShape);
 
-    var width = toNumber(
-      readAppearanceValue(appearance, [
-        'floating_width',
-        'floatingWidth',
-        'width',
-        'largura',
-        'widget_width',
-        'widgetWidth',
-        'floating_video_width',
-        'floatingVideoWidth',
-        'size',
-        'tamanho'
-      ]),
-      DEFAULT_APPEARANCE.floating_width
-    );
+  var width = toNumber(
+    readAppearanceValue(appearance, [
+      'floating_width',
+      'floatingWidth',
+      'width',
+      'largura',
+      'widget_width',
+      'widgetWidth',
+      'floating_video_width',
+      'floatingVideoWidth',
+      'size',
+      'tamanho',
+      'widget_size',
+      'widgetSize'
+    ]),
+    DEFAULT_APPEARANCE.floating_width
+  );
 
-    var heightRaw = readAppearanceValue(appearance, [
-      'floating_height',
-      'floatingHeight',
-      'height',
-      'altura',
-      'widget_height',
-      'widgetHeight',
-      'floating_video_height',
-      'floatingVideoHeight'
-    ]);
+  var heightRaw = readAppearanceValue(appearance, [
+    'floating_height',
+    'floatingHeight',
+    'height',
+    'altura',
+    'widget_height',
+    'widgetHeight',
+    'floating_video_height',
+    'floatingVideoHeight'
+  ]);
 
-    var height = toNumber(heightRaw, null);
+  var height = toNumber(heightRaw, null);
 
-    if (!height) {
-      if (shape === 'circle' || shape === 'square') height = width;
-      else height = Math.round((width * 16) / 9);
+  if (!height) {
+    if (shape === 'circle' || shape === 'square') {
+      height = width;
+    } else {
+      height = Math.round((width * 16) / 9);
     }
-
-    if (shape === 'circle' || shape === 'square') height = width;
-
-    var radius = toNumber(
-      readAppearanceValue(appearance, [
-        'floating_radius',
-        'floatingRadius',
-        'border_radius',
-        'borderRadius',
-        'radius',
-        'raio',
-        'widget_radius',
-        'widgetRadius'
-      ]),
-      shape === 'circle' ? 999 : DEFAULT_APPEARANCE.floating_radius
-    );
-
-    if (shape === 'circle') radius = 999;
-
-    var borderWidth = toNumber(
-      readAppearanceValue(appearance, [
-        'floating_border_width',
-        'floatingBorderWidth',
-        'border_width',
-        'borderWidth',
-        'border_style',
-        'borderStyle',
-        'largura_borda',
-        'larguraDaBorda',
-        'larguraBorda'
-      ]),
-      DEFAULT_APPEARANCE.floating_border_width
-    );
-
-    var top = toNumber(
-      readAppearanceValue(appearance, [
-        'floating_top',
-        'floatingTop',
-        'top',
-        'top_spacing',
-        'topSpacing',
-        'spacing_top',
-        'spacingTop',
-        'distance_top',
-        'distanceTop',
-        'distancia_superior',
-        'distanciaSuperior',
-        'offset_top',
-        'offsetTop'
-      ]),
-      DEFAULT_APPEARANCE.floating_top
-    );
-
-    var bottom = toNumber(
-      readAppearanceValue(appearance, [
-        'floating_bottom',
-        'floatingBottom',
-        'bottom',
-        'bottom_spacing',
-        'bottomSpacing',
-        'spacing_bottom',
-        'spacingBottom',
-        'distance_bottom',
-        'distanceBottom',
-        'distancia_inferior',
-        'distanciaInferior',
-        'offset_bottom',
-        'offsetBottom'
-      ]),
-      DEFAULT_APPEARANCE.floating_bottom
-    );
-
-    var isTop = position.indexOf('top') === 0;
-var isRight = position.indexOf('right') !== -1;
-
-var side = toNumber(
-  readAppearanceValue(
-    appearance,
-    isRight
-      ? [
-          'right_spacing',
-          'rightSpacing',
-          'spacing_right',
-          'spacingRight',
-          'floating_side',
-          'floatingSide',
-          'side',
-          'distance_side',
-          'distanceSide',
-          'distancia_lateral',
-          'distanciaLateral',
-          'offset_side',
-          'offsetSide'
-        ]
-      : [
-          'left_spacing',
-          'leftSpacing',
-          'spacing_left',
-          'spacingLeft',
-          'floating_side',
-          'floatingSide',
-          'side',
-          'distance_side',
-          'distanceSide',
-          'distancia_lateral',
-          'distanciaLateral',
-          'offset_side',
-          'offsetSide'
-        ]
-  ),
-  DEFAULT_APPEARANCE.floating_side
-);
-
-    var zIndex = toNumber(
-      readAppearanceValue(appearance, [
-        'z_index',
-        'zIndex',
-        'zindex',
-        'floating_z_index',
-        'floatingZIndex'
-      ]),
-      DEFAULT_APPEARANCE.z_index
-    );
-
-    return {
-      position: position,
-      shape: shape,
-      top: isTop ? px(top) : 'auto',
-      bottom: isTop ? 'auto' : px(bottom),
-      left: isRight ? 'auto' : px(side),
-      right: isRight ? px(side) : 'auto',
-      width: px(width),
-      height: px(height),
-      radius: shape === 'circle' ? '999px' : px(radius),
-      innerRadius: shape === 'circle' ? '999px' : px(Math.max(radius - borderWidth, 0)),
-      borderWidth: px(borderWidth),
-      zIndex: String(Math.round(zIndex)),
-      alignItems: isRight ? 'flex-end' : 'flex-start'
-    };
   }
+
+  if (shape === 'circle' || shape === 'square') {
+    height = width;
+  }
+
+  var radius = toNumber(
+    readAppearanceValue(appearance, [
+      'floating_radius',
+      'floatingRadius',
+      'border_radius',
+      'borderRadius',
+      'radius',
+      'raio',
+      'widget_radius',
+      'widgetRadius'
+    ]),
+    shape === 'circle' ? 999 : DEFAULT_APPEARANCE.floating_radius
+  );
+
+  if (shape === 'circle') {
+    radius = 999;
+  }
+
+  var borderWidth = toNumber(
+    readAppearanceValue(appearance, [
+      'floating_border_width',
+      'floatingBorderWidth',
+      'border_width',
+      'borderWidth',
+      'border_style',
+      'borderStyle',
+      'largura_borda',
+      'larguraDaBorda',
+      'larguraBorda'
+    ]),
+    DEFAULT_APPEARANCE.floating_border_width
+  );
+
+  var top = toNumber(
+    readAppearanceValue(appearance, [
+      'floating_top',
+      'floatingTop',
+      'top',
+      'top_spacing',
+      'topSpacing',
+      'spacing_top',
+      'spacingTop',
+      'distance_top',
+      'distanceTop',
+      'distancia_superior',
+      'distanciaSuperior',
+      'offset_top',
+      'offsetTop'
+    ]),
+    DEFAULT_APPEARANCE.floating_top
+  );
+
+  var bottom = toNumber(
+    readAppearanceValue(appearance, [
+      'floating_bottom',
+      'floatingBottom',
+      'bottom',
+      'bottom_spacing',
+      'bottomSpacing',
+      'spacing_bottom',
+      'spacingBottom',
+      'distance_bottom',
+      'distanceBottom',
+      'distancia_inferior',
+      'distanciaInferior',
+      'offset_bottom',
+      'offsetBottom'
+    ]),
+    DEFAULT_APPEARANCE.floating_bottom
+  );
+
+  var isTop = position.indexOf('top') === 0;
+  var isRight = position.indexOf('right') !== -1;
+
+  var side = toNumber(
+    readAppearanceValue(
+      appearance,
+      isRight
+        ? [
+            'right_spacing',
+            'rightSpacing',
+            'spacing_right',
+            'spacingRight',
+            'floating_side',
+            'floatingSide',
+            'side',
+            'distance_side',
+            'distanceSide',
+            'distancia_lateral',
+            'distanciaLateral',
+            'offset_side',
+            'offsetSide'
+          ]
+        : [
+            'left_spacing',
+            'leftSpacing',
+            'spacing_left',
+            'spacingLeft',
+            'floating_side',
+            'floatingSide',
+            'side',
+            'distance_side',
+            'distanceSide',
+            'distancia_lateral',
+            'distanciaLateral',
+            'offset_side',
+            'offsetSide'
+          ]
+    ),
+    DEFAULT_APPEARANCE.floating_side
+  );
+
+  var zIndex = toNumber(
+    readAppearanceValue(appearance, [
+      'z_index',
+      'zIndex',
+      'zindex',
+      'floating_z_index',
+      'floatingZIndex'
+    ]),
+    DEFAULT_APPEARANCE.z_index
+  );
+
+  return {
+    position: position,
+    shape: shape,
+    top: isTop ? px(top) : 'auto',
+    bottom: isTop ? 'auto' : px(bottom),
+    left: isRight ? 'auto' : px(side),
+    right: isRight ? px(side) : 'auto',
+    width: px(width),
+    height: px(height),
+    radius: shape === 'circle' ? '999px' : px(radius),
+    innerRadius: shape === 'circle' ? '999px' : px(Math.max(radius - borderWidth, 0)),
+    borderWidth: px(borderWidth),
+    zIndex: String(Math.round(zIndex)),
+    alignItems: isRight ? 'flex-end' : 'flex-start'
+  };
+}
+
 
   function getPrimaryColor(appearance) {
     return (
