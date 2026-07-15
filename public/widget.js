@@ -2025,24 +2025,6 @@ var modalConfig = normalizeModalAppearanceConfig(appearance);
   handle.addEventListener('pointercancel', stop);
 }
 
-
-  function stop() {
-    dragging = false;
-
-    try {
-      if (activePointerId !== null) {
-        handle.releasePointerCapture(activePointerId);
-      }
-    } catch (error) {}
-
-    activePointerId = null;
-  }
-
-  handle.addEventListener('pointerup', stop);
-  handle.addEventListener('pointercancel', stop);
-}
-
-
   function renderFloatingBubbles(stories, storyVideoMap, activeVideos) {
   var appearance = currentAppearance || {};
   var modalConfig = normalizeModalAppearanceConfig(appearance);
@@ -2168,7 +2150,6 @@ shadow.appendChild(overlay);
 if (behaviorConfig.allowDrag) {
   setupFloatingDrag(shadowData.host, bubbles);
 }
-  
 }
 
 function renderCarousel(stories, storyVideoMap, activeVideos) {
