@@ -2251,6 +2251,17 @@ function getFloatingClosedStorageKey() {
   return 'vidlytics_floating_closed_' + String(storeId || 'default');
 }
 
+  function getFloatingBehaviorConfig(appearance) {
+  var config = getFloatingConfig(appearance);
+
+  return {
+    objectFit: config.objectFit || 'cover',
+    showPlayButton: config.showPlayButton !== false,
+    allowDrag: config.allowDrag !== false,
+    allowClose: config.allowClose !== false
+  };
+}
+
   function renderFloatingBubbles(stories, storyVideoMap, activeVideos) {
   var appearance = currentAppearance || {};
   var modalConfig = normalizeModalAppearanceConfig(appearance);
