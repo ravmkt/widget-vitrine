@@ -1678,6 +1678,7 @@ function buildSharedCss(appearance) {
 }
 
 function buildFloatingCss(appearance) {
+  var behaviorConfig = getFloatingBehaviorConfig(appearance);
     var cfg = getFloatingConfig(appearance);
     var primary = getPrimaryColor(appearance);
 var secondary = getSecondaryColor(appearance);
@@ -1978,7 +1979,7 @@ var modalConfig = normalizeModalAppearanceConfig(appearance);
 
     try {
       handle.setPointerCapture(event.pointerId);
-    } catch (error) {}
+    } catch (e) {}
   });
 
   handle.addEventListener('pointermove', function (event) {
@@ -2007,6 +2008,23 @@ var modalConfig = normalizeModalAppearanceConfig(appearance);
     setImportant(host, 'bottom', 'auto');
     setImportant(host, 'position', 'fixed');
   });
+
+  function stop() {
+    dragging = false;
+
+    try {
+      if (activePointerId !== null) {
+        handle.releasePointerCapture(activePointerId);
+      }
+    } catch (e) {}
+
+    activePointerId = null;
+  }
+
+  handle.addEventListener('pointerup', stop);
+  handle.addEventListener('pointercancel', stop);
+}
+
 
   function stop() {
     dragging = false;
@@ -2150,6 +2168,7 @@ shadow.appendChild(overlay);
 if (behaviorConfig.allowDrag) {
   setupFloatingDrag(shadowData.host, bubbles);
 }
+  
 }
 
 function renderCarousel(stories, storyVideoMap, activeVideos) {
