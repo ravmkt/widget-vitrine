@@ -1361,32 +1361,106 @@ function px(value, fallback) {
   };
 }
 
+  function getFloatingBehaviorConfig(appearance) {
+  appearance = normalizeAppearanceItem(appearance || {});
 
-  function getPrimaryColor(appearance) {
-    return (
-      readAppearanceValue(appearance, [
-        'color',
-        'border_color',
-        'borderColor',
-        'primary_color',
-        'primaryColor',
-        'cor_primaria',
-        'cor_borda'
-      ]) || DEFAULT_APPEARANCE.primary_color
-    );
+  var objectFit = String(
+    readAppearanceValue(appearance, [
+      'object_fit',
+      'objectFit',
+      'video_object_fit',
+      'videoObjectFit',
+      'fit',
+      'ajuste',
+      'floating_object_fit',
+      'floatingObjectFit'
+    ]) || DEFAULT_APPEARANCE.object_fit || 'cover'
+  ).toLowerCase();
+
+  if (['cover', 'contain', 'fill', 'none', 'scale-down'].indexOf(objectFit) === -1) {
+    objectFit = 'cover';
   }
 
-  function getSecondaryColor(appearance) {
-    return (
-      readAppearanceValue(appearance, [
-        'secondary_color',
-        'secondaryColor',
-        'cor_secundaria',
-        'gradient_color',
-        'gradientColor'
-      ]) || DEFAULT_APPEARANCE.secondary_color
-    );
-  }
+  var showPlayButton = toBool(
+    readAppearanceValue(appearance, [
+      'show_play_button',
+      'showPlayButton',
+      'play_button',
+      'playButton',
+      'mostrar_play',
+      'mostrarPlay',
+      'exibir_play',
+      'exibirPlay'
+    ]),
+    DEFAULT_APPEARANCE.show_play_button
+  );
+
+  var allowDrag = toBool(
+    readAppearanceValue(appearance, [
+      'allow_drag',
+      'allowDrag',
+      'draggable',
+      'drag',
+      'permitir_arrastar',
+      'permitirArrastar'
+    ]),
+    DEFAULT_APPEARANCE.allow_drag
+  );
+
+  var allowClose = toBool(
+    readAppearanceValue(appearance, [
+      'allow_close',
+      'allowClose',
+      'show_close',
+      'showClose',
+      'close_button',
+      'closeButton',
+      'floating_close_button',
+      'floatingCloseButton',
+      'permitir_fechar',
+      'permitirFechar'
+    ]),
+    DEFAULT_APPEARANCE.allow_close
+  );
+
+  return {
+    objectFit: objectFit,
+    showPlayButton: showPlayButton,
+    allowDrag: allowDrag,
+    allowClose: allowClose
+  };
+}
+
+function getPrimaryColor(appearance) {
+  return (
+    readAppearanceValue(appearance, [
+      'color',
+      'border_color',
+      'borderColor',
+      'primary_color',
+      'primaryColor',
+      'cor_primaria',
+      'corPrimaria',
+      'cor_borda'
+    ]) || DEFAULT_APPEARANCE.primary_color
+  );
+}
+
+function getSecondaryColor(appearance) {
+  return (
+    readAppearanceValue(appearance, [
+      'secondary_color',
+      'secondaryColor',
+      'background_color',
+      'backgroundColor',
+      'bg_color',
+      'bgColor',
+      'cor_secundaria',
+      'corSecundaria',
+      'cor_fundo'
+    ]) || DEFAULT_APPEARANCE.secondary_color
+  );
+}
 
   function getBorderColor(appearance) {
   return readAppearanceValue(appearance, [
