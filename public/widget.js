@@ -1032,6 +1032,44 @@ if (directAllowClose !== undefined) {
     return DEFAULT_APPEARANCE.floating_shape;
   }
 
+  function toNumber(value, fallback = 0) {
+  if (value === null || value === undefined || value === '') {
+    return fallback;
+  }
+
+  const num = Number(value);
+
+  return Number.isFinite(num) ? num : fallback;
+}
+
+function toBool(value, fallback = false) {
+  if (value === null || value === undefined || value === '') {
+    return fallback;
+  }
+
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    return value === 1;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+
+    if (['true', '1', 'yes', 'sim', 'on'].includes(normalized)) {
+      return true;
+    }
+
+    if (['false', '0', 'no', 'nao', 'não', 'off'].includes(normalized)) {
+      return false;
+    }
+  }
+
+  return fallback;
+}
+
   function getFloatingConfig(appearance) {
   appearance = normalizeAppearanceItem(appearance || {});
 
