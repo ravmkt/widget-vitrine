@@ -1998,13 +1998,13 @@ function buildSharedCss(appearance) {
     + '*,*::before,*::after{box-sizing:border-box!important;}'
     + '.vl-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;background:rgba(15,23,42,.7)!important;display:none!important;align-items:center!important;justify-content:center!important;padding:20px!important;z-index:' + cfg.zIndex + '!important;font-family:' + font + '!important;}'
     + '.vl-overlay.is-open{display:flex!important;}'
-    + '.vl-modal{width:min(92vw,420px)!important;max-height:88vh!important;overflow:hidden!important;background:' + '.vl-modal{position:relative!important;width:min(92vw,420px)!important;height:min(88vh,760px)!important;max-height:88vh!important;overflow:hidden!important;background:' + bgColor + '!important;border-radius:24px!important;box-shadow:' + (modalConfig.shadow_enabled !== false ? '0 24px 80px rgba(15,23,42,.3)' : 'none') + '!important;display:flex!important;flex-direction:column!important;}'
+    + '.vl-modal{width:min(92vw,420px)!important;max-height:88vh!important;overflow:hidden!important;background:' + bgColor + '!important;border-radius:24px!important;box-shadow:' + (modalConfig.shadow_enabled !== false ? '0 24px 80px rgba(15,23,42,.3)' : 'none') + '!important;display:flex!important;flex-direction:column!important;}'
     + '.vl-header{display:flex!important;align-items:center!important;justify-content:space-between!important;padding:14px 16px!important;border-bottom:1px solid #e2e8f0!important;}'
     + '.vl-title{font-weight:800!important;color:' + text + '!important;font-size:14px!important;}'
     + '.vl-count{font-size:12px!important;color:#64748b!important;}'
     + '.vl-close{all:unset!important;font-size:28px!important;line-height:1!important;cursor:pointer!important;color:' + text + '!important;}'
     + '.vl-body{padding:16px!important;display:grid!important;gap:12px!important;overflow:auto!important;}'
-    + '.vl-player{width:100%!important;height:min(58vh,560px)!important;min-height:300px!important;border-radius:18px!important;overflow:hidden!important;background:#000!important;position:relative!important;}'
+    + '.vl-player{width:100%!important;aspect-ratio:9/16!important;border-radius:18px!important;overflow:hidden!important;background:#000!important;}'
     + '.vl-player video,.vl-player iframe{width:100%!important;height:100%!important;border:0!important;display:block!important;object-fit:cover!important;}'
     + '.vl-nav{display:flex!important;gap:10px!important;}'
     + '.vl-btn{all:unset!important;flex:1!important;text-align:center!important;border-radius:999px!important;padding:10px 14px!important;font-weight:800!important;font-size:13px!important;cursor:pointer!important;background:#e2e8f0!important;color:#0f172a!important;}'
@@ -2047,27 +2047,20 @@ var modalConfig = normalizeModalAppearanceConfig(appearance);
   function buildVideoPlayer(video, storyId) {
   var url = getVideoUrl(video);
   var ytId = extractYouTubeId(url);
-  var sourceType = String(
-    firstDefined(video.source_type, video.sourceType, '')
-  ).toLowerCase();
-
-  var isUpload = sourceType === 'upload';
+  var isUpload = video.source_type === 'upload' || video.sourceType === 'upload';
   var isDirect = isDirectVideoUrl(url);
-
   var wrapper = createEl('div', 'vl-player');
 
-  /*
-   * YouTube
-   */
-  if (ytId) {
+  // YouTube: abre o modal já solicitando autoplay.
+  if (!isUpload && ytId) {
     var iframe = createEl('iframe');
 
     iframe.src =
       getYouTubeEmbedUrl(url) +
-      '?autoplay=1&mute=1&playsinline=1&rel=0& modestbranding=1';
+      '?autoplay=1&playsinline=1&rel=0';
 
     iframe.allow =
-      'autoplay; encrypted-media; picture-in-picture; fullscreen';
+      'autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
 
     iframe.allowFullscreen = true;
     iframe.loading = 'eager';
@@ -2078,16 +2071,13 @@ var modalConfig = normalizeModalAppearanceConfig(appearance);
     return wrapper;
   }
 
-  /*
-   * Upload ou vídeo direto
-   */
+  // Vídeos enviados/upload ou URLs diretas (.mp4, .webm etc.).
   if ((isUpload || isDirect) && url) {
     var media = createEl('video');
 
     media.src = url;
     media.controls = true;
     media.autoplay = true;
-    media.muted = true;
     media.playsInline = true;
     media.preload = 'auto';
 
@@ -2098,6 +2088,10 @@ var modalConfig = normalizeModalAppearanceConfig(appearance);
     }
 
     media.addEventListener('play', function () {
+      console.log('[VIDLYTICS] VÍDEO INICIADO', {
+        videoId: video.id
+      });
+
       trackMetric({
         event_type: 'play',
         story_id: storyId,
@@ -2108,40 +2102,18 @@ var modalConfig = normalizeModalAppearanceConfig(appearance);
 
     wrapper.appendChild(media);
 
-    /*
-     * O vídeo precisa estar dentro do DOM antes do play().
-     */
-    setTimeout(function () {
-      var playPromise = media.play();
+    // O clique no widget é uma interação do usuário.
+    // Então tentamos iniciar imediatamente o vídeo no modal.
+    var playPromise = media.play();
 
-      if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.catch(function (error) {
-          console.warn(
-            '[VIDLYTICS] Autoplay bloqueado pelo navegador:',
-            error
-          );
-        });
-      }
-    }, 0);
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(function (error) {
+        console.warn('[VIDLYTICS] Autoplay bloqueado pelo navegador:', error);
+      });
+    }
 
     return wrapper;
   }
-
-  /*
-   * Caso o vídeo não seja reconhecido como arquivo direto
-   */
-  var link = createEl('a', 'vl-btn vl-btn-primary');
-
-  link.href = url || '#';
-  link.target = '_blank';
-  link.rel = 'noopener noreferrer';
-  link.textContent = 'Abrir vídeo';
-
-  wrapper.appendChild(link);
-
-  return wrapper;
-}
-
 
   var link = createEl('a');
   link.href = url || '#';
@@ -2161,54 +2133,30 @@ var modalConfig = normalizeModalAppearanceConfig(appearance);
     if (modalContent) modalContent.innerHTML = '';
   }
 
-  function getStoryRelations(storyVideoMap, storyId) {
-  var relations = storyVideoMap.get(String(storyId)) || [];
-
-  return relations
-    .slice()
-    .sort(function (a, b) {
-      return Number(a.position || 0) - Number(b.position || 0);
-    });
-}
-
   function openStory(story, storyVideoMap, activeVideos, storyProducts, products) {
     if (!overlay || !modalContent) return;
 
-    var relations = getStoryRelations(storyVideoMap, story.id);
+    var relations = (storyVideoMap.get(story.id) || [])
+      .slice()
+      .sort(function (a, b) {
+        return Number(a.position || 0) - Number(b.position || 0);
+      });
 
+    var orderedVideos = relations
+      .map(function (rel) {
+        return activeVideos.find(function (video) {
+          return idsEqual(video.id, rel.video_id);
+        });
+      })
+      .filter(Boolean);
 
-    var videoItems = relations
-  .map(function (rel) {
-    var video = activeVideos.find(function (item) {
-      return idsEqual(item.id, rel.video_id);
+    if (!orderedVideos.length) return;
+
+    var currentIndex = 0;
+
+    relations.forEach(function (rel, index) {
+      if (rel.is_cover) currentIndex = index;
     });
-
-    if (!video) return null;
-
-    return {
-      relation: rel,
-      video: video
-    };
-  })
-  .filter(Boolean);
-
-if (!videoItems.length) {
-  console.warn('[VIDLYTICS] Story sem vídeos válidos:', story.id);
-  return;
-}
-
-var orderedVideos = videoItems.map(function (item) {
-  return item.video;
-});
-
-var currentIndex = videoItems.findIndex(function (item) {
-  return item.relation.is_cover === true || item.relation.is_cover === 'true';
-});
-
-if (currentIndex < 0) {
-  currentIndex = 0;
-}
-
 
     var activeProducts = storyProducts
       .filter(function (sp) {
@@ -2507,7 +2455,7 @@ function getFloatingClosedStorageKey() {
   });
 
   stories.forEach(function (story) {
-    var relations = (storyVideoMap.get(String(story.id)) || [])
+    var relations = (storyVideoMap.get(story.id) || [])
       .slice()
       .sort(function (a, b) {
         return Number(a.position || 0) - Number(b.position || 0);
@@ -2583,39 +2531,25 @@ function getFloatingClosedStorageKey() {
     }
 
     bubble.addEventListener('click', function (event) {
-  event.preventDefault();
-  event.stopPropagation();
+      if (floatingWasDragged) {
+        event.preventDefault();
+        event.stopPropagation();
 
-  if (floatingWasDragged) {
-    floatingWasDragged = false;
-    return;
-  }
+        setTimeout(function () {
+          floatingWasDragged = false;
+        }, 100);
 
-  var relations = getStoryRelations(storyVideoMap, story.id);
+        return;
+      }
 
-  var hasValidVideo = relations.some(function (relation) {
-    return activeVideos.some(function (video) {
-      return idsEqual(video.id, relation.video_id);
+      openStory(
+        story,
+        storyVideoMap,
+        activeVideos,
+        readStoryProductsData,
+        readProductsData
+      );
     });
-  });
-
-  if (!hasValidVideo) {
-    console.warn(
-      '[VIDLYTICS] Nenhum vídeo válido encontrado para a story:',
-      story.id
-    );
-    return;
-  }
-
-  openStory(
-    story,
-    storyVideoMap,
-    activeVideos,
-    readStoryProductsData,
-    readProductsData
-  );
-});
-
 
     bubbles.appendChild(bubble);
 
@@ -2687,7 +2621,7 @@ var font = getFontFamily(appearance);
     }
 
     stories.forEach(function (story) {
-      var relations = (storyVideoMap.get(String(story.id)) || [])
+      var relations = (storyVideoMap.get(story.id) || [])
         .slice()
         .sort(function (a, b) {
           return Number(a.position || 0) - Number(b.position || 0);
@@ -2816,14 +2750,14 @@ var font = getFontFamily(appearance);
           var storyId = item.story_id;
 
           if (!storyVideoMap.has(storyId)) {
-            storyVideoMap.set(String(storyId), []);
+            storyVideoMap.set(storyId, []);
           }
 
-          storyVideoMap.get(String(storyId)).push(item);
+          storyVideoMap.get(storyId).push(item);
         });
 
         var storiesWithVideos = stories.filter(function (story) {
-          var rels = storyVideoMap.get(String(story.id)) || [];
+          var rels = storyVideoMap.get(story.id) || [];
 
           return rels.some(function (rel) {
             return activeVideos.some(function (video) {
