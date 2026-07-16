@@ -1,11 +1,11 @@
 /**
  * Vidlytics Widget — widget.js
- * Correção: GPU Paint Bug Chrome Desktop / requestAnimationFrame
+ * Correção: Espelhamento da lógica da bolhinha para o Modal (Fim da tela preta)
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - APARÊNCIA VIA widget_appearances - 202607161200');
+  console.log('VIDLYTICS WIDGET CARREGADO - FIX MODAL RENDER - 202607161400');
 
-  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-appearances-only-202607161200';
+  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-appearances-only-202607161400';
 
   if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) return;
 
@@ -451,7 +451,7 @@
     var buttonColor = getButtonColor(appearance);
     var font = getFontFamily(appearance);
 
-    // REMOVIDO: transform:translateZ(0) que causa bug na renderização do Chrome
+    // Removido o transform: translate3d e backface-visibility que causavam tela preta em modais no Chrome
     return '*,*::before,*::after{box-sizing:border-box!important;}'
       + '.vl-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;background:#000!important;display:none!important;align-items:center!important;justify-content:center!important;z-index:' + cfg.zIndex + '!important;font-family:' + font + '!important;}'
       + '.vl-overlay.is-open{display:flex!important;}'
@@ -514,8 +514,7 @@
     }
   }
 
-  // ATUALIZADO: Remoção do data-src, agora injetamos src diretamente
-    function buildVideoPlayer(video, storyId, onEnded) {
+  function buildVideoPlayer(video, storyId, onEnded) {
     var url = getVideoUrl(video);
     var ytId = extractYouTubeId(url);
     var isUpload = video.source_type === 'upload' || video.sourceType === 'upload';
@@ -533,52 +532,24 @@
 
     if ((isUpload || isDirect) && url) {
       var media = createEl('video');
-
-      // Usa <source> (padrão HTML5 mais forte) em vez de src direto
-      var source = createEl('source');
-      source.src = url;
-      // Ajuda o Chrome a escolher decoder correto; se não bater, ele ignora
-      if (/\.mp4(\?.*)?$/i.test(url) || /\.m4v(\?.*)?$/i.test(url) || /\.mov(\?.*)?$/i.test(url)) {
-        source.type = 'video/mp4';
-      } else if (/\.webm(\?.*)?$/i.test(url)) {
-        source.type = 'video/webm';
-      } else if (/\.ogg(\?.*)?$/i.test(url)) {
-        source.type = 'video/ogg';
-      }
-      media.appendChild(source);
-
+      
       media.controls = false;
       media.preload = 'auto';
       media.setAttribute('playsinline', '');
       media.setAttribute('webkit-playsinline', '');
       media.playsInline = true;
-      media.muted = false;
-
-      // FORÇA O CHROME A RENDERIZAR NA GPU E PINTAR O FRAME
-      setImportant(media, 'transform', 'translate3d(0,0,0)');
-      setImportant(media, 'backface-visibility', 'hidden');
-      setImportant(media, '-webkit-backface-visibility', 'hidden');
-      setImportant(media, 'will-change', 'transform');
-
+      media.muted = false; 
+      
       var thumb = getVideoThumbnail(video);
       if (thumb) media.poster = thumb;
+
+      // Injeta direto no SRC. É exatamente assim que a bolhinha faz para funcionar.
+      media.src = url;
 
       media.addEventListener('play', function () {
         trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
       });
-      media.addEventListener('ended', function () { if (typeof onEnded === 'function') onEnded(); });
-
-      // GATILHO DE REPAINT: quando o primeiro frame decodifica, força a pintura
-      function forceRepaint() {
-        var cur = media.style.transform || 'translate3d(0,0,0)';
-        setImportant(media, 'transform', 'translate3d(0,0,0.0001px)');
-        requestAnimationFrame(function () {
-          setImportant(media, 'transform', 'translate3d(0,0,0)');
-        });
-      }
-      media.addEventListener('loadeddata', forceRepaint);
-      media.addEventListener('canplay', forceRepaint);
-      media.addEventListener('playing', forceRepaint);
+      media.addEventListener('ended', function() { if (typeof onEnded === 'function') onEnded(); });
 
       wrapper.appendChild(media);
       return wrapper;
@@ -707,44 +678,23 @@
 
       if (footer.childNodes.length > 0) body.appendChild(footer);
       
-      // Monta primeiro toda a UI no Modal
+      // Injeta o player diretamente sem setTimeout (igual fazemos na bolhinha)
+      var playerNode = buildVideoPlayer(video, story.id, nextVideo);
+      body.insertBefore(playerNode, body.firstChild); 
+      
       modalContent.appendChild(header);
       modalContent.appendChild(body);
       
-      // 1. FORÇA O OVERLAY A FICAR VISÍVEL ANTES DE CRIAR A TAG DE VÍDEO
       overlay.className = 'vl-overlay is-open';
 
-      // 2. USA O REQUEST ANIMATION FRAME PARA INJETAR O VÍDEO NO PRÓXIMO QUADRO DE PINTURA DO CHROME
-           // Duplo requestAnimationFrame garante que o overlay já foi pintado
-      requestAnimationFrame(function () {
-        requestAnimationFrame(function () {
-          var playerNode = buildVideoPlayer(video, story.id, nextVideo);
-          body.insertBefore(playerNode, body.firstChild);
-
-          var newVid = playerNode.querySelector('video');
-          if (newVid) {
-            // Detecta HEVC/codec não suportado de verdade
-            newVid.addEventListener('error', function () {
-              console.warn('Vidlytics: erro ao carregar vídeo (possível HEVC/H.265 não suportado no Chrome Desktop).');
-            });
-
-            var tryPlay = function () {
-              var p = newVid.play();
-              if (p && typeof p.catch === 'function') {
-                p.catch(function (e) { console.warn('Vidlytics Play Block:', e); });
-              }
-            };
-
-            // Toca assim que houver dados; se já estiver pronto, toca já
-            if (newVid.readyState >= 2) {
-              tryPlay();
-            } else {
-              newVid.addEventListener('loadeddata', tryPlay, { once: true });
-              tryPlay();
-            }
-          }
-        });
-      });
+      // Dispara o play do vídeo recém injetado
+      var newVid = playerNode.querySelector('video');
+      if (newVid) {
+        var playPromise = newVid.play();
+        if (playPromise) {
+          playPromise.catch(function(e) { console.warn('Vidlytics Play Block:', e); });
+        }
+      }
     }
 
     renderCurrent();
