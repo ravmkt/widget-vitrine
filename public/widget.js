@@ -2045,67 +2045,88 @@ var modalConfig = normalizeModalAppearanceConfig(appearance);
   }
 
   function buildVideoPlayer(video, storyId) {
-    var url = getVideoUrl(video);
-    var ytId = extractYouTubeId(url);
-    var isUpload = video.source_type === 'upload' || video.sourceType === 'upload';
-    var isDirect = isDirectVideoUrl(url);
-    var wrapper = createEl('div', 'vl-player');
+  var url = getVideoUrl(video);
+  var ytId = extractYouTubeId(url);
+  var isUpload = video.source_type === 'upload' || video.sourceType === 'upload';
+  var isDirect = isDirectVideoUrl(url);
+  var wrapper = createEl('div', 'vl-player');
 
-    if (!isUpload && ytId) {
-      var iframe = createEl('iframe');
-      iframe.src = getYouTubeEmbedUrl(url);
-      iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-      iframe.allowFullscreen = true;
-      iframe.loading = 'lazy';
-      iframe.title = video.title || video.name || 'Vídeo';
-      wrapper.appendChild(iframe);
+  // YouTube: abre o modal já solicitando autoplay.
+  if (!isUpload && ytId) {
+    var iframe = createEl('iframe');
 
-      return wrapper;
-    }
+    iframe.src =
+      getYouTubeEmbedUrl(url) +
+      '?autoplay=1&playsinline=1&rel=0';
 
-    if ((isUpload || isDirect) && url) {
-  var media = createEl('video');
+    iframe.allow =
+      'autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
 
-  media.src = url;
-  media.controls = true;
-  media.autoplay = true;
-  media.playsInline = true;
+    iframe.allowFullscreen = true;
+    iframe.loading = 'eager';
+    iframe.title = video.title || video.name || 'Vídeo';
 
-  var thumb = getVideoThumbnail(video);
+    wrapper.appendChild(iframe);
 
-  if (thumb) {
-    media.poster = thumb;
+    return wrapper;
   }
 
-  media.addEventListener('play', function () {
-    console.log('[VIDLYTICS] VÍDEO INICIADO', {
-      videoId: video.id
+  // Vídeos enviados/upload ou URLs diretas (.mp4, .webm etc.).
+  if ((isUpload || isDirect) && url) {
+    var media = createEl('video');
+
+    media.src = url;
+    media.controls = true;
+    media.autoplay = true;
+    media.playsInline = true;
+    media.preload = 'auto';
+
+    var thumb = getVideoThumbnail(video);
+
+    if (thumb) {
+      media.poster = thumb;
+    }
+
+    media.addEventListener('play', function () {
+      console.log('[VIDLYTICS] VÍDEO INICIADO', {
+        videoId: video.id
+      });
+
+      trackMetric({
+        event_type: 'play',
+        story_id: storyId,
+        video_id: video.id,
+        page_url: window.location.href
+      });
     });
 
-    trackMetric({
-      event_type: 'play',
-      story_id: storyId,
-      video_id: video.id,
-      page_url: window.location.href
-    });
-  });
+    wrapper.appendChild(media);
 
-  wrapper.appendChild(media);
+    // O clique no widget é uma interação do usuário.
+    // Então tentamos iniciar imediatamente o vídeo no modal.
+    var playPromise = media.play();
+
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(function (error) {
+        console.warn('[VIDLYTICS] Autoplay bloqueado pelo navegador:', error);
+      });
+    }
+
+    return wrapper;
+  }
+
+  var link = createEl('a');
+  link.href = url || '#';
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.textContent = 'Abrir vídeo';
+  link.className = 'vl-btn vl-btn-primary';
+
+  wrapper.appendChild(link);
 
   return wrapper;
 }
 
-
-    var link = createEl('a');
-    link.href = url || '#';
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    link.textContent = 'Abrir vídeo';
-    link.className = 'vl-btn vl-btn-primary';
-    wrapper.appendChild(link);
-
-    return wrapper;
-  }
 
   function closeOverlay() {
     if (overlay) overlay.className = 'vl-overlay';
