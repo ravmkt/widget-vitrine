@@ -490,7 +490,7 @@
     + '.vl-product-info{min-width:0!important;flex:1!important;}'
     + '.vl-product-name{font-weight:800!important;font-size:12px!important;color:#0f172a!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-transform:uppercase!important;}'
     + '.vl-product-price{margin-top:2px!important;font-weight:800!important;font-size:14px!important;color:#000!important;}'
-    + '.vl-product-btn{background:#00c853!important;color:#fff!important;font-size:10px!important;font-weight:800!important;padding:4px 10px!important;border-radius:6px!important;display:inline-block!important;margin-top:4px!important;text-transform:uppercase!important;cursor:pointer!important;}
+    + '.vl-product-btn{background:#00c853!important;color:#fff!important;font-size:10px!important;font-weight:800!important;padding:4px 10px!important;border-radius:6px!important;display:inline-block!important;margin-top:4px!important;text-transform:uppercase!important;cursor:pointer!important;}'
 
     // BOTÕES DE AÇÃO — lateral direita, empilhados verticalmente
     + '.vl-actions{position:absolute!important;right:12px!important;bottom:120px!important;z-index:25!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:14px!important;pointer-events:auto!important;}'
