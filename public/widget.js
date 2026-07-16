@@ -774,19 +774,28 @@ var shadow = shadowData.shadow;
 
 var style = createEl('style');
 style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
+  html, body {
+    height: 100% !important;
+    margin: 0 !important;
+  }
   .vl-overlay {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
+    width: 100vw !important;
+    height: 100vh !important;
     z-index: 9999 !important;
     background: rgba(0, 0, 0, 0.95) !important;
-  }
-  .vl-overlay.is-open {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .vl-overlay > * {
+    margin: auto !important;
+    max-width: 90vw !important;
+    max-height: 90vh !important;
   }
   .vl-header,
   .vl-body > .vl-nav,
@@ -799,7 +808,6 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
     z-index: 20;
   }
 `;
-
 
 
     var bubbles = createEl('div', 'vl-bubbles');
