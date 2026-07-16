@@ -1081,13 +1081,36 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
       var modalConfig = normalizeModalAppearanceConfig(currentAppearance);
       var stories = results[1] || [], storyVideos = results[2] || [], videos = results[3] || [];
       var storyProducts = results[4] || [], products = results[5] || [], pageRules = results[6] || [];
+        console.log('[Vidlytics] Dados carregados:', {
+  appearance: results[0],
+  stories: stories,
+  storyVideos: storyVideos,
+  videos: videos,
+  storyProducts: storyProducts,
+  products: products,
+  pageRules: pageRules
+});
+
 
       readStoryProductsData = storyProducts; readProductsData = products;
       if (!stories.length || modalConfig.hide_stories) return;
 
       var activeVideos = videos.filter(function (video) {
-        return ('status' in video ? video.status === 'active' : true) && ('active' in video ? video.active !== false : true) && Boolean(getVideoUrl(video));
-      });
+  var videoUrl = getVideoUrl(video);
+
+  console.log('[Vidlytics] Vídeo encontrado:', {
+    video: video,
+    url: videoUrl,
+    isDirect: isDirectVideoUrl(videoUrl)
+  });
+
+  return Boolean(videoUrl);
+});
+        console.log('[Vidlytics] activeVideos:', activeVideos);
+console.log('[Vidlytics] enableFloating:', enableFloating);
+console.log('[Vidlytics] hasSupabase:', hasSupabase);
+console.log('[Vidlytics] storeId:', storeId);
+
       if (!activeVideos.length) return;
 
       var storyVideoMap = new Map();
@@ -1106,6 +1129,10 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
         return !rulesForStory.length || rulesForStory.some(matchesRule);
       });
       if (!applicableStories.length) return;
+console.log('[Vidlytics] Renderizando widget:', {
+  applicableStories: applicableStories,
+  activeVideos: activeVideos
+});
 
       if (enableFloating) renderFloatingBubbles(applicableStories, storyVideoMap, activeVideos);
       if (enableCarousel) renderCarousel(applicableStories, storyVideoMap, activeVideos);
