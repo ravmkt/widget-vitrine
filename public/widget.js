@@ -611,7 +611,7 @@
       ? extractYouTubeId(url)
       : null;
 
-  if (youtubeId) {
+    if (youtubeId) {
     var iframe = createEl('iframe');
 
     iframe.src =
@@ -629,7 +629,11 @@
     return wrapper;
   }
 
-    function closeOverlay() {
+  return wrapper;
+} // fecha buildVideoPlayer
+
+  function closeOverlay() {
+
     if (overlay) overlay.className = 'vl-overlay';
     if (modalContent) {
       var oldVid = modalContent.querySelector('video');
@@ -745,14 +749,9 @@
       }
 
       if (footer.childNodes.length > 0) body.appendChild(footer);
-      
-      var playerNode = buildVideoPlayer(video, story.id, nextVideo);
-
-body.insertBefore(playerNode, body.firstChild);
+    
       var playerNode = buildVideoPlayer(video, story.id, nextVideo);
 body.insertBefore(playerNode, body.firstChild);
-
-var controls = createEl('div', 'vl-controls');
 
 var playBtn = createEl('button', 'vl-control-btn');
 playBtn.type = 'button';
@@ -1129,3 +1128,4 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
   function init() { try { initMutationObserver(); renderWidget(); } catch (error) { console.error('Vidlytics Widget: erro', error); } }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 }
+})();
