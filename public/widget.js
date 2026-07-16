@@ -2075,9 +2075,9 @@ var modalConfig = normalizeModalAppearanceConfig(appearance);
 
       media.addEventListener('play', function () {
   console.log('[VIDLYTICS] VÍDEO INICIADO', {
-    widgetData: widgetData,
-    videoId: video.id
-  });
+  videoId: video.id
+});
+
 
   trackMetric({
     event_type: 'play',
@@ -2092,20 +2092,12 @@ wrapper.style.position = 'relative';
 wrapper.appendChild(media);
 
 
-media.addEventListener('click', function (event) {
-  event.preventDefault();
-  event.stopPropagation();
-
-  console.log('[VIDLYTICS] Widget flutuante clicado', {
-    videoId: video.id,
-    videoUrl: video.video_url || video.url
-  });
-
   // Troque pela função real que seu projeto já usa para abrir o modal.
   openVideoModal(video, storyId);
 });
 
 return wrapper;
+    }
 
     var link = createEl('a');
     link.href = url || '#';
