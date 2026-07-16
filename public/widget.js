@@ -3,9 +3,9 @@
  * Correção: Loop no vídeo + sem fechamento automático
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - FIX LOOP + NO AUTO CLOSE - 202607161500');
+  console.log('VIDLYTICS WIDGET CARREGADO - FIX LOOP + NO AUTO CLOSE - 202607161700');
 
-  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-loop-no-autoclose-202607161500';
+  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-loop-no-autoclose-202607161700';
 
   if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) return;
 
@@ -438,11 +438,20 @@
     video.source_type || video.sourceType || ''
   ).trim().toLowerCase();
 
-  if (sourceType !== 'upload') {
-    return getYouTubeThumbnail(getVideoUrl(video));
-  }
+  function getVideoThumbnail(video) {
+  if (!video) return '';
+
+  var direct = getThumbnailFromObject(video);
+  if (direct) return direct;
+
+  var url = getVideoUrl(video);
+  var youtubeThumb = getYouTubeThumbnail(url);
+
+  if (youtubeThumb) return youtubeThumb;
 
   return '';
+}
+
 }
 
   function getStoryThumbnail(story, coverVideo, coverRelation) {
@@ -753,7 +762,6 @@
       var playerNode = buildVideoPlayer(video, story.id, nextVideo);
 body.insertBefore(playerNode, body.firstChild);
 
-// Controles visuais do player
 var controls = createEl('div', 'vl-controls');
 
 var playButton = createEl('button', 'vl-control-btn');
@@ -771,7 +779,7 @@ likeButton.type = 'button';
 likeButton.setAttribute('aria-label', 'Curtir vídeo');
 likeButton.textContent = '♡';
 
-var spacer = createEl('span', 'vl-control-spacer');
+var controlSpacer = createEl('span', 'vl-control-spacer');
 
 var shareButton = createEl('button', 'vl-control-btn');
 shareButton.type = 'button';
@@ -784,7 +792,7 @@ shareStatus.textContent = 'Link copiado';
 controls.appendChild(playButton);
 controls.appendChild(muteButton);
 controls.appendChild(likeButton);
-controls.appendChild(spacer);
+controls.appendChild(controlSpacer);
 controls.appendChild(shareStatus);
 controls.appendChild(shareButton);
 
@@ -799,10 +807,8 @@ if (newVid) {
 
     if (newVid.paused) {
       newVid.play().catch(function () {});
-      playButton.textContent = 'Ⅱ';
     } else {
       newVid.pause();
-      playButton.textContent = '▶';
     }
   });
 
@@ -822,8 +828,6 @@ if (newVid) {
     playButton.textContent = '▶';
   });
 } else {
-  // O iframe do YouTube não pode ser controlado diretamente
-  // sem utilizar a API oficial do YouTube.
   playButton.style.display = 'none';
   muteButton.style.display = 'none';
 }
@@ -842,6 +846,12 @@ likeButton.addEventListener('click', function (event) {
     page_url: window.location.href
   });
 });
+
+      modalContent.appendChild(header);
+modalContent.appendChild(body);
+
+overlay.className = 'vl-overlay is-open';
+
 
 shareButton.addEventListener('click', function (event) {
   event.preventDefault();
@@ -872,7 +882,6 @@ shareButton.addEventListener('click', function (event) {
   });
 });
 
-modalContent.appendChild(header);
 modalContent.appendChild(body);
      
       overlay.className = 'vl-overlay is-open';
@@ -997,10 +1006,10 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
       var ring = createEl('div', 'vl-ring'); var inner = createEl('div', 'vl-inner');
 
       var videoUrl = coverVideo ? getVideoUrl(coverVideo) : '';
-      var isDirect = isDirectVideoUrl(videoUrl);
-      var isUpload = coverVideo && (coverVideo.source_type === 'upload' || coverVideo.sourceType === 'upload');
+      var isNative = coverVideo && isNativeVideo(coverVideo);
 
-      if ((isDirect || isUpload) && videoUrl) {
+if (isNative && videoUrl) {
+
         var vidPreview = createEl('video', 'vl-img');
         vidPreview.src = videoUrl;
         vidPreview.autoplay = true; vidPreview.muted = true; vidPreview.loop = true; vidPreview.playsInline = true;
