@@ -141,33 +141,29 @@ var floatingWasClosed = false;
       .replace(/\s+/g, '-');
   }
 
-  function toBoolean(value, defaultValue) {
+  function toBoolean(value, fallback) {
   if (value === undefined || value === null || value === '') {
-    return defaultValue;
+    return fallback;
   }
 
-  if (typeof value === 'boolean') {
-    return value;
-  }
-
-  if (typeof value === 'number') {
-    return value === 1;
+  if (value === true || value === 1 || value === '1') {
+    return true;
   }
 
   if (typeof value === 'string') {
     var normalized = value.trim().toLowerCase();
 
-    if (['true', '1', 'yes', 'sim', 'on'].indexOf(normalized) !== -1) {
-      return true;
-    }
-
-    if (['false', '0', 'no', 'não', 'nao', 'off'].indexOf(normalized) !== -1) {
-      return false;
-    }
+    if (normalized === 'true') return true;
+    if (normalized === 'false') return false;
   }
 
-  return defaultValue;
+  if (value === false || value === 0 || value === '0') {
+    return false;
+  }
+
+  return fallback;
 }
+
 
 function getFloatingBehaviorConfig(appearance) {
   var config = getFloatingConfig(appearance) || {};
@@ -1525,30 +1521,29 @@ function px(value, fallback) {
   var innerRadius = shape === 'circle' ? '999px' : px(innerRadiusNumber);
 
   return {
-    position: position,
-    shape: shape,
+  position: positionRaw,
 
-    top: top,
-    right: right,
-    bottom: bottom,
-    left: left,
+  floating_position: positionRaw,
+  floating_shape: getValue(['floating_shape', 'floatingShape'], 'portrait'),
+  floating_width: getValue(['floating_width', 'floatingWidth'], 64),
+  floating_height: getValue(['floating_height', 'floatingHeight'], 96),
 
-    zIndex: zIndexNumber,
+  show_play_button: getValue(
+    ['show_play_button', 'showPlayButton'],
+    undefined
+  ),
 
-    width: px(widthNumber),
-    height: px(heightNumber),
+  allow_drag: getValue(
+    ['allow_drag', 'allowDrag'],
+    undefined
+  ),
 
-    radius: radius,
-    innerRadius: innerRadius,
-    borderWidth: borderWidth,
+  allow_close: getValue(
+    ['allow_close', 'allowClose'],
+    undefined
+  )
+};
 
-    alignItems: alignItems,
-
-    objectFit: objectFit,
-    showPlayButton: showPlayButton,
-    allowDrag: allowDrag,
-    allowClose: allowClose
-  };
 }
 
   function getPrimaryColor(appearance) {
@@ -2063,19 +2058,73 @@ var modalConfig = normalizeModalAppearanceConfig(appearance);
       if (thumb) media.poster = thumb;
 
       media.addEventListener('play', function () {
-        console.log('[VIDLYTICS] WIDGET CLICADO', widgetData);
-        trackMetric({
-          event_type: 'play',
-          story_id: storyId,
-          video_id: video.id,
-          page_url: window.location.href
-        });
-      });
+  console.log('[VIDLYTICS] VÍDEO INICIADO', {
+    widgetData: widgetData,
+    videoId: video.id
+  });
 
-      wrapper.appendChild(media);
+  trackMetric({
+    event_type: 'play',
+    story_id: storyId,
+    video_id: video.id,
+    page_url: window.location.href
+  });
+});
 
-      return wrapper;
-    }
+wrapper.style.position = 'relative';
+
+wrapper.appendChild(media);
+
+if (behaviorConfig.allowClose === true) {
+  var closeButton = document.createElement('button');
+
+  closeButton.type = 'button';
+  closeButton.setAttribute('aria-label', 'Fechar vídeo');
+  closeButton.innerHTML = '&times;';
+
+  closeButton.style.cssText = [
+    'position:absolute',
+    'top:8px',
+    'right:8px',
+    'z-index:9999',
+    'width:28px',
+    'height:28px',
+    'padding:0',
+    'border:0',
+    'border-radius:50%',
+    'background:rgba(0,0,0,.65)',
+    'color:#fff',
+    'font-size:24px',
+    'line-height:28px',
+    'text-align:center',
+    'cursor:pointer'
+  ].join(';');
+
+  closeButton.addEventListener('click', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    console.log('[VIDLYTICS] Widget flutuante fechado');
+
+    wrapper.remove();
+  });
+
+  wrapper.appendChild(closeButton);
+}
+media.addEventListener('click', function (event) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  console.log('[VIDLYTICS] Widget flutuante clicado', {
+    videoId: video.id,
+    videoUrl: video.video_url || video.url
+  });
+
+  // Troque pela função real que seu projeto já usa para abrir o modal.
+  openVideoModal(video, storyId);
+});
+
+return wrapper;
 
     var link = createEl('a');
     link.href = url || '#';
@@ -2361,28 +2410,40 @@ function getFloatingClosedStorageKey() {
 }
 
   function getFloatingBehaviorConfig(appearance) {
-  var config = getFloatingConfig(appearance);
+  var config = getFloatingConfig(appearance) || {};
 
- return {
-    objectFit: config.objectFit || 'cover',
-    showPlayButton: config.showPlayButton === true,
-    allowDrag: config.allowDrag === true,
-    allowClose: config.allowClose === true
+  var rawShowPlayButton = config.showPlayButton;
+  if (rawShowPlayButton === undefined) {
+    rawShowPlayButton = config.show_play_button;
+  }
+
+  var rawAllowDrag = config.allowDrag;
+  if (rawAllowDrag === undefined) {
+    rawAllowDrag = config.allow_drag;
+  }
+
+  var rawAllowClose = config.allowClose;
+  if (rawAllowClose === undefined) {
+    rawAllowClose = config.allow_close;
+  }
+
+  var behavior = {
+    objectFit: config.objectFit || config.object_fit || 'cover',
+
+    showPlayButton: toBoolean(rawShowPlayButton, false),
+    allowDrag: toBoolean(rawAllowDrag, true),
+
+    // Enquanto allow_close não vier do banco,
+    // o botão fechar será exibido por padrão.
+    allowClose: toBoolean(rawAllowClose, true)
   };
+
+  console.log('[VIDLYTICS] FLOATING BEHAVIOR FINAL:', behavior);
+  console.log('[VIDLYTICS] allow_close RAW:', rawAllowClose);
+
+  return behavior;
 }
 
-  function renderFloatingBubbles(stories, storyVideoMap, activeVideos) {
-  var appearance = currentAppearance || {};
-  var modalConfig = normalizeModalAppearanceConfig(appearance);
-  var behaviorConfig = getFloatingBehaviorConfig(appearance);
-
-    if (
-  behaviorConfig.allowClose &&
-  toBoolean(getStorageItem(getFloatingClosedStorageKey(), false), false)
-) {
-  floatingWasClosed = true;
-  return;
-}
 
     console.log('VIDLYTICS FLOATING BEHAVIOR FINAL:', behaviorConfig);
     var floatingCfg = getFloatingConfig(appearance);
