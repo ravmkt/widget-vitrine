@@ -2064,40 +2064,37 @@ var modalConfig = normalizeModalAppearanceConfig(appearance);
     }
 
     if ((isUpload || isDirect) && url) {
-      var media = createEl('video');
-      media.src = url;
-      media.controls = true;
-      media.autoplay = true;
-      media.playsInline = true;
+  var media = createEl('video');
 
-      var thumb = getVideoThumbnail(video);
-      if (thumb) media.poster = thumb;
+  media.src = url;
+  media.controls = true;
+  media.autoplay = true;
+  media.playsInline = true;
 
-      media.addEventListener('play', function () {
-  console.log('[VIDLYTICS] VÍDEO INICIADO', {
-  videoId: video.id
-});
+  var thumb = getVideoThumbnail(video);
 
+  if (thumb) {
+    media.poster = thumb;
+  }
 
-  trackMetric({
-    event_type: 'play',
-    story_id: storyId,
-    video_id: video.id,
-    page_url: window.location.href
+  media.addEventListener('play', function () {
+    console.log('[VIDLYTICS] VÍDEO INICIADO', {
+      videoId: video.id
+    });
+
+    trackMetric({
+      event_type: 'play',
+      story_id: storyId,
+      video_id: video.id,
+      page_url: window.location.href
+    });
   });
-});
 
-wrapper.style.position = 'relative';
+  wrapper.appendChild(media);
 
-wrapper.appendChild(media);
+  return wrapper;
+}
 
-
-  // Troque pela função real que seu projeto já usa para abrir o modal.
-  openVideoModal(video, storyId);
-});
-
-return wrapper;
-    }
 
     var link = createEl('a');
     link.href = url || '#';
