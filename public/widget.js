@@ -1128,5 +1128,4 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
 
   function init() { try { initMutationObserver(); renderWidget(); } catch (error) { console.error('Vidlytics Widget: erro', error); } }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-
-})();
+}
