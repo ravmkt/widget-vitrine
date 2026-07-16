@@ -2646,47 +2646,6 @@ var font = getFontFamily(appearance);
         if (event.target === overlay) closeOverlay();
       });
 
-      carouselOwnsOverlay = true;
-    }
-
-    stories.forEach(function (story) {
-      var relations = (storyVideoMap.get(story.id) || [])
-        .slice()
-        .sort(function (a, b) {
-          return Number(a.position || 0) - Number(b.position || 0);
-        });
-
-      var coverRelation =
-        relations.find(function (item) {
-          return item.is_cover;
-        }) ||
-        relations[0] ||
-        null;
-
-      var coverVideo = coverRelation
-        ? activeVideos.find(function (video) {
-            return idsEqual(video.id, coverRelation.video_id);
-          })
-        : null;
-
-      var thumb = getStoryThumbnail(story, coverVideo, coverRelation);
-
-      var card = createEl('button', 'card');
-      card.type = 'button';
-
-      var mediaBox = createEl('div', 'media');
-
-      if (thumb) {
-        var img = createEl('img');
-        img.src = thumb;
-        img.alt = story.title || story.name || 'Story';
-        img.loading = 'lazy';
-
-        img.onerror = function () {
-          mediaBox.innerHTML = '';
-          mediaBox.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase();
-        };
-
         mediaBox.appendChild(img);
       } else {
         mediaBox.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase();
