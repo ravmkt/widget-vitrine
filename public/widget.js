@@ -1522,11 +1522,7 @@ function px(value, fallback) {
 
   return {
   position: position,
-
-  floating_position: position,
-  floating_shape: shape,
-  floating_width: widthNumber,
-  floating_height: heightNumber,
+  shape: shape,
 
   top: top,
   right: right,
@@ -1542,17 +1538,26 @@ function px(value, fallback) {
 
   zIndex: zIndexNumber,
   alignItems: alignItems,
+
   objectFit: objectFit,
 
-  show_play_button: showPlayButton,
   showPlayButton: showPlayButton,
-
-  allow_drag: allowDrag,
   allowDrag: allowDrag,
+  allowClose: allowClose,
 
-  allow_close: allowClose,
-  allowClose: allowClose
+  floating_position: position,
+  floating_shape: shape,
+  floating_width: widthNumber,
+  floating_height: heightNumber,
+
+  floating_object_fit: objectFit,
+  object_fit: objectFit,
+
+  show_play_button: showPlayButton,
+  allow_drag: allowDrag,
+  allow_close: allowClose
 };
+
 
 
 }
@@ -2390,154 +2395,171 @@ function getFloatingClosedStorageKey() {
   var modalConfig = normalizeModalAppearanceConfig(appearance);
   var behaviorConfig = getFloatingBehaviorConfig(appearance);
 
+    // Não recria o widget se ele foi fechado nesta sessão/navegador.
+  if (floatingWasClosed || getStorageItem(getFloatingClosedStorageKey(), false) === true) {
+    return;
+  }
+
   console.log('VIDLYTICS FLOATING BEHAVIOR FINAL:', behaviorConfig);
 
   var floatingCfg = getFloatingConfig(appearance);
   var shadowData = getOrCreateShadowRoot(appearance);
   var shadow = shadowData.shadow;
 
-var style = createEl('style');
-    style.textContent = buildFloatingCss(appearance, behaviorConfig);
+  var style = createEl('style');
+  style.textContent = buildFloatingCss(appearance, behaviorConfig);
 
-    var bubbles = createEl('div', 'vl-bubbles');
+  var bubbles = createEl('div', 'vl-bubbles');
 
-    if (behaviorConfig.allowClose) {
-  var dismissButton = createEl('button', 'vl-dismiss');
-  dismissButton.type = 'button';
-  dismissButton.setAttribute('aria-label', 'Fechar widget');
-  dismissButton.textContent = '×';
+  if (behaviorConfig.allowClose) {
+    var dismissButton = createEl('button', 'vl-dismiss');
 
-  dismissButton.addEventListener('click', function (event) {
-    event.preventDefault();
-    event.stopPropagation();
+    dismissButton.type = 'button';
+    dismissButton.setAttribute('aria-label', 'Fechar widget');
+    dismissButton.textContent = '×';
 
-    floatingWasClosed = true;
-setStorageItem(getFloatingClosedStorageKey(), true);
-setImportant(shadowData.host, 'display', 'none');
-});
+    dismissButton.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
 
-  bubbles.appendChild(dismissButton);
-}
-
-
-    overlay = createEl('div', 'vl-overlay');
-
-    var modal = createEl('div', 'vl-modal');
-    modalContent = createEl('div');
-
-    modal.appendChild(modalContent);
-    overlay.appendChild(modal);
-
-    overlay.addEventListener('click', function (event) {
-      if (event.target === overlay) closeOverlay();
+      floatingWasClosed = true;
+      setStorageItem(getFloatingClosedStorageKey(), true);
+      setImportant(shadowData.host, 'display', 'none');
     });
 
-    stories.forEach(function (story) {
-      var relations = (storyVideoMap.get(story.id) || [])
-        .slice()
-        .sort(function (a, b) {
-          return Number(a.position || 0) - Number(b.position || 0);
-        });
-
-      var coverRelation =
-        relations.find(function (item) {
-          return item.is_cover;
-        }) ||
-        relations[0] ||
-        null;
-
-      var coverVideo = coverRelation
-        ? activeVideos.find(function (video) {
-            return idsEqual(video.id, coverRelation.video_id);
-          })
-        : null;
-
-      var thumb = getStoryThumbnail(story, coverVideo, coverRelation);
-
-      var bubble = createEl('button', 'vl-bubble');
-      bubble.type = 'button';
-      bubble.setAttribute('aria-label', story.title || story.name || 'Story');
-
-      var ring = createEl('div', 'vl-ring');
-      var inner = createEl('div', 'vl-inner');
-
-      setImportant(ring, 'border-radius', floatingCfg.radius);
-setImportant(ring, 'overflow', 'hidden');
-
-setImportant(inner, 'border-radius', floatingCfg.innerRadius);
-setImportant(inner, 'overflow', 'hidden');
-
-      if (thumb) {
-        var img = createEl('img', 'vl-img');
-        img.src = thumb;
-        img.alt = story.title || story.name || 'Story';
-        img.loading = 'lazy';
-
-        setImportant(img, 'border-radius', floatingCfg.innerRadius);
-setImportant(img, 'object-fit', behaviorConfig.objectFit);
-setImportant(img, 'overflow', 'hidden');
-
-        img.onerror = function () {
-          inner.innerHTML = '';
-          inner.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase();
-        };
-
-        inner.appendChild(img);
-      } else {
-        inner.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase();
-      }
-
-      ring.appendChild(inner);
-
-if (behaviorConfig.showPlayButton) {
-  var playBadge = createEl('span', 'vl-play-badge');
-  playBadge.setAttribute('aria-hidden', 'true');
-  ring.appendChild(playBadge);
-}
-
-bubble.appendChild(ring);
-
-
-      if (modalConfig.show_title !== false) {
-        var label = createEl('span', 'vl-label');
-        label.textContent = story.title || story.name || 'Story';
-        bubble.appendChild(label);
-      }
-
-      bubble.addEventListener('click', function (event) {
-  if (floatingWasDragged) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    setTimeout(function () {
-      floatingWasDragged = false;
-    }, 100);
-
-    return;
+    bubbles.appendChild(dismissButton);
   }
 
-  openStory(story, storyVideoMap, activeVideos, readStoryProductsData, readProductsData);
-});
+  overlay = createEl('div', 'vl-overlay');
 
+  var modal = createEl('div', 'vl-modal');
+  modalContent = createEl('div');
 
-      bubbles.appendChild(bubble);
+  modal.appendChild(modalContent);
+  overlay.appendChild(modal);
 
-      trackMetric({
-        event_type: 'view',
-        story_id: story.id,
-        video_id: coverVideo ? coverVideo.id : null,
-        page_url: window.location.href
+  overlay.addEventListener('click', function (event) {
+    if (event.target === overlay) {
+      closeOverlay();
+    }
+  });
+
+  stories.forEach(function (story) {
+    var relations = (storyVideoMap.get(story.id) || [])
+      .slice()
+      .sort(function (a, b) {
+        return Number(a.position || 0) - Number(b.position || 0);
       });
+
+    var coverRelation =
+      relations.find(function (item) {
+        return item.is_cover;
+      }) ||
+      relations[0] ||
+      null;
+
+    var coverVideo = coverRelation
+      ? activeVideos.find(function (video) {
+          return idsEqual(video.id, coverRelation.video_id);
+        })
+      : null;
+
+    var thumb = getStoryThumbnail(story, coverVideo, coverRelation);
+
+    var bubble = createEl('button', 'vl-bubble');
+    bubble.type = 'button';
+    bubble.setAttribute('aria-label', story.title || story.name || 'Story');
+
+    var ring = createEl('div', 'vl-ring');
+    var inner = createEl('div', 'vl-inner');
+
+    setImportant(ring, 'border-radius', floatingCfg.radius);
+    setImportant(ring, 'overflow', 'hidden');
+
+    setImportant(inner, 'border-radius', floatingCfg.innerRadius);
+    setImportant(inner, 'overflow', 'hidden');
+
+    if (thumb) {
+      var img = createEl('img', 'vl-img');
+
+      img.src = thumb;
+      img.alt = story.title || story.name || 'Story';
+      img.loading = 'lazy';
+
+      setImportant(img, 'border-radius', floatingCfg.innerRadius);
+      setImportant(img, 'object-fit', behaviorConfig.objectFit);
+      setImportant(img, 'overflow', 'hidden');
+
+      img.onerror = function () {
+        inner.innerHTML = '';
+        inner.textContent = (story.title || story.name || 'S')
+          .slice(0, 1)
+          .toUpperCase();
+      };
+
+      inner.appendChild(img);
+    } else {
+      inner.textContent = (story.title || story.name || 'S')
+        .slice(0, 1)
+        .toUpperCase();
+    }
+
+    ring.appendChild(inner);
+
+    if (behaviorConfig.showPlayButton) {
+      var playBadge = createEl('span', 'vl-play-badge');
+      playBadge.setAttribute('aria-hidden', 'true');
+      ring.appendChild(playBadge);
+    }
+
+    bubble.appendChild(ring);
+
+    if (modalConfig.show_title !== false) {
+      var label = createEl('span', 'vl-label');
+      label.textContent = story.title || story.name || 'Story';
+      bubble.appendChild(label);
+    }
+
+    bubble.addEventListener('click', function (event) {
+      if (floatingWasDragged) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        setTimeout(function () {
+          floatingWasDragged = false;
+        }, 100);
+
+        return;
+      }
+
+      openStory(
+        story,
+        storyVideoMap,
+        activeVideos,
+        readStoryProductsData,
+        readProductsData
+      );
     });
 
-    shadow.appendChild(style);
-shadow.appendChild(bubbles);
-shadow.appendChild(overlay);
+    bubbles.appendChild(bubble);
 
-if (behaviorConfig.allowDrag) {
-  setupFloatingDrag(shadowData.host, bubbles);
+    trackMetric({
+      event_type: 'view',
+      story_id: story.id,
+      video_id: coverVideo ? coverVideo.id : null,
+      page_url: window.location.href
+    });
+  });
+
+  shadow.appendChild(style);
+  shadow.appendChild(bubbles);
+  shadow.appendChild(overlay);
+
+  if (behaviorConfig.allowDrag) {
+    setupFloatingDrag(shadowData.host, bubbles);
+  }
 }
-}
+
 
 function renderCarousel(stories, storyVideoMap, activeVideos) {
 
