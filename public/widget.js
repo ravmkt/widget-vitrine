@@ -1,11 +1,11 @@
 /**
  * Vidlytics Widget — widget.js
- * Atualização: Correção do Decoder Lock (Tela Preta) e Reset instantâneo no F5.
+ * Correção Final: Atraso no Play para renderização de imagem e liberação de memória
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - APARÊNCIA VIA widget_appearances - 202607161055');
+  console.log('VIDLYTICS WIDGET CARREGADO - APARÊNCIA VIA widget_appearances - 202607161115');
 
-  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-appearances-only-202607161055';
+  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-appearances-only-202607161115';
 
   if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) return;
 
@@ -33,7 +33,7 @@
   var modalContent = null;
   var globalShadowRoot = null; 
   var floatingWasDragged = false;
-  var floatingWasClosed = false; // Apenas variável de memória (F5 vai sempre resetar para false)
+  var floatingWasClosed = false; 
   var readStoryProductsData = [];
   var readProductsData = [];
 
@@ -181,7 +181,7 @@
 
   function appearanceHasUsefulData(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
-    var usefulNames = [ 'floating_position', 'floatingPosition', 'position', 'posicao', 'posição', 'widget_position', 'widgetPosition', 'placement', 'floating_video_position', 'floatingVideoPosition', 'floating_shape', 'floatingShape', 'shape', 'form', 'forma', 'formato', 'widget_shape', 'widgetShape', 'floating_video_shape', 'floatingVideoShape', 'floating_width', 'floatingWidth', 'width', 'largura', 'widget_width', 'widgetWidth', 'floating_video_width', 'floatingVideoWidth', 'floating_height', 'floatingHeight', 'height', 'altura', 'widget_height', 'widgetHeight', 'floating_video_height', 'floatingVideoHeight', 'floating_radius', 'floatingRadius', 'border_radius', 'borderRadius', 'radius', 'raio', 'widget_radius', 'widgetRadius', 'floating_top', 'floatingTop', 'top', 'top_spacing', 'topSpacing', 'spacing_top', 'spacingTop', 'floating_bottom', 'floatingBottom', 'bottom', 'bottom_spacing', 'bottomSpacing', 'spacing_bottom', 'spacingBottom', 'floating_side', 'floatingSide', 'side', 'left_spacing', 'leftSpacing', 'right_spacing', 'rightSpacing', 'distance_top', 'distanceTop', 'distancia_superior', 'distanciaSuperior', 'distance_bottom', 'distanceBottom', 'distancia_inferior', 'distanciaInferior', 'distance_side', 'distanceSide', 'distancia_lateral', 'distanciaLateral', 'floating_border_width', 'floatingBorderWidth', 'border_width', 'borderWidth', 'largura_borda', 'larguraBorda', 'primary_color', 'primaryColor', 'secondary_color', 'secondaryColor', 'border_color', 'borderColor', 'color', 'text_color', 'textColor', 'font_family', 'fontFamily', 'background_color', 'backgroundColor', 'button_color', 'buttonColor', 'show_title', 'showTitle', 'show_product', 'showProduct', 'hide_stories', 'hideStories', 'shadow_enabled', 'shadowEnabled', 'floating_config', 'floatingConfig', 'floating_border_radius', 'floatingBorderRadius', 'widget_border_radius', 'widgetBorderRadius', 'widget_radius', 'widgetRadius', 'border_radius', 'borderRadius', 'floating_object_fit', 'floatingObjectFit', 'object_fit', 'objectFit', 'image_fit', 'imageFit', 'fit', 'show_play_button', 'showPlayButton', 'show_player_button', 'showPlayerButton', 'play_button_enabled', 'playButtonEnabled', 'allow_drag', 'allowDrag', 'draggable', 'drag_enabled', 'dragEnabled', 'permitir_arrastar', 'allow_close', 'allowClose', 'closable', 'close_enabled', 'closeEnabled', 'show_close_button', 'showCloseButton', 'permitir_fechar', 'floating_show_play_button', 'floatingShowPlayButton', 'show_floating_play_button', 'showFloatingPlayButton', 'allow_floating_drag', 'allowFloatingDrag', 'floating_allow_drag', 'floatingAllowDrag', 'floating_drag_enabled', 'floatingDragEnabled', 'allow_floating_close', 'allowFloatingClose', 'floating_allow_close', 'floatingAllowClose', 'floating_close_enabled', 'floatingCloseEnabled' ];
+    var usefulNames = [ 'floating_position', 'floatingPosition', 'position', 'posicao', 'posição', 'widget_position', 'widgetPosition', 'placement', 'floating_video_position', 'floatingVideoPosition', 'floating_shape', 'floatingShape', 'shape', 'form', 'forma', 'formato', 'widget_shape', 'widgetShape', 'floating_video_shape', 'floatingVideoShape', 'floating_width', 'floatingWidth', 'width', 'largura', 'widget_width', 'widgetWidth', 'floating_video_width', 'floatingVideoWidth', 'floating_height', 'floatingHeight', 'height', 'altura', 'widget_height', 'widgetHeight', 'floating_radius', 'floatingRadius', 'border_radius', 'borderRadius', 'radius', 'raio', 'widget_radius', 'widgetRadius', 'floating_top', 'floatingTop', 'top', 'top_spacing', 'topSpacing', 'spacing_top', 'spacingTop', 'floating_bottom', 'floatingBottom', 'bottom', 'bottom_spacing', 'bottomSpacing', 'spacing_bottom', 'spacingBottom', 'floating_side', 'floatingSide', 'side', 'left_spacing', 'leftSpacing', 'right_spacing', 'rightSpacing', 'distance_top', 'distanceTop', 'distancia_superior', 'distanciaSuperior', 'distance_bottom', 'distanceBottom', 'distancia_inferior', 'distanciaInferior', 'distance_side', 'distanceSide', 'distancia_lateral', 'distanciaLateral', 'floating_border_width', 'floatingBorderWidth', 'border_width', 'borderWidth', 'largura_borda', 'larguraBorda', 'primary_color', 'primaryColor', 'secondary_color', 'secondaryColor', 'border_color', 'borderColor', 'color', 'text_color', 'textColor', 'font_family', 'fontFamily', 'background_color', 'backgroundColor', 'button_color', 'buttonColor', 'show_title', 'showTitle', 'show_product', 'showProduct', 'hide_stories', 'hideStories', 'shadow_enabled', 'shadowEnabled', 'floating_config', 'floatingConfig', 'floating_border_radius', 'floatingBorderRadius', 'widget_border_radius', 'widgetBorderRadius', 'widget_radius', 'widgetRadius', 'border_radius', 'borderRadius', 'floating_object_fit', 'floatingObjectFit', 'object_fit', 'objectFit', 'image_fit', 'imageFit', 'fit', 'show_play_button', 'showPlayButton', 'show_player_button', 'showPlayerButton', 'play_button_enabled', 'playButtonEnabled', 'allow_drag', 'allowDrag', 'draggable', 'drag_enabled', 'dragEnabled', 'permitir_arrastar', 'allow_close', 'allowClose', 'closable', 'close_enabled', 'closeEnabled', 'show_close_button', 'showCloseButton', 'permitir_fechar', 'floating_show_play_button', 'floatingShowPlayButton', 'show_floating_play_button', 'showFloatingPlayButton', 'allow_floating_drag', 'allowFloatingDrag', 'floating_allow_drag', 'floatingAllowDrag', 'floating_drag_enabled', 'floatingDragEnabled', 'allow_floating_close', 'allowFloatingClose', 'floating_allow_close', 'floatingAllowClose', 'floating_close_enabled', 'floatingCloseEnabled' ];
     for (var i = 0; i < usefulNames.length; i += 1) { if (readAppearanceValue(appearance, [usefulNames[i]]) !== undefined) return true; }
     return false;
   }
@@ -499,15 +499,14 @@
       + '.vl-label{pointer-events:none!important;width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;font-family:' + font + '!important;font-size:11px!important;line-height:12px!important;font-weight:700!important;color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.8)!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;display:block!important;}';
   }
 
-  // --- HACK PARA PREVENIR TELA PRETA NO CHROME (HARDWARE DECODER LOCK) ---
+  // --- HACK HArdware Lock: Pausa o video do background ---
   function pausePreviews() {
     if (!globalShadowRoot) return;
-    var vids = globalShadowRoot.querySelectorAll('video.vl-img');
+    var vids = globalShadowRoot.querySelectorAll('.vl-bubble video.vl-img');
     for (var i = 0; i < vids.length; i++) {
       var v = vids[i];
-      if (!v.paused) v.pause();
-      // Remove o SRC temporariamente. Isso liberta o Chrome para renderizar o vídeo grande.
-      if (v.src) {
+      v.pause();
+      if (v.src && !v.dataset.tempSrc) {
         v.dataset.tempSrc = v.src;
         v.removeAttribute('src');
         v.load();
@@ -517,17 +516,18 @@
   
   function resumePreviews() {
     if (!globalShadowRoot) return;
-    var vids = globalShadowRoot.querySelectorAll('video.vl-img');
+    var vids = globalShadowRoot.querySelectorAll('.vl-bubble video.vl-img');
     for (var i = 0; i < vids.length; i++) {
       var v = vids[i];
-      // Devolve o SRC e dá Play novamente
       if (v.dataset.tempSrc) {
         v.src = v.dataset.tempSrc;
-        v.play().catch(function(){});
+        v.removeAttribute('data-temp-src');
+        v.load();
+        var p = v.play();
+        if (p) p.catch(function(){});
       }
     }
   }
-  // ------------------------------------------------------------------------
 
   function buildVideoPlayer(video, storyId, onEnded) {
     var url = getVideoUrl(video);
@@ -548,7 +548,7 @@
     if ((isUpload || isDirect) && url) {
       var media = createEl('video');
       media.src = url;
-      media.autoplay = true;
+      // ATENÇÃO: Autoplay e Play removidos daqui. Serão chamados APÓS o vídeo estar visível no DOM
       media.controls = false;
       media.preload = 'auto';
       media.setAttribute('playsinline', '');
@@ -565,10 +565,6 @@
       media.addEventListener('ended', function() { if (typeof onEnded === 'function') onEnded(); });
 
       wrapper.appendChild(media);
-      var playPromise = media.play();
-      if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.catch(function () { console.log('Autoplay do vídeo prevenido pelo navegador.'); });
-      }
       return wrapper;
     }
 
@@ -583,8 +579,15 @@
 
   function closeOverlay() {
     if (overlay) overlay.className = 'vl-overlay';
-    if (modalContent) modalContent.innerHTML = '';
-    resumePreviews(); // Retorna o vídeo para o mini-player
+    
+    // Mata o video da modal para limpar memória ao fechar
+    if (modalContent) {
+      var oldVid = modalContent.querySelector('video');
+      if (oldVid) { oldVid.pause(); oldVid.removeAttribute('src'); oldVid.load(); }
+      modalContent.innerHTML = '';
+    }
+    
+    resumePreviews(); 
   }
 
   function openStory(storiesList, initialStoryIndex, storyVideoMap, activeVideos, storyProducts, products) {
@@ -623,6 +626,10 @@
       var story = storiesList[currentStoryIndex]; if (!story) return;
       var orderedVideos = getOrderedVideos(story); if (!orderedVideos.length) { nextVideo(); return; }
       var video = orderedVideos[currentVideoIndex]; if (!video) return;
+
+      // HACK: Mata o vídeo anterior (se houver) ANTES de injetar o novo
+      var oldVid = modalContent.querySelector('video');
+      if (oldVid) { oldVid.pause(); oldVid.removeAttribute('src'); oldVid.load(); }
 
       var modalConfig = normalizeModalAppearanceConfig(currentAppearance);
       modalContent.innerHTML = '';
@@ -697,7 +704,19 @@
       if (footer.childNodes.length > 0) body.appendChild(footer);
       modalContent.appendChild(header);
       modalContent.appendChild(body);
+      
+      // Abre a tela no HTML!
       overlay.className = 'vl-overlay is-open';
+
+      // HACK: E só dá o PLAY depois que a tela preta já estiver desenhada!
+      setTimeout(function() {
+        var newVid = body.querySelector('video');
+        if (newVid) {
+          newVid.currentTime = 0; // Força um reset de frame
+          var playPromise = newVid.play();
+          if (playPromise) playPromise.catch(function(e) { console.log('Erro play:', e); });
+        }
+      }, 50);
     }
 
     renderCurrent();
@@ -749,7 +768,6 @@
     var modalConfig = normalizeModalAppearanceConfig(appearance);
     var behaviorConfig = getFloatingBehaviorConfig(appearance);
 
-    // Agora é impossível o widget sumir com F5 se não fechar a aba
     if (floatingWasClosed) return;
 
     var shadowData = getOrCreateShadowRoot(appearance);
@@ -766,9 +784,8 @@
       dismissButton.textContent = '×';
       dismissButton.addEventListener('click', function (event) {
         event.preventDefault(); event.stopPropagation();
-        floatingWasClosed = true; // Salva apenas nessa aba até dar F5
+        floatingWasClosed = true; 
         
-        // Remove totalmente o balão da tela instantaneamente
         if (shadowData && shadowData.host) {
           shadowData.host.remove();
         }
