@@ -463,33 +463,47 @@
     + '.vl-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;background:rgba(0,0,0,0.7)!important;display:none!important;align-items:center!important;justify-content:center!important;z-index:' + cfg.zIndex + '!important;font-family:' + font + '!important;}'
     + '.vl-overlay.is-open{display:flex!important;}'
     + '.vl-modal{width:100%!important;max-width:480px!important;max-height:90vh!important;position:relative!important;overflow:hidden!important;background:transparent!important;box-shadow:none!important;display:flex!important;flex-direction:column!important;}'
-    + '.vl-header{position:absolute!important;top:0!important;left:0!important;right:0!important;display:flex!important;align-items:flex-start!important;justify-content:space-between!important;padding:20px 16px!important;background:linear-gradient(to bottom,rgba(0,0,0,.6),transparent)!important;z-index:20!important;border:none!important;pointer-events:none!important;}'
-    + '.vl-header-left{display:flex!important;flex-direction:column!important;gap:4px!important;pointer-events:auto!important;}'
-    + '.vl-title{font-weight:800!important;color:#fff!important;font-size:16px!important;text-shadow:0 1px 3px rgba(0,0,0,.5)!important;text-transform:uppercase!important;}'
-    + '.vl-count{font-size:13px!important;color:rgba(255,255,255,.9)!important;font-weight:600!important;}'
-    + '.vl-close{all:unset!important;width:32px!important;height:32px!important;border-radius:50%!important;border:1px solid rgba(255,255,255,.5)!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:20px!important;line-height:1!important;cursor:pointer!important;color:#fff!important;background:rgba(0,0,0,.3)!important;backdrop-filter:blur(4px)!important;pointer-events:auto!important;}'
+
+    // HEADER
+    + '.vl-header{position:absolute!important;top:0!important;left:0!important;right:0!important;display:flex!important;align-items:flex-start!important;justify-content:space-between!important;padding:16px!important;background:linear-gradient(to bottom,rgba(0,0,0,.55),transparent)!important;z-index:30!important;border:none!important;pointer-events:none!important;}'
+    + '.vl-header-left{display:flex!important;flex-direction:column!important;gap:2px!important;pointer-events:auto!important;}'
+    + '.vl-title{font-weight:800!important;color:#fff!important;font-size:14px!important;text-shadow:0 1px 3px rgba(0,0,0,.5)!important;text-transform:uppercase!important;letter-spacing:.5px!important;}'
+    + '.vl-subtitle{font-size:11px!important;color:rgba(255,255,255,.85)!important;font-weight:600!important;text-transform:uppercase!important;letter-spacing:.3px!important;}'
+    + '.vl-count{font-size:11px!important;color:rgba(255,255,255,.75)!important;font-weight:600!important;}'
+    + '.vl-header-right{display:flex!important;align-items:center!important;gap:8px!important;pointer-events:auto!important;}'
+    + '.vl-ctrl-btn{all:unset!important;width:30px!important;height:30px!important;border-radius:50%!important;border:1px solid rgba(255,255,255,.4)!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:14px!important;cursor:pointer!important;color:#fff!important;background:rgba(0,0,0,.35)!important;backdrop-filter:blur(4px)!important;pointer-events:auto!important;}'
+
+    // BODY
     + '.vl-body{flex:1!important;width:100%!important;position:relative!important;background:transparent!important;aspect-ratio:9/16!important;}'
     + '.vl-player{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;background:transparent!important;z-index:1!important;}'
     + '.vl-player video,.vl-player iframe{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;border:0!important;display:block!important;object-fit:cover!important;z-index:2!important;background:transparent!important;}'
+
+    // NAVEGAÇÃO (invisível mas funcional — tap left/right)
     + '.vl-nav{position:absolute!important;inset:0!important;display:flex!important;z-index:10!important;background:transparent!important;}'
     + '.vl-nav-btn{all:unset!important;height:100%!important;cursor:pointer!important;}'
     + '.vl-nav-prev{width:30%!important;}'
     + '.vl-nav-next{width:70%!important;}'
-    + '.vl-footer{position:absolute!important;bottom:24px!important;left:16px!important;right:16px!important;z-index:20!important;display:flex!important;flex-direction:column!important;gap:12px!important;pointer-events:none!important;}'
-    + '.vl-cta{all:unset!important;display:block!important;width:100%!important;text-align:center!important;border-radius:12px!important;padding:14px!important;font-weight:800!important;font-size:15px!important;cursor:pointer!important;background:' + buttonColor + '!important;color:#fff!important;box-shadow:0 4px 12px rgba(0,0,0,.2)!important;pointer-events:auto!important;}'
-    + '.vl-product{display:flex!important;align-items:center!important;gap:12px!important;border-radius:16px!important;padding:12px!important;background:#fff!important;cursor:pointer!important;box-shadow:0 8px 24px rgba(0,0,0,.15)!important;pointer-events:auto!important;}'
-    + '.vl-product-img{width:60px!important;height:60px!important;border-radius:10px!important;object-fit:cover!important;background:#e2e8f0!important;flex:0 0 auto!important;}'
+
+    // CARD DE PRODUTO — canto inferior esquerdo
+    + '.vl-product-card{position:absolute!important;bottom:16px!important;left:16px!important;right:72px!important;z-index:25!important;display:flex!important;align-items:center!important;gap:10px!important;border-radius:14px!important;padding:10px!important;background:#fff!important;box-shadow:0 8px 24px rgba(0,0,0,.2)!important;pointer-events:auto!important;}'
+    + '.vl-product-img{width:52px!important;height:52px!important;border-radius:8px!important;object-fit:cover!important;background:#e2e8f0!important;flex:0 0 auto!important;}'
     + '.vl-product-info{min-width:0!important;flex:1!important;}'
-    + '.vl-product-name{font-weight:800!important;font-size:13px!important;color:#0f172a!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-transform:uppercase!important;}'
-    + '.vl-product-price{margin-top:2px!important;font-weight:800!important;font-size:15px!important;color:#000!important;}'
-    + '.vl-product-btn{background:#00c853!important;color:#fff!important;font-size:11px!important;font-weight:800!important;padding:4px 10px!important;border-radius:6px!important;display:inline-block!important;margin-top:4px!important;text-transform:uppercase!important;}'
-    // ✅ NOVOS: Botões de ação do modal (like, share, comment)
-    + '.vl-actions{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;gap:16px!important;pointer-events:auto!important;padding:4px 0!important;}'
-    + '.vl-action-btn{all:unset!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:4px!important;cursor:pointer!important;color:#fff!important;font-size:11px!important;font-weight:700!important;text-shadow:0 1px 2px rgba(0,0,0,.5)!important;transition:transform .15s ease!important;}'
+    + '.vl-product-name{font-weight:800!important;font-size:12px!important;color:#0f172a!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-transform:uppercase!important;}'
+    + '.vl-product-price{margin-top:2px!important;font-weight:800!important;font-size:14px!important;color:#000!important;}'
+    + '.vl-product-btn{background:#00c853!important;color:#fff!important;font-size:10px!important;font-weight:800!important;padding:4px 10px!important;border-radius:6px!important;display:inline-block!important;margin-top:4px!important;text-transform:uppercase!important;cursor:pointer!important;}
+
+    // BOTÕES DE AÇÃO — lateral direita, empilhados verticalmente
+    + '.vl-actions{position:absolute!important;right:12px!important;bottom:120px!important;z-index:25!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:14px!important;pointer-events:auto!important;}'
+    + '.vl-action-btn{all:unset!important;width:40px!important;height:40px!important;border-radius:50%!important;display:flex!important;align-items:center!important;justify-content:center!important;cursor:pointer!important;color:#fff!important;background:rgba(0,0,0,.35)!important;backdrop-filter:blur(4px)!important;border:1px solid rgba(255,255,255,.25)!important;transition:transform .15s ease!important;}'
     + '.vl-action-btn:active{transform:scale(.9)!important;}'
-    + '.vl-action-btn svg{width:24px!important;height:24px!important;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))!important;}'
-    + '.vl-action-btn.is-liked svg{fill:#ef4444!important;color:#ef4444!important;}';
+    + '.vl-action-btn svg{width:20px!important;height:20px!important;}'
+    + '.vl-action-btn.is-liked svg{fill:#ef4444!important;color:#ef4444!important;}'
+    + '.vl-action-btn.whatsapp-btn{background:#25d366!important;border-color:#25d366!important;}'
+
+    // CTA
+    + '.vl-cta{all:unset!important;display:block!important;width:100%!important;text-align:center!important;border-radius:12px!important;padding:14px!important;font-weight:800!important;font-size:15px!important;cursor:pointer!important;background:' + buttonColor + '!important;color:#fff!important;box-shadow:0 4px 12px rgba(0,0,0,.2)!important;pointer-events:auto!important;}';
 }
+
 
   function buildFloatingCss(appearance, behaviorConfig) {
     behaviorConfig = behaviorConfig || getFloatingBehaviorConfig(appearance);
@@ -640,170 +654,221 @@
     }
 
     function renderCurrent() {
-      var story = storiesList[currentStoryIndex]; if (!story) return;
-      var orderedVideos = getOrderedVideos(story); if (!orderedVideos.length) { nextVideo(); return; }
-      var video = orderedVideos[currentVideoIndex]; if (!video) return;
+  var story = storiesList[currentStoryIndex]; if (!story) return;
+  var orderedVideos = getOrderedVideos(story); if (!orderedVideos.length) { nextVideo(); return; }
+  var video = orderedVideos[currentVideoIndex]; if (!video) return;
 
-      var oldVid = modalContent.querySelector('video');
-      if (oldVid) { oldVid.pause(); oldVid.removeAttribute('src'); oldVid.load(); }
+  var oldVid = modalContent.querySelector('video');
+  if (oldVid) { oldVid.pause(); oldVid.removeAttribute('src'); oldVid.load(); }
 
-      // ✅ Lê TODOS os campos do modal_config
-      var modalConfig = normalizeModalAppearanceConfig(currentAppearance);
-      modalContent.innerHTML = '';
+  var modalConfig = normalizeModalAppearanceConfig(currentAppearance);
+  modalContent.innerHTML = '';
 
-      // ─── HEADER ──────────────────────────────────────────
-      var header = createEl('div', 'vl-header');
-      var headerLeft = createEl('div', 'vl-header-left');
+  // ─── HEADER ───────────────────────────────────────────
+  var header = createEl('div', 'vl-header');
 
-      // Título e contador (condicional)
-      if (modalConfig.show_title !== false) {
-        var title = createEl('div', 'vl-title'); title.textContent = story.title || story.name || 'Story';
-        var count = createEl('div', 'vl-count'); count.textContent = (currentVideoIndex + 1) + '/' + orderedVideos.length;
-        headerLeft.appendChild(title); headerLeft.appendChild(count);
-      }
-      header.appendChild(headerLeft);
+  // Esquerda: título + subtítulo + contador
+  var headerLeft = createEl('div', 'vl-header-left');
+  if (modalConfig.show_title !== false) {
+    var title = createEl('div', 'vl-title'); title.textContent = story.title || story.name || 'Story';
+    headerLeft.appendChild(title);
 
-      // Botão de fechar (condicional — ✅ NOVO)
-      if (modalConfig.show_close_button !== false) {
-        var closeBtn = createEl('button', 'vl-close');
-        closeBtn.type = 'button';
-        closeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
-        closeBtn.addEventListener('click', function(e) { e.stopPropagation(); closeOverlay(); });
-        header.appendChild(closeBtn);
-      }
-
-      // ─── BODY ────────────────────────────────────────────
-      var body = createEl('div', 'vl-body');
-
-      // Navegação (condicional — ✅ NOVO)
-      if (modalConfig.show_navigation !== false) {
-        var nav = createEl('div', 'vl-nav');
-        var prevBtn = createEl('button', 'vl-nav-btn vl-nav-prev'); prevBtn.type = 'button'; prevBtn.addEventListener('click', prevVideo);
-        var nextBtn = createEl('button', 'vl-nav-btn vl-nav-next'); nextBtn.type = 'button'; nextBtn.addEventListener('click', nextVideo);
-        nav.appendChild(prevBtn); nav.appendChild(nextBtn);
-        body.appendChild(nav);
-      }
-
-      // ─── FOOTER ──────────────────────────────────────────
-      var footer = createEl('div', 'vl-footer');
-
-      // Produto (condicional)
-      var activeProducts = storyProducts
-        .filter(function (sp) { return idsEqual(sp.story_id, story.id); })
-        .map(function (sp) { return products.find(function (product) { return idsEqual(product.id, sp.product_id); }); })
-        .filter(function (product) { return product && (product.active === undefined || product.active); });
-
-      if (activeProducts.length && modalConfig.show_product !== false) {
-        var product = activeProducts[0];
-        var productCard = createEl('div', 'vl-product');
-        var productImg = createEl('img', 'vl-product-img');
-        productImg.src = normalizeMediaUrl(product.image_url || product.imageUrl || ''); productImg.alt = product.name || '';
-
-        var productInfo = createEl('div', 'vl-product-info');
-        var productName = createEl('div', 'vl-product-name'); productName.textContent = product.name || '';
-        var productPrice = createEl('div', 'vl-product-price'); productPrice.textContent = Number(product.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        var productBtn = createEl('div', 'vl-product-btn'); productBtn.textContent = 'Ver Produto';
-
-        productInfo.appendChild(productName); productInfo.appendChild(productPrice); productInfo.appendChild(productBtn);
-        productCard.appendChild(productImg); productCard.appendChild(productInfo);
-
-        productCard.addEventListener('click', function (e) {
-          e.stopPropagation();
-          trackMetric({ event_type: 'product_click', story_id: story.id, video_id: video.id, product_id: product.id, page_url: window.location.href });
-          if (product.product_url) window.open(product.product_url, '_blank', 'noopener,noreferrer');
-        });
-        footer.appendChild(productCard);
-      }
-
-      // CTA
-      if (story.cta_enabled && story.cta_url) {
-        var ctaBtn = createEl('button', 'vl-cta');
-        ctaBtn.type = 'button'; ctaBtn.textContent = story.cta_text || 'Saiba mais';
-        ctaBtn.addEventListener('click', function (e) {
-          e.stopPropagation(); trackMetric({ event_type: story.cta_type === 'whatsapp' ? 'whatsapp_click' : 'cta_click', story_id: story.id, video_id: video.id, page_url: window.location.href });
-          window.open(story.cta_url, '_blank', 'noopener,noreferrer');
-        });
-        footer.appendChild(ctaBtn);
-      }
-
-      // ─── ACTION BUTTONS (Like | Share | Comment) — ✅ NOVO ───
-      var hasAnyAction = modalConfig.show_like_button !== false
-                      || modalConfig.show_share_button !== false
-                      || modalConfig.show_comment_button !== false;
-
-      if (hasAnyAction) {
-        var actionsRow = createEl('div', 'vl-actions');
-
-        // ❤️ Like
-        if (modalConfig.show_like_button !== false) {
-          var likeBtn = createEl('button', 'vl-action-btn');
-          likeBtn.type = 'button';
-          likeBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
-          likeBtn.setAttribute('aria-label', 'Curtir');
-          likeBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            likeBtn.classList.toggle('is-liked');
-            trackMetric({ event_type: 'like_click', story_id: story.id, video_id: video.id, page_url: window.location.href });
-          });
-          actionsRow.appendChild(likeBtn);
-        }
-
-        // 💬 Comment
-        if (modalConfig.show_comment_button !== false) {
-          var commentBtn = createEl('button', 'vl-action-btn');
-          commentBtn.type = 'button';
-          commentBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
-          commentBtn.setAttribute('aria-label', 'Comentar');
-          commentBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            trackMetric({ event_type: 'comment_click', story_id: story.id, video_id: video.id, page_url: window.location.href });
-            // Você pode integrar com seu sistema de comentários aqui
-          });
-          actionsRow.appendChild(commentBtn);
-        }
-
-        // 📤 Share
-        if (modalConfig.show_share_button !== false) {
-          var shareBtn = createEl('button', 'vl-action-btn');
-          shareBtn.type = 'button';
-          shareBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
-          shareBtn.setAttribute('aria-label', 'Compartilhar');
-          shareBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            trackMetric({ event_type: 'share_click', story_id: story.id, video_id: video.id, page_url: window.location.href });
-            if (navigator.share) {
-              navigator.share({ title: story.title || '', url: window.location.href }).catch(function(){});
-            } else {
-              navigator.clipboard.writeText(window.location.href).catch(function(){});
-            }
-          });
-          actionsRow.appendChild(shareBtn);
-        }
-
-        footer.appendChild(actionsRow);
-      }
-
-      if (footer.childNodes.length > 0) body.appendChild(footer);
-
-      // Player
-      var playerNode = buildVideoPlayer(video, story.id, nextVideo);
-      body.insertBefore(playerNode, body.firstChild);
-
-      modalContent.appendChild(header);
-      modalContent.appendChild(body);
-
-      overlay.className = 'vl-overlay is-open';
-
-      var newVid = playerNode.querySelector('video');
-      if (newVid) {
-        var playPromise = newVid.play();
-        if (playPromise) {
-          playPromise.catch(function(e) { console.warn('Vidlytics Play Block:', e); });
-        }
-      }
+    // Subtítulo (use_anne / código do story)
+    if (story.subtitle || story.code || story.use_code) {
+      var subtitle = createEl('div', 'vl-subtitle');
+      subtitle.textContent = story.subtitle || story.code || story.use_code || '';
+      headerLeft.appendChild(subtitle);
     }
 
-    renderCurrent();
+    var count = createEl('div', 'vl-count');
+    count.textContent = (currentVideoIndex + 1) + '/' + orderedVideos.length;
+    headerLeft.appendChild(count);
+  }
+  header.appendChild(headerLeft);
+
+  // Direita: controles (áudio, play, fechar)
+  var headerRight = createEl('div', 'vl-header-right');
+
+  // Botão áudio
+  var audioBtn = createEl('button', 'vl-ctrl-btn');
+  audioBtn.type = 'button';
+  audioBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
+  audioBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var vid = modalContent.querySelector('video');
+    if (vid) { vid.muted = !vid.muted; audioBtn.style.opacity = vid.muted ? '0.5' : '1'; }
+  });
+  headerRight.appendChild(audioBtn);
+
+  // Botão play/pause
+  var playBtn = createEl('button', 'vl-ctrl-btn');
+  playBtn.type = 'button';
+  playBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+  playBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var vid = modalContent.querySelector('video');
+    if (vid) {
+      if (vid.paused) { vid.play(); playBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>'; }
+      else { vid.pause(); playBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>'; }
+    }
+  });
+  headerRight.appendChild(playBtn);
+
+  // Botão fechar (condicional)
+  if (modalConfig.show_close_button !== false) {
+    var closeBtn = createEl('button', 'vl-ctrl-btn');
+    closeBtn.type = 'button';
+    closeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+    closeBtn.addEventListener('click', function(e) { e.stopPropagation(); closeOverlay(); });
+    headerRight.appendChild(closeBtn);
+  }
+
+  header.appendChild(headerRight);
+
+  // ─── BODY ─────────────────────────────────────────────
+  var body = createEl('div', 'vl-body');
+
+  // Player
+  var playerNode = buildVideoPlayer(video, story.id, nextVideo);
+  body.appendChild(playerNode);
+
+  // Navegação (tap zones — invisíveis)
+  if (modalConfig.show_navigation !== false) {
+    var nav = createEl('div', 'vl-nav');
+    var prevBtn = createEl('button', 'vl-nav-btn vl-nav-prev'); prevBtn.type = 'button'; prevBtn.addEventListener('click', prevVideo);
+    var nextBtn = createEl('button', 'vl-nav-btn vl-nav-next'); nextBtn.type = 'button'; nextBtn.addEventListener('click', nextVideo);
+    nav.appendChild(prevBtn); nav.appendChild(nextBtn);
+    body.appendChild(nav);
+  }
+
+  // ─── CARD DE PRODUTO — canto inferior esquerdo ────────
+  var activeProducts = storyProducts
+    .filter(function (sp) { return idsEqual(sp.story_id, story.id); })
+    .map(function (sp) { return products.find(function (product) { return idsEqual(product.id, sp.product_id); }); })
+    .filter(function (product) { return product && (product.active === undefined || product.active); });
+
+  if (activeProducts.length && modalConfig.show_product !== false) {
+    var product = activeProducts[0];
+    var productCard = createEl('div', 'vl-product-card');
+
+    var productImg = createEl('img', 'vl-product-img');
+    productImg.src = normalizeMediaUrl(product.image_url || product.imageUrl || '');
+    productImg.alt = product.name || '';
+
+    var productInfo = createEl('div', 'vl-product-info');
+    var productName = createEl('div', 'vl-product-name'); productName.textContent = product.name || '';
+    var productPrice = createEl('div', 'vl-product-price');
+    productPrice.textContent = Number(product.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    var productBtn = createEl('div', 'vl-product-btn'); productBtn.textContent = 'Ver produto';
+
+    productInfo.appendChild(productName);
+    productInfo.appendChild(productPrice);
+    productInfo.appendChild(productBtn);
+    productCard.appendChild(productImg);
+    productCard.appendChild(productInfo);
+
+    productCard.addEventListener('click', function (e) {
+      e.stopPropagation();
+      trackMetric({ event_type: 'product_click', story_id: story.id, video_id: video.id, product_id: product.id, page_url: window.location.href });
+      if (product.product_url) window.open(product.product_url, '_blank', 'noopener,noreferrer');
+    });
+    body.appendChild(productCard);
+  }
+
+  // ─── BOTÕES DE AÇÃO — lateral direita ─────────────────
+  var hasAnyAction = modalConfig.show_like_button !== false
+                  || modalConfig.show_share_button !== false
+                  || modalConfig.show_comment_button !== false;
+
+  if (hasAnyAction) {
+    var actionsCol = createEl('div', 'vl-actions');
+
+    // ❤️ Like
+    if (modalConfig.show_like_button !== false) {
+      var likeBtn = createEl('button', 'vl-action-btn');
+      likeBtn.type = 'button';
+      likeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
+      likeBtn.setAttribute('aria-label', 'Curtir');
+      likeBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        likeBtn.classList.toggle('is-liked');
+        trackMetric({ event_type: 'like_click', story_id: story.id, video_id: video.id, page_url: window.location.href });
+      });
+      actionsCol.appendChild(likeBtn);
+    }
+
+    // 💬 Comment
+    if (modalConfig.show_comment_button !== false) {
+      var commentBtn = createEl('button', 'vl-action-btn');
+      commentBtn.type = 'button';
+      commentBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+      commentBtn.setAttribute('aria-label', 'Comentar');
+      commentBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        trackMetric({ event_type: 'comment_click', story_id: story.id, video_id: video.id, page_url: window.location.href });
+      });
+      actionsCol.appendChild(commentBtn);
+    }
+
+    // 📤 Share
+    if (modalConfig.show_share_button !== false) {
+      var shareBtn = createEl('button', 'vl-action-btn');
+      shareBtn.type = 'button';
+      shareBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
+      shareBtn.setAttribute('aria-label', 'Compartilhar');
+      shareBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        trackMetric({ event_type: 'share_click', story_id: story.id, video_id: video.id, page_url: window.location.href });
+        if (navigator.share) {
+          navigator.share({ title: story.title || '', url: window.location.href }).catch(function(){});
+        } else {
+          navigator.clipboard.writeText(window.location.href).catch(function(){});
+        }
+      });
+      actionsCol.appendChild(shareBtn);
+    }
+
+    // 🔗 Link / WhatsApp
+    if (story.cta_enabled && story.cta_url) {
+      var linkBtn = createEl('button', 'vl-action-btn' + (story.cta_type === 'whatsapp' ? ' whatsapp-btn' : ''));
+      linkBtn.type = 'button';
+      linkBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+      linkBtn.setAttribute('aria-label', 'Link');
+      linkBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        trackMetric({ event_type: story.cta_type === 'whatsapp' ? 'whatsapp_click' : 'cta_click', story_id: story.id, video_id: video.id, page_url: window.location.href });
+        window.open(story.cta_url, '_blank', 'noopener,noreferrer');
+      });
+      actionsCol.appendChild(linkBtn);
+    }
+
+    body.appendChild(actionsCol);
+  }
+
+  // ─── CTA BUTTON (se houver e não houver product card) ─
+  if (story.cta_enabled && story.cta_url && (!activeProducts.length || modalConfig.show_product === false)) {
+    var ctaBtn = createEl('button', 'vl-cta');
+    ctaBtn.type = 'button'; ctaBtn.textContent = story.cta_text || 'Saiba mais';
+    ctaBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      trackMetric({ event_type: story.cta_type === 'whatsapp' ? 'whatsapp_click' : 'cta_click', story_id: story.id, video_id: video.id, page_url: window.location.href });
+      window.open(story.cta_url, '_blank', 'noopener,noreferrer');
+    });
+    body.appendChild(ctaBtn);
+  }
+
+  modalContent.appendChild(header);
+  modalContent.appendChild(body);
+
+  overlay.className = 'vl-overlay is-open';
+
+  var newVid = playerNode.querySelector('video');
+  if (newVid) {
+    var playPromise = newVid.play();
+    if (playPromise) playPromise.catch(function(e) { console.warn('Vidlytics Play Block:', e); });
+  }
+}
+
   }
 
   function setupFloatingDrag(host, handle) {
