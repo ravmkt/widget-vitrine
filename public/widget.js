@@ -1,11 +1,11 @@
 /**
- * Vidlytics Widget — widget.js
- * Layout fiel ao preview: header com 3 botões, social bar com SVGs, card de produto
+ * Vidlytics Widget — widget.js (CORRIGIDO)
+ * Fix: CSS duplicado removido, card do produto corrigido, ES5 padronizado
  */
 (function () {
-  console.log('VIDLYTICS WIDGET - LAYOUT PREVIEW - 202607161900');
+  console.log('VIDLYTICS WIDGET CARREGADO - FIX CSS DUPLICADO - 202607161800');
 
-  var VIDLYTICS_WIDGET_VERSION = 'layout-preview-202607161900';
+  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-fix-css-202607161800';
 
   if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) return;
 
@@ -24,8 +24,10 @@
   var supabaseAnonKey = config.supabaseAnonKey || '';
   var widgetsCfg = config.widgets || {};
   var hasSupabase = Boolean(supabaseUrl && supabaseAnonKey);
+
   var enableFloating = widgetsCfg.floatingVideo !== undefined ? widgetsCfg.floatingVideo : config.floatingVideo !== false;
   var enableCarousel = widgetsCfg.carousel !== undefined ? widgetsCfg.carousel : config.carousel !== false;
+
   var currentAppearance = {};
   var overlay = null;
   var modalContent = null;
@@ -34,6 +36,7 @@
   var floatingWasClosed = false;
   var readStoryProductsData = [];
   var readProductsData = [];
+
   var VIDEO_FILE_REGEX = /\.(mp4|webm|ogg|mov|m4v|m3u8)(\?.*)?$/i;
 
   var DEFAULT_APPEARANCE = {
@@ -165,27 +168,27 @@
 
   function getConfigAppearance() {
     var merged = {};
-    [ config.appearance, config.aparencia, config.appearanceConfig, config.appearance_config, config.floating, config.floatingConfig, config.floatingAppearance, config.floatingVideoConfig, config.floatingVideoAppearance, config.floating_video, widgetsCfg.appearance, widgetsCfg.aparencia, widgetsCfg.appearanceConfig, widgetsCfg.appearance_config, widgetsCfg.floating, widgetsCfg.floatingConfig, widgetsCfg.floatingAppearance, widgetsCfg.floatingVideoConfig, widgetsCfg.floatingVideoAppearance, widgetsCfg.floating_video ].forEach(function (src) { flattenAppearanceInto(merged, src, 0); });
+    [config.appearance, config.aparencia, config.appearanceConfig, config.appearance_config, config.floating, config.floatingConfig, config.floatingAppearance, config.floatingVideoConfig, config.floatingVideoAppearance, config.floating_video, widgetsCfg.appearance, widgetsCfg.aparencia, widgetsCfg.appearanceConfig, widgetsCfg.appearance_config, widgetsCfg.floating, widgetsCfg.floatingConfig, widgetsCfg.floatingAppearance, widgetsCfg.floatingVideoConfig, widgetsCfg.floatingVideoAppearance, widgetsCfg.floating_video].forEach(function (src) { flattenAppearanceInto(merged, src, 0); });
     return normalizeAppearanceItem(merged);
   }
 
   function getStorageAppearance() {
     var merged = {};
-    var keys = [ 'vidlytics_appearance', 'vidlytics_appearance_' + storeId, 'vidlytics_aparencia', 'vidlytics_aparencia_' + storeId, 'vidlytics_widget_appearance', 'vidlytics_widget_appearance_' + storeId, 'vidlytics_config', 'vidlytics_config_' + storeId, 'VIDLYTICS_APPEARANCE', 'VIDLYTICS_CONFIG' ];
+    var keys = ['vidlytics_appearance', 'vidlytics_appearance_' + storeId, 'vidlytics_aparencia', 'vidlytics_aparencia_' + storeId, 'vidlytics_widget_appearance', 'vidlytics_widget_appearance_' + storeId, 'vidlytics_config', 'vidlytics_config_' + storeId, 'VIDLYTICS_APPEARANCE', 'VIDLYTICS_CONFIG'];
     keys.forEach(function (key) { flattenAppearanceInto(merged, getStorageItem(key, {}), 0); });
     return normalizeAppearanceItem(merged);
   }
 
   function appearanceHasUsefulData(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
-    var usefulNames = [ 'floating_position', 'floatingPosition', 'position', 'posicao', 'posição', 'widget_position', 'widgetPosition', 'placement', 'floating_video_position', 'floatingVideoPosition', 'floating_shape', 'floatingShape', 'shape', 'form', 'forma', 'formato', 'widget_shape', 'widgetShape', 'floating_video_shape', 'floatingVideoShape', 'floating_width', 'floatingWidth', 'width', 'largura', 'widget_width', 'widgetWidth', 'floating_video_width', 'floatingVideoWidth', 'floating_height', 'floatingHeight', 'height', 'altura', 'widget_height', 'widgetHeight', 'floating_radius', 'floatingRadius', 'border_radius', 'borderRadius', 'radius', 'raio', 'widget_radius', 'widgetRadius', 'floating_top', 'floatingTop', 'top', 'top_spacing', 'topSpacing', 'spacing_top', 'spacingTop', 'floating_bottom', 'floatingBottom', 'bottom', 'bottom_spacing', 'bottomSpacing', 'spacing_bottom', 'spacingBottom', 'floating_side', 'floatingSide', 'side', 'left_spacing', 'leftSpacing', 'right_spacing', 'rightSpacing', 'distance_top', 'distanceTop', 'distancia_superior', 'distanciaSuperior', 'distance_bottom', 'distanceBottom', 'distancia_inferior', 'distanciaInferior', 'distance_side', 'distanceSide', 'distancia_lateral', 'distanciaLateral', 'floating_border_width', 'floatingBorderWidth', 'border_width', 'borderWidth', 'largura_borda', 'larguraBorda', 'primary_color', 'primaryColor', 'secondary_color', 'secondaryColor', 'border_color', 'borderColor', 'color', 'text_color', 'textColor', 'font_family', 'fontFamily', 'background_color', 'backgroundColor', 'button_color', 'buttonColor', 'show_title', 'showTitle', 'show_product', 'showProduct', 'hide_stories', 'hideStories', 'shadow_enabled', 'shadowEnabled', 'floating_config', 'floatingConfig', 'floating_border_radius', 'floatingBorderRadius', 'widget_border_radius', 'widgetBorderRadius', 'widget_radius', 'widgetRadius', 'border_radius', 'borderRadius', 'floating_object_fit', 'floatingObjectFit', 'object_fit', 'objectFit', 'image_fit', 'imageFit', 'fit', 'show_play_button', 'showPlayButton', 'show_player_button', 'showPlayerButton', 'play_button_enabled', 'playButtonEnabled', 'allow_drag', 'allowDrag', 'draggable', 'drag_enabled', 'dragEnabled', 'permitir_arrastar', 'allow_close', 'allowClose', 'closable', 'close_enabled', 'closeEnabled', 'show_close_button', 'showCloseButton', 'permitir_fechar', 'floating_show_play_button', 'floatingShowPlayButton', 'show_floating_play_button', 'showFloatingPlayButton', 'allow_floating_drag', 'allowFloatingDrag', 'floating_allow_drag', 'floatingAllowDrag', 'floating_drag_enabled', 'floatingDragEnabled', 'allow_floating_close', 'allowFloatingClose', 'floating_allow_close', 'floatingAllowClose', 'floating_close_enabled', 'floatingCloseEnabled' ];
+    var usefulNames = ['floating_position', 'floatingPosition', 'position', 'posicao', 'widget_position', 'widgetPosition', 'placement', 'floating_video_position', 'floatingVideoPosition', 'floating_shape', 'floatingShape', 'shape', 'form', 'forma', 'formato', 'widget_shape', 'widgetShape', 'floating_video_shape', 'floatingVideoShape', 'floating_width', 'floatingWidth', 'width', 'largura', 'widget_width', 'widgetWidth', 'floating_video_width', 'floatingVideoWidth', 'floating_height', 'floatingHeight', 'height', 'altura', 'widget_height', 'widgetHeight', 'floating_radius', 'floatingRadius', 'border_radius', 'borderRadius', 'radius', 'raio', 'widget_radius', 'widgetRadius', 'floating_top', 'floatingTop', 'top', 'top_spacing', 'topSpacing', 'spacing_top', 'spacingTop', 'floating_bottom', 'floatingBottom', 'bottom', 'bottom_spacing', 'bottomSpacing', 'spacing_bottom', 'spacingBottom', 'floating_side', 'floatingSide', 'side', 'left_spacing', 'leftSpacing', 'right_spacing', 'rightSpacing', 'distance_top', 'distanceTop', 'distancia_superior', 'distanciaSuperior', 'distance_bottom', 'distanceBottom', 'distancia_inferior', 'distanciaInferior', 'distance_side', 'distanceSide', 'distancia_lateral', 'distanciaLateral', 'floating_border_width', 'floatingBorderWidth', 'border_width', 'borderWidth', 'largura_borda', 'larguraBorda', 'primary_color', 'primaryColor', 'secondary_color', 'secondaryColor', 'border_color', 'borderColor', 'color', 'text_color', 'textColor', 'font_family', 'fontFamily', 'background_color', 'backgroundColor', 'button_color', 'buttonColor', 'show_title', 'showTitle', 'show_product', 'showProduct', 'hide_stories', 'hideStories', 'shadow_enabled', 'shadowEnabled', 'floating_config', 'floatingConfig', 'floating_border_radius', 'floatingBorderRadius', 'widget_border_radius', 'widgetBorderRadius', 'widget_radius', 'widgetRadius', 'border_radius', 'borderRadius', 'floating_object_fit', 'floatingObjectFit', 'object_fit', 'objectFit', 'image_fit', 'imageFit', 'fit', 'show_play_button', 'showPlayButton', 'show_player_button', 'showPlayerButton', 'play_button_enabled', 'playButtonEnabled', 'allow_drag', 'allowDrag', 'draggable', 'drag_enabled', 'dragEnabled', 'permitir_arrastar', 'allow_close', 'allowClose', 'closable', 'close_enabled', 'closeEnabled', 'show_close_button', 'showCloseButton', 'permitir_fechar', 'floating_show_play_button', 'floatingShowPlayButton', 'show_floating_play_button', 'showFloatingPlayButton', 'allow_floating_drag', 'allowFloatingDrag', 'floating_allow_drag', 'floatingAllowDrag', 'floating_drag_enabled', 'floatingDragEnabled', 'allow_floating_close', 'allowFloatingClose', 'floating_allow_close', 'floatingAllowClose', 'floating_close_enabled', 'floatingCloseEnabled'];
     for (var i = 0; i < usefulNames.length; i += 1) { if (readAppearanceValue(appearance, [usefulNames[i]]) !== undefined) return true; }
     return false;
   }
 
   function extractAppearanceFromItem(item, allowDirectFields) {
     if (!item) return {}; var merged = {};
-    [ item.appearance, item.aparencia, item.appearance_config, item.appearanceConfig, item.widget_appearance, item.widgetAppearance, item.widget_config, item.widgetConfig, item.settings, item.config, item.style, item.styles, item.data, item.metadata, item.customization, item.customization_config, item.theme, item.theme_config, item.floating, item.floating_config, item.floatingConfig, item.floatingAppearance, item.floating_video, item.floatingVideo, item.floatingVideoConfig, item.floatingVideoAppearance ].forEach(function (src) { flattenAppearanceInto(merged, src, 0); });
+    [item.appearance, item.aparencia, item.appearance_config, item.appearanceConfig, item.widget_appearance, item.widgetAppearance, item.widget_config, item.widgetConfig, item.settings, item.config, item.style, item.styles, item.data, item.metadata, item.customization, item.customization_config, item.theme, item.theme_config, item.floating, item.floating_config, item.floatingConfig, item.floatingAppearance, item.floating_video, item.floatingVideo, item.floatingVideoConfig, item.floatingVideoAppearance].forEach(function (src) { flattenAppearanceInto(merged, src, 0); });
 
     if (allowDirectFields) {
       if (firstDefined(item.widget_shape, item.shape)) merged.shape = firstDefined(item.widget_shape, item.shape);
@@ -331,14 +334,19 @@
 
   function normalizeModalAppearanceConfig(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
+    var modalConfig = parseJsonIfNeeded(appearance.modal_config || appearance.modalConfig);
+
     return {
-      show_title: toBoolean(firstDefined(appearance.show_title, appearance.showTitle), DEFAULT_APPEARANCE.show_title),
-      show_product: toBoolean(firstDefined(appearance.show_product, appearance.showProduct), DEFAULT_APPEARANCE.show_product),
-      show_audio_button: toBoolean(firstDefined(appearance.show_audio_button, appearance.showAudioButton), true),
-      show_like_button: toBoolean(firstDefined(appearance.show_like_button, appearance.showLikeButton), true),
-      show_comment_button: toBoolean(firstDefined(appearance.show_comment_button, appearance.showCommentButton), true),
-      show_share_button: toBoolean(firstDefined(appearance.show_share_button, appearance.showShareButton), true),
-      show_whatsapp_button: toBoolean(firstDefined(appearance.show_whatsapp_button, appearance.showWhatsappButton), true)
+      show_title: toBoolean(firstDefined(appearance.show_title, appearance.showTitle, modalConfig.show_title), true),
+      show_play_button: toBoolean(firstDefined(appearance.show_play_button, appearance.showPlayButton, modalConfig.show_play_button), true),
+      show_product: toBoolean(firstDefined(appearance.show_product, appearance.showProduct, modalConfig.show_product), true),
+      show_like_button: toBoolean(firstDefined(appearance.show_like_button, appearance.showLikeButton, modalConfig.show_like_button), true),
+      show_comment_button: toBoolean(firstDefined(appearance.show_comment_button, appearance.show_comments_button, appearance.showCommentButton, appearance.showCommentsButton, modalConfig.show_comment_button), true),
+      show_share_button: toBoolean(firstDefined(appearance.show_share_button, appearance.showShareButton, modalConfig.show_share_button), true),
+      show_whatsapp_button: toBoolean(firstDefined(appearance.show_whatsapp_button, appearance.showWhatsappButton, modalConfig.show_whatsapp_button), true),
+      show_product_button: toBoolean(firstDefined(appearance.show_product_button, appearance.showProductButton, modalConfig.show_product_button), true),
+      hide_stories: toBoolean(firstDefined(appearance.hide_stories, appearance.hideStories, modalConfig.hide_stories), false),
+      shadow_enabled: toBoolean(firstDefined(appearance.shadow_enabled, appearance.shadowEnabled, modalConfig.shadow_enabled), true)
     };
   }
 
@@ -448,54 +456,102 @@
     return { host: host, shadow: globalShadowRoot };
   }
 
-  // ========================
-  // CSS ATUALIZADO — FIEL AO PREVIEW
-  // ========================
+  /* ================================================================
+     ✅ CSS UNIFICADO — SEM DUPLICAÇÃO, SEM BLOCOS SOLTOS
+     ================================================================ */
   function buildSharedCss(appearance) {
     var cfg = getFloatingConfig(appearance);
+    var primary = getPrimaryColor(appearance);
+    var secondary = getSecondaryColor(appearance);
     var buttonColor = getButtonColor(appearance);
+    var textColor = readAppearanceValue(appearance, ['text_color', 'textColor']) || '#0f172a';
+    var bgColor = readAppearanceValue(appearance, ['background_color', 'backgroundColor']) || '#ffffff';
     var font = getFontFamily(appearance);
+    var fontSize = readAppearanceValue(appearance, ['font_size', 'fontSize']) || '14';
+    var modalConfig = normalizeModalAppearanceConfig(appearance);
+    var shadow = modalConfig.shadow_enabled !== false ? '0 24px 80px rgba(0,0,0,0.45)' : 'none';
+
     return '*,*::before,*::after{box-sizing:border-box!important;}'
-      + '.vl-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;background:rgba(0,0,0,0.75)!important;display:none!important;align-items:center!important;justify-content:center!important;z-index:' + cfg.zIndex + '!important;font-family:' + font + '!important;}'
+
+      /* ===== OVERLAY ===== */
+      + '.vl-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;'
+      + 'background:rgba(0,0,0,0.85)!important;display:none!important;align-items:center!important;justify-content:center!important;'
+      + 'z-index:' + cfg.zIndex + '!important;font-family:' + font + '!important;font-size:' + toNumber(fontSize, 14) + 'px!important;}'
       + '.vl-overlay.is-open{display:flex!important;}'
-      + '.vl-modal{width:100%!important;max-width:420px!important;max-height:92vh!important;position:relative!important;overflow:hidden!important;background:#000!important;box-shadow:0 25px 60px rgba(0,0,0,0.5)!important;display:flex!important;flex-direction:column!important;border-radius:24px!important;}'
-      // HEADER
-      + '.vl-header{position:absolute!important;top:0!important;left:0!important;right:0!important;display:flex!important;align-items:center!important;justify-content:space-between!important;padding:16px 16px 12px!important;background:linear-gradient(to bottom,rgba(0,0,0,0.6) 0%,transparent 100%)!important;z-index:20!important;pointer-events:none!important;}'
-      + '.vl-header-left{display:flex!important;flex-direction:column!important;gap:2px!important;pointer-events:auto!important;}'
-      + '.vl-title{font-weight:800!important;color:#fff!important;font-size:15px!important;text-shadow:0 1px 3px rgba(0,0,0,0.5)!important;text-transform:uppercase!important;letter-spacing:0.5px!important;line-height:1.2!important;}'
-      + '.vl-subtitle{font-size:11px!important;color:rgba(255,255,255,0.75)!important;font-weight:600!important;letter-spacing:0.3px!important;line-height:1.2!important;}'
-      + '.vl-header-actions{display:flex!important;align-items:center!important;gap:8px!important;pointer-events:auto!important;}'
-      + '.vl-header-btn{all:unset!important;width:34px!important;height:34px!important;border-radius:50%!important;border:1.5px solid rgba(255,255,255,0.6)!important;display:flex!important;align-items:center!important;justify-content:center!important;cursor:pointer!important;background:rgba(0,0,0,0.35)!important;backdrop-filter:blur(6px)!important;transition:transform 0.15s ease!important;}'
-      + '.vl-header-btn:hover{transform:scale(1.08)!important;}'
-      + '.vl-header-btn svg{width:16px!important;height:16px!important;stroke:#fff!important;fill:none!important;stroke-width:2!important;stroke-linecap:round!important;stroke-linejoin:round!important;}'
-      // BODY
-      + '.vl-body{flex:1!important;width:100%!important;position:relative!important;background:#000!important;aspect-ratio:9/16!important;overflow:hidden!important;}'
-      + '.vl-player{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;background:#000!important;z-index:1!important;}'
-      + '.vl-player video,.vl-player iframe{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;border:0!important;display:block!important;object-fit:cover!important;z-index:2!important;background:#000!important;}'
-      + '.vl-nav{position:absolute!important;inset:0!important;display:flex!important;z-index:10!important;background:transparent!important;pointer-events:none!important;}'
-      + '.vl-nav-btn{all:unset!important;height:100%!important;cursor:pointer!important;pointer-events:auto!important;}'
+
+      /* ===== MODAL ===== */
+      + '.vl-modal{position:relative!important;width:100%!important;max-width:420px!important;'
+      + 'height:100%!important;max-height:100vh!important;overflow:hidden!important;background:#000!important;'
+      + 'box-shadow:' + shadow + '!important;display:flex!important;flex-direction:column!important;'
+      + 'border-radius:0!important;}'
+      + '@media(min-width:640px){.vl-modal{height:auto!important;aspect-ratio:9/16!important;max-height:90vh!important;border-radius:36px!important;}}'
+
+      /* ===== PROGRESS BARS ===== */
+      + '.vl-progress{position:absolute!important;top:12px!important;left:0!important;right:0!important;z-index:50!important;'
+      + 'display:flex!important;gap:6px!important;padding:0 16px!important;}'
+      + '.vl-progress-bar{height:2px!important;flex:1!important;border-radius:999px!important;background:rgba(255,255,255,0.25)!important;overflow:hidden!important;}'
+      + '.vl-progress-fill{height:100%!important;border-radius:999px!important;background:' + primary + '!important;transition:width 0.3s ease!important;}'
+
+      /* ===== HEADER ===== */
+      + '.vl-header{position:absolute!important;top:0!important;left:0!important;right:0!important;z-index:40!important;'
+      + 'display:flex!important;align-items:flex-start!important;justify-content:space-between!important;'
+      + 'padding:20px 16px 16px 16px!important;background:linear-gradient(to bottom,rgba(0,0,0,0.7),transparent)!important;'
+      + 'pointer-events:none!important;}'
+      + '.vl-header-left{display:flex!important;flex-direction:column!important;gap:2px!important;min-width:0!important;flex:1!important;padding-right:48px!important;pointer-events:auto!important;}'
+      + '.vl-title{font-weight:800!important;color:#fff!important;font-size:13px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-shadow:0 1px 3px rgba(0,0,0,0.5)!important;}'
+      + '.vl-count{font-size:10px!important;font-weight:700!important;color:rgba(255,255,255,0.65)!important;text-transform:uppercase!important;}'
+      + '.vl-close{all:unset!important;flex-shrink:0!important;width:32px!important;height:32px!important;border-radius:999px!important;'
+      + 'background:rgba(0,0,0,0.4)!important;backdrop-filter:blur(12px)!important;display:flex!important;align-items:center!important;'
+      + 'justify-content:center!important;cursor:pointer!important;color:#fff!important;pointer-events:auto!important;border:none!important;}'
+
+      /* ===== BODY ===== */
+      + '.vl-body{position:relative!important;flex:1!important;width:100%!important;overflow:hidden!important;}'
+      + '.vl-player{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;}'
+      + '.vl-player video,.vl-player iframe{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;'
+      + 'border:0!important;display:block!important;object-fit:cover!important;}'
+
+      /* ===== NAV ===== */
+      + '.vl-nav{position:absolute!important;inset:0!important;display:flex!important;z-index:30!important;}'
+      + '.vl-nav-btn{all:unset!important;height:100%!important;cursor:pointer!important;}'
       + '.vl-nav-prev{width:30%!important;}'
       + '.vl-nav-next{width:70%!important;}'
-      // SOCIAL BAR
-      + '.vl-social-bar{position:absolute!important;right:12px!important;bottom:120px!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:14px!important;z-index:15!important;pointer-events:auto!important;}'
-      + '.vl-social-btn{all:unset!important;display:flex!important;align-items:center!important;justify-content:center!important;cursor:pointer!important;transition:transform 0.15s ease!important;}'
-      + '.vl-social-btn:hover{transform:scale(1.1)!important;}'
-      + '.vl-social-icon{width:44px!important;height:44px!important;border-radius:50%!important;border:1.5px solid rgba(255,255,255,0.7)!important;background:rgba(0,0,0,0.25)!important;backdrop-filter:blur(4px)!important;display:flex!important;align-items:center!important;justify-content:center!important;}'
-      + '.vl-social-icon svg{width:20px!important;height:20px!important;stroke:#fff!important;fill:none!important;stroke-width:2!important;stroke-linecap:round!important;stroke-linejoin:round!important;}'
-      + '.vl-social-btn.vl-whatsapp .vl-social-icon{background:#25D366!important;border-color:#25D366!important;}'
-      + '.vl-social-btn.vl-whatsapp .vl-social-icon svg{fill:#fff!important;stroke:none!important;}'
-      // FOOTER / PRODUTO
-      + '.vl-footer{position:absolute!important;bottom:16px!important;left:16px!important;right:16px!important;z-index:20!important;display:flex!important;flex-direction:column!important;gap:10px!important;pointer-events:none!important;}'
-      + '.vl-product{display:flex!important;align-items:center!important;gap:12px!important;border-radius:14px!important;padding:10px 12px!important;background:#fff!important;cursor:pointer!important;box-shadow:0 8px 24px rgba(0,0,0,0.2)!important;pointer-events:auto!important;}'
-      + '.vl-product-img{width:52px!important;height:52px!important;border-radius:10px!important;object-fit:cover!important;background:#f1f5f9!important;flex:0 0 auto!important;}'
-      + '.vl-product-info{min-width:0!important;flex:1!important;display:flex!important;flex-direction:column!important;gap:2px!important;}'
-      + '.vl-product-name{font-weight:800!important;font-size:13px!important;color:#0f172a!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-transform:uppercase!important;line-height:1.2!important;}'
-      + '.vl-product-price{font-weight:700!important;font-size:14px!important;color:#0f172a!important;line-height:1.2!important;}'
-      + '.vl-product-btn{background:#22c55e!important;color:#fff!important;font-size:11px!important;font-weight:700!important;padding:5px 10px!important;border-radius:8px!important;display:inline-flex!important;align-items:center!important;gap:4px!important;margin-top:2px!important;text-transform:none!important;align-self:flex-start!important;}'
-      + '.vl-product-btn svg{width:12px!important;height:12px!important;stroke:#fff!important;fill:none!important;stroke-width:2.5!important;stroke-linecap:round!important;stroke-linejoin:round!important;}'
-      + '.vl-cta{all:unset!important;display:block!important;width:100%!important;text-align:center!important;border-radius:12px!important;padding:14px!important;font-weight:800!important;font-size:15px!important;cursor:pointer!important;background:' + buttonColor + '!important;color:#fff!important;box-shadow:0 4px 12px rgba(0,0,0,0.2)!important;pointer-events:auto!important;}';
+
+      /* ===== SOCIAL ACTIONS ===== */
+      + '.vl-social{position:absolute!important;top:61%!important;right:12px!important;transform:translateY(-50%)!important;'
+      + 'z-index:45!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:12px!important;}'
+      + '.vl-social-btn{all:unset!important;width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;'
+      + 'border-radius:999px!important;border:1px solid rgba(255,255,255,0.8)!important;'
+      + 'background:rgba(0,0,0,0.1)!important;backdrop-filter:blur(4px)!important;display:flex!important;align-items:center!important;'
+      + 'justify-content:center!important;color:#fff!important;cursor:pointer!important;flex-shrink:0!important;padding:0!important;}'
+      + '.vl-social-btn svg{width:18px!important;height:18px!important;}'
+      + '.vl-social-btn:hover{background:rgba(0,0,0,0.25)!important;}'
+      + '.vl-social-count{font-size:10px!important;font-weight:800!important;color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,0.5)!important;margin-top:-4px!important;}'
+      + '.vl-social-btn.whatsapp{background:#25D366!important;border-color:#25D366!important;}'
+
+      /* ===== FOOTER / PRODUCT CARD (ÚNICA DEFINIÇÃO) ===== */
+      + '.vl-footer{position:absolute!important;bottom:0!important;left:0!important;right:0!important;z-index:40!important;'
+      + 'background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.5) 50%,transparent 100%)!important;'
+      + 'padding:40px 16px 16px 16px!important;pointer-events:none!important;}'
+      + '.vl-footer-inner{pointer-events:auto!important;}'
+      + '.vl-cta{all:unset!important;display:block!important;width:100%!important;text-align:center!important;'
+      + 'border-radius:12px!important;padding:14px!important;font-weight:800!important;font-size:15px!important;'
+      + 'cursor:pointer!important;background:' + buttonColor + '!important;color:#fff!important;'
+      + 'box-shadow:0 4px 12px rgba(0,0,0,0.2)!important;margin-bottom:12px!important;}'
+      + '.vl-product{display:flex!important;align-items:center!important;gap:12px!important;border-radius:24px!important;'
+      + 'border:1px solid rgba(255,255,255,0.15)!important;padding:12px!important;background:' + bgColor + '!important;'
+      + 'cursor:pointer!important;box-shadow:' + shadow + '!important;}'
+      + '.vl-product-img{width:72px!important;height:72px!important;border-radius:16px!important;object-fit:cover!important;'
+      + 'background:#e2e8f0!important;flex:0 0 auto!important;}'
+      + '.vl-product-info{min-width:0!important;flex:1!important;}'
+      + '.vl-product-name{font-weight:800!important;font-size:13px!important;color:' + textColor + '!important;'
+      + 'white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}'
+      + '.vl-product-price{margin-top:4px!important;font-weight:800!important;font-size:16px!important;color:' + secondary + '!important;}'
+      + '.vl-product-btn{all:unset!important;display:inline-flex!important;align-items:center!important;gap:4px!important;'
+      + 'border-radius:999px!important;padding:6px 12px!important;margin-top:6px!important;'
+      + 'background:' + buttonColor + '!important;color:#fff!important;font-size:11px!important;font-weight:800!important;cursor:pointer!important;}';
   }
 
+  /* ✅ buildFloatingCss — ES5 PURO, SEM TEMPLATE LITERAL */
   function buildFloatingCss(appearance, behaviorConfig) {
     behaviorConfig = behaviorConfig || getFloatingBehaviorConfig(appearance);
     var cfg = getFloatingConfig(appearance);
@@ -504,6 +560,7 @@
     var borderColor = getBorderColor(appearance);
     var borderBackground = borderColor ? borderColor : 'linear-gradient(135deg,' + primary + ',' + secondary + ')';
     var font = getFontFamily(appearance);
+
     return ':host{all:initial!important;position:fixed!important;top:' + cfg.top + '!important;right:' + cfg.right + '!important;bottom:' + cfg.bottom + '!important;left:' + cfg.left + '!important;z-index:' + cfg.zIndex + '!important;width:' + cfg.width + '!important;min-width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;height:auto!important;overflow:visible!important;background:transparent!important;pointer-events:auto!important;font-family:' + font + '!important;}'
       + buildSharedCss(appearance)
       + '.vl-bubbles{width:' + cfg.width + '!important;display:flex!important;flex-direction:column!important;align-items:' + cfg.alignItems + '!important;justify-content:flex-start!important;gap:10px!important;overflow:visible!important;position:relative!important;}'
@@ -527,26 +584,9 @@
     if (!globalShadowRoot) return;
     var vids = globalShadowRoot.querySelectorAll('.vl-bubble video.vl-img');
     for (var i = 0; i < vids.length; i++) {
-      var p = vids[i].play(); if (p) p.catch(function(){});
+      var p = vids[i].play(); if (p) p.catch(function () { });
     }
   }
-
-  // ========================
-  // SVG ICONS (fiéis ao preview)
-  // ========================
-  var ICONS = {
-    mute: '<svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>',
-    unmute: '<svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>',
-    play: '<svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>',
-    pause: '<svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>',
-    close: '<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
-    heart: '<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
-    comment: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-    share: '<svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>',
-    link: '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
-    whatsapp: '<svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>',
-    externalLink: '<svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
-  };
 
   function buildVideoPlayer(video, storyId, onEnded) {
     var url = getVideoUrl(video);
@@ -565,11 +605,6 @@
     }
 
     if ((isUpload || isDirect) && url) {
-      wrapper.style.position = 'relative';
-      wrapper.style.width = '100%';
-      wrapper.style.minHeight = '300px';
-      wrapper.style.overflow = 'hidden';
-
       var media = createEl('video');
       media.controls = false;
       media.preload = 'auto';
@@ -578,16 +613,10 @@
       media.playsInline = true;
       media.muted = false;
       media.loop = true;
-      media.style.position = 'absolute';
-      media.style.top = '0';
-      media.style.left = '0';
-      media.style.width = '100%';
-      media.style.height = '100%';
-      media.style.objectFit = 'cover';
-      media.style.zIndex = '1';
 
       var thumb = getVideoThumbnail(video);
       if (thumb) media.poster = thumb;
+
       media.src = url;
 
       media.addEventListener('play', function () {
@@ -621,6 +650,22 @@
     resumePreviews();
   }
 
+  function svgIcon(name) {
+    var icons = {
+      play: '<svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>',
+      pause: '<svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>',
+      mute: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="white"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>',
+      unmute: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="white"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>',
+      heart: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+      heartFilled: '<svg width="18" height="18" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+      comment: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+      share: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>',
+      whatsapp: '<svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M16.6 13.2c-.3-.2-1.7-.8-2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.8 0c-.4-.2-1.4-.5-2.6-1.6-.9-.8-1.6-1.8-1.8-2.2-.2-.4 0-.6.2-.8l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6s-.7-1.7-1-2.3c-.3-.6-.6-.5-.8-.5h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.8s1.3 3.2 1.5 3.4c.2.2 2.3 3.6 5.6 5.1.8.4 1.5.6 2.1.8.9.3 1.7.3 2.3.2.7-.1 1.7-.7 2-1.3.3-.6.3-1.1.2-1.3-.1-.2-.3-.3-.6-.5z"/><path d="M20 4A10 10 0 0 0 3.6 16.2L2 22l5.9-1.5A10 10 0 1 0 20 4zm-7.9 15.4c-1.6 0-3.2-.4-4.6-1.3l-.3-.2-3.5.9.9-3.4-.2-.3A8.1 8.1 0 1 1 12.1 19.4z"/></svg>',
+      close: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>'
+    };
+    return icons[name] || '';
+  }
+
   function openStory(storiesList, initialStoryIndex, storyVideoMap, activeVideos, storyProducts, products) {
     if (!overlay || !modalContent || !storiesList || !storiesList.length) return;
 
@@ -628,6 +673,13 @@
 
     var currentStoryIndex = initialStoryIndex || 0;
     var currentVideoIndex = 0;
+    var isMuted = false;
+    var isPlaying = true;
+    var liked = false;
+    var likeCount = 0;
+
+    var likes = getStorageItem('vidlytics_likes', {});
+    if (!likes || typeof likes !== 'object') likes = {};
 
     function getOrderedVideos(s) {
       var relations = (storyVideoMap.get(s.id) || []).slice().sort(function (a, b) { return Number(a.position || 0) - Number(b.position || 0); });
@@ -648,11 +700,8 @@
     function prevVideo() {
       if (currentVideoIndex > 0) { currentVideoIndex--; renderCurrent(); }
       else if (currentStoryIndex > 0) {
-        currentStoryIndex--;
-        var prevS = storiesList[currentStoryIndex];
-        var prevVids = getOrderedVideos(prevS);
-        currentVideoIndex = Math.max(0, prevVids.length - 1);
-        renderCurrent();
+        currentStoryIndex--; var prevS = storiesList[currentStoryIndex]; var prevVids = getOrderedVideos(prevS);
+        currentVideoIndex = Math.max(0, prevVids.length - 1); renderCurrent();
       }
     }
 
@@ -667,75 +716,39 @@
       var modalConfig = normalizeModalAppearanceConfig(currentAppearance);
       modalContent.innerHTML = '';
 
-      // ========================
-      // HEADER — Título + Subtítulo + 3 botões (mute, play, close)
-      // ========================
+      /* ===== PROGRESS BARS ===== */
+      var progress = createEl('div', 'vl-progress');
+      orderedVideos.forEach(function (v, idx) {
+        var bar = createEl('div', 'vl-progress-bar');
+        var fill = createEl('div', 'vl-progress-fill');
+        if (idx < currentVideoIndex) fill.style.width = '100%';
+        else if (idx === currentVideoIndex) fill.style.width = '33%';
+        else fill.style.width = '0%';
+        bar.appendChild(fill);
+        progress.appendChild(bar);
+      });
+      modalContent.appendChild(progress);
+
+      /* ===== HEADER ===== */
       var header = createEl('div', 'vl-header');
       var headerLeft = createEl('div', 'vl-header-left');
 
       if (modalConfig.show_title !== false) {
-        var title = createEl('div', 'vl-title');
-        title.textContent = story.title || story.name || 'Story';
-        headerLeft.appendChild(title);
-
-        var subtitle = createEl('div', 'vl-subtitle');
-        subtitle.textContent = (story.subtitle || story.collection || story.description || '').toUpperCase();
-        if (subtitle.textContent) headerLeft.appendChild(subtitle);
+        var title = createEl('div', 'vl-title'); title.textContent = story.title || story.name || 'Story';
+        var count = createEl('div', 'vl-count');
+        count.textContent = (currentVideoIndex + 1) + '/' + orderedVideos.length;
+        headerLeft.appendChild(title); headerLeft.appendChild(count);
       }
       header.appendChild(headerLeft);
 
-      var headerActions = createEl('div', 'vl-header-actions');
-
-      // Botão Mute/Unmute
-      if (modalConfig.show_audio_button !== false) {
-        var audioBtn = createEl('button', 'vl-header-btn');
-        audioBtn.type = 'button';
-        audioBtn.setAttribute('aria-label', 'Alternar áudio');
-        audioBtn.innerHTML = ICONS.mute;
-        audioBtn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          var vid = modalContent.querySelector('video');
-          if (vid) {
-            vid.muted = !vid.muted;
-            audioBtn.innerHTML = vid.muted ? ICONS.mute : ICONS.unmute;
-          }
-        });
-        headerActions.appendChild(audioBtn);
-      }
-
-      // Botão Play/Pause
-      var playBtn = createEl('button', 'vl-header-btn');
-      playBtn.type = 'button';
-      playBtn.setAttribute('aria-label', 'Play/Pause');
-      playBtn.innerHTML = ICONS.pause;
-      playBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        var vid = modalContent.querySelector('video');
-        if (vid) {
-          if (vid.paused) {
-            vid.play().catch(function(){});
-            playBtn.innerHTML = ICONS.pause;
-          } else {
-            vid.pause();
-            playBtn.innerHTML = ICONS.play;
-          }
-        }
-      });
-      headerActions.appendChild(playBtn);
-
-      // Botão Fechar
-      var closeBtn = createEl('button', 'vl-header-btn');
+      var closeBtn = createEl('button', 'vl-close');
       closeBtn.type = 'button';
-      closeBtn.setAttribute('aria-label', 'Fechar');
-      closeBtn.innerHTML = ICONS.close;
-      closeBtn.addEventListener('click', function(e) { e.stopPropagation(); closeOverlay(); });
-      headerActions.appendChild(closeBtn);
+      closeBtn.innerHTML = svgIcon('close');
+      closeBtn.addEventListener('click', function (e) { e.stopPropagation(); closeOverlay(); });
+      header.appendChild(closeBtn);
+      modalContent.appendChild(header);
 
-      header.appendChild(headerActions);
-
-      // ========================
-      // BODY
-      // ========================
+      /* ===== BODY ===== */
       var body = createEl('div', 'vl-body');
 
       var nav = createEl('div', 'vl-nav');
@@ -744,112 +757,105 @@
       nav.appendChild(prevBtn); nav.appendChild(nextBtn);
       body.appendChild(nav);
 
-      // ========================
-      // BARRA SOCIAL — Ícones SVG outline, WhatsApp verde
-      // ========================
-      var hasAnySocial = modalConfig.show_like_button !== false
-        || modalConfig.show_comment_button !== false
-        || modalConfig.show_share_button !== false
-        || modalConfig.show_whatsapp_button !== false;
+      var playerNode = buildVideoPlayer(video, story.id, nextVideo);
+      body.insertBefore(playerNode, body.firstChild);
 
-      if (hasAnySocial) {
-        var socialBar = createEl('div', 'vl-social-bar');
+      /* ===== SOCIAL ACTIONS ===== */
+      var social = createEl('div', 'vl-social');
+      var hasSocial = false;
 
-        if (modalConfig.show_like_button !== false) {
-          var likeBtn = createEl('button', 'vl-social-btn');
-          likeBtn.type = 'button';
-          likeBtn.setAttribute('aria-label', 'Curtir');
-          var likeIcon = createEl('div', 'vl-social-icon'); likeIcon.innerHTML = ICONS.heart;
-          likeBtn.appendChild(likeIcon);
-          likeBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            trackMetric({ event_type: 'like', story_id: story.id, video_id: video.id, page_url: window.location.href });
-            likeIcon.style.transform = 'scale(1.2)';
-            setTimeout(function() { likeIcon.style.transform = 'scale(1)'; }, 200);
-          });
-          socialBar.appendChild(likeBtn);
-        }
+      if (modalConfig.show_like_button !== false) {
+        var videoId = video.id;
+        var currentLikeData = likes[videoId] || { liked: false, count: 0 };
+        liked = currentLikeData.liked;
+        likeCount = currentLikeData.count;
 
-        if (modalConfig.show_comment_button !== false) {
-          var commentBtn = createEl('button', 'vl-social-btn');
-          commentBtn.type = 'button';
-          commentBtn.setAttribute('aria-label', 'Comentar');
-          var commentIcon = createEl('div', 'vl-social-icon'); commentIcon.innerHTML = ICONS.comment;
-          commentBtn.appendChild(commentIcon);
-          commentBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            trackMetric({ event_type: 'comment', story_id: story.id, video_id: video.id, page_url: window.location.href });
-          });
-          socialBar.appendChild(commentBtn);
-        }
+        var likeBtn = createEl('button', 'vl-social-btn');
+        likeBtn.type = 'button';
+        likeBtn.innerHTML = liked ? svgIcon('heartFilled') : svgIcon('heart');
 
-        if (modalConfig.show_share_button !== false) {
-          var shareBtn = createEl('button', 'vl-social-btn');
-          shareBtn.type = 'button';
-          shareBtn.setAttribute('aria-label', 'Compartilhar');
-          var shareIcon = createEl('div', 'vl-social-icon'); shareIcon.innerHTML = ICONS.share;
-          shareBtn.appendChild(shareIcon);
-          shareBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            trackMetric({ event_type: 'share', story_id: story.id, video_id: video.id, page_url: window.location.href });
-            if (navigator.share) {
-              navigator.share({ title: story.title || '', url: window.location.href }).catch(function(){});
-            } else {
-              navigator.clipboard.writeText(window.location.href).then(function() {
-                shareIcon.style.background = '#22c55e';
-                shareIcon.style.borderColor = '#22c55e';
-                setTimeout(function() { shareIcon.style.background = ''; shareIcon.style.borderColor = ''; }, 1500);
-              }).catch(function(){});
-            }
-          });
-          socialBar.appendChild(shareBtn);
-        }
+        var likeCountEl = createEl('span', 'vl-social-count');
+        likeCountEl.textContent = String(likeCount);
 
-        if (modalConfig.show_whatsapp_button !== false) {
-          var waBtn = createEl('button', 'vl-social-btn vl-whatsapp');
-          waBtn.type = 'button';
-          waBtn.setAttribute('aria-label', 'WhatsApp');
-          var waIcon = createEl('div', 'vl-social-icon'); waIcon.innerHTML = ICONS.whatsapp;
-          waBtn.appendChild(waIcon);
-          waBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            trackMetric({ event_type: 'whatsapp_click', story_id: story.id, video_id: video.id, page_url: window.location.href });
-            window.open('https://wa.me/?text=' + encodeURIComponent(window.location.href), '_blank', 'noopener,noreferrer');
-          });
-          socialBar.appendChild(waBtn);
-        }
-
-        body.appendChild(socialBar);
+        likeBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          liked = !liked;
+          likeCount = Math.max(0, likeCount + (liked ? 1 : -1));
+          likes[videoId] = { liked: liked, count: likeCount };
+          setStorageItem('vidlytics_likes', likes);
+          likeBtn.innerHTML = liked ? svgIcon('heartFilled') : svgIcon('heart');
+          likeCountEl.textContent = String(likeCount);
+        });
+        social.appendChild(likeBtn);
+        social.appendChild(likeCountEl);
+        hasSocial = true;
       }
 
-      // ========================
-      // FOOTER — Card de produto
-      // ========================
-      var footer = createEl('div', 'vl-footer');
+      if (modalConfig.show_share_button !== false) {
+        var shareBtn = createEl('button', 'vl-social-btn');
+        shareBtn.type = 'button';
+        shareBtn.innerHTML = svgIcon('share');
+        shareBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var shareUrl = window.location.href;
+          var shareText = 'Olha esse conteúdo: ' + (story.title || '');
+          try {
+            if (navigator.share) {
+              navigator.share({ title: story.title || 'Story', text: shareText, url: shareUrl });
+            } else if (navigator.clipboard) {
+              navigator.clipboard.writeText(shareUrl);
+            }
+          } catch (err) { }
+        });
+        social.appendChild(shareBtn);
+        hasSocial = true;
+      }
+
+      if (modalConfig.show_whatsapp_button !== false) {
+        var waBtn = createEl('button', 'vl-social-btn whatsapp');
+        waBtn.type = 'button';
+        waBtn.innerHTML = svgIcon('whatsapp');
+        waBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var msg = 'Olha esse conteúdo: ' + (story.title || '');
+          window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank', 'noopener,noreferrer');
+        });
+        social.appendChild(waBtn);
+        hasSocial = true;
+      }
+
+      if (hasSocial) body.appendChild(social);
+
+      /* ===== FOOTER / PRODUCT ===== */
       var activeProducts = storyProducts
         .filter(function (sp) { return idsEqual(sp.story_id, story.id); })
         .map(function (sp) { return products.find(function (product) { return idsEqual(product.id, sp.product_id); }); })
         .filter(function (product) { return product && (product.active === undefined || product.active); });
 
       if (activeProducts.length && modalConfig.show_product !== false) {
+        var footer = createEl('div', 'vl-footer');
+        var footerInner = createEl('div', 'vl-footer-inner');
         var product = activeProducts[0];
-        var productCard = createEl('div', 'vl-product');
 
+        var productCard = createEl('div', 'vl-product');
         var productImg = createEl('img', 'vl-product-img');
         productImg.src = normalizeMediaUrl(product.image_url || product.imageUrl || '');
         productImg.alt = product.name || '';
-        productImg.onerror = function() { productImg.style.display = 'none'; };
 
         var productInfo = createEl('div', 'vl-product-info');
-        var productName = createEl('div', 'vl-product-name'); productName.textContent = product.name || '';
-        var productPrice = createEl('div', 'vl-product-price'); productPrice.textContent = Number(product.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-        var productBtn = createEl('div', 'vl-product-btn');
-        productBtn.innerHTML = 'Ver produto ' + ICONS.externalLink;
+        var productName = createEl('div', 'vl-product-name');
+        productName.textContent = product.name || '';
+        var productPrice = createEl('div', 'vl-product-price');
+        productPrice.textContent = Number(product.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
         productInfo.appendChild(productName);
         productInfo.appendChild(productPrice);
-        productInfo.appendChild(productBtn);
+
+        if (modalConfig.show_product_button !== false && product.product_url) {
+          var productBtn = createEl('span', 'vl-product-btn');
+          productBtn.innerHTML = 'Ver produto';
+          productInfo.appendChild(productBtn);
+        }
 
         productCard.appendChild(productImg);
         productCard.appendChild(productInfo);
@@ -859,34 +865,37 @@
           trackMetric({ event_type: 'product_click', story_id: story.id, video_id: video.id, product_id: product.id, page_url: window.location.href });
           if (product.product_url) window.open(product.product_url, '_blank', 'noopener,noreferrer');
         });
-        footer.appendChild(productCard);
+
+        footerInner.appendChild(productCard);
+        footer.appendChild(footerInner);
+        body.appendChild(footer);
       }
 
       if (story.cta_enabled && story.cta_url) {
+        var ctaFooter = createEl('div', 'vl-footer');
+        var ctaInner = createEl('div', 'vl-footer-inner');
         var ctaBtn = createEl('button', 'vl-cta');
-        ctaBtn.type = 'button'; ctaBtn.textContent = story.cta_text || 'Saiba mais';
+        ctaBtn.type = 'button';
+        ctaBtn.textContent = story.cta_text || 'Saiba mais';
         ctaBtn.addEventListener('click', function (e) {
-          e.stopPropagation(); trackMetric({ event_type: story.cta_type === 'whatsapp' ? 'whatsapp_click' : 'cta_click', story_id: story.id, video_id: video.id, page_url: window.location.href });
+          e.stopPropagation();
+          trackMetric({ event_type: story.cta_type === 'whatsapp' ? 'whatsapp_click' : 'cta_click', story_id: story.id, video_id: video.id, page_url: window.location.href });
           window.open(story.cta_url, '_blank', 'noopener,noreferrer');
         });
-        footer.appendChild(ctaBtn);
+        ctaInner.appendChild(ctaBtn);
+        ctaFooter.appendChild(ctaInner);
+        body.appendChild(ctaFooter);
       }
 
-      if (footer.childNodes.length > 0) body.appendChild(footer);
-
-      var playerNode = buildVideoPlayer(video, story.id, nextVideo);
-      body.insertBefore(playerNode, body.firstChild);
-
-      modalContent.appendChild(header);
       modalContent.appendChild(body);
-
       overlay.className = 'vl-overlay is-open';
 
       var newVid = playerNode.querySelector('video');
       if (newVid) {
+        newVid.muted = isMuted;
         var playPromise = newVid.play();
         if (playPromise) {
-          playPromise.catch(function(e) { console.warn('Vidlytics Play Block:', e); });
+          playPromise.catch(function (e) { console.warn('Vidlytics Play Block:', e); });
         }
       }
     }
@@ -916,20 +925,21 @@
     window.addEventListener('pointermove', function (event) {
       if (!dragging) return;
       var dx = event.clientX - startX, dy = event.clientY - startY;
+
       if (Math.abs(dx) > 8 || Math.abs(dy) > 8) moved = true;
       if (!moved) return;
 
       event.preventDefault(); floatingWasDragged = true;
+
       var nextLeft = Math.max(0, Math.min(window.innerWidth - hostWidth, startLeft + dx));
       var nextTop = Math.max(0, Math.min(window.innerHeight - hostHeight, startTop + dy));
-      setImportant(host, 'left', px(nextLeft));
-      setImportant(host, 'top', px(nextTop));
-      setImportant(host, 'right', 'auto');
-      setImportant(host, 'bottom', 'auto');
+
+      setImportant(host, 'left', px(nextLeft)); setImportant(host, 'top', px(nextTop));
+      setImportant(host, 'right', 'auto'); setImportant(host, 'bottom', 'auto');
       setImportant(host, 'position', 'fixed');
     }, { passive: false });
 
-    function stop() { dragging = false; setTimeout(function() { floatingWasDragged = false; }, 100); }
+    function stop() { dragging = false; setTimeout(function () { floatingWasDragged = false; }, 100); }
     window.addEventListener('pointerup', stop); window.addEventListener('pointercancel', stop);
   }
 
@@ -951,7 +961,7 @@
     if (behaviorConfig.allowClose) {
       var dismissButton = createEl('button', 'vl-dismiss');
       dismissButton.type = 'button';
-      dismissButton.textContent = '×';
+      dismissButton.textContent = '\u00D7';
       dismissButton.addEventListener('click', function (event) {
         event.preventDefault(); event.stopPropagation();
         floatingWasClosed = true;
@@ -990,7 +1000,7 @@
         if (thumb) vidPreview.poster = thumb;
         var playPromise = vidPreview.play();
         if (playPromise !== undefined) {
-          playPromise.catch(function() { if (thumb) { var fbImg = createEl('img', 'vl-img'); fbImg.src = thumb; inner.innerHTML = ''; inner.appendChild(fbImg); } });
+          playPromise.catch(function () { if (thumb) { var fbImg = createEl('img', 'vl-img'); fbImg.src = thumb; inner.innerHTML = ''; inner.appendChild(fbImg); } });
         }
         inner.appendChild(vidPreview);
       } else if (thumb) {
@@ -1025,7 +1035,7 @@
     if (behaviorConfig.allowDrag) setupFloatingDrag(shadowData.host, bubbles);
   }
 
-  function renderCarousel(stories, storyVideoMap, activeVideos) {}
+  function renderCarousel(stories, storyVideoMap, activeVideos) { }
 
   function forceHostPosition() {
     if (floatingWasDragged || floatingWasClosed) return;
@@ -1035,46 +1045,43 @@
   }
 
   function renderWidget() {
-    return Promise.all([ readAppearance(), readStories(), readStoryVideos(), readVideos(), readStoryProducts(), readProducts(), readPageRules() ])
+    return Promise.all([readAppearance(), readStories(), readStoryVideos(), readVideos(), readStoryProducts(), readProducts(), readPageRules()])
       .then(function (results) {
-      currentAppearance = normalizeAppearanceItem(results[0] || {});
-      var modalConfig = normalizeModalAppearanceConfig(currentAppearance);
-      var stories = results[1] || [], storyVideos = results[2] || [], videos = results[3] || [];
-      var storyProducts = results[4] || [], products = results[5] || [], pageRules = results[6] || [];
+        currentAppearance = normalizeAppearanceItem(results[0] || {});
+        var modalConfig = normalizeModalAppearanceConfig(currentAppearance);
+        var stories = results[1] || [], storyVideos = results[2] || [], videos = results[3] || [];
+        var storyProducts = results[4] || [], products = results[5] || [], pageRules = results[6] || [];
 
-      readStoryProductsData = storyProducts; readProductsData = products;
+        readStoryProductsData = storyProducts; readProductsData = products;
+        if (!stories.length || modalConfig.hide_stories) return;
 
-      if (!stories.length || modalConfig.hide_stories) return;
-
-      var activeVideos = videos.filter(function (video) {
-        return ('status' in video ? video.status === 'active' : true) && ('active' in video ? video.active !== false : true) && Boolean(getVideoUrl(video));
-      });
-      if (!activeVideos.length) return;
-
-      var storyVideoMap = new Map();
-      storyVideos.forEach(function (item) {
-        if (!storyVideoMap.has(item.story_id)) storyVideoMap.set(item.story_id, []);
-        storyVideoMap.get(item.story_id).push(item);
-      });
-
-      var storiesWithVideos = stories.filter(function (story) {
-        return (storyVideoMap.get(story.id) || []).some(function (rel) {
-          return activeVideos.some(function (v) { return idsEqual(v.id, rel.video_id); });
+        var activeVideos = videos.filter(function (video) {
+          return ('status' in video ? video.status === 'active' : true) && ('active' in video ? video.active !== false : true) && Boolean(getVideoUrl(video));
         });
-      });
-      if (!storiesWithVideos.length) return;
+        if (!activeVideos.length) return;
 
-      var applicableStories = storiesWithVideos.filter(function (story) {
-        var rulesForStory = pageRules.filter(function (rule) { return idsEqual(rule.story_id, story.id); });
-        return !rulesForStory.length || rulesForStory.some(matchesRule);
-      });
-      if (!applicableStories.length) return;
+        var storyVideoMap = new Map();
+        storyVideos.forEach(function (item) {
+          if (!storyVideoMap.has(item.story_id)) storyVideoMap.set(item.story_id, []);
+          storyVideoMap.get(item.story_id).push(item);
+        });
 
-      if (enableFloating) renderFloatingBubbles(applicableStories, storyVideoMap, activeVideos);
-      if (enableCarousel) renderCarousel(applicableStories, storyVideoMap, activeVideos);
+        var storiesWithVideos = stories.filter(function (story) {
+          return (storyVideoMap.get(story.id) || []).some(function (rel) { return activeVideos.some(function (v) { return idsEqual(v.id, rel.video_id); }); });
+        });
+        if (!storiesWithVideos.length) return;
 
-      forceHostPosition(); setTimeout(forceHostPosition, 100); setTimeout(forceHostPosition, 500); setTimeout(forceHostPosition, 1500);
-    }).catch(function (error) { console.error('Erro no Vidlytics Widget:', error); });
+        var applicableStories = storiesWithVideos.filter(function (story) {
+          var rulesForStory = pageRules.filter(function (rule) { return idsEqual(rule.story_id, story.id); });
+          return !rulesForStory.length || rulesForStory.some(matchesRule);
+        });
+        if (!applicableStories.length) return;
+
+        if (enableFloating) renderFloatingBubbles(applicableStories, storyVideoMap, activeVideos);
+        if (enableCarousel) renderCarousel(applicableStories, storyVideoMap, activeVideos);
+
+        forceHostPosition(); setTimeout(forceHostPosition, 100); setTimeout(forceHostPosition, 500); setTimeout(forceHostPosition, 1500);
+      }).catch(function (error) { console.error('Erro no Vidlytics Widget:', error); });
   }
 
   function initMutationObserver() {
