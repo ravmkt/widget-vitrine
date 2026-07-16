@@ -1,6 +1,6 @@
 /**
  * Vidlytics Widget — widget.js
- * Correção Definitiva: Display None Bug & Media Fragment Decoder Lock
+ * Correção: GPU Paint Bug Chrome Desktop / requestAnimationFrame
  */
 (function () {
   console.log('VIDLYTICS WIDGET CARREGADO - APARÊNCIA VIA widget_appearances - 202607161200');
@@ -451,6 +451,7 @@
     var buttonColor = getButtonColor(appearance);
     var font = getFontFamily(appearance);
 
+    // REMOVIDO: transform:translateZ(0) que causa bug na renderização do Chrome
     return '*,*::before,*::after{box-sizing:border-box!important;}'
       + '.vl-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;background:#000!important;display:none!important;align-items:center!important;justify-content:center!important;z-index:' + cfg.zIndex + '!important;font-family:' + font + '!important;}'
       + '.vl-overlay.is-open{display:flex!important;}'
@@ -462,7 +463,7 @@
       + '.vl-close{all:unset!important;width:32px!important;height:32px!important;border-radius:50%!important;border:1px solid rgba(255,255,255,.5)!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:20px!important;line-height:1!important;cursor:pointer!important;color:#fff!important;background:rgba(0,0,0,.3)!important;backdrop-filter:blur(4px)!important;pointer-events:auto!important;}'
       + '.vl-body{flex:1!important;width:100%!important;height:100%!important;position:relative!important;background:#000!important;}'
       + '.vl-player{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;background:#000!important;z-index:1!important;}'
-      + '.vl-player video,.vl-player iframe{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;border:0!important;display:block!important;object-fit:cover!important;z-index:2!important;transform:translateZ(0)!important;}'
+      + '.vl-player video,.vl-player iframe{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;border:0!important;display:block!important;object-fit:cover!important;z-index:2!important;background:transparent!important;}'
       + '.vl-nav{position:absolute!important;inset:0!important;display:flex!important;z-index:10!important;background:transparent!important;}'
       + '.vl-nav-btn{all:unset!important;height:100%!important;cursor:pointer!important;}'
       + '.vl-nav-prev{width:30%!important;}'
@@ -513,6 +514,7 @@
     }
   }
 
+  // ATUALIZADO: Remoção do data-src, agora injetamos src diretamente
   function buildVideoPlayer(video, storyId, onEnded) {
     var url = getVideoUrl(video);
     var ytId = extractYouTubeId(url);
@@ -522,7 +524,6 @@
 
     if (!isUpload && ytId) {
       var iframe = createEl('iframe');
-      // Correção para funcionamento do YouTube
       iframe.src = 'https://www.youtube.com/embed/' + ytId + '?autoplay=1&playsinline=1&rel=0';
       iframe.allow = 'autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
       iframe.allowFullscreen = true;
@@ -533,16 +534,15 @@
     if ((isUpload || isDirect) && url) {
       var media = createEl('video');
       
-      // VITAL PARA RESOLVER O DISPLAY NONE: Salvar a URL em "data-src". 
-      // Não atribuímos a "src" ainda para evitar bloqueio do decodificador!
-      media.setAttribute('data-src', url);
+      // Injeta a URL diretamente, sem truques que quebram o Desktop
+      media.src = url;
       
       media.controls = false;
       media.preload = 'auto';
-      media.setAttribute('playsinline', 'playsinline');
-      media.setAttribute('webkit-playsinline', 'webkit-playsinline');
+      media.setAttribute('playsinline', '');
+      media.setAttribute('webkit-playsinline', '');
       media.playsInline = true;
-      media.muted = false;
+      media.muted = false; // Como o modal abriu por clique, o navegador autoriza áudio
       
       var thumb = getVideoThumbnail(video);
       if (thumb) media.poster = thumb;
@@ -632,8 +632,7 @@
       header.appendChild(closeBtn);
 
       var body = createEl('div', 'vl-body');
-      body.appendChild(buildVideoPlayer(video, story.id, nextVideo));
-
+      
       var nav = createEl('div', 'vl-nav');
       var prevBtn = createEl('button', 'vl-nav-btn vl-nav-prev'); prevBtn.type = 'button'; prevBtn.addEventListener('click', prevVideo);
       var nextBtn = createEl('button', 'vl-nav-btn vl-nav-next'); nextBtn.type = 'button'; nextBtn.addEventListener('click', nextVideo);
@@ -679,42 +678,31 @@
       }
 
       if (footer.childNodes.length > 0) body.appendChild(footer);
+      
+      // Monta primeiro toda a UI no Modal
       modalContent.appendChild(header);
       modalContent.appendChild(body);
       
-      // 1. FORÇA O OVERLAY A FICAR VISÍVEL ANTES DE CARREGAR A MÍDIA
+      // 1. FORÇA O OVERLAY A FICAR VISÍVEL ANTES DE CRIAR A TAG DE VÍDEO
       overlay.className = 'vl-overlay is-open';
 
-      // 2. BUSCA O VÍDEO
-      var newVid = body.querySelector('video');
-      if (newVid && newVid.hasAttribute('data-src')) {
+      // 2. USA O REQUEST ANIMATION FRAME PARA INJETAR O VÍDEO NO PRÓXIMO QUADRO DE PINTURA DO CHROME
+      requestAnimationFrame(function() {
+        var playerNode = buildVideoPlayer(video, story.id, nextVideo);
         
-        // 3. AGUARDA 50ms PARA A PLACA DE VÍDEO RENDERIZAR O CSS DO OVERLAY ABERTO
-        setTimeout(function() {
-          var rawUrl = newVid.getAttribute('data-src');
-          
-          // 4. TRUQUE DO HASH: Evita cache duplo e força renderização do primeiro milissegundo
-          var finalUrl = rawUrl.split('#')[0] + '#t=0.001';
-          
-          newVid.src = finalUrl;
-          newVid.load();
-
-          // 5. APENAS DÁ O PLAY QUANDO O NAVEGADOR CARREGOU DADOS SUFICIENTES
-          newVid.addEventListener('loadeddata', function() {
-            var playPromise = newVid.play();
-            if (playPromise) playPromise.catch(function(e) { console.log('Vidlytics Play Block:', e); });
-          }, { once: true });
-
-          // 6. FALLBACK DE SEGURANÇA SE A INTERNET TIVER OSCILADO
-          setTimeout(function() {
-            if (newVid.paused) {
-              var playPromise = newVid.play();
-              if (playPromise) playPromise.catch(function() {});
-            }
-          }, 300);
-
-        }, 50);
-      }
+        // Coloca o vídeo dentro do body, atrás da navegação
+        body.insertBefore(playerNode, body.firstChild); 
+        
+        var newVid = playerNode.querySelector('video');
+        if (newVid) {
+          var playPromise = newVid.play();
+          if (playPromise) {
+            playPromise.catch(function(e) {
+              console.warn('Vidlytics Play Block:', e);
+            });
+          }
+        }
+      });
     }
 
     renderCurrent();
