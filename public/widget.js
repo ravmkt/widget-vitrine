@@ -786,7 +786,7 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
     height: 100vh !important;
     z-index: 9999 !important;
     background: rgba(0, 0, 0, 0.95) !important;
-    display: flex !important;
+    /* display: flex !important;  ← REMOVA ESTA LINHA */
     align-items: center !important;
     justify-content: center !important;
     margin: 0 !important;
@@ -808,6 +808,7 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
     z-index: 20;
   }
 `;
+
 
 
     var bubbles = createEl('div', 'vl-bubbles');
