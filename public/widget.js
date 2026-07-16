@@ -1521,28 +1521,39 @@ function px(value, fallback) {
   var innerRadius = shape === 'circle' ? '999px' : px(innerRadiusNumber);
 
   return {
-  position: positionRaw,
+  position: position,
 
-  floating_position: positionRaw,
-  floating_shape: getValue(['floating_shape', 'floatingShape'], 'portrait'),
-  floating_width: getValue(['floating_width', 'floatingWidth'], 64),
-  floating_height: getValue(['floating_height', 'floatingHeight'], 96),
+  floating_position: position,
+  floating_shape: shape,
+  floating_width: widthNumber,
+  floating_height: heightNumber,
 
-  show_play_button: getValue(
-    ['show_play_button', 'showPlayButton'],
-    undefined
-  ),
+  top: top,
+  right: right,
+  bottom: bottom,
+  left: left,
 
-  allow_drag: getValue(
-    ['allow_drag', 'allowDrag'],
-    undefined
-  ),
+  width: px(widthNumber),
+  height: px(heightNumber),
 
-  allow_close: getValue(
-    ['allow_close', 'allowClose'],
-    undefined
-  )
+  borderWidth: borderWidth,
+  radius: radius,
+  innerRadius: innerRadius,
+
+  zIndex: zIndexNumber,
+  alignItems: alignItems,
+  objectFit: objectFit,
+
+  show_play_button: showPlayButton,
+  showPlayButton: showPlayButton,
+
+  allow_drag: allowDrag,
+  allowDrag: allowDrag,
+
+  allow_close: allowClose,
+  allowClose: allowClose
 };
+
 
 }
 
@@ -2075,42 +2086,7 @@ wrapper.style.position = 'relative';
 
 wrapper.appendChild(media);
 
-if (behaviorConfig.allowClose === true) {
-  var closeButton = document.createElement('button');
 
-  closeButton.type = 'button';
-  closeButton.setAttribute('aria-label', 'Fechar vídeo');
-  closeButton.innerHTML = '&times;';
-
-  closeButton.style.cssText = [
-    'position:absolute',
-    'top:8px',
-    'right:8px',
-    'z-index:9999',
-    'width:28px',
-    'height:28px',
-    'padding:0',
-    'border:0',
-    'border-radius:50%',
-    'background:rgba(0,0,0,.65)',
-    'color:#fff',
-    'font-size:24px',
-    'line-height:28px',
-    'text-align:center',
-    'cursor:pointer'
-  ].join(';');
-
-  closeButton.addEventListener('click', function (event) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    console.log('[VIDLYTICS] Widget flutuante fechado');
-
-    wrapper.remove();
-  });
-
-  wrapper.appendChild(closeButton);
-}
 media.addEventListener('click', function (event) {
   event.preventDefault();
   event.stopPropagation();
@@ -2409,49 +2385,18 @@ function getFloatingClosedStorageKey() {
   return 'vidlytics_floating_closed_' + String(storeId || 'default');
 }
 
-  function getFloatingBehaviorConfig(appearance) {
-  var config = getFloatingConfig(appearance) || {};
+  function renderFloatingBubbles(stories, storyVideoMap, activeVideos) {
+  var appearance = currentAppearance || {};
+  var modalConfig = normalizeModalAppearanceConfig(appearance);
+  var behaviorConfig = getFloatingBehaviorConfig(appearance);
 
-  var rawShowPlayButton = config.showPlayButton;
-  if (rawShowPlayButton === undefined) {
-    rawShowPlayButton = config.show_play_button;
-  }
+  console.log('VIDLYTICS FLOATING BEHAVIOR FINAL:', behaviorConfig);
 
-  var rawAllowDrag = config.allowDrag;
-  if (rawAllowDrag === undefined) {
-    rawAllowDrag = config.allow_drag;
-  }
-
-  var rawAllowClose = config.allowClose;
-  if (rawAllowClose === undefined) {
-    rawAllowClose = config.allow_close;
-  }
-
-  var behavior = {
-    objectFit: config.objectFit || config.object_fit || 'cover',
-
-    showPlayButton: toBoolean(rawShowPlayButton, false),
-    allowDrag: toBoolean(rawAllowDrag, true),
-
-    // Enquanto allow_close não vier do banco,
-    // o botão fechar será exibido por padrão.
-    allowClose: toBoolean(rawAllowClose, true)
-  };
-
-  console.log('[VIDLYTICS] FLOATING BEHAVIOR FINAL:', behavior);
-  console.log('[VIDLYTICS] allow_close RAW:', rawAllowClose);
-
-  return behavior;
-}
-
-
-    console.log('VIDLYTICS FLOATING BEHAVIOR FINAL:', behaviorConfig);
-    var floatingCfg = getFloatingConfig(appearance);
+  var floatingCfg = getFloatingConfig(appearance);
   var shadowData = getOrCreateShadowRoot(appearance);
   var shadow = shadowData.shadow;
 
-
-    var style = createEl('style');
+var style = createEl('style');
     style.textContent = buildFloatingCss(appearance, behaviorConfig);
 
     var bubbles = createEl('div', 'vl-bubbles');
