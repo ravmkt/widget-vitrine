@@ -334,9 +334,26 @@
 
   function normalizeModalAppearanceConfig(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
+    var modalConfig = parseJsonIfNeeded(appearance.modal_config || appearance.modalConfig);
+
+    function getVal(names, fallback) {
+      return firstDefined(
+        appearance[names[0]], appearance[names[1]],
+        modalConfig[names[0]], modalConfig[names[1]]
+      ) !== undefined ? firstDefined(appearance[names[0]], appearance[names[1]], modalConfig[names[0]], modalConfig[names[1]]) : fallback;
+    }
+
     return {
-      show_title: toBoolean(firstDefined(appearance.show_title, appearance.showTitle), DEFAULT_APPEARANCE.show_title),
-      show_product: toBoolean(firstDefined(appearance.show_product, appearance.showProduct), DEFAULT_APPEARANCE.show_product)
+      show_title: toBoolean(firstDefined(appearance.show_title, appearance.showTitle, modalConfig.show_title), true),
+      show_play_button: toBoolean(firstDefined(appearance.show_play_button, appearance.showPlayButton, modalConfig.show_play_button), true),
+      show_product: toBoolean(firstDefined(appearance.show_product, appearance.showProduct, modalConfig.show_product), true),
+      show_like_button: toBoolean(firstDefined(appearance.show_like_button, appearance.showLikeButton, modalConfig.show_like_button), true),
+      show_comment_button: toBoolean(firstDefined(appearance.show_comment_button, appearance.show_comments_button, appearance.showCommentButton, appearance.showCommentsButton, modalConfig.show_comment_button), true),
+      show_share_button: toBoolean(firstDefined(appearance.show_share_button, appearance.showShareButton, modalConfig.show_share_button), true),
+      show_whatsapp_button: toBoolean(firstDefined(appearance.show_whatsapp_button, appearance.showWhatsappButton, modalConfig.show_whatsapp_button), true),
+      show_product_button: toBoolean(firstDefined(appearance.show_product_button, appearance.showProductButton, modalConfig.show_product_button), true),
+      hide_stories: toBoolean(firstDefined(appearance.hide_stories, appearance.hideStories, modalConfig.hide_stories), false),
+      shadow_enabled: toBoolean(firstDefined(appearance.shadow_enabled, appearance.shadowEnabled, modalConfig.shadow_enabled), true)
     };
   }
 
@@ -448,24 +465,95 @@
 
   function buildSharedCss(appearance) {
   var cfg = getFloatingConfig(appearance);
+  var primary = getPrimaryColor(appearance);
+  var secondary = getSecondaryColor(appearance);
   var buttonColor = getButtonColor(appearance);
+  var textColor = readAppearanceValue(appearance, ['text_color', 'textColor']) || '#0f172a';
+  var bgColor = readAppearanceValue(appearance, ['background_color', 'backgroundColor']) || '#ffffff';
   var font = getFontFamily(appearance);
+  var fontSize = readAppearanceValue(appearance, ['font_size', 'fontSize']) || '14';
+  var modalConfig = normalizeModalAppearanceConfig(appearance);
+  var shadow = modalConfig.shadow_enabled !== false ? '0 24px 80px rgba(0,0,0,0.45)' : 'none';
 
   return '*,*::before,*::after{box-sizing:border-box!important;}'
-    + '.vl-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;background:rgba(0,0,0,0.7)!important;display:none!important;align-items:center!important;justify-content:center!important;z-index:' + cfg.zIndex + '!important;font-family:' + font + '!important;}'
+
+    /* ===== OVERLAY ===== */
+    + '.vl-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;'
+    + 'background:rgba(0,0,0,0.85)!important;display:none!important;align-items:center!important;justify-content:center!important;'
+    + 'z-index:' + cfg.zIndex + '!important;font-family:' + font + '!important;font-size:' + toNumber(fontSize, 14) + 'px!important;}'
     + '.vl-overlay.is-open{display:flex!important;}'
-    + '.vl-modal{width:100%!important;max-width:480px!important;max-height:90vh!important;position:relative!important;overflow:hidden!important;background:transparent!important;box-shadow:none!important;display:flex!important;flex-direction:column!important;}'
-    + '.vl-header{position:absolute!important;top:0!important;left:0!important;right:0!important;display:flex!important;align-items:flex-start!important;justify-content:space-between!important;padding:20px 16px!important;background:linear-gradient(to bottom,rgba(0,0,0,.6),transparent)!important;z-index:20!important;border:none!important;pointer-events:none!important;}'
-    + '.vl-header-left{display:flex!important;flex-direction:column!important;gap:4px!important;pointer-events:auto!important;}'
-    + '.vl-title{font-weight:800!important;color:#fff!important;font-size:16px!important;text-shadow:0 1px 3px rgba(0,0,0,.5)!important;text-transform:uppercase!important;}'
-    + '.vl-count{font-size:13px!important;color:rgba(255,255,255,.9)!important;font-weight:600!important;}'
-    + '.vl-close{all:unset!important;width:32px!important;height:32px!important;border-radius:50%!important;border:1px solid rgba(255,255,255,.5)!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:20px!important;line-height:1!important;cursor:pointer!important;color:#fff!important;background:rgba(0,0,0,.3)!important;backdrop-filter:blur(4px)!important;pointer-events:auto!important;}'
-    + '.vl-body{flex:1!important;width:100%!important;position:relative!important;background:transparent!important;aspect-ratio:9/16!important;}'
-    + '.vl-player{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;background:transparent!important;z-index:1!important;}'
-    + '.vl-player video,.vl-player iframe{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;border:0!important;display:block!important;object-fit:cover!important;z-index:2!important;background:transparent!important;}'
-    + '.vl-nav{position:absolute!important;inset:0!important;display:flex!important;z-index:10!important;background:transparent!important;}'
+
+    /* ===== MODAL CONTAINER (matches StoriesWidgetPage) ===== */
+    + '.vl-modal{position:relative!important;width:100%!important;max-width:420px!important;'
+    + 'height:100%!important;max-height:100vh!important;overflow:hidden!important;background:#000!important;'
+    + 'box-shadow:' + shadow + '!important;display:flex!important;flex-direction:column!important;'
+    + 'border-radius:0!important;}'
+    + '@media(min-width:640px){.vl-modal{height:auto!important;aspect-ratio:9/16!important;max-height:90vh!important;border-radius:36px!important;}}'
+
+    /* ===== PROGRESS BARS (top) ===== */
+    + '.vl-progress{position:absolute!important;top:12px!important;left:0!important;right:0!important;z-index:50!important;'
+    + 'display:flex!important;gap:6px!important;padding:0 16px!important;}'
+    + '.vl-progress-bar{height:2px!important;flex:1!important;border-radius:999px!important;background:rgba(255,255,255,0.25)!important;overflow:hidden!important;}'
+    + '.vl-progress-fill{height:100%!important;border-radius:999px!important;background:' + primary + '!important;transition:width 0.3s ease!important;}'
+
+    /* ===== HEADER (gradient top, same as preview) ===== */
+    + '.vl-header{position:absolute!important;top:0!important;left:0!important;right:0!important;z-index:40!important;'
+    + 'display:flex!important;align-items:flex-start!important;justify-content:space-between!important;'
+    + 'padding:20px 16px 16px 16px!important;background:linear-gradient(to bottom,rgba(0,0,0,0.7),transparent)!important;'
+    + 'pointer-events:none!important;}'
+    + '.vl-header-left{display:flex!important;flex-direction:column!important;gap:2px!important;min-width:0!important;flex:1!important;padding-right:48px!important;pointer-events:auto!important;}'
+    + '.vl-title{font-weight:800!important;color:#fff!important;font-size:13px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-shadow:0 1px 3px rgba(0,0,0,0.5)!important;}'
+    + '.vl-count{font-size:10px!important;font-weight:700!important;color:rgba(255,255,255,0.65)!important;text-transform:uppercase!important;}'
+    + '.vl-close{all:unset!important;flex-shrink:0!important;width:32px!important;height:32px!important;border-radius:999px!important;'
+    + 'background:rgba(0,0,0,0.4)!important;backdrop-filter:blur(12px)!important;display:flex!important;align-items:center!important;'
+    + 'justify-content:center!important;cursor:pointer!important;color:#fff!important;pointer-events:auto!important;border:none!important;}'
+
+    /* ===== BODY (video fills container) ===== */
+    + '.vl-body{position:relative!important;flex:1!important;width:100%!important;overflow:hidden!important;}'
+    + '.vl-player{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;}'
+    + '.vl-player video,.vl-player iframe{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;'
+    + 'border:0!important;display:block!important;object-fit:cover!important;}'
+
+    /* ===== NAV (tap zones like preview) ===== */
+    + '.vl-nav{position:absolute!important;inset:0!important;display:flex!important;z-index:30!important;}'
     + '.vl-nav-btn{all:unset!important;height:100%!important;cursor:pointer!important;}'
     + '.vl-nav-prev{width:30%!important;}'
+    + '.vl-nav-next{width:70%!important;}'
+
+    /* ===== SOCIAL ACTIONS (right side, same as preview) ===== */
+    + '.vl-social{position:absolute!important;top:61%!important;right:12px!important;transform:translateY(-50%)!important;'
+    + 'z-index:45!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:12px!important;}'
+    + '.vl-social-btn{all:unset!important;width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;'
+    + 'border-radius:999px!important;border:1px solid rgba(255,255,255,0.8)!important;'
+    + 'background:rgba(0,0,0,0.1)!important;backdrop-filter:blur(4px)!important;display:flex!important;align-items:center!important;'
+    + 'justify-content:center!important;color:#fff!important;cursor:pointer!important;flex-shrink:0!important;padding:0!important;}'
+    + '.vl-social-btn svg{width:18px!important;height:18px!important;}'
+    + '.vl-social-btn:hover{background:rgba(0,0,0,0.25)!important;}'
+    + '.vl-social-count{font-size:10px!important;font-weight:800!important;color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,0.5)!important;margin-top:-4px!important;}'
+    + '.vl-social-btn.whatsapp{background:#25D366!important;border-color:#25D366!important;}'
+
+    /* ===== FOOTER / PRODUCT CARD (bottom, same as preview) ===== */
+    + '.vl-footer{position:absolute!important;bottom:0!important;left:0!important;right:0!important;z-index:40!important;'
+    + 'background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.5) 50%,transparent 100%)!important;'
+    + 'padding:40px 16px 16px 16px!important;pointer-events:none!important;}'
+    + '.vl-footer-inner{pointer-events:auto!important;}'
+    + '.vl-cta{all:unset!important;display:block!important;width:100%!important;text-align:center!important;'
+    + 'border-radius:12px!important;padding:14px!important;font-weight:800!important;font-size:15px!important;'
+    + 'cursor:pointer!important;background:' + buttonColor + '!important;color:#fff!important;'
+    + 'box-shadow:0 4px 12px rgba(0,0,0,0.2)!important;margin-bottom:12px!important;}'
+    + '.vl-product{display:flex!important;align-items:center!important;gap:12px!important;border-radius:24px!important;'
+    + 'border:1px solid rgba(255,255,255,0.15)!important;padding:12px!important;background:' + bgColor + '!important;'
+    + 'cursor:pointer!important;box-shadow:' + shadow + '!important;}'
+    + '.vl-product-img{width:72px!important;height:72px!important;border-radius:16px!important;object-fit:cover!important;'
+    + 'background:#e2e8f0!important;flex:0 0 auto!important;}'
+    + '.vl-product-info{min-width:0!important;flex:1!important;}'
+    + '.vl-product-name{font-weight:800!important;font-size:13px!important;color:' + textColor + '!important;'
+    + 'white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}'
+    + '.vl-product-price{margin-top:4px!important;font-weight:800!important;font-size:16px!important;color:' + secondary + '!important;}'
+    + '.vl-product-btn{all:unset!important;display:inline-flex!important;align-items:center!important;gap:4px!important;'
+    + 'border-radius:999px!important;padding:6px 12px!important;margin-top:6px!important;'
+    + 'background:' + buttonColor + '!important;color:#fff!important;font-size:11px!important;font-weight:800!important;cursor:pointer!important;}';
+}
     + '.vl-nav-next{width:70%!important;}'
     + '.vl-footer{position:absolute!important;bottom:24px!important;left:16px!important;right:16px!important;z-index:20!important;display:flex!important;flex-direction:column!important;gap:12px!important;pointer-events:none!important;}'
     + '.vl-cta{all:unset!important;display:block!important;width:100%!important;text-align:center!important;border-radius:12px!important;padding:14px!important;font-weight:800!important;font-size:15px!important;cursor:pointer!important;background:' + buttonColor + '!important;color:#fff!important;box-shadow:0 4px 12px rgba(0,0,0,.2)!important;pointer-events:auto!important;}'
@@ -600,32 +688,56 @@
     resumePreviews(); 
   }
 
+  function svgIcon(name) {
+    var icons = {
+      play: '<svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>',
+      pause: '<svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>',
+      mute: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="white"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>',
+      unmute: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="white"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>',
+      heart: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+      heartFilled: '<svg width="18" height="18" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+      comment: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+      share: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>',
+      whatsapp: '<svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M16.6 13.2c-.3-.2-1.7-.8-2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.8 0c-.4-.2-1.4-.5-2.6-1.6-.9-.8-1.6-1.8-1.8-2.2-.2-.4 0-.6.2-.8l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6s-.7-1.7-1-2.3c-.3-.6-.6-.5-.8-.5h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.8s1.3 3.2 1.5 3.4c.2.2 2.3 3.6 5.6 5.1.8.4 1.5.6 2.1.8.9.3 1.7.3 2.3.2.7-.1 1.7-.7 2-1.3.3-.6.3-1.1.2-1.3-.1-.2-.3-.3-.6-.5z"/><path d="M20 4A10 10 0 0 0 3.6 16.2L2 22l5.9-1.5A10 10 0 1 0 20 4zm-7.9 15.4c-1.6 0-3.2-.4-4.6-1.3l-.3-.2-3.5.9.9-3.4-.2-.3A8.1 8.1 0 1 1 12.1 19.4z"/></svg>',
+      close: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>'
+    };
+    return icons[name] || '';
+  }
+
   function openStory(storiesList, initialStoryIndex, storyVideoMap, activeVideos, storyProducts, products) {
     if (!overlay || !modalContent || !storiesList || !storiesList.length) return;
 
-    pausePreviews(); 
+    pausePreviews();
 
     var currentStoryIndex = initialStoryIndex || 0;
     var currentVideoIndex = 0;
+    var isMuted = false;
+    var isPlaying = true;
+    var liked = false;
+    var likeCount = 0;
+
+    /* Read likes from localStorage */
+    var likes = getStorageItem('vidlytics_likes', {});
+    if (!likes || typeof likes !== 'object') likes = {};
 
     function getOrderedVideos(s) {
-      var relations = (storyVideoMap.get(s.id) || []).slice().sort(function(a,b) { return Number(a.position || 0) - Number(b.position || 0); });
-      return relations.map(function(rel) { return activeVideos.find(function(v) { return idsEqual(v.id, rel.video_id); }); }).filter(Boolean);
+      var relations = (storyVideoMap.get(s.id) || []).slice().sort(function (a, b) { return Number(a.position || 0) - Number(b.position || 0); });
+      return relations.map(function (rel) { return activeVideos.find(function (v) { return idsEqual(v.id, rel.video_id); }); }).filter(Boolean);
     }
 
     var initialStory = storiesList[currentStoryIndex];
-    var initialRels = (storyVideoMap.get(initialStory.id) || []).slice().sort(function(a,b) { return Number(a.position || 0) - Number(b.position || 0); });
+    var initialRels = (storyVideoMap.get(initialStory.id) || []).slice().sort(function (a, b) { return Number(a.position || 0) - Number(b.position || 0); });
     initialRels.forEach(function (rel, index) { if (rel.is_cover) currentVideoIndex = index; });
 
     function nextVideo() {
       var s = storiesList[currentStoryIndex]; var vids = getOrderedVideos(s);
-      if (currentVideoIndex < vids.length - 1) { currentVideoIndex++; renderCurrent(); } 
-      else if (currentStoryIndex < storiesList.length - 1) { currentStoryIndex++; currentVideoIndex = 0; renderCurrent(); } 
+      if (currentVideoIndex < vids.length - 1) { currentVideoIndex++; renderCurrent(); }
+      else if (currentStoryIndex < storiesList.length - 1) { currentStoryIndex++; currentVideoIndex = 0; renderCurrent(); }
       else { closeOverlay(); }
     }
 
     function prevVideo() {
-      if (currentVideoIndex > 0) { currentVideoIndex--; renderCurrent(); } 
+      if (currentVideoIndex > 0) { currentVideoIndex--; renderCurrent(); }
       else if (currentStoryIndex > 0) {
         currentStoryIndex--; var prevS = storiesList[currentStoryIndex]; var prevVids = getOrderedVideos(prevS);
         currentVideoIndex = Math.max(0, prevVids.length - 1); renderCurrent();
@@ -643,83 +755,191 @@
       var modalConfig = normalizeModalAppearanceConfig(currentAppearance);
       modalContent.innerHTML = '';
 
+      /* ===== PROGRESS BARS ===== */
+      var progress = createEl('div', 'vl-progress');
+      orderedVideos.forEach(function (v, idx) {
+        var bar = createEl('div', 'vl-progress-bar');
+        var fill = createEl('div', 'vl-progress-fill');
+        if (idx < currentVideoIndex) fill.style.width = '100%';
+        else if (idx === currentVideoIndex) fill.style.width = '33%';
+        else fill.style.width = '0%';
+        bar.appendChild(fill);
+        progress.appendChild(bar);
+      });
+      modalContent.appendChild(progress);
+
+      /* ===== HEADER ===== */
       var header = createEl('div', 'vl-header');
       var headerLeft = createEl('div', 'vl-header-left');
 
       if (modalConfig.show_title !== false) {
         var title = createEl('div', 'vl-title'); title.textContent = story.title || story.name || 'Story';
-        var count = createEl('div', 'vl-count'); count.textContent = (currentVideoIndex + 1) + '/' + orderedVideos.length;
+        var count = createEl('div', 'vl-count');
+        count.textContent = (currentVideoIndex + 1) + '/' + orderedVideos.length;
         headerLeft.appendChild(title); headerLeft.appendChild(count);
       }
       header.appendChild(headerLeft);
 
       var closeBtn = createEl('button', 'vl-close');
       closeBtn.type = 'button';
-      closeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
-      closeBtn.addEventListener('click', function(e) { e.stopPropagation(); closeOverlay(); });
+      closeBtn.innerHTML = svgIcon('close');
+      closeBtn.addEventListener('click', function (e) { e.stopPropagation(); closeOverlay(); });
       header.appendChild(closeBtn);
+      modalContent.appendChild(header);
 
+      /* ===== BODY ===== */
       var body = createEl('div', 'vl-body');
-      
+
+      /* Navigation tap zones */
       var nav = createEl('div', 'vl-nav');
       var prevBtn = createEl('button', 'vl-nav-btn vl-nav-prev'); prevBtn.type = 'button'; prevBtn.addEventListener('click', prevVideo);
       var nextBtn = createEl('button', 'vl-nav-btn vl-nav-next'); nextBtn.type = 'button'; nextBtn.addEventListener('click', nextVideo);
       nav.appendChild(prevBtn); nav.appendChild(nextBtn);
       body.appendChild(nav);
 
-      var footer = createEl('div', 'vl-footer');
+      /* Video player */
+      var playerNode = buildVideoPlayer(video, story.id, nextVideo);
+      body.insertBefore(playerNode, body.firstChild);
+
+      /* ===== SOCIAL ACTIONS (right side) ===== */
+      var social = createEl('div', 'vl-social');
+      var hasSocial = false;
+
+      /* Like */
+      if (modalConfig.show_like_button !== false) {
+        var videoId = video.id;
+        var currentLikeData = likes[videoId] || { liked: false, count: 0 };
+        liked = currentLikeData.liked;
+        likeCount = currentLikeData.count;
+
+        var likeBtn = createEl('button', 'vl-social-btn');
+        likeBtn.type = 'button';
+        likeBtn.innerHTML = liked ? svgIcon('heartFilled') : svgIcon('heart');
+        likeBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          liked = !liked;
+          likeCount = Math.max(0, likeCount + (liked ? 1 : -1));
+          likes[videoId] = { liked: liked, count: likeCount };
+          setStorageItem('vidlytics_likes', likes);
+          likeBtn.innerHTML = liked ? svgIcon('heartFilled') : svgIcon('heart');
+          likeCountEl.textContent = String(likeCount);
+        });
+        social.appendChild(likeBtn);
+
+        var likeCountEl = createEl('span', 'vl-social-count');
+        likeCountEl.textContent = String(likeCount);
+        social.appendChild(likeCountEl);
+        hasSocial = true;
+      }
+
+      /* Share */
+      if (modalConfig.show_share_button !== false) {
+        var shareBtn = createEl('button', 'vl-social-btn');
+        shareBtn.type = 'button';
+        shareBtn.innerHTML = svgIcon('share');
+        shareBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var shareUrl = window.location.href;
+          var shareText = 'Olha esse conteúdo: ' + (story.title || '');
+          try {
+            if (navigator.share) {
+              navigator.share({ title: story.title || 'Story', text: shareText, url: shareUrl });
+            } else if (navigator.clipboard) {
+              navigator.clipboard.writeText(shareUrl);
+            }
+          } catch (err) {}
+        });
+        social.appendChild(shareBtn);
+        hasSocial = true;
+      }
+
+      /* WhatsApp */
+      if (modalConfig.show_whatsapp_button !== false) {
+        var waBtn = createEl('button', 'vl-social-btn whatsapp');
+        waBtn.type = 'button';
+        waBtn.innerHTML = svgIcon('whatsapp');
+        waBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var msg = 'Olha esse conteúdo: ' + (story.title || '');
+          window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank', 'noopener,noreferrer');
+        });
+        social.appendChild(waBtn);
+        hasSocial = true;
+      }
+
+      if (hasSocial) body.appendChild(social);
+
+      /* ===== FOOTER / PRODUCT ===== */
       var activeProducts = storyProducts
         .filter(function (sp) { return idsEqual(sp.story_id, story.id); })
         .map(function (sp) { return products.find(function (product) { return idsEqual(product.id, sp.product_id); }); })
         .filter(function (product) { return product && (product.active === undefined || product.active); });
 
       if (activeProducts.length && modalConfig.show_product !== false) {
+        var footer = createEl('div', 'vl-footer');
+        var footerInner = createEl('div', 'vl-footer-inner');
         var product = activeProducts[0];
+
         var productCard = createEl('div', 'vl-product');
         var productImg = createEl('img', 'vl-product-img');
-        productImg.src = normalizeMediaUrl(product.image_url || product.imageUrl || ''); productImg.alt = product.name || '';
+        productImg.src = normalizeMediaUrl(product.image_url || product.imageUrl || '');
+        productImg.alt = product.name || '';
 
         var productInfo = createEl('div', 'vl-product-info');
-        var productName = createEl('div', 'vl-product-name'); productName.textContent = product.name || '';
-        var productPrice = createEl('div', 'vl-product-price'); productPrice.textContent = Number(product.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        var productBtn = createEl('div', 'vl-product-btn'); productBtn.textContent = 'Ver Produto';
+        var productName = createEl('div', 'vl-product-name');
+        productName.textContent = product.name || '';
+        var productPrice = createEl('div', 'vl-product-price');
+        productPrice.textContent = Number(product.price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-        productInfo.appendChild(productName); productInfo.appendChild(productPrice); productInfo.appendChild(productBtn);
-        productCard.appendChild(productImg); productCard.appendChild(productInfo);
+        productInfo.appendChild(productName);
+        productInfo.appendChild(productPrice);
+
+        if (modalConfig.show_product_button !== false && product.product_url) {
+          var productBtn = createEl('span', 'vl-product-btn');
+          productBtn.innerHTML = 'Ver produto';
+          productInfo.appendChild(productBtn);
+        }
+
+        productCard.appendChild(productImg);
+        productCard.appendChild(productInfo);
 
         productCard.addEventListener('click', function (e) {
           e.stopPropagation();
           trackMetric({ event_type: 'product_click', story_id: story.id, video_id: video.id, product_id: product.id, page_url: window.location.href });
           if (product.product_url) window.open(product.product_url, '_blank', 'noopener,noreferrer');
         });
-        footer.appendChild(productCard);
+
+        footerInner.appendChild(productCard);
+        footer.appendChild(footerInner);
+        body.appendChild(footer);
       }
 
       if (story.cta_enabled && story.cta_url) {
+        var ctaFooter = createEl('div', 'vl-footer');
+        var ctaInner = createEl('div', 'vl-footer-inner');
         var ctaBtn = createEl('button', 'vl-cta');
-        ctaBtn.type = 'button'; ctaBtn.textContent = story.cta_text || 'Saiba mais';
+        ctaBtn.type = 'button';
+        ctaBtn.textContent = story.cta_text || 'Saiba mais';
         ctaBtn.addEventListener('click', function (e) {
-          e.stopPropagation(); trackMetric({ event_type: story.cta_type === 'whatsapp' ? 'whatsapp_click' : 'cta_click', story_id: story.id, video_id: video.id, page_url: window.location.href });
+          e.stopPropagation();
+          trackMetric({ event_type: story.cta_type === 'whatsapp' ? 'whatsapp_click' : 'cta_click', story_id: story.id, video_id: video.id, page_url: window.location.href });
           window.open(story.cta_url, '_blank', 'noopener,noreferrer');
         });
-        footer.appendChild(ctaBtn);
+        ctaInner.appendChild(ctaBtn);
+        ctaFooter.appendChild(ctaInner);
+        body.appendChild(ctaFooter);
       }
 
-      if (footer.childNodes.length > 0) body.appendChild(footer);
-      
-      var playerNode = buildVideoPlayer(video, story.id, nextVideo);
-      body.insertBefore(playerNode, body.firstChild); 
-      
-      modalContent.appendChild(header);
       modalContent.appendChild(body);
-      
       overlay.className = 'vl-overlay is-open';
 
+      /* Auto-play */
       var newVid = playerNode.querySelector('video');
       if (newVid) {
+        newVid.muted = isMuted;
         var playPromise = newVid.play();
         if (playPromise) {
-          playPromise.catch(function(e) { console.warn('Vidlytics Play Block:', e); });
+          playPromise.catch(function (e) { console.warn('Vidlytics Play Block:', e); });
         }
       }
     }
