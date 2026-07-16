@@ -334,42 +334,10 @@
 
   function normalizeModalAppearanceConfig(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
-
-    var rawShowLike = firstDefined(
-      appearance.show_like, appearance.showLike, appearance.like,
-      appearance.show_curtir, appearance.showCurtir, appearance.curtir,
-      appearance.curtir_enabled, appearance.curtirEnabled,
-      appearance.modal_show_like, appearance.modal_showLike,
-      appearance.story_like, appearance.storyLike
-    );
-    var rawShowComment = firstDefined(
-      appearance.show_comment, appearance.showComment, appearance.comment,
-      appearance.show_comentario, appearance.showComentario, appearance.comentario,
-      appearance.comentar_enabled, appearance.comentarEnabled,
-      appearance.modal_show_comment, appearance.modal_showComment
-    );
-    var rawShowShare = firstDefined(
-      appearance.show_share, appearance.showShare, appearance.share,
-      appearance.show_compartilhar, appearance.showCompartilhar, appearance.compartilhar,
-      appearance.compartilhar_enabled, appearance.compartilharEnabled,
-      appearance.modal_show_share, appearance.modal_showShare
-    );
-    var rawShowWhatsapp = firstDefined(
-      appearance.show_whatsapp, appearance.showWhatsapp, appearance.whatsapp,
-      appearance.whatsapp_enabled, appearance.whatsappEnabled,
-      appearance.modal_show_whatsapp, appearance.modal_showWhatsapp
-    );
-
-    var config = {
+    return {
       show_title: toBoolean(firstDefined(appearance.show_title, appearance.showTitle), DEFAULT_APPEARANCE.show_title),
-      show_product: toBoolean(firstDefined(appearance.show_product, appearance.showProduct), DEFAULT_APPEARANCE.show_product),
-      show_like: toBoolean(rawShowLike, true),
-      show_comment: toBoolean(rawShowComment, true),
-      show_share: toBoolean(rawShowShare, true),
-      show_whatsapp: toBoolean(rawShowWhatsapp, true)
+      show_product: toBoolean(firstDefined(appearance.show_product, appearance.showProduct), DEFAULT_APPEARANCE.show_product)
     };
-
-    return config;
   }
 
   function trackMetric(metric) {
@@ -479,42 +447,35 @@
   }
 
   function buildSharedCss(appearance) {
-    var cfg = getFloatingConfig(appearance);
-    var buttonColor = getButtonColor(appearance);
-    var font = getFontFamily(appearance);
+  var cfg = getFloatingConfig(appearance);
+  var buttonColor = getButtonColor(appearance);
+  var font = getFontFamily(appearance);
 
-    return '*,*::before,*::after{box-sizing:border-box!important;}'
-      + '.vl-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;background:rgba(0,0,0,0.7)!important;display:none!important;align-items:center!important;justify-content:center!important;z-index:' + cfg.zIndex + '!important;font-family:' + font + '!important;}'
-      + '.vl-overlay.is-open{display:flex!important;}'
-      + '.vl-modal{width:100%!important;max-width:480px!important;max-height:90vh!important;position:relative!important;overflow:hidden!important;background:transparent!important;box-shadow:none!important;display:flex!important;flex-direction:column!important;}'
-      + '.vl-header{position:absolute!important;top:0!important;left:0!important;right:0!important;display:flex!important;align-items:flex-start!important;justify-content:space-between!important;padding:20px 16px!important;background:linear-gradient(to bottom,rgba(0,0,0,.6),transparent)!important;z-index:20!important;border:none!important;pointer-events:none!important;}'
-      + '.vl-header-left{display:flex!important;flex-direction:column!important;gap:4px!important;pointer-events:auto!important;}'
-      + '.vl-title{font-weight:800!important;color:#fff!important;font-size:16px!important;text-shadow:0 1px 3px rgba(0,0,0,.5)!important;text-transform:uppercase!important;}'
-      + '.vl-count{font-size:13px!important;color:rgba(255,255,255,.9)!important;font-weight:600!important;}'
-      + '.vl-close{all:unset!important;width:32px!important;height:32px!important;border-radius:50%!important;border:1px solid rgba(255,255,255,.5)!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:20px!important;line-height:1!important;cursor:pointer!important;color:#fff!important;background:rgba(0,0,0,.3)!important;backdrop-filter:blur(4px)!important;pointer-events:auto!important;}'
-      + '.vl-body{flex:1!important;width:100%!important;position:relative!important;background:transparent!important;aspect-ratio:9/16!important;}'
-      + '.vl-player{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;background:transparent!important;z-index:1!important;}'
-      + '.vl-player video,.vl-player iframe{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;border:0!important;display:block!important;object-fit:cover!important;z-index:2!important;background:transparent!important;}'
-      + '.vl-nav{position:absolute!important;inset:0!important;display:flex!important;z-index:10!important;background:transparent!important;}'
-      + '.vl-nav-btn{all:unset!important;height:100%!important;cursor:pointer!important;}'
-      + '.vl-nav-prev{width:30%!important;}'
-      + '.vl-nav-next{width:70%!important;}'
-      + '.vl-footer{position:absolute!important;bottom:24px!important;left:16px!important;right:16px!important;z-index:20!important;display:flex!important;flex-direction:column!important;gap:12px!important;pointer-events:none!important;}'
-      + '.vl-cta{all:unset!important;display:block!important;width:100%!important;text-align:center!important;border-radius:12px!important;padding:14px!important;font-weight:800!important;font-size:15px!important;cursor:pointer!important;background:' + buttonColor + '!important;color:#fff!important;box-shadow:0 4px 12px rgba(0,0,0,.2)!important;pointer-events:auto!important;}'
-      + '.vl-product{display:flex!important;align-items:center!important;gap:12px!important;border-radius:16px!important;padding:12px!important;background:#fff!important;cursor:pointer!important;box-shadow:0 8px 24px rgba(0,0,0,.15)!important;pointer-events:auto!important;}'
-      + '.vl-product-img{width:60px!important;height:60px!important;border-radius:10px!important;object-fit:cover!important;background:#e2e8f0!important;flex:0 0 auto!important;}'
-      + '.vl-product-info{min-width:0!important;flex:1!important;}'
-      + '.vl-product-name{font-weight:800!important;font-size:13px!important;color:#0f172a!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-transform:uppercase!important;}'
-      + '.vl-product-price{margin-top:2px!important;font-weight:800!important;font-size:15px!important;color:#000!important;}'
-      + '.vl-product-btn{background:#00c853!important;color:#fff!important;font-size:11px!important;font-weight:800!important;padding:4px 10px!important;border-radius:6px!important;display:inline-block!important;margin-top:4px!important;text-transform:uppercase!important;}'
-      + '.vl-actions{position:absolute!important;right:10px!important;bottom:150px!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:14px!important;z-index:20!important;pointer-events:auto!important;}'
-      + '.vl-action-btn{all:unset!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:4px!important;cursor:pointer!important;color:#fff!important;font-size:11px!important;font-weight:700!important;text-shadow:0 1px 3px rgba(0,0,0,.65)!important;text-transform:uppercase!important;letter-spacing:.3px!important;line-height:1!important;}'
-      + '.vl-action-icon{width:44px!important;height:44px!important;border-radius:50%!important;background:rgba(255,255,255,.12)!important;backdrop-filter:blur(10px)!important;-webkit-backdrop-filter:blur(10px)!important;display:flex!important;align-items:center!important;justify-content:center!important;transition:transform .15s!important;border:1px solid rgba(255,255,255,.18)!important;}'
-      + '.vl-action-btn:active .vl-action-icon{transform:scale(.84)!important;}'
-      + '.vl-action-btn.liked .vl-action-icon{background:#ef4444!important;border-color:#ef4444!important;box-shadow:0 0 20px rgba(239,68,68,.5)!important;}'
-      + '.vl-action-btn.liked .vl-action-icon svg{fill:#fff!important;stroke:#fff!important;}'
-      + '.vl-action-label{font-size:10px!important;font-weight:700!important;line-height:1!important;text-align:center!important;max-width:56px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}';
-  }
+  return '*,*::before,*::after{box-sizing:border-box!important;}'
+    + '.vl-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;background:rgba(0,0,0,0.7)!important;display:none!important;align-items:center!important;justify-content:center!important;z-index:' + cfg.zIndex + '!important;font-family:' + font + '!important;}'
+    + '.vl-overlay.is-open{display:flex!important;}'
+    + '.vl-modal{width:100%!important;max-width:480px!important;max-height:90vh!important;position:relative!important;overflow:hidden!important;background:transparent!important;box-shadow:none!important;display:flex!important;flex-direction:column!important;}'
+    + '.vl-header{position:absolute!important;top:0!important;left:0!important;right:0!important;display:flex!important;align-items:flex-start!important;justify-content:space-between!important;padding:20px 16px!important;background:linear-gradient(to bottom,rgba(0,0,0,.6),transparent)!important;z-index:20!important;border:none!important;pointer-events:none!important;}'
+    + '.vl-header-left{display:flex!important;flex-direction:column!important;gap:4px!important;pointer-events:auto!important;}'
+    + '.vl-title{font-weight:800!important;color:#fff!important;font-size:16px!important;text-shadow:0 1px 3px rgba(0,0,0,.5)!important;text-transform:uppercase!important;}'
+    + '.vl-count{font-size:13px!important;color:rgba(255,255,255,.9)!important;font-weight:600!important;}'
+    + '.vl-close{all:unset!important;width:32px!important;height:32px!important;border-radius:50%!important;border:1px solid rgba(255,255,255,.5)!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:20px!important;line-height:1!important;cursor:pointer!important;color:#fff!important;background:rgba(0,0,0,.3)!important;backdrop-filter:blur(4px)!important;pointer-events:auto!important;}'
+    + '.vl-body{flex:1!important;width:100%!important;position:relative!important;background:transparent!important;aspect-ratio:9/16!important;}'
+    + '.vl-player{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;background:transparent!important;z-index:1!important;}'
+    + '.vl-player video,.vl-player iframe{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;border:0!important;display:block!important;object-fit:cover!important;z-index:2!important;background:transparent!important;}'
+    + '.vl-nav{position:absolute!important;inset:0!important;display:flex!important;z-index:10!important;background:transparent!important;}'
+    + '.vl-nav-btn{all:unset!important;height:100%!important;cursor:pointer!important;}'
+    + '.vl-nav-prev{width:30%!important;}'
+    + '.vl-nav-next{width:70%!important;}'
+    + '.vl-footer{position:absolute!important;bottom:24px!important;left:16px!important;right:16px!important;z-index:20!important;display:flex!important;flex-direction:column!important;gap:12px!important;pointer-events:none!important;}'
+    + '.vl-cta{all:unset!important;display:block!important;width:100%!important;text-align:center!important;border-radius:12px!important;padding:14px!important;font-weight:800!important;font-size:15px!important;cursor:pointer!important;background:' + buttonColor + '!important;color:#fff!important;box-shadow:0 4px 12px rgba(0,0,0,.2)!important;pointer-events:auto!important;}'
+    + '.vl-product{display:flex!important;align-items:center!important;gap:12px!important;border-radius:16px!important;padding:12px!important;background:#fff!important;cursor:pointer!important;box-shadow:0 8px 24px rgba(0,0,0,.15)!important;pointer-events:auto!important;}'
+    + '.vl-product-img{width:60px!important;height:60px!important;border-radius:10px!important;object-fit:cover!important;background:#e2e8f0!important;flex:0 0 auto!important;}'
+    + '.vl-product-info{min-width:0!important;flex:1!important;}'
+    + '.vl-product-name{font-weight:800!important;font-size:13px!important;color:#0f172a!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-transform:uppercase!important;}'
+    + '.vl-product-price{margin-top:2px!important;font-weight:800!important;font-size:15px!important;color:#000!important;}'
+    + '.vl-product-btn{background:#00c853!important;color:#fff!important;font-size:11px!important;font-weight:800!important;padding:4px 10px!important;border-radius:6px!important;display:inline-block!important;margin-top:4px!important;text-transform:uppercase!important;}';
+}
 
   function buildFloatingCss(appearance, behaviorConfig) {
     behaviorConfig = behaviorConfig || getFloatingBehaviorConfig(appearance);
@@ -552,6 +513,9 @@
     }
   }
 
+  // ================================================================
+  // 🔄 FUNÇÃO CORRIGIDA — LOOP ATIVADO + SEM FECHAMENTO AUTOMÁTICO
+  // ================================================================
   function buildVideoPlayer(video, storyId, onEnded) {
     var url = getVideoUrl(video);
     var ytId = extractYouTubeId(url);
@@ -559,8 +523,10 @@
     var isDirect = isDirectVideoUrl(url);
     var wrapper = createEl('div', 'vl-player');
 
+    // YouTube com loop
     if (!isUpload && ytId) {
       var iframe = createEl('iframe');
+      // ✅ LOOP: adicionado &loop=1&playlist=VIDEO_ID
       iframe.src = 'https://www.youtube.com/embed/' + ytId + '?autoplay=1&playsinline=1&rel=0&loop=1&playlist=' + ytId;
       iframe.allow = 'autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
       iframe.allowFullscreen = true;
@@ -582,6 +548,7 @@
       media.setAttribute('webkit-playsinline', '');
       media.playsInline = true;
       media.muted = false;
+      // ✅ LOOP: vídeo repete infinitamente, NUNCA dispara o evento 'ended'
       media.loop = true;
 
       media.style.position = 'absolute';
@@ -601,6 +568,9 @@
         trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
       });
 
+      // O evento 'ended' NUNCA será disparado com loop=true,
+      // então o nextVideo() nunca será chamado e o modal NUNCA fecha sozinho.
+      // Mas mantemos o listener por segurança.
       media.addEventListener('ended', function() {
         if (typeof onEnded === 'function') onEnded();
       });
@@ -609,6 +579,7 @@
       return wrapper;
     }
 
+    // Fallback
     var link = createEl('a');
     link.href = url || '#';
     link.target = '_blank';
@@ -617,6 +588,7 @@
     wrapper.appendChild(link);
     return wrapper;
   }
+
 
   function closeOverlay() {
     if (overlay) overlay.className = 'vl-overlay';
@@ -696,7 +668,6 @@
       body.appendChild(nav);
 
       var footer = createEl('div', 'vl-footer');
-
       var activeProducts = storyProducts
         .filter(function (sp) { return idsEqual(sp.story_id, story.id); })
         .map(function (sp) { return products.find(function (product) { return idsEqual(product.id, sp.product_id); }); })
@@ -737,78 +708,20 @@
       if (footer.childNodes.length > 0) body.appendChild(footer);
       
       var playerNode = buildVideoPlayer(video, story.id, nextVideo);
-      body.insertBefore(playerNode, body.firstChild);
-
-      var hasAnyAction = modalConfig.show_like || modalConfig.show_comment || 
-        modalConfig.show_share || (modalConfig.show_whatsapp && story.cta_type === 'whatsapp' && story.cta_url);
-
-      if (hasAnyAction) {
-        var actionsCol = createEl('div', 'vl-actions');
-        var likedKey = 'vidlytics_liked_' + story.id;
-
-        if (modalConfig.show_like) {
-          var likeBtn = createEl('button', 'vl-action-btn vl-like-btn');
-          likeBtn.type = 'button';
-          var alreadyLiked = getStorageItem(likedKey, false);
-          if (alreadyLiked) likeBtn.classList.add('liked');
-          likeBtn.innerHTML = '<span class="vl-action-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span><span class="vl-action-label">Curtir</span>';
-          likeBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            var isLiked = likeBtn.classList.toggle('liked');
-            setStorageItem(likedKey, isLiked);
-            trackMetric({ event_type: isLiked ? 'like' : 'unlike', story_id: story.id, video_id: video.id, page_url: window.location.href });
-          });
-          actionsCol.appendChild(likeBtn);
-        }
-
-        if (modalConfig.show_comment) {
-          var commentBtn = createEl('button', 'vl-action-btn vl-comment-btn');
-          commentBtn.type = 'button';
-          commentBtn.innerHTML = '<span class="vl-action-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span class="vl-action-label">Comentar</span>';
-          commentBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            trackMetric({ event_type: 'comment_click', story_id: story.id, video_id: video.id, page_url: window.location.href });
-            if (story.comment_url) window.open(story.comment_url, '_blank', 'noopener,noreferrer');
-          });
-          actionsCol.appendChild(commentBtn);
-        }
-
-        if (modalConfig.show_share) {
-          var shareBtn = createEl('button', 'vl-action-btn vl-share-btn');
-          shareBtn.type = 'button';
-          shareBtn.innerHTML = '<span class="vl-action-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></span><span class="vl-action-label">Compartilhar</span>';
-          shareBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            trackMetric({ event_type: 'share', story_id: story.id, video_id: video.id, page_url: window.location.href });
-            if (navigator.share) {
-              navigator.share({ title: story.title || story.name || '', url: window.location.href }).catch(function(){});
-            } else if (navigator.clipboard && navigator.clipboard.writeText) {
-              navigator.clipboard.writeText(window.location.href).then(function() {
-                var label = shareBtn.querySelector('.vl-action-label');
-                if (label) { var orig = label.textContent; label.textContent = 'Copiado!'; setTimeout(function() { label.textContent = orig; }, 2000); }
-              }).catch(function(){});
-            }
-          });
-          actionsCol.appendChild(shareBtn);
-        }
-
-        if (modalConfig.show_whatsapp && story.cta_type === 'whatsapp' && story.cta_url) {
-          var waBtn = createEl('button', 'vl-action-btn vl-whatsapp-btn');
-          waBtn.type = 'button';
-          waBtn.innerHTML = '<span class="vl-action-icon" style="background:#25D366!important;border-color:#25D366!important;"><svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></span><span class="vl-action-label">WhatsApp</span>';
-          waBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            trackMetric({ event_type: 'whatsapp_click', story_id: story.id, video_id: video.id, page_url: window.location.href });
-            window.open(story.cta_url, '_blank', 'noopener,noreferrer');
-          });
-          actionsCol.appendChild(waBtn);
-        }
-
-        body.appendChild(actionsCol);
-      }
-
+      body.insertBefore(playerNode, body.firstChild); 
+      
       modalContent.appendChild(header);
       modalContent.appendChild(body);
+      
+      overlay.className = 'vl-overlay is-open';
+
+      var newVid = playerNode.querySelector('video');
+      if (newVid) {
+        var playPromise = newVid.play();
+        if (playPromise) {
+          playPromise.catch(function(e) { console.warn('Vidlytics Play Block:', e); });
+        }
+      }
     }
 
     renderCurrent();
@@ -862,25 +775,28 @@
     if (floatingWasClosed) return;
 
     var shadowData = getOrCreateShadowRoot(appearance);
-    var shadow = shadowData.shadow;
+var shadow = shadowData.shadow;
 
-    var style = createEl('style');
-    style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
-      html, body {
-        height: 100% !important;
-        margin: 0 !important;
-      }
-      .vl-header,
-      .vl-body > .vl-nav,
-      .vl-footer {
-        position: relative;
-        z-index: 10;
-      }
-      .vl-close {
-        position: relative;
-        z-index: 20;
-      }
-    `;
+var style = createEl('style');
+style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
+  html, body {
+    height: 100% !important;
+    margin: 0 !important;
+  }
+  .vl-header,
+  .vl-body > .vl-nav,
+  .vl-footer {
+    position: relative;
+    z-index: 10;
+  }
+  .vl-close {
+    position: relative;
+    z-index: 20;
+  }
+`;
+
+
+
 
     var bubbles = createEl('div', 'vl-bubbles');
 
