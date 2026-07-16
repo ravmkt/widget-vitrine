@@ -33,6 +33,7 @@ import {
   isDirectVideoUrl,
   extractYouTubeId,
   getYouTubeThumbnailUrl,
+  isVideoPlayableNatively,
 } from '@/lib/videoEmbeds';
 
 const getSafeExternalData = (video: any) => {
@@ -300,11 +301,9 @@ const VideoPerformancePage = () => {
           const externalData = isExternalVideo ? getSafeExternalData(viewingVideo) : null;
           const youTubeId = extractYouTubeId(videoUrl);
 
-          const shouldUseNativePlayer =
-            viewingVideo.source_type === 'upload' && Boolean(videoUrl);
-          const shouldUseNativeForDirect =
-            isExternalVideo && isDirectVideoUrl(videoUrl);
-          const shouldUseYouTubeEmbed = isExternalVideo && Boolean(youTubeId);
+          const shouldUseNativePlayer = isVideoPlayableNatively(viewingVideo as any);
+          const shouldUseNativeForDirect = !shouldUseNativePlayer && isDirectVideoUrl(videoUrl);
+          const shouldUseYouTubeEmbed = !shouldUseNativePlayer && !shouldUseNativeForDirect && Boolean(youTubeId);
           const canPlayInApp = shouldUseNativePlayer || shouldUseNativeForDirect || shouldUseYouTubeEmbed;
 
           const embedUrl = youTubeId
@@ -313,7 +312,7 @@ const VideoPerformancePage = () => {
 
           const modalThumb = getVideoThumbnail(viewingVideo);
 
-          if (!isExternalVideo || shouldUseNativeForDirect) {
+          if (shouldUseNativePlayer || shouldUseNativeForDirect) {
             return (
               <div className="flex flex-col lg:flex-row gap-6">
                 <div className="lg:w-[240px] shrink-0 mx-auto lg:mx-0">

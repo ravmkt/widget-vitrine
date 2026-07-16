@@ -31,6 +31,28 @@ export const isDirectVideoUrl = (url?: string | null): boolean => {
 };
 
 /**
+ * Determina se um vídeo deve ser reproduzido via <video> HTML5
+ * em vez de <iframe> (YouTube embed).
+ *
+ * Critérios (qualquer um):
+ * 1. source_type === 'upload'
+ * 2. URL contém 'supabase.co/storage'
+ * 3. URL termina em .mp4, .webm, .ogg, .mov, .m4v, .m3u8
+ */
+export const isVideoPlayableNatively = (video: Record<string, any> | null): boolean => {
+  if (!video) return false;
+
+  const sourceType = video.source_type || video.sourceType || '';
+  const url = getVideoUrl(video);
+
+  if (sourceType === 'upload') return true;
+  if (url && url.includes('supabase.co/storage')) return true;
+  if (isDirectVideoUrl(url)) return true;
+
+  return false;
+};
+
+/**
  * Extrai o ID de um vídeo do YouTube de vários formatos de URL:
  * - youtube.com/watch?v=ID
  * - youtu.be/ID

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
+import { extractYouTubeId, isVideoPlayableNatively } from '@/lib/videoEmbeds';
 
 const EMOJIS = [
   '😎',
@@ -1331,20 +1332,43 @@ setAppearance(initialAppearance);
         </div>
 
         {currentUrl && !videoError ? (
-          <video
-            key={currentVideo?.id}
-            ref={videoRef}
-            src={currentUrl}
-            poster={posterUrl || undefined}
-            autoPlay
-            muted={muted}
-            playsInline
-            className="h-full w-full object-cover"
-            onEnded={goNext}
-            onPlay={() => setPlaying(true)}
-            onPause={() => setPlaying(false)}
-            onError={() => setVideoError(true)}
-          />
+          (() => {
+            const ytId = !isVideoPlayableNatively(currentVideo as any)
+              ? extractYouTubeId(currentUrl)
+              : '';
+            const sharedProps = {
+              key: currentVideo?.id,
+              className: 'h-full w-full object-cover',
+            };
+
+            if (ytId) {
+              return (
+                <iframe
+                  {...sharedProps}
+                  src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=${muted ? 1 : 0}&playsinline=1&rel=0`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  title={story.title || 'Story'}
+                />
+              );
+            }
+
+            return (
+              <video
+                {...sharedProps}
+                ref={videoRef}
+                src={currentUrl}
+                poster={posterUrl || undefined}
+                autoPlay
+                muted={muted}
+                playsInline
+                onEnded={goNext}
+                onPlay={() => setPlaying(true)}
+                onPause={() => setPlaying(false)}
+                onError={() => setVideoError(true)}
+              />
+            );
+          })()
         ) : (
           <div className="flex h-full items-center justify-center px-8 text-center text-white/70">
             Nenhum vídeo vinculado

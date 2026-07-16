@@ -27,6 +27,7 @@ import {
   isDirectVideoUrl,
   getYouTubeThumbnailUrl,
   extractYouTubeId,
+  isVideoPlayableNatively,
 } from '@/lib/videoEmbeds';
 
 const getSafeExternalData = (video: Video | null) => {
@@ -846,16 +847,14 @@ const VideoGalleryPage = () => {
           const youTubeId = extractYouTubeId(videoUrl);
 
           // upload → sempre player HTML5
-          const shouldUseNativePlayer =
-            viewingVideo.source_type === 'upload' && Boolean(videoUrl);
+          const shouldUseNativePlayer = isVideoPlayableNatively(viewingVideo as any);
 
           // external_url + arquivo direto → player HTML5
-          const shouldUseNativeForDirect =
-            viewingVideo.source_type === 'external_url' && isDirectVideoUrl(videoUrl);
+          const shouldUseNativeForDirect = !shouldUseNativePlayer && isDirectVideoUrl(videoUrl);
 
           // external_url + YouTube → embed iframe automático
           const shouldUseYouTubeEmbed =
-            viewingVideo.source_type === 'external_url' && Boolean(youTubeId);
+            !shouldUseNativePlayer && !shouldUseNativeForDirect && Boolean(youTubeId);
 
           // Indica se há algum player interno possível
           const canPlayInApp = shouldUseNativePlayer || shouldUseNativeForDirect || shouldUseYouTubeEmbed;
