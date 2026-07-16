@@ -753,41 +753,6 @@
       var playerNode = buildVideoPlayer(video, story.id, nextVideo);
 body.insertBefore(playerNode, body.firstChild);
 
-var playBtn = createEl('button', 'vl-control-btn');
-playBtn.type = 'button';
-playBtn.setAttribute('aria-label', 'Reproduzir/Pausar');
-playBtn.textContent = '▶';
-
-var muteBtn = createEl('button', 'vl-control-btn');
-muteBtn.type = 'button';
-muteBtn.setAttribute('aria-label', 'Ativar/Desativar Som');
-muteBtn.textContent = '🔇';
-
-var likeBtn = createEl('button', 'vl-control-btn');
-likeBtn.type = 'button';
-likeBtn.setAttribute('aria-label', 'Curtir');
-likeBtn.textContent = '♡';
-
-var spacer = createEl('span', 'vl-control-spacer');
-
-var shareBtn = createEl('button', 'vl-control-btn');
-shareBtn.type = 'button';
-shareBtn.setAttribute('aria-label', 'Compartilhar');
-shareBtn.textContent = '↗';
-
-var shareStatus = createEl('span', 'vl-share-status');
-shareStatus.textContent = 'Link copiado';
-
-controls.appendChild(playBtn);
-controls.appendChild(muteBtn);
-controls.appendChild(likeBtn);
-controls.appendChild(spacer);
-controls.appendChild(shareStatus);
-controls.appendChild(shareBtn);
-
-body.appendChild(controls);
-
-
 // Controles visuais do player
 var controls = createEl('div', 'vl-controls');
 
@@ -954,6 +919,23 @@ modalContent.appendChild(body);
     function stop() { dragging = false; setTimeout(function() { floatingWasDragged = false; }, 100); }
     window.addEventListener('pointerup', stop); window.addEventListener('pointercancel', stop);
   }
+function getStoryRelations(storyVideoMap, storyId) {
+  var directRelations = storyVideoMap.get(storyId);
+
+  if (directRelations) {
+    return directRelations;
+  }
+
+  var relations = [];
+
+  storyVideoMap.forEach(function (items, key) {
+    if (idsEqual(key, storyId)) {
+      relations = items;
+    }
+  });
+
+  return relations;
+}
 
   function renderFloatingBubbles(stories, storyVideoMap, activeVideos) {
     var appearance = currentAppearance || {};
@@ -983,9 +965,6 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
   }
 `;
 
-
-
-
     var bubbles = createEl('div', 'vl-bubbles');
 
     if (behaviorConfig.allowClose) {
@@ -1009,7 +988,7 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
     overlay.addEventListener('click', function (event) { if (event.target === overlay) closeOverlay(); });
 
     stories.forEach(function (story, index) {
-      var relations = (storyVideoMap.get(story.id) || []).slice().sort(function (a, b) { return Number(a.position || 0) - Number(b.position || 0); });
+      var relations = (getStoryRelations(storyVideoMap, story.id) || []).slice().sort(function (a, b) { return Number(a.position || 0) - Number(b.position || 0); });
       var coverRelation = relations.find(function (item) { return item.is_cover; }) || relations[0] || null;
       var coverVideo = coverRelation ? activeVideos.find(function (video) { return idsEqual(video.id, coverRelation.video_id); }) : null;
       var thumb = getStoryThumbnail(story, coverVideo, coverRelation);
@@ -1093,6 +1072,12 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
 
 
       readStoryProductsData = storyProducts; readProductsData = products;
+        console.log('[Vidlytics] Quantidades:', {
+  stories: stories.length,
+  storyVideos: storyVideos.length,
+  videos: videos.length
+});
+
       if (!stories.length || modalConfig.hide_stories) return;
 
       var activeVideos = videos.filter(function (video) {
@@ -1120,9 +1105,17 @@ console.log('[Vidlytics] storeId:', storeId);
       });
 
       var storiesWithVideos = stories.filter(function (story) {
-        return (storyVideoMap.get(story.id) || []).some(function (rel) { return activeVideos.some(function (v) { return idsEqual(v.id, rel.video_id); }); });
+        return (getStoryRelations(storyVideoMap, story.id) || []).some(function (rel) { return activeVideos.some(function (v) { return idsEqual(v.id, rel.video_id); }); });
       });
-      if (!storiesWithVideos.length) return;
+      if (!storiesWithVideos.length) {
+  console.warn('[Vidlytics] Nenhuma story possui relação válida com vídeos', {
+    stories: stories,
+    storyVideos: storyVideos,
+    activeVideos: activeVideos
+  });
+
+  return;
+}
 
       var applicableStories = storiesWithVideos.filter(function (story) {
         var rulesForStory = pageRules.filter(function (rule) { return idsEqual(rule.story_id, story.id); });
@@ -1135,6 +1128,12 @@ console.log('[Vidlytics] Renderizando widget:', {
 });
 
       if (enableFloating) renderFloatingBubbles(applicableStories, storyVideoMap, activeVideos);
+        console.log('[Vidlytics] Widget flutuante sendo renderizado:', {
+  enableFloating: enableFloating,
+  applicableStories: applicableStories,
+  activeVideos: activeVideos
+});
+
       if (enableCarousel) renderCarousel(applicableStories, storyVideoMap, activeVideos);
 
       forceHostPosition(); setTimeout(forceHostPosition, 100); setTimeout(forceHostPosition, 500); setTimeout(forceHostPosition, 1500);
