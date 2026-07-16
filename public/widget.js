@@ -3,9 +3,9 @@
  * Correção: Loop no vídeo + sem fechamento automático
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - FIX LOOP + NO AUTO CLOSE - 202607161500');
+  console.log('VIDLYTICS WIDGET CARREGADO - FIX LOOP + NO AUTO CLOSE - 202607161906');
 
-  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-loop-no-autoclose-202607161500';
+  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-loop-no-autoclose-202607161906';
 
   if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) return;
 
@@ -485,9 +485,11 @@
 
     /* ===== MODAL CONTAINER (matches StoriesWidgetPage) ===== */
     + '.vl-modal{position:relative!important;width:100%!important;max-width:420px!important;'
-    + 'height:100%!important;max-height:100vh!important;overflow:hidden!important;background:#000!important;'
-    + 'box-shadow:' + shadow + '!important;display:flex!important;flex-direction:column!important;'
-    + 'border-radius:0!important;}'
++ 'height:100%!important;min-height:0!important;max-height:100vh!important;overflow:hidden!important;background:#000!important;'
++ 'box-shadow:' + shadow + '!important;display:flex!important;flex-direction:column!important;'
++ 'border-radius:0!important;}'
++ '.vl-modal>div{position:relative!important;display:flex!important;flex-direction:column!important;'
++ 'flex:1 1 auto!important;min-height:0!important;width:100%!important;height:100%!important;}'
     + '@media(min-width:640px){.vl-modal{height:auto!important;aspect-ratio:9/16!important;max-height:90vh!important;border-radius:36px!important;}}'
 
     /* ===== PROGRESS BARS (top) ===== */
@@ -509,10 +511,14 @@
     + 'justify-content:center!important;cursor:pointer!important;color:#fff!important;pointer-events:auto!important;border:none!important;}'
 
     /* ===== BODY (video fills container) ===== */
-    + '.vl-body{position:relative!important;flex:1!important;width:100%!important;overflow:hidden!important;}'
-    + '.vl-player{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;}'
+    + '.vl-body{position:relative!important;display:block!important;flex:1 1 auto!important;'
++ 'width:100%!important;height:100%!important;min-height:0!important;overflow:hidden!important;}'
+    + '.vl-player{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;'
++ 'min-height:100%!important;z-index:1!important;background:#000!important;}'
+
     + '.vl-player video,.vl-player iframe{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;'
-    + 'border:0!important;display:block!important;object-fit:cover!important;}'
+    + 'border:0!important;display:block!important;object-fit:cover!important;'
++ 'visibility:visible!important;opacity:1!important;z-index:2!important;}'
 
     /* ===== NAV (tap zones like preview) ===== */
     + '.vl-nav{position:absolute!important;inset:0!important;display:flex!important;z-index:30!important;}'
