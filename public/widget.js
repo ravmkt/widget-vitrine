@@ -774,10 +774,19 @@ var shadow = shadowData.shadow;
 
 var style = createEl('style');
 style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
+  .vl-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 9999 !important;
+    background: rgba(0, 0, 0, 0.95) !important;
+  }
   .vl-overlay.is-open {
     display: flex !important;
-    align-items: center;
-    justify-content: center;
+    align-items: center !important;
+    justify-content: center !important;
   }
   .vl-header,
   .vl-body > .vl-nav,
@@ -790,6 +799,7 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
     z-index: 20;
   }
 `;
+
 
 
     var bubbles = createEl('div', 'vl-bubbles');
