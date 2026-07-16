@@ -1,11 +1,11 @@
 /**
  * Vidlytics Widget — widget.js
- * Correção: Loop no vídeo + sem fechamento automático
+ * Correção: Loop no vídeo + sem fechamento automático + modal_config completo
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - FIX LOOP + NO AUTO CLOSE - 202607161500');
+  console.log('VIDLYTICS WIDGET CARREGADO - MODAL CONFIG FULL - 202607161600');
 
-  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-loop-no-autoclose-202607161500';
+  var VIDLYTICS_WIDGET_VERSION = 'appearance-modal-config-full-202607161600';
 
   if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) return;
 
@@ -31,9 +31,9 @@
   var currentAppearance = {};
   var overlay = null;
   var modalContent = null;
-  var globalShadowRoot = null; 
+  var globalShadowRoot = null;
   var floatingWasDragged = false;
-  var floatingWasClosed = false; 
+  var floatingWasClosed = false;
   var readStoryProductsData = [];
   var readProductsData = [];
 
@@ -81,12 +81,12 @@
   }
 
   function getFloatingBehaviorConfig(appearance) {
-    var config = getFloatingConfig(appearance) || {};
-    var rawShowPlayButton = firstDefined(config.showPlayButton, config.show_play_button);
-    var rawAllowDrag = firstDefined(config.allowDrag, config.allow_drag);
-    var rawAllowClose = firstDefined(config.allowClose, config.allow_close);
+    var cfg = getFloatingConfig(appearance) || {};
+    var rawShowPlayButton = firstDefined(cfg.showPlayButton, cfg.show_play_button);
+    var rawAllowDrag = firstDefined(cfg.allowDrag, cfg.allow_drag);
+    var rawAllowClose = firstDefined(cfg.allowClose, cfg.allow_close);
     return {
-      objectFit: config.objectFit || config.object_fit || 'cover',
+      objectFit: cfg.objectFit || cfg.object_fit || 'cover',
       showPlayButton: toBoolean(rawShowPlayButton, false),
       allowDrag: toBoolean(rawAllowDrag, true),
       allowClose: toBoolean(rawAllowClose, true)
@@ -168,7 +168,7 @@
 
   function getConfigAppearance() {
     var merged = {};
-    [ config.appearance, config.aparencia, config.appearanceConfig, config.appearance_config, config.floating, config.floatingConfig, config.floatingAppearance, config.floatingVideoConfig, config.floatingVideoAppearance, config.floating_video, widgetsCfg.appearance, widgetsCfg.aparencia, widgetsCfg.appearanceConfig, widgetsCfg.appearance_config, widgetsCfg.floating, widgetsCfg.floatingConfig, widgetsCfg.floatingAppearance, widgetsCfg.floatingVideoConfig, widgetsCfg.floatingVideoAppearance, widgetsCfg.floating_video ].forEach(function (src) { flattenAppearanceInto(merged, src, 0); });
+    [ config.appearance, config.aparencia, config.appearanceConfig, config.appearance_config, config.floating, config.floatingConfig, config.floatingAppearance, config.floatingVideoConfig, config.floatingVideoAppearance, config.floating_video, widgetsCfg.appearance, widgetsCfg.aparencia, widgetsCfg.appearanceConfig, widgetsCfg.appearance_config, widgetsCfg.floating, widgetsCfg.floatingConfig, widgetsCfg.floatingAppearance, widgetsCfg.floatingVideoConfig, widgetsCfg.floatingVideoAppearance, widgetsCfg.floating_video, config.modal_config, config.modalConfig, widgetsCfg.modal_config, widgetsCfg.modalConfig ].forEach(function (src) { flattenAppearanceInto(merged, src, 0); });
     return normalizeAppearanceItem(merged);
   }
 
@@ -181,14 +181,14 @@
 
   function appearanceHasUsefulData(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
-    var usefulNames = [ 'floating_position', 'floatingPosition', 'position', 'posicao', 'posição', 'widget_position', 'widgetPosition', 'placement', 'floating_video_position', 'floatingVideoPosition', 'floating_shape', 'floatingShape', 'shape', 'form', 'forma', 'formato', 'widget_shape', 'widgetShape', 'floating_video_shape', 'floatingVideoShape', 'floating_width', 'floatingWidth', 'width', 'largura', 'widget_width', 'widgetWidth', 'floating_video_width', 'floatingVideoWidth', 'floating_height', 'floatingHeight', 'height', 'altura', 'widget_height', 'widgetHeight', 'floating_radius', 'floatingRadius', 'border_radius', 'borderRadius', 'radius', 'raio', 'widget_radius', 'widgetRadius', 'floating_top', 'floatingTop', 'top', 'top_spacing', 'topSpacing', 'spacing_top', 'spacingTop', 'floating_bottom', 'floatingBottom', 'bottom', 'bottom_spacing', 'bottomSpacing', 'spacing_bottom', 'spacingBottom', 'floating_side', 'floatingSide', 'side', 'left_spacing', 'leftSpacing', 'right_spacing', 'rightSpacing', 'distance_top', 'distanceTop', 'distancia_superior', 'distanciaSuperior', 'distance_bottom', 'distanceBottom', 'distancia_inferior', 'distanciaInferior', 'distance_side', 'distanceSide', 'distancia_lateral', 'distanciaLateral', 'floating_border_width', 'floatingBorderWidth', 'border_width', 'borderWidth', 'largura_borda', 'larguraBorda', 'primary_color', 'primaryColor', 'secondary_color', 'secondaryColor', 'border_color', 'borderColor', 'color', 'text_color', 'textColor', 'font_family', 'fontFamily', 'background_color', 'backgroundColor', 'button_color', 'buttonColor', 'show_title', 'showTitle', 'show_product', 'showProduct', 'hide_stories', 'hideStories', 'shadow_enabled', 'shadowEnabled', 'floating_config', 'floatingConfig', 'floating_border_radius', 'floatingBorderRadius', 'widget_border_radius', 'widgetBorderRadius', 'widget_radius', 'widgetRadius', 'border_radius', 'borderRadius', 'floating_object_fit', 'floatingObjectFit', 'object_fit', 'objectFit', 'image_fit', 'imageFit', 'fit', 'show_play_button', 'showPlayButton', 'show_player_button', 'showPlayerButton', 'play_button_enabled', 'playButtonEnabled', 'allow_drag', 'allowDrag', 'draggable', 'drag_enabled', 'dragEnabled', 'permitir_arrastar', 'allow_close', 'allowClose', 'closable', 'close_enabled', 'closeEnabled', 'show_close_button', 'showCloseButton', 'permitir_fechar', 'floating_show_play_button', 'floatingShowPlayButton', 'show_floating_play_button', 'showFloatingPlayButton', 'allow_floating_drag', 'allowFloatingDrag', 'floating_allow_drag', 'floatingAllowDrag', 'floating_drag_enabled', 'floatingDragEnabled', 'allow_floating_close', 'allowFloatingClose', 'floating_allow_close', 'floatingAllowClose', 'floating_close_enabled', 'floatingCloseEnabled' ];
+    var usefulNames = [ 'floating_position', 'floatingPosition', 'position', 'posicao', 'posição', 'widget_position', 'widgetPosition', 'placement', 'floating_video_position', 'floatingVideoPosition', 'floating_shape', 'floatingShape', 'shape', 'form', 'forma', 'formato', 'widget_shape', 'widgetShape', 'floating_video_shape', 'floatingVideoShape', 'floating_width', 'floatingWidth', 'width', 'largura', 'widget_width', 'widgetWidth', 'floating_video_width', 'floatingVideoWidth', 'floating_height', 'floatingHeight', 'height', 'altura', 'widget_height', 'widgetHeight', 'floating_radius', 'floatingRadius', 'border_radius', 'borderRadius', 'radius', 'raio', 'widget_radius', 'widgetRadius', 'floating_top', 'floatingTop', 'top', 'top_spacing', 'topSpacing', 'spacing_top', 'spacingTop', 'floating_bottom', 'floatingBottom', 'bottom', 'bottom_spacing', 'bottomSpacing', 'spacing_bottom', 'spacingBottom', 'floating_side', 'floatingSide', 'side', 'left_spacing', 'leftSpacing', 'right_spacing', 'rightSpacing', 'distance_top', 'distanceTop', 'distancia_superior', 'distanciaSuperior', 'distance_bottom', 'distanceBottom', 'distancia_inferior', 'distanciaInferior', 'distance_side', 'distanceSide', 'distancia_lateral', 'distanciaLateral', 'floating_border_width', 'floatingBorderWidth', 'border_width', 'borderWidth', 'largura_borda', 'larguraBorda', 'primary_color', 'primaryColor', 'secondary_color', 'secondaryColor', 'border_color', 'borderColor', 'color', 'text_color', 'textColor', 'font_family', 'fontFamily', 'background_color', 'backgroundColor', 'button_color', 'buttonColor', 'show_title', 'showTitle', 'show_product', 'showProduct', 'hide_stories', 'hideStories', 'shadow_enabled', 'shadowEnabled', 'floating_config', 'floatingConfig', 'floating_border_radius', 'floatingBorderRadius', 'widget_border_radius', 'widgetBorderRadius', 'widget_radius', 'widgetRadius', 'border_radius', 'borderRadius', 'floating_object_fit', 'floatingObjectFit', 'object_fit', 'objectFit', 'image_fit', 'imageFit', 'fit', 'show_play_button', 'showPlayButton', 'show_player_button', 'showPlayerButton', 'play_button_enabled', 'playButtonEnabled', 'allow_drag', 'allowDrag', 'draggable', 'drag_enabled', 'dragEnabled', 'permitir_arrastar', 'allow_close', 'allowClose', 'closable', 'close_enabled', 'closeEnabled', 'show_close_button', 'showCloseButton', 'permitir_fechar', 'floating_show_play_button', 'floatingShowPlayButton', 'show_floating_play_button', 'showFloatingPlayButton', 'allow_floating_drag', 'allowFloatingDrag', 'floating_allow_drag', 'floatingAllowDrag', 'floating_drag_enabled', 'floatingDragEnabled', 'allow_floating_close', 'allowFloatingClose', 'floating_allow_close', 'floatingAllowClose', 'floating_close_enabled', 'floatingCloseEnabled', 'show_like_button', 'showLikeButton', 'show_share_button', 'showShareButton', 'show_comment_button', 'showCommentButton', 'show_product_button', 'showProductButton', 'show_navigation', 'showNavigation', 'modal_config', 'modalConfig' ];
     for (var i = 0; i < usefulNames.length; i += 1) { if (readAppearanceValue(appearance, [usefulNames[i]]) !== undefined) return true; }
     return false;
   }
 
   function extractAppearanceFromItem(item, allowDirectFields) {
     if (!item) return {}; var merged = {};
-    [ item.appearance, item.aparencia, item.appearance_config, item.appearanceConfig, item.widget_appearance, item.widgetAppearance, item.widget_config, item.widgetConfig, item.settings, item.config, item.style, item.styles, item.data, item.metadata, item.customization, item.customization_config, item.theme, item.theme_config, item.floating, item.floating_config, item.floatingConfig, item.floatingAppearance, item.floating_video, item.floatingVideo, item.floatingVideoConfig, item.floatingVideoAppearance ].forEach(function (src) { flattenAppearanceInto(merged, src, 0); });
+    [ item.appearance, item.aparencia, item.appearance_config, item.appearanceConfig, item.widget_appearance, item.widgetAppearance, item.widget_config, item.widgetConfig, item.settings, item.config, item.style, item.styles, item.data, item.metadata, item.customization, item.customization_config, item.theme, item.theme_config, item.floating, item.floating_config, item.floatingConfig, item.floatingAppearance, item.floating_video, item.floatingVideo, item.floatingVideoConfig, item.floatingVideoAppearance, item.modal_config, item.modalConfig, item.modalConfiguracao ].forEach(function (src) { flattenAppearanceInto(merged, src, 0); });
 
     if (allowDirectFields) {
       if (firstDefined(item.widget_shape, item.shape)) merged.shape = firstDefined(item.widget_shape, item.shape);
@@ -332,11 +332,19 @@
   function getButtonColor(appearance) { return readAppearanceValue(appearance, ['button_color', 'buttonColor', 'btn_color', 'cor_botao']) || getPrimaryColor(appearance); }
   function getFontFamily(appearance) { return readAppearanceValue(appearance, ['font_family', 'fontFamily', 'fonte']) || DEFAULT_APPEARANCE.font_family; }
 
+  // ================================================================
+  // ✅ normalizeModalAppearanceConfig — TODOS OS CAMPOS DO MODAL_CONFIG
+  // ================================================================
   function normalizeModalAppearanceConfig(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
     return {
-      show_title: toBoolean(firstDefined(appearance.show_title, appearance.showTitle), DEFAULT_APPEARANCE.show_title),
-      show_product: toBoolean(firstDefined(appearance.show_product, appearance.showProduct), DEFAULT_APPEARANCE.show_product)
+      show_title:        toBoolean(firstDefined(appearance.show_title, appearance.showTitle), DEFAULT_APPEARANCE.show_title),
+      show_product:      toBoolean(firstDefined(appearance.show_product, appearance.showProduct, appearance.show_product_button, appearance.showProductButton), DEFAULT_APPEARANCE.show_product),
+      show_like_button:  toBoolean(firstDefined(appearance.show_like_button, appearance.showLikeButton), true),
+      show_share_button: toBoolean(firstDefined(appearance.show_share_button, appearance.showShareButton), true),
+      show_comment_button: toBoolean(firstDefined(appearance.show_comment_button, appearance.showCommentButton), true),
+      show_close_button: toBoolean(firstDefined(appearance.show_close_button, appearance.showCloseButton), true),
+      show_navigation:   toBoolean(firstDefined(appearance.show_navigation, appearance.showNavigation), true)
     };
   }
 
@@ -474,7 +482,13 @@
     + '.vl-product-info{min-width:0!important;flex:1!important;}'
     + '.vl-product-name{font-weight:800!important;font-size:13px!important;color:#0f172a!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-transform:uppercase!important;}'
     + '.vl-product-price{margin-top:2px!important;font-weight:800!important;font-size:15px!important;color:#000!important;}'
-    + '.vl-product-btn{background:#00c853!important;color:#fff!important;font-size:11px!important;font-weight:800!important;padding:4px 10px!important;border-radius:6px!important;display:inline-block!important;margin-top:4px!important;text-transform:uppercase!important;}';
+    + '.vl-product-btn{background:#00c853!important;color:#fff!important;font-size:11px!important;font-weight:800!important;padding:4px 10px!important;border-radius:6px!important;display:inline-block!important;margin-top:4px!important;text-transform:uppercase!important;}'
+    // ✅ NOVOS: Botões de ação do modal (like, share, comment)
+    + '.vl-actions{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;gap:16px!important;pointer-events:auto!important;padding:4px 0!important;}'
+    + '.vl-action-btn{all:unset!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:4px!important;cursor:pointer!important;color:#fff!important;font-size:11px!important;font-weight:700!important;text-shadow:0 1px 2px rgba(0,0,0,.5)!important;transition:transform .15s ease!important;}'
+    + '.vl-action-btn:active{transform:scale(.9)!important;}'
+    + '.vl-action-btn svg{width:24px!important;height:24px!important;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))!important;}'
+    + '.vl-action-btn.is-liked svg{fill:#ef4444!important;color:#ef4444!important;}';
 }
 
   function buildFloatingCss(appearance, behaviorConfig) {
@@ -504,7 +518,7 @@
     var vids = globalShadowRoot.querySelectorAll('.vl-bubble video.vl-img');
     for (var i = 0; i < vids.length; i++) { vids[i].pause(); }
   }
-  
+
   function resumePreviews() {
     if (!globalShadowRoot) return;
     var vids = globalShadowRoot.querySelectorAll('.vl-bubble video.vl-img');
@@ -523,10 +537,8 @@
     var isDirect = isDirectVideoUrl(url);
     var wrapper = createEl('div', 'vl-player');
 
-    // YouTube com loop
     if (!isUpload && ytId) {
       var iframe = createEl('iframe');
-      // ✅ LOOP: adicionado &loop=1&playlist=VIDEO_ID
       iframe.src = 'https://www.youtube.com/embed/' + ytId + '?autoplay=1&playsinline=1&rel=0&loop=1&playlist=' + ytId;
       iframe.allow = 'autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
       iframe.allowFullscreen = true;
@@ -541,14 +553,12 @@
       wrapper.style.overflow = 'hidden';
 
       var media = createEl('video');
-      
       media.controls = false;
       media.preload = 'auto';
       media.setAttribute('playsinline', '');
       media.setAttribute('webkit-playsinline', '');
       media.playsInline = true;
       media.muted = false;
-      // ✅ LOOP: vídeo repete infinitamente, NUNCA dispara o evento 'ended'
       media.loop = true;
 
       media.style.position = 'absolute';
@@ -561,16 +571,12 @@
 
       var thumb = getVideoThumbnail(video);
       if (thumb) media.poster = thumb;
-
       media.src = url;
 
       media.addEventListener('play', function () {
         trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
       });
 
-      // O evento 'ended' NUNCA será disparado com loop=true,
-      // então o nextVideo() nunca será chamado e o modal NUNCA fecha sozinho.
-      // Mas mantemos o listener por segurança.
       media.addEventListener('ended', function() {
         if (typeof onEnded === 'function') onEnded();
       });
@@ -579,7 +585,6 @@
       return wrapper;
     }
 
-    // Fallback
     var link = createEl('a');
     link.href = url || '#';
     link.target = '_blank';
@@ -589,7 +594,6 @@
     return wrapper;
   }
 
-
   function closeOverlay() {
     if (overlay) overlay.className = 'vl-overlay';
     if (modalContent) {
@@ -597,13 +601,16 @@
       if (oldVid) { oldVid.pause(); oldVid.removeAttribute('src'); oldVid.load(); }
       modalContent.innerHTML = '';
     }
-    resumePreviews(); 
+    resumePreviews();
   }
 
+  // ================================================================
+  // ✅ openStory + renderCurrent — COM MODAL_CONFIG COMPLETO
+  // ================================================================
   function openStory(storiesList, initialStoryIndex, storyVideoMap, activeVideos, storyProducts, products) {
     if (!overlay || !modalContent || !storiesList || !storiesList.length) return;
 
-    pausePreviews(); 
+    pausePreviews();
 
     var currentStoryIndex = initialStoryIndex || 0;
     var currentVideoIndex = 0;
@@ -619,13 +626,13 @@
 
     function nextVideo() {
       var s = storiesList[currentStoryIndex]; var vids = getOrderedVideos(s);
-      if (currentVideoIndex < vids.length - 1) { currentVideoIndex++; renderCurrent(); } 
-      else if (currentStoryIndex < storiesList.length - 1) { currentStoryIndex++; currentVideoIndex = 0; renderCurrent(); } 
+      if (currentVideoIndex < vids.length - 1) { currentVideoIndex++; renderCurrent(); }
+      else if (currentStoryIndex < storiesList.length - 1) { currentStoryIndex++; currentVideoIndex = 0; renderCurrent(); }
       else { closeOverlay(); }
     }
 
     function prevVideo() {
-      if (currentVideoIndex > 0) { currentVideoIndex--; renderCurrent(); } 
+      if (currentVideoIndex > 0) { currentVideoIndex--; renderCurrent(); }
       else if (currentStoryIndex > 0) {
         currentStoryIndex--; var prevS = storiesList[currentStoryIndex]; var prevVids = getOrderedVideos(prevS);
         currentVideoIndex = Math.max(0, prevVids.length - 1); renderCurrent();
@@ -640,12 +647,15 @@
       var oldVid = modalContent.querySelector('video');
       if (oldVid) { oldVid.pause(); oldVid.removeAttribute('src'); oldVid.load(); }
 
+      // ✅ Lê TODOS os campos do modal_config
       var modalConfig = normalizeModalAppearanceConfig(currentAppearance);
       modalContent.innerHTML = '';
 
+      // ─── HEADER ──────────────────────────────────────────
       var header = createEl('div', 'vl-header');
       var headerLeft = createEl('div', 'vl-header-left');
 
+      // Título e contador (condicional)
       if (modalConfig.show_title !== false) {
         var title = createEl('div', 'vl-title'); title.textContent = story.title || story.name || 'Story';
         var count = createEl('div', 'vl-count'); count.textContent = (currentVideoIndex + 1) + '/' + orderedVideos.length;
@@ -653,21 +663,31 @@
       }
       header.appendChild(headerLeft);
 
-      var closeBtn = createEl('button', 'vl-close');
-      closeBtn.type = 'button';
-      closeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
-      closeBtn.addEventListener('click', function(e) { e.stopPropagation(); closeOverlay(); });
-      header.appendChild(closeBtn);
+      // Botão de fechar (condicional — ✅ NOVO)
+      if (modalConfig.show_close_button !== false) {
+        var closeBtn = createEl('button', 'vl-close');
+        closeBtn.type = 'button';
+        closeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+        closeBtn.addEventListener('click', function(e) { e.stopPropagation(); closeOverlay(); });
+        header.appendChild(closeBtn);
+      }
 
+      // ─── BODY ────────────────────────────────────────────
       var body = createEl('div', 'vl-body');
-      
-      var nav = createEl('div', 'vl-nav');
-      var prevBtn = createEl('button', 'vl-nav-btn vl-nav-prev'); prevBtn.type = 'button'; prevBtn.addEventListener('click', prevVideo);
-      var nextBtn = createEl('button', 'vl-nav-btn vl-nav-next'); nextBtn.type = 'button'; nextBtn.addEventListener('click', nextVideo);
-      nav.appendChild(prevBtn); nav.appendChild(nextBtn);
-      body.appendChild(nav);
 
+      // Navegação (condicional — ✅ NOVO)
+      if (modalConfig.show_navigation !== false) {
+        var nav = createEl('div', 'vl-nav');
+        var prevBtn = createEl('button', 'vl-nav-btn vl-nav-prev'); prevBtn.type = 'button'; prevBtn.addEventListener('click', prevVideo);
+        var nextBtn = createEl('button', 'vl-nav-btn vl-nav-next'); nextBtn.type = 'button'; nextBtn.addEventListener('click', nextVideo);
+        nav.appendChild(prevBtn); nav.appendChild(nextBtn);
+        body.appendChild(nav);
+      }
+
+      // ─── FOOTER ──────────────────────────────────────────
       var footer = createEl('div', 'vl-footer');
+
+      // Produto (condicional)
       var activeProducts = storyProducts
         .filter(function (sp) { return idsEqual(sp.story_id, story.id); })
         .map(function (sp) { return products.find(function (product) { return idsEqual(product.id, sp.product_id); }); })
@@ -695,6 +715,7 @@
         footer.appendChild(productCard);
       }
 
+      // CTA
       if (story.cta_enabled && story.cta_url) {
         var ctaBtn = createEl('button', 'vl-cta');
         ctaBtn.type = 'button'; ctaBtn.textContent = story.cta_text || 'Saiba mais';
@@ -705,14 +726,72 @@
         footer.appendChild(ctaBtn);
       }
 
+      // ─── ACTION BUTTONS (Like | Share | Comment) — ✅ NOVO ───
+      var hasAnyAction = modalConfig.show_like_button !== false
+                      || modalConfig.show_share_button !== false
+                      || modalConfig.show_comment_button !== false;
+
+      if (hasAnyAction) {
+        var actionsRow = createEl('div', 'vl-actions');
+
+        // ❤️ Like
+        if (modalConfig.show_like_button !== false) {
+          var likeBtn = createEl('button', 'vl-action-btn');
+          likeBtn.type = 'button';
+          likeBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
+          likeBtn.setAttribute('aria-label', 'Curtir');
+          likeBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            likeBtn.classList.toggle('is-liked');
+            trackMetric({ event_type: 'like_click', story_id: story.id, video_id: video.id, page_url: window.location.href });
+          });
+          actionsRow.appendChild(likeBtn);
+        }
+
+        // 💬 Comment
+        if (modalConfig.show_comment_button !== false) {
+          var commentBtn = createEl('button', 'vl-action-btn');
+          commentBtn.type = 'button';
+          commentBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+          commentBtn.setAttribute('aria-label', 'Comentar');
+          commentBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            trackMetric({ event_type: 'comment_click', story_id: story.id, video_id: video.id, page_url: window.location.href });
+            // Você pode integrar com seu sistema de comentários aqui
+          });
+          actionsRow.appendChild(commentBtn);
+        }
+
+        // 📤 Share
+        if (modalConfig.show_share_button !== false) {
+          var shareBtn = createEl('button', 'vl-action-btn');
+          shareBtn.type = 'button';
+          shareBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
+          shareBtn.setAttribute('aria-label', 'Compartilhar');
+          shareBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            trackMetric({ event_type: 'share_click', story_id: story.id, video_id: video.id, page_url: window.location.href });
+            if (navigator.share) {
+              navigator.share({ title: story.title || '', url: window.location.href }).catch(function(){});
+            } else {
+              navigator.clipboard.writeText(window.location.href).catch(function(){});
+            }
+          });
+          actionsRow.appendChild(shareBtn);
+        }
+
+        footer.appendChild(actionsRow);
+      }
+
       if (footer.childNodes.length > 0) body.appendChild(footer);
-      
+
+      // Player
       var playerNode = buildVideoPlayer(video, story.id, nextVideo);
-      body.insertBefore(playerNode, body.firstChild); 
-      
+      body.insertBefore(playerNode, body.firstChild);
+
       modalContent.appendChild(header);
       modalContent.appendChild(body);
-      
+
       overlay.className = 'vl-overlay is-open';
 
       var newVid = playerNode.querySelector('video');
@@ -775,10 +854,10 @@
     if (floatingWasClosed) return;
 
     var shadowData = getOrCreateShadowRoot(appearance);
-var shadow = shadowData.shadow;
+    var shadow = shadowData.shadow;
 
-var style = createEl('style');
-style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
+    var style = createEl('style');
+    style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
   html, body {
     height: 100% !important;
     margin: 0 !important;
@@ -795,9 +874,6 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
   }
 `;
 
-
-
-
     var bubbles = createEl('div', 'vl-bubbles');
 
     if (behaviorConfig.allowClose) {
@@ -806,7 +882,7 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
       dismissButton.textContent = '×';
       dismissButton.addEventListener('click', function (event) {
         event.preventDefault(); event.stopPropagation();
-        floatingWasClosed = true; 
+        floatingWasClosed = true;
         if (shadowData && shadowData.host) shadowData.host.remove();
       });
       bubbles.appendChild(dismissButton);
@@ -838,7 +914,7 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
         vidPreview.src = videoUrl;
         vidPreview.autoplay = true; vidPreview.muted = true; vidPreview.loop = true; vidPreview.playsInline = true;
         vidPreview.setAttribute('playsinline', 'playsinline'); vidPreview.setAttribute('webkit-playsinline', 'webkit-playsinline');
-        
+
         if (thumb) vidPreview.poster = thumb;
         var playPromise = vidPreview.play();
         if (playPromise !== undefined) {
@@ -877,8 +953,8 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
     if (behaviorConfig.allowDrag) setupFloatingDrag(shadowData.host, bubbles);
   }
 
-  function renderCarousel(stories, storyVideoMap, activeVideos) {} 
-  
+  function renderCarousel(stories, storyVideoMap, activeVideos) {}
+
   function forceHostPosition() {
     if (floatingWasDragged || floatingWasClosed) return;
     var host = document.getElementById('vidlytics-widget-root');
