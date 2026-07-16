@@ -400,6 +400,23 @@
     return '';
   }
 
+  function isNativeVideo(video) {
+  var url = getVideoUrl(video);
+  if (!url) return false;
+
+  var sourceType = String(
+    video.source_type || video.sourceType || ''
+  ).trim().toLowerCase();
+
+  if (sourceType === 'upload') return true;
+
+  if (url.indexOf('supabase.co/storage') !== -1) return true;
+
+  if (isDirectVideoUrl(url)) return true;
+
+  return false;
+}
+
   function getYouTubeThumbnail(url) {
     var id = extractYouTubeId(url);
     return id ? 'https://img.youtube.com/vi/' + id + '/hqdefault.jpg' : '';
@@ -412,12 +429,21 @@
   }
 
   function getVideoThumbnail(video) {
-    if (!video) return '';
-    var direct = getThumbnailFromObject(video);
-    if (direct) return direct;
-    if (video.source_type !== 'upload' && video.sourceType !== 'upload') return getYouTubeThumbnail(getVideoUrl(video));
-    return '';
+  if (!video) return '';
+
+  var direct = getThumbnailFromObject(video);
+  if (direct) return direct;
+
+  var sourceType = String(
+    video.source_type || video.sourceType || ''
+  ).trim().toLowerCase();
+
+  if (sourceType !== 'upload') {
+    return getYouTubeThumbnail(getVideoUrl(video));
   }
+
+  return '';
+}
 
   function getStoryThumbnail(story, coverVideo, coverRelation) {
     return getThumbnailFromObject(story) || getThumbnailFromObject(coverRelation) || getVideoThumbnail(coverVideo) || '';
@@ -462,11 +488,11 @@
     + '.vl-close{all:unset!important;width:32px!important;height:32px!important;border-radius:50%!important;border:1px solid rgba(255,255,255,.5)!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:20px!important;line-height:1!important;cursor:pointer!important;color:#fff!important;background:rgba(0,0,0,.3)!important;backdrop-filter:blur(4px)!important;pointer-events:auto!important;}'
     + '.vl-body{flex:1!important;width:100%!important;position:relative!important;background:transparent!important;aspect-ratio:9/16!important;}'
     + '.vl-player{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;background:transparent!important;z-index:1!important;}'
-    + '.vl-player video,.vl-player iframe{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;border:0!important;display:block!important;object-fit:cover!important;z-index:2!important;background:transparent!important;}'
-    + '.vl-nav{position:absolute!important;inset:0!important;display:flex!important;z-index:10!important;background:transparent!important;}'
-    + '.vl-nav-btn{all:unset!important;height:100%!important;cursor:pointer!important;}'
-    + '.vl-nav-prev{width:30%!important;}'
-    + '.vl-nav-next{width:70%!important;}'
+    + '.vl-player video,.vl-player iframe{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;border:0!important;display:block!important;object-fit:cover!important;z-index:2!important;background:#000!important;}'
++ '.vl-nav{position:absolute!important;inset:0!important;display:flex!important;z-index:5!important;background:transparent!important;pointer-events:none!important;}'
++ '.vl-nav-btn{all:unset!important;height:100%!important;cursor:pointer!important;}'
++ '.vl-nav-prev{width:25%!important;}'
++ '.vl-nav-next{width:25%!important;margin-left:auto!important;}'
     + '.vl-footer{position:absolute!important;bottom:24px!important;left:16px!important;right:16px!important;z-index:20!important;display:flex!important;flex-direction:column!important;gap:12px!important;pointer-events:none!important;}'
     + '.vl-cta{all:unset!important;display:block!important;width:100%!important;text-align:center!important;border-radius:12px!important;padding:14px!important;font-weight:800!important;font-size:15px!important;cursor:pointer!important;background:' + buttonColor + '!important;color:#fff!important;box-shadow:0 4px 12px rgba(0,0,0,.2)!important;pointer-events:auto!important;}'
     + '.vl-product{display:flex!important;align-items:center!important;gap:12px!important;border-radius:16px!important;padding:12px!important;background:#fff!important;cursor:pointer!important;box-shadow:0 8px 24px rgba(0,0,0,.15)!important;pointer-events:auto!important;}'
@@ -474,8 +500,15 @@
     + '.vl-product-info{min-width:0!important;flex:1!important;}'
     + '.vl-product-name{font-weight:800!important;font-size:13px!important;color:#0f172a!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-transform:uppercase!important;}'
     + '.vl-product-price{margin-top:2px!important;font-weight:800!important;font-size:15px!important;color:#000!important;}'
-    + '.vl-product-btn{background:#00c853!important;color:#fff!important;font-size:11px!important;font-weight:800!important;padding:4px 10px!important;border-radius:6px!important;display:inline-block!important;margin-top:4px!important;text-transform:uppercase!important;}';
-}
+   + '.vl-product-btn{background:#00c853!important;color:#fff!important;font-size:11px!important;font-weight:800!important;padding:4px 10px!important;border-radius:6px!important;display:inline-block!important;margin-top:4px!important;text-transform:uppercase!important;}'
++ '.vl-controls{position:absolute!important;left:16px!important;right:16px!important;bottom:16px!important;z-index:40!important;display:flex!important;align-items:center!important;gap:8px!important;pointer-events:none!important;}'
++ '.vl-control-btn{all:unset!important;width:38px!important;height:38px!important;border-radius:50%!important;display:flex!important;align-items:center!important;justify-content:center!important;background:rgba(15,23,42,.68)!important;color:#fff!important;font-size:16px!important;cursor:pointer!important;pointer-events:auto!important;backdrop-filter:blur(5px)!important;box-shadow:0 4px 12px rgba(0,0,0,.25)!important;}'
++ '.vl-control-btn:hover{background:rgba(15,23,42,.9)!important;transform:scale(1.05)!important;}'
++ '.vl-control-spacer{flex:1!important;}'
++ '.vl-like-active{background:#ec4899!important;}'
++ '.vl-share-status{color:#fff!important;font-size:12px!important;font-weight:700!important;text-shadow:0 1px 3px #000!important;opacity:0!important;transition:opacity .2s!important;}'
++ '.vl-share-status.is-visible{opacity:1!important;}';
+  }
 
   function buildFloatingCss(appearance, behaviorConfig) {
     behaviorConfig = behaviorConfig || getFloatingBehaviorConfig(appearance);
@@ -517,67 +550,83 @@
   // 🔄 FUNÇÃO CORRIGIDA — LOOP ATIVADO + SEM FECHAMENTO AUTOMÁTICO
   // ================================================================
   function buildVideoPlayer(video, storyId, onEnded) {
-    var url = getVideoUrl(video);
-    var ytId = extractYouTubeId(url);
-    var isUpload = video.source_type === 'upload' || video.sourceType === 'upload';
-    var isDirect = isDirectVideoUrl(url);
-    var wrapper = createEl('div', 'vl-player');
+  var url = getVideoUrl(video);
+  var wrapper = createEl('div', 'vl-player');
 
-    // YouTube com loop
-    if (!isUpload && ytId) {
-      var iframe = createEl('iframe');
-      // ✅ LOOP: adicionado &loop=1&playlist=VIDEO_ID
-      iframe.src = 'https://www.youtube.com/embed/' + ytId + '?autoplay=1&playsinline=1&rel=0&loop=1&playlist=' + ytId;
-      iframe.allow = 'autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-      iframe.allowFullscreen = true;
-      wrapper.appendChild(iframe);
-      return wrapper;
+  if (isNativeVideo(video) && url) {
+    var media = createEl('video');
+
+    media.controls = true;
+    media.preload = 'auto';
+    media.playsInline = true;
+    media.loop = true;
+    media.muted = false;
+
+    media.setAttribute('playsinline', '');
+    media.setAttribute('webkit-playsinline', '');
+
+    var thumbnail = getVideoThumbnail(video);
+    if (thumbnail) {
+      media.poster = thumbnail;
     }
 
-    if ((isUpload || isDirect) && url) {
-      wrapper.style.position = 'relative';
-      wrapper.style.width = '100%';
-      wrapper.style.minHeight = '300px';
-      wrapper.style.overflow = 'hidden';
+    media.src = url;
 
-      var media = createEl('video');
-      
-      media.controls = false;
-      media.preload = 'auto';
-      media.setAttribute('playsinline', '');
-      media.setAttribute('webkit-playsinline', '');
-      media.playsInline = true;
-      media.muted = false;
-      // ✅ LOOP: vídeo repete infinitamente, NUNCA dispara o evento 'ended'
-      media.loop = true;
-
-      media.style.position = 'absolute';
-      media.style.top = '0';
-      media.style.left = '0';
-      media.style.width = '100%';
-      media.style.height = '100%';
-      media.style.objectFit = 'cover';
-      media.style.zIndex = '1';
-
-      var thumb = getVideoThumbnail(video);
-      if (thumb) media.poster = thumb;
-
-      media.src = url;
-
-      media.addEventListener('play', function () {
-        trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
+    media.addEventListener('play', function () {
+      trackMetric({
+        event_type: 'play',
+        story_id: storyId,
+        video_id: video.id,
+        page_url: window.location.href
       });
+    });
 
-      // O evento 'ended' NUNCA será disparado com loop=true,
-      // então o nextVideo() nunca será chamado e o modal NUNCA fecha sozinho.
-      // Mas mantemos o listener por segurança.
-      media.addEventListener('ended', function() {
-        if (typeof onEnded === 'function') onEnded();
-      });
+    media.addEventListener('ended', function () {
+      if (typeof onEnded === 'function') {
+        onEnded();
+      }
+    });
 
-      wrapper.appendChild(media);
-      return wrapper;
-    }
+    wrapper.appendChild(media);
+    return wrapper;
+  }
+
+  var youtubeId = extractYouTubeId(url);
+
+  if (youtubeId) {
+    var iframe = createEl('iframe');
+
+    iframe.src =
+      'https://www.youtube.com/embed/' +
+      encodeURIComponent(youtubeId) +
+      '?autoplay=1' +
+      '&playsinline=1' +
+      '&rel=0' +
+      '&loop=1' +
+      '&playlist=' + encodeURIComponent(youtubeId);
+
+    iframe.allow =
+      'autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+
+    iframe.allowFullscreen = true;
+
+    wrapper.appendChild(iframe);
+    return wrapper;
+  }
+
+  var link = createEl('a');
+
+  link.href = url || '#';
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.textContent = 'Abrir vídeo';
+  link.className = 'vl-cta';
+
+  wrapper.appendChild(link);
+
+  return wrapper;
+}
+
 
     // Fallback
     var link = createEl('a');
@@ -708,23 +757,134 @@
       if (footer.childNodes.length > 0) body.appendChild(footer);
       
       var playerNode = buildVideoPlayer(video, story.id, nextVideo);
-      body.insertBefore(playerNode, body.firstChild); 
-      
-      modalContent.appendChild(header);
-      modalContent.appendChild(body);
-      
+
+body.insertBefore(playerNode, body.firstChild);
+
+// Controles visuais do player
+var controls = createEl('div', 'vl-controls');
+
+var playButton = createEl('button', 'vl-control-btn');
+playButton.type = 'button';
+playButton.setAttribute('aria-label', 'Reproduzir ou pausar');
+playButton.textContent = '▶';
+
+var muteButton = createEl('button', 'vl-control-btn');
+muteButton.type = 'button';
+muteButton.setAttribute('aria-label', 'Ativar ou desativar som');
+muteButton.textContent = '🔇';
+
+var likeButton = createEl('button', 'vl-control-btn');
+likeButton.type = 'button';
+likeButton.setAttribute('aria-label', 'Curtir vídeo');
+likeButton.textContent = '♡';
+
+var spacer = createEl('span', 'vl-control-spacer');
+
+var shareButton = createEl('button', 'vl-control-btn');
+shareButton.type = 'button';
+shareButton.setAttribute('aria-label', 'Compartilhar vídeo');
+shareButton.textContent = '↗';
+
+var shareStatus = createEl('span', 'vl-share-status');
+shareStatus.textContent = 'Link copiado';
+
+controls.appendChild(playButton);
+controls.appendChild(muteButton);
+controls.appendChild(likeButton);
+controls.appendChild(spacer);
+controls.appendChild(shareStatus);
+controls.appendChild(shareButton);
+
+body.appendChild(controls);
+
+var newVid = playerNode.querySelector('video');
+
+if (newVid) {
+  playButton.addEventListener('click', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (newVid.paused) {
+      newVid.play().catch(function () {});
+      playButton.textContent = 'Ⅱ';
+    } else {
+      newVid.pause();
+      playButton.textContent = '▶';
+    }
+  });
+
+  muteButton.addEventListener('click', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    newVid.muted = !newVid.muted;
+    muteButton.textContent = newVid.muted ? '🔇' : '🔊';
+  });
+
+  newVid.addEventListener('play', function () {
+    playButton.textContent = 'Ⅱ';
+  });
+
+  newVid.addEventListener('pause', function () {
+    playButton.textContent = '▶';
+  });
+} else {
+  // O iframe do YouTube não pode ser controlado diretamente
+  // sem utilizar a API oficial do YouTube.
+  playButton.style.display = 'none';
+  muteButton.style.display = 'none';
+}
+
+likeButton.addEventListener('click', function (event) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  var active = likeButton.classList.toggle('vl-like-active');
+  likeButton.textContent = active ? '♥' : '♡';
+
+  trackMetric({
+    event_type: active ? 'like' : 'unlike',
+    story_id: story.id,
+    video_id: video.id,
+    page_url: window.location.href
+  });
+});
+
+shareButton.addEventListener('click', function (event) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  var shareUrl = window.location.href;
+
+  if (navigator.share) {
+    navigator.share({
+      title: story.title || story.name || 'Vídeo',
+      url: shareUrl
+    }).catch(function () {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(shareUrl).then(function () {
+      shareStatus.classList.add('is-visible');
+
+      setTimeout(function () {
+        shareStatus.classList.remove('is-visible');
+      }, 1800);
+    });
+  }
+
+  trackMetric({
+    event_type: 'share',
+    story_id: story.id,
+    video_id: video.id,
+    page_url: window.location.href
+  });
+});
+
+modalContent.appendChild(header);
+modalContent.appendChild(body);
+     
       overlay.className = 'vl-overlay is-open';
 
-      var newVid = playerNode.querySelector('video');
-      if (newVid) {
-        var playPromise = newVid.play();
-        if (playPromise) {
-          playPromise.catch(function(e) { console.warn('Vidlytics Play Block:', e); });
-        }
-      }
-    }
-
-    renderCurrent();
+                renderCurrent();
   }
 
   function setupFloatingDrag(host, handle) {
