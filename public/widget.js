@@ -333,25 +333,24 @@
   function getFontFamily(appearance) { return readAppearanceValue(appearance, ['font_family', 'fontFamily', 'fonte']) || DEFAULT_APPEARANCE.font_family; }
 
   function normalizeModalAppearanceConfig(appearance) {
-    appearance = normalizeAppearanceItem(appearance || {});
-    return {
-      show_title: toBoolean(firstDefined(appearance.show_title, appearance.showTitle), DEFAULT_APPEARANCE.show_title),
-      show_product: toBoolean(firstDefined(appearance.show_product, appearance.showProduct), DEFAULT_APPEARANCE.show_product)
-    };
-  }
+  appearance = normalizeAppearanceItem(appearance || {});
 
-  function trackMetric(metric) {
-    var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
-    if (!Array.isArray(fallbackMetrics)) fallbackMetrics = [];
-    fallbackMetrics.push({
-      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2),
-      store_id: storeId, story_id: metric.story_id || null, video_id: metric.video_id || null, product_id: metric.product_id || null,
-      event_type: metric.event_type, page_url: metric.page_url || window.location.href,
-      device_type: window.innerWidth < 768 ? 'mobile' : 'desktop', created_at: new Date().toISOString()
-    });
-    setStorageItem('vidlytics_metrics', fallbackMetrics);
-    return Promise.resolve();
-  }
+  return {
+    show_title: toBoolean(
+      firstDefined(appearance.show_title, appearance.showTitle),
+      DEFAULT_APPEARANCE.show_title
+    ),
+    show_product: toBoolean(
+      firstDefined(appearance.show_product, appearance.showProduct),
+      DEFAULT_APPEARANCE.show_product
+    ),
+    hide_stories: toBoolean(
+      firstDefined(appearance.hide_stories, appearance.hideStories),
+      DEFAULT_APPEARANCE.hide_stories || false
+    )
+  };
+}
+
 
   function readStories() {
     if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_stories', []));
@@ -434,24 +433,7 @@
   var direct = getThumbnailFromObject(video);
   if (direct) return direct;
 
-  var sourceType = String(
-    video.source_type || video.sourceType || ''
-  ).trim().toLowerCase();
-
-  function getVideoThumbnail(video) {
-  if (!video) return '';
-
-  var direct = getThumbnailFromObject(video);
-  if (direct) return direct;
-
-  var url = getVideoUrl(video);
-  var youtubeThumb = getYouTubeThumbnail(url);
-
-  if (youtubeThumb) return youtubeThumb;
-
-  return '';
-}
-
+  return getYouTubeThumbnail(getVideoUrl(video));
 }
 
   function getStoryThumbnail(story, coverVideo, coverRelation) {
@@ -661,13 +643,20 @@
     var currentVideoIndex = 0;
 
     function getOrderedVideos(s) {
-      var relations = (storyVideoMap.get(s.id) || []).slice().sort(function(a,b) { return Number(a.position || 0) - Number(b.position || 0); });
-      return relations.map(function(rel) { return activeVideos.find(function(v) { return idsEqual(v.id, rel.video_id); }); }).filter(Boolean);
-    }
+      var relations = (getStoryRelations(storyVideoMap, s.id) || [])
+  .slice()
+  .sort(function (a, b) {
+    return Number(a.position || 0) - Number(b.position || 0);
+  });
+
 
     var initialStory = storiesList[currentStoryIndex];
-    var initialRels = (storyVideoMap.get(initialStory.id) || []).slice().sort(function(a,b) { return Number(a.position || 0) - Number(b.position || 0); });
-    initialRels.forEach(function (rel, index) { if (rel.is_cover) currentVideoIndex = index; });
+    var initialRels = (getStoryRelations(storyVideoMap, initialStory.id) || [])
+  .slice()
+  .sort(function (a, b) {
+    return Number(a.position || 0) - Number(b.position || 0);
+  });
+
 
     function nextVideo() {
       var s = storiesList[currentStoryIndex]; var vids = getOrderedVideos(s);
@@ -1087,7 +1076,15 @@ if (isNative && videoUrl) {
   videos: videos.length
 });
 
-      if (!stories.length || modalConfig.hide_stories) return;
+      if (
+  !stories.length ||
+  toBoolean(
+    firstDefined(currentAppearance.hide_stories, currentAppearance.hideStories),
+    false
+  )
+) {
+  return;
+}
 
       var activeVideos = videos.filter(function (video) {
   var videoUrl = getVideoUrl(video);
