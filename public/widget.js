@@ -509,8 +509,8 @@
     + 'justify-content:center!important;cursor:pointer!important;color:#fff!important;pointer-events:auto!important;border:none!important;}'
 
     /* ===== BODY (video fills container) ===== */
-    + '.vl-body{position:relative!important;flex:1!important;width:100%!important;overflow:hidden!important;}'
-    + '.vl-player{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;}'
+    + '.vl-body{position:relative!important;flex:1!important;width:100%!important;overflow:hidden!important;background:#000!important;}'
+    + '.vl-player{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;z-index:5!important;}'
     + '.vl-player video,.vl-player iframe{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;'
     + 'border:0!important;display:block!important;object-fit:cover!important;}'
 
@@ -601,10 +601,8 @@
     var isDirect = isDirectVideoUrl(url);
     var wrapper = createEl('div', 'vl-player');
 
-    // YouTube com loop
     if (!isUpload && ytId) {
       var iframe = createEl('iframe');
-      // ✅ LOOP: adicionado &loop=1&playlist=VIDEO_ID
       iframe.src = 'https://www.youtube.com/embed/' + ytId + '?autoplay=1&playsinline=1&rel=0&loop=1&playlist=' + ytId;
       iframe.allow = 'autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
       iframe.allowFullscreen = true;
@@ -613,29 +611,13 @@
     }
 
     if ((isUpload || isDirect) && url) {
-      wrapper.style.position = 'relative';
-      wrapper.style.width = '100%';
-      wrapper.style.minHeight = '300px';
-      wrapper.style.overflow = 'hidden';
-
       var media = createEl('video');
-      
       media.controls = false;
       media.preload = 'auto';
       media.setAttribute('playsinline', '');
       media.setAttribute('webkit-playsinline', '');
       media.playsInline = true;
-      media.muted = false;
-      // ✅ LOOP: vídeo repete infinitamente, NUNCA dispara o evento 'ended'
       media.loop = true;
-
-      media.style.position = 'absolute';
-      media.style.top = '0';
-      media.style.left = '0';
-      media.style.width = '100%';
-      media.style.height = '100%';
-      media.style.objectFit = 'cover';
-      media.style.zIndex = '1';
 
       var thumb = getVideoThumbnail(video);
       if (thumb) media.poster = thumb;
@@ -646,10 +628,7 @@
         trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
       });
 
-      // O evento 'ended' NUNCA será disparado com loop=true,
-      // então o nextVideo() nunca será chamado e o modal NUNCA fecha sozinho.
-      // Mas mantemos o listener por segurança.
-      media.addEventListener('ended', function() {
+      media.addEventListener('ended', function () {
         if (typeof onEnded === 'function') onEnded();
       });
 
@@ -657,7 +636,6 @@
       return wrapper;
     }
 
-    // Fallback
     var link = createEl('a');
     link.href = url || '#';
     link.target = '_blank';
@@ -701,7 +679,7 @@
 
     var currentStoryIndex = initialStoryIndex || 0;
     var currentVideoIndex = 0;
-    var isMuted = false;
+    var isMuted = true;
     var isPlaying = true;
     var liked = false;
     var likeCount = 0;
