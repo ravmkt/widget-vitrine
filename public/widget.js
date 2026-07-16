@@ -515,7 +515,7 @@
   }
 
   // ATUALIZADO: Remoção do data-src, agora injetamos src diretamente
-  function buildVideoPlayer(video, storyId, onEnded) {
+    function buildVideoPlayer(video, storyId, onEnded) {
     var url = getVideoUrl(video);
     var ytId = extractYouTubeId(url);
     var isUpload = video.source_type === 'upload' || video.sourceType === 'upload';
@@ -533,24 +533,52 @@
 
     if ((isUpload || isDirect) && url) {
       var media = createEl('video');
-      
-      // Injeta a URL diretamente, sem truques que quebram o Desktop
-      media.src = url;
-      
+
+      // Usa <source> (padrão HTML5 mais forte) em vez de src direto
+      var source = createEl('source');
+      source.src = url;
+      // Ajuda o Chrome a escolher decoder correto; se não bater, ele ignora
+      if (/\.mp4(\?.*)?$/i.test(url) || /\.m4v(\?.*)?$/i.test(url) || /\.mov(\?.*)?$/i.test(url)) {
+        source.type = 'video/mp4';
+      } else if (/\.webm(\?.*)?$/i.test(url)) {
+        source.type = 'video/webm';
+      } else if (/\.ogg(\?.*)?$/i.test(url)) {
+        source.type = 'video/ogg';
+      }
+      media.appendChild(source);
+
       media.controls = false;
       media.preload = 'auto';
       media.setAttribute('playsinline', '');
       media.setAttribute('webkit-playsinline', '');
       media.playsInline = true;
-      media.muted = false; // Como o modal abriu por clique, o navegador autoriza áudio
-      
+      media.muted = false;
+
+      // FORÇA O CHROME A RENDERIZAR NA GPU E PINTAR O FRAME
+      setImportant(media, 'transform', 'translate3d(0,0,0)');
+      setImportant(media, 'backface-visibility', 'hidden');
+      setImportant(media, '-webkit-backface-visibility', 'hidden');
+      setImportant(media, 'will-change', 'transform');
+
       var thumb = getVideoThumbnail(video);
       if (thumb) media.poster = thumb;
 
       media.addEventListener('play', function () {
         trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
       });
-      media.addEventListener('ended', function() { if (typeof onEnded === 'function') onEnded(); });
+      media.addEventListener('ended', function () { if (typeof onEnded === 'function') onEnded(); });
+
+      // GATILHO DE REPAINT: quando o primeiro frame decodifica, força a pintura
+      function forceRepaint() {
+        var cur = media.style.transform || 'translate3d(0,0,0)';
+        setImportant(media, 'transform', 'translate3d(0,0,0.0001px)');
+        requestAnimationFrame(function () {
+          setImportant(media, 'transform', 'translate3d(0,0,0)');
+        });
+      }
+      media.addEventListener('loadeddata', forceRepaint);
+      media.addEventListener('canplay', forceRepaint);
+      media.addEventListener('playing', forceRepaint);
 
       wrapper.appendChild(media);
       return wrapper;
@@ -687,21 +715,35 @@
       overlay.className = 'vl-overlay is-open';
 
       // 2. USA O REQUEST ANIMATION FRAME PARA INJETAR O VÍDEO NO PRÓXIMO QUADRO DE PINTURA DO CHROME
-      requestAnimationFrame(function() {
-        var playerNode = buildVideoPlayer(video, story.id, nextVideo);
-        
-        // Coloca o vídeo dentro do body, atrás da navegação
-        body.insertBefore(playerNode, body.firstChild); 
-        
-        var newVid = playerNode.querySelector('video');
-        if (newVid) {
-          var playPromise = newVid.play();
-          if (playPromise) {
-            playPromise.catch(function(e) {
-              console.warn('Vidlytics Play Block:', e);
+           // Duplo requestAnimationFrame garante que o overlay já foi pintado
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          var playerNode = buildVideoPlayer(video, story.id, nextVideo);
+          body.insertBefore(playerNode, body.firstChild);
+
+          var newVid = playerNode.querySelector('video');
+          if (newVid) {
+            // Detecta HEVC/codec não suportado de verdade
+            newVid.addEventListener('error', function () {
+              console.warn('Vidlytics: erro ao carregar vídeo (possível HEVC/H.265 não suportado no Chrome Desktop).');
             });
+
+            var tryPlay = function () {
+              var p = newVid.play();
+              if (p && typeof p.catch === 'function') {
+                p.catch(function (e) { console.warn('Vidlytics Play Block:', e); });
+              }
+            };
+
+            // Toca assim que houver dados; se já estiver pronto, toca já
+            if (newVid.readyState >= 2) {
+              tryPlay();
+            } else {
+              newVid.addEventListener('loadeddata', tryPlay, { once: true });
+              tryPlay();
+            }
           }
-        }
+        });
       });
     }
 
