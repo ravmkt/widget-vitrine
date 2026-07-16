@@ -1,4 +1,4 @@
-/**
+/***
  * Vidlytics Widget — widget.js
  * Correção: Loop no vídeo + sem fechamento automático
  */
