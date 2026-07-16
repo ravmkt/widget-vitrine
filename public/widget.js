@@ -554,16 +554,6 @@
     + 'border-radius:999px!important;padding:6px 12px!important;margin-top:6px!important;'
     + 'background:' + buttonColor + '!important;color:#fff!important;font-size:11px!important;font-weight:800!important;cursor:pointer!important;}';
 }
-    + '.vl-nav-next{width:70%!important;}'
-    + '.vl-footer{position:absolute!important;bottom:24px!important;left:16px!important;right:16px!important;z-index:20!important;display:flex!important;flex-direction:column!important;gap:12px!important;pointer-events:none!important;}'
-    + '.vl-cta{all:unset!important;display:block!important;width:100%!important;text-align:center!important;border-radius:12px!important;padding:14px!important;font-weight:800!important;font-size:15px!important;cursor:pointer!important;background:' + buttonColor + '!important;color:#fff!important;box-shadow:0 4px 12px rgba(0,0,0,.2)!important;pointer-events:auto!important;}'
-    + '.vl-product{display:flex!important;align-items:center!important;gap:12px!important;border-radius:16px!important;padding:12px!important;background:#fff!important;cursor:pointer!important;box-shadow:0 8px 24px rgba(0,0,0,.15)!important;pointer-events:auto!important;}'
-    + '.vl-product-img{width:60px!important;height:60px!important;border-radius:10px!important;object-fit:cover!important;background:#e2e8f0!important;flex:0 0 auto!important;}'
-    + '.vl-product-info{min-width:0!important;flex:1!important;}'
-    + '.vl-product-name{font-weight:800!important;font-size:13px!important;color:#0f172a!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-transform:uppercase!important;}'
-    + '.vl-product-price{margin-top:2px!important;font-weight:800!important;font-size:15px!important;color:#000!important;}'
-    + '.vl-product-btn{background:#00c853!important;color:#fff!important;font-size:11px!important;font-weight:800!important;padding:4px 10px!important;border-radius:6px!important;display:inline-block!important;margin-top:4px!important;text-transform:uppercase!important;}';
-}
 
   function buildFloatingCss(appearance, behaviorConfig) {
     behaviorConfig = behaviorConfig || getFloatingBehaviorConfig(appearance);
@@ -998,22 +988,7 @@
 var shadow = shadowData.shadow;
 
 var style = createEl('style');
-style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
-  html, body {
-    height: 100% !important;
-    margin: 0 !important;
-  }
-  .vl-header,
-  .vl-body > .vl-nav,
-  .vl-footer {
-    position: relative;
-    z-index: 10;
-  }
-  .vl-close {
-    position: relative;
-    z-index: 20;
-  }
-`;
+style.textContent = buildFloatingCss(appearance, behaviorConfig);
 
 
 
