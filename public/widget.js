@@ -2129,9 +2129,12 @@ var modalConfig = normalizeModalAppearanceConfig(appearance);
 
 
   function closeOverlay() {
-    if (overlay) overlay.className = 'vl-overlay';
-    if (modalContent) modalContent.innerHTML = '';
+  if (overlay) {
+    overlay.className = 'vl-overlay';
+    setImportant(overlay, 'pointer-events', 'auto');
   }
+  if (modalContent) modalContent.innerHTML = '';
+}
 
   function openStory(story, storyVideoMap, activeVideos, storyProducts, products) {
     if (!overlay || !modalContent) return;
@@ -2400,6 +2403,48 @@ function getFloatingClosedStorageKey() {
   return 'vidlytics_floating_closed_' + String(storeId || 'default');
 }
 
+  function ensureOverlayRoot(appearance) {
+  var existing = document.getElementById('vidlytics-overlay-root');
+  if (existing) existing.remove();
+
+  var host = createEl('div');
+  host.id = 'vidlytics-overlay-root';
+
+  // Host ocupa a tela inteira e fica acima de tudo
+  setImportant(host, 'position', 'fixed');
+  setImportant(host, 'inset', '0');
+  setImportant(host, 'width', '100vw');
+  setImportant(host, 'height', '100vh');
+  setImportant(host, 'z-index', getFloatingConfig(appearance).zIndex);
+  setImportant(host, 'pointer-events', 'none'); // só o overlay captura clique
+
+  document.body.appendChild(host);
+
+  var shadow = host.attachShadow({ mode: 'open' });
+
+  var style = createEl('style');
+  style.textContent = buildSharedCss(appearance);
+
+  overlay = createEl('div', 'vl-overlay');
+  var modal = createEl('div', 'vl-modal');
+  modalContent = createEl('div');
+
+  modal.appendChild(modalContent);
+  overlay.appendChild(modal);
+
+  // quando aberto, o overlay precisa capturar cliques
+  setImportant(overlay, 'pointer-events', 'auto');
+
+  overlay.addEventListener('click', function (event) {
+    if (event.target === overlay) closeOverlay();
+  });
+
+  shadow.appendChild(style);
+  shadow.appendChild(overlay);
+
+  return host;
+}
+
   function renderFloatingBubbles(stories, storyVideoMap, activeVideos) {
   var appearance = currentAppearance || {};
   var modalConfig = normalizeModalAppearanceConfig(appearance);
@@ -2440,19 +2485,7 @@ function getFloatingClosedStorageKey() {
     bubbles.appendChild(dismissButton);
   }
 
-  overlay = createEl('div', 'vl-overlay');
-
-  var modal = createEl('div', 'vl-modal');
-  modalContent = createEl('div');
-
-  modal.appendChild(modalContent);
-  overlay.appendChild(modal);
-
-  overlay.addEventListener('click', function (event) {
-    if (event.target === overlay) {
-      closeOverlay();
-    }
-  });
+  ensureOverlayRoot(appearance);
 
   stories.forEach(function (story) {
     var relations = (storyVideoMap.get(story.id) || [])
@@ -2563,7 +2596,6 @@ function getFloatingClosedStorageKey() {
 
   shadow.appendChild(style);
   shadow.appendChild(bubbles);
-  shadow.appendChild(overlay);
 
   if (behaviorConfig.allowDrag) {
     setupFloatingDrag(shadowData.host, bubbles);
