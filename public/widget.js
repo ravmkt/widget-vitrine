@@ -1,11 +1,11 @@
 /**
  * Vidlytics Widget — widget.js
- * Correção: Loop no vídeo + sem fechamento automático + modal_config completo
+ * Correção: clique no widget flutuante agora abre o modal (vídeo não intercepta mais o clique)
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - MODAL CONFIG FULL - 202607161600');
+  console.log('VIDLYTICS WIDGET CARREGADO - FIX FLOATING CLICK - 202607161600');
 
-  var VIDLYTICS_WIDGET_VERSION = 'appearance-modal-config-full-202607161600';
+  var VIDLYTICS_WIDGET_VERSION = 'fix-floating-click-202607161600';
 
   if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) return;
 
@@ -332,9 +332,6 @@
   function getButtonColor(appearance) { return readAppearanceValue(appearance, ['button_color', 'buttonColor', 'btn_color', 'cor_botao']) || getPrimaryColor(appearance); }
   function getFontFamily(appearance) { return readAppearanceValue(appearance, ['font_family', 'fontFamily', 'fonte']) || DEFAULT_APPEARANCE.font_family; }
 
-  // ================================================================
-  // ✅ normalizeModalAppearanceConfig — TODOS OS CAMPOS DO MODAL_CONFIG
-  // ================================================================
   function normalizeModalAppearanceConfig(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
     return {
@@ -478,13 +475,13 @@
     + '.vl-player{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;background:transparent!important;z-index:1!important;}'
     + '.vl-player video,.vl-player iframe{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;border:0!important;display:block!important;object-fit:cover!important;z-index:2!important;background:transparent!important;}'
 
-    // NAVEGAÇÃO (invisível mas funcional — tap left/right)
+    // NAVEGAÇÃO
     + '.vl-nav{position:absolute!important;inset:0!important;display:flex!important;z-index:10!important;background:transparent!important;}'
     + '.vl-nav-btn{all:unset!important;height:100%!important;cursor:pointer!important;}'
     + '.vl-nav-prev{width:30%!important;}'
     + '.vl-nav-next{width:70%!important;}'
 
-    // CARD DE PRODUTO — canto inferior esquerdo
+    // CARD DE PRODUTO
     + '.vl-product-card{position:absolute!important;bottom:16px!important;left:16px!important;right:72px!important;z-index:25!important;display:flex!important;align-items:center!important;gap:10px!important;border-radius:14px!important;padding:10px!important;background:#fff!important;box-shadow:0 8px 24px rgba(0,0,0,.2)!important;pointer-events:auto!important;}'
     + '.vl-product-img{width:52px!important;height:52px!important;border-radius:8px!important;object-fit:cover!important;background:#e2e8f0!important;flex:0 0 auto!important;}'
     + '.vl-product-info{min-width:0!important;flex:1!important;}'
@@ -492,7 +489,7 @@
     + '.vl-product-price{margin-top:2px!important;font-weight:800!important;font-size:14px!important;color:#000!important;}'
     + '.vl-product-btn{background:#00c853!important;color:#fff!important;font-size:10px!important;font-weight:800!important;padding:4px 10px!important;border-radius:6px!important;display:inline-block!important;margin-top:4px!important;text-transform:uppercase!important;cursor:pointer!important;}'
 
-    // BOTÕES DE AÇÃO — lateral direita, empilhados verticalmente
+    // BOTÕES DE AÇÃO
     + '.vl-actions{position:absolute!important;right:12px!important;bottom:120px!important;z-index:25!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:14px!important;pointer-events:auto!important;}'
     + '.vl-action-btn{all:unset!important;width:40px!important;height:40px!important;border-radius:50%!important;display:flex!important;align-items:center!important;justify-content:center!important;cursor:pointer!important;color:#fff!important;background:rgba(0,0,0,.35)!important;backdrop-filter:blur(4px)!important;border:1px solid rgba(255,255,255,.25)!important;transition:transform .15s ease!important;}'
     + '.vl-action-btn:active{transform:scale(.9)!important;}'
@@ -541,9 +538,6 @@
     }
   }
 
-  // ================================================================
-  // 🔄 FUNÇÃO CORRIGIDA — LOOP ATIVADO + SEM FECHAMENTO AUTOMÁTICO
-  // ================================================================
   function buildVideoPlayer(video, storyId, onEnded) {
     var url = getVideoUrl(video);
     var ytId = extractYouTubeId(url);
@@ -618,9 +612,6 @@
     resumePreviews();
   }
 
-  // ================================================================
-  // ✅ openStory + renderCurrent — COM MODAL_CONFIG COMPLETO
-  // ================================================================
   function openStory(storiesList, initialStoryIndex, storyVideoMap, activeVideos, storyProducts, products) {
     if (!overlay || !modalContent || !storiesList || !storiesList.length) return;
 
@@ -667,13 +658,11 @@
   // ─── HEADER ───────────────────────────────────────────
   var header = createEl('div', 'vl-header');
 
-  // Esquerda: título + subtítulo + contador
   var headerLeft = createEl('div', 'vl-header-left');
   if (modalConfig.show_title !== false) {
     var title = createEl('div', 'vl-title'); title.textContent = story.title || story.name || 'Story';
     headerLeft.appendChild(title);
 
-    // Subtítulo (use_anne / código do story)
     if (story.subtitle || story.code || story.use_code) {
       var subtitle = createEl('div', 'vl-subtitle');
       subtitle.textContent = story.subtitle || story.code || story.use_code || '';
@@ -686,10 +675,8 @@
   }
   header.appendChild(headerLeft);
 
-  // Direita: controles (áudio, play, fechar)
   var headerRight = createEl('div', 'vl-header-right');
 
-  // Botão áudio
   var audioBtn = createEl('button', 'vl-ctrl-btn');
   audioBtn.type = 'button';
   audioBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
@@ -700,7 +687,6 @@
   });
   headerRight.appendChild(audioBtn);
 
-  // Botão play/pause
   var playBtn = createEl('button', 'vl-ctrl-btn');
   playBtn.type = 'button';
   playBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
@@ -714,7 +700,6 @@
   });
   headerRight.appendChild(playBtn);
 
-  // Botão fechar (condicional)
   if (modalConfig.show_close_button !== false) {
     var closeBtn = createEl('button', 'vl-ctrl-btn');
     closeBtn.type = 'button';
@@ -728,11 +713,9 @@
   // ─── BODY ─────────────────────────────────────────────
   var body = createEl('div', 'vl-body');
 
-  // Player
   var playerNode = buildVideoPlayer(video, story.id, nextVideo);
   body.appendChild(playerNode);
 
-  // Navegação (tap zones — invisíveis)
   if (modalConfig.show_navigation !== false) {
     var nav = createEl('div', 'vl-nav');
     var prevBtn = createEl('button', 'vl-nav-btn vl-nav-prev'); prevBtn.type = 'button'; prevBtn.addEventListener('click', prevVideo);
@@ -741,7 +724,7 @@
     body.appendChild(nav);
   }
 
-  // ─── CARD DE PRODUTO — canto inferior esquerdo ────────
+  // ─── CARD DE PRODUTO ──────────────────────────────────
   var activeProducts = storyProducts
     .filter(function (sp) { return idsEqual(sp.story_id, story.id); })
     .map(function (sp) { return products.find(function (product) { return idsEqual(product.id, sp.product_id); }); })
@@ -775,7 +758,7 @@
     body.appendChild(productCard);
   }
 
-  // ─── BOTÕES DE AÇÃO — lateral direita ─────────────────
+  // ─── BOTÕES DE AÇÃO ───────────────────────────────────
   var hasAnyAction = modalConfig.show_like_button !== false
                   || modalConfig.show_share_button !== false
                   || modalConfig.show_comment_button !== false;
@@ -783,7 +766,6 @@
   if (hasAnyAction) {
     var actionsCol = createEl('div', 'vl-actions');
 
-    // ❤️ Like
     if (modalConfig.show_like_button !== false) {
       var likeBtn = createEl('button', 'vl-action-btn');
       likeBtn.type = 'button';
@@ -797,7 +779,6 @@
       actionsCol.appendChild(likeBtn);
     }
 
-    // 💬 Comment
     if (modalConfig.show_comment_button !== false) {
       var commentBtn = createEl('button', 'vl-action-btn');
       commentBtn.type = 'button';
@@ -810,7 +791,6 @@
       actionsCol.appendChild(commentBtn);
     }
 
-    // 📤 Share
     if (modalConfig.show_share_button !== false) {
       var shareBtn = createEl('button', 'vl-action-btn');
       shareBtn.type = 'button';
@@ -828,7 +808,6 @@
       actionsCol.appendChild(shareBtn);
     }
 
-    // 🔗 Link / WhatsApp
     if (story.cta_enabled && story.cta_url) {
       var linkBtn = createEl('button', 'vl-action-btn' + (story.cta_type === 'whatsapp' ? ' whatsapp-btn' : ''));
       linkBtn.type = 'button';
@@ -845,7 +824,6 @@
     body.appendChild(actionsCol);
   }
 
-  // ─── CTA BUTTON (se houver e não houver product card) ─
   if (story.cta_enabled && story.cta_url && (!activeProducts.length || modalConfig.show_product === false)) {
     var ctaBtn = createEl('button', 'vl-cta');
     ctaBtn.type = 'button'; ctaBtn.textContent = story.cta_text || 'Saiba mais';
@@ -911,6 +889,9 @@
     window.addEventListener('pointerup', stop); window.addEventListener('pointercancel', stop);
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // 🔧 FUNÇÃO CORRIGIDA — vídeo do widget NÃO intercepta mais o clique
+  // ═══════════════════════════════════════════════════════════
   function renderFloatingBubbles(stories, storyVideoMap, activeVideos) {
     var appearance = currentAppearance || {};
     var modalConfig = normalizeModalAppearanceConfig(appearance);
@@ -974,18 +955,38 @@
       var isDirect = isDirectVideoUrl(videoUrl);
       var isUpload = coverVideo && (coverVideo.source_type === 'upload' || coverVideo.sourceType === 'upload');
 
+      // ──────────────────────────────────────────────────────
+      // 🔧 CORREÇÃO PRINCIPAL: vídeo do widget NÃO pode
+      //    receber cliques — deve abrir o modal sempre
+      // ──────────────────────────────────────────────────────
       if ((isDirect || isUpload) && videoUrl) {
         var vidPreview = createEl('video', 'vl-img');
         vidPreview.src = videoUrl;
-        vidPreview.autoplay = true; vidPreview.muted = true; vidPreview.loop = true; vidPreview.playsInline = true;
-        vidPreview.setAttribute('playsinline', 'playsinline'); vidPreview.setAttribute('webkit-playsinline', 'webkit-playsinline');
+        vidPreview.autoplay = true;
+        vidPreview.muted = true;
+        vidPreview.loop = true;
+        vidPreview.playsInline = true;
+        vidPreview.setAttribute('playsinline', 'playsinline');
+        vidPreview.setAttribute('webkit-playsinline', 'webkit-playsinline');
+        vidPreview.setAttribute('disableRemotePlayback', '');
+        vidPreview.disableRemotePlayback = true;
+
+        // ✅ BLOQUEIO TOTAL de interação com o vídeo no widget
+        vidPreview.style.pointerEvents = 'none';
+        vidPreview.addEventListener('click', function(e) { e.preventDefault(); });
+        vidPreview.addEventListener('pointerdown', function(e) { e.preventDefault(); });
+        vidPreview.addEventListener('dblclick', function(e) { e.preventDefault(); });
 
         if (thumb) vidPreview.poster = thumb;
+
         var playPromise = vidPreview.play();
         if (playPromise !== undefined) {
-          playPromise.catch(function() { if (thumb) { var fbImg = createEl('img', 'vl-img'); fbImg.src = thumb; inner.innerHTML = ''; inner.appendChild(fbImg); } });
+          playPromise.catch(function() {
+            if (thumb) { var fbImg = createEl('img', 'vl-img'); fbImg.src = thumb; inner.innerHTML = ''; inner.appendChild(fbImg); }
+          });
         }
         inner.appendChild(vidPreview);
+
       } else if (thumb) {
         var img = createEl('img', 'vl-img'); img.src = thumb; img.loading = 'lazy';
         img.onerror = function () { inner.innerHTML = ''; inner.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase(); };
@@ -1002,6 +1003,7 @@
         var label = createEl('span', 'vl-label'); label.textContent = story.title || story.name || 'Story'; bubble.appendChild(label);
       }
 
+      // ✅ Clique na bolha → abre modal (vídeo não bloqueia mais)
       bubble.addEventListener('click', function (event) {
         if (floatingWasDragged) { event.preventDefault(); event.stopPropagation(); return; }
         openStory(stories, index, storyVideoMap, activeVideos, readStoryProductsData, readProductsData);
