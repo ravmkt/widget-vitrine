@@ -380,7 +380,7 @@
 
 }
 
-  function trackMetric(metric) {
+  function trackMetric() {
     var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
     if (!Array.isArray(fallbackMetrics)) fallbackMetrics = [];
     fallbackMetrics.push({
