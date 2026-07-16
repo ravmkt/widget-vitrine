@@ -1,11 +1,11 @@
 /**
  * Vidlytics Widget — widget.js
- * Atualização: Correção Tela Preta (Pausa Background), Fechamento Instântaneo e SessionStorage
+ * Atualização: Correção do Decoder Lock (Tela Preta) e Reset instantâneo no F5.
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - APARÊNCIA VIA widget_appearances - 202607161045');
+  console.log('VIDLYTICS WIDGET CARREGADO - APARÊNCIA VIA widget_appearances - 202607161055');
 
-  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-appearances-only-202607161045';
+  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-appearances-only-202607161055';
 
   if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) return;
 
@@ -31,9 +31,9 @@
   var currentAppearance = {};
   var overlay = null;
   var modalContent = null;
-  var globalShadowRoot = null; // Guardar referência para pausar vídeos
+  var globalShadowRoot = null; 
   var floatingWasDragged = false;
-  var floatingWasClosed = false;
+  var floatingWasClosed = false; // Apenas variável de memória (F5 vai sempre resetar para false)
   var readStoryProductsData = [];
   var readProductsData = [];
 
@@ -105,12 +105,6 @@
     try { var item = localStorage.getItem(key); if (!item) return fallback; try { return JSON.parse(item); } catch (e) { return item; } } catch (e2) { return fallback; }
   }
   function setStorageItem(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
-
-  // Usar SessionStorage para o botão de fechar (X), assim ao dar F5 ele reaparece para testarmos!
-  function getSessionItem(key, fallback) {
-    try { var item = sessionStorage.getItem(key); if (!item) return fallback; try { return JSON.parse(item); } catch (e) { return item; } } catch (e2) { return fallback; }
-  }
-  function setSessionItem(key, value) { try { sessionStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
 
   function supabaseFetch(path, options) {
     if (!hasSupabase) return Promise.reject(new Error('No Supabase config'));
@@ -505,19 +499,35 @@
       + '.vl-label{pointer-events:none!important;width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;font-family:' + font + '!important;font-size:11px!important;line-height:12px!important;font-weight:700!important;color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.8)!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;display:block!important;}';
   }
 
-  // --- FUNÇÕES PARA PREVENIR TRAVAMENTO DE REDE NO CHROME ---
+  // --- HACK PARA PREVENIR TELA PRETA NO CHROME (HARDWARE DECODER LOCK) ---
   function pausePreviews() {
     if (!globalShadowRoot) return;
     var vids = globalShadowRoot.querySelectorAll('video.vl-img');
-    for (var i = 0; i < vids.length; i++) { if (!vids[i].paused) vids[i].pause(); }
+    for (var i = 0; i < vids.length; i++) {
+      var v = vids[i];
+      if (!v.paused) v.pause();
+      // Remove o SRC temporariamente. Isso liberta o Chrome para renderizar o vídeo grande.
+      if (v.src) {
+        v.dataset.tempSrc = v.src;
+        v.removeAttribute('src');
+        v.load();
+      }
+    }
   }
   
   function resumePreviews() {
     if (!globalShadowRoot) return;
     var vids = globalShadowRoot.querySelectorAll('video.vl-img');
-    for (var i = 0; i < vids.length; i++) { vids[i].play().catch(function(){}); }
+    for (var i = 0; i < vids.length; i++) {
+      var v = vids[i];
+      // Devolve o SRC e dá Play novamente
+      if (v.dataset.tempSrc) {
+        v.src = v.dataset.tempSrc;
+        v.play().catch(function(){});
+      }
+    }
   }
-  // ---------------------------------------------------------
+  // ------------------------------------------------------------------------
 
   function buildVideoPlayer(video, storyId, onEnded) {
     var url = getVideoUrl(video);
@@ -541,9 +551,9 @@
       media.autoplay = true;
       media.controls = false;
       media.preload = 'auto';
-      // Atributos obrigatórios para vídeos tocarem perfeitamente em modal
       media.setAttribute('playsinline', '');
       media.setAttribute('webkit-playsinline', '');
+      media.playsInline = true;
       
       var thumb = getVideoThumbnail(video);
       if (thumb) media.poster = thumb;
@@ -574,13 +584,13 @@
   function closeOverlay() {
     if (overlay) overlay.className = 'vl-overlay';
     if (modalContent) modalContent.innerHTML = '';
-    resumePreviews(); // Retoma o mini-player de fundo ao fechar
+    resumePreviews(); // Retorna o vídeo para o mini-player
   }
 
   function openStory(storiesList, initialStoryIndex, storyVideoMap, activeVideos, storyProducts, products) {
     if (!overlay || !modalContent || !storiesList || !storiesList.length) return;
 
-    pausePreviews(); // Pausa os mini-players ANTES de abrir o modal grande (evita tela preta)
+    pausePreviews(); // Pausa e libera a placa de vídeo ANTES de abrir o modal
 
     var currentStoryIndex = initialStoryIndex || 0;
     var currentVideoIndex = 0;
@@ -733,15 +743,14 @@
     window.addEventListener('pointerup', stop); window.addEventListener('pointercancel', stop);
   }
 
-  function getFloatingClosedStorageKey() { return 'vidlytics_floating_closed_session_' + String(storeId || 'default'); }
 
   function renderFloatingBubbles(stories, storyVideoMap, activeVideos) {
     var appearance = currentAppearance || {};
     var modalConfig = normalizeModalAppearanceConfig(appearance);
     var behaviorConfig = getFloatingBehaviorConfig(appearance);
 
-    // Agora usa o armazenamento de sessão (F5 ressuscita o widget)
-    if (floatingWasClosed || getSessionItem(getFloatingClosedStorageKey(), false) === true) return;
+    // Agora é impossível o widget sumir com F5 se não fechar a aba
+    if (floatingWasClosed) return;
 
     var shadowData = getOrCreateShadowRoot(appearance);
     var shadow = shadowData.shadow;
@@ -757,10 +766,9 @@
       dismissButton.textContent = '×';
       dismissButton.addEventListener('click', function (event) {
         event.preventDefault(); event.stopPropagation();
-        floatingWasClosed = true; 
-        setSessionItem(getFloatingClosedStorageKey(), true);
+        floatingWasClosed = true; // Salva apenas nessa aba até dar F5
         
-        // Remove totalmente o balão da tela sem dó
+        // Remove totalmente o balão da tela instantaneamente
         if (shadowData && shadowData.host) {
           shadowData.host.remove();
         }
