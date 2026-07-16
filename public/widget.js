@@ -1,11 +1,11 @@
 /**
  * Vidlytics Widget — widget.js
- * Correção Final: Renderização de GPU (Tela Preta) e User Gesture Sync
+ * Correção Definitiva: Display None Bug & Media Fragment Decoder Lock
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - APARÊNCIA VIA widget_appearances - 202607161130');
+  console.log('VIDLYTICS WIDGET CARREGADO - APARÊNCIA VIA widget_appearances - 202607161200');
 
-  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-appearances-only-202607161130';
+  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-appearances-only-202607161200';
 
   if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) return;
 
@@ -451,7 +451,6 @@
     var buttonColor = getButtonColor(appearance);
     var font = getFontFamily(appearance);
 
-    // NOTA: A classe .vl-player video recebeu transform:translateZ(0)!important para forçar camada de GPU
     return '*,*::before,*::after{box-sizing:border-box!important;}'
       + '.vl-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;background:#000!important;display:none!important;align-items:center!important;justify-content:center!important;z-index:' + cfg.zIndex + '!important;font-family:' + font + '!important;}'
       + '.vl-overlay.is-open{display:flex!important;}'
@@ -500,21 +499,17 @@
       + '.vl-label{pointer-events:none!important;width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;font-family:' + font + '!important;font-size:11px!important;line-height:12px!important;font-weight:700!important;color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.8)!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;display:block!important;}';
   }
 
-  // --- HACK Hardware Lock: APENAS pausa o video do background para NÃO quebrar a requisição de rede do arquivo principal ---
   function pausePreviews() {
     if (!globalShadowRoot) return;
     var vids = globalShadowRoot.querySelectorAll('.vl-bubble video.vl-img');
-    for (var i = 0; i < vids.length; i++) {
-      vids[i].pause();
-    }
+    for (var i = 0; i < vids.length; i++) { vids[i].pause(); }
   }
   
   function resumePreviews() {
     if (!globalShadowRoot) return;
     var vids = globalShadowRoot.querySelectorAll('.vl-bubble video.vl-img');
     for (var i = 0; i < vids.length; i++) {
-      var p = vids[i].play();
-      if (p) p.catch(function(){});
+      var p = vids[i].play(); if (p) p.catch(function(){});
     }
   }
 
@@ -527,7 +522,8 @@
 
     if (!isUpload && ytId) {
       var iframe = createEl('iframe');
-      iframe.src = getYouTubeEmbedUrl(url) + '?autoplay=1&playsinline=1&rel=0';
+      // Correção para funcionamento do YouTube
+      iframe.src = 'https://www.youtube.com/embed/' + ytId + '?autoplay=1&playsinline=1&rel=0';
       iframe.allow = 'autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
       iframe.allowFullscreen = true;
       wrapper.appendChild(iframe);
@@ -536,12 +532,17 @@
 
     if ((isUpload || isDirect) && url) {
       var media = createEl('video');
-      media.src = url;
+      
+      // VITAL PARA RESOLVER O DISPLAY NONE: Salvar a URL em "data-src". 
+      // Não atribuímos a "src" ainda para evitar bloqueio do decodificador!
+      media.setAttribute('data-src', url);
+      
       media.controls = false;
       media.preload = 'auto';
-      media.setAttribute('playsinline', '');
-      media.setAttribute('webkit-playsinline', '');
+      media.setAttribute('playsinline', 'playsinline');
+      media.setAttribute('webkit-playsinline', 'webkit-playsinline');
       media.playsInline = true;
+      media.muted = false;
       
       var thumb = getVideoThumbnail(video);
       if (thumb) media.poster = thumb;
@@ -549,33 +550,25 @@
       media.addEventListener('play', function () {
         trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
       });
-
       media.addEventListener('ended', function() { if (typeof onEnded === 'function') onEnded(); });
 
       wrapper.appendChild(media);
-      media.load(); // Força o inicio do carregamento com os parâmetros configurados
       return wrapper;
     }
 
     var link = createEl('a');
-    link.href = url || '#';
-    link.target = '_blank';
-    link.textContent = 'Abrir vídeo';
-    link.className = 'vl-cta';
+    link.href = url || '#'; link.target = '_blank'; link.textContent = 'Abrir vídeo'; link.className = 'vl-cta';
     wrapper.appendChild(link);
     return wrapper;
   }
 
   function closeOverlay() {
     if (overlay) overlay.className = 'vl-overlay';
-    
-    // Mata o video da modal para limpar memória ao fechar
     if (modalContent) {
       var oldVid = modalContent.querySelector('video');
       if (oldVid) { oldVid.pause(); oldVid.removeAttribute('src'); oldVid.load(); }
       modalContent.innerHTML = '';
     }
-    
     resumePreviews(); 
   }
 
@@ -635,10 +628,7 @@
       var closeBtn = createEl('button', 'vl-close');
       closeBtn.type = 'button';
       closeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
-      closeBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        closeOverlay();
-      });
+      closeBtn.addEventListener('click', function(e) { e.stopPropagation(); closeOverlay(); });
       header.appendChild(closeBtn);
 
       var body = createEl('div', 'vl-body');
@@ -659,7 +649,6 @@
       if (activeProducts.length && modalConfig.show_product !== false) {
         var product = activeProducts[0];
         var productCard = createEl('div', 'vl-product');
-        
         var productImg = createEl('img', 'vl-product-img');
         productImg.src = normalizeMediaUrl(product.image_url || product.imageUrl || ''); productImg.alt = product.name || '';
 
@@ -693,15 +682,38 @@
       modalContent.appendChild(header);
       modalContent.appendChild(body);
       
-      // Abre a tela no HTML
+      // 1. FORÇA O OVERLAY A FICAR VISÍVEL ANTES DE CARREGAR A MÍDIA
       overlay.className = 'vl-overlay is-open';
 
-      // Reproduz IMEDIATAMENTE (Síncrono com o Clique) e força a renderização visual com 0.001
+      // 2. BUSCA O VÍDEO
       var newVid = body.querySelector('video');
-      if (newVid) {
-        newVid.currentTime = 0.001; 
-        var playPromise = newVid.play();
-        if (playPromise) playPromise.catch(function(e) { console.log('Erro play:', e); });
+      if (newVid && newVid.hasAttribute('data-src')) {
+        
+        // 3. AGUARDA 50ms PARA A PLACA DE VÍDEO RENDERIZAR O CSS DO OVERLAY ABERTO
+        setTimeout(function() {
+          var rawUrl = newVid.getAttribute('data-src');
+          
+          // 4. TRUQUE DO HASH: Evita cache duplo e força renderização do primeiro milissegundo
+          var finalUrl = rawUrl.split('#')[0] + '#t=0.001';
+          
+          newVid.src = finalUrl;
+          newVid.load();
+
+          // 5. APENAS DÁ O PLAY QUANDO O NAVEGADOR CARREGOU DADOS SUFICIENTES
+          newVid.addEventListener('loadeddata', function() {
+            var playPromise = newVid.play();
+            if (playPromise) playPromise.catch(function(e) { console.log('Vidlytics Play Block:', e); });
+          }, { once: true });
+
+          // 6. FALLBACK DE SEGURANÇA SE A INTERNET TIVER OSCILADO
+          setTimeout(function() {
+            if (newVid.paused) {
+              var playPromise = newVid.play();
+              if (playPromise) playPromise.catch(function() {});
+            }
+          }, 300);
+
+        }, 50);
       }
     }
 
@@ -748,7 +760,6 @@
     window.addEventListener('pointerup', stop); window.addEventListener('pointercancel', stop);
   }
 
-
   function renderFloatingBubbles(stories, storyVideoMap, activeVideos) {
     var appearance = currentAppearance || {};
     var modalConfig = normalizeModalAppearanceConfig(appearance);
@@ -771,10 +782,7 @@
       dismissButton.addEventListener('click', function (event) {
         event.preventDefault(); event.stopPropagation();
         floatingWasClosed = true; 
-        
-        if (shadowData && shadowData.host) {
-          shadowData.host.remove();
-        }
+        if (shadowData && shadowData.host) shadowData.host.remove();
       });
       bubbles.appendChild(dismissButton);
     }
@@ -804,7 +812,7 @@
         var vidPreview = createEl('video', 'vl-img');
         vidPreview.src = videoUrl;
         vidPreview.autoplay = true; vidPreview.muted = true; vidPreview.loop = true; vidPreview.playsInline = true;
-        vidPreview.setAttribute('playsinline', ''); vidPreview.setAttribute('webkit-playsinline', '');
+        vidPreview.setAttribute('playsinline', 'playsinline'); vidPreview.setAttribute('webkit-playsinline', 'webkit-playsinline');
         
         if (thumb) vidPreview.poster = thumb;
         var playPromise = vidPreview.play();
