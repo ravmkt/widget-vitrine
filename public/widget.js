@@ -1,11 +1,11 @@
 /**
  * Vidlytics Widget — widget.js
- * Correção Final: Atraso no Play para renderização de imagem e liberação de memória
+ * Correção Final: Renderização de GPU (Tela Preta) e User Gesture Sync
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - APARÊNCIA VIA widget_appearances - 202607161115');
+  console.log('VIDLYTICS WIDGET CARREGADO - APARÊNCIA VIA widget_appearances - 202607161130');
 
-  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-appearances-only-202607161115';
+  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-appearances-only-202607161130';
 
   if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) return;
 
@@ -451,6 +451,7 @@
     var buttonColor = getButtonColor(appearance);
     var font = getFontFamily(appearance);
 
+    // NOTA: A classe .vl-player video recebeu transform:translateZ(0)!important para forçar camada de GPU
     return '*,*::before,*::after{box-sizing:border-box!important;}'
       + '.vl-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;background:#000!important;display:none!important;align-items:center!important;justify-content:center!important;z-index:' + cfg.zIndex + '!important;font-family:' + font + '!important;}'
       + '.vl-overlay.is-open{display:flex!important;}'
@@ -462,7 +463,7 @@
       + '.vl-close{all:unset!important;width:32px!important;height:32px!important;border-radius:50%!important;border:1px solid rgba(255,255,255,.5)!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:20px!important;line-height:1!important;cursor:pointer!important;color:#fff!important;background:rgba(0,0,0,.3)!important;backdrop-filter:blur(4px)!important;pointer-events:auto!important;}'
       + '.vl-body{flex:1!important;width:100%!important;height:100%!important;position:relative!important;background:#000!important;}'
       + '.vl-player{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;background:#000!important;z-index:1!important;}'
-      + '.vl-player video,.vl-player iframe{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;border:0!important;display:block!important;object-fit:cover!important;z-index:2!important;}'
+      + '.vl-player video,.vl-player iframe{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;border:0!important;display:block!important;object-fit:cover!important;z-index:2!important;transform:translateZ(0)!important;}'
       + '.vl-nav{position:absolute!important;inset:0!important;display:flex!important;z-index:10!important;background:transparent!important;}'
       + '.vl-nav-btn{all:unset!important;height:100%!important;cursor:pointer!important;}'
       + '.vl-nav-prev{width:30%!important;}'
@@ -499,18 +500,12 @@
       + '.vl-label{pointer-events:none!important;width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;font-family:' + font + '!important;font-size:11px!important;line-height:12px!important;font-weight:700!important;color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.8)!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;display:block!important;}';
   }
 
-  // --- HACK HArdware Lock: Pausa o video do background ---
+  // --- HACK Hardware Lock: APENAS pausa o video do background para NÃO quebrar a requisição de rede do arquivo principal ---
   function pausePreviews() {
     if (!globalShadowRoot) return;
     var vids = globalShadowRoot.querySelectorAll('.vl-bubble video.vl-img');
     for (var i = 0; i < vids.length; i++) {
-      var v = vids[i];
-      v.pause();
-      if (v.src && !v.dataset.tempSrc) {
-        v.dataset.tempSrc = v.src;
-        v.removeAttribute('src');
-        v.load();
-      }
+      vids[i].pause();
     }
   }
   
@@ -518,14 +513,8 @@
     if (!globalShadowRoot) return;
     var vids = globalShadowRoot.querySelectorAll('.vl-bubble video.vl-img');
     for (var i = 0; i < vids.length; i++) {
-      var v = vids[i];
-      if (v.dataset.tempSrc) {
-        v.src = v.dataset.tempSrc;
-        v.removeAttribute('data-temp-src');
-        v.load();
-        var p = v.play();
-        if (p) p.catch(function(){});
-      }
+      var p = vids[i].play();
+      if (p) p.catch(function(){});
     }
   }
 
@@ -548,7 +537,6 @@
     if ((isUpload || isDirect) && url) {
       var media = createEl('video');
       media.src = url;
-      // ATENÇÃO: Autoplay e Play removidos daqui. Serão chamados APÓS o vídeo estar visível no DOM
       media.controls = false;
       media.preload = 'auto';
       media.setAttribute('playsinline', '');
@@ -565,6 +553,7 @@
       media.addEventListener('ended', function() { if (typeof onEnded === 'function') onEnded(); });
 
       wrapper.appendChild(media);
+      media.load(); // Força o inicio do carregamento com os parâmetros configurados
       return wrapper;
     }
 
@@ -593,7 +582,7 @@
   function openStory(storiesList, initialStoryIndex, storyVideoMap, activeVideos, storyProducts, products) {
     if (!overlay || !modalContent || !storiesList || !storiesList.length) return;
 
-    pausePreviews(); // Pausa e libera a placa de vídeo ANTES de abrir o modal
+    pausePreviews(); 
 
     var currentStoryIndex = initialStoryIndex || 0;
     var currentVideoIndex = 0;
@@ -627,7 +616,6 @@
       var orderedVideos = getOrderedVideos(story); if (!orderedVideos.length) { nextVideo(); return; }
       var video = orderedVideos[currentVideoIndex]; if (!video) return;
 
-      // HACK: Mata o vídeo anterior (se houver) ANTES de injetar o novo
       var oldVid = modalContent.querySelector('video');
       if (oldVid) { oldVid.pause(); oldVid.removeAttribute('src'); oldVid.load(); }
 
@@ -705,18 +693,16 @@
       modalContent.appendChild(header);
       modalContent.appendChild(body);
       
-      // Abre a tela no HTML!
+      // Abre a tela no HTML
       overlay.className = 'vl-overlay is-open';
 
-      // HACK: E só dá o PLAY depois que a tela preta já estiver desenhada!
-      setTimeout(function() {
-        var newVid = body.querySelector('video');
-        if (newVid) {
-          newVid.currentTime = 0; // Força um reset de frame
-          var playPromise = newVid.play();
-          if (playPromise) playPromise.catch(function(e) { console.log('Erro play:', e); });
-        }
-      }, 50);
+      // Reproduz IMEDIATAMENTE (Síncrono com o Clique) e força a renderização visual com 0.001
+      var newVid = body.querySelector('video');
+      if (newVid) {
+        newVid.currentTime = 0.001; 
+        var playPromise = newVid.play();
+        if (playPromise) playPromise.catch(function(e) { console.log('Erro play:', e); });
+      }
     }
 
     renderCurrent();
