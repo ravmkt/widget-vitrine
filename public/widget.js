@@ -3,9 +3,9 @@
  * Correção: Loop no vídeo + sem fechamento automático
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - FIX LOOP + NO AUTO CLOSE - 202607161700');
+  console.log('VIDLYTICS WIDGET CARREGADO - FIX LOOP + NO AUTO CLOSE - 202607161701');
 
-  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-loop-no-autoclose-202607161700';
+  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-loop-no-autoclose-202607161701';
 
   if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) return;
 
