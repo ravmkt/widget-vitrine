@@ -988,22 +988,7 @@
 var shadow = shadowData.shadow;
 
 var style = createEl('style');
-style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
-  html, body {
-    height: 100% !important;
-    margin: 0 !important;
-  }
-  .vl-header,
-  .vl-body > .vl-nav,
-  .vl-footer {
-    position: relative;
-    z-index: 10;
-  }
-  .vl-close {
-    position: relative;
-    z-index: 20;
-  }
-`;
+style.textContent = buildFloatingCss(appearance, behaviorConfig);
 
 
 
