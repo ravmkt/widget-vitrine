@@ -521,6 +521,7 @@
     var isDirect = isDirectVideoUrl(url);
     var wrapper = createEl('div', 'vl-player');
 
+    // YouTube — nada muda
     if (!isUpload && ytId) {
       var iframe = createEl('iframe');
       iframe.src = 'https://www.youtube.com/embed/' + ytId + '?autoplay=1&playsinline=1&rel=0';
@@ -531,6 +532,12 @@
     }
 
     if ((isUpload || isDirect) && url) {
+      // ===== FIX: wrapper com altura e position relative =====
+      wrapper.style.position = 'relative';
+      wrapper.style.width = '100%';
+      wrapper.style.minHeight = '300px';
+      wrapper.style.overflow = 'hidden';
+
       var media = createEl('video');
       
       media.controls = false;
@@ -538,28 +545,43 @@
       media.setAttribute('playsinline', '');
       media.setAttribute('webkit-playsinline', '');
       media.playsInline = true;
-      media.muted = false; 
-      
+      media.muted = false;
+
+      // ===== FIX: vídeo absoluto, z-index baixo =====
+      media.style.position = 'absolute';
+      media.style.top = '0';
+      media.style.left = '0';
+      media.style.width = '100%';
+      media.style.height = '100%';
+      media.style.objectFit = 'cover';
+      media.style.zIndex = '1';
+
       var thumb = getVideoThumbnail(video);
       if (thumb) media.poster = thumb;
 
-      // Injeta direto no SRC. É exatamente assim que a bolhinha faz para funcionar.
       media.src = url;
 
       media.addEventListener('play', function () {
         trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
       });
-      media.addEventListener('ended', function() { if (typeof onEnded === 'function') onEnded(); });
+      media.addEventListener('ended', function() {
+        if (typeof onEnded === 'function') onEnded();
+      });
 
       wrapper.appendChild(media);
       return wrapper;
     }
 
+    // Fallback
     var link = createEl('a');
-    link.href = url || '#'; link.target = '_blank'; link.textContent = 'Abrir vídeo'; link.className = 'vl-cta';
+    link.href = url || '#';
+    link.target = '_blank';
+    link.textContent = 'Abrir vídeo';
+    link.className = 'vl-cta';
     wrapper.appendChild(link);
     return wrapper;
   }
+
 
   function closeOverlay() {
     if (overlay) overlay.className = 'vl-overlay';
@@ -748,10 +770,27 @@
     if (floatingWasClosed) return;
 
     var shadowData = getOrCreateShadowRoot(appearance);
-    var shadow = shadowData.shadow;
+var shadow = shadowData.shadow;
 
-    var style = createEl('style');
-    style.textContent = buildFloatingCss(appearance, behaviorConfig);
+var style = createEl('style');
+style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
+  .vl-overlay.is-open {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+  .vl-header,
+  .vl-body > .vl-nav,
+  .vl-footer {
+    position: relative;
+    z-index: 10;
+  }
+  .vl-close {
+    position: relative;
+    z-index: 20;
+  }
+`;
+
 
     var bubbles = createEl('div', 'vl-bubbles');
 
