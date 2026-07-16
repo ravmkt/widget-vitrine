@@ -141,44 +141,74 @@ var floatingWasClosed = false;
       .replace(/\s+/g, '-');
   }
 
-  function toBoolean(value, fallback) {
-  if (value === undefined || value === null || value === '') return fallback;
-  if (typeof value === 'boolean') return value;
-  if (typeof value === 'number') return value !== 0;
-
-  var str = String(value).trim().toLowerCase();
-
-  if (
-    str === 'true' ||
-    str === '1' ||
-    str === 'yes' ||
-    str === 'sim' ||
-    str === 'on' ||
-    str === 'enabled' ||
-    str === 'enable' ||
-    str === 'ativo' ||
-    str === 'ativado'
-  ) {
-    return true;
+  function toBoolean(value, defaultValue) {
+  if (value === undefined || value === null || value === '') {
+    return defaultValue;
   }
 
-  if (
-    str === 'false' ||
-    str === '0' ||
-    str === 'no' ||
-    str === 'nao' ||
-    str === 'não' ||
-    str === 'off' ||
-    str === 'disabled' ||
-    str === 'disable' ||
-    str === 'inativo' ||
-    str === 'desativado'
-  ) {
-    return false;
+  if (typeof value === 'boolean') {
+    return value;
   }
 
-  return fallback;
+  if (typeof value === 'number') {
+    return value === 1;
+  }
+
+  if (typeof value === 'string') {
+    var normalized = value.trim().toLowerCase();
+
+    if (['true', '1', 'yes', 'sim', 'on'].indexOf(normalized) !== -1) {
+      return true;
+    }
+
+    if (['false', '0', 'no', 'não', 'nao', 'off'].indexOf(normalized) !== -1) {
+      return false;
+    }
+  }
+
+  return defaultValue;
 }
+
+function getFloatingBehaviorConfig(appearance) {
+  var config = getFloatingConfig(appearance) || {};
+
+  // Aceita os dois formatos: banco/API pode usar snake_case,
+  // enquanto o JavaScript pode usar camelCase.
+  var rawShowPlayButton = config.showPlayButton;
+  if (rawShowPlayButton === undefined) {
+    rawShowPlayButton = config.show_play_button;
+  }
+
+  var rawAllowDrag = config.allowDrag;
+  if (rawAllowDrag === undefined) {
+    rawAllowDrag = config.allow_drag;
+  }
+
+  var rawAllowClose = config.allowClose;
+  if (rawAllowClose === undefined) {
+    rawAllowClose = config.allow_close;
+  }
+
+  var behavior = {
+    objectFit: config.objectFit || config.object_fit || 'cover',
+
+    // Defina os defaults desejados aqui:
+    showPlayButton: toBoolean(rawShowPlayButton, false),
+    allowDrag: toBoolean(rawAllowDrag, true),
+    allowClose: toBoolean(rawAllowClose, true)
+  };
+
+  console.log('[VIDLYTICS] FLOATING BEHAVIOR:', {
+    config: config,
+    rawShowPlayButton: rawShowPlayButton,
+    rawAllowDrag: rawAllowDrag,
+    rawAllowClose: rawAllowClose,
+    result: behavior
+  });
+
+  return behavior;
+}
+
 
 
   function normalizeMediaUrl(url) {
@@ -2033,6 +2063,7 @@ var modalConfig = normalizeModalAppearanceConfig(appearance);
       if (thumb) media.poster = thumb;
 
       media.addEventListener('play', function () {
+        console.log('[VIDLYTICS] WIDGET CLICADO', widgetData);
         trackMetric({
           event_type: 'play',
           story_id: storyId,
