@@ -369,16 +369,8 @@
       show_whatsapp: toBoolean(rawShowWhatsapp, true)
     };
 
-    // 🔍 DEBUG — remova depois de testar
-    console.log('🔧 Vidlytics Modal Config:', JSON.stringify(config));
-    console.log('🔧 Raw appearance (todas as chaves):', Object.keys(appearance));
-    console.log('🔧 Raw show_like:', rawShowLike, '→', config.show_like);
-    console.log('🔧 Raw show_comment:', rawShowComment, '→', config.show_comment);
-
     return config;
-}
-
-}
+  }
 
   function trackMetric(metric) {
     var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
@@ -487,43 +479,42 @@
   }
 
   function buildSharedCss(appearance) {
-  var cfg = getFloatingConfig(appearance);
-  var buttonColor = getButtonColor(appearance);
-  var font = getFontFamily(appearance);
+    var cfg = getFloatingConfig(appearance);
+    var buttonColor = getButtonColor(appearance);
+    var font = getFontFamily(appearance);
 
-  return '*,*::before,*::after{box-sizing:border-box!important;}'
-    + '.vl-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;background:rgba(0,0,0,0.7)!important;display:none!important;align-items:center!important;justify-content:center!important;z-index:' + cfg.zIndex + '!important;font-family:' + font + '!important;}'
-    + '.vl-overlay.is-open{display:flex!important;}'
-    + '.vl-modal{width:100%!important;max-width:480px!important;max-height:90vh!important;position:relative!important;overflow:hidden!important;background:transparent!important;box-shadow:none!important;display:flex!important;flex-direction:column!important;}'
-    + '.vl-header{position:absolute!important;top:0!important;left:0!important;right:0!important;display:flex!important;align-items:flex-start!important;justify-content:space-between!important;padding:20px 16px!important;background:linear-gradient(to bottom,rgba(0,0,0,.6),transparent)!important;z-index:20!important;border:none!important;pointer-events:none!important;}'
-    + '.vl-header-left{display:flex!important;flex-direction:column!important;gap:4px!important;pointer-events:auto!important;}'
-    + '.vl-title{font-weight:800!important;color:#fff!important;font-size:16px!important;text-shadow:0 1px 3px rgba(0,0,0,.5)!important;text-transform:uppercase!important;}'
-    + '.vl-count{font-size:13px!important;color:rgba(255,255,255,.9)!important;font-weight:600!important;}'
-    + '.vl-close{all:unset!important;width:32px!important;height:32px!important;border-radius:50%!important;border:1px solid rgba(255,255,255,.5)!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:20px!important;line-height:1!important;cursor:pointer!important;color:#fff!important;background:rgba(0,0,0,.3)!important;backdrop-filter:blur(4px)!important;pointer-events:auto!important;}'
-    + '.vl-body{flex:1!important;width:100%!important;position:relative!important;background:transparent!important;aspect-ratio:9/16!important;}'
-    + '.vl-player{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;background:transparent!important;z-index:1!important;}'
-    + '.vl-player video,.vl-player iframe{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;border:0!important;display:block!important;object-fit:cover!important;z-index:2!important;background:transparent!important;}'
-    + '.vl-nav{position:absolute!important;inset:0!important;display:flex!important;z-index:10!important;background:transparent!important;}'
-    + '.vl-nav-btn{all:unset!important;height:100%!important;cursor:pointer!important;}'
-    + '.vl-nav-prev{width:30%!important;}'
-    + '.vl-nav-next{width:70%!important;}'
-    + '.vl-footer{position:absolute!important;bottom:24px!important;left:16px!important;right:16px!important;z-index:20!important;display:flex!important;flex-direction:column!important;gap:12px!important;pointer-events:none!important;}'
-    + '.vl-cta{all:unset!important;display:block!important;width:100%!important;text-align:center!important;border-radius:12px!important;padding:14px!important;font-weight:800!important;font-size:15px!important;cursor:pointer!important;background:' + buttonColor + '!important;color:#fff!important;box-shadow:0 4px 12px rgba(0,0,0,.2)!important;pointer-events:auto!important;}'
-    + '.vl-product{display:flex!important;align-items:center!important;gap:12px!important;border-radius:16px!important;padding:12px!important;background:#fff!important;cursor:pointer!important;box-shadow:0 8px 24px rgba(0,0,0,.15)!important;pointer-events:auto!important;}'
-    + '.vl-product-img{width:60px!important;height:60px!important;border-radius:10px!important;object-fit:cover!important;background:#e2e8f0!important;flex:0 0 auto!important;}'
-    + '.vl-product-info{min-width:0!important;flex:1!important;}'
-    + '.vl-product-name{font-weight:800!important;font-size:13px!important;color:#0f172a!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-transform:uppercase!important;}'
-    + '.vl-product-price{margin-top:2px!important;font-weight:800!important;font-size:15px!important;color:#000!important;}'
-    + '.vl-product-btn{background:#00c853!important;color:#fff!important;font-size:11px!important;font-weight:800!important;padding:4px 10px!important;border-radius:6px!important;display:inline-block!important;margin-top:4px!important;text-transform:uppercase!important;}'
-    + '.vl-actions{position:absolute!important;right:10px!important;bottom:150px!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:14px!important;z-index:20!important;pointer-events:auto!important;}'
-+ '.vl-action-btn{all:unset!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:4px!important;cursor:pointer!important;color:#fff!important;font-size:11px!important;font-weight:700!important;text-shadow:0 1px 3px rgba(0,0,0,.65)!important;text-transform:uppercase!important;letter-spacing:.3px!important;line-height:1!important;}'
-+ '.vl-action-icon{width:44px!important;height:44px!important;border-radius:50%!important;background:rgba(255,255,255,.12)!important;backdrop-filter:blur(10px)!important;-webkit-backdrop-filter:blur(10px)!important;display:flex!important;align-items:center!important;justify-content:center!important;transition:transform .15s!important;border:1px solid rgba(255,255,255,.18)!important;}'
-+ '.vl-action-btn:active .vl-action-icon{transform:scale(.84)!important;}'
-+ '.vl-action-btn.liked .vl-action-icon{background:#ef4444!important;border-color:#ef4444!important;box-shadow:0 0 20px rgba(239,68,68,.5)!important;}'
-+ '.vl-action-btn.liked .vl-action-icon svg{fill:#fff!important;stroke:#fff!important;}'
-+ '.vl-action-label{font-size:10px!important;font-weight:700!important;line-height:1!important;text-align:center!important;max-width:56px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}'
-
-}
+    return '*,*::before,*::after{box-sizing:border-box!important;}'
+      + '.vl-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;background:rgba(0,0,0,0.7)!important;display:none!important;align-items:center!important;justify-content:center!important;z-index:' + cfg.zIndex + '!important;font-family:' + font + '!important;}'
+      + '.vl-overlay.is-open{display:flex!important;}'
+      + '.vl-modal{width:100%!important;max-width:480px!important;max-height:90vh!important;position:relative!important;overflow:hidden!important;background:transparent!important;box-shadow:none!important;display:flex!important;flex-direction:column!important;}'
+      + '.vl-header{position:absolute!important;top:0!important;left:0!important;right:0!important;display:flex!important;align-items:flex-start!important;justify-content:space-between!important;padding:20px 16px!important;background:linear-gradient(to bottom,rgba(0,0,0,.6),transparent)!important;z-index:20!important;border:none!important;pointer-events:none!important;}'
+      + '.vl-header-left{display:flex!important;flex-direction:column!important;gap:4px!important;pointer-events:auto!important;}'
+      + '.vl-title{font-weight:800!important;color:#fff!important;font-size:16px!important;text-shadow:0 1px 3px rgba(0,0,0,.5)!important;text-transform:uppercase!important;}'
+      + '.vl-count{font-size:13px!important;color:rgba(255,255,255,.9)!important;font-weight:600!important;}'
+      + '.vl-close{all:unset!important;width:32px!important;height:32px!important;border-radius:50%!important;border:1px solid rgba(255,255,255,.5)!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:20px!important;line-height:1!important;cursor:pointer!important;color:#fff!important;background:rgba(0,0,0,.3)!important;backdrop-filter:blur(4px)!important;pointer-events:auto!important;}'
+      + '.vl-body{flex:1!important;width:100%!important;position:relative!important;background:transparent!important;aspect-ratio:9/16!important;}'
+      + '.vl-player{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;background:transparent!important;z-index:1!important;}'
+      + '.vl-player video,.vl-player iframe{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;border:0!important;display:block!important;object-fit:cover!important;z-index:2!important;background:transparent!important;}'
+      + '.vl-nav{position:absolute!important;inset:0!important;display:flex!important;z-index:10!important;background:transparent!important;}'
+      + '.vl-nav-btn{all:unset!important;height:100%!important;cursor:pointer!important;}'
+      + '.vl-nav-prev{width:30%!important;}'
+      + '.vl-nav-next{width:70%!important;}'
+      + '.vl-footer{position:absolute!important;bottom:24px!important;left:16px!important;right:16px!important;z-index:20!important;display:flex!important;flex-direction:column!important;gap:12px!important;pointer-events:none!important;}'
+      + '.vl-cta{all:unset!important;display:block!important;width:100%!important;text-align:center!important;border-radius:12px!important;padding:14px!important;font-weight:800!important;font-size:15px!important;cursor:pointer!important;background:' + buttonColor + '!important;color:#fff!important;box-shadow:0 4px 12px rgba(0,0,0,.2)!important;pointer-events:auto!important;}'
+      + '.vl-product{display:flex!important;align-items:center!important;gap:12px!important;border-radius:16px!important;padding:12px!important;background:#fff!important;cursor:pointer!important;box-shadow:0 8px 24px rgba(0,0,0,.15)!important;pointer-events:auto!important;}'
+      + '.vl-product-img{width:60px!important;height:60px!important;border-radius:10px!important;object-fit:cover!important;background:#e2e8f0!important;flex:0 0 auto!important;}'
+      + '.vl-product-info{min-width:0!important;flex:1!important;}'
+      + '.vl-product-name{font-weight:800!important;font-size:13px!important;color:#0f172a!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-transform:uppercase!important;}'
+      + '.vl-product-price{margin-top:2px!important;font-weight:800!important;font-size:15px!important;color:#000!important;}'
+      + '.vl-product-btn{background:#00c853!important;color:#fff!important;font-size:11px!important;font-weight:800!important;padding:4px 10px!important;border-radius:6px!important;display:inline-block!important;margin-top:4px!important;text-transform:uppercase!important;}'
+      + '.vl-actions{position:absolute!important;right:10px!important;bottom:150px!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:14px!important;z-index:20!important;pointer-events:auto!important;}'
+      + '.vl-action-btn{all:unset!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:4px!important;cursor:pointer!important;color:#fff!important;font-size:11px!important;font-weight:700!important;text-shadow:0 1px 3px rgba(0,0,0,.65)!important;text-transform:uppercase!important;letter-spacing:.3px!important;line-height:1!important;}'
+      + '.vl-action-icon{width:44px!important;height:44px!important;border-radius:50%!important;background:rgba(255,255,255,.12)!important;backdrop-filter:blur(10px)!important;-webkit-backdrop-filter:blur(10px)!important;display:flex!important;align-items:center!important;justify-content:center!important;transition:transform .15s!important;border:1px solid rgba(255,255,255,.18)!important;}'
+      + '.vl-action-btn:active .vl-action-icon{transform:scale(.84)!important;}'
+      + '.vl-action-btn.liked .vl-action-icon{background:#ef4444!important;border-color:#ef4444!important;box-shadow:0 0 20px rgba(239,68,68,.5)!important;}'
+      + '.vl-action-btn.liked .vl-action-icon svg{fill:#fff!important;stroke:#fff!important;}'
+      + '.vl-action-label{font-size:10px!important;font-weight:700!important;line-height:1!important;text-align:center!important;max-width:56px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}';
+  }
 
   function buildFloatingCss(appearance, behaviorConfig) {
     behaviorConfig = behaviorConfig || getFloatingBehaviorConfig(appearance);
@@ -561,9 +552,6 @@
     }
   }
 
-  // ================================================================
-  // 🔄 FUNÇÃO CORRIGIDA — LOOP ATIVADO + SEM FECHAMENTO AUTOMÁTICO
-  // ================================================================
   function buildVideoPlayer(video, storyId, onEnded) {
     var url = getVideoUrl(video);
     var ytId = extractYouTubeId(url);
@@ -571,10 +559,8 @@
     var isDirect = isDirectVideoUrl(url);
     var wrapper = createEl('div', 'vl-player');
 
-    // YouTube com loop
     if (!isUpload && ytId) {
       var iframe = createEl('iframe');
-      // ✅ LOOP: adicionado &loop=1&playlist=VIDEO_ID
       iframe.src = 'https://www.youtube.com/embed/' + ytId + '?autoplay=1&playsinline=1&rel=0&loop=1&playlist=' + ytId;
       iframe.allow = 'autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
       iframe.allowFullscreen = true;
@@ -596,7 +582,6 @@
       media.setAttribute('webkit-playsinline', '');
       media.playsInline = true;
       media.muted = false;
-      // ✅ LOOP: vídeo repete infinitamente, NUNCA dispara o evento 'ended'
       media.loop = true;
 
       media.style.position = 'absolute';
@@ -616,9 +601,6 @@
         trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
       });
 
-      // O evento 'ended' NUNCA será disparado com loop=true,
-      // então o nextVideo() nunca será chamado e o modal NUNCA fecha sozinho.
-      // Mas mantemos o listener por segurança.
       media.addEventListener('ended', function() {
         if (typeof onEnded === 'function') onEnded();
       });
@@ -627,7 +609,6 @@
       return wrapper;
     }
 
-    // Fallback
     var link = createEl('a');
     link.href = url || '#';
     link.target = '_blank';
@@ -636,7 +617,6 @@
     wrapper.appendChild(link);
     return wrapper;
   }
-
 
   function closeOverlay() {
     if (overlay) overlay.className = 'vl-overlay';
@@ -680,7 +660,7 @@
       }
     }
 
-        function renderCurrent() {
+    function renderCurrent() {
       var story = storiesList[currentStoryIndex]; if (!story) return;
       var orderedVideos = getOrderedVideos(story); if (!orderedVideos.length) { nextVideo(); return; }
       var video = orderedVideos[currentVideoIndex]; if (!video) return;
@@ -759,9 +739,6 @@
       var playerNode = buildVideoPlayer(video, story.id, nextVideo);
       body.insertBefore(playerNode, body.firstChild);
 
-      // ═══════════════════════════════════════════════════════
-      // BOTÕES DE AÇÃO — LATERAL DIREITA (fora do footer)
-      // ═══════════════════════════════════════════════════════
       var hasAnyAction = modalConfig.show_like || modalConfig.show_comment || 
         modalConfig.show_share || (modalConfig.show_whatsapp && story.cta_type === 'whatsapp' && story.cta_url);
 
@@ -769,7 +746,6 @@
         var actionsCol = createEl('div', 'vl-actions');
         var likedKey = 'vidlytics_liked_' + story.id;
 
-        // ❤️ Curtir
         if (modalConfig.show_like) {
           var likeBtn = createEl('button', 'vl-action-btn vl-like-btn');
           likeBtn.type = 'button';
@@ -785,7 +761,6 @@
           actionsCol.appendChild(likeBtn);
         }
 
-        // 💬 Comentar
         if (modalConfig.show_comment) {
           var commentBtn = createEl('button', 'vl-action-btn vl-comment-btn');
           commentBtn.type = 'button';
@@ -798,7 +773,6 @@
           actionsCol.appendChild(commentBtn);
         }
 
-        // 🔗 Compartilhar
         if (modalConfig.show_share) {
           var shareBtn = createEl('button', 'vl-action-btn vl-share-btn');
           shareBtn.type = 'button';
@@ -818,7 +792,6 @@
           actionsCol.appendChild(shareBtn);
         }
 
-        // 🟢 WhatsApp
         if (modalConfig.show_whatsapp && story.cta_type === 'whatsapp' && story.cta_url) {
           var waBtn = createEl('button', 'vl-action-btn vl-whatsapp-btn');
           waBtn.type = 'button';
@@ -836,13 +809,12 @@
 
       modalContent.appendChild(header);
       modalContent.appendChild(body);
-    } // ✅ fecha renderCurrent
+    }
 
-    renderCurrent(); // chamada inicial
-  } // ✅ fecha openStory
+    renderCurrent();
+  }
 
   function setupFloatingDrag(host, handle) {
-
     if (!host || !handle) return;
     var dragging = false, moved = false;
     var startX = 0, startY = 0, startLeft = 0, startTop = 0;
@@ -890,28 +862,25 @@
     if (floatingWasClosed) return;
 
     var shadowData = getOrCreateShadowRoot(appearance);
-var shadow = shadowData.shadow;
+    var shadow = shadowData.shadow;
 
-var style = createEl('style');
-style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
-  html, body {
-    height: 100% !important;
-    margin: 0 !important;
-  }
-  .vl-header,
-  .vl-body > .vl-nav,
-  .vl-footer {
-    position: relative;
-    z-index: 10;
-  }
-  .vl-close {
-    position: relative;
-    z-index: 20;
-  }
-`;
-
-
-
+    var style = createEl('style');
+    style.textContent = buildFloatingCss(appearance, behaviorConfig) + `
+      html, body {
+        height: 100% !important;
+        margin: 0 !important;
+      }
+      .vl-header,
+      .vl-body > .vl-nav,
+      .vl-footer {
+        position: relative;
+        z-index: 10;
+      }
+      .vl-close {
+        position: relative;
+        z-index: 20;
+      }
+    `;
 
     var bubbles = createEl('div', 'vl-bubbles');
 
