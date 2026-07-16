@@ -1,11 +1,11 @@
 /**
  * Vidlytics Widget — widget.js
- * Correção: Espelhamento da lógica da bolhinha para o Modal (Fim da tela preta)
+ * Correção: Loop no vídeo + sem fechamento automático
  */
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - FIX MODAL RENDER - 202607161400');
+  console.log('VIDLYTICS WIDGET CARREGADO - FIX LOOP + NO AUTO CLOSE - 202607161500');
 
-  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-appearances-only-202607161400';
+  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-loop-no-autoclose-202607161500';
 
   if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) return;
 
@@ -513,6 +513,9 @@
     }
   }
 
+  // ================================================================
+  // 🔄 FUNÇÃO CORRIGIDA — LOOP ATIVADO + SEM FECHAMENTO AUTOMÁTICO
+  // ================================================================
   function buildVideoPlayer(video, storyId, onEnded) {
     var url = getVideoUrl(video);
     var ytId = extractYouTubeId(url);
@@ -520,10 +523,11 @@
     var isDirect = isDirectVideoUrl(url);
     var wrapper = createEl('div', 'vl-player');
 
-    // YouTube — nada muda
+    // YouTube com loop
     if (!isUpload && ytId) {
       var iframe = createEl('iframe');
-      iframe.src = 'https://www.youtube.com/embed/' + ytId + '?autoplay=1&playsinline=1&rel=0';
+      // ✅ LOOP: adicionado &loop=1&playlist=VIDEO_ID
+      iframe.src = 'https://www.youtube.com/embed/' + ytId + '?autoplay=1&playsinline=1&rel=0&loop=1&playlist=' + ytId;
       iframe.allow = 'autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
       iframe.allowFullscreen = true;
       wrapper.appendChild(iframe);
@@ -531,7 +535,6 @@
     }
 
     if ((isUpload || isDirect) && url) {
-      // ===== FIX: wrapper com altura e position relative =====
       wrapper.style.position = 'relative';
       wrapper.style.width = '100%';
       wrapper.style.minHeight = '300px';
@@ -545,8 +548,9 @@
       media.setAttribute('webkit-playsinline', '');
       media.playsInline = true;
       media.muted = false;
+      // ✅ LOOP: vídeo repete infinitamente, NUNCA dispara o evento 'ended'
+      media.loop = true;
 
-      // ===== FIX: vídeo absoluto, z-index baixo =====
       media.style.position = 'absolute';
       media.style.top = '0';
       media.style.left = '0';
@@ -563,6 +567,10 @@
       media.addEventListener('play', function () {
         trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
       });
+
+      // O evento 'ended' NUNCA será disparado com loop=true,
+      // então o nextVideo() nunca será chamado e o modal NUNCA fecha sozinho.
+      // Mas mantemos o listener por segurança.
       media.addEventListener('ended', function() {
         if (typeof onEnded === 'function') onEnded();
       });
@@ -699,7 +707,6 @@
 
       if (footer.childNodes.length > 0) body.appendChild(footer);
       
-      // Injeta o player diretamente sem setTimeout (igual fazemos na bolhinha)
       var playerNode = buildVideoPlayer(video, story.id, nextVideo);
       body.insertBefore(playerNode, body.firstChild); 
       
@@ -708,7 +715,6 @@
       
       overlay.className = 'vl-overlay is-open';
 
-      // Dispara o play do vídeo recém injetado
       var newVid = playerNode.querySelector('video');
       if (newVid) {
         var playPromise = newVid.play();
