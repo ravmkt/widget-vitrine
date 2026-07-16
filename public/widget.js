@@ -553,7 +553,16 @@
   var url = getVideoUrl(video);
   var wrapper = createEl('div', 'vl-player');
 
-  if (isNativeVideo(video) && url) {
+  var sourceType = String(
+    video.source_type || video.sourceType || ''
+  ).trim().toLowerCase();
+
+  var isNative =
+    sourceType === 'upload' ||
+    (url && url.indexOf('supabase.co/storage') !== -1) ||
+    (typeof isDirectVideoUrl === 'function' && isDirectVideoUrl(url));
+
+  if (isNative && url) {
     var media = createEl('video');
 
     media.controls = true;
@@ -565,7 +574,11 @@
     media.setAttribute('playsinline', '');
     media.setAttribute('webkit-playsinline', '');
 
-    var thumbnail = getVideoThumbnail(video);
+    var thumbnail =
+      typeof getVideoThumbnail === 'function'
+        ? getVideoThumbnail(video)
+        : '';
+
     if (thumbnail) {
       media.poster = thumbnail;
     }
@@ -573,12 +586,14 @@
     media.src = url;
 
     media.addEventListener('play', function () {
-      trackMetric({
-        event_type: 'play',
-        story_id: storyId,
-        video_id: video.id,
-        page_url: window.location.href
-      });
+      if (typeof trackMetric === 'function') {
+        trackMetric({
+          event_type: 'play',
+          story_id: storyId,
+          video_id: video.id,
+          page_url: window.location.href
+        });
+      }
     });
 
     media.addEventListener('ended', function () {
@@ -591,7 +606,10 @@
     return wrapper;
   }
 
-  var youtubeId = extractYouTubeId(url);
+  var youtubeId =
+    typeof extractYouTubeId === 'function'
+      ? extractYouTubeId(url)
+      : null;
 
   if (youtubeId) {
     var iframe = createEl('iframe');
@@ -599,11 +617,8 @@
     iframe.src =
       'https://www.youtube.com/embed/' +
       encodeURIComponent(youtubeId) +
-      '?autoplay=1' +
-      '&playsinline=1' +
-      '&rel=0' +
-      '&loop=1' +
-      '&playlist=' + encodeURIComponent(youtubeId);
+      '?autoplay=1&playsinline=1&rel=0&loop=1&playlist=' +
+      encodeURIComponent(youtubeId);
 
     iframe.allow =
       'autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
@@ -614,32 +629,7 @@
     return wrapper;
   }
 
-  var link = createEl('a');
-
-  link.href = url || '#';
-  link.target = '_blank';
-  link.rel = 'noopener noreferrer';
-  link.textContent = 'Abrir vídeo';
-  link.className = 'vl-cta';
-
-  wrapper.appendChild(link);
-
-  return wrapper;
-}
-
-
-    // Fallback
-    var link = createEl('a');
-    link.href = url || '#';
-    link.target = '_blank';
-    link.textContent = 'Abrir vídeo';
-    link.className = 'vl-cta';
-    wrapper.appendChild(link);
-    return wrapper;
-  }
-
-
-  function closeOverlay() {
+    function closeOverlay() {
     if (overlay) overlay.className = 'vl-overlay';
     if (modalContent) {
       var oldVid = modalContent.querySelector('video');
@@ -759,6 +749,45 @@
       var playerNode = buildVideoPlayer(video, story.id, nextVideo);
 
 body.insertBefore(playerNode, body.firstChild);
+      var playerNode = buildVideoPlayer(video, story.id, nextVideo);
+body.insertBefore(playerNode, body.firstChild);
+
+var controls = createEl('div', 'vl-controls');
+
+var playBtn = createEl('button', 'vl-control-btn');
+playBtn.type = 'button';
+playBtn.setAttribute('aria-label', 'Reproduzir/Pausar');
+playBtn.textContent = '▶';
+
+var muteBtn = createEl('button', 'vl-control-btn');
+muteBtn.type = 'button';
+muteBtn.setAttribute('aria-label', 'Ativar/Desativar Som');
+muteBtn.textContent = '🔇';
+
+var likeBtn = createEl('button', 'vl-control-btn');
+likeBtn.type = 'button';
+likeBtn.setAttribute('aria-label', 'Curtir');
+likeBtn.textContent = '♡';
+
+var spacer = createEl('span', 'vl-control-spacer');
+
+var shareBtn = createEl('button', 'vl-control-btn');
+shareBtn.type = 'button';
+shareBtn.setAttribute('aria-label', 'Compartilhar');
+shareBtn.textContent = '↗';
+
+var shareStatus = createEl('span', 'vl-share-status');
+shareStatus.textContent = 'Link copiado';
+
+controls.appendChild(playBtn);
+controls.appendChild(muteBtn);
+controls.appendChild(likeBtn);
+controls.appendChild(spacer);
+controls.appendChild(shareStatus);
+controls.appendChild(shareBtn);
+
+body.appendChild(controls);
+
 
 // Controles visuais do player
 var controls = createEl('div', 'vl-controls');
