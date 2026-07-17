@@ -1382,7 +1382,250 @@ const createCrudFunctions = <
   };
 };
 
+const createSupabaseCrudFunctions = <
+  T extends {
+    id: string;
+    store_id?: string;
+    created_at?: string;
+    updated_at?: string;
+  },
+>(
+  tableName: string,
+  fallbackMemoryArray: T[],
+) => {
+  const localFallback = createCrudFunctions<T>(
+    tableName,
+    fallbackMemoryArray,
+  );
 
+  return {
+    async getAll(storeId?: string): Promise<T[]> {
+      if (!isSupabaseConfigured) {
+        return localFallback.getAll(storeId);
+      }
+
+      console.log(`[${tableName}.getAll] executando consulta`, {
+        storeId,
+      });
+
+      let query = supabase
+        .from(tableName as any)
+        .select("*");
+
+      if (storeId) {
+        if (!isValidUuid(storeId)) {
+          console.warn(
+            `[${tableName}.getAll] storeId inválido ignorado:`,
+            storeId,
+          );
+
+          return [];
+        }
+
+        query = query.eq("store_id", storeId);
+      }
+
+      query = query.order("created_at", {
+        ascending: false,
+      });
+
+      const { data, error } = await query;
+
+      console.log(`[${tableName}.getAll] resposta do Supabase`, {
+        data,
+        error,
+      });
+
+      if (error) {
+        console.error(
+          `Erro ao buscar dados da tabela ${tableName}:`,
+          error,
+        );
+
+        throw error;
+      }
+
+      return ((data || []) as T[]).map(item =>
+        normalizeTableItemForClient(tableName, item as any),
+      ) as T[];
+    },
+
+    async getById(
+      id: string,
+      storeId?: string,
+    ): Promise<T | null> {
+      if (!isSupabaseConfigured) {
+        return localFallback.getById(id, storeId);
+      }
+
+      if (!isValidUuid(id)) {
+        return null;
+      }
+
+      let query = supabase
+        .from(tableName as any)
+        .select("*")
+        .eq("id", id);
+
+      if (storeId) {
+        if (!isValidUuid(storeId)) {
+          return null;
+        }
+
+        query = query.eq("store_id", storeId);
+      }
+
+      const { data, error } = await query.maybeSingle();
+
+      if (error) {
+        console.error(
+          `Erro ao buscar ${tableName} por ID:`,
+          error,
+        );
+
+        throw error;
+      }
+
+      if (!data) {
+        return null;
+      }
+
+      return normalizeTableItemForClient(
+        tableName,
+        data as any,
+      ) as T;
+    },
+
+    async save(item: T): Promise<T> {
+      if (!isSupabaseConfigured) {
+        return localFallback.save(item);
+      }
+
+      const now = new Date().toISOString();
+
+      const originalId = item.id;
+      const originalIdIsValid = isValidUuid(originalId);
+
+      let payload = preparePayloadForSave(tableName, {
+        ...item,
+        created_at: item.created_at || now,
+        updated_at: now,
+      } as any);
+
+      if (
+        tableName !== "stores" &&
+        payload.store_id
+      ) {
+        await ensureSupabaseStoreExists(payload.store_id);
+      }
+
+      payload = await normalizeSupabaseRelationsBeforeSave(
+        tableName,
+        payload,
+      );
+
+      if (originalIdIsValid) {
+        const {
+          data: existingItem,
+          error: selectError,
+        } = await supabase
+          .from(tableName as any)
+          .select("id")
+          .eq("id", payload.id)
+          .maybeSingle();
+
+        if (selectError) {
+          console.error(
+            `Erro ao verificar ${tableName}:`,
+            selectError,
+          );
+
+          throw selectError;
+        }
+
+        if (existingItem) {
+          const {
+            data,
+            error: updateError,
+          } = await supabase
+            .from(tableName as any)
+            .update(payload as any)
+            .eq("id", payload.id)
+            .select()
+            .single();
+
+          if (updateError) {
+            console.error(
+              `Erro ao atualizar ${tableName}:`,
+              updateError,
+            );
+
+            throw updateError;
+          }
+
+          return normalizeTableItemForClient(
+            tableName,
+            data as any,
+          ) as T;
+        }
+      }
+
+      const {
+        data,
+        error: insertError,
+      } = await supabase
+        .from(tableName as any)
+        .insert(payload as any)
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error(
+          `Erro ao inserir ${tableName}:`,
+          insertError,
+        );
+
+        throw insertError;
+      }
+
+      return normalizeTableItemForClient(
+        tableName,
+        data as any,
+      ) as T;
+    },
+
+    async delete(id: string): Promise<boolean> {
+      if (!isSupabaseConfigured) {
+        return localFallback.delete(id);
+      }
+
+      if (!isValidUuid(id)) {
+        console.warn(
+          `ID inválido ignorado ao deletar ${tableName}:`,
+          id,
+        );
+
+        return true;
+      }
+
+      const { error } = await supabase
+        .from(tableName as any)
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        console.error(
+          `Erro ao deletar ${tableName}:`,
+          error,
+        );
+
+        throw error;
+      }
+
+      return true;
+    },
+  };
+};
 
 export const resolveStoreId = async (
   storeId?: string | null,
