@@ -55,6 +55,8 @@ const CommentsPage = () => {
   const [storeName, setStoreName] = useState("");
   const [storeLogoUrl, setStoreLogoUrl] = useState("");
 
+
+
   useEffect(() => {
     const fetchStoreSettings = async () => {
       try {
