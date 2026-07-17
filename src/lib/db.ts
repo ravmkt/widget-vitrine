@@ -1426,21 +1426,12 @@ const createSupabaseCrudFunctions = <
         return localFallback.getAll(storeId);
       }
 
-      console.log(`[${tableName}.getAll] executando consulta`, {
-        storeId,
-      });
-
       let query = supabase
         .from(tableName as any)
         .select("*");
 
       if (storeId) {
         if (!isValidUuid(storeId)) {
-          console.warn(
-            `[${tableName}.getAll] storeId inválido ignorado:`,
-            storeId,
-          );
-
           return [];
         }
 
@@ -1452,11 +1443,6 @@ const createSupabaseCrudFunctions = <
       });
 
       const { data, error } = await query;
-
-      console.log(`[${tableName}.getAll] resposta do Supabase`, {
-        data,
-        error,
-      });
 
       if (error) {
         console.error(

@@ -184,9 +184,6 @@ const CommentsPage = () => {
     try {
       setLoading(true);
 
-      console.log("[CommentsPage] storeId:", storeId);
-      console.log("[CommentsPage] iniciando busca de comentários");
-
       if (!storeId) {
         setComments([]);
         setVideos([]);
@@ -197,21 +194,6 @@ const CommentsPage = () => {
         db.comments.getAll(storeId),
         db.videos.getAll(storeId),
       ]);
-
-      console.log(
-        "[CommentsPage] comentários recebidos do DB:",
-        allComments,
-      );
-
-      if (allComments && allComments.length > 0) {
-        console.log("[CommentsPage] primeiro comentário bruto:", allComments[0]);
-        console.log("[CommentsPage] mapeamento check:", {
-          user_name: (allComments[0] as any).user_name,
-          text: (allComments[0] as any).text
-        });
-      }
-
-      console.log("[CommentsPage] vídeos recebidos:", allVideos);
 
       setComments((allComments || []) as CommentWithReplies[]);
       setVideos(allVideos || []);
