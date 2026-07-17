@@ -1789,7 +1789,35 @@ if (modalConfig.show_comment_button !== false) {
         hasSocial = true;
       }
 
-      
+      /* Medidas */
+var sizingModelId = getSizingModelId(video);
+
+if (sizingModelId) {
+  var measureBtn = createEl('button', 'vl-social-btn');
+
+  measureBtn.type = 'button';
+  measureBtn.innerHTML = svgIcon('measure');
+  measureBtn.setAttribute('aria-label', 'Ver medidas da modelo');
+  measureBtn.title = 'Medidas';
+
+  measureBtn.addEventListener('click', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    openSizingPanel(sizingModelId);
+
+    trackMetric({
+      event_type: 'sizing_open',
+      story_id: story.id,
+      video_id: video.id,
+      page_url: window.location.href
+    });
+  });
+
+  social.appendChild(measureBtn);
+  hasSocial = true;
+}
+
 
 /* WhatsApp — compartilhar produto com amigo */
 if (modalConfig.show_whatsapp_button !== false) {
