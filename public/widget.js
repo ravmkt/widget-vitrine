@@ -1,7 +1,4 @@
-/**
- * Vidlytics Widget — widget.js
- * Correção: Loop no vídeo + sem fechamento automático
- */
+
 (function () {
   console.log('VIDLYTICS WIDGET CARREGADO - FIX LOOP + NO AUTO CLOSE - 202607161906');
 
