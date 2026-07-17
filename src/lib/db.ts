@@ -632,11 +632,17 @@ const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
     'store_id',
     'story_id',
     'video_id',
-    'user_name',
-    'user_email',
-    'text',
+    'author_name',
+    'author_email',
+    'content',
     'status',
+    'active',
+    'reply_content',
+    'reply_status',
+    'replied_at',
+    'replied_by',
     'created_at',
+    'updated_at',
   ],
 
   metrics: [
@@ -855,6 +861,7 @@ const normalizeTableItemForClient = <T extends Record<string, any>>(
   // Normalização de comentários: banco usa author_name/content, app usa user_name/text
   if (tableName === 'comments') {
     if (item.author_name !== undefined) normalized.user_name = item.author_name;
+    if (item.author_email !== undefined) normalized.user_email = item.author_email;
     if (item.content !== undefined) normalized.text = item.content;
 
     // Converte colunas de resposta do banco para o formato de array de replies do app
@@ -993,6 +1000,7 @@ const preparePayloadForSave = <T extends Record<string, any>>(
   // Normalização inversa para comentários: app usa user_name/text, banco usa author_name/content
   if (tableName === 'comments') {
     if (item.user_name !== undefined) normalizedPayload.author_name = item.user_name;
+    if (item.user_email !== undefined) normalizedPayload.author_email = item.user_email;
     if (item.text !== undefined) normalizedPayload.content = item.text;
 
     // Mapeia o array de replies do app para as colunas de resposta do banco
@@ -1009,6 +1017,7 @@ const preparePayloadForSave = <T extends Record<string, any>>(
 
     // Remove campos que não existem no banco
     delete normalizedPayload.user_name;
+    delete normalizedPayload.user_email;
     delete normalizedPayload.text;
     delete normalizedPayload.replies;
     delete normalizedPayload.is_store_reply;
