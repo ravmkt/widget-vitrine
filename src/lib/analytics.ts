@@ -100,10 +100,12 @@ export const trackMetric = async (metric: Partial<Metric> & { store_id: string; 
     video_id: metric.video_id ?? null,
     product_id: metric.product_id ?? null,
     event_type: metric.event_type,
-    page_url: metric.page_url ?? window.location.href,
-    device_type: metric.device_type ?? (window.innerWidth < 768 ? 'mobile' : 'desktop'),
-    browser: metric.browser ?? navigator.userAgent,
-    referrer: metric.referrer ?? document.referrer ?? null,
+    page_url: metric.page_url ?? (typeof window !== 'undefined' ? window.location.href : ''),
+    device_type: metric.device_type ?? (typeof window !== 'undefined' ? (window.innerWidth < 768 ? 'mobile' : 'desktop') : 'desktop'),
+    browser: metric.browser ?? (typeof navigator !== 'undefined' ? navigator.userAgent : ''),
+    user_agent: metric.browser ?? (typeof navigator !== 'undefined' ? navigator.userAgent : ''),
+    referrer: metric.referrer ?? (typeof document !== 'undefined' ? document.referrer : null),
+    metadata: {},
   };
 
   if (isSupabaseConfigured && supabase) {

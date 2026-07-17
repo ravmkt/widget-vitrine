@@ -73,6 +73,7 @@
   var readStoryProductsData = [];
   var readProductsData = [];
   var readCommentsData = [];
+  var readLikeCounts = {}; // Mapeia videoId -> total real de curtidas
 
   var VIDEO_FILE_REGEX = /\.(mp4|webm|ogg|mov|m4v|m3u8)(\?.*)?$/i;
 
@@ -512,41 +513,36 @@
   }
 
   function trackMetric(metric) {
-  var payload = {
-    store_id: storeId,
-    story_id: metric.story_id || null,
-    video_id: metric.video_id || null,
-    product_id: metric.product_id || null,
-    event_type: metric.event_type,
-    page_url: metric.page_url || window.location.href,
-    device_type: window.innerWidth < 768 ? 'mobile' : 'desktop',
-    browser: navigator.userAgent,
-    referrer: document.referrer || null,
-    created_at: new Date().toISOString()
-  };
+    var payload = {
+      store_id: storeId,
+      story_id: metric.story_id || null,
+      video_id: metric.video_id || null,
+      product_id: metric.product_id || null,
+      event_type: metric.event_type,
+      page_url: metric.page_url || window.location.href,
+      device_type: window.innerWidth < 768 ? 'mobile' : 'desktop',
+      browser: navigator.userAgent,
+      user_agent: navigator.userAgent,
+      referrer: document.referrer || null,
+      created_at: new Date().toISOString()
+    };
 
-  if (hasSupabase && supabaseUrl && supabaseKey) {
-    var url = supabaseUrl + '/rest/v1/metrics';
-    fetch(url, {
-      method: 'POST',
-      headers: {
-        'apikey': supabaseKey,
-        'Authorization': 'Bearer ' + supabaseKey,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify(payload)
-    }).catch(function(err) {
-      console.warn('Erro ao enviar métrica para o Supabase:', err);
-    });
+    if (hasSupabase) {
+      supabaseFetch('metrics', {
+        method: 'POST',
+        headers: { 'Prefer': 'return=minimal' },
+        body: JSON.stringify(payload)
+      }).catch(function(err) {
+        console.warn('Erro ao enviar métrica para o Supabase:', err);
+      });
+    }
+
+    var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
+    if (!Array.isArray(fallbackMetrics)) fallbackMetrics = [];
+    fallbackMetrics.push(payload);
+    setStorageItem('vidlytics_metrics', fallbackMetrics);
+    return Promise.resolve();
   }
-
-  var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
-  if (!Array.isArray(fallbackMetrics)) fallbackMetrics = [];
-  fallbackMetrics.push(payload);
-  setStorageItem('vidlytics_metrics', fallbackMetrics);
-  return Promise.resolve();
-}
 
   function readStories() {
     if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_stories', []));
@@ -576,6 +572,12 @@
 }
 
   function readPageRules() { return (!storeId || !hasSupabase) ? Promise.resolve(getStorageItem('vidlytics_page_rules', [])) : fetchJson('page_rules?select=*&store_id=eq.' + encodeURIComponent(storeId)); }
+
+  function readLikesFromDb() {
+    if (!storeId || !hasSupabase) return Promise.resolve([]);
+    // Busca apenas o video_id de todos os eventos de 'like' da loja para contar
+    return fetchJson('metrics?select=video_id&store_id=eq.' + encodeURIComponent(storeId) + '&event_type=eq.like');
+  }
 
   function matchesRule(rule) {
     var href = window.location.href, path = window.location.pathname || '/', value = String(rule.value || '');
@@ -1535,9 +1537,13 @@ function openCommentsPanel(videoId, storyId) {
       /* Like */
       if (modalConfig.show_like_button !== false) {
         var videoId = video.id;
-        var currentLikeData = likes[videoId] || { liked: false, count: 0 };
+        var currentLikeData = likes[videoId] || { liked: false };
         liked = currentLikeData.liked;
-        likeCount = currentLikeData.count;
+        
+        // O total de curtidas é o que veio do banco + 1 se o usuário local curtiu agora
+        // (Isso é uma simplificação, o ideal seria o banco já incluir a curtida do usuário)
+        var baseCount = readLikeCounts[videoId] || 0;
+        likeCount = baseCount;
 
         var likeBtn = createEl('button', 'vl-social-btn');
         likeBtn.type = 'button';
@@ -1545,20 +1551,21 @@ function openCommentsPanel(videoId, storyId) {
         likeBtn.addEventListener('click', function (e) {
           e.stopPropagation();
           liked = !liked;
-          likeCount = Math.max(0, likeCount + (liked ? 1 : -1));
-          likes[videoId] = { liked: liked, count: likeCount };
+          
+          // Atualiza o contador visual imediatamente
+          var displayCount = Number(likeCountEl.textContent);
+          likeCountEl.textContent = String(Math.max(0, displayCount + (liked ? 1 : -1)));
+          
+          likes[videoId] = { liked: liked };
           setStorageItem('vidlytics_likes', likes);
           likeBtn.innerHTML = liked ? svgIcon('heartFilled') : svgIcon('heart');
-          likeCountEl.textContent = String(likeCount);
 
           // Rastreia a curtida no banco de dados
-          if (liked) {
-            trackMetric({
-              event_type: 'like',
-              story_id: story.id,
-              video_id: videoId
-            });
-          }
+          trackMetric({
+            event_type: liked ? 'like' : 'unlike', // Adicionei 'unlike' para balancear se necessário
+            story_id: story.id,
+            video_id: videoId
+          });
         });
         social.appendChild(likeBtn);
 
@@ -2250,7 +2257,8 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig);
     readStoryProducts(),
     readProducts(),
     readPageRules(),
-    readComments()
+    readComments(),
+    readLikesFromDb()
   ])
     .then(function (results) {
       currentAppearance = normalizeAppearanceItem(results[0] || {});
@@ -2263,7 +2271,16 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig);
       var storyProducts = results[4] || [];
       var products = results[5] || [];
       var pageRules = results[6] || [];
-readCommentsData = results[7] || [];
+      readCommentsData = results[7] || [];
+      var dbLikes = results[8] || [];
+
+      // Processa os likes do banco para contar por vídeo
+      readLikeCounts = {};
+      dbLikes.forEach(function(item) {
+        if (item.video_id) {
+          readLikeCounts[item.video_id] = (readLikeCounts[item.video_id] || 0) + 1;
+        }
+      });
 
 
       readStoryProductsData = storyProducts;
@@ -2294,6 +2311,9 @@ readCommentsData = results[7] || [];
 
         storyVideoMap.get(item.story_id).push(item);
       });
+
+      // Rastreia visualização geral do widget
+      trackMetric({ event_type: 'view' });
 
       var storiesWithVideos = stories.filter(function (story) {
         return (storyVideoMap.get(story.id) || []).some(function (rel) {
