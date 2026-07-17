@@ -963,18 +963,58 @@ social.appendChild(measureBtn);
 hasSocial = true;
 
       /* WhatsApp */
-      if (modalConfig.show_whatsapp_button !== false) {
-        var waBtn = createEl('button', 'vl-social-btn whatsapp');
-        waBtn.type = 'button';
-        waBtn.innerHTML = svgIcon('whatsapp');
-        waBtn.addEventListener('click', function (e) {
-          e.stopPropagation();
-          var msg = 'Olha esse conteúdo: ' + (story.title || '');
-          window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank', 'noopener,noreferrer');
-        });
-        social.appendChild(waBtn);
-        hasSocial = true;
-      }
+if (modalConfig.show_whatsapp_button !== false) {
+  var waBtn = createEl('button', 'vl-social-btn whatsapp');
+
+  waBtn.type = 'button';
+  waBtn.innerHTML = svgIcon('whatsapp');
+
+  waBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+
+    /*
+     * Tenta encontrar o link do produto vinculado ao vídeo.
+     * O campo principal esperado é story.product_url.
+     */
+    var productUrl =
+      story.product_url ||
+      story.product_link ||
+      story.productLink ||
+      (story.product && story.product.url) ||
+      story.url ||
+      '';
+
+    var productTitle =
+      story.product_title ||
+      story.product_name ||
+      (story.product && story.product.title) ||
+      story.title ||
+      '';
+
+    if (!productUrl) {
+      alert('O link do produto não foi encontrado.');
+      return;
+    }
+
+    var msg =
+      'Quero mais informações sobre esse produto: ' +
+      productTitle +
+      '\n' +
+      productUrl;
+
+    var whatsappUrl =
+      'https://wa.me/?text=' + encodeURIComponent(msg);
+
+    window.open(
+      whatsappUrl,
+      '_blank',
+      'noopener,noreferrer'
+    );
+  });
+
+  social.appendChild(waBtn);
+  hasSocial = true;
+}
 
       if (hasSocial) body.appendChild(social);
 
