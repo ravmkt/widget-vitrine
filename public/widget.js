@@ -1009,26 +1009,40 @@ if (modalConfig.show_whatsapp_button !== false) {
     linkedProduct = linkedProduct || {};
 
     var productUrl =
-      story.product_url ||
-      story.product_link ||
-      story.productLink ||
-      linkedProduct.product_url ||
-      linkedProduct.product_link ||
-      linkedProduct.url ||
-      linkedProduct.link ||
-      linkedProduct.permalink ||
-      linkedProduct.href ||
-      story.url ||
-      '';
+  story.product_url ||
+  story.product_link ||
+  story.productLink ||
+  story.url ||
+  (story.product && (
+    story.product.url ||
+    story.product.product_url ||
+    story.product.product_link ||
+    story.product.link ||
+    story.product.permalink
+  )) ||
+  linkedProduct.product_url ||
+  linkedProduct.product_link ||
+  linkedProduct.productLink ||
+  linkedProduct.url ||
+  linkedProduct.link ||
+  linkedProduct.permalink ||
+  linkedProduct.href ||
+  '';
 
     var productTitle =
-      story.product_title ||
-      story.product_name ||
-      linkedProduct.title ||
-      linkedProduct.name ||
-      linkedProduct.product_name ||
-      story.title ||
-      'Produto';
+  story.product_title ||
+  story.product_name ||
+  (story.product && (
+    story.product.title ||
+    story.product.name ||
+    story.product.product_name
+  )) ||
+  story.title ||
+  linkedProduct.title ||
+  linkedProduct.name ||
+  linkedProduct.product_name ||
+  'Produto';
+
 
     if (!productUrl) {
       alert('A URL pública do produto não está cadastrada neste Story.');
