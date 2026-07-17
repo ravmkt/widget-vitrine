@@ -48,7 +48,7 @@ type ModalTab =
   | 'grid'
   | 'modal';
 
-type WidgetShape = 'circle' | 'square' | 'portrait';
+type WidgetShape = 'circle' | 'square' | 'portrait' | 'rounded';
 
 type FloatingPosition =
   | 'left'
@@ -2271,7 +2271,7 @@ const AppearancePage = () => {
         show_product_button: modalConfig.show_product_button,
         hide_stories: modalConfig.hide_stories,
         shadow_enabled: modalConfig.shadow_enabled,
-      };
+      } as ExtendedAppearance;
     });
   };
 

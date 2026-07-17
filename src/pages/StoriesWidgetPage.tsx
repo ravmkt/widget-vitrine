@@ -632,7 +632,6 @@ export default function StoriesWidgetPage() {
   const [product, setProduct] = useState<any | null>(null);
   const [settings, setSettings] = useState<any | null>(null);
 const [appearances, setAppearances] = useState<any[]>([]);
-const [appearance, setAppearance] = useState<any | null>(null);
 const [model, setModel] = useState<any | null>(null);
   const [showMeasures, setShowMeasures] = useState(false);
 
@@ -892,39 +891,10 @@ const [model, setModel] = useState<any | null>(null);
           }
         }
 
-        const initialStory =
-  startStoryIdx !== null ? filteredStories[startStoryIdx] : null;
-
-const initialAppearance = resolveAppearanceForStory(
-  initialStory,
-  appearancesList || [],
-  genSettings,
-);
-useEffect(() => {
-  if (!story) return;
-
-  const nextAppearance = resolveAppearanceForStory(
-    story,
-    appearances,
-    settings,
-  );
-
-  console.log('StoriesWidgetPage - Story atual:', story);
-  console.log('StoriesWidgetPage - Appearance aplicada:', nextAppearance);
-
-  setAppearance(nextAppearance);
-}, [story?.id, appearances, settings]);
-
-console.log('StoriesWidgetPage - Stories:', filteredStories);
-console.log('StoriesWidgetPage - Aparências:', appearancesList);
-console.log('StoriesWidgetPage - Configuração geral:', genSettings);
-console.log('StoriesWidgetPage - Aparência inicial:', initialAppearance);
-
-setStories(filteredStories);
-setStoryVideosMap(map);
-setStoryIdx(startStoryIdx);
-setVideoIdx(startVideoIdx);
-setAppearance(initialAppearance);
+        setStories(filteredStories);
+        setStoryVideosMap(map);
+        setStoryIdx(startStoryIdx);
+        setVideoIdx(startVideoIdx);
       } catch (error) {
         console.error('Erro ao carregar widget de Stories:', error);
         showError('Erro ao carregar Stories.');

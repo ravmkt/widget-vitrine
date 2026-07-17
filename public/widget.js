@@ -73,6 +73,7 @@
   var readStoryProductsData = [];
   var readProductsData = [];
   var readCommentsData = [];
+  var readSizingModelsData = [];
   var readLikeCounts = {}; // Mapeia videoId -> total real de curtidas
 
   var VIDEO_FILE_REGEX = /\.(mp4|webm|ogg|mov|m4v|m3u8)(\?.*)?$/i;
@@ -579,6 +580,11 @@
     return fetchJson('metrics?select=video_id&store_id=eq.' + encodeURIComponent(storeId) + '&event_type=eq.like');
   }
 
+  function readSizingModels() {
+    if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_sizing_models', []));
+    return fetchJson('sizing_models?select=*&store_id=eq.' + encodeURIComponent(storeId));
+  }
+
   function matchesRule(rule) {
     var href = window.location.href, path = window.location.pathname || '/', value = String(rule.value || '');
     switch (rule.condition_type) {
@@ -941,6 +947,37 @@ function buildSharedCss(appearance) {
     + '.vl-comments-feedback{min-height:18px!important;text-align:center!important;'
     + 'font-size:12px!important;color:' + modalMuted + '!important;}'
 
+    /* PAINEL DE MEDIDAS */
+    + '.vl-sizing-panel{position:absolute!important;inset:0!important;z-index:70!important;'
+    + 'display:none!important;flex-direction:column!important;'
+    + 'background:' + modalBackground + '!important;'
+    + 'padding:18px!important;color:' + modalText + '!important;}'
+
+    + '.vl-sizing-panel.is-open{display:flex!important;}'
+
+    + '.vl-sizing-header{display:flex!important;align-items:center!important;'
+    + 'justify-content:space-between!important;padding:28px 0 16px!important;'
+    + 'border-bottom:1px solid ' + modalBorder + '!important;}'
+
+    + '.vl-sizing-title{font-size:17px!important;font-weight:800!important;'
+    + 'color:' + modalText + '!important;}'
+
+    + '.vl-sizing-close{all:unset!important;width:36px!important;height:36px!important;'
+    + 'border-radius:999px!important;background:' + modalBorder + '!important;'
+    + 'display:flex!important;align-items:center!important;justify-content:center!important;'
+    + 'cursor:pointer!important;color:' + modalText + '!important;font-size:20px!important;}'
+
+    + '.vl-sizing-close:hover{background:' + primary + '!important;color:#fff!important;}'
+
+    + '.vl-sizing-content{flex:1!important;overflow-y:auto!important;padding:16px 0!important;}'
+
+    + '.vl-sizing-image-container{width:100%!important;margin-bottom:20px!important;border-radius:16px!important;overflow:hidden!important;background:' + modalBorder + '!important;}'
+    + '.vl-sizing-image{width:100%!important;height:auto!important;display:block!important;object-fit:contain!important;}'
+
+    + '.vl-sizing-table{width:100%!important;border-collapse:collapse!important;margin-top:10px!important;font-size:13px!important;}'
+    + '.vl-sizing-table th{text-align:left!important;padding:10px 8px!important;border-bottom:2px solid ' + modalBorder + '!important;font-weight:800!important;color:' + primary + '!important;text-transform:uppercase!important;font-size:11px!important;letter-spacing:0.05em!important;}'
+    + '.vl-sizing-table td{padding:10px 8px!important;border-bottom:1px solid ' + modalBorder + '!important;font-weight:600!important;}'
+
     /* RODAPÉ */
     + '.vl-footer{position:absolute!important;bottom:0!important;left:0!important;right:0!important;'
     + 'z-index:40!important;background:linear-gradient(to top,rgba(0,0,0,.85),rgba(0,0,0,.5),transparent)!important;'
@@ -1173,6 +1210,109 @@ function renderCommentItem(comment) {
     '⭐', '😢', '😡', '🤔', '👀', '😊',
     '🥰'
   ];
+}
+
+function openSizingPanel(modelId) {
+  if (!modalContent) return;
+
+  var model = readSizingModelsData.find(function (m) {
+    return idsEqual(m.id, modelId);
+  });
+
+  if (!model) return;
+
+  var oldPanel = modalContent.querySelector('.vl-sizing-panel');
+  if (oldPanel) oldPanel.remove();
+
+  var panel = createEl('div', 'vl-sizing-panel');
+  panel.className = 'vl-sizing-panel is-open';
+
+  var header = createEl('div', 'vl-sizing-header');
+  var title = createEl('div', 'vl-sizing-title');
+  title.textContent = 'Tabela de Medidas';
+
+  var closeButton = createEl('button', 'vl-sizing-close');
+  closeButton.type = 'button';
+  closeButton.innerHTML = '&times;';
+  closeButton.onclick = function() { panel.remove(); };
+
+  header.appendChild(title);
+  header.appendChild(closeButton);
+  panel.appendChild(header);
+
+  var content = createEl('div', 'vl-sizing-content');
+
+  // Imagem da modelo (opcional)
+  if (model.image_url) {
+    var imgCont = createEl('div', 'vl-sizing-image-container');
+    var img = createEl('img', 'vl-sizing-image');
+    img.src = model.image_url;
+    img.alt = model.name;
+    imgCont.appendChild(img);
+    content.appendChild(imgCont);
+  }
+
+  // Nome da modelo/tamanho
+  var modelName = createEl('div');
+  modelName.style.fontWeight = '800';
+  modelName.style.fontSize = '15px';
+  modelName.style.marginBottom = '4px';
+  modelName.textContent = model.name || 'Modelo';
+  content.appendChild(modelName);
+
+  if (model.size_name) {
+    var sizeLabel = createEl('div');
+    sizeLabel.style.fontSize = '12px';
+    sizeLabel.style.color = getPrimaryColor(currentAppearance);
+    sizeLabel.style.fontWeight = '700';
+    sizeLabel.style.marginBottom = '16px';
+    sizeLabel.textContent = 'Veste tamanho: ' + model.size_name;
+    content.appendChild(sizeLabel);
+  }
+
+  // Tabela de medidas
+  var measures = [];
+  try {
+    measures = typeof model.measures === 'string' ? JSON.parse(model.measures) : (model.measures || []);
+  } catch (e) {}
+
+  if (measures && measures.length > 0) {
+    var table = createEl('table', 'vl-sizing-table');
+    var thead = createEl('thead');
+    var trHead = createEl('tr');
+    var th1 = createEl('th'); th1.textContent = 'Medida';
+    var th2 = createEl('th'); th2.textContent = 'Valor';
+    trHead.appendChild(th1); trHead.appendChild(th2);
+    thead.appendChild(trHead);
+    table.appendChild(thead);
+
+    var tbody = createEl('tbody');
+    measures.forEach(function (m) {
+      var label = m.name || m.label || '';
+      var val = m.value || '';
+      var unit = m.unit || '';
+      if (!label || !val) return;
+      
+      var tr = createEl('tr');
+      var td1 = createEl('td'); td1.textContent = label;
+      var td2 = createEl('td'); td2.textContent = val + (unit ? ' ' + unit : '');
+      tr.appendChild(td1); tr.appendChild(td2);
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    content.appendChild(table);
+  } else {
+    var empty = createEl('div');
+    empty.style.textAlign = 'center';
+    empty.style.padding = '20px';
+    empty.style.fontSize = '14px';
+    empty.style.opacity = '0.6';
+    empty.textContent = 'Nenhuma medida cadastrada para esta modelo.';
+    content.appendChild(empty);
+  }
+
+  panel.appendChild(content);
+  modalContent.appendChild(panel);
 }
 
 function openCommentsPanel(videoId, storyId) {
@@ -1619,21 +1759,22 @@ if (modalConfig.show_comment_button !== false) {
         hasSocial = true;
       }
 
-      /* Medidas — função será habilitada posteriormente */
-var measureBtn = createEl('button', 'vl-social-btn');
-measureBtn.type = 'button';
-measureBtn.innerHTML = svgIcon('measure');
-measureBtn.setAttribute('aria-label', 'Medidas');
-measureBtn.title = 'Medidas';
+      /* Medidas */
+if (video.model_id || video.modelId) {
+  var measureBtn = createEl('button', 'vl-social-btn');
+  measureBtn.type = 'button';
+  measureBtn.innerHTML = svgIcon('measure');
+  measureBtn.setAttribute('aria-label', 'Medidas');
+  measureBtn.title = 'Medidas';
 
-measureBtn.addEventListener('click', function (e) {
-  e.stopPropagation();
+  measureBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    openSizingPanel(video.model_id || video.modelId);
+  });
 
-  // Função de medidas será adicionada posteriormente.
-});
-
-social.appendChild(measureBtn);
-hasSocial = true;
+  social.appendChild(measureBtn);
+  hasSocial = true;
+}
 
 /* WhatsApp — compartilhar produto com amigo */
 if (modalConfig.show_whatsapp_button !== false) {
@@ -2258,7 +2399,8 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig);
     readProducts(),
     readPageRules(),
     readComments(),
-    readLikesFromDb()
+    readLikesFromDb(),
+    readSizingModels()
   ])
     .then(function (results) {
       currentAppearance = normalizeAppearanceItem(results[0] || {});
@@ -2273,6 +2415,7 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig);
       var pageRules = results[6] || [];
       readCommentsData = results[7] || [];
       var dbLikes = results[8] || [];
+      readSizingModelsData = results[9] || [];
 
       // Processa os likes do banco para contar por vídeo
       readLikeCounts = {};
