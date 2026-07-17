@@ -120,14 +120,16 @@
   }
 
   function getFloatingBehaviorConfig(appearance) {
-    var config = getFloatingConfig(appearance) || {};
-    var rawShowPlayButton = firstDefined(config.showPlayButton, config.show_play_button);
-    var rawAllowDrag = firstDefined(config.allowDrag, config.allow_drag);
-    var rawAllowClose = firstDefined(config.allowClose, config.allow_close);
+    appearance = appearance || {};
+    var rawShowPlayButton = firstDefined(appearance.floating_show_play_button, appearance.floatingShowPlayButton, appearance.show_play_button, appearance.showPlayButton);
+    var rawAllowDrag = firstDefined(appearance.floating_draggable, appearance.floatingDraggable, appearance.allow_drag, appearance.allowDrag, appearance.draggable);
+    var rawAllowClose = firstDefined(appearance.floating_closable, appearance.floatingClosable, appearance.allow_close, appearance.allowClose, appearance.closable);
+    var rawObjectFit = firstDefined(appearance.floating_object_fit, appearance.floatingObjectFit, appearance.object_fit, appearance.objectFit);
+    
     return {
-      objectFit: config.objectFit || config.object_fit || 'cover',
-      showPlayButton: toBoolean(rawShowPlayButton, false),
-      allowDrag: toBoolean(rawAllowDrag, true),
+      objectFit: rawObjectFit || 'cover',
+      showPlayButton: toBoolean(rawShowPlayButton, true),
+      allowDrag: toBoolean(rawAllowDrag, false),
       allowClose: toBoolean(rawAllowClose, true)
     };
   }
@@ -378,7 +380,8 @@
   function fetchDbAppearance() {
     if (!storeId || !hasSupabase) return Promise.resolve({});
     function tryTable(tableName, extraQuery) {
-      var path = tableName + '?select=*&store_id=eq.' + encodeURIComponent(storeId) + (extraQuery || '') + '&order=updated_at.desc.nullslast,created_at.desc.nullslast&limit=1';
+      // Prioriza a que estiver marcada como is_default=true
+      var path = tableName + '?select=*&store_id=eq.' + encodeURIComponent(storeId) + (extraQuery || '') + '&order=is_default.desc,updated_at.desc.nullslast,created_at.desc.nullslast&limit=1';
       return fetchJson(path).then(function (items) {
         if (!items || !items.length) return null;
         var appearance = extractAppearanceFromItem(items[0], true);
@@ -1212,6 +1215,20 @@ function renderCommentItem(comment) {
   ];
 }
 
+function getSizingModelId(video) {
+  if (!video) return null;
+
+  return firstDefined(
+    video.model_id,
+    video.modelId,
+    video.sizing_model_id,
+    video.sizingModelId,
+    video.modelo_id,
+    video.modeloId,
+    video.model
+  ) || null;
+}
+
 function openSizingPanel(modelId) {
   if (!modalContent) return;
 
@@ -1590,17 +1607,19 @@ function openCommentsPanel(videoId, storyId) {
       modalContent.innerHTML = '';
 
       /* ===== PROGRESS BARS ===== */
-      var progress = createEl('div', 'vl-progress');
-      orderedVideos.forEach(function (v, idx) {
-        var bar = createEl('div', 'vl-progress-bar');
-        var fill = createEl('div', 'vl-progress-fill');
-        if (idx < currentVideoIndex) fill.style.width = '100%';
-        else if (idx === currentVideoIndex) fill.style.width = '33%';
-        else fill.style.width = '0%';
-        bar.appendChild(fill);
-        progress.appendChild(bar);
-      });
-      modalContent.appendChild(progress);
+      if (modalConfig.hide_stories !== true) {
+        var progress = createEl('div', 'vl-progress');
+        orderedVideos.forEach(function (v, idx) {
+          var bar = createEl('div', 'vl-progress-bar');
+          var fill = createEl('div', 'vl-progress-fill');
+          if (idx < currentVideoIndex) fill.style.width = '100%';
+          else if (idx === currentVideoIndex) fill.style.width = '33%';
+          else fill.style.width = '0%';
+          bar.appendChild(fill);
+          progress.appendChild(bar);
+        });
+        modalContent.appendChild(progress);
+      }
 
       /* ===== HEADER ===== */
       var header = createEl('div', 'vl-header');
@@ -1626,13 +1645,16 @@ function openCommentsPanel(videoId, storyId) {
       );
 
       // Botão de play/pause
-      var playBtn = createEl('button', 'vl-control');
-      playBtn.type = 'button';
-      playBtn.innerHTML = svgIcon(isPlaying ? 'pause' : 'play');
-      playBtn.setAttribute(
-        'aria-label',
-        isPlaying ? 'Pausar vídeo' : 'Reproduzir vídeo'
-      );
+      if (modalConfig.show_play_button !== false) {
+        var playBtn = createEl('button', 'vl-control');
+        playBtn.type = 'button';
+        playBtn.innerHTML = svgIcon(isPlaying ? 'pause' : 'play');
+        playBtn.setAttribute(
+          'aria-label',
+          isPlaying ? 'Pausar vídeo' : 'Reproduzir vídeo'
+        );
+        headerActions.appendChild(playBtn);
+      }
 
       // Botão de fechar
       var closeBtn = createEl('button', 'vl-close');
@@ -1647,7 +1669,6 @@ function openCommentsPanel(videoId, storyId) {
 
       // Ordem visual: controles à esquerda e fechar à direita
       headerActions.appendChild(muteBtn);
-      headerActions.appendChild(playBtn);
 
       header.appendChild(headerActions);
       header.appendChild(closeBtn);
