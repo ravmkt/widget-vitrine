@@ -971,18 +971,65 @@ if (modalConfig.show_whatsapp_button !== false) {
 
   waBtn.addEventListener('click', function (e) {
     e.stopPropagation();
+    e.preventDefault();
 
-    /*
-     * Tenta encontrar o link do produto vinculado ao vídeo.
-     * O campo principal esperado é story.product_url.
-     */
+    // Produto vinculado ao Story
+    var product = story.product || story.linked_product || story.product_data || {};
+
+    // Nome do produto
+    var productName =
+      product.name ||
+      product.title ||
+      story.product_name ||
+      story.product_title ||
+      story.title ||
+      'produto';
+
+    // Link do produto
     var productUrl =
+      product.url ||
+      product.link ||
+      product.permalink ||
       story.product_url ||
+      story.productUrl ||
       story.product_link ||
       story.productLink ||
-      (story.product && story.product.url) ||
-      story.url ||
-      '';
+      story.link;
+
+    if (!productUrl) {
+      alert('O link do produto não foi encontrado.');
+      console.log('Dados completos do Story:', story);
+      return;
+    }
+
+    // Garante que o link seja absoluto
+    if (productUrl.indexOf('http://') !== 0 && productUrl.indexOf('https://') !== 0) {
+      productUrl = window.location.origin + (
+        productUrl.charAt(0) === '/' ? productUrl : '/' + productUrl
+      );
+    }
+
+    var msg =
+      'Quero mais informações sobre esse produto: ' +
+      productName +
+      '\n\n' +
+      productUrl;
+
+    var whatsappUrl =
+      'https://wa.me/?text=' + encodeURIComponent(msg);
+
+    // Abre o WhatsApp para a pessoa escolher os contatos
+    window.open(
+      whatsappUrl,
+      '_blank',
+      'noopener,noreferrer'
+    );
+  });
+
+  social.appendChild(waBtn);
+  hasSocial = true;
+}
+
 
     var productTitle =
       story.product_title ||
