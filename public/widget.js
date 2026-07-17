@@ -1800,6 +1800,15 @@ if (sizingModelId) {
   measureBtn.setAttribute('aria-label', 'Ver medidas da modelo');
   measureBtn.title = 'Medidas';
 
+ measureBtn.addEventListener('click', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    console.log('[Medidas] Botão clicado. ID da tabela:', sizingModelId);
+
+    openSizingModelTable(sizingModelId);
+  });
+
   measureBtn.addEventListener('click', function (event) {
     event.preventDefault();
     event.stopPropagation();
