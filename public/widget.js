@@ -1813,6 +1813,9 @@ function openCommentsPanel(videoId, storyId) {
       if (oldVid) { oldVid.pause(); oldVid.removeAttribute('src'); oldVid.load(); }
 
       var modalConfig = normalizeModalAppearanceConfig(currentAppearance);
+      console.log('[Vidlytics] currentAppearance:', currentAppearance);
+console.log('[Vidlytics] modalConfig normalizado:', modalConfig);
+
       modalContent.innerHTML = '';
 
       /* ===== PROGRESS BARS ===== */
