@@ -904,7 +904,25 @@
         likeCountEl.textContent = String(likeCount);
         social.appendChild(likeCountEl);
         hasSocial = true;
-      }
+  
+      /* Comentários */
+var commentsBtn = createEl('button', 'vl-social-btn');
+commentsBtn.type = 'button';
+commentsBtn.innerHTML = svgIcon('comment');
+commentsBtn.setAttribute('aria-label', 'Comentários');
+commentsBtn.title = 'Comentários';
+
+commentsBtn.addEventListener('click', function (e) {
+  e.stopPropagation();
+
+  // A função que abrirá o painel ou modal de comentários
+  if (typeof openComments === 'function') {
+    openComments();
+  }
+});
+
+social.appendChild(commentsBtn);
+hasSocial = true;
 
       /* Share */
       if (modalConfig.show_share_button !== false) {
