@@ -501,23 +501,83 @@
   function getFontFamily(appearance) { return readAppearanceValue(appearance, ['font_family', 'fontFamily', 'fonte']) || DEFAULT_APPEARANCE.font_family; }
 
   function normalizeModalAppearanceConfig(appearance) {
-  appearance = normalizeAppearanceItem(appearance || {});
+  appearance = appearance || {};
 
-  /*
-   * Aceita configurações salvas diretamente na aparência
-   * ou agrupadas em modal_config / player_config.
-   */
-  var modalConfig = parseJsonIfNeeded(
-    firstDefined(
-      appearance.modal_config,
-      appearance.modalConfig,
-      appearance.player_config,
-      appearance.playerConfig,
-      appearance.player_modal,
-      appearance.playerModal,
-      {}
-    )
+  // Em algumas APIs a aparência pode estar embrulhada nesses objetos.
+  if (appearance.appearance && typeof appearance.appearance === 'object') {
+    appearance = appearance.appearance;
+  }
+
+  if (appearance.data && typeof appearance.data === 'object') {
+    appearance = appearance.data;
+  }
+
+  function parseConfig(value) {
+    if (!value) return {};
+
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch (e) {
+        console.warn('[Vidlytics] modal_config inválido:', value);
+        return {};
+      }
+    }
+
+    if (typeof value === 'object') {
+      return value;
+    }
+
+    return {};
+  }
+
+  var modalConfig = parseConfig(
+    appearance.modal_config ||
+    appearance.modalConfig ||
+    appearance.player_config ||
+    appearance.playerConfig
   );
+
+  function getBoolean(keys, fallback) {
+    var i;
+    var value;
+
+    // Primeiro procura no modal_config JSON.
+    for (i = 0; i < keys.length; i++) {
+      value = modalConfig[keys[i]];
+
+      if (value !== undefined && value !== null && value !== '') {
+        return value === true || value === 'true' || value === 1 || value === '1';
+      }
+    }
+
+    // Depois procura diretamente na linha de widget_appearances.
+    for (i = 0; i < keys.length; i++) {
+      value = appearance[keys[i]];
+
+      if (value !== undefined && value !== null && value !== '') {
+        return value === true || value === 'true' || value === 1 || value === '1';
+      }
+    }
+
+    return fallback;
+  }
+
+  return {
+    show_title: getBoolean(['show_title', 'showTitle'], true),
+    show_play_button: getBoolean(['show_play_button', 'showPlayButton'], true),
+    show_product: getBoolean(['show_product', 'showProduct'], true),
+    show_product_button: getBoolean(['show_product_button', 'showProductButton'], true),
+    show_like_button: getBoolean(['show_like_button', 'showLikeButton'], true),
+    show_comment_button: getBoolean(['show_comment_button', 'showCommentsButton'], true),
+    show_share_button: getBoolean(['show_share_button', 'showShareButton'], true),
+    show_whatsapp_button: getBoolean(['show_whatsapp_button', 'showWhatsappButton'], true),
+    show_sizing_button: getBoolean(['show_sizing_button', 'showSizingButton'], true),
+    hide_stories: getBoolean(['hide_stories', 'hideStories'], false),
+    shadow_enabled: getBoolean(['shadow_enabled', 'shadowEnabled'], true)
+  };
+}
+
 
   function getValue(names, fallback) {
     var i;
