@@ -2591,6 +2591,26 @@ if (supabase) {
       floating_show_play_button: floatingDesktop.show_play_icon !== false,
       floating_draggable: Boolean(floatingDesktop.draggable),
 
+      /* Novas colunas para refletir todas as configurações no widget.js */
+      primary_color: formData.primary_color,
+      secondary_color: formData.secondary_color,
+      text_color: formData.text_color,
+      background_color: formData.background_color,
+      button_color: formData.button_color,
+      font_family: formData.font_family,
+      font_size: Number(toNumberInputValue(formData.font_size)) || 14,
+
+      show_title: modalConfig.show_title,
+      show_product: modalConfig.show_product,
+      show_play_button: modalConfig.show_play_button,
+      show_like_button: modalConfig.show_like_button,
+      show_whatsapp_button: modalConfig.show_whatsapp_button,
+      show_product_button: modalConfig.show_product_button,
+      show_share_button: modalConfig.show_share_button,
+      show_comments_button: modalConfig.show_comment_button,
+      hide_stories: modalConfig.hide_stories,
+      shadow_enabled: modalConfig.shadow_enabled,
+
       updated_at: now,
     }, {
       onConflict: 'store_id',
