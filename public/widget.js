@@ -501,29 +501,177 @@
   function getFontFamily(appearance) { return readAppearanceValue(appearance, ['font_family', 'fontFamily', 'fonte']) || DEFAULT_APPEARANCE.font_family; }
 
   function normalizeModalAppearanceConfig(appearance) {
-    appearance = normalizeAppearanceItem(appearance || {});
-    var modalConfig = parseJsonIfNeeded(appearance.modal_config || appearance.modalConfig);
+  appearance = normalizeAppearanceItem(appearance || {});
 
-    function getVal(names, fallback) {
-      return firstDefined(
-        appearance[names[0]], appearance[names[1]],
-        modalConfig[names[0]], modalConfig[names[1]]
-      ) !== undefined ? firstDefined(appearance[names[0]], appearance[names[1]], modalConfig[names[0]], modalConfig[names[1]]) : fallback;
+  /*
+   * Aceita configurações salvas diretamente na aparência
+   * ou agrupadas em modal_config / player_config.
+   */
+  var modalConfig = parseJsonIfNeeded(
+    firstDefined(
+      appearance.modal_config,
+      appearance.modalConfig,
+      appearance.player_config,
+      appearance.playerConfig,
+      appearance.player_modal,
+      appearance.playerModal,
+      {}
+    )
+  );
+
+  function getValue(names, fallback) {
+    var i;
+    var value;
+
+    for (i = 0; i < names.length; i += 1) {
+      value = firstDefined(
+        appearance[names[i]],
+        modalConfig[names[i]]
+      );
+
+      if (value !== undefined && value !== null && value !== '') {
+        return value;
+      }
     }
 
-    return {
-      show_title: toBoolean(firstDefined(appearance.show_title, appearance.showTitle, modalConfig.show_title), true),
-      show_play_button: toBoolean(firstDefined(appearance.show_play_button, appearance.showPlayButton, modalConfig.show_play_button), true),
-      show_product: toBoolean(firstDefined(appearance.show_product, appearance.showProduct, modalConfig.show_product), true),
-      show_like_button: toBoolean(firstDefined(appearance.show_like_button, appearance.showLikeButton, modalConfig.show_like_button), true),
-      show_comment_button: toBoolean(firstDefined(appearance.show_comment_button, appearance.show_comments_button, appearance.showCommentButton, appearance.showCommentsButton, modalConfig.show_comment_button), true),
-      show_share_button: toBoolean(firstDefined(appearance.show_share_button, appearance.showShareButton, modalConfig.show_share_button), true),
-      show_whatsapp_button: toBoolean(firstDefined(appearance.show_whatsapp_button, appearance.showWhatsappButton, modalConfig.show_whatsapp_button), true),
-      show_product_button: toBoolean(firstDefined(appearance.show_product_button, appearance.showProductButton, modalConfig.show_product_button), true),
-      hide_stories: toBoolean(firstDefined(appearance.hide_stories, appearance.hideStories, modalConfig.hide_stories), false),
-      shadow_enabled: toBoolean(firstDefined(appearance.shadow_enabled, appearance.shadowEnabled, modalConfig.shadow_enabled), true)
-    };
+    return fallback;
   }
+
+  return {
+    show_title: toBoolean(
+      getValue(
+        ['show_title', 'showTitle', 'player_show_title', 'playerShowTitle'],
+        true
+      ),
+      true
+    ),
+
+    show_play_button: toBoolean(
+      getValue(
+        [
+          'show_play_button',
+          'showPlayButton',
+          'player_show_play_button',
+          'playerShowPlayButton'
+        ],
+        true
+      ),
+      true
+    ),
+
+    show_product: toBoolean(
+      getValue(
+        [
+          'show_product',
+          'showProduct',
+          'player_show_product',
+          'playerShowProduct'
+        ],
+        true
+      ),
+      true
+    ),
+
+    show_like_button: toBoolean(
+      getValue(
+        [
+          'show_like_button',
+          'showLikeButton',
+          'player_show_like_button',
+          'playerShowLikeButton'
+        ],
+        true
+      ),
+      true
+    ),
+
+    show_comment_button: toBoolean(
+      getValue(
+        [
+          'show_comment_button',
+          'show_comments_button',
+          'showCommentButton',
+          'showCommentsButton',
+          'player_show_comment_button',
+          'playerShowCommentButton'
+        ],
+        true
+      ),
+      true
+    ),
+
+    show_share_button: toBoolean(
+      getValue(
+        [
+          'show_share_button',
+          'showShareButton',
+          'player_show_share_button',
+          'playerShowShareButton'
+        ],
+        true
+      ),
+      true
+    ),
+
+    show_whatsapp_button: toBoolean(
+      getValue(
+        [
+          'show_whatsapp_button',
+          'showWhatsappButton',
+          'player_show_whatsapp_button',
+          'playerShowWhatsappButton'
+        ],
+        true
+      ),
+      true
+    ),
+
+    show_product_button: toBoolean(
+      getValue(
+        [
+          'show_product_button',
+          'showProductButton',
+          'player_show_product_button',
+          'playerShowProductButton'
+        ],
+        true
+      ),
+      true
+    ),
+
+    show_sizing_button: toBoolean(
+      getValue(
+        [
+          'show_sizing_button',
+          'showSizingButton',
+          'show_measure_button',
+          'showMeasureButton',
+          'player_show_sizing_button',
+          'playerShowSizingButton'
+        ],
+        true
+      ),
+      true
+    ),
+
+    hide_stories: toBoolean(
+      getValue(
+        ['hide_stories', 'hideStories'],
+        false
+      ),
+      false
+    ),
+
+    shadow_enabled: toBoolean(
+      getValue(
+        ['shadow_enabled', 'shadowEnabled'],
+        true
+      ),
+      true
+    )
+  };
+}
+
 
   function trackMetric(metric) {
     var payload = {
