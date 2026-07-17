@@ -13,16 +13,7 @@
     if (oldCarousel) oldCarousel.remove();
   } catch (e) {}
 
-  window.__vidlytics_widget_loaded_version = VIDLYTICS_WIDGET_VERSION;
-
-  var config = window.VIDLYTICS_CONFIG || {};
-  var storeId = config.storeId || config.lojaId || config.licenseId || null;
-  var supabaseUrl = String(config.supabaseUrl || '').replace(/\/$/, '');
-  var supabaseAnonKey = config.supabaseAnonKey || '';
-  var widgetsCfg = config.widgets || {};
-  var hasSupabase = Boolean(supabaseUrl && supabaseAnonKey);
-
-  var enableFloating = widgetsCfg.floatingVideo !== undefined ? widgetsCfg.floatingVideo : config.floatingVideo !== false;
+    var enableFloating = widgetsCfg.floatingVideo !== undefined ? widgetsCfg.floatingVideo : config.floatingVideo !== false;
   var enableCarousel = widgetsCfg.carousel !== undefined ? widgetsCfg.carousel : config.carousel !== false;
 
   var currentAppearance = {};
@@ -162,29 +153,70 @@
   }
 
   return supabaseFetch('comments', {
-    method: 'POST',
-    headers: {
-      Prefer: 'return=representation'
-    },
-    body: JSON.stringify(payload)
-  }).then(function (response) {
-    if (!response.ok) {
-      return response.text().then(function (rawMessage) {
-        var parsed = {};
+  method: 'POST',
+  headers: {
+    Prefer: 'return=minimal'
+  },
+  body: JSON.stringify(payload)
+}).then(function (response) {
+  if (!response.ok) {
+    return response.text().then(function (rawMessage) {
+      var parsed = {};
 
-        try {
-          parsed = JSON.parse(rawMessage || '{}');
-        } catch (e) {}
+      try {
+        parsed = JSON.parse(rawMessage || '{}');
+      } catch (e) {}
 
-        if (
-          response.status === 401 ||
-          response.status === 403 ||
-          parsed.code === '42501'
-        ) {
-          throw new Error(
-            'O envio de comentários ainda não está autorizado. Verifique as políticas RLS da tabela comments.'
-          );
-        }
+      console.error('Erro completo do Supabase:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: rawMessage
+      });
+
+      if (
+        response.status === 401 ||
+        response.status === 403 ||
+        parsed.code === '42501'
+      ) {
+        throw new Error(
+          'O envio de comentários ainda não está autorizado. Verifique as políticas RLS da tabela comments.'
+        );
+      }
+
+      throw new Error(
+        parsed.message ||
+        parsed.error_description ||
+        parsed.hint ||
+        'Não foi possível enviar o comentário.'
+      );
+    });
+  }
+
+  return true;
+});
+
+
+    if (response.status === 401) {
+      throw new Error(
+        'A chave anon ou a URL do Supabase são inválidas. Verifique o VIDLYTICS_CONFIG.'
+      );
+    }
+
+    if (response.status === 403 || parsed.code === '42501') {
+      throw new Error(
+        'Inserção bloqueada pelas políticas RLS da tabela comments.'
+      );
+    }
+
+    throw new Error(
+      parsed.message ||
+      parsed.error_description ||
+      parsed.hint ||
+      'Não foi possível enviar o comentário.'
+    );
+  });
+}
+
 
         throw new Error(
           parsed.message ||
