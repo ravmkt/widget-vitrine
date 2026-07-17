@@ -55,6 +55,28 @@ const CommentsPage = () => {
   const [storeName, setStoreName] = useState("");
   const [storeLogoUrl, setStoreLogoUrl] = useState("");
 
+useEffect(() => {
+  const fetchStoreSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("app_settings")
+        .select("settings")
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data?.settings) {
+        setStoreName(data.settings.store_name || "");
+        setStoreLogoUrl(data.settings.store_logo_url || "");
+      }
+    } catch (err) {
+      console.error("Error fetching store settings:", err);
+    }
+  };
+
+  fetchStoreSettings();
+}, []);
 
 
   useEffect(() => {
