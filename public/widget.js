@@ -1,10 +1,58 @@
-
 (function () {
-  console.log('VIDLYTICS WIDGET CARREGADO - FIX LOOP + NO AUTO CLOSE - 202607161906');
+  console.log(
+    'VIDLYTICS WIDGET CARREGADO - FIX LOOP + NO AUTO CLOSE - 202607161906'
+  );
 
-  var VIDLYTICS_WIDGET_VERSION = 'appearance-widget-loop-no-autoclose-202607161906';
+  var globalConfig =
+    window.VIDLYTICS_CONFIG ||
+    window.vidlyticsConfig ||
+    {};
 
-  if (window.__vidlytics_widget_loaded_version === VIDLYTICS_WIDGET_VERSION) return;
+  var config =
+    globalConfig.config ||
+    globalConfig;
+
+  var widgetsCfg =
+    globalConfig.widgets ||
+    globalConfig.widgetsConfig ||
+    {};
+
+  var supabaseUrl = String(
+    globalConfig.supabaseUrl ||
+    config.supabaseUrl ||
+    ''
+  ).replace(/\/+$/, '');
+
+  var supabaseAnonKey =
+    globalConfig.supabaseAnonKey ||
+    globalConfig.anonKey ||
+    config.supabaseAnonKey ||
+    config.anonKey ||
+    '';
+
+  var storeId =
+    globalConfig.storeId ||
+    config.storeId ||
+    '';
+
+  var hasSupabase = Boolean(
+    supabaseUrl &&
+    supabaseAnonKey &&
+    storeId
+  );
+
+  var VIDLYTICS_WIDGET_VERSION =
+    'appearance-widget-loop-no-autoclose-202607161906';
+
+  if (
+    window.__vidlytics_widget_loaded_version ===
+    VIDLYTICS_WIDGET_VERSION
+  ) {
+    return;
+  }
+
+  window.__vidlytics_widget_loaded_version =
+    VIDLYTICS_WIDGET_VERSION;
 
   try {
     var oldRoot = document.getElementById('vidlytics-widget-root');
@@ -96,11 +144,36 @@
   function setStorageItem(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
 
   function supabaseFetch(path, options) {
-    if (!hasSupabase) return Promise.reject(new Error('No Supabase config'));
-    var headers = { apikey: supabaseAnonKey, Authorization: 'Bearer ' + supabaseAnonKey, 'Content-Type': 'application/json' };
-    if (options && options.headers) { Object.keys(options.headers).forEach(function (key) { headers[key] = options.headers[key]; }); }
-    return fetch(supabaseUrl + '/rest/v1/' + path, { method: (options && options.method) || 'GET', headers: headers, body: options && options.body ? options.body : undefined });
+  if (!hasSupabase) {
+    return Promise.reject(
+      new Error('Supabase não configurado.')
+    );
   }
+
+  options = options || {};
+
+  var headers = {
+    'apikey': supabaseAnonKey,
+    'Authorization': 'Bearer ' + supabaseAnonKey,
+    'Content-Type': 'application/json'
+  };
+
+  if (options.headers) {
+    Object.keys(options.headers).forEach(function (key) {
+      headers[key] = options.headers[key];
+    });
+  }
+
+  return fetch(
+    supabaseUrl + '/rest/v1/' + path,
+    {
+      method: options.method || 'GET',
+      headers: headers,
+      body: options.body || undefined
+    }
+  );
+}
+
 
   function fetchJson(path) {
     return supabaseFetch(path, { method: 'GET' })
@@ -128,8 +201,12 @@
 
   function createComment(commentData) {
   if (!hasSupabase) {
-    return Promise.reject(new Error('Supabase não configurado.'));
+    return Promise.reject(
+      new Error('Supabase não configurado.')
+    );
   }
+
+  commentData = commentData || {};
 
   var payload = {
     store_id: storeId,
@@ -145,90 +222,72 @@
   };
 
   if (!payload.author_name) {
-    return Promise.reject(new Error('Informe seu nome.'));
+    return Promise.reject(
+      new Error('Informe seu nome.')
+    );
   }
 
   if (!payload.content) {
-    return Promise.reject(new Error('Digite um comentário.'));
+    return Promise.reject(
+      new Error('Digite um comentário.')
+    );
   }
 
   return supabaseFetch('comments', {
-  method: 'POST',
-  headers: {
-    Prefer: 'return=minimal'
-  },
-  body: JSON.stringify(payload)
-}).then(function (response) {
-  if (!response.ok) {
-    return response.text().then(function (rawMessage) {
-      var parsed = {};
-
-      try {
-        parsed = JSON.parse(rawMessage || '{}');
-      } catch (e) {}
-
-      console.error('Erro completo do Supabase:', {
-        status: response.status,
-        statusText: response.statusText,
-        body: rawMessage
-      });
-
-      if (
-        response.status === 401 ||
-        response.status === 403 ||
-        parsed.code === '42501'
-      ) {
-        throw new Error(
-          'O envio de comentários ainda não está autorizado. Verifique as políticas RLS da tabela comments.'
-        );
+    method: 'POST',
+    headers: {
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(payload)
+  })
+    .then(function (response) {
+      if (response.ok) {
+        return true;
       }
 
-      throw new Error(
-        parsed.message ||
-        parsed.error_description ||
-        parsed.hint ||
-        'Não foi possível enviar o comentário.'
-      );
-    });
-  }
+      return response.text().then(function (rawMessage) {
+        var parsed = {};
 
-  return true;
-});
+        try {
+          parsed = JSON.parse(rawMessage || '{}');
+        } catch (error) {
+          parsed = {};
+        }
 
+        console.error(
+          'Erro completo ao enviar comentário para o Supabase:',
+          {
+            status: response.status,
+            statusText: response.statusText,
+            body: rawMessage,
+            payload: payload
+          }
+        );
 
-    if (response.status === 401) {
-      throw new Error(
-        'A chave anon ou a URL do Supabase são inválidas. Verifique o VIDLYTICS_CONFIG.'
-      );
-    }
+        if (response.status === 401) {
+          throw new Error(
+            'A chave pública ou a URL do Supabase são inválidas.'
+          );
+        }
 
-    if (response.status === 403 || parsed.code === '42501') {
-      throw new Error(
-        'Inserção bloqueada pelas políticas RLS da tabela comments.'
-      );
-    }
-
-    throw new Error(
-      parsed.message ||
-      parsed.error_description ||
-      parsed.hint ||
-      'Não foi possível enviar o comentário.'
-    );
-  });
-}
-
+        if (
+          response.status === 403 ||
+          parsed.code === '42501'
+        ) {
+          throw new Error(
+            'Inserção bloqueada pelas políticas RLS da tabela comments.'
+          );
+        }
 
         throw new Error(
           parsed.message ||
           parsed.error_description ||
           parsed.hint ||
+          parsed.details ||
           'Não foi possível enviar o comentário.'
         );
       });
-    }
-
-    return response.json();
-  });
+    });
 }
 
 
