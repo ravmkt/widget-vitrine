@@ -36,6 +36,8 @@
   var floatingWasClosed = false; 
   var readStoryProductsData = [];
   var readProductsData = [];
+  var readModelsData = [];
+  var readCommentsData = [];
 
   var VIDEO_FILE_REGEX = /\.(mp4|webm|ogg|mov|m4v|m3u8)(\?.*)?$/i;
 
@@ -382,6 +384,8 @@
   function readStoryProducts() { return (!storeId || !hasSupabase) ? Promise.resolve(getStorageItem('vidlytics_story_products', [])) : fetchJson('story_products?select=*&store_id=eq.' + encodeURIComponent(storeId)); }
   function readProducts() { return (!storeId || !hasSupabase) ? Promise.resolve(getStorageItem('vidlytics_products', [])) : fetchJson('products?select=*&store_id=eq.' + encodeURIComponent(storeId)); }
   function readPageRules() { return (!storeId || !hasSupabase) ? Promise.resolve(getStorageItem('vidlytics_page_rules', [])) : fetchJson('page_rules?select=*&store_id=eq.' + encodeURIComponent(storeId)); }
+  function readSizingModels() { return (!storeId || !hasSupabase) ? Promise.resolve(getStorageItem('vidlytics_sizing_models', [])) : fetchJson('sizing_models?select=*&store_id=eq.' + encodeURIComponent(storeId)); }
+  function readComments() { return (!storeId || !hasSupabase) ? Promise.resolve(getStorageItem('vidlytics_comments', [])) : fetchJson('comments?select=*&store_id=eq.' + encodeURIComponent(storeId)); }
 
   function matchesRule(rule) {
     var href = window.location.href, path = window.location.pathname || '/', value = String(rule.value || '');
@@ -532,6 +536,37 @@
     + '.vl-social-count{font-size:10px!important;font-weight:800!important;color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,0.5)!important;margin-top:-4px!important;}'
     + '.vl-social-btn.whatsapp{background:#25D366!important;border-color:#25D366!important;}'
 
+    /* ===== SLIDE-IN PANEL (comments / measures) ===== */
+    + '.vl-panel{position:absolute!important;inset:0!important;z-index:60!important;'
+    + 'background:rgba(0,0,0,0.92)!important;display:none!important;flex-direction:column!important;'
+    + 'padding:16px!important;font-family:' + font + '!important;color:#fff!important;}'
+    + '.vl-panel.is-open{display:flex!important;}'
+    + '.vl-panel-header{display:flex!important;align-items:center!important;justify-content:space-between!important;'
+    + 'margin-bottom:16px!important;padding-top:32px!important;}'
+    + '.vl-panel-title{font-weight:800!important;font-size:16px!important;color:#fff!important;}'
+    + '.vl-panel-close{all:unset!important;width:32px!important;height:32px!important;border-radius:999px!important;'
+    + 'background:rgba(255,255,255,0.1)!important;display:flex!important;align-items:center!important;'
+    + 'justify-content:center!important;cursor:pointer!important;color:#fff!important;}'
+    + '.vl-panel-body{flex:1!important;overflow-y:auto!important;overflow-x:hidden!important;}'
+    /* Comments */
+    + '.vl-comment{background:rgba(255,255,255,0.06)!important;border-radius:14px!important;padding:12px!important;margin-bottom:10px!important;}'
+    + '.vl-comment-name{font-size:12px!important;font-weight:800!important;color:rgba(255,255,255,0.7)!important;margin-bottom:4px!important;}'
+    + '.vl-comment-text{font-size:14px!important;color:#fff!important;line-height:1.4!important;}'
+    + '.vl-comment-empty{color:rgba(255,255,255,0.4)!important;font-size:14px!important;text-align:center!important;padding:40px 0!important;}'
+    + '.vl-comment-form{margin-top:12px!important;display:flex!important;flex-direction:column!important;gap:8px!important;}'
+    + '.vl-comment-input{all:unset!important;width:100%!important;background:rgba(255,255,255,0.08)!important;'
+    + 'border-radius:12px!important;padding:12px!important;font-size:14px!important;color:#fff!important;'
+    + 'font-family:' + font + '!important;box-sizing:border-box!important;}'
+    + '.vl-comment-input::placeholder{color:rgba(255,255,255,0.4)!important;}'
+    + '.vl-comment-submit{all:unset!important;text-align:center!important;background:' + buttonColor + '!important;'
+    + 'color:#fff!important;border-radius:12px!important;padding:12px!important;font-weight:800!important;'
+    + 'font-size:14px!important;cursor:pointer!important;}'
+    /* Measures */
+    + '.vl-measure-row{display:flex!important;justify-content:space-between!important;'
+    + 'padding:12px 0!important;border-bottom:1px solid rgba(255,255,255,0.1)!important;}'
+    + '.vl-measure-label{font-size:14px!important;color:rgba(255,255,255,0.7)!important;}'
+    + '.vl-measure-value{font-size:14px!important;font-weight:700!important;color:#fff!important;}'
+
     /* ===== FOOTER / PRODUCT CARD (bottom, same as preview) ===== */
     + '.vl-footer{position:absolute!important;bottom:0!important;left:0!important;right:0!important;z-index:40!important;'
     + 'background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.5) 50%,transparent 100%)!important;'
@@ -667,9 +702,155 @@
       comment: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
       share: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>',
       whatsapp: '<svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M16.6 13.2c-.3-.2-1.7-.8-2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.8 0c-.4-.2-1.4-.5-2.6-1.6-.9-.8-1.6-1.8-1.8-2.2-.2-.4 0-.6.2-.8l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6s-.7-1.7-1-2.3c-.3-.6-.6-.5-.8-.5h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.8s1.3 3.2 1.5 3.4c.2.2 2.3 3.6 5.6 5.1.8.4 1.5.6 2.1.8.9.3 1.7.3 2.3.2.7-.1 1.7-.7 2-1.3.3-.6.3-1.1.2-1.3-.1-.2-.3-.3-.6-.5z"/><path d="M20 4A10 10 0 0 0 3.6 16.2L2 22l5.9-1.5A10 10 0 1 0 20 4zm-7.9 15.4c-1.6 0-3.2-.4-4.6-1.3l-.3-.2-3.5.9.9-3.4-.2-.3A8.1 8.1 0 1 1 12.1 19.4z"/></svg>',
+      ruler: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 8.7L8.7 21.3a1 1 0 0 1-1.4 0L2.7 16.7a1 1 0 0 1 0-1.4L15.3 2.7a1 1 0 0 1 1.4 0l4.6 4.6a1 1 0 0 1 0 1.4z"/><path d="M7.5 10.5l2 2M11 7l2 2M14.5 3.5l2 2M4 14l2 2"/></svg>',
       close: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>'
     };
     return icons[name] || '';
+  }
+
+  function parseModelMeasures(model) {
+    if (!model) return [];
+    if (Array.isArray(model.measures)) return model.measures;
+    if (Array.isArray(model.measurements)) return model.measurements;
+    if (Array.isArray(model.items)) return model.items;
+    try {
+      var parsed = JSON.parse(typeof model.measures === 'string' ? model.measures : typeof model.measurements === 'string' ? model.measurements : '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) { return []; }
+  }
+
+  function openMeasurePanel(model) {
+    var existing = modalContent.querySelector('.vl-panel');
+    if (existing) existing.remove();
+
+    var panel = createEl('div', 'vl-panel is-open');
+    var header = createEl('div', 'vl-panel-header');
+    var title = createEl('div', 'vl-panel-title');
+    title.textContent = model.name || 'Medidas';
+    var closeBtn = createEl('button', 'vl-panel-close');
+    closeBtn.type = 'button';
+    closeBtn.innerHTML = svgIcon('close');
+    closeBtn.addEventListener('click', function (e) { e.stopPropagation(); panel.remove(); });
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+
+    var body = createEl('div', 'vl-panel-body');
+    var measures = parseModelMeasures(model);
+    if (!measures.length) {
+      var empty = createEl('div', 'vl-comment-empty');
+      empty.textContent = 'Nenhuma medida cadastrada.';
+      body.appendChild(empty);
+    } else {
+      measures.forEach(function (m) {
+        var label = m.label || m.name || m.medida || '';
+        var value = m.value || m.size || m.valor || '';
+        if (!label && !value) return;
+        var row = createEl('div', 'vl-measure-row');
+        var labelEl = createEl('span', 'vl-measure-label');
+        labelEl.textContent = label;
+        var valueEl = createEl('span', 'vl-measure-value');
+        valueEl.textContent = value;
+        row.appendChild(labelEl);
+        row.appendChild(valueEl);
+        body.appendChild(row);
+      });
+    }
+
+    panel.appendChild(header);
+    panel.appendChild(body);
+    modalContent.appendChild(panel);
+  }
+
+  function openCommentPanel(video, story) {
+    var existing = modalContent.querySelector('.vl-panel');
+    if (existing) existing.remove();
+
+    var approvedComments = readCommentsData.filter(function (c) {
+      return idsEqual(c.video_id, video.id) && c.status === 'approved';
+    });
+
+    var panel = createEl('div', 'vl-panel is-open');
+    var header = createEl('div', 'vl-panel-header');
+    var title = createEl('div', 'vl-panel-title');
+    title.textContent = 'Comentários';
+    var closeBtn = createEl('button', 'vl-panel-close');
+    closeBtn.type = 'button';
+    closeBtn.innerHTML = svgIcon('close');
+    closeBtn.addEventListener('click', function (e) { e.stopPropagation(); panel.remove(); });
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+
+    var body = createEl('div', 'vl-panel-body');
+    if (!approvedComments.length) {
+      var empty = createEl('div', 'vl-comment-empty');
+      empty.textContent = 'Nenhum comentário ainda. Seja o primeiro!';
+      body.appendChild(empty);
+    } else {
+      approvedComments.forEach(function (c) {
+        var div = createEl('div', 'vl-comment');
+        var nameEl = createEl('div', 'vl-comment-name');
+        nameEl.textContent = c.user_name || c.name || 'Visitante';
+        var textEl = createEl('div', 'vl-comment-text');
+        textEl.textContent = c.text || '';
+        div.appendChild(nameEl);
+        div.appendChild(textEl);
+        body.appendChild(div);
+      });
+    }
+
+    /* Comment form */
+    var form = createEl('div', 'vl-comment-form');
+    var nameInput = createEl('input', 'vl-comment-input');
+    nameInput.placeholder = 'Seu nome';
+    var textInput = createEl('textarea', 'vl-comment-input');
+    textInput.placeholder = 'Escreva um comentário...';
+    textInput.rows = '2';
+    textInput.style.resize = 'none';
+    var submitBtn = createEl('button', 'vl-comment-submit');
+    submitBtn.type = 'button';
+    submitBtn.textContent = 'Enviar comentário';
+
+    submitBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var name = (nameInput.value || '').trim();
+      var text = (textInput.value || '').trim();
+      if (!name || !text) return;
+
+      var newComment = {
+        id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2),
+        store_id: storeId, video_id: video.id, story_id: story.id,
+        user_name: name, name: name, text: text,
+        status: 'pending', created_at: new Date().toISOString()
+      };
+
+      /* Save locally */
+      readCommentsData.unshift(newComment);
+      setStorageItem('vidlytics_comments', readCommentsData);
+
+      /* Try save to Supabase */
+      if (hasSupabase) {
+        supabaseFetch('comments', {
+          method: 'POST',
+          headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify(newComment)
+        }).catch(function () {});
+      }
+
+      nameInput.value = '';
+      textInput.value = '';
+
+      submitBtn.textContent = 'Enviado! ✓';
+      setTimeout(function () { submitBtn.textContent = 'Enviar comentário'; }, 2000);
+    });
+
+    form.appendChild(nameInput);
+    form.appendChild(textInput);
+    form.appendChild(submitBtn);
+    body.appendChild(form);
+
+    panel.appendChild(header);
+    panel.appendChild(body);
+    modalContent.appendChild(panel);
   }
 
   function openStory(storiesList, initialStoryIndex, storyVideoMap, activeVideos, storyProducts, products) {
@@ -769,6 +950,23 @@
       var playerNode = buildVideoPlayer(video, story.id, nextVideo);
       body.insertBefore(playerNode, body.firstChild);
 
+      /* ===== TOP CONTROLS (mute toggle) ===== */
+      var topControls = createEl('div', 'vl-top-controls');
+      topControls.style.cssText = 'position:absolute;top:56px;right:12px;z-index:45;display:flex;gap:8px;';
+
+      var muteBtn = createEl('button', 'vl-social-btn');
+      muteBtn.type = 'button';
+      muteBtn.innerHTML = isMuted ? svgIcon('mute') : svgIcon('unmute');
+      muteBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        isMuted = !isMuted;
+        var v = modalContent.querySelector('video');
+        if (v) v.muted = isMuted;
+        muteBtn.innerHTML = isMuted ? svgIcon('mute') : svgIcon('unmute');
+      });
+      topControls.appendChild(muteBtn);
+      body.appendChild(topControls);
+
       /* ===== SOCIAL ACTIONS (right side) ===== */
       var social = createEl('div', 'vl-social');
       var hasSocial = false;
@@ -798,6 +996,46 @@
         likeCountEl.textContent = String(likeCount);
         social.appendChild(likeCountEl);
         hasSocial = true;
+      }
+
+      /* Comments */
+      if (modalConfig.show_comment_button !== false) {
+        var commentCount = 0;
+        var videoComments = readCommentsData.filter(function (c) {
+          return idsEqual(c.video_id, video.id) && c.status === 'approved';
+        });
+        commentCount = videoComments.length;
+
+        var commentBtn = createEl('button', 'vl-social-btn');
+        commentBtn.type = 'button';
+        commentBtn.innerHTML = svgIcon('comment');
+        commentBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          openCommentPanel(video, story);
+        });
+        social.appendChild(commentBtn);
+
+        var commentCountEl = createEl('span', 'vl-social-count');
+        commentCountEl.textContent = String(commentCount);
+        social.appendChild(commentCountEl);
+        hasSocial = true;
+      }
+
+      /* Measures (ruler) */
+      if (video.model_id || video.modelId) {
+        var modelId = video.model_id || video.modelId;
+        var linkedModel = readModelsData.find(function (m) { return idsEqual(m.id, modelId); });
+        if (linkedModel) {
+          var measureBtn = createEl('button', 'vl-social-btn');
+          measureBtn.type = 'button';
+          measureBtn.innerHTML = svgIcon('ruler');
+          measureBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            openMeasurePanel(linkedModel);
+          });
+          social.appendChild(measureBtn);
+          hasSocial = true;
+        }
       }
 
       /* Share */
@@ -1060,7 +1298,7 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig);
   }
 
   function renderWidget() {
-    return Promise.all([ readAppearance(), readStories(), readStoryVideos(), readVideos(), readStoryProducts(), readProducts(), readPageRules() ])
+    return Promise.all([ readAppearance(), readStories(), readStoryVideos(), readVideos(), readStoryProducts(), readProducts(), readPageRules(), readSizingModels(), readComments() ])
       .then(function (results) {
       currentAppearance = normalizeAppearanceItem(results[0] || {});
       var modalConfig = normalizeModalAppearanceConfig(currentAppearance);
@@ -1068,6 +1306,8 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig);
       var storyProducts = results[4] || [], products = results[5] || [], pageRules = results[6] || [];
 
       readStoryProductsData = storyProducts; readProductsData = products;
+      readModelsData = results[7] || [];
+      readCommentsData = results[8] || [];
       if (!stories.length || modalConfig.hide_stories) return;
 
       var activeVideos = videos.filter(function (video) {
