@@ -1285,17 +1285,35 @@ const createCrudFunctions = <
   tableName: string,
   memoryArray: T[],
 ) => {
+  const getLocalItems = (): T[] => {
+    try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        const local = localStorage.getItem(`vidlytics_${tableName}`);
+
+        if (local) {
+          const parsed = JSON.parse(local);
+
+          if (Array.isArray(parsed)) {
+            return parsed as T[];
+          }
+        }
+      }
+    } catch (error) {
+      console.warn(
+        `Erro ao ler dados locais da tabela ${tableName}:`,
+        error,
+      );
+    }
+
+    return memoryArray;
+  };
+
   return {
     async getAll(storeId?: string): Promise<T[]> {
-      const local =
-        typeof window !== 'undefined'
-          ? localStorage.getItem(`vidlytics_${tableName}`)
-          : null;
-
-      const items: T[] = local ? JSON.parse(local) : memoryArray;
+      const items = getLocalItems();
 
       const filteredItems = storeId
-        ? items.filter((item: T) => item.store_id === storeId)
+        ? items.filter(item => item.store_id === storeId)
         : items;
 
       return filteredItems.map(item =>
@@ -1306,16 +1324,19 @@ const createCrudFunctions = <
     async getById(id: string, storeId?: string): Promise<T | null> {
       const items = await this.getAll(storeId);
 
-      return items.find((item: T) => item.id === id) || null;
+      return items.find(item => item.id === id) || null;
     },
 
     async save(item: T): Promise<T> {
       const now = new Date().toISOString();
       const items = await this.getAll();
 
-      const normalizedItem = preparePayloadForSave(tableName, item as any) as T;
+      const normalizedItem = preparePayloadForSave(
+        tableName,
+        item as any,
+      ) as T;
 
-      const index = items.findIndex((s: T) => s.id === normalizedItem.id);
+      const index = items.findIndex(existing => existing.id === normalizedItem.id);
 
       const updatedItem = {
         ...normalizedItem,
@@ -1331,18 +1352,25 @@ const createCrudFunctions = <
         });
       }
 
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(`vidlytics_${tableName}`, JSON.stringify(items));
+      if (typeof window !== "undefined" && window.localStorage) {
+        localStorage.setItem(
+          `vidlytics_${tableName}`,
+          JSON.stringify(items),
+        );
       }
 
-      return normalizeTableItemForClient(tableName, updatedItem as any) as T;
+      return normalizeTableItemForClient(
+        tableName,
+        updatedItem as any,
+      ) as T;
     },
 
     async delete(id: string): Promise<boolean> {
       const items = await this.getAll();
-      const filtered = items.filter((s: T) => s.id !== id);
 
-      if (typeof window !== 'undefined') {
+      const filtered = items.filter(item => item.id !== id);
+
+      if (typeof window !== "undefined" && window.localStorage) {
         localStorage.setItem(
           `vidlytics_${tableName}`,
           JSON.stringify(filtered),
