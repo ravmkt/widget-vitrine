@@ -1373,6 +1373,8 @@ const createSupabaseCrudFunctions = <
         return localFallback.getAll(storeId);
       }
 
+      console.log('[comments.getAll] executando consulta', { storeId });
+
       let query = supabase.from(tableName as any).select('*');
 
       if (storeId) {
@@ -1382,6 +1384,8 @@ const createSupabaseCrudFunctions = <
       query = query.order('created_at', { ascending: false });
 
       const { data, error } = await query;
+
+      console.log('[comments.getAll] resposta do Supabase', { data, error });
 
       if (error) {
         console.error(`Erro ao buscar ${tableName}:`, error);

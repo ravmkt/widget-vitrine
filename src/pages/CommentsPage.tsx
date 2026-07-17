@@ -92,6 +92,8 @@ const CommentsPage = () => {
 
   const loadComments = async () => {
     try {
+      console.log('[CommentsPage] storeId:', storeId);
+      console.log('[CommentsPage] iniciando busca de comentários');
       if (!storeId) {
         setComments([]);
         setVideos([]);
@@ -101,9 +103,12 @@ const CommentsPage = () => {
         db.comments.getAll(storeId),
         db.videos.getAll(storeId),
       ]);
+      console.log('[CommentsPage] comentários recebidos:', allComments);
+      console.log('[CommentsPage] vídeos recebidos:', allVideos);
       setComments(allComments || []);
       setVideos(allVideos);
     } catch (error) {
+      console.error('[CommentsPage] erro ao carregar comentários:', error);
       showError("Erro ao carregar comentários.");
     } finally {
       setLoading(false);
@@ -111,6 +116,7 @@ const CommentsPage = () => {
   };
 
   useEffect(() => {
+    console.log('[CommentsPage] useEffect disparou', { storeId, tenantLoading });
     if (!tenantLoading) loadComments();
   }, [storeId, tenantLoading]);
 
