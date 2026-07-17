@@ -856,6 +856,21 @@ const normalizeTableItemForClient = <T extends Record<string, any>>(
   if (tableName === 'comments') {
     if (item.author_name !== undefined) normalized.user_name = item.author_name;
     if (item.content !== undefined) normalized.text = item.content;
+
+    // Converte colunas de resposta do banco para o formato de array de replies do app
+    if (item.reply_content) {
+      normalized.replies = [
+        {
+          id: `reply-${item.id}`,
+          user_name: 'Loja',
+          text: item.reply_content,
+          created_at: item.replied_at || item.updated_at || item.created_at,
+          is_store_reply: true,
+        },
+      ];
+    } else {
+      normalized.replies = [];
+    }
   }
 
   if (tableName !== 'appearances') {
@@ -979,6 +994,14 @@ const preparePayloadForSave = <T extends Record<string, any>>(
   if (tableName === 'comments') {
     if (item.user_name !== undefined) normalizedPayload.author_name = item.user_name;
     if (item.text !== undefined) normalizedPayload.content = item.text;
+
+    // Mapeia o array de replies do app para as colunas de resposta do banco
+    if (item.replies && Array.isArray(item.replies) && item.replies.length > 0) {
+      const lastReply = item.replies[item.replies.length - 1];
+      normalizedPayload.reply_content = lastReply.text;
+      normalizedPayload.reply_status = 'replied';
+      normalizedPayload.replied_at = lastReply.created_at || new Date().toISOString();
+    }
 
     // Remove campos que não existem no banco
     delete normalizedPayload.user_name;
