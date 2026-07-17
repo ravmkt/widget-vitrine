@@ -1752,86 +1752,98 @@ export const replaceStoryRelations = async <
 };
 
 export const db = {
-  stores: createSupabaseCrudFunctions<Store>('stores', memoryStores),
+  stores: createSupabaseCrudFunctions<Store>(
+    "stores",
+    memoryStores,
+  ),
 
   generalSettings: createSupabaseCrudFunctions<GeneralSettings>(
-    'general_settings',
+    "general_settings",
     memoryGeneralSettings,
   ),
 
   appearances: createSupabaseCrudFunctions<Appearance>(
-    'appearances',
+    "appearances",
     memoryAppearances,
   ),
 
-  videos: createSupabaseCrudFunctions<Video>('videos', memoryVideos),
+  videos: createSupabaseCrudFunctions<Video>(
+    "videos",
+    memoryVideos,
+  ),
 
-  stories: createSupabaseCrudFunctions<Story>('stories', memoryStories),
+  stories: createSupabaseCrudFunctions<Story>(
+    "stories",
+    memoryStories,
+  ),
 
   storyVideos: createSupabaseCrudFunctions<StoryVideo>(
-    'story_videos',
+    "story_videos",
     memoryStoryVideos,
   ),
 
-  products: createSupabaseCrudFunctions<Product>('products', memoryProducts),
+  products: createSupabaseCrudFunctions<Product>(
+    "products",
+    memoryProducts,
+  ),
 
   storyProducts: createSupabaseCrudFunctions<StoryProduct>(
-    'story_products',
+    "story_products",
     memoryStoryProducts,
   ),
 
-  displayLocations: createCrudFunctions<DisplayLocation>(
-    'display_locations',
+  displayLocations: createSupabaseCrudFunctions<DisplayLocation>(
+    "display_locations",
     memoryDisplayLocations,
   ),
 
-  pageRules: createCrudFunctions<PageRule>('page_rules', memoryPageRules),
+  pageRules: createSupabaseCrudFunctions<PageRule>(
+    "page_rules",
+    memoryPageRules,
+  ),
 
-  comments: createCrudFunctions<Comment>('comments', memoryComments),
+  comments: createSupabaseCrudFunctions<Comment>(
+    "comments",
+    memoryComments,
+  ),
 
-  metrics: createCrudFunctions<Metric>('metrics', memoryMetrics),
+  metrics: createSupabaseCrudFunctions<Metric>(
+    "metrics",
+    memoryMetrics,
+  ),
 
-  /**
-   * IMPORTANTE:
-   *
-   * Antes estava usando createCrudFunctions, ou seja, salvava somente no localStorage.
-   * Agora usa createSupabaseCrudFunctions para criar o registro real na tabela sizing_models.
-   *
-   * Isso corrige o erro:
-   * videos_model_id_fkey -> Key is not present in table "sizing_models"
-   */
   sizingModels: createSupabaseCrudFunctions<SizingModel>(
-    'sizing_models',
+    "sizing_models",
     memorySizingModels,
   ),
 
-  profiles: createCrudFunctions<{
+  profiles: createSupabaseCrudFunctions<{
     id: string;
     user_id: string;
     name: string;
     email: string;
     created_at?: string;
-  }>('profiles', []),
+  }>("profiles", []),
 
-  storeMembers: createCrudFunctions<{
+  storeMembers: createSupabaseCrudFunctions<{
     id: string;
     store_id: string;
     user_id: string;
-    role: 'owner' | 'admin' | 'member';
+    role: "owner" | "admin" | "member";
     created_at?: string;
-  }>('store_members', []),
+  }>("store_members", []),
 
-  subscriptions: createCrudFunctions<{
+  subscriptions: createSupabaseCrudFunctions<{
     id: string;
     store_id: string;
     plan_name: string;
-    status: 'trialing' | 'active' | 'past_due' | 'canceled';
+    status: "trialing" | "active" | "past_due" | "canceled";
     current_period_start?: string;
     current_period_end?: string;
     created_at?: string;
-  }>('subscriptions', []),
+  }>("subscriptions", []),
 
-  usageCounters: createCrudFunctions<{
+  usageCounters: createSupabaseCrudFunctions<{
     id: string;
     store_id: string;
     month: string;
@@ -1840,7 +1852,7 @@ export const db = {
     users_count: number;
     created_at?: string;
     updated_at?: string;
-  }>('usage_counters', []),
+  }>("usage_counters", []),
 
   resolveStoreId,
 
@@ -1848,3 +1860,4 @@ export const db = {
 
   replaceStoryRelations,
 };
+
