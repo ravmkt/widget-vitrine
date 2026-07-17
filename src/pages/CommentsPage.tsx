@@ -117,6 +117,7 @@ const CommentsPage = () => {
 
   useEffect(() => {
     console.log('[CommentsPage] useEffect disparou', { storeId, tenantLoading });
+    console.log('[CommentsPage] sessão autenticada no preview:', supabase?.auth?.getSession ? 'disponível' : 'indisponível');
     if (!tenantLoading) loadComments();
   }, [storeId, tenantLoading]);
 
