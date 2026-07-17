@@ -1,5 +1,5 @@
 (function () {
-    var WIDGET_VERSION = '2026.07.17-02';
+    var WIDGET_VERSION = '2026.07.17-03';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -2685,9 +2685,9 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig);
       readStoryProductsData = storyProducts;
       readProductsData = products;
 
-      if (!stories.length || modalConfig.hide_stories) {
-        return;
-      }
+      if (!stories.length) {
+  return;
+}
 
       var activeVideos = videos.filter(function (video) {
         return (
