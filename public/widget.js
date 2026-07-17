@@ -736,6 +736,7 @@
       heartFilled: '<svg width="18" height="18" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
       comment: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
       share: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>',
+      measure: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17L17 3l4 4L7 21a2 2 0 0 1-3-3z"/><path d="M14 6l4 4"/><path d="M11 9l2 2"/><path d="M8 12l2 2"/><path d="M5 15l2 2"/></svg>',
       whatsapp: '<svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M16.6 13.2c-.3-.2-1.7-.8-2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.8 0c-.4-.2-1.4-.5-2.6-1.6-.9-.8-1.6-1.8-1.8-2.2-.2-.4 0-.6.2-.8l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6s-.7-1.7-1-2.3c-.3-.6-.6-.5-.8-.5h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.8s1.3 3.2 1.5 3.4c.2.2 2.3 3.6 5.6 5.1.8.4 1.5.6 2.1.8.9.3 1.7.3 2.3.2.7-.1 1.7-.7 2-1.3.3-.6.3-1.1.2-1.3-.1-.2-.3-.3-.6-.5z"/><path d="M20 4A10 10 0 0 0 3.6 16.2L2 22l5.9-1.5A10 10 0 1 0 20 4zm-7.9 15.4c-1.6 0-3.2-.4-4.6-1.3l-.3-.2-3.5.9.9-3.4-.2-.3A8.1 8.1 0 1 1 12.1 19.4z"/></svg>',
       close: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>'
     };
@@ -905,6 +906,25 @@
         hasSocial = true;
       }
 
+      /* Comentários */
+var commentsBtn = createEl('button', 'vl-social-btn');
+commentsBtn.type = 'button';
+commentsBtn.innerHTML = svgIcon('comment');
+commentsBtn.setAttribute('aria-label', 'Comentários');
+commentsBtn.title = 'Comentários';
+
+commentsBtn.addEventListener('click', function (e) {
+  e.stopPropagation();
+
+  // A função que abrirá o painel ou modal de comentários
+  if (typeof openComments === 'function') {
+    openComments();
+  }
+});
+
+social.appendChild(commentsBtn);
+hasSocial = true;
+
       /* Share */
       if (modalConfig.show_share_button !== false) {
         var shareBtn = createEl('button', 'vl-social-btn');
@@ -925,6 +945,22 @@
         social.appendChild(shareBtn);
         hasSocial = true;
       }
+
+      /* Medidas — função será habilitada posteriormente */
+var measureBtn = createEl('button', 'vl-social-btn');
+measureBtn.type = 'button';
+measureBtn.innerHTML = svgIcon('measure');
+measureBtn.setAttribute('aria-label', 'Medidas');
+measureBtn.title = 'Medidas';
+
+measureBtn.addEventListener('click', function (e) {
+  e.stopPropagation();
+
+  // Função de medidas será adicionada posteriormente.
+});
+
+social.appendChild(measureBtn);
+hasSocial = true;
 
       /* WhatsApp */
       if (modalConfig.show_whatsapp_button !== false) {
