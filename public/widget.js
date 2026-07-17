@@ -506,6 +506,9 @@
     + '.vl-header-left{display:flex!important;flex-direction:column!important;gap:2px!important;min-width:0!important;flex:1!important;padding-right:48px!important;pointer-events:auto!important;}'
     + '.vl-title{font-weight:800!important;color:#fff!important;font-size:13px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-shadow:0 1px 3px rgba(0,0,0,0.5)!important;}'
     + '.vl-count{font-size:10px!important;font-weight:700!important;color:rgba(255,255,255,0.65)!important;text-transform:uppercase!important;}'
+  
+
+    + '.vl-close{all:unset!important;flex-shrink:0!important;width:32px!important;height:32px!important;border-radius:999px!important;'
     .vl-media-controls {
   position: absolute !important;
   top: 14px !important;
@@ -556,143 +559,7 @@
   width: 17px !important;
   height: 17px !important;
 }
-(function setupVidlyticsMediaControls() {
-  var body = document.querySelector('.vl-body');
-  var video = document.querySelector('.vl-player');
 
-  if (!body || !video) return;
-
-  // Evita duplicar os controles caso o widget seja reinicializado
-  var existingControls = body.querySelector('.vl-media-controls');
-  if (existingControls) existingControls.remove();
-
-  var controls = document.createElement('div');
-  controls.className = 'vl-media-controls';
-
-  var muteButton = document.createElement('button');
-  muteButton.type = 'button';
-  muteButton.className = 'vl-media-control vl-mute-control';
-  muteButton.setAttribute('aria-label', 'Ativar som');
-
-  var playButton = document.createElement('button');
-  playButton.type = 'button';
-  playButton.className = 'vl-media-control vl-play-control';
-  playButton.setAttribute('aria-label', 'Reproduzir');
-
-  /*
-   * O botão X existente permanece inalterado.
-   * Estes dois botões são inseridos antes dele.
-   */
-  var closeButton = body.querySelector(
-    '.vl-close, .vl-close-button, [data-vl-close], [aria-label="Fechar"]'
-  );
-
-  controls.appendChild(muteButton);
-  controls.appendChild(playButton);
-
-  if (closeButton && closeButton.parentNode) {
-    closeButton.parentNode.insertBefore(controls, closeButton);
-  } else {
-    body.appendChild(controls);
-  }
-
-  function muteIcon() {
-    return (
-      '<svg viewBox="0 0 24 24" aria-hidden="true">' +
-        '<path d="M4 9v6h4l5 4V5L8 9H4"></path>' +
-        '<path d="M17 9.5c1.4 1.4 1.4 3.6 0 5"></path>' +
-        '<path d="M20 7c2.8 2.8 2.8 7.2 0 10"></path>' +
-      '</svg>'
-    );
-  }
-
-  function unmuteIcon() {
-    return (
-      '<svg viewBox="0 0 24 24" aria-hidden="true">' +
-        '<path d="M4 9v6h4l5 4V5L8 9H4"></path>' +
-        '<path d="M18 9.5c1.4 1.4 1.4 3.6 0 5"></path>' +
-      '</svg>'
-    );
-  }
-
-  function playIcon() {
-    return (
-      '<svg viewBox="0 0 24 24" aria-hidden="true">' +
-        '<path d="M8 5l11 7-11 7V5z"></path>' +
-      '</svg>'
-    );
-  }
-
-  function pauseIcon() {
-    return (
-      '<svg viewBox="0 0 24 24" aria-hidden="true">' +
-        '<path d="M8 5v14"></path>' +
-        '<path d="M16 5v14"></path>' +
-      '</svg>'
-    );
-  }
-
-  function updateMuteButton() {
-    var isMuted = video.muted || video.volume === 0;
-
-    muteButton.innerHTML = isMuted ? muteIcon() : unmuteIcon();
-    muteButton.setAttribute(
-      'aria-label',
-      isMuted ? 'Ativar som' : 'Silenciar'
-    );
-  }
-
-  function updatePlayButton() {
-    var isPaused = video.paused;
-
-    playButton.innerHTML = isPaused ? playIcon() : pauseIcon();
-    playButton.setAttribute(
-      'aria-label',
-      isPaused ? 'Reproduzir' : 'Pausar'
-    );
-  }
-
-  muteButton.addEventListener('click', function (event) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    video.muted = !video.muted;
-
-    if (!video.muted && video.volume === 0) {
-      video.volume = 1;
-    }
-
-    updateMuteButton();
-  });
-
-  playButton.addEventListener('click', function (event) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (video.paused) {
-      var playPromise = video.play();
-
-      if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.catch(function () {
-          // O navegador pode bloquear o áudio, mas o botão continua funcionando.
-        });
-      }
-    } else {
-      video.pause();
-    }
-
-    updatePlayButton();
-  });
-
-  video.addEventListener('play', updatePlayButton);
-  video.addEventListener('pause', updatePlayButton);
-  video.addEventListener('volumechange', updateMuteButton);
-
-  updateMuteButton();
-  updatePlayButton();
-})();
-
-    + '.vl-close{all:unset!important;flex-shrink:0!important;width:32px!important;height:32px!important;border-radius:999px!important;'
     + '.vl-header-actions{display:flex!important;align-items:center!important;gap:8px!important;pointer-events:auto!important;}'
 + '.vl-control{all:unset!important;flex-shrink:0!important;width:32px!important;height:32px!important;border-radius:999px!important;'
 + 'background:rgba(0,0,0,0.4)!important;backdrop-filter:blur(12px)!important;display:flex!important;align-items:center!important;'
@@ -980,13 +847,43 @@ playBtn.type = 'button';
 playBtn.innerHTML = svgIcon('pause');
 playBtn.setAttribute('aria-label', 'Pausar vídeo');
 
+var headerActions = createEl('div', 'vl-header-actions');
+
+// Botão de mute/unmute
+var muteBtn = createEl('button', 'vl-control');
+muteBtn.type = 'button';
+muteBtn.innerHTML = svgIcon(isMuted ? 'mute' : 'unmute');
+muteBtn.setAttribute(
+  'aria-label',
+  isMuted ? 'Ativar som' : 'Desativar som'
+);
+
+// Botão de play/pause
+var playBtn = createEl('button', 'vl-control');
+playBtn.type = 'button';
+playBtn.innerHTML = svgIcon(isPlaying ? 'pause' : 'play');
+playBtn.setAttribute(
+  'aria-label',
+  isPlaying ? 'Pausar vídeo' : 'Reproduzir vídeo'
+);
+
+// Botão de fechar
 var closeBtn = createEl('button', 'vl-close');
 closeBtn.type = 'button';
 closeBtn.innerHTML = svgIcon('close');
+
 closeBtn.addEventListener('click', function (e) {
   e.stopPropagation();
   closeOverlay();
 });
+
+// Ordem dos botões: mute, play/pause e fechar
+headerActions.appendChild(muteBtn);
+headerActions.appendChild(playBtn);
+
+header.appendChild(headerActions);
+header.appendChild(closeBtn);
+
 
 headerActions.appendChild(muteBtn);
 headerActions.appendChild(playBtn);
@@ -1148,6 +1045,48 @@ modalContent.appendChild(header);
         var playPromise = newVid.play();
         if (playPromise) {
           playPromise.catch(function (e) { console.warn('Vidlytics Play Block:', e); });
+if (newVid) {
+  newVid.addEventListener('play', function () {
+    isPlaying = true;
+    playBtn.innerHTML = svgIcon('pause');
+    playBtn.setAttribute('aria-label', 'Pausar vídeo');
+  });
+
+  newVid.addEventListener('pause', function () {
+    isPlaying = false;
+    playBtn.innerHTML = svgIcon('play');
+    playBtn.setAttribute('aria-label', 'Reproduzir vídeo');
+  });
+
+  muteBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+
+    isMuted = !isMuted;
+    newVid.muted = isMuted;
+
+    muteBtn.innerHTML = svgIcon(isMuted ? 'mute' : 'unmute');
+    muteBtn.setAttribute(
+      'aria-label',
+      isMuted ? 'Ativar som' : 'Desativar som'
+    );
+  });
+
+  playBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+
+    if (newVid.paused) {
+      var promise = newVid.play();
+
+      if (promise) {
+        promise.catch(function (err) {
+          console.warn('Vidlytics Play Block:', err);
+        });
+      }
+    } else {
+      newVid.pause();
+    }
+  });
+}
 
           if (newVid) {
   newVid.addEventListener('play', function () {
