@@ -506,6 +506,192 @@
     + '.vl-header-left{display:flex!important;flex-direction:column!important;gap:2px!important;min-width:0!important;flex:1!important;padding-right:48px!important;pointer-events:auto!important;}'
     + '.vl-title{font-weight:800!important;color:#fff!important;font-size:13px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-shadow:0 1px 3px rgba(0,0,0,0.5)!important;}'
     + '.vl-count{font-size:10px!important;font-weight:700!important;color:rgba(255,255,255,0.65)!important;text-transform:uppercase!important;}'
+    .vl-media-controls {
+  position: absolute !important;
+  top: 14px !important;
+  right: 12px !important;
+  z-index: 30 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  pointer-events: auto !important;
+}
+
+.vl-media-control {
+  width: 30px !important;
+  height: 30px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  border-radius: 50% !important;
+  background: rgba(0, 0, 0, 0.18) !important;
+  color: #fff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+  line-height: 1 !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+.vl-media-control:hover {
+  background: rgba(0, 0, 0, 0.35) !important;
+}
+
+.vl-media-control svg {
+  width: 16px !important;
+  height: 16px !important;
+  display: block !important;
+  pointer-events: none !important;
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 1.7 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+.vl-media-control.vl-play-control svg {
+  width: 17px !important;
+  height: 17px !important;
+}
+(function setupVidlyticsMediaControls() {
+  var body = document.querySelector('.vl-body');
+  var video = document.querySelector('.vl-player');
+
+  if (!body || !video) return;
+
+  // Evita duplicar os controles caso o widget seja reinicializado
+  var existingControls = body.querySelector('.vl-media-controls');
+  if (existingControls) existingControls.remove();
+
+  var controls = document.createElement('div');
+  controls.className = 'vl-media-controls';
+
+  var muteButton = document.createElement('button');
+  muteButton.type = 'button';
+  muteButton.className = 'vl-media-control vl-mute-control';
+  muteButton.setAttribute('aria-label', 'Ativar som');
+
+  var playButton = document.createElement('button');
+  playButton.type = 'button';
+  playButton.className = 'vl-media-control vl-play-control';
+  playButton.setAttribute('aria-label', 'Reproduzir');
+
+  /*
+   * O botão X existente permanece inalterado.
+   * Estes dois botões são inseridos antes dele.
+   */
+  var closeButton = body.querySelector(
+    '.vl-close, .vl-close-button, [data-vl-close], [aria-label="Fechar"]'
+  );
+
+  controls.appendChild(muteButton);
+  controls.appendChild(playButton);
+
+  if (closeButton && closeButton.parentNode) {
+    closeButton.parentNode.insertBefore(controls, closeButton);
+  } else {
+    body.appendChild(controls);
+  }
+
+  function muteIcon() {
+    return (
+      '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M4 9v6h4l5 4V5L8 9H4"></path>' +
+        '<path d="M17 9.5c1.4 1.4 1.4 3.6 0 5"></path>' +
+        '<path d="M20 7c2.8 2.8 2.8 7.2 0 10"></path>' +
+      '</svg>'
+    );
+  }
+
+  function unmuteIcon() {
+    return (
+      '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M4 9v6h4l5 4V5L8 9H4"></path>' +
+        '<path d="M18 9.5c1.4 1.4 1.4 3.6 0 5"></path>' +
+      '</svg>'
+    );
+  }
+
+  function playIcon() {
+    return (
+      '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M8 5l11 7-11 7V5z"></path>' +
+      '</svg>'
+    );
+  }
+
+  function pauseIcon() {
+    return (
+      '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M8 5v14"></path>' +
+        '<path d="M16 5v14"></path>' +
+      '</svg>'
+    );
+  }
+
+  function updateMuteButton() {
+    var isMuted = video.muted || video.volume === 0;
+
+    muteButton.innerHTML = isMuted ? muteIcon() : unmuteIcon();
+    muteButton.setAttribute(
+      'aria-label',
+      isMuted ? 'Ativar som' : 'Silenciar'
+    );
+  }
+
+  function updatePlayButton() {
+    var isPaused = video.paused;
+
+    playButton.innerHTML = isPaused ? playIcon() : pauseIcon();
+    playButton.setAttribute(
+      'aria-label',
+      isPaused ? 'Reproduzir' : 'Pausar'
+    );
+  }
+
+  muteButton.addEventListener('click', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    video.muted = !video.muted;
+
+    if (!video.muted && video.volume === 0) {
+      video.volume = 1;
+    }
+
+    updateMuteButton();
+  });
+
+  playButton.addEventListener('click', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (video.paused) {
+      var playPromise = video.play();
+
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(function () {
+          // O navegador pode bloquear o áudio, mas o botão continua funcionando.
+        });
+      }
+    } else {
+      video.pause();
+    }
+
+    updatePlayButton();
+  });
+
+  video.addEventListener('play', updatePlayButton);
+  video.addEventListener('pause', updatePlayButton);
+  video.addEventListener('volumechange', updateMuteButton);
+
+  updateMuteButton();
+  updatePlayButton();
+})();
+
     + '.vl-close{all:unset!important;flex-shrink:0!important;width:32px!important;height:32px!important;border-radius:999px!important;'
     + '.vl-header-actions{display:flex!important;align-items:center!important;gap:8px!important;pointer-events:auto!important;}'
 + '.vl-control{all:unset!important;flex-shrink:0!important;width:32px!important;height:32px!important;border-radius:999px!important;'
