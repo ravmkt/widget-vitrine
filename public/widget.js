@@ -904,6 +904,8 @@
         likeCountEl.textContent = String(likeCount);
         social.appendChild(likeCountEl);
         hasSocial = true;
+           }
+
   
       /* Comentários */
 var commentsBtn = createEl('button', 'vl-social-btn');
@@ -923,6 +925,7 @@ commentsBtn.addEventListener('click', function (e) {
 
 social.appendChild(commentsBtn);
 hasSocial = true;
+           }
 
       /* Share */
       if (modalConfig.show_share_button !== false) {
