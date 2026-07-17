@@ -1317,7 +1317,7 @@ function openSizingPanel(modelId) {
 
   var header = createEl('div', 'vl-sizing-header');
   var title = createEl('div', 'vl-sizing-title');
-  title.textContent = 'Tabela de Medidas';
+  title.textContent = 'Medidas da modelo';
 
   var closeButton = createEl('button', 'vl-sizing-close');
   closeButton.type = 'button';
