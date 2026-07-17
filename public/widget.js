@@ -1,5 +1,5 @@
 (function () {
-    var WIDGET_VERSION = '2026.07.17-01';
+    var WIDGET_VERSION = '2026.07.17-02';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -2262,22 +2262,25 @@ if (modalConfig.show_whatsapp_button !== false) {
         });
 
         // Botão de play/pause
-        playBtn.addEventListener('click', function (e) {
-          e.preventDefault();
-          e.stopPropagation();
+        if (playBtn) {
+  playBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
 
-          if (newVid.paused) {
-            var playPromise = newVid.play();
+    if (newVid.paused) {
+      var playPromise = newVid.play();
 
-            if (playPromise && typeof playPromise.catch === 'function') {
-              playPromise.catch(function (error) {
-                console.warn('Vidlytics Play Block:', error);
-              });
-            }
-          } else {
-            newVid.pause();
-          }
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(function (error) {
+          console.warn('Vidlytics Play Block:', error);
         });
+      }
+    } else {
+      newVid.pause();
+    }
+  });
+}
+
 
         // Reprodução automática
         var playPromise = newVid.play();
