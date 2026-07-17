@@ -199,9 +199,17 @@ const CommentsPage = () => {
       ]);
 
       console.log(
-        "[CommentsPage] comentários recebidos:",
+        "[CommentsPage] comentários recebidos do DB:",
         allComments,
       );
+
+      if (allComments && allComments.length > 0) {
+        console.log("[CommentsPage] primeiro comentário bruto:", allComments[0]);
+        console.log("[CommentsPage] mapeamento check:", {
+          user_name: (allComments[0] as any).user_name,
+          text: (allComments[0] as any).text
+        });
+      }
 
       console.log("[CommentsPage] vídeos recebidos:", allVideos);
 

@@ -850,11 +850,19 @@ const normalizeTableItemForClient = <T extends Record<string, any>>(
   tableName: string,
   item: T,
 ): T => {
-  if (tableName !== 'appearances') {
-    return item;
+  const normalized: Record<string, any> = { ...item };
+
+  // Normalização de comentários: banco usa author_name/content, app usa user_name/text
+  if (tableName === 'comments') {
+    if (item.author_name !== undefined) normalized.user_name = item.author_name;
+    if (item.content !== undefined) normalized.text = item.content;
   }
 
-  const appearance: Record<string, any> = { ...item };
+  if (tableName !== 'appearances') {
+    return normalized as T;
+  }
+
+  const appearance: Record<string, any> = normalized;
 
   appearance.useGlobalAppearance =
     appearance.useGlobalAppearance ??
@@ -965,9 +973,23 @@ const preparePayloadForSave = <T extends Record<string, any>>(
   tableName: string,
   item: T,
 ): T => {
+  const normalizedPayload: Record<string, any> = { ...item };
+
+  // Normalização inversa para comentários: app usa user_name/text, banco usa author_name/content
+  if (tableName === 'comments') {
+    if (item.user_name !== undefined) normalizedPayload.author_name = item.user_name;
+    if (item.text !== undefined) normalizedPayload.content = item.text;
+
+    // Remove campos que não existem no banco
+    delete normalizedPayload.user_name;
+    delete normalizedPayload.text;
+    delete normalizedPayload.replies;
+    delete normalizedPayload.is_store_reply;
+  }
+
   return normalizeUuidPayload(
     tableName,
-    sanitizeTablePayload(tableName, removeUndefinedValues(item)),
+    sanitizeTablePayload(tableName, removeUndefinedValues(normalizedPayload)),
   );
 };
 
