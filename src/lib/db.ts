@@ -1393,7 +1393,10 @@ const createSupabaseCrudFunctions = <
   tableName: string,
   fallbackMemoryArray: T[],
 ) => {
-  const localFallback = createCrudFunctions<T>(tableName, fallbackMemoryArray);
+  const localFallback = createCrudFunctions<T>(
+    tableName,
+    fallbackMemoryArray,
+  );
 
   return {
     async getAll(storeId?: string): Promise<T[]> {
@@ -1401,22 +1404,44 @@ const createSupabaseCrudFunctions = <
         return localFallback.getAll(storeId);
       }
 
-      console.log('[comments.getAll] executando consulta', { storeId });
+      console.log(`[${tableName}.getAll] executando consulta`, {
+        storeId,
+      });
 
-      let query = supabase.from(tableName as any).select('*');
+      let query = supabase
+        .from(tableName as any)
+        .select("*");
 
       if (storeId) {
-        query = query.eq('store_id', storeId);
+        if (!isValidUuid(storeId)) {
+          console.warn(
+            `[${tableName}.getAll] storeId inválido ignorado:`,
+            storeId,
+          );
+
+          return [];
+        }
+
+        query = query.eq("store_id", storeId);
       }
 
-      query = query.order('created_at', { ascending: false });
+      query = query.order("created_at", {
+        ascending: false,
+      });
 
       const { data, error } = await query;
 
-      console.log('[comments.getAll] resposta do Supabase', { data, error });
+      console.log(`[${tableName}.getAll] resposta do Supabase`, {
+        data,
+        error,
+      });
 
       if (error) {
-        console.error(`Erro ao buscar ${tableName}:`, error);
+        console.error(
+          `Erro ao buscar dados da tabela ${tableName}:`,
+          error,
+        );
+
         throw error;
       }
 
@@ -1425,7 +1450,10 @@ const createSupabaseCrudFunctions = <
       ) as T[];
     },
 
-    async getById(id: string, storeId?: string): Promise<T | null> {
+    async getById(
+      id: string,
+      storeId?: string,
+    ): Promise<T | null> {
       if (!isSupabaseConfigured) {
         return localFallback.getById(id, storeId);
       }
@@ -1434,22 +1462,38 @@ const createSupabaseCrudFunctions = <
         return null;
       }
 
-      let query = supabase.from(tableName as any).select('*').eq('id', id);
+      let query = supabase
+        .from(tableName as any)
+        .select("*")
+        .eq("id", id);
 
       if (storeId) {
-        query = query.eq('store_id', storeId);
+        if (!isValidUuid(storeId)) {
+          return null;
+        }
+
+        query = query.eq("store_id", storeId);
       }
 
       const { data, error } = await query.maybeSingle();
 
       if (error) {
-        console.error(`Erro ao buscar ${tableName} por ID:`, error);
+        console.error(
+          `Erro ao buscar ${tableName} por ID:`,
+          error,
+        );
+
         throw error;
       }
 
-      if (!data) return null;
+      if (!data) {
+        return null;
+      }
 
-      return normalizeTableItemForClient(tableName, data as any) as T;
+      return normalizeTableItemForClient(
+        tableName,
+        data as any,
+      ) as T;
     },
 
     async save(item: T): Promise<T> {
@@ -1468,53 +1512,86 @@ const createSupabaseCrudFunctions = <
         updated_at: now,
       } as any);
 
-      if (tableName !== 'stores' && payload.store_id) {
+      if (
+        tableName !== "stores" &&
+        payload.store_id
+      ) {
         await ensureSupabaseStoreExists(payload.store_id);
       }
 
-      payload = await normalizeSupabaseRelationsBeforeSave(tableName, payload);
+      payload = await normalizeSupabaseRelationsBeforeSave(
+        tableName,
+        payload,
+      );
 
       if (originalIdIsValid) {
-        const { data: existingItem, error: selectError } = await supabase
+        const {
+          data: existingItem,
+          error: selectError,
+        } = await supabase
           .from(tableName as any)
-          .select('id')
-          .eq('id', payload.id)
+          .select("id")
+          .eq("id", payload.id)
           .maybeSingle();
 
         if (selectError) {
-          console.error(`Erro ao verificar ${tableName}:`, selectError);
+          console.error(
+            `Erro ao verificar ${tableName}:`,
+            selectError,
+          );
+
           throw selectError;
         }
 
         if (existingItem) {
-          const { data, error } = await supabase
+          const {
+            data,
+            error: updateError,
+          } = await supabase
             .from(tableName as any)
             .update(payload as any)
-            .eq('id', payload.id)
+            .eq("id", payload.id)
             .select()
             .single();
 
-          if (error) {
-            console.error(`Erro ao atualizar ${tableName}:`, error);
-            throw error;
+          if (updateError) {
+            console.error(
+              `Erro ao atualizar ${tableName}:`,
+              updateError,
+            );
+
+            throw updateError;
           }
 
-          return normalizeTableItemForClient(tableName, data as any) as T;
+          return normalizeTableItemForClient(
+            tableName,
+            data as any,
+          ) as T;
         }
       }
 
-      const { data, error } = await supabase
+      const {
+        data,
+        error: insertError,
+      } = await supabase
         .from(tableName as any)
         .insert(payload as any)
         .select()
         .single();
 
-      if (error) {
-        console.error(`Erro ao inserir ${tableName}:`, error);
-        throw error;
+      if (insertError) {
+        console.error(
+          `Erro ao inserir ${tableName}:`,
+          insertError,
+        );
+
+        throw insertError;
       }
 
-      return normalizeTableItemForClient(tableName, data as any) as T;
+      return normalizeTableItemForClient(
+        tableName,
+        data as any,
+      ) as T;
     },
 
     async delete(id: string): Promise<boolean> {
@@ -1523,17 +1600,25 @@ const createSupabaseCrudFunctions = <
       }
 
       if (!isValidUuid(id)) {
-        console.warn(`ID inválido ignorado ao deletar ${tableName}:`, id);
+        console.warn(
+          `ID inválido ignorado ao deletar ${tableName}:`,
+          id,
+        );
+
         return true;
       }
 
       const { error } = await supabase
         .from(tableName as any)
         .delete()
-        .eq('id', id);
+        .eq("id", id);
 
       if (error) {
-        console.error(`Erro ao deletar ${tableName}:`, error);
+        console.error(
+          `Erro ao deletar ${tableName}:`,
+          error,
+        );
+
         throw error;
       }
 
@@ -1541,6 +1626,7 @@ const createSupabaseCrudFunctions = <
     },
   };
 };
+
 
 export const resolveStoreId = async (
   storeId?: string | null,
