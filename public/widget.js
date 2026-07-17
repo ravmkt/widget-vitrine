@@ -968,102 +968,169 @@ if (modalConfig.show_whatsapp_button !== false) {
 
   waBtn.type = 'button';
   waBtn.innerHTML = svgIcon('whatsapp');
+  waBtn.setAttribute('aria-label', 'Compartilhar pelo WhatsApp');
+  waBtn.title = 'Compartilhar pelo WhatsApp';
 
   waBtn.addEventListener('click', function (e) {
-    e.stopPropagation();
     e.preventDefault();
+    e.stopPropagation();
 
-    console.log('STORY COMPLETO:', story);
-    console.log(
-  'PRODUTOS DO STORY:',
-  JSON.stringify(storyProducts, null, 2)
-);
+    /*
+     * storyProducts contém os relacionamentos da tabela story_products.
+     * Exemplo:
+     * {
+     *   story_id: "...",
+     *   product_id: "..."
+     * }
+     *
+     * products contém os dados completos dos produtos.
+     */
 
-console.log(
-  'PRODUTO VINCULADO:',
-  JSON.stringify(linkedProduct, null, 2)
-);
+    var storyRelations = [];
 
+    if (Array.isArray(storyProducts)) {
+      storyRelations = storyProducts.filter(function (relation) {
+        return idsEqual(relation.story_id, story.id);
+      });
+    }
 
     var linkedProduct = null;
+    var linkedRelation = storyRelations.length ? storyRelations[0] : null;
 
-    // Produto diretamente vinculado ao Story
+    /*
+     * 1. Produto diretamente dentro do objeto story, caso exista
+     */
     if (story.product && typeof story.product === 'object') {
       linkedProduct = story.product;
     }
 
-    // Procura o produto pelo ID
-    if (
-      !linkedProduct &&
-      Array.isArray(storyProducts) &&
-      story.product_id
-    ) {
-      linkedProduct = storyProducts.find(function (product) {
-        return (
-          String(product.id) === String(story.product_id) ||
-          String(product.product_id) === String(story.product_id)
-        );
-      });
+    /*
+     * 2. Procura pelo product_id informado diretamente no story
+     */
+    var storyProductId = firstDefined(
+      story.product_id,
+      story.productId
+    );
+
+    if (!linkedProduct && storyProductId && Array.isArray(products)) {
+      linkedProduct = products.find(function (product) {
+        return idsEqual(product.id, storyProductId);
+      }) || null;
     }
 
-    // Se houver apenas um produto, utiliza esse produto
-    if (
-      !linkedProduct &&
-      Array.isArray(storyProducts) &&
-      storyProducts.length === 1
-    ) {
-      linkedProduct = storyProducts[0];
+    /*
+     * 3. Procura o produto através da tabela story_products
+     */
+    if (!linkedProduct && linkedRelation && Array.isArray(products)) {
+      var relationProductId = firstDefined(
+        linkedRelation.product_id,
+        linkedRelation.productId
+      );
+
+      if (relationProductId) {
+        linkedProduct = products.find(function (product) {
+          return idsEqual(product.id, relationProductId);
+        }) || null;
+      }
+    }
+
+    /*
+     * 4. Caso story_products já venha com os dados do produto incorporados
+     */
+    if (!linkedProduct && linkedRelation) {
+      if (
+        linkedRelation.product &&
+        typeof linkedRelation.product === 'object'
+      ) {
+        linkedProduct = linkedRelation.product;
+      } else if (
+        linkedRelation.name ||
+        linkedRelation.product_name ||
+        linkedRelation.product_url ||
+        linkedRelation.url
+      ) {
+        linkedProduct = linkedRelation;
+      }
     }
 
     linkedProduct = linkedProduct || {};
 
-    var productUrl =
-  story.product_url ||
-  story.product_link ||
-  story.productLink ||
-  story.url ||
-  (story.product && (
-    story.product.url ||
-    story.product.product_url ||
-    story.product.product_link ||
-    story.product.link ||
-    story.product.permalink
-  )) ||
-  linkedProduct.product_url ||
-  linkedProduct.product_link ||
-  linkedProduct.productLink ||
-  linkedProduct.url ||
-  linkedProduct.link ||
-  linkedProduct.permalink ||
-  linkedProduct.href ||
-  '';
+    console.log('VIDLYTICS — STORY:', story);
+    console.log('VIDLYTICS — RELACIONAMENTOS DO STORY:', storyRelations);
+    console.log('VIDLYTICS — PRODUTO ENCONTRADO:', linkedProduct);
 
-    var productTitle =
-  story.product_title ||
-  story.product_name ||
-  (story.product && (
-    story.product.title ||
-    story.product.name ||
-    story.product.product_name
-  )) ||
-  story.title ||
-  linkedProduct.title ||
-  linkedProduct.name ||
-  linkedProduct.product_name ||
-  'Produto';
+    /*
+     * Obtém a URL pública do produto
+     */
+    var productUrl = firstDefined(
+      linkedProduct.product_url,
+      linkedProduct.productUrl,
+      linkedProduct.product_link,
+      linkedProduct.productLink,
+      linkedProduct.permalink,
+      linkedProduct.href,
+      linkedProduct.url,
 
+      story.product_url,
+      story.productUrl,
+      story.product_link,
+      story.productLink,
+
+      story.product && story.product.url,
+      story.product && story.product.product_url,
+      story.product && story.product.productUrl,
+      story.product && story.product.product_link,
+      story.product && story.product.permalink,
+
+      story.url
+    );
+
+    /*
+     * Obtém o nome do produto
+     */
+    var productTitle = firstDefined(
+      linkedProduct.name,
+      linkedProduct.title,
+      linkedProduct.product_name,
+      linkedProduct.productName,
+
+      story.product_title,
+      story.productTitle,
+      story.product_name,
+      story.productName,
+
+      story.product && story.product.name,
+      story.product && story.product.title,
+      story.product && story.product.product_name,
+
+      story.title,
+      'Produto'
+    );
 
     if (!productUrl) {
-      alert('A URL pública do produto não está cadastrada neste Story.');
+      alert(
+        'Este produto não possui uma URL pública cadastrada. ' +
+        'Verifique o campo product_url na tabela products.'
+      );
 
-      console.error('Nenhuma URL encontrada.');
-      console.error('Story:', story);
-      console.error('Produto encontrado:', linkedProduct);
+      console.error(
+        'VIDLYTICS — Nenhuma URL encontrada para o produto.',
+        {
+          story: story,
+          storyRelations: storyRelations,
+          linkedProduct: linkedProduct,
+          products: products
+        }
+      );
 
       return;
     }
 
-    // Converte URL relativa em URL completa
+    /*
+     * Converte URLs relativas em URLs absolutas
+     */
+    productUrl = String(productUrl).trim();
+
     if (
       productUrl.indexOf('http://') !== 0 &&
       productUrl.indexOf('https://') !== 0
@@ -1074,14 +1141,64 @@ console.log(
         productUrl;
     }
 
-    var msg =
-      'Quero mais informações sobre este produto:\n' +
+    /*
+     * Mensagem enviada ao WhatsApp
+     */
+    var message =
+      'Olá! Tenho interesse neste produto:\n\n' +
       productTitle +
       '\n' +
       productUrl;
 
-    var whatsappUrl =
-      'https://wa.me/?text=' + encodeURIComponent(msg);
+    /*
+     * Opcionalmente, pode configurar um número no VIDLYTICS_CONFIG:
+     *
+     * whatsappNumber: '5541999999999'
+     *
+     * Se não houver número, o WhatsApp abrirá a tela de compartilhamento.
+     */
+    var whatsappNumber = firstDefined(
+      config.whatsappNumber,
+      config.whatsapp_number,
+      config.whatsappPhone,
+      config.whatsapp_phone,
+      linkedProduct.whatsapp_number,
+      linkedProduct.whatsappNumber
+    );
+
+    var cleanWhatsappNumber = '';
+
+    if (whatsappNumber) {
+      cleanWhatsappNumber = String(whatsappNumber).replace(/\D/g, '');
+
+      /*
+       * Se for um número brasileiro sem código do país,
+       * adiciona automaticamente o código 55.
+       */
+      if (
+        cleanWhatsappNumber.length === 10 ||
+        cleanWhatsappNumber.length === 11
+      ) {
+        cleanWhatsappNumber = '55' + cleanWhatsappNumber;
+      }
+    }
+
+    var whatsappUrl = cleanWhatsappNumber
+      ? 'https://wa.me/' +
+        cleanWhatsappNumber +
+        '?text=' +
+        encodeURIComponent(message)
+      : 'https://wa.me/?text=' + encodeURIComponent(message);
+
+    trackMetric({
+      event_type: 'whatsapp_click',
+      story_id: story.id,
+      video_id: video.id,
+      product_id: linkedProduct.id || (
+        linkedRelation && linkedRelation.product_id
+      ) || null,
+      page_url: window.location.href
+    });
 
     window.open(
       whatsappUrl,
@@ -1093,6 +1210,7 @@ console.log(
   social.appendChild(waBtn);
   hasSocial = true;
 }
+
 
       if (hasSocial) body.appendChild(social);
 
