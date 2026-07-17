@@ -959,37 +959,7 @@ function buildSharedCss(appearance) {
     + '.vl-comments-feedback{min-height:18px!important;text-align:center!important;'
     + 'font-size:12px!important;color:' + modalMuted + '!important;}'
 
-    /* PAINEL DE MEDIDAS */
-    + '.vl-sizing-panel{position:absolute!important;inset:0!important;z-index:70!important;'
-    + 'display:none!important;flex-direction:column!important;'
-    + 'background:' + modalBackground + '!important;'
-    + 'padding:18px!important;color:' + modalText + '!important;}'
-
-    + '.vl-sizing-panel.is-open{display:flex!important;}'
-
-    + '.vl-sizing-header{display:flex!important;align-items:center!important;'
-    + 'justify-content:space-between!important;padding:28px 0 16px!important;'
-    + 'border-bottom:1px solid ' + modalBorder + '!important;}'
-
-    + '.vl-sizing-title{font-size:17px!important;font-weight:800!important;'
-    + 'color:' + modalText + '!important;}'
-
-    + '.vl-sizing-close{all:unset!important;width:36px!important;height:36px!important;'
-    + 'border-radius:999px!important;background:' + modalBorder + '!important;'
-    + 'display:flex!important;align-items:center!important;justify-content:center!important;'
-    + 'cursor:pointer!important;color:' + modalText + '!important;font-size:20px!important;}'
-
-    + '.vl-sizing-close:hover{background:' + primary + '!important;color:#fff!important;}'
-
-    + '.vl-sizing-content{flex:1!important;overflow-y:auto!important;padding:16px 0!important;}'
-
-    + '.vl-sizing-image-container{width:100%!important;margin-bottom:20px!important;border-radius:16px!important;overflow:hidden!important;background:' + modalBorder + '!important;}'
-    + '.vl-sizing-image{width:100%!important;height:auto!important;display:block!important;object-fit:contain!important;}'
-
-    + '.vl-sizing-table{width:100%!important;border-collapse:collapse!important;margin-top:10px!important;font-size:13px!important;}'
-    + '.vl-sizing-table th{text-align:left!important;padding:10px 8px!important;border-bottom:2px solid ' + modalBorder + '!important;font-weight:800!important;color:' + primary + '!important;text-transform:uppercase!important;font-size:11px!important;letter-spacing:0.05em!important;}'
-    + '.vl-sizing-table td{padding:10px 8px!important;border-bottom:1px solid ' + modalBorder + '!important;font-weight:600!important;}'
-
+    
     /* RODAPÉ */
     + '.vl-footer{position:absolute!important;bottom:0!important;left:0!important;right:0!important;'
     + 'z-index:40!important;background:linear-gradient(to top,rgba(0,0,0,.85),rgba(0,0,0,.5),transparent)!important;'
