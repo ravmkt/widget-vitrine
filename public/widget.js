@@ -974,7 +974,16 @@ if (modalConfig.show_whatsapp_button !== false) {
     e.preventDefault();
 
     console.log('STORY COMPLETO:', story);
-    console.log('PRODUTOS DO STORY:', storyProducts);
+    console.log(
+  'PRODUTOS DO STORY:',
+  JSON.stringify(storyProducts, null, 2)
+);
+
+console.log(
+  'PRODUTO VINCULADO:',
+  JSON.stringify(linkedProduct, null, 2)
+);
+
 
     var linkedProduct = null;
 
