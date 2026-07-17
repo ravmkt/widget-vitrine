@@ -72,30 +72,7 @@ const CommentsPage = () => {
       } catch (err) {
         console.error("Error fetching store settings:", err);
       }
-      useEffect(() => {
-  const verificarSessao = async () => {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-
-    console.log("[CommentsPage] userId:", user?.id ?? null);
-    console.log("[CommentsPage] usuário autenticado:", user);
-    console.log("[CommentsPage] erro de autenticação:", error);
-  };
-
-  verificarSessao();
-
-  console.log("[CommentsPage] useEffect disparou", {
-    storeId,
-    tenantLoading,
-  });
-
-  if (!tenantLoading) {
-    loadComments();
-  }
-}, [storeId, tenantLoading]);
-
+      
     };
     fetchStoreSettings();
   }, []);
