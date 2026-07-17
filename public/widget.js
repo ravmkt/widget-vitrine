@@ -971,54 +971,79 @@ if (modalConfig.show_whatsapp_button !== false) {
 
   waBtn.addEventListener('click', function (e) {
     e.stopPropagation();
-    e.preventDefault();
 
-    // Produto vinculado ao Story
-    var product = story.product || story.linked_product || story.product_data || {};
+    console.log('STORY COMPLETO:', story);
+    console.log('PRODUTOS DO STORY:', storyProducts);
 
-    // Nome do produto
-    var productName =
-      product.name ||
-      product.title ||
-      story.product_name ||
-      story.product_title ||
-      story.title ||
-      'produto';
+    var linkedProduct = null;
 
-    // Link do produto
+    // Tenta encontrar o produto diretamente dentro do story
+    if (story.product && typeof story.product === 'object') {
+      linkedProduct = story.product;
+    }
+
+    // Tenta encontrar pelo ID do produto
+    if (
+      !linkedProduct &&
+      Array.isArray(storyProducts) &&
+      story.product_id
+    ) {
+      linkedProduct = storyProducts.find(function (product) {
+        return String(product.id) === String(story.product_id) ||
+               String(product.product_id) === String(story.product_id);
+      });
+    }
+
+    // Se o story tiver somente um produto vinculado,
+    // usa o primeiro produto disponível
+    if (
+      !linkedProduct &&
+      Array.isArray(storyProducts) &&
+      storyProducts.length === 1
+    ) {
+      linkedProduct = storyProducts[0];
+    }
+
+    linkedProduct = linkedProduct || {};
+
     var productUrl =
-      product.url ||
-      product.link ||
-      product.permalink ||
       story.product_url ||
-      story.productUrl ||
       story.product_link ||
       story.productLink ||
-      story.link;
+      story.url ||
+      linkedProduct.product_url ||
+      linkedProduct.product_link ||
+      linkedProduct.url ||
+      linkedProduct.link ||
+      linkedProduct.permalink ||
+      linkedProduct.href ||
+      '';
+
+    var productTitle =
+      story.product_title ||
+      story.product_name ||
+      story.title ||
+      linkedProduct.title ||
+      linkedProduct.name ||
+      linkedProduct.product_name ||
+      'Produto';
 
     if (!productUrl) {
-      alert('O link do produto não foi encontrado.');
-      console.log('Dados completos do Story:', story);
+      alert('A URL pública do produto não está cadastrada neste Story.');
+      console.error('Nenhuma URL encontrada. Story:', story);
+      console.error('Produto encontrado:', linkedProduct);
       return;
     }
 
-    // Garante que o link seja absoluto
-    if (productUrl.indexOf('http://') !== 0 && productUrl.indexOf('https://') !== 0) {
-      productUrl = window.location.origin + (
-        productUrl.charAt(0) === '/' ? productUrl : '/' + productUrl
-      );
-    }
-
     var msg =
-      'Quero mais informações sobre esse produto: ' +
-      productName +
-      '\n\n' +
+      'Quero mais informações sobre este produto:\n' +
+      productTitle +
+      '\n' +
       productUrl;
 
     var whatsappUrl =
       'https://wa.me/?text=' + encodeURIComponent(msg);
 
-    // Abre o WhatsApp para a pessoa escolher os contatos
     window.open(
       whatsappUrl,
       '_blank',
@@ -1027,8 +1052,8 @@ if (modalConfig.show_whatsapp_button !== false) {
   });
 
   social.appendChild(waBtn);
-  hasSocial = true;
 }
+
 
 
     var productTitle =
