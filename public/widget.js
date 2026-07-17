@@ -1,4 +1,13 @@
 (function () {
+    var WIDGET_VERSION = '2026.07.17-01';
+
+  console.info(
+    '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
+    'color: #22c55e; font-weight: bold; font-size: 13px;'
+  );
+
+  window.VIDLYTICS_WIDGET_VERSION = WIDGET_VERSION;
+
   console.log(
     'VIDLYTICS WIDGET CARREGADO - FIX LOOP + NO AUTO CLOSE - 202607161906'
   );
