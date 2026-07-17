@@ -4,7 +4,11 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { db, Comment, Video } from "@/lib/db";
 import { useTenant } from "@/context/TenantContext";
 import { supabase } from "@/lib/supabase";
-import { Search, MessageSquare, Trash2 } from "lucide-react";
+import {
+  Search,
+  MessageSquare,
+  Trash2,
+} from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import CustomDialog from "@/components/CustomDialog";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
@@ -24,6 +28,11 @@ interface CommentWithReplies extends Comment {
   is_store_reply?: boolean;
 }
 
+interface StoreSettings {
+  store_name?: string;
+  store_logo_url?: string;
+}
+
 const CommentsPage = () => {
   const { storeId, loading: tenantLoading } = useTenant();
 
@@ -32,15 +41,13 @@ const CommentsPage = () => {
   const [loading, setLoading] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterVideo, setFilterVideo] = useState("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterVideo, setFilterVideo] = useState<string>("all");
 
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
-  const [editingCommentId, setEditingCommentId] = useState<string | null>(
-    null,
-  );
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [commentText, setCommentText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
 
@@ -93,10 +100,43 @@ const CommentsPage = () => {
     "👀",
   ];
 
-  /**
-   * Verifica a sessão autenticada.
-   * Este useEffect precisa ficar diretamente dentro do componente,
-   * nunca dentro de outra função.
+  /*
+   * Busca os dados da loja.
+   * Este é o único useEffect responsável por buscar app_settings.
+   */
+  useEffect(() => {
+    const fetchStoreSettings = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("app_settings")
+          .select("settings")
+          .limit(1)
+          .maybeSingle();
+
+        if (error) {
+          throw error;
+        }
+
+        const settings = data?.settings as StoreSettings | null;
+
+        if (settings) {
+          setStoreName(settings.store_name || "");
+          setStoreLogoUrl(settings.store_logo_url || "");
+        }
+      } catch (error) {
+        console.error(
+          "[CommentsPage] erro ao buscar configurações da loja:",
+          error,
+        );
+      }
+    };
+
+    fetchStoreSettings();
+  }, []);
+
+  /*
+   * Verifica a sessão atual do usuário.
+   * O userId é obtido automaticamente da sessão autenticada.
    */
   useEffect(() => {
     const verificarSessao = async () => {
@@ -113,47 +153,18 @@ const CommentsPage = () => {
     verificarSessao();
   }, []);
 
-  /**
-   * Busca as configurações da loja.
-   * Existe apenas um useEffect para essa finalidade.
-   */
-  useEffect(() => {
-    const fetchStoreSettings = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("app_settings")
-          .select("settings")
-          .limit(1)
-          .maybeSingle();
-
-        if (error) {
-          throw error;
-        }
-
-        if (data?.settings) {
-          setStoreName(data.settings.store_name || "");
-          setStoreLogoUrl(data.settings.store_logo_url || "");
-        }
-      } catch (error) {
-        console.error(
-          "[CommentsPage] erro ao buscar configurações da loja:",
-          error,
-        );
-      }
-    };
-
-    fetchStoreSettings();
-  }, []);
-
   const normalizeStatus = (status?: string) => {
     const value = String(status || "")
       .toLowerCase()
       .trim();
 
     if (
-      ["pending", "pendente", "pendente aprovação", "em análise"].includes(
-        value,
-      )
+      [
+        "pending",
+        "pendente",
+        "pendente aprovação",
+        "em análise",
+      ].includes(value)
     ) {
       return "pending";
     }
@@ -171,6 +182,8 @@ const CommentsPage = () => {
 
   const loadComments = async () => {
     try {
+      setLoading(true);
+
       console.log("[CommentsPage] storeId:", storeId);
       console.log("[CommentsPage] iniciando busca de comentários");
 
@@ -185,29 +198,32 @@ const CommentsPage = () => {
         db.videos.getAll(storeId),
       ]);
 
-      console.log("[CommentsPage] comentários recebidos:", allComments);
+      console.log(
+        "[CommentsPage] comentários recebidos:",
+        allComments,
+      );
+
       console.log("[CommentsPage] vídeos recebidos:", allVideos);
 
       setComments((allComments || []) as CommentWithReplies[]);
       setVideos(allVideos || []);
     } catch (error) {
-      console.error("[CommentsPage] erro ao carregar comentários:", error);
+      console.error(
+        "[CommentsPage] erro ao carregar comentários:",
+        error,
+      );
+
       showError("Erro ao carregar comentários.");
     } finally {
       setLoading(false);
     }
   };
 
-  /**
-   * Carrega comentários e vídeos somente depois que o TenantContext
-   * terminar de carregar a loja.
+  /*
+   * Carrega os comentários somente depois que o TenantContext
+   * terminar de identificar a loja atual.
    */
   useEffect(() => {
-    console.log("[CommentsPage] useEffect disparou", {
-      storeId,
-      tenantLoading,
-    });
-
     if (!tenantLoading) {
       loadComments();
     }
@@ -240,12 +256,12 @@ const CommentsPage = () => {
   };
 
   const filteredComments = useMemo(() => {
-    const normalizedSearch = searchTerm.toLowerCase();
-
     return comments.filter((comment) => {
+      const search = searchTerm.toLowerCase();
+
       const matchesSearch =
-        (comment.user_name || "").toLowerCase().includes(normalizedSearch) ||
-        (comment.text || "").toLowerCase().includes(normalizedSearch);
+        (comment.user_name || "").toLowerCase().includes(search) ||
+        (comment.text || "").toLowerCase().includes(search);
 
       const normalizedStatus = normalizeStatus(comment.status);
 
@@ -264,7 +280,9 @@ const CommentsPage = () => {
 
   const handleSort = (column: string) => {
     if (sortColumn === column) {
-      setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
+      setSortDirection((current) =>
+        current === "asc" ? "desc" : "asc",
+      );
       return;
     }
 
@@ -298,11 +316,14 @@ const CommentsPage = () => {
       }
     };
 
-    rows.sort((first, second) => {
-      const valueA = getSortValue(first);
-      const valueB = getSortValue(second);
+    rows.sort((a, b) => {
+      const valueA = getSortValue(a);
+      const valueB = getSortValue(b);
 
-      if (typeof valueA === "number" && typeof valueB === "number") {
+      if (
+        typeof valueA === "number" &&
+        typeof valueB === "number"
+      ) {
         return sortDirection === "asc"
           ? valueA - valueB
           : valueB - valueA;
@@ -321,36 +342,43 @@ const CommentsPage = () => {
     newStatus: Comment["status"],
   ) => {
     try {
-      const currentComment = comments.find(
+      const current = comments.find(
         (comment) => comment.id === commentId,
       );
 
-      if (!currentComment || !storeId) {
+      if (!current || !storeId) {
         showError("Não foi possível identificar a loja atual.");
         return;
       }
 
       await db.comments.save({
-        ...(currentComment as Comment & Record<string, unknown>),
+        ...(current as Comment & Record<string, unknown>),
         status: newStatus,
         store_id: storeId,
       } as Comment);
 
       await loadComments();
+
       showSuccess("Status atualizado com sucesso!");
     } catch (error) {
-      console.error("[CommentsPage] erro ao atualizar status:", error);
+      console.error(
+        "[CommentsPage] erro ao atualizar status:",
+        error,
+      );
+
       showError("Erro ao atualizar status.");
     }
   };
 
   const openStatusDropdown = (
-    event: React.MouseEvent<HTMLButtonElement | HTMLSpanElement>,
+    event: React.MouseEvent,
     commentId: string,
   ) => {
     event.stopPropagation();
 
-    const rect = event.currentTarget.getBoundingClientRect();
+    const rect = (
+      event.currentTarget as HTMLElement
+    ).getBoundingClientRect();
 
     setStatusDropdownPosition({
       top: rect.bottom + 8,
@@ -367,7 +395,7 @@ const CommentsPage = () => {
   };
 
   const handleDeleteClick = (
-    event: React.MouseEvent<HTMLButtonElement>,
+    event: React.MouseEvent,
     comment: Comment,
   ) => {
     event.stopPropagation();
@@ -394,18 +422,21 @@ const CommentsPage = () => {
 
       showSuccess("Comentário excluído com sucesso!");
     } catch (error) {
-      console.error("[CommentsPage] erro ao excluir comentário:", error);
+      console.error(
+        "[CommentsPage] erro ao excluir comentário:",
+        error,
+      );
+
       showError("Erro ao excluir comentário.");
     }
   };
 
   const handleReply = (
-    event: React.MouseEvent<HTMLButtonElement>,
+    event: React.MouseEvent,
     comment: CommentWithReplies,
   ) => {
     event.stopPropagation();
 
-    setShowStatusDropdown(false);
     setEditingCommentId(comment.id);
 
     setTimeout(() => {
@@ -414,7 +445,7 @@ const CommentsPage = () => {
   };
 
   const submitReply = async () => {
-    if (!editingCommentId) {
+    if (!editingCommentId || !textareaRef.current) {
       return;
     }
 
@@ -435,7 +466,9 @@ const CommentsPage = () => {
     }
 
     const newReply: CommentReply = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+      id: `${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2, 11)}`,
       user_name: storeName || "Loja",
       user_logo: storeLogoUrl || undefined,
       text,
@@ -446,14 +479,19 @@ const CommentsPage = () => {
     try {
       const updatedComment: CommentWithReplies = {
         ...currentComment,
-        replies: [...(currentComment.replies || []), newReply],
+        replies: [
+          ...(currentComment.replies || []),
+          newReply,
+        ],
       };
 
       await db.comments.save(updatedComment as Comment);
 
       setComments((previousComments) =>
         previousComments.map((comment) =>
-          comment.id === editingCommentId ? updatedComment : comment,
+          comment.id === editingCommentId
+            ? updatedComment
+            : comment,
         ),
       );
 
@@ -463,51 +501,54 @@ const CommentsPage = () => {
 
       showSuccess("Resposta enviada.");
     } catch (error) {
-      console.error("[CommentsPage] erro ao enviar resposta:", error);
+      console.error(
+        "[CommentsPage] erro ao enviar resposta:",
+        error,
+      );
+
       showError("Erro ao enviar resposta.");
     }
   };
 
   const insertEmojiAtCursor = (emoji: string) => {
-    const textarea = textareaRef.current;
+    const element = textareaRef.current;
 
-    if (!textarea) {
+    if (!element) {
       return;
     }
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
+    const start = element.selectionStart;
+    const end = element.selectionEnd;
 
     const newValue =
-      textarea.value.substring(0, start) +
+      element.value.substring(0, start) +
       emoji +
-      textarea.value.substring(end);
+      element.value.substring(end);
 
     const newCursorPosition = start + emoji.length;
 
     setCommentText(newValue);
 
     requestAnimationFrame(() => {
-      textarea.focus();
-      textarea.setSelectionRange(
+      element.focus();
+      element.setSelectionRange(
         newCursorPosition,
         newCursorPosition,
       );
     });
   };
 
-  const handleViewVideo = (comment: CommentWithReplies) => {
-    const video = videos.find((item) => item.id === comment.video_id);
+  const handleViewVideo = (row: CommentWithReplies) => {
+    const video =
+      videos.find((item) => item.id === row.video_id) || null;
 
-    if (!video) {
-      return;
+    if (video) {
+      setViewingVideo(video);
+      setIsViewingModalOpen(true);
     }
-
-    setViewingVideo(video);
-    setIsViewingModalOpen(true);
   };
 
-  if (loading) {
+  if (loading || tenantLoading) {
     return null;
   }
 
@@ -535,14 +576,18 @@ const CommentsPage = () => {
               type="text"
               placeholder="Pesquisar autor ou conteúdo..."
               value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
+              onChange={(event) =>
+                setSearchTerm(event.target.value)
+              }
               className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-12 pr-4 text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
             />
           </div>
 
           <select
             value={filterStatus}
-            onChange={(event) => setFilterStatus(event.target.value)}
+            onChange={(event) =>
+              setFilterStatus(event.target.value)
+            }
             className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold text-slate-600 outline-none focus:border-[#0094EB]"
           >
             <option value="all">Todos</option>
@@ -553,7 +598,9 @@ const CommentsPage = () => {
 
           <select
             value={filterVideo}
-            onChange={(event) => setFilterVideo(event.target.value)}
+            onChange={(event) =>
+              setFilterVideo(event.target.value)
+            }
             className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold text-slate-600 outline-none focus:border-[#0094EB]"
           >
             <option value="all">Todos os Vídeos</option>
@@ -620,10 +667,13 @@ const CommentsPage = () => {
                   (item) => item.id === row.video_id,
                 );
 
-                const isMainStoreReply = row.is_store_reply === true;
+                const isMainStoreReply =
+                  row.is_store_reply === true;
+
                 const mainAuthorName = isMainStoreReply
                   ? storeName || "Loja"
-                  : row.user_name || "Cliente";
+                  : row.user_name;
+
                 const mainAuthorLogo = isMainStoreReply
                   ? storeLogoUrl
                   : undefined;
@@ -644,7 +694,9 @@ const CommentsPage = () => {
                             />
                           ) : (
                             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-xs font-black text-[#0094EB]">
-                              {mainAuthorName.charAt(0).toUpperCase()}
+                              {mainAuthorName
+                                ?.charAt(0)
+                                .toUpperCase() || "?"}
                             </div>
                           )}
                         </div>
@@ -665,9 +717,11 @@ const CommentsPage = () => {
                           {row.replies.map((reply) => {
                             const isReplyStore =
                               reply.is_store_reply === true;
+
                             const replyName = isReplyStore
                               ? storeName || "Loja"
-                              : reply.user_name || "Cliente";
+                              : reply.user_name;
+
                             const replyLogo = isReplyStore
                               ? storeLogoUrl
                               : reply.user_logo;
@@ -686,7 +740,9 @@ const CommentsPage = () => {
                                     />
                                   ) : (
                                     <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0094EB] text-xs font-black text-white">
-                                      {replyName.charAt(0).toUpperCase()}
+                                      {replyName
+                                        ?.charAt(0)
+                                        .toUpperCase() || "?"}
                                     </div>
                                   )}
 
@@ -712,7 +768,7 @@ const CommentsPage = () => {
 
                       {video && (
                         <div className="mt-2 flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-[#0094EB]">
-                          VÍDEO:{" "}
+                          VÍDEO:
 
                           <button
                             type="button"
@@ -747,7 +803,9 @@ const CommentsPage = () => {
                       <div className="flex justify-center gap-2">
                         <button
                           type="button"
-                          onClick={(event) => handleReply(event, row)}
+                          onClick={(event) =>
+                            handleReply(event, row)
+                          }
                           className="rounded-lg p-2 text-[#0094EB] transition-colors hover:bg-blue-50"
                           title="Responder"
                         >
@@ -769,19 +827,16 @@ const CommentsPage = () => {
                   </tr>
                 );
               })}
-
-              {sortedComments.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-6 py-12 text-center text-sm font-medium text-slate-400"
-                  >
-                    Nenhum comentário encontrado.
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
+
+          {sortedComments.length === 0 && (
+            <div className="py-12 text-center">
+              <p className="text-sm font-medium text-slate-400">
+                Nenhum comentário encontrado.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -799,7 +854,7 @@ const CommentsPage = () => {
         confirmText="Enviar Resposta"
       >
         <div className="flex flex-col items-center">
-          <div className="w-full space-y-3">
+          <div className="space-y-3">
             <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
               Resposta da Loja
             </p>
@@ -816,9 +871,11 @@ const CommentsPage = () => {
 
             <p className="text-sm font-medium italic text-slate-600">
               &quot;
-              {comments.find(
-                (comment) => comment.id === editingCommentId,
-              )?.text || ""}
+              {
+                comments.find(
+                  (comment) => comment.id === editingCommentId,
+                )?.text
+              }
               &quot;
             </p>
           </div>
@@ -832,7 +889,9 @@ const CommentsPage = () => {
               <textarea
                 ref={textareaRef}
                 value={commentText}
-                onChange={(event) => setCommentText(event.target.value)}
+                onChange={(event) =>
+                  setCommentText(event.target.value)
+                }
                 rows={3}
                 className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
                 placeholder="Escreva aqui a resposta pública..."
@@ -888,34 +947,36 @@ const CommentsPage = () => {
             }}
             onClick={(event) => event.stopPropagation()}
           >
-            {["Pendente", "Aprovado", "Rejeitado"].map((option) => (
-              <button
-                key={option}
-                type="button"
-                className="block w-full rounded-lg p-2 text-left transition-colors hover:bg-slate-50"
-                onClick={async () => {
-                  const statusMap: Record<
-                    string,
-                    Comment["status"]
-                  > = {
-                    Pendente: "pending",
-                    Aprovado: "approved",
-                    Rejeitado: "rejected",
-                  };
+            {["Pendente", "Aprovado", "Rejeitado"].map(
+              (option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className="block w-full rounded-lg p-2 text-left hover:bg-slate-50"
+                  onClick={async () => {
+                    const statusMap: Record<
+                      string,
+                      Comment["status"]
+                    > = {
+                      Pendente: "pending",
+                      Aprovado: "approved",
+                      Rejeitado: "rejected",
+                    };
 
-                  await handleStatusChange(
-                    editingCommentId,
-                    statusMap[option],
-                  );
+                    await handleStatusChange(
+                      editingCommentId,
+                      statusMap[option],
+                    );
 
-                  closeStatusDropdown();
-                }}
-              >
-                <span className="text-sm font-bold text-slate-800">
-                  {option}
-                </span>
-              </button>
-            ))}
+                    closeStatusDropdown();
+                  }}
+                >
+                  <span className="text-sm font-bold text-slate-800">
+                    {option}
+                  </span>
+                </button>
+              ),
+            )}
           </div>
         </div>
       )}
@@ -925,7 +986,10 @@ const CommentsPage = () => {
         type="form"
         title="Visualizar Vídeo"
         maxWidth="max-w-3xl"
-        onCancel={() => setIsViewingModalOpen(false)}
+        onCancel={() => {
+          setIsViewingModalOpen(false);
+          setViewingVideo(null);
+        }}
       >
         {viewingVideo && (
           <div className="flex flex-col gap-6 lg:flex-row">
@@ -972,14 +1036,17 @@ const CommentsPage = () => {
                   </p>
 
                   <p className="text-[10px] font-bold text-slate-500">
-                    {viewingVideo.id?.slice(0, 8) || "---"}
+                    {viewingVideo.id?.substring(0, 8) || "---"}
                   </p>
                 </div>
               </div>
 
               <button
                 type="button"
-                onClick={() => setIsViewingModalOpen(false)}
+                onClick={() => {
+                  setIsViewingModalOpen(false);
+                  setViewingVideo(null);
+                }}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0094EB] py-3 text-xs font-black text-white transition-all"
               >
                 Fechar
