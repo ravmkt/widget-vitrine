@@ -499,75 +499,58 @@
     + '.vl-progress-fill{height:100%!important;border-radius:999px!important;background:' + primary + '!important;transition:width 0.3s ease!important;}'
 
     /* ===== HEADER (gradient top, same as preview) ===== */
-    + '.vl-header{position:absolute!important;top:0!important;left:0!important;right:0!important;z-index:40!important;'
-    + 'display:flex!important;align-items:flex-start!important;justify-content:space-between!important;'
-    + 'padding:20px 16px 16px 16px!important;background:linear-gradient(to bottom,rgba(0,0,0,0.7),transparent)!important;'
-    + 'pointer-events:none!important;}'
-    + '.vl-header-left{display:flex!important;flex-direction:column!important;gap:2px!important;min-width:0!important;flex:1!important;padding-right:48px!important;pointer-events:auto!important;}'
-    + '.vl-title{font-weight:800!important;color:#fff!important;font-size:13px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-shadow:0 1px 3px rgba(0,0,0,0.5)!important;}'
-    + '.vl-count{font-size:10px!important;font-weight:700!important;color:rgba(255,255,255,0.65)!important;text-transform:uppercase!important;}'
-  
++ '.vl-header{position:absolute!important;top:0!important;left:0!important;right:0!important;'
++ 'z-index:40!important;width:100%!important;box-sizing:border-box!important;'
++ 'display:flex!important;align-items:flex-start!important;justify-content:space-between!important;'
++ 'padding:20px 16px 16px 16px!important;'
++ 'background:linear-gradient(to bottom,rgba(0,0,0,0.7),transparent)!important;'
++ 'pointer-events:none!important;}'
 
-    + '.vl-close{all:unset!important;flex-shrink:0!important;width:32px!important;height:32px!important;border-radius:999px!important;'
-    .vl-media-controls {
-  position: absolute !important;
-  top: 14px !important;
-  right: 12px !important;
-  z-index: 30 !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  pointer-events: auto !important;
-}
++ '.vl-header-left{display:flex!important;flex-direction:column!important;'
++ 'gap:2px!important;min-width:0!important;flex:1!important;'
++ 'padding-right:48px!important;pointer-events:auto!important;}'
 
-.vl-media-control {
-  width: 30px !important;
-  height: 30px !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  border: 1px solid rgba(255, 255, 255, 0.95) !important;
-  border-radius: 50% !important;
-  background: rgba(0, 0, 0, 0.18) !important;
-  color: #fff !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  cursor: pointer !important;
-  box-sizing: border-box !important;
-  line-height: 1 !important;
-  appearance: none !important;
-  -webkit-appearance: none !important;
-}
++ '.vl-title{font-weight:800!important;color:#fff!important;font-size:13px!important;'
++ 'white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;'
++ 'text-shadow:0 1px 3px rgba(0,0,0,0.5)!important;}'
 
-.vl-media-control:hover {
-  background: rgba(0, 0, 0, 0.35) !important;
-}
++ '.vl-count{font-size:10px!important;font-weight:700!important;'
++ 'color:rgba(255,255,255,0.65)!important;text-transform:uppercase!important;}'
 
-.vl-media-control svg {
-  width: 16px !important;
-  height: 16px !important;
-  display: block !important;
-  pointer-events: none !important;
-  fill: none !important;
-  stroke: currentColor !important;
-  stroke-width: 1.7 !important;
-  stroke-linecap: round !important;
-  stroke-linejoin: round !important;
-}
++ '.vl-header-actions{display:flex!important;align-items:center!important;'
++ 'gap:8px!important;pointer-events:auto!important;flex-shrink:0!important;}'
 
-.vl-media-control.vl-play-control svg {
-  width: 17px !important;
-  height: 17px !important;
-}
++ '.vl-control{all:unset!important;box-sizing:border-box!important;'
++ 'flex-shrink:0!important;width:32px!important;height:32px!important;'
++ 'border-radius:999px!important;background:rgba(0,0,0,0.4)!important;'
++ 'backdrop-filter:blur(12px)!important;'
++ 'display:flex!important;align-items:center!important;justify-content:center!important;'
++ 'cursor:pointer!important;color:#fff!important;pointer-events:auto!important;'
++ 'border:1px solid rgba(255,255,255,0.8)!important;}'
 
-    + '.vl-header-actions{display:flex!important;align-items:center!important;gap:8px!important;pointer-events:auto!important;}'
-+ '.vl-control{all:unset!important;flex-shrink:0!important;width:32px!important;height:32px!important;border-radius:999px!important;'
-+ 'background:rgba(0,0,0,0.4)!important;backdrop-filter:blur(12px)!important;display:flex!important;align-items:center!important;'
-+ 'justify-content:center!important;cursor:pointer!important;color:#fff!important;pointer-events:auto!important;border:1px solid rgba(255,255,255,0.8)!important;}'
-+ '.vl-control svg{width:18px!important;height:18px!important;pointer-events:none!important;}'
++ '.vl-control:hover{background:rgba(0,0,0,0.6)!important;}'
 
-    + 'background:rgba(0,0,0,0.4)!important;backdrop-filter:blur(12px)!important;display:flex!important;align-items:center!important;'
-    + 'justify-content:center!important;cursor:pointer!important;color:#fff!important;pointer-events:auto!important;border:none!important;}'
++ '.vl-control svg{width:18px!important;height:18px!important;'
++ 'display:block!important;pointer-events:none!important;'
++ 'fill:none!important;stroke:currentColor!important;'
++ 'stroke-width:1.7!important;stroke-linecap:round!important;'
++ 'stroke-linejoin:round!important;}'
+
++ '.vl-close{all:unset!important;box-sizing:border-box!important;'
++ 'flex-shrink:0!important;width:32px!important;height:32px!important;'
++ 'border-radius:999px!important;background:rgba(0,0,0,0.4)!important;'
++ 'backdrop-filter:blur(12px)!important;display:flex!important;'
++ 'align-items:center!important;justify-content:center!important;'
++ 'cursor:pointer!important;color:#fff!important;pointer-events:auto!important;'
++ 'border:1px solid rgba(255,255,255,0.8)!important;}'
+
++ '.vl-close:hover{background:rgba(0,0,0,0.6)!important;}'
+
++ '.vl-close svg{width:18px!important;height:18px!important;'
++ 'display:block!important;pointer-events:none!important;'
++ 'fill:none!important;stroke:currentColor!important;'
++ 'stroke-width:1.7!important;stroke-linecap:round!important;'
++ 'stroke-linejoin:round!important;}'
 
     /* ===== BODY (video fills container) ===== */
     + '.vl-body{position:relative!important;display:block!important;flex:1 1 auto!important;'
@@ -835,61 +818,46 @@
       }
       header.appendChild(headerLeft);
 
-      var headerActions = createEl('div', 'vl-header-actions');
+           var headerActions = createEl('div', 'vl-header-actions');
 
-var muteBtn = createEl('button', 'vl-control');
-muteBtn.type = 'button';
-muteBtn.innerHTML = svgIcon(isMuted ? 'mute' : 'unmute');
-muteBtn.setAttribute('aria-label', isMuted ? 'Ativar som' : 'Desativar som');
+      // Botão de mute/unmute
+      var muteBtn = createEl('button', 'vl-control');
+      muteBtn.type = 'button';
+      muteBtn.innerHTML = svgIcon(isMuted ? 'mute' : 'unmute');
+      muteBtn.setAttribute(
+        'aria-label',
+        isMuted ? 'Ativar som' : 'Desativar som'
+      );
 
-var playBtn = createEl('button', 'vl-control');
-playBtn.type = 'button';
-playBtn.innerHTML = svgIcon('pause');
-playBtn.setAttribute('aria-label', 'Pausar vídeo');
+      // Botão de play/pause
+      var playBtn = createEl('button', 'vl-control');
+      playBtn.type = 'button';
+      playBtn.innerHTML = svgIcon(isPlaying ? 'pause' : 'play');
+      playBtn.setAttribute(
+        'aria-label',
+        isPlaying ? 'Pausar vídeo' : 'Reproduzir vídeo'
+      );
 
-var headerActions = createEl('div', 'vl-header-actions');
+      // Botão de fechar
+      var closeBtn = createEl('button', 'vl-close');
+      closeBtn.type = 'button';
+      closeBtn.innerHTML = svgIcon('close');
 
-// Botão de mute/unmute
-var muteBtn = createEl('button', 'vl-control');
-muteBtn.type = 'button';
-muteBtn.innerHTML = svgIcon(isMuted ? 'mute' : 'unmute');
-muteBtn.setAttribute(
-  'aria-label',
-  isMuted ? 'Ativar som' : 'Desativar som'
-);
+      closeBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeOverlay();
+      });
 
-// Botão de play/pause
-var playBtn = createEl('button', 'vl-control');
-playBtn.type = 'button';
-playBtn.innerHTML = svgIcon(isPlaying ? 'pause' : 'play');
-playBtn.setAttribute(
-  'aria-label',
-  isPlaying ? 'Pausar vídeo' : 'Reproduzir vídeo'
-);
+      // Ordem visual: controles à esquerda e fechar à direita
+      headerActions.appendChild(muteBtn);
+      headerActions.appendChild(playBtn);
 
-// Botão de fechar
-var closeBtn = createEl('button', 'vl-close');
-closeBtn.type = 'button';
-closeBtn.innerHTML = svgIcon('close');
+      header.appendChild(headerActions);
+      header.appendChild(closeBtn);
 
-closeBtn.addEventListener('click', function (e) {
-  e.stopPropagation();
-  closeOverlay();
-});
+      modalContent.appendChild(header);
 
-// Ordem dos botões: mute, play/pause e fechar
-headerActions.appendChild(muteBtn);
-headerActions.appendChild(playBtn);
-
-header.appendChild(headerActions);
-header.appendChild(closeBtn);
-
-
-headerActions.appendChild(muteBtn);
-headerActions.appendChild(playBtn);
-headerActions.appendChild(closeBtn);
-header.appendChild(headerActions);
-modalContent.appendChild(header);
 
 
       /* ===== BODY ===== */
@@ -1038,99 +1006,84 @@ modalContent.appendChild(header);
       modalContent.appendChild(body);
       overlay.className = 'vl-overlay is-open';
 
-      /* Auto-play */
+            /* Auto-play e controles do vídeo */
       var newVid = playerNode.querySelector('video');
+
       if (newVid) {
+        // Estado inicial
         newVid.muted = isMuted;
+        newVid.loop = true;
+
+        // Atualiza o botão quando o vídeo começa
+        newVid.addEventListener('play', function () {
+          isPlaying = true;
+          playBtn.innerHTML = svgIcon('pause');
+          playBtn.setAttribute('aria-label', 'Pausar vídeo');
+        });
+
+        // Atualiza o botão quando o vídeo pausa
+        newVid.addEventListener('pause', function () {
+          isPlaying = false;
+          playBtn.innerHTML = svgIcon('play');
+          playBtn.setAttribute('aria-label', 'Reproduzir vídeo');
+        });
+
+        // Atualiza o botão quando o volume muda
+        newVid.addEventListener('volumechange', function () {
+          isMuted = newVid.muted || newVid.volume === 0;
+
+          muteBtn.innerHTML = svgIcon(isMuted ? 'mute' : 'unmute');
+          muteBtn.setAttribute(
+            'aria-label',
+            isMuted ? 'Ativar som' : 'Desativar som'
+          );
+        });
+
+        // Botão de mute/unmute
+        muteBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          newVid.muted = !newVid.muted;
+
+          if (!newVid.muted && newVid.volume === 0) {
+            newVid.volume = 1;
+          }
+
+          isMuted = newVid.muted || newVid.volume === 0;
+
+          muteBtn.innerHTML = svgIcon(isMuted ? 'mute' : 'unmute');
+          muteBtn.setAttribute(
+            'aria-label',
+            isMuted ? 'Ativar som' : 'Desativar som'
+          );
+        });
+
+        // Botão de play/pause
+        playBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          if (newVid.paused) {
+            var playPromise = newVid.play();
+
+            if (playPromise && typeof playPromise.catch === 'function') {
+              playPromise.catch(function (error) {
+                console.warn('Vidlytics Play Block:', error);
+              });
+            }
+          } else {
+            newVid.pause();
+          }
+        });
+
+        // Reprodução automática
         var playPromise = newVid.play();
-        if (playPromise) {
-          playPromise.catch(function (e) { console.warn('Vidlytics Play Block:', e); });
-if (newVid) {
-  newVid.addEventListener('play', function () {
-    isPlaying = true;
-    playBtn.innerHTML = svgIcon('pause');
-    playBtn.setAttribute('aria-label', 'Pausar vídeo');
-  });
 
-  newVid.addEventListener('pause', function () {
-    isPlaying = false;
-    playBtn.innerHTML = svgIcon('play');
-    playBtn.setAttribute('aria-label', 'Reproduzir vídeo');
-  });
-
-  muteBtn.addEventListener('click', function (e) {
-    e.stopPropagation();
-
-    isMuted = !isMuted;
-    newVid.muted = isMuted;
-
-    muteBtn.innerHTML = svgIcon(isMuted ? 'mute' : 'unmute');
-    muteBtn.setAttribute(
-      'aria-label',
-      isMuted ? 'Ativar som' : 'Desativar som'
-    );
-  });
-
-  playBtn.addEventListener('click', function (e) {
-    e.stopPropagation();
-
-    if (newVid.paused) {
-      var promise = newVid.play();
-
-      if (promise) {
-        promise.catch(function (err) {
-          console.warn('Vidlytics Play Block:', err);
-        });
-      }
-    } else {
-      newVid.pause();
-    }
-  });
-}
-
-          if (newVid) {
-  newVid.addEventListener('play', function () {
-    isPlaying = true;
-    playBtn.innerHTML = svgIcon('pause');
-    playBtn.setAttribute('aria-label', 'Pausar vídeo');
-  });
-
-  newVid.addEventListener('pause', function () {
-    isPlaying = false;
-    playBtn.innerHTML = svgIcon('play');
-    playBtn.setAttribute('aria-label', 'Reproduzir vídeo');
-  });
-
-  muteBtn.addEventListener('click', function (e) {
-    e.stopPropagation();
-
-    isMuted = !isMuted;
-    newVid.muted = isMuted;
-
-    muteBtn.innerHTML = svgIcon(isMuted ? 'mute' : 'unmute');
-    muteBtn.setAttribute(
-      'aria-label',
-      isMuted ? 'Ativar som' : 'Desativar som'
-    );
-  });
-
-  playBtn.addEventListener('click', function (e) {
-    e.stopPropagation();
-
-    if (newVid.paused) {
-      var playPromise = newVid.play();
-
-      if (playPromise) {
-        playPromise.catch(function (error) {
-          console.warn('Vidlytics Play Block:', error);
-        });
-      }
-    } else {
-      newVid.pause();
-    }
-  });
-}
-
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(function (error) {
+            console.warn('Vidlytics Play Block:', error);
+           });
         }
       }
     }
