@@ -1268,16 +1268,6 @@ function openSizingPanel(modelId) {
 
   var content = createEl('div', 'vl-sizing-content');
 
-  // Imagem da modelo (opcional)
-  if (model.image_url) {
-    var imgCont = createEl('div', 'vl-sizing-image-container');
-    var img = createEl('img', 'vl-sizing-image');
-    img.src = model.image_url;
-    img.alt = model.name;
-    imgCont.appendChild(img);
-    content.appendChild(imgCont);
-  }
-
   // Nome da modelo/tamanho
   var modelName = createEl('div');
   modelName.style.fontWeight = '800';
