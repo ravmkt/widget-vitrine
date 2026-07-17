@@ -1992,7 +1992,11 @@ if (modalConfig.show_comment_button !== false) {
       /* Medidas */
 var sizingModelId = getSizingModelId(video);
 
-if (sizingModelId) {
+if (
+  sizingModelId &&
+  modalConfig.show_sizing_button !== false
+) {
+
   var measureBtn = createEl('button', 'vl-social-btn');
 
   measureBtn.type = 'button';
