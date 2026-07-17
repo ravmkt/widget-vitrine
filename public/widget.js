@@ -2417,17 +2417,23 @@ if (modalConfig.show_whatsapp_button !== false) {
 
         // Atualiza o botão quando o vídeo começa
         newVid.addEventListener('play', function () {
-          isPlaying = true;
-          playBtn.innerHTML = svgIcon('pause');
-          playBtn.setAttribute('aria-label', 'Pausar vídeo');
-        });
+  isPlaying = true;
 
-        // Atualiza o botão quando o vídeo pausa
-        newVid.addEventListener('pause', function () {
-          isPlaying = false;
-          playBtn.innerHTML = svgIcon('play');
-          playBtn.setAttribute('aria-label', 'Reproduzir vídeo');
-        });
+  if (playBtn) {
+    playBtn.innerHTML = svgIcon('pause');
+    playBtn.setAttribute('aria-label', 'Pausar vídeo');
+  }
+});
+
+newVid.addEventListener('pause', function () {
+  isPlaying = false;
+
+  if (playBtn) {
+    playBtn.innerHTML = svgIcon('play');
+    playBtn.setAttribute('aria-label', 'Reproduzir vídeo');
+  }
+});
+
 
         // Atualiza o botão quando o volume muda
         newVid.addEventListener('volumechange', function () {
