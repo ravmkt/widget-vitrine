@@ -24,9 +24,14 @@ import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { db, Video } from '@/lib/db';
+import { useTenant } from '@/context/TenantContext';
 import CustomDialog from '@/components/CustomDialog';
 import { DayPicker } from 'react-day-picker';
-import { aggregateVideoMetrics, buildVideoMetricsRows, getVideoInterval, VideoPeriod } from '@/lib/videoMetrics';
+import { getVideoInterval, VideoPeriod } from '@/lib/videoMetrics';
+import {
+  getDashboardMetrics,
+  getVideoMetricsRows,
+} from '@/lib/analytics';
 import {
   getExternalVideoData,
   getVideoUrl,
@@ -70,8 +75,11 @@ const getVideoThumbnail = (video: any) => {
 
 const VideoPerformancePage = () => {
   const navigate = useNavigate();
+  const { storeId } = useTenant();
   const [loading, setLoading] = useState(true);
   const [videos, setVideos] = useState<Video[]>([]);
+  const [videoStats, setVideoStats] = useState<any[]>([]);
+  const [totals, setTotals] = useState({ views: 0, clicks: 0, conversions: 0, ctr: 0 });
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewingVideo, setViewingVideo] = useState<Video | null>(null);
   const [showExternalPlayer, setShowExternalPlayer] = useState(false);
@@ -85,37 +93,43 @@ const VideoPerformancePage = () => {
 
   useEffect(() => {
     const load = async () => {
-      const allVideos = await db.videos.getAll();
-      setVideos(allVideos);
-      setLoading(false);
-    };
-    load();
-  }, []);
+      if (!storeId) return;
+      
+      setLoading(true);
+      try {
+        const allVideos = await db.videos.getAll(storeId);
+        setVideos(allVideos);
 
-  const activeInterval = useMemo(() => getVideoInterval(filters.period, filters.customRange), [filters]);
-
-  const videoStats = useMemo(() => {
-    return buildVideoMetricsRows(videos, activeInterval)
-      .filter(v => (v.title || '').toLowerCase().includes(filters.search.toLowerCase()))
-      .map(v => {
-        const duration = Math.max(1, Math.round((activeInterval.end.getTime() - activeInterval.start.getTime()) / 86400000) + 1);
-        const prevStart = subDays(activeInterval.start, duration);
-        const prevEnd = subDays(activeInterval.end, duration);
-        const prevMetrics = buildVideoMetricsRows([v], { start: prevStart, end: prevEnd })[0]?.metrics;
-        const viewDiff = prevMetrics && prevMetrics.views > 0 ? Math.round(((v.metrics.views - prevMetrics.views) / prevMetrics.views) * 100) : 0;
-
-        return {
+        const rows = await getVideoMetricsRows(storeId, allVideos, filters.period as any, filters.customRange);
+        const mappedRows = rows.map(v => ({
           ...v,
           metrics: {
             ...v.metrics,
             engagement: Number((v.metrics.ctr * 1.3).toFixed(1))
           },
-          trends: { views: viewDiff }
-        };
-      });
-  }, [videos, filters.search, activeInterval]);
+          trends: { views: 0 } // Resetting trends for now as it used mock data
+        }));
+        setVideoStats(mappedRows);
 
-  const totals = useMemo(() => aggregateVideoMetrics(videoStats), [videoStats]);
+        const dashboardTotals = await getDashboardMetrics(storeId, filters.period as any, filters.customRange);
+        setTotals({
+          views: dashboardTotals.views,
+          clicks: dashboardTotals.ctaClicks,
+          conversions: dashboardTotals.conversions,
+          ctr: dashboardTotals.ctr
+        });
+      } catch (error) {
+        console.error('Erro ao carregar métricas reais:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [storeId, filters.period, filters.customRange]);
+
+  const filteredVideoStats = useMemo(() => {
+    return videoStats.filter(v => (v.title || '').toLowerCase().includes(filters.search.toLowerCase()));
+  }, [videoStats, filters.search]);
 
   const handleOpenPlayer = (video: any) => {
     setViewingVideo(video);
@@ -151,10 +165,10 @@ const VideoPerformancePage = () => {
   };
 
   const sortedVideoStats = useMemo(() => {
-    const rows = [...videoStats];
+    const rows = [...filteredVideoStats];
     if (!sortColumn || sortColumn === 'recent') return rows.sort((a, b) => sortDirection === 'asc'
-      ? new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime()
-      : new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+      ? new Date(a.updated_at || 0).getTime() - new Date(b.updated_at || 0).getTime()
+      : new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime());
 
     const getValue = (video: any) => {
       switch (sortColumn) {
@@ -210,9 +224,9 @@ const VideoPerformancePage = () => {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <SummaryCard label="Visualizações" value={Number(totals.views || 0).toLocaleString()} icon={Eye} color="blue" trend="+12%" />
-<SummaryCard label="Cliques (CTA)" value={Number(totals.clicks || 0).toLocaleString()} icon={MousePointer2} color="violet" trend="+5%" />
-<SummaryCard label="Conversões" value={Number(totals.conversions || 0).toLocaleString()} icon={CheckCircle2} color="emerald" trend="+8%" />
+        <SummaryCard label="Visualizações" value={Number(totals.views || 0).toLocaleString()} icon={Eye} color="blue" />
+        <SummaryCard label="Cliques (CTA)" value={Number(totals.clicks || 0).toLocaleString()} icon={MousePointer2} color="violet" />
+        <SummaryCard label="Conversões" value={Number(totals.conversions || 0).toLocaleString()} icon={CheckCircle2} color="emerald" />
         <SummaryCard label="CTR Geral" value={`${totals.ctr}%`} icon={TrendingUp} color="amber" />
       </div>
 

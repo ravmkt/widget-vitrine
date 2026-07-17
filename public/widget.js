@@ -512,17 +512,41 @@
   }
 
   function trackMetric(metric) {
-    var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
-    if (!Array.isArray(fallbackMetrics)) fallbackMetrics = [];
-    fallbackMetrics.push({
-      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2),
-      store_id: storeId, story_id: metric.story_id || null, video_id: metric.video_id || null, product_id: metric.product_id || null,
-      event_type: metric.event_type, page_url: metric.page_url || window.location.href,
-      device_type: window.innerWidth < 768 ? 'mobile' : 'desktop', created_at: new Date().toISOString()
+  var payload = {
+    store_id: storeId,
+    story_id: metric.story_id || null,
+    video_id: metric.video_id || null,
+    product_id: metric.product_id || null,
+    event_type: metric.event_type,
+    page_url: metric.page_url || window.location.href,
+    device_type: window.innerWidth < 768 ? 'mobile' : 'desktop',
+    browser: navigator.userAgent,
+    referrer: document.referrer || null,
+    created_at: new Date().toISOString()
+  };
+
+  if (hasSupabase && supabaseUrl && supabaseKey) {
+    var url = supabaseUrl + '/rest/v1/metrics';
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': 'Bearer ' + supabaseKey,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(payload)
+    }).catch(function(err) {
+      console.warn('Erro ao enviar métrica para o Supabase:', err);
     });
-    setStorageItem('vidlytics_metrics', fallbackMetrics);
-    return Promise.resolve();
   }
+
+  var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
+  if (!Array.isArray(fallbackMetrics)) fallbackMetrics = [];
+  fallbackMetrics.push(payload);
+  setStorageItem('vidlytics_metrics', fallbackMetrics);
+  return Promise.resolve();
+}
 
   function readStories() {
     if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_stories', []));
@@ -1526,6 +1550,15 @@ function openCommentsPanel(videoId, storyId) {
           setStorageItem('vidlytics_likes', likes);
           likeBtn.innerHTML = liked ? svgIcon('heartFilled') : svgIcon('heart');
           likeCountEl.textContent = String(likeCount);
+
+          // Rastreia a curtida no banco de dados
+          if (liked) {
+            trackMetric({
+              event_type: 'like',
+              story_id: story.id,
+              video_id: videoId
+            });
+          }
         });
         social.appendChild(likeBtn);
 

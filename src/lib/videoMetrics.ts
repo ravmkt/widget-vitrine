@@ -50,29 +50,13 @@ export const calculateCTR = (clicks: number, views: number): number => {
 };
 
 export const calculateVideoMetrics = (videoId: string, interval: VideoInterval): VideoMetrics => {
-  const seed = videoId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const daysInterval = eachDayOfInterval(interval);
-
-  let views = 0;
-  let clicks = 0;
-  let conversions = 0;
-
-  daysInterval.forEach((date) => {
-    const dateSeed = date.getDate() + date.getMonth() * 31 + (date.getFullYear() % 100) * 400;
-    const combinedSeed = (seed + dateSeed) % 1000;
-    const dailyViews = 15 + (combinedSeed % 40);
-    const dailyClicks = Math.floor(dailyViews * (0.10 + (combinedSeed % 15) / 100));
-    const dailyConversions = Math.floor(dailyClicks * (0.05 + (combinedSeed % 5) / 100));
-    views += dailyViews;
-    clicks += dailyClicks;
-    conversions += dailyConversions;
-  });
-
+  // Retornando 0 para métricas reais.
+  // O sistema agora utiliza src/lib/analytics.ts para buscar dados reais do Supabase.
   return {
-    views,
-    clicks,
-    conversions,
-    ctr: calculateCTR(clicks, views),
+    views: 0,
+    clicks: 0,
+    conversions: 0,
+    ctr: 0,
   };
 };
 

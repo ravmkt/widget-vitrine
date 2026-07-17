@@ -22,6 +22,9 @@ import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import { cn } from '@/lib/utils';
 import { subDays, eachDayOfInterval } from 'date-fns';
 import {
+  getVideoMetricsRows,
+} from '@/lib/analytics';
+import {
   getExternalVideoData,
   getVideoUrl,
   isDirectVideoUrl,
@@ -208,6 +211,7 @@ const VideoGalleryPage = () => {
   const [resolvedStoreId, setResolvedStoreId] = useState('');
   const [loading, setLoading] = useState(true);
   const [videos, setVideos] = useState<Video[]>([]);
+  const [videoWithMetrics, setVideoWithMetrics] = useState<VideoWithMetrics[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSource, setFilterSource] = useState<'all' | 'upload' | 'external_url'>('all');
@@ -262,35 +266,6 @@ const VideoGalleryPage = () => {
     return '';
   }, [tenantStoreId]);
 
-  const calculateVideoMetrics = (videoId: string) => {
-    const end = new Date();
-    const start = subDays(end, 30);
-    const seed = videoId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const daysInterval = eachDayOfInterval({ start, end });
-
-    let views = 0;
-    let likes = 0;
-    let comments = 0;
-
-    daysInterval.forEach(date => {
-      const dateSeed =
-        date.getDate() +
-        date.getMonth() * 31 +
-        (date.getFullYear() % 100) * 400;
-
-      const combinedSeed = (seed + dateSeed) % 1000;
-      const dailyViews = 15 + (combinedSeed % 40);
-      const dailyLikes = Math.floor(dailyViews * (0.10 + (combinedSeed % 15) / 100));
-      const dailyComments = Math.floor(dailyLikes * (0.05 + (combinedSeed % 5) / 100));
-
-      views += dailyViews;
-      likes += dailyLikes;
-      comments += dailyComments;
-    });
-
-    return { views, likes, comments };
-  };
-
   useEffect(() => {
     let mounted = true;
 
@@ -304,6 +279,7 @@ const VideoGalleryPage = () => {
 
         if (!safeStoreId) {
           setVideos([]);
+          setVideoWithMetrics([]);
           setProducts([]);
           setResolvedStoreId('');
           showError('Não foi possível identificar a loja atual.');
@@ -321,6 +297,23 @@ const VideoGalleryPage = () => {
 
         setVideos(allVideos || []);
         setProducts(allProducts || []);
+
+        const rows = await getVideoMetricsRows(safeStoreId, allVideos || [], '30');
+        const processed = rows.map(v => ({
+          ...v,
+          metrics: {
+            views: v.metrics.views,
+            comments: v.metrics.comments,
+            likes: v.metrics.likes,
+            clicks: v.metrics.ctaClicks,
+            conversions: v.metrics.conversions,
+            ctr: v.metrics.ctr,
+            ctrValue: v.metrics.ctr,
+            engagement: Number((v.metrics.ctr * 1.3).toFixed(1))
+          }
+        }));
+        
+        setVideoWithMetrics(processed);
       } catch (e) {
         console.error('Erro ao carregar vídeos:', e);
         showError('Erro ao carregar vídeos.');
@@ -340,68 +333,8 @@ const VideoGalleryPage = () => {
     };
   }, [tenantLoading, resolveSafeStoreId]);
 
-  const getVideoMetrics = (video: Video): VideoMetrics => {
-    const base = calculateVideoMetrics(video.id);
-
-    const views = Number(
-      (video as any).views_count ??
-      (video as any).view_count ??
-      (video as any).views ??
-      base.views ?? 0,
-    );
-
-    const comments = Number(
-      (video as any).comments_count ??
-      (video as any).comment_count ??
-      (video as any).comments ??
-      base.comments ?? 0,
-    );
-
-    const likes = Number(
-      (video as any).likes_count ??
-      (video as any).like_count ??
-      (video as any).likes ??
-      base.likes ?? 0,
-    );
-
-    const clicks = Number(
-      (video as any).clicks_count ??
-      (video as any).click_count ??
-      (video as any).clicks ??
-      0,
-    );
-
-    const conversions = Number(
-      (video as any).conversions_count ??
-      (video as any).conversion_count ??
-      (video as any).conversions ??
-      0,
-    );
-
-    const ctrValue = Number(
-      (video as any).ctr ??
-      (views > 0 ? (clicks / views) * 100 : 0),
-    );
-
-    const engagement = Number(
-      (video as any).engagement ??
-      Math.min(100, ctrValue * 1.3).toFixed(1),
-    );
-
-    return {
-      views,
-      comments,
-      likes,
-      clicks,
-      conversions,
-      ctr: ctrValue,
-      ctrValue,
-      engagement,
-    };
-  };
-
   const processedVideos = useMemo<ProcessedVideo[]>(() => {
-    return videos
+    return videoWithMetrics
       .filter(v => {
         const matchesSearch = (v.title || '')
           .toLowerCase()
@@ -417,10 +350,7 @@ const VideoGalleryPage = () => {
 
         return matchesSearch && matchesSource && matchesProduct;
       })
-      .map(v => ({
-        ...v,
-        metrics: getVideoMetrics(v),
-      }))
+      .map(v => v as ProcessedVideo)
       .sort((a, b) => {
         if (!sortColumn || sortColumn === 'recent') {
           return sortDirection === 'asc'
@@ -467,7 +397,7 @@ const VideoGalleryPage = () => {
           : String(valueB).localeCompare(String(valueA), 'pt-BR');
       });
   }, [
-    videos,
+    videoWithMetrics,
     products,
     searchTerm,
     filterSource,
@@ -487,10 +417,7 @@ const VideoGalleryPage = () => {
   };
 
   const handleViewVideo = (video: VideoWithMetrics) => {
-    setViewingVideo({
-      ...video,
-      metrics: video.metrics || getVideoMetrics(video),
-    });
+    setViewingVideo(video);
 
     setShowExternalPlayer(false);
     setIsViewModalOpen(true);
@@ -843,7 +770,7 @@ const VideoGalleryPage = () => {
           const videoUrl = getVideoUrl(viewingVideo as any);
           const externalData = getSafeExternalData(viewingVideo);
           const modalThumb = getVideoThumbnail(viewingVideo);
-          const modalMetrics = viewingVideo.metrics || getVideoMetrics(viewingVideo);
+          const modalMetrics = viewingVideo.metrics || { views: 0, ctrValue: 0, conversions: 0, engagement: 0 };
           const youTubeId = extractYouTubeId(videoUrl);
 
           // upload → sempre player HTML5
