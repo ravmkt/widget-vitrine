@@ -1801,11 +1801,7 @@ if (sizingModelId) {
   measureBtn.title = 'Medidas';
 
   measureBtn.addEventListener('click', function () {
-    openSizingModelTable(sizingModelId);
-  });
 
-  // Coloque o botão no local onde os outros botões são inseridos
-  actionsContainer.appendChild(measureBtn);
 }
 
 
