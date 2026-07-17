@@ -772,6 +772,13 @@ const [model, setModel] = useState<any | null>(null);
         getByIdSafe<any>((db as any).sizingModels, modelId, currentStoreId),
       ]);
 
+      console.log('[StoriesWidgetPage] Linked Data:', {
+        productId,
+        modelId,
+        resolvedProduct,
+        resolvedModel,
+      });
+
       setProduct(resolvedProduct || null);
       setModel(resolvedModel || null);
     } catch (error) {
@@ -1368,7 +1375,7 @@ const [model, setModel] = useState<any | null>(null);
         ) : null}
 
         <div
-          className="absolute top-24 z-50 flex flex-col gap-3"
+          className="absolute top-24 z-[60] flex flex-col gap-3"
           style={{
             right: 'max(0.75rem, env(safe-area-inset-right))',
           }}
@@ -1456,7 +1463,10 @@ const [model, setModel] = useState<any | null>(null);
           {model && (
             <button
               type="button"
-              onClick={() => setShowMeasures(true)}
+              onClick={() => {
+                console.log('[StoriesWidgetPage] Opening measures modal');
+                setShowMeasures(true);
+              }}
               className="rounded-full p-3 text-white backdrop-blur-md transition hover:brightness-110"
               style={actionButtonStyle}
               title="Medidas"
@@ -1647,6 +1657,7 @@ const [model, setModel] = useState<any | null>(null);
 
         {model && showMeasures && (
           <div className="absolute inset-0 z-[95] flex items-center justify-center bg-black/85 p-4">
+            {console.log('[StoriesWidgetPage] Rendering measures modal', { model, modelData })}
             <div className="mx-auto flex max-h-[75vh] w-full max-w-[380px] flex-col overflow-hidden rounded-[28px] bg-white p-5 text-slate-900 shadow-2xl">
               <div className="mb-4 flex items-center justify-between">
                 <div>
