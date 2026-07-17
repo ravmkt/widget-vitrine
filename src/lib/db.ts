@@ -997,10 +997,14 @@ const preparePayloadForSave = <T extends Record<string, any>>(
 
     // Mapeia o array de replies do app para as colunas de resposta do banco
     if (item.replies && Array.isArray(item.replies) && item.replies.length > 0) {
-      const lastReply = item.replies[item.replies.length - 1];
-      normalizedPayload.reply_content = lastReply.text;
-      normalizedPayload.reply_status = 'replied';
-      normalizedPayload.replied_at = lastReply.created_at || new Date().toISOString();
+      // Filtra apenas as respostas da loja
+      const storeReplies = item.replies.filter(r => r.is_store_reply);
+      if (storeReplies.length > 0) {
+        const lastReply = storeReplies[storeReplies.length - 1];
+        normalizedPayload.reply_content = lastReply.text;
+        normalizedPayload.reply_status = 'replied';
+        normalizedPayload.replied_at = lastReply.created_at || new Date().toISOString();
+      }
     }
 
     // Remove campos que não existem no banco
