@@ -1683,15 +1683,59 @@ function openCommentsPanel(videoId, storyId) {
     feedback.textContent = 'Enviando...';
 
     createComment({
-      story_id: storyId || null,
-      video_id: videoId || null,
-      author_name: authorName,
-      content: content
-    }).then(function () {
-      contentInput.value = '';
-      feedback.textContent =
-        'Comentário enviado. Ele aparecerá após aprovação da loja.';
-    }).catch(function (error) {
+  story_id: storyId || null,
+  video_id: videoId || null,
+  author_name: authorName,
+  content: content
+}).then(function () {
+  contentInput.value = '';
+
+  feedback.textContent =
+    'Comentário enviado. Ele aparecerá após aprovação da loja.';
+
+  /*
+   * Atualiza os dados locais para o player reconhecer
+   * imediatamente que há um novo comentário.
+   */
+  readCommentsData.push({
+    store_id: storeId,
+    story_id: storyId || null,
+    video_id: videoId || null,
+    author_name: authorName,
+    content: content,
+    status: 'pending',
+    active: true,
+    created_at: new Date().toISOString()
+  });
+
+  /*
+   * Busca a contagem verdadeira no Supabase e atualiza
+   * o número que fica ao lado do botão de comentários.
+   */
+  return getVideoMetrics(videoId);
+}).then(function (metrics) {
+  /*
+   * commentCountEl existe no renderCurrent(), onde o botão
+   * de comentários foi criado.
+   */
+  var commentCountElement = modalContent.querySelector(
+    '.vl-social-count[data-video-comments="' + videoId + '"]'
+  );
+
+  if (commentCountElement) {
+    commentCountElement.textContent = String(
+      metrics.comments_count
+    );
+  }
+}).catch(function (error) {
+  feedback.textContent =
+    error && error.message
+      ? error.message
+      : 'Não foi possível enviar o comentário.';
+}).finally(function () {
+  submit.disabled = false;
+});
+
       feedback.textContent =
         error && error.message
           ? error.message
