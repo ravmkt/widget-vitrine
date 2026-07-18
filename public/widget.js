@@ -1867,15 +1867,27 @@ function openCustomShareModal(data) {
   );
 
   actions.appendChild(
-    createShareButton('Copiar link', getPrimaryColor(currentAppearance), function () {
-      copyShareUrl(shareUrl)
-        .then(function () {
-          alert('Link copiado com sucesso!');
-        })
-        .catch(function () {
-          alert('Não foi possível copiar o link. Tente novamente.');
+    createShareButton(
+  'Copiar link',
+  getPrimaryColor(currentAppearance),
+  function () {
+    copyShareUrl(shareUrl)
+      .then(function () {
+        trackMetric({
+          event_type: 'share_copy_link',
+          story_id: data.story_id || null,
+          video_id: data.video_id || null,
+          page_url: shareUrl
         });
-    })
+
+        alert('Link copiado com sucesso!');
+      })
+      .catch(function () {
+        window.prompt('Copie o link abaixo:', shareUrl);
+      });
+  }
+)
+
   );
 
   panel.appendChild(header);
