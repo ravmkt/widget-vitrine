@@ -2354,7 +2354,151 @@ if (modalConfig.show_share_button !== false) {
       linkedProduct = video.product;
     }
 
-    
+   /* Produto relacionado por product_id no vídeo */
+if (
+  !linkedProduct &&
+  video.product_id &&
+  Array.isArray(products)
+) {
+  linkedProduct = products.find(function (product) {
+    return idsEqual(product.id, video.product_id);
+  });
+}
+
+/* Compatibilidade com variações de campos no vídeo */
+if (
+  !linkedProduct &&
+  Array.isArray(products)
+) {
+  var videoProductId = firstDefined(
+    video.product_id,
+    video.productId,
+    video.linked_product_id,
+    video.linkedProductId
+  );
+
+  if (videoProductId) {
+    linkedProduct = products.find(function (product) {
+      return idsEqual(product.id, videoProductId);
+    });
+  }
+}
+
+/* Produto que já venha como objeto dentro do Story */
+if (
+  !linkedProduct &&
+  story.product &&
+  typeof story.product === 'object'
+) {
+  linkedProduct = story.product;
+}
+
+/* Produto relacionado via story_products */
+if (
+  !linkedProduct &&
+  Array.isArray(storyProducts) &&
+  Array.isArray(products)
+) {
+  var storyProductRelation = storyProducts.find(function (relation) {
+    return idsEqual(relation.story_id, story.id);
+  });
+
+  if (storyProductRelation) {
+    linkedProduct = products.find(function (product) {
+      return idsEqual(product.id, storyProductRelation.product_id);
+    });
+  }
+}
+
+linkedProduct = linkedProduct || {};
+
+var productTitle =
+  linkedProduct.name ||
+  linkedProduct.title ||
+  linkedProduct.product_name ||
+  '';
+
+var productUrl =
+  linkedProduct.product_url ||
+  linkedProduct.product_link ||
+  linkedProduct.productLink ||
+  linkedProduct.permalink ||
+  linkedProduct.url ||
+  linkedProduct.link ||
+  linkedProduct.href ||
+  '';
+
+/* Converte links relativos, como /produto/camiseta, para URL completa */
+if (
+  productUrl &&
+  productUrl.indexOf('http://') !== 0 &&
+  productUrl.indexOf('https://') !== 0
+) {
+  productUrl =
+    window.location.origin +
+    (productUrl.charAt(0) === '/' ? '' : '/') +
+    productUrl;
+}
+
+var hasProduct = Boolean(productTitle && productUrl);
+
+var shareTitle = hasProduct
+  ? productTitle
+  : 'Conheça nossos produtos';
+
+var shareText = hasProduct
+  ? 'Olha esse produto que eu encontrei: ' + productTitle
+  : 'Olha só os produtos da nossa loja!';
+
+var shareUrl = hasProduct
+  ? productUrl
+  : window.location.origin + '/';
+
+openCustomShareModal({
+  title: shareTitle,
+  text: shareText,
+  url: shareUrl,
+  story_id: story.id || null,
+  video_id: video.id || null,
+  product_id: linkedProduct.id || null
+});
+});
+
+social.appendChild(shareBtn);
+hasSocial = true;
+}
+
+var sizingModelId = getSizingModelId(video);
+
+if (
+  sizingModelId &&
+  modalConfig.show_sizing_button !== false
+) {
+  var measureBtn = createEl('button', 'vl-social-btn');
+
+  measureBtn.type = 'button';
+  measureBtn.innerHTML = svgIcon('measure');
+  measureBtn.setAttribute('aria-label', 'Ver medidas da modelo');
+  measureBtn.title = 'Medidas';
+
+  measureBtn.addEventListener('click', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    openSizingPanel(sizingModelId);
+
+    trackMetric({
+      event_type: 'sizing_open',
+      story_id: story.id,
+      video_id: video.id,
+      page_url: window.location.href
+    });
+  });
+
+  social.appendChild(measureBtn);
+  hasSocial = true;
+}
+ 
 
   social.appendChild(shareBtn);
   hasSocial = true;
