@@ -51,7 +51,7 @@
   );
 
   var VIDLYTICS_WIDGET_VERSION =
-    'likes-fix-202607190001';
+    'likes-fix-202607190005';
 
   if (
     window.__vidlytics_widget_loaded_version ===
