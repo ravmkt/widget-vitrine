@@ -2088,6 +2088,20 @@ function shareStory(story, video) {
       var story = storiesList[currentStoryIndex]; if (!story) return;
       var orderedVideos = getOrderedVideos(story); if (!orderedVideos.length) { nextVideo(); return; }
       var video = orderedVideos[currentVideoIndex]; if (!video) return;
+/*
+ * Registra somente uma visualização por vídeo enquanto
+ * este modal estiver aberto.
+ */
+if (!viewedVideos[video.id]) {
+  viewedVideos[video.id] = true;
+
+  trackMetric({
+    event_type: 'view',
+    story_id: story.id,
+    video_id: video.id,
+    page_url: window.location.href
+  });
+}
 
       var oldVid = modalContent.querySelector('video');
       if (oldVid) { oldVid.pause(); oldVid.removeAttribute('src'); oldVid.load(); }
