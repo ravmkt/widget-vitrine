@@ -2153,49 +2153,35 @@ if (modalConfig.show_share_button !== false) {
   shareBtn.setAttribute('aria-label', 'Compartilhar');
   shareBtn.title = 'Compartilhar';
 
-  function openSharePanel(event) {
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-
-    var shareUrl = window.location.href;
-    var storyTitle =
-      (story && (story.title || story.name)) || 'Story';
-
-    var shareText = 'Olha esse conteúdo: ' + storyTitle;
-
-    console.log('[Vidlytics] Abrindo painel de compartilhamento', {
-      storyId: story && story.id,
-      videoId: video && video.id,
-      url: shareUrl
-    });
-
-    trackMetric({
-      event_type: 'share_open',
-      story_id: story && story.id ? story.id : null,
-      video_id: video && video.id ? video.id : null,
-      page_url: shareUrl
-    });
-
-    openCustomShareModal({
-      title: storyTitle,
-      text: shareText,
-      url: shareUrl,
-      story_id: story && story.id ? story.id : null,
-      video_id: video && video.id ? video.id : null
-    });
-  }
-
-  /*
-   * Impede que a área de navegação do Story capture o toque,
-   * especialmente em celulares.
-   */
-  shareBtn.addEventListener('pointerdown', function (event) {
-    event.stopPropagation();
+  shareBtn.addEventListener('pointerdown', function (evt) {
+    evt.stopPropagation();
   });
 
-  shareBtn.addEventListener('click', openSharePanel);
+  shareBtn.addEventListener('click', function (evt) {
+    evt.preventDefault();
+    evt.stopPropagation();
+
+    var shareUrl = window.location.href;
+    var storyTitle = (story && (story.title || story.name)) || 'Story';
+    var shareText = 'Olha esse conteúdo: ' + storyTitle;
+
+    if (typeof openCustomShareModal === 'function') {
+      openCustomShareModal({
+        title: storyTitle,
+        text: shareText,
+        url: shareUrl,
+        story_id: story ? story.id : null,
+        video_id: video ? video.id : null
+      });
+    } else {
+      console.error('[Vidlytics] A função openCustomShareModal não foi encontrada.');
+    }
+  });
+
+  social.appendChild(shareBtn);
+  hasSocial = true;
+}
+
 
   social.appendChild(shareBtn);
   hasSocial = true;
