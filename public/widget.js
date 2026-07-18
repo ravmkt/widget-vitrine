@@ -2455,14 +2455,7 @@ if (modalConfig.show_share_button !== false) {
       ? productUrl
       : window.location.origin + '/';
 
-    trackMetric({
-      event_type: 'share_open',
-      story_id: story.id || null,
-      video_id: video.id || null,
-      product_id: linkedProduct.id || null,
-      page_url: shareUrl
-    });
-
+    
     openCustomShareModal({
       title: shareTitle,
       text: shareText,
