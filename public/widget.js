@@ -2406,10 +2406,11 @@ setStorageItem('vidlytics_likes', likes);
       : createVideoLike(videoId);
 
     request
-      .then(function () {
-        console.log('[Vidlytics] Like request SUCESSO');
+      .then(function (result) {
+  console.log('[Vidlytics] Like request SUCESSO', result);
 
-        liked = !wasLiked;
+  liked = wasLiked ? false : true;
+
 
         likes[videoId] = {
           liked: liked
