@@ -2141,46 +2141,7 @@ console.log('[Vidlytics] modalConfig normalizado:', modalConfig);
       var social = createEl('div', 'vl-social');
       var hasSocial = false;
 
-      /* Like */
-      if (modalConfig.show_like_button !== false) {
-        var videoId = video.id;
-        var currentLikeData = likes[videoId] || { liked: false };
-        liked = currentLikeData.liked;
-        
-        // O total de curtidas é o que veio do banco + 1 se o usuário local curtiu agora
-        // (Isso é uma simplificação, o ideal seria o banco já incluir a curtida do usuário)
-        var baseCount = readLikeCounts[videoId] || 0;
-        likeCount = baseCount;
-
-        var likeBtn = createEl('button', 'vl-social-btn');
-        likeBtn.type = 'button';
-        likeBtn.innerHTML = liked ? svgIcon('heartFilled') : svgIcon('heart');
-        likeBtn.addEventListener('click', function (e) {
-          e.stopPropagation();
-          liked = !liked;
-          
-          // Atualiza o contador visual imediatamente
-          var displayCount = Number(likeCountEl.textContent);
-          likeCountEl.textContent = String(Math.max(0, displayCount + (liked ? 1 : -1)));
-          
-          likes[videoId] = { liked: liked };
-          setStorageItem('vidlytics_likes', likes);
-          likeBtn.innerHTML = liked ? svgIcon('heartFilled') : svgIcon('heart');
-
-          // Rastreia a curtida no banco de dados
-          trackMetric({
-            event_type: liked ? 'like' : 'unlike', // Adicionei 'unlike' para balancear se necessário
-            story_id: story.id,
-            video_id: videoId
-          });
-        });
-        social.appendChild(likeBtn);
-
-        var likeCountEl = createEl('span', 'vl-social-count');
-        likeCountEl.textContent = String(likeCount);
-        social.appendChild(likeCountEl);
-        hasSocial = true;
-      }
+      
 
       /* Comentários */
 if (modalConfig.show_comment_button !== false) {
