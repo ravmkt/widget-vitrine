@@ -1687,6 +1687,244 @@ function openCommentsPanel(videoId, storyId) {
   return icons[name] || '';
 }
 
+function copyShareUrl(url) {
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(url);
+  }
+
+  return new Promise(function (resolve, reject) {
+    try {
+      var input = document.createElement('textarea');
+
+      input.value = url;
+      input.setAttribute('readonly', '');
+      input.style.position = 'fixed';
+      input.style.opacity = '0';
+      input.style.pointerEvents = 'none';
+
+      document.body.appendChild(input);
+      input.select();
+
+      var copied = document.execCommand('copy');
+
+      document.body.removeChild(input);
+
+      if (copied) {
+        resolve();
+      } else {
+        reject(new Error('Não foi possível copiar o link.'));
+      }
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+function openCustomShareModal(data) {
+  if (!modalContent) return;
+
+  var oldSharePanel = modalContent.querySelector('.vl-share-panel');
+  if (oldSharePanel) oldSharePanel.remove();
+
+  var shareUrl = data.url || window.location.href;
+  var shareTitle = data.title || 'Story';
+  var shareText = data.text || 'Confira este conteúdo';
+
+  var panel = createEl('div', 'vl-share-panel');
+
+  panel.style.position = 'absolute';
+  panel.style.zIndex = '100';
+  panel.style.left = '50%';
+  panel.style.top = '50%';
+  panel.style.width = 'calc(100% - 40px)';
+  panel.style.maxWidth = '340px';
+  panel.style.transform = 'translate(-50%, -50%)';
+  panel.style.padding = '20px';
+  panel.style.borderRadius = '24px';
+  panel.style.background = '#ffffff';
+  panel.style.color = '#0f172a';
+  panel.style.boxShadow = '0 18px 50px rgba(0,0,0,.35)';
+  panel.style.fontFamily = getFontFamily(currentAppearance);
+
+  var header = createEl('div');
+  header.style.display = 'flex';
+  header.style.alignItems = 'center';
+  header.style.justifyContent = 'space-between';
+  header.style.gap = '12px';
+  header.style.marginBottom = '16px';
+
+  var title = createEl('strong');
+  title.textContent = 'Compartilhar';
+  title.style.fontSize = '18px';
+
+  var closeBtn = createEl('button');
+  closeBtn.type = 'button';
+  closeBtn.innerHTML = '&times;';
+  closeBtn.setAttribute('aria-label', 'Fechar compartilhamento');
+
+  closeBtn.style.width = '36px';
+  closeBtn.style.height = '36px';
+  closeBtn.style.border = '0';
+  closeBtn.style.borderRadius = '50%';
+  closeBtn.style.background = '#f1f5f9';
+  closeBtn.style.color = '#0f172a';
+  closeBtn.style.fontSize = '26px';
+  closeBtn.style.lineHeight = '1';
+  closeBtn.style.cursor = 'pointer';
+
+  closeBtn.addEventListener('click', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+    panel.remove();
+  });
+
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+
+  var description = createEl('p');
+  description.textContent = 'Escolha como deseja compartilhar este conteúdo.';
+  description.style.margin = '0 0 16px';
+  description.style.fontSize = '13px';
+  description.style.color = '#64748b';
+
+  var actions = createEl('div');
+  actions.style.display = 'grid';
+  actions.style.gridTemplateColumns = '1fr 1fr';
+  actions.style.gap = '10px';
+
+  function createShareButton(label, background, onClick) {
+    var button = createEl('button');
+
+    button.type = 'button';
+    button.textContent = label;
+
+    button.style.border = '0';
+    button.style.borderRadius = '12px';
+    button.style.padding = '12px 10px';
+    button.style.background = background;
+    button.style.color = '#ffffff';
+    button.style.fontWeight = '800';
+    button.style.cursor = 'pointer';
+
+    button.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      onClick();
+    });
+
+    return button;
+  }
+
+  var whatsappMessage = shareText + '\n' + shareUrl;
+
+  actions.appendChild(
+    createShareButton('WhatsApp', '#25D366', function () {
+      trackMetric({
+        event_type: 'share_whatsapp',
+        page_url: window.location.href
+      });
+
+      window.open(
+        'https://wa.me/?text=' + encodeURIComponent(whatsappMessage),
+        '_blank',
+        'noopener,noreferrer'
+      );
+    })
+  );
+
+  actions.appendChild(
+    createShareButton('Facebook', '#1877F2', function () {
+      trackMetric({
+        event_type: 'share_facebook',
+        page_url: window.location.href
+      });
+
+      window.open(
+        'https://www.facebook.com/sharer/sharer.php?u=' +
+          encodeURIComponent(shareUrl),
+        '_blank',
+        'noopener,noreferrer'
+      );
+    })
+  );
+
+  actions.appendChild(
+    createShareButton('X / Twitter', '#0f172a', function () {
+      trackMetric({
+        event_type: 'share_twitter',
+        page_url: window.location.href
+      });
+
+      window.open(
+        'https://twitter.com/intent/tweet?text=' +
+          encodeURIComponent(shareText) +
+          '&url=' +
+          encodeURIComponent(shareUrl),
+        '_blank',
+        'noopener,noreferrer'
+      );
+    })
+  );
+
+  actions.appendChild(
+    createShareButton('Copiar link', getPrimaryColor(currentAppearance), function () {
+      copyShareUrl(shareUrl)
+        .then(function () {
+          alert('Link copiado com sucesso!');
+        })
+        .catch(function () {
+          alert('Não foi possível copiar o link. Tente novamente.');
+        });
+    })
+  );
+
+  panel.appendChild(header);
+  panel.appendChild(description);
+  panel.appendChild(actions);
+
+  modalContent.appendChild(panel);
+}
+
+function shareStory(story, video) {
+  var shareUrl = window.location.href;
+
+  var shareData = {
+    title: story.title || story.name || 'Story',
+    text: 'Olha esse conteúdo: ' + (story.title || story.name || ''),
+    url: shareUrl
+  };
+
+  trackMetric({
+    event_type: 'share_open',
+    story_id: story.id || null,
+    video_id: video.id || null,
+    page_url: shareUrl
+  });
+
+  /*
+   * Em celular, tenta abrir a janela nativa do navegador/sistema.
+   * Se não existir ou ocorrer erro, abre a janela personalizada.
+   */
+  if (navigator.share) {
+    navigator.share(shareData)
+      .then(function () {
+        trackMetric({
+          event_type: 'share_native',
+          story_id: story.id || null,
+          video_id: video.id || null,
+          page_url: shareUrl
+        });
+      })
+      .catch(function () {
+        openCustomShareModal(shareData);
+      });
+
+    return;
+  }
+
+  openCustomShareModal(shareData);
+}
+
   function openStory(storiesList, initialStoryIndex, storyVideoMap, activeVideos, storyProducts, products) {
     if (!overlay || !modalContent || !storiesList || !storiesList.length) return;
 
