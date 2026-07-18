@@ -2155,13 +2155,10 @@ function removeVideoLike(videoId) {
     '&visitor_id=eq.' + encodeURIComponent(visitorId),
     {
       method: 'DELETE',
-      headers: {
-        'Prefer': 'return=minimal'
-      }
+      headers: { 'Prefer': 'return=minimal' }
     }
   ).then(function (response) {
     if (response.ok) {
-      // Decrementa o contador em memória
       readLikeCounts[videoId] = Math.max(0, (readLikeCounts[videoId] || 0) - 1);
       return true;
     }
@@ -2180,6 +2177,7 @@ function removeVideoLike(videoId) {
     });
   });
 }
+
 
   function openStory(storiesList, initialStoryIndex, storyVideoMap, activeVideos, storyProducts, products) {
     if (!overlay || !modalContent || !storiesList || !storiesList.length) return;
