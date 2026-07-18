@@ -156,36 +156,7 @@
   }
   function setStorageItem(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
 
-  function supabaseFetch(path, options) {
-  if (!hasSupabase) {
-    return Promise.reject(
-      new Error('Supabase não configurado.')
-    );
-  }
-
-  options = options || {};
-
-  var headers = {
-    'apikey': supabaseAnonKey,
-    'Authorization': 'Bearer ' + supabaseAnonKey,
-    'Content-Type': 'application/json'
-  };
-
-  if (options.headers) {
-    Object.keys(options.headers).forEach(function (key) {
-      headers[key] = options.headers[key];
-    });
-  }
-
-  return fetch(
-    supabaseUrl + '/rest/v1/' + path,
-    {
-      method: options.method || 'GET',
-      headers: headers,
-      body: options.body || undefined
-    }
-  );
-}
+  
 
 
   function fetchJson(path) {
