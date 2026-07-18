@@ -691,31 +691,80 @@
   function readPageRules() { return (!storeId || !hasSupabase) ? Promise.resolve(getStorageItem('vidlytics_page_rules', [])) : fetchJson('page_rules?select=*&store_id=eq.' + encodeURIComponent(storeId)); }
 
   function readLikesFromDb() {
-    if (!storeId || !hasSupabase) {
-      console.warn('[Vidlytics] readLikesFromDb: sem storeId ou Supabase', { storeId: storeId, hasSupabase: hasSupabase });
-      return Promise.resolve([]);
-    }
+  if (!storeId || !hasSupabase) {
+    console.warn(
+      '[Vidlytics] readLikesFromDb: Supabase ou storeId indisponível.',
+      {
+        hasSupabase: hasSupabase,
+        storeId: storeId
+      }
+    );
 
-    var url = 'video_likes?select=video_id&store_id=eq.' + encodeURIComponent(storeId);
-
-    return supabaseFetch(url, { method: 'GET' })
-      .then(function (response) {
-        if (!response.ok) {
-          console.error('[Vidlytics] readLikesFromDb erro HTTP:', response.status);
-          return [];
-        }
-        return response.json().catch(function () { return []; });
-      })
-      .then(function (data) {
-        var result = Array.isArray(data) ? data : [];
-        console.log('[Vidlytics] readLikesFromDb OK:', result.length, 'likes encontrados', result);
-        return result;
-      })
-      .catch(function (err) {
-        console.error('[Vidlytics] readLikesFromDb exception:', err);
-        return [];
-      });
+    return Promise.resolve([]);
   }
+
+  /*
+   * O parâmetro _vidlytics_ts torna cada URL única e evita que
+   * navegador, CDN ou proxy devolvam uma resposta antiga em cache.
+   */
+  var url =
+    'video_likes?select=video_id,visitor_id,created_at' +
+    '&store_id=eq.' + encodeURIComponent(storeId) +
+    '&order=created_at.desc' +
+    '&_vidlytics_ts=' + Date.now();
+
+  console.log('[Vidlytics] Consultando curtidas no Supabase:', url);
+
+  return supabaseFetch(url, {
+    method: 'GET',
+    headers: {
+      'Cache-Control': 'no-cache, no-store, max-age=0',
+      Pragma: 'no-cache'
+    }
+  })
+    .then(function (response) {
+      if (!response.ok) {
+        return response.text().then(function (body) {
+          console.error(
+            '[Vidlytics] Falha ao ler video_likes:',
+            {
+              status: response.status,
+              statusText: response.statusText,
+              body: body,
+              storeId: storeId
+            }
+          );
+
+          return [];
+        });
+      }
+
+      return response.json();
+    })
+    .then(function (data) {
+      var result = Array.isArray(data) ? data : [];
+
+      console.log(
+        '[Vidlytics] Curtidas carregadas do banco:',
+        {
+          total: result.length,
+          storeId: storeId,
+          rows: result
+        }
+      );
+
+      return result;
+    })
+    .catch(function (error) {
+      console.error(
+        '[Vidlytics] Erro de rede ao ler video_likes:',
+        error
+      );
+
+      return [];
+    });
+}
+
 
 
   function readSizingModels() {
