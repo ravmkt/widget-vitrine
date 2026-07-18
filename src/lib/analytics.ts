@@ -162,25 +162,37 @@ export const getMetricsByStore = async (storeId: string, interval: AnalyticsInte
  */
 const getVideoLikeCounts = async (
   storeId: string,
-  client: typeof supabase,
 ): Promise<Record<string, number>> => {
-  if (!isSupabaseConfigured || !client) return {};
+  if (!isSupabaseConfigured || !supabase) {
+    console.warn('[analytics] getVideoLikeCounts: Supabase não configurado');
+    return {};
+  }
 
   try {
-    const { data, error } = await client
+    const { data, error, count } = await supabase
       .from('video_likes')
-      .select('video_id')
+      .select('video_id', { count: 'exact' })
       .eq('store_id', storeId);
 
-    if (error || !data) return {};
+    console.log('[analytics] getVideoLikeCounts resultado:', { storeId, count, dataLength: data?.length, error });
+
+    if (error) {
+      console.error('[analytics] getVideoLikeCounts erro:', error);
+      return {};
+    }
+
+    if (!data) return {};
 
     const counts: Record<string, number> = {};
     data.forEach((row: any) => {
       const vid = row.video_id;
       if (vid) counts[vid] = (counts[vid] || 0) + 1;
     });
+
+    console.log('[analytics] getVideoLikeCounts contagens finais:', counts);
     return counts;
-  } catch {
+  } catch (err) {
+    console.error('[analytics] getVideoLikeCounts exception:', err);
     return {};
   }
 };
@@ -190,19 +202,26 @@ const getVideoLikeCounts = async (
  */
 const getCommentCounts = async (
   storeId: string,
-  client: typeof supabase,
 ): Promise<Record<string, number>> => {
-  if (!isSupabaseConfigured || !client) return {};
+  if (!isSupabaseConfigured || !supabase) {
+    console.warn('[analytics] getCommentCounts: Supabase não configurado');
+    return {};
+  }
 
   try {
-    const { data, error } = await client
+    const { data, error } = await supabase
       .from('comments')
       .select('video_id')
       .eq('store_id', storeId)
       .eq('status', 'approved')
       .eq('active', true);
 
-    if (error || !data) return {};
+    if (error) {
+      console.error('[analytics] getCommentCounts erro:', error);
+      return {};
+    }
+
+    if (!data) return {};
 
     const counts: Record<string, number> = {};
     data.forEach((row: any) => {
@@ -210,7 +229,8 @@ const getCommentCounts = async (
       if (vid) counts[vid] = (counts[vid] || 0) + 1;
     });
     return counts;
-  } catch {
+  } catch (err) {
+    console.error('[analytics] getCommentCounts exception:', err);
     return {};
   }
 };
@@ -221,8 +241,8 @@ export const getDashboardMetrics = async (storeId: string, interval: AnalyticsIn
 
   // Sobrescreve com totais reais de video_likes e comments
   const [realLikes, realComments] = await Promise.all([
-    getVideoLikeCounts(storeId, supabase),
-    getCommentCounts(storeId, supabase),
+    getVideoLikeCounts(storeId),
+    getCommentCounts(storeId),
   ]);
 
   mapped.likes = Object.values(realLikes).reduce((sum, n) => sum + n, 0);
@@ -236,8 +256,8 @@ export const getVideoMetricsRows = async (storeId: string, videos: Video[], inte
 
   // Busca contagens reais de video_likes e comments em paralelo
   const [realLikes, realComments] = await Promise.all([
-    getVideoLikeCounts(storeId, supabase),
-    getCommentCounts(storeId, supabase),
+    getVideoLikeCounts(storeId),
+    getCommentCounts(storeId),
   ]);
 
   return videos.map((video) => {
