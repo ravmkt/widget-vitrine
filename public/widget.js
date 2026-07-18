@@ -1084,7 +1084,8 @@ function buildSharedCss(appearance) {
 
     + '.vl-comments-close:hover{background:' + primary + '!important;color:#fff!important;}'
 
-    + '.vl-comments-list{flex:1!important;overflow-y:auto!important;padding:16px 0!important;}'
+    + '.vl-comments-list{flex:1!important;min-height:0!important;overflow-y:auto!important;padding:14px 0!important;}'
+
 
     + '.vl-comment-item{padding:12px!important;margin-bottom:10px!important;'
     + 'border-radius:14px!important;background:' + modalBorder + '!important;}'
