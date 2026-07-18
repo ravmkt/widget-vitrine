@@ -2198,25 +2198,7 @@ console.log('[Vidlytics] modalConfig normalizado:', modalConfig);
         var likeBtn = createEl('button', 'vl-social-btn');
         likeBtn.type = 'button';
         likeBtn.innerHTML = liked ? svgIcon('heartFilled') : svgIcon('heart');
-        likeBtn.addEventListener('click', function (e) {
-          e.stopPropagation();
-          liked = !liked;
-          
-          // Atualiza o contador visual imediatamente
-          var displayCount = Number(likeCountEl.textContent);
-          likeCountEl.textContent = String(Math.max(0, displayCount + (liked ? 1 : -1)));
-          
-          likes[videoId] = { liked: liked };
-          setStorageItem('vidlytics_likes', likes);
-          likeBtn.innerHTML = liked ? svgIcon('heartFilled') : svgIcon('heart');
-
-          // Rastreia a curtida no banco de dados
-          trackMetric({
-            event_type: liked ? 'like' : 'unlike', // Adicionei 'unlike' para balancear se necessário
-            story_id: story.id,
-            video_id: videoId
-          });
-        });
+        
         social.appendChild(likeBtn);
 
         var likeCountEl = createEl('span', 'vl-social-count');
