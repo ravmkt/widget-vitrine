@@ -580,36 +580,129 @@
  
 
   function trackMetric(metric) {
-    var payload = {
-      store_id: storeId,
-      story_id: metric.story_id || null,
-      video_id: metric.video_id || null,
-      product_id: metric.product_id || null,
-      event_type: metric.event_type,
-      page_url: metric.page_url || window.location.href,
-      device_type: window.innerWidth < 768 ? 'mobile' : 'desktop',
-      browser: navigator.userAgent,
-      user_agent: navigator.userAgent,
-      referrer: document.referrer || null,
-      created_at: new Date().toISOString()
-    };
+  metric = metric || {};
 
-    if (hasSupabase) {
-      supabaseFetch('metrics', {
-        method: 'POST',
-        headers: { 'Prefer': 'return=minimal' },
-        body: JSON.stringify(payload)
-      }).catch(function(err) {
-        console.warn('Erro ao enviar métrica para o Supabase:', err);
-      });
-    }
+  var payload = {
+    store_id: storeId || null,
+    story_id: metric.story_id || null,
+    video_id: metric.video_id || null,
+    product_id: metric.product_id || null,
+    event_type: String(metric.event_type || 'unknown'),
+    page_url: metric.page_url || window.location.href,
+    device_type: window.innerWidth < 768 ? 'mobile' : 'desktop',
+    browser: navigator.userAgent,
+    user_agent: navigator.userAgent,
+    referrer: document.referrer || null,
+    created_at: new Date().toISOString()
+  };
 
-    var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
-    if (!Array.isArray(fallbackMetrics)) fallbackMetrics = [];
-    fallbackMetrics.push(payload);
-    setStorageItem('vidlytics_metrics', fallbackMetrics);
-    return Promise.resolve();
+  /*
+   * Mantém uma cópia local apenas como contingência.
+   * O dashboard deve ler a tabela metrics no Supabase.
+   */
+  var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
+
+  if (!Array.isArray(fallbackMetrics)) {
+    fallbackMetrics = [];
   }
+
+  fallbackMetrics.push(payload);
+  setStorageItem('vidlytics_metrics', fallbackMetrics);
+
+  if (!hasSupabase) {
+    console.warn(
+      '[Vidlytics] Métrica salva somente localmente: Supabase não configurado.',
+      payload
+    );
+
+    return Promise.resolve({
+      saved: false,
+      local: true,
+      payload: payload
+    });
+  }
+
+  return supabaseFetch('metrics', {
+    method: 'POST',
+    headers: {
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(payload)
+  })
+    .then(function (response) {
+      if (response.ok) {
+        return response.json()
+          .catch(function () {
+            return [];
+          })
+          .then(function (data) {
+            console.info(
+              '[Vidlytics] Métrica registrada no Supabase:',
+              payload.event_type,
+              payload
+            );
+
+            return {
+              saved: true,
+              data: data,
+              payload: payload
+            };
+          });
+      }
+
+      return response.text().then(function (rawMessage) {
+        var parsed = {};
+
+        try {
+          parsed = JSON.parse(rawMessage || '{}');
+        } catch (error) {
+          parsed = {};
+        }
+
+        console.error(
+          '[Vidlytics] Erro ao registrar métrica no Supabase:',
+          {
+            status: response.status,
+            statusText: response.statusText,
+            body: rawMessage,
+            payload: payload
+          }
+        );
+
+        if (response.status === 401) {
+          throw new Error(
+            'Supabase recusou a métrica: URL ou chave anônima inválida.'
+          );
+        }
+
+        if (
+          response.status === 403 ||
+          parsed.code === '42501'
+        ) {
+          throw new Error(
+            'Supabase recusou a métrica: a política RLS da tabela metrics não permite INSERT.'
+          );
+        }
+
+        throw new Error(
+          parsed.message ||
+          parsed.error_description ||
+          parsed.details ||
+          parsed.hint ||
+          'Não foi possível registrar a métrica.'
+        );
+      });
+    })
+    .catch(function (error) {
+      console.error(
+        '[Vidlytics] A métrica não foi salva no Supabase:',
+        error
+      );
+
+      throw error;
+    });
+}
+
 
   function readStories() {
     if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_stories', []));
