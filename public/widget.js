@@ -710,7 +710,7 @@
    */
   var params = new URLSearchParams();
 
-  params.set('select', 'video_id');
+params.set('select', 'video_id,visitor_id');
   params.set('store_id', 'eq.' + String(storeId).trim());
 
   var path = 'video_likes?' + params.toString();
