@@ -2201,6 +2201,8 @@ function removeVideoLike(videoId) {
     /* Read likes from localStorage */
     var likes = getStorageItem('vidlytics_likes', {});
     if (!likes || typeof likes !== 'object') likes = {};
+    var currentVisitorId = getVisitorId();
+
 
     function getOrderedVideos(s) {
       var relations = (storyVideoMap.get(s.id) || []).slice().sort(function (a, b) { return Number(a.position || 0) - Number(b.position || 0); });
