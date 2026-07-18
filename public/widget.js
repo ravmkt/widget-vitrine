@@ -2285,9 +2285,10 @@ if (modalConfig.show_like_button !== false) {
         error
       );
     }).finally(function () {
-      likeBtn.disabled = false;
-    });
-  });
+  submit.disabled = false;
+});
+
+});
 
   social.appendChild(likeBtn);
   social.appendChild(likeCountEl);
