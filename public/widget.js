@@ -2144,8 +2144,161 @@ if (modalConfig.show_comment_button !== false) {
   hasSocial = true;
 }
 
+/* Compartilhar */
+if (modalConfig.show_share_button !== false) {
+  var shareBtn = createEl('button', 'vl-social-btn');
 
+  shareBtn.type = 'button';
+  shareBtn.innerHTML = svgIcon('share');
+  shareBtn.setAttribute('aria-label', 'Compartilhar');
+  shareBtn.title = 'Compartilhar';
 
+  shareBtn.addEventListener('pointerdown', function (event) {
+    event.stopPropagation();
+  });
+
+  shareBtn.addEventListener('click', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    /*
+     * Prioridade:
+     * 1. Produto vinculado diretamente ao vídeo.
+     * 2. Produto vinculado ao Story.
+     * 3. Compartilhamento institucional da loja/site.
+     */
+    var linkedProduct = null;
+
+    /* Produto que já venha como objeto dentro do vídeo */
+    if (video.product && typeof video.product === 'object') {
+      linkedProduct = video.product;
+    }
+
+    /* Produto relacionado por product_id no vídeo */
+    if (
+      !linkedProduct &&
+      video.product_id &&
+      Array.isArray(products)
+    ) {
+      linkedProduct = products.find(function (product) {
+        return idsEqual(product.id, video.product_id);
+      });
+    }
+
+    /* Compatibilidade com variações de campos no vídeo */
+    if (
+      !linkedProduct &&
+      Array.isArray(products)
+    ) {
+      var videoProductId = firstDefined(
+        video.product_id,
+        video.productId,
+        video.linked_product_id,
+        video.linkedProductId
+      );
+
+      if (videoProductId) {
+        linkedProduct = products.find(function (product) {
+          return idsEqual(product.id, videoProductId);
+        });
+      }
+    }
+
+    /* Produto que já venha como objeto dentro do Story */
+    if (
+      !linkedProduct &&
+      story.product &&
+      typeof story.product === 'object'
+    ) {
+      linkedProduct = story.product;
+    }
+
+    /* Produto relacionado via story_products */
+    if (
+      !linkedProduct &&
+      Array.isArray(storyProducts) &&
+      Array.isArray(products)
+    ) {
+      var storyProductRelation = storyProducts.find(function (relation) {
+        return idsEqual(relation.story_id, story.id);
+      });
+
+      if (storyProductRelation) {
+        linkedProduct = products.find(function (product) {
+          return idsEqual(product.id, storyProductRelation.product_id);
+        });
+      }
+    }
+
+    linkedProduct = linkedProduct || {};
+
+    var productTitle =
+      linkedProduct.name ||
+      linkedProduct.title ||
+      linkedProduct.product_name ||
+      '';
+
+    var productUrl =
+      linkedProduct.product_url ||
+      linkedProduct.product_link ||
+      linkedProduct.productLink ||
+      linkedProduct.permalink ||
+      linkedProduct.url ||
+      linkedProduct.link ||
+      linkedProduct.href ||
+      '';
+
+    /* Converte links relativos, como /produto/camiseta, para URL completa */
+    if (
+      productUrl &&
+      productUrl.indexOf('http://') !== 0 &&
+      productUrl.indexOf('https://') !== 0
+    ) {
+      productUrl =
+        window.location.origin +
+        (productUrl.charAt(0) === '/' ? '' : '/') +
+        productUrl;
+    }
+
+    var hasProduct = Boolean(productTitle && productUrl);
+
+    /*
+     * Se há produto, compartilha produto + URL da página dele.
+     * Se não há, compartilha uma mensagem institucional + home.
+     */
+    var shareTitle = hasProduct
+      ? productTitle
+      : 'Conheça nossos produtos';
+
+    var shareText = hasProduct
+      ? 'Olha esse produto que eu encontrei: ' + productTitle
+      : 'Olha só os produtos da nossa loja!';
+
+    var shareUrl = hasProduct
+      ? productUrl
+      : window.location.origin + '/';
+
+    trackMetric({
+      event_type: 'share_open',
+      story_id: story.id || null,
+      video_id: video.id || null,
+      product_id: linkedProduct.id || null,
+      page_url: shareUrl
+    });
+
+    openCustomShareModal({
+      title: shareTitle,
+      text: shareText,
+      url: shareUrl,
+      story_id: story.id || null,
+      video_id: video.id || null,
+      product_id: linkedProduct.id || null
+    });
+  });
+
+  social.appendChild(shareBtn);
+  hasSocial = true;
+}
   
 var sizingModelId = getSizingModelId(video);
 
