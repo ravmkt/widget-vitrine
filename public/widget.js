@@ -1894,28 +1894,86 @@ if (modalConfig.show_comment_button !== false) {
   hasSocial = true;
 }
 
-      /* Share */
-      if (modalConfig.show_share_button !== false) {
-        var shareBtn = createEl('button', 'vl-social-btn');
-        shareBtn.type = 'button';
-        shareBtn.innerHTML = svgIcon('share');
-        shareBtn.addEventListener('click', function (e) {
-          e.stopPropagation();
-          var shareUrl = window.location.href;
-          var shareText = 'Olha esse conteúdo: ' + (story.title || '');
-          try {
-            if (navigator.share) {
-              navigator.share({ title: story.title || 'Story', text: shareText, url: shareUrl });
-            } else if (navigator.clipboard) {
-              navigator.clipboard.writeText(shareUrl);
-            }
-          } catch (err) {}
+       /* Compartilhar */
+if (modalConfig.show_share_button !== false) {
+  var shareBtn = createEl('button', 'vl-social-btn');
+  shareBtn.type = 'button';
+  shareBtn.innerHTML = svgIcon('share');
+  shareBtn.setAttribute('aria-label', 'Compartilhar');
+  shareBtn.title = 'Compartilhar';
+
+  shareBtn.addEventListener('click', async function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    /* Evita abrir duas janelas de compartilhamento ao mesmo tempo */
+    if (shareBtn.disabled) return;
+
+    var shareUrl = window.location.href;
+    var storyTitle = story.title || story.name || 'Story';
+    var shareText = 'Olha esse conteúdo: ' + storyTitle;
+
+    shareBtn.disabled = true;
+
+    try {
+      /*
+       * navigator.share abre a janela nativa do celular/computador,
+       * permitindo escolher WhatsApp, Facebook, Gmail etc.
+       */
+      if (navigator.share) {
+        await navigator.share({
+          title: storyTitle,
+          text: shareText,
+          url: shareUrl
         });
-        social.appendChild(shareBtn);
-        hasSocial = true;
+
+        trackMetric({
+          event_type: 'share',
+          story_id: story.id,
+          video_id: video.id,
+          page_url: window.location.href
+        });
+
+        return;
       }
 
-      /* Medidas */
+      /*
+       * Fallback para navegadores sem suporte à janela nativa.
+       */
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+        alert('Link copiado para a área de transferência.');
+      } else {
+        window.prompt('Copie o link para compartilhar:', shareUrl);
+      }
+
+      trackMetric({
+        event_type: 'share_copy_link',
+        story_id: story.id,
+        video_id: video.id,
+        page_url: window.location.href
+      });
+    } catch (error) {
+      /*
+       * AbortError: pessoa fechou/cancelou a janela — comportamento normal.
+       * InvalidStateError: já existia uma janela nativa aberta.
+       */
+      if (
+        error &&
+        error.name !== 'AbortError' &&
+        error.name !== 'InvalidStateError'
+      ) {
+        console.warn('[Vidlytics] Não foi possível compartilhar:', error);
+      }
+    } finally {
+      shareBtn.disabled = false;
+    }
+  });
+
+  social.appendChild(shareBtn);
+  hasSocial = true;
+}
+
 var sizingModelId = getSizingModelId(video);
 
 if (
