@@ -51,7 +51,7 @@
   );
 
   var VIDLYTICS_WIDGET_VERSION =
-    'metrics-sync-202607180001';
+    'likes-fix-202607190001';
 
   if (
     window.__vidlytics_widget_loaded_version ===
@@ -691,15 +691,31 @@
   function readPageRules() { return (!storeId || !hasSupabase) ? Promise.resolve(getStorageItem('vidlytics_page_rules', [])) : fetchJson('page_rules?select=*&store_id=eq.' + encodeURIComponent(storeId)); }
 
   function readLikesFromDb() {
-  if (!storeId || !hasSupabase) {
-    return Promise.resolve([]);
-  }
+    if (!storeId || !hasSupabase) {
+      console.warn('[Vidlytics] readLikesFromDb: sem storeId ou Supabase', { storeId: storeId, hasSupabase: hasSupabase });
+      return Promise.resolve([]);
+    }
 
-  return fetchJson(
-    'video_likes?select=video_id&store_id=eq.' +
-    encodeURIComponent(storeId)
-  );
-}
+    var url = 'video_likes?select=video_id&store_id=eq.' + encodeURIComponent(storeId);
+
+    return supabaseFetch(url, { method: 'GET' })
+      .then(function (response) {
+        if (!response.ok) {
+          console.error('[Vidlytics] readLikesFromDb erro HTTP:', response.status);
+          return [];
+        }
+        return response.json().catch(function () { return []; });
+      })
+      .then(function (data) {
+        var result = Array.isArray(data) ? data : [];
+        console.log('[Vidlytics] readLikesFromDb OK:', result.length, 'likes encontrados', result);
+        return result;
+      })
+      .catch(function (err) {
+        console.error('[Vidlytics] readLikesFromDb exception:', err);
+        return [];
+      });
+  }
 
 
   function readSizingModels() {
@@ -2008,7 +2024,7 @@ function getVisitorId() {
   var storageKey = 'vidlytics_visitor_id';
   var visitorId = getStorageItem(storageKey, '');
 
-  if (visitorId && typeof visitorId === 'string') {
+  if (visitorId && typeof visitorId === 'string' && visitorId.length > 5) {
     return visitorId;
   }
 
@@ -2029,38 +2045,52 @@ function getVisitorId() {
 
 function createVideoLike(videoId) {
   if (!hasSupabase || !storeId || !videoId) {
-    return Promise.reject(
-      new Error('Não foi possível registrar a curtida.')
-    );
+    console.error('[Vidlytics] createVideoLike: dados insuficientes', { hasSupabase: hasSupabase, storeId: storeId, videoId: videoId });
+    return Promise.reject(new Error('Não foi possível registrar a curtida.'));
   }
+
+  var visitorId = getVisitorId();
+  var payload = {
+    store_id: storeId,
+    video_id: videoId,
+    visitor_id: visitorId
+  };
+
+  console.log('[Vidlytics] createVideoLike POST /rest/v1/video_likes', payload);
 
   return supabaseFetch('video_likes', {
     method: 'POST',
     headers: {
-      'Prefer': 'return=representation'
+      'Prefer': 'return=minimal'
     },
-    body: JSON.stringify({
-      store_id: storeId,
-      video_id: videoId,
-      visitor_id: getVisitorId()
-    })
+    body: JSON.stringify(payload)
   }).then(function (response) {
+    console.log('[Vidlytics] createVideoLike resposta:', response.status, response.ok);
+
     if (response.ok) {
-      return response.json().catch(function () {
-        return [];
-      });
+      // Atualiza o contador em memória imediatamente
+      readLikeCounts[videoId] = (readLikeCounts[videoId] || 0) + 1;
+      return true;
     }
 
     return response.text().then(function (rawMessage) {
-      console.error('[Vidlytics] Erro ao curtir:', {
+      console.error('[Vidlytics] createVideoLike erro:', {
         status: response.status,
-        body: rawMessage
+        body: rawMessage,
+        payload: payload
       });
+
+      // Se for 409 (conflito - já curtiu), trata como sucesso
+      if (response.status === 409) {
+        return true;
+      }
 
       throw new Error(
         response.status === 403
           ? 'A política RLS bloqueou a curtida.'
-          : 'Não foi possível salvar a curtida.'
+          : response.status === 400
+            ? 'Dados inválidos para curtida.'
+            : 'Não foi possível salvar a curtida.'
       );
     });
   });
@@ -2068,9 +2098,7 @@ function createVideoLike(videoId) {
 
 function removeVideoLike(videoId) {
   if (!hasSupabase || !storeId || !videoId) {
-    return Promise.reject(
-      new Error('Não foi possível remover a curtida.')
-    );
+    return Promise.reject(new Error('Não foi possível remover a curtida.'));
   }
 
   var visitorId = getVisitorId();
@@ -2088,11 +2116,13 @@ function removeVideoLike(videoId) {
     }
   ).then(function (response) {
     if (response.ok) {
+      // Decrementa o contador em memória
+      readLikeCounts[videoId] = Math.max(0, (readLikeCounts[videoId] || 0) - 1);
       return true;
     }
 
     return response.text().then(function (rawMessage) {
-      console.error('[Vidlytics] Erro ao descurtir:', {
+      console.error('[Vidlytics] removeVideoLike erro:', {
         status: response.status,
         body: rawMessage
       });
@@ -2277,6 +2307,8 @@ if (modalConfig.show_like_button !== false) {
   var baseCount = readLikeCounts[videoId] || 0;
   likeCount = baseCount;
 
+  console.log('[Vidlytics] Like button init:', { videoId: videoId, liked: liked, baseCount: baseCount, readLikeCounts: readLikeCounts });
+
   var likeBtn = createEl('button', 'vl-social-btn');
   likeBtn.type = 'button';
   likeBtn.setAttribute(
@@ -2306,16 +2338,16 @@ if (modalConfig.show_like_button !== false) {
 
     var wasLiked = liked;
 
+    console.log('[Vidlytics] Like click:', { videoId: videoId, wasLiked: wasLiked, action: wasLiked ? 'removeVideoLike' : 'createVideoLike' });
+
     var request = wasLiked
       ? removeVideoLike(videoId)
       : createVideoLike(videoId);
 
     request
       .then(function () {
-        /*
-         * Só muda o coração e o contador depois de o Supabase
-         * confirmar que o insert/delete funcionou.
-         */
+        console.log('[Vidlytics] Like request SUCESSO');
+
         liked = !wasLiked;
 
         likes[videoId] = {
@@ -2340,9 +2372,6 @@ if (modalConfig.show_like_button !== false) {
 
         likeCountEl.textContent = String(likeCount);
 
-        /*
-         * Métrica é opcional e separada do registro real da curtida.
-         */
         trackMetric({
           event_type: liked ? 'like' : 'unlike',
           story_id: story.id,
@@ -2356,7 +2385,7 @@ if (modalConfig.show_like_button !== false) {
         });
       })
       .catch(function (error) {
-        console.error('[Vidlytics] Não foi possível alterar a curtida:', error);
+        console.error('[Vidlytics] Like request FALHOU:', error);
 
         alert(
           error && error.message
@@ -3246,6 +3275,7 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig);
           readLikeCounts[item.video_id] = (readLikeCounts[item.video_id] || 0) + 1;
         }
       });
+      console.log('[Vidlytics] readLikeCounts processado:', JSON.parse(JSON.stringify(readLikeCounts)));
 
 
       readStoryProductsData = storyProducts;

@@ -299,6 +299,7 @@ const VideoGalleryPage = () => {
         setProducts(allProducts || []);
 
         const rows = await getVideoMetricsRows(safeStoreId, allVideos || [], '30');
+        console.log('[VideoGallery] métricas recebidas:', rows.map(r => ({ id: r.id, title: r.title, likes: r.metrics.likes, comments: r.metrics.comments, views: r.metrics.views })));
         const processed = rows.map(v => ({
           ...v,
           metrics: {

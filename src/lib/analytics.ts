@@ -169,19 +169,19 @@ const getVideoLikeCounts = async (
   }
 
   try {
-    const { data, error, count } = await supabase
+    const { data, error } = await supabase
       .from('video_likes')
-      .select('video_id', { count: 'exact' })
+      .select('video_id')
       .eq('store_id', storeId);
 
-    console.log('[analytics] getVideoLikeCounts resultado:', { storeId, count, dataLength: data?.length, error });
+    console.log('[analytics] getVideoLikeCounts:', { storeId, rowCount: data?.length, error: error?.message, data });
 
     if (error) {
       console.error('[analytics] getVideoLikeCounts erro:', error);
       return {};
     }
 
-    if (!data) return {};
+    if (!data || data.length === 0) return {};
 
     const counts: Record<string, number> = {};
     data.forEach((row: any) => {
@@ -189,7 +189,7 @@ const getVideoLikeCounts = async (
       if (vid) counts[vid] = (counts[vid] || 0) + 1;
     });
 
-    console.log('[analytics] getVideoLikeCounts contagens finais:', counts);
+    console.log('[analytics] getVideoLikeCounts final:', counts);
     return counts;
   } catch (err) {
     console.error('[analytics] getVideoLikeCounts exception:', err);
