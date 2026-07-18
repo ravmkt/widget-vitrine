@@ -1047,10 +1047,25 @@ function buildSharedCss(appearance) {
     + '.vl-social-btn.whatsapp{background:#25d366!important;border-color:#25d366!important;}'
 
     /* PAINEL DE COMENTÁRIOS — CORES CONTROLADAS PELA APARÊNCIA */
-    + '.vl-comments-panel{position:absolute!important;inset:0!important;z-index:70!important;'
-    + 'display:none!important;flex-direction:column!important;'
-    + 'background:' + modalBackground + '!important;'
-    + 'padding:18px!important;color:' + modalText + '!important;}'
+   + '.vl-comments-panel{'
++ 'position:absolute!important;'
++ 'z-index:70!important;'
++ 'display:none!important;'
++ 'flex-direction:column!important;'
++ 'top:50%!important;'
++ 'left:50%!important;'
++ 'transform:translate(-50%,-50%)!important;'
++ 'width:calc(100% - 40px)!important;'
++ 'max-width:306px!important;'
++ 'max-height:72%!important;'
++ 'overflow:hidden!important;'
++ 'background:' + modalBackground + '!important;'
++ 'padding:18px!important;'
++ 'color:' + modalText + '!important;'
++ 'border-radius:24px!important;'
++ 'box-shadow:0 18px 50px rgba(0,0,0,.32)!important;'
++ '}'
+
 
     + '.vl-comments-panel.is-open{display:flex!important;}'
 
