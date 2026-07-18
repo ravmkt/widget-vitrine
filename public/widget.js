@@ -693,10 +693,10 @@
   function readLikesFromDb() {
   if (!storeId || !hasSupabase) {
     console.warn(
-      '[Vidlytics] readLikesFromDb: Supabase ou storeId indisponível.',
+      '[Vidlytics] readLikesFromDb: Supabase ou storeId ausente.',
       {
-        hasSupabase: hasSupabase,
-        storeId: storeId
+        storeId: storeId,
+        hasSupabase: hasSupabase
       }
     );
 
@@ -704,34 +704,34 @@
   }
 
   /*
-   * O parâmetro _vidlytics_ts torna cada URL única e evita que
-   * navegador, CDN ou proxy devolvam uma resposta antiga em cache.
+   * URLSearchParams evita erros como:
+   * - &amp;
+   * - barras invertidas (\)
+   * - parâmetros concatenados incorretamente
    */
-  var url =
-    'video_likes?select=video_id,visitor_id,created_at' +
-    '&store_id=eq.' + encodeURIComponent(storeId) +
-    '&order=created_at.desc' +
-    '&_vidlytics_ts=' + Date.now();
+  var params = new URLSearchParams();
 
-  console.log('[Vidlytics] Consultando curtidas no Supabase:', url);
+  params.set('select', 'video_id');
+  params.set('store_id', 'eq.' + String(storeId).trim());
 
-  return supabaseFetch(url, {
-    method: 'GET',
-    headers: {
-      'Cache-Control': 'no-cache, no-store, max-age=0',
-      Pragma: 'no-cache'
-    }
-  })
+  var path = 'video_likes?' + params.toString();
+
+  console.log(
+    '[Vidlytics] Consultando curtidas no Supabase:',
+    path
+  );
+
+  return supabaseFetch(path, { method: 'GET' })
     .then(function (response) {
       if (!response.ok) {
-        return response.text().then(function (body) {
+        return response.text().then(function (rawMessage) {
           console.error(
             '[Vidlytics] Falha ao ler video_likes:',
             {
               status: response.status,
               statusText: response.statusText,
-              body: body,
-              storeId: storeId
+              body: rawMessage,
+              path: path
             }
           );
 
@@ -742,30 +742,27 @@
       return response.json();
     })
     .then(function (data) {
-      var result = Array.isArray(data) ? data : [];
+      var likes = Array.isArray(data) ? data : [];
 
       console.log(
         '[Vidlytics] Curtidas carregadas do banco:',
         {
-          total: result.length,
-          storeId: storeId,
-          rows: result
+          total: likes.length,
+          likes: likes
         }
       );
 
-      return result;
+      return likes;
     })
     .catch(function (error) {
       console.error(
-        '[Vidlytics] Erro de rede ao ler video_likes:',
+        '[Vidlytics] Erro inesperado ao ler video_likes:',
         error
       );
 
       return [];
     });
 }
-
-
 
   function readSizingModels() {
     if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_sizing_models', []));
