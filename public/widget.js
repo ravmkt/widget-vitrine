@@ -2132,34 +2132,63 @@ if (modalConfig.show_comment_button !== false) {
   hasSocial = true;
 }
 
-       /* Compartilhar */
+/* Compartilhar */
 if (modalConfig.show_share_button !== false) {
   var shareBtn = createEl('button', 'vl-social-btn');
+
   shareBtn.type = 'button';
   shareBtn.innerHTML = svgIcon('share');
   shareBtn.setAttribute('aria-label', 'Compartilhar');
   shareBtn.title = 'Compartilhar';
 
-  shareBtn.addEventListener('click', function (event) {
-  event.preventDefault();
-  event.stopPropagation();
-
-  if (shareBtn.disabled) return;
-
-  var shareUrl = window.location.href;
-  var storyTitle = (story && (story.title || story.name)) || 'Story';
-  var shareText = 'Olha esse conteúdo: ' + storyTitle;
-
-  function registrarEvento(tipo) {
-    if (typeof trackMetric === 'function') {
-      trackMetric({
-        event_type: tipo,
-        story_id: story && story.id ? story.id : null,
-        video_id: video && video.id ? video.id : null,
-        page_url: window.location.href
-      });
+  function openSharePanel(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
     }
+
+    var shareUrl = window.location.href;
+    var storyTitle =
+      (story && (story.title || story.name)) || 'Story';
+
+    var shareText = 'Olha esse conteúdo: ' + storyTitle;
+
+    console.log('[Vidlytics] Abrindo painel de compartilhamento', {
+      storyId: story && story.id,
+      videoId: video && video.id,
+      url: shareUrl
+    });
+
+    trackMetric({
+      event_type: 'share_open',
+      story_id: story && story.id ? story.id : null,
+      video_id: video && video.id ? video.id : null,
+      page_url: shareUrl
+    });
+
+    openCustomShareModal({
+      title: storyTitle,
+      text: shareText,
+      url: shareUrl,
+      story_id: story && story.id ? story.id : null,
+      video_id: video && video.id ? video.id : null
+    });
   }
+
+  /*
+   * Impede que a área de navegação do Story capture o toque,
+   * especialmente em celulares.
+   */
+  shareBtn.addEventListener('pointerdown', function (event) {
+    event.stopPropagation();
+  });
+
+  shareBtn.addEventListener('click', openSharePanel);
+
+  social.appendChild(shareBtn);
+  hasSocial = true;
+}
+
 
   function copiarLink() {
     if (navigator.clipboard && navigator.clipboard.writeText) {
