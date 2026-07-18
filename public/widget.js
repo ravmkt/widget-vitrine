@@ -2030,6 +2030,108 @@ function shareStory(story, video) {
   openCustomShareModal(shareData);
 }
 
+function getVisitorId() {
+  var storageKey = 'vidlytics_visitor_id';
+  var visitorId = getStorageItem(storageKey, '');
+
+  if (visitorId && typeof visitorId === 'string') {
+    return visitorId;
+  }
+
+  if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+    visitorId = window.crypto.randomUUID();
+  } else {
+    visitorId =
+      'visitor_' +
+      Date.now() +
+      '_' +
+      Math.random().toString(36).slice(2);
+  }
+
+  setStorageItem(storageKey, visitorId);
+
+  return visitorId;
+}
+
+function createVideoLike(videoId) {
+  if (!hasSupabase || !storeId || !videoId) {
+    return Promise.reject(
+      new Error('Não foi possível registrar a curtida.')
+    );
+  }
+
+  return supabaseFetch('video_likes', {
+    method: 'POST',
+    headers: {
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify({
+      store_id: storeId,
+      video_id: videoId,
+      visitor_id: getVisitorId()
+    })
+  }).then(function (response) {
+    if (response.ok) {
+      return response.json().catch(function () {
+        return [];
+      });
+    }
+
+    return response.text().then(function (rawMessage) {
+      console.error('[Vidlytics] Erro ao curtir:', {
+        status: response.status,
+        body: rawMessage
+      });
+
+      throw new Error(
+        response.status === 403
+          ? 'A política RLS bloqueou a curtida.'
+          : 'Não foi possível salvar a curtida.'
+      );
+    });
+  });
+}
+
+function removeVideoLike(videoId) {
+  if (!hasSupabase || !storeId || !videoId) {
+    return Promise.reject(
+      new Error('Não foi possível remover a curtida.')
+    );
+  }
+
+  var visitorId = getVisitorId();
+
+  return supabaseFetch(
+    'video_likes?' +
+    'store_id=eq.' + encodeURIComponent(storeId) +
+    '&video_id=eq.' + encodeURIComponent(videoId) +
+    '&visitor_id=eq.' + encodeURIComponent(visitorId),
+    {
+      method: 'DELETE',
+      headers: {
+        'Prefer': 'return=minimal'
+      }
+    }
+  ).then(function (response) {
+    if (response.ok) {
+      return true;
+    }
+
+    return response.text().then(function (rawMessage) {
+      console.error('[Vidlytics] Erro ao descurtir:', {
+        status: response.status,
+        body: rawMessage
+      });
+
+      throw new Error(
+        response.status === 403
+          ? 'A política RLS bloqueou a remoção da curtida.'
+          : 'Não foi possível remover a curtida.'
+      );
+    });
+  });
+}
+
   function openStory(storiesList, initialStoryIndex, storyVideoMap, activeVideos, storyProducts, products) {
     if (!overlay || !modalContent || !storiesList || !storiesList.length) return;
 
