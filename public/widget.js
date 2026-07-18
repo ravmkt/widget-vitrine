@@ -2352,7 +2352,8 @@ if (modalConfig.show_like_button !== false) {
   var videoId = video.id;
   var currentLikeData = likes[videoId] || { liked: false };
 
-  liked = Boolean(currentLikeData.liked);
+liked = Boolean(currentLikeData.liked);
+
 
   // Contagem real do banco de dados para ESTE vídeo específico
   var baseCount = readLikeCounts[videoId] || 0;
