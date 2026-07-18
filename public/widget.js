@@ -727,7 +727,17 @@ if (response.status === 401) {
 
   function readPageRules() { return (!storeId || !hasSupabase) ? Promise.resolve(getStorageItem('vidlytics_page_rules', [])) : fetchJson('page_rules?select=*&store_id=eq.' + encodeURIComponent(storeId)); }
 
-  
+  function readLikesFromDb() {
+  if (!storeId || !hasSupabase) {
+    return Promise.resolve([]);
+  }
+
+  return fetchJson(
+    'video_likes?select=video_id&store_id=eq.' +
+    encodeURIComponent(storeId)
+  );
+}
+
 
   function readSizingModels() {
     if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_sizing_models', []));
