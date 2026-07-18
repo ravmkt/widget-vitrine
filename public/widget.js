@@ -2179,6 +2179,7 @@ function removeVideoLike(videoId) {
 }
 
 
+
   function openStory(storiesList, initialStoryIndex, storyVideoMap, activeVideos, storyProducts, products) {
     if (!overlay || !modalContent || !storiesList || !storiesList.length) return;
 
