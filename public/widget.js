@@ -2178,6 +2178,18 @@ function removeVideoLike(videoId) {
   });
 }
 
+function checkIfVisitorLiked(videoId, dbLikesRaw) {
+  var visitorId = getVisitorId();
+
+  if (!Array.isArray(dbLikesRaw)) return false;
+
+  return dbLikesRaw.some(function (row) {
+    return (
+      idsEqual(row.video_id, videoId) &&
+      idsEqual(row.visitor_id, visitorId)
+    );
+  });
+}
 
 
   function openStory(storiesList, initialStoryIndex, storyVideoMap, activeVideos, storyProducts, products) {
