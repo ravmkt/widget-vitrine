@@ -2141,7 +2141,107 @@ console.log('[Vidlytics] modalConfig normalizado:', modalConfig);
       var social = createEl('div', 'vl-social');
       var hasSocial = false;
 
-      
+      /* Like */
+if (modalConfig.show_like_button !== false) {
+  var videoId = video.id;
+
+  var currentLikeData = likes[videoId] || {
+    liked: false
+  };
+
+  liked = Boolean(currentLikeData.liked);
+
+  var likeBtn = createEl('button', 'vl-social-btn');
+  likeBtn.type = 'button';
+  likeBtn.innerHTML = liked
+    ? svgIcon('heartFilled')
+    : svgIcon('heart');
+
+  likeBtn.setAttribute(
+    'aria-label',
+    liked ? 'Remover curtida' : 'Curtir vídeo'
+  );
+
+  var likeCountEl = createEl('span', 'vl-social-count');
+  likeCountEl.textContent = '0';
+
+  /*
+   * Carrega a quantidade real de curtidas salva no Supabase
+   * assim que o vídeo atual é aberto.
+   */
+  getVideoMetrics(videoId).then(function (metrics) {
+    likeCount = metrics.likes_count;
+    likeCountEl.textContent = String(metrics.likes_count);
+  });
+
+  likeBtn.addEventListener('click', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    /*
+     * Evita dois cliques rápidos enquanto o Supabase está registrando.
+     */
+    if (likeBtn.disabled) {
+      return;
+    }
+
+    likeBtn.disabled = true;
+
+    var nextLikedState = !liked;
+
+    /*
+     * Registra a ação na tabela public.metrics.
+     *
+     * Curtir = event_type "like"
+     * Descurtir = event_type "unlike"
+     */
+    trackMetric({
+      event_type: nextLikedState ? 'like' : 'unlike',
+      story_id: story.id,
+      video_id: videoId,
+      page_url: window.location.href
+    }).then(function () {
+      liked = nextLikedState;
+
+      likes[videoId] = {
+        liked: liked
+      };
+
+      setStorageItem('vidlytics_likes', likes);
+
+      likeBtn.innerHTML = liked
+        ? svgIcon('heartFilled')
+        : svgIcon('heart');
+
+      likeBtn.setAttribute(
+        'aria-label',
+        liked ? 'Remover curtida' : 'Curtir vídeo'
+      );
+
+      /*
+       * Em vez de confiar no cálculo local,
+       * consulta novamente o valor do banco.
+       */
+      return getVideoMetrics(videoId);
+    }).then(function (metrics) {
+      likeCount = metrics.likes_count;
+      likeCountEl.textContent = String(metrics.likes_count);
+    }).catch(function (error) {
+      console.warn(
+        '[Vidlytics] Erro ao registrar curtida:',
+        error
+      );
+    }).finally(function () {
+      likeBtn.disabled = false;
+    });
+  });
+
+  social.appendChild(likeBtn);
+  social.appendChild(likeCountEl);
+
+  hasSocial = true;
+}
+
 
       /* Comentários */
 if (modalConfig.show_comment_button !== false) {
