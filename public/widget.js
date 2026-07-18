@@ -2198,7 +2198,59 @@ console.log('[Vidlytics] modalConfig normalizado:', modalConfig);
         var likeBtn = createEl('button', 'vl-social-btn');
         likeBtn.type = 'button';
         likeBtn.innerHTML = liked ? svgIcon('heartFilled') : svgIcon('heart');
-        
+       likeBtn.addEventListener('click', function (e) {
+  e.preventDefault();
+  e.stopPropagation();
+
+  var nextLiked = !liked;
+
+  // Evita vários cliques enquanto salva
+  likeBtn.disabled = true;
+  likeBtn.style.opacity = '0.65';
+  likeBtn.style.cursor = 'wait';
+
+  trackMetric({
+    event_type: nextLiked ? 'like' : 'unlike',
+    story_id: story.id,
+    video_id: videoId,
+    page_url: window.location.href
+  })
+    .then(function () {
+      // Só altera o estado visual depois de salvar no Supabase
+      liked = nextLiked;
+
+      // Salva o estado daquele visitante no navegador
+      likes[videoId] = {
+        liked: liked
+      };
+
+      setStorageItem('vidlytics_likes', likes);
+
+      // Pinta ou despinta o coração
+      likeBtn.innerHTML = liked
+        ? svgIcon('heartFilled')
+        : svgIcon('heart');
+
+      // Atualiza o número visual de curtidas
+      var displayCount = Number(likeCountEl.textContent) || 0;
+
+      likeCountEl.textContent = String(
+        Math.max(0, displayCount + (liked ? 1 : -1))
+      );
+    })
+    .catch(function (error) {
+      console.error('[Vidlytics] Não foi possível salvar a curtida:', error);
+
+      // Se não salvou, não pinta o coração
+      alert('Não foi possível registrar sua curtida. Tente novamente.');
+    })
+    .finally(function () {
+      likeBtn.disabled = false;
+      likeBtn.style.opacity = '1';
+      likeBtn.style.cursor = 'pointer';
+    });
+});
+ 
         social.appendChild(likeBtn);
 
         var likeCountEl = createEl('span', 'vl-social-count');
