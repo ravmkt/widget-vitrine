@@ -1662,20 +1662,17 @@ function openCommentsPanel(videoId, storyId) {
   modalContent.appendChild(panel);
 
   closeButton.addEventListener('click', function (event) {
-    event.preventDefault();
-    event.stopPropagation();
-    panel.remove();
-  });
+  event.preventDefault();
+  event.stopPropagation();
+  panel.remove();
+});
 
-  
-
-  trackMetric({
-    event_type: 'comment_open',
-    story_id: storyId || null,
-    video_id: videoId || null,
-    page_url: window.location.href
-  });
-}
+trackMetric({
+  event_type: 'comment_open',
+  story_id: storyId || null,
+  video_id: videoId || null,
+  page_url: window.location.href
+});
 
 form.addEventListener('submit', function (event) {
   event.preventDefault();
