@@ -2105,33 +2105,29 @@ function createVideoLike(videoId) {
 
   return supabaseFetch('video_likes', {
     method: 'POST',
-    headers: {
-      'Prefer': 'return=minimal'
-    },
+    headers: { 'Prefer': 'return=minimal' },
     body: JSON.stringify(payload)
   }).then(function (response) {
     console.log('[Vidlytics] createVideoLike resposta:', response.status, response.ok);
 
     if (response.ok) {
-      // Atualiza o contador em memória imediatamente
       readLikeCounts[videoId] = (readLikeCounts[videoId] || 0) + 1;
-      return true;
+      return { alreadyLiked: false };
     }
 
     return response.text().then(function (rawMessage) {
+      // 409 = já existe esse like no banco (constraint única).
+      // Trata como sucesso, apenas sincroniza o estado local.
+      if (response.status === 409) {
+        console.warn('[Vidlytics] createVideoLike: like já existia no banco (409). Sincronizando estado.');
+        return { alreadyLiked: true };
+      }
+
       console.error('[Vidlytics] createVideoLike erro:', {
         status: response.status,
         body: rawMessage,
         payload: payload
       });
-
-      // Se for 409 (conflito - já curtiu), trata como sucesso
-      if (response.status === 409) {
-  throw new Error(
-    'Esta pessoa já curtiu este vídeo. Atualize a página para sincronizar a contagem.'
-  );
-}
-
 
       throw new Error(
         response.status === 403
@@ -2143,6 +2139,7 @@ function createVideoLike(videoId) {
     });
   });
 }
+
 
 function removeVideoLike(videoId) {
   if (!hasSupabase || !storeId || !videoId) {
