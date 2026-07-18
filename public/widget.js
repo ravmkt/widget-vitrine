@@ -2174,7 +2174,9 @@ if (modalConfig.show_share_button !== false) {
         video_id: video ? video.id : null
       });
     } else {
-      console.error('[Vidlytics] A função openCustomShareModal não foi encontrada.');
+      console.error(
+        '[Vidlytics] A função openCustomShareModal não foi encontrada.'
+      );
     }
   });
 
