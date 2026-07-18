@@ -1677,6 +1677,83 @@ function openCommentsPanel(videoId, storyId) {
   });
 }
 
+form.addEventListener('submit', function (event) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  var authorName = nameInput.value.trim();
+  var content = contentInput.value.trim();
+
+  if (!authorName || !content) {
+    feedback.textContent = 'Preencha seu nome e seu comentário.';
+    return;
+  }
+
+  submit.disabled = true;
+  feedback.textContent = 'Enviando...';
+
+  createComment({
+    story_id: storyId || null,
+    video_id: videoId || null,
+    author_name: authorName,
+    content: content
+  })
+    .then(function () {
+      contentInput.value = '';
+
+      feedback.textContent =
+        'Comentário enviado. Ele aparecerá após aprovação da loja.';
+
+      /*
+       * Adiciona localmente como pendente.
+       * Ele não entra na contagem pública até ser aprovado.
+       */
+      readCommentsData.push({
+        store_id: storeId,
+        story_id: storyId || null,
+        video_id: videoId || null,
+        author_name: authorName,
+        content: content,
+        status: 'pending',
+        active: true,
+        created_at: new Date().toISOString()
+      });
+
+      /*
+       * Busca a contagem real dos comentários aprovados.
+       */
+      if (!videoId) {
+        return null;
+      }
+
+      return getVideoMetrics(videoId);
+    })
+    .then(function (metrics) {
+      if (!metrics || !videoId) {
+        return;
+      }
+
+      var commentCountElement = modalContent.querySelector(
+        '.vl-social-count[data-video-comments="' + videoId + '"]'
+      );
+
+      if (commentCountElement) {
+        commentCountElement.textContent = String(
+          metrics.comments_count
+        );
+      }
+    })
+    .catch(function (error) {
+      feedback.textContent =
+        error && error.message
+          ? error.message
+          : 'Não foi possível enviar o comentário.';
+    })
+    .finally(function () {
+      submit.disabled = false;
+    });
+});
+
 
   function closeOverlay() {
     if (overlay) overlay.className = 'vl-overlay';
