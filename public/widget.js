@@ -3046,7 +3046,6 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig);
       });
 
       bubbles.appendChild(bubble);
-      trackMetric({ event_type: 'view', story_id: story.id, video_id: coverVideo ? coverVideo.id : null, page_url: window.location.href });
     });
 
     shadow.appendChild(style);
