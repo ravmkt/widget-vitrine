@@ -1744,15 +1744,7 @@ form.addEventListener('submit', function (event) {
       }
     })
     .catch(function (error) {
-      feedback.textContent =
-        error && error.message
-          ? error.message
-          : 'Não foi possível enviar o comentário.';
-    })
-    .finally(function () {
-      submit.disabled = false;
-    });
-});
+      });
 
 
   function closeOverlay() {
