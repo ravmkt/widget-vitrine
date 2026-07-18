@@ -1,5 +1,5 @@
 (function () {
-    var WIDGET_VERSION = '2026.07.17-04';
+    var WIDGET_VERSION = '2026.07.17-05';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -2140,73 +2140,79 @@ if (modalConfig.show_share_button !== false) {
   shareBtn.setAttribute('aria-label', 'Compartilhar');
   shareBtn.title = 'Compartilhar';
 
-  shareBtn.addEventListener('click', async function (event) {
-    event.preventDefault();
-    event.stopPropagation();
+  shareBtn.addEventListener('click', function (event) {
+  event.preventDefault();
+  event.stopPropagation();
 
-    /* Evita abrir duas janelas de compartilhamento ao mesmo tempo */
-    if (shareBtn.disabled) return;
+  if (shareBtn.disabled) return;
 
-    var shareUrl = window.location.href;
-    var storyTitle = story.title || story.name || 'Story';
-    var shareText = 'Olha esse conteúdo: ' + storyTitle;
+  var shareUrl = window.location.href;
+  var storyTitle = (story && (story.title || story.name)) || 'Story';
+  var shareText = 'Olha esse conteúdo: ' + storyTitle;
 
-    shareBtn.disabled = true;
-
-    try {
-      /*
-       * navigator.share abre a janela nativa do celular/computador,
-       * permitindo escolher WhatsApp, Facebook, Gmail etc.
-       */
-      if (navigator.share) {
-        await navigator.share({
-          title: storyTitle,
-          text: shareText,
-          url: shareUrl
-        });
-
-        trackMetric({
-          event_type: 'share',
-          story_id: story.id,
-          video_id: video.id,
-          page_url: window.location.href
-        });
-
-        return;
-      }
-
-      /*
-       * Fallback para navegadores sem suporte à janela nativa.
-       */
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(shareUrl);
-        alert('Link copiado para a área de transferência.');
-      } else {
-        window.prompt('Copie o link para compartilhar:', shareUrl);
-      }
-
+  function registrarEvento(tipo) {
+    if (typeof trackMetric === 'function') {
       trackMetric({
-        event_type: 'share_copy_link',
-        story_id: story.id,
-        video_id: video.id,
+        event_type: tipo,
+        story_id: story && story.id ? story.id : null,
+        video_id: video && video.id ? video.id : null,
         page_url: window.location.href
       });
-    } catch (error) {
-      /*
-       * AbortError: pessoa fechou/cancelou a janela — comportamento normal.
-       * InvalidStateError: já existia uma janela nativa aberta.
-       */
-      if (
-        error &&
-        error.name !== 'AbortError' &&
-        error.name !== 'InvalidStateError'
-      ) {
-        console.warn('[Vidlytics] Não foi possível compartilhar:', error);
-      }
-    } finally {
-      shareBtn.disabled = false;
     }
-  });
+  }
+
+  function copiarLink() {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(shareUrl)
+        .then(function () {
+          alert('Link copiado para a área de transferência.');
+          registrarEvento('share_copy_link');
+        })
+        .catch(function () {
+          window.prompt('Copie o link para compartilhar:', shareUrl);
+          registrarEvento('share_copy_link');
+        });
+
+      return;
+    }
+
+    window.prompt('Copie o link para compartilhar:', shareUrl);
+    registrarEvento('share_copy_link');
+  }
+
+  shareBtn.disabled = true;
+
+  if (navigator.share) {
+    navigator.share({
+      title: storyTitle,
+      text: shareText,
+      url: shareUrl
+    })
+      .then(function () {
+        registrarEvento('share');
+      })
+      .catch(function (error) {
+        /* Usuário fechou/cancelou a janela de compartilhamento */
+        if (error && error.name === 'AbortError') {
+          return;
+        }
+
+        console.warn('[Vidlytics] Compartilhamento nativo indisponível:', error);
+
+        /* Se o compartilhamento nativo falhar, copia o link */
+        copiarLink();
+      })
+      .finally(function () {
+        shareBtn.disabled = false;
+      });
+
+    return;
+  }
+
+  copiarLink();
+  shareBtn.disabled = false;
+});
+
 
   social.appendChild(shareBtn);
   hasSocial = true;
