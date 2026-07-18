@@ -2296,7 +2296,18 @@ if (modalConfig.show_comment_button !== false) {
   commentsBtn.title = 'Comentários';
 
   var commentCountEl = createEl('span', 'vl-social-count');
-  commentCountEl.textContent = String(getCommentCount(video.id));
+
+commentCountEl.setAttribute(
+  'data-video-comments',
+  video.id
+);
+
+commentCountEl.textContent = String(getCommentCount(video.id));
+
+getVideoMetrics(video.id).then(function (metrics) {
+  commentCountEl.textContent = String(metrics.comments_count);
+});
+
 
   commentsBtn.addEventListener('click', function (event) {
     event.preventDefault();
