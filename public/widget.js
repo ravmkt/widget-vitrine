@@ -1740,6 +1740,8 @@ form.addEventListener('submit', function (event) {
     });
 });
 
+}
+
   function closeOverlay() {
     if (overlay) overlay.className = 'vl-overlay';
     if (modalContent) {
