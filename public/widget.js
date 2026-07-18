@@ -51,7 +51,7 @@
   );
 
   var VIDLYTICS_WIDGET_VERSION =
-    'appearance-widget-loop-no-autoclose-202607161906';
+    'metrics-sync-202607180001';
 
   if (
     window.__vidlytics_widget_loaded_version ===
@@ -593,6 +593,7 @@
     browser: navigator.userAgent,
     user_agent: navigator.userAgent,
     referrer: document.referrer || null,
+    metadata: {},
     created_at: new Date().toISOString()
   };
 
@@ -625,66 +626,29 @@
   return supabaseFetch('metrics', {
     method: 'POST',
     headers: {
-      'Prefer': 'return=representation'
+      'Prefer': 'return=minimal'
     },
     body: JSON.stringify(payload)
   })
     .then(function (response) {
       if (response.ok) {
-        return response.json()
-          .catch(function () {
-            return [];
-          })
-          .then(function (data) {
-            console.info(
-              '[Vidlytics] Métrica registrada no Supabase:',
-              payload.event_type,
-              payload
-            );
-
-            return {
-              saved: true,
-              data: data,
-              payload: payload
-            };
-          });
+        console.info(
+          '[Vidlytics] Métrica registrada no Supabase:',
+          payload.event_type
+        );
+        return { saved: true, payload: payload };
       }
 
       return response.text().then(function (rawMessage) {
-        var parsed = {};
-
-        try {
-          parsed = JSON.parse(rawMessage || '{}');
-        } catch (error) {
-          parsed = {};
-        }
-
         console.error(
           '[Vidlytics] Erro ao registrar métrica no Supabase:',
           {
             status: response.status,
-            statusText: response.statusText,
             body: rawMessage,
-            payload: payload
+            event_type: payload.event_type
           }
         );
-
-        if (parsed.code === '42501' || response.status === 403) {
-  throw new Error('Política RLS bloqueou a métrica.');
-}
-
-if (response.status === 401) {
-  throw new Error('Supabase recusou a métrica. Verifique a chave anônima e as políticas RLS.');
-}
-
-
-        throw new Error(
-          parsed.message ||
-          parsed.error_description ||
-          parsed.details ||
-          parsed.hint ||
-          'Não foi possível registrar a métrica.'
-        );
+        return { saved: false, payload: payload };
       });
     })
     .catch(function (error) {
@@ -692,8 +656,7 @@ if (response.status === 401) {
         '[Vidlytics] A métrica não foi salva no Supabase:',
         error
       );
-
-      throw error;
+      return { saved: false, payload: payload };
     });
 }
 
@@ -1320,6 +1283,10 @@ function buildSharedCss(appearance) {
       iframe.allow = 'autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
       iframe.allowFullscreen = true;
       wrapper.appendChild(iframe);
+
+      // Rastreia play para YouTube
+      trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
+
       return wrapper;
     }
 
@@ -1723,6 +1690,13 @@ function openCommentsPanel(videoId, storyId) {
       contentInput.value = '';
       feedback.textContent =
         'Comentário enviado. Ele aparecerá após aprovação da loja.';
+
+      trackMetric({
+        event_type: 'comment',
+        story_id: storyId || null,
+        video_id: videoId || null,
+        page_url: window.location.href
+      });
     }).catch(function (error) {
       feedback.textContent =
         error && error.message

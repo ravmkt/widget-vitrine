@@ -655,7 +655,9 @@ const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
     'page_url',
     'device_type',
     'browser',
+    'user_agent',
     'referrer',
+    'metadata',
     'created_at',
   ],
 

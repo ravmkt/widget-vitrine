@@ -157,18 +157,100 @@ export const getMetricsByStore = async (storeId: string, interval: AnalyticsInte
   });
 };
 
+/**
+ * Busca a contagem real de curtidas por vídeo a partir da tabela video_likes.
+ */
+const getVideoLikeCounts = async (
+  storeId: string,
+  client: typeof supabase,
+): Promise<Record<string, number>> => {
+  if (!isSupabaseConfigured || !client) return {};
+
+  try {
+    const { data, error } = await client
+      .from('video_likes')
+      .select('video_id')
+      .eq('store_id', storeId);
+
+    if (error || !data) return {};
+
+    const counts: Record<string, number> = {};
+    data.forEach((row: any) => {
+      const vid = row.video_id;
+      if (vid) counts[vid] = (counts[vid] || 0) + 1;
+    });
+    return counts;
+  } catch {
+    return {};
+  }
+};
+
+/**
+ * Busca a contagem real de comentários aprovados por vídeo a partir da tabela comments.
+ */
+const getCommentCounts = async (
+  storeId: string,
+  client: typeof supabase,
+): Promise<Record<string, number>> => {
+  if (!isSupabaseConfigured || !client) return {};
+
+  try {
+    const { data, error } = await client
+      .from('comments')
+      .select('video_id')
+      .eq('store_id', storeId)
+      .eq('status', 'approved')
+      .eq('active', true);
+
+    if (error || !data) return {};
+
+    const counts: Record<string, number> = {};
+    data.forEach((row: any) => {
+      const vid = row.video_id;
+      if (vid) counts[vid] = (counts[vid] || 0) + 1;
+    });
+    return counts;
+  } catch {
+    return {};
+  }
+};
+
 export const getDashboardMetrics = async (storeId: string, interval: AnalyticsInterval, customRange?: { from?: Date; to?: Date }) => {
   const items = await getMetricsByStore(storeId, interval, customRange);
-  return mapMetrics(items);
+  const mapped = mapMetrics(items);
+
+  // Sobrescreve com totais reais de video_likes e comments
+  const [realLikes, realComments] = await Promise.all([
+    getVideoLikeCounts(storeId, supabase),
+    getCommentCounts(storeId, supabase),
+  ]);
+
+  mapped.likes = Object.values(realLikes).reduce((sum, n) => sum + n, 0);
+  mapped.comments = Object.values(realComments).reduce((sum, n) => sum + n, 0);
+
+  return mapped;
 };
 
 export const getVideoMetricsRows = async (storeId: string, videos: Video[], interval: AnalyticsInterval, customRange?: { from?: Date; to?: Date }) => {
   const items = await getMetricsByStore(storeId, interval, customRange);
+
+  // Busca contagens reais de video_likes e comments em paralelo
+  const [realLikes, realComments] = await Promise.all([
+    getVideoLikeCounts(storeId, supabase),
+    getCommentCounts(storeId, supabase),
+  ]);
+
   return videos.map((video) => {
     const videoItems = items.filter((item) => item.video_id === video.id);
+    const mapped = mapMetrics(videoItems);
+
+    // Sobrescreve com contagens reais
+    mapped.likes = realLikes[video.id] || 0;
+    mapped.comments = realComments[video.id] || 0;
+
     return {
       ...video,
-      metrics: mapMetrics(videoItems),
+      metrics: mapped,
     };
   });
 };
