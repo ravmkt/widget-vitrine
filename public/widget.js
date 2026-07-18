@@ -2075,6 +2075,22 @@ function shareStory(story, video) {
       var story = storiesList[currentStoryIndex]; if (!story) return;
       var orderedVideos = getOrderedVideos(story); if (!orderedVideos.length) { nextVideo(); return; }
       var video = orderedVideos[currentVideoIndex]; if (!video) return;
+/*
+ * Registra uma visualização somente uma vez por vídeo,
+ * durante a sessão atual do player.
+ */
+if (!viewedVideos[video.id]) {
+  viewedVideos[video.id] = true;
+
+  trackMetric({
+    event_type: 'view',
+    story_id: story.id,
+    video_id: video.id,
+    page_url: window.location.href
+  }).catch(function (error) {
+    console.warn('[Vidlytics] Falha ao registrar visualização:', error);
+  });
+}
 
       var oldVid = modalContent.querySelector('video');
       if (oldVid) { oldVid.pause(); oldVid.removeAttribute('src'); oldVid.load(); }
