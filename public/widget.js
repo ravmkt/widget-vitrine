@@ -2357,10 +2357,12 @@ console.log('[Vidlytics] modalConfig normalizado:', modalConfig);
       /* Like */
 if (modalConfig.show_like_button !== false) {
   var videoId = video.id;
-  var currentLikeData = likes[videoId] || { liked: false };
+  var likedFromDb = checkIfVisitorLiked(videoId, window.__vidlytics_db_likes_raw || []);
+liked = likedFromDb;
 
-liked = Boolean(currentLikeData.liked);
-
+// sincroniza o localStorage com a verdade do banco
+likes[videoId] = { liked: liked };
+setStorageItem('vidlytics_likes', likes);
 
   // Contagem real do banco de dados para ESTE vídeo específico
   var baseCount = readLikeCounts[videoId] || 0;
