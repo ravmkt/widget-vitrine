@@ -2292,7 +2292,116 @@ console.log('[Vidlytics] modalConfig normalizado:', modalConfig);
       var social = createEl('div', 'vl-social');
       var hasSocial = false;
 
-      
+      /* Like */
+if (modalConfig.show_like_button !== false) {
+  var videoId = video.id;
+  var currentLikeData = likes[videoId] || { liked: false };
+
+  liked = Boolean(currentLikeData.liked);
+
+  var baseCount = readLikeCounts[videoId] || 0;
+  likeCount = baseCount;
+
+  var likeBtn = createEl('button', 'vl-social-btn');
+  likeBtn.type = 'button';
+  likeBtn.setAttribute(
+    'aria-label',
+    liked ? 'Remover curtida' : 'Curtir vídeo'
+  );
+  likeBtn.innerHTML = liked
+    ? svgIcon('heartFilled')
+    : svgIcon('heart');
+
+  var likeCountEl = createEl('span', 'vl-social-count');
+  likeCountEl.textContent = String(likeCount);
+
+  var isSavingLike = false;
+
+  likeBtn.addEventListener('click', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isSavingLike) {
+      return;
+    }
+
+    isSavingLike = true;
+    likeBtn.style.opacity = '0.6';
+    likeBtn.style.cursor = 'wait';
+
+    var wasLiked = liked;
+
+    var request = wasLiked
+      ? removeVideoLike(videoId)
+      : createVideoLike(videoId);
+
+    request
+      .then(function () {
+        /*
+         * Só muda o coração e o contador depois de o Supabase
+         * confirmar que o insert/delete funcionou.
+         */
+        liked = !wasLiked;
+
+        likes[videoId] = {
+          liked: liked
+        };
+
+        setStorageItem('vidlytics_likes', likes);
+
+        likeBtn.innerHTML = liked
+          ? svgIcon('heartFilled')
+          : svgIcon('heart');
+
+        likeBtn.setAttribute(
+          'aria-label',
+          liked ? 'Remover curtida' : 'Curtir vídeo'
+        );
+
+        likeCount = Math.max(
+          0,
+          Number(likeCountEl.textContent || 0) + (liked ? 1 : -1)
+        );
+
+        likeCountEl.textContent = String(likeCount);
+
+        /*
+         * Métrica é opcional e separada do registro real da curtida.
+         */
+        trackMetric({
+          event_type: liked ? 'like' : 'unlike',
+          story_id: story.id,
+          video_id: videoId,
+          page_url: window.location.href
+        }).catch(function (error) {
+          console.warn(
+            '[Vidlytics] A curtida foi salva, mas a métrica falhou:',
+            error
+          );
+        });
+      })
+      .catch(function (error) {
+        console.error('[Vidlytics] Não foi possível alterar a curtida:', error);
+
+        alert(
+          error && error.message
+            ? error.message
+            : 'Não foi possível registrar sua curtida. Tente novamente.'
+        );
+      })
+      .finally(function () {
+        isSavingLike = false;
+        likeBtn.style.opacity = '1';
+        likeBtn.style.cursor = 'pointer';
+      });
+  });
+
+  social.appendChild(likeBtn);
+  social.appendChild(likeCountEl);
+
+  hasSocial = true;
+}
+
 
       /* Comentários */
 if (modalConfig.show_comment_button !== false) {
