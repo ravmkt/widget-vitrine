@@ -669,20 +669,14 @@
           }
         );
 
-        if (response.status === 401) {
-          throw new Error(
-            'Supabase recusou a métrica: URL ou chave anônima inválida.'
-          );
-        }
+        if (parsed.code === '42501' || response.status === 403) {
+  throw new Error('Política RLS bloqueou a métrica.');
+}
 
-        if (
-          response.status === 403 ||
-          parsed.code === '42501'
-        ) {
-          throw new Error(
-            'Supabase recusou a métrica: a política RLS da tabela metrics não permite INSERT.'
-          );
-        }
+if (response.status === 401) {
+  throw new Error('Supabase recusou a métrica. Verifique a chave anônima e as políticas RLS.');
+}
+
 
         throw new Error(
           parsed.message ||
