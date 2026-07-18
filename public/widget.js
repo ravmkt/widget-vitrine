@@ -2131,8 +2131,11 @@ function createVideoLike(videoId) {
 
       // Se for 409 (conflito - já curtiu), trata como sucesso
       if (response.status === 409) {
-        return true;
-      }
+  throw new Error(
+    'Esta pessoa já curtiu este vídeo. Atualize a página para sincronizar a contagem.'
+  );
+}
+
 
       throw new Error(
         response.status === 403
