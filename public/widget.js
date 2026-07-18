@@ -3325,6 +3325,7 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig);
       var pageRules = results[6] || [];
       readCommentsData = results[7] || [];
       var dbLikes = results[8] || [];
+      window.__vidlytics_db_likes_raw = dbLikes;
       readSizingModelsData = results[9] || [];
 
       // Processa os likes do banco para contar por vídeo
