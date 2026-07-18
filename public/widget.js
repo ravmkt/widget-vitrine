@@ -3663,5 +3663,3 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig);
 
         document.head.appendChild(style);
       })();
-
-})();
