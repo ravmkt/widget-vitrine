@@ -2144,45 +2144,7 @@ if (modalConfig.show_comment_button !== false) {
   hasSocial = true;
 }
 
-/* Compartilhar */
-if (modalConfig.show_share_button !== false) {
-  var shareBtn = createEl('button', 'vl-social-btn');
 
-  shareBtn.type = 'button';
-  shareBtn.innerHTML = svgIcon('share');
-  shareBtn.setAttribute('aria-label', 'Compartilhar');
-  shareBtn.title = 'Compartilhar';
-
-  shareBtn.addEventListener('pointerdown', function (evt) {
-    evt.stopPropagation();
-  });
-
-  shareBtn.addEventListener('click', function (evt) {
-    evt.preventDefault();
-    evt.stopPropagation();
-
-    var shareUrl = window.location.href;
-    var storyTitle = (story && (story.title || story.name)) || 'Story';
-    var shareText = 'Olha esse conteúdo: ' + storyTitle;
-
-    if (typeof openCustomShareModal === 'function') {
-      openCustomShareModal({
-        title: storyTitle,
-        text: shareText,
-        url: shareUrl,
-        story_id: story ? story.id : null,
-        video_id: video ? video.id : null
-      });
-    } else {
-      console.error(
-        '[Vidlytics] A função openCustomShareModal não foi encontrada.'
-      );
-    }
-  });
-
-  social.appendChild(shareBtn);
-  hasSocial = true;
-}
 
   
 var sizingModelId = getSizingModelId(video);
