@@ -1701,10 +1701,6 @@ form.addEventListener('submit', function (event) {
       feedback.textContent =
         'Comentário enviado. Ele aparecerá após aprovação da loja.';
 
-      /*
-       * Adiciona localmente como pendente.
-       * Ele não entra na contagem pública até ser aprovado.
-       */
       readCommentsData.push({
         store_id: storeId,
         story_id: storyId || null,
@@ -1716,33 +1712,33 @@ form.addEventListener('submit', function (event) {
         created_at: new Date().toISOString()
       });
 
-      /*
-       * Busca a contagem real dos comentários aprovados.
-       */
-      if (!videoId) {
-        return null;
+      if (videoId) {
+        return getVideoMetrics(videoId);
       }
 
-      return getVideoMetrics(videoId);
+      return null;
     })
     .then(function (metrics) {
-      if (!metrics || !videoId) {
-        return;
-      }
-
-      var commentCountElement = modalContent.querySelector(
-        '.vl-social-count[data-video-comments="' + videoId + '"]'
-      );
-
-      if (commentCountElement) {
-        commentCountElement.textContent = String(
-          metrics.comments_count
+      if (metrics && videoId) {
+        var commentCountEl = modalContent.querySelector(
+          '.vl-social-count[data-video-comments="' + videoId + '"]'
         );
+
+        if (commentCountEl) {
+          commentCountEl.textContent = String(metrics.comments_count);
+        }
       }
     })
     .catch(function (error) {
-      });
-
+      feedback.textContent =
+        error && error.message
+          ? error.message
+          : 'Não foi possível enviar o comentário.';
+    })
+    .finally(function () {
+      submit.disabled = false;
+    });
+});
 
   function closeOverlay() {
     if (overlay) overlay.className = 'vl-overlay';
