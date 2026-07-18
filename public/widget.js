@@ -187,6 +187,7 @@
   );
 }
 
+
   function fetchJson(path) {
     return supabaseFetch(path, { method: 'GET' })
       .then(function (response) { if (!response.ok) return []; return response.json(); })
