@@ -1,5 +1,5 @@
 (function () {
-    var WIDGET_VERSION = '2026.07.18-03';
+    var WIDGET_VERSION = '2026.07.18-02';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -645,67 +645,6 @@
     // Busca apenas o video_id de todos os eventos de 'like' da loja para contar
     return fetchJson('metrics?select=video_id&store_id=eq.' + encodeURIComponent(storeId) + '&event_type=eq.like');
   }
-
-function getVideoMetrics(videoId) {
-  if (!videoId || !storeId || !hasSupabase) {
-    return Promise.resolve({
-      views_count: 0,
-      likes_count: 0,
-      comments_count: 0
-    });
-  }
-
-  var encodedStoreId = encodeURIComponent(storeId);
-  var encodedVideoId = encodeURIComponent(videoId);
-
-  var viewsQuery =
-    'metrics?select=id' +
-    '&store_id=eq.' + encodedStoreId +
-    '&video_id=eq.' + encodedVideoId +
-    '&event_type=eq.view';
-
-  var likesQuery =
-    'metrics?select=id' +
-    '&store_id=eq.' + encodedStoreId +
-    '&video_id=eq.' + encodedVideoId +
-    '&event_type=eq.like';
-
-  /*
-   * Aqui contamos todos os comentários, inclusive os pendentes.
-   * Assim o número pode ficar alinhado com o dashboard administrativo.
-   *
-   * Se você quiser mostrar SOMENTE comentários aprovados no player,
-   * adicione:
-   * &status=eq.approved&active=eq.true
-   */
-  var commentsQuery =
-    'comments?select=id' +
-    '&store_id=eq.' + encodedStoreId +
-    '&video_id=eq.' + encodedVideoId;
-
-  return Promise.all([
-    fetchJson(viewsQuery),
-    fetchJson(likesQuery),
-    fetchJson(commentsQuery)
-  ]).then(function (results) {
-    return {
-      views_count: results[0].length,
-      likes_count: results[1].length,
-      comments_count: results[2].length
-    };
-  }).catch(function (error) {
-    console.warn(
-      '[Vidlytics] Não foi possível buscar métricas do vídeo:',
-      error
-    );
-
-    return {
-      views_count: 0,
-      likes_count: 0,
-      comments_count: 0
-    };
-  });
-}
 
   function readSizingModels() {
     if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_sizing_models', []));
@@ -1662,86 +1601,53 @@ function openCommentsPanel(videoId, storyId) {
   modalContent.appendChild(panel);
 
   closeButton.addEventListener('click', function (event) {
-  event.preventDefault();
-  event.stopPropagation();
-  panel.remove();
-});
+    event.preventDefault();
+    event.stopPropagation();
+    panel.remove();
+  });
 
-trackMetric({
-  event_type: 'comment_open',
-  story_id: storyId || null,
-  video_id: videoId || null,
-  page_url: window.location.href
-});
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
 
-form.addEventListener('submit', function (event) {
-  event.preventDefault();
-  event.stopPropagation();
+    var authorName = nameInput.value.trim();
+    var content = contentInput.value.trim();
 
-  var authorName = nameInput.value.trim();
-  var content = contentInput.value.trim();
+    if (!authorName || !content) {
+      feedback.textContent = 'Preencha seu nome e seu comentário.';
+      return;
+    }
 
-  if (!authorName || !content) {
-    feedback.textContent = 'Preencha seu nome e seu comentário.';
-    return;
-  }
+    submit.disabled = true;
+    feedback.textContent = 'Enviando...';
 
-  submit.disabled = true;
-  feedback.textContent = 'Enviando...';
-
-  createComment({
-    story_id: storyId || null,
-    video_id: videoId || null,
-    author_name: authorName,
-    content: content
-  })
-    .then(function () {
+    createComment({
+      story_id: storyId || null,
+      video_id: videoId || null,
+      author_name: authorName,
+      content: content
+    }).then(function () {
       contentInput.value = '';
-
       feedback.textContent =
         'Comentário enviado. Ele aparecerá após aprovação da loja.';
-
-      readCommentsData.push({
-        store_id: storeId,
-        story_id: storyId || null,
-        video_id: videoId || null,
-        author_name: authorName,
-        content: content,
-        status: 'pending',
-        active: true,
-        created_at: new Date().toISOString()
-      });
-
-      if (videoId) {
-        return getVideoMetrics(videoId);
-      }
-
-      return null;
-    })
-    .then(function (metrics) {
-      if (metrics && videoId) {
-        var commentCountEl = modalContent.querySelector(
-          '.vl-social-count[data-video-comments="' + videoId + '"]'
-        );
-
-        if (commentCountEl) {
-          commentCountEl.textContent = String(metrics.comments_count);
-        }
-      }
-    })
-    .catch(function (error) {
+    }).catch(function (error) {
       feedback.textContent =
         error && error.message
           ? error.message
           : 'Não foi possível enviar o comentário.';
-    })
-    .finally(function () {
-  likeBtn.disabled = false;
-});
+    }).finally(function () {
+      submit.disabled = false;
+    });
+  });
 
-});
-
+  trackMetric({
+    event_type: 'comment_open',
+    story_id: storyId || null,
+    video_id: videoId || null,
+    page_url: window.location.href
+  });
 }
+
 
   function closeOverlay() {
     if (overlay) overlay.className = 'vl-overlay';
@@ -2042,8 +1948,6 @@ function shareStory(story, video) {
     var isPlaying = true;
     var liked = false;
     var likeCount = 0;
-    var viewedVideos = {};
-
 
     /* Read likes from localStorage */
     var likes = getStorageItem('vidlytics_likes', {});
@@ -2077,20 +1981,6 @@ function shareStory(story, video) {
       var story = storiesList[currentStoryIndex]; if (!story) return;
       var orderedVideos = getOrderedVideos(story); if (!orderedVideos.length) { nextVideo(); return; }
       var video = orderedVideos[currentVideoIndex]; if (!video) return;
-/*
- * Registra somente uma visualização por vídeo enquanto
- * este modal estiver aberto.
- */
-if (!viewedVideos[video.id]) {
-  viewedVideos[video.id] = true;
-
-  trackMetric({
-    event_type: 'view',
-    story_id: story.id,
-    video_id: video.id,
-    page_url: window.location.href
-  });
-}
 
       var oldVid = modalContent.querySelector('video');
       if (oldVid) { oldVid.pause(); oldVid.removeAttribute('src'); oldVid.load(); }
@@ -2191,107 +2081,45 @@ console.log('[Vidlytics] modalConfig normalizado:', modalConfig);
       var hasSocial = false;
 
       /* Like */
-if (modalConfig.show_like_button !== false) {
-  var videoId = video.id;
+      if (modalConfig.show_like_button !== false) {
+        var videoId = video.id;
+        var currentLikeData = likes[videoId] || { liked: false };
+        liked = currentLikeData.liked;
+        
+        // O total de curtidas é o que veio do banco + 1 se o usuário local curtiu agora
+        // (Isso é uma simplificação, o ideal seria o banco já incluir a curtida do usuário)
+        var baseCount = readLikeCounts[videoId] || 0;
+        likeCount = baseCount;
 
-  var currentLikeData = likes[videoId] || {
-    liked: false
-  };
+        var likeBtn = createEl('button', 'vl-social-btn');
+        likeBtn.type = 'button';
+        likeBtn.innerHTML = liked ? svgIcon('heartFilled') : svgIcon('heart');
+        likeBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          liked = !liked;
+          
+          // Atualiza o contador visual imediatamente
+          var displayCount = Number(likeCountEl.textContent);
+          likeCountEl.textContent = String(Math.max(0, displayCount + (liked ? 1 : -1)));
+          
+          likes[videoId] = { liked: liked };
+          setStorageItem('vidlytics_likes', likes);
+          likeBtn.innerHTML = liked ? svgIcon('heartFilled') : svgIcon('heart');
 
-  liked = Boolean(currentLikeData.liked);
+          // Rastreia a curtida no banco de dados
+          trackMetric({
+            event_type: liked ? 'like' : 'unlike', // Adicionei 'unlike' para balancear se necessário
+            story_id: story.id,
+            video_id: videoId
+          });
+        });
+        social.appendChild(likeBtn);
 
-  var likeBtn = createEl('button', 'vl-social-btn');
-  likeBtn.type = 'button';
-  likeBtn.innerHTML = liked
-    ? svgIcon('heartFilled')
-    : svgIcon('heart');
-
-  likeBtn.setAttribute(
-    'aria-label',
-    liked ? 'Remover curtida' : 'Curtir vídeo'
-  );
-
-  var likeCountEl = createEl('span', 'vl-social-count');
-  likeCountEl.textContent = '0';
-
-  /*
-   * Carrega a quantidade real de curtidas salva no Supabase
-   * assim que o vídeo atual é aberto.
-   */
-  getVideoMetrics(videoId).then(function (metrics) {
-    likeCount = metrics.likes_count;
-    likeCountEl.textContent = String(metrics.likes_count);
-  });
-
-  likeBtn.addEventListener('click', function (event) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    /*
-     * Evita dois cliques rápidos enquanto o Supabase está registrando.
-     */
-    if (likeBtn.disabled) {
-      return;
-    }
-
-    likeBtn.disabled = true;
-
-    var nextLikedState = !liked;
-
-    /*
-     * Registra a ação na tabela public.metrics.
-     *
-     * Curtir = event_type "like"
-     * Descurtir = event_type "unlike"
-     */
-    trackMetric({
-      event_type: nextLikedState ? 'like' : 'unlike',
-      story_id: story.id,
-      video_id: videoId,
-      page_url: window.location.href
-    }).then(function () {
-      liked = nextLikedState;
-
-      likes[videoId] = {
-        liked: liked
-      };
-
-      setStorageItem('vidlytics_likes', likes);
-
-      likeBtn.innerHTML = liked
-        ? svgIcon('heartFilled')
-        : svgIcon('heart');
-
-      likeBtn.setAttribute(
-        'aria-label',
-        liked ? 'Remover curtida' : 'Curtir vídeo'
-      );
-
-      /*
-       * Em vez de confiar no cálculo local,
-       * consulta novamente o valor do banco.
-       */
-      return getVideoMetrics(videoId);
-    }).then(function (metrics) {
-      likeCount = metrics.likes_count;
-      likeCountEl.textContent = String(metrics.likes_count);
-    }).catch(function (error) {
-      console.warn(
-        '[Vidlytics] Erro ao registrar curtida:',
-        error
-      );
-    }).finally(function () {
-  submit.disabled = false;
-});
-
-});
-
-  social.appendChild(likeBtn);
-  social.appendChild(likeCountEl);
-
-  hasSocial = true;
-}
-
+        var likeCountEl = createEl('span', 'vl-social-count');
+        likeCountEl.textContent = String(likeCount);
+        social.appendChild(likeCountEl);
+        hasSocial = true;
+      }
 
       /* Comentários */
 if (modalConfig.show_comment_button !== false) {
@@ -2302,18 +2130,7 @@ if (modalConfig.show_comment_button !== false) {
   commentsBtn.title = 'Comentários';
 
   var commentCountEl = createEl('span', 'vl-social-count');
-
-commentCountEl.setAttribute(
-  'data-video-comments',
-  video.id
-);
-
-commentCountEl.textContent = String(getCommentCount(video.id));
-
-getVideoMetrics(video.id).then(function (metrics) {
-  commentCountEl.textContent = String(metrics.comments_count);
-});
-
+  commentCountEl.textContent = String(getCommentCount(video.id));
 
   commentsBtn.addEventListener('click', function (event) {
     event.preventDefault();
@@ -2357,151 +2174,127 @@ if (modalConfig.show_share_button !== false) {
       linkedProduct = video.product;
     }
 
-   /* Produto relacionado por product_id no vídeo */
-if (
-  !linkedProduct &&
-  video.product_id &&
-  Array.isArray(products)
-) {
-  linkedProduct = products.find(function (product) {
-    return idsEqual(product.id, video.product_id);
-  });
-}
+    /* Produto relacionado por product_id no vídeo */
+    if (
+      !linkedProduct &&
+      video.product_id &&
+      Array.isArray(products)
+    ) {
+      linkedProduct = products.find(function (product) {
+        return idsEqual(product.id, video.product_id);
+      });
+    }
 
-/* Compatibilidade com variações de campos no vídeo */
-if (
-  !linkedProduct &&
-  Array.isArray(products)
-) {
-  var videoProductId = firstDefined(
-    video.product_id,
-    video.productId,
-    video.linked_product_id,
-    video.linkedProductId
-  );
+    /* Compatibilidade com variações de campos no vídeo */
+    if (
+      !linkedProduct &&
+      Array.isArray(products)
+    ) {
+      var videoProductId = firstDefined(
+        video.product_id,
+        video.productId,
+        video.linked_product_id,
+        video.linkedProductId
+      );
 
-  if (videoProductId) {
-    linkedProduct = products.find(function (product) {
-      return idsEqual(product.id, videoProductId);
-    });
-  }
-}
+      if (videoProductId) {
+        linkedProduct = products.find(function (product) {
+          return idsEqual(product.id, videoProductId);
+        });
+      }
+    }
 
-/* Produto que já venha como objeto dentro do Story */
-if (
-  !linkedProduct &&
-  story.product &&
-  typeof story.product === 'object'
-) {
-  linkedProduct = story.product;
-}
+    /* Produto que já venha como objeto dentro do Story */
+    if (
+      !linkedProduct &&
+      story.product &&
+      typeof story.product === 'object'
+    ) {
+      linkedProduct = story.product;
+    }
 
-/* Produto relacionado via story_products */
-if (
-  !linkedProduct &&
-  Array.isArray(storyProducts) &&
-  Array.isArray(products)
-) {
-  var storyProductRelation = storyProducts.find(function (relation) {
-    return idsEqual(relation.story_id, story.id);
-  });
+    /* Produto relacionado via story_products */
+    if (
+      !linkedProduct &&
+      Array.isArray(storyProducts) &&
+      Array.isArray(products)
+    ) {
+      var storyProductRelation = storyProducts.find(function (relation) {
+        return idsEqual(relation.story_id, story.id);
+      });
 
-  if (storyProductRelation) {
-    linkedProduct = products.find(function (product) {
-      return idsEqual(product.id, storyProductRelation.product_id);
-    });
-  }
-}
+      if (storyProductRelation) {
+        linkedProduct = products.find(function (product) {
+          return idsEqual(product.id, storyProductRelation.product_id);
+        });
+      }
+    }
 
-linkedProduct = linkedProduct || {};
+    linkedProduct = linkedProduct || {};
 
-var productTitle =
-  linkedProduct.name ||
-  linkedProduct.title ||
-  linkedProduct.product_name ||
-  '';
+    var productTitle =
+      linkedProduct.name ||
+      linkedProduct.title ||
+      linkedProduct.product_name ||
+      '';
 
-var productUrl =
-  linkedProduct.product_url ||
-  linkedProduct.product_link ||
-  linkedProduct.productLink ||
-  linkedProduct.permalink ||
-  linkedProduct.url ||
-  linkedProduct.link ||
-  linkedProduct.href ||
-  '';
+    var productUrl =
+      linkedProduct.product_url ||
+      linkedProduct.product_link ||
+      linkedProduct.productLink ||
+      linkedProduct.permalink ||
+      linkedProduct.url ||
+      linkedProduct.link ||
+      linkedProduct.href ||
+      '';
 
-/* Converte links relativos, como /produto/camiseta, para URL completa */
-if (
-  productUrl &&
-  productUrl.indexOf('http://') !== 0 &&
-  productUrl.indexOf('https://') !== 0
-) {
-  productUrl =
-    window.location.origin +
-    (productUrl.charAt(0) === '/' ? '' : '/') +
-    productUrl;
-}
+    /* Converte links relativos, como /produto/camiseta, para URL completa */
+    if (
+      productUrl &&
+      productUrl.indexOf('http://') !== 0 &&
+      productUrl.indexOf('https://') !== 0
+    ) {
+      productUrl =
+        window.location.origin +
+        (productUrl.charAt(0) === '/' ? '' : '/') +
+        productUrl;
+    }
 
-var hasProduct = Boolean(productTitle && productUrl);
+    var hasProduct = Boolean(productTitle && productUrl);
 
-var shareTitle = hasProduct
-  ? productTitle
-  : 'Conheça nossos produtos';
+    /*
+     * Se há produto, compartilha produto + URL da página dele.
+     * Se não há, compartilha uma mensagem institucional + home.
+     */
+    var shareTitle = hasProduct
+      ? productTitle
+      : 'Conheça nossos produtos';
 
-var shareText = hasProduct
-  ? 'Olha esse produto que eu encontrei: ' + productTitle
-  : 'Olha só os produtos da nossa loja!';
+    var shareText = hasProduct
+      ? 'Olha esse produto que eu encontrei: ' + productTitle
+      : 'Olha só os produtos da nossa loja!';
 
-var shareUrl = hasProduct
-  ? productUrl
-  : window.location.origin + '/';
-
-openCustomShareModal({
-  title: shareTitle,
-  text: shareText,
-  url: shareUrl,
-  story_id: story.id || null,
-  video_id: video.id || null,
-  product_id: linkedProduct.id || null
-});
-});
-
-social.appendChild(shareBtn);
-hasSocial = true;
-}
-
-var sizingModelId = getSizingModelId(video);
-
-if (
-  sizingModelId &&
-  modalConfig.show_sizing_button !== false
-) {
-  var measureBtn = createEl('button', 'vl-social-btn');
-
-  measureBtn.type = 'button';
-  measureBtn.innerHTML = svgIcon('measure');
-  measureBtn.setAttribute('aria-label', 'Ver medidas da modelo');
-  measureBtn.title = 'Medidas';
-
-  measureBtn.addEventListener('click', function (event) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    openSizingPanel(sizingModelId);
+    var shareUrl = hasProduct
+      ? productUrl
+      : window.location.origin + '/';
 
     trackMetric({
-      event_type: 'sizing_open',
-      story_id: story.id,
-      video_id: video.id,
-      page_url: window.location.href
+      event_type: 'share_open',
+      story_id: story.id || null,
+      video_id: video.id || null,
+      product_id: linkedProduct.id || null,
+      page_url: shareUrl
+    });
+
+    openCustomShareModal({
+      title: shareTitle,
+      text: shareText,
+      url: shareUrl,
+      story_id: story.id || null,
+      video_id: video.id || null,
+      product_id: linkedProduct.id || null
     });
   });
-
-  social.appendChild(measureBtn);
-  hasSocial = true;
-}
- 
 
   social.appendChild(shareBtn);
   hasSocial = true;
@@ -3666,3 +3459,5 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig);
 
         document.head.appendChild(style);
       })();
+
+})();
