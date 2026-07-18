@@ -2053,6 +2053,8 @@ function shareStory(story, video) {
     var isPlaying = true;
     var liked = false;
     var likeCount = 0;
+    var viewedVideos = {};
+
 
     /* Read likes from localStorage */
     var likes = getStorageItem('vidlytics_likes', {});
