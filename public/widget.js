@@ -168,7 +168,9 @@
   var headers = {
     'apikey': supabaseAnonKey,
     'Authorization': 'Bearer ' + supabaseAnonKey,
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Cache-Control': 'no-cache'
   };
 
   if (options.headers) {
@@ -177,16 +179,13 @@
     });
   }
 
-  return fetch(
-    supabaseUrl + '/rest/v1/' + path,
-    {
-      method: options.method || 'GET',
-      headers: headers,
-      body: options.body || undefined
-    }
-  );
+  return fetch(supabaseUrl + '/rest/v1/' + path, {
+    method: options.method || 'GET',
+    headers: headers,
+    body: options.body || undefined,
+    cache: 'no-store'
+  });
 }
-
 
   function fetchJson(path) {
     return supabaseFetch(path, { method: 'GET' })
