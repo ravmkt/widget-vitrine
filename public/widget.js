@@ -646,6 +646,67 @@
     return fetchJson('metrics?select=video_id&store_id=eq.' + encodeURIComponent(storeId) + '&event_type=eq.like');
   }
 
+function getVideoMetrics(videoId) {
+  if (!videoId || !storeId || !hasSupabase) {
+    return Promise.resolve({
+      views_count: 0,
+      likes_count: 0,
+      comments_count: 0
+    });
+  }
+
+  var encodedStoreId = encodeURIComponent(storeId);
+  var encodedVideoId = encodeURIComponent(videoId);
+
+  var viewsQuery =
+    'metrics?select=id' +
+    '&store_id=eq.' + encodedStoreId +
+    '&video_id=eq.' + encodedVideoId +
+    '&event_type=eq.view';
+
+  var likesQuery =
+    'metrics?select=id' +
+    '&store_id=eq.' + encodedStoreId +
+    '&video_id=eq.' + encodedVideoId +
+    '&event_type=eq.like';
+
+  /*
+   * Aqui contamos todos os comentários, inclusive os pendentes.
+   * Assim o número pode ficar alinhado com o dashboard administrativo.
+   *
+   * Se você quiser mostrar SOMENTE comentários aprovados no player,
+   * adicione:
+   * &status=eq.approved&active=eq.true
+   */
+  var commentsQuery =
+    'comments?select=id' +
+    '&store_id=eq.' + encodedStoreId +
+    '&video_id=eq.' + encodedVideoId;
+
+  return Promise.all([
+    fetchJson(viewsQuery),
+    fetchJson(likesQuery),
+    fetchJson(commentsQuery)
+  ]).then(function (results) {
+    return {
+      views_count: results[0].length,
+      likes_count: results[1].length,
+      comments_count: results[2].length
+    };
+  }).catch(function (error) {
+    console.warn(
+      '[Vidlytics] Não foi possível buscar métricas do vídeo:',
+      error
+    );
+
+    return {
+      views_count: 0,
+      likes_count: 0,
+      comments_count: 0
+    };
+  });
+}
+
   function readSizingModels() {
     if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_sizing_models', []));
     return fetchJson('sizing_models?select=*&store_id=eq.' + encodeURIComponent(storeId));
