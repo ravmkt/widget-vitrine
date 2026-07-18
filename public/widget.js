@@ -1736,8 +1736,9 @@ form.addEventListener('submit', function (event) {
           : 'Não foi possível enviar o comentário.';
     })
     .finally(function () {
-      submit.disabled = false;
-    });
+  likeBtn.disabled = false;
+});
+
 });
 
 }
