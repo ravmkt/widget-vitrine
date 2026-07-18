@@ -2182,12 +2182,6 @@ if (modalConfig.show_share_button !== false) {
   hasSocial = true;
 }
 
-
-  social.appendChild(shareBtn);
-  hasSocial = true;
-}
-
-
   function copiarLink() {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(shareUrl)
