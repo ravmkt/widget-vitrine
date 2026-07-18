@@ -1070,8 +1070,9 @@ function buildSharedCss(appearance) {
     + '.vl-comments-panel.is-open{display:flex!important;}'
 
     + '.vl-comments-header{display:flex!important;align-items:center!important;'
-    + 'justify-content:space-between!important;padding:28px 0 16px!important;'
-    + 'border-bottom:1px solid ' + modalBorder + '!important;}'
++ 'justify-content:space-between!important;padding:0 0 14px!important;'
++ 'border-bottom:1px solid ' + modalBorder + '!important;}'
+
 
     + '.vl-comments-title{font-size:17px!important;font-weight:800!important;'
     + 'color:' + modalText + '!important;}'
