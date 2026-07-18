@@ -2184,63 +2184,7 @@ if (modalConfig.show_share_button !== false) {
   hasSocial = true;
 }
 
-  function copiarLink() {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(shareUrl)
-        .then(function () {
-          alert('Link copiado para a área de transferência.');
-          registrarEvento('share_copy_link');
-        })
-        .catch(function () {
-          window.prompt('Copie o link para compartilhar:', shareUrl);
-          registrarEvento('share_copy_link');
-        });
-
-      return;
-    }
-
-    window.prompt('Copie o link para compartilhar:', shareUrl);
-    registrarEvento('share_copy_link');
-  }
-
-  shareBtn.disabled = true;
-
-  if (navigator.share) {
-    navigator.share({
-      title: storyTitle,
-      text: shareText,
-      url: shareUrl
-    })
-      .then(function () {
-        registrarEvento('share');
-      })
-      .catch(function (error) {
-        /* Usuário fechou/cancelou a janela de compartilhamento */
-        if (error && error.name === 'AbortError') {
-          return;
-        }
-
-        console.warn('[Vidlytics] Compartilhamento nativo indisponível:', error);
-
-        /* Se o compartilhamento nativo falhar, copia o link */
-        copiarLink();
-      })
-      .finally(function () {
-        shareBtn.disabled = false;
-      });
-
-    return;
-  }
-
-  copiarLink();
-  shareBtn.disabled = false;
-});
-
-
-  social.appendChild(shareBtn);
-  hasSocial = true;
-}
-
+  
 var sizingModelId = getSizingModelId(video);
 
 if (
