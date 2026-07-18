@@ -727,11 +727,7 @@ if (response.status === 401) {
 
   function readPageRules() { return (!storeId || !hasSupabase) ? Promise.resolve(getStorageItem('vidlytics_page_rules', [])) : fetchJson('page_rules?select=*&store_id=eq.' + encodeURIComponent(storeId)); }
 
-  function readLikesFromDb() {
-    if (!storeId || !hasSupabase) return Promise.resolve([]);
-    // Busca apenas o video_id de todos os eventos de 'like' da loja para contar
-    return fetchJson('metrics?select=video_id&store_id=eq.' + encodeURIComponent(storeId) + '&event_type=eq.like');
-  }
+  
 
   function readSizingModels() {
     if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_sizing_models', []));
