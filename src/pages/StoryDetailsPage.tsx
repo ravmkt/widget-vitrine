@@ -16,6 +16,7 @@ import {
   generateUuid,
   isValidUuid,
 } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 import { useTenant } from '@/context/TenantContext';
 import {
   ArrowLeft,
@@ -139,22 +140,15 @@ const CONDITION_TYPES_WITH_VALUE: ConditionType[] = [
  * para o formato usado internamente pela UI (condition_type / value).
  */
 const mapDbRuleToUiRule = (rule: any): UiRule => {
-  // Determina o condition_type olhando primeiro match_type,
-  // depois rule_type, com fallback seguro
   let conditionType: ConditionType;
 
   if (CONDITION_TYPES_WITH_VALUE.includes(rule.match_type)) {
-    // Caso ideal: match_type está presente (ex: 'contains')
     conditionType = rule.match_type;
   } else if (CONDITION_TYPES_WITH_VALUE.includes(rule.rule_type)) {
-    // Fallback: rule_type já é o valor real (ex: 'contains', 'equals')
     conditionType = rule.rule_type;
   } else if (rule.rule_type === 'custom' && rule.url_pattern) {
-    // Registro antigo com rule_type='custom' mas sem match_type —
-    // assume 'contains' como fallback razoável
     conditionType = 'contains';
   } else {
-    // Último fallback: usa rule_type ou 'all_pages'
     conditionType = (rule.rule_type as ConditionType) || 'all_pages';
   }
 
@@ -185,10 +179,7 @@ const mapUiRuleToDbRule = (
     id: isValidUuid(rule.id) ? rule.id : generateUuid(),
     store_id: targetStoreId,
     story_id: targetStoryId,
-    // 🟢 Agora rule_type sempre recebe o valor real da condição
-    // (ex: 'contains', 'all_pages', 'home_only'), nunca 'custom'
     rule_type: rule.condition_type,
-    // match_type é mantido para compatibilidade com registros existentes
     match_type: hasValue ? rule.condition_type : null,
     page_url: null,
     url_pattern: hasValue ? rule.value || '' : null,
@@ -198,7 +189,6 @@ const mapUiRuleToDbRule = (
     updated_at: now,
   } as PageRule & Record<string, any>;
 };
-
 
 const StoryDetailsPage = () => {
   const { storeId, loading: tenantLoading } = useTenant();
@@ -424,12 +414,14 @@ const StoryDetailsPage = () => {
       return sameStory && sameStore;
     });
 
+    // Remove todas as regras antigas do IndexedDB
     await Promise.all(
       rulesToDelete.map((rule: any) =>
         deleteSafe((db as any).pageRules, rule.id, targetStoreId),
       ),
     );
 
+    // Normaliza e salva as regras atuais no IndexedDB
     const normalizedRules = rules.map((rule) =>
       mapUiRuleToDbRule(rule, targetStoreId, targetStoryId, now),
     );
@@ -438,6 +430,25 @@ const StoryDetailsPage = () => {
       await Promise.all(
         normalizedRules.map((rule) => (db as any).pageRules.save(rule)),
       );
+    }
+
+    // ----- Sincronização com Supabase -----
+    if (supabase && targetStoreId && targetStoryId) {
+      // Upsert das regras atuais
+      await Promise.all(
+        normalizedRules.map((rule) =>
+          supabase.from('page_rules').upsert(rule, { onConflict: 'id' }),
+        ),
+      );
+
+      // Remove do Supabase as regras que foram deletadas
+      if (rulesToDelete.length > 0) {
+        await Promise.all(
+          rulesToDelete.map((rule: any) =>
+            supabase.from('page_rules').delete().eq('id', rule.id),
+          ),
+        );
+      }
     }
   };
 
@@ -1108,7 +1119,9 @@ const StoryDetailsPage = () => {
       <SuccessDialog
         isOpen={successOpen}
         description={
-          isCreate ? 'Story criado com sucesso.' : 'Story atualizado com sucesso.'
+          isCreate
+            ? 'Story criado com sucesso.'
+            : 'Story atualizado com sucesso.'
         }
         onClose={handleSuccessClose}
       />
