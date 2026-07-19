@@ -23,6 +23,7 @@ export type DashboardMetrics = {
   closes: number;
   conversions: number;
   ctr: number;
+  revenue: number;
 };
 
 export type VideoMetricsRow = Video & {
@@ -71,6 +72,7 @@ const zeroMetrics = (): DashboardMetrics => ({
   closes: 0,
   conversions: 0,
   ctr: 0,
+  revenue: 0,
 });
 
 const mapMetrics = (items: Metric[]): DashboardMetrics => {
@@ -165,6 +167,37 @@ export const getMetricsByStore = async (storeId: string, interval: AnalyticsInte
 };
 
 /**
+ * Busca conversões (vendas) e receita por vídeo a partir da tabela conversions.
+ */
+const getConversionData = async (
+  storeId: string,
+): Promise<Record<string, { count: number; revenue: number }>> => {
+  if (!isSupabaseConfigured || !supabase) return {};
+
+  try {
+    const { data, error } = await supabase
+      .from('conversions')
+      .select('video_id, order_value, status')
+      .eq('store_id', storeId)
+      .eq('status', 'paid');
+
+    if (error || !data) return {};
+
+    const result: Record<string, { count: number; revenue: number }> = {};
+    data.forEach((row: any) => {
+      const vid = row.video_id;
+      if (!vid) return;
+      if (!result[vid]) result[vid] = { count: 0, revenue: 0 };
+      result[vid].count += 1;
+      result[vid].revenue += Number(row.order_value) || 0;
+    });
+    return result;
+  } catch {
+    return {};
+  }
+};
+
+/**
  * Busca a contagem real de curtidas por vídeo a partir da tabela video_likes.
  */
 const getVideoLikeCounts = async (
@@ -246,14 +279,17 @@ export const getDashboardMetrics = async (storeId: string, interval: AnalyticsIn
   const items = await getMetricsByStore(storeId, interval, customRange);
   const mapped = mapMetrics(items);
 
-  // Sobrescreve com totais reais de video_likes e comments
-  const [realLikes, realComments] = await Promise.all([
+  // Sobrescreve com totais reais
+  const [realLikes, realComments, conversions] = await Promise.all([
     getVideoLikeCounts(storeId),
     getCommentCounts(storeId),
+    getConversionData(storeId),
   ]);
 
   mapped.likes = Object.values(realLikes).reduce((sum, n) => sum + n, 0);
   mapped.comments = Object.values(realComments).reduce((sum, n) => sum + n, 0);
+  mapped.conversions = Object.values(conversions).reduce((sum, c) => sum + c.count, 0);
+  mapped.revenue = Object.values(conversions).reduce((sum, c) => sum + c.revenue, 0);
 
   return mapped;
 };
@@ -261,10 +297,11 @@ export const getDashboardMetrics = async (storeId: string, interval: AnalyticsIn
 export const getVideoMetricsRows = async (storeId: string, videos: Video[], interval: AnalyticsInterval, customRange?: { from?: Date; to?: Date }) => {
   const items = await getMetricsByStore(storeId, interval, customRange);
 
-  // Busca contagens reais de video_likes e comments em paralelo
-  const [realLikes, realComments] = await Promise.all([
+  // Busca contagens reais em paralelo
+  const [realLikes, realComments, conversions] = await Promise.all([
     getVideoLikeCounts(storeId),
     getCommentCounts(storeId),
+    getConversionData(storeId),
   ]);
 
   return videos.map((video) => {
@@ -274,6 +311,8 @@ export const getVideoMetricsRows = async (storeId: string, videos: Video[], inte
     // Sobrescreve com contagens reais
     mapped.likes = realLikes[video.id] || 0;
     mapped.comments = realComments[video.id] || 0;
+    mapped.conversions = conversions[video.id]?.count || 0;
+    mapped.revenue = conversions[video.id]?.revenue || 0;
 
     return {
       ...video,

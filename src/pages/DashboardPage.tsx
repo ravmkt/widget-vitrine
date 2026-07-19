@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, Video } from '@/lib/db';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Eye, MousePointerClick, ShoppingBag, CheckCircle2, Calendar } from 'lucide-react';
+import { Eye, MousePointerClick, ShoppingBag, CheckCircle2, Calendar, TrendingUp, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -23,7 +23,7 @@ const DashboardPage = () => {
   });
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [videos, setVideos] = useState<Video[]>([]);
-  const [dashboardMetrics, setDashboardMetrics] = useState({ views: 0, plays: 0, pauses: 0, clicks: 0, ctaClicks: 0, productClicks: 0, whatsappClicks: 0, likes: 0, shares: 0, comments: 0, closes: 0, conversions: 0, ctr: 0 });
+  const [dashboardMetrics, setDashboardMetrics] = useState({ views: 0, plays: 0, pauses: 0, clicks: 0, ctaClicks: 0, productClicks: 0, whatsappClicks: 0, likes: 0, shares: 0, comments: 0, closes: 0, conversions: 0, ctr: 0, revenue: 0 });
   const [flow, setFlow] = useState<any[]>([]);
   const [topVideos, setTopVideos] = useState<any[]>([]);
 
@@ -85,11 +85,12 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
         <MetricCard title="Visualizações" value={dashboardMetrics.views.toLocaleString()} icon={Eye} />
         <MetricCard title="Cliques em CTA" value={dashboardMetrics.ctaClicks.toLocaleString()} icon={MousePointerClick} />
         <MetricCard title="Conversões" value={dashboardMetrics.conversions.toLocaleString()} icon={CheckCircle2} isConversion />
         <MetricCard title="CTR" value={`${dashboardMetrics.ctr.toFixed(1).replace('.', ',')}%`} icon={MousePointerClick} />
+        <MetricCard title="Receita" value={`R$ ${dashboardMetrics.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} icon={DollarSign} isRevenue />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
@@ -164,10 +165,10 @@ const DashboardPage = () => {
   );
 };
 
-const MetricCard = ({ title, value, icon: Icon, isConversion = false }: any) => (
+const MetricCard = ({ title, value, icon: Icon, isConversion = false, isRevenue = false }: any) => (
   <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
     <div className="flex items-start justify-between mb-6">
-      <div className={cn('p-4 rounded-2xl transition-all group-hover:scale-110', isConversion ? 'bg-emerald-50 text-emerald-500' : 'bg-blue-50 text-[#0094EB]')}>
+      <div className={cn('p-4 rounded-2xl transition-all group-hover:scale-110', isConversion ? 'bg-emerald-50 text-emerald-500' : isRevenue ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-[#0094EB]')}>
         <Icon size={24} />
       </div>
     </div>

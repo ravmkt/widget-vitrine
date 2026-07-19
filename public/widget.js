@@ -51,7 +51,7 @@
   );
 
   var VIDLYTICS_WIDGET_VERSION =
-    'likes-fix-202607190002';
+    'yampi-conversion-202607190001';
 
   if (
     window.__vidlytics_widget_loaded_version ===
@@ -2962,6 +2962,21 @@ if (modalConfig.show_whatsapp_button !== false) {
           productBtn.textContent = 'Ver produto';
 
           productActions.appendChild(productBtn);
+        }
+
+        /*
+         * Anexa parâmetros de rastreamento na URL do produto
+         * para atribuir a venda ao vídeo/visitor.
+         */
+        var trackingParams = 'vly_v=' + encodeURIComponent(video.id) +
+          '&vly_s=' + encodeURIComponent(storeId) +
+          '&vly_p=' + encodeURIComponent(product.id || '') +
+          '&vly_u=' + encodeURIComponent(getVisitorId());
+
+        if (productUrl.indexOf('?') === -1) {
+          productUrl = productUrl + '?' + trackingParams;
+        } else {
+          productUrl = productUrl + '&' + trackingParams;
         }
 
         /*

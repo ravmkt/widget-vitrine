@@ -194,6 +194,7 @@ type VideoMetrics = {
   ctr: number;
   ctrValue: number;
   engagement: number;
+  revenue: number;
 };
 
 type VideoWithMetrics = Video & {
@@ -310,7 +311,8 @@ const VideoGalleryPage = () => {
             conversions: v.metrics.conversions,
             ctr: v.metrics.ctr,
             ctrValue: v.metrics.ctr,
-            engagement: Number((v.metrics.ctr * 1.3).toFixed(1))
+            engagement: Number((v.metrics.ctr * 1.3).toFixed(1)),
+            revenue: (v.metrics as any).revenue || 0
           }
         }));
         
@@ -572,7 +574,7 @@ const VideoGalleryPage = () => {
 
       <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm max-w-full">
         <div className="w-full max-w-full overflow-x-auto">
-          <table className="w-full min-w-[980px] table-fixed text-left border-collapse">
+          <table className="w-full min-w-[1080px] table-fixed text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
                 <th className={cn(getHeaderClass('preview'), 'w-[78px]')}>
@@ -633,6 +635,12 @@ const VideoGalleryPage = () => {
                   </span>
                 </th>
 
+                <th className={cn(getHeaderClass('receita', 'center'), 'w-[100px]')}>
+                  <span className="inline-flex items-center gap-1 justify-center max-w-full truncate">
+                    Receita
+                  </span>
+                </th>
+
                 <th className={cn(getHeaderClass('acoes', 'center'), 'w-[150px]')}>
                   Ações
                 </th>
@@ -646,6 +654,7 @@ const VideoGalleryPage = () => {
                   comments,
                   likes,
                   ctrValue,
+                  revenue,
                 } = video.metrics;
 
                 const productName =
@@ -710,6 +719,10 @@ const VideoGalleryPage = () => {
 
                     <td className="px-3 py-4 text-center font-black text-slate-800">
                       {Number(ctrValue || 0).toFixed(2).replace('.', ',')}%
+                    </td>
+
+                    <td className="px-3 py-4 text-center font-black text-emerald-600">
+                      {Number(revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
 
                     <td className="px-3 py-4 text-center">

@@ -19,6 +19,7 @@ import {
   ShoppingBag,
   BarChart3,
   Clock,
+  DollarSign,
 } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -79,7 +80,7 @@ const VideoPerformancePage = () => {
   const [loading, setLoading] = useState(true);
   const [videos, setVideos] = useState<Video[]>([]);
   const [videoStats, setVideoStats] = useState<any[]>([]);
-  const [totals, setTotals] = useState({ views: 0, clicks: 0, conversions: 0, ctr: 0 });
+  const [totals, setTotals] = useState({ views: 0, clicks: 0, conversions: 0, ctr: 0, revenue: 0 });
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewingVideo, setViewingVideo] = useState<Video | null>(null);
   const [showExternalPlayer, setShowExternalPlayer] = useState(false);
@@ -105,9 +106,10 @@ const VideoPerformancePage = () => {
           ...v,
           metrics: {
             ...v.metrics,
-            engagement: Number((v.metrics.ctr * 1.3).toFixed(1))
+            engagement: Number((v.metrics.ctr * 1.3).toFixed(1)),
+            revenue: (v.metrics as any).revenue || 0
           },
-          trends: { views: 0 } // Resetting trends for now as it used mock data
+          trends: { views: 0 }
         }));
         setVideoStats(mappedRows);
 
@@ -116,7 +118,8 @@ const VideoPerformancePage = () => {
           views: dashboardTotals.views,
           clicks: dashboardTotals.ctaClicks,
           conversions: dashboardTotals.conversions,
-          ctr: dashboardTotals.ctr
+          ctr: dashboardTotals.ctr,
+          revenue: dashboardTotals.revenue
         });
       } catch (error) {
         console.error('Erro ao carregar métricas reais:', error);
@@ -223,11 +226,12 @@ const VideoPerformancePage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <SummaryCard label="Visualizações" value={Number(totals.views || 0).toLocaleString()} icon={Eye} color="blue" />
         <SummaryCard label="Cliques (CTA)" value={Number(totals.clicks || 0).toLocaleString()} icon={MousePointer2} color="violet" />
         <SummaryCard label="Conversões" value={Number(totals.conversions || 0).toLocaleString()} icon={CheckCircle2} color="emerald" />
         <SummaryCard label="CTR Geral" value={`${totals.ctr}%`} icon={TrendingUp} color="amber" />
+        <SummaryCard label="Receita" value={`R$ ${Number(totals.revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} icon={DollarSign} color="green" />
       </div>
 
       <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 flex flex-col md:flex-row gap-4 shadow-sm">
@@ -478,7 +482,7 @@ const VideoPerformancePage = () => {
 const SummaryCard = ({ label, value, icon: Icon, color, trend }: any) => (
   <div className="bg-white border border-slate-200 rounded-[1.5rem] p-5 shadow-sm">
     <div className="flex items-start justify-between mb-4">
-      <div className={cn('p-3 rounded-2xl', color === 'blue' ? 'bg-blue-50 text-[#0094EB]' : color === 'violet' ? 'bg-violet-50 text-violet-600' : color === 'emerald' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600')}>
+      <div className={cn('p-3 rounded-2xl', color === 'blue' ? 'bg-blue-50 text-[#0094EB]' : color === 'violet' ? 'bg-violet-50 text-violet-600' : color === 'emerald' ? 'bg-emerald-50 text-emerald-600' : color === 'green' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600')}>
         <Icon size={20} />
       </div>
       {trend && <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2 py-1 rounded-full">{trend}</span>}
