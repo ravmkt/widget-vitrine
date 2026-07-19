@@ -1,9 +1,5 @@
 import { Link } from 'react-router-dom';
-import {
-  BarChart3,
-  Link2,
-  ShoppingBag,
-} from 'lucide-react';
+import { BarChart3, Link2, ShoppingBag } from 'lucide-react';
 
 const Index = () => {
   return (

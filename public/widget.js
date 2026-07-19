@@ -843,6 +843,23 @@ params.set('select', 'video_id,visitor_id');
 }
 
 
+  function matchesUrl(appearance) {
+    if (!appearance) return true;
+    var rawUrl = firstDefined(appearance.url, appearance.pageUrl, appearance.page_url);
+    if (!rawUrl || String(rawUrl).trim() === '') return true; // vazio = todas as páginas
+
+    var pattern = String(rawUrl).trim().toLowerCase();
+    var href = window.location.href.toLowerCase();
+    var path = (window.location.pathname || '/').toLowerCase();
+
+    // Suporta múltiplas URLs separadas por vírgula
+    var patterns = pattern.split(',').map(function (p) { return p.trim(); }).filter(Boolean);
+
+    return patterns.some(function (p) {
+      return href.indexOf(p) !== -1 || path.indexOf(p) !== -1;
+    });
+  }
+
   function getVideoUrl(video) {
     if (!video) return '';
     return normalizeMediaUrl(firstDefined(video.video_url, video.videoUrl, video.url, video.source_url, video.sourceUrl, video.file_url, video.fileUrl, video.video, video.src, ''));
@@ -3504,7 +3521,203 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
   });
 }
 
-  function renderCarousel(stories, storyVideoMap, activeVideos) {} 
+  function renderCarousel(stories, storyVideoMap, activeVideos) {
+    var appearance = currentAppearance || {};
+    var modalConfig = normalizeModalAppearanceConfig(appearance);
+
+    if (floatingWasClosed) return;
+
+    var shadowData = getOrCreateShadowRoot(appearance);
+    var shadow = shadowData.shadow;
+
+    var style = createEl('style');
+    style.textContent = buildFloatingCss(appearance) + buildCarouselCss(appearance) + buildGridCss(appearance);
+
+    var carousel = createEl('div', 'vl-carousel');
+
+    overlay = createEl('div', 'vl-overlay');
+    var modal = createEl('div', 'vl-modal');
+    modalContent = createEl('div');
+    modal.appendChild(modalContent);
+    overlay.appendChild(modal);
+    overlay.addEventListener('click', function (event) { if (event.target === overlay) closeOverlay(); });
+
+    stories.forEach(function (story, index) {
+      var relations = (storyVideoMap.get(story.id) || []).slice().sort(function (a, b) { return Number(a.position || 0) - Number(b.position || 0); });
+      var coverRelation = relations.find(function (item) { return item.is_cover; }) || relations[0] || null;
+      var coverVideo = coverRelation ? activeVideos.find(function (video) { return idsEqual(video.id, coverRelation.video_id); }) : null;
+      var thumb = getStoryThumbnail(story, coverVideo, coverRelation);
+
+      var card = createEl('button', 'vl-carousel-card');
+      card.type = 'button';
+
+      var inner = createEl('div', 'vl-carousel-inner');
+      var videoUrl = coverVideo ? getVideoUrl(coverVideo) : '';
+      var isDirect = isDirectVideoUrl(videoUrl);
+      var isUpload = coverVideo && (coverVideo.source_type === 'upload' || coverVideo.sourceType === 'upload');
+
+      if ((isDirect || isUpload) && videoUrl) {
+        var vidPreview = createEl('video', 'vl-carousel-video');
+        vidPreview.src = videoUrl;
+        vidPreview.autoplay = true; vidPreview.muted = true; vidPreview.loop = true; vidPreview.playsInline = true;
+        vidPreview.setAttribute('playsinline', 'playsinline');
+        vidPreview.setAttribute('webkit-playsinline', 'webkit-playsinline');
+        if (thumb) vidPreview.poster = thumb;
+        var playPromise = vidPreview.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(function () {
+            if (thumb) {
+              var fbImg = createEl('img', 'vl-carousel-video');
+              fbImg.src = thumb;
+              inner.appendChild(fbImg);
+            }
+          });
+        }
+        inner.appendChild(vidPreview);
+      } else if (thumb) {
+        var img = createEl('img', 'vl-carousel-video');
+        img.src = thumb;
+        img.loading = 'lazy';
+        img.onerror = function () { inner.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase(); };
+        inner.appendChild(img);
+      } else {
+        inner.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase();
+      }
+
+      card.appendChild(inner);
+
+      if (modalConfig.show_title !== false) {
+        var label = createEl('span', 'vl-carousel-label');
+        label.textContent = story.title || story.name || 'Story';
+        card.appendChild(label);
+      }
+
+      if (modalConfig.show_play_button !== false) {
+        var playBadge = createEl('span', 'vl-carousel-play');
+        card.appendChild(playBadge);
+      }
+
+      card.addEventListener('click', function (event) {
+        if (floatingWasDragged) { event.preventDefault(); event.stopPropagation(); return; }
+        openStory(stories, index, storyVideoMap, activeVideos, readStoryProductsData, readProductsData);
+      });
+
+      carousel.appendChild(card);
+    });
+
+    shadow.appendChild(style);
+    shadow.appendChild(carousel);
+    shadow.appendChild(overlay);
+  }
+
+  function renderGrid(stories, storyVideoMap, activeVideos) {
+    var appearance = currentAppearance || {};
+    var shadowData = getOrCreateShadowRoot(appearance);
+    var shadow = shadowData.shadow;
+
+    var style = createEl('style');
+    style.textContent = buildFloatingCss(appearance) + buildCarouselCss(appearance) + buildGridCss(appearance);
+
+    var grid = createEl('div', 'vl-grid');
+    stories.forEach(function (story, index) {
+      var relations = (storyVideoMap.get(story.id) || []).slice().sort(function (a, b) { return Number(a.position || 0) - Number(b.position || 0); });
+      var coverRelation = relations.find(function (item) { return item.is_cover; }) || relations[0] || null;
+      var coverVideo = coverRelation ? activeVideos.find(function (video) { return idsEqual(video.id, coverRelation.video_id); }) : null;
+      var thumb = getStoryThumbnail(story, coverVideo, coverRelation);
+      var card = createEl('button', 'vl-grid-card');
+      card.type = 'button';
+
+      var media = createEl('div', 'vl-grid-media');
+      if (thumb) {
+        var img = createEl('img', 'vl-grid-img');
+        img.src = thumb;
+        img.alt = story.title || story.name || 'Story';
+        media.appendChild(img);
+      } else {
+        media.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase();
+      }
+
+      var label = createEl('div', 'vl-grid-label');
+      label.textContent = story.title || story.name || 'Story';
+
+      card.appendChild(media);
+      card.appendChild(label);
+      card.addEventListener('click', function (event) {
+        if (floatingWasDragged) { event.preventDefault(); event.stopPropagation(); return; }
+        openStory(stories, index, storyVideoMap, activeVideos, readStoryProductsData, readProductsData);
+      });
+      grid.appendChild(card);
+    });
+
+    shadow.appendChild(style);
+    shadow.appendChild(grid);
+  }
+
+  function buildGridCss(appearance) {
+    var font = getFontFamily(appearance);
+    var gridConfig = parseJsonIfNeeded(firstDefined(appearance.grid_config, appearance.gridConfig, {})) || {};
+    var gap = toNumber(firstDefined(gridConfig.gap, gridConfig.grid_gap), 16);
+    var columns = Math.max(1, toNumber(firstDefined(gridConfig.columns, gridConfig.grid_columns), 4));
+    var cardRadius = '18px';
+
+    return (
+      '.vl-grid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))!important;gap:' + gap + 'px!important;width:100%!important;font-family:' + font + '!important;}' +
+      '.vl-grid-card{all:unset!important;display:flex!important;flex-direction:column!important;gap:8px!important;cursor:pointer!important;}' +
+      '.vl-grid-media{position:relative!important;width:100%!important;aspect-ratio:9/16!important;border-radius:' + cardRadius + '!important;overflow:hidden!important;background:#e2e8f0!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:24px!important;font-weight:800!important;color:#0f172a!important;box-shadow:0 10px 24px rgba(15,23,42,.12)!important;}' +
+      '.vl-grid-img{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;}' +
+      '.vl-grid-label{font-size:12px!important;line-height:1.2!important;font-weight:700!important;text-align:center!important;color:#0f172a!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}'
+    );
+  }
+
+  function buildCarouselCss(appearance) {
+    var cfg = getFloatingConfig(appearance);
+    var primary = getPrimaryColor(appearance);
+    var secondary = getSecondaryColor(appearance);
+    var font = getFontFamily(appearance);
+
+    var carouselConfig = parseJsonIfNeeded(
+      firstDefined(appearance.carousel_config, appearance.carouselConfig, {})
+    ) || {};
+
+    var gap = toNumber(firstDefined(carouselConfig.gap, carouselConfig.carousel_gap), 16);
+    var visibleItems = toNumber(firstDefined(carouselConfig.visible_items, carouselConfig.carousel_visible_items), 4);
+    var cardShape = String(firstDefined(carouselConfig.card_shape, carouselConfig.carousel_card_shape, 'portrait') || 'portrait').toLowerCase();
+    var autoCenter = toBoolean(firstDefined(carouselConfig.auto_center, carouselConfig.carousel_auto_center), false);
+    var marginTop = px(firstDefined(carouselConfig.margin_top, carouselConfig.carousel_margin_top), 0);
+    var marginBottom = px(firstDefined(carouselConfig.margin_bottom, carouselConfig.carousel_margin_bottom), 0);
+
+    var cardRadius = cardShape === 'circle' ? '999px' : (cardShape === 'square' ? '16px' : '16px');
+    var cardAspect = cardShape === 'portrait' ? '9 / 16' : '1 / 1';
+
+    var itemMinWidth = 'calc((100% - ' + (gap * (visibleItems - 1)) + 'px) / ' + visibleItems + ')';
+
+    return (
+      '.vl-carousel{display:flex!important;gap:' + gap + 'px!important;overflow-x:auto!important;overflow-y:hidden!important;' +
+      'padding:' + marginTop + ' 4px ' + marginBottom + ' 4px!important;width:100%!important;' +
+      (autoCenter ? 'justify-content:center!important;' : '') +
+      'scrollbar-width:thin!important;font-family:' + font + '!important;}' +
+
+      '.vl-carousel-card{all:unset!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:6px!important;' +
+      'cursor:pointer!important;flex:0 0 ' + itemMinWidth + '!important;min-width:' + itemMinWidth + '!important;max-width:' + itemMinWidth + '!important;}' +
+
+      '.vl-carousel-inner{position:relative!important;width:100%!important;aspect-ratio:' + cardAspect + '!important;border-radius:' + cardRadius + '!important;' +
+      'overflow:hidden!important;background:#000!important;box-shadow:0 6px 18px rgba(15,23,42,.18)!important;' +
+      'border:2px solid ' + primary + '!important;}' +
+
+      '.vl-carousel-video{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;}' +
+
+      '.vl-carousel-play{position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;' +
+      'width:34px!important;height:34px!important;border-radius:999px!important;background:rgba(15,23,42,.62)!important;color:#fff!important;' +
+      'display:flex!important;align-items:center!important;justify-content:center!important;font-size:15px!important;line-height:1!important;' +
+      'box-shadow:0 6px 18px rgba(0,0,0,.25)!important;pointer-events:none!important;}' +
+      '.vl-carousel-play::before{content:""!important;margin-left:3px!important;width:0!important;height:0!important;' +
+      'border-top:8px solid transparent!important;border-bottom:8px solid transparent!important;border-left:12px solid #fff!important;display:block!important;}' +
+
+      '.vl-carousel-label{width:100%!important;max-width:100%!important;font-family:' + font + '!important;font-size:11px!important;line-height:12px!important;' +
+      'font-weight:700!important;color:#0f172a!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;' +
+      'text-overflow:ellipsis!important;display:block!important;}'
+    );
+  }
   
   function forceHostPosition() {
     if (floatingWasDragged || floatingWasClosed) return;
@@ -3525,7 +3738,7 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
     readComments(),
     readLikesFromDb(),
     readSizingModels(),
-    readDisplayLocations() // <- NOVO
+    readDisplayLocations()
   ])
   .then(function (results) {
     currentAppearance = normalizeAppearanceItem(results[0] || {});
@@ -3544,10 +3757,6 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
     readSizingModelsData = results[9] || [];
     var displayLocations = results[10] || [];
 
-// quando o modo for 'grid' ou 'carousel', usar as posições:
-    if (mode === 'floating') {
-      renderFloatingBubbles(applicableStories, storyVideoMap, activeVideos);
-      
     readLikeCounts = {};
     dbLikes.forEach(function (item) {
       if (item.video_id) readLikeCounts[item.video_id] = (readLikeCounts[item.video_id] || 0) + 1;
@@ -3585,7 +3794,7 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
     });
     if (!storiesWithVideos.length) return;
 
-    // Aplica regras: considera regras do story e regras globais (story_id nulo)
+    // Aplica regras de página (page_rules)
     var applicableStories = storiesWithVideos.filter(function (story) {
       var rulesForStory = pageRules.filter(function (rule) {
         return (rule.active !== false) && (rule.story_id == null || idsEqual(rule.story_id, story.id));
@@ -3594,8 +3803,16 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
     });
     if (!applicableStories.length) return;
 
-    // Determinar modo
+    // Filtro de URL específica (campo `url` da aparência)
+    if (!matchesUrl(currentAppearance)) {
+      console.info('[Vidlytics] Widget não exibido: URL atual não corresponde à configuração (url="' + (currentAppearance.url || '') + '").');
+      return;
+    }
+
+    // Determinar modo: prioriza o campo `type` da aparência salva
+    var rawType = firstDefined(currentAppearance.type, currentAppearance.widget_type, currentAppearance.viewMode);
     var rawMode =
+      rawType ||
       (widgetsCfg && widgetsCfg.viewMode) ||
       (config && config.viewMode) ||
       (enableFloating ? 'floating' : (enableCarousel ? 'carousel' : 'grid'));
@@ -3608,16 +3825,16 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
       setTimeout(forceHostPosition, 100);
       setTimeout(forceHostPosition, 500);
       setTimeout(forceHostPosition, 1500);
+    } else if (mode === 'carousel') {
+      renderCarousel(applicableStories, storyVideoMap, activeVideos);
+      forceHostPosition();
+      setTimeout(forceHostPosition, 100);
+      setTimeout(forceHostPosition, 500);
     } else {
-      // Monta inline conforme display_locations.
-      // Se não houver locations, como fallback aplica na primeira <main> ou no body.
-      if (Array.isArray(displayLocations) && displayLocations.length) {
-        renderIntoDisplayLocations(mode, displayLocations, applicableStories, storyVideoMap, activeVideos);
-      } else {
-        var fallbackNode = document.querySelector('main') || document.body;
-        renderIntoDisplayLocations(mode, [{ selector: 'body', position: 'append', active: true }], applicableStories, storyVideoMap, activeVideos);
-      }
+      // grid (ou qualquer outro modo inline)
+      renderGrid(applicableStories, storyVideoMap, activeVideos);
     }
+
   })
   .catch(function (error) {
     console.error('Erro no Vidlytics Widget:', error);
