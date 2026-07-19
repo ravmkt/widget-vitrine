@@ -851,12 +851,21 @@ params.set('select', 'video_id,visitor_id');
     var pattern = String(rawUrl).trim().toLowerCase();
     var href = window.location.href.toLowerCase();
     var path = (window.location.pathname || '/').toLowerCase();
+    var search = (window.location.search || '').toLowerCase();
+    var fullPath = (path + search).replace(/\/+$/, '');
 
     // Suporta múltiplas URLs separadas por vírgula
     var patterns = pattern.split(',').map(function (p) { return p.trim(); }).filter(Boolean);
 
     return patterns.some(function (p) {
-      return href.indexOf(p) !== -1 || path.indexOf(p) !== -1;
+      var normalizedPattern = p.replace(/\/+$/, '');
+      if (!normalizedPattern) return false;
+      return (
+        href.indexOf(normalizedPattern) !== -1 ||
+        fullPath.indexOf(normalizedPattern) !== -1 ||
+        path.indexOf(normalizedPattern) !== -1 ||
+        normalizedPattern.indexOf(path) !== -1
+      );
     });
   }
 
