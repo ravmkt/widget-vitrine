@@ -83,6 +83,7 @@ const mapMetrics = (items: Metric[]): DashboardMetrics => {
     if (item.event_type === 'cta_click') totals.ctaClicks += 1;
     if (item.event_type === 'product_click') totals.productClicks += 1;
     if (item.event_type === 'whatsapp_click') totals.whatsappClicks += 1;
+    if (item.event_type === 'whatsapp_product_click') totals.whatsappClicks += 1;
     if (item.event_type === 'like') totals.likes += 1;
     if (item.event_type === 'share') totals.shares += 1;
     if (item.event_type === 'comment') totals.comments += 1;
