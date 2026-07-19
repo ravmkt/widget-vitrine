@@ -16,6 +16,7 @@ import { useTenant } from '@/context/TenantContext';
 const IntegrationPage = () => {
   const { storeId } = useTenant();
   const [copied, setCopied] = useState(false);
+  const [copiedTracking, setCopiedTracking] = useState(false);
 
   const publicUrl = useMemo(() => {
     const envUrl = import.meta.env.VITE_WIDGET_PUBLIC_URL || '';
@@ -72,6 +73,18 @@ window.VIDLYTICS_CONFIG = {
 </script>`;
   }, [storeId, supabaseUrl, supabaseAnonKey, publicUrl]);
 
+  const trackingScriptCode = useMemo(() => {
+    return `<script>
+(function() {
+  var script = document.createElement('script');
+  script.src = '${publicUrl}/yampi-tracking.js';
+  script.type = 'text/javascript';
+  script.async = true;
+  document.head.appendChild(script);
+})();
+</script>`;
+  }, [publicUrl]);
+
   const handleCopyScript = async () => {
     try {
       if (navigator.clipboard && window.isSecureContext) {
@@ -96,6 +109,33 @@ window.VIDLYTICS_CONFIG = {
       }, 2500);
     } catch (error) {
       console.error('Erro ao copiar script:', error);
+    }
+  };
+
+  const handleCopyTrackingScript = async () => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(trackingScriptCode);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = trackingScriptCode;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        textarea.style.top = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+      }
+
+      setCopiedTracking(true);
+
+      window.setTimeout(() => {
+        setCopiedTracking(false);
+      }, 2500);
+    } catch (error) {
+      console.error('Erro ao copiar script de rastreamento:', error);
     }
   };
 
@@ -223,56 +263,115 @@ window.VIDLYTICS_CONFIG = {
         </div>
       </div>
 
-      <div className="rounded-[2.5rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-10">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <h2 className="text-2xl font-black tracking-tight text-slate-900">
-              Script de instalação
-            </h2>
-
-            <p className="mt-2 max-w-3xl text-sm font-medium leading-relaxed text-slate-500">
-              Copie o código abaixo e cole no cabeçalho da sua loja Yampi. Esse
-              script carrega os vídeos configurados no painel e exibe o widget
-              na loja.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleCopyScript}
-            disabled={!canInstall}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {copied ? (
-              <>
-                <CheckCircle2 className="h-4 w-4" />
-                Script copiado
-              </>
-            ) : (
-              <>
-                <Copy className="h-4 w-4" />
-                Copiar script
-              </>
-            )}
-          </button>
-        </div>
-
-        <div className="mt-8 overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 shadow-2xl">
-          <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-5 py-3">
-            <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-red-400" />
-              <span className="h-3 w-3 rounded-full bg-yellow-400" />
-              <span className="h-3 w-3 rounded-full bg-green-400" />
+      <div className="space-y-6">
+        {/* PASSO 1 */}
+        <div className="rounded-[2.5rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-10">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 font-black text-white">
+                1
+              </div>
+              <div>
+                <h2 className="text-2xl font-black tracking-tight text-slate-900">
+                  Script Principal (Widget)
+                </h2>
+                <p className="mt-2 max-w-3xl text-sm font-medium leading-relaxed text-slate-500">
+                  Este script carrega o player de vídeo e os stories no seu site.
+                  Cole este código no <strong>Cabeçalho (Header)</strong> da sua loja.
+                </p>
+              </div>
             </div>
 
-            <span className="text-xs font-bold text-slate-400">
-              widget.js
-            </span>
+            <button
+              type="button"
+              onClick={handleCopyScript}
+              disabled={!canInstall}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {copied ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4" />
+                  Copiado
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" />
+                  Copiar Script
+                </>
+              )}
+            </button>
           </div>
 
-          <pre className="overflow-x-auto whitespace-pre-wrap p-6 text-xs font-medium leading-relaxed text-emerald-400 md:text-sm">
-            {scriptCode}
-          </pre>
+          <div className="mt-8 overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-5 py-3">
+              <div className="flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full bg-red-400" />
+                <span className="h-3 w-3 rounded-full bg-yellow-400" />
+                <span className="h-3 w-3 rounded-full bg-green-400" />
+              </div>
+              <span className="text-xs font-bold text-slate-400">widget.js</span>
+            </div>
+            <pre className="overflow-x-auto whitespace-pre-wrap p-6 text-xs font-medium leading-relaxed text-emerald-400 md:text-sm">
+              {scriptCode}
+            </pre>
+          </div>
+        </div>
+
+        {/* PASSO 2 */}
+        <div className="rounded-[2.5rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-10">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500 font-black text-white">
+                2
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-2xl font-black tracking-tight text-slate-900">
+                    Script de Rastreamento (Vendas)
+                  </h2>
+                  <span className="rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-black uppercase text-emerald-700">
+                    Recomendado
+                  </span>
+                </div>
+                <p className="mt-2 max-w-3xl text-sm font-medium leading-relaxed text-slate-500">
+                  Para medir o lucro gerado por cada vídeo, instale este script adicional.
+                  Ele captura as vendas finalizadas no checkout da Yampi e atribui ao vídeo assistido.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleCopyTrackingScript}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-slate-800"
+            >
+              {copiedTracking ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4" />
+                  Copiado
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" />
+                  Copiar Script
+                </>
+              )}
+            </button>
+          </div>
+
+          <div className="mt-8 overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-5 py-3">
+              <div className="flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full bg-red-400" />
+                <span className="h-3 w-3 rounded-full bg-yellow-400" />
+                <span className="h-3 w-3 rounded-full bg-green-400" />
+              </div>
+              <span className="text-xs font-bold text-slate-400">yampi-tracking.js</span>
+            </div>
+            <pre className="overflow-x-auto whitespace-pre-wrap p-6 text-xs font-medium leading-relaxed text-blue-400 md:text-sm">
+              {trackingScriptCode}
+            </pre>
+          </div>
         </div>
       </div>
 
@@ -432,12 +531,11 @@ window.VIDLYTICS_CONFIG = {
             </div>
 
             <h3 className="mt-4 text-sm font-black text-slate-900">
-              Cole o script
+              Cole os scripts
             </h3>
 
             <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
-              Cole o código de instalação no cabeçalho da loja, preferencialmente
-              antes do fechamento da tag head.
+              Cole os códigos de instalação (Passo 1 e Passo 2) no campo de scripts personalizados da Yampi.
             </p>
           </div>
 
