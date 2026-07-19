@@ -213,6 +213,8 @@ const StoryDetailsPage = () => {
     scroll_direction: 'horizontal' as ScrollDirection,
     active: true,
     appearance_id: '',
+    page_rule_mode: 'all_pages' as ConditionType,
+    page_rule_value: '',
   });
 
   const [deleteModal, setDeleteModal] = useState<{
@@ -258,7 +260,10 @@ const StoryDetailsPage = () => {
           scroll_direction: 'horizontal',
           active: true,
           appearance_id: '',
-        });
+          page_rule_mode: 'all_pages',
+          page_rule_value: '',
+          });
+  
         setSelectedVideoIds([]);
         setLocations([]);
         setRules([]);
@@ -289,18 +294,8 @@ const StoryDetailsPage = () => {
 
       setStory(currentStory);
 
-      setFormData({
-        title: currentStory.title || '',
-        format: currentStory.format || 'carousel',
-        scroll_direction: currentStory.scroll_direction || 'horizontal',
-        active: Boolean(currentStory.active),
-        appearance_id:
-          currentStory.appearance_id && isValidUuid(currentStory.appearance_id)
-            ? currentStory.appearance_id
-            : '',
-      });
-
       const [relations, locs, rls] = await Promise.all([
+
         getAllSafe<StoryVideo>((db as any).storyVideos, finalStoreId),
         getAllSafe<DisplayLocation>((db as any).displayLocations, finalStoreId),
         getAllSafe<any>((db as any).pageRules, finalStoreId),
@@ -340,6 +335,21 @@ const StoryDetailsPage = () => {
       });
 
       setRules(filteredDbRules.map(mapDbRuleToUiRule));
+
+      setFormData({
+        title: currentStory.title || '',
+        format: currentStory.format || 'carousel',
+        scroll_direction: currentStory.scroll_direction || 'horizontal',
+        active: Boolean(currentStory.active),
+        appearance_id:
+          currentStory.appearance_id && isValidUuid(currentStory.appearance_id)
+            ? currentStory.appearance_id
+            : '',
+        page_rule_mode:
+          (filteredDbRules[0]?.condition_type as ConditionType) || 'all_pages',
+        page_rule_value: filteredDbRules[0]?.value || '',
+      });
+
     } catch (error) {
       console.error('Erro ao carregar Story:', error);
       showError('Erro ao carregar os dados do Story.');
@@ -357,6 +367,59 @@ const StoryDetailsPage = () => {
     targetStoreId: string,
   ) => {
     const now = new Date().toISOString();
+
+    // ----- Regra de URL -----
+    const existingRules = await getAllSafe<any>(
+      (db as any).pageRules,
+      targetStoreId,
+    );
+
+    const rulesToDelete = existingRules.filter((rule: any) => {
+      const sameStory = rule.story_id === targetStoryId;
+      const sameStore = !rule.store_id || rule.store_id === targetStoreId;
+
+      return sameStory && sameStore;
+    });
+
+    await Promise.all(
+      rulesToDelete.map((rule: any) =>
+        deleteSafe((db as any).pageRules, rule.id, targetStoreId),
+      ),
+    );
+
+    const selectedRule = {
+      id: generateUuid(),
+      store_id: targetStoreId,
+      story_id: targetStoryId,
+      condition_type: formData.page_rule_mode,
+      value:
+        formData.page_rule_mode === 'all_pages'
+          ? ''
+          : String(formData.page_rule_value || '').trim(),
+      created_at: now,
+      updated_at: now,
+    } as UiRule;
+
+    const normalizedRule = mapUiRuleToDbRule(
+      selectedRule,
+      targetStoreId,
+      targetStoryId,
+      now,
+    );
+
+    await (db as any).pageRules.save(normalizedRule);
+
+    if (supabase && targetStoreId && targetStoryId) {
+      await supabase.from('page_rules').upsert(normalizedRule, { onConflict: 'id' });
+
+      if (rulesToDelete.length > 0) {
+        await Promise.all(
+          rulesToDelete.map((rule: any) =>
+            supabase.from('page_rules').delete().eq('id', rule.id),
+          ),
+        );
+      }
+    }
 
     // ----- Locais de exibição -----
     const existingLocations = await getAllSafe<DisplayLocation>(
@@ -398,55 +461,6 @@ const StoryDetailsPage = () => {
       ),
     );
 
-    // ----- Regras de exibição (page_rules) -----
-    const existingRules = await getAllSafe<any>(
-      (db as any).pageRules,
-      targetStoreId,
-    );
-
-    const rulesToDelete = existingRules.filter((rule: any) => {
-      const sameStory = rule.story_id === targetStoryId;
-      const sameStore = !rule.store_id || rule.store_id === targetStoreId;
-
-      return sameStory && sameStore;
-    });
-
-    // Remove todas as regras antigas do IndexedDB
-    await Promise.all(
-      rulesToDelete.map((rule: any) =>
-        deleteSafe((db as any).pageRules, rule.id, targetStoreId),
-      ),
-    );
-
-    // Normaliza e salva as regras atuais no IndexedDB
-    const normalizedRules = rules.map((rule) =>
-      mapUiRuleToDbRule(rule, targetStoreId, targetStoryId, now),
-    );
-
-    if (normalizedRules.length > 0) {
-      await Promise.all(
-        normalizedRules.map((rule) => (db as any).pageRules.save(rule)),
-      );
-    }
-
-    // ----- Sincronização com Supabase -----
-    if (supabase && targetStoreId && targetStoryId) {
-      // Upsert das regras atuais
-      await Promise.all(
-        normalizedRules.map((rule) =>
-          supabase.from('page_rules').upsert(rule, { onConflict: 'id' }),
-        ),
-      );
-
-      // Remove do Supabase as regras que foram deletadas
-      if (rulesToDelete.length > 0) {
-        await Promise.all(
-          rulesToDelete.map((rule: any) =>
-            supabase.from('page_rules').delete().eq('id', rule.id),
-          ),
-        );
-      }
-    }
   };
 
   const handleSave = async (event: FormEvent) => {
