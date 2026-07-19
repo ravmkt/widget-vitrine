@@ -418,12 +418,15 @@ const StoryDetailsPage = () => {
     );
 
     const normalizedRules = rules.map((rule) =>
-      mapUiRuleToDbRule(rule, targetStoreId, targetStoryId, now),
-    );
+  mapUiRuleToDbRule(rule, targetStoreId, targetStoryId, now),
+);
 
-    await Promise.all(
-      normalizedRules.map((rule) => (db as any).pageRules.save(rule)),
-    );
+if (normalizedRules.length > 0) {
+  await Promise.all(
+    normalizedRules.map((rule) => (db as any).pageRules.save(rule)),
+  );
+}
+
   };
 
   const handleSave = async (event?: FormEvent) => {
