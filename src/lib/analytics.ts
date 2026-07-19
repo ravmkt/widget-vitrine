@@ -89,7 +89,13 @@ const mapMetrics = (items: Metric[]): DashboardMetrics => {
     if (item.event_type === 'close') totals.closes += 1;
     if (item.event_type === 'conversion') totals.conversions += 1;
   });
-  totals.ctr = totals.views > 0 ? Number(((totals.ctaClicks / totals.views) * 100).toFixed(1)) : 0;
+
+  // CTR = soma de todos os cliques de engajamento ÷ visualizações × 100
+  const engagementClicks = totals.ctaClicks + totals.productClicks + totals.whatsappClicks;
+  totals.ctr = totals.views > 0
+    ? Number(((engagementClicks / totals.views) * 100).toFixed(1))
+    : 0;
+
   return totals;
 };
 
