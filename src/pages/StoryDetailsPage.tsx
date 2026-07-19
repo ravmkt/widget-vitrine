@@ -130,9 +130,6 @@ const CONDITION_TYPES_WITH_VALUE: ConditionType[] = [
   'contains',
   'equals',
   'not_equals',
-  'starts_with',
-  'ends_with',
-  'regex',
 ];
 
 /**
@@ -1033,20 +1030,11 @@ const StoryDetailsPage = () => {
                           }}
                           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
                         >
-                          <option value="all_pages">Todas as Páginas</option>
-                          <option value="home_only">Apenas Home</option>
-                          <option value="product_pages">
-                            Páginas de Produto
-                          </option>
-                          <option value="category_pages">
-                            Páginas de Categoria
-                          </option>
+                          <option value="all_pages">Roaming</option>
                           <option value="contains">URL Contém</option>
                           <option value="equals">URL Igual</option>
                           <option value="not_equals">URL Diferente</option>
-                          <option value="starts_with">URL Começa com</option>
-                          <option value="ends_with">URL Termina com</option>
-                          <option value="regex">Regex</option>
+
                         </select>
                       </div>
 

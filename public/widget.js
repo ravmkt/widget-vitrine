@@ -3578,6 +3578,7 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
 
       var card = createEl('button', 'vl-carousel-card');
       card.type = 'button';
+      card.setAttribute('aria-label', story.title || story.name || 'Story');
 
       var inner = createEl('div', 'vl-carousel-inner');
       var videoUrl = coverVideo ? getVideoUrl(coverVideo) : '';
@@ -3610,6 +3611,10 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
         inner.appendChild(img);
       } else {
         inner.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase();
+      }
+
+      if (mode === 'carousel') {
+        inner.style.pointerEvents = 'none';
       }
 
       card.appendChild(inner);
@@ -3689,7 +3694,8 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
     var cardRadius = '18px';
 
     return (
-      '.vl-grid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))!important;gap:' + gap + 'px!important;width:100%!important;font-family:' + font + '!important;}' +
+      '.vl-grid{display:grid!important;grid-template-columns:repeat(' + columns + ',minmax(0,1fr))!important;gap:' + gap + 'px!important;width:100%!important;font-family:' + font + '!important;}' +
+      '@media (max-width: 768px){.vl-grid{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))!important;}}' +
       '.vl-grid-card{all:unset!important;display:flex!important;flex-direction:column!important;gap:8px!important;cursor:pointer!important;}' +
       '.vl-grid-media{position:relative!important;width:100%!important;aspect-ratio:9/16!important;border-radius:' + cardRadius + '!important;overflow:hidden!important;background:#e2e8f0!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:24px!important;font-weight:800!important;color:#0f172a!important;box-shadow:0 10px 24px rgba(15,23,42,.12)!important;}' +
       '.vl-grid-img{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;}' +
