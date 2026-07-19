@@ -3553,22 +3553,20 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
     var appearance = currentAppearance || {};
     var modalConfig = normalizeModalAppearanceConfig(appearance);
 
-    if (floatingWasClosed) return;
-
     var shadowData = getOrCreateShadowRoot(appearance);
     var shadow = shadowData.shadow;
 
     var style = createEl('style');
-    style.textContent = buildFloatingCss(appearance) + buildCarouselCss(appearance) + buildGridCss(appearance);
+    style.textContent = buildCarouselCss(appearance) + buildSharedCss(appearance) + '.vl-carousel{width:100%!important;overflow-x:auto!important;display:flex!important;gap:16px!important;padding:8px 4px!important;scrollbar-width:thin!important;}.vl-carousel-card{flex:0 0 220px!important;max-width:220px!important;display:flex!important;flex-direction:column!important;gap:10px!important;cursor:pointer!important;}.vl-carousel-inner{position:relative!important;border-radius:18px!important;overflow:hidden!important;aspect-ratio:9/16!important;background:#e2e8f0!important;box-shadow:0 10px 24px rgba(15,23,42,.12)!important;}.vl-carousel-media,.vl-grid-media{width:100%!important;height:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;}.vl-carousel-video{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;}.vl-carousel-label{text-align:center!important;font-size:12px!important;font-weight:700!important;color:#0f172a!important;}'
+
+    var wrap = createEl('div', 'vl-carousel-wrap');
+    var header = createEl('div', 'vl-carousel-header');
+    var title = createEl('div', 'vl-carousel-title');
+    title.textContent = currentAppearance.name || 'Stories';
+    header.appendChild(title);
+    wrap.appendChild(header);
 
     var carousel = createEl('div', 'vl-carousel');
-
-    overlay = createEl('div', 'vl-overlay');
-    var modal = createEl('div', 'vl-modal');
-    modalContent = createEl('div');
-    modal.appendChild(modalContent);
-    overlay.appendChild(modal);
-    overlay.addEventListener('click', function (event) { if (event.target === overlay) closeOverlay(); });
 
     stories.forEach(function (story, index) {
       var relations = (storyVideoMap.get(story.id) || []).slice().sort(function (a, b) { return Number(a.position || 0) - Number(b.position || 0); });
@@ -3581,42 +3579,16 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
       card.setAttribute('aria-label', story.title || story.name || 'Story');
 
       var inner = createEl('div', 'vl-carousel-inner');
-      var videoUrl = coverVideo ? getVideoUrl(coverVideo) : '';
-      var isDirect = isDirectVideoUrl(videoUrl);
-      var isUpload = coverVideo && (coverVideo.source_type === 'upload' || coverVideo.sourceType === 'upload');
-
-      if ((isDirect || isUpload) && videoUrl) {
-        var vidPreview = createEl('video', 'vl-carousel-video');
-        vidPreview.src = videoUrl;
-        vidPreview.autoplay = true; vidPreview.muted = true; vidPreview.loop = true; vidPreview.playsInline = true;
-        vidPreview.setAttribute('playsinline', 'playsinline');
-        vidPreview.setAttribute('webkit-playsinline', 'webkit-playsinline');
-        if (thumb) vidPreview.poster = thumb;
-        var playPromise = vidPreview.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(function () {
-            if (thumb) {
-              var fbImg = createEl('img', 'vl-carousel-video');
-              fbImg.src = thumb;
-              inner.appendChild(fbImg);
-            }
-          });
-        }
-        inner.appendChild(vidPreview);
-      } else if (thumb) {
+      var media = createEl('div', 'vl-carousel-media');
+      if (thumb) {
         var img = createEl('img', 'vl-carousel-video');
         img.src = thumb;
-        img.loading = 'lazy';
-        img.onerror = function () { inner.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase(); };
-        inner.appendChild(img);
+        img.alt = story.title || story.name || 'Story';
+        media.appendChild(img);
       } else {
-        inner.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase();
+        media.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase();
       }
-
-      if (mode === 'carousel') {
-        inner.style.pointerEvents = 'none';
-      }
-
+      inner.appendChild(media);
       card.appendChild(inner);
 
       if (modalConfig.show_title !== false) {
@@ -3625,22 +3597,18 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
         card.appendChild(label);
       }
 
-      if (modalConfig.show_play_button !== false) {
-        var playBadge = createEl('span', 'vl-carousel-play');
-        card.appendChild(playBadge);
-      }
-
       card.addEventListener('click', function (event) {
-        if (floatingWasDragged) { event.preventDefault(); event.stopPropagation(); return; }
+        event.preventDefault();
+        event.stopPropagation();
         openStory(stories, index, storyVideoMap, activeVideos, readStoryProductsData, readProductsData);
       });
 
       carousel.appendChild(card);
     });
 
+    wrap.appendChild(carousel);
     shadow.appendChild(style);
-    shadow.appendChild(carousel);
-    shadow.appendChild(overlay);
+    shadow.appendChild(wrap);
   }
 
   function renderGrid(stories, storyVideoMap, activeVideos) {
@@ -3649,7 +3617,14 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
     var shadow = shadowData.shadow;
 
     var style = createEl('style');
-    style.textContent = buildFloatingCss(appearance) + buildCarouselCss(appearance) + buildGridCss(appearance);
+    style.textContent = buildGridCss(appearance) + buildSharedCss(appearance) + '.vl-grid{width:100%!important;}.vl-grid-card{display:flex!important;flex-direction:column!important;gap:8px!important;cursor:pointer!important;}.vl-grid-img{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;}'
+
+    var wrap = createEl('div', 'vl-grid-wrap');
+    var header = createEl('div', 'vl-grid-header');
+    var title = createEl('div', 'vl-grid-title');
+    title.textContent = currentAppearance.name || 'Stories';
+    header.appendChild(title);
+    wrap.appendChild(header);
 
     var grid = createEl('div', 'vl-grid');
     stories.forEach(function (story, index) {
@@ -3676,25 +3651,30 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
       card.appendChild(media);
       card.appendChild(label);
       card.addEventListener('click', function (event) {
-        if (floatingWasDragged) { event.preventDefault(); event.stopPropagation(); return; }
+        event.preventDefault();
+        event.stopPropagation();
         openStory(stories, index, storyVideoMap, activeVideos, readStoryProductsData, readProductsData);
       });
       grid.appendChild(card);
     });
 
+    wrap.appendChild(grid);
     shadow.appendChild(style);
-    shadow.appendChild(grid);
+    shadow.appendChild(wrap);
   }
 
   function buildGridCss(appearance) {
     var font = getFontFamily(appearance);
     var gridConfig = parseJsonIfNeeded(firstDefined(appearance.grid_config, appearance.gridConfig, {})) || {};
     var gap = toNumber(firstDefined(gridConfig.gap, gridConfig.grid_gap), 16);
-    var columns = Math.max(1, toNumber(firstDefined(gridConfig.columns, gridConfig.grid_columns), 4));
+    var columns = Math.max(1, toNumber(firstDefined(gridConfig.columns, gridConfig.grid_columns), 3));
     var cardRadius = '18px';
 
     return (
-      '.vl-grid{display:grid!important;grid-template-columns:repeat(' + columns + ',minmax(0,1fr))!important;gap:' + gap + 'px!important;width:100%!important;font-family:' + font + '!important;}' +
+      '.vl-grid-wrap{width:100%!important;display:flex!important;flex-direction:column!important;gap:16px!important;font-family:' + font + '!important;}' +
+      '.vl-grid-header{display:flex!important;align-items:center!important;justify-content:space-between!important;}' +
+      '.vl-grid-title{font-size:18px!important;font-weight:800!important;color:#0f172a!important;}' +
+      '.vl-grid{display:grid!important;grid-template-columns:repeat(' + columns + ',minmax(0,1fr))!important;gap:' + gap + 'px!important;width:100%!important;}' +
       '@media (max-width: 768px){.vl-grid{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))!important;}}' +
       '.vl-grid-card{all:unset!important;display:flex!important;flex-direction:column!important;gap:8px!important;cursor:pointer!important;}' +
       '.vl-grid-media{position:relative!important;width:100%!important;aspect-ratio:9/16!important;border-radius:' + cardRadius + '!important;overflow:hidden!important;background:#e2e8f0!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:24px!important;font-weight:800!important;color:#0f172a!important;box-shadow:0 10px 24px rgba(15,23,42,.12)!important;}' +
