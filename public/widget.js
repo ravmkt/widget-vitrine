@@ -410,12 +410,26 @@
       mergeObject(finalAppearance, configAppearance);
       mergeObject(finalAppearance, storageAppearance);
       if (appearanceHasUsefulData(dbAppearance)) mergeObject(finalAppearance, dbAppearance);
+      console.info('[Vidlytics] Aparência carregada', {
+        url: finalAppearance.url || '',
+        type: finalAppearance.type || '',
+        storeId: storeId,
+        pathname: window.location.pathname,
+        href: window.location.href
+      });
       return normalizeAppearanceItem(finalAppearance);
     }).catch(function () {
       var finalAppearance = {};
       mergeObject(finalAppearance, DEFAULT_APPEARANCE);
       mergeObject(finalAppearance, configAppearance);
       mergeObject(finalAppearance, storageAppearance);
+      console.info('[Vidlytics] Aparência carregada via fallback', {
+        url: finalAppearance.url || '',
+        type: finalAppearance.type || '',
+        storeId: storeId,
+        pathname: window.location.pathname,
+        href: window.location.href
+      });
       return normalizeAppearanceItem(finalAppearance);
     });
   }
@@ -858,8 +872,13 @@ params.set('select', 'video_id,visitor_id');
     var patterns = pattern.split(',').map(function (p) { return p.trim(); }).filter(Boolean);
 
     return patterns.some(function (p) {
-      var normalizedPattern = p.replace(/\/+$/, '');
+      var normalizedPattern = p.replace(/\/+$/, '').replace(/^https?:\/\/[^/]+/i, '');
       if (!normalizedPattern) return false;
+
+      if (normalizedPattern === '/' || normalizedPattern === 'all' || normalizedPattern === 'todas' || normalizedPattern === 'all_pages') {
+        return true;
+      }
+
       return (
         href.indexOf(normalizedPattern) !== -1 ||
         fullPath.indexOf(normalizedPattern) !== -1 ||
