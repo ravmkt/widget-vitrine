@@ -139,15 +139,24 @@ const CONDITION_TYPES_WITH_VALUE: ConditionType[] = [
  * para o formato usado internamente pela UI (condition_type / value).
  */
 const mapDbRuleToUiRule = (rule: any): UiRule => {
-  const ruleType: ConditionType = rule.rule_type || 'all_pages';
+  // Determina o condition_type olhando primeiro match_type,
+  // depois rule_type, com fallback seguro
+  let conditionType: ConditionType;
 
-  // Se a regra tiver match_type (contains, equals, etc.) esse é o "tipo real"
-  // de condição; caso contrário, usamos rule_type diretamente.
-  const conditionType: ConditionType = CONDITION_TYPES_WITH_VALUE.includes(
-    rule.match_type,
-  )
-    ? rule.match_type
-    : ruleType;
+  if (CONDITION_TYPES_WITH_VALUE.includes(rule.match_type)) {
+    // Caso ideal: match_type está presente (ex: 'contains')
+    conditionType = rule.match_type;
+  } else if (CONDITION_TYPES_WITH_VALUE.includes(rule.rule_type)) {
+    // Fallback: rule_type já é o valor real (ex: 'contains', 'equals')
+    conditionType = rule.rule_type;
+  } else if (rule.rule_type === 'custom' && rule.url_pattern) {
+    // Registro antigo com rule_type='custom' mas sem match_type —
+    // assume 'contains' como fallback razoável
+    conditionType = 'contains';
+  } else {
+    // Último fallback: usa rule_type ou 'all_pages'
+    conditionType = (rule.rule_type as ConditionType) || 'all_pages';
+  }
 
   return {
     id: rule.id,
@@ -176,7 +185,10 @@ const mapUiRuleToDbRule = (
     id: isValidUuid(rule.id) ? rule.id : generateUuid(),
     store_id: targetStoreId,
     story_id: targetStoryId,
-    rule_type: hasValue ? 'custom' : rule.condition_type,
+    // 🟢 Agora rule_type sempre recebe o valor real da condição
+    // (ex: 'contains', 'all_pages', 'home_only'), nunca 'custom'
+    rule_type: rule.condition_type,
+    // match_type é mantido para compatibilidade com registros existentes
     match_type: hasValue ? rule.condition_type : null,
     page_url: null,
     url_pattern: hasValue ? rule.value || '' : null,
@@ -186,6 +198,7 @@ const mapUiRuleToDbRule = (
     updated_at: now,
   } as PageRule & Record<string, any>;
 };
+
 
 const StoryDetailsPage = () => {
   const { storeId, loading: tenantLoading } = useTenant();
