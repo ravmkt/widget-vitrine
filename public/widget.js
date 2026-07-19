@@ -3755,6 +3755,13 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
   }
 
   function renderWidget() {
+  try {
+    var existingRoot = document.getElementById('vidlytics-widget-root');
+    if (existingRoot) existingRoot.remove();
+    var existingCarouselRoot = document.getElementById('vidlytics-carousel-root');
+    if (existingCarouselRoot) existingCarouselRoot.remove();
+  } catch (e) {}
+
   return Promise.all([
     readAppearance(),
     readStories(),
@@ -3896,10 +3903,67 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
     });
   }
 
+  var bootstrapStarted = false;
+  var bootstrapObserver = null;
+  var bootstrapTimer = null;
+
+  function scheduleRender() {
+    if (bootstrapTimer) {
+      clearTimeout(bootstrapTimer);
+    }
+
+    bootstrapTimer = setTimeout(function () {
+      renderWidget();
+    }, 50);
+  }
+
+  function observeUrlChanges() {
+    if (bootstrapObserver || !window.MutationObserver) return;
+
+    var lastHref = window.location.href;
+
+    bootstrapObserver = new MutationObserver(function () {
+      var currentHref = window.location.href;
+
+      if (currentHref !== lastHref) {
+        lastHref = currentHref;
+        scheduleRender();
+      }
+    });
+
+    bootstrapObserver.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      characterData: false
+    });
+
+    window.addEventListener('popstate', scheduleRender);
+    window.addEventListener('hashchange', scheduleRender);
+
+    var pushState = history.pushState;
+    var replaceState = history.replaceState;
+
+    history.pushState = function () {
+      var result = pushState.apply(history, arguments);
+      scheduleRender();
+      return result;
+    };
+
+    history.replaceState = function () {
+      var result = replaceState.apply(history, arguments);
+      scheduleRender();
+      return result;
+    };
+  }
+
   function bootstrap() {
     try {
+      if (bootstrapStarted) return;
+      bootstrapStarted = true;
       renderWidget();
       initMutationObserver();
+      observeUrlChanges();
       window.addEventListener('resize', forceHostPosition);
       window.addEventListener('orientationchange', forceHostPosition);
     } catch (e) {
