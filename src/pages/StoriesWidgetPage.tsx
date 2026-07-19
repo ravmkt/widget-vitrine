@@ -559,11 +559,13 @@ const findAppearanceForStory = ({
   story,
   settings,
   appearanceIdParam,
+  currentUrl,
 }: {
   appearances: any[];
   story?: any | null;
   settings?: any | null;
   appearanceIdParam?: string | null;
+  currentUrl?: string | null;
 }) => {
   if (!Array.isArray(appearances) || appearances.length === 0) {
     return null;
@@ -575,22 +577,62 @@ const findAppearanceForStory = ({
     return appearances.find((item: any) => item.id === id) || null;
   };
 
-  return (
+  // Function to check if appearance should be shown on current URL
+  const shouldShowAppearance = (appearance: any, url: string | null): boolean => {
+    if (!appearance?.url) {
+      // No URL filter - show on all pages
+      return true;
+    }
+
+    if (!url) {
+      // No current URL - show if no filter
+      return true;
+    }
+
+    const appearanceUrl = String(appearance.url).toLowerCase();
+    const currentPath = url.toLowerCase();
+
+    // Check if the appearance URL is contained in the current path
+    return currentPath.includes(appearanceUrl);
+  };
+
+  // First, try to find by ID
+  const byIdResult =
     byId(appearanceIdParam) ||
     byId(story?.appearance_id || story?.appearanceId) ||
-    byId(settings?.default_appearance_id || settings?.defaultAppearanceId) ||
-    appearances.find(
-      (item: any) =>
-        item.is_default === true ||
+    byId(settings?.default_appearance_id || settings?.defaultAppearanceId);
+
+  if (byIdResult) {
+    // Check URL filter for ID-matched appearance
+    if (shouldShowAppearance(byIdResult, currentUrl)) {
+      return byIdResult;
+    }
+    return null;
+  }
+
+  // Find default appearance that should be shown on current URL
+  const defaultAppearance = appearances.find(
+    (item: any) =>
+      (item.is_default === true ||
         item.isDefault === true ||
         item.default === true ||
         item.is_active === true ||
         item.isActive === true ||
-        item.active === true,
-    ) ||
-    appearances[0] ||
-    null
+        item.active === true) &&
+      shouldShowAppearance(item, currentUrl),
   );
+
+  if (defaultAppearance) {
+    return defaultAppearance;
+  }
+
+  // If no default matches URL filter, try first appearance
+  const firstAppearance = appearances[0];
+  if (firstAppearance && shouldShowAppearance(firstAppearance, currentUrl)) {
+    return firstAppearance;
+  }
+
+  return null;
 };
 
 export default function StoriesWidgetPage() {
@@ -643,15 +685,16 @@ const [model, setModel] = useState<any | null>(null);
   const currentVideo = currentVideos[videoIdx] ?? null;
 
   const appearance = useMemo(
-    () =>
-      findAppearanceForStory({
-        appearances,
-        story,
-        settings,
-        appearanceIdParam,
-      }),
-    [appearances, story, settings, appearanceIdParam],
-  );
+      () =>
+        findAppearanceForStory({
+          appearances,
+          story,
+          settings,
+          appearanceIdParam,
+          currentUrl: typeof window !== 'undefined' ? window.location.href : null,
+        }),
+      [appearances, story, settings, appearanceIdParam],
+    );
 
   const currentUrl = getVideoUrl(currentVideo);
   const posterUrl = getVideoPosterUrl(currentVideo);

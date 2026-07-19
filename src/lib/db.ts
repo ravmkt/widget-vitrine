@@ -69,6 +69,12 @@ export interface Appearance {
   show_product_button: boolean;
 
   /**
+   * URL específica onde o widget deve aparecer.
+   * Se null, aparece em todas as páginas.
+   */
+  url?: string | null;
+
+  /**
    * Campo usado no Supabase.
    */
   use_global_appearance?: boolean;
@@ -740,6 +746,7 @@ const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
     'carousel_config',
     'grid_config',
     'modal_config',
+    'url',
     'created_at',
     'updated_at',
   ],

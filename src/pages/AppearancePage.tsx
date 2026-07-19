@@ -165,6 +165,12 @@ type ExtendedAppearance = Appearance & {
   mobile_rows: number;
   mobile_gap: number;
   font_size: string;
+
+  /**
+   * URL específica onde o widget deve aparecer.
+   * Se vazio, aparece em todas as páginas.
+   */
+  url?: string | null;
 };
 
 type PreviewColors = {
@@ -2472,12 +2478,11 @@ const AppearancePage = () => {
 
       const shouldBeDefault = formData.is_default || appearances.length === 0;
 
-const stylePayload = {
-  id,
-  store_id: finalStoreId,
-  name: formData.name.trim(),
-  is_default: shouldBeDefault,
-
+      const stylePayload = {
+        id,
+        store_id: finalStoreId,
+        name: formData.name.trim(),
+        is_default: shouldBeDefault,
 
         primary_color: formData.primary_color,
         secondary_color: formData.secondary_color,
@@ -2546,6 +2551,8 @@ const stylePayload = {
         hide_stories: modalConfig.hide_stories,
         font_size: formData.font_size,
 
+        url: formData.url || null,
+
         updated_at: now,
         created_at: formData.created_at || editingStyle?.created_at || now,
       };
@@ -2590,6 +2597,9 @@ if (supabase) {
       floating_z_index: Number(toNumberInputValue(floatingDesktop.z_index)) || 2147483647,
       floating_show_play_button: floatingDesktop.show_play_icon !== false,
       floating_draggable: Boolean(floatingDesktop.draggable),
+
+      /* URL específica onde o widget deve aparecer */
+      url: formData.url || null,
 
       /* Novas colunas para refletir todas as configurações no widget.js */
       primary_color: formData.primary_color,
@@ -2955,6 +2965,24 @@ window.dispatchEvent(new Event('storage'));
                           }}
                           description="Quando ativado, as configurações de Desktop serão aplicadas também no Mobile."
                         />
+                      </FormField>
+
+                      <FormField label="URL específica (opcional)">
+                        <input
+                          type="text"
+                          value={formData.url || ''}
+                          onChange={e =>
+                            setFormData({
+                              ...formData,
+                              url: e.target.value,
+                            })
+                          }
+                          placeholder="Ex: /teste, /produtos, /categoria/calcados"
+                          className={inputClass}
+                        />
+                        <p className="text-xs font-semibold text-slate-400">
+                          Deixe em branco para mostrar em todas as páginas. Use uma palavra-chave que apareça na URL (ex: "teste" para mostrar em /pagina-teste).
+                        </p>
                       </FormField>
                     </SectionCard>
                   )}

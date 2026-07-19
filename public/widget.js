@@ -1,5 +1,5 @@
 (function () {
-    var WIDGET_VERSION = '2026.07.19-01';
+    var WIDGET_VERSION = '2026.07.19-02';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -689,6 +689,24 @@
 
   function readPageRules() { return (!storeId || !hasSupabase) ? Promise.resolve(getStorageItem('vidlytics_page_rules', [])) : fetchJson('page_rules?select=*&store_id=eq.' + encodeURIComponent(storeId)); }
 
+// ... outras funções read*
+function readPageRules() {
+  if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_page_rules', []));
+  return fetchJson('page_rules?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&active=is.true');
+}
+
+// ADICIONE AQUI:
+function readDisplayLocations() {
+  if (!storeId || !hasSupabase) {
+    return Promise.resolve(getStorageItem('vidlytics_display_locations', []));
+  }
+  return fetchJson(
+    'display_locations?select=*&store_id=eq.' +
+    encodeURIComponent(storeId) +
+    '&active=is.true'
+  );
+}
+
   function readLikesFromDb() {
   if (!storeId || !hasSupabase) {
     console.warn(
@@ -774,83 +792,56 @@ params.set('select', 'video_id,visitor_id');
   // e usa os nomes reais das colunas do banco
   // ============================================================
   function matchesRule(rule) {
-    var href = window.location.href;
-    var path = window.location.pathname || '/';
+  if (!rule || rule.active === false) return false;
 
-    // Usa os nomes reais das colunas (rule_type, match_type, condition_type)
-    var conditionType = String(
-      firstDefined(
-        rule.rule_type,
-        rule.match_type,
-        rule.condition_type
-      ) || ''
-    ).trim();
+  var href = window.location.href;
+  var path = window.location.pathname || '/';
 
-    var value = String(
-      firstDefined(
-        rule.url_pattern,
-        rule.page_url,
-        rule.value
-      ) || ''
-    );
+  var conditionType = String(
+    firstDefined(
+      rule.condition_type,
+      rule.rule_type,
+      rule.match_type
+    ) || ''
+  ).trim();
 
-    if (!conditionType) return true;
+  var value = String(
+    firstDefined(
+      rule.url_pattern,
+      rule.page_url,
+      rule.value
+    ) || ''
+  ).trim();
 
-    switch (conditionType) {
-      case 'all_pages':
-        return true;
+  if (!conditionType) return true;
 
-      case 'home_only':
-        return (
-          path === '/' ||
-          path === '/home' ||
-          path === '/index.html' ||
-          path === ''
-        );
-
-      case 'product_pages':
-        return (
-          path.indexOf('/product') !== -1 ||
-          path.indexOf('/produto') !== -1
-        );
-
-      case 'category_pages':
-        return (
-          path.indexOf('/category') !== -1 ||
-          path.indexOf('/categoria') !== -1 ||
-          path.indexOf('/colecao') !== -1
-        );
-
-      case 'contains':
-        return href.indexOf(value) !== -1;
-
-      case 'equals':
-        return href === value;
-
-      case 'not_equals':
-        return href !== value;
-
-      case 'starts_with':
-        return href.indexOf(value) === 0;
-
-      case 'ends_with':
-        return (
-          href.lastIndexOf(value) === href.length - value.length
-        );
-
-      case 'regex':
-        try {
-          return new RegExp(value).test(href);
-        } catch (e) {
-          console.warn('[Vidlytics] Regex inválida:', value, e);
-          return false;
-        }
-
-      default:
-        console.warn('[Vidlytics] Tipo condição desconhecida:', conditionType);
-        return true;
-    }
+  switch (conditionType) {
+    case 'all_pages':
+      return true;
+    case 'home_only':
+      return path === '/' || path === '/home' || path === '/index.html' || path === '';
+    case 'product_pages':
+      return path.indexOf('/product') !== -1 || path.indexOf('/produto') !== -1;
+    case 'category_pages':
+      return path.indexOf('/category') !== -1 || path.indexOf('/categoria') !== -1 || path.indexOf('/colecao') !== -1;
+    case 'contains':
+      return href.indexOf(value) !== -1 || path.indexOf(value) !== -1;
+    case 'equals':
+      return href === value || path === value;
+    case 'not_equals':
+      return href !== value && path !== value;
+    case 'starts_with':
+      return href.indexOf(value) === 0 || path.indexOf(value) === 0;
+    case 'ends_with':
+      return href.endsWith(value) || path.endsWith(value);
+    case 'regex':
+      try { return new RegExp(value).test(href); } catch (e) { return false; }
+    default:
+      console.warn('[Vidlytics] condition_type desconhecido:', conditionType);
+      return true;
   }
+}
+
 
   function getVideoUrl(video) {
     if (!video) return '';
@@ -3379,6 +3370,140 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig);
     if (behaviorConfig.allowDrag) setupFloatingDrag(shadowData.host, bubbles);
   }
 
+function ensureHostAt(el) {
+  // Cria um host isolado via Shadow DOM dentro/ao lado do elemento destino
+  var host = document.createElement('div');
+  host.className = 'vidlytics-inline-host';
+  var shadow = host.attachShadow({ mode: 'open' });
+  return { host: host, shadow: shadow };
+}
+
+function buildInlineCss(appearance, mode) {
+  var font = getFontFamily(appearance);
+  return (
+    '*,*::before,*::after{box-sizing:border-box!important;}'
+    + ':host{all:initial!important;display:block!important;font-family:' + font + '!important;}'
+    + '.vl-inline{width:100%!important;display:block!important;}'
+    + (mode === 'grid'
+      ? '.vl-list{display:grid!important;gap:12px!important;grid-template-columns:repeat(auto-fill,minmax(120px,1fr))!important;}'
+      : '.vl-list{display:flex!important;gap:10px!important;overflow-x:auto!important;padding:4px!important;scrollbar-width:thin!important;}'
+    )
+    + '.vl-card{all:unset!important;display:flex!important;flex-direction:column!important;gap:6px!important;cursor:pointer!important;width:140px!important;flex:0 0 auto!important;}'
+    + '.vl-thumb{width:100%!important;aspect-ratio:9/16!important;border-radius:16px!important;object-fit:cover!important;background:#000!important;box-shadow:0 6px 18px rgba(15,23,42,.18)!important;}'
+    + '.vl-caption{font-size:12px!important;font-weight:800!important;color:#0f172a!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-align:center!important;}'
+  );
+}
+
+function renderInlineWidgetAt(targetEl, mode, stories, storyVideoMap, activeVideos) {
+  try {
+    var mount;
+    try {
+      mount = ensureHostAt(targetEl);
+    } catch (e) {
+      // Fallback sem Shadow (casos de CSP estrita)
+      var host = document.createElement('div');
+      host.className = 'vidlytics-inline-fallback';
+      targetEl.appendChild(host);
+      mount = { host: host, shadow: host }; // "shadow" aponta para o host
+    }
+
+    var style = document.createElement('style');
+    style.textContent = buildInlineCss(currentAppearance, mode);
+
+    var wrap = document.createElement('div');
+    wrap.className = 'vl-inline';
+
+    var list = document.createElement('div');
+    list.className = 'vl-list';
+
+    stories.forEach(function (story, index) {
+      var relations = (storyVideoMap.get(story.id) || []).slice().sort(function(a,b){return Number(a.position||0)-Number(b.position||0)});
+      var coverRel = relations.find(function(r){return r.is_cover}) || relations[0] || null;
+      var coverVideo = coverRel ? activeVideos.find(function(v){return idsEqual(v.id, coverRel.video_id)}) : null;
+      var thumb = getStoryThumbnail(story, coverVideo, coverRel);
+
+      var card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'vl-card';
+
+      var img = document.createElement('img');
+      img.className = 'vl-thumb';
+      img.src = thumb || '';
+      img.alt = story.title || story.name || 'Story';
+
+      var caption = document.createElement('div');
+      caption.className = 'vl-caption';
+      caption.textContent = story.title || story.name || '';
+
+      card.appendChild(img);
+      card.appendChild(caption);
+
+      card.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openStory(stories, index, storyVideoMap, activeVideos, readStoryProductsData, readProductsData);
+      });
+
+      list.appendChild(card);
+    });
+
+    wrap.appendChild(list);
+
+    if (mount.shadow !== mount.host) {
+      mount.shadow.appendChild(style);
+      mount.shadow.appendChild(wrap);
+    } else {
+      mount.shadow.appendChild(wrap);
+      // Estilo inline sem shadow
+      if (!document.getElementById('vidlytics-inline-style')) {
+        style.id = 'vidlytics-inline-style';
+        document.head.appendChild(style);
+      }
+    }
+
+    return mount.host;
+  } catch (e) {
+    console.error('[Vidlytics] Falha ao montar inline widget:', e);
+  }
+}
+
+function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, activeVideos) {
+  if (!Array.isArray(locations) || !locations.length) return;
+
+  locations.forEach(function (loc) {
+    if (!loc || !loc.selector || loc.active === false) return;
+
+    var nodes;
+    try {
+      nodes = Array.prototype.slice.call(document.querySelectorAll(loc.selector));
+    } catch (e) {
+      console.warn('[Vidlytics] Selector inválido:', loc.selector, e);
+      nodes = [];
+    }
+
+    nodes.forEach(function (node) {
+      var host = renderInlineWidgetAt(node, mode, stories, storyVideoMap, activeVideos);
+
+      if (!host) return;
+
+      switch (loc.position) {
+        case 'before':
+          node.parentNode && node.parentNode.insertBefore(host, node);
+          break;
+        case 'after':
+          node.parentNode && node.parentNode.insertBefore(host, node.nextSibling);
+          break;
+        case 'prepend':
+          node.insertBefore(host, node.firstChild);
+          break;
+        case 'append':
+        default:
+          node.appendChild(host);
+      }
+    });
+  });
+}
+
   function renderCarousel(stories, storyVideoMap, activeVideos) {} 
   
   function forceHostPosition() {
@@ -3399,127 +3524,147 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig);
     readPageRules(),
     readComments(),
     readLikesFromDb(),
-    readSizingModels()
+    readSizingModels(),
+    readDisplayLocations() // <- NOVO
   ])
-    .then(function (results) {
-      currentAppearance = normalizeAppearanceItem(results[0] || {});
+  .then(function (results) {
+    currentAppearance = normalizeAppearanceItem(results[0] || {});
 
-      var modalConfig = normalizeModalAppearanceConfig(currentAppearance);
+    var modalConfig = normalizeModalAppearanceConfig(currentAppearance);
 
-      var stories = results[1] || [];
-      var storyVideos = results[2] || [];
-      var videos = results[3] || [];
-      var storyProducts = results[4] || [];
-      var products = results[5] || [];
-      var pageRules = results[6] || [];
-      readCommentsData = results[7] || [];
-      var dbLikes = results[8] || [];
-      window.__vidlytics_db_likes_raw = dbLikes;
-      readSizingModelsData = results[9] || [];
+    var stories = results[1] || [];
+    var storyVideos = results[2] || [];
+    var videos = results[3] || [];
+    var storyProducts = results[4] || [];
+    var products = results[5] || [];
+    var pageRules = results[6] || [];
+    readCommentsData = results[7] || [];
+    var dbLikes = results[8] || [];
+    window.__vidlytics_db_likes_raw = dbLikes;
+    readSizingModelsData = results[9] || [];
+    var displayLocations = results[10] || [];
 
-      // Processa os likes do banco para contar por vídeo
-      readLikeCounts = {};
-      dbLikes.forEach(function(item) {
-        if (item.video_id) {
-          readLikeCounts[item.video_id] = (readLikeCounts[item.video_id] || 0) + 1;
-        }
-      });
-      console.log('[Vidlytics] readLikeCounts processado:', JSON.parse(JSON.stringify(readLikeCounts)));
+// quando o modo for 'grid' ou 'carousel', usar as posições:
+    if (mode === 'floating') {
+      renderFloatingBubbles(applicableStories, storyVideoMap, activeVideos);
+      
+    readLikeCounts = {};
+    dbLikes.forEach(function (item) {
+      if (item.video_id) readLikeCounts[item.video_id] = (readLikeCounts[item.video_id] || 0) + 1;
+    });
 
+    readStoryProductsData = storyProducts;
+    readProductsData = products;
 
-      readStoryProductsData = storyProducts;
-      readProductsData = products;
+    if (!stories.length) return;
 
-      if (!stories.length) {
-  return;
-}
+    var activeVideos = videos.filter(function (video) {
+      return (
+        ('status' in video ? video.status === 'active' : true) &&
+        ('active' in video ? video.active !== false : true) &&
+        Boolean(getVideoUrl(video))
+      );
+    });
+    if (!activeVideos.length) return;
 
-      var activeVideos = videos.filter(function (video) {
-        return (
-          ('status' in video ? video.status === 'active' : true) &&
-          ('active' in video ? video.active !== false : true) &&
-          Boolean(getVideoUrl(video))
-        );
-      });
+    var storyVideoMap = new Map();
+    storyVideos.forEach(function (item) {
+      if (!storyVideoMap.has(item.story_id)) storyVideoMap.set(item.story_id, []);
+      storyVideoMap.get(item.story_id).push(item);
+    });
 
-      if (!activeVideos.length) {
-        return;
-      }
+    // Métrica de view do widget
+    trackMetric({ event_type: 'view' });
 
-      var storyVideoMap = new Map();
-
-      storyVideos.forEach(function (item) {
-        if (!storyVideoMap.has(item.story_id)) {
-          storyVideoMap.set(item.story_id, []);
-        }
-
-        storyVideoMap.get(item.story_id).push(item);
-      });
-
-      // Rastreia visualização geral do widget
-      trackMetric({ event_type: 'view' });
-
-      var storiesWithVideos = stories.filter(function (story) {
-        return (storyVideoMap.get(story.id) || []).some(function (rel) {
-          return activeVideos.some(function (video) {
-            return idsEqual(video.id, rel.video_id);
-          });
+    var storiesWithVideos = stories.filter(function (story) {
+      return (storyVideoMap.get(story.id) || []).some(function (rel) {
+        return activeVideos.some(function (video) {
+          return idsEqual(video.id, rel.video_id);
         });
       });
+    });
+    if (!storiesWithVideos.length) return;
 
-      if (!storiesWithVideos.length) {
-        return;
-      }
-
-      var applicableStories = storiesWithVideos.filter(function (story) {
-        var rulesForStory = pageRules.filter(function (rule) {
-          return idsEqual(rule.story_id, story.id);
-        });
-
-        return (
-          !rulesForStory.length ||
-          rulesForStory.some(matchesRule)
-        );
+    // Aplica regras: considera regras do story e regras globais (story_id nulo)
+    var applicableStories = storiesWithVideos.filter(function (story) {
+      var rulesForStory = pageRules.filter(function (rule) {
+        return (rule.active !== false) && (rule.story_id == null || idsEqual(rule.story_id, story.id));
       });
+      return !rulesForStory.length || rulesForStory.some(matchesRule);
+    });
+    if (!applicableStories.length) return;
 
-      if (!applicableStories.length) {
-        return;
-      }
+    // Determinar modo
+    var rawMode =
+      (widgetsCfg && widgetsCfg.viewMode) ||
+      (config && config.viewMode) ||
+      (enableFloating ? 'floating' : (enableCarousel ? 'carousel' : 'grid'));
 
-      if (enableFloating) {
-        renderFloatingBubbles(
-          applicableStories,
-          storyVideoMap,
-          activeVideos
-        );
-      }
+    var mode = String(rawMode || 'floating').toLowerCase();
 
-      if (enableCarousel) {
-        renderCarousel(
-          applicableStories,
-          storyVideoMap,
-          activeVideos
-        );
-      }
-
+    if (mode === 'floating') {
+      renderFloatingBubbles(applicableStories, storyVideoMap, activeVideos);
       forceHostPosition();
-
       setTimeout(forceHostPosition, 100);
       setTimeout(forceHostPosition, 500);
       setTimeout(forceHostPosition, 1500);
-    })
-    .catch(function (error) {
-      console.error('Erro no Vidlytics Widget:', error);
-    });
+    } else {
+      // Monta inline conforme display_locations.
+      // Se não houver locations, como fallback aplica na primeira <main> ou no body.
+      if (Array.isArray(displayLocations) && displayLocations.length) {
+        renderIntoDisplayLocations(mode, displayLocations, applicableStories, storyVideoMap, activeVideos);
+      } else {
+        var fallbackNode = document.querySelector('main') || document.body;
+        renderIntoDisplayLocations(mode, [{ selector: 'body', position: 'append', active: true }], applicableStories, storyVideoMap, activeVideos);
+      }
+    }
+  })
+  .catch(function (error) {
+    console.error('Erro no Vidlytics Widget:', error);
+  });
 }
 
 
-  function initMutationObserver() {
+
+    function initMutationObserver() {
     if (!window.MutationObserver) return;
     var scheduled = false;
     var observer = new MutationObserver(function (mutations) {
       var shouldForce = false;
-      mutations.forEach(function (m) { if (m.type === 'childList' || (m.type === 'attributes' && m.target && m.target.id === 'vidlytics-widget-root')) shouldForce = true; });
-      if (shouldForce && !scheduled) { scheduled = true; setTimeout(function () { scheduled = false; forceHostPosition(); }, 150); }
+      mutations.forEach(function (m) {
+        if (m.type === 'childList' || (m.type === 'attributes' && m.target && m.target.id === 'vidlytics-widget-root')) {
+          shouldForce = true;
+        }
+      });
+      if (shouldForce && !scheduled) {
+        scheduled = true;
+        setTimeout(function () {
+          scheduled = false;
+          forceHostPosition();
+        }, 150);
+      }
     });
-    observer.observe(document.documentElement, { childList: true, subtree: true, attributes:
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: false
+    });
+  }
+
+  function bootstrap() {
+    try {
+      renderWidget();
+      initMutationObserver();
+      window.addEventListener('resize', forceHostPosition);
+      window.addEventListener('orientationchange', forceHostPosition);
+    } catch (e) {
+      console.error('[Vidlytics] Erro no bootstrap', e);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrap);
+  } else {
+    bootstrap();
+  }
+})();
