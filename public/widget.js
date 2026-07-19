@@ -3872,7 +3872,6 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
       setTimeout(forceHostPosition, 100);
       setTimeout(forceHostPosition, 500);
     } else {
-      // grid (ou qualquer outro modo inline)
       renderGrid(applicableStories, storyVideoMap, activeVideos);
     }
 

@@ -262,8 +262,9 @@ const StoryDetailsPage = () => {
           appearance_id: '',
           page_rule_mode: 'all_pages',
           page_rule_value: '',
-          });
-  
+        });
+
+
         setSelectedVideoIds([]);
         setLocations([]);
         setRules([]);
@@ -295,8 +296,8 @@ const StoryDetailsPage = () => {
       setStory(currentStory);
 
       const [relations, locs, rls] = await Promise.all([
-
         getAllSafe<StoryVideo>((db as any).storyVideos, finalStoreId),
+
         getAllSafe<DisplayLocation>((db as any).displayLocations, finalStoreId),
         getAllSafe<any>((db as any).pageRules, finalStoreId),
       ]);
@@ -1044,7 +1045,8 @@ const StoryDetailsPage = () => {
                           }}
                           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
                         >
-                          <option value="all_pages">Roaming</option>
+                          <option value="all_pages">Roaming HOME</option>
+
                           <option value="contains">URL Contém</option>
                           <option value="equals">URL Igual</option>
                           <option value="not_equals">URL Diferente</option>
