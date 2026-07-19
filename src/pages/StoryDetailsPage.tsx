@@ -160,7 +160,7 @@ const mapDbRuleToUiRule = (rule: any): UiRule => {
     value: rule.url_pattern || rule.page_url || '',
     created_at: rule.created_at,
     updated_at: rule.updated_at,
-  };
+  } as UiRule;
 };
 
 /**
@@ -187,7 +187,7 @@ const mapUiRuleToDbRule = (
     active: true,
     created_at: rule.created_at || now,
     updated_at: now,
-  } as PageRule & Record<string, any>;
+  } as unknown as PageRule & Record<string, any>;
 };
 
 const StoryDetailsPage = () => {
@@ -690,10 +690,11 @@ const StoryDetailsPage = () => {
 
           <button
             type="button"
-            onClick={() => handleSave()}
+            onClick={handleSave}
             disabled={isSaving}
             className="flex items-center gap-2 rounded-2xl bg-[#0094EB] px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-blue-100 transition-all hover:bg-[#0E4787] disabled:opacity-60"
           >
+
             {isSaving ? (
               <Loader2 className="animate-spin" size={18} />
             ) : (
