@@ -270,10 +270,13 @@ const VideoPerformancePage = () => {
                 <th onClick={() => handleSort('cliques')} className={cn(getHeaderClass('center'), 'w-[10%]')}>
                   <span className="inline-flex items-center gap-1 justify-center">Cliques {sortIcon('cliques')}</span>
                 </th>
-                <th onClick={() => handleSort('conversoes')} className={cn(getHeaderClass('center'), 'w-[10%]')}>
-                  <span className="inline-flex items-center gap-1 justify-center">Conversões {sortIcon('conversoes')}</span>
+                <th onClick={() => handleSort('conversoes')} className={cn(getHeaderClass('center'), 'w-[8%]')}>
+                  <span className="inline-flex items-center gap-1 justify-center">Vendas {sortIcon('conversoes')}</span>
                 </th>
-                <th className={cn(getHeaderClass('center'), 'w-[12%]')}>Ações</th>
+                <th onClick={() => handleSort('revenue')} className={cn(getHeaderClass('center'), 'w-[12%]')}>
+                  <span className="inline-flex items-center gap-1 justify-center">Receita {sortIcon('revenue')}</span>
+                </th>
+                <th className={cn(getHeaderClass('center'), 'w-[10%]')}>Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -299,6 +302,7 @@ const VideoPerformancePage = () => {
                   <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.ctr || 0).toFixed(1).replace('.', ',')}%</td>
                   <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.clicks || 0).toLocaleString()}</td>
                   <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.conversions || 0).toLocaleString()}</td>
+                  <td className="px-2 py-4 text-center font-black text-emerald-600">R$ {Number(v.metrics.revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                   <td className="px-2 py-4 text-center">
                     <div className="flex items-center justify-center gap-1.5">
                       <button onClick={() => handleOpenPlayer(v)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors" title="Ver"><Eye size={16} /></button>
