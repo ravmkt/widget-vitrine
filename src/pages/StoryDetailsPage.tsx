@@ -112,6 +112,81 @@ const getVideoPosterUrl = (video: Video) => {
   );
 };
 
+// ==============================
+// Tipo de regra usado na UI (não é o formato salvo na tabela)
+// ==============================
+type UiRule = {
+  id: string;
+  store_id?: string;
+  story_id?: string;
+  condition_type: ConditionType;
+  value: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+const CONDITION_TYPES_WITH_VALUE: ConditionType[] = [
+  'contains',
+  'equals',
+  'not_equals',
+  'starts_with',
+  'ends_with',
+  'regex',
+];
+
+/**
+ * Converte um registro vindo do banco (colunas reais da tabela page_rules)
+ * para o formato usado internamente pela UI (condition_type / value).
+ */
+const mapDbRuleToUiRule = (rule: any): UiRule => {
+  const ruleType: ConditionType = rule.rule_type || 'all_pages';
+
+  // Se a regra tiver match_type (contains, equals, etc.) esse é o "tipo real"
+  // de condição; caso contrário, usamos rule_type diretamente.
+  const conditionType: ConditionType = CONDITION_TYPES_WITH_VALUE.includes(
+    rule.match_type,
+  )
+    ? rule.match_type
+    : ruleType;
+
+  return {
+    id: rule.id,
+    store_id: rule.store_id,
+    story_id: rule.story_id,
+    condition_type: conditionType,
+    value: rule.url_pattern || rule.page_url || '',
+    created_at: rule.created_at,
+    updated_at: rule.updated_at,
+  };
+};
+
+/**
+ * Converte uma regra da UI (condition_type / value) para o formato
+ * de colunas reais da tabela page_rules.
+ */
+const mapUiRuleToDbRule = (
+  rule: UiRule,
+  targetStoreId: string,
+  targetStoryId: string,
+  now: string,
+) => {
+  const hasValue = CONDITION_TYPES_WITH_VALUE.includes(rule.condition_type);
+
+  return {
+    id: isValidUuid(rule.id) ? rule.id : generateUuid(),
+    store_id: targetStoreId,
+    story_id: targetStoryId,
+    rule_type: hasValue ? 'custom' : rule.condition_type,
+    match_type: hasValue ? rule.condition_type : null,
+    page_url: null,
+    url_pattern: hasValue ? rule.value || '' : null,
+    page_type: null,
+    active: true,
+    created_at: rule.created_at || now,
+    updated_at: now,
+  } as PageRule & Record<string, any>;
+};
+
 const StoryDetailsPage = () => {
   const { storeId, loading: tenantLoading } = useTenant();
   const { id } = useParams();
@@ -126,7 +201,7 @@ const StoryDetailsPage = () => {
   const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
   const [appearances, setAppearances] = useState<Appearance[]>([]);
   const [locations, setLocations] = useState<DisplayLocation[]>([]);
-  const [rules, setRules] = useState<PageRule[]>([]);
+  const [rules, setRules] = useState<UiRule[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -228,7 +303,7 @@ const StoryDetailsPage = () => {
       const [relations, locs, rls] = await Promise.all([
         getAllSafe<StoryVideo>((db as any).storyVideos, finalStoreId),
         getAllSafe<DisplayLocation>((db as any).displayLocations, finalStoreId),
-        getAllSafe<PageRule>((db as any).pageRules, finalStoreId),
+        getAllSafe<any>((db as any).pageRules, finalStoreId),
       ]);
 
       const storyVideoIds = relations
@@ -257,14 +332,14 @@ const StoryDetailsPage = () => {
         }),
       );
 
-      setRules(
-        rls.filter((rule: any) => {
-          const sameStory = rule.story_id === currentStory.id;
-          const sameStore = !rule.store_id || rule.store_id === finalStoreId;
+      const filteredDbRules = rls.filter((rule: any) => {
+        const sameStory = rule.story_id === currentStory.id;
+        const sameStore = !rule.store_id || rule.store_id === finalStoreId;
 
-          return sameStory && sameStore;
-        }),
-      );
+        return sameStory && sameStore;
+      });
+
+      setRules(filteredDbRules.map(mapDbRuleToUiRule));
     } catch (error) {
       console.error('Erro ao carregar Story:', error);
       showError('Erro ao carregar os dados do Story.');
@@ -283,6 +358,7 @@ const StoryDetailsPage = () => {
   ) => {
     const now = new Date().toISOString();
 
+    // ----- Locais de exibição -----
     const existingLocations = await getAllSafe<DisplayLocation>(
       (db as any).displayLocations,
       targetStoreId,
@@ -322,7 +398,8 @@ const StoryDetailsPage = () => {
       ),
     );
 
-    const existingRules = await getAllSafe<PageRule>(
+    // ----- Regras de exibição (page_rules) -----
+    const existingRules = await getAllSafe<any>(
       (db as any).pageRules,
       targetStoreId,
     );
@@ -340,16 +417,9 @@ const StoryDetailsPage = () => {
       ),
     );
 
-    const normalizedRules = rules.map((rule: any) => ({
-      ...rule,
-      id: isValidUuid(rule.id) ? rule.id : generateUuid(),
-      store_id: targetStoreId,
-      story_id: targetStoryId,
-      condition_type: rule.condition_type || 'all_pages',
-      value: rule.value || '',
-      created_at: rule.created_at || now,
-      updated_at: now,
-    })) as PageRule[];
+    const normalizedRules = rules.map((rule) =>
+      mapUiRuleToDbRule(rule, targetStoreId, targetStoryId, now),
+    );
 
     await Promise.all(
       normalizedRules.map((rule) => (db as any).pageRules.save(rule)),
@@ -461,13 +531,13 @@ const StoryDetailsPage = () => {
   const handleAddRule = async () => {
     const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
 
-    const newRule = {
+    const newRule: UiRule = {
       id: generateUuid(),
       store_id: finalStoreId,
       story_id: story?.id || '',
       condition_type: 'all_pages',
       value: '',
-    } as PageRule;
+    };
 
     setRules((prev) => [...prev, newRule]);
   };
@@ -491,7 +561,7 @@ const StoryDetailsPage = () => {
     });
   };
 
-  const openDeleteRuleModal = (rule: PageRule) => {
+  const openDeleteRuleModal = (rule: UiRule) => {
     setDeleteModal({
       isOpen: true,
       type: 'rule',
@@ -953,14 +1023,9 @@ const StoryDetailsPage = () => {
                         </select>
                       </div>
 
-                      {[
-                        'contains',
-                        'equals',
-                        'not_equals',
-                        'starts_with',
-                        'ends_with',
-                        'regex',
-                      ].includes(rule.condition_type) && (
+                      {CONDITION_TYPES_WITH_VALUE.includes(
+                        rule.condition_type,
+                      ) && (
                         <div className="space-y-1">
                           <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
                             Valor do Filtro
