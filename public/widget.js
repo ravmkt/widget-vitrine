@@ -768,16 +768,87 @@ params.set('select', 'video_id,visitor_id');
     return fetchJson('sizing_models?select=*&store_id=eq.' + encodeURIComponent(storeId));
   }
 
+  // ============================================================
+  // 🟢 FUNÇÃO CORRIGIDA — matchesRule com suporte completo
+  // Inclui: not_equals, starts_with, ends_with, regex
+  // e usa os nomes reais das colunas do banco
+  // ============================================================
   function matchesRule(rule) {
-    var href = window.location.href, path = window.location.pathname || '/', value = String(rule.value || '');
-    switch (rule.condition_type) {
-      case 'all_pages': return true;
-      case 'home_only': return path === '/' || path === '/home' || path === '/index.html' || path === '';
-      case 'product_pages': return path.indexOf('/product') !== -1 || path.indexOf('/produto') !== -1;
-      case 'category_pages': return path.indexOf('/category') !== -1 || path.indexOf('/categoria') !== -1 || path.indexOf('/colecao') !== -1;
-      case 'contains': return href.indexOf(value) !== -1;
-      case 'equals': return href === value;
-      default: return true;
+    var href = window.location.href;
+    var path = window.location.pathname || '/';
+
+    // Usa os nomes reais das colunas (rule_type, match_type, condition_type)
+    var conditionType = String(
+      firstDefined(
+        rule.rule_type,
+        rule.match_type,
+        rule.condition_type
+      ) || ''
+    ).trim();
+
+    var value = String(
+      firstDefined(
+        rule.url_pattern,
+        rule.page_url,
+        rule.value
+      ) || ''
+    );
+
+    if (!conditionType) return true;
+
+    switch (conditionType) {
+      case 'all_pages':
+        return true;
+
+      case 'home_only':
+        return (
+          path === '/' ||
+          path === '/home' ||
+          path === '/index.html' ||
+          path === ''
+        );
+
+      case 'product_pages':
+        return (
+          path.indexOf('/product') !== -1 ||
+          path.indexOf('/produto') !== -1
+        );
+
+      case 'category_pages':
+        return (
+          path.indexOf('/category') !== -1 ||
+          path.indexOf('/categoria') !== -1 ||
+          path.indexOf('/colecao') !== -1
+        );
+
+      case 'contains':
+        return href.indexOf(value) !== -1;
+
+      case 'equals':
+        return href === value;
+
+      case 'not_equals':
+        return href !== value;
+
+      case 'starts_with':
+        return href.indexOf(value) === 0;
+
+      case 'ends_with':
+        return (
+          href.lastIndexOf(value) === href.length - value.length
+        );
+
+      case 'regex':
+        try {
+          return new RegExp(value).test(href);
+        } catch (e) {
+          console.warn('[Vidlytics] Regex inválida:', value, e);
+          return false;
+        }
+
+      default:
+        console.warn('[Vidlytics] Tipo condição desconhecida:', conditionType);
+        return true;
     }
   }
 
@@ -3451,377 +3522,4 @@ style.textContent = buildFloatingCss(appearance, behaviorConfig);
       mutations.forEach(function (m) { if (m.type === 'childList' || (m.type === 'attributes' && m.target && m.target.id === 'vidlytics-widget-root')) shouldForce = true; });
       if (shouldForce && !scheduled) { scheduled = true; setTimeout(function () { scheduled = false; forceHostPosition(); }, 150); }
     });
-    observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
-  }
-
-  function init() { try { initMutationObserver(); renderWidget(); } catch (error) { console.error('Vidlytics Widget: erro', error); } }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-
-      /*
-       * ==========================================================
-       * TABELA DE MEDIDAS — sizing_models
-       * Correção para o erro:
-       * openSizingModelTable is not defined
-       * ==========================================================
-       */
-
-      function escapeHtml(value) {
-        return String(value === undefined || value === null ? '' : value)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#039;');
-      }
-
-      function formatSizingValue(value) {
-        if (value === undefined || value === null || value === '') {
-          return '-';
-        }
-
-        if (typeof value === 'object') {
-          try {
-            return escapeHtml(JSON.stringify(value, null, 2));
-          } catch (error) {
-            return '-';
-          }
-        }
-
-        return escapeHtml(value);
-      }
-
-      function getSizingModelName(model) {
-        return (
-          model.name ||
-          model.title ||
-          model.model_name ||
-          model.label ||
-          model.size_name ||
-          model.size ||
-          'Tabela de medidas'
-        );
-      }
-
-      function closeSizingModelTable() {
-        try {
-          var panel = document.getElementById('vidlytics-sizing-model-panel');
-
-          if (panel) {
-            panel.remove();
-          }
-        } catch (error) {
-          console.warn('Não foi possível fechar a tabela de medidas.', error);
-        }
-      }
-
-      function openSizingModelTable() {
-        closeSizingModelTable();
-
-        if (!hasSupabase || !storeId) {
-          console.error(
-            'Não foi possível abrir a tabela de medidas: Supabase ou store_id não configurado.'
-          );
-
-          alert(
-            'Não foi possível carregar a tabela de medidas. Verifique a configuração do Supabase e o store_id.'
-          );
-
-          return;
-        }
-
-        var loadingPanel = document.createElement('div');
-
-        loadingPanel.id = 'vidlytics-sizing-model-panel';
-
-        loadingPanel.innerHTML =
-          '<div class="vl-sizing-modal-backdrop">' +
-            '<div class="vl-sizing-modal">' +
-              '<div class="vl-sizing-modal-header">' +
-                '<h2>Tabela de medidas</h2>' +
-                '<button type="button" class="vl-sizing-modal-close" aria-label="Fechar">×</button>' +
-              '</div>' +
-              '<div class="vl-sizing-modal-content">' +
-                '<p class="vl-sizing-loading">Carregando tabela de medidas...</p>' +
-              '</div>' +
-            '</div>' +
-          '</div>';
-
-        document.body.appendChild(loadingPanel);
-
-        var closeButton = loadingPanel.querySelector('.vl-sizing-modal-close');
-        var backdrop = loadingPanel.querySelector('.vl-sizing-modal-backdrop');
-
-        if (closeButton) {
-          closeButton.addEventListener('click', closeSizingModelTable);
-        }
-
-        if (backdrop) {
-          backdrop.addEventListener('click', function (event) {
-            if (event.target === backdrop) {
-              closeSizingModelTable();
-            }
-          });
-        }
-
-        document.addEventListener(
-          'keydown',
-          function handleSizingEscape(event) {
-            if (event.key === 'Escape') {
-              closeSizingModelTable();
-              document.removeEventListener('keydown', handleSizingEscape);
-            }
-          }
-        );
-
-        readSizingModels()
-          .then(function (models) {
-            readSizingModelsData = Array.isArray(models) ? models : [];
-
-            var content = loadingPanel.querySelector('.vl-sizing-modal-content');
-
-            if (!content) {
-              return;
-            }
-
-            if (!readSizingModelsData.length) {
-              content.innerHTML =
-                '<div class="vl-sizing-empty">' +
-                  '<strong>Nenhuma tabela de medidas encontrada.</strong>' +
-                  '<p>Cadastre um registro na tabela <code>sizing_models</code> no Supabase para esta loja.</p>' +
-                '</div>';
-
-              return;
-            }
-
-            var html = '';
-
-            readSizingModelsData.forEach(function (model, index) {
-              var fields = Object.keys(model).filter(function (key) {
-                return (
-                  key !== 'id' &&
-                  key !== 'store_id' &&
-                  key !== 'created_at' &&
-                  key !== 'updated_at' &&
-                  model[key] !== null &&
-                  model[key] !== ''
-                );
-              });
-
-              html +=
-                '<section class="vl-sizing-model-card">' +
-                  '<h3>' +
-                    escapeHtml(getSizingModelName(model)) +
-                  '</h3>' +
-                  '<div class="vl-sizing-table-wrapper">' +
-                    '<table class="vl-sizing-table">' +
-                      '<thead>' +
-                        '<tr>' +
-                          '<th>Campo</th>' +
-                          '<th>Informação</th>' +
-                        '</tr>' +
-                      '</thead>' +
-                      '<tbody>';
-
-              if (!fields.length) {
-                html +=
-                  '<tr>' +
-                    '<td colspan="2">Nenhum dado disponível para este modelo.</td>' +
-                  '</tr>';
-              } else {
-                fields.forEach(function (field) {
-                  html +=
-                    '<tr>' +
-                      '<td>' + escapeHtml(field) + '</td>' +
-                      '<td><pre>' +
-                        formatSizingValue(model[field]) +
-                      '</pre></td>' +
-                    '</tr>';
-                });
-              }
-
-              html +=
-                      '</tbody>' +
-                    '</table>' +
-                  '</div>' +
-                '</section>';
-
-              if (index < readSizingModelsData.length - 1) {
-                html += '<hr class="vl-sizing-divider">';
-              }
-            });
-
-            content.innerHTML = html;
-          })
-          .catch(function (error) {
-            console.error(
-              'Erro ao buscar os dados da tabela sizing_models no Supabase:',
-              error
-            );
-
-            var content = loadingPanel.querySelector('.vl-sizing-modal-content');
-
-            if (content) {
-              content.innerHTML =
-                '<div class="vl-sizing-empty">' +
-                  '<strong>Não foi possível carregar a tabela de medidas.</strong>' +
-                  '<p>Verifique se a tabela <code>sizing_models</code> existe e se as políticas RLS permitem leitura pública para a loja atual.</p>' +
-                '</div>';
-            }
-          });
-      }
-
-      /*
-       * Estilos da janela da tabela de medidas.
-       */
-      (function injectSizingModelStyles() {
-        if (document.getElementById('vidlytics-sizing-model-styles')) {
-          return;
-        }
-
-        var style = document.createElement('style');
-
-        style.id = 'vidlytics-sizing-model-styles';
-
-        style.textContent =
-          '#vidlytics-sizing-model-panel{' +
-            'position:fixed;' +
-            'inset:0;' +
-            'z-index:2147483647;' +
-            'font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;' +
-          '}' +
-
-          '.vl-sizing-modal-backdrop{' +
-            'position:absolute;' +
-            'inset:0;' +
-            'display:flex;' +
-            'align-items:center;' +
-            'justify-content:center;' +
-            'padding:16px;' +
-            'background:rgba(15,23,42,.68);' +
-          '}' +
-
-          '.vl-sizing-modal{' +
-            'width:100%;' +
-            'max-width:680px;' +
-            'max-height:88vh;' +
-            'overflow:hidden;' +
-            'display:flex;' +
-            'flex-direction:column;' +
-            'background:#ffffff;' +
-            'color:#0f172a;' +
-            'border-radius:18px;' +
-            'box-shadow:0 24px 80px rgba(0,0,0,.35);' +
-          '}' +
-
-          '.vl-sizing-modal-header{' +
-            'display:flex;' +
-            'align-items:center;' +
-            'justify-content:space-between;' +
-            'gap:16px;' +
-            'padding:18px 20px;' +
-            'border-bottom:1px solid #e2e8f0;' +
-          '}' +
-
-          '.vl-sizing-modal-header h2{' +
-            'margin:0;' +
-            'font-size:18px;' +
-            'font-weight:800;' +
-          '}' +
-
-          '.vl-sizing-modal-close{' +
-            'width:36px;' +
-            'height:36px;' +
-            'border:0;' +
-            'border-radius:999px;' +
-            'background:#f1f5f9;' +
-            'color:#0f172a;' +
-            'font-size:26px;' +
-            'line-height:1;' +
-            'cursor:pointer;' +
-          '}' +
-
-          '.vl-sizing-modal-close:hover{' +
-            'background:#e2e8f0;' +
-          '}' +
-
-          '.vl-sizing-modal-content{' +
-            'overflow:auto;' +
-            'padding:20px;' +
-          '}' +
-
-          '.vl-sizing-loading,' +
-          '.vl-sizing-empty{' +
-            'margin:0;' +
-            'padding:24px 10px;' +
-            'text-align:center;' +
-            'color:#64748b;' +
-          '}' +
-
-          '.vl-sizing-empty strong{' +
-            'display:block;' +
-            'margin-bottom:8px;' +
-            'color:#0f172a;' +
-          '}' +
-
-          '.vl-sizing-empty p{' +
-            'margin:0;' +
-            'font-size:14px;' +
-            'line-height:1.5;' +
-          '}' +
-
-          '.vl-sizing-model-card h3{' +
-            'margin:0 0 14px;' +
-            'font-size:16px;' +
-            'font-weight:800;' +
-            'color:#0094EB;' +
-          '}' +
-
-          '.vl-sizing-table-wrapper{' +
-            'overflow-x:auto;' +
-            'border:1px solid #e2e8f0;' +
-            'border-radius:12px;' +
-          '}' +
-
-          '.vl-sizing-table{' +
-            'width:100%;' +
-            'border-collapse:collapse;' +
-            'font-size:13px;' +
-          '}' +
-
-          '.vl-sizing-table th{' +
-            'padding:12px;' +
-            'background:#f8fafc;' +
-            'text-align:left;' +
-            'font-weight:800;' +
-            'color:#334155;' +
-            'border-bottom:1px solid #e2e8f0;' +
-          '}' +
-
-          '.vl-sizing-table td{' +
-            'padding:12px;' +
-            'vertical-align:top;' +
-            'border-bottom:1px solid #e2e8f0;' +
-            'color:#334155;' +
-          '}' +
-
-          '.vl-sizing-table tr:last-child td{' +
-            'border-bottom:0;' +
-          '}' +
-
-          '.vl-sizing-table pre{' +
-            'margin:0;' +
-            'white-space:pre-wrap;' +
-            'word-break:break-word;' +
-            'font-family:inherit;' +
-          '}' +
-
-          '.vl-sizing-divider{' +
-            'border:0;' +
-            'border-top:1px solid #e2e8f0;' +
-            'margin:24px 0;' +
-          '}';
-
-        document.head.appendChild(style);
-      })();
-
-})();
+    observer.observe(document.documentElement, { childList: true, subtree: true, attributes:
