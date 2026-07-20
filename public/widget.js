@@ -1,5 +1,5 @@
 (function () {
-    var WIDGET_VERSION = '2026.07.20-09';
+    var WIDGET_VERSION = '2026.07.20-15';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -3549,67 +3549,171 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
   });
 }
 
+function getOrCreateCarouselShadowRoot() {
+  var oldRoot = document.getElementById('vidlytics-carousel-root');
+
+  if (oldRoot) {
+    oldRoot.remove();
+  }
+
+  var host = createEl('div', 'vidlytics-carousel-root');
+
+  host.id = 'vidlytics-carousel-root';
+
+  setImportant(host, 'display', 'block');
+  setImportant(host, 'position', 'relative');
+  setImportant(host, 'z-index', '1');
+  setImportant(host, 'width', '100%');
+  setImportant(host, 'max-width', '100%');
+  setImportant(host, 'min-width', '0');
+  setImportant(host, 'height', 'auto');
+  setImportant(host, 'margin', '0');
+  setImportant(host, 'padding', '0');
+  setImportant(host, 'overflow', 'visible');
+  setImportant(host, 'background', 'transparent');
+
+  document.body.appendChild(host);
+
+  var shadow = host.attachShadow({ mode: 'open' });
+
+  return {
+    host: host,
+    shadow: shadow
+  };
+}
+
+
   function renderCarousel(stories, storyVideoMap, activeVideos) {
-    var appearance = currentAppearance || {};
-    var modalConfig = normalizeModalAppearanceConfig(appearance);
+  var appearance = currentAppearance || {};
+  var modalConfig = normalizeModalAppearanceConfig(appearance);
 
-    var shadowData = getOrCreateShadowRoot(appearance);
-    var shadow = shadowData.shadow;
+  /*
+   * IMPORTANTE:
+   * O carrossel NÃO pode usar getOrCreateShadowRoot(),
+   * pois aquela função cria um widget flutuante/fixo
+   * com a largura configurada para o vídeo flutuante.
+   */
+  var shadowData = getOrCreateCarouselShadowRoot();
+  var shadow = shadowData.shadow;
 
-    var style = createEl('style');
-    style.textContent = buildSharedCss(appearance) + buildCarouselCss(appearance);
+  var style = createEl('style');
+  style.textContent =
+    buildSharedCss(appearance) +
+    buildCarouselCss(appearance);
 
-    var wrap = createEl('div', 'vl-carousel-wrap');
-    var header = createEl('div', 'vl-carousel-header');
-    var title = createEl('div', 'vl-carousel-title');
-    title.textContent = currentAppearance.name || 'Stories';
-    header.appendChild(title);
-    wrap.appendChild(header);
+  var wrap = createEl('div', 'vl-carousel-wrap');
 
-    var carousel = createEl('div', 'vl-carousel');
+  var header = createEl('div', 'vl-carousel-header');
+  var title = createEl('div', 'vl-carousel-title');
 
-    stories.forEach(function (story, index) {
-      var relations = (storyVideoMap.get(story.id) || []).slice().sort(function (a, b) { return Number(a.position || 0) - Number(b.position || 0); });
-      var visibleRelation = relations[0] || null;
-      var visibleVideo = visibleRelation ? activeVideos.find(function (video) { return idsEqual(video.id, visibleRelation.video_id); }) : null;
-      var thumb = getStoryThumbnail(story, visibleVideo, visibleRelation);
+  title.textContent =
+    currentAppearance.name ||
+    currentAppearance.title ||
+    'Stories';
 
-      var card = createEl('button', 'vl-carousel-card');
-      card.type = 'button';
-      card.setAttribute('aria-label', story.title || story.name || 'Story');
+  header.appendChild(title);
+  wrap.appendChild(header);
 
-      var inner = createEl('div', 'vl-carousel-inner');
-      var media = createEl('div', 'vl-carousel-media');
-      if (thumb) {
-        var img = createEl('img', 'vl-carousel-video');
-        img.src = thumb;
-        img.alt = story.title || story.name || 'Story';
-        media.appendChild(img);
-      } else {
-        media.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase();
-      }
-      inner.appendChild(media);
-      card.appendChild(inner);
+  var carousel = createEl('div', 'vl-carousel');
 
-      if (modalConfig.show_title !== false) {
-        var label = createEl('span', 'vl-carousel-label');
-        label.textContent = story.title || story.name || 'Story';
-        card.appendChild(label);
-      }
-
-      card.addEventListener('click', function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        openStory(stories, index, storyVideoMap, activeVideos, readStoryProductsData, readProductsData);
+  stories.forEach(function (story, index) {
+    var relations = (storyVideoMap.get(story.id) || [])
+      .slice()
+      .sort(function (a, b) {
+        return Number(a.position || 0) - Number(b.position || 0);
       });
 
-      carousel.appendChild(card);
+    var visibleRelation =
+      relations.find(function (item) {
+        return item.is_cover;
+      }) ||
+      relations[0] ||
+      null;
+
+    var visibleVideo = visibleRelation
+      ? activeVideos.find(function (video) {
+          return idsEqual(video.id, visibleRelation.video_id);
+        })
+      : null;
+
+    var thumb = getStoryThumbnail(
+      story,
+      visibleVideo,
+      visibleRelation
+    );
+
+    var card = createEl('button', 'vl-carousel-card');
+
+    card.type = 'button';
+    card.setAttribute(
+      'aria-label',
+      story.title || story.name || 'Story'
+    );
+
+    var inner = createEl('div', 'vl-carousel-inner');
+    var media = createEl('div', 'vl-carousel-media');
+
+    if (thumb) {
+      var img = createEl('img', 'vl-carousel-video');
+
+      img.src = thumb;
+      img.alt = story.title || story.name || 'Story';
+
+      img.onerror = function () {
+        this.remove();
+        media.textContent = (
+          story.title ||
+          story.name ||
+          'S'
+        ).slice(0, 1).toUpperCase();
+      };
+
+      media.appendChild(img);
+    } else {
+      media.textContent = (
+        story.title ||
+        story.name ||
+        'S'
+      ).slice(0, 1).toUpperCase();
+    }
+
+    inner.appendChild(media);
+    card.appendChild(inner);
+
+    if (modalConfig.show_title !== false) {
+      var label = createEl('span', 'vl-carousel-label');
+
+      label.textContent =
+        story.title ||
+        story.name ||
+        'Story';
+
+      card.appendChild(label);
+    }
+
+    card.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      openStory(
+        stories,
+        index,
+        storyVideoMap,
+        activeVideos,
+        readStoryProductsData,
+        readProductsData
+      );
     });
 
-    wrap.appendChild(carousel);
-    shadow.appendChild(style);
-    shadow.appendChild(wrap);
-  }
+    carousel.appendChild(card);
+  });
+
+  wrap.appendChild(carousel);
+
+  shadow.appendChild(style);
+  shadow.appendChild(wrap);
+}
+
 
   function renderGrid(stories, storyVideoMap, activeVideos) {
     var appearance = currentAppearance || {};
@@ -3832,13 +3936,13 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
       setTimeout(forceHostPosition, 500);
       setTimeout(forceHostPosition, 1500);
     } else if (mode === 'carousel') {
-      renderCarousel(applicableStories, storyVideoMap, activeVideos);
-      forceHostPosition();
-      setTimeout(forceHostPosition, 100);
-      setTimeout(forceHostPosition, 500);
-    } else {
-      renderGrid(applicableStories, storyVideoMap, activeVideos);
-    }
+  renderCarousel(
+    applicableStories,
+    storyVideoMap,
+    activeVideos
+  );
+}
+
 
   })
   .catch(function (error) {
