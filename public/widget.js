@@ -1,5 +1,5 @@
 (function () {
-    var WIDGET_VERSION = '2026.07.20-08';
+    var WIDGET_VERSION = '2026.07.20-09';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -3557,7 +3557,7 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
     var shadow = shadowData.shadow;
 
     var style = createEl('style');
-    style.textContent = buildCarouselCss(appearance) + buildSharedCss(appearance);
+    style.textContent = buildSharedCss(appearance) + buildCarouselCss(appearance);
 
     var wrap = createEl('div', 'vl-carousel-wrap');
     var header = createEl('div', 'vl-carousel-header');
@@ -3570,9 +3570,9 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
 
     stories.forEach(function (story, index) {
       var relations = (storyVideoMap.get(story.id) || []).slice().sort(function (a, b) { return Number(a.position || 0) - Number(b.position || 0); });
-      var coverRelation = relations.find(function (item) { return item.is_cover; }) || relations[0] || null;
-      var coverVideo = coverRelation ? activeVideos.find(function (video) { return idsEqual(video.id, coverRelation.video_id); }) : null;
-      var thumb = getStoryThumbnail(story, coverVideo, coverRelation);
+      var visibleRelation = relations[0] || null;
+      var visibleVideo = visibleRelation ? activeVideos.find(function (video) { return idsEqual(video.id, visibleRelation.video_id); }) : null;
+      var thumb = getStoryThumbnail(story, visibleVideo, visibleRelation);
 
       var card = createEl('button', 'vl-carousel-card');
       card.type = 'button';
@@ -3692,19 +3692,18 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
 
     var gap = toNumber(firstDefined(carouselConfig.gap, carouselConfig.carousel_gap), 16);
     var cardWidth = 'clamp(160px, 18vw, 250px)';
-    var cardAspect = '9 / 16';
 
     return (
-      '.vl-carousel-wrap{width:min(100%,1200px)!important;margin:0 auto!important;padding:24px 16px!important;box-sizing:border-box!important;display:flex!important;flex-direction:column!important;gap:16px!important;font-family:' + font + '!important;}' +
-      '.vl-carousel-header{display:flex!important;align-items:center!important;justify-content:flex-start!important;}' +
-      '.vl-carousel-title{font-size:18px!important;font-weight:800!important;color:#0f172a!important;}' +
-      '.vl-carousel{display:flex!important;justify-content:center!important;gap:' + gap + 'px!important;width:100%!important;overflow-x:auto!important;overflow-y:hidden!important;box-sizing:border-box!important;padding:8px 0!important;}' +
-      '.vl-carousel-card{all:unset!important;flex:0 0 ' + cardWidth + '!important;width:' + cardWidth + '!important;min-width:0!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:8px!important;cursor:pointer!important;}' +
-      '.vl-carousel-inner{position:relative!important;width:100%!important;aspect-ratio:' + cardAspect + '!important;border-radius:20px!important;overflow:hidden!important;background:#e2e8f0!important;box-shadow:0 10px 24px rgba(15,23,42,.12)!important;}' +
-      '.vl-carousel-media{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;}' +
-      '.vl-carousel-video{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;}' +
-      '.vl-carousel-label{width:100%!important;max-width:100%!important;font-size:12px!important;line-height:1.2!important;font-weight:700!important;color:#0f172a!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;display:block!important;}' +
-      '@media (max-width: 768px){.vl-carousel{justify-content:flex-start!important;overflow-x:auto!important;}.vl-carousel-card{flex-basis:clamp(160px, 72vw, 220px)!important;width:clamp(160px, 72vw, 220px)!important;}}'
+      '.vl-carousel-wrap{width:min(100%,1200px)!important;margin:0 auto!important;padding:24px 16px!important;box-sizing:border-box!important;font-family:' + font + '!important;}' +
+      '.vl-carousel-wrap .vl-carousel-header{display:flex!important;align-items:center!important;justify-content:flex-start!important;margin-bottom:16px!important;}' +
+      '.vl-carousel-wrap .vl-carousel-title{font-size:18px!important;font-weight:800!important;color:#0f172a!important;}' +
+      '.vl-carousel-wrap .vl-carousel{width:100%!important;display:flex!important;flex-flow:row nowrap!important;justify-content:center!important;align-items:flex-start!important;gap:' + gap + 'px!important;overflow-x:auto!important;overflow-y:hidden!important;box-sizing:border-box!important;padding:8px 0!important;}' +
+      '.vl-carousel-wrap .vl-carousel-card{display:flex!important;flex:0 0 ' + cardWidth + '!important;width:' + cardWidth + '!important;min-width:' + cardWidth + '!important;max-width:' + cardWidth + '!important;flex-direction:column!important;gap:8px!important;box-sizing:border-box!important;cursor:pointer!important;}' +
+      '.vl-carousel-wrap .vl-carousel-inner{position:relative!important;width:100%!important;aspect-ratio:9 / 16!important;overflow:hidden!important;border-radius:20px!important;background:#e2e8f0!important;box-shadow:0 10px 24px rgba(15,23,42,.12)!important;}' +
+      '.vl-carousel-wrap .vl-carousel-media{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;}' +
+      '.vl-carousel-wrap .vl-carousel-video{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;}' +
+      '.vl-carousel-wrap .vl-carousel-label{width:100%!important;max-width:100%!important;font-size:12px!important;line-height:1.2!important;font-weight:700!important;color:#0f172a!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;display:block!important;}' +
+      '@media (max-width: 768px){.vl-carousel-wrap .vl-carousel{justify-content:flex-start!important;}.vl-carousel-wrap .vl-carousel-card{flex-basis:clamp(160px, 72vw, 220px)!important;width:clamp(160px, 72vw, 220px)!important;min-width:clamp(160px, 72vw, 220px)!important;max-width:clamp(160px, 72vw, 220px)!important;}}'
     );
   }
 
