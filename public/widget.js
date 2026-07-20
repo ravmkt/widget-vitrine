@@ -1,5 +1,5 @@
 (function () {
-    var WIDGET_VERSION = '2026.07.20-09';
+    var WIDGET_VERSION = '2026.07.20-15';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -954,6 +954,27 @@ params.set('select', 'video_id,visitor_id');
     globalShadowRoot = host.attachShadow({ mode: 'open' });
     return { host: host, shadow: globalShadowRoot };
   }
+
+  function getOrCreateCarouselShadowRoot() {
+    var existingRoot = document.getElementById('vidlytics-carousel-root');
+    if (existingRoot) existingRoot.remove();
+
+    var host = createEl('div', 'vidlytics-carousel-root');
+    host.id = 'vidlytics-carousel-root';
+    host.style.display = 'block';
+    host.style.position = 'relative';
+    host.style.width = '100%';
+    host.style.maxWidth = '100%';
+    host.style.height = 'auto';
+    host.style.zIndex = '2147483647';
+    host.style.pointerEvents = 'auto';
+    host.style.background = 'transparent';
+
+    document.body.appendChild(host);
+    globalShadowRoot = host.attachShadow({ mode: 'open' });
+    return { host: host, shadow: globalShadowRoot };
+  }
+
 function buildSharedCss(appearance) {
   var cfg = getFloatingConfig(appearance);
   var primary = getPrimaryColor(appearance);
@@ -2299,7 +2320,7 @@ function checkIfVisitorLiked(videoId, dbLikesRaw) {
 }
 
 
-  function openStory(storiesList, initialStoryIndex, storyVideoMap, activeVideos, storyProducts, products) {
+  function openStory(storiesList, initialStoryIndex, storyVideoMap, activeVideos, storyProducts, products, initialVideoIndex) {
     if (!overlay || !modalContent || !storiesList || !storiesList.length) return;
 
     pausePreviews();
@@ -2325,7 +2346,11 @@ function checkIfVisitorLiked(videoId, dbLikesRaw) {
 
     var initialStory = storiesList[currentStoryIndex];
     var initialRels = (storyVideoMap.get(initialStory.id) || []).slice().sort(function (a, b) { return Number(a.position || 0) - Number(b.position || 0); });
-    initialRels.forEach(function (rel, index) { if (rel.is_cover) currentVideoIndex = index; });
+    if (typeof initialVideoIndex === 'number' && initialVideoIndex >= 0 && initialVideoIndex < initialRels.length) {
+      currentVideoIndex = initialVideoIndex;
+    } else {
+      initialRels.forEach(function (rel, index) { if (rel.is_cover) currentVideoIndex = index; });
+    }
 
     function nextVideo() {
       var s = storiesList[currentStoryIndex]; var vids = getOrderedVideos(s);
@@ -3549,11 +3574,45 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
   });
 }
 
+function getOrCreateCarouselShadowRoot() {
+  var oldRoot = document.getElementById('vidlytics-carousel-root');
+
+  if (oldRoot) {
+    oldRoot.remove();
+  }
+
+  var host = createEl('div', 'vidlytics-carousel-root');
+
+  host.id = 'vidlytics-carousel-root';
+
+  setImportant(host, 'display', 'block');
+  setImportant(host, 'position', 'relative');
+  setImportant(host, 'z-index', '1');
+  setImportant(host, 'width', '100%');
+  setImportant(host, 'max-width', '100%');
+  setImportant(host, 'min-width', '0');
+  setImportant(host, 'height', 'auto');
+  setImportant(host, 'margin', '0');
+  setImportant(host, 'padding', '0');
+  setImportant(host, 'overflow', 'visible');
+  setImportant(host, 'background', 'transparent');
+
+  document.body.appendChild(host);
+
+  var shadow = host.attachShadow({ mode: 'open' });
+
+  return {
+    host: host,
+    shadow: shadow
+  };
+}
+
+
   function renderCarousel(stories, storyVideoMap, activeVideos) {
     var appearance = currentAppearance || {};
     var modalConfig = normalizeModalAppearanceConfig(appearance);
 
-    var shadowData = getOrCreateShadowRoot(appearance);
+    var shadowData = getOrCreateCarouselShadowRoot();
     var shadow = shadowData.shadow;
 
     var style = createEl('style');
@@ -3562,54 +3621,83 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
     var wrap = createEl('div', 'vl-carousel-wrap');
     var header = createEl('div', 'vl-carousel-header');
     var title = createEl('div', 'vl-carousel-title');
-    title.textContent = currentAppearance.name || 'Stories';
+    title.textContent = currentAppearance.name || currentAppearance.title || 'Stories';
     header.appendChild(title);
     wrap.appendChild(header);
 
     var carousel = createEl('div', 'vl-carousel');
 
-    stories.forEach(function (story, index) {
-      var relations = (storyVideoMap.get(story.id) || []).slice().sort(function (a, b) { return Number(a.position || 0) - Number(b.position || 0); });
-      var visibleRelation = relations[0] || null;
-      var visibleVideo = visibleRelation ? activeVideos.find(function (video) { return idsEqual(video.id, visibleRelation.video_id); }) : null;
-      var thumb = getStoryThumbnail(story, visibleVideo, visibleRelation);
-
-      var card = createEl('button', 'vl-carousel-card');
-      card.type = 'button';
-      card.setAttribute('aria-label', story.title || story.name || 'Story');
-
-      var inner = createEl('div', 'vl-carousel-inner');
-      var media = createEl('div', 'vl-carousel-media');
-      if (thumb) {
-        var img = createEl('img', 'vl-carousel-video');
-        img.src = thumb;
-        img.alt = story.title || story.name || 'Story';
-        media.appendChild(img);
-      } else {
-        media.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase();
-      }
-      inner.appendChild(media);
-      card.appendChild(inner);
-
-      if (modalConfig.show_title !== false) {
-        var label = createEl('span', 'vl-carousel-label');
-        label.textContent = story.title || story.name || 'Story';
-        card.appendChild(label);
-      }
-
-      card.addEventListener('click', function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        openStory(stories, index, storyVideoMap, activeVideos, readStoryProductsData, readProductsData);
+    stories.forEach(function (story, storyIndex) {
+      var relations = (storyVideoMap.get(story.id) || []).slice().sort(function (a, b) {
+        return Number(a.position || 0) - Number(b.position || 0);
       });
 
-      carousel.appendChild(card);
+      relations.forEach(function (relation, relationIndex) {
+        var video = activeVideos.find(function (item) {
+          return idsEqual(item.id, relation.video_id);
+        });
+
+        if (!video) return;
+
+        var thumb = getStoryThumbnail(story, video, relation) || getVideoThumbnail(video);
+        var labelText = firstDefined(video.title, video.name, video.video_title, story.title, story.name, 'Story');
+
+        var card = createEl('button', 'vl-carousel-card');
+        card.type = 'button';
+        card.setAttribute('aria-label', labelText);
+
+        var inner = createEl('div', 'vl-carousel-inner');
+        var media = createEl('div', 'vl-carousel-media');
+
+        if (thumb) {
+          var img = createEl('img', 'vl-carousel-video');
+          img.src = thumb;
+          img.alt = labelText;
+          media.appendChild(img);
+        } else {
+          var videoPreview = createEl('video', 'vl-carousel-video');
+          var videoUrl = getVideoUrl(video);
+          if (videoUrl) {
+            videoPreview.src = videoUrl;
+            videoPreview.muted = true;
+            videoPreview.autoplay = true;
+            videoPreview.loop = true;
+            videoPreview.playsInline = true;
+            videoPreview.preload = 'metadata';
+            videoPreview.setAttribute('playsinline', 'playsinline');
+            videoPreview.setAttribute('webkit-playsinline', 'webkit-playsinline');
+            media.appendChild(videoPreview);
+            var playPromise = videoPreview.play();
+            if (playPromise && typeof playPromise.catch === 'function') {
+              playPromise.catch(function () {});
+            }
+          }
+        }
+
+        inner.appendChild(media);
+        card.appendChild(inner);
+
+        if (modalConfig.show_title !== false) {
+          var label = createEl('span', 'vl-carousel-label');
+          label.textContent = labelText;
+          card.appendChild(label);
+        }
+
+        card.addEventListener('click', function (event) {
+          event.preventDefault();
+          event.stopPropagation();
+          openStory(stories, storyIndex, storyVideoMap, activeVideos, readStoryProductsData, readProductsData, relationIndex);
+        });
+
+        carousel.appendChild(card);
+      });
     });
 
     wrap.appendChild(carousel);
     shadow.appendChild(style);
     shadow.appendChild(wrap);
   }
+
 
   function renderGrid(stories, storyVideoMap, activeVideos) {
     var appearance = currentAppearance || {};
@@ -3691,14 +3779,14 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
     ) || {};
 
     var gap = toNumber(firstDefined(carouselConfig.gap, carouselConfig.carousel_gap), 16);
-    var cardWidth = 'clamp(160px, 18vw, 250px)';
+    var cardWidth = 'clamp(220px, 22vw, 280px)';
 
     return (
-      '.vl-carousel-wrap{width:min(100%,1200px)!important;margin:0 auto!important;padding:24px 16px!important;box-sizing:border-box!important;font-family:' + font + '!important;}' +
+      '.vl-carousel-wrap{width:100%!important;max-width:1200px!important;margin:0 auto!important;padding:24px 16px!important;box-sizing:border-box!important;background:transparent!important;font-family:' + font + '!important;}' +
       '.vl-carousel-wrap .vl-carousel-header{display:flex!important;align-items:center!important;justify-content:flex-start!important;margin-bottom:16px!important;}' +
       '.vl-carousel-wrap .vl-carousel-title{font-size:18px!important;font-weight:800!important;color:#0f172a!important;}' +
-      '.vl-carousel-wrap .vl-carousel{width:100%!important;display:flex!important;flex-flow:row nowrap!important;justify-content:center!important;align-items:flex-start!important;gap:' + gap + 'px!important;overflow-x:auto!important;overflow-y:hidden!important;box-sizing:border-box!important;padding:8px 0!important;}' +
-      '.vl-carousel-wrap .vl-carousel-card{display:flex!important;flex:0 0 ' + cardWidth + '!important;width:' + cardWidth + '!important;min-width:' + cardWidth + '!important;max-width:' + cardWidth + '!important;flex-direction:column!important;gap:8px!important;box-sizing:border-box!important;cursor:pointer!important;}' +
+      '.vl-carousel-wrap .vl-carousel{width:100%!important;display:flex!important;flex-flow:row nowrap!important;justify-content:flex-start!important;align-items:flex-start!important;gap:' + gap + 'px!important;overflow-x:auto!important;overflow-y:hidden!important;box-sizing:border-box!important;padding:8px 0!important;scroll-snap-type:x mandatory!important;}' +
+      '.vl-carousel-wrap .vl-carousel-card{display:flex!important;flex:0 0 ' + cardWidth + '!important;width:' + cardWidth + '!important;min-width:' + cardWidth + '!important;max-width:' + cardWidth + '!important;flex-direction:column!important;gap:8px!important;box-sizing:border-box!important;cursor:pointer!important;scroll-snap-align:start!important;}' +
       '.vl-carousel-wrap .vl-carousel-inner{position:relative!important;width:100%!important;aspect-ratio:9 / 16!important;overflow:hidden!important;border-radius:20px!important;background:#e2e8f0!important;box-shadow:0 10px 24px rgba(15,23,42,.12)!important;}' +
       '.vl-carousel-wrap .vl-carousel-media{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;}' +
       '.vl-carousel-wrap .vl-carousel-video{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;}' +
@@ -3832,13 +3920,13 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
       setTimeout(forceHostPosition, 500);
       setTimeout(forceHostPosition, 1500);
     } else if (mode === 'carousel') {
-      renderCarousel(applicableStories, storyVideoMap, activeVideos);
-      forceHostPosition();
-      setTimeout(forceHostPosition, 100);
-      setTimeout(forceHostPosition, 500);
-    } else {
-      renderGrid(applicableStories, storyVideoMap, activeVideos);
-    }
+  renderCarousel(
+    applicableStories,
+    storyVideoMap,
+    activeVideos
+  );
+}
+
 
   })
   .catch(function (error) {
