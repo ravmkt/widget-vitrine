@@ -1,5 +1,5 @@
 (function () {
-    var WIDGET_VERSION = '2026.07.19-02';
+    var WIDGET_VERSION = '2026.07.19-03';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -3830,15 +3830,26 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
       return;
     }
 
-    // Determinar modo: prioriza o campo `type` da aparência salva
+    // Determinar modo: prioriza o `format` do story, depois o `type` da aparência
+    var storyFormat = '';
+    if (applicableStories.length > 0 && applicableStories[0].format) {
+      storyFormat = String(applicableStories[0].format).toLowerCase();
+    }
+
     var rawType = firstDefined(currentAppearance.type, currentAppearance.widget_type, currentAppearance.viewMode);
     var rawMode =
+      storyFormat ||
       rawType ||
       (widgetsCfg && widgetsCfg.viewMode) ||
       (config && config.viewMode) ||
       (enableFloating ? 'floating' : (enableCarousel ? 'carousel' : 'grid'));
 
     var mode = String(rawMode || 'floating').toLowerCase();
+
+    // Normaliza: floating_widget -> floating
+    if (mode === 'floating_widget') mode = 'floating';
+
+    console.info('[Vidlytics] Modo de renderização:', mode, '| story format:', storyFormat, '| appearance type:', rawType || '(não definido)');
 
     if (mode === 'floating') {
       renderFloatingBubbles(applicableStories, storyVideoMap, activeVideos);

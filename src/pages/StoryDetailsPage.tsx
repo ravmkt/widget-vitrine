@@ -998,101 +998,59 @@ const StoryDetailsPage = () => {
                     Quando Aparece
                   </h4>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={handleAddRule}
-                  className="rounded-lg bg-emerald-50 p-1.5 text-emerald-500 hover:bg-emerald-100"
-                >
-                  <Plus size={16} />
-                </button>
               </div>
 
               <div className="space-y-4">
-                {rules.map((rule) => (
-                  <div
-                    key={rule.id}
-                    className="group relative rounded-2xl border border-slate-100 bg-slate-50 p-4"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => openDeleteRuleModal(rule)}
-                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-rose-500 opacity-0 shadow-sm transition-all group-hover:opacity-100"
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                      Tipo de Regra
+                    </label>
+
+                    <select
+                      value={formData.page_rule_mode}
+                      onChange={(event) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          page_rule_mode: event.target
+                            .value as ConditionType,
+                        }))
+                      }
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
                     >
-                      <X size={12} />
-                    </button>
-
-                    <div className="space-y-3">
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                          Tipo de Regra
-                        </label>
-
-                        <select
-                          value={rule.condition_type || 'all_pages'}
-                          onChange={(event) => {
-                            const next = rules.map((item) =>
-                              item.id === rule.id
-                                ? {
-                                    ...item,
-                                    condition_type:
-                                      event.target.value as ConditionType,
-                                  }
-                                : item,
-                            );
-
-                            setRules(next);
-                          }}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
-                        >
-                          <option value="all_pages">Roaming HOME</option>
-
-                          <option value="contains">URL Contém</option>
-                          <option value="equals">URL Igual</option>
-                          <option value="not_equals">URL Diferente</option>
-
-                        </select>
-                      </div>
-
-                      {CONDITION_TYPES_WITH_VALUE.includes(
-                        rule.condition_type,
-                      ) && (
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                            Valor do Filtro
-                          </label>
-
-                          <input
-                            type="text"
-                            value={rule.value || ''}
-                            onChange={(event) => {
-                              const next = rules.map((item) =>
-                                item.id === rule.id
-                                  ? {
-                                      ...item,
-                                      value: event.target.value,
-                                    }
-                                  : item,
-                              );
-
-                              setRules(next);
-                            }}
-                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
-                            placeholder="Ex: /produto"
-                          />
-                        </div>
-                      )}
-                    </div>
+                      <option value="all_pages">Roaming HOME</option>
+                      <option value="contains">URL Contém</option>
+                      <option value="equals">URL Igual</option>
+                      <option value="not_equals">URL Diferente</option>
+                    </select>
                   </div>
-                ))}
 
-                {rules.length === 0 && (
-                  <p className="text-xs font-bold text-slate-400">
-                    Nenhuma regra configurada.
-                  </p>
-                )}
+                  {CONDITION_TYPES_WITH_VALUE.includes(
+                    formData.page_rule_mode,
+                  ) && (
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                        Valor do Filtro
+                      </label>
+
+                      <input
+                        type="text"
+                        value={formData.page_rule_value}
+                        onChange={(event) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            page_rule_value: event.target.value,
+                          }))
+                        }
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
+                        placeholder="Ex: /jaleco"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
+
           </div>
         </div>
       </form>
