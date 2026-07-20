@@ -1,5 +1,5 @@
 (function () {
-    var WIDGET_VERSION = '2026.07.19-03';
+    var WIDGET_VERSION = '2026.07.20-03';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -9,7 +9,7 @@
   window.VIDLYTICS_WIDGET_VERSION = WIDGET_VERSION;
 
   console.log(
-    'VIDLYTICS WIDGET CARREGADO - FIX LOOP + NO AUTO CLOSE - 202607161906'
+    'VIDLYTICS WIDGET CARREGADO - FIX LOOP + NO AUTO CLOSE - 202607161909'
   );
 
   var globalConfig =

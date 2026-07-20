@@ -335,7 +335,8 @@ const StoryDetailsPage = () => {
         return sameStory && sameStore;
       });
 
-      setRules(filteredDbRules.map(mapDbRuleToUiRule));
+      const mappedRules = filteredDbRules.map(mapDbRuleToUiRule);
+      setRules(mappedRules);
 
       setFormData({
         title: currentStory.title || '',
@@ -347,8 +348,8 @@ const StoryDetailsPage = () => {
             ? currentStory.appearance_id
             : '',
         page_rule_mode:
-          (filteredDbRules[0]?.condition_type as ConditionType) || 'all_pages',
-        page_rule_value: filteredDbRules[0]?.value || '',
+          (mappedRules[0]?.condition_type as ConditionType) || 'all_pages',
+        page_rule_value: mappedRules[0]?.value || '',
       });
 
     } catch (error) {

@@ -64,7 +64,8 @@ window.VIDLYTICS_CONFIG = {
 
 (function() {
   var script = document.createElement('script');
-  script.src = '${publicUrl}/widget.js';
+  script.src = '${publicUrl}/widget.js?v=' + Date.now();
+
   script.type = 'text/javascript';
   script.async = true;
   script.charset = 'UTF-8';
