@@ -48,6 +48,8 @@ const IntegrationPage = () => {
   const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey);
   const canInstall = hasStoreId && hasSupabaseConfig && Boolean(publicUrl);
 
+  const widgetVersion = '2026.07.20-04';
+
   const scriptCode = useMemo(() => {
     return `<script>
 window.VIDLYTICS_CONFIG = {
@@ -64,15 +66,14 @@ window.VIDLYTICS_CONFIG = {
 
 (function() {
   var script = document.createElement('script');
-  script.src = '${publicUrl}/widget.js?v=' + Date.now();
-
+  script.src = '${publicUrl}/widget.js?v=${widgetVersion}';
   script.type = 'text/javascript';
   script.async = true;
   script.charset = 'UTF-8';
   document.head.appendChild(script);
 })();
 </script>`;
-  }, [storeId, supabaseUrl, supabaseAnonKey, publicUrl]);
+  }, [storeId, supabaseUrl, supabaseAnonKey, publicUrl, widgetVersion]);
 
   const trackingScriptCode = useMemo(() => {
     return `<script>
