@@ -3617,7 +3617,7 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
     var shadow = shadowData.shadow;
 
     var style = createEl('style');
-    style.textContent = buildGridCss(appearance) + buildSharedCss(appearance) + '.vl-grid-wrap{width:min(100%,1100px)!important;margin:0 auto!important;padding:24px 16px!important;display:flex!important;flex-direction:column!important;gap:16px!important;}.vl-grid-card{display:flex!important;flex-direction:column!important;gap:8px!important;cursor:pointer!important;}.vl-grid-img{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;}'
+    style.textContent = buildGridCss(appearance) + buildSharedCss(appearance) + '.vl-grid-wrap{width:min(100%,1200px)!important;margin:0 auto!important;padding:24px 16px!important;display:flex!important;flex-direction:column!important;gap:16px!important;}.vl-grid-card{display:flex!important;flex-direction:column!important;gap:8px!important;cursor:pointer!important;}.vl-grid-img{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;}'
 
     var wrap = createEl('div', 'vl-grid-wrap');
     var header = createEl('div', 'vl-grid-header');
@@ -3685,55 +3685,35 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
   }
 
   function buildCarouselCss(appearance) {
-    var cfg = getFloatingConfig(appearance);
-    var primary = getPrimaryColor(appearance);
-    var secondary = getSecondaryColor(appearance);
     var font = getFontFamily(appearance);
-
     var carouselConfig = parseJsonIfNeeded(
       firstDefined(appearance.carousel_config, appearance.carouselConfig, {})
     ) || {};
 
     var gap = toNumber(firstDefined(carouselConfig.gap, carouselConfig.carousel_gap), 16);
-    var visibleItems = toNumber(firstDefined(carouselConfig.visible_items, carouselConfig.carousel_visible_items), 4);
+    var visibleItems = Math.max(1, toNumber(firstDefined(carouselConfig.visible_items, carouselConfig.carousel_visible_items), 4));
     var cardShape = String(firstDefined(carouselConfig.card_shape, carouselConfig.carousel_card_shape, 'portrait') || 'portrait').toLowerCase();
-    var autoCenter = toBoolean(firstDefined(carouselConfig.auto_center, carouselConfig.carousel_auto_center), false);
+    var autoCenter = toBoolean(firstDefined(carouselConfig.auto_center, carouselConfig.carousel_auto_center), true);
     var marginTop = px(firstDefined(carouselConfig.margin_top, carouselConfig.carousel_margin_top), 0);
     var marginBottom = px(firstDefined(carouselConfig.margin_bottom, carouselConfig.carousel_margin_bottom), 0);
 
-    var cardRadius = cardShape === 'circle' ? '999px' : (cardShape === 'square' ? '16px' : '16px');
+    var cardRadius = cardShape === 'circle' ? '999px' : '20px';
+    var cardWidth = cardShape === 'portrait' ? 'clamp(160px, 18vw, 220px)' : 'clamp(160px, 18vw, 220px)';
     var cardAspect = cardShape === 'portrait' ? '9 / 16' : '1 / 1';
 
-    var itemMinWidth = 'calc((100% - ' + (gap * (visibleItems - 1)) + 'px) / ' + visibleItems + ')';
-
     return (
-      '.vl-carousel{display:flex!important;gap:' + gap + 'px!important;overflow-x:auto!important;overflow-y:hidden!important;' +
-      'padding:' + marginTop + ' 4px ' + marginBottom + ' 4px!important;width:100%!important;' +
-      (autoCenter ? 'justify-content:center!important;' : '') +
-      'scrollbar-width:thin!important;font-family:' + font + '!important;}' +
-
-      '.vl-carousel-card{all:unset!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:6px!important;' +
-      'cursor:pointer!important;flex:0 0 ' + itemMinWidth + '!important;min-width:' + itemMinWidth + '!important;max-width:' + itemMinWidth + '!important;}' +
-
-      '.vl-carousel-inner{position:relative!important;width:100%!important;aspect-ratio:' + cardAspect + '!important;border-radius:' + cardRadius + '!important;' +
-      'overflow:hidden!important;background:#000!important;box-shadow:0 6px 18px rgba(15,23,42,.18)!important;' +
-      'border:2px solid ' + primary + '!important;}' +
-
-      '.vl-carousel-video{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;}' +
-
-      '.vl-carousel-play{position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;' +
-      'width:34px!important;height:34px!important;border-radius:999px!important;background:rgba(15,23,42,.62)!important;color:#fff!important;' +
-      'display:flex!important;align-items:center!important;justify-content:center!important;font-size:15px!important;line-height:1!important;' +
-      'box-shadow:0 6px 18px rgba(0,0,0,.25)!important;pointer-events:none!important;}' +
-      '.vl-carousel-play::before{content:""!important;margin-left:3px!important;width:0!important;height:0!important;' +
-      'border-top:8px solid transparent!important;border-bottom:8px solid transparent!important;border-left:12px solid #fff!important;display:block!important;}' +
-
-      '.vl-carousel-label{width:100%!important;max-width:100%!important;font-family:' + font + '!important;font-size:11px!important;line-height:12px!important;' +
-      'font-weight:700!important;color:#0f172a!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;' +
-      'text-overflow:ellipsis!important;display:block!important;}'
+      '.vl-carousel-wrap{width:min(100%,1200px)!important;margin:0 auto!important;padding:24px 16px!important;display:flex!important;flex-direction:column!important;gap:16px!important;font-family:' + font + '!important;}' +
+      '.vl-carousel-header{display:flex!important;align-items:center!important;justify-content:flex-start!important;}' +
+      '.vl-carousel-title{font-size:18px!important;font-weight:800!important;color:#0f172a!important;}' +
+      '.vl-carousel{display:grid!important;grid-auto-flow:column!important;grid-auto-columns:' + cardWidth + '!important;gap:' + gap + 'px!important;overflow-x:auto!important;overflow-y:hidden!important;scroll-snap-type:x mandatory!important;padding:' + marginTop + ' 4px ' + marginBottom + ' 4px!important;width:100%!important;justify-content:' + (autoCenter ? 'center' : 'start') + '!important;}' +
+      '.vl-carousel-card{all:unset!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:8px!important;cursor:pointer!important;scroll-snap-align:start!important;}' +
+      '.vl-carousel-inner{position:relative!important;width:100%!important;aspect-ratio:' + cardAspect + '!important;border-radius:' + cardRadius + '!important;overflow:hidden!important;background:#e2e8f0!important;box-shadow:0 10px 24px rgba(15,23,42,.12)!important;}' +
+      '.vl-carousel-media{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;}' +
+      '.vl-carousel-video{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;}' +
+      '.vl-carousel-label{width:100%!important;max-width:100%!important;font-size:12px!important;line-height:1.2!important;font-weight:700!important;color:#0f172a!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;display:block!important;}'
     );
   }
-  
+
   function forceHostPosition() {
     if (floatingWasDragged || floatingWasClosed) return;
     var host = document.getElementById('vidlytics-widget-root');
