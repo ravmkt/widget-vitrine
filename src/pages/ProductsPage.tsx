@@ -425,6 +425,13 @@ const ProductsPage = () => {
   const [yampiUrl, setYampiUrl] = useState('');
   const [spreadsheetFile, setSpreadsheetFile] = useState<File | null>(null);
   const [isImportingXml, setIsImportingXml] = useState(false);
+  const [importProgressMessage, setImportProgressMessage] = useState('');
+
+  const readTagValue = (item: Element, tagName: string) => {
+    const namespaced = item.getElementsByTagNameNS('*', tagName)[0]?.textContent?.trim() || '';
+    const plain = item.getElementsByTagName(tagName)[0]?.textContent?.trim() || '';
+    return namespaced || plain;
+  };
 
   const parseXmlProducts = async (xmlText: string) => {
     const parser = new DOMParser();
@@ -436,17 +443,24 @@ const ProductsPage = () => {
 
     const items = Array.from(xmlDoc.getElementsByTagName('item'));
     const productsFromXml = items.map((item) => {
-      const textContent = (tagName: string) => item.getElementsByTagName(tagName)[0]?.textContent?.trim() || '';
-      const imageTags = Array.from(item.getElementsByTagName('image_link'));
-      const firstImage = imageTags[0]?.textContent?.trim() || '';
-      const priceRaw = textContent('price');
-      const price = Number(String(priceRaw).replace(/[^[\d,.-]/g, '').replace('.', '').replace(',', '.'));
+      const title = readTagValue(item, 'title');
+      const link = readTagValue(item, 'link');
+      const priceRaw = readTagValue(item, 'price');
+      const imageUrl = readTagValue(item, 'image_link') || readTagValue(item, 'image');
+      const category = readTagValue(item, 'product_type') || readTagValue(item, 'google_product_category');
+      const normalizedPrice = Number(
+        String(priceRaw)
+          .replace(/[^[\d,.-]/g, '')
+          .replace(/\./g, '')
+          .replace(',', '.'),
+      );
 
       return {
-        name: textContent('title'),
-        price: Number.isFinite(price) ? price : 0,
-        product_url: textContent('link'),
-        image_url: firstImage,
+        name: title,
+        price: Number.isFinite(normalizedPrice) ? normalizedPrice : 0,
+        product_url: link,
+        image_url: imageUrl,
+        category,
       };
     }).filter((product) => product.name && product.product_url);
 
@@ -461,6 +475,7 @@ const ProductsPage = () => {
 
     try {
       setIsImportingXml(true);
+      setImportProgressMessage('Lendo o feed XML...');
 
       const xmlText = xmlFile
         ? await xmlFile.text()
@@ -471,6 +486,7 @@ const ProductsPage = () => {
             return response.text();
           });
 
+      setImportProgressMessage('Processando produtos do feed...');
       const importedProducts = await parseXmlProducts(xmlText);
 
       if (importedProducts.length === 0) {
@@ -482,9 +498,13 @@ const ProductsPage = () => {
       const now = new Date().toISOString();
       const existingProducts = await db.products.getAll(resolvedStoreId);
       const existingNames = new Set(existingProducts.map((product) => product.name.toLowerCase()));
+      const existingCategories = new Set(
+        existingProducts.map((product) => String((product as any).category || '').trim()).filter(Boolean),
+      );
 
       const newProducts = importedProducts.filter((product) => !existingNames.has(product.name.toLowerCase()));
 
+      setImportProgressMessage(`Importando ${newProducts.length} produtos...`);
       await Promise.all(
         newProducts.map(async (product) => {
           const payload = await withStoreId(
@@ -496,9 +516,10 @@ const ProductsPage = () => {
               image_url: product.image_url,
               active: true,
               origin: 'integration',
+              category: product.category || '',
               created_at: now,
               updated_at: now,
-            } as Product,
+            } as unknown as Product,
             resolvedStoreId,
           );
 
@@ -508,15 +529,31 @@ const ProductsPage = () => {
 
       const refreshedProducts = await db.products.getAll(resolvedStoreId);
       setProducts(refreshedProducts);
+      setCategories((prev) => {
+        const importedCategories = importedProducts
+          .map((product) => product.category)
+          .filter((category): category is string => Boolean(category && category.trim()));
+        const merged = [...prev];
+
+        importedCategories.forEach((categoryName) => {
+          if (!existingCategories.has(categoryName) && !merged.some((item) => item.name === categoryName)) {
+            merged.push({ id: Date.now().toString() + categoryName, name: categoryName });
+          }
+        });
+
+        return merged;
+      });
       showSuccess(`Importação concluída: ${newProducts.length} produtos adicionados.`);
       setShowImportModal(false);
       setXmlUrl('');
       setXmlFile(null);
+      setImportProgressMessage('');
     } catch (error) {
       console.error('Erro ao importar XML:', error);
       showError('Erro ao importar XML. Verifique o link informado.');
     } finally {
       setIsImportingXml(false);
+      setImportProgressMessage('');
     }
   };
 
@@ -772,12 +809,13 @@ const ProductsPage = () => {
                           "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
                           (product as any).origin === 'manual'
                             ? "bg-blue-50 text-blue-600 border-blue-100"
-                            : "bg-violet-50 text-violet-600 border-violet-100"
+                            : "bg-emerald-50 text-emerald-700 border-emerald-100"
                         )}
                       >
                         {(product as any).origin === 'manual' ? <Tag size={10} /> : <Globe size={10} />}
-                        {(product as any).origin === 'manual' ? 'Manual' : 'Integração'}
+                        {(product as any).origin === 'manual' ? 'Manual' : 'Integração XML'}
                       </span>
+
                     </div>
                   </td>
 
@@ -1165,7 +1203,8 @@ const ProductsPage = () => {
               </div>
 
               {importTab === 'xml' && (
-                <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 relative">
+
                   <div className="flex items-start gap-3 rounded-xl bg-white p-3 border border-slate-100">
                     <FileText className="mt-0.5 text-[#0094EB]" size={18} />
                     <p className="text-xs font-bold text-slate-600">
@@ -1201,7 +1240,7 @@ const ProductsPage = () => {
                       className="inline-flex items-center gap-2 rounded-xl bg-[#0094EB] px-5 py-3 text-sm font-black text-white hover:bg-[#0E4787] disabled:opacity-60"
                     >
                       {isImportingXml ? <Loader2 className="animate-spin" size={16} /> : <Link size={16} />}
-                      Importar XML
+                      {isImportingXml ? 'Importando...' : 'Importar XML'}
                     </button>
                   </div>
                 </div>
@@ -1268,7 +1307,22 @@ const ProductsPage = () => {
         </div>
       )}
 
+      {isImportingXml && (
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-slate-950/50 backdrop-blur-sm">
+          <div className="flex w-full max-w-sm items-center gap-4 rounded-3xl bg-white p-6 shadow-2xl">
+            <Loader2 className="h-6 w-6 animate-spin text-[#0094EB]" />
+            <div>
+              <p className="text-sm font-black text-slate-900">Aguarde</p>
+              <p className="text-sm font-bold text-slate-500">
+                {importProgressMessage || 'Importando produtos do XML...'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ConfirmDeleteDialog
+
         isOpen={deleteModal.isOpen}
         title="EXCLUIR PRODUTO"
         itemName={deleteModal.productTitle}
