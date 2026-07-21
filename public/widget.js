@@ -1,5 +1,5 @@
 (function () {
-    var WIDGET_VERSION = '2026.07.20-15';
+    var WIDGET_VERSION = '2026.07.20-16';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -3755,16 +3755,9 @@ function insertCarouselHostBeforeContent(host) {
     shadow.appendChild(wrap);
   }
 
-  wrap.appendChild(carousel);
-
-  shadow.appendChild(style);
-  shadow.appendChild(wrap);
-}
-
-
-
   function renderGrid(stories, storyVideoMap, activeVideos) {
     var appearance = currentAppearance || {};
+
     var shadowData = getOrCreateShadowRoot(appearance);
     var shadow = shadowData.shadow;
 
