@@ -3620,46 +3620,60 @@ function getOrCreateCarouselShadowRoot() {
   };
 }
 
-function insertCarouselHostBySelector(host, locations) {  // ← adiciona o 2º parâmetro
+function insertCarouselHostBySelector(host, locations) {
   if (!host) return;
 
-  // Fallback: se não vier locations, tenta do VIDLYTICS_CONFIG
-  locations = locations || (Array.isArray(window.VIDLYTICS_CONFIG && window.VIDLYTICS_CONFIG.widgets && window.VIDLYTICS_CONFIG.widgets.locations)
-    ? window.VIDLYTICS_CONFIG.widgets.locations
-    : []);
+  locations = locations || [];
 
+  if (!locations.length) {
+    // ⬇️ fallback: tenta antes do footer, depois no body
+    var footer = document.querySelector('footer, [role="contentinfo"], .footer');
+    if (footer && footer.parentNode) {
+      footer.parentNode.insertBefore(host, footer);
+    } else {
+      document.body.appendChild(host);
+    }
+    return;
+  }
 
   var targetLocation = locations.find(function (loc) {
     return loc && loc.active !== false && loc.mode === 'carousel' && loc.selector;
   });
 
   if (!targetLocation) {
-    document.body.appendChild(host);
+    var footer2 = document.querySelector('footer, [role="contentinfo"], .footer');
+    if (footer2 && footer2.parentNode) {
+      footer2.parentNode.insertBefore(host, footer2);
+    } else {
+      document.body.appendChild(host);
+    }
     return;
   }
 
   var selector = String(targetLocation.selector || '').trim();
-  if (!selector || selector === 'body') {
-    document.body.appendChild(host);
-    return;
-  }
-
   var target = null;
+
   try {
-    target = document.querySelector(selector);  // ✅ primeiro match
+    target = document.querySelector(selector);
   } catch (e) {
     target = null;
   }
 
   if (!target) {
-    document.body.appendChild(host);
+    console.warn('[Vidlytics] Carousel: seletor "' + selector + '" não encontrado no DOM. Inserindo antes do footer.');
+    var footer3 = document.querySelector('footer, [role="contentinfo"], .footer');
+    if (footer3 && footer3.parentNode) {
+      footer3.parentNode.insertBefore(host, footer3);
+    } else {
+      document.body.appendChild(host);
+    }
     return;
   }
 
-  // ✅ Respeita o position do banco (afterbegin, beforeend, beforebegin, afterend)
   var position = targetLocation.position || 'beforeend';
   target.insertAdjacentElement(position, host);
 }
+
 
 
 
