@@ -3689,10 +3689,6 @@ function renderCarousel(stories, storyVideoMap, activeVideos, dbLocations) {  //
     style.textContent =
       buildSharedCss(appearance) +
       buildCarouselCss(appearance) +
-      '.vl-carousel-wrap{max-width:100%!important;overflow:visible!important;}' +
-      '.vl-carousel-wrap .vl-carousel{overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none!important;-ms-overflow-style:none!important;cursor:grab!important;scroll-snap-type:x mandatory!important;}' +
-      '.vl-carousel-wrap .vl-carousel::-webkit-scrollbar{display:none!important;}' +
-      '.vl-carousel-wrap .vl-carousel-card{width:clamp(220px,22vw,300px)!important;min-width:clamp(220px,22vw,300px)!important;max-width:clamp(220px,22vw,300px)!important;scroll-snap-align:start!important;}'
 
     var wrap = createEl('div', 'vl-carousel-wrap');
     var header = createEl('div', 'vl-carousel-header');
