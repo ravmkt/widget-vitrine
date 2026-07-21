@@ -929,7 +929,7 @@ params.set('select', 'video_id,visitor_id');
   }
 
   function getStoryThumbnail(story, coverVideo, coverRelation) {
-    return getThumbnailFromObject(story) || getThumbnailFromObject(coverRelation) || getVideoThumbnail(coverVideo) || '';
+    return getThumbnailFromObject(coverRelation) || getThumbnailFromObject(story) || getVideoThumbnail(coverVideo) || getThumbnailFromObject(coverVideo) || '';
   }
 
   function applyHostPosition(host, appearance) {
@@ -957,7 +957,8 @@ params.set('select', 'video_id,visitor_id');
 
   function getOrCreateCarouselShadowRoot() {
     var existingRoot = document.getElementById('vidlytics-carousel-root');
-    if (existingRoot) existingRoot.remove();
+    if (existingRoot && existingRoot.shadowRoot) existingRoot.shadowRoot.innerHTML = '';
+    if (existingRoot && existingRoot.parentNode) existingRoot.parentNode.removeChild(existingRoot);
 
     var host = createEl('div', 'vidlytics-carousel-root');
     host.id = 'vidlytics-carousel-root';
@@ -970,7 +971,6 @@ params.set('select', 'video_id,visitor_id');
     host.style.pointerEvents = 'auto';
     host.style.background = 'transparent';
 
-    document.body.appendChild(host);
     globalShadowRoot = host.attachShadow({ mode: 'open' });
     return { host: host, shadow: globalShadowRoot };
   }
@@ -2325,8 +2325,9 @@ function checkIfVisitorLiked(videoId, dbLikesRaw) {
 
     pausePreviews();
 
-    var currentStoryIndex = initialStoryIndex || 0;
+    var currentStoryIndex = typeof initialStoryIndex === 'number' ? initialStoryIndex : 0;
     var currentVideoIndex = 0;
+
     var isMuted = false;
     var isPlaying = true;
     var liked = false;
@@ -2341,7 +2342,11 @@ function checkIfVisitorLiked(videoId, dbLikesRaw) {
 
     function getOrderedVideos(s) {
       var relations = (storyVideoMap.get(s.id) || []).slice().sort(function (a, b) { return Number(a.position || 0) - Number(b.position || 0); });
-      return relations.map(function (rel) { return activeVideos.find(function (v) { return idsEqual(v.id, rel.video_id); }); }).filter(Boolean);
+      return relations.map(function (rel) {
+        return activeVideos.find(function (v) {
+          return idsEqual(v.id, rel.video_id) && v.active !== false && rel.active !== false;
+        });
+      }).filter(Boolean);
     }
 
     var initialStory = storiesList[currentStoryIndex];
@@ -2349,7 +2354,9 @@ function checkIfVisitorLiked(videoId, dbLikesRaw) {
     if (typeof initialVideoIndex === 'number' && initialVideoIndex >= 0 && initialVideoIndex < initialRels.length) {
       currentVideoIndex = initialVideoIndex;
     } else {
-      initialRels.forEach(function (rel, index) { if (rel.is_cover) currentVideoIndex = index; });
+      var coverIndex = -1;
+      initialRels.forEach(function (rel, index) { if (rel.is_cover && coverIndex === -1) coverIndex = index; });
+      currentVideoIndex = coverIndex >= 0 ? coverIndex : 0;
     }
 
     function nextVideo() {
@@ -3575,14 +3582,15 @@ function renderIntoDisplayLocations(mode, locations, stories, storyVideoMap, act
 }
 
 function getOrCreateCarouselShadowRoot() {
-  var oldRoot = document.getElementById('vidlytics-carousel-root');
-
-  if (oldRoot) {
-    oldRoot.remove();
-  }
+var existing = document.getElementById('vidlytics-carousel-root');
+if (existing && existing.shadowRoot) {
+  existing.shadowRoot.innerHTML = '';
+}
+if (existing && existing.parentNode) {
+  existing.parentNode.removeChild(existing);
+}
 
   var host = createEl('div', 'vidlytics-carousel-root');
-
   host.id = 'vidlytics-carousel-root';
 
   setImportant(host, 'display', 'block');
@@ -3597,8 +3605,6 @@ function getOrCreateCarouselShadowRoot() {
   setImportant(host, 'overflow', 'visible');
   setImportant(host, 'background', 'transparent');
 
-  document.body.appendChild(host);
-
   var shadow = host.attachShadow({ mode: 'open' });
 
   return {
@@ -3607,71 +3613,111 @@ function getOrCreateCarouselShadowRoot() {
   };
 }
 
+function insertCarouselHostBeforeContent(host) {
+  if (!host) return;
+
+  var selectors = [
+    'header',
+    '[role="banner"]',
+    'main',
+    '.main-content',
+    '#main-content',
+    '[role="main"]',
+    'footer'
+  ];
+
+  for (var i = 0; i < selectors.length; i += 1) {
+    var target = document.querySelector(selectors[i]);
+    if (target && target.parentNode) {
+      target.parentNode.insertBefore(host, target);
+      return;
+    }
+  }
+
+  document.body.insertBefore(host, document.body.firstChild);
+}
+
 
   function renderCarousel(stories, storyVideoMap, activeVideos) {
     var appearance = currentAppearance || {};
     var modalConfig = normalizeModalAppearanceConfig(appearance);
-
     var shadowData = getOrCreateCarouselShadowRoot();
+    insertCarouselHostBeforeContent(shadowData.host);
     var shadow = shadowData.shadow;
 
     var style = createEl('style');
-    style.textContent = buildSharedCss(appearance) + buildCarouselCss(appearance);
+    style.textContent =
+      buildSharedCss(appearance) +
+      buildCarouselCss(appearance);
 
     var wrap = createEl('div', 'vl-carousel-wrap');
     var header = createEl('div', 'vl-carousel-header');
     var title = createEl('div', 'vl-carousel-title');
-    title.textContent = currentAppearance.name || currentAppearance.title || 'Stories';
+
+    title.textContent =
+      currentAppearance.name ||
+      currentAppearance.title ||
+      'Stories';
+
     header.appendChild(title);
     wrap.appendChild(header);
 
     var carousel = createEl('div', 'vl-carousel');
 
-    stories.forEach(function (story, storyIndex) {
-      var relations = (storyVideoMap.get(story.id) || []).slice().sort(function (a, b) {
-        return Number(a.position || 0) - Number(b.position || 0);
-      });
+    stories.forEach(function (story, index) {
+      var relations = (storyVideoMap.get(story.id) || [])
+        .slice()
+        .sort(function (a, b) {
+          return Number(a.position || 0) - Number(b.position || 0);
+        });
 
-      relations.forEach(function (relation, relationIndex) {
+      relations.forEach(function (relation) {
         var video = activeVideos.find(function (item) {
           return idsEqual(item.id, relation.video_id);
         });
 
-        if (!video) return;
+        if (!video || video.active === false || relation.active === false) {
+          return;
+        }
 
         var thumb = getStoryThumbnail(story, video, relation) || getVideoThumbnail(video);
         var labelText = firstDefined(video.title, video.name, video.video_title, story.title, story.name, 'Story');
-
         var card = createEl('button', 'vl-carousel-card');
-        card.type = 'button';
-        card.setAttribute('aria-label', labelText);
-
         var inner = createEl('div', 'vl-carousel-inner');
         var media = createEl('div', 'vl-carousel-media');
+        var openIndex = storyVideoMap && storyVideoMap.get(story.id)
+          ? (storyVideoMap.get(story.id).slice().sort(function (a, b) { return Number(a.position || 0) - Number(b.position || 0); }).findIndex(function (item) {
+              return idsEqual(item.video_id, relation.video_id) && Number(item.position || 0) === Number(relation.position || 0);
+            }))
+          : 0;
+
+        if (openIndex < 0) openIndex = 0;
+
+        card.type = 'button';
+        card.setAttribute('aria-label', labelText);
 
         if (thumb) {
           var img = createEl('img', 'vl-carousel-video');
           img.src = thumb;
           img.alt = labelText;
+          img.loading = 'lazy';
+          img.onerror = (function (cardMedia, fallbackText) {
+            return function () {
+              if (img && img.parentNode) {
+                img.parentNode.removeChild(img);
+              }
+              if (!cardMedia.querySelector('.vl-carousel-fallback')) {
+                var fallback = createEl('div', 'vl-carousel-fallback');
+                fallback.textContent = fallbackText;
+                cardMedia.appendChild(fallback);
+              }
+            };
+          }(media, (story.title || story.name || 'S').slice(0, 1).toUpperCase()));
           media.appendChild(img);
         } else {
-          var videoPreview = createEl('video', 'vl-carousel-video');
-          var videoUrl = getVideoUrl(video);
-          if (videoUrl) {
-            videoPreview.src = videoUrl;
-            videoPreview.muted = true;
-            videoPreview.autoplay = true;
-            videoPreview.loop = true;
-            videoPreview.playsInline = true;
-            videoPreview.preload = 'metadata';
-            videoPreview.setAttribute('playsinline', 'playsinline');
-            videoPreview.setAttribute('webkit-playsinline', 'webkit-playsinline');
-            media.appendChild(videoPreview);
-            var playPromise = videoPreview.play();
-            if (playPromise && typeof playPromise.catch === 'function') {
-              playPromise.catch(function () {});
-            }
-          }
+          var fallback = createEl('div', 'vl-carousel-fallback');
+          fallback.textContent = (story.title || story.name || 'S').slice(0, 1).toUpperCase();
+          media.appendChild(fallback);
         }
 
         inner.appendChild(media);
@@ -3686,7 +3732,16 @@ function getOrCreateCarouselShadowRoot() {
         card.addEventListener('click', function (event) {
           event.preventDefault();
           event.stopPropagation();
-          openStory(stories, storyIndex, storyVideoMap, activeVideos, readStoryProductsData, readProductsData, relationIndex);
+          if (window.VIDLYTICS_DEBUG) {
+            console.log('[Vidlytics] carousel click', { storyId: story.id, videoId: relation.video_id, videoIndex: openIndex });
+          }
+          try {
+            openStory(stories, index, storyVideoMap, activeVideos, readStoryProductsData, readProductsData, openIndex);
+          } catch (error) {
+            if (window.VIDLYTICS_DEBUG) {
+              console.warn('[Vidlytics] Falha ao abrir story do carrossel:', error);
+            }
+          }
         });
 
         carousel.appendChild(card);
@@ -3694,9 +3749,18 @@ function getOrCreateCarouselShadowRoot() {
     });
 
     wrap.appendChild(carousel);
+
+    shadow.innerHTML = '';
     shadow.appendChild(style);
     shadow.appendChild(wrap);
   }
+
+  wrap.appendChild(carousel);
+
+  shadow.appendChild(style);
+  shadow.appendChild(wrap);
+}
+
 
 
   function renderGrid(stories, storyVideoMap, activeVideos) {
