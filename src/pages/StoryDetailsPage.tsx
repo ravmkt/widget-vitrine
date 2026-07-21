@@ -233,6 +233,10 @@ const StoryDetailsPage = () => {
   const buildEmbedSnippet = (location: DisplayLocationUi): string => {
     const id = location.id;
     const preset = location.preset || 'main-area';
+    const embedBaseUrl =
+      window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+        ? 'https://app.vidlytics.com.br'
+        : window.location.origin;
 
     const positionMap: Record<string, string> = {
       before_element: 'beforebegin',
@@ -242,7 +246,7 @@ const StoryDetailsPage = () => {
     };
 
     const position = positionMap[location.position] || 'afterbegin';
-    let snippet = `<script src="https://app.vidlytics.com.br/embed/${id}.js"\n        data-preset="${preset}"\n        data-block-id="${id}"\n        data-position="${position}"`;
+    let snippet = `<script src="${embedBaseUrl}/embed/${id}.js"\n        data-preset="${preset}"\n        data-block-id="${id}"\n        data-position="${position}"`;
 
     if (preset === 'custom' && location.selector) {
       snippet += `\n        data-custom-selector="${location.selector}"`;

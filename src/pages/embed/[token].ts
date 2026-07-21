@@ -1,6 +1,18 @@
 import { supabase } from '@/lib/supabase';
 
-const buildScript = (block: any) => {
+const getPublicBaseUrl = (req: Request) => {
+  const configuredUrl = import.meta.env?.VITE_PUBLIC_APP_URL;
+  if (configuredUrl) return configuredUrl;
+
+  const origin = new URL(req.url).origin;
+  if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+    return 'https://app.vidlytics.com.br';
+  }
+
+  return origin;
+};
+
+const buildScript = (block: any, baseUrl: string) => {
   const preset = block?.preset || 'main-area';
   const customSelector = block?.selector || null;
   const blockId = block?.id;
@@ -14,6 +26,7 @@ const buildScript = (block: any) => {
   var blockId = script.getAttribute('data-block-id');
   var blockType = script.getAttribute('data-block-type');
   var position = script.getAttribute('data-position') || 'afterbegin';
+  var baseUrl = script.getAttribute('data-base-url') || '';
 
   var PRESETS = {
     'after-menu':    ['.menu', 'header nav', '#menu', 'nav', 'main'],
@@ -26,6 +39,8 @@ const buildScript = (block: any) => {
   var selectors = PRESETS[preset] || PRESETS['main-area'];
   var BLOCK_ID = 'vidlytics-' + blockId;
   var METHOD = position;
+  var injected = false;
+  var observerStarted = false;
 
   function findTarget() {
     for (var i = 0; i < selectors.length; i++) {
@@ -34,9 +49,6 @@ const buildScript = (block: any) => {
     }
     return document.querySelector('footer') || document.body;
   }
-
-  var injected = false;
-  var observerStarted = false;
 
   function inject() {
     if (injected || document.getElementById(BLOCK_ID)) return;
@@ -47,7 +59,7 @@ const buildScript = (block: any) => {
     wrapper.className = 'vidlytics-block vidlytics-' + blockType;
     wrapper.setAttribute('data-vidlytics-block-id', blockId);
     target.insertAdjacentElement(METHOD, wrapper);
-    fetch('https://app.vidlytics.com.br/api/blocks/' + blockId)
+    fetch(baseUrl + '/api/blocks/' + blockId)
       .then(function(r) { return r.text(); })
       .then(function(html) {
         if (document.getElementById(BLOCK_ID)) {
@@ -84,14 +96,6 @@ const buildScript = (block: any) => {
   } else {
     document.addEventListener('DOMContentLoaded', startObserver, { once: true });
   }
-
-  window.addEventListener('popstate', function() {
-    if (!document.getElementById(BLOCK_ID)) {
-      injected = false;
-      setTimeout(safeInject, 300);
-    }
-  });
-
 })();`;
 };
 
@@ -102,13 +106,14 @@ export async function GET(_: Request, { params }: { params: { token: string } })
     return new Response('Missing token', { status: 400 });
   }
 
+  const baseUrl = getPublicBaseUrl(_);
   const { data: block } = await supabase
     .from('display_locations')
     .select('*')
     .eq('id', token)
     .maybeSingle();
 
-  const payload = buildScript(block || { id: token });
+  const payload = buildScript(block || { id: token }, baseUrl);
 
   return new Response(payload, {
     headers: {
