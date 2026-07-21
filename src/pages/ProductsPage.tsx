@@ -15,12 +15,16 @@ import {
   Globe,
   Package,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  FileText,
+  Link,
 } from 'lucide-react';
+
 import { showError, showSuccess } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
-import { db, Product, resolveStoreId, withStoreId } from '@/lib/db';
+import { db, Product, resolveStoreId, withStoreId, generateUuid } from '@/lib/db';
+
 import { useTenant } from '@/context/TenantContext';
 
 const ProductsPage = () => {
@@ -420,15 +424,100 @@ const ProductsPage = () => {
   const [yampiToken, setYampiToken] = useState('');
   const [yampiUrl, setYampiUrl] = useState('');
   const [spreadsheetFile, setSpreadsheetFile] = useState<File | null>(null);
+  const [isImportingXml, setIsImportingXml] = useState(false);
 
-  const handleXmlImport = () => {
+  const parseXmlProducts = async (xmlText: string) => {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlText, 'application/xml');
+
+    if (xmlDoc.querySelector('parsererror')) {
+      throw new Error('XML inválido');
+    }
+
+    const items = Array.from(xmlDoc.getElementsByTagName('item'));
+    const productsFromXml = items.map((item) => {
+      const textContent = (tagName: string) => item.getElementsByTagName(tagName)[0]?.textContent?.trim() || '';
+      const imageTags = Array.from(item.getElementsByTagName('image_link'));
+      const firstImage = imageTags[0]?.textContent?.trim() || '';
+      const priceRaw = textContent('price');
+      const price = Number(String(priceRaw).replace(/[^[\d,.-]/g, '').replace('.', '').replace(',', '.'));
+
+      return {
+        name: textContent('title'),
+        price: Number.isFinite(price) ? price : 0,
+        product_url: textContent('link'),
+        image_url: firstImage,
+      };
+    }).filter((product) => product.name && product.product_url);
+
+    return productsFromXml;
+  };
+
+  const handleXmlImport = async () => {
     if (!xmlUrl && !xmlFile) {
       showError('Informe URL ou arquivo XML.');
       return;
     }
 
-    showSuccess('Importação XML iniciada (simulação)');
-    setShowImportModal(false);
+    try {
+      setIsImportingXml(true);
+
+      const xmlText = xmlFile
+        ? await xmlFile.text()
+        : await fetch(xmlUrl).then((response) => {
+            if (!response.ok) {
+              throw new Error('Não foi possível baixar o XML');
+            }
+            return response.text();
+          });
+
+      const importedProducts = await parseXmlProducts(xmlText);
+
+      if (importedProducts.length === 0) {
+        showError('Nenhum produto encontrado no XML.');
+        return;
+      }
+
+      const resolvedStoreId = await resolveStoreId(storeId);
+      const now = new Date().toISOString();
+      const existingProducts = await db.products.getAll(resolvedStoreId);
+      const existingNames = new Set(existingProducts.map((product) => product.name.toLowerCase()));
+
+      const newProducts = importedProducts.filter((product) => !existingNames.has(product.name.toLowerCase()));
+
+      await Promise.all(
+        newProducts.map(async (product) => {
+          const payload = await withStoreId(
+            {
+              id: generateUuid(),
+              name: product.name,
+              price: product.price,
+              product_url: product.product_url,
+              image_url: product.image_url,
+              active: true,
+              origin: 'integration',
+              created_at: now,
+              updated_at: now,
+            } as Product,
+            resolvedStoreId,
+          );
+
+          return db.products.save(payload);
+        }),
+      );
+
+      const refreshedProducts = await db.products.getAll(resolvedStoreId);
+      setProducts(refreshedProducts);
+      showSuccess(`Importação concluída: ${newProducts.length} produtos adicionados.`);
+      setShowImportModal(false);
+      setXmlUrl('');
+      setXmlFile(null);
+    } catch (error) {
+      console.error('Erro ao importar XML:', error);
+      showError('Erro ao importar XML. Verifique o link informado.');
+    } finally {
+      setIsImportingXml(false);
+    }
   };
 
   const handleApiImport = () => {
@@ -1076,27 +1165,42 @@ const ProductsPage = () => {
               </div>
 
               {importTab === 'xml' && (
-                <div className="space-y-4">
-                  <input
-                    value={xmlUrl}
-                    onChange={(e) => setXmlUrl(e.target.value)}
-                    placeholder="URL do XML"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]"
-                  />
+                <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                  <div className="flex items-start gap-3 rounded-xl bg-white p-3 border border-slate-100">
+                    <FileText className="mt-0.5 text-[#0094EB]" size={18} />
+                    <p className="text-xs font-bold text-slate-600">
+                      Envie a URL do feed XML do Google Shopping ou selecione o arquivo. Serão importados apenas nome, preço, link e a primeira imagem.
+                    </p>
+                  </div>
 
-                  <input
-                    type="file"
-                    accept=".xml"
-                    onChange={(e) => setXmlFile(e.target.files?.[0] || null)}
-                    className="block w-full text-sm text-slate-500"
-                  />
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Link do XML</label>
+                    <input
+                      value={xmlUrl}
+                      onChange={(e) => setXmlUrl(e.target.value)}
+                      placeholder="https://.../feed.xml"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Arquivo XML</label>
+                    <input
+                      type="file"
+                      accept=".xml,text/xml,application/xml"
+                      onChange={(e) => setXmlFile(e.target.files?.[0] || null)}
+                      className="block w-full text-sm text-slate-500"
+                    />
+                  </div>
 
                   <div className="flex justify-end">
                     <button
                       type="button"
                       onClick={handleXmlImport}
-                      className="rounded-xl bg-[#0094EB] px-5 py-3 text-sm font-black text-white hover:bg-[#0E4787]"
+                      disabled={isImportingXml}
+                      className="inline-flex items-center gap-2 rounded-xl bg-[#0094EB] px-5 py-3 text-sm font-black text-white hover:bg-[#0E4787] disabled:opacity-60"
                     >
+                      {isImportingXml ? <Loader2 className="animate-spin" size={16} /> : <Link size={16} />}
                       Importar XML
                     </button>
                   </div>
