@@ -2296,6 +2296,9 @@ function createVideoLike(videoId) {
       );
     });
   });
+}
+
+
 function removeVideoLike(videoId) {
 
   if (!hasSupabase || !storeId || !videoId) {
