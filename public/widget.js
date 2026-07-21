@@ -701,15 +701,11 @@
   return fetchJson(query);
 }
 
-  function readPageRules() { return (!storeId || !hasSupabase) ? Promise.resolve(getStorageItem('vidlytics_page_rules', [])) : fetchJson('page_rules?select=*&store_id=eq.' + encodeURIComponent(storeId)); }
-
-// ... outras funções read*
 function readPageRules() {
   if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_page_rules', []));
   return fetchJson('page_rules?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&active=is.true');
 }
 
-// ADICIONE AQUI:
 function readDisplayLocations() {
   if (!storeId || !hasSupabase) {
     return Promise.resolve(getStorageItem('vidlytics_display_locations', []));
