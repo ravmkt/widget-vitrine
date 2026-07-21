@@ -3694,7 +3694,11 @@ function renderCarousel(stories, storyVideoMap, activeVideos) {
     var style = createEl('style');
     style.textContent =
       buildSharedCss(appearance) +
-      buildCarouselCss(appearance);
+      buildCarouselCss(appearance) +
+      '.vl-carousel-wrap{max-width:100%!important;overflow:visible!important;}' +
+      '.vl-carousel-wrap .vl-carousel{overflow-x:visible!important;overflow-y:visible!important;scrollbar-width:none!important;-ms-overflow-style:none!important;cursor:grab!important;}' +
+      '.vl-carousel-wrap .vl-carousel::-webkit-scrollbar{display:none!important;}' +
+      '.vl-carousel-wrap .vl-carousel-card{width:clamp(220px,22vw,300px)!important;min-width:clamp(220px,22vw,300px)!important;max-width:clamp(220px,22vw,300px)!important;}'
 
     var wrap = createEl('div', 'vl-carousel-wrap');
     var header = createEl('div', 'vl-carousel-header');
@@ -3731,11 +3735,9 @@ function renderCarousel(stories, storyVideoMap, activeVideos) {
         var card = createEl('button', 'vl-carousel-card');
         var inner = createEl('div', 'vl-carousel-inner');
         var media = createEl('div', 'vl-carousel-media');
-        var openIndex = storyVideoMap && storyVideoMap.get(story.id)
-          ? (storyVideoMap.get(story.id).slice().sort(function (a, b) { return Number(a.position || 0) - Number(b.position || 0); }).findIndex(function (item) {
-              return idsEqual(item.video_id, relation.video_id) && Number(item.position || 0) === Number(relation.position || 0);
-            }))
-          : 0;
+        var openIndex = relations.findIndex(function (item) {
+          return idsEqual(item.video_id, relation.video_id) && Number(item.position || 0) === Number(relation.position || 0);
+        });
 
         if (openIndex < 0) openIndex = 0;
 
@@ -3790,6 +3792,10 @@ function renderCarousel(stories, storyVideoMap, activeVideos) {
             console.log('[Vidlytics] carousel click', { storyId: story.id, videoId: relation.video_id, videoIndex: openIndex });
           }
           openStory(stories, index, storyVideoMap, activeVideos, readStoryProductsData, readProductsData, openIndex);
+        });
+
+        card.addEventListener('pointerdown', function (event) {
+          event.stopPropagation();
         });
 
         carousel.appendChild(card);
