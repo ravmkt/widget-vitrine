@@ -1,5 +1,5 @@
 (function () {
-    var WIDGET_VERSION = '2026.07.21-00';
+    var WIDGET_VERSION = '2026.07.21-01';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -3644,12 +3644,14 @@ function getOrCreateCarouselShadowRoot() {
   };
 }
 
-function insertCarouselHostBySelector(host) {
+function insertCarouselHostBySelector(host, locations) {  // ← adiciona o 2º parâmetro
   if (!host) return;
 
-  var locations = Array.isArray(window.VIDLYTICS_CONFIG && window.VIDLYTICS_CONFIG.widgets && window.VIDLYTICS_CONFIG.widgets.locations)
+  // Fallback: se não vier locations, tenta do VIDLYTICS_CONFIG
+  locations = locations || (Array.isArray(window.VIDLYTICS_CONFIG && window.VIDLYTICS_CONFIG.widgets && window.VIDLYTICS_CONFIG.widgets.locations)
     ? window.VIDLYTICS_CONFIG.widgets.locations
-    : [];
+    : []);
+
 
   var targetLocation = locations.find(function (loc) {
     return loc && loc.active !== false && loc.mode === 'carousel' && loc.selector;
@@ -3668,8 +3670,7 @@ function insertCarouselHostBySelector(host) {
 
   var target = null;
   try {
-    var matches = Array.prototype.slice.call(document.querySelectorAll(selector));
-    target = matches.length ? matches[matches.length - 1] : null;
+    target = document.querySelector(selector);  // ✅ primeiro match
   } catch (e) {
     target = null;
   }
@@ -3679,15 +3680,19 @@ function insertCarouselHostBySelector(host) {
     return;
   }
 
-  target.appendChild(host);
+  // ✅ Respeita o position do banco (afterbegin, beforeend, beforebegin, afterend)
+  var position = targetLocation.position || 'beforeend';
+  target.insertAdjacentElement(position, host);
 }
 
 
-function renderCarousel(stories, storyVideoMap, activeVideos) {
+
+function renderCarousel(stories, storyVideoMap, activeVideos, dbLocations) {  // ← adiciona o 4º parâmetro
     var appearance = currentAppearance || {};
     var modalConfig = normalizeModalAppearanceConfig(appearance);
     var shadowData = getOrCreateCarouselShadowRoot();
-    insertCarouselHostBySelector(shadowData.host);
+    insertCarouselHostBySelector(shadowData.host, dbLocations);  // ← passa dbLocations aqui
+
 
     var shadow = shadowData.shadow;
 
@@ -4041,6 +4046,7 @@ function renderCarousel(stories, storyVideoMap, activeVideos) {
         applicableStories,
         storyVideoMap,
         activeVideos
+         displayLocations 
       );
     }
 
