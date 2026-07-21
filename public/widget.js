@@ -2296,10 +2296,8 @@ function createVideoLike(videoId) {
       );
     });
   });
-}
-
-
 function removeVideoLike(videoId) {
+
   if (!hasSupabase || !storeId || !videoId) {
     return Promise.reject(new Error('Não foi possível remover a curtida.'));
   }
