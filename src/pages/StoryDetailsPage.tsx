@@ -236,6 +236,8 @@ const StoryDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
+  const [embedModalLocation, setEmbedModalLocation] = useState<DisplayLocationUi | null>(null);
+  const [copiedSnippet, setCopiedSnippet] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -627,6 +629,29 @@ const StoryDetailsPage = () => {
     setRules((prev) => prev.filter((rule) => rule.id !== ruleId));
   };
 
+  const buildEmbedSnippet = (location: DisplayLocationUi): string => {
+    const id = location.id;
+    const preset = location.preset || 'main-area';
+    const blockType = location.blockType || 'carousel';
+
+    const positionMap: Record<string, string> = {
+      before_element: 'beforebegin',
+      after_element: 'afterend',
+      inside_start: 'afterbegin',
+      inside_end: 'beforeend',
+    };
+
+    const position = positionMap[location.position] || 'afterbegin';
+    let snippet = `<script src="https://app.vidlytics.com.br/embed/${id}.js"\n        data-preset="${preset}"\n        data-block-id="${id}"\n        data-block-type="${blockType}"\n        data-position="${position}"`;
+
+    if (preset === 'custom' && location.selector) {
+      snippet += `\n        data-custom-selector="${location.selector}"`;
+    }
+
+    snippet += `\n        async></script>`;
+    return snippet;
+  };
+
   const buildEmbedSnippet = (location: DisplayLocationUi) => {
     const position = POSITION_METHOD_MAP[location.position] || 'afterbegin';
     const preset = location.preset || 'main-area';
@@ -1006,16 +1031,16 @@ const StoryDetailsPage = () => {
                       key={location.id}
                       className="group relative rounded-2xl border border-slate-100 bg-slate-50 p-4"
                     >
+                      <button
+                        type="button"
+                        onClick={() => openDeleteLocationModal(location)}
+                        className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-rose-500 opacity-0 shadow-sm transition-all group-hover:opacity-100"
+                      >
+                        <X size={12} />
+                      </button>
 
-                    <button
-                      type="button"
-                      onClick={() => openDeleteLocationModal(location)}
-                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-rose-500 opacity-0 shadow-sm transition-all group-hover:opacity-100"
-                    >
-                      <X size={12} />
-                    </button>
+                      <div className="mb-3 grid gap-3 md:grid-cols-2">
 
-                    <div className="mb-3 grid gap-3 md:grid-cols-2">
                       <div className="space-y-1">
                         <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
                           Tipo de bloco
@@ -1300,8 +1325,8 @@ const StoryDetailsPage = () => {
 
       {embedModalLocation && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-2xl rounded-[28px] bg-white p-6 shadow-2xl">
 
-            <div className="w-full max-w-2xl rounded-[28px] bg-white p-6 shadow-2xl">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-black text-slate-900">Código de embed</h3>
                 <button
