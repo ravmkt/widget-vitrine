@@ -37,6 +37,22 @@ import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import SuccessDialog from '@/components/SuccessDialog';
 import { cn } from '@/lib/utils';
 
+const POSITION_PRESETS: Record<string, string[]> = {
+  'after-menu': ['.menu', 'header nav', '#menu', 'nav', 'main'],
+  'middle-page': ['[role="main"]', 'main', '.content', '.page-content'],
+  'before-footer': ['footer', '.footer', '#footer'],
+  'main-area': ['main', '.holder-results', '.flex-holder', '.content', '[role="main"]'],
+  custom: [],
+};
+
+const POSITION_PRESET_LABELS: Record<string, string> = {
+  'after-menu': 'Logo abaixo do menu',
+  'middle-page': 'No meio da página',
+  'before-footer': 'Antes do rodapé',
+  'main-area': 'Área principal',
+  custom: 'Lugar personalizado',
+};
+
 const getAllSafe = async <T,>(
   collection: any,
   storeId?: string,
@@ -126,6 +142,12 @@ type UiRule = {
   updated_at?: string;
 };
 
+type DisplayLocationUi = DisplayLocation & {
+  preset?: 'after-menu' | 'middle-page' | 'before-footer' | 'main-area' | 'custom';
+  blockType?: 'carousel' | 'grid' | 'floating';
+  advanced?: boolean;
+};
+
 const CONDITION_TYPES_WITH_VALUE: ConditionType[] = [
   'contains',
   'equals',
@@ -200,7 +222,8 @@ const StoryDetailsPage = () => {
   const [allVideos, setAllVideos] = useState<Video[]>([]);
   const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
   const [appearances, setAppearances] = useState<Appearance[]>([]);
-  const [locations, setLocations] = useState<DisplayLocation[]>([]);
+  const [locations, setLocations] = useState<DisplayLocationUi[]>([]);
+
   const [rules, setRules] = useState<UiRule[]>([]);
 
   const [loading, setLoading] = useState(true);
@@ -562,7 +585,11 @@ const StoryDetailsPage = () => {
       store_id: finalStoreId,
       story_id: story?.id || '',
       selector: 'body',
-    } as DisplayLocation;
+      position: 'inside_end',
+      preset: 'main-area',
+      blockType: 'carousel',
+      advanced: false,
+    } as DisplayLocationUi;
 
     setLocations((prev) => [...prev, newLocation]);
   };
@@ -943,7 +970,12 @@ const StoryDetailsPage = () => {
               </div>
 
               <div className="space-y-4">
-                {locations.map((location) => (
+                {locations.map((location) => {
+                  const activePreset = (location as any).preset || 'main-area';
+                  const isAdvanced = Boolean((location as any).advanced);
+                  const blockType = (location as any).blockType || 'carousel';
+
+                  return (
                   <div
                     key={location.id}
                     className="group relative rounded-2xl border border-slate-100 bg-slate-50 p-4"
@@ -956,35 +988,92 @@ const StoryDetailsPage = () => {
                       <X size={12} />
                     </button>
 
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                    <div className="mb-3 grid gap-3 md:grid-cols-2">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
                           Tipo de bloco
-                        </p>
-                        <p className="text-sm font-black text-slate-800">
-                          {'position' in location && location.position === 'inside_start'
-                            ? 'Carrossel'
-                            : 'position' in location && location.position === 'inside_end'
-                              ? 'Grade'
-                              : 'Flutuante'}
-
-                        </p>
+                        </label>
+                        <select
+                          value={blockType}
+                          onChange={(event) => {
+                            const next = locations.map((item) =>
+                              item.id === location.id
+                                ? {
+                                    ...item,
+                                    blockType: event.target.value as 'carousel' | 'grid' | 'floating',
+                                  }
+                                : item,
+                            );
+                            setLocations(next);
+                          }}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
+                        >
+                          <option value="carousel">Carrossel</option>
+                          <option value="grid">Grade</option>
+                          <option value="floating">Flutuante</option>
+                        </select>
                       </div>
 
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                          Preset de posição
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          {(Object.entries(POSITION_PRESET_LABELS) as Array<[
+                            'after-menu' | 'middle-page' | 'before-footer' | 'main-area' | 'custom',
+                            string,
+                          ]>).map(([preset, label]) => {
+
+                            const active = activePreset === preset;
+
+                            return (
+                              <button
+                                key={preset}
+                                type="button"
+                                onClick={() => {
+                                  const next = locations.map((item) =>
+                                    item.id === location.id
+                                      ? {
+                                          ...item,
+                                          preset: preset,
+      
+                                          selector: POSITION_PRESETS[preset][0] || 'main',
+                                        }
+                                      : item,
+                                  );
+                                  setLocations(next);
+                                }}
+                                className={cn(
+                                  'rounded-2xl border px-3 py-2 text-[10px] font-black uppercase tracking-widest transition',
+                                  active
+                                    ? 'border-orange-300 bg-orange-50 text-orange-600'
+                                    : 'border-slate-200 bg-white text-slate-600 hover:border-orange-200 hover:bg-orange-50',
+                                )}
+                              >
+                                {label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mb-3 flex items-center justify-between gap-3">
                       <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
                         <input
                           type="checkbox"
-                          checked={Boolean((location as any).advanced)}
+                          checked={isAdvanced}
                           onChange={(event) => {
                             const next = locations.map((item) =>
                               item.id === location.id
                                 ? {
                                     ...item,
                                     advanced: event.target.checked,
+                                    preset: (event.target.checked ? 'custom' : activePreset) as DisplayLocationUi['preset'],
+
                                   }
                                 : item,
                             );
-
                             setLocations(next);
                           }}
                           className="h-4 w-4 rounded border-slate-300 text-orange-500"
@@ -993,77 +1082,78 @@ const StoryDetailsPage = () => {
                       </label>
                     </div>
 
-                    <div className="grid gap-2 md:grid-cols-2">
-                      {[
-                        ['after-menu', 'Logo abaixo do menu'],
-                        ['main-area', 'Área principal'],
-                        ['middle-page', 'No meio da página'],
-                        ['before-footer', 'Antes do rodapé'],
-                      ].map(([preset, label]) => (
-                        <button
-                          key={preset}
-                          type="button"
-                          onClick={() => {
-                            const next = locations.map((item) =>
-                              item.id === location.id
-                                ? {
-                                    ...item,
-                                    preset,
-                                    selector:
-                                      preset === 'after-menu'
-                                        ? '.menu, header nav, #menu, nav, main'
-                                        : preset === 'main-area'
-                                          ? 'main, .holder-results, .flex-holder, .content, [role="main"]'
-                                          : preset === 'middle-page'
-                                            ? '[role="main"], main, .content, .page-content'
-                                            : 'footer, .footer, #footer',
-                                  }
-                                : item,
-                            );
+                    {isAdvanced && (
+                      <div className="space-y-3">
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                            Seletor CSS
+                          </label>
+                          <input
+                            type="text"
+                            value={location.selector || ''}
+                            onChange={(event) => {
+                              const next = locations.map((item) =>
+                                item.id === location.id
+                                  ? {
+                                      ...item,
+                                      selector: event.target.value,
+                                      preset: 'custom' as DisplayLocationUi['preset'],
 
-                            setLocations(next);
-                          }}
-                          className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-600 hover:border-orange-300 hover:bg-orange-50"
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
+                                    }
+                                  : item,
+                              );
+                              setLocations(next);
+                            }}
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
+                            placeholder="Ex: body, .product-info, #main"
+                          />
+                        </div>
 
-                    {(location as any).advanced && (
-                      <div className="mt-4 space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                          Seletor CSS
-                        </label>
-
-                        <input
-                          type="text"
-                          value={location.selector || ''}
-                          onChange={(event) => {
-                            const next = locations.map((item) =>
-                              item.id === location.id
-                                ? {
-                                    ...item,
-                                    selector: event.target.value,
-                                  }
-                                : item,
-                            );
-
-                            setLocations(next);
-                          }}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
-                          placeholder="Ex: body, .product-info, #main"
-                        />
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                            Posição
+                          </label>
+                          <select
+                            value={location.position || 'inside_end'}
+                            onChange={(event) => {
+                              const next = locations.map((item) =>
+                                item.id === location.id
+                                  ? {
+                                      ...item,
+                                      position: event.target.value as DisplayLocation['position'],
+                                    }
+                                  : item,
+                              );
+                              setLocations(next);
+                            }}
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
+                          >
+                            <option value="before_element">beforebegin</option>
+                            <option value="after_element">afterend</option>
+                            <option value="inside_start">afterbegin</option>
+                            <option value="inside_end">beforeend</option>
+                          </select>
+                        </div>
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
 
                 {locations.length === 0 && (
                   <p className="text-xs font-bold text-slate-400">
                     Nenhum local configurado.
                   </p>
                 )}
+
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-4">
+                  <button
+                    type="button"
+                    className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-black uppercase tracking-widest text-white"
+                  >
+                    Gerar código de embed
+                  </button>
+                </div>
               </div>
 
             </div>

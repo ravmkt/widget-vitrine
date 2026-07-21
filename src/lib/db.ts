@@ -114,6 +114,8 @@ export interface DisplayLocation {
   story_id: string;
   selector: string;
   position: DisplayPosition;
+  preset?: 'after-menu' | 'middle-page' | 'before-footer' | 'main-area' | 'custom';
+  blockType?: 'carousel' | 'grid' | 'floating';
   created_at?: string;
   updated_at?: string;
 }
