@@ -427,44 +427,53 @@ const ProductsPage = () => {
   const [isImportingXml, setIsImportingXml] = useState(false);
   const [importProgressMessage, setImportProgressMessage] = useState('');
 
-  const readTagValue = (item: Element, tagName: string) => {
-    const namespaced = item.getElementsByTagNameNS('*', tagName)[0]?.textContent?.trim() || '';
-    const plain = item.getElementsByTagName(tagName)[0]?.textContent?.trim() || '';
-    return namespaced || plain;
+  const getTagValue = (item: Element, tagName: string) => {
+    const candidates = [
+      item.getElementsByTagName(tagName)[0],
+      item.getElementsByTagNameNS('*', tagName)[0],
+    ];
+
+    for (const node of candidates) {
+      const value = node?.textContent?.trim();
+      if (value) return value;
+    }
+
+    return '';
   };
 
-  const parseXmlProducts = async (xmlText: string) => {
+  const parseXmlProducts = (xmlText: string) => {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlText, 'application/xml');
 
     if (xmlDoc.querySelector('parsererror')) {
-      throw new Error('XML inválido');
+      throw new Error('O XML informado não é válido.');
     }
 
     const items = Array.from(xmlDoc.getElementsByTagName('item'));
-    const productsFromXml = items.map((item) => {
-      const title = readTagValue(item, 'title');
-      const link = readTagValue(item, 'link');
-      const priceRaw = readTagValue(item, 'price');
-      const imageUrl = readTagValue(item, 'image_link') || readTagValue(item, 'image');
-      const category = readTagValue(item, 'product_type') || readTagValue(item, 'google_product_category');
-      const normalizedPrice = Number(
-        String(priceRaw)
-          .replace(/[^[\d,.-]/g, '')
-          .replace(/\./g, '')
-          .replace(',', '.'),
-      );
 
-      return {
-        name: title,
-        price: Number.isFinite(normalizedPrice) ? normalizedPrice : 0,
-        product_url: link,
-        image_url: imageUrl,
-        category,
-      };
-    }).filter((product) => product.name && product.product_url);
+    return items
+      .map((item) => {
+        const title = getTagValue(item, 'title');
+        const link = getTagValue(item, 'link');
+        const priceRaw = getTagValue(item, 'price');
+        const imageUrl = getTagValue(item, 'image_link') || getTagValue(item, 'image');
+        const category = getTagValue(item, 'product_type') || getTagValue(item, 'google_product_category');
+        const normalizedPrice = Number(
+          priceRaw
+            .replace(/[^\d.,-]/g, '')
+            .replace(/\./g, '')
+            .replace(',', '.'),
+        );
 
-    return productsFromXml;
+        return {
+          name: title,
+          price: Number.isFinite(normalizedPrice) ? normalizedPrice : 0,
+          product_url: link,
+          image_url: imageUrl,
+          category,
+        };
+      })
+      .filter((product) => product.name && product.product_url);
   };
 
   const handleXmlImport = async () => {
@@ -479,19 +488,18 @@ const ProductsPage = () => {
 
       const xmlText = xmlFile
         ? await xmlFile.text()
-        : await fetch(xmlUrl).then((response) => {
+        : await fetch(xmlUrl, { cache: 'no-store' }).then((response) => {
             if (!response.ok) {
-              throw new Error('Não foi possível baixar o XML');
+              throw new Error(`Não foi possível baixar o XML (${response.status})`);
             }
             return response.text();
           });
 
       setImportProgressMessage('Processando produtos do feed...');
-      const importedProducts = await parseXmlProducts(xmlText);
+      const importedProducts = parseXmlProducts(xmlText);
 
       if (importedProducts.length === 0) {
-        showError('Nenhum produto encontrado no XML.');
-        return;
+        throw new Error('Nenhum produto válido foi encontrado no XML.');
       }
 
       const resolvedStoreId = await resolveStoreId(storeId);
@@ -499,10 +507,16 @@ const ProductsPage = () => {
       const existingProducts = await db.products.getAll(resolvedStoreId);
       const existingNames = new Set(existingProducts.map((product) => product.name.toLowerCase()));
       const existingCategories = new Set(
-        existingProducts.map((product) => String((product as any).category || '').trim()).filter(Boolean),
+        existingProducts
+          .map((product) => String((product as any).category || '').trim())
+          .filter(Boolean),
       );
 
       const newProducts = importedProducts.filter((product) => !existingNames.has(product.name.toLowerCase()));
+
+      if (newProducts.length === 0) {
+        throw new Error('Todos os produtos do XML já existem no catálogo.');
+      }
 
       setImportProgressMessage(`Importando ${newProducts.length} produtos...`);
       await Promise.all(
@@ -550,7 +564,7 @@ const ProductsPage = () => {
       setImportProgressMessage('');
     } catch (error) {
       console.error('Erro ao importar XML:', error);
-      showError('Erro ao importar XML. Verifique o link informado.');
+      showError(error instanceof Error ? error.message : 'Erro ao importar XML. Verifique o link informado.');
     } finally {
       setIsImportingXml(false);
       setImportProgressMessage('');
