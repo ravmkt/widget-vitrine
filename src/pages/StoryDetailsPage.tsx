@@ -137,7 +137,6 @@ type UiRule = {
 
 type DisplayLocationUi = DisplayLocation & {
   preset?: 'after-menu' | 'middle-page' | 'before-footer' | 'main-area' | 'custom';
-  blockType?: 'carousel' | 'grid' | 'floating';
   advanced?: boolean;
 };
 
@@ -234,7 +233,6 @@ const StoryDetailsPage = () => {
   const buildEmbedSnippet = (location: DisplayLocationUi): string => {
     const id = location.id;
     const preset = location.preset || 'main-area';
-    const blockType = location.blockType || 'carousel';
 
     const positionMap: Record<string, string> = {
       before_element: 'beforebegin',
@@ -244,7 +242,7 @@ const StoryDetailsPage = () => {
     };
 
     const position = positionMap[location.position] || 'afterbegin';
-    let snippet = `<script src="https://app.vidlytics.com.br/embed/${id}.js"\n        data-preset="${preset}"\n        data-block-id="${id}"\n        data-block-type="${blockType}"\n        data-position="${position}"`;
+    let snippet = `<script src="https://app.vidlytics.com.br/embed/${id}.js"\n        data-preset="${preset}"\n        data-block-id="${id}"\n        data-position="${position}"`;
 
     if (preset === 'custom' && location.selector) {
       snippet += `\n        data-custom-selector="${location.selector}"`;
@@ -341,6 +339,8 @@ const StoryDetailsPage = () => {
 
       setRules(filteredDbRules.map(mapDbRuleToUiRule));
 
+      const currentRule = filteredDbRules[0] || null;
+
       setFormData({
         title: currentStory.title || '',
         format: currentStory.format || 'carousel',
@@ -350,9 +350,10 @@ const StoryDetailsPage = () => {
           currentStory.appearance_id && isValidUuid(currentStory.appearance_id)
             ? currentStory.appearance_id
             : '',
-        page_rule_mode: 'all_pages',
-        page_rule_value: '',
+        page_rule_mode: (currentRule?.match_type || currentRule?.rule_type || 'all_pages') as ConditionType,
+        page_rule_value: currentRule?.url_pattern || currentRule?.page_url || '',
       });
+
     } catch (error) {
       console.error('Erro ao carregar Story:', error);
       showError('Erro ao carregar os dados do Story.');
@@ -515,7 +516,6 @@ const StoryDetailsPage = () => {
       selector: 'body',
       position: 'inside_end',
       preset: 'main-area',
-      blockType: 'carousel',
       advanced: false,
     } as DisplayLocationUi;
 
@@ -876,7 +876,6 @@ const StoryDetailsPage = () => {
                 {locations.map((location) => {
                   const activePreset = (location as any).preset || 'main-area';
                   const isAdvanced = Boolean((location as any).advanced);
-                  const blockType = (location as any).blockType || 'carousel';
 
                   return (
                     <div
@@ -884,6 +883,7 @@ const StoryDetailsPage = () => {
                       className="group relative rounded-2xl border border-slate-100 bg-slate-50 p-4"
                     >
                       <button
+
                         type="button"
                         onClick={() => openDeleteLocationModal(location)}
                         className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-rose-500 opacity-0 shadow-sm transition-all group-hover:opacity-100"
@@ -891,31 +891,10 @@ const StoryDetailsPage = () => {
                         <X size={12} />
                       </button>
 
-                      <div className="mb-3 grid gap-3 md:grid-cols-2">
+                      <div className="mb-3 grid gap-3">
                         <div className="space-y-1">
                           <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                            Tipo de bloco
-                          </label>
-                          <select
-                            value={blockType}
-                            onChange={(event) => {
-                              const next = locations.map((item) =>
-                                item.id === location.id
-                                  ? { ...item, blockType: event.target.value as 'carousel' | 'grid' | 'floating' }
-                                  : item,
-                              );
-                              setLocations(next);
-                            }}
-                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
-                          >
-                            <option value="carousel">Carrossel</option>
-                            <option value="grid">Grade</option>
-                            <option value="floating">Flutuante</option>
-                          </select>
-                        </div>
 
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
                             Preset de posição
                           </label>
                           <div className="flex flex-wrap gap-2">
@@ -1009,6 +988,7 @@ const StoryDetailsPage = () => {
                             <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
                               Posição
                             </label>
+
                             <select
                               value={location.position || 'inside_end'}
                               onChange={(event) => {

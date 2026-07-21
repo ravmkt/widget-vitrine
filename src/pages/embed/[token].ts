@@ -4,7 +4,7 @@ const buildScript = (block: any) => {
   const preset = block?.preset || 'main-area';
   const customSelector = block?.selector || null;
   const blockId = block?.id;
-  const blockType = block?.blockType || 'carousel';
+  const blockType = block?.story?.format || block?.format || 'carousel';
   const position = block?.position || 'afterbegin';
 
   return `(function() {
@@ -36,13 +36,10 @@ const buildScript = (block: any) => {
   }
 
   var injected = false;
+  var observerStarted = false;
 
   function inject() {
-    if (injected) return;
-    if (document.getElementById(BLOCK_ID)) {
-      injected = true;
-      return;
-    }
+    if (injected || document.getElementById(BLOCK_ID)) return;
     var target = findTarget();
     if (!target) return;
     var wrapper = document.createElement('div');
@@ -53,40 +50,48 @@ const buildScript = (block: any) => {
     fetch('https://app.vidlytics.com.br/api/blocks/' + blockId)
       .then(function(r) { return r.text(); })
       .then(function(html) {
-        wrapper.innerHTML = html;
+        if (document.getElementById(BLOCK_ID)) {
+          wrapper.innerHTML = html;
+        }
       })
       .catch(function() {
-        wrapper.innerHTML = '<!-- Vidlytics: bloco não encontrado -->';
+        if (document.getElementById(BLOCK_ID)) {
+          wrapper.innerHTML = '<!-- Vidlytics: bloco não encontrado -->';
+        }
       });
     injected = true;
   }
 
   function safeInject() {
     if (document.body) { inject(); }
-    else { document.addEventListener('DOMContentLoaded', inject); }
+    else { document.addEventListener('DOMContentLoaded', inject, { once: true }); }
   }
   safeInject();
 
-  var observer = new MutationObserver(function() {
-    if (!document.getElementById(BLOCK_ID)) {
-      injected = false;
-      safeInject();
-    }
-  });
-
   function startObserver() {
-    if (document.body) {
-      observer.observe(document.body, { childList: true, subtree: true });
-    } else {
-      document.addEventListener('DOMContentLoaded', startObserver);
-    }
+    if (observerStarted || !document.body) return;
+    observerStarted = true;
+    var observer = new MutationObserver(function() {
+      if (!injected && !document.getElementById(BLOCK_ID)) {
+        inject();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
   }
-  startObserver();
+
+  if (document.body) {
+    startObserver();
+  } else {
+    document.addEventListener('DOMContentLoaded', startObserver, { once: true });
+  }
 
   window.addEventListener('popstate', function() {
-    injected = false;
-    setTimeout(safeInject, 300);
+    if (!document.getElementById(BLOCK_ID)) {
+      injected = false;
+      setTimeout(safeInject, 300);
+    }
   });
+
 })();`;
 };
 
