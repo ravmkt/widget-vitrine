@@ -3660,14 +3660,20 @@ function insertCarouselHostBySelector(host) {
     return;
   }
 
-  var targets = [];
-  try {
-    targets = Array.prototype.slice.call(document.querySelectorAll(targetLocation.selector));
-  } catch (e) {
-    targets = [];
+  var selector = String(targetLocation.selector || '').trim();
+  if (!selector || selector === 'body') {
+    document.body.appendChild(host);
+    return;
   }
 
-  var target = targets.length ? targets[targets.length - 1] : null;
+  var target = null;
+  try {
+    var matches = Array.prototype.slice.call(document.querySelectorAll(selector));
+    target = matches.length ? matches[matches.length - 1] : null;
+  } catch (e) {
+    target = null;
+  }
+
   if (!target) {
     document.body.appendChild(host);
     return;
@@ -3711,12 +3717,19 @@ function renderCarousel(stories, storyVideoMap, activeVideos) {
           return Number(a.position || 0) - Number(b.position || 0);
         });
 
-      relations.forEach(function (relation) {
+      var orderedRelations = relations.filter(function (relation) {
+        var video = activeVideos.find(function (item) {
+          return idsEqual(item.id, relation.video_id);
+        });
+        return Boolean(video && video.active !== false && relation.active !== false);
+      });
+
+      orderedRelations.forEach(function (relation) {
         var video = activeVideos.find(function (item) {
           return idsEqual(item.id, relation.video_id);
         });
 
-        if (!video || video.active === false || relation.active === false) {
+        if (!video) {
           return;
         }
 
@@ -3725,11 +3738,9 @@ function renderCarousel(stories, storyVideoMap, activeVideos) {
         var card = createEl('button', 'vl-carousel-card');
         var inner = createEl('div', 'vl-carousel-inner');
         var media = createEl('div', 'vl-carousel-media');
-        var openIndex = storyVideoMap && storyVideoMap.get(story.id)
-          ? (storyVideoMap.get(story.id).slice().sort(function (a, b) { return Number(a.position || 0) - Number(b.position || 0); }).findIndex(function (item) {
-              return idsEqual(item.video_id, relation.video_id) && Number(item.position || 0) === Number(relation.position || 0);
-            }))
-          : 0;
+        var openIndex = relations.findIndex(function (item) {
+          return idsEqual(item.video_id, relation.video_id) && Number(item.position || 0) === Number(relation.position || 0);
+        });
 
         if (openIndex < 0) openIndex = 0;
 
@@ -3788,6 +3799,7 @@ function renderCarousel(stories, storyVideoMap, activeVideos) {
 
         carousel.appendChild(card);
       });
+
     });
 
     wrap.appendChild(carousel);
@@ -4025,6 +4037,18 @@ function renderCarousel(stories, storyVideoMap, activeVideos) {
         storyVideoMap,
         activeVideos
       );
+    }
+
+    if (mode === 'carousel' && typeof window !== 'undefined') {
+      setTimeout(function () {
+        var root = document.getElementById('vidlytics-carousel-root');
+        if (root && root.parentNode && root.parentNode !== document.body) {
+          var body = document.body;
+          if (body) {
+            body.appendChild(root);
+          }
+        }
+      }, 0);
     }
 
   })
