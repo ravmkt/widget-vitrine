@@ -4045,7 +4045,7 @@ function renderCarousel(stories, storyVideoMap, activeVideos, dbLocations) {  //
       renderCarousel(
         applicableStories,
         storyVideoMap,
-        activeVideos
+        activeVideos,
          displayLocations 
       );
     }
