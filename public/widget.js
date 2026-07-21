@@ -3688,7 +3688,7 @@ function renderCarousel(stories, storyVideoMap, activeVideos, dbLocations) {  //
     var style = createEl('style');
     style.textContent =
       buildSharedCss(appearance) +
-      buildCarouselCss(appearance) +
+      buildCarouselCss(appearance)
 
     var wrap = createEl('div', 'vl-carousel-wrap');
     var header = createEl('div', 'vl-carousel-header');
