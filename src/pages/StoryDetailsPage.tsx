@@ -1296,9 +1296,11 @@ const StoryDetailsPage = () => {
 
           </div>
         </div>
+      </form>
 
-        {embedModalLocation && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
+      {embedModalLocation && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
+
             <div className="w-full max-w-2xl rounded-[28px] bg-white p-6 shadow-2xl">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-black text-slate-900">Código de embed</h3>
