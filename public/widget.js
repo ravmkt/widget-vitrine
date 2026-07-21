@@ -3901,7 +3901,7 @@ function renderCarousel(stories, storyVideoMap, activeVideos, dbLocations) {  //
       '.vl-carousel-wrap{max-width:100%!important;overflow:visible!important;}' +
       '.vl-carousel-wrap .vl-carousel{overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none!important;-ms-overflow-style:none!important;cursor:grab!important;scroll-snap-type:x mandatory!important;}' +
       '.vl-carousel-wrap .vl-carousel::-webkit-scrollbar{display:none!important;}' +
-      '.vl-carousel-wrap .vl-carousel-card{width:clamp(220px,22vw,300px)!important;min-width:clamp(220px,22vw,300px)!important;max-width:clamp(220px,22vw,300px)!important;scroll-snap-align:start!important;}'
+      '.vl-carousel-wrap .vl-carousel-card{width:clamp(220px,22vw,300px)!important;min-width:clamp(220px,22vw,300px)!important;max-width:clamp(220px,22vw,300px)!important;scroll-snap-align:start!important;}' +
       '@media (max-width: 768px){.vl-carousel-wrap .vl-carousel{justify-content:flex-start!important;}.vl-carousel-wrap .vl-carousel-card{flex-basis:clamp(160px, 72vw, 220px)!important;width:clamp(160px, 72vw, 220px)!important;min-width:clamp(160px, 72vw, 220px)!important;max-width:clamp(160px, 72vw, 220px)!important;}}'
     );
   }
