@@ -488,10 +488,8 @@ const ProductsPage = () => {
 
       const xmlText = xmlFile
         ? await xmlFile.text()
-        : await fetch(xmlUrl, {
+        : await fetch(`/api/proxy-xml?url=${encodeURIComponent(xmlUrl)}`, {
             cache: 'no-store',
-            mode: 'cors',
-            credentials: 'omit',
           }).then((response) => {
             if (!response.ok) {
               throw new Error(`Não foi possível baixar o XML (${response.status})`);
@@ -1226,8 +1224,9 @@ const ProductsPage = () => {
                   <div className="flex items-start gap-3 rounded-xl bg-white p-3 border border-slate-100">
                     <FileText className="mt-0.5 text-[#0094EB]" size={18} />
                     <p className="text-xs font-bold text-slate-600">
-                      Envie a URL do feed XML do Google Shopping ou selecione o arquivo. Se o link externo bloquear o navegador, use o arquivo XML baixado. Serão importados apenas nome, preço, link e a primeira imagem.
+                      Envie a URL do feed XML do Google Shopping ou selecione o arquivo. O app baixa o XML pelo backend para evitar erro de CORS. Serão importados apenas nome, preço, link e a primeira imagem.
                     </p>
+
                   </div>
 
                   <div className="space-y-2">
