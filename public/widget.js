@@ -3902,12 +3902,12 @@ function renderCarousel(stories, storyVideoMap, activeVideos) {
   }
 
   function renderWidget() {
-  try {
-    var existingRoot = document.getElementById('vidlytics-widget-root');
-    if (existingRoot) existingRoot.remove();
-    var existingCarouselRoot = document.getElementById('vidlytics-carousel-root');
-    if (existingCarouselRoot) existingCarouselRoot.remove();
-  } catch (e) {}
+    try {
+      var existingRoot = document.getElementById('vidlytics-widget-root');
+      if (existingRoot) existingRoot.remove();
+      var existingCarouselRoot = document.getElementById('vidlytics-carousel-root');
+      if (existingCarouselRoot) existingCarouselRoot.remove();
+    } catch (e) {}
 
   return Promise.all([
     readAppearance(),
@@ -4019,15 +4019,15 @@ function renderCarousel(stories, storyVideoMap, activeVideos) {
       setTimeout(forceHostPosition, 500);
       setTimeout(forceHostPosition, 1500);
     } else if (mode === 'carousel') {
-  renderCarousel(
-    applicableStories,
-    storyVideoMap,
-    activeVideos
-  );
-}
-
+      renderCarousel(
+        applicableStories,
+        storyVideoMap,
+        activeVideos
+      );
+    }
 
   })
+
   .catch(function (error) {
     console.error('Erro no Vidlytics Widget:', error);
   });
@@ -4133,4 +4133,4 @@ function renderCarousel(stories, storyVideoMap, activeVideos) {
   } else {
     bootstrap();
   }
-})();
+  })();
