@@ -1,5 +1,5 @@
 (function () {
-    var WIDGET_VERSION = '2026.07.20-19';
+    var WIDGET_VERSION = '2026.07.20-20';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -3666,14 +3666,14 @@ function insertCarouselHostBySelector(host) {
     return;
   }
 
-  var targets = [];
+  var target = null;
   try {
-    targets = Array.prototype.slice.call(document.querySelectorAll(selector));
+    var matches = Array.prototype.slice.call(document.querySelectorAll(selector));
+    target = matches.length ? matches[matches.length - 1] : null;
   } catch (e) {
-    targets = [];
+    target = null;
   }
 
-  var target = targets.length ? targets[targets.length - 1] : null;
   if (!target) {
     document.body.appendChild(host);
     return;
@@ -3696,9 +3696,9 @@ function renderCarousel(stories, storyVideoMap, activeVideos) {
       buildSharedCss(appearance) +
       buildCarouselCss(appearance) +
       '.vl-carousel-wrap{max-width:100%!important;overflow:visible!important;}' +
-      '.vl-carousel-wrap .vl-carousel{overflow-x:visible!important;overflow-y:visible!important;scrollbar-width:none!important;-ms-overflow-style:none!important;cursor:grab!important;}' +
+      '.vl-carousel-wrap .vl-carousel{overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none!important;-ms-overflow-style:none!important;cursor:grab!important;scroll-snap-type:x mandatory!important;}' +
       '.vl-carousel-wrap .vl-carousel::-webkit-scrollbar{display:none!important;}' +
-      '.vl-carousel-wrap .vl-carousel-card{width:clamp(220px,22vw,300px)!important;min-width:clamp(220px,22vw,300px)!important;max-width:clamp(220px,22vw,300px)!important;}'
+      '.vl-carousel-wrap .vl-carousel-card{width:clamp(220px,22vw,300px)!important;min-width:clamp(220px,22vw,300px)!important;max-width:clamp(220px,22vw,300px)!important;scroll-snap-align:start!important;}'
 
     var wrap = createEl('div', 'vl-carousel-wrap');
     var header = createEl('div', 'vl-carousel-header');
@@ -3713,6 +3713,7 @@ function renderCarousel(stories, storyVideoMap, activeVideos) {
     wrap.appendChild(header);
 
     var carousel = createEl('div', 'vl-carousel');
+    carousel.setAttribute('data-vidlytics-drag-scroll', 'true');
 
     stories.forEach(function (story, index) {
       var relations = (storyVideoMap.get(story.id) || [])
@@ -3796,6 +3797,10 @@ function renderCarousel(stories, storyVideoMap, activeVideos) {
 
         card.addEventListener('pointerdown', function (event) {
           event.stopPropagation();
+        });
+
+        card.addEventListener('dragstart', function (event) {
+          event.preventDefault();
         });
 
         carousel.appendChild(card);
