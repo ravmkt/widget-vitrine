@@ -981,27 +981,7 @@ params.set('select', 'video_id,visitor_id');
     return { host: host, shadow: globalShadowRoot };
   }
 
-  function getOrCreateCarouselShadowRoot() {
-    var existingRoot = document.getElementById('vidlytics-carousel-root');
-    if (existingRoot && existingRoot.shadowRoot) existingRoot.shadowRoot.innerHTML = '';
-    if (existingRoot && existingRoot.parentNode) existingRoot.parentNode.removeChild(existingRoot);
-
-    var host = createEl('div', 'vidlytics-carousel-root');
-    host.id = 'vidlytics-carousel-root';
-    host.style.display = 'block';
-    host.style.position = 'relative';
-    host.style.width = '100%';
-    host.style.maxWidth = '100%';
-    host.style.height = 'auto';
-    host.style.zIndex = '2147483647';
-    host.style.pointerEvents = 'auto';
-    host.style.background = 'transparent';
-
-    globalShadowRoot = host.attachShadow({ mode: 'open' });
-    return { host: host, shadow: globalShadowRoot };
-  }
-
-function buildSharedCss(appearance) {
+  function buildSharedCss(appearance) {
   var cfg = getFloatingConfig(appearance);
   var primary = getPrimaryColor(appearance);
   var secondary = getSecondaryColor(appearance);
