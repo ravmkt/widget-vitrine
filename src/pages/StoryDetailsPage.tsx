@@ -956,30 +956,106 @@ const StoryDetailsPage = () => {
                       <X size={12} />
                     </button>
 
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                        Seletor CSS
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                          Tipo de bloco
+                        </p>
+                        <p className="text-sm font-black text-slate-800">
+                          {'position' in location && location.position === 'inside_start'
+                            ? 'Carrossel'
+                            : 'position' in location && location.position === 'inside_end'
+                              ? 'Grade'
+                              : 'Flutuante'}
+
+                        </p>
+                      </div>
+
+                      <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        <input
+                          type="checkbox"
+                          checked={Boolean((location as any).advanced)}
+                          onChange={(event) => {
+                            const next = locations.map((item) =>
+                              item.id === location.id
+                                ? {
+                                    ...item,
+                                    advanced: event.target.checked,
+                                  }
+                                : item,
+                            );
+
+                            setLocations(next);
+                          }}
+                          className="h-4 w-4 rounded border-slate-300 text-orange-500"
+                        />
+                        Modo avançado
                       </label>
-
-                      <input
-                        type="text"
-                        value={location.selector || ''}
-                        onChange={(event) => {
-                          const next = locations.map((item) =>
-                            item.id === location.id
-                              ? {
-                                  ...item,
-                                  selector: event.target.value,
-                                }
-                              : item,
-                          );
-
-                          setLocations(next);
-                        }}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
-                        placeholder="Ex: body, .product-info, #main"
-                      />
                     </div>
+
+                    <div className="grid gap-2 md:grid-cols-2">
+                      {[
+                        ['after-menu', 'Logo abaixo do menu'],
+                        ['main-area', 'Área principal'],
+                        ['middle-page', 'No meio da página'],
+                        ['before-footer', 'Antes do rodapé'],
+                      ].map(([preset, label]) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => {
+                            const next = locations.map((item) =>
+                              item.id === location.id
+                                ? {
+                                    ...item,
+                                    preset,
+                                    selector:
+                                      preset === 'after-menu'
+                                        ? '.menu, header nav, #menu, nav, main'
+                                        : preset === 'main-area'
+                                          ? 'main, .holder-results, .flex-holder, .content, [role="main"]'
+                                          : preset === 'middle-page'
+                                            ? '[role="main"], main, .content, .page-content'
+                                            : 'footer, .footer, #footer',
+                                  }
+                                : item,
+                            );
+
+                            setLocations(next);
+                          }}
+                          className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-600 hover:border-orange-300 hover:bg-orange-50"
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {(location as any).advanced && (
+                      <div className="mt-4 space-y-1">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                          Seletor CSS
+                        </label>
+
+                        <input
+                          type="text"
+                          value={location.selector || ''}
+                          onChange={(event) => {
+                            const next = locations.map((item) =>
+                              item.id === location.id
+                                ? {
+                                    ...item,
+                                    selector: event.target.value,
+                                  }
+                                : item,
+                            );
+
+                            setLocations(next);
+                          }}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
+                          placeholder="Ex: body, .product-info, #main"
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
 
@@ -989,6 +1065,7 @@ const StoryDetailsPage = () => {
                   </p>
                 )}
               </div>
+
             </div>
 
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
