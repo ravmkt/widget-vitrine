@@ -1,4 +1,3 @@
-import { db } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
 
 const buildScript = (block: any) => {
@@ -51,6 +50,14 @@ const buildScript = (block: any) => {
     wrapper.className = 'vidlytics-block vidlytics-' + blockType;
     wrapper.setAttribute('data-vidlytics-block-id', blockId);
     target.insertAdjacentElement(METHOD, wrapper);
+    fetch('https://app.vidlytics.com.br/api/blocks/' + blockId)
+      .then(function(r) { return r.text(); })
+      .then(function(html) {
+        wrapper.innerHTML = html;
+      })
+      .catch(function() {
+        wrapper.innerHTML = '<!-- Vidlytics: bloco não encontrado -->';
+      });
     injected = true;
   }
 

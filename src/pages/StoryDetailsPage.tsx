@@ -53,6 +53,13 @@ const POSITION_PRESET_LABELS: Record<string, string> = {
   custom: 'Lugar personalizado',
 };
 
+const POSITION_METHOD_MAP: Record<string, string> = {
+  before_element: 'beforebegin',
+  after_element: 'afterend',
+  inside_start: 'afterbegin',
+  inside_end: 'beforeend',
+};
+
 const getAllSafe = async <T,>(
   collection: any,
   storeId?: string,
@@ -251,6 +258,8 @@ const StoryDetailsPage = () => {
     id: '',
     name: '',
   });
+  const [embedModalLocation, setEmbedModalLocation] = useState<DisplayLocationUi | null>(null);
+  const [copiedSnippet, setCopiedSnippet] = useState(false);
 
   const selectedVideosCount = useMemo(
     () => selectedVideoIds.length,
@@ -618,6 +627,23 @@ const StoryDetailsPage = () => {
     setRules((prev) => prev.filter((rule) => rule.id !== ruleId));
   };
 
+  const buildEmbedSnippet = (location: DisplayLocationUi) => {
+    const position = POSITION_METHOD_MAP[location.position] || 'afterbegin';
+    const preset = location.preset || 'main-area';
+    const blockType = location.blockType || 'carousel';
+    const customSelector = preset === 'custom' ? location.selector : '';
+
+    return `<script src="https://app.vidlytics.com.br/embed/${location.id}.js"\n        data-preset="${preset}"\n        data-block-id="${location.id}"\n        data-block-type="${blockType}"\n        data-position="${position}"${customSelector ? `\n        data-custom-selector="${customSelector.replace(/\"/g, '&quot;')}"` : ''}\n        async></script>`;
+  };
+
+  const handleGenerateEmbedCode = () => {
+    const firstLocation = locations[0] || null;
+    if (firstLocation) {
+      setEmbedModalLocation(firstLocation);
+      setCopiedSnippet(false);
+    }
+  };
+
   const openDeleteLocationModal = (location: DisplayLocation) => {
     setDeleteModal({
       isOpen: true,
@@ -976,10 +1002,11 @@ const StoryDetailsPage = () => {
                   const blockType = (location as any).blockType || 'carousel';
 
                   return (
-                  <div
-                    key={location.id}
-                    className="group relative rounded-2xl border border-slate-100 bg-slate-50 p-4"
-                  >
+                    <div
+                      key={location.id}
+                      className="group relative rounded-2xl border border-slate-100 bg-slate-50 p-4"
+                    >
+
                     <button
                       type="button"
                       onClick={() => openDeleteLocationModal(location)}
@@ -1035,14 +1062,14 @@ const StoryDetailsPage = () => {
                                     item.id === location.id
                                       ? {
                                           ...item,
-                                          preset: preset,
-      
+                                          preset,
                                           selector: POSITION_PRESETS[preset][0] || 'main',
                                         }
                                       : item,
                                   );
                                   setLocations(next);
                                 }}
+
                                 className={cn(
                                   'rounded-2xl border px-3 py-2 text-[10px] font-black uppercase tracking-widest transition',
                                   active
@@ -1070,10 +1097,10 @@ const StoryDetailsPage = () => {
                                     ...item,
                                     advanced: event.target.checked,
                                     preset: (event.target.checked ? 'custom' : activePreset) as DisplayLocationUi['preset'],
-
                                   }
                                 : item,
                             );
+
                             setLocations(next);
                           }}
                           className="h-4 w-4 rounded border-slate-300 text-orange-500"
@@ -1149,11 +1176,59 @@ const StoryDetailsPage = () => {
                 <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-4">
                   <button
                     type="button"
+                    onClick={handleGenerateEmbedCode}
                     className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-black uppercase tracking-widest text-white"
                   >
                     Gerar código de embed
                   </button>
                 </div>
+              </div>
+
+              {embedModalLocation && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
+                  <div className="w-full max-w-2xl rounded-[28px] bg-white p-6 shadow-2xl">
+                    <div className="mb-4 flex items-center justify-between">
+                      <h3 className="text-lg font-black text-slate-900">Código de embed</h3>
+                      <button
+                        type="button"
+                        onClick={() => setEmbedModalLocation(null)}
+                        className="rounded-full p-2 text-slate-500 hover:bg-slate-100"
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+
+                    <textarea
+                      readOnly
+                      value={buildEmbedSnippet(embedModalLocation)}
+                      className="min-h-[220px] w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 font-mono text-xs text-slate-800 outline-none"
+                    />
+
+                    <div className="mt-4 flex items-center justify-between gap-3">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(buildEmbedSnippet(embedModalLocation));
+                          setCopiedSnippet(true);
+                          setTimeout(() => setCopiedSnippet(false), 1500);
+                        }}
+                        className="rounded-xl bg-orange-500 px-4 py-2 text-xs font-black uppercase tracking-widest text-white"
+                      >
+                        {copiedSnippet ? 'Copiado!' : 'Copiar'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setEmbedModalLocation(null)}
+                        className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-700"
+                      >
+                        Fechar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               </div>
 
             </div>
@@ -1221,7 +1296,51 @@ const StoryDetailsPage = () => {
 
           </div>
         </div>
-      </form>
+
+        {embedModalLocation && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
+            <div className="w-full max-w-2xl rounded-[28px] bg-white p-6 shadow-2xl">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-black text-slate-900">Código de embed</h3>
+                <button
+                  type="button"
+                  onClick={() => setEmbedModalLocation(null)}
+                  className="rounded-full p-2 text-slate-500 hover:bg-slate-100"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <textarea
+                readOnly
+                value={buildEmbedSnippet(embedModalLocation)}
+                className="min-h-[220px] w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 font-mono text-xs text-slate-800 outline-none"
+              />
+
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(buildEmbedSnippet(embedModalLocation));
+                    setCopiedSnippet(true);
+                    setTimeout(() => setCopiedSnippet(false), 1500);
+                  }}
+                  className="rounded-xl bg-orange-500 px-4 py-2 text-xs font-black uppercase tracking-widest text-white"
+                >
+                  {copiedSnippet ? 'Copiado!' : 'Copiar'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setEmbedModalLocation(null)}
+                  className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-700"
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       <ConfirmDeleteDialog
         isOpen={deleteModal.isOpen}
