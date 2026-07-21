@@ -3625,54 +3625,53 @@ function insertCarouselHostBySelector(host, locations) {
 
   locations = locations || [];
 
-  if (!locations.length) {
-    // ⬇️ fallback: tenta antes do footer, depois no body
-    var footer = document.querySelector('footer, [role="contentinfo"], .footer');
-    if (footer && footer.parentNode) {
-      footer.parentNode.insertBefore(host, footer);
-    } else {
-      document.body.appendChild(host);
-    }
-    return;
-  }
-
+  // Tenta encontrar o local de exibição para carrossel
   var targetLocation = locations.find(function (loc) {
     return loc && loc.active !== false && loc.mode === 'carousel' && loc.selector;
   });
 
-  if (!targetLocation) {
-    var footer2 = document.querySelector('footer, [role="contentinfo"], .footer');
-    if (footer2 && footer2.parentNode) {
-      footer2.parentNode.insertBefore(host, footer2);
-    } else {
-      document.body.appendChild(host);
+  // Se tem targetLocation, tenta usar o seletor
+  if (targetLocation) {
+    var selector = String(targetLocation.selector || '').trim();
+
+    if (selector && selector !== 'body') {
+      var target = null;
+      try {
+        target = document.querySelector(selector);
+      } catch (e) {
+        target = null;
+      }
+
+      if (target) {
+        var position = targetLocation.position || 'beforeend';
+        target.insertAdjacentElement(position, host);
+        return;
+      }
+
+      console.warn(
+        '[Vidlytics] Carrossel: seletor "' +
+          selector +
+          '" definido no painel, mas não foi encontrado no DOM. Inserindo antes do footer.'
+      );
     }
+  }
+
+  // FALLBACK: insere antes do footer, se existir
+  var footer =
+    document.querySelector('footer') ||
+    document.querySelector('[role="contentinfo"]') ||
+    document.querySelector('.footer') ||
+    document.querySelector('#footer');
+
+  if (footer && footer.parentNode) {
+    footer.parentNode.insertBefore(host, footer);
     return;
   }
 
-  var selector = String(targetLocation.selector || '').trim();
-  var target = null;
-
-  try {
-    target = document.querySelector(selector);
-  } catch (e) {
-    target = null;
-  }
-
-  if (!target) {
-    console.warn('[Vidlytics] Carousel: seletor "' + selector + '" não encontrado no DOM. Inserindo antes do footer.');
-    var footer3 = document.querySelector('footer, [role="contentinfo"], .footer');
-    if (footer3 && footer3.parentNode) {
-      footer3.parentNode.insertBefore(host, footer3);
-    } else {
-      document.body.appendChild(host);
-    }
-    return;
-  }
-
-  var position = targetLocation.position || 'beforeend';
-  target.insertAdjacentElement(position, host);
+  // Último recurso: insere no body
+  document.body.appendChild(host);
 }
+
 
 
 
