@@ -1037,7 +1037,7 @@ const preparePayloadForSave = <T extends Record<string, any>>(
   return normalizeUuidPayload(
     tableName,
     sanitizeTablePayload(tableName, removeUndefinedValues(normalizedPayload)),
-  );
+  ) as T;
 };
 
 const initLocalStorage = () => {

@@ -1700,8 +1700,10 @@ const [model, setModel] = useState<any | null>(null);
 
         {model && showMeasures && (
           <div className="absolute inset-0 z-[95] flex items-center justify-center bg-black/85 p-4">
-            {console.log('[StoriesWidgetPage] Rendering measures modal', { model, modelData })}
+            {process.env.NODE_ENV !== 'production' && (() => { console.log('[StoriesWidgetPage] Rendering measures modal', { model, modelData }); return null; })()}
+
             <div className="mx-auto flex max-h-[75vh] w-full max-w-[380px] flex-col overflow-hidden rounded-[28px] bg-white p-5 text-slate-900 shadow-2xl">
+
               <div className="mb-4 flex items-center justify-between">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
