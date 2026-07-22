@@ -644,11 +644,13 @@ const ProductsPage = () => {
 
   const xmlPreviewCategories = Array.from(new Set(importedXmlProducts.map((product) => formatXmlCategory(product.category || 'Sem categoria')))).sort();
 
+  const totalXmlProducts = importedXmlProducts.length;
   const totalXmlPages = Math.max(1, Math.ceil(filteredXmlProducts.length / xmlPreviewPageSize));
   const safeXmlPreviewPage = Math.min(xmlPreviewPage, totalXmlPages);
   const xmlPreviewPageItems = filteredXmlProducts.slice((safeXmlPreviewPage - 1) * xmlPreviewPageSize, safeXmlPreviewPage * xmlPreviewPageSize);
   const selectedXmlCount = selectedXmlKeys.size;
   const allVisibleSelected = xmlPreviewPageItems.length > 0 && xmlPreviewPageItems.every((product) => selectedXmlKeys.has(getXmlProductKey(product)));
+  const allFilteredXmlSelected = filteredXmlProducts.length > 0 && filteredXmlProducts.every((product) => selectedXmlKeys.has(getXmlProductKey(product)));
 
   const setSelectedXmlProduct = (product: ImportedProduct, checked: boolean) => {
     const key = getXmlProductKey(product);
@@ -669,6 +671,13 @@ const ProductsPage = () => {
         else next.delete(key);
       });
       return next;
+    });
+  };
+
+  const toggleSelectAllXml = (checked: boolean) => {
+    setSelectedXmlKeys(() => {
+      if (!checked) return new Set();
+      return new Set(importedXmlProducts.map((product) => getXmlProductKey(product)));
     });
   };
 
@@ -1726,9 +1735,10 @@ const ProductsPage = () => {
                         <div className="flex items-start justify-between gap-3">
                           <div className="space-y-1">
                             <p className="text-sm font-black text-slate-900">Prévia dos produtos encontrados</p>
-                            <p className="text-xs font-bold text-slate-500">{selectedXmlCount} produto(s) selecionado(s)</p>
+                            <p className="text-xs font-bold text-slate-500">{selectedXmlCount} produto(s) selecionado(s) de {totalXmlProducts} no arquivo</p>
                           </div>
-                          <button type="button" onClick={() => setShowImportModal(false)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-black text-slate-600 hover:bg-slate-50">Voltar</button>
+                          <button type="button" onClick={() => { setShowImportModal(true); setXmlPreviewPage(1); }} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-black text-slate-600 hover:bg-slate-50">Voltar</button>
+
                         </div>
 
                         <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1736,12 +1746,14 @@ const ProductsPage = () => {
                             <input type="checkbox" checked={allVisibleSelected} onChange={(e) => toggleSelectAllVisibleXml(e.target.checked)} />
                             <span className="min-w-0 break-words">Selecionar todos desta página</span>
                           </label>
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button type="button" onClick={() => toggleSelectAllXml(true)} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-black text-slate-600 hover:bg-slate-50">Selecionar tudo</button>
                             <button type="button" onClick={handleXmlImportSelected} disabled={isImportingXml || !selectedXmlCount} className="rounded-xl bg-[#0094EB] px-4 py-2 text-sm font-black text-white hover:bg-[#0E4787] disabled:opacity-60">Importar selecionados</button>
                           </div>
                         </div>
 
                         <div className="mt-3 flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
+
                           <input value={xmlPreviewSearch} onChange={(e) => { setXmlPreviewSearch(e.target.value); setXmlPreviewPage(1); }} placeholder="Buscar por nome, SKU ou categoria" className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-1 sm:max-w-[15rem]" />
                           <select value={xmlPreviewCategory} onChange={(e) => { setXmlPreviewCategory(e.target.value); setXmlPreviewPage(1); }} className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-1 sm:max-w-[15rem]">
                             <option value="all">Todas as categorias</option>
