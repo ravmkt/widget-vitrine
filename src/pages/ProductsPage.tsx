@@ -1731,17 +1731,16 @@ const ProductsPage = () => {
                 </div>
 
                 {importedXmlProducts.length > 0 && (
-                  <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 max-h-[62vh] overflow-y-auto overflow-x-hidden">
+                  <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 max-h-[52vh] overflow-y-auto overflow-x-hidden sm:max-h-[58vh] lg:max-h-[62vh]">
 
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                      <div className="space-y-1">
+                    <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                      <div className="space-y-1 xl:max-w-[18rem]">
                         <p className="text-sm font-black text-slate-900">Prévia dos produtos encontrados</p>
                         <p className="text-xs font-bold text-slate-500">{selectedXmlCount} produto(s) selecionado(s)</p>
                       </div>
-                      <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-1 sm:justify-end">
-                        <input value={xmlPreviewSearch} onChange={(e) => { setXmlPreviewSearch(e.target.value); setXmlPreviewPage(1); }} placeholder="Buscar por nome, SKU ou categoria" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:w-[18rem]" />
-                        <select value={xmlPreviewCategory} onChange={(e) => { setXmlPreviewCategory(e.target.value); setXmlPreviewPage(1); }} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:w-[18rem]">
-
+                      <div className="flex w-full flex-col gap-2 sm:flex-row xl:flex-1 xl:justify-end">
+                        <input value={xmlPreviewSearch} onChange={(e) => { setXmlPreviewSearch(e.target.value); setXmlPreviewPage(1); }} placeholder="Buscar por nome, SKU ou categoria" className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-1 xl:max-w-[16rem]" />
+                        <select value={xmlPreviewCategory} onChange={(e) => { setXmlPreviewCategory(e.target.value); setXmlPreviewPage(1); }} className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-1 xl:max-w-[16rem]">
                           <option value="all">Todas as categorias</option>
                           {xmlPreviewCategories.map((category) => <option key={category} value={category}>{category}</option>)}
                         </select>
@@ -1750,11 +1749,11 @@ const ProductsPage = () => {
                     </div>
 
                     <div className="flex flex-col gap-3 rounded-xl bg-slate-50 px-4 py-3 text-sm font-bold text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-                      <label className="flex items-center gap-2">
+                      <label className="flex min-w-0 items-center gap-2">
                         <input type="checkbox" checked={allVisibleSelected} onChange={(e) => toggleSelectAllVisibleXml(e.target.checked)} />
-                        Selecionar todos desta página
+                        <span className="min-w-0 break-words">Selecionar todos desta página</span>
                       </label>
-                      <select value={xmlPreviewPageSize} onChange={(e) => { setXmlPreviewPageSize(Number(e.target.value)); setXmlPreviewPage(1); }} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold sm:w-auto">
+                      <select value={xmlPreviewPageSize} onChange={(e) => { setXmlPreviewPageSize(Number(e.target.value)); setXmlPreviewPage(1); }} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold sm:w-36">
                         {[10, 20, 50].map((size) => <option key={size} value={size}>{size} por página</option>)}
                       </select>
                     </div>
@@ -1764,19 +1763,20 @@ const ProductsPage = () => {
                         const key = getXmlProductKey(product);
                         return (
                           <div key={key} className="rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
-                            <div className="grid grid-cols-[auto_56px_1fr] gap-3 sm:grid-cols-[auto_64px_minmax(0,1.4fr)_repeat(4,minmax(0,1fr))] sm:items-start">
+                            <div className="grid grid-cols-[auto_48px_1fr] gap-3 sm:grid-cols-[auto_56px_minmax(0,1.35fr)_repeat(4,minmax(0,1fr))] sm:items-start">
                               <div className="flex items-start pt-2"><input type="checkbox" checked={selectedXmlKeys.has(key)} onChange={(e) => setSelectedXmlProduct(product, e.target.checked)} /></div>
-                              <div><img src={product.image_url || 'https://via.placeholder.com/72'} alt={product.name} className="h-14 w-14 rounded-xl object-cover" loading="lazy" /></div>
+                              <div><img src={product.image_url || 'https://via.placeholder.com/72'} alt={product.name} className="h-12 w-12 rounded-xl object-cover" loading="lazy" /></div>
                               <div className="min-w-0 space-y-1 sm:col-span-6">
-                                <div className="truncate font-bold text-slate-900">{product.name}</div>
-                                <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs font-bold text-slate-500 sm:grid-cols-4">
-                                  <div className="min-w-0"><span className="block uppercase tracking-widest text-[10px] text-slate-400">SKU</span><span className="block truncate">{product.sku || '-'}</span></div>
-                                  <div className="min-w-0"><span className="block uppercase tracking-widest text-[10px] text-slate-400">Preço</span><span className="block truncate">{product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
-                                  <div className="min-w-0"><span className="block uppercase tracking-widest text-[10px] text-slate-400">Marca</span><span className="block truncate">{product.idValue || '-'}</span></div>
-                                  <div className="min-w-0"><span className="block uppercase tracking-widest text-[10px] text-slate-400">Categoria</span><span className="block truncate">{formatXmlCategory(product.category || 'Sem categoria')}</span></div>
+                                <div className="truncate text-sm font-bold text-slate-900 sm:text-base">{product.name}</div>
+                                <div className="grid grid-cols-2 gap-x-2 gap-y-2 text-[11px] font-bold text-slate-500 sm:grid-cols-4 sm:text-xs">
+                                  <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">SKU</span><span className="block truncate">{product.sku || '-'}</span></div>
+                                  <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">Preço</span><span className="block truncate">{product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
+                                  <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">Marca</span><span className="block truncate">{product.idValue || '-'}</span></div>
+                                  <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">Categoria</span><span className="block truncate">{formatXmlCategory(product.category || 'Sem categoria')}</span></div>
                                 </div>
                               </div>
                             </div>
+
                           </div>
                         );
                       })}
@@ -1859,8 +1859,9 @@ const ProductsPage = () => {
       )}
 
       {isImportingXml && (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-slate-950/50 backdrop-blur-sm px-3 py-6">
-          <div className="flex w-full max-w-2xl items-center gap-4 rounded-3xl bg-white p-6 shadow-2xl">
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-slate-950/50 backdrop-blur-sm px-3 py-4">
+          <div className="flex w-full max-w-2xl items-center gap-4 rounded-3xl bg-white p-4 shadow-2xl sm:p-6">
+
             <Loader2 className="h-6 w-6 animate-spin text-[#0094EB]" />
             <div>
               <p className="text-sm font-black text-slate-900">Aguarde</p>
