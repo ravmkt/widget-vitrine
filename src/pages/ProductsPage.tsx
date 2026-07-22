@@ -638,7 +638,11 @@ const ProductsPage = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const xmlPreviewCategories = Array.from(new Set(importedXmlProducts.map((product) => product.category || 'Sem categoria'))).sort();
+  const formatXmlCategory = (value: string) =>
+    value.replace(/&gt;|>/g, ': ').replace(/\s+/g, ' ').replace(/:\s*/g, ': ').replace(/\s*:\s*/g, ': ').replace(/:\s*/g, ': ').replace(/\s+([A-Za-zÀ-ÿ])/g, ' $1').trim();
+
+  const xmlPreviewCategories = Array.from(new Set(importedXmlProducts.map((product) => formatXmlCategory(product.category || 'Sem categoria')))).sort();
+
   const totalXmlPages = Math.max(1, Math.ceil(filteredXmlProducts.length / xmlPreviewPageSize));
   const safeXmlPreviewPage = Math.min(xmlPreviewPage, totalXmlPages);
   const xmlPreviewPageItems = filteredXmlProducts.slice((safeXmlPreviewPage - 1) * xmlPreviewPageSize, safeXmlPreviewPage * xmlPreviewPageSize);
@@ -1733,46 +1737,45 @@ const ProductsPage = () => {
                         <p className="text-sm font-black text-slate-900">Prévia dos produtos encontrados</p>
                         <p className="text-xs font-bold text-slate-500">{selectedXmlCount} produto(s) selecionado(s)</p>
                       </div>
-                      <div className="flex flex-col gap-2 sm:flex-row">
-                        <input value={xmlPreviewSearch} onChange={(e) => { setXmlPreviewSearch(e.target.value); setXmlPreviewPage(1); }} placeholder="Buscar por nome, SKU ou categoria" className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-bold outline-none focus:border-[#0094EB]" />
-                        <select value={xmlPreviewCategory} onChange={(e) => { setXmlPreviewCategory(e.target.value); setXmlPreviewPage(1); }} className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-bold outline-none focus:border-[#0094EB]">
+                      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                        <input value={xmlPreviewSearch} onChange={(e) => { setXmlPreviewSearch(e.target.value); setXmlPreviewPage(1); }} placeholder="Buscar por nome, SKU ou categoria" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:w-64" />
+                        <select value={xmlPreviewCategory} onChange={(e) => { setXmlPreviewCategory(e.target.value); setXmlPreviewPage(1); }} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:w-64">
                           <option value="all">Todas as categorias</option>
                           {xmlPreviewCategories.map((category) => <option key={category} value={category}>{category}</option>)}
                         </select>
                       </div>
+
                     </div>
 
-                    <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm font-bold text-slate-600">
+                    <div className="flex flex-col gap-3 rounded-xl bg-slate-50 px-4 py-3 text-sm font-bold text-slate-600 sm:flex-row sm:items-center sm:justify-between">
                       <label className="flex items-center gap-2">
                         <input type="checkbox" checked={allVisibleSelected} onChange={(e) => toggleSelectAllVisibleXml(e.target.checked)} />
                         Selecionar todos desta página
                       </label>
-                      <select value={xmlPreviewPageSize} onChange={(e) => { setXmlPreviewPageSize(Number(e.target.value)); setXmlPreviewPage(1); }} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold">
+                      <select value={xmlPreviewPageSize} onChange={(e) => { setXmlPreviewPageSize(Number(e.target.value)); setXmlPreviewPage(1); }} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold sm:w-auto">
                         {[10, 20, 50].map((size) => <option key={size} value={size}>{size} por página</option>)}
                       </select>
                     </div>
 
-                    <div className="overflow-hidden rounded-xl border border-slate-100">
-                      <div className="grid grid-cols-[auto_72px_1.6fr_1fr_1fr_1fr_1fr] gap-3 border-b border-slate-100 bg-slate-50 px-4 py-3 text-[11px] font-black uppercase tracking-widest text-slate-500">
-                        <div />
-                        <div>Imagem</div>
-                        <div>Nome</div>
-                        <div>SKU</div>
-                        <div>Preço</div>
-                        <div>Marca</div>
-                        <div>Categoria</div>
-                      </div>
+                    <div className="space-y-3">
                       {xmlPreviewPageItems.map((product) => {
                         const key = getXmlProductKey(product);
                         return (
-                          <div key={key} className="grid grid-cols-[auto_72px_1.6fr_1fr_1fr_1fr_1fr] gap-3 border-b border-slate-100 px-4 py-3 text-sm">
-                            <div className="flex items-center"><input type="checkbox" checked={selectedXmlKeys.has(key)} onChange={(e) => setSelectedXmlProduct(product, e.target.checked)} /></div>
-                            <div><img src={product.image_url || 'https://via.placeholder.com/72'} alt={product.name} className="h-14 w-14 rounded-xl object-cover" loading="lazy" /></div>
-                            <div className="font-bold text-slate-900">{product.name}</div>
-                            <div className="font-bold text-slate-600">{product.sku || '-'}</div>
-                            <div className="font-bold text-slate-600">{product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
-                            <div className="font-bold text-slate-600">{product.idValue || '-'}</div>
-                            <div className="font-bold text-slate-600">{product.category || 'Sem categoria'}</div>
+                          <div key={key} className="rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
+                            <div className="grid grid-cols-[auto_64px_1fr] gap-3 sm:grid-cols-[auto_72px_1fr_1fr_1fr_1fr_1fr] sm:items-start">
+                              <div className="flex items-start pt-2"><input type="checkbox" checked={selectedXmlKeys.has(key)} onChange={(e) => setSelectedXmlProduct(product, e.target.checked)} /></div>
+                              <div><img src={product.image_url || 'https://via.placeholder.com/72'} alt={product.name} className="h-14 w-14 rounded-xl object-cover" loading="lazy" /></div>
+                              <div className="min-w-0 space-y-1 sm:col-span-5">
+                                <div className="font-bold text-slate-900">{product.name}</div>
+                                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs font-bold text-slate-500 sm:grid-cols-5">
+                                  <div><span className="block uppercase tracking-widest text-[10px] text-slate-400">SKU</span>{product.sku || '-'}</div>
+                                  <div><span className="block uppercase tracking-widest text-[10px] text-slate-400">Preço</span>{product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                                  <div><span className="block uppercase tracking-widest text-[10px] text-slate-400">Marca</span>{product.idValue || '-'}</div>
+                                  <div className="col-span-2"><span className="block uppercase tracking-widest text-[10px] text-slate-400">Categoria</span>{formatXmlCategory(product.category || 'Sem categoria')}</div>
+                                </div>
+                              </div>
+  
+                            </div>
                           </div>
                         );
                       })}
