@@ -754,12 +754,18 @@ const ProductsPage = () => {
       setIsImportingXml(true);
       const resolvedStoreId = await resolveStoreId(storeId);
       const now = new Date().toISOString();
+      const existingProducts = await db.products.getAll(resolvedStoreId);
+      const existingSkus = new Set(existingProducts.map((product) => String((product as any).sku || '').trim().toLowerCase()).filter(Boolean));
       let saved = 0;
 
       for (let index = 0; index < selectedProducts.length; index += 20) {
         const batch = selectedProducts.slice(index, index + 20);
         setImportProgressMessage(`Importando ${Math.min(index + 1, selectedProducts.length)}-${Math.min(index + batch.length, selectedProducts.length)} de ${selectedProducts.length} produtos...`);
         for (const product of batch) {
+          const sku = String(product.sku || '').trim().toLowerCase();
+          if (!sku || existingSkus.has(sku)) continue;
+          existingSkus.add(sku);
+
           try {
             const payload = await withStoreId(
               {
@@ -770,7 +776,6 @@ const ProductsPage = () => {
                 image_url: product.image_url || '',
                 active: true,
                 origin: 'xml',
-
                 category: product.category || '',
                 sku: product.sku || '',
                 short_description: product.description || '',
@@ -781,7 +786,6 @@ const ProductsPage = () => {
             );
             await db.products.save(payload);
             saved += 1;
-
           } catch (error) {
             console.error('Erro ao importar produto XML:', error);
           }
@@ -792,8 +796,8 @@ const ProductsPage = () => {
       setProducts(refreshedProducts);
       setSelectedIds(new Set());
       setSelectedXmlKeys(new Set());
-      setShowImportModal(false);
       setImportedXmlProducts([]);
+      setShowImportModal(false);
       setXmlPreviewSearch('');
       setXmlPreviewCategory('all');
       setXmlPreviewPage(1);
@@ -873,51 +877,40 @@ const ProductsPage = () => {
       const now = new Date().toISOString();
       const existingProducts = await db.products.getAll(resolvedStoreId);
       const existingCategories = new Set(existingProducts.map((product) => String((product as any).category || '').trim()).filter(Boolean));
-
-      const existingKeys = new Set(
-        existingProducts.map((product) => {
-          const sku = String((product as any).sku || '').trim().toLowerCase();
-          const idValue = String((product as any).external_id || (product as any).xml_id || '').trim().toLowerCase();
-          const link = String(product.product_url || '').trim().toLowerCase();
-          const namePrice = `${String(product.name || '').trim().toLowerCase()}|${Number(product.price || 0)}`;
-          return [sku, idValue, link, namePrice].join('|');
-        }),
-      );
+      const existingSkus = new Set(existingProducts.map((product) => String((product as any).sku || '').trim().toLowerCase()).filter(Boolean));
 
       const importedProductsFiltered = importedProducts.filter((product) => {
         const sku = String(product.sku || '').trim().toLowerCase();
-        const idValue = String(product.idValue || '').trim().toLowerCase();
-        const link = String(product.product_url || '').trim().toLowerCase();
-        const namePrice = `${String(product.name || '').trim().toLowerCase()}|${Number(product.price || 0)}`;
-        const compoundKey = [sku, idValue, link, namePrice].join('|');
-        return !existingKeys.has(compoundKey);
+        if (!sku) return false;
+        return !existingSkus.has(sku);
       });
 
       setImportProgressMessage(`Importando ${importedProductsFiltered.length} produtos...`);
-      await Promise.all(
-        importedProductsFiltered.map(async (product) => {
-          const payload = await withStoreId(
-            {
-              id: generateUuid(),
-              name: product.name,
-              price: product.price,
-              product_url: product.product_url,
-              image_url: product.image_url || '',
-              active: true,
-              origin: 'xml',
+      for (const product of importedProductsFiltered) {
+        const sku = String(product.sku || '').trim().toLowerCase();
+        if (existingSkus.has(sku)) continue;
+        existingSkus.add(sku);
 
-              category: product.category || '',
-              sku: product.sku || '',
-              short_description: product.description || '',
-              created_at: now,
-              updated_at: now,
-            } as unknown as Product,
-            resolvedStoreId,
-          );
+        const payload = await withStoreId(
+          {
+            id: generateUuid(),
+            name: product.name,
+            price: product.price,
+            product_url: product.product_url,
+            image_url: product.image_url || '',
+            active: true,
+            origin: 'xml',
+            category: product.category || '',
+            sku: product.sku || '',
+            short_description: product.description || '',
+            created_at: now,
+            updated_at: now,
+          } as unknown as Product,
+          resolvedStoreId,
+        );
 
-          return db.products.save(payload);
-        }),
-      );
+        await db.products.save(payload);
+      }
 
       const refreshedProducts = await db.products.getAll(resolvedStoreId);
       setProducts(refreshedProducts);
