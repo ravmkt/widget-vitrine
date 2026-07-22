@@ -521,7 +521,21 @@ const ProductsPage = () => {
       .trimStart();
   };
 
+  const normalizeSkuValue = (value: string) =>
+    value
+      .replace(/\u200B|\u200C|\u200D|\uFEFF/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toUpperCase();
+
+  const isValidSkuValue = (value: string) => {
+    const normalized = normalizeSkuValue(value);
+    if (!normalized) return false;
+    return !['-', '—', 'N/A', 'NA', 'NULL', 'UNDEFINED'].includes(normalized.toUpperCase());
+  };
+
   const parseXmlProducts = (rawXmlText: string) => {
+
     const xmlText = sanitizeXmlText(rawXmlText);
 
     if (!xmlText) {
@@ -560,17 +574,54 @@ const ProductsPage = () => {
       throw new Error(detail ? `Erro de sintaxe no XML: ${detail}` : 'O XML possui erro de sintaxe.');
     }
 
-    const getTextByAliases = (item: Element, aliases: string[]) => {
-      const children = Array.from(item.children || []);
+    const normalizeFieldName = (value: string) =>
+      value
+        .replace(/^.*:/, '')
+        .replace(/^@/, '')
+        .trim()
+        .toLowerCase();
+
+    const normalizeSkuValue = (value: string) =>
+      value
+        .replace(/\u200B|\u200C|\u200D|\uFEFF/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toUpperCase();
+
+    const isValidSkuValue = (value: string) => {
+      const normalized = normalizeSkuValue(value);
+      if (!normalized) return false;
+      return !['-', '—', 'N/A', 'NA', 'NULL', 'UNDEFINED'].includes(normalized.toUpperCase());
+    };
+
+    const collectNodeValues = (item: Element) => {
+      const values = new Map<string, string>();
+      const walk = (node: Element, path: string[]) => {
+        const name = normalizeFieldName(node.nodeName || node.localName || '');
+        const nextPath = [...path, name].filter(Boolean);
+        const text = node.textContent?.replace(/\s+/g, ' ').trim() || '';
+        if (text) {
+          const key = nextPath.join('.');
+          if (!values.has(key)) values.set(key, text);
+          if (!values.has(name)) values.set(name, text);
+        }
+        Array.from(node.children || []).forEach((child) => walk(child as Element, nextPath));
+      };
+      walk(item, []);
+      return values;
+    };
+
+    const findNodeValue = (item: Element, aliases: string[]) => {
+      const values = collectNodeValues(item);
+      const entries = Array.from(values.entries());
       for (const alias of aliases) {
-        const node = children.find(
-          (child) =>
-            child.nodeName === alias ||
-            child.localName === alias ||
-            child.nodeName.split(':').pop() === alias,
-        );
-        const value = node?.textContent?.trim();
-        if (value) return value;
+        const normalizedAlias = normalizeFieldName(alias);
+        const exactMatch = values.get(normalizedAlias);
+        if (exactMatch) return exactMatch;
+        const partialMatch = entries.find(([key]) => key.split('.').some((part) => part === normalizedAlias));
+        if (partialMatch?.[1]) return partialMatch[1];
+        const nestedMatch = entries.find(([key]) => key.includes(normalizedAlias));
+        if (nestedMatch?.[1]) return nestedMatch[1];
       }
       return '';
     };
@@ -605,14 +656,21 @@ const ProductsPage = () => {
           productNode: (item.localName || item.nodeName).split(':').pop(),
         });
 
-        const name = getTextByAliases(item, ['title', 'name', 'nome', 'product_name', 'g:title']);
-        const priceRaw = getTextByAliases(item, ['price', 'sale_price', 'valor', 'preco', 'price_with_tax', 'g:price']);
-        const link = getTextByAliases(item, ['link', 'url', 'product_url', 'g:link']);
-        const imageUrl = getTextByAliases(item, ['image_link', 'image', 'imagem', 'picture', 'g:image_link', 'additional_image_link']);
-        const category = getTextByAliases(item, ['product_type', 'google_product_category']);
-        const sku = getTextByAliases(item, ['sku', 'reference', 'codigo']);
-        const idValue = getTextByAliases(item, ['id', 'g:id']);
-        const description = stripHtml(getTextByAliases(item, ['description', 'descricao', 'summary', 'content']));
+        const name = findNodeValue(item, ['title', 'name', 'nome', 'product_name', 'g:title']);
+        const priceRaw = findNodeValue(item, ['price', 'sale_price', 'valor', 'preco', 'price_with_tax', 'g:price']);
+        const link = findNodeValue(item, ['link', 'url', 'product_url', 'g:link']);
+        const imageUrl = findNodeValue(item, ['image_link', 'image', 'imagem', 'picture', 'g:image_link', 'additional_image_link']);
+        const category = findNodeValue(item, ['product_type', 'google_product_category']);
+        const skuRaw = findNodeValue(item, ['sku', 'productCode', 'product_code', 'codigo', 'código', 'ref', 'referencia', 'referência', 'id', 'g:id']);
+        const sku = isValidSkuValue(skuRaw) ? normalizeSkuValue(skuRaw) : '';
+        console.debug('[xml-sku]', {
+          path: skuRaw ? 'matched-alias' : 'not-found',
+          original: skuRaw ? skuRaw.slice(0, 50) : '',
+          normalized: sku || '',
+        });
+        const idValue = findNodeValue(item, ['id', 'g:id']);
+
+        const description = stripHtml(findNodeValue(item, ['description', 'descricao', 'summary', 'content']));
 
         return {
           name,
@@ -772,27 +830,27 @@ const ProductsPage = () => {
         setImportProgressMessage(`Importando ${Math.min(index + 1, selectedProducts.length)}-${Math.min(index + batch.length, selectedProducts.length)} de ${selectedProducts.length} produtos...`);
         for (const product of batch) {
           const rawSku = String(product.sku || '');
-          const sku = rawSku.trim().toLowerCase();
-          const skuLabel = rawSku.trim();
+          const sku = normalizeSkuValue(rawSku).trim();
+          const skuKey = sku.toLowerCase();
           const productName = product.name.trim();
 
-          if (!sku) {
+          if (!isValidSkuValue(rawSku)) {
             summary.invalid += 1;
             invalidMessages.add(`Produto não importado: o SKU é obrigatório para evitar duplicidade.${productName ? ` (${productName})` : ''}`);
             continue;
           }
 
-          if (selectedSkus.has(sku)) {
+          if (selectedSkus.has(skuKey)) {
             summary.repeated += 1;
-            repeatedMessages.add(`Produto repetido no XML e não importado: ${skuLabel}${productName ? ` - ${productName}` : ''}`);
+            repeatedMessages.add(`Produto repetido no XML e não importado: ${sku}${productName ? ` - ${productName}` : ''}`);
             continue;
           }
 
-          selectedSkus.add(sku);
+          selectedSkus.add(skuKey);
 
-          if (existingSkus.has(sku)) {
+          if (existingSkus.has(skuKey)) {
             summary.existing += 1;
-            existingMessages.add(`Produto já existente e não importado: ${skuLabel}${productName ? ` - ${productName}` : ''}`);
+            existingMessages.add(`Produto já existente e não importado: ${sku}${productName ? ` - ${productName}` : ''}`);
             continue;
           }
 
@@ -821,7 +879,8 @@ const ProductsPage = () => {
           } catch (error: any) {
             if (error?.code === '23505') {
               summary.existing += 1;
-              existingMessages.add(`Produto já existente e não importado: ${skuLabel}${productName ? ` - ${productName}` : ''}`);
+              existingMessages.add(`Produto já existente e não importado: ${sku}${productName ? ` - ${productName}` : ''}`);
+  
               continue;
             }
 
@@ -928,16 +987,17 @@ const ProductsPage = () => {
       setImportProgressMessage(`Importando ${importedProducts.length} produtos...`);
       for (const product of importedProducts) {
         const rawSku = String(product.sku || '');
-        const sku = rawSku.trim().toLowerCase();
-        if (!sku) {
+        const sku = normalizeSkuValue(rawSku).trim();
+        const skuKey = sku.toLowerCase();
+        if (!isValidSkuValue(rawSku)) {
           invalidCount += 1;
           continue;
         }
-        if (existingSkus.has(sku) || importedSkus.has(sku)) {
+        if (existingSkus.has(skuKey) || importedSkus.has(skuKey)) {
           duplicatedCount += 1;
           continue;
         }
-        importedSkus.add(sku);
+        importedSkus.add(skuKey);
 
         const payload = await withStoreId(
           {
@@ -949,7 +1009,8 @@ const ProductsPage = () => {
             active: true,
             origin: 'xml',
             category: product.category || '',
-            sku: product.sku || '',
+            sku: normalizeSkuValue(product.sku || ''),
+
             short_description: product.description || '',
             created_at: now,
             updated_at: now,
