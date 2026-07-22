@@ -641,7 +641,8 @@ const ProductsPage = () => {
     const matchesSearch = !query || [product.name, product.sku, product.category, product.description].join(' ').toLowerCase().includes(query);
     const matchesSku = !skuQuery || product.sku.toLowerCase().includes(skuQuery);
     const matchesBrand = !brandQuery || String(product.idValue || '').toLowerCase().includes(brandQuery);
-    const matchesCategory = xmlPreviewCategory === 'all' || normalizedCategory === xmlPreviewCategory;
+    const matchesCategory = xmlPreviewCategory === 'all' || normalizedCategory.toLowerCase() === xmlPreviewCategory.toLowerCase();
+
     return matchesSearch && matchesSku && matchesBrand && matchesCategory;
   });
 
