@@ -645,16 +645,16 @@ const ProductsPage = () => {
   const filteredXmlProducts = importedXmlProducts.filter((product) => {
     const query = normalizeXmlText(xmlPreviewSearch);
     const normalizedCategory = normalizeXmlText(formatXmlCategory(product.category || 'Sem categoria'));
-    const searchableText = normalizeXmlText([
-      product.name,
-      product.sku,
-      product.idValue,
-      product.description,
-      product.category,
-    ].join(' '));
-    const matchesSearch = !query || searchableText.includes(query);
     const matchesCategory = xmlPreviewCategory === 'all' || normalizedCategory === normalizeXmlText(xmlPreviewCategory);
-    return matchesSearch && matchesCategory;
+    if (!query) return matchesCategory;
+
+    const matchesName = normalizeXmlText(product.name).includes(query);
+    const matchesSku = normalizeXmlText(product.sku).includes(query);
+    const matchesBrand = normalizeXmlText(product.idValue).includes(query);
+    const matchesDescription = normalizeXmlText(product.description).includes(query);
+    const matchesProductCategory = normalizeXmlText(product.category).includes(query) || normalizedCategory.includes(query);
+
+    return matchesCategory && (matchesName || matchesSku || matchesBrand || matchesDescription || matchesProductCategory);
   });
 
   const xmlPreviewCategories = Array.from(new Set(importedXmlProducts.map((product) => formatXmlCategory(product.category || 'Sem categoria')))).sort();
