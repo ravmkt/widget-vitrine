@@ -205,10 +205,11 @@ const StoryDetailsPage = () => {
   });
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
-    type: 'location' | 'rule';
+    type: 'location';
     id: string;
     name: string;
   }>({
+
     isOpen: false,
     type: 'location',
     id: '',
@@ -259,7 +260,6 @@ const StoryDetailsPage = () => {
         });
         setSelectedVideoIds([]);
         setLocations([]);
-        setRules([]);
         return;
       }
 
@@ -267,7 +267,6 @@ const StoryDetailsPage = () => {
         setStory(null);
         setSelectedVideoIds([]);
         setLocations([]);
-        setRules([]);
         return;
       }
 
@@ -277,7 +276,6 @@ const StoryDetailsPage = () => {
         setStory(null);
         setSelectedVideoIds([]);
         setLocations([]);
-        setRules([]);
         return;
       }
 
@@ -497,43 +495,24 @@ const StoryDetailsPage = () => {
     setLocations((prev) => [...prev, newLocation]);
   };
 
-  const handleAddRule = (locationId: string) => {
-    setLocations((prev) =>
-      prev.map((location) =>
-        location.id === locationId
-          ? {
-              ...location,
-              rules: [
-                ...(location.rules || []),
-                {
-                  id: generateUuid(),
-                  store_id: location.store_id,
-                  story_id: location.story_id,
-                  condition_type: 'all_pages',
-                  value: '',
-                },
-              ],
-            }
-          : location,
-      ),
-    );
+  const handleAddRule = () => {
+    setFormData((prev) => ({
+      ...prev,
+      page_rule_mode: prev.page_rule_mode || 'home',
+      page_rule_value: prev.page_rule_value || '',
+    }));
   };
 
   const handleDeleteLocation = (locationId: string) => {
     setLocations((prev) => prev.filter((location) => location.id !== locationId));
   };
 
-  const handleDeleteRule = (locationId: string, ruleId: string) => {
-    setLocations((prev) =>
-      prev.map((location) =>
-        location.id === locationId
-          ? {
-              ...location,
-              rules: (location.rules || []).filter((rule) => rule.id !== ruleId),
-            }
-          : location,
-      ),
-    );
+  const handleDeleteRule = () => {
+    setFormData((prev) => ({
+      ...prev,
+      page_rule_mode: 'all_pages',
+      page_rule_value: '',
+    }));
   };
 
   const openDeleteLocationModal = (location: DisplayLocation) => {
@@ -844,23 +823,104 @@ const StoryDetailsPage = () => {
           </div>
 
           <div className="space-y-8">
-            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="mb-6 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <MapPin className="text-orange-500" size={18} />
-                  <h4 className="text-sm font-black uppercase text-slate-800">Local de exibição</h4>
+                <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+                  <div className="mb-6 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="text-[#0094EB]" size={18} />
+                      <h4 className="text-sm font-black uppercase text-slate-800">LOCAL DE EXIBIÇÃO</h4>
+                    </div>
+                  </div>
+    
+                  <div className="space-y-4">
+                    {locations.map((location) => (
+                      <div
+                        key={location.id}
+                        className="rounded-2xl border border-slate-100 bg-slate-50 p-4"
+                      >
+                        <div className="grid gap-4 md:grid-cols-[1fr_220px_auto] md:items-end">
+                          <div className="space-y-2">
+                            <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">SELETOR CSS</label>
+                            <input
+                              type="text"
+                              value={location.selector}
+                              onChange={(event) => {
+                                const next = locations.map((item) =>
+                                  item.id === location.id ? { ...item, selector: event.target.value } : item,
+                                );
+                                setLocations(next);
+                              }}
+                              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
+                              placeholder=".breadcrumbs"
+                            />
+                            <p className="text-[11px] text-slate-500">Informe o seletor de referência CSS da página</p>
+                          </div>
+    
+                          <div className="space-y-2">
+                            <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">POSIÇÃO</label>
+                            <select
+                              value={location.position}
+                              onChange={(event) => {
+                                const next = locations.map((item) =>
+                                  item.id === location.id ? { ...item, position: event.target.value as DisplayLocation['position'] } : item,
+                                );
+                                setLocations(next);
+                              }}
+                              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
+                            >
+                              <option value="beforebegin">Acima do elemento</option>
+                              <option value="afterend">Abaixo do elemento</option>
+                              <option value="afterbegin">Dentro do elemento, no início</option>
+                              <option value="beforeend">Dentro do elemento, no final</option>
+                            </select>
+                          </div>
+    
+                          <button
+                            type="button"
+                            onClick={handleAddLocation}
+                            className="rounded-xl bg-[#0094EB] px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-sm hover:bg-[#0E4787]"
+                          >
+                            + Adicionar página
+                          </button>
+                        </div>
+    
+                        <div className="mt-3 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteLocation(location.id)}
+                            className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-rose-500"
+                          >
+                            Remover
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+    
+                    {locations.length === 0 && (
+                      <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-xs font-bold text-slate-400">
+                        Nenhum local configurado.
+                      </div>
+                    )}
+    
+                    <button
+                      type="button"
+                      onClick={handleAddLocation}
+                      className="rounded-xl bg-[#0094EB] px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-sm hover:bg-[#0E4787]"
+                    >
+                      + Adicionar página
+                    </button>
+                  </div>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={handleAddLocation}
-                  className="rounded-lg bg-orange-50 px-3 py-2 text-xs font-black uppercase tracking-widest text-orange-600 hover:bg-orange-100"
-                >
-                  + Adicionar local onde irá aparecer na página
-                </button>
-              </div>
-
-              <div className="space-y-4">
+    
+                <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+                  <div className="mb-6 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Globe className="text-[#0094EB]" size={18} />
+                      <h4 className="text-sm font-black uppercase text-slate-800">QUAL PÁGINA IRÁ APARECER?</h4>
+                    </div>
+                  </div>
+    
+                  <div className="space-y-4">
+    
                 {locations.map((location) => (
                   <div
                     key={location.id}
@@ -924,96 +984,74 @@ const StoryDetailsPage = () => {
                           </button>
                         </div>
 
-                        <div className="space-y-3">
-                          {(location.rules || []).map((rule) => (
-                            <div key={rule.id} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                              <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-start">
-                                <div className="space-y-2">
-                                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Página</label>
-                                  <select
-                                    value={rule.condition_type}
-                                    onChange={(event) => {
-                                      const next = locations.map((item) =>
-                                        item.id === location.id
-                                          ? {
-                                              ...item,
-                                              rules: (item.rules || []).map((currentRule) =>
-                                                currentRule.id === rule.id
-                                                  ? {
-                                                      ...currentRule,
-                                                      condition_type: event.target.value as ConditionType,
-                                                      value: PAGE_RULE_OPTIONS.find((option) => option.value === event.target.value)?.value === 'home' || event.target.value === 'all_pages' ? '' : currentRule.value,
-                                                    }
-                                                  : currentRule,
-                                              ),
-                                            }
-                                          : item,
-                                      );
-                                      setLocations(next);
-                                    }}
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
-                                  >
-                                    {PAGE_RULE_OPTIONS.map((option) => (
-                                      <option key={option.value} value={option.value}>{option.label}</option>
-                                    ))}
-                                  </select>
-                                </div>
-
-                                {CONDITION_TYPES_WITH_VALUE.includes(rule.condition_type) ? (
-                                  <div className="space-y-2">
-                                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">URL</label>
-                                    <input
-                                      type="text"
-                                      value={rule.value}
-                                      onChange={(event) => {
-                                        const next = locations.map((item) =>
-                                          item.id === location.id
-                                            ? {
-                                                ...item,
-                                                rules: (item.rules || []).map((currentRule) =>
-                                                  currentRule.id === rule.id ? { ...currentRule, value: event.target.value } : currentRule,
-                                                ),
-                                              }
-                                            : item,
-                                        );
-                                        setLocations(next);
-                                      }}
-                                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
-                                      placeholder="/colecao ou trecho da URL"
-                                    />
-                                  </div>
-                                ) : (
-                                  <div className="space-y-2">
-                                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">URL</label>
-                                    <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-400">Não necessário para essa opção</div>
-                                  </div>
-                                )}
-
-                                <div className="pt-6 md:pt-7">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeleteRule(location.id, rule.id)}
-                                    className="rounded-lg border border-rose-200 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-50"
-                                  >
-                                    Remover
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
+                {PAGE_RULE_OPTIONS.map((option) => (
+                  <div
+                    key={option.value}
+                    className="rounded-2xl border border-slate-100 bg-slate-50 p-4"
+                  >
+                    <div className="grid gap-4 md:grid-cols-[220px_1fr_auto] md:items-end">
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">REGRA</label>
+                        <select
+                          value={formData.page_rule_mode}
+                          onChange={(event) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              page_rule_mode: event.target.value as ConditionType,
+                              page_rule_value:
+                                event.target.value === 'home' || event.target.value === 'all_pages'
+                                  ? ''
+                                  : prev.page_rule_value,
+                            }))
+                          }
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
+                        >
+                          {PAGE_RULE_OPTIONS.map((ruleOption) => (
+                            <option key={ruleOption.value} value={ruleOption.value}>
+                              {ruleOption.label}
+                            </option>
                           ))}
-
-                          {(location.rules || []).length === 0 && (
-                            <p className="text-xs font-bold text-slate-400">Nenhuma regra de página adicionada.</p>
-                          )}
-                        </div>
+                        </select>
                       </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">VALOR DO FILTRO</label>
+                        {CONDITION_TYPES_WITH_VALUE.includes(formData.page_rule_mode) ? (
+                          <input
+                            type="text"
+                            value={formData.page_rule_value}
+                            onChange={(event) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                page_rule_value: event.target.value,
+                              }))
+                            }
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
+                            placeholder="/colecao, /produto/nome-do-produto ou trecho da URL"
+                          />
+                        ) : (
+                          <div className="h-[34px] rounded-xl border border-dashed border-slate-200 bg-slate-50" />
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleAddRule}
+                        className="rounded-xl bg-[#0094EB] px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-sm hover:bg-[#0E4787]"
+                      >
+                        + Adicionar página
+                      </button>
                     </div>
                   </div>
                 ))}
 
-                {locations.length === 0 && (
-                  <p className="text-xs font-bold text-slate-400">Nenhum local configurado.</p>
-                )}
+                <button
+                  type="button"
+                  onClick={handleAddRule}
+                  className="rounded-xl bg-[#0094EB] px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-sm hover:bg-[#0E4787]"
+                >
+                  + Adicionar página
+                </button>
               </div>
             </div>
           </div>
