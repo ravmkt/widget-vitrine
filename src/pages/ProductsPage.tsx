@@ -757,16 +757,44 @@ const ProductsPage = () => {
       const existingProducts = await db.products.getAll(resolvedStoreId);
       const existingSkus = new Set(existingProducts.map((product) => String((product as any).sku || '').trim().toLowerCase()).filter(Boolean));
       const selectedSkus = new Set<string>();
-      let saved = 0;
+      const summary = {
+        imported: 0,
+        existing: 0,
+        repeated: 0,
+        invalid: 0,
+      };
+      const existingMessages = new Set<string>();
+      const repeatedMessages = new Set<string>();
+      const invalidMessages = new Set<string>();
 
       for (let index = 0; index < selectedProducts.length; index += 20) {
         const batch = selectedProducts.slice(index, index + 20);
         setImportProgressMessage(`Importando ${Math.min(index + 1, selectedProducts.length)}-${Math.min(index + batch.length, selectedProducts.length)} de ${selectedProducts.length} produtos...`);
         for (const product of batch) {
-          const sku = String(product.sku || '').trim().toLowerCase();
-          if (!sku) continue;
-          if (existingSkus.has(sku) || selectedSkus.has(sku)) continue;
+          const rawSku = String(product.sku || '');
+          const sku = rawSku.trim().toLowerCase();
+          const skuLabel = rawSku.trim();
+          const productName = product.name.trim();
+
+          if (!sku) {
+            summary.invalid += 1;
+            invalidMessages.add(`Produto não importado: o SKU é obrigatório para evitar duplicidade.${productName ? ` (${productName})` : ''}`);
+            continue;
+          }
+
+          if (selectedSkus.has(sku)) {
+            summary.repeated += 1;
+            repeatedMessages.add(`Produto repetido no XML e não importado: ${skuLabel}${productName ? ` - ${productName}` : ''}`);
+            continue;
+          }
+
           selectedSkus.add(sku);
+
+          if (existingSkus.has(sku)) {
+            summary.existing += 1;
+            existingMessages.add(`Produto já existente e não importado: ${skuLabel}${productName ? ` - ${productName}` : ''}`);
+            continue;
+          }
 
           try {
             const payload = await withStoreId(
@@ -786,10 +814,19 @@ const ProductsPage = () => {
               } as unknown as Product,
               resolvedStoreId,
             );
+
             await db.products.save(payload);
-            saved += 1;
-          } catch (error) {
-            console.error('Erro ao importar produto XML:', error);
+            existingSkus.add(sku);
+            summary.imported += 1;
+          } catch (error: any) {
+            if (error?.code === '23505') {
+              summary.existing += 1;
+              existingMessages.add(`Produto já existente e não importado: ${skuLabel}${productName ? ` - ${productName}` : ''}`);
+              continue;
+            }
+
+            summary.invalid += 1;
+            invalidMessages.add(`Produto não importado: o SKU é obrigatório para evitar duplicidade.${productName ? ` (${productName})` : ''}`);
           }
         }
       }
@@ -803,8 +840,11 @@ const ProductsPage = () => {
       setXmlPreviewSearch('');
       setXmlPreviewCategory('all');
       setXmlPreviewPage(1);
-      showSuccess(`${saved} produtos importados com sucesso.`);
-
+      setImportProgressMessage('');
+      showSuccess(
+        [`Produtos importados: ${summary.imported}.`, `Já existentes: ${summary.existing}.`, `Repetidos no XML: ${summary.repeated}.`, `Sem SKU/erro: ${summary.invalid}.`].join(' '),
+      );
+      [...existingMessages, ...repeatedMessages, ...invalidMessages].forEach((message) => showError(message));
     } catch (error: unknown) {
       console.error('Erro ao importar XML:', error);
       showError(error instanceof Error ? error.message : 'Erro ao importar XML.');
@@ -880,16 +920,26 @@ const ProductsPage = () => {
       const existingProducts = await db.products.getAll(resolvedStoreId);
       const existingCategories = new Set(existingProducts.map((product) => String((product as any).category || '').trim()).filter(Boolean));
       const existingSkus = new Set(existingProducts.map((product) => String((product as any).sku || '').trim().toLowerCase()).filter(Boolean));
+      const importedSkus = new Set<string>();
       let saved = 0;
+      let duplicatedCount = 0;
+      let invalidCount = 0;
 
       setImportProgressMessage(`Importando ${importedProducts.length} produtos...`);
       for (const product of importedProducts) {
-        const sku = String(product.sku || '').trim().toLowerCase();
-        if (sku && existingSkus.has(sku)) continue;
-        if (sku) existingSkus.add(sku);
+        const rawSku = String(product.sku || '');
+        const sku = rawSku.trim().toLowerCase();
+        if (!sku) {
+          invalidCount += 1;
+          continue;
+        }
+        if (existingSkus.has(sku) || importedSkus.has(sku)) {
+          duplicatedCount += 1;
+          continue;
+        }
+        importedSkus.add(sku);
 
         const payload = await withStoreId(
-
           {
             id: generateUuid(),
             name: product.name,
@@ -907,8 +957,18 @@ const ProductsPage = () => {
           resolvedStoreId,
         );
 
-        await db.products.save(payload);
-        existingSkus.add(sku);
+        try {
+          await db.products.save(payload);
+          saved += 1;
+          existingSkus.add(sku);
+        } catch (error: any) {
+          if (error?.code === '23505') {
+            duplicatedCount += 1;
+            existingSkus.add(sku);
+            continue;
+          }
+          invalidCount += 1;
+        }
       }
 
       const refreshedProducts = await db.products.getAll(resolvedStoreId);
@@ -926,8 +986,6 @@ const ProductsPage = () => {
         return merged;
       });
 
-      showSuccess(`Importação concluída: ${importedProducts.length} encontrados, ${saved} importados.`);
-
       setShowImportModal(false);
       setImportedXmlProducts([]);
       setSelectedXmlKeys(new Set());
@@ -937,6 +995,14 @@ const ProductsPage = () => {
       setXmlPreviewCategory('all');
       setXmlPreviewPage(1);
       setImportProgressMessage('');
+
+      if (duplicatedCount > 0) {
+        showError(`Produtos já existentes e não importados: ${duplicatedCount}.`);
+      }
+      if (invalidCount > 0) {
+        showError('Produto não importado: o SKU é obrigatório para evitar duplicidade.');
+      }
+      showSuccess(`Importação concluída: ${saved} importados, ${duplicatedCount} já existentes, ${invalidCount} sem SKU ou com erro.`);
 
     } catch (error) {
       console.error('Erro ao importar XML:', error);
