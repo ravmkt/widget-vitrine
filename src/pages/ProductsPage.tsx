@@ -1688,14 +1688,13 @@ const ProductsPage = () => {
               </div>
 
               {importTab === 'xml' && (
-                    <div className="flex h-full min-h-0 flex-col gap-4 overflow-hidden">
-                      <div className="space-y-2">
-                        <p className="text-sm font-black text-slate-900">Prévia dos produtos encontrados</p>
-                        <p className="text-xs font-bold text-slate-500">{selectedXmlCount} produto(s) selecionado(s)</p>
-                      </div>
+                <div className="flex h-[min(84vh,900px)] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
+                  <div className="min-h-0 flex-1 overflow-hidden px-4 py-4 sm:px-5">
 
-                      {!importedXmlProducts.length ? (
-                        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                          <div className="space-y-2">
+                            <p className="text-sm font-black text-slate-900">Prévia dos produtos encontrados</p>
+                            <p className="text-xs font-bold text-slate-500">0 produto(s) selecionado(s)</p>
+                          </div>
                           <div className="flex items-start gap-3 rounded-xl border border-slate-100 bg-white p-3">
                             <FileText className="mt-0.5 text-[#0094EB]" size={18} />
                             <p className="text-xs font-bold leading-5 text-slate-600">Envie a URL do feed XML ou selecione o arquivo. Primeiro o sistema lê e interpreta o XML sem salvar nada.</p>
@@ -1710,7 +1709,7 @@ const ProductsPage = () => {
                               <input type="file" accept=".xml,text/xml,application/xml" onChange={(e) => setXmlFile(e.target.files?.[0] || null)} className="block w-full text-sm text-slate-500" />
                             </div>
                           </div>
-                          <div className="flex flex-wrap items-center justify-end gap-3 pt-1">
+                          <div className="mt-auto flex flex-wrap items-center justify-end gap-3 pt-1">
                             <button type="button" onClick={() => setShowImportModal(false)} className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-600 hover:bg-slate-50">Cancelar</button>
                             <button type="button" onClick={readXmlFeed} disabled={isImportingXml} className="inline-flex items-center gap-2 rounded-xl bg-[#0094EB] px-5 py-3 text-sm font-black text-white hover:bg-[#0E4787] disabled:opacity-60">
                               {isImportingXml ? <Loader2 className="animate-spin" size={16} /> : <Link size={16} />}
@@ -1719,7 +1718,7 @@ const ProductsPage = () => {
                           </div>
                         </div>
                       ) : (
-                        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                        <>
                           <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 xl:flex-row xl:items-start xl:justify-between">
                             <div className="space-y-2">
                               <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-400">
@@ -1792,28 +1791,25 @@ const ProductsPage = () => {
                               </div>
                             </div>
                           </div>
-                        </div>
+                        </>
                       )}
                     </div>
-                  )}
-                </div>
+                  </div>
 
-                <div className="border-t border-slate-100 bg-white px-4 py-4 sm:px-5">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-sm font-bold text-slate-500">{selectedXmlCount} produto(s) selecionado(s)</p>
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                      <button type="button" onClick={() => setShowImportModal(false)} className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-600 hover:bg-slate-50">Voltar</button>
-                      <button type="button" onClick={handleXmlImportSelected} disabled={isImportingXml || !selectedXmlCount || !importedXmlProducts.length} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0094EB] px-5 py-3 text-sm font-black text-white hover:bg-[#0E4787] disabled:opacity-60">
-                        {isImportingXml ? <Loader2 className="animate-spin" size={16} /> : null}
-                        {isImportingXml ? 'Importando...' : `Importar ${selectedXmlCount} produto(s)`}
-                      </button>
+                  <div className="border-t border-slate-100 bg-white px-4 py-4 sm:px-5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-sm font-bold text-slate-500">{selectedXmlCount} produto(s) selecionado(s)</p>
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <button type="button" onClick={() => setShowImportModal(false)} className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-600 hover:bg-slate-50">Voltar</button>
+                        <button type="button" onClick={handleXmlImportSelected} disabled={isImportingXml || !selectedXmlCount || !importedXmlProducts.length} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0094EB] px-5 py-3 text-sm font-black text-white hover:bg-[#0E4787] disabled:opacity-60">
+                          {isImportingXml ? <Loader2 className="animate-spin" size={16} /> : null}
+                          {isImportingXml ? 'Importando...' : `Importar ${selectedXmlCount} produto(s)`}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-
               )}
-
               {importTab === 'api' && (
                 <div className="space-y-4">
                   <input
