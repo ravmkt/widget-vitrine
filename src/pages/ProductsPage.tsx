@@ -756,6 +756,7 @@ const ProductsPage = () => {
       const now = new Date().toISOString();
       const existingProducts = await db.products.getAll(resolvedStoreId);
       const existingSkus = new Set(existingProducts.map((product) => String((product as any).sku || '').trim().toLowerCase()).filter(Boolean));
+      const selectedSkus = new Set<string>();
       let saved = 0;
 
       for (let index = 0; index < selectedProducts.length; index += 20) {
@@ -763,8 +764,9 @@ const ProductsPage = () => {
         setImportProgressMessage(`Importando ${Math.min(index + 1, selectedProducts.length)}-${Math.min(index + batch.length, selectedProducts.length)} de ${selectedProducts.length} produtos...`);
         for (const product of batch) {
           const sku = String(product.sku || '').trim().toLowerCase();
-          if (sku && existingSkus.has(sku)) continue;
-          if (sku) existingSkus.add(sku);
+          if (!sku) continue;
+          if (existingSkus.has(sku) || selectedSkus.has(sku)) continue;
+          selectedSkus.add(sku);
 
           try {
             const payload = await withStoreId(
@@ -785,6 +787,7 @@ const ProductsPage = () => {
               resolvedStoreId,
             );
             await db.products.save(payload);
+            existingSkus.add(sku);
             saved += 1;
           } catch (error) {
             console.error('Erro ao importar produto XML:', error);
@@ -878,17 +881,21 @@ const ProductsPage = () => {
       const existingProducts = await db.products.getAll(resolvedStoreId);
       const existingCategories = new Set(existingProducts.map((product) => String((product as any).category || '').trim()).filter(Boolean));
       const existingSkus = new Set(existingProducts.map((product) => String((product as any).sku || '').trim().toLowerCase()).filter(Boolean));
+      const importedSkus = new Set<string>();
 
       const importedProductsFiltered = importedProducts.filter((product) => {
         const sku = String(product.sku || '').trim().toLowerCase();
-        return !sku || !existingSkus.has(sku);
+        if (!sku) return false;
+        if (existingSkus.has(sku) || importedSkus.has(sku)) return false;
+        importedSkus.add(sku);
+        return true;
       });
 
       setImportProgressMessage(`Importando ${importedProductsFiltered.length} produtos...`);
       for (const product of importedProductsFiltered) {
         const sku = String(product.sku || '').trim().toLowerCase();
-        if (sku && existingSkus.has(sku)) continue;
-        if (sku) existingSkus.add(sku);
+        if (existingSkus.has(sku) || importedSkus.has(sku)) continue;
+        importedSkus.add(sku);
 
         const payload = await withStoreId(
           {
@@ -909,6 +916,7 @@ const ProductsPage = () => {
         );
 
         await db.products.save(payload);
+        existingSkus.add(sku);
       }
 
       const refreshedProducts = await db.products.getAll(resolvedStoreId);
