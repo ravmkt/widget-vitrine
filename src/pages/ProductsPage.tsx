@@ -427,63 +427,105 @@ const ProductsPage = () => {
   const [isImportingXml, setIsImportingXml] = useState(false);
   const [importProgressMessage, setImportProgressMessage] = useState('');
 
-  const getTagValue = (item: Element, aliases: string[]) => {
-    const children = Array.from(item.children || []);
+  const normalizeXmlText = (value: string) => {
+    return value
+      .replace(/^\uFEFF/, '')
+      .replace(/^\uFEFF/, '')
+      .trimStart();
+  };
 
-    for (const alias of aliases) {
-      const node = children.find(
-        (child) =>
-          child.nodeName === alias ||
-          child.localName === alias ||
-          child.nodeName.split(':').pop() === alias,
-      );
-      const value = node?.textContent?.trim();
-      if (value) return value;
+  const parseXmlProducts = (rawXmlText: string) => {
+    const xmlText = normalizeXmlText(rawXmlText);
+
+    if (!xmlText) {
+      throw new Error('A resposta do XML está vazia.');
     }
 
-    return '';
-  };
+    const preview = xmlText.slice(0, 500).toLowerCase();
 
-  const normalizePrice = (value: string) => {
-    const cleaned = value.replace(/<[^>]*>/g, '').replace(/[^\d.,-]/g, '');
-    if (!cleaned) return 0;
-    const normalized = cleaned.includes(',') ? cleaned.replace(/\./g, '').replace(',', '.') : cleaned;
-    const parsed = Number(normalized);
-    return Number.isFinite(parsed) ? parsed : 0;
-  };
+    if (
+      preview.startsWith('<!doctype html') ||
+      preview.startsWith('<html') ||
+      preview.includes('cannot get') ||
+      preview.includes('<body')
+    ) {
+      throw new Error('O feed XML retornou HTML ou conteúdo não esperado.');
+    }
 
-  const stripHtml = (value: string) => value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (preview.startsWith('{') || preview.startsWith('[')) {
+      throw new Error('O proxy retornou uma mensagem de erro em vez do XML.');
+    }
 
-  const findProductNodes = (xmlDoc: Document) => {
-    const allElements = Array.from(xmlDoc.getElementsByTagName('*'));
-    const candidates = allElements.filter((node) => {
-      const name = (node.localName || node.nodeName).split(':').pop() || node.nodeName;
-      return ['item', 'product', 'entry', 'produto', 'offer'].includes(name.toLowerCase());
-    });
+    if (!xmlText.includes('<')) {
+      throw new Error('A resposta recebida não parece ser XML.');
+    }
 
-    return candidates;
-  };
-
-  const parseXmlProducts = (xmlText: string) => {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlText, 'application/xml');
+    const parserError = xmlDoc.querySelector('parsererror');
 
-    if (xmlDoc.querySelector('parsererror')) {
-      throw new Error('XML malformado.');
+    if (parserError) {
+      const detail = parserError.textContent?.replace(/\s+/g, ' ').trim();
+      console.error('[xml-debug] parser error', {
+        detail,
+        preview: xmlText.slice(0, 500),
+      });
+      throw new Error(detail ? `Erro de sintaxe no XML: ${detail}` : 'O XML possui erro de sintaxe.');
     }
 
-    const items = findProductNodes(xmlDoc);
+    const getTextByAliases = (item: Element, aliases: string[]) => {
+      const children = Array.from(item.children || []);
+      for (const alias of aliases) {
+        const node = children.find(
+          (child) =>
+            child.nodeName === alias ||
+            child.localName === alias ||
+            child.nodeName.split(':').pop() === alias,
+        );
+        const value = node?.textContent?.trim();
+        if (value) return value;
+      }
+      return '';
+    };
+
+    const normalizePrice = (value: string) => {
+      const cleaned = value.replace(/<[^>]*>/g, '').replace(/[^\d.,-]/g, '');
+      if (!cleaned) return 0;
+      const normalized = cleaned.includes(',') ? cleaned.replace(/\./g, '').replace(',', '.') : cleaned;
+      const parsed = Number(normalized);
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
+
+    const stripHtml = (value: string) => value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+
+    const findProductNodes = () => {
+      const allElements = Array.from(xmlDoc.getElementsByTagName('*'));
+      return allElements.filter((node) => {
+        const name = (node.localName || node.nodeName).split(':').pop() || node.nodeName;
+        return ['item', 'product', 'entry', 'produto', 'offer'].includes(name.toLowerCase());
+      });
+    };
+
+    const items = findProductNodes();
+    console.log('[xml-debug]', {
+      foundProductNodes: items.length,
+      preview: xmlText.slice(0, 500),
+    });
 
     return items
       .map((item) => {
-        const name = getTagValue(item, ['title', 'name', 'nome', 'product_name']);
-        const priceRaw = getTagValue(item, ['price', 'sale_price', 'valor', 'preco', 'price_with_tax']);
-        const link = getTagValue(item, ['link', 'url', 'product_url']);
-        const imageUrl = getTagValue(item, ['image_link', 'image', 'imagem', 'picture', 'additional_image_link']);
-        const category = getTagValue(item, ['product_type', 'google_product_category']);
-        const sku = getTagValue(item, ['sku', 'reference', 'codigo']);
-        const idValue = getTagValue(item, ['id']);
-        const description = stripHtml(getTagValue(item, ['description', 'descricao', 'summary', 'content']));
+        console.log('[xml-debug]', {
+          productNode: (item.localName || item.nodeName).split(':').pop(),
+        });
+
+        const name = getTextByAliases(item, ['title', 'name', 'nome', 'product_name', 'g:title']);
+        const priceRaw = getTextByAliases(item, ['price', 'sale_price', 'valor', 'preco', 'price_with_tax', 'g:price']);
+        const link = getTextByAliases(item, ['link', 'url', 'product_url', 'g:link']);
+        const imageUrl = getTextByAliases(item, ['image_link', 'image', 'imagem', 'picture', 'g:image_link', 'additional_image_link']);
+        const category = getTextByAliases(item, ['product_type', 'google_product_category']);
+        const sku = getTextByAliases(item, ['sku', 'reference', 'codigo']);
+        const idValue = getTextByAliases(item, ['id', 'g:id']);
+        const description = stripHtml(getTextByAliases(item, ['description', 'descricao', 'summary', 'content']));
 
         return {
           name,
@@ -510,17 +552,34 @@ const ProductsPage = () => {
       setIsImportingXml(true);
       setImportProgressMessage('Lendo o feed XML...');
 
-      const xmlText = xmlFile
+      const responseText = xmlFile
         ? await xmlFile.text().catch(() => {
             throw new Error('Não foi possível ler o arquivo XML.');
           })
         : await fetch(`/api/proxy-xml?url=${encodeURIComponent(rawUrl)}`, {
             cache: 'no-store',
           }).then(async (response) => {
-            if (response.status === 408) throw new Error('Tempo esgotado ao baixar o XML.');
-            if (!response.ok) throw new Error(`Erro HTTP ao baixar o XML (${response.status}).`);
-            return response.text();
+            const text = await response.text();
+            console.log('[xml-debug]', {
+              status: response.status,
+              contentType: response.headers.get('content-type'),
+              size: text.length,
+              preview: text.slice(0, 500),
+            });
+
+            if (!response.ok) {
+              try {
+                const parsed = JSON.parse(text);
+                throw new Error(parsed.error || `Erro HTTP ao baixar o XML (${response.status}).`);
+              } catch {
+                throw new Error(`Erro HTTP ao baixar o XML (${response.status}).`);
+              }
+            }
+
+            return text;
           });
+
+      const xmlText = responseText;
 
       if (!xmlText.trim()) {
         throw new Error('A resposta do XML está vazia.');
