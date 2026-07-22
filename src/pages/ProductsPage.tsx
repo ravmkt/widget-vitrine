@@ -1655,19 +1655,6 @@ const ProductsPage = () => {
 
                 <button
                   type="button"
-                  onClick={() => setImportTab('api')}
-                  className={cn(
-                    'rounded-xl border px-4 py-3 text-sm font-black',
-                    importTab === 'api'
-                      ? 'border-[#0094EB] bg-[#EAF6FF] text-[#0094EB]'
-                      : 'border-slate-200 bg-white text-slate-600'
-                  )}
-                >
-                  API Yampi
-                </button>
-
-                <button
-                  type="button"
                   onClick={() => setImportTab('sheet')}
                   className={cn(
                     'rounded-xl border px-4 py-3 text-sm font-black',
@@ -1678,6 +1665,7 @@ const ProductsPage = () => {
                 >
                   Planilha
                 </button>
+
               </div>
 
               {importTab === 'xml' && (
@@ -1686,13 +1674,12 @@ const ProductsPage = () => {
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <p className="text-sm font-black text-slate-900">Importar produtos</p>
-                        <p className="text-xs font-bold text-slate-500">XML • API Yampi • Planilha</p>
+                        <p className="text-xs font-bold text-slate-500">XML • Planilha</p>
                       </div>
                       <button type="button" onClick={() => setShowImportModal(false)} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-black text-slate-500 hover:bg-slate-50">Fechar</button>
                     </div>
-                    <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-3">
+                    <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-2">
                       <button type="button" onClick={() => setImportTab('xml')} className={cn('rounded-xl border px-4 py-3 text-sm font-black', importTab === 'xml' ? 'border-[#0094EB] bg-[#EAF6FF] text-[#0094EB]' : 'border-slate-200 bg-white text-slate-600')}>XML</button>
-                      <button type="button" onClick={() => setImportTab('api')} className={cn('rounded-xl border px-4 py-3 text-sm font-black', importTab === 'api' ? 'border-[#0094EB] bg-[#EAF6FF] text-[#0094EB]' : 'border-slate-200 bg-white text-slate-600')}>API Yampi</button>
                       <button type="button" onClick={() => setImportTab('sheet')} className={cn('rounded-xl border px-4 py-3 text-sm font-black', importTab === 'sheet' ? 'border-[#0094EB] bg-[#EAF6FF] text-[#0094EB]' : 'border-slate-200 bg-white text-slate-600')}>Planilha</button>
                     </div>
                   </div>
@@ -1822,34 +1809,6 @@ const ProductsPage = () => {
                 </div>
               )}
 
-              {importTab === 'api' && (
-
-                <div className="space-y-4">
-                  <input
-                    value={yampiToken}
-                    onChange={(e) => setYampiToken(e.target.value)}
-                    placeholder="Token Yampi"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]"
-                  />
-
-                  <input
-                    value={yampiUrl}
-                    onChange={(e) => setYampiUrl(e.target.value)}
-                    placeholder="URL da loja"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]"
-                  />
-
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      onClick={handleApiImport}
-                      className="rounded-xl bg-[#0094EB] px-5 py-3 text-sm font-black text-white hover:bg-[#0E4787]"
-                    >
-                      Importar API
-                    </button>
-                  </div>
-                </div>
-              )}
 
               {importTab === 'sheet' && (
                 <div className="space-y-4">
