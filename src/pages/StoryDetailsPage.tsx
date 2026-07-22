@@ -17,7 +17,6 @@ import {
   generateUuid,
   isValidUuid,
 } from '@/lib/db';
-import { supabase } from '@/lib/supabase';
 import { useTenant } from '@/context/TenantContext';
 import {
   ArrowLeft,
@@ -32,21 +31,24 @@ import {
   CheckCircle2,
   Plus,
   Loader2,
+  Play,
 } from 'lucide-react';
 import { showError } from '@/utils/toast';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import SuccessDialog from '@/components/SuccessDialog';
 import { cn } from '@/lib/utils';
 
-const PAGE_RULE_OPTIONS = [
-  { label: 'HOME', value: 'home' },
-  { label: 'Todas as páginas', value: 'all_pages' },
-  { label: 'URL Contém', value: 'url_contains' },
-  { label: 'URL Igual', value: 'url_equals' },
-  { label: 'URL Diferente', value: 'url_not_equals' },
-] as const;
+type PageRuleCondition = 'home' | 'all_pages' | 'url_contains' | 'url_not_contains' | 'url_not_equals';
 
-const CONDITION_TYPES_WITH_VALUE: ConditionType[] = ['url_contains', 'url_equals', 'url_not_equals'];
+const PAGE_RULE_OPTIONS: Array<{ label: string; value: PageRuleCondition }> = [
+  { label: 'Somente na Home', value: 'home' },
+  { label: 'Todas as páginas', value: 'all_pages' },
+  { label: 'URL contém', value: 'url_contains' },
+  { label: 'URL não contém', value: 'url_not_contains' },
+  { label: 'URL diferente', value: 'url_not_equals' },
+];
+
+const CONDITION_TYPES_WITH_VALUE: PageRuleCondition[] = ['url_contains', 'url_not_contains', 'url_not_equals'];
 
 const POSITION_OPTIONS = [
   { label: 'Acima do elemento', value: 'beforebegin' as const },
@@ -119,11 +121,12 @@ const getVideoPosterUrl = (video: Video) => {
   );
 };
 
-type UiRule = {
+type PageRuleUi = {
   id: string;
   store_id?: string;
   story_id?: string;
-  condition_type: ConditionType;
+  condition_type: PageRuleCondition;
+
   value: string;
   created_at?: string;
   updated_at?: string;
@@ -131,13 +134,12 @@ type UiRule = {
 
 type DisplayLocationUi = DisplayLocation;
 
-type PageRuleUi = UiRule;
-
 const mapDbRuleToUiRule = (rule: any): PageRuleUi => ({
   id: rule.id,
   store_id: rule.store_id,
   story_id: rule.story_id,
-  condition_type: (rule.condition_type as ConditionType) || 'all_pages',
+  condition_type: (rule.condition_type as PageRuleCondition) || 'all_pages',
+
   value: rule.value || '',
   created_at: rule.created_at,
   updated_at: rule.updated_at,
@@ -166,21 +168,19 @@ const StoryDetailsPage = () => {
   const [appearances, setAppearances] = useState<Appearance[]>([]);
   const [locations, setLocations] = useState<DisplayLocationUi[]>([]);
   const [pageRules, setPageRules] = useState<PageRuleUi[]>([]);
+  const [pageRuleMode, setPageRuleMode] = useState<PageRuleCondition>('home');
+  const [pageRuleValue, setPageRuleValue] = useState('');
+
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
-  const [embedModalLocation, setEmbedModalLocation] = useState<DisplayLocationUi | null>(null);
-  const [copiedSnippet, setCopiedSnippet] = useState(false);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     format: 'carousel' as StoryFormat,
     scroll_direction: 'horizontal' as ScrollDirection,
     active: true,
     appearance_id: '',
-  });
-  const [pageRuleForm, setPageRuleForm] = useState({
-    condition_type: 'home' as ConditionType,
-    value: '',
   });
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; type: 'location' | 'rule'; id: string; name: string }>({
     isOpen: false,
@@ -190,15 +190,6 @@ const StoryDetailsPage = () => {
   });
 
   const selectedVideosCount = useMemo(() => selectedVideoIds.length, [selectedVideoIds]);
-
-  const buildEmbedSnippet = (location: DisplayLocationUi): string => {
-    const embedBaseUrl =
-      window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
-        ? 'https://app.vidlytics.com.br'
-        : window.location.origin;
-
-    return `<script src="${embedBaseUrl}/embed/${location.id}.js"\n        data-block-id="${location.id}"\n        data-selector="${location.selector}"\n        data-position="${location.position}"\n        async></script>`;
-  };
 
   const loadStoryData = useCallback(async () => {
     if (tenantLoading) return;
@@ -218,13 +209,22 @@ const StoryDetailsPage = () => {
 
       if (isCreate) {
         setStory(null);
+        setSelectedVideoIds([]);
         setLocations([]);
         setPageRules([]);
+        setFormData({
+          title: '',
+          format: 'carousel',
+          scroll_direction: 'horizontal',
+          active: true,
+          appearance_id: '',
+        });
         return;
       }
 
       if (!id || !isValidUuid(id)) {
         setStory(null);
+        setSelectedVideoIds([]);
         setLocations([]);
         setPageRules([]);
         return;
@@ -234,6 +234,7 @@ const StoryDetailsPage = () => {
 
       if (!currentStory) {
         setStory(null);
+        setSelectedVideoIds([]);
         setLocations([]);
         setPageRules([]);
         return;
@@ -377,17 +378,19 @@ const StoryDetailsPage = () => {
   };
 
   const handleAddLocation = () => {
-    const newLocation: DisplayLocationUi = {
-      id: generateUuid(),
-      store_id: resolvedStoreId || '',
-      story_id: story?.id || '',
-      selector: '',
-      position: 'beforeend',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    setLocations((prev) => [...prev, newLocation]);
+    const now = new Date().toISOString();
+    setLocations((prev) => [
+      ...prev,
+      {
+        id: generateUuid(),
+        store_id: resolvedStoreId || '',
+        story_id: story?.id || '',
+        selector: '',
+        position: 'beforeend',
+        created_at: now,
+        updated_at: now,
+      },
+    ]);
   };
 
   const handleDeleteLocation = (locationId: string) => {
@@ -402,8 +405,8 @@ const StoryDetailsPage = () => {
         id: generateUuid(),
         store_id: resolvedStoreId || '',
         story_id: story?.id || '',
-        condition_type: 'home',
-        value: '',
+        condition_type: pageRuleMode,
+        value: CONDITION_TYPES_WITH_VALUE.includes(pageRuleMode) ? pageRuleValue : '',
         created_at: now,
         updated_at: now,
       },
@@ -458,6 +461,78 @@ const StoryDetailsPage = () => {
     );
   }
 
+  const GalleryModal = () => (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
+      <div className="w-full max-w-5xl rounded-[28px] bg-white p-6 shadow-2xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-black text-slate-900">Galeria de Vídeos</h3>
+          <button type="button" onClick={() => setIsGalleryOpen(false)} className="rounded-full p-2 text-slate-500 hover:bg-slate-100">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="mb-4 flex flex-wrap gap-3">
+          <button type="button" onClick={() => navigate('/videos/new')} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">
+            Fazer upload de um novo vídeo
+          </button>
+          <button type="button" onClick={() => navigate('/videos/new')} className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-slate-800">
+            Criar um novo vídeo
+          </button>
+        </div>
+
+        <div className="max-h-[70vh] overflow-y-auto pr-1">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {allVideos.map((video) => {
+              const selected = selectedVideoIds.includes(video.id);
+              const posterUrl = getVideoPosterUrl(video);
+              return (
+                <button
+                  key={video.id}
+                  type="button"
+                  onClick={() => handleToggleVideo(video.id)}
+                  className={cn(
+                    'group relative aspect-[9/16] overflow-hidden rounded-2xl border-2 transition-all',
+                    selected ? 'border-[#0094EB] shadow-lg shadow-blue-100' : 'border-slate-200',
+                  )}
+                >
+                  {posterUrl ? (
+                    <img src={posterUrl} alt={video.title || 'Vídeo'} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400">
+                      <Film size={24} />
+                    </div>
+                  )}
+
+                  <div className={cn('absolute inset-0 flex items-center justify-center transition-all', selected ? 'bg-[#0094EB]/20' : 'bg-black/10')}>
+                    {selected && (
+                      <div className="rounded-full bg-[#0094EB] p-1 text-white">
+                        <CheckCircle2 size={16} />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                    <p className="truncate text-[9px] font-black text-white">{video.title || 'Sem título'}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mt-5 flex items-center justify-between gap-3">
+          <button type="button" onClick={() => navigate('/videos/new')} className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-700 hover:bg-slate-50">
+            Criar novo vídeo
+          </button>
+
+          <button type="button" onClick={() => setIsGalleryOpen(false)} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">
+            Adicionar ao History
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-8 animate-fade-in pb-20">
       <div className="mb-8 flex items-center justify-between">
@@ -467,8 +542,8 @@ const StoryDetailsPage = () => {
           </button>
 
           <div>
-            <h1 className="text-2xl font-black tracking-tight text-slate-900">{isCreate ? 'Novo Story' : 'Editar Story'}</h1>
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-500">{isCreate ? 'Criar novo story' : formData.title}</p>
+            <h1 className="text-2xl font-black tracking-tight text-slate-900">{isCreate ? 'Novo History' : 'Editar History'}</h1>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-500">{isCreate ? 'Criar novo history' : formData.title}</p>
           </div>
         </div>
 
@@ -495,7 +570,7 @@ const StoryDetailsPage = () => {
       </div>
 
       <form onSubmit={handleSave}>
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_350px]">
+        <div className="grid grid-cols-1 gap-8">
           <div className="space-y-8">
             <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
               <div className="mb-6 flex items-center gap-3 border-b border-slate-100 pb-6">
@@ -505,17 +580,17 @@ const StoryDetailsPage = () => {
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2 md:col-span-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nome do Bloco</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nome do History</label>
                   <input type="text" value={formData.title} onChange={(event) => setFormData((prev) => ({ ...prev, title: event.target.value }))} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none focus:border-[#0094EB]" placeholder="Ex: Lançamentos" />
                 </div>
 
                 <div className="space-y-4 pt-4 md:col-span-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Formato de Exibição</label>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                     {[
+                      { id: 'floating_widget', icon: MousePointer2, label: 'Flutuante' },
                       { id: 'carousel', icon: Layout, label: 'Carrossel' },
                       { id: 'grid', icon: Layers, label: 'Grade' },
-                      { id: 'floating_widget', icon: MousePointer2, label: 'Flutuante' },
                     ].map((format) => {
                       const Icon = format.icon;
                       return (
@@ -554,18 +629,22 @@ const StoryDetailsPage = () => {
               <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-6">
                 <div className="flex items-center gap-3">
                   <Film className="text-[#0094EB]" size={20} />
-                  <h3 className="text-lg font-black uppercase tracking-tight text-slate-800">Conteúdo Selecionado</h3>
+                  <h3 className="text-lg font-black uppercase tracking-tight text-slate-800">Conteúdo selecionado</h3>
                 </div>
-                <span className="rounded-full bg-slate-50 px-3 py-1 text-xs font-black text-slate-400">{selectedVideosCount} Vídeos</span>
+                <button type="button" onClick={() => setIsGalleryOpen(true)} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">
+                  Galeria
+                </button>
               </div>
 
-              {allVideos.length > 0 ? (
+              {selectedVideoIds.length > 0 ? (
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5">
-                  {allVideos.map((video) => {
-                    const isSelected = selectedVideoIds.includes(video.id);
+                  {selectedVideoIds.map((videoId) => {
+                    const video = allVideos.find((item) => item.id === videoId);
+                    if (!video) return null;
                     const posterUrl = getVideoPosterUrl(video);
+
                     return (
-                      <button key={video.id} type="button" onClick={() => handleToggleVideo(video.id)} className={cn('group relative aspect-[9/16] overflow-hidden rounded-2xl border-2 transition-all', isSelected ? 'scale-[0.98] border-[#0094EB] shadow-lg shadow-blue-100' : 'border-transparent opacity-60 grayscale hover:opacity-100 hover:grayscale-0')}>
+                      <button key={video.id} type="button" onClick={() => handleToggleVideo(video.id)} className="group relative aspect-[9/16] overflow-hidden rounded-2xl border-2 border-[#0094EB] shadow-lg shadow-blue-100">
                         {posterUrl ? (
                           <img src={posterUrl} alt={video.title || 'Vídeo'} className="h-full w-full object-cover" />
                         ) : (
@@ -577,14 +656,10 @@ const StoryDetailsPage = () => {
                           </div>
                         )}
 
-                        <div className={cn('absolute inset-0 flex items-center justify-center transition-all', isSelected ? 'bg-[#0094EB]/20' : 'bg-black/20')}>
-                          {isSelected ? (
-                            <div className="rounded-full bg-[#0094EB] p-1 text-white">
-                              <CheckCircle2 size={16} />
-                            </div>
-                          ) : (
-                            <Plus className="text-white opacity-0 group-hover:opacity-100" size={24} />
-                          )}
+                        <div className="absolute inset-0 flex items-center justify-center bg-[#0094EB]/15 transition-all">
+                          <div className="rounded-full bg-[#0094EB] p-1 text-white">
+                            <CheckCircle2 size={16} />
+                          </div>
                         </div>
 
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
@@ -598,14 +673,12 @@ const StoryDetailsPage = () => {
                 <div className="p-10 text-center text-sm font-bold text-slate-400">Nenhum vídeo cadastrado para esta loja.</div>
               )}
             </div>
-          </div>
 
-          <div className="space-y-8">
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <MapPin className="text-[#0094EB]" size={18} />
-                  <h4 className="text-sm font-black uppercase text-slate-800">LOCAL DE EXIBIÇÃO</h4>
+                  <h4 className="text-sm font-black uppercase text-slate-800">Local de exibição</h4>
                 </div>
               </div>
 
@@ -669,7 +742,7 @@ const StoryDetailsPage = () => {
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Globe className="text-[#0094EB]" size={18} />
-                  <h4 className="text-sm font-black uppercase text-slate-800">QUAL PÁGINA IRÁ APARECER?</h4>
+                  <h4 className="text-sm font-black uppercase text-slate-800">Qual página irá aparecer?</h4>
                 </div>
               </div>
 
@@ -681,7 +754,7 @@ const StoryDetailsPage = () => {
                         <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">REGRA</label>
                         <select
                           value={rule.condition_type}
-                          onChange={(event) => handleUpdatePageRule(rule.id, { condition_type: event.target.value as ConditionType })}
+                          onChange={(event) => handleUpdatePageRule(rule.id, { condition_type: event.target.value as PageRuleCondition })}
                           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
                         >
                           {PAGE_RULE_OPTIONS.map((ruleOption) => (
@@ -690,6 +763,7 @@ const StoryDetailsPage = () => {
                             </option>
                           ))}
                         </select>
+
                       </div>
 
                       <div className="space-y-2">
@@ -731,45 +805,18 @@ const StoryDetailsPage = () => {
         </div>
       </form>
 
-      {embedModalLocation && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-2xl rounded-[28px] bg-white p-6 shadow-2xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-black text-slate-900">Código de embed</h3>
-              <button type="button" onClick={() => setEmbedModalLocation(null)} className="rounded-full p-2 text-slate-500 hover:bg-slate-100">
-                <X size={18} />
-              </button>
-            </div>
-
-            <textarea readOnly value={buildEmbedSnippet(embedModalLocation)} className="min-h-[220px] w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 font-mono text-xs text-slate-800 outline-none" />
-
-            <div className="mt-4 flex items-center justify-between gap-3">
-              <button
-                type="button"
-                onClick={async () => {
-                  await navigator.clipboard.writeText(buildEmbedSnippet(embedModalLocation));
-                  setCopiedSnippet(true);
-                  setTimeout(() => setCopiedSnippet(false), 1500);
-                }}
-                className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white"
-              >
-                {copiedSnippet ? 'Copiado!' : 'Copiar'}
-              </button>
-
-              <button type="button" onClick={() => setEmbedModalLocation(null)} className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-700">
-                Fechar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {isGalleryOpen && <GalleryModal />}
 
       <ConfirmDeleteDialog
         isOpen={deleteModal.isOpen}
         title="Confirmar Exclusão"
         itemName={deleteModal.name}
         onConfirm={() => {
-          handleDeleteLocation(deleteModal.id);
+          if (deleteModal.type === 'location') {
+            handleDeleteLocation(deleteModal.id);
+          } else {
+            handleDeletePageRule(deleteModal.id);
+          }
           setDeleteModal((prev) => ({ ...prev, isOpen: false }));
         }}
         onCancel={() => setDeleteModal((prev) => ({ ...prev, isOpen: false }))}
