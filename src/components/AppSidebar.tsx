@@ -84,13 +84,7 @@ export function AppSidebar() {
 
       <SidebarHeader className="p-6">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 bg-[#0094EB] rounded-lg flex items-center justify-center text-white shadow-md shadow-blue-100">
-            <MonitorPlay className="h-5 w-5 fill-white" />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-extrabold text-[#0F172A] tracking-tight leading-none text-lg">Vitrine Vídeo</span>
-            <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-widest leading-none mt-1">Sistema Loja Lucrativa</span>
-          </div>
+          <img src="/assets/vidlytics-logo-wide.png" alt="Vidlytics" className="h-10 w-auto" />
         </div>
       </SidebarHeader>
 
