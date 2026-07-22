@@ -880,6 +880,7 @@ const ProductsPage = () => {
                 image_url: product.image_url || '',
                 active: true,
                 origin: 'xml',
+                import_source: 'xml',
                 category: product.category || '',
                 sku: product.sku || '',
                 external_id: externalId,
@@ -1027,13 +1028,14 @@ const ProductsPage = () => {
             image_url: product.image_url || '',
             active: true,
             origin: 'xml',
+            import_source: 'xml',
             category: product.category || '',
             sku: normalizeSkuValue(product.sku || ''),
             external_id: normalizeExternalIdValue(String(product.idValue || '')),
             xml_id: normalizeExternalIdValue(String(product.idValue || '')),
             short_description: product.description || '',
-
             created_at: now,
+
             updated_at: now,
           } as unknown as Product,
           resolvedStoreId,
@@ -1920,10 +1922,14 @@ const ProductsPage = () => {
                             <input type="checkbox" checked={allVisibleSelected} onChange={(e) => toggleSelectAllVisibleXml(e.target.checked)} />
                             <span className="min-w-0 break-words">Selecionar todos desta página</span>
                           </label>
-                          <select value={xmlPreviewPageSize} onChange={(e) => { setXmlPreviewPageSize(Number(e.target.value)); setXmlPreviewPage(1); }} className="w-36 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold">
-                            {[10, 20, 50].map((size) => <option key={size} value={size}>{size} por página</option>)}
-                          </select>
+                          <div className="flex items-center gap-2">
+                            <select value={xmlPreviewPageSize} onChange={(e) => { setXmlPreviewPageSize(Number(e.target.value)); setXmlPreviewPage(1); }} className="w-28 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold">
+                              {[10, 20, 50].map((size) => <option key={size} value={size}>{size}</option>)}
+                            </select>
+                            <span className="text-xs font-bold text-slate-500">{safeXmlPreviewPage}/{totalXmlPages}</span>
+                          </div>
                         </div>
+
                       </div>
 
                       <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 py-4 sm:px-6">
