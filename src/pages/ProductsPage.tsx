@@ -1731,39 +1731,39 @@ const ProductsPage = () => {
                 </div>
 
                 {importedXmlProducts.length > 0 && (
-                  <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 max-h-[52vh] overflow-y-auto overflow-x-hidden sm:max-h-[58vh] lg:max-h-[62vh]">
-
-                    <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-                      <div className="space-y-1 xl:max-w-[18rem]">
-                        <p className="text-sm font-black text-slate-900">Prévia dos produtos encontrados</p>
-                        <p className="text-xs font-bold text-slate-500">{selectedXmlCount} produto(s) selecionado(s)</p>
+                  <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 max-h-[48vh] overflow-hidden sm:max-h-[54vh] lg:max-h-[60vh]">
+                    <div className="sticky top-0 z-10 -mx-4 -mt-4 border-b border-slate-100 bg-white/95 px-4 py-4 backdrop-blur">
+                      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                        <div className="space-y-1 xl:max-w-[18rem]">
+                          <p className="text-sm font-black text-slate-900">Prévia dos produtos encontrados</p>
+                          <p className="text-xs font-bold text-slate-500">{selectedXmlCount} produto(s) selecionado(s)</p>
+                        </div>
+                        <div className="flex w-full flex-col gap-2 sm:flex-row xl:flex-1 xl:justify-end">
+                          <input value={xmlPreviewSearch} onChange={(e) => { setXmlPreviewSearch(e.target.value); setXmlPreviewPage(1); }} placeholder="Buscar por nome, SKU ou categoria" className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-1 xl:max-w-[15rem]" />
+                          <select value={xmlPreviewCategory} onChange={(e) => { setXmlPreviewCategory(e.target.value); setXmlPreviewPage(1); }} className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-1 xl:max-w-[15rem]">
+                            <option value="all">Todas as categorias</option>
+                            {xmlPreviewCategories.map((category) => <option key={category} value={category}>{category}</option>)}
+                          </select>
+                        </div>
                       </div>
-                      <div className="flex w-full flex-col gap-2 sm:flex-row xl:flex-1 xl:justify-end">
-                        <input value={xmlPreviewSearch} onChange={(e) => { setXmlPreviewSearch(e.target.value); setXmlPreviewPage(1); }} placeholder="Buscar por nome, SKU ou categoria" className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-1 xl:max-w-[16rem]" />
-                        <select value={xmlPreviewCategory} onChange={(e) => { setXmlPreviewCategory(e.target.value); setXmlPreviewPage(1); }} className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-1 xl:max-w-[16rem]">
-                          <option value="all">Todas as categorias</option>
-                          {xmlPreviewCategories.map((category) => <option key={category} value={category}>{category}</option>)}
+
+                      <div className="mt-3 flex flex-col gap-3 rounded-xl bg-slate-50 px-4 py-3 text-sm font-bold text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+                        <label className="flex min-w-0 items-center gap-2">
+                          <input type="checkbox" checked={allVisibleSelected} onChange={(e) => toggleSelectAllVisibleXml(e.target.checked)} />
+                          <span className="min-w-0 break-words">Selecionar todos desta página</span>
+                        </label>
+                        <select value={xmlPreviewPageSize} onChange={(e) => { setXmlPreviewPageSize(Number(e.target.value)); setXmlPreviewPage(1); }} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold sm:w-36">
+                          {[10, 20, 50].map((size) => <option key={size} value={size}>{size} por página</option>)}
                         </select>
                       </div>
-
                     </div>
 
-                    <div className="flex flex-col gap-3 rounded-xl bg-slate-50 px-4 py-3 text-sm font-bold text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-                      <label className="flex min-w-0 items-center gap-2">
-                        <input type="checkbox" checked={allVisibleSelected} onChange={(e) => toggleSelectAllVisibleXml(e.target.checked)} />
-                        <span className="min-w-0 break-words">Selecionar todos desta página</span>
-                      </label>
-                      <select value={xmlPreviewPageSize} onChange={(e) => { setXmlPreviewPageSize(Number(e.target.value)); setXmlPreviewPage(1); }} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold sm:w-36">
-                        {[10, 20, 50].map((size) => <option key={size} value={size}>{size} por página</option>)}
-                      </select>
-                    </div>
-
-                    <div className="space-y-3">
+                    <div className="max-h-[31vh] space-y-3 overflow-y-auto overflow-x-hidden pr-1 sm:max-h-[34vh] lg:max-h-[39vh]">
                       {xmlPreviewPageItems.map((product) => {
                         const key = getXmlProductKey(product);
                         return (
                           <div key={key} className="rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
-                            <div className="grid grid-cols-[auto_48px_1fr] gap-3 sm:grid-cols-[auto_56px_minmax(0,1.35fr)_repeat(4,minmax(0,1fr))] sm:items-start">
+                            <div className="grid grid-cols-[auto_48px_1fr] gap-3 sm:grid-cols-[auto_56px_minmax(0,1.25fr)_repeat(4,minmax(0,1fr))] sm:items-start">
                               <div className="flex items-start pt-2"><input type="checkbox" checked={selectedXmlKeys.has(key)} onChange={(e) => setSelectedXmlProduct(product, e.target.checked)} /></div>
                               <div><img src={product.image_url || 'https://via.placeholder.com/72'} alt={product.name} className="h-12 w-12 rounded-xl object-cover" loading="lazy" /></div>
                               <div className="min-w-0 space-y-1 sm:col-span-6">
@@ -1776,7 +1776,6 @@ const ProductsPage = () => {
                                 </div>
                               </div>
                             </div>
-
                           </div>
                         );
                       })}
