@@ -1214,7 +1214,9 @@ const ProductsPage = () => {
           >
             <option value="all">Todas Origens</option>
             <option value="manual">Manual</option>
-            <option value="integration">Integração</option>
+            <option value="xml">XML</option>
+            <option value="planilha">Planilha</option>
+
           </select>
         </div>
       </div>
