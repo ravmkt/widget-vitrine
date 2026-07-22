@@ -427,13 +427,16 @@ const ProductsPage = () => {
   const [isImportingXml, setIsImportingXml] = useState(false);
   const [importProgressMessage, setImportProgressMessage] = useState('');
 
-  const getTagValue = (item: Element, tagName: string) => {
-    const candidates = [
-      item.getElementsByTagName(tagName)[0],
-      item.getElementsByTagNameNS('*', tagName)[0],
-    ];
+  const getTagValue = (item: Element, aliases: string[]) => {
+    const children = Array.from(item.children || []);
 
-    for (const node of candidates) {
+    for (const alias of aliases) {
+      const node = children.find(
+        (child) =>
+          child.nodeName === alias ||
+          child.localName === alias ||
+          child.nodeName.split(':').pop() === alias,
+      );
       const value = node?.textContent?.trim();
       if (value) return value;
     }
@@ -441,43 +444,64 @@ const ProductsPage = () => {
     return '';
   };
 
+  const normalizePrice = (value: string) => {
+    const cleaned = value.replace(/<[^>]*>/g, '').replace(/[^\d.,-]/g, '');
+    if (!cleaned) return 0;
+    const normalized = cleaned.includes(',') ? cleaned.replace(/\./g, '').replace(',', '.') : cleaned;
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  const stripHtml = (value: string) => value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+
+  const findProductNodes = (xmlDoc: Document) => {
+    const allElements = Array.from(xmlDoc.getElementsByTagName('*'));
+    const candidates = allElements.filter((node) => {
+      const name = (node.localName || node.nodeName).split(':').pop() || node.nodeName;
+      return ['item', 'product', 'entry', 'produto', 'offer'].includes(name.toLowerCase());
+    });
+
+    return candidates;
+  };
+
   const parseXmlProducts = (xmlText: string) => {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlText, 'application/xml');
 
     if (xmlDoc.querySelector('parsererror')) {
-      throw new Error('O XML informado não é válido.');
+      throw new Error('XML malformado.');
     }
 
-    const items = Array.from(xmlDoc.getElementsByTagName('item'));
+    const items = findProductNodes(xmlDoc);
 
     return items
       .map((item) => {
-        const title = getTagValue(item, 'title');
-        const link = getTagValue(item, 'link');
-        const priceRaw = getTagValue(item, 'price');
-        const imageUrl = getTagValue(item, 'image_link') || getTagValue(item, 'image');
-        const category = getTagValue(item, 'product_type') || getTagValue(item, 'google_product_category');
-        const normalizedPrice = Number(
-          priceRaw
-            .replace(/[^\d.,-]/g, '')
-            .replace(/\./g, '')
-            .replace(',', '.'),
-        );
+        const name = getTagValue(item, ['title', 'name', 'nome', 'product_name']);
+        const priceRaw = getTagValue(item, ['price', 'sale_price', 'valor', 'preco', 'price_with_tax']);
+        const link = getTagValue(item, ['link', 'url', 'product_url']);
+        const imageUrl = getTagValue(item, ['image_link', 'image', 'imagem', 'picture', 'additional_image_link']);
+        const category = getTagValue(item, ['product_type', 'google_product_category']);
+        const sku = getTagValue(item, ['sku', 'reference', 'codigo']);
+        const idValue = getTagValue(item, ['id']);
+        const description = stripHtml(getTagValue(item, ['description', 'descricao', 'summary', 'content']));
 
         return {
-          name: title,
-          price: Number.isFinite(normalizedPrice) ? normalizedPrice : 0,
+          name,
+          price: normalizePrice(priceRaw),
           product_url: link,
           image_url: imageUrl,
           category,
+          sku,
+          idValue,
+          description,
         };
       })
-      .filter((product) => product.name && product.product_url);
+      .filter((product) => product.name);
   };
 
   const handleXmlImport = async () => {
-    if (!xmlUrl && !xmlFile) {
+    const rawUrl = xmlUrl.trim();
+    if (!rawUrl && !xmlFile) {
       showError('Informe URL ou arquivo XML.');
       return;
     }
@@ -487,52 +511,67 @@ const ProductsPage = () => {
       setImportProgressMessage('Lendo o feed XML...');
 
       const xmlText = xmlFile
-        ? await xmlFile.text()
-        : await fetch(`/api/proxy-xml?url=${encodeURIComponent(xmlUrl)}`, {
+        ? await xmlFile.text().catch(() => {
+            throw new Error('Não foi possível ler o arquivo XML.');
+          })
+        : await fetch(`/api/proxy-xml?url=${encodeURIComponent(rawUrl)}`, {
             cache: 'no-store',
-          }).then((response) => {
-            if (!response.ok) {
-              throw new Error(`Não foi possível baixar o XML (${response.status})`);
-            }
+          }).then(async (response) => {
+            if (response.status === 408) throw new Error('Tempo esgotado ao baixar o XML.');
+            if (!response.ok) throw new Error(`Erro HTTP ao baixar o XML (${response.status}).`);
             return response.text();
           });
+
+      if (!xmlText.trim()) {
+        throw new Error('A resposta do XML está vazia.');
+      }
 
       setImportProgressMessage('Processando produtos do feed...');
       const importedProducts = parseXmlProducts(xmlText);
 
       if (importedProducts.length === 0) {
-        throw new Error('Nenhum produto válido foi encontrado no XML.');
+        throw new Error('XML válido, mas nenhum produto foi reconhecido.');
       }
 
       const resolvedStoreId = await resolveStoreId(storeId);
       const now = new Date().toISOString();
       const existingProducts = await db.products.getAll(resolvedStoreId);
-      const existingNames = new Set(existingProducts.map((product) => product.name.toLowerCase()));
-      const existingCategories = new Set(
-        existingProducts
-          .map((product) => String((product as any).category || '').trim())
-          .filter(Boolean),
+      const existingCategories = new Set(existingProducts.map((product) => String((product as any).category || '').trim()).filter(Boolean));
+
+      const existingKeys = new Set(
+        existingProducts.map((product) => {
+          const sku = String((product as any).sku || '').trim().toLowerCase();
+          const idValue = String((product as any).external_id || (product as any).xml_id || '').trim().toLowerCase();
+          const link = String(product.product_url || '').trim().toLowerCase();
+          const namePrice = `${String(product.name || '').trim().toLowerCase()}|${Number(product.price || 0)}`;
+          return [sku, idValue, link, namePrice].join('|');
+        }),
       );
 
-      const newProducts = importedProducts.filter((product) => !existingNames.has(product.name.toLowerCase()));
+      const importedProductsFiltered = importedProducts.filter((product) => {
+        const sku = String(product.sku || '').trim().toLowerCase();
+        const idValue = String(product.idValue || '').trim().toLowerCase();
+        const link = String(product.product_url || '').trim().toLowerCase();
+        const namePrice = `${String(product.name || '').trim().toLowerCase()}|${Number(product.price || 0)}`;
+        const compoundKey = [sku, idValue, link, namePrice].join('|');
+        return !existingKeys.has(compoundKey);
+      });
 
-      if (newProducts.length === 0) {
-        throw new Error('Todos os produtos do XML já existem no catálogo.');
-      }
-
-      setImportProgressMessage(`Importando ${newProducts.length} produtos...`);
+      setImportProgressMessage(`Importando ${importedProductsFiltered.length} produtos...`);
       await Promise.all(
-        newProducts.map(async (product) => {
+        importedProductsFiltered.map(async (product) => {
           const payload = await withStoreId(
             {
               id: generateUuid(),
               name: product.name,
               price: product.price,
               product_url: product.product_url,
-              image_url: product.image_url,
+              image_url: product.image_url || '',
               active: true,
               origin: 'integration',
               category: product.category || '',
+              sku: product.sku || '',
+              short_description: product.description || '',
               created_at: now,
               updated_at: now,
             } as unknown as Product,
@@ -546,20 +585,19 @@ const ProductsPage = () => {
       const refreshedProducts = await db.products.getAll(resolvedStoreId);
       setProducts(refreshedProducts);
       setCategories((prev) => {
-        const importedCategories = importedProducts
-          .map((product) => product.category)
-          .filter((category): category is string => Boolean(category && category.trim()));
         const merged = [...prev];
-
-        importedCategories.forEach((categoryName) => {
-          if (!existingCategories.has(categoryName) && !merged.some((item) => item.name === categoryName)) {
-            merged.push({ id: Date.now().toString() + categoryName, name: categoryName });
-          }
-        });
-
+        importedProducts
+          .map((product) => product.category)
+          .filter((category): category is string => Boolean(category && category.trim()))
+          .forEach((categoryName) => {
+            if (!existingCategories.has(categoryName) && !merged.some((item) => item.name === categoryName)) {
+              merged.push({ id: Date.now().toString() + categoryName, name: categoryName });
+            }
+          });
         return merged;
       });
-      showSuccess(`Importação concluída: ${newProducts.length} produtos adicionados.`);
+
+      showSuccess(`Importação concluída: ${importedProducts.length} encontrados, ${importedProductsFiltered.length} importados, ${importedProducts.length - importedProductsFiltered.length} ignorados.`);
       setShowImportModal(false);
       setXmlUrl('');
       setXmlFile(null);
@@ -1224,7 +1262,7 @@ const ProductsPage = () => {
                   <div className="flex items-start gap-3 rounded-xl bg-white p-3 border border-slate-100">
                     <FileText className="mt-0.5 text-[#0094EB]" size={18} />
                     <p className="text-xs font-bold text-slate-600">
-                      Envie a URL do feed XML do Google Shopping ou selecione o arquivo. O app baixa o XML pelo backend para evitar erro de CORS. Serão importados apenas nome, preço, link e a primeira imagem.
+                      Envie a URL do feed XML do Google Shopping ou selecione o arquivo. O app baixa o XML pelo backend para evitar erro de CORS. Serão importados apenas nome, preço, link, primeira imagem e campos auxiliares.
                     </p>
 
                   </div>
