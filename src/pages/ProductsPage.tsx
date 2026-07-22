@@ -735,7 +735,7 @@ const ProductsPage = () => {
       setImportedXmlProducts(parsedProducts);
       setSelectedXmlKeys(new Set());
       setXmlPreviewPage(1);
-      setShowImportModal(false);
+      setShowImportModal(true);
       showSuccess(`${parsedProducts.length} produtos encontrados no XML.`);
 
     } catch (error: unknown) {
