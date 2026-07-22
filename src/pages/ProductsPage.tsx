@@ -528,7 +528,14 @@ const ProductsPage = () => {
       .trim()
       .toUpperCase();
 
+  const normalizeExternalIdValue = (value: string) =>
+    value
+      .replace(/\u200B|\u200C|\u200D|\uFEFF/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
   const isValidSkuValue = (value: string) => {
+
     const normalized = normalizeSkuValue(value);
     if (!normalized) return false;
     return !['-', '—', 'N/A', 'NA', 'NULL', 'UNDEFINED'].includes(normalized.toUpperCase());
@@ -593,6 +600,12 @@ const ProductsPage = () => {
       if (!normalized) return false;
       return !['-', '—', 'N/A', 'NA', 'NULL', 'UNDEFINED'].includes(normalized.toUpperCase());
     };
+
+    const normalizeExternalIdValue = (value: string) =>
+      value
+        .replace(/\u200B|\u200C|\u200D|\uFEFF/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
 
     const collectNodeValues = (item: Element) => {
       const values = new Map<string, string>();
@@ -661,15 +674,16 @@ const ProductsPage = () => {
         const link = findNodeValue(item, ['link', 'url', 'product_url', 'g:link']);
         const imageUrl = findNodeValue(item, ['image_link', 'image', 'imagem', 'picture', 'g:image_link', 'additional_image_link']);
         const category = findNodeValue(item, ['product_type', 'google_product_category']);
-        const skuRaw = findNodeValue(item, ['sku', 'productCode', 'product_code', 'codigo', 'código', 'ref', 'referencia', 'referência', 'id', 'g:id']);
+        const skuRaw = findNodeValue(item, ['mpn', 'g:mpn']);
+        const externalIdRaw = findNodeValue(item, ['id', 'g:id']);
         const sku = isValidSkuValue(skuRaw) ? normalizeSkuValue(skuRaw) : '';
+        const externalId = normalizeExternalIdValue(externalIdRaw);
+        console.log({ externalId: externalIdRaw, sku: skuRaw, title: name });
         console.debug('[xml-sku]', {
-          path: skuRaw ? 'matched-alias' : 'not-found',
+          path: skuRaw ? 'g:mpn' : 'not-found',
           original: skuRaw ? skuRaw.slice(0, 50) : '',
           normalized: sku || '',
         });
-        const idValue = findNodeValue(item, ['id', 'g:id']);
-
         const description = stripHtml(findNodeValue(item, ['description', 'descricao', 'summary', 'content']));
 
         return {
@@ -679,9 +693,10 @@ const ProductsPage = () => {
           image_url: imageUrl,
           category,
           sku,
-          idValue,
+          idValue: externalId,
           description,
         };
+
       })
       .filter((product) => product.name);
   };
@@ -832,6 +847,7 @@ const ProductsPage = () => {
           const rawSku = String(product.sku || '');
           const sku = normalizeSkuValue(rawSku).trim();
           const skuKey = sku.toLowerCase();
+          const externalId = normalizeExternalIdValue(String(product.idValue || ''));
           const productName = product.name.trim();
 
           if (!isValidSkuValue(rawSku)) {
@@ -866,9 +882,12 @@ const ProductsPage = () => {
                 origin: 'xml',
                 category: product.category || '',
                 sku: product.sku || '',
+                external_id: externalId,
+                xml_id: externalId,
                 short_description: product.description || '',
                 created_at: now,
                 updated_at: now,
+
               } as unknown as Product,
               resolvedStoreId,
             );
@@ -1010,8 +1029,10 @@ const ProductsPage = () => {
             origin: 'xml',
             category: product.category || '',
             sku: normalizeSkuValue(product.sku || ''),
-
+            external_id: normalizeExternalIdValue(String(product.idValue || '')),
+            xml_id: normalizeExternalIdValue(String(product.idValue || '')),
             short_description: product.description || '',
+
             created_at: now,
             updated_at: now,
           } as unknown as Product,
@@ -1921,10 +1942,12 @@ const ProductsPage = () => {
                                   <div className="min-w-0 space-y-1 sm:col-span-6">
                                     <div className="truncate text-sm font-bold text-slate-900 sm:text-base">{product.name}</div>
                                     <div className="grid grid-cols-2 gap-x-2 gap-y-2 text-[11px] font-bold text-slate-500 sm:grid-cols-4 sm:text-xs">
-                                      <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">SKU</span><span className="block truncate">{product.sku || '-'}</span></div>
+                                      <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">SKU</span><span className="block truncate">{product.sku || 'SKU não informado'}</span></div>
+
                                       <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">Preço</span><span className="block truncate">{product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
-                                      <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">Marca</span><span className="block truncate">{product.idValue || '-'}</span></div>
+                                      <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">ID Externo</span><span className="block truncate">{product.idValue || '-'}</span></div>
                                       <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">Categoria</span><span className="block truncate">{formatXmlCategory(product.category || 'Sem categoria')}</span></div>
+
                                     </div>
                                   </div>
                                 </div>
