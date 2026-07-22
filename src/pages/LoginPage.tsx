@@ -27,7 +27,8 @@ const LoginPage = () => {
     <div className="min-h-screen flex items-center justify-center bg-[#F7FAFC] p-4">
       <form onSubmit={handleSubmit} className="w-full max-w-md rounded-[2rem] bg-white p-8 shadow-sm border border-slate-200 space-y-4">
         <div className="flex justify-center pb-2">
-          <img src="/assets/vidlytics-logo-mark.png" alt="Vidlytics" className="h-24 w-auto" />
+          <img src="/assets/vidlytics-logo-wide.png" alt="Vidlytics" className="h-24 w-auto" />
+
         </div>
         <h1 className="text-2xl font-black text-slate-900">Entrar</h1>
 
