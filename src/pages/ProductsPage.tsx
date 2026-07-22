@@ -514,7 +514,7 @@ const ProductsPage = () => {
   const [xmlPreviewPageSize, setXmlPreviewPageSize] = useState(10);
   const [xmlPreviewPage, setXmlPreviewPage] = useState(1);
 
-  const normalizeXmlText = (value: string) => {
+  const sanitizeXmlText = (value: string) => {
     return value
       .replace(/^\uFEFF/, '')
       .replace(/^\uFEFF/, '')
@@ -522,7 +522,7 @@ const ProductsPage = () => {
   };
 
   const parseXmlProducts = (rawXmlText: string) => {
-    const xmlText = normalizeXmlText(rawXmlText);
+    const xmlText = sanitizeXmlText(rawXmlText);
 
     if (!xmlText) {
       throw new Error('A resposta do XML está vazia.');
@@ -631,14 +631,28 @@ const ProductsPage = () => {
   const getXmlProductKey = (product: ImportedProduct) =>
     [product.sku.trim().toLowerCase(), product.idValue.trim().toLowerCase(), product.product_url.trim().toLowerCase(), product.name.trim().toLowerCase()].join('|');
 
+  const normalizeXmlText = (value: string) =>
+    value
+      .replace(/&gt;/g, '>')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
   const formatXmlCategory = (value: string) =>
     value.replace(/&gt;|>/g, ': ').replace(/\s+/g, ' ').replace(/:\s*/g, ': ').replace(/\s*:\s*/g, ': ').replace(/:\s*/g, ': ').replace(/\s+([A-Za-zÀ-ÿ])/g, ' $1').trim();
 
   const filteredXmlProducts = importedXmlProducts.filter((product) => {
-    const query = xmlPreviewSearch.trim().toLowerCase();
-    const normalizedCategory = formatXmlCategory(product.category || 'Sem categoria');
-    const matchesSearch = !query || [product.name, product.sku, normalizedCategory, product.description].join(' ').toLowerCase().includes(query);
-    const matchesCategory = xmlPreviewCategory === 'all' || normalizedCategory === xmlPreviewCategory;
+    const query = normalizeXmlText(xmlPreviewSearch);
+    const normalizedCategory = normalizeXmlText(formatXmlCategory(product.category || 'Sem categoria'));
+    const searchableText = normalizeXmlText([
+      product.name,
+      product.sku,
+      product.idValue,
+      product.description,
+      product.category,
+    ].join(' '));
+    const matchesSearch = !query || searchableText.includes(query);
+    const matchesCategory = xmlPreviewCategory === 'all' || normalizedCategory === normalizeXmlText(xmlPreviewCategory);
     return matchesSearch && matchesCategory;
   });
 
@@ -721,7 +735,9 @@ const ProductsPage = () => {
       setImportedXmlProducts(parsedProducts);
       setSelectedXmlKeys(new Set());
       setXmlPreviewPage(1);
+      setShowImportModal(false);
       showSuccess(`${parsedProducts.length} produtos encontrados no XML.`);
+
     } catch (error: unknown) {
       console.error('Erro ao ler XML:', error);
       showError(error instanceof Error ? error.message : 'Erro ao ler XML.');
@@ -757,7 +773,8 @@ const ProductsPage = () => {
                 product_url: product.product_url,
                 image_url: product.image_url || '',
                 active: true,
-                origin: 'integration',
+                origin: 'xml',
+
                 category: product.category || '',
                 sku: product.sku || '',
                 short_description: product.description || '',
@@ -886,7 +903,8 @@ const ProductsPage = () => {
               product_url: product.product_url,
               image_url: product.image_url || '',
               active: true,
-              origin: 'integration',
+              origin: 'xml',
+
               category: product.category || '',
               sku: product.sku || '',
               short_description: product.description || '',
@@ -917,9 +935,15 @@ const ProductsPage = () => {
 
       showSuccess(`Importação concluída: ${importedProducts.length} encontrados, ${importedProductsFiltered.length} importados, ${importedProducts.length - importedProductsFiltered.length} ignorados.`);
       setShowImportModal(false);
+      setImportedXmlProducts([]);
+      setSelectedXmlKeys(new Set());
       setXmlUrl('');
       setXmlFile(null);
+      setXmlPreviewSearch('');
+      setXmlPreviewCategory('all');
+      setXmlPreviewPage(1);
       setImportProgressMessage('');
+
     } catch (error) {
       console.error('Erro ao importar XML:', error);
       showError(error instanceof Error ? error.message : 'Erro ao importar XML. Verifique o link informado.');
