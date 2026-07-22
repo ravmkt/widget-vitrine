@@ -2384,7 +2384,11 @@ function checkIfVisitorLiked(videoId, dbLikesRaw) {
     function renderCurrent() {
       var story = storiesList[currentStoryIndex]; if (!story) return;
       var orderedVideos = getOrderedVideos(story); if (!orderedVideos.length) { nextVideo(); return; }
+      if (currentVideoIndex < 0 || currentVideoIndex >= orderedVideos.length) {
+        currentVideoIndex = 0;
+      }
       var video = orderedVideos[currentVideoIndex]; if (!video) return;
+
 /*
  * Registra uma visualização somente uma vez por vídeo,
  * durante a sessão atual do player.
@@ -3623,53 +3627,30 @@ function getOrCreateCarouselShadowRoot() {
 function insertCarouselHostBySelector(host, locations) {
   if (!host) return;
 
-  locations = locations || [];
+  var header =
+    document.querySelector('header') ||
+    document.querySelector('[role="banner"]') ||
+    document.querySelector('#menu') ||
+    document.querySelector('.menu');
 
-  // Tenta encontrar o local de exibição para carrossel
-  var targetLocation = locations.find(function (loc) {
-    return loc && loc.active !== false && loc.mode === 'carousel' && loc.selector;
-  });
-
-  // Se tem targetLocation, tenta usar o seletor
-  if (targetLocation) {
-    var selector = String(targetLocation.selector || '').trim();
-
-    if (selector && selector !== 'body') {
-      var target = null;
-      try {
-        target = document.querySelector(selector);
-      } catch (e) {
-        target = null;
-      }
-
-      if (target) {
-        var position = targetLocation.position || 'beforeend';
-        target.insertAdjacentElement(position, host);
-        return;
-      }
-
-      console.warn(
-        '[Vidlytics] Carrossel: seletor "' +
-          selector +
-          '" definido no painel, mas não foi encontrado no DOM. Inserindo antes do footer.'
-      );
+  if (header && header.parentNode) {
+    if (header.nextSibling) {
+      header.parentNode.insertBefore(host, header.nextSibling);
+    } else {
+      header.parentNode.appendChild(host);
     }
-  }
-
-  // FALLBACK: insere antes do footer, se existir
-  var footer =
-    document.querySelector('footer') ||
-    document.querySelector('[role="contentinfo"]') ||
-    document.querySelector('.footer') ||
-    document.querySelector('#footer');
-
-  if (footer && footer.parentNode) {
-    footer.parentNode.insertBefore(host, footer);
     return;
   }
 
-  // Último recurso: insere no body
-  document.body.appendChild(host);
+  var main = document.querySelector('main');
+  if (main && main.parentNode) {
+    main.parentNode.insertBefore(host, main);
+    return;
+  }
+
+  if (document.body) {
+    document.body.insertBefore(host, document.body.firstChild);
+  }
 }
 
 
@@ -3886,13 +3867,16 @@ function renderCarousel(stories, storyVideoMap, activeVideos, dbLocations) {  //
     ) || {};
 
     var gap = toNumber(firstDefined(carouselConfig.gap, carouselConfig.carousel_gap), 16);
-    var cardWidth = 'clamp(220px, 22vw, 280px)';
+    var visibleItems = Math.max(2, toNumber(firstDefined(carouselConfig.visible_items, carouselConfig.carousel_visible_items), 4));
+    var cardWidth = 'clamp(180px, ' + Math.floor(100 / visibleItems) + 'vw, 280px)';
 
     return (
-      '.vl-carousel-wrap{width:100%!important;max-width:1200px!important;margin:0 auto!important;padding:24px 16px!important;box-sizing:border-box!important;background:transparent!important;font-family:' + font + '!important;}' +
+      '.vl-carousel-wrap{width:100%!important;max-width:none!important;margin:0!important;padding:24px 0!important;box-sizing:border-box!important;background:transparent!important;font-family:' + font + '!important;}' +
+
       '.vl-carousel-wrap .vl-carousel-header{display:flex!important;align-items:center!important;justify-content:flex-start!important;margin-bottom:16px!important;}' +
       '.vl-carousel-wrap .vl-carousel-title{font-size:18px!important;font-weight:800!important;color:#0f172a!important;}' +
-      '.vl-carousel-wrap .vl-carousel{width:100%!important;display:flex!important;flex-flow:row nowrap!important;justify-content:flex-start!important;align-items:flex-start!important;gap:' + gap + 'px!important;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none!important;-ms-overflow-style:none!important;cursor:grab!important;box-sizing:border-box!important;padding:8px 0!important;scroll-snap-type:x mandatory!important;}' +
+      '.vl-carousel-wrap .vl-carousel{width:100%!important;display:flex!important;flex-flow:row nowrap!important;justify-content:flex-start!important;align-items:flex-start!important;gap:' + gap + 'px!important;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none!important;-ms-overflow-style:none!important;cursor:grab!important;box-sizing:border-box!important;padding:8px 0!important;scroll-snap-type:x mandatory!important;touch-action:pan-x!important;}' +
+
       '.vl-carousel-wrap .vl-carousel-card{display:flex!important;flex:0 0 ' + cardWidth + '!important;width:' + cardWidth + '!important;min-width:' + cardWidth + '!important;max-width:' + cardWidth + '!important;flex-direction:column!important;gap:8px!important;box-sizing:border-box!important;cursor:pointer!important;scroll-snap-align:start!important;}' +
       '.vl-carousel-wrap .vl-carousel-inner{position:relative!important;width:100%!important;aspect-ratio:9 / 16!important;overflow:hidden!important;border-radius:20px!important;background:#e2e8f0!important;box-shadow:0 10px 24px rgba(15,23,42,.12)!important;}' +
       '.vl-carousel-wrap .vl-carousel-media{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;}' +
