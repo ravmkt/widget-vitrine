@@ -1718,67 +1718,69 @@ const ProductsPage = () => {
                   </button>
                 </div>
 
-                {importedXmlProducts.length > 0 && (
-                  <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-3 max-h-[40vh] overflow-hidden sm:max-h-[46vh] lg:max-h-[52vh]">
-
-                    <div className="sticky top-0 z-10 -mx-3 -mt-3 border-b border-slate-100 bg-white/95 px-3 py-3 backdrop-blur">
-
-                      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-                        <div className="space-y-1 xl:max-w-[18rem]">
-                          <p className="text-sm font-black text-slate-900">Prévia dos produtos encontrados</p>
-                          <p className="text-xs font-bold text-slate-500">{selectedXmlCount} produto(s) selecionado(s)</p>
+                {importedXmlProducts.length > 0 && showImportModal && (
+                  <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/50 px-3 py-3 backdrop-blur-sm">
+                    <div className="flex w-full max-w-4xl flex-col rounded-[1.75rem] bg-white shadow-2xl max-h-[92vh] overflow-hidden">
+                      <div className="border-b border-slate-100 px-5 py-4 sm:px-6">
+                        <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                          <div className="space-y-1 xl:max-w-[18rem]">
+                            <p className="text-sm font-black text-slate-900">Prévia dos produtos encontrados</p>
+                            <p className="text-xs font-bold text-slate-500">{selectedXmlCount} produto(s) selecionado(s)</p>
+                          </div>
+                          <div className="flex w-full flex-col gap-2 sm:flex-row xl:flex-1 xl:justify-end">
+                            <input value={xmlPreviewSearch} onChange={(e) => { setXmlPreviewSearch(e.target.value); setXmlPreviewPage(1); }} placeholder="Buscar por nome, SKU ou categoria" className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-1 xl:max-w-[13rem]" />
+                            <select value={xmlPreviewCategory} onChange={(e) => { setXmlPreviewCategory(e.target.value); setXmlPreviewPage(1); }} className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-1 xl:max-w-[13rem]">
+                              <option value="all">Todas as categorias</option>
+                              {xmlPreviewCategories.map((category) => <option key={category} value={category}>{category}</option>)}
+                            </select>
+                          </div>
                         </div>
-                        <div className="flex w-full flex-col gap-2 sm:flex-row xl:flex-1 xl:justify-end">
-                          <input value={xmlPreviewSearch} onChange={(e) => { setXmlPreviewSearch(e.target.value); setXmlPreviewPage(1); }} placeholder="Buscar por nome, SKU ou categoria" className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-1 xl:max-w-[13rem]" />
-                          <select value={xmlPreviewCategory} onChange={(e) => { setXmlPreviewCategory(e.target.value); setXmlPreviewPage(1); }} className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-1 xl:max-w-[13rem]">
 
-                            <option value="all">Todas as categorias</option>
-                            {xmlPreviewCategories.map((category) => <option key={category} value={category}>{category}</option>)}
+                        <div className="mt-3 flex flex-col gap-3 rounded-xl bg-slate-50 px-4 py-3 text-sm font-bold text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+                          <label className="flex min-w-0 items-center gap-2">
+                            <input type="checkbox" checked={allVisibleSelected} onChange={(e) => toggleSelectAllVisibleXml(e.target.checked)} />
+                            <span className="min-w-0 break-words">Selecionar todos desta página</span>
+                          </label>
+                          <select value={xmlPreviewPageSize} onChange={(e) => { setXmlPreviewPageSize(Number(e.target.value)); setXmlPreviewPage(1); }} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold sm:w-36">
+                            {[10, 20, 50].map((size) => <option key={size} value={size}>{size} por página</option>)}
                           </select>
                         </div>
                       </div>
 
-                      <div className="mt-3 flex flex-col gap-3 rounded-xl bg-slate-50 px-4 py-3 text-sm font-bold text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-                        <label className="flex min-w-0 items-center gap-2">
-                          <input type="checkbox" checked={allVisibleSelected} onChange={(e) => toggleSelectAllVisibleXml(e.target.checked)} />
-                          <span className="min-w-0 break-words">Selecionar todos desta página</span>
-                        </label>
-                        <select value={xmlPreviewPageSize} onChange={(e) => { setXmlPreviewPageSize(Number(e.target.value)); setXmlPreviewPage(1); }} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold sm:w-36">
-                          {[10, 20, 50].map((size) => <option key={size} value={size}>{size} por página</option>)}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="max-h-[22vh] space-y-3 overflow-y-auto overflow-x-hidden pr-1 sm:max-h-[26vh] lg:max-h-[31vh]">
-
-                      {xmlPreviewPageItems.map((product) => {
-                        const key = getXmlProductKey(product);
-                        return (
-                          <div key={key} className="rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
-                            <div className="grid grid-cols-[auto_48px_1fr] gap-3 sm:grid-cols-[auto_56px_minmax(0,1.25fr)_repeat(4,minmax(0,1fr))] sm:items-start">
-                              <div className="flex items-start pt-2"><input type="checkbox" checked={selectedXmlKeys.has(key)} onChange={(e) => setSelectedXmlProduct(product, e.target.checked)} /></div>
-                              <div><img src={product.image_url || 'https://via.placeholder.com/72'} alt={product.name} className="h-12 w-12 rounded-xl object-cover" loading="lazy" /></div>
-                              <div className="min-w-0 space-y-1 sm:col-span-6">
-                                <div className="truncate text-sm font-bold text-slate-900 sm:text-base">{product.name}</div>
-                                <div className="grid grid-cols-2 gap-x-2 gap-y-2 text-[11px] font-bold text-slate-500 sm:grid-cols-4 sm:text-xs">
-                                  <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">SKU</span><span className="block truncate">{product.sku || '-'}</span></div>
-                                  <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">Preço</span><span className="block truncate">{product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
-                                  <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">Marca</span><span className="block truncate">{product.idValue || '-'}</span></div>
-                                  <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">Categoria</span><span className="block truncate">{formatXmlCategory(product.category || 'Sem categoria')}</span></div>
+                      <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 py-4 sm:px-6">
+                        <div className="space-y-3">
+                          {xmlPreviewPageItems.map((product) => {
+                            const key = getXmlProductKey(product);
+                            return (
+                              <div key={key} className="rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
+                                <div className="grid grid-cols-[auto_48px_1fr] gap-3 sm:grid-cols-[auto_56px_minmax(0,1.25fr)_repeat(4,minmax(0,1fr))] sm:items-start">
+                                  <div className="flex items-start pt-2"><input type="checkbox" checked={selectedXmlKeys.has(key)} onChange={(e) => setSelectedXmlProduct(product, e.target.checked)} /></div>
+                                  <div><img src={product.image_url || 'https://via.placeholder.com/72'} alt={product.name} className="h-12 w-12 rounded-xl object-cover" loading="lazy" /></div>
+                                  <div className="min-w-0 space-y-1 sm:col-span-6">
+                                    <div className="truncate text-sm font-bold text-slate-900 sm:text-base">{product.name}</div>
+                                    <div className="grid grid-cols-2 gap-x-2 gap-y-2 text-[11px] font-bold text-slate-500 sm:grid-cols-4 sm:text-xs">
+                                      <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">SKU</span><span className="block truncate">{product.sku || '-'}</span></div>
+                                      <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">Preço</span><span className="block truncate">{product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
+                                      <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">Marca</span><span className="block truncate">{product.idValue || '-'}</span></div>
+                                      <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">Categoria</span><span className="block truncate">{formatXmlCategory(product.category || 'Sem categoria')}</span></div>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                            );
+                          })}
+                        </div>
+                      </div>
 
-                    <div className="flex items-center justify-between text-sm font-bold text-slate-500">
-                      <span>Mostrando {xmlPreviewPageItems.length} de {filteredXmlProducts.length}</span>
-                      <div className="flex items-center gap-2">
-                        <button type="button" onClick={() => setXmlPreviewPage((page) => Math.max(1, page - 1))} disabled={safeXmlPreviewPage === 1} className="rounded-lg border border-slate-200 px-3 py-2 disabled:opacity-40">Anterior</button>
-                        <span>Página {safeXmlPreviewPage} de {totalXmlPages}</span>
-                        <button type="button" onClick={() => setXmlPreviewPage((page) => Math.min(totalXmlPages, page + 1))} disabled={safeXmlPreviewPage === totalXmlPages} className="rounded-lg border border-slate-200 px-3 py-2 disabled:opacity-40">Próxima</button>
+                      <div className="border-t border-slate-100 px-5 py-3 text-sm font-bold text-slate-500 sm:px-6">
+                        <div className="flex items-center justify-between gap-3">
+                          <span>Mostrando {xmlPreviewPageItems.length} de {filteredXmlProducts.length}</span>
+                          <div className="flex items-center gap-2">
+                            <button type="button" onClick={() => setXmlPreviewPage((page) => Math.max(1, page - 1))} disabled={safeXmlPreviewPage === 1} className="rounded-lg border border-slate-200 px-3 py-2 disabled:opacity-40">Anterior</button>
+                            <span>Página {safeXmlPreviewPage} de {totalXmlPages}</span>
+                            <button type="button" onClick={() => setXmlPreviewPage((page) => Math.min(totalXmlPages, page + 1))} disabled={safeXmlPreviewPage === totalXmlPages} className="rounded-lg border border-slate-200 px-3 py-2 disabled:opacity-40">Próxima</button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
