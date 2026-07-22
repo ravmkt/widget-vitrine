@@ -115,12 +115,15 @@ const deleteSafe = async (collection: any, id: string, storeId?: string) => {
 const getVideoPosterUrl = (video: Video) => {
   const item = video as any;
   return (
+    item.cover_url ||
+    item.coverUrl ||
     item.thumbnail_url ||
     item.thumbnailUrl ||
     item.poster_url ||
     item.posterUrl ||
     item.image_url ||
     item.imageUrl ||
+    item.thumbnail ||
     ''
   );
 };
@@ -822,8 +825,11 @@ const StoryDetailsPage = () => {
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <div className="flex h-full w-full items-center justify-center bg-slate-200 text-slate-400">
-                            <Film size={24} />
+                          <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400">
+                            <div className="flex flex-col items-center gap-2">
+                              <Film size={24} />
+                              <span className="text-[10px] font-black uppercase tracking-widest">Sem capa</span>
+                            </div>
                           </div>
                         )}
 
