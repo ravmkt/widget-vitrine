@@ -16,16 +16,16 @@ const buildScript = (block: any, baseUrl: string) => {
   const blockId = block?.id;
   const selector = block?.selector || '';
   const position = block?.position || 'beforeend';
-  const rules = Array.isArray(block?.rules) ? block.rules : [];
   const storyId = block?.story_id || block?.story?.id || null;
+  const rules = Array.isArray(block?.rules) ? block.rules : [];
 
   return `(function() {
   var script = document.currentScript;
   var blockId = script.getAttribute('data-block-id');
   var selector = script.getAttribute('data-selector') || '';
   var position = script.getAttribute('data-position') || 'beforeend';
-  var rules = JSON.parse(script.getAttribute('data-rules') || '[]');
   var storyId = script.getAttribute('data-story-id') || '';
+  var rules = JSON.parse(script.getAttribute('data-rules') || '[]');
   var baseUrl = script.getAttribute('data-base-url') || '';
   var injectedIds = new Set();
 
@@ -110,8 +110,8 @@ const buildScript = (block: any, baseUrl: string) => {
 
   function insertHost(target, host) {
     if (!target || !host || host.parentNode) return;
-    if (position === 'beforebegin') target.parentNode && target.parentNode.insertBefore(host, target);
-    else if (position === 'afterend') target.parentNode && target.parentNode.insertBefore(host, target.nextSibling);
+    if (position === 'beforebegin' && target.parentNode) target.parentNode.insertBefore(host, target);
+    else if (position === 'afterend' && target.parentNode) target.parentNode.insertBefore(host, target.nextSibling);
     else if (position === 'afterbegin') target.insertBefore(host, target.firstChild);
     else target.appendChild(host);
   }

@@ -14,7 +14,7 @@ type Location = {
   store_id: string;
   story_id: string | null;
   selector: string;
-  position?: 'beforebegin'|'afterend'|'afterbegin'|'beforeend';
+  position?: 'beforebegin' | 'afterend' | 'afterbegin' | 'beforeend';
 };
 
 export async function saveRulesAndLocations(params: {

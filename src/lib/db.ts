@@ -123,7 +123,7 @@ export interface PageRule {
   store_id: string;
   story_id: string;
   condition_type: ConditionType;
-  value?: string;
+  value?: string | null;
   created_at?: string;
   updated_at?: string;
 }
