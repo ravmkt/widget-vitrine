@@ -1875,7 +1875,7 @@ const ProductsPage = () => {
       )}
 
       {isImportingXml && (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-slate-950/50 backdrop-blur-sm px-3 py-4">
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center overflow-hidden bg-slate-950/50 backdrop-blur-sm px-3 py-4 sm:px-4 sm:py-6">
           <div className="flex w-full max-w-2xl items-center gap-4 rounded-3xl bg-white p-4 shadow-2xl sm:p-6">
 
             <Loader2 className="h-6 w-6 animate-spin text-[#0094EB]" />
