@@ -27,7 +27,19 @@ import { db, Product, resolveStoreId, withStoreId, generateUuid } from '@/lib/db
 
 import { useTenant } from '@/context/TenantContext';
 
+type ImportedProduct = {
+  name: string;
+  price: number;
+  product_url: string;
+  image_url: string;
+  category: string;
+  sku: string;
+  idValue: string;
+  description: string;
+};
+
 const ProductsPage = () => {
+
   const { storeId, loading: tenantLoading } = useTenant();
   const [products, setProducts] = useState<Product[]>([]);
 
@@ -495,6 +507,12 @@ const ProductsPage = () => {
   const [spreadsheetFile, setSpreadsheetFile] = useState<File | null>(null);
   const [isImportingXml, setIsImportingXml] = useState(false);
   const [importProgressMessage, setImportProgressMessage] = useState('');
+  const [importedXmlProducts, setImportedXmlProducts] = useState<ImportedProduct[]>([]);
+  const [selectedXmlKeys, setSelectedXmlKeys] = useState<Set<string>>(new Set());
+  const [xmlPreviewSearch, setXmlPreviewSearch] = useState('');
+  const [xmlPreviewCategory, setXmlPreviewCategory] = useState('all');
+  const [xmlPreviewPageSize, setXmlPreviewPageSize] = useState(10);
+  const [xmlPreviewPage, setXmlPreviewPage] = useState(1);
 
   const normalizeXmlText = (value: string) => {
     return value
