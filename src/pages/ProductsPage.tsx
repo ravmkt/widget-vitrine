@@ -78,6 +78,9 @@ const ProductsPage = () => {
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+
 
 
   useEffect(() => {
@@ -166,18 +169,39 @@ const ProductsPage = () => {
     return rows;
   }, [filteredProducts, sortColumn, sortDirection]);
 
-  const allVisibleIds = useMemo(() => sortedProducts.map(p => p.id), [sortedProducts]);
-  const allSelected = allVisibleIds.length > 0 && allVisibleIds.every(id => selectedIds.has(id));
+  const totalPages = Math.max(1, Math.ceil(sortedProducts.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIdx = (safePage - 1) * pageSize;
+  const endIdx = startIdx + pageSize;
+
+  const pagedProducts = useMemo(
+    () => sortedProducts.slice(startIdx, endIdx),
+    [sortedProducts, startIdx, endIdx]
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterCategory, filterStatus, filterOrigin]);
+
+  const allFilteredIds = useMemo(() => sortedProducts.map(p => p.id), [sortedProducts]);
+  const pageIds = useMemo(() => pagedProducts.map(p => p.id), [pagedProducts]);
+
+  const allOnPageSelected = pageIds.length > 0 && pageIds.every(id => selectedIds.has(id));
+  const allFilteredSelected = allFilteredIds.length > 0 && allFilteredIds.every(id => selectedIds.has(id));
+
+  const selectAllFiltered = () => {
+    setSelectedIds(new Set(allFilteredIds));
+  };
 
   const toggleSelectAll = () => {
     setSelectedIds(prev => {
-      if (allSelected) {
+      if (allOnPageSelected) {
         const next = new Set(prev);
-        allVisibleIds.forEach(id => next.delete(id));
+        pageIds.forEach(id => next.delete(id));
         return next;
       }
       const next = new Set(prev);
-      allVisibleIds.forEach(id => next.add(id));
+      pageIds.forEach(id => next.add(id));
       return next;
     });
   };
@@ -849,20 +873,55 @@ const ProductsPage = () => {
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-bold text-slate-500">
-          {filteredProducts.length} {filteredProducts.length === 1 ? 'produto' : 'produtos'}
-        </p>
-        {selectedIds.size > 0 && (
-          <button
-            type="button"
-            onClick={handleBulkDeleteClick}
-            className="inline-flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-black text-rose-600 transition-all hover:bg-rose-100"
-          >
-            <Trash2 size={16} />
-            Excluir {selectedIds.size} {selectedIds.size === 1 ? 'selecionado' : 'selecionados'}
-          </button>
-        )}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <p className="text-sm font-bold text-slate-500">
+            {filteredProducts.length} {filteredProducts.length === 1 ? 'produto' : 'produtos'}
+          </p>
+          {selectedIds.size > 0 && (
+            <span className="rounded-full bg-[#EAF6FF] px-3 py-1 text-xs font-black text-[#0094EB]">
+              {selectedIds.size} selecionados
+            </span>
+          )}
+          {!allFilteredSelected && selectedIds.size > 0 && selectedIds.size < filteredProducts.length && (
+            <button
+              type="button"
+              onClick={selectAllFiltered}
+              className="text-xs font-black text-[#0094EB] underline hover:text-[#0E4787]"
+            >
+              Selecionar todos os {filteredProducts.length}
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-4">
+          {selectedIds.size > 0 && (
+            <button
+              type="button"
+              onClick={handleBulkDeleteClick}
+              className="inline-flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-black text-rose-600 transition-all hover:bg-rose-100"
+            >
+              <Trash2 size={16} />
+              Excluir {selectedIds.size} {selectedIds.size === 1 ? 'selecionado' : 'selecionados'}
+            </button>
+          )}
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-400">Itens por página</span>
+            <select
+              value={pageSize}
+              onChange={e => {
+                setPageSize(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-xs font-black text-slate-600 outline-none focus:border-[#0094EB]"
+            >
+              <option value={10}>10</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm">
@@ -873,11 +932,12 @@ const ProductsPage = () => {
                 <th className="px-4 py-4 text-center w-[48px]">
                   <input
                     type="checkbox"
-                    checked={allSelected}
+                    checked={allOnPageSelected}
                     onChange={toggleSelectAll}
                     className="h-4 w-4 cursor-pointer rounded border-slate-300 text-[#0094EB] focus:ring-[#0094EB]"
                   />
                 </th>
+
                 <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-[80px]">
                   Foto
                 </th>
@@ -937,7 +997,8 @@ const ProductsPage = () => {
             </thead>
 
             <tbody className="divide-y divide-slate-100">
-              {sortedProducts.map(product => (
+              {pagedProducts.map(product => (
+
                 <tr
                   key={product.id}
                   className={cn(
@@ -1073,6 +1134,48 @@ const ProductsPage = () => {
             <p className="text-xs text-slate-400 mt-1">
               Tente ajustar os filtros ou cadastre um novo produto.
             </p>
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 border-t border-slate-100 px-6 py-4">
+            <button
+              type="button"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={safePage === 1}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-600 transition-all hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white"
+            >
+              Anterior
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(page => page === 1 || page === totalPages || Math.abs(page - safePage) <= 1)
+              .map((page, idx, arr) => (
+                <React.Fragment key={page}>
+                  {idx > 0 && arr[idx - 1] !== page - 1 && <span className="text-slate-300">…</span>}
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(page)}
+                    className={cn(
+                      'h-9 w-9 rounded-lg text-xs font-black transition-all',
+                      page === safePage
+                        ? 'bg-[#0094EB] text-white'
+                        : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                    )}
+                  >
+                    {page}
+                  </button>
+                </React.Fragment>
+              ))}
+
+            <button
+              type="button"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={safePage === totalPages}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-600 transition-all hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white"
+            >
+              Próxima
+            </button>
           </div>
         )}
       </div>
@@ -1528,11 +1631,12 @@ const ProductsPage = () => {
       <ConfirmDeleteDialog
 
         isOpen={deleteModal.isOpen}
-        title="EXCLUIR PRODUTO"
+        title={deleteModal.bulkMode ? 'EXCLUIR PRODUTOS' : 'EXCLUIR PRODUTO'}
         itemName={deleteModal.productTitle}
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))}
       />
+
     </div>
   );
 };
