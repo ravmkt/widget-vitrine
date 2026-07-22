@@ -649,12 +649,7 @@ const ProductsPage = () => {
     if (!query) return matchesCategory;
 
     const matchesName = normalizeXmlText(product.name).includes(query);
-    const matchesSku = normalizeXmlText(product.sku).includes(query);
-    const matchesBrand = normalizeXmlText(product.idValue).includes(query);
-    const matchesDescription = normalizeXmlText(product.description).includes(query);
-    const matchesProductCategory = normalizeXmlText(product.category).includes(query) || normalizedCategory.includes(query);
-
-    return matchesCategory && (matchesName || matchesSku || matchesBrand || matchesDescription || matchesProductCategory);
+    return matchesCategory && matchesName;
   });
 
   const xmlPreviewCategories = Array.from(new Set(importedXmlProducts.map((product) => formatXmlCategory(product.category || 'Sem categoria')))).sort();
