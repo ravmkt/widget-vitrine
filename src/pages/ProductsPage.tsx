@@ -1731,16 +1731,19 @@ const ProductsPage = () => {
                 </div>
 
                 {importedXmlProducts.length > 0 && (
-                  <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 max-h-[48vh] overflow-hidden sm:max-h-[54vh] lg:max-h-[60vh]">
-                    <div className="sticky top-0 z-10 -mx-4 -mt-4 border-b border-slate-100 bg-white/95 px-4 py-4 backdrop-blur">
+                  <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-3 max-h-[40vh] overflow-hidden sm:max-h-[46vh] lg:max-h-[52vh]">
+
+                    <div className="sticky top-0 z-10 -mx-3 -mt-3 border-b border-slate-100 bg-white/95 px-3 py-3 backdrop-blur">
+
                       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                         <div className="space-y-1 xl:max-w-[18rem]">
                           <p className="text-sm font-black text-slate-900">Prévia dos produtos encontrados</p>
                           <p className="text-xs font-bold text-slate-500">{selectedXmlCount} produto(s) selecionado(s)</p>
                         </div>
                         <div className="flex w-full flex-col gap-2 sm:flex-row xl:flex-1 xl:justify-end">
-                          <input value={xmlPreviewSearch} onChange={(e) => { setXmlPreviewSearch(e.target.value); setXmlPreviewPage(1); }} placeholder="Buscar por nome, SKU ou categoria" className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-1 xl:max-w-[15rem]" />
-                          <select value={xmlPreviewCategory} onChange={(e) => { setXmlPreviewCategory(e.target.value); setXmlPreviewPage(1); }} className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-1 xl:max-w-[15rem]">
+                          <input value={xmlPreviewSearch} onChange={(e) => { setXmlPreviewSearch(e.target.value); setXmlPreviewPage(1); }} placeholder="Buscar por nome, SKU ou categoria" className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-1 xl:max-w-[13rem]" />
+                          <select value={xmlPreviewCategory} onChange={(e) => { setXmlPreviewCategory(e.target.value); setXmlPreviewPage(1); }} className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-1 xl:max-w-[13rem]">
+
                             <option value="all">Todas as categorias</option>
                             {xmlPreviewCategories.map((category) => <option key={category} value={category}>{category}</option>)}
                           </select>
@@ -1758,7 +1761,8 @@ const ProductsPage = () => {
                       </div>
                     </div>
 
-                    <div className="max-h-[31vh] space-y-3 overflow-y-auto overflow-x-hidden pr-1 sm:max-h-[34vh] lg:max-h-[39vh]">
+                    <div className="max-h-[22vh] space-y-3 overflow-y-auto overflow-x-hidden pr-1 sm:max-h-[26vh] lg:max-h-[31vh]">
+
                       {xmlPreviewPageItems.map((product) => {
                         const key = getXmlProductKey(product);
                         return (
