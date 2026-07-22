@@ -763,8 +763,8 @@ const ProductsPage = () => {
         setImportProgressMessage(`Importando ${Math.min(index + 1, selectedProducts.length)}-${Math.min(index + batch.length, selectedProducts.length)} de ${selectedProducts.length} produtos...`);
         for (const product of batch) {
           const sku = String(product.sku || '').trim().toLowerCase();
-          if (!sku || existingSkus.has(sku)) continue;
-          existingSkus.add(sku);
+          if (sku && existingSkus.has(sku)) continue;
+          if (sku) existingSkus.add(sku);
 
           try {
             const payload = await withStoreId(
@@ -881,15 +881,14 @@ const ProductsPage = () => {
 
       const importedProductsFiltered = importedProducts.filter((product) => {
         const sku = String(product.sku || '').trim().toLowerCase();
-        if (!sku) return false;
-        return !existingSkus.has(sku);
+        return !sku || !existingSkus.has(sku);
       });
 
       setImportProgressMessage(`Importando ${importedProductsFiltered.length} produtos...`);
       for (const product of importedProductsFiltered) {
         const sku = String(product.sku || '').trim().toLowerCase();
-        if (existingSkus.has(sku)) continue;
-        existingSkus.add(sku);
+        if (sku && existingSkus.has(sku)) continue;
+        if (sku) existingSkus.add(sku);
 
         const payload = await withStoreId(
           {
