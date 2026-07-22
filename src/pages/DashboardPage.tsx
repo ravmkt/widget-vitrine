@@ -57,8 +57,8 @@ const DashboardPage = () => {
     <div className="space-y-8 animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900">Visão Geral</h1>
-          <p className="text-slate-500 font-medium mt-1">
+          <img src="/assets/vidlytics-logo-wide.png" alt="Vidlytics" className="h-16 w-auto" />
+          <p className="text-slate-500 font-medium mt-3">
             Métricas de <span className="text-[#0094EB] font-bold">{format(new Date(), "dd/MM")}</span> com dados reais do Supabase
           </p>
         </div>
