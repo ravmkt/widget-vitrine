@@ -628,7 +628,156 @@ const ProductsPage = () => {
       .filter((product) => product.name);
   };
 
+  const getXmlProductKey = (product: ImportedProduct) =>
+    [product.sku.trim().toLowerCase(), product.idValue.trim().toLowerCase(), product.product_url.trim().toLowerCase(), product.name.trim().toLowerCase()].join('|');
+
+  const filteredXmlProducts = importedXmlProducts.filter((product) => {
+    const query = xmlPreviewSearch.trim().toLowerCase();
+    const matchesSearch = !query || [product.name, product.sku, product.category, product.description].join(' ').toLowerCase().includes(query);
+    const matchesCategory = xmlPreviewCategory === 'all' || (product.category || 'Sem categoria') === xmlPreviewCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const xmlPreviewCategories = Array.from(new Set(importedXmlProducts.map((product) => product.category || 'Sem categoria'))).sort();
+  const totalXmlPages = Math.max(1, Math.ceil(filteredXmlProducts.length / xmlPreviewPageSize));
+  const safeXmlPreviewPage = Math.min(xmlPreviewPage, totalXmlPages);
+  const xmlPreviewPageItems = filteredXmlProducts.slice((safeXmlPreviewPage - 1) * xmlPreviewPageSize, safeXmlPreviewPage * xmlPreviewPageSize);
+  const selectedXmlCount = selectedXmlKeys.size;
+  const allVisibleSelected = xmlPreviewPageItems.length > 0 && xmlPreviewPageItems.every((product) => selectedXmlKeys.has(getXmlProductKey(product)));
+
+  const setSelectedXmlProduct = (product: ImportedProduct, checked: boolean) => {
+    const key = getXmlProductKey(product);
+    setSelectedXmlKeys((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(key);
+      else next.delete(key);
+      return next;
+    });
+  };
+
+  const toggleSelectAllVisibleXml = (checked: boolean) => {
+    setSelectedXmlKeys((prev) => {
+      const next = new Set(prev);
+      xmlPreviewPageItems.forEach((product) => {
+        const key = getXmlProductKey(product);
+        if (checked) next.add(key);
+        else next.delete(key);
+      });
+      return next;
+    });
+  };
+
+  const readXmlFeed = async () => {
+    const rawUrl = xmlUrl.trim();
+    if (!rawUrl && !xmlFile) {
+      showError('Informe URL ou arquivo XML.');
+      return;
+    }
+
+    try {
+      setIsImportingXml(true);
+      setImportProgressMessage('Lendo e interpretando o XML...');
+
+      const responseText = xmlFile
+        ? await xmlFile.text().catch(() => { throw new Error('Não foi possível ler o arquivo XML.'); })
+        : await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/proxy-xml?url=${encodeURIComponent(rawUrl)}`, {
+            method: 'GET',
+            headers: {
+              apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            },
+            cache: 'no-store',
+          }).then(async (response) => {
+            const text = await response.text();
+            if (!response.ok) {
+              try {
+                const parsed = JSON.parse(text);
+                throw new Error(parsed.error || `Erro HTTP ao baixar o XML (${response.status}).`);
+              } catch {
+                throw new Error(`Erro HTTP ao baixar o XML (${response.status}).`);
+              }
+            }
+            return text;
+          });
+
+      if (!responseText.trim()) throw new Error('A resposta do XML está vazia.');
+      const parsedProducts = parseXmlProducts(responseText);
+      if (!parsedProducts.length) throw new Error('XML válido, mas nenhum produto foi reconhecido.');
+
+      setImportedXmlProducts(parsedProducts);
+      setSelectedXmlKeys(new Set());
+      setXmlPreviewPage(1);
+      showSuccess(`${parsedProducts.length} produtos encontrados no XML.`);
+    } catch (error: unknown) {
+      console.error('Erro ao ler XML:', error);
+      showError(error instanceof Error ? error.message : 'Erro ao ler XML.');
+    } finally {
+      setIsImportingXml(false);
+      setImportProgressMessage('');
+    }
+  };
+
+  const handleXmlImportSelected = async () => {
+    const selectedProducts = importedXmlProducts.filter((product) => selectedXmlKeys.has(getXmlProductKey(product)));
+    if (!selectedProducts.length) {
+      showError('Selecione ao menos um produto para importar.');
+      return;
+    }
+
+    try {
+      setIsImportingXml(true);
+      const resolvedStoreId = await resolveStoreId(storeId);
+      const now = new Date().toISOString();
+      let saved = 0;
+
+      for (let index = 0; index < selectedProducts.length; index += 20) {
+        const batch = selectedProducts.slice(index, index + 20);
+        setImportProgressMessage(`Importando ${Math.min(index + 1, selectedProducts.length)}-${Math.min(index + batch.length, selectedProducts.length)} de ${selectedProducts.length} produtos...`);
+        for (const product of batch) {
+          try {
+            const payload = await withStoreId(
+              {
+                id: generateUuid(),
+                name: product.name,
+                price: product.price,
+                product_url: product.product_url,
+                image_url: product.image_url || '',
+                active: true,
+                origin: 'integration',
+                category: product.category || '',
+                sku: product.sku || '',
+                short_description: product.description || '',
+                created_at: now,
+                updated_at: now,
+              } as unknown as Product,
+              resolvedStoreId,
+            );
+            await db.products.save(payload);
+            saved += 1;
+
+          } catch (error) {
+            console.error('Erro ao importar produto XML:', error);
+          }
+        }
+      }
+
+      const refreshedProducts = await db.products.getAll(resolvedStoreId);
+      setProducts(refreshedProducts);
+      setSelectedIds(new Set());
+      setSelectedXmlKeys(new Set());
+      showSuccess(`${saved} produtos importados com sucesso.`);
+
+    } catch (error: unknown) {
+      console.error('Erro ao importar XML:', error);
+      showError(error instanceof Error ? error.message : 'Erro ao importar XML.');
+    } finally {
+      setIsImportingXml(false);
+      setImportProgressMessage('');
+    }
+  };
+
   const handleXmlImport = async () => {
+
     const rawUrl = xmlUrl.trim();
     if (!rawUrl && !xmlFile) {
       showError('Informe URL ou arquivo XML.');
@@ -1532,43 +1681,116 @@ const ProductsPage = () => {
                   <div className="flex items-start gap-3 rounded-xl bg-white p-3 border border-slate-100">
                     <FileText className="mt-0.5 text-[#0094EB]" size={18} />
                     <p className="text-xs font-bold text-slate-600">
-                      Envie a URL do feed XML do Google Shopping ou selecione o arquivo. O app baixa o XML pelo backend para evitar erro de CORS. Serão importados apenas nome, preço, link, primeira imagem e campos auxiliares.
-                    </p>
+                    Envie a URL do feed XML ou selecione o arquivo. Primeiro o sistema lê e interpreta o XML sem salvar nada. Depois você escolhe os produtos e importa apenas os selecionados.
+                  </p>
 
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Link do XML</label>
-                    <input
-                      value={xmlUrl}
-                      onChange={(e) => setXmlUrl(e.target.value)}
-                      placeholder="https://.../feed.xml"
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Arquivo XML</label>
-                    <input
-                      type="file"
-                      accept=".xml,text/xml,application/xml"
-                      onChange={(e) => setXmlFile(e.target.files?.[0] || null)}
-                      className="block w-full text-sm text-slate-500"
-                    />
-                  </div>
-
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      onClick={handleXmlImport}
-                      disabled={isImportingXml}
-                      className="inline-flex items-center gap-2 rounded-xl bg-[#0094EB] px-5 py-3 text-sm font-black text-white hover:bg-[#0E4787] disabled:opacity-60"
-                    >
-                      {isImportingXml ? <Loader2 className="animate-spin" size={16} /> : <Link size={16} />}
-                      {isImportingXml ? 'Importando...' : 'Importar XML'}
-                    </button>
-                  </div>
                 </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Link do XML</label>
+                  <input
+                    value={xmlUrl}
+                    onChange={(e) => setXmlUrl(e.target.value)}
+                    placeholder="https://.../feed.xml"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Arquivo XML</label>
+                  <input
+                    type="file"
+                    accept=".xml,text/xml,application/xml"
+                    onChange={(e) => setXmlFile(e.target.files?.[0] || null)}
+                    className="block w-full text-sm text-slate-500"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={readXmlFeed}
+                    disabled={isImportingXml}
+                    className="inline-flex items-center gap-2 rounded-xl border border-[#0094EB] bg-white px-5 py-3 text-sm font-black text-[#0094EB] hover:bg-[#EAF6FF] disabled:opacity-60"
+                  >
+                    {isImportingXml ? <Loader2 className="animate-spin" size={16} /> : <Link size={16} />}
+                    Ler XML
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleXmlImportSelected}
+                    disabled={isImportingXml || !selectedXmlCount}
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#0094EB] px-5 py-3 text-sm font-black text-white hover:bg-[#0E4787] disabled:opacity-60"
+                  >
+                    Importar selecionados
+                  </button>
+                </div>
+
+                {importedXmlProducts.length > 0 && (
+                  <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="space-y-1">
+                        <p className="text-sm font-black text-slate-900">Prévia dos produtos encontrados</p>
+                        <p className="text-xs font-bold text-slate-500">{selectedXmlCount} produto(s) selecionado(s)</p>
+                      </div>
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <input value={xmlPreviewSearch} onChange={(e) => { setXmlPreviewSearch(e.target.value); setXmlPreviewPage(1); }} placeholder="Buscar por nome, SKU ou categoria" className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-bold outline-none focus:border-[#0094EB]" />
+                        <select value={xmlPreviewCategory} onChange={(e) => { setXmlPreviewCategory(e.target.value); setXmlPreviewPage(1); }} className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-bold outline-none focus:border-[#0094EB]">
+                          <option value="all">Todas as categorias</option>
+                          {xmlPreviewCategories.map((category) => <option key={category} value={category}>{category}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm font-bold text-slate-600">
+                      <label className="flex items-center gap-2">
+                        <input type="checkbox" checked={allVisibleSelected} onChange={(e) => toggleSelectAllVisibleXml(e.target.checked)} />
+                        Selecionar todos desta página
+                      </label>
+                      <select value={xmlPreviewPageSize} onChange={(e) => { setXmlPreviewPageSize(Number(e.target.value)); setXmlPreviewPage(1); }} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold">
+                        {[10, 20, 50].map((size) => <option key={size} value={size}>{size} por página</option>)}
+                      </select>
+                    </div>
+
+                    <div className="overflow-hidden rounded-xl border border-slate-100">
+                      <div className="grid grid-cols-[auto_72px_1.6fr_1fr_1fr_1fr_1fr] gap-3 border-b border-slate-100 bg-slate-50 px-4 py-3 text-[11px] font-black uppercase tracking-widest text-slate-500">
+                        <div />
+                        <div>Imagem</div>
+                        <div>Nome</div>
+                        <div>SKU</div>
+                        <div>Preço</div>
+                        <div>Marca</div>
+                        <div>Categoria</div>
+                      </div>
+                      {xmlPreviewPageItems.map((product) => {
+                        const key = getXmlProductKey(product);
+                        return (
+                          <div key={key} className="grid grid-cols-[auto_72px_1.6fr_1fr_1fr_1fr_1fr] gap-3 border-b border-slate-100 px-4 py-3 text-sm">
+                            <div className="flex items-center"><input type="checkbox" checked={selectedXmlKeys.has(key)} onChange={(e) => setSelectedXmlProduct(product, e.target.checked)} /></div>
+                            <div><img src={product.image_url || 'https://via.placeholder.com/72'} alt={product.name} className="h-14 w-14 rounded-xl object-cover" loading="lazy" /></div>
+                            <div className="font-bold text-slate-900">{product.name}</div>
+                            <div className="font-bold text-slate-600">{product.sku || '-'}</div>
+                            <div className="font-bold text-slate-600">{product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                            <div className="font-bold text-slate-600">{product.idValue || '-'}</div>
+                            <div className="font-bold text-slate-600">{product.category || 'Sem categoria'}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="flex items-center justify-between text-sm font-bold text-slate-500">
+                      <span>Mostrando {xmlPreviewPageItems.length} de {filteredXmlProducts.length}</span>
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={() => setXmlPreviewPage((page) => Math.max(1, page - 1))} disabled={safeXmlPreviewPage === 1} className="rounded-lg border border-slate-200 px-3 py-2 disabled:opacity-40">Anterior</button>
+                        <span>Página {safeXmlPreviewPage} de {totalXmlPages}</span>
+                        <button type="button" onClick={() => setXmlPreviewPage((page) => Math.min(totalXmlPages, page + 1))} disabled={safeXmlPreviewPage === totalXmlPages} className="rounded-lg border border-slate-200 px-3 py-2 disabled:opacity-40">Próxima</button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                </div>
+
               )}
 
               {importTab === 'api' && (
