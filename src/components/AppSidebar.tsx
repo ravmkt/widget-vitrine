@@ -84,7 +84,8 @@ export function AppSidebar() {
 
       <SidebarHeader className="p-6">
         <div className="flex items-center gap-3">
-          <img src="/assets/vidlytics-logo-wide.png" alt="Vidlytics" className="h-10 w-auto" />
+          <img src="/assets/vidlytics-logo-wide.png" alt="Vidlytics" className="h-12 w-auto max-w-[220px]" />
+
         </div>
       </SidebarHeader>
 
