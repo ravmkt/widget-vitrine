@@ -1638,7 +1638,8 @@ const ProductsPage = () => {
             </div>
 
             <div className="p-6 space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="mx-auto grid w-full max-w-2xl grid-cols-2 gap-3">
+
                 <button
                   type="button"
                   onClick={() => setImportTab('xml')}
@@ -1654,19 +1655,6 @@ const ProductsPage = () => {
 
                 <button
                   type="button"
-                  onClick={() => setImportTab('api')}
-                  className={cn(
-                    'rounded-xl border px-4 py-3 text-sm font-black',
-                    importTab === 'api'
-                      ? 'border-[#0094EB] bg-[#EAF6FF] text-[#0094EB]'
-                      : 'border-slate-200 bg-white text-slate-600'
-                  )}
-                >
-                  API Yampi
-                </button>
-
-                <button
-                  type="button"
                   onClick={() => setImportTab('sheet')}
                   className={cn(
                     'rounded-xl border px-4 py-3 text-sm font-black',
@@ -1677,18 +1665,18 @@ const ProductsPage = () => {
                 >
                   Planilha
                 </button>
+
               </div>
 
               {importTab === 'xml' && (
-                <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 relative">
+                <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-3 relative">
 
                   <div className="flex items-start gap-3 rounded-xl bg-white p-3 border border-slate-100">
                     <FileText className="mt-0.5 text-[#0094EB]" size={18} />
                     <p className="text-xs font-bold text-slate-600">
-                    Envie a URL do feed XML ou selecione o arquivo. Primeiro o sistema lê e interpreta o XML sem salvar nada. Depois você escolhe os produtos e importa apenas os selecionados.
-                  </p>
-
-                </div>
+                      Envie a URL do feed XML ou selecione o arquivo. Primeiro o sistema lê e interpreta o XML sem salvar nada. Depois você escolhe os produtos e importa apenas os selecionados.
+                    </p>
+                  </div>
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Link do XML</label>
@@ -1862,8 +1850,8 @@ const ProductsPage = () => {
       )}
 
       {isImportingXml && (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-slate-950/50 backdrop-blur-sm px-3 py-4">
-          <div className="flex w-full max-w-2xl items-center gap-4 rounded-3xl bg-white p-4 shadow-2xl sm:p-6">
+        <div className="fixed inset-0 z-[100000] flex items-start justify-center overflow-y-auto bg-slate-950/50 backdrop-blur-sm px-3 py-2 sm:items-center sm:py-4">
+          <div className="flex w-full max-w-2xl items-center gap-4 rounded-3xl bg-white p-4 shadow-2xl sm:p-5 max-h-[94vh] overflow-hidden">
 
             <Loader2 className="h-6 w-6 animate-spin text-[#0094EB]" />
             <div>
