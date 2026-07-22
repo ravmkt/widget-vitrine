@@ -1656,15 +1656,12 @@ const ProductsPage = () => {
                 <button
                   type="button"
                   onClick={() => setImportTab('sheet')}
-                  className={cn(
-                    'rounded-xl border px-4 py-3 text-sm font-black',
-                    importTab === 'sheet'
-                      ? 'border-[#0094EB] bg-[#EAF6FF] text-[#0094EB]'
-                      : 'border-slate-200 bg-white text-slate-600'
-                  )}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-600"
                 >
                   Planilha
                 </button>
+
+
 
               </div>
 
@@ -1809,8 +1806,8 @@ const ProductsPage = () => {
                 </div>
               )}
 
-
               {importTab === 'sheet' && (
+
                 <div className="space-y-4">
                   <input
                     type="file"
