@@ -510,6 +510,8 @@ const ProductsPage = () => {
   const [importedXmlProducts, setImportedXmlProducts] = useState<ImportedProduct[]>([]);
   const [selectedXmlKeys, setSelectedXmlKeys] = useState<Set<string>>(new Set());
   const [xmlPreviewSearch, setXmlPreviewSearch] = useState('');
+  const [xmlPreviewSkuFilter, setXmlPreviewSkuFilter] = useState('');
+  const [xmlPreviewBrandFilter, setXmlPreviewBrandFilter] = useState('');
   const [xmlPreviewCategory, setXmlPreviewCategory] = useState('all');
   const [xmlPreviewPageSize, setXmlPreviewPageSize] = useState(10);
   const [xmlPreviewPage, setXmlPreviewPage] = useState(1);
@@ -633,9 +635,14 @@ const ProductsPage = () => {
 
   const filteredXmlProducts = importedXmlProducts.filter((product) => {
     const query = xmlPreviewSearch.trim().toLowerCase();
+    const skuQuery = xmlPreviewSkuFilter.trim().toLowerCase();
+    const brandQuery = xmlPreviewBrandFilter.trim().toLowerCase();
+    const normalizedCategory = formatXmlCategory(product.category || 'Sem categoria');
     const matchesSearch = !query || [product.name, product.sku, product.category, product.description].join(' ').toLowerCase().includes(query);
-    const matchesCategory = xmlPreviewCategory === 'all' || (product.category || 'Sem categoria') === xmlPreviewCategory;
-    return matchesSearch && matchesCategory;
+    const matchesSku = !skuQuery || product.sku.toLowerCase().includes(skuQuery);
+    const matchesBrand = !brandQuery || String(product.idValue || '').toLowerCase().includes(brandQuery);
+    const matchesCategory = xmlPreviewCategory === 'all' || normalizedCategory === xmlPreviewCategory;
+    return matchesSearch && matchesSku && matchesBrand && matchesCategory;
   });
 
   const formatXmlCategory = (value: string) =>
@@ -1680,119 +1687,129 @@ const ProductsPage = () => {
               </div>
 
               {importTab === 'xml' && (
-                <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 relative">
-
-                  <div className="flex items-start gap-3 rounded-xl bg-white p-3 border border-slate-100">
-                    <FileText className="mt-0.5 text-[#0094EB]" size={18} />
-                    <p className="text-xs font-bold text-slate-600">
-                    Envie a URL do feed XML ou selecione o arquivo. Primeiro o sistema lê e interpreta o XML sem salvar nada. Depois você escolhe os produtos e importa apenas os selecionados.
-                  </p>
-
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Link do XML</label>
-                  <input
-                    value={xmlUrl}
-                    onChange={(e) => setXmlUrl(e.target.value)}
-                    placeholder="https://.../feed.xml"
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Arquivo XML</label>
-                  <input
-                    type="file"
-                    accept=".xml,text/xml,application/xml"
-                    onChange={(e) => setXmlFile(e.target.files?.[0] || null)}
-                    className="block w-full text-sm text-slate-500"
-                  />
-                </div>
-
-                <div className="flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={readXmlFeed}
-                    disabled={isImportingXml}
-                    className="inline-flex items-center gap-2 rounded-xl border border-[#0094EB] bg-white px-5 py-3 text-sm font-black text-[#0094EB] hover:bg-[#EAF6FF] disabled:opacity-60"
-                  >
-                    {isImportingXml ? <Loader2 className="animate-spin" size={16} /> : <Link size={16} />}
-                    Ler XML
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleXmlImportSelected}
-                    disabled={isImportingXml || !selectedXmlCount}
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#0094EB] px-5 py-3 text-sm font-black text-white hover:bg-[#0E4787] disabled:opacity-60"
-                  >
-                    Importar selecionados
-                  </button>
-                </div>
-
-                {importedXmlProducts.length > 0 && (
-                  <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 max-h-[48vh] overflow-hidden sm:max-h-[54vh] lg:max-h-[60vh]">
-                    <div className="sticky top-0 z-10 -mx-4 -mt-4 border-b border-slate-100 bg-white/95 px-4 py-4 backdrop-blur">
-                      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-                        <div className="space-y-1 xl:max-w-[18rem]">
-                          <p className="text-sm font-black text-slate-900">Prévia dos produtos encontrados</p>
-                          <p className="text-xs font-bold text-slate-500">{selectedXmlCount} produto(s) selecionado(s)</p>
-                        </div>
-                        <div className="flex w-full flex-col gap-2 sm:flex-row xl:flex-1 xl:justify-end">
-                          <input value={xmlPreviewSearch} onChange={(e) => { setXmlPreviewSearch(e.target.value); setXmlPreviewPage(1); }} placeholder="Buscar por nome, SKU ou categoria" className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-1 xl:max-w-[15rem]" />
-                          <select value={xmlPreviewCategory} onChange={(e) => { setXmlPreviewCategory(e.target.value); setXmlPreviewPage(1); }} className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-1 xl:max-w-[15rem]">
-                            <option value="all">Todas as categorias</option>
-                            {xmlPreviewCategories.map((category) => <option key={category} value={category}>{category}</option>)}
-                          </select>
-                        </div>
+                    <div className="flex h-full min-h-0 flex-col gap-4 overflow-hidden">
+                      <div className="space-y-2">
+                        <p className="text-sm font-black text-slate-900">Prévia dos produtos encontrados</p>
+                        <p className="text-xs font-bold text-slate-500">{selectedXmlCount} produto(s) selecionado(s)</p>
                       </div>
 
-                      <div className="mt-3 flex flex-col gap-3 rounded-xl bg-slate-50 px-4 py-3 text-sm font-bold text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-                        <label className="flex min-w-0 items-center gap-2">
-                          <input type="checkbox" checked={allVisibleSelected} onChange={(e) => toggleSelectAllVisibleXml(e.target.checked)} />
-                          <span className="min-w-0 break-words">Selecionar todos desta página</span>
-                        </label>
-                        <select value={xmlPreviewPageSize} onChange={(e) => { setXmlPreviewPageSize(Number(e.target.value)); setXmlPreviewPage(1); }} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold sm:w-36">
-                          {[10, 20, 50].map((size) => <option key={size} value={size}>{size} por página</option>)}
-                        </select>
-                      </div>
-                    </div>
+                      {!importedXmlProducts.length ? (
+                        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                          <div className="flex items-start gap-3 rounded-xl border border-slate-100 bg-white p-3">
+                            <FileText className="mt-0.5 text-[#0094EB]" size={18} />
+                            <p className="text-xs font-bold leading-5 text-slate-600">Envie a URL do feed XML ou selecione o arquivo. Primeiro o sistema lê e interpreta o XML sem salvar nada.</p>
+                          </div>
+                          <div className="grid gap-3 lg:grid-cols-2">
+                            <div className="space-y-2 lg:col-span-2">
+                              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Link do XML</label>
+                              <input value={xmlUrl} onChange={(e) => setXmlUrl(e.target.value)} placeholder="https://.../feed.xml" className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]" />
+                            </div>
+                            <div className="space-y-2 lg:col-span-2">
+                              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Arquivo XML</label>
+                              <input type="file" accept=".xml,text/xml,application/xml" onChange={(e) => setXmlFile(e.target.files?.[0] || null)} className="block w-full text-sm text-slate-500" />
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap items-center justify-end gap-3 pt-1">
+                            <button type="button" onClick={() => setShowImportModal(false)} className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-600 hover:bg-slate-50">Cancelar</button>
+                            <button type="button" onClick={readXmlFeed} disabled={isImportingXml} className="inline-flex items-center gap-2 rounded-xl bg-[#0094EB] px-5 py-3 text-sm font-black text-white hover:bg-[#0E4787] disabled:opacity-60">
+                              {isImportingXml ? <Loader2 className="animate-spin" size={16} /> : <Link size={16} />}
+                              {isImportingXml ? 'Lendo XML...' : 'Ler XML'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                          <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 xl:flex-row xl:items-start xl:justify-between">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-400">
+                                <span className="rounded-full bg-[#EAF6FF] px-2 py-1 text-[#0094EB]">1. Ler XML</span>
+                                <span className="text-slate-300">→</span>
+                                <span className="rounded-full bg-[#0094EB] px-2 py-1 text-white">2. Selecionar produtos</span>
+                              </div>
+                              <p className="text-sm font-black text-slate-900">Selecionar produtos para importar</p>
+                              <p className="text-xs font-bold text-slate-500">Foram encontrados {filteredXmlProducts.length} produtos • {selectedXmlCount} produto(s) selecionado(s)</p>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <button type="button" onClick={() => { setSelectedXmlKeys(new Set()); setXmlPreviewSearch(''); setXmlPreviewSkuFilter(''); setXmlPreviewBrandFilter(''); setXmlPreviewCategory('all'); setXmlPreviewPage(1); }} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-600 hover:bg-slate-50">Voltar e ler outro XML</button>
+                              <button type="button" onClick={() => setShowImportModal(false)} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-500 hover:bg-slate-50">Fechar</button>
+                            </div>
+                          </div>
 
-                    <div className="max-h-[31vh] space-y-3 overflow-y-auto overflow-x-hidden pr-1 sm:max-h-[34vh] lg:max-h-[39vh]">
-                      {xmlPreviewPageItems.map((product) => {
-                        const key = getXmlProductKey(product);
-                        return (
-                          <div key={key} className="rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
-                            <div className="grid grid-cols-[auto_48px_1fr] gap-3 sm:grid-cols-[auto_56px_minmax(0,1.25fr)_repeat(4,minmax(0,1fr))] sm:items-start">
-                              <div className="flex items-start pt-2"><input type="checkbox" checked={selectedXmlKeys.has(key)} onChange={(e) => setSelectedXmlProduct(product, e.target.checked)} /></div>
-                              <div><img src={product.image_url || 'https://via.placeholder.com/72'} alt={product.name} className="h-12 w-12 rounded-xl object-cover" loading="lazy" /></div>
-                              <div className="min-w-0 space-y-1 sm:col-span-6">
-                                <div className="truncate text-sm font-bold text-slate-900 sm:text-base">{product.name}</div>
-                                <div className="grid grid-cols-2 gap-x-2 gap-y-2 text-[11px] font-bold text-slate-500 sm:grid-cols-4 sm:text-xs">
-                                  <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">SKU</span><span className="block truncate">{product.sku || '-'}</span></div>
-                                  <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">Preço</span><span className="block truncate">{product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
-                                  <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">Marca</span><span className="block truncate">{product.idValue || '-'}</span></div>
-                                  <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">Categoria</span><span className="block truncate">{formatXmlCategory(product.category || 'Sem categoria')}</span></div>
-                                </div>
+                          <div className="grid gap-3 xl:grid-cols-[1.2fr_1fr_1fr_1fr_auto]">
+                            <input value={xmlPreviewSearch} onChange={(e) => { setXmlPreviewSearch(e.target.value); setXmlPreviewPage(1); }} placeholder="Buscar por nome ou SKU..." className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]" />
+                            <input value={xmlPreviewSkuFilter} onChange={(e) => { setXmlPreviewSkuFilter(e.target.value); setXmlPreviewPage(1); }} placeholder="Filtrar por SKU" className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]" />
+                            <input value={xmlPreviewBrandFilter} onChange={(e) => { setXmlPreviewBrandFilter(e.target.value); setXmlPreviewPage(1); }} placeholder="Filtrar por marca" className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]" />
+                            <select value={xmlPreviewCategory} onChange={(e) => { setXmlPreviewCategory(e.target.value); setXmlPreviewPage(1); }} className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]">
+                              <option value="all">Todas as categorias</option>
+                              {xmlPreviewCategories.map((category) => <option key={category} value={category}>{category}</option>)}
+                            </select>
+                            <button type="button" onClick={() => { setXmlPreviewSearch(''); setXmlPreviewSkuFilter(''); setXmlPreviewBrandFilter(''); setXmlPreviewCategory('all'); setXmlPreviewPage(1); }} className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-600 hover:bg-slate-50">Limpar filtros</button>
+                          </div>
+
+                          <div className="flex flex-col gap-3 rounded-xl bg-white px-4 py-3 text-sm font-bold text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+                            <label className="flex min-w-0 items-center gap-2">
+                              <input type="checkbox" checked={allVisibleSelected} onChange={(e) => toggleSelectAllVisibleXml(e.target.checked)} />
+                              <span className="min-w-0 break-words">Selecionar todos os produtos desta página</span>
+                            </label>
+                            <select value={xmlPreviewPageSize} onChange={(e) => { setXmlPreviewPageSize(Number(e.target.value)); setXmlPreviewPage(1); }} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold sm:w-36">
+                              {[10, 25, 50, 100].map((size) => <option key={size} value={size}>{size} por página</option>)}
+                            </select>
+                          </div>
+
+                          <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-1">
+                            <div className="space-y-3">
+                              {xmlPreviewPageItems.map((product) => {
+                                const key = getXmlProductKey(product);
+                                return (
+                                  <div key={key} className="rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
+                                    <div className="grid grid-cols-[auto_48px_1fr] gap-3 sm:grid-cols-[auto_56px_minmax(0,1.25fr)_repeat(4,minmax(0,1fr))] sm:items-start">
+                                      <div className="flex items-start pt-2"><input type="checkbox" checked={selectedXmlKeys.has(key)} onChange={(e) => setSelectedXmlProduct(product, e.target.checked)} /></div>
+                                      <div><img src={product.image_url || 'https://via.placeholder.com/72'} alt={product.name} className="h-12 w-12 rounded-xl object-cover" loading="lazy" /></div>
+                                      <div className="min-w-0 space-y-1 sm:col-span-6">
+                                        <div className="truncate text-sm font-bold text-slate-900 sm:text-base">{product.name}</div>
+                                        <div className="grid grid-cols-2 gap-x-2 gap-y-2 text-[11px] font-bold text-slate-500 sm:grid-cols-4 sm:text-xs">
+                                          <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">SKU</span><span className="block truncate">{product.sku || '-'}</span></div>
+                                          <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">Preço</span><span className="block truncate">{product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
+                                          <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">Marca</span><span className="block truncate">{product.idValue || '-'}</span></div>
+                                          <div className="min-w-0"><span className="block uppercase tracking-widest text-[9px] text-slate-400">Categoria</span><span className="block truncate">{formatXmlCategory(product.category || 'Sem categoria')}</span></div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          <div className="border-t border-slate-200 bg-slate-50 px-4 py-3">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                              <span className="text-sm font-bold text-slate-500">Mostrando {xmlPreviewPageItems.length} de {filteredXmlProducts.length}</span>
+                              <div className="flex items-center gap-2">
+                                <button type="button" onClick={() => setXmlPreviewPage((page) => Math.max(1, page - 1))} disabled={safeXmlPreviewPage === 1} className="rounded-lg border border-slate-200 bg-white px-3 py-2 disabled:opacity-40">Anterior</button>
+                                <span className="text-sm font-bold text-slate-500">Página {safeXmlPreviewPage} de {totalXmlPages}</span>
+                                <button type="button" onClick={() => setXmlPreviewPage((page) => Math.min(totalXmlPages, page + 1))} disabled={safeXmlPreviewPage === totalXmlPages} className="rounded-lg border border-slate-200 bg-white px-3 py-2 disabled:opacity-40">Próxima</button>
                               </div>
                             </div>
                           </div>
-                        );
-                      })}
+                        </div>
+                      )}
                     </div>
+                  )}
+                </div>
 
-                    <div className="flex items-center justify-between text-sm font-bold text-slate-500">
-                      <span>Mostrando {xmlPreviewPageItems.length} de {filteredXmlProducts.length}</span>
-                      <div className="flex items-center gap-2">
-                        <button type="button" onClick={() => setXmlPreviewPage((page) => Math.max(1, page - 1))} disabled={safeXmlPreviewPage === 1} className="rounded-lg border border-slate-200 px-3 py-2 disabled:opacity-40">Anterior</button>
-                        <span>Página {safeXmlPreviewPage} de {totalXmlPages}</span>
-                        <button type="button" onClick={() => setXmlPreviewPage((page) => Math.min(totalXmlPages, page + 1))} disabled={safeXmlPreviewPage === totalXmlPages} className="rounded-lg border border-slate-200 px-3 py-2 disabled:opacity-40">Próxima</button>
-                      </div>
+                <div className="border-t border-slate-100 bg-white px-4 py-4 sm:px-5">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm font-bold text-slate-500">{selectedXmlCount} produto(s) selecionado(s)</p>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <button type="button" onClick={() => setShowImportModal(false)} className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-600 hover:bg-slate-50">Voltar</button>
+                      <button type="button" onClick={handleXmlImportSelected} disabled={isImportingXml || !selectedXmlCount || !importedXmlProducts.length} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0094EB] px-5 py-3 text-sm font-black text-white hover:bg-[#0E4787] disabled:opacity-60">
+                        {isImportingXml ? <Loader2 className="animate-spin" size={16} /> : null}
+                        {isImportingXml ? 'Importando...' : `Importar ${selectedXmlCount} produto(s)`}
+                      </button>
                     </div>
                   </div>
-                )}
-
                 </div>
+              </div>
 
               )}
 
