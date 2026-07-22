@@ -68,11 +68,17 @@ const ProductsPage = () => {
     isOpen: boolean;
     productId: string;
     productTitle: string;
+    bulkMode: boolean;
   }>({
     isOpen: false,
     productId: '',
-    productTitle: ''
+    productTitle: '',
+    bulkMode: false,
   });
+
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+
 
   useEffect(() => {
     const load = async () => {
@@ -160,7 +166,33 @@ const ProductsPage = () => {
     return rows;
   }, [filteredProducts, sortColumn, sortDirection]);
 
+  const allVisibleIds = useMemo(() => sortedProducts.map(p => p.id), [sortedProducts]);
+  const allSelected = allVisibleIds.length > 0 && allVisibleIds.every(id => selectedIds.has(id));
+
+  const toggleSelectAll = () => {
+    setSelectedIds(prev => {
+      if (allSelected) {
+        const next = new Set(prev);
+        allVisibleIds.forEach(id => next.delete(id));
+        return next;
+      }
+      const next = new Set(prev);
+      allVisibleIds.forEach(id => next.add(id));
+      return next;
+    });
+  };
+
+  const toggleSelectOne = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+
     const file = e.target.files?.[0];
 
     if (!file) return;
@@ -321,27 +353,40 @@ const ProductsPage = () => {
     setDeleteModal({
       isOpen: true,
       productId: product.id,
-      productTitle: product.name
+      productTitle: product.name,
+      bulkMode: false,
+    });
+  };
+
+  const handleBulkDeleteClick = () => {
+    if (selectedIds.size === 0) return;
+    setDeleteModal({
+      isOpen: true,
+      productId: '',
+      productTitle: `${selectedIds.size} ${selectedIds.size === 1 ? 'produto' : 'produtos'}`,
+      bulkMode: true,
     });
   };
 
   const handleConfirmDelete = async () => {
     try {
-      await db.products.delete(deleteModal.productId);
-
-      setProducts(prev =>
-        prev.filter(p => p.id !== deleteModal.productId)
-      );
-
-      showSuccess('Produto removido.');
+      if (deleteModal.bulkMode) {
+        const ids = Array.from(selectedIds);
+        await Promise.all(ids.map(id => db.products.delete(id)));
+        setProducts(prev => prev.filter(p => !selectedIds.has(p.id)));
+        setSelectedIds(new Set());
+        showSuccess(`${ids.length} ${ids.length === 1 ? 'produto removido' : 'produtos removidos'}.`);
+      } else {
+        await db.products.delete(deleteModal.productId);
+        setProducts(prev => prev.filter(p => p.id !== deleteModal.productId));
+        setSelectedIds(prev => { const n = new Set(prev); n.delete(deleteModal.productId); return n; });
+        showSuccess('Produto removido.');
+      }
     } catch (error) {
       console.error('Erro ao remover produto:', error);
       showError('Erro ao remover produto.');
     } finally {
-      setDeleteModal(prev => ({
-        ...prev,
-        isOpen: false
-      }));
+      setDeleteModal(prev => ({ ...prev, isOpen: false }));
     }
   };
 
@@ -808,6 +853,16 @@ const ProductsPage = () => {
         <p className="text-sm font-bold text-slate-500">
           {filteredProducts.length} {filteredProducts.length === 1 ? 'produto' : 'produtos'}
         </p>
+        {selectedIds.size > 0 && (
+          <button
+            type="button"
+            onClick={handleBulkDeleteClick}
+            className="inline-flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-black text-rose-600 transition-all hover:bg-rose-100"
+          >
+            <Trash2 size={16} />
+            Excluir {selectedIds.size} {selectedIds.size === 1 ? 'selecionado' : 'selecionados'}
+          </button>
+        )}
       </div>
 
       <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm">
@@ -815,6 +870,14 @@ const ProductsPage = () => {
           <table className="w-full table-fixed text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="px-4 py-4 text-center w-[48px]">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                    className="h-4 w-4 cursor-pointer rounded border-slate-300 text-[#0094EB] focus:ring-[#0094EB]"
+                  />
+                </th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-[80px]">
                   Foto
                 </th>
@@ -877,8 +940,20 @@ const ProductsPage = () => {
               {sortedProducts.map(product => (
                 <tr
                   key={product.id}
-                  className="hover:bg-slate-50/50 transition-colors"
+                  className={cn(
+                    "transition-colors",
+                    selectedIds.has(product.id) ? "bg-[#EAF6FF]/60" : "hover:bg-slate-50/50"
+                  )}
                 >
+                  <td className="px-4 py-4 text-center align-middle">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(product.id)}
+                      onChange={() => toggleSelectOne(product.id)}
+                      className="h-4 w-4 cursor-pointer rounded border-slate-300 text-[#0094EB] focus:ring-[#0094EB]"
+                    />
+                  </td>
+
                   <td className="px-6 py-4 align-middle">
                     <div className="h-14 w-14 min-h-[56px] min-w-[56px] rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
                       {product.image_url ? (
