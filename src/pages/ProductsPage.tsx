@@ -787,7 +787,6 @@ const ProductsPage = () => {
               resolvedStoreId,
             );
             await db.products.save(payload);
-            existingSkus.add(sku);
             saved += 1;
           } catch (error) {
             console.error('Erro ao importar produto XML:', error);
@@ -881,23 +880,16 @@ const ProductsPage = () => {
       const existingProducts = await db.products.getAll(resolvedStoreId);
       const existingCategories = new Set(existingProducts.map((product) => String((product as any).category || '').trim()).filter(Boolean));
       const existingSkus = new Set(existingProducts.map((product) => String((product as any).sku || '').trim().toLowerCase()).filter(Boolean));
-      const importedSkus = new Set<string>();
+      let saved = 0;
 
-      const importedProductsFiltered = importedProducts.filter((product) => {
+      setImportProgressMessage(`Importando ${importedProducts.length} produtos...`);
+      for (const product of importedProducts) {
         const sku = String(product.sku || '').trim().toLowerCase();
-        if (!sku) return false;
-        if (existingSkus.has(sku) || importedSkus.has(sku)) return false;
-        importedSkus.add(sku);
-        return true;
-      });
-
-      setImportProgressMessage(`Importando ${importedProductsFiltered.length} produtos...`);
-      for (const product of importedProductsFiltered) {
-        const sku = String(product.sku || '').trim().toLowerCase();
-        if (existingSkus.has(sku) || importedSkus.has(sku)) continue;
-        importedSkus.add(sku);
+        if (sku && existingSkus.has(sku)) continue;
+        if (sku) existingSkus.add(sku);
 
         const payload = await withStoreId(
+
           {
             id: generateUuid(),
             name: product.name,
@@ -934,7 +926,8 @@ const ProductsPage = () => {
         return merged;
       });
 
-      showSuccess(`Importação concluída: ${importedProducts.length} encontrados, ${importedProductsFiltered.length} importados, ${importedProducts.length - importedProductsFiltered.length} ignorados.`);
+      showSuccess(`Importação concluída: ${importedProducts.length} encontrados, ${saved} importados.`);
+
       setShowImportModal(false);
       setImportedXmlProducts([]);
       setSelectedXmlKeys(new Set());
