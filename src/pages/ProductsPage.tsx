@@ -1421,11 +1421,13 @@ const ProductsPage = () => {
                           "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
                           (product as any).origin === 'manual'
                             ? "bg-blue-50 text-blue-600 border-blue-100"
-                            : "bg-emerald-50 text-emerald-700 border-emerald-100"
+                            : (product as any).origin === 'planilha'
+                              ? "bg-violet-50 text-violet-700 border-violet-100"
+                              : "bg-emerald-50 text-emerald-700 border-emerald-100"
                         )}
                       >
                         {(product as any).origin === 'manual' ? <Tag size={10} /> : <Globe size={10} />}
-                        {(product as any).origin === 'manual' ? 'Manual' : 'Integração XML'}
+                        {(product as any).origin === 'manual' ? 'Manual' : (product as any).origin === 'planilha' ? 'Planilha' : 'XML'}
                       </span>
 
                     </div>
