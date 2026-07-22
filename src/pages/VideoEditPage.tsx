@@ -130,6 +130,10 @@ const uploadDataUrlToSupabase = async (
   return uploadFileToSupabase(file, storeId, folder);
 };
 
+const hasRealThumbnail = (url: string) => {
+  return Boolean(url && !isTemporaryUrl(url));
+};
+
 const isTemporaryUrl = (url: string) => {
   return url.startsWith('blob:') || url.startsWith('data:');
 };
@@ -347,18 +351,20 @@ const VideoEditPage = () => {
       video_url: previewUrl,
     }));
 
-    try {
-      const generatedThumbnail = await generateVideoThumbnail(previewUrl);
+    if (!hasRealThumbnail(formData.thumbnail_url)) {
+      try {
+        const generatedThumbnail = await generateVideoThumbnail(previewUrl);
 
-      if (generatedThumbnail) {
-        setFormData(prev => ({
-          ...prev,
-          thumbnail_url: generatedThumbnail,
-          thumbnail_file: null,
-        }));
+        if (generatedThumbnail) {
+          setFormData(prev => ({
+            ...prev,
+            thumbnail_url: generatedThumbnail,
+            thumbnail_file: null,
+          }));
+        }
+      } catch (error) {
+        console.warn('Não foi possível gerar thumbnail automática:', error);
       }
-    } catch (error) {
-      console.warn('Não foi possível gerar thumbnail automática:', error);
     }
   };
 
@@ -525,12 +531,26 @@ const VideoEditPage = () => {
 
       const now = new Date().toISOString();
 
+      if (!finalThumbnailUrl && formData.video_file) {
+        const generatedThumbnail = await generateVideoThumbnail(finalVideoUrl);
+
+        if (generatedThumbnail) {
+          finalThumbnailUrl = generatedThumbnail;
+        }
+      }
+
+      if (finalThumbnailUrl.startsWith('data:image/')) {
+        finalThumbnailUrl = await uploadDataUrlToSupabase(
+          finalThumbnailUrl,
+          safeStoreId,
+          'thumbnails',
+        );
+      }
+
       const videoData: Partial<Video> = {
         title: formData.title.trim(),
         source_type: sourceType,
         video_url: finalVideoUrl,
-        instagram_link: '',
-        tiktok_link: '',
         thumbnail_url: finalThumbnailUrl,
         active: formData.active,
         status: formData.active ? 'active' : 'inactive',
@@ -701,12 +721,6 @@ const VideoEditPage = () => {
                     src={formData.thumbnail_url}
                     className="w-full h-full object-cover"
                     alt="Capa"
-                  />
-                ) : formData.video_url ? (
-                  <video
-                    src={formData.video_url}
-                    className="w-full h-full object-cover"
-                    muted
                   />
                 ) : (
                   <span className="text-xs font-bold text-slate-400">

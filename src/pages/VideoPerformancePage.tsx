@@ -56,22 +56,15 @@ const getSafeExternalData = (video: any) => {
 const getVideoThumbnail = (video: any) => {
   if (!video) return '';
 
-  const directThumb =
+  return (
     video.thumbnail_url ||
     video.poster_url ||
     video.image_url ||
     video.cover_url ||
     video.thumb_url ||
-    '';
-
-  if (directThumb) return directThumb;
-
-  if (video.source_type !== 'upload') {
-    const youTubeThumb = getYouTubeThumbnailUrl(video);
-    if (youTubeThumb) return youTubeThumb;
-  }
-
-  return '';
+    (video.source_type !== 'upload' ? getYouTubeThumbnailUrl(video) : '') ||
+    ''
+  );
 };
 
 const VideoPerformancePage = () => {

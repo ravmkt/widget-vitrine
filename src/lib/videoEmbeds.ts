@@ -104,12 +104,12 @@ export const getYouTubeThumbnailUrl = (video: Record<string, any> | null): strin
 
 export type VideoPlatform = 'youtube' | 'instagram' | 'tiktok';
 
-export const getExternalVideoData = (video: { source_type?: string; platform?: string; external_id?: string; video_url?: string; instagram_link?: string; tiktok_link?: string; source_url?: string }) => {
+export const getExternalVideoData = (video: { source_type?: string; platform?: string; external_id?: string; video_url?: string; source_url?: string }) => {
   if (video.source_type === 'upload') {
     return { platform: null, externalId: '', embedUrl: null, sourceUrl: '' };
   }
 
-  const sourceUrl = (video.source_url || video.video_url || video.instagram_link || video.tiktok_link || '').trim();
+  const sourceUrl = (video.source_url || video.video_url || '').trim();
   const platform = (video.platform as VideoPlatform | undefined) || null;
   const externalId = (video.external_id || '').trim();
 

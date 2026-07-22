@@ -21,8 +21,6 @@ export interface Video {
   file_size?: number;
   status: 'active' | 'inactive';
   active?: boolean;
-  instagram_link?: string;
-  tiktok_link?: string;
   product_id?: string | null;
   model_id?: string | null;
   created_at?: string;
@@ -555,8 +553,6 @@ const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
     'file_size',
     'status',
     'active',
-    'instagram_link',
-    'tiktok_link',
     'product_id',
     'model_id',
     'created_at',
