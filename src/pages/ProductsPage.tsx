@@ -1681,7 +1681,7 @@ const ProductsPage = () => {
               </div>
 
               {importTab === 'xml' && (
-                <div className="flex h-[min(86vh,920px)] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
+                <div className="flex h-[min(84vh,900px)] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
                   <div className="border-b border-slate-100 px-4 py-4 sm:px-5">
                     <div className="flex items-center justify-between gap-3">
                       <div>
@@ -1698,6 +1698,7 @@ const ProductsPage = () => {
                   </div>
 
                   <div className="min-h-0 flex-1 overflow-hidden px-4 py-4 sm:px-5">
+
                     {!importedXmlProducts.length ? (
                       <div className="flex h-full min-h-0 flex-col justify-between gap-4 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 p-4">
                         <div className="space-y-2">
@@ -1820,7 +1821,9 @@ const ProductsPage = () => {
                   </div>
                 </div>
               )}
+
               {importTab === 'api' && (
+
                 <div className="space-y-4">
                   <input
                     value={yampiToken}
