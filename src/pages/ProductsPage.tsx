@@ -1079,12 +1079,9 @@ const ProductsPage = () => {
       setImportProgressMessage('');
 
       if (duplicatedCount > 0) {
-        showError(`Produtos já existentes e não importados: ${duplicatedCount}.`);
+        showError('Produto já existente na loja.');
       }
-      if (invalidCount > 0) {
-        showError('Produto não importado: o SKU é obrigatório para evitar duplicidade.');
-      }
-      showSuccess(`Importação concluída: ${saved} importados, ${duplicatedCount} já existentes, ${invalidCount} sem SKU ou com erro.`);
+      showSuccess(`${saved} produtos importados com sucesso.`);
 
     } catch (error) {
       console.error('Erro ao importar XML:', error);
