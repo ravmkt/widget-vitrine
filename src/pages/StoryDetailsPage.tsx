@@ -11,6 +11,8 @@ import {
   PageRule,
   StoryVideo,
   ConditionType,
+  DisplayPosition,
+
   replaceStoryRelations,
   resolveStoreId,
   generateUuid,
@@ -37,28 +39,21 @@ import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import SuccessDialog from '@/components/SuccessDialog';
 import { cn } from '@/lib/utils';
 
-const POSITION_PRESETS: Record<string, string[]> = {
-  'after-menu': ['.menu', 'header nav', '#menu', 'nav', 'main'],
-  'middle-page': ['[role="main"]', 'main', '.content', '.page-content'],
-  'before-footer': ['footer', '.footer', '#footer'],
-  'main-area': ['main', '.holder-results', '.flex-holder', '.content', '[role="main"]'],
-  custom: [],
-};
-
-const POSITION_PRESET_LABELS: Record<string, string> = {
-  'after-menu': 'Logo abaixo do menu',
-  'middle-page': 'No meio da página',
-  'before-footer': 'Antes do rodapé',
-  'main-area': 'Área principal',
-  custom: 'Lugar personalizado',
-};
-
-const POSITION_METHOD_MAP: Record<string, string> = {
+const POSITION_METHOD_MAP: Record<string, DisplayPosition> = {
   before_element: 'beforebegin',
   after_element: 'afterend',
   inside_start: 'afterbegin',
   inside_end: 'beforeend',
 };
+
+const PAGE_RULE_OPTIONS = [
+  { label: 'HOME', value: 'home' },
+  { label: 'Todas as páginas', value: 'all_pages' },
+  { label: 'URL Contém', value: 'url_contains' },
+  { label: 'URL Igual', value: 'url_equals' },
+  { label: 'URL Diferente', value: 'url_not_equals' },
+] as const;
+
 
 const getAllSafe = async <T,>(collection: any, storeId?: string): Promise<T[]> => {
   if (!collection?.getAll) return [];
@@ -139,34 +134,27 @@ type UiRule = {
 };
 
 type DisplayLocationUi = DisplayLocation & {
-  preset?: 'after-menu' | 'middle-page' | 'before-footer' | 'main-area' | 'custom';
-  advanced?: boolean;
+  rules: UiRule[];
 };
 
-const CONDITION_TYPES_WITH_VALUE: ConditionType[] = ['contains', 'equals', 'not_equals'];
+const CONDITION_TYPES_WITH_VALUE: ConditionType[] = ['url_contains', 'url_equals', 'url_not_equals'];
 
 const mapDbRuleToUiRule = (rule: any): UiRule => {
-  let conditionType: ConditionType;
-
-  if (CONDITION_TYPES_WITH_VALUE.includes(rule.match_type)) {
-    conditionType = rule.match_type;
-  } else if (CONDITION_TYPES_WITH_VALUE.includes(rule.rule_type)) {
-    conditionType = rule.rule_type;
-  } else if (rule.rule_type === 'custom' && rule.url_pattern) {
-    conditionType = 'contains';
-  } else {
-    conditionType = (rule.rule_type as ConditionType) || 'all_pages';
-  }
+  const conditionType =
+    (rule.condition_type as ConditionType) ||
+    (rule.match_type as ConditionType) ||
+    (rule.rule_type as ConditionType) ||
+    'all_pages';
 
   return {
     id: rule.id,
     store_id: rule.store_id,
     story_id: rule.story_id,
     condition_type: conditionType,
-    value: rule.url_pattern || rule.page_url || '',
+    value: rule.value || rule.url_pattern || rule.page_url || '',
     created_at: rule.created_at,
     updated_at: rule.updated_at,
-  } as UiRule;
+  };
 };
 
 const mapUiRuleToDbRule = (
@@ -181,12 +169,8 @@ const mapUiRuleToDbRule = (
     id: isValidUuid(rule.id) ? rule.id : generateUuid(),
     store_id: targetStoreId,
     story_id: targetStoryId,
-    rule_type: rule.condition_type,
-    match_type: hasValue ? rule.condition_type : null,
-    page_url: null,
-    url_pattern: hasValue ? rule.value || '' : null,
-    page_type: null,
-    active: true,
+    condition_type: rule.condition_type,
+    value: hasValue ? rule.value || '' : null,
     created_at: rule.created_at || now,
     updated_at: now,
   } as unknown as PageRule & Record<string, any>;
@@ -204,7 +188,7 @@ const StoryDetailsPage = () => {
   const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
   const [appearances, setAppearances] = useState<Appearance[]>([]);
   const [locations, setLocations] = useState<DisplayLocationUi[]>([]);
-  const [rules, setRules] = useState<UiRule[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
@@ -235,25 +219,12 @@ const StoryDetailsPage = () => {
 
   const buildEmbedSnippet = (location: DisplayLocationUi): string => {
     const id = location.id;
-    const preset = location.preset || 'main-area';
     const embedBaseUrl =
       window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
         ? 'https://app.vidlytics.com.br'
         : window.location.origin;
 
-    const positionMap: Record<string, string> = {
-      before_element: 'beforebegin',
-      after_element: 'afterend',
-      inside_start: 'afterbegin',
-      inside_end: 'beforeend',
-    };
-
-    const position = positionMap[location.position] || 'afterbegin';
-    let snippet = `<script src="${embedBaseUrl}/embed/${id}.js"\n        data-preset="${preset}"\n        data-block-id="${id}"\n        data-position="${position}"`;
-
-    if (preset === 'custom' && location.selector) {
-      snippet += `\n        data-custom-selector="${location.selector}"`;
-    }
+    let snippet = `<script src="${embedBaseUrl}/embed/${id}.js"\n        data-block-id="${id}"\n        data-selector="${location.selector}"\n        data-position="${location.position}"`;
 
     snippet += `\n        async></script>`;
     return snippet;
@@ -330,13 +301,11 @@ const StoryDetailsPage = () => {
 
       setSelectedVideoIds(storyVideoIds);
 
-      setLocations(
-        locs.filter((location: any) => {
-          const sameStory = location.story_id === currentStory.id;
-          const sameStore = !location.store_id || location.store_id === finalStoreId;
-          return sameStory && sameStore;
-        }),
-      );
+      const filteredLocations = locs.filter((location: any) => {
+        const sameStory = location.story_id === currentStory.id;
+        const sameStore = !location.store_id || location.store_id === finalStoreId;
+        return sameStory && sameStore;
+      });
 
       const filteredDbRules = rls.filter((rule: any) => {
         const sameStory = rule.story_id === currentStory.id;
@@ -344,9 +313,17 @@ const StoryDetailsPage = () => {
         return sameStory && sameStore;
       });
 
-      setRules(filteredDbRules.map(mapDbRuleToUiRule));
+      const convertedLocations = filteredLocations.map((location: any) => ({
+        ...location,
+        position: location.position || 'beforeend',
+        rules: filteredDbRules
+          .filter((rule: any) => String(rule.location_id || rule.display_location_id || '') === String(location.id))
+          .map(mapDbRuleToUiRule),
+      }));
 
-      const currentRule = filteredDbRules[0] || null;
+      setLocations(convertedLocations);
+
+      const firstRule = filteredDbRules[0] || null;
 
       setFormData({
         title: currentStory.title || '',
@@ -357,8 +334,8 @@ const StoryDetailsPage = () => {
           currentStory.appearance_id && isValidUuid(currentStory.appearance_id)
             ? currentStory.appearance_id
             : '',
-        page_rule_mode: (currentRule?.match_type || currentRule?.rule_type || 'all_pages') as ConditionType,
-        page_rule_value: currentRule?.url_pattern || currentRule?.page_url || '',
+        page_rule_mode: (firstRule?.condition_type || 'all_pages') as ConditionType,
+        page_rule_value: firstRule?.value || '',
       });
 
     } catch (error) {
@@ -375,39 +352,6 @@ const StoryDetailsPage = () => {
 
   const saveLocationsAndRules = async (targetStoryId: string, targetStoreId: string) => {
     const now = new Date().toISOString();
-
-    const existingRules = await getAllSafe<any>((db as any).pageRules, targetStoreId);
-    const rulesToDelete = existingRules.filter((rule: any) => {
-      const sameStory = rule.story_id === targetStoryId;
-      const sameStore = !rule.store_id || rule.store_id === targetStoreId;
-      return sameStory && sameStore;
-    });
-
-    await Promise.all(
-      rulesToDelete.map((rule: any) => deleteSafe((db as any).pageRules, rule.id, targetStoreId)),
-    );
-
-    const selectedRule = {
-      id: generateUuid(),
-      store_id: targetStoreId,
-      story_id: targetStoryId,
-      condition_type: formData.page_rule_mode,
-      value: formData.page_rule_mode === 'all_pages' ? '' : String(formData.page_rule_value || '').trim(),
-      created_at: now,
-      updated_at: now,
-    } as UiRule;
-
-    const normalizedRule = mapUiRuleToDbRule(selectedRule, targetStoreId, targetStoryId, now);
-    await (db as any).pageRules.save(normalizedRule);
-
-    if (supabase && targetStoreId && targetStoryId) {
-      await supabase.from('page_rules').upsert(normalizedRule, { onConflict: 'id' });
-      if (rulesToDelete.length > 0) {
-        await Promise.all(
-          rulesToDelete.map((rule: any) => supabase.from('page_rules').delete().eq('id', rule.id)),
-        );
-      }
-    }
 
     const existingLocations = await getAllSafe<DisplayLocationUi>(
       (db as any).displayLocations,
@@ -426,20 +370,45 @@ const StoryDetailsPage = () => {
       ),
     );
 
-    const normalizedLocations = locations.map((location: any) => {
-      const { position: _position, ...locationWithoutPosition } = location;
-      return {
-        ...locationWithoutPosition,
-        id: isValidUuid(location.id) ? location.id : generateUuid(),
-        store_id: targetStoreId,
-        story_id: targetStoryId,
-        selector: location.selector || 'body',
-        created_at: location.created_at || now,
-        updated_at: now,
-      };
-    });
+    const normalizedLocations = locations.map((location: any) => ({
+      id: isValidUuid(location.id) ? location.id : generateUuid(),
+      store_id: targetStoreId,
+      story_id: targetStoryId,
+      selector: String(location.selector || '').trim(),
+      position: location.position,
+      created_at: location.created_at || now,
+      updated_at: now,
+    }));
 
     await Promise.all(normalizedLocations.map((location) => (db as any).displayLocations.save(location)));
+
+    const existingRules = await getAllSafe<any>((db as any).pageRules, targetStoreId);
+    const rulesToDelete = existingRules.filter((rule: any) => {
+      const sameStory = rule.story_id === targetStoryId;
+      const sameStore = !rule.store_id || rule.store_id === targetStoreId;
+      return sameStory && sameStore;
+    });
+
+    await Promise.all(
+      rulesToDelete.map((rule: any) => deleteSafe((db as any).pageRules, rule.id, targetStoreId)),
+    );
+
+    const normalizedRules = locations.flatMap((location: any) =>
+      (location.rules || []).map((rule: any) =>
+        mapUiRuleToDbRule(
+          {
+            ...rule,
+            story_id: targetStoryId,
+            store_id: targetStoreId,
+          },
+          targetStoreId,
+          targetStoryId,
+          now,
+        ),
+      ),
+    );
+
+    await Promise.all(normalizedRules.map((rule) => (db as any).pageRules.save(rule)));
   };
 
   const handleSave = async (event: FormEvent) => {
@@ -516,37 +485,55 @@ const StoryDetailsPage = () => {
 
   const handleAddLocation = async () => {
     const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
-    const newLocation = {
+    const newLocation: DisplayLocationUi = {
       id: generateUuid(),
       store_id: finalStoreId,
       story_id: story?.id || '',
-      selector: 'body',
-      position: 'inside_end',
-      preset: 'main-area',
-      advanced: false,
-    } as DisplayLocationUi;
+      selector: '',
+      position: 'beforeend',
+      rules: [],
+    };
 
     setLocations((prev) => [...prev, newLocation]);
   };
 
-  const handleAddRule = async () => {
-    const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
-    const newRule: UiRule = {
-      id: generateUuid(),
-      store_id: finalStoreId,
-      story_id: story?.id || '',
-      condition_type: 'all_pages',
-      value: '',
-    };
-    setRules((prev) => [...prev, newRule]);
+  const handleAddRule = (locationId: string) => {
+    setLocations((prev) =>
+      prev.map((location) =>
+        location.id === locationId
+          ? {
+              ...location,
+              rules: [
+                ...(location.rules || []),
+                {
+                  id: generateUuid(),
+                  store_id: location.store_id,
+                  story_id: location.story_id,
+                  condition_type: 'all_pages',
+                  value: '',
+                },
+              ],
+            }
+          : location,
+      ),
+    );
   };
 
   const handleDeleteLocation = (locationId: string) => {
     setLocations((prev) => prev.filter((location) => location.id !== locationId));
   };
 
-  const handleDeleteRule = (ruleId: string) => {
-    setRules((prev) => prev.filter((rule) => rule.id !== ruleId));
+  const handleDeleteRule = (locationId: string, ruleId: string) => {
+    setLocations((prev) =>
+      prev.map((location) =>
+        location.id === locationId
+          ? {
+              ...location,
+              rules: (location.rules || []).filter((rule) => rule.id !== ruleId),
+            }
+          : location,
+      ),
+    );
   };
 
   const openDeleteLocationModal = (location: DisplayLocation) => {
@@ -555,15 +542,6 @@ const StoryDetailsPage = () => {
       type: 'location',
       id: location.id,
       name: location.selector || 'Local de exibição',
-    });
-  };
-
-  const openDeleteRuleModal = (rule: UiRule) => {
-    setDeleteModal({
-      isOpen: true,
-      type: 'rule',
-      id: rule.id,
-      name: rule.condition_type || 'Regra de exibição',
     });
   };
 
@@ -870,231 +848,172 @@ const StoryDetailsPage = () => {
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <MapPin className="text-orange-500" size={18} />
-                  <h4 className="text-sm font-black uppercase text-slate-800">Onde Aparece</h4>
+                  <h4 className="text-sm font-black uppercase text-slate-800">Local de exibição</h4>
                 </div>
 
                 <button
                   type="button"
                   onClick={handleAddLocation}
-                  className="rounded-lg bg-orange-50 p-1.5 text-orange-500 hover:bg-orange-100"
+                  className="rounded-lg bg-orange-50 px-3 py-2 text-xs font-black uppercase tracking-widest text-orange-600 hover:bg-orange-100"
                 >
-                  <Plus size={16} />
+                  + Adicionar local onde irá aparecer na página
                 </button>
               </div>
 
               <div className="space-y-4">
-                {locations.map((location) => {
-                  const activePreset = (location as any).preset || 'main-area';
-                  const isAdvanced = Boolean((location as any).advanced);
-
-                  return (
-                    <div
-                      key={location.id}
-                      className="group relative rounded-2xl border border-slate-100 bg-slate-50 p-4"
+                {locations.map((location) => (
+                  <div
+                    key={location.id}
+                    className="group relative rounded-2xl border border-slate-100 bg-slate-50 p-4"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteLocation(location.id)}
+                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-rose-500 opacity-0 shadow-sm transition-all group-hover:opacity-100"
                     >
-                      <button
+                      <X size={12} />
+                    </button>
 
-                        type="button"
-                        onClick={() => openDeleteLocationModal(location)}
-                        className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-rose-500 opacity-0 shadow-sm transition-all group-hover:opacity-100"
-                      >
-                        <X size={12} />
-                      </button>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Seletor CSS</label>
+                        <input
+                          type="text"
+                          value={location.selector}
+                          onChange={(event) => {
+                            const next = locations.map((item) =>
+                              item.id === location.id ? { ...item, selector: event.target.value } : item,
+                            );
+                            setLocations(next);
+                          }}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
+                          placeholder=".breadcrumbs .container"
+                        />
+                        <p className="text-[11px] text-slate-500">Informe o seletor CSS do elemento de referência na página.</p>
+                      </div>
 
-                      <div className="mb-3 grid gap-3">
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Posição</label>
+                        <select
+                          value={location.position}
+                          onChange={(event) => {
+                            const next = locations.map((item) =>
+                              item.id === location.id ? { ...item, position: event.target.value as DisplayLocation['position'] } : item,
+                            );
 
-                            Preset de posição
-                          </label>
-                          <div className="flex flex-wrap gap-2">
-                            {(Object.entries(POSITION_PRESET_LABELS) as Array<[
-                              'after-menu' | 'middle-page' | 'before-footer' | 'main-area' | 'custom',
-                              string,
-                            ]>).map(([preset, label]) => {
-                              const active = activePreset === preset;
+                            setLocations(next);
+                          }}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
+                        >
+                          <option value="beforebegin">Acima do elemento</option>
+                          <option value="afterend">Abaixo do elemento</option>
+                          <option value="afterbegin">Dentro do elemento, no início</option>
+                          <option value="beforeend">Dentro do elemento, no final</option>
+                        </select>
+                      </div>
 
-                              return (
-                                <button
-                                  key={preset}
-                                  type="button"
-                                  onClick={() => {
-                                    const next = locations.map((item) =>
-                                      item.id === location.id
-                                        ? {
-                                            ...item,
-                                            preset,
-                                            selector: POSITION_PRESETS[preset][0] || 'main',
-                                          }
-                                        : item,
-                                    );
-                                    setLocations(next);
-                                  }}
-                                  className={cn(
-                                    'rounded-2xl border px-3 py-2 text-[10px] font-black uppercase tracking-widest transition',
-                                    active
-                                      ? 'border-orange-300 bg-orange-50 text-orange-600'
-                                      : 'border-slate-200 bg-white text-slate-600 hover:border-orange-200 hover:bg-orange-50',
-                                  )}
-                                >
-                                  {label}
-                                </button>
-                              );
-                            })}
-                          </div>
+                      <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <h5 className="text-xs font-black uppercase tracking-widest text-slate-700">Qual página irá aparecer?</h5>
+                          <button
+                            type="button"
+                            onClick={() => handleAddRule(location.id)}
+                            className="rounded-lg bg-emerald-50 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-emerald-600 hover:bg-emerald-100"
+                          >
+                            + Adicionar página onde irá aparecer
+                          </button>
                         </div>
-                      </div>
 
-                      <div className="mb-3 flex items-center justify-between gap-3">
-                        <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                          <input
-                            type="checkbox"
-                            checked={isAdvanced}
-                            onChange={(event) => {
-                              const next = locations.map((item) =>
-                                item.id === location.id
-                                  ? {
-                                      ...item,
-                                      advanced: event.target.checked,
-                                      preset: (event.target.checked ? 'custom' : activePreset) as DisplayLocationUi['preset'],
-                                    }
-                                  : item,
-                              );
-                              setLocations(next);
-                            }}
-                            className="h-4 w-4 rounded border-slate-300 text-orange-500"
-                          />
-                          Modo avançado
-                        </label>
-                      </div>
-
-                      {isAdvanced && (
                         <div className="space-y-3">
-                          <div className="space-y-1">
-                            <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                              Seletor CSS
-                            </label>
-                            <input
-                              type="text"
-                              value={location.selector || ''}
-                              onChange={(event) => {
-                                const next = locations.map((item) =>
-                                  item.id === location.id
-                                    ? {
-                                        ...item,
-                                        selector: event.target.value,
-                                        preset: 'custom' as DisplayLocationUi['preset'],
-                                      }
-                                    : item,
-                                );
-                                setLocations(next);
-                              }}
-                              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
-                              placeholder="Ex: body, .product-info, #main"
-                            />
-                          </div>
+                          {(location.rules || []).map((rule) => (
+                            <div key={rule.id} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                              <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-start">
+                                <div className="space-y-2">
+                                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Página</label>
+                                  <select
+                                    value={rule.condition_type}
+                                    onChange={(event) => {
+                                      const next = locations.map((item) =>
+                                        item.id === location.id
+                                          ? {
+                                              ...item,
+                                              rules: (item.rules || []).map((currentRule) =>
+                                                currentRule.id === rule.id
+                                                  ? {
+                                                      ...currentRule,
+                                                      condition_type: event.target.value as ConditionType,
+                                                      value: PAGE_RULE_OPTIONS.find((option) => option.value === event.target.value)?.value === 'home' || event.target.value === 'all_pages' ? '' : currentRule.value,
+                                                    }
+                                                  : currentRule,
+                                              ),
+                                            }
+                                          : item,
+                                      );
+                                      setLocations(next);
+                                    }}
+                                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
+                                  >
+                                    {PAGE_RULE_OPTIONS.map((option) => (
+                                      <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                                  </select>
+                                </div>
 
-                          <div className="space-y-1">
-                            <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                              Posição
-                            </label>
+                                {CONDITION_TYPES_WITH_VALUE.includes(rule.condition_type) ? (
+                                  <div className="space-y-2">
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">URL</label>
+                                    <input
+                                      type="text"
+                                      value={rule.value}
+                                      onChange={(event) => {
+                                        const next = locations.map((item) =>
+                                          item.id === location.id
+                                            ? {
+                                                ...item,
+                                                rules: (item.rules || []).map((currentRule) =>
+                                                  currentRule.id === rule.id ? { ...currentRule, value: event.target.value } : currentRule,
+                                                ),
+                                              }
+                                            : item,
+                                        );
+                                        setLocations(next);
+                                      }}
+                                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
+                                      placeholder="/colecao ou trecho da URL"
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="space-y-2">
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">URL</label>
+                                    <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-400">Não necessário para essa opção</div>
+                                  </div>
+                                )}
 
-                            <select
-                              value={location.position || 'inside_end'}
-                              onChange={(event) => {
-                                const next = locations.map((item) =>
-                                  item.id === location.id
-                                    ? {
-                                        ...item,
-                                        position: event.target.value as DisplayLocation['position'],
-                                      }
-                                    : item,
-                                );
-                                setLocations(next);
-                              }}
-                              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
-                            >
-                              <option value="before_element">beforebegin</option>
-                              <option value="after_element">afterend</option>
-                              <option value="inside_start">afterbegin</option>
-                              <option value="inside_end">beforeend</option>
-                            </select>
-                          </div>
+                                <div className="pt-6 md:pt-7">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteRule(location.id, rule.id)}
+                                    className="rounded-lg border border-rose-200 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-50"
+                                  >
+                                    Remover
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+
+                          {(location.rules || []).length === 0 && (
+                            <p className="text-xs font-bold text-slate-400">Nenhuma regra de página adicionada.</p>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
 
                 {locations.length === 0 && (
                   <p className="text-xs font-bold text-slate-400">Nenhum local configurado.</p>
                 )}
-
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-4">
-                  <button
-                    type="button"
-                    onClick={handleGenerateEmbedCode}
-                    className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-black uppercase tracking-widest text-white"
-                  >
-                    Gerar código de embed
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="mb-6 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Globe className="text-emerald-500" size={18} />
-                  <h4 className="text-sm font-black uppercase text-slate-800">Quando Aparece</h4>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                      Tipo de Regra
-                    </label>
-
-                    <select
-                      value={formData.page_rule_mode}
-                      onChange={(event) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          page_rule_mode: event.target.value as ConditionType,
-                        }))
-                      }
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
-                    >
-                      <option value="all_pages">Roaming HOME</option>
-                      <option value="contains">URL Contém</option>
-                      <option value="equals">URL Igual</option>
-                      <option value="not_equals">URL Diferente</option>
-                    </select>
-                  </div>
-
-                  {CONDITION_TYPES_WITH_VALUE.includes(formData.page_rule_mode) && (
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                        Valor do Filtro
-                      </label>
-
-                      <input
-                        type="text"
-                        value={formData.page_rule_value}
-                        onChange={(event) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            page_rule_value: event.target.value,
-                          }))
-                        }
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
-                        placeholder="Ex: /jaleco"
-                      />
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
           </div>
@@ -1151,11 +1070,7 @@ const StoryDetailsPage = () => {
         title="Confirmar Exclusão"
         itemName={deleteModal.name}
         onConfirm={() => {
-          if (deleteModal.type === 'location') {
-            handleDeleteLocation(deleteModal.id);
-          } else {
-            handleDeleteRule(deleteModal.id);
-          }
+          handleDeleteLocation(deleteModal.id);
 
           setDeleteModal((prev) => ({
             ...prev,
@@ -1166,6 +1081,7 @@ const StoryDetailsPage = () => {
           setDeleteModal((prev) => ({
             ...prev,
             isOpen: false,
+
           }))
         }
       />

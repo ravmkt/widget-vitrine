@@ -96,15 +96,10 @@ export interface Appearance {
 }
 
 export type DisplayPosition =
-  | 'before_element'
-  | 'after_element'
-  | 'inside_start'
-  | 'inside_end'
-  | 'replace_element'
-  | 'fixed_bottom_right'
-  | 'fixed_bottom_left'
-  | 'fixed_top_right'
-  | 'fixed_top_left';
+  | 'beforebegin'
+  | 'afterend'
+  | 'afterbegin'
+  | 'beforeend';
 
 export interface DisplayLocation {
   id: string;
@@ -112,23 +107,16 @@ export interface DisplayLocation {
   story_id: string;
   selector: string;
   position: DisplayPosition;
-  preset?: 'after-menu' | 'middle-page' | 'before-footer' | 'main-area' | 'custom';
-  blockType?: 'carousel' | 'grid' | 'floating';
   created_at?: string;
   updated_at?: string;
 }
 
 export type ConditionType =
-  | 'contains'
-  | 'equals'
-  | 'not_equals'
-  | 'starts_with'
-  | 'ends_with'
-  | 'regex'
+  | 'home'
   | 'all_pages'
-  | 'home_only'
-  | 'product_pages'
-  | 'category_pages';
+  | 'url_contains'
+  | 'url_equals'
+  | 'url_not_equals';
 
 export interface PageRule {
   id: string;

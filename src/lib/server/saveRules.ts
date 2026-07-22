@@ -5,19 +5,8 @@ type Rule = {
   id?: string;
   store_id: string;
   story_id: string | null;
-  condition_type:
-    | 'all_pages'
-    | 'home_only'
-    | 'product_pages'
-    | 'category_pages'
-    | 'contains'
-    | 'equals'
-    | 'not_equals'
-    | 'starts_with'
-    | 'ends_with'
-    | 'regex';
-  url_pattern?: string | null;
-  active?: boolean;
+  condition_type: 'home' | 'all_pages' | 'url_contains' | 'url_equals' | 'url_not_equals';
+  value?: string | null;
 };
 
 type Location = {
@@ -25,8 +14,7 @@ type Location = {
   store_id: string;
   story_id: string | null;
   selector: string;
-  position?: 'before'|'after'|'append'|'prepend';
-  active?: boolean;
+  position?: 'beforebegin'|'afterend'|'afterbegin'|'beforeend';
 };
 
 export async function saveRulesAndLocations(params: {
@@ -37,25 +25,13 @@ export async function saveRulesAndLocations(params: {
 }) {
   const { store_id, story_id, rules = [], locations = [] } = params;
 
-  // Deleta respeitando NULL corretamente
-  {
-    let q = supabaseAdmin.from('page_rules').delete().eq('store_id', store_id);
-    q = story_id === null ? q.is('story_id', null) : q.eq('story_id', story_id);
-    const { error } = await q;
-    if (error) throw error;
-  }
-  {
-    let q = supabaseAdmin.from('display_locations').delete().eq('store_id', store_id);
-    q = story_id === null ? q.is('story_id', null) : q.eq('story_id', story_id);
-    const { error } = await q;
-    if (error) throw error;
-  }
+  await supabaseAdmin.from('page_rules').delete().eq('store_id', store_id).eq('story_id', story_id);
+  await supabaseAdmin.from('display_locations').delete().eq('store_id', store_id).eq('story_id', story_id);
 
-  // Você está apagando antes; insert simples já basta.
   if (rules.length) {
     const { error } = await supabaseAdmin
       .from('page_rules')
-      .insert(rules.map(r => ({ active: true, ...r, store_id, story_id })));
+      .insert(rules.map(r => ({ ...r, store_id, story_id })));
     if (error) throw error;
   }
 
@@ -63,11 +39,10 @@ export async function saveRulesAndLocations(params: {
     const { error } = await supabaseAdmin
       .from('display_locations')
       .insert(locations.map(l => ({
-        active: true,
-        position: l.position || 'append',
         ...l,
         store_id,
-        story_id
+        story_id,
+        position: l.position || 'beforeend'
       })));
     if (error) throw error;
   }
