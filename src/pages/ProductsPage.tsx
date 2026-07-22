@@ -1687,7 +1687,19 @@ const ProductsPage = () => {
                 </button>
               </div>
 
+              <div className="flex h-[min(84vh,900px)] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
+                <div className="border-b border-slate-100 px-4 py-4 sm:px-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-black text-slate-900">Importar produtos</p>
+                      <p className="text-xs font-bold text-slate-500">XML • API Yampi • Planilha</p>
+                    </div>
+                    <button type="button" onClick={() => setShowImportModal(false)} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-black text-slate-500 hover:bg-slate-50">Fechar</button>
+                  </div>
+                </div>
+
               {importTab === 'xml' && (
+
                     <div className="flex h-full min-h-0 flex-col gap-4 overflow-hidden">
                       <div className="space-y-2">
                         <p className="text-sm font-black text-slate-900">Prévia dos produtos encontrados</p>
@@ -1797,8 +1809,10 @@ const ProductsPage = () => {
                     </div>
                   )}
                 </div>
+              </div>
 
               {importTab === 'api' && (
+
                 <div className="space-y-4">
                   <input
                     value={yampiToken}
@@ -1858,13 +1872,10 @@ const ProductsPage = () => {
           </div>
         </div>
       </div>
-      )}
 
       {isImportingXml && (
-
         <div className="fixed inset-0 z-[100000] flex items-center justify-center overflow-hidden bg-slate-950/50 backdrop-blur-sm px-3 py-4 sm:px-4 sm:py-6">
           <div className="flex w-full max-w-2xl items-center gap-4 rounded-3xl bg-white p-4 shadow-2xl sm:p-6">
-
             <Loader2 className="h-6 w-6 animate-spin text-[#0094EB]" />
             <div>
               <p className="text-sm font-black text-slate-900">Aguarde</p>
@@ -1877,7 +1888,6 @@ const ProductsPage = () => {
       )}
 
       <ConfirmDeleteDialog
-
         isOpen={deleteModal.isOpen}
         title={deleteModal.bulkMode ? 'EXCLUIR PRODUTOS' : 'EXCLUIR PRODUTO'}
         itemName={deleteModal.productTitle}
