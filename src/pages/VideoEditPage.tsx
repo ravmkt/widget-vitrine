@@ -134,6 +134,14 @@ const hasRealThumbnail = (url: string) => {
   return Boolean(url && !isTemporaryUrl(url));
 };
 
+const generateAndUploadThumbnailFromUrl = async (videoUrl: string, storeId: string) => {
+  const thumbnail = await generateVideoThumbnail(videoUrl);
+
+  if (!thumbnail) return '';
+
+  return uploadDataUrlToSupabase(thumbnail, storeId, 'thumbnails');
+};
+
 const isTemporaryUrl = (url: string) => {
   return url.startsWith('blob:') || url.startsWith('data:');
 };
@@ -531,12 +539,8 @@ const VideoEditPage = () => {
 
       const now = new Date().toISOString();
 
-      if (!finalThumbnailUrl && formData.video_file) {
-        const generatedThumbnail = await generateVideoThumbnail(finalVideoUrl);
-
-        if (generatedThumbnail) {
-          finalThumbnailUrl = generatedThumbnail;
-        }
+      if (!finalThumbnailUrl && finalVideoUrl) {
+        finalThumbnailUrl = await generateAndUploadThumbnailFromUrl(finalVideoUrl, safeStoreId);
       }
 
       if (finalThumbnailUrl.startsWith('data:image/')) {
@@ -559,6 +563,7 @@ const VideoEditPage = () => {
         store_id: safeStoreId,
         updated_at: now,
       };
+
 
       if (isCreate) {
         const newVideo: Video = {
@@ -721,6 +726,13 @@ const VideoEditPage = () => {
                     src={formData.thumbnail_url}
                     className="w-full h-full object-cover"
                     alt="Capa"
+                  />
+                ) : formData.video_url ? (
+                  <video
+                    src={formData.video_url}
+                    className="w-full h-full object-cover"
+                    muted
+                    preload="metadata"
                   />
                 ) : (
                   <span className="text-xs font-bold text-slate-400">
