@@ -556,9 +556,18 @@ const ProductsPage = () => {
         ? await xmlFile.text().catch(() => {
             throw new Error('Não foi possível ler o arquivo XML.');
           })
-        : await fetch(`/api/proxy-xml?url=${encodeURIComponent(rawUrl)}`, {
-            cache: 'no-store',
-          }).then(async (response) => {
+        : await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/proxy-xml?url=${encodeURIComponent(rawUrl)}`,
+    {
+      method: 'GET',
+      headers: {
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      },
+      cache: 'no-store',
+    },
+  ).then(async (response) => {
+
             const text = await response.text();
             console.log('[xml-debug]', {
               status: response.status,
@@ -793,6 +802,12 @@ const ProductsPage = () => {
             <option value="integration">Integração</option>
           </select>
         </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-bold text-slate-500">
+          {filteredProducts.length} {filteredProducts.length === 1 ? 'produto' : 'produtos'}
+        </p>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm">
