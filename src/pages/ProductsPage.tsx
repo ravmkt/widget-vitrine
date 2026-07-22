@@ -634,6 +634,7 @@ const ProductsPage = () => {
   const normalizeXmlText = (value: string) =>
     value
       .replace(/&gt;/g, '>')
+      .replace(/>/g, ' > ')
       .replace(/\s+/g, ' ')
       .trim()
       .toLowerCase();
@@ -796,6 +797,11 @@ const ProductsPage = () => {
       setProducts(refreshedProducts);
       setSelectedIds(new Set());
       setSelectedXmlKeys(new Set());
+      setShowImportModal(false);
+      setImportedXmlProducts([]);
+      setXmlPreviewSearch('');
+      setXmlPreviewCategory('all');
+      setXmlPreviewPage(1);
       showSuccess(`${saved} produtos importados com sucesso.`);
 
     } catch (error: unknown) {
@@ -1766,7 +1772,8 @@ const ProductsPage = () => {
                         </div>
 
                         <div className="mt-3 flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
-                          <input value={xmlPreviewSearch} onChange={(e) => { setXmlPreviewSearch(e.target.value); setXmlPreviewPage(1); }} placeholder="Buscar por nome, SKU ou categoria" className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-1 sm:max-w-[15rem]" />
+                          <input value={xmlPreviewSearch} onChange={(e) => { setXmlPreviewSearch(e.target.value); setXmlPreviewPage(1); }} placeholder="Buscar por nome, SKU ou categoria" className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-[1.3] sm:max-w-[20rem]" />
+
                           <select value={xmlPreviewCategory} onChange={(e) => { setXmlPreviewCategory(e.target.value); setXmlPreviewPage(1); }} className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 text-sm font-bold outline-none focus:border-[#0094EB] sm:flex-1 sm:max-w-[15rem]">
                             <option value="all">Todas as categorias</option>
                             {xmlPreviewCategories.map((category) => <option key={category} value={category}>{category}</option>)}
