@@ -402,10 +402,10 @@ const DEFAULT_APPEARANCES: Appearance[] = [
     show_product_button: true,
     use_global_appearance: true,
     useGlobalAppearance: true,
-    floating_config: DEFAULT_RESPONSIVE_CONFIG,
-    carousel_config: DEFAULT_RESPONSIVE_CONFIG,
-    grid_config: DEFAULT_RESPONSIVE_CONFIG,
-    modal_config: DEFAULT_RESPONSIVE_CONFIG,
+    floating_config: createDefaultResponsiveConfig(),
+    carousel_config: createDefaultResponsiveConfig(),
+    grid_config: createDefaultResponsiveConfig(),
+    modal_config: createDefaultResponsiveConfig(),
   },
 ];
 
