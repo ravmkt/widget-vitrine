@@ -105,9 +105,9 @@ export interface DisplayLocation {
   id: string;
   store_id: string;
   story_id: string;
+  location?: string | null;
   selector: string;
   position: DisplayPosition;
-  location?: string | null;
   active?: boolean;
   created_at?: string;
   updated_at?: string;
