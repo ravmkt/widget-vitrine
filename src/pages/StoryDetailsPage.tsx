@@ -276,7 +276,23 @@ const StoryDetailsPage = () => {
     const existingRules = await getAllSafe<any>((db as any).pageRules, targetStoreId);
     const rulesToDelete = existingRules.filter((rule: any) => rule.story_id === targetStoryId && (!rule.store_id || rule.store_id === targetStoreId));
     await Promise.all(rulesToDelete.map((rule: any) => deleteSafe((db as any).pageRules, rule.id, targetStoreId)));
-    const normalizedRules = pageRules.map((rule) => mapUiRuleToDbRule(rule, targetStoreId, targetStoryId, now));
+
+    const normalizedRules = pageRules.map((rule) => ({
+      id: isValidUuid(rule.id) ? rule.id : generateUuid(),
+      store_id: targetStoreId,
+      story_id: targetStoryId,
+      condition_type: rule.condition_type,
+      value: CONDITION_TYPES_WITH_VALUE.includes(rule.condition_type) ? rule.value.trim() : null,
+      rule_type: null,
+      match_type: null,
+      page_url: null,
+      url_pattern: null,
+      page_type: null,
+      active: true,
+      created_at: rule.created_at || now,
+      updated_at: now,
+    } as unknown as PageRule & Record<string, any>));
+
     await Promise.all(normalizedRules.map((rule) => (db as any).pageRules.save(rule)));
   };
 
