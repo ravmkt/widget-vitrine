@@ -3664,23 +3664,6 @@ function insertCarouselHostBySelector(host, locations, rules) {
   if (document.body) document.body.insertBefore(host, document.body.firstChild);
 }
 
-
-  // Fallback antigo, só se não houver display_locations aplicável
-  var header = document.querySelector('header') || document.querySelector('[role="banner"]') || document.querySelector('#menu') || document.querySelector('.menu');
-  if (header && header.parentNode) {
-    header.parentNode.insertBefore(host, header.nextSibling || null);
-    return;
-  }
-  var main = document.querySelector('main');
-  if (main && main.parentNode) {
-    main.parentNode.insertBefore(host, main);
-    return;
-  }
-  if (document.body) document.body.insertBefore(host, document.body.firstChild);
-}
-
-
-
 function renderCarousel(stories, storyVideoMap, activeVideos, displayLocations, pageRules) {
     var appearance = currentAppearance || {};
     var modalConfig = normalizeModalAppearanceConfig(appearance);
