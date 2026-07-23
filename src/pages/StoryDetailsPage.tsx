@@ -234,6 +234,7 @@ const StoryDetailsPage = () => {
           .map((location: any) => ({
             ...location,
             location: location.location || location.position || 'afterend',
+            page_type: location.page_type || 'all_pages',
             selector: location.selector || '',
             position: location.position || 'beforeend',
           })),
@@ -275,7 +276,7 @@ const normalizedLocations = locations.map((location) => ({
   location: location.location || location.position || 'afterend',
   page_type: location.page_type || 'all_pages',
   selector: String(location.selector || '').trim(),
-  position: location.position,
+  position: location.position || 'beforeend',
   active: true,
   created_at: location.created_at || now,
   updated_at: now,

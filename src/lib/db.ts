@@ -618,13 +618,14 @@ display_locations: [
   'selector',
   'position',
   'location',
+  'page_type',
   'active',
   'created_at',
   'updated_at',
 ],
 
-
   page_rules: [
+
     'id',
     'store_id',
     'story_id',
