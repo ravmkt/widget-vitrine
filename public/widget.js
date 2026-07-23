@@ -3624,36 +3624,50 @@ function getOrCreateCarouselShadowRoot() {
   };
 }
 
-function insertCarouselHostBySelector(host, locations) {
+ffunction insertCarouselHostBySelector(host, locations) {
   if (!host) return;
 
-  var header =
-    document.querySelector('header') ||
-    document.querySelector('[role="banner"]') ||
-    document.querySelector('#menu') ||
-    document.querySelector('.menu');
+  var applicableLocations = (locations || []).filter(function (loc) {
+    if (!loc || loc.active === false || !loc.selector) return false;
+    return matchesRule(loc); // reaproveita a mesma lógica de page_rules
+  });
 
-  if (header && header.parentNode) {
-    if (header.nextSibling) {
-      header.parentNode.insertBefore(host, header.nextSibling);
-    } else {
-      header.parentNode.appendChild(host);
+  if (applicableLocations.length) {
+    var loc = applicableLocations[0];
+    var target = document.querySelector(loc.selector);
+
+    if (target) {
+      switch (loc.position) {
+        case 'before':
+          target.parentNode && target.parentNode.insertBefore(host, target);
+          return;
+        case 'after':
+          target.parentNode && target.parentNode.insertBefore(host, target.nextSibling);
+          return;
+        case 'prepend':
+          target.insertBefore(host, target.firstChild);
+          return;
+        case 'append':
+        default:
+          target.appendChild(host);
+          return;
+      }
     }
-    return;
   }
 
+  // Fallback antigo, só se não houver display_locations aplicável
+  var header = document.querySelector('header') || document.querySelector('[role="banner"]') || document.querySelector('#menu') || document.querySelector('.menu');
+  if (header && header.parentNode) {
+    header.parentNode.insertBefore(host, header.nextSibling || null);
+    return;
+  }
   var main = document.querySelector('main');
   if (main && main.parentNode) {
     main.parentNode.insertBefore(host, main);
     return;
   }
-
-  if (document.body) {
-    document.body.insertBefore(host, document.body.firstChild);
-  }
+  if (document.body) document.body.insertBefore(host, document.body.firstChild);
 }
-
-
 
 
 
