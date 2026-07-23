@@ -109,9 +109,12 @@ export interface DisplayLocation {
   position: DisplayPosition;
   location?: string | null;
   page_type?: string | null;
+  page_rule?: string | null;
+  page_value?: string | null;
   created_at?: string;
   updated_at?: string;
 }
+
 
 
 export type ConditionType =
