@@ -683,7 +683,7 @@ const [model, setModel] = useState<any | null>(null);
 
   const story = stories[storyIdx ?? -1] ?? null;
   const activeStory = story;
-  const activeStoryFormat = String(
+  const rawActiveStoryFormat = String(
     activeStory?.format ||
       activeStory?.display_format ||
       activeStory?.displayFormat ||
@@ -693,6 +693,12 @@ const [model, setModel] = useState<any | null>(null);
   )
     .toLowerCase()
     .trim();
+  const activeStoryFormat =
+    rawActiveStoryFormat === 'carrossel'
+      ? 'carousel'
+      : rawActiveStoryFormat === 'floating'
+        ? 'floating_widget'
+        : rawActiveStoryFormat;
 
   const currentVideos = story ? storyVideosMap.get(story.id) || [] : [];
   const currentVideo = currentVideos[videoIdx] ?? null;
@@ -1336,10 +1342,7 @@ const [model, setModel] = useState<any | null>(null);
     activeStoryFormat === 'floating_widget' ||
     activeStoryFormat === 'floating' ||
     activeStoryFormat === 'widget';
-  const isCarouselLayout =
-    activeStoryFormat === 'carousel' ||
-    activeStoryFormat === 'carrossel' ||
-    (!isGridLayout && !isFloatingLayout);
+  const isCarouselLayout = activeStoryFormat === 'carousel';
 
   return (
     <div
@@ -1505,13 +1508,51 @@ const [model, setModel] = useState<any | null>(null);
               />
             );
           })()
-        ) : isFloatingLayout && currentUrl && !videoError ? (
+        ) : isFloatingLayout ? (
           <div className="flex h-full items-center justify-center px-6 pt-20 text-center text-white/70">
             <div className="max-w-[280px] rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
               <p className="text-sm font-semibold text-white">Visual flutuante</p>
               <p className="mt-2 text-xs text-white/65">{story.title || 'Story'}</p>
             </div>
           </div>
+        ) : currentUrl && !videoError ? (
+          (() => {
+            const ytId = !isVideoPlayableNatively(currentVideo as any)
+              ? extractYouTubeId(currentUrl)
+              : '';
+            const sharedProps = {
+              key: currentVideo?.id,
+              className: 'h-full w-full object-cover',
+            };
+
+            if (ytId) {
+              return (
+                <iframe
+                  {...sharedProps}
+                  src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=${muted ? 1 : 0}&playsinline=1&rel=0`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  title={story.title || 'Story'}
+                />
+              );
+            }
+
+            return (
+              <video
+                {...sharedProps}
+                ref={videoRef}
+                src={currentUrl}
+                poster={posterUrl || undefined}
+                autoPlay
+                muted={muted}
+                playsInline
+                onEnded={goNext}
+                onPlay={() => setPlaying(true)}
+                onPause={() => setPlaying(false)}
+                onError={() => setVideoError(true)}
+              />
+            );
+          })()
         ) : (
           <div className="flex h-full items-center justify-center px-8 text-center text-white/70">
             Nenhum vídeo vinculado
