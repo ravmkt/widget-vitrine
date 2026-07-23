@@ -666,6 +666,7 @@ export default function StoriesWidgetPage() {
   const [likeCount, setLikeCount] = useState(0);
 
   const [comments, setComments] = useState<CommentItem[]>([]);
+
   const [showComments, setShowComments] = useState(false);
   const [commentName, setCommentName] = useState('');
   const [commentText, setCommentText] = useState('');
@@ -681,6 +682,8 @@ const [model, setModel] = useState<any | null>(null);
   const [progress, setProgress] = useState(0);
 
   const story = stories[storyIdx ?? -1] ?? null;
+  const activeStory = story;
+  const activeStoryFormat = String(activeStory?.format || activeStory?.display_format || 'carousel');
   const currentVideos = story ? storyVideosMap.get(story.id) || [] : [];
   const currentVideo = currentVideos[videoIdx] ?? null;
 
@@ -708,6 +711,7 @@ const [model, setModel] = useState<any | null>(null);
   );
 
   const primaryColor = getPrimaryColor(appearance);
+
   const secondaryColor = getSecondaryColor(appearance);
   const textColor = getTextColor(appearance);
   const backgroundColor = getBackgroundColor(appearance);
@@ -1305,22 +1309,33 @@ const [model, setModel] = useState<any | null>(null);
     );
   }
 
+  const isGridLayout = activeStoryFormat === 'grid';
+  const isFloatingLayout = activeStoryFormat === 'floating_widget';
+  const isCarouselLayout = !isGridLayout && !isFloatingLayout;
+
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-black"
+      className={cn(
+        'fixed inset-0 z-[9999] flex overflow-hidden bg-black',
+        isFloatingLayout ? 'items-center justify-center' : 'items-start justify-center',
+      )}
       style={{
         fontFamily,
         fontSize,
       }}
     >
       <div
-        className="relative h-full w-full max-w-[420px] overflow-hidden bg-black sm:aspect-[9/16] sm:max-h-screen"
+        className={cn(
+          'relative h-full w-full overflow-hidden bg-black',
+          isGridLayout ? 'max-w-[780px] sm:max-h-screen' : 'max-w-[420px] sm:aspect-[9/16] sm:max-h-screen',
+        )}
         style={{
           boxShadow: modalConfig.shadow_enabled
             ? '0 24px 80px rgba(0,0,0,0.45)'
             : 'none',
         }}
       >
+
         {!modalConfig.hide_stories && (
           <div
             className="absolute top-3 z-50 flex gap-1.5"
@@ -1398,8 +1413,28 @@ const [model, setModel] = useState<any | null>(null);
           </button>
         </div>
 
-        {currentUrl && !videoError ? (
+        {isGridLayout ? (
+          <div className="grid h-full w-full grid-cols-2 gap-3 overflow-auto p-4 pt-20">
+            {currentVideos.map((video: any) => {
+              const videoThumb = video.thumbnail_url || video.thumbnailUrl || video.poster_url || video.posterUrl || video.image_url || video.imageUrl || '';
+              return (
+                <button key={video.id} type="button" className="relative aspect-[9/16] overflow-hidden rounded-2xl bg-slate-900" onClick={() => setVideoIdx(currentVideos.findIndex((item) => item.id === video.id))}>
+                  {videoThumb ? (
+                    <img src={videoThumb} alt={video.title || 'Vídeo'} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-slate-800 text-white/60">Vídeo</div>
+                  )}
+                  <div className="absolute inset-0 bg-black/10" />
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                    <p className="truncate text-[10px] font-black text-white">{video.title || 'Sem título'}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        ) : currentUrl && !videoError ? (
           (() => {
+
             const ytId = !isVideoPlayableNatively(currentVideo as any)
               ? extractYouTubeId(currentUrl)
               : '';
@@ -1442,7 +1477,8 @@ const [model, setModel] = useState<any | null>(null);
           </div>
         )}
 
-        {stories.length > 1 || currentVideos.length > 1 ? (
+        {isCarouselLayout && (stories.length > 1 || currentVideos.length > 1) ? (
+
           <>
             <button
               type="button"
