@@ -1624,9 +1624,26 @@
          });
       });
 
-      renderFloating(validStories, appearance);
+      // --- O CÉREBRO DA DECISÃO DE FORMATO ---
+      // Lê exatamente como veio do banco de dados (o que foi salvo no painel)
+      var widgetFormat = String(firstDefined(appearance.layout, appearance.format, appearance.widget_type, appearance.widget_format, appearance.tipo, 'floating_widget')).toLowerCase();
 
-    }).catch(function (err) {});
+      // Normaliza os nomes para garantir que não vai errar
+      if (widgetFormat.indexOf('carousel') !== -1 || widgetFormat.indexOf('carrossel') !== -1) widgetFormat = 'carousel';
+      if (widgetFormat.indexOf('grid') !== -1 || widgetFormat.indexOf('grade') !== -1) widgetFormat = 'grid';
+      
+      // Executa a função certa dependendo do formato escolhido
+      if (widgetFormat === 'carousel' || widgetFormat === 'grid') {
+          console.info('Instory renderizando formato: ' + widgetFormat);
+          renderInlineWidget(validStories, appearance, widgetFormat);
+      } else {
+          console.info('Instory renderizando formato: Flutuante');
+          renderFloating(validStories, appearance);
+      }
+
+    }).catch(function (err) {
+        console.error("Erro ao inicializar o Instory:", err);
+    });
   }
 
   if (document.readyState === 'loading') {
