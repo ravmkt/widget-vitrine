@@ -48,6 +48,12 @@ const PAGE_RULE_OPTIONS: Array<{ label: string; value: PageRuleCondition }> = [
   { label: 'URL diferente', value: 'url_not_equals' },
 ];
 
+const FORMAT_ICONS = {
+  floating_widget: MousePointer2,
+  carousel: Layout,
+  grid: Layers,
+} as const;
+
 const CONDITION_TYPES_WITH_VALUE: PageRuleCondition[] = ['url_contains', 'url_not_contains', 'url_not_equals'];
 
 const POSITION_OPTIONS = [
@@ -168,8 +174,6 @@ const StoryDetailsPage = () => {
   const [appearances, setAppearances] = useState<Appearance[]>([]);
   const [locations, setLocations] = useState<DisplayLocationUi[]>([]);
   const [pageRules, setPageRules] = useState<PageRuleUi[]>([]);
-  const [pageRuleMode, setPageRuleMode] = useState<PageRuleCondition>('home');
-  const [pageRuleValue, setPageRuleValue] = useState('');
 
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -405,8 +409,8 @@ const StoryDetailsPage = () => {
         id: generateUuid(),
         store_id: resolvedStoreId || '',
         story_id: story?.id || '',
-        condition_type: pageRuleMode,
-        value: CONDITION_TYPES_WITH_VALUE.includes(pageRuleMode) ? pageRuleValue : '',
+        condition_type: 'all_pages',
+        value: '',
         created_at: now,
         updated_at: now,
       },
@@ -473,10 +477,10 @@ const StoryDetailsPage = () => {
 
         <div className="mb-4 flex flex-wrap gap-3">
           <button type="button" onClick={() => navigate('/videos/new')} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">
-            Fazer upload de um novo vídeo
+            Criar novo vídeo
           </button>
-          <button type="button" onClick={() => navigate('/videos/new')} className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-slate-800">
-            Criar um novo vídeo
+          <button type="button" onClick={() => setIsGalleryOpen(false)} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">
+            Adicionar ao Story
           </button>
         </div>
 
@@ -520,15 +524,15 @@ const StoryDetailsPage = () => {
           </div>
         </div>
 
-        <div className="mt-5 flex items-center justify-between gap-3">
-          <button type="button" onClick={() => navigate('/videos/new')} className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-700 hover:bg-slate-50">
+        <div className="mt-5 flex items-center justify-end gap-3">
+          <button type="button" onClick={() => navigate('/videos/new')} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">
             Criar novo vídeo
           </button>
-
           <button type="button" onClick={() => setIsGalleryOpen(false)} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">
-            Adicionar ao History
+            Adicionar ao Story
           </button>
         </div>
+
       </div>
     </div>
   );
@@ -580,19 +584,20 @@ const StoryDetailsPage = () => {
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2 md:col-span-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nome do History</label>
-                  <input type="text" value={formData.title} onChange={(event) => setFormData((prev) => ({ ...prev, title: event.target.value }))} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none focus:border-[#0094EB]" placeholder="Ex: Lançamentos" />
-                </div>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nome do Story</label>
+                <input type="text" value={formData.title} onChange={(event) => setFormData((prev) => ({ ...prev, title: event.target.value }))} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none focus:border-[#0094EB]" placeholder="Ex: Lançamentos" />
+              </div>
 
                 <div className="space-y-4 pt-4 md:col-span-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Formato de Exibição</label>
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                     {[
-                      { id: 'floating_widget', icon: MousePointer2, label: 'Flutuante' },
-                      { id: 'carousel', icon: Layout, label: 'Carrossel' },
-                      { id: 'grid', icon: Layers, label: 'Grade' },
+                      { id: 'floating_widget', label: 'Flutuante' },
+                      { id: 'carousel', label: 'Carrossel' },
+                      { id: 'grid', label: 'Grade' },
                     ].map((format) => {
-                      const Icon = format.icon;
+                      const Icon = FORMAT_ICONS[format.id as keyof typeof FORMAT_ICONS];
+
                       return (
                         <button key={format.id} type="button" onClick={() => setFormData((prev) => ({ ...prev, format: format.id as StoryFormat }))} className={cn('flex flex-col items-center gap-3 rounded-3xl border-2 p-6 transition-all', formData.format === format.id ? 'border-[#0094EB] bg-blue-50 text-[#0094EB]' : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200')}>
                           <Icon size={24} />
@@ -675,67 +680,26 @@ const StoryDetailsPage = () => {
             </div>
 
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="mb-6 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <MapPin className="text-[#0094EB]" size={18} />
-                  <h4 className="text-sm font-black uppercase text-slate-800">Local de exibição</h4>
+              <div className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-[1fr_220px] md:items-end">
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">SELETOR CSS</label>
+                    <input type="text" value={locations[0]?.selector || ''} onChange={(event) => setLocations((prev) => [{ ...(prev[0] || { id: generateUuid(), store_id: resolvedStoreId || '', story_id: story?.id || '', position: 'beforeend', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }), selector: event.target.value }])} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none" placeholder=".breadcrumbs" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">POSIÇÃO</label>
+                    <select value={locations[0]?.position || 'beforeend'} onChange={(event) => setLocations((prev) => [{ ...(prev[0] || { id: generateUuid(), store_id: resolvedStoreId || '', story_id: story?.id || '', selector: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }), position: event.target.value as DisplayPosition }])} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none">
+                      {POSITION_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                {locations.map((location) => (
-                  <div key={location.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                    <div className="grid gap-4 md:grid-cols-[1fr_220px_auto] md:items-end">
-                      <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">SELETOR CSS</label>
-                        <input
-                          type="text"
-                          value={location.selector}
-                          onChange={(event) => setLocations((prev) => prev.map((item) => (item.id === location.id ? { ...item, selector: event.target.value } : item)))}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
-                          placeholder=".breadcrumbs"
-                        />
-                        <p className="text-[11px] text-slate-500">Informe o seletor de referência CSS da página</p>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">POSIÇÃO</label>
-                        <select
-                          value={location.position}
-                          onChange={(event) => setLocations((prev) => prev.map((item) => (item.id === location.id ? { ...item, position: event.target.value as DisplayPosition } : item)))}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
-                        >
-                          {POSITION_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <button type="button" onClick={handleAddLocation} className="rounded-xl bg-[#0094EB] px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-sm hover:bg-[#0E4787]">
-                        + Adicionar página
-                      </button>
-                    </div>
-
-                    <div className="mt-3 flex justify-end">
-                      <button type="button" onClick={() => handleDeleteLocation(location.id)} className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-rose-500">
-                        Remover
-                      </button>
-                    </div>
-                  </div>
-                ))}
-
-                {locations.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-xs font-bold text-slate-400">
-                    Nenhum local configurado.
-                  </div>
-                )}
-
-                <button type="button" onClick={handleAddLocation} className="rounded-xl bg-[#0094EB] px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-sm hover:bg-[#0E4787]">
-                  + Adicionar página
-                </button>
-              </div>
             </div>
 
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
@@ -748,58 +712,33 @@ const StoryDetailsPage = () => {
 
               <div className="space-y-4">
                 {pageRules.map((rule) => (
+
                   <div key={rule.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                    <div className="grid gap-4 md:grid-cols-[220px_1fr_auto] md:items-end">
+                    <div className="grid gap-4 md:grid-cols-[220px_1fr] md:items-end">
                       <div className="space-y-2">
                         <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">REGRA</label>
-                        <select
-                          value={rule.condition_type}
-                          onChange={(event) => handleUpdatePageRule(rule.id, { condition_type: event.target.value as PageRuleCondition })}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
-                        >
+                        <select value={rule.condition_type} onChange={(event) => handleUpdatePageRule(rule.id, { condition_type: event.target.value as PageRuleCondition })} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none">
                           {PAGE_RULE_OPTIONS.map((ruleOption) => (
                             <option key={ruleOption.value} value={ruleOption.value}>
                               {ruleOption.label}
                             </option>
                           ))}
                         </select>
-
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">VALOR DO FILTRO</label>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">VALOR</label>
                         {CONDITION_TYPES_WITH_VALUE.includes(rule.condition_type) ? (
-                          <input
-                            type="text"
-                            value={rule.value}
-                            onChange={(event) => handleUpdatePageRule(rule.id, { value: event.target.value })}
-                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
-                            placeholder="/colecao, /produto/nome-do-produto ou trecho da URL"
-                          />
+                          <input type="text" value={rule.value} onChange={(event) => handleUpdatePageRule(rule.id, { value: event.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none" placeholder="/colecao, /produto/nome-do-produto ou trecho da URL" />
                         ) : (
                           <div className="h-[34px] rounded-xl border border-dashed border-slate-200 bg-slate-50" />
                         )}
                       </div>
-
-                      <div className="flex items-end justify-end">
-                        <button type="button" onClick={() => handleDeletePageRule(rule.id)} className="rounded-xl border border-rose-200 bg-white px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-50">
-                          Remover
-                        </button>
-                      </div>
                     </div>
                   </div>
                 ))}
-
-                {pageRules.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-xs font-bold text-slate-400">
-                    Nenhuma regra de página adicionada.
-                  </div>
-                )}
-
-                <button type="button" onClick={handleAddPageRule} className="rounded-xl bg-[#0094EB] px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-sm hover:bg-[#0E4787]">
-                  + Adicionar página
-                </button>
               </div>
+
             </div>
           </div>
         </div>
