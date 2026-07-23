@@ -215,6 +215,8 @@ const StoryPreviewPage = () => {
       (story as any)?.visualStyle ||
       'carousel',
   ).toLowerCase().trim();
+  console.log('[StoryPreviewPage] story format', rawStoryFormat, story);
+
   const storyFormat =
     rawStoryFormat === 'carrossel'
       ? 'carousel'
