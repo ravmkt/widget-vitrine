@@ -107,9 +107,12 @@ export interface DisplayLocation {
   story_id: string;
   selector: string;
   position: DisplayPosition;
+  location?: string | null;
+  page_type?: string | null;
   created_at?: string;
   updated_at?: string;
 }
+
 
 export type ConditionType =
   | 'home'
@@ -609,14 +612,17 @@ const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
   ],
 
   display_locations: [
-    'id',
-    'store_id',
-    'story_id',
-    'selector',
-    'position',
-    'created_at',
-    'updated_at',
-  ],
+  'id',
+  'store_id',
+  'story_id',
+  'selector',
+  'position',
+  'location',
+  'page_type',
+  'created_at',
+  'updated_at',
+],
+
 
   page_rules: [
     'id',
