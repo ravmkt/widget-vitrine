@@ -698,7 +698,11 @@ const [model, setModel] = useState<any | null>(null);
       ? 'carousel'
       : rawActiveStoryFormat === 'floating'
         ? 'floating_widget'
-        : rawActiveStoryFormat;
+        : rawActiveStoryFormat === 'carousel' ||
+            rawActiveStoryFormat === 'grid' ||
+            rawActiveStoryFormat === 'floating_widget'
+          ? rawActiveStoryFormat
+          : 'carousel';
 
   const currentVideos = story ? storyVideosMap.get(story.id) || [] : [];
   const currentVideo = currentVideos[videoIdx] ?? null;
@@ -931,19 +935,20 @@ const [model, setModel] = useState<any | null>(null);
               item.visual_style ||
               item.visualStyle ||
               'carousel',
-          ).toLowerCase();
+          ).toLowerCase().trim();
 
           const format =
-            rawFormat === 'floating'
+            rawFormat === 'floating' || rawFormat === 'floating_widget' || rawFormat === 'widget'
               ? 'floating_widget'
-              : rawFormat === 'carrossel'
-                ? 'carousel'
-                : rawFormat;
+              : rawFormat === 'grid'
+                ? 'grid'
+                : 'carousel';
 
           return {
             ...item,
             format,
-            display_format: item.display_format || format,
+            display_format: format,
+            visual_style: format,
           };
         });
 
@@ -1338,10 +1343,8 @@ const [model, setModel] = useState<any | null>(null);
   }
 
   const isGridLayout = activeStoryFormat === 'grid';
-  const isFloatingLayout =
-    activeStoryFormat === 'floating_widget' ||
-    activeStoryFormat === 'floating' ||
-    activeStoryFormat === 'widget';
+  const isFloatingLayout = activeStoryFormat === 'floating_widget';
+
   const isCarouselLayout = activeStoryFormat === 'carousel';
 
   return (
@@ -1515,7 +1518,8 @@ const [model, setModel] = useState<any | null>(null);
               <p className="mt-2 text-xs text-white/65">{story.title || 'Story'}</p>
             </div>
           </div>
-        ) : currentUrl && !videoError ? (
+        ) : isCarouselLayout && currentUrl && !videoError ? (
+
           (() => {
             const ytId = !isVideoPlayableNatively(currentVideo as any)
               ? extractYouTubeId(currentUrl)
