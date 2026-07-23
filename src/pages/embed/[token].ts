@@ -25,8 +25,15 @@ const buildScript = (block: any, baseUrl: string) => {
   var selector = script.getAttribute('data-selector') || '';
   var position = script.getAttribute('data-position') || 'beforeend';
   var storyId = script.getAttribute('data-story-id') || '';
-  var rules = JSON.parse(script.getAttribute('data-rules') || '[]');
+  var rules = [];
+  try {
+    rules = JSON.parse(script.getAttribute('data-rules') || '[]');
+    if (!Array.isArray(rules)) rules = [];
+  } catch (e) {
+    rules = [];
+  }
   var baseUrl = script.getAttribute('data-base-url') || '';
+
   var injectedIds = new Set();
 
   function normalizeUrl(url) {
@@ -55,7 +62,6 @@ const buildScript = (block: any, baseUrl: string) => {
   }
 
   function shouldRender() {
-    if (!rules.length) return true;
     for (var i = 0; i < rules.length; i++) {
       if (matchesRule(rules[i])) return true;
     }
