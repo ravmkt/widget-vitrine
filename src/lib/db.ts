@@ -366,10 +366,10 @@ const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   public_live_key: `pub_live_${Math.random().toString(36).substring(2, 26)}`,
 };
 
-const DEFAULT_RESPONSIVE_CONFIG: ResponsiveAppearanceConfig = {
+const createDefaultResponsiveConfig = (): ResponsiveAppearanceConfig => ({
   desktop: {},
   mobile: {},
-};
+});
 
 const DEFAULT_APPEARANCES: Appearance[] = [
   {
