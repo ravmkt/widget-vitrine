@@ -1386,62 +1386,73 @@
   }
 
     function renderInlineWidget(stories, appearance, format) {
-    if (!stories || !stories.length) return;
-
-    // Procura onde o usuário quer que o carrossel apareça na página
-    var targetDiv = document.getElementById('vidlytics-carousel-root') || document.getElementById('instory-root');
-
-    // Se não achar a div, cria uma e insere no topo do body
-    if (!targetDiv) {
-        targetDiv = createEl('div');
-        targetDiv.id = 'vidlytics-carousel-root';
-        if (document.body.firstChild) {
-            document.body.insertBefore(targetDiv, document.body.firstChild);
-        } else {
-            document.body.appendChild(targetDiv);
-        }
-    }
-
-    targetDiv.innerHTML = ''; // Limpa antes de renderizar
-
-    // Cria o Shadow DOM para isolar o CSS (igual o flutuante faz)
-    var shadow = targetDiv.shadowRoot || targetDiv.attachShadow({ mode: 'open' });
-
-    var cfg = getFloatingConfig(appearance);
-    var behavior = getFloatingBehaviorConfig(appearance);
-    var font = getFontFamily(appearance);
-
-    // CSS específico para Carrossel e Grade
-    var inlineCss = ':host { display: block; width: 100%; margin: 20px 0; font-family: ' + font + ' !important; }'
-      + buildSharedCss(appearance) // Traz o CSS do modal/player que já existe
-      + '.vl-inline-container { display: flex; gap: 12px; padding: 10px; }'
-      + '.vl-carousel { overflow-x: auto; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }'
-      + '.vl-carousel::-webkit-scrollbar { display: none; }'
-      + '.vl-grid { flex-wrap: wrap; justify-content: center; }'
-      + '.vl-bubble { all: unset; flex: 0 0 auto; width: ' + cfg.width + ' !important; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }'
-      + '.vl-ring { width: ' + cfg.width + ' !important; height: ' + cfg.height + ' !important; border-radius: ' + cfg.radius + ' !important; padding: ' + cfg.borderWidth + ' !important; position: relative; background: linear-gradient(135deg, ' + getPrimaryColor(appearance) + ', ' + getSecondaryColor(appearance) + ') !important; box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important; }'
-      + '.vl-inner { width: 100%; height: 100%; border-radius: ' + cfg.innerRadius + ' !important; overflow: hidden; background: #000; position: relative; }'
-      + '.vl-img { width: 100%; height: 100%; object-fit: cover; }'
-      + '.vl-label { width: ' + cfg.width + ' !important; font-size: 11px; font-weight: 700; color: ' + (readAppearanceValue(appearance, ['text_color']) || '#333') + ' !important; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }';
-
-    var style = createEl('style');
-    style.textContent = inlineCss;
-    shadow.appendChild(style);
-
-    var wrapper = createEl('div', 'vl-inline-container ' + (format === 'grid' || format === 'grade' ? 'vl-grid' : 'vl-carousel'));
-
+      if (!stories || !stories.length) return;
+  
+      var targetDiv = document.getElementById('vidlytics-carousel-root') || document.getElementById('instory-root');
+  
+      if (!targetDiv) {
+          targetDiv = createEl('div');
+          targetDiv.id = 'vidlytics-carousel-root';
+          if (document.body.firstChild) {
+              document.body.insertBefore(targetDiv, document.body.firstChild);
+          } else {
+              document.body.appendChild(targetDiv);
+          }
+      }
+  
+      targetDiv.innerHTML = '';
+  
+      var shadow = targetDiv.shadowRoot || targetDiv.attachShadow({ mode: 'open' });
+      shadow.innerHTML = '';
+  
+      appearance = normalizeAppearanceItem(appearance || {});
+      var inlineConfig = normalizeAppearanceItem({
+        spacing: firstDefined(readAppearanceValue(appearance, ['spacing', 'gap', 'grid_gap', 'card_gap']), 12),
+        items_visible: firstDefined(readAppearanceValue(appearance, ['items_visible', 'itemsVisible', 'visible_items', 'visibleItems']), 3),
+        columns: firstDefined(readAppearanceValue(appearance, ['columns', 'grid_columns', 'gridColumns']), 3),
+        card_radius: firstDefined(readAppearanceValue(appearance, ['card_radius', 'cardRadius', 'border_radius', 'borderRadius', 'radius']), 8),
+        object_fit: firstDefined(readAppearanceValue(appearance, ['object_fit', 'objectFit', 'image_fit', 'imageFit']), 'cover'),
+        format_style: firstDefined(readAppearanceValue(appearance, ['format_style', 'formatStyle', 'story_format', 'storyFormat', 'aspect_ratio', 'aspectRatio']), '9:16')
+      });
+  
+      var spacing = Math.max(0, toNumber(inlineConfig.spacing, 12));
+      var itemsVisible = Math.max(1, toNumber(inlineConfig.items_visible, 3));
+      var columns = Math.max(1, toNumber(inlineConfig.columns, 3));
+      var cardRadius = Math.max(0, toNumber(inlineConfig.card_radius, 8));
+      var objectFit = String(inlineConfig.object_fit || 'cover').toLowerCase();
+      var formatStyle = String(inlineConfig.format_style || '9:16').toLowerCase();
+      var isPortrait = formatStyle.indexOf('9:16') !== -1 || formatStyle.indexOf('retrato') !== -1 || formatStyle.indexOf('portrait') !== -1;
+  
+      var inlineCss = ':host{display:block;width:100%;font-family:' + getFontFamily(appearance) + ' !important;}'
+        + buildSharedCss(appearance)
+        + '.vidlytics-inline-root{width:100%;display:flex;flex-direction:column;gap:12px;}'
+        + '.vidlytics-inline-track{width:100%;display:flex;gap:' + spacing + 'px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}'
+        + '.vidlytics-inline-track::-webkit-scrollbar{display:none;}'
+        + '.vidlytics-inline-grid{width:100%;display:grid;grid-template-columns:repeat(' + columns + ', minmax(0, 1fr));gap:' + spacing + 'px;}'
+        + '.vidlytics-inline-card{flex:0 0 calc((100% - (' + spacing + 'px * ' + (itemsVisible - 1) + ')) / ' + itemsVisible + ');scroll-snap-align:start;min-width:0;}'
+        + '.vidlytics-inline-grid .vidlytics-inline-card{flex:none;width:100%;}'
+        + '.vidlytics-inline-media{width:100%;' + (isPortrait ? 'aspect-ratio:9/16;' : '') + 'object-fit:' + objectFit + ';border-radius:' + cardRadius + 'px;display:block;overflow:hidden;}'
+        + '.vidlytics-inline-media img,.vidlytics-inline-media video{width:100%;height:100%;object-fit:' + objectFit + ';display:block;}'
+        + '.vidlytics-inline-title{margin-top:8px;font-size:11px;font-weight:700;color:' + (readAppearanceValue(appearance, ['text_color']) || '#333') + ';text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}';
+  
+      var style = createEl('style');
+      style.textContent = inlineCss;
+      shadow.appendChild(style);
+  
+      var root = createEl('div', 'vidlytics-inline-root');
+      var wrapper = createEl('div', format === 'grid' || format === 'grade' ? 'vidlytics-inline-grid' : 'vidlytics-inline-track');
+  
     stories.forEach(function (story, index) {
       var bubbleVideo = story.videos && story.videos.length > 0 ? story.videos[0] : null;
       var videoUrl = bubbleVideo ? getVideoUrl(bubbleVideo) : '';
       var cover = getStoryThumbnail(story, bubbleVideo, null);
 
-      var bubble = createEl('button', 'vl-bubble');
-      var ring = createEl('div', 'vl-ring');
-      var inner = createEl('div', 'vl-inner');
+      var card = createEl('button', 'vidlytics-inline-card');
+      var mediaWrap = createEl('div', 'vidlytics-inline-media');
 
       var mediaEl;
       if (videoUrl && isDirectVideoUrl(videoUrl)) {
-        mediaEl = createEl('video', 'vl-img');
+        mediaEl = createEl('video');
         mediaEl.src = videoUrl;
         if (cover) mediaEl.poster = cover;
         mediaEl.muted = true;
@@ -1449,30 +1460,30 @@
         mediaEl.autoplay = true;
         mediaEl.setAttribute('playsinline', '');
       } else {
-        mediaEl = createEl('img', 'vl-img');
+        mediaEl = createEl('img');
         if (cover) mediaEl.src = cover;
       }
-      
-      inner.appendChild(mediaEl);
-      ring.appendChild(inner);
-      bubble.appendChild(ring);
+
+      mediaEl.className = 'w-full h-full';
+      mediaWrap.appendChild(mediaEl);
+      card.appendChild(mediaWrap);
 
       var modalCfg = normalizeModalAppearanceConfig(appearance);
       if (modalCfg.show_title) {
-        var label = createEl('span', 'vl-label');
+        var label = createEl('span', 'vidlytics-inline-title');
         label.textContent = story.title || '';
-        bubble.appendChild(label);
+        card.appendChild(label);
       }
 
-      // Ao clicar, abre o modal principal (o mesmo do flutuante)
-      bubble.addEventListener('click', function (e) {
+      card.addEventListener('click', function (e) {
         openStoryViewer(stories, index);
       });
 
-      wrapper.appendChild(bubble);
+      wrapper.appendChild(card);
     });
 
-    shadow.appendChild(wrapper);
+    root.appendChild(wrapper);
+    shadow.appendChild(root);
   }
 
 
