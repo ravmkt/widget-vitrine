@@ -1388,16 +1388,27 @@
     function renderInlineWidget(stories, appearance, format) {
       if (!stories || !stories.length) return;
   
-      var targetDiv = document.getElementById('vidlytics-carousel-root') || document.getElementById('instory-root');
+      var targetDiv = null;
+      var selectorValue = readAppearanceValue(appearance, ['css_selector', 'inline_selector', 'cssSelector', 'inlineSelector']);
+  
+      if (selectorValue) {
+          try {
+              targetDiv = document.querySelector(String(selectorValue));
+          } catch (e) {}
+      }
+  
+      if (!targetDiv) {
+          targetDiv = document.getElementById('vidlytics-carousel-root') || document.getElementById('instory-root');
+      }
+  
+      if (!targetDiv) {
+          targetDiv = document.querySelector('main') || document.getElementById('MainContent') || document.querySelector('#MainContent') || document.querySelector('[role="main"]');
+      }
   
       if (!targetDiv) {
           targetDiv = createEl('div');
           targetDiv.id = 'vidlytics-carousel-root';
-          if (document.body.firstChild) {
-              document.body.insertBefore(targetDiv, document.body.firstChild);
-          } else {
-              document.body.appendChild(targetDiv);
-          }
+          document.body.appendChild(targetDiv);
       }
   
       targetDiv.innerHTML = '';
@@ -1423,13 +1434,15 @@
       var formatStyle = String(inlineConfig.format_style || '9:16').toLowerCase();
       var isPortrait = formatStyle.indexOf('9:16') !== -1 || formatStyle.indexOf('retrato') !== -1 || formatStyle.indexOf('portrait') !== -1;
   
-      var inlineCss = ':host{display:block;width:100%;font-family:' + getFontFamily(appearance) + ' !important;}'
+      var inlineCss = ':host{display:block;width:100%;max-width:1200px;margin:0 auto;padding:0 15px;box-sizing:border-box;font-family:' + getFontFamily(appearance) + ' !important;}'
         + buildSharedCss(appearance)
-        + '.vidlytics-inline-root{width:100%;display:flex;flex-direction:column;gap:12px;}'
+        + '.vidlytics-inline-root{width:100%;display:flex;flex-direction:column;gap:12px;box-sizing:border-box;}'
+  
         + '.vidlytics-inline-track{width:100%;display:flex;gap:' + spacing + 'px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}'
         + '.vidlytics-inline-track::-webkit-scrollbar{display:none;}'
         + '.vidlytics-inline-grid{width:100%;display:grid;grid-template-columns:repeat(' + columns + ', minmax(0, 1fr));gap:' + spacing + 'px;}'
-        + '.vidlytics-inline-card{flex:0 0 calc((100% - (' + spacing + 'px * ' + (itemsVisible - 1) + ')) / ' + itemsVisible + ');scroll-snap-align:start;min-width:0;}'
+        + '.vidlytics-inline-card{appearance:none;background:transparent;border:none;padding:0;margin:0;text-align:left;cursor:pointer;display:flex;flex-direction:column;flex:0 0 calc((100% - (' + spacing + 'px * ' + (itemsVisible - 1) + ')) / ' + itemsVisible + ');scroll-snap-align:start;min-width:0;}'
+  
         + '.vidlytics-inline-grid .vidlytics-inline-card{flex:none;width:100%;}'
         + '.vidlytics-inline-media{width:100%;' + (isPortrait ? 'aspect-ratio:9/16;' : '') + 'object-fit:' + objectFit + ';border-radius:' + cardRadius + 'px;display:block;overflow:hidden;}'
         + '.vidlytics-inline-media img,.vidlytics-inline-media video{width:100%;height:100%;object-fit:' + objectFit + ';display:block;}'
