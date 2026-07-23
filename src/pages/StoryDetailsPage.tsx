@@ -730,9 +730,9 @@ const StoryDetailsPage = () => {
                   </div>
                 </div>
 
-                {pageRules.map((rule) => (
+                {pageRules.map((rule, index) => (
                   <div key={rule.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                    <div className="grid gap-4 md:grid-cols-[220px_1fr] md:items-end">
+                    <div className="grid gap-4 md:grid-cols-[220px_1fr_auto] md:items-end">
                       <div className="space-y-2">
                         <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">REGRA</label>
                         <select value={rule.condition_type} onChange={(event) => handleUpdatePageRule(rule.id, { condition_type: event.target.value as PageRuleCondition })} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none">
@@ -752,6 +752,14 @@ const StoryDetailsPage = () => {
                           <div className="h-[34px] rounded-xl border border-dashed border-slate-200 bg-slate-50" />
                         )}
                       </div>
+
+                      <div className="flex items-end justify-end">
+                        {pageRules.length > 1 && (
+                          <button type="button" onClick={() => handleDeletePageRule(rule.id)} className="rounded-xl border border-rose-200 bg-white px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-50">
+                            Remover
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -759,6 +767,7 @@ const StoryDetailsPage = () => {
                 <button type="button" onClick={handleAddPageRule} className="rounded-xl bg-[#0094EB] px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-sm hover:bg-[#0E4787]">
                   + Adicionar página
                 </button>
+
               </div>
             </div>
 
