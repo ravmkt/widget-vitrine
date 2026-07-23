@@ -79,7 +79,6 @@ const buildScript = (block: any, baseUrl: string) => {
           return;
         }
         if (Date.now() - start >= timeout) {
-          console.warn('[Vidlytics] Seletor não encontrado após o tempo limite:', selector);
           resolve(null);
           return;
         }
@@ -110,10 +109,23 @@ const buildScript = (block: any, baseUrl: string) => {
 
   function insertHost(target, host) {
     if (!target || !host || host.parentNode) return;
-    if (position === 'beforebegin' && target.parentNode) target.parentNode.insertBefore(host, target);
-    else if (position === 'afterend' && target.parentNode) target.parentNode.insertBefore(host, target.nextSibling);
-    else if (position === 'afterbegin') target.insertBefore(host, target.firstChild);
-    else target.appendChild(host);
+    if (position === 'beforebegin' && target.parentNode) {
+      target.parentNode.insertBefore(host, target);
+      return;
+    }
+    if (position === 'afterend' && target.parentNode) {
+      target.parentNode.insertBefore(host, target.nextSibling);
+      return;
+    }
+    if (position === 'afterbegin') {
+      target.insertBefore(host, target.firstChild);
+      return;
+    }
+    if (position === 'beforeend') {
+      target.appendChild(host);
+      return;
+    }
+    console.warn('[Vidlytics] Posição inválida ou seletor sem suporte:', position);
   }
 
   function renderIntoHost(host) {
@@ -135,10 +147,19 @@ const buildScript = (block: any, baseUrl: string) => {
 
   async function inject() {
     if (!shouldRender()) return;
+    if (!selector) {
+      console.warn('[Vidlytics] Nenhum seletor configurado para este Story.');
+      return;
+    }
+
+    var target = await waitForElement(selector, 8000);
+    if (!target) {
+      console.warn('[Vidlytics] Seletor não encontrado, Story não será renderizado:', selector);
+      return;
+    }
+
     var host = createHost();
     if (host.parentNode) return;
-    var target = selector ? await waitForElement(selector, 8000) : document.body;
-    if (!target) return;
     insertHost(target, host);
     renderIntoHost(host);
   }
