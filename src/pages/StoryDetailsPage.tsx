@@ -121,15 +121,52 @@ type PageRuleUi = {
 
 type DisplayLocationUi = DisplayLocation;
 
-const mapDbRuleToUiRule = (rule: any): PageRuleUi => ({
-  id: rule.id,
-  store_id: rule.store_id,
-  story_id: rule.story_id,
-  condition_type: (rule.condition_type as PageRuleCondition) || 'all_pages',
-  value: rule.value || '',
-  created_at: rule.created_at,
-  updated_at: rule.updated_at,
-});
+const mapDbRuleToUiRule = (rule: any): PageRuleUi => {
+  const legacyRuleType = String(rule.rule_type || '').toLowerCase();
+  const legacyMatchType = String(rule.match_type || '').toLowerCase();
+  const legacyPageType = String(rule.page_type || '').toLowerCase();
+  const legacyUrl = String(rule.page_url || rule.url_pattern || '').trim();
+
+  let condition_type: PageRuleCondition = 'all_pages';
+  let value = '';
+
+  if (rule.condition_type) {
+    condition_type = rule.condition_type as PageRuleCondition;
+    value = String(rule.value || '').trim();
+  } else if (legacyRuleType === 'contains' || legacyRuleType === 'url_contains') {
+    condition_type = 'url_contains';
+    value = legacyUrl;
+  } else if (legacyRuleType === 'not_contains' || legacyRuleType === 'url_not_contains') {
+    condition_type = 'url_not_contains';
+    value = legacyUrl;
+  } else if (legacyRuleType === 'equals' || legacyRuleType === 'url_equals') {
+    condition_type = 'url_not_equals';
+    value = legacyUrl;
+  } else if (legacyRuleType === 'home' || legacyPageType === 'home') {
+    condition_type = 'home';
+  } else if (legacyRuleType === 'all_pages' || legacyPageType === 'all_pages') {
+    condition_type = 'all_pages';
+  } else if (legacyMatchType === 'contains') {
+    condition_type = 'url_contains';
+    value = legacyUrl;
+  } else if (legacyMatchType === 'not_contains') {
+    condition_type = 'url_not_contains';
+    value = legacyUrl;
+  } else if (legacyMatchType === 'equals') {
+    condition_type = 'url_not_equals';
+    value = legacyUrl;
+  }
+
+  return {
+    id: rule.id,
+    store_id: rule.store_id,
+    story_id: rule.story_id,
+    condition_type,
+    value,
+    created_at: rule.created_at,
+    updated_at: rule.updated_at,
+  };
+};
 
 const mapUiRuleToDbRule = (rule: PageRuleUi, targetStoreId: string, targetStoryId: string, now: string) => ({
   id: isValidUuid(rule.id) ? rule.id : generateUuid(),
@@ -137,6 +174,12 @@ const mapUiRuleToDbRule = (rule: PageRuleUi, targetStoreId: string, targetStoryI
   story_id: targetStoryId,
   condition_type: rule.condition_type,
   value: CONDITION_TYPES_WITH_VALUE.includes(rule.condition_type) ? rule.value || '' : null,
+  rule_type: null,
+  match_type: null,
+  page_url: null,
+  url_pattern: null,
+  page_type: null,
+  active: true,
   created_at: rule.created_at || now,
   updated_at: now,
 } as unknown as PageRule & Record<string, any>);
@@ -203,7 +246,13 @@ const StoryDetailsPage = () => {
       const storyVideoIds = relations.filter((relation: any) => relation.story_id === currentStory.id && (!relation.store_id || relation.store_id === finalStoreId)).sort((a: any, b: any) => Number(a.position || 0) - Number(b.position || 0)).map((relation: any) => relation.video_id).filter((videoId: any) => videoId && isValidUuid(videoId));
       setSelectedVideoIds(storyVideoIds);
       setLocations(locs.filter((location: any) => location.story_id === currentStory.id && (!location.store_id || location.store_id === finalStoreId)));
-      setPageRules(rules.filter((rule: any) => rule.story_id === currentStory.id && (!rule.store_id || rule.store_id === finalStoreId)).map(mapDbRuleToUiRule));
+      setPageRules(
+        rules
+          .filter((rule: any) => rule.story_id === currentStory.id && (!rule.store_id || rule.store_id === finalStoreId))
+          .map(mapDbRuleToUiRule)
+          .filter((rule: PageRuleUi) => rule.condition_type || rule.value || rule.value === ''),
+      );
+
       setFormData({ title: currentStory.title || '', format: currentStory.format || 'carousel', scroll_direction: currentStory.scroll_direction || 'horizontal', active: Boolean(currentStory.active), appearance_id: currentStory.appearance_id && isValidUuid(currentStory.appearance_id) ? currentStory.appearance_id : '' });
     } catch (error) {
       console.error('Erro ao carregar Story:', error);
