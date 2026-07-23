@@ -690,7 +690,9 @@ const [model, setModel] = useState<any | null>(null);
       activeStory?.visual_style ||
       activeStory?.visualStyle ||
       'carousel',
-  ).toLowerCase();
+  )
+    .toLowerCase()
+    .trim();
 
   const currentVideos = story ? storyVideosMap.get(story.id) || [] : [];
   const currentVideo = currentVideos[videoIdx] ?? null;
@@ -915,21 +917,33 @@ const [model, setModel] = useState<any | null>(null);
               Number(a.position || 0) - Number(b.position || 0),
           );
 
-        const formatStories = activeStories.filter((item: any) => {
-          const storyFormat = String(item.format || item.display_format || 'carousel');
-          return storyFormat === 'carousel' || storyFormat === 'grid' || storyFormat === 'floating_widget';
+        const normalizedStories = activeStories.map((item: any) => {
+          const rawFormat = String(
+            item.format ||
+              item.display_format ||
+              item.displayFormat ||
+              item.visual_style ||
+              item.visualStyle ||
+              'carousel',
+          ).toLowerCase();
+
+          const format =
+            rawFormat === 'floating'
+              ? 'floating_widget'
+              : rawFormat === 'carrossel'
+                ? 'carousel'
+                : rawFormat;
+
+          return {
+            ...item,
+            format,
+            display_format: item.display_format || format,
+          };
         });
 
-        const activeStoriesWithFormat = formatStories;
-
         const filteredStories = storyIdParam
-          ? activeStoriesWithFormat.filter((item: any) => item.id === storyIdParam)
-          : activeStoriesWithFormat;
-
-        const normalizedStories = filteredStories.map((item: any) => ({
-          ...item,
-          format: String(item.format || item.display_format || 'carousel'),
-        }));
+          ? normalizedStories.filter((item: any) => item.id === storyIdParam)
+          : normalizedStories;
 
         const map = new Map<string, Video[]>();
 
@@ -1323,7 +1337,9 @@ const [model, setModel] = useState<any | null>(null);
     activeStoryFormat === 'floating' ||
     activeStoryFormat === 'widget';
   const isCarouselLayout =
-    activeStoryFormat === 'carousel' || activeStoryFormat === 'carrossel';
+    activeStoryFormat === 'carousel' ||
+    activeStoryFormat === 'carrossel' ||
+    (!isGridLayout && !isFloatingLayout);
 
   return (
     <div
@@ -1449,7 +1465,7 @@ const [model, setModel] = useState<any | null>(null);
               );
             })}
           </div>
-        ) : currentUrl && !videoError ? (
+        ) : isCarouselLayout && currentUrl && !videoError ? (
 
           (() => {
 
@@ -1489,6 +1505,13 @@ const [model, setModel] = useState<any | null>(null);
               />
             );
           })()
+        ) : isFloatingLayout && currentUrl && !videoError ? (
+          <div className="flex h-full items-center justify-center px-6 pt-20 text-center text-white/70">
+            <div className="max-w-[280px] rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
+              <p className="text-sm font-semibold text-white">Visual flutuante</p>
+              <p className="mt-2 text-xs text-white/65">{story.title || 'Story'}</p>
+            </div>
+          </div>
         ) : (
           <div className="flex h-full items-center justify-center px-8 text-center text-white/70">
             Nenhum vídeo vinculado
