@@ -4013,12 +4013,12 @@ insertCarouselHostBySelector(shadowData.host, displayLocations, pageRules);
     console.info('[Vidlytics] Modo de renderização:', mode, '| story format:', storyFormat, '| appearance type:', rawType || '(não definido)');
 
     if (mode === 'floating') {
-      renderFloatingBubbles(applicableStories, storyVideoMap, activeVideos);
-      forceHostPosition();
-      setTimeout(forceHostPosition, 100);
-      setTimeout(forceHostPosition, 500);
-      setTimeout(forceHostPosition, 1500);
-   } else if (mode === 'carousel') {
+  renderFloatingBubbles(applicableStories, storyVideoMap, activeVideos);
+  forceHostPosition();
+  setTimeout(forceHostPosition, 100);
+  setTimeout(forceHostPosition, 500);
+  setTimeout(forceHostPosition, 1500);
+} else if (mode === 'carousel') {
   renderCarousel(
     applicableStories,
     storyVideoMap,
@@ -4026,7 +4026,14 @@ insertCarouselHostBySelector(shadowData.host, displayLocations, pageRules);
     displayLocations,
     pageRules
   );
+} else if (mode === 'grid') {
+  renderGrid(
+    applicableStories,
+    storyVideoMap,
+    activeVideos
+  );
 }
+
 
   })
 
