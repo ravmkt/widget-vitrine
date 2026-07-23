@@ -887,7 +887,17 @@ const [model, setModel] = useState<any | null>(null);
         );
 
         const activeStories = (allStories || [])
-          .filter((item: any) => item.active !== false)
+          .filter((item: any) => {
+            if (
+              item.is_active === false || 
+              item.active === false || 
+              item.status === 'inactive' || 
+              item.status === 'inativo'
+            ) {
+              return false;
+            }
+            return true;
+          })
           .sort(
             (a: any, b: any) =>
               Number(a.position || 0) - Number(b.position || 0),
