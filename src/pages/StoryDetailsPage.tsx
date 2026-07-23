@@ -126,35 +126,30 @@ const mapDbRuleToUiRule = (rule: any): PageRuleUi => {
   const legacyMatchType = String(rule.match_type || '').toLowerCase();
   const legacyPageType = String(rule.page_type || '').toLowerCase();
   const legacyUrl = String(rule.page_url || rule.url_pattern || '').trim();
+  const storedCondition = String(rule.condition_type || '').trim();
+  const storedValue = String(rule.value || '').trim();
 
   let condition_type: PageRuleCondition = 'all_pages';
   let value = '';
 
-  if (rule.condition_type) {
-    condition_type = rule.condition_type as PageRuleCondition;
-    value = String(rule.value || '').trim();
-  } else if (legacyRuleType === 'contains' || legacyRuleType === 'url_contains') {
+  if (storedCondition) {
+    if (storedCondition === 'home' || storedCondition === 'all_pages' || storedCondition === 'url_contains' || storedCondition === 'url_not_contains' || storedCondition === 'url_not_equals') {
+      condition_type = storedCondition as PageRuleCondition;
+      value = CONDITION_TYPES_WITH_VALUE.includes(condition_type) ? storedValue : '';
+    }
+  } else if (legacyRuleType === 'contains' || legacyMatchType === 'contains') {
     condition_type = 'url_contains';
     value = legacyUrl;
-  } else if (legacyRuleType === 'not_contains' || legacyRuleType === 'url_not_contains') {
+  } else if (legacyRuleType === 'not_contains' || legacyMatchType === 'not_contains') {
     condition_type = 'url_not_contains';
     value = legacyUrl;
-  } else if (legacyRuleType === 'equals' || legacyRuleType === 'url_equals') {
+  } else if (legacyRuleType === 'equals' || legacyMatchType === 'equals') {
     condition_type = 'url_not_equals';
     value = legacyUrl;
   } else if (legacyRuleType === 'home' || legacyPageType === 'home') {
     condition_type = 'home';
   } else if (legacyRuleType === 'all_pages' || legacyPageType === 'all_pages') {
     condition_type = 'all_pages';
-  } else if (legacyMatchType === 'contains') {
-    condition_type = 'url_contains';
-    value = legacyUrl;
-  } else if (legacyMatchType === 'not_contains') {
-    condition_type = 'url_not_contains';
-    value = legacyUrl;
-  } else if (legacyMatchType === 'equals') {
-    condition_type = 'url_not_equals';
-    value = legacyUrl;
   }
 
   return {
@@ -250,7 +245,11 @@ const StoryDetailsPage = () => {
         rules
           .filter((rule: any) => rule.story_id === currentStory.id && (!rule.store_id || rule.store_id === finalStoreId))
           .map(mapDbRuleToUiRule)
-          .filter((rule: PageRuleUi) => rule.condition_type || rule.value || rule.value === ''),
+          .map((rule: PageRuleUi) => ({
+            ...rule,
+            condition_type: rule.condition_type || 'all_pages',
+            value: rule.value || '',
+          })),
       );
 
       setFormData({ title: currentStory.title || '', format: currentStory.format || 'carousel', scroll_direction: currentStory.scroll_direction || 'horizontal', active: Boolean(currentStory.active), appearance_id: currentStory.appearance_id && isValidUuid(currentStory.appearance_id) ? currentStory.appearance_id : '' });
