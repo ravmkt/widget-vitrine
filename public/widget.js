@@ -1385,6 +1385,99 @@
     });
   }
 
+    function renderInlineWidget(stories, appearance, format) {
+    if (!stories || !stories.length) return;
+
+    // Procura onde o usuário quer que o carrossel apareça na página
+    // Geralmente as lojas criam uma div com id "vidlytics-carousel-root" ou "instory-root"
+    var containerId = 'vidlytics-carousel-root';
+    var targetDiv = document.getElementById(containerId) || document.getElementById('instory-root');
+    
+    // Se não achar a div, tenta colocar no topo do body
+    if (!targetDiv) {
+        targetDiv = createEl('div');
+        targetDiv.id = containerId;
+        if (document.body.firstChild) {
+            document.body.insertBefore(targetDiv, document.body.firstChild);
+        } else {
+            document.body.appendChild(targetDiv);
+        }
+    }
+
+    targetDiv.innerHTML = ''; // Limpa antes de renderizar
+
+    // Cria o Shadow DOM para isolar o CSS (igual o flutuante faz)
+    var shadow = targetDiv.attachShadow({ mode: 'open' });
+    
+    var cfg = getFloatingConfig(appearance);
+    var behavior = getFloatingBehaviorConfig(appearance);
+    var font = getFontFamily(appearance);
+
+    // CSS específico para Carrossel e Grade
+    var inlineCss = ':host { display: block; width: 100%; margin: 20px 0; font-family: ' + font + ' !important; }'
+      + buildSharedCss(appearance) // Traz o CSS do modal/player que já existe
+      + '.vl-inline-container { display: flex; gap: 12px; padding: 10px; }'
+      + '.vl-carousel { overflow-x: auto; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }'
+      + '.vl-carousel::-webkit-scrollbar { display: none; }'
+      + '.vl-grid { flex-wrap: wrap; justify-content: center; }'
+      + '.vl-bubble { all: unset; flex: 0 0 auto; width: ' + cfg.width + ' !important; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }'
+      + '.vl-ring { width: ' + cfg.width + ' !important; height: ' + cfg.height + ' !important; border-radius: ' + cfg.radius + ' !important; padding: ' + cfg.borderWidth + ' !important; position: relative; background: linear-gradient(135deg, ' + getPrimaryColor(appearance) + ', ' + getSecondaryColor(appearance) + ') !important; box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important; }'
+      + '.vl-inner { width: 100%; height: 100%; border-radius: ' + cfg.innerRadius + ' !important; overflow: hidden; background: #000; position: relative; }'
+      + '.vl-img { width: 100%; height: 100%; object-fit: cover; }'
+      + '.vl-label { width: ' + cfg.width + ' !important; font-size: 11px; font-weight: 700; color: ' + (readAppearanceValue(appearance, ['text_color']) || '#333') + ' !important; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }';
+
+    var style = createEl('style');
+    style.textContent = inlineCss;
+    shadow.appendChild(style);
+
+    var wrapper = createEl('div', 'vl-inline-container ' + (format === 'grid' || format === 'grade' ? 'vl-grid' : 'vl-carousel'));
+
+    stories.forEach(function (story, index) {
+      var bubbleVideo = story.videos && story.videos.length > 0 ? story.videos[0] : null;
+      var videoUrl = bubbleVideo ? getVideoUrl(bubbleVideo) : '';
+      var cover = getStoryThumbnail(story, bubbleVideo, null);
+
+      var bubble = createEl('button', 'vl-bubble');
+      var ring = createEl('div', 'vl-ring');
+      var inner = createEl('div', 'vl-inner');
+
+      var mediaEl;
+      if (videoUrl && isDirectVideoUrl(videoUrl)) {
+        mediaEl = createEl('video', 'vl-img');
+        mediaEl.src = videoUrl;
+        if (cover) mediaEl.poster = cover;
+        mediaEl.muted = true;
+        mediaEl.loop = true;
+        mediaEl.autoplay = true;
+        mediaEl.setAttribute('playsinline', '');
+      } else {
+        mediaEl = createEl('img', 'vl-img');
+        if (cover) mediaEl.src = cover;
+      }
+      
+      inner.appendChild(mediaEl);
+      ring.appendChild(inner);
+      bubble.appendChild(ring);
+
+      var modalCfg = normalizeModalAppearanceConfig(appearance);
+      if (modalCfg.show_title) {
+        var label = createEl('span', 'vl-label');
+        label.textContent = story.title || '';
+        bubble.appendChild(label);
+      }
+
+      // Ao clicar, abre o modal principal (o mesmo do flutuante)
+      bubble.addEventListener('click', function (e) {
+        openStoryViewer(stories, index);
+      });
+
+      wrapper.appendChild(bubble);
+    });
+
+    shadow.appendChild(wrapper);
+  }
+
+
   function renderFloating(stories, appearance) {
     if (!stories || !stories.length || floatingWasClosed) return;
     if (!enableFloating) return;
