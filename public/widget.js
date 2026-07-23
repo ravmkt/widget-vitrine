@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.07.23-05';
+  var WIDGET_VERSION = '2026.07.23-06';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -1088,7 +1088,7 @@
       + 'width:100%!important;height:100%!important;min-height:0!important;overflow:hidden!important;}'
 
       + '.vl-player{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;'
-      + 'min-height:100%!important;z-index:1!important;background:#000!important;}'
+      + 'min-height:100%!important;z-index:1!important;background:#000!important;display:block!important;}'
 
       + '.vl-player video,.vl-player iframe{position:absolute!important;top:0!important;left:0!important;'
       + 'width:100%!important;height:100%!important;border:0!important;display:block!important;'
@@ -1415,8 +1415,8 @@
       + '.vl-bubbles{width:' + cfg.width + '!important;display:flex!important;flex-direction:column!important;align-items:' + cfg.alignItems + '!important;justify-content:flex-start!important;gap:10px!important;overflow:visible!important;position:relative!important;}'
       + '.vl-bubble{all:unset!important;width:' + cfg.width + '!important;min-width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;height:auto!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;gap:4px!important;cursor:pointer!important;overflow:visible!important;pointer-events:auto!important;}'
       + '.vl-ring{pointer-events:none!important;width:' + cfg.width + '!important;height:' + cfg.height + '!important;border-radius:' + cfg.radius + '!important;padding:' + cfg.borderWidth + '!important;overflow:hidden!important;display:block!important;position:relative!important;background:' + borderBackground + '!important;box-shadow:0 12px 30px rgba(15,23,42,.18)!important;}'
-      + '.vl-inner{pointer-events:none!important;width:100%!important;height:100%!important;border-radius:' + cfg.innerRadius + '!important;overflow:hidden!important;background:#000!important;display:flex!important;align-items:center!important;justify-content:center!important;font-weight:800!important;font-size:24px!important;color:#fff!important;}'
-      + '.vl-img{pointer-events:none!important;width:100%!important;height:100%!important;object-fit:' + behaviorConfig.objectFit + '!important;object-position:center!important;display:block!important;border-radius:' + cfg.innerRadius + '!important;}'
+      + '.vl-inner{pointer-events:none!important;position:relative!important;width:100%!important;height:100%!important;border-radius:' + cfg.innerRadius + '!important;overflow:hidden!important;background:#000!important;display:block!important;}'
+      + '.vl-img{pointer-events:none!important;position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;object-fit:' + behaviorConfig.objectFit + '!important;object-position:center!important;display:block!important;border:none!important;border-radius:' + cfg.innerRadius + '!important;}'
       + '.vl-play-badge{pointer-events:none!important;position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;width:34px!important;height:34px!important;border-radius:999px!important;background:rgba(15,23,42,.62)!important;color:#fff!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:15px!important;line-height:1!important;box-shadow:0 6px 18px rgba(0,0,0,.25)!important;}'
       + '.vl-play-badge::before{content:""!important;margin-left:3px!important;width:0!important;height:0!important;border-top:8px solid transparent!important;border-bottom:8px solid transparent!important;border-left:12px solid #fff!important;display:block!important;}'
       + '.vl-dismiss{all:unset!important;position:absolute!important;top:-10px!important;right:-10px!important;width:24px!important;height:24px!important;border-radius:999px!important;background:#0f172a!important;color:#fff!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:16px!important;font-weight:800!important;line-height:1!important;cursor:pointer!important;z-index:3!important;box-shadow:0 6px 18px rgba(0,0,0,.25)!important;pointer-events:auto!important;}'
@@ -1457,11 +1457,7 @@
     }
 
     if ((isUpload || isDirect) && url) {
-      wrapper.style.position = 'relative';
-      wrapper.style.width = '100%';
-      wrapper.style.minHeight = '300px';
-      wrapper.style.overflow = 'hidden';
-
+      // Estilos inline problemáticos que travavam o modal com a tela preta e deixavam ele curto foram removidos daqui!
       var media = createEl('video');
 
       media.controls = false;
@@ -1471,14 +1467,6 @@
       media.playsInline = true;
       media.muted = false;
       media.loop = true;
-
-      media.style.position = 'absolute';
-      media.style.top = '0';
-      media.style.left = '0';
-      media.style.width = '100%';
-      media.style.height = '100%';
-      media.style.objectFit = 'cover';
-      media.style.zIndex = '1';
 
       var thumb = getVideoThumbnail(video);
       if (thumb) media.poster = thumb;
@@ -1545,9 +1533,7 @@
       (
         !replyStatus ||
         replyStatus === 'replied' ||
-        replyStatus === 'responded' ||
         replyStatus === 'respondido' ||
-        replyStatus === 'answered' ||
         replyStatus === 'published' ||
         replyStatus === 'publicado'
       );
@@ -1954,16 +1940,38 @@
     var behavior = getFloatingBehaviorConfig(appearance);
 
     stories.forEach(function (story, index) {
-      var cover = getStoryThumbnail(story, null, null);
+      // Agora procuramos se o story tem algum vídeo e passamos ele pra bolinha tocar
+      var bubbleVideo = null;
+      if (story.videos && story.videos.length > 0) {
+        bubbleVideo = story.videos[0];
+      }
+      
+      var videoUrl = bubbleVideo ? getVideoUrl(bubbleVideo) : '';
+      var cover = getStoryThumbnail(story, bubbleVideo, null);
 
       var bubble = createEl('button', 'vl-bubble');
       var ring = createEl('div', 'vl-ring');
       var inner = createEl('div', 'vl-inner');
 
-      var img = createEl('img', 'vl-img');
-      img.src = cover;
-      img.loading = 'lazy';
-      inner.appendChild(img);
+      var mediaEl;
+      if (videoUrl && isDirectVideoUrl(videoUrl)) {
+        // Se tem vídeo em MP4, renderizamos a tag video em loop silencioso
+        mediaEl = createEl('video', 'vl-img');
+        mediaEl.src = videoUrl;
+        if (cover) mediaEl.poster = cover;
+        mediaEl.muted = true;
+        mediaEl.defaultMuted = true;
+        mediaEl.loop = true;
+        mediaEl.autoplay = true;
+        mediaEl.setAttribute('playsinline', '');
+        mediaEl.setAttribute('webkit-playsinline', '');
+      } else {
+        // Se for Youtube ou não tiver URL, mostramos a imagem
+        mediaEl = createEl('img', 'vl-img');
+        if (cover) mediaEl.src = cover;
+      }
+      mediaEl.loading = 'lazy';
+      inner.appendChild(mediaEl);
 
       if (behavior.showPlayButton) {
         var badge = createEl('span', 'vl-play-badge');
@@ -1996,8 +2004,6 @@
         if (e.target.closest('.vl-dismiss')) return;
         if (floatingWasDragged) { floatingWasDragged = false; return; }
         
-        // Chamada para abrir o visualizador de modal (a lógica completa do modal fica no seu buildStoriesHTML)
-        // Aqui conectamos com a UI principal do widget
         if (typeof window.VLStories !== 'undefined' && window.VLStories.open) {
            window.VLStories.open({ stories: stories }, index);
         }
@@ -2045,7 +2051,6 @@
 
       if (!stories || stories.length === 0) return;
 
-      // Valida as regras de exibição (URLs, etc)
       var match = false;
       if (!pageRules || pageRules.length === 0) {
         match = matchesUrl(appearance);
@@ -2055,7 +2060,6 @@
 
       if (!match) return;
 
-      // Popula a propriedade videos dentro de cada story para o Modal entender
       stories.forEach(function(story) {
          var rels = storyVideos.filter(function(sv) { return idsEqual(sv.story_id, story.id); });
          story.videos = rels.map(function(r) {
@@ -2070,7 +2074,6 @@
     });
   }
 
-  // Inicializa quando o DOM estiver pronto
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initWidget);
   } else {
