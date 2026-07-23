@@ -1436,7 +1436,8 @@
   
       var inlineCss = ':host{display:block;width:100%;max-width:1200px;margin:0 auto;padding:0 15px;box-sizing:border-box;font-family:' + getFontFamily(appearance) + ' !important;}'
         + buildSharedCss(appearance)
-        + '.vidlytics-inline-root{width:100%;display:flex;flex-direction:column;gap:12px;box-sizing:border-box;}'
+        + '.vidlytics-inline-root{width:100%;display:flex;flex-direction:row;gap:' + spacing + 'px;box-sizing:border-box;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;}'
+        + '.vidlytics-inline-root::-webkit-scrollbar{display:none;}'
   
         + '.vidlytics-inline-track{width:100%;display:flex;gap:' + spacing + 'px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}'
         + '.vidlytics-inline-track::-webkit-scrollbar{display:none;}'
