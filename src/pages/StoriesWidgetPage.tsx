@@ -914,6 +914,11 @@ const [model, setModel] = useState<any | null>(null);
           ? activeStoriesWithFormat.filter((item: any) => item.id === storyIdParam)
           : activeStoriesWithFormat;
 
+        const normalizedStories = filteredStories.map((item: any) => ({
+          ...item,
+          format: String(item.format || item.display_format || 'carousel'),
+        }));
+
         const map = new Map<string, Video[]>();
 
         filteredStories.forEach((currentStory: any) => {
@@ -958,7 +963,8 @@ const [model, setModel] = useState<any | null>(null);
           }
         }
 
-        setStories(filteredStories);
+        setStories(normalizedStories);
+
         setStoryVideosMap(map);
         setStoryIdx(startStoryIdx);
         setVideoIdx(startVideoIdx);
