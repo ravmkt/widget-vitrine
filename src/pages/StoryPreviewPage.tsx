@@ -207,6 +207,25 @@ const StoryPreviewPage = () => {
   const currentVideo = videos[activeVideoIdx] || null;
   const currentUrl = getVideoUrl(currentVideo);
   const posterUrl = getVideoPosterUrl(currentVideo);
+  const rawStoryFormat = String(
+    (story as any)?.format ||
+      (story as any)?.display_format ||
+      (story as any)?.displayFormat ||
+      (story as any)?.visual_style ||
+      (story as any)?.visualStyle ||
+      'carousel',
+  ).toLowerCase().trim();
+  const storyFormat =
+    rawStoryFormat === 'carrossel'
+      ? 'carousel'
+      : rawStoryFormat === 'floating'
+        ? 'floating_widget'
+        : rawStoryFormat === 'grid'
+          ? 'grid'
+          : 'carousel';
+  const isGridLayout = storyFormat === 'grid';
+  const isFloatingLayout = storyFormat === 'floating_widget';
+  const isCarouselLayout = storyFormat === 'carousel';
 
   const commentCount = useMemo(() => comments.length, [comments]);
   const modelData = useMemo(() => parseMeasures(model), [model]);
@@ -647,8 +666,8 @@ const StoryPreviewPage = () => {
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center overflow-hidden bg-neutral-950">
-      <div className="story-viewer story-modal-content relative h-full w-full max-w-[420px] overflow-hidden bg-black sm:aspect-[9/16] sm:max-h-[90vh] sm:rounded-[36px]">
+    <div className={cn('fixed inset-0 overflow-hidden bg-neutral-950', isFloatingLayout ? 'flex items-end justify-end p-4' : 'flex items-center justify-center')}>
+      <div className={cn('story-viewer story-modal-content relative overflow-hidden bg-black', isGridLayout ? 'h-full w-full max-w-[1100px]' : isCarouselLayout ? 'h-full w-full max-w-[420px] sm:aspect-[9/16] sm:max-h-[90vh] sm:rounded-[36px]' : 'h-[320px] w-[320px] rounded-[28px]')}>
         <div className="progress-bars story-progress absolute left-4 right-4 top-3 z-[80] flex gap-1.5">
           {videos.length > 0 ? (
             videos.map((video, idx) => (
@@ -677,102 +696,76 @@ const StoryPreviewPage = () => {
           </div>
         </div>
 
-        <div className="top-actions absolute right-3 top-4 z-[90] flex items-center gap-1.5">
-          <button
-            type="button"
-            className="top-action-button only-top-control flex h-[32px] w-[32px] min-h-[32px] min-w-[32px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm"
-            onClick={handleToggleMute}
-            aria-label={muted ? 'Ativar som' : 'Desativar som'}
-          >
-            {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-          </button>
-
-          <button
-            type="button"
-            className="top-action-button only-top-control flex h-[32px] w-[32px] min-h-[32px] min-w-[32px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm"
-            onClick={handleTogglePlay}
-            aria-label={playing ? 'Pausar' : 'Reproduzir'}
-          >
-            {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-          </button>
-
-          <button
-            type="button"
-            className="top-action-button only-top-control flex h-[32px] w-[32px] min-h-[32px] min-w-[32px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm"
-            onClick={close}
-            aria-label="Fechar"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        {currentUrl && !videoError ? (
-          (() => {
-            const ytId = !isVideoPlayableNatively(currentVideo as any)
-              ? extractYouTubeId(currentUrl)
-              : '';
-            const sharedProps = {
-              key: currentVideo?.id,
-              className: 'h-full w-full object-cover',
-            };
-
-            if (ytId) {
+        {isGridLayout ? (
+          <div className="grid h-full w-full grid-cols-1 gap-3 overflow-auto p-4 pt-20 sm:grid-cols-2">
+            {videos.map((video, idx) => {
+              const thumb = getVideoPosterUrl(video);
               return (
-                <iframe
-                  {...sharedProps}
-                  src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=${muted ? 1 : 0}&playsinline=1&rel=0`}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  title={story.title || 'Story'}
-                />
+                <button key={video.id} type="button" onClick={() => setActiveVideoIdx(idx)} className="relative aspect-[9/16] overflow-hidden rounded-3xl bg-slate-900">
+                  {thumb ? <img src={thumb} alt={video.title || 'Vídeo'} className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center text-white/60">Vídeo</div>}
+                  <div className="absolute inset-0 bg-black/10" />
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 text-left">
+                    <p className="truncate text-xs font-black text-white">{video.title || 'Sem título'}</p>
+                  </div>
+                </button>
               );
-            }
+            })}
+          </div>
+        ) : isCarouselLayout ? (
+          <>
+            <div className="top-actions absolute right-3 top-4 z-[90] flex items-center gap-1.5">
+              <button
+                type="button"
+                className="top-action-button only-top-control flex h-[32px] w-[32px] min-h-[32px] min-w-[32px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm"
+                onClick={handleToggleMute}
+                aria-label={muted ? 'Ativar som' : 'Desativar som'}
+              >
+                {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              </button>
 
-            return (
-              <video
-                {...sharedProps}
-                ref={videoRef}
-                src={currentUrl}
-                poster={posterUrl || undefined}
-                autoPlay
-                playsInline
-                muted={muted}
-                onEnded={goNext}
-                onPlay={() => setPlaying(true)}
-                onPause={() => setPlaying(false)}
-                onError={() => setVideoError(true)}
-              />
-            );
-          })()
+              <button
+                type="button"
+                className="top-action-button only-top-control flex h-[32px] w-[32px] min-h-[32px] min-w-[32px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm"
+                onClick={handleTogglePlay}
+                aria-label={playing ? 'Pausar' : 'Reproduzir'}
+              >
+                {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              </button>
+
+              <button
+                type="button"
+                className="top-action-button only-top-control flex h-[32px] w-[32px] min-h-[32px] min-w-[32px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm"
+                onClick={close}
+                aria-label="Fechar"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {currentUrl && !videoError ? (() => {
+              const ytId = !isVideoPlayableNatively(currentVideo as any) ? extractYouTubeId(currentUrl) : '';
+              const sharedProps = { key: currentVideo?.id, className: 'h-full w-full object-cover' };
+              if (ytId) {
+                return <iframe {...sharedProps} src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=${muted ? 1 : 0}&playsinline=1&rel=0`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen title={story.title || 'Story'} />;
+              }
+              return <video {...sharedProps} ref={videoRef} src={currentUrl} poster={posterUrl || undefined} autoPlay playsInline muted={muted} onEnded={goNext} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onError={() => setVideoError(true)} />;
+            })() : <div className="flex h-full items-center justify-center px-8 text-center text-white/70">Nenhum vídeo vinculado</div>}
+
+            {videos.length > 1 && (
+              <>
+                <button type="button" onClick={goPrev} className="nav-left nav-button absolute left-3 top-1/2 z-[85] flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/80 bg-black/15 text-white backdrop-blur-sm" aria-label="Vídeo anterior"><ChevronLeft className="h-5 w-5" /></button>
+                <button type="button" onClick={goNext} className="nav-right nav-button absolute right-3 top-1/2 z-[85] flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/80 bg-black/15 text-white backdrop-blur-sm" aria-label="Próximo vídeo"><ChevronRight className="h-5 w-5" /></button>
+              </>
+            )}
+          </>
         ) : (
-          <div className="flex h-full items-center justify-center px-8 text-center text-white/70">
-            Nenhum vídeo vinculado
+          <div className="flex h-full items-center justify-center px-6 text-center text-white/80">
+            Visual flutuante
           </div>
         )}
 
-        {videos.length > 1 && (
-          <>
-            <button
-              type="button"
-              onClick={goPrev}
-              className="nav-left nav-button absolute left-3 top-1/2 z-[85] flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/80 bg-black/15 text-white backdrop-blur-sm"
-              aria-label="Vídeo anterior"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-
-            <button
-              type="button"
-              onClick={goNext}
-              className="nav-right nav-button absolute right-3 top-1/2 z-[85] flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/80 bg-black/15 text-white backdrop-blur-sm"
-              aria-label="Próximo vídeo"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </>
-        )}
-
         <div className="social-actions absolute right-4 top-[61%] z-[90] flex -translate-y-1/2 flex-col items-center gap-2">
+
           <button
             type="button"
             onClick={handleLike}
