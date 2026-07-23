@@ -249,7 +249,6 @@ const StoryDetailsPage = () => {
           .map((location: any) => ({
             ...location,
             location: location.location || location.position || 'afterend',
-            page_type: location.page_type || 'all_pages',
             selector: location.selector || '',
             position: location.position || 'beforeend',
           })),
