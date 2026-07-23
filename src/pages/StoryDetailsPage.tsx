@@ -165,17 +165,6 @@ const mapDbRuleToUiRule = (rule: any): PageRuleUi => {
   };
 };
 
-const mapUiRuleToDbRule = (rule: PageRuleUi, targetStoreId: string, targetStoryId: string, now: string) => ({
-  id: isValidUuid(rule.id) ? rule.id : generateUuid(),
-  store_id: targetStoreId,
-  story_id: targetStoryId,
-  condition_type: rule.condition_type,
-  value: CONDITION_TYPES_WITH_VALUE.includes(rule.condition_type) ? rule.value || '' : null,
-  active: true,
-  created_at: rule.created_at || now,
-  updated_at: now,
-} as unknown as PageRule & Record<string, any>);
-
 
 const StoryDetailsPage = () => {
   const { storeId, loading: tenantLoading } = useTenant();
