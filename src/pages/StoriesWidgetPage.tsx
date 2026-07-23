@@ -999,13 +999,20 @@ const [model, setModel] = useState<any | null>(null);
     };
   }, [currentVideo?.id]);
 
-  const close = () => {
+const close = () => {
+  // Se estiver rodando dentro de um Iframe (na loja do cliente)
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'CLOSE_STORY_WIDGET' }, '*');
+    window.parent.postMessage('CLOSE_STORY_WIDGET', '*'); // Fallback
+  } else {
+    // Se estiver rodando direto na URL
     if (window.history.length > 1) {
       window.history.back();
     } else {
-      window.location.href = '/';
+      window.close();
     }
-  };
+  }
+};
 
   const handleTogglePlay = async () => {
     if (!videoRef.current) return;
