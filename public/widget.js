@@ -3624,36 +3624,46 @@ function getOrCreateCarouselShadowRoot() {
   };
 }
 
-ffunction insertCarouselHostBySelector(host, locations) {
+function insertCarouselHostBySelector(host, locations, rules) {
   if (!host) return;
 
-  var applicableLocations = (locations || []).filter(function (loc) {
-    if (!loc || loc.active === false || !loc.selector) return false;
-    return matchesRule(loc); // reaproveita a mesma lógica de page_rules
+  // 1. Verifica em page_rules (story_id) se deve mostrar
+  var storyRules = (rules || []).filter(function (r) {
+    return r && r.active !== false;
   });
+  var shouldShow = storyRules.length === 0 || storyRules.some(matchesRule);
 
-  if (applicableLocations.length) {
-    var loc = applicableLocations[0];
-    var target = document.querySelector(loc.selector);
+  if (shouldShow) {
+    var applicableLocations = (locations || []).filter(function (loc) {
+      return loc && loc.active !== false && loc.selector && loc.position;
+    });
 
-    if (target) {
-      switch (loc.position) {
-        case 'before':
-          target.parentNode && target.parentNode.insertBefore(host, target);
-          return;
-        case 'after':
-          target.parentNode && target.parentNode.insertBefore(host, target.nextSibling);
-          return;
-        case 'prepend':
-          target.insertBefore(host, target.firstChild);
-          return;
-        case 'append':
-        default:
-          target.appendChild(host);
-          return;
+    if (applicableLocations.length) {
+      var loc = applicableLocations[0];
+      var target = document.querySelector(loc.selector);
+
+      if (target) {
+        // position já vem no formato nativo: beforebegin | afterbegin | beforeend | afterend
+        target.insertAdjacentElement(loc.position, host);
+        return;
       }
     }
   }
+
+  // Fallback antigo
+  var header = document.querySelector('header') || document.querySelector('[role="banner"]') || document.querySelector('#menu') || document.querySelector('.menu');
+  if (header && header.parentNode) {
+    header.parentNode.insertBefore(host, header.nextSibling || null);
+    return;
+  }
+  var main = document.querySelector('main');
+  if (main && main.parentNode) {
+    main.parentNode.insertBefore(host, main);
+    return;
+  }
+  if (document.body) document.body.insertBefore(host, document.body.firstChild);
+}
+
 
   // Fallback antigo, só se não houver display_locations aplicável
   var header = document.querySelector('header') || document.querySelector('[role="banner"]') || document.querySelector('#menu') || document.querySelector('.menu');
