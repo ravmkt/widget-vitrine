@@ -585,15 +585,16 @@ const StoryDetailsPage = () => {
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Formato de Exibição</label>
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                     {[
-                      { id: 'floating_widget', label: 'Flutuante' },
-                      { id: 'carousel', label: 'Carrossel' },
-                      { id: 'grid', label: 'Grade' },
+                      { id: 'floating_widget', label: 'Flutuante', icon: 'pointer' },
+                      { id: 'carousel', label: 'Carrossel', icon: 'bars' },
+                      { id: 'grid', label: 'Grade', icon: 'grid' },
                     ].map((format) => {
                       const Icon = FORMAT_ICONS[format.id as keyof typeof FORMAT_ICONS];
 
                       return (
                         <button key={format.id} type="button" onClick={() => setFormData((prev) => ({ ...prev, format: format.id as StoryFormat }))} className={cn('flex flex-col items-center gap-3 rounded-3xl border-2 p-6 transition-all', formData.format === format.id ? 'border-[#0094EB] bg-blue-50 text-[#0094EB]' : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200')}>
-                          <Icon size={24} />
+                          <Icon size={24} strokeWidth={1.7} />
+  
                           <span className="text-[10px] font-black uppercase">{format.label}</span>
                         </button>
                       );
@@ -711,8 +712,25 @@ const StoryDetailsPage = () => {
               </div>
 
               <div className="space-y-4">
-                {pageRules.map((rule) => (
+                <div className="grid gap-4 md:grid-cols-[220px_1fr] md:items-end">
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">REGRA</label>
+                    <select className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none">
+                      {PAGE_RULE_OPTIONS.map((ruleOption) => (
+                        <option key={ruleOption.value} value={ruleOption.value}>
+                          {ruleOption.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">VALOR</label>
+                    <input type="text" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none" placeholder="/colecao, /produto/nome-do-produto ou trecho da URL" />
+                  </div>
+                </div>
+
+                {pageRules.map((rule) => (
                   <div key={rule.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
                     <div className="grid gap-4 md:grid-cols-[220px_1fr] md:items-end">
                       <div className="space-y-2">
@@ -738,8 +756,8 @@ const StoryDetailsPage = () => {
                   </div>
                 ))}
               </div>
-
             </div>
+
           </div>
         </div>
       </form>
