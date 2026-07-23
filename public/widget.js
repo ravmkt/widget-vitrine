@@ -3681,7 +3681,7 @@ function insertCarouselHostBySelector(host, locations, rules) {
 
 
 
-function renderCarousel(stories, storyVideoMap, activeVideos, dbLocations) {  // ← adiciona o 4º parâmetro
+function renderCarousel(stories, storyVideoMap, activeVideos, dbLocations, dbRules) {
     var appearance = currentAppearance || {};
     var modalConfig = normalizeModalAppearanceConfig(appearance);
     var shadowData = getOrCreateCarouselShadowRoot();
