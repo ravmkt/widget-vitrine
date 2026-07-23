@@ -3681,7 +3681,7 @@ function insertCarouselHostBySelector(host, locations, rules) {
 
 
 
-function renderCarousel(stories, storyVideoMap, activeVideos, dbLocations, dbRules) {
+function renderCarousel(stories, storyVideoMap, activeVideos, displayLocations, pageRules);
     var appearance = currentAppearance || {};
     var modalConfig = normalizeModalAppearanceConfig(appearance);
     var shadowData = getOrCreateCarouselShadowRoot();
