@@ -1009,6 +1009,25 @@ const [model, setModel] = useState<any | null>(null);
     };
   }, [currentVideo?.id]);
 
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    const isYt = !isVideoPlayableNatively(currentVideo as any) && extractYouTubeId(currentUrl);
+
+    if (isYt && playing) {
+      let ms = 0;
+      const duration = 15000;
+      interval = setInterval(() => {
+        ms += 100;
+        setProgress((ms / duration) * 100);
+        if (ms >= duration) {
+          clearInterval(interval);
+          goNext();
+        }
+      }, 100);
+    }
+    return () => { if (interval) clearInterval(interval); };
+  }, [currentVideo?.id, playing, currentUrl]);
+
   const close = () => {
     if (window.parent && window.parent !== window) {
       window.parent.postMessage({ type: 'CLOSE_STORY_WIDGET' }, '*');
