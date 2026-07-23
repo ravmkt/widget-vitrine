@@ -54,6 +54,8 @@ const FORMAT_ICONS = {
   grid: Layers,
 } as const;
 
+const PAGE_RULE_PREVIEW = { label: 'Regra' };
+
 const CONDITION_TYPES_WITH_VALUE: PageRuleCondition[] = ['url_contains', 'url_not_contains', 'url_not_equals'];
 
 const POSITION_OPTIONS = [
@@ -475,15 +477,6 @@ const StoryDetailsPage = () => {
           </button>
         </div>
 
-        <div className="mb-4 flex flex-wrap gap-3">
-          <button type="button" onClick={() => navigate('/videos/new')} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">
-            Criar novo vídeo
-          </button>
-          <button type="button" onClick={() => setIsGalleryOpen(false)} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">
-            Adicionar ao Story
-          </button>
-        </div>
-
         <div className="max-h-[70vh] overflow-y-auto pr-1">
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {allVideos.map((video) => {
@@ -680,13 +673,20 @@ const StoryDetailsPage = () => {
             </div>
 
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="space-y-4">
+              <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="mb-6 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="text-[#0094EB]" size={18} />
+                    <h4 className="text-sm font-black uppercase text-slate-800">Local de exibição</h4>
+                  </div>
+                </div>
+  
                 <div className="grid gap-4 md:grid-cols-[1fr_220px] md:items-end">
                   <div className="space-y-2">
                     <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">SELETOR CSS</label>
                     <input type="text" value={locations[0]?.selector || ''} onChange={(event) => setLocations((prev) => [{ ...(prev[0] || { id: generateUuid(), store_id: resolvedStoreId || '', story_id: story?.id || '', position: 'beforeend', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }), selector: event.target.value }])} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none" placeholder=".breadcrumbs" />
                   </div>
-
+  
                   <div className="space-y-2">
                     <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">POSIÇÃO</label>
                     <select value={locations[0]?.position || 'beforeend'} onChange={(event) => setLocations((prev) => [{ ...(prev[0] || { id: generateUuid(), store_id: resolvedStoreId || '', story_id: story?.id || '', selector: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }), position: event.target.value as DisplayPosition }])} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none">
@@ -699,7 +699,7 @@ const StoryDetailsPage = () => {
                   </div>
                 </div>
               </div>
-
+  
             </div>
 
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
