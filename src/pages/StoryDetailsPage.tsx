@@ -467,16 +467,7 @@ const StoryDetailsPage = () => {
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
               <div className="mb-6 flex items-center justify-between"><div className="flex items-center gap-2"><Globe className="text-[#0094EB]" size={18} /><h4 className="text-sm font-black uppercase text-slate-800">Qual página irá aparecer?</h4></div></div>
               <div className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-[220px_1fr] md:items-end">
-                  <div className="space-y-2"><label className="text-[9px] font-black uppercase tracking-widest text-slate-400">REGRA</label><select className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none">{PAGE_RULE_OPTIONS.map((ruleOption) => (<option key={ruleOption.value} value={ruleOption.value}>{ruleOption.label}</option>))}</select></div>
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">VALOR</label>
-                    <input type="text" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none" placeholder="/colecao, /produto/nome-do-produto ou trecho da URL" />
-                  </div>
-
-                </div>
-
-                {pageRules.map((rule) => (
+                  {pageRules.map((rule) => (
                   <div key={rule.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
                     <div className="grid gap-4 md:grid-cols-[220px_1fr_auto] md:items-end">
                       <div className="space-y-2"><label className="text-[9px] font-black uppercase tracking-widest text-slate-400">REGRA</label><select value={rule.condition_type} onChange={(event) => handleUpdatePageRule(rule.id, { condition_type: event.target.value as PageRuleCondition })} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none">{PAGE_RULE_OPTIONS.map((ruleOption) => (<option key={ruleOption.value} value={ruleOption.value}>{ruleOption.label}</option>))}</select></div>
