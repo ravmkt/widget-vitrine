@@ -755,6 +755,10 @@ const StoryDetailsPage = () => {
                     </div>
                   </div>
                 ))}
+
+                <button type="button" onClick={handleAddPageRule} className="rounded-xl bg-[#0094EB] px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-sm hover:bg-[#0E4787]">
+                  + Adicionar página
+                </button>
               </div>
             </div>
 
