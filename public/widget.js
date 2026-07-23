@@ -1439,7 +1439,7 @@
         + '.vidlytics-inline-root{width:100%;display:flex;flex-direction:row;gap:' + spacing + 'px;box-sizing:border-box;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;}'
         + '.vidlytics-inline-root::-webkit-scrollbar{display:none;}'
   
-        + '.vidlytics-inline-track{width:100%;display:flex !important;flex-direction:row !important;gap:15px;overflow-x:auto !important;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;}'
+        + '.vidlytics-inline-track{width:100%;display:flex !important;flex-direction:row !important;gap:' + spacing + 'px;overflow-x:auto !important;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;}'
         + '.vidlytics-inline-track::-webkit-scrollbar{display:none;}'
         + '.vidlytics-inline-track > *{flex:0 0 auto !important;scroll-snap-align:start;}'
         + '.vidlytics-inline-grid{width:100%;display:grid;grid-template-columns:repeat(' + columns + ', minmax(0, 1fr));gap:' + spacing + 'px;}'
