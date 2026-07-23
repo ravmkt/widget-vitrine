@@ -618,13 +618,10 @@ display_locations: [
   'selector',
   'position',
   'location',
-  'page_type',
-  'page_rule',
-  'page_value',
+  'active',
   'created_at',
   'updated_at',
 ],
-
 
 
   page_rules: [
