@@ -683,7 +683,15 @@ const [model, setModel] = useState<any | null>(null);
 
   const story = stories[storyIdx ?? -1] ?? null;
   const activeStory = story;
-  const activeStoryFormat = String(activeStory?.format || activeStory?.display_format || 'carousel');
+  const activeStoryFormat = String(
+    activeStory?.format ||
+      activeStory?.display_format ||
+      activeStory?.displayFormat ||
+      activeStory?.visual_style ||
+      activeStory?.visualStyle ||
+      'carousel',
+  ).toLowerCase();
+
   const currentVideos = story ? storyVideosMap.get(story.id) || [] : [];
   const currentVideo = currentVideos[videoIdx] ?? null;
 
@@ -1310,8 +1318,12 @@ const [model, setModel] = useState<any | null>(null);
   }
 
   const isGridLayout = activeStoryFormat === 'grid';
-  const isFloatingLayout = activeStoryFormat === 'floating_widget';
-  const isCarouselLayout = !isGridLayout && !isFloatingLayout;
+  const isFloatingLayout =
+    activeStoryFormat === 'floating_widget' ||
+    activeStoryFormat === 'floating' ||
+    activeStoryFormat === 'widget';
+  const isCarouselLayout =
+    activeStoryFormat === 'carousel' || activeStoryFormat === 'carrossel';
 
   return (
     <div
@@ -1327,8 +1339,13 @@ const [model, setModel] = useState<any | null>(null);
       <div
         className={cn(
           'relative h-full w-full overflow-hidden bg-black',
-          isGridLayout ? 'max-w-[780px] sm:max-h-screen' : 'max-w-[420px] sm:aspect-[9/16] sm:max-h-screen',
+          isGridLayout
+            ? 'max-w-[1080px] sm:max-h-screen'
+            : isCarouselLayout
+              ? 'max-w-[420px] sm:aspect-[9/16] sm:max-h-screen'
+              : 'max-w-[380px] sm:aspect-[9/16] sm:max-h-screen',
         )}
+
         style={{
           boxShadow: modalConfig.shadow_enabled
             ? '0 24px 80px rgba(0,0,0,0.45)'
@@ -1414,11 +1431,11 @@ const [model, setModel] = useState<any | null>(null);
         </div>
 
         {isGridLayout ? (
-          <div className="grid h-full w-full grid-cols-2 gap-3 overflow-auto p-4 pt-20">
+          <div className="grid h-full w-full grid-cols-1 gap-3 overflow-auto p-4 pt-20 sm:grid-cols-2">
             {currentVideos.map((video: any) => {
               const videoThumb = video.thumbnail_url || video.thumbnailUrl || video.poster_url || video.posterUrl || video.image_url || video.imageUrl || '';
               return (
-                <button key={video.id} type="button" className="relative aspect-[9/16] overflow-hidden rounded-2xl bg-slate-900" onClick={() => setVideoIdx(currentVideos.findIndex((item) => item.id === video.id))}>
+                <button key={video.id} type="button" className="relative aspect-[9/16] overflow-hidden rounded-3xl bg-slate-900" onClick={() => setVideoIdx(currentVideos.findIndex((item) => item.id === video.id))}>
                   {videoThumb ? (
                     <img src={videoThumb} alt={video.title || 'Vídeo'} className="h-full w-full object-cover" />
                   ) : (
@@ -1433,6 +1450,7 @@ const [model, setModel] = useState<any | null>(null);
             })}
           </div>
         ) : currentUrl && !videoError ? (
+
           (() => {
 
             const ytId = !isVideoPlayableNatively(currentVideo as any)
