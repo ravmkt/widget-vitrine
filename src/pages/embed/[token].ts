@@ -192,7 +192,29 @@ export async function GET(_: Request, { params }: { params: { token: string } })
     .eq('id', token)
     .maybeSingle();
 
-  const payload = buildScript(block || { id: token }, baseUrl);
+  let rules: Array<{ condition_type?: string; value?: string }> = [];
+  if (block?.story_id) {
+    const { data: pageRules } = await supabase
+      .from('page_rules')
+      .select('condition_type, value, active, story_id, store_id')
+      .eq('story_id', block.story_id)
+      .eq('active', true);
+
+    rules = (pageRules || [])
+      .filter((rule: any) => !block.store_id || rule.store_id === block.store_id)
+      .map((rule: any) => ({
+        condition_type: rule.condition_type,
+        value: rule.value,
+      }));
+  }
+
+  const payload = buildScript(
+    {
+      ...(block || { id: token }),
+      rules,
+    },
+    baseUrl,
+  );
 
   return new Response(payload, {
     headers: {
