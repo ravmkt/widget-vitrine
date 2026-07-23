@@ -889,9 +889,9 @@ const [model, setModel] = useState<any | null>(null);
         const activeStories = (allStories || [])
           .filter((item: any) => {
             if (
-              item.is_active === false || 
-              item.active === false || 
-              item.status === 'inactive' || 
+              item.is_active === false ||
+              item.active === false ||
+              item.status === 'inactive' ||
               item.status === 'inativo'
             ) {
               return false;
@@ -903,9 +903,16 @@ const [model, setModel] = useState<any | null>(null);
               Number(a.position || 0) - Number(b.position || 0),
           );
 
+        const formatStories = activeStories.filter((item: any) => {
+          const storyFormat = String(item.format || item.display_format || 'carousel');
+          return storyFormat === 'carousel' || storyFormat === 'grid' || storyFormat === 'floating_widget';
+        });
+
+        const activeStoriesWithFormat = formatStories;
+
         const filteredStories = storyIdParam
-          ? activeStories.filter((item: any) => item.id === storyIdParam)
-          : activeStories;
+          ? activeStoriesWithFormat.filter((item: any) => item.id === storyIdParam)
+          : activeStoriesWithFormat;
 
         const map = new Map<string, Video[]>();
 
