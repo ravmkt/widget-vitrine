@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.07.23-08';
+  var WIDGET_VERSION = '2026.07.23-10';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -9,7 +9,7 @@
   window.VIDLYTICS_WIDGET_VERSION = WIDGET_VERSION;
 
   console.log(
-    'VIDLYTICS WIDGET CARREGADO - FIX LOOP + CLICK ABRINDO MODAL'
+    'VIDLYTICS WIDGET CARREGADO - FIX LOOP + CLICK ABRINDO MODAL + FIX REGRAS DE URL'
   );
 
   var globalConfig =
@@ -673,26 +673,29 @@
     return fetchJson('sizing_models?select=*&store_id=eq.' + encodeURIComponent(storeId));
   }
 
+  // =========================================================================
+  // CORREÇÃO: Função matchesRule aprimorada para entender regras em português
+  // =========================================================================
   function matchesRule(rule) {
     if (!rule || rule.active === false) return false;
 
     var href = window.location.href;
     var path = window.location.pathname || '/';
 
-    var conditionType = String(
-      firstDefined(
-        rule.condition_type,
-        rule.rule_type,
-        rule.match_type
-      ) || ''
-    ).trim();
+    var rawCondition = String(
+      firstDefined(rule.condition_type, rule.rule_type, rule.match_type) || ''
+    ).trim().toLowerCase();
+
+    // Normaliza acentos para garantir que "contém" seja lido corretamente
+    var conditionType = rawCondition.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    if (conditionType.indexOf('contem') !== -1 || conditionType === 'url_contains') conditionType = 'contains';
+    if (conditionType.indexOf('exata') !== -1 || conditionType === 'url_equals' || conditionType === 'exact') conditionType = 'equals';
+    if (conditionType.indexOf('todas') !== -1 || conditionType === 'all') conditionType = 'all_pages';
+    if (conditionType.indexOf('inicial') !== -1 || conditionType === 'home') conditionType = 'home_only';
 
     var value = String(
-      firstDefined(
-        rule.url_pattern,
-        rule.page_url,
-        rule.value
-      ) || ''
+      firstDefined(rule.url_pattern, rule.page_url, rule.value) || ''
     ).trim();
 
     if (!conditionType) return true;
@@ -707,13 +710,10 @@
       case 'not_equals': return href !== value && path !== value;
       case 'starts_with': return href.indexOf(value) === 0 || path.indexOf(value) === 0;
       case 'ends_with': return href.endsWith(value) || path.endsWith(value);
-      case 'regex':
-        try { return new RegExp(value).test(href); } catch (e) { return false; }
-      default:
-        return true;
+      case 'regex': try { return new RegExp(value).test(href); } catch (e) { return false; }
+      default: return true;
     }
   }
-
 
   function matchesUrl(appearance) {
     if (!appearance) return true;
@@ -1599,10 +1599,6 @@
       if (emojiPicker.classList.contains('is-open')) contentInput.focus();
     });
 
-    editor.appendChild(contentInput);
-    editor.appendChild(emojiButton);
-    editor.appendChild(emojiPicker);
-
     document.addEventListener('click', function closeEmojiPicker(event) {
       if (emojiPicker.classList.contains('is-open') && !editor.contains(event.target)) {
         emojiPicker.classList.remove('is-open');
@@ -1674,8 +1670,6 @@
     }
     resumePreviews();
   }
-
-  // ============== NOVO CÓDIGO DO MODAL (INÍCIO) ============== //
   
   function renderStoryModal() {
     if (!modalContent) return;
@@ -1896,7 +1890,6 @@
     overlay.className = 'vl-overlay is-open';
     renderStoryModal();
   }
-  // ============== NOVO CÓDIGO DO MODAL (FIM) ============== //
 
   function svgIcon(name) {
     var icons = {
@@ -1924,7 +1917,7 @@
     el.addEventListener('mousedown', function (e) {
       if (e.target.closest('.vl-dismiss')) return;
       isDragging = true;
-      floatingWasDragged = false; // Resetando o arraste
+      floatingWasDragged = false; 
       startX = e.clientX;
       startY = e.clientY;
       var rect = el.getBoundingClientRect();
@@ -1938,7 +1931,6 @@
       var dx = startX - e.clientX;
       var dy = startY - e.clientY;
 
-      // CORREÇÃO: Só aciona o arraste se mover o mouse em mais de 3 pixels
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
           floatingWasDragged = true; 
           el.style.right = (initialRight + dx) + 'px';
@@ -1995,11 +1987,11 @@
         mediaEl.autoplay = true;
         mediaEl.setAttribute('playsinline', '');
         mediaEl.setAttribute('webkit-playsinline', '');
-        mediaEl.style.pointerEvents = 'none'; // CORREÇÃO: Evita que o <video> engula o clique
+        mediaEl.style.pointerEvents = 'none'; 
       } else {
         mediaEl = createEl('img', 'vl-img');
         if (cover) mediaEl.src = cover;
-        mediaEl.style.pointerEvents = 'none'; // CORREÇÃO: Mesma coisa para imagens
+        mediaEl.style.pointerEvents = 'none'; 
       }
       
       mediaEl.loading = 'lazy';
@@ -2036,7 +2028,6 @@
         if (e.target.closest('.vl-dismiss')) return;
         if (floatingWasDragged) { floatingWasDragged = false; return; }
         
-        // CORREÇÃO: Aqui chamamos a nova função nativa do modal!
         openStoryViewer(stories, index);
       });
 
@@ -2079,23 +2070,34 @@
 
       if (!stories || stories.length === 0) return;
 
-      var match = false;
-      if (!pageRules || pageRules.length === 0) {
-        match = matchesUrl(appearance);
-      } else {
-        match = pageRules.some(matchesRule);
+      // =========================================================================
+      // CORREÇÃO: Lógica para validar AS REGRAS ESPECÍFICAS DE CADA STORY
+      // =========================================================================
+      function storyMatchesCurrentPage(story) {
+        var locs = locations.filter(function(l) { return idsEqual(l.story_id, story.id); });
+        var rules = pageRules.filter(function(r) { return idsEqual(r.story_id, story.id); });
+
+        if (locs.length > 0) return locs.some(matchesRule);
+        if (rules.length > 0) return rules.some(matchesRule);
+
+        var globalRules = pageRules.filter(function(r) { return !r.story_id; });
+        if (globalRules.length > 0) return globalRules.some(matchesRule);
+
+        return matchesUrl(appearance);
       }
 
-      if (!match) return;
+      var validStories = stories.filter(storyMatchesCurrentPage);
 
-      stories.forEach(function(story) {
+      if (!validStories || validStories.length === 0) return;
+
+      validStories.forEach(function(story) {
          var rels = storyVideos.filter(function(sv) { return idsEqual(sv.story_id, story.id); });
          story.videos = rels.map(function(r) {
              return videos.find(function(v) { return idsEqual(v.id, r.video_id); }) || {};
          });
       });
 
-      renderFloating(stories, appearance);
+      renderFloating(validStories, appearance);
 
     }).catch(function (err) {});
   }
