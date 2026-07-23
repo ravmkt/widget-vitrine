@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.07.23-07';
+  var WIDGET_VERSION = '2026.07.23-08';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -9,7 +9,7 @@
   window.VIDLYTICS_WIDGET_VERSION = WIDGET_VERSION;
 
   console.log(
-    'VIDLYTICS WIDGET CARREGADO - FIX LOOP + NO AUTO CLOSE - 202607161909'
+    'VIDLYTICS WIDGET CARREGADO - FIX LOOP + CLICK ABRINDO MODAL'
   );
 
   var globalConfig =
@@ -81,6 +81,11 @@
   var readCommentsData = [];
   var readSizingModelsData = [];
   var readLikeCounts = {};
+
+  // Variáveis globais de estado do Modal
+  var currentStories = [];
+  var currentStoryIndex = 0;
+  var currentVideoIndex = 0;
 
   var VIDEO_FILE_REGEX = /\.(mp4|webm|ogg|mov|m4v|m3u8)(\?.*)?$/i;
 
@@ -262,17 +267,7 @@
           } catch (error) {
             parsed = {};
           }
-
-          console.error(
-            'Erro completo ao enviar comentário para o Supabase:',
-            {
-              status: response.status,
-              statusText: response.statusText,
-              body: rawMessage,
-              payload: payload
-            }
-          );
-
+          
           if (response.status === 401) {
             throw new Error(
               'A chave pública ou a URL do Supabase são inválidas.'
@@ -406,26 +401,12 @@
       mergeObject(finalAppearance, configAppearance);
       mergeObject(finalAppearance, storageAppearance);
       if (appearanceHasUsefulData(dbAppearance)) mergeObject(finalAppearance, dbAppearance);
-      console.info('[Vidlytics] Aparência carregada', {
-        url: finalAppearance.url || '',
-        type: finalAppearance.type || '',
-        storeId: storeId,
-        pathname: window.location.pathname,
-        href: window.location.href
-      });
       return normalizeAppearanceItem(finalAppearance);
     }).catch(function () {
       var finalAppearance = {};
       mergeObject(finalAppearance, DEFAULT_APPEARANCE);
       mergeObject(finalAppearance, configAppearance);
       mergeObject(finalAppearance, storageAppearance);
-      console.info('[Vidlytics] Aparência carregada via fallback', {
-        url: finalAppearance.url || '',
-        type: finalAppearance.type || '',
-        storeId: storeId,
-        pathname: window.location.pathname,
-        href: window.location.href
-      });
       return normalizeAppearanceItem(finalAppearance);
     });
   }
@@ -522,20 +503,16 @@
 
     function parseConfig(value) {
       if (!value) return {};
-
       if (typeof value === 'string') {
         try {
           return JSON.parse(value);
         } catch (e) {
-          console.warn('[Vidlytics] modal_config inválido:', value);
           return {};
         }
       }
-
       if (typeof value === 'object') {
         return value;
       }
-
       return {};
     }
 
@@ -604,7 +581,6 @@
     };
 
     var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
-
     if (!Array.isArray(fallbackMetrics)) {
       fallbackMetrics = [];
     }
@@ -613,53 +589,19 @@
     setStorageItem('vidlytics_metrics', fallbackMetrics);
 
     if (!hasSupabase) {
-      console.warn(
-        '[Vidlytics] Métrica salva somente localmente: Supabase não configurado.',
-        payload
-      );
-
-      return Promise.resolve({
-        saved: false,
-        local: true,
-        payload: payload
-      });
+      return Promise.resolve({ saved: false, local: true, payload: payload });
     }
 
     return supabaseFetch('metrics', {
       method: 'POST',
-      headers: {
-        'Prefer': 'return=minimal'
-      },
+      headers: { 'Prefer': 'return=minimal' },
       body: JSON.stringify(payload)
-    })
-      .then(function (response) {
-        if (response.ok) {
-          console.info(
-            '[Vidlytics] Métrica registrada no Supabase:',
-            payload.event_type
-          );
-          return { saved: true, payload: payload };
-        }
-
-        return response.text().then(function (rawMessage) {
-          console.error(
-            '[Vidlytics] Erro ao registrar métrica no Supabase:',
-            {
-              status: response.status,
-              body: rawMessage,
-              event_type: payload.event_type
-            }
-          );
-          return { saved: false, payload: payload };
-        });
-      })
-      .catch(function (error) {
-        console.error(
-          '[Vidlytics] A métrica não foi salva no Supabase:',
-          error
-        );
+    }).then(function (response) {
+        if (response.ok) return { saved: true, payload: payload };
         return { saved: false, payload: payload };
-      });
+    }).catch(function (error) {
+        return { saved: false, payload: payload };
+    });
   }
 
 
@@ -707,69 +649,21 @@
   }
 
   function readLikesFromDb() {
-    if (!storeId || !hasSupabase) {
-      console.warn(
-        '[Vidlytics] readLikesFromDb: Supabase ou storeId ausente.',
-        {
-          storeId: storeId,
-          hasSupabase: hasSupabase
-        }
-      );
-
-      return Promise.resolve([]);
-    }
-
+    if (!storeId || !hasSupabase) return Promise.resolve([]);
     var params = new URLSearchParams();
-
     params.set('select', 'video_id,visitor_id');
     params.set('store_id', 'eq.' + String(storeId).trim());
-
     var path = 'video_likes?' + params.toString();
-
-    console.log(
-      '[Vidlytics] Consultando curtidas no Supabase:',
-      path
-    );
 
     return supabaseFetch(path, { method: 'GET' })
       .then(function (response) {
-        if (!response.ok) {
-          return response.text().then(function (rawMessage) {
-            console.error(
-              '[Vidlytics] Falha ao ler video_likes:',
-              {
-                status: response.status,
-                statusText: response.statusText,
-                body: rawMessage,
-                path: path
-              }
-            );
-
-            return [];
-          });
-        }
-
+        if (!response.ok) return [];
         return response.json();
       })
       .then(function (data) {
-        var likes = Array.isArray(data) ? data : [];
-
-        console.log(
-          '[Vidlytics] Curtidas carregadas do banco:',
-          {
-            total: likes.length,
-            likes: likes
-          }
-        );
-
-        return likes;
+        return Array.isArray(data) ? data : [];
       })
       .catch(function (error) {
-        console.error(
-          '[Vidlytics] Erro inesperado ao ler video_likes:',
-          error
-        );
-
         return [];
       });
   }
@@ -804,28 +698,18 @@
     if (!conditionType) return true;
 
     switch (conditionType) {
-      case 'all_pages':
-        return true;
-      case 'home_only':
-        return path === '/' || path === '/home' || path === '/index.html' || path === '';
-      case 'product_pages':
-        return path.indexOf('/product') !== -1 || path.indexOf('/produto') !== -1;
-      case 'category_pages':
-        return path.indexOf('/category') !== -1 || path.indexOf('/categoria') !== -1 || path.indexOf('/colecao') !== -1;
-      case 'contains':
-        return href.indexOf(value) !== -1 || path.indexOf(value) !== -1;
-      case 'equals':
-        return href === value || path === value;
-      case 'not_equals':
-        return href !== value && path !== value;
-      case 'starts_with':
-        return href.indexOf(value) === 0 || path.indexOf(value) === 0;
-      case 'ends_with':
-        return href.endsWith(value) || path.endsWith(value);
+      case 'all_pages': return true;
+      case 'home_only': return path === '/' || path === '/home' || path === '/index.html' || path === '';
+      case 'product_pages': return path.indexOf('/product') !== -1 || path.indexOf('/produto') !== -1;
+      case 'category_pages': return path.indexOf('/category') !== -1 || path.indexOf('/categoria') !== -1 || path.indexOf('/colecao') !== -1;
+      case 'contains': return href.indexOf(value) !== -1 || path.indexOf(value) !== -1;
+      case 'equals': return href === value || path === value;
+      case 'not_equals': return href !== value && path !== value;
+      case 'starts_with': return href.indexOf(value) === 0 || path.indexOf(value) === 0;
+      case 'ends_with': return href.endsWith(value) || path.endsWith(value);
       case 'regex':
         try { return new RegExp(value).test(href); } catch (e) { return false; }
       default:
-        console.warn('[Vidlytics] condition_type desconhecido:', conditionType);
         return true;
     }
   }
@@ -964,52 +848,23 @@
     var secondary = getSecondaryColor(appearance);
     var buttonColor = getButtonColor(appearance);
 
-    var textColor =
-      readAppearanceValue(appearance, ['text_color', 'textColor']) || '#0f172a';
+    var textColor = readAppearanceValue(appearance, ['text_color', 'textColor']) || '#0f172a';
+    var bgColor = readAppearanceValue(appearance, ['background_color', 'backgroundColor']) || '#ffffff';
 
-    var bgColor =
-      readAppearanceValue(appearance, ['background_color', 'backgroundColor']) ||
-      '#ffffff';
+    var modalBackground = readAppearanceValue(appearance, [
+        'modal_background_color', 'modalBackgroundColor', 'background_color', 'backgroundColor'
+    ]) || bgColor;
 
-    var modalBackground =
-      readAppearanceValue(appearance, [
-        'modal_background_color',
-        'modalBackgroundColor',
-        'background_color',
-        'backgroundColor'
-      ]) || bgColor;
+    var modalText = readAppearanceValue(appearance, [
+        'modal_text_color', 'modalTextColor', 'text_color', 'textColor'
+    ]) || textColor;
 
-    var modalText =
-      readAppearanceValue(appearance, [
-        'modal_text_color',
-        'modalTextColor',
-        'text_color',
-        'textColor'
-      ]) || textColor;
-
-    var modalBorder =
-      readAppearanceValue(appearance, [
-        'modal_border_color',
-        'modalBorderColor'
-      ]) || 'rgba(15,23,42,.12)';
-
-    var modalMuted =
-      readAppearanceValue(appearance, [
-        'modal_muted_color',
-        'modalMutedColor'
-      ]) || '#64748b';
-
+    var modalBorder = readAppearanceValue(appearance, ['modal_border_color', 'modalBorderColor']) || 'rgba(15,23,42,.12)';
+    var modalMuted = readAppearanceValue(appearance, ['modal_muted_color', 'modalMutedColor']) || '#64748b';
     var font = getFontFamily(appearance);
-
-    var fontSize =
-      readAppearanceValue(appearance, ['font_size', 'fontSize']) || '14';
-
+    var fontSize = readAppearanceValue(appearance, ['font_size', 'fontSize']) || '14';
     var modalConfig = normalizeModalAppearanceConfig(appearance);
-
-    var shadow =
-      modalConfig.shadow_enabled !== false
-        ? '0 24px 80px rgba(15,23,42,.24)'
-        : 'none';
+    var shadow = modalConfig.shadow_enabled !== false ? '0 24px 80px rgba(15,23,42,.24)' : 'none';
 
     return (
       '*,*::before,*::after{box-sizing:border-box!important;}'
@@ -1246,7 +1101,6 @@
       + 'background:' + modalBorder + '!important;'
       + 'transform:scale(1.12)!important;}'
 
-
       + '.vl-comments-submit{all:unset!important;box-sizing:border-box!important;width:100%!important;'
       + 'text-align:center!important;border-radius:11px!important;padding:12px!important;'
       + 'background:' + buttonColor + '!important;color:#fff!important;font-size:14px!important;'
@@ -1452,12 +1306,10 @@
       wrapper.appendChild(iframe);
 
       trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
-
       return wrapper;
     }
 
     if ((isUpload || isDirect) && url) {
-      // Estilos inline problemáticos que travavam o modal com a tela preta e deixavam ele curto foram removidos daqui!
       var media = createEl('video');
 
       media.controls = false;
@@ -1566,15 +1418,9 @@
 
   function getSizingModelId(video) {
     if (!video) return null;
-
     return firstDefined(
-      video.model_id,
-      video.modelId,
-      video.sizing_model_id,
-      video.sizingModelId,
-      video.modelo_id,
-      video.modeloId,
-      video.model
+      video.model_id, video.modelId, video.sizing_model_id, video.sizingModelId,
+      video.modelo_id, video.modeloId, video.model
     ) || null;
   }
 
@@ -1679,7 +1525,6 @@
     panel.className = 'vl-comments-panel is-open';
 
     var header = createEl('div', 'vl-comments-header');
-
     var title = createEl('div', 'vl-comments-title');
     title.textContent = 'Comentários';
 
@@ -1705,7 +1550,6 @@
     }
 
     var form = createEl('form', 'vl-comments-form');
-
     var nameInput = createEl('input', 'vl-comments-input');
     nameInput.type = 'text';
     nameInput.placeholder = 'Seu nome';
@@ -1714,12 +1558,7 @@
     nameInput.autocomplete = 'name';
 
     var editor = createEl('div', 'vl-comments-editor');
-
-    var contentInput = createEl(
-      'textarea',
-      'vl-comments-input vl-comments-textarea'
-    );
-
+    var contentInput = createEl('textarea', 'vl-comments-input vl-comments-textarea');
     contentInput.placeholder = 'Escreva um comentário...';
     contentInput.maxLength = 1000;
     contentInput.required = true;
@@ -1728,34 +1567,25 @@
     emojiButton.type = 'button';
     emojiButton.textContent = '☺️';
     emojiButton.setAttribute('aria-label', 'Adicionar emoji');
-    emojiButton.title = 'Adicionar emoji';
 
     var emojiPicker = createEl('div', 'vl-emoji-picker');
 
     getCommentEmojis().forEach(function (emoji) {
       var emojiItem = createEl('button', 'vl-emoji-item');
-
       emojiItem.type = 'button';
       emojiItem.textContent = emoji;
-      emojiItem.setAttribute('aria-label', 'Adicionar ' + emoji);
-
+      
       emojiItem.addEventListener('click', function (event) {
         event.preventDefault();
         event.stopPropagation();
-
         var start = contentInput.selectionStart || contentInput.value.length;
         var end = contentInput.selectionEnd || contentInput.value.length;
-
         var before = contentInput.value.substring(0, start);
         var after = contentInput.value.substring(end);
-
         contentInput.value = before + emoji + after;
-
         var nextPosition = start + emoji.length;
-
         contentInput.focus();
         contentInput.setSelectionRange(nextPosition, nextPosition);
-
         emojiPicker.classList.remove('is-open');
       });
 
@@ -1765,12 +1595,8 @@
     emojiButton.addEventListener('click', function (event) {
       event.preventDefault();
       event.stopPropagation();
-
       emojiPicker.classList.toggle('is-open');
-
-      if (emojiPicker.classList.contains('is-open')) {
-        contentInput.focus();
-      }
+      if (emojiPicker.classList.contains('is-open')) contentInput.focus();
     });
 
     editor.appendChild(contentInput);
@@ -1778,25 +1604,19 @@
     editor.appendChild(emojiPicker);
 
     document.addEventListener('click', function closeEmojiPicker(event) {
-      if (
-        emojiPicker.classList.contains('is-open') &&
-        !editor.contains(event.target)
-      ) {
+      if (emojiPicker.classList.contains('is-open') && !editor.contains(event.target)) {
         emojiPicker.classList.remove('is-open');
         document.removeEventListener('click', closeEmojiPicker);
       }
     });
 
-
     var feedback = createEl('div', 'vl-comments-feedback');
-
     var submit = createEl('button', 'vl-comments-submit');
     submit.type = 'submit';
     submit.textContent = 'Enviar comentário';
 
     form.appendChild(nameInput);
     form.appendChild(editor);
-
     form.appendChild(feedback);
     form.appendChild(submit);
 
@@ -1833,33 +1653,17 @@
         content: content
       }).then(function () {
         contentInput.value = '';
-        feedback.textContent =
-          'Comentário enviado. Ele aparecerá após aprovação da loja.';
-
-        trackMetric({
-          event_type: 'comment',
-          story_id: storyId || null,
-          video_id: videoId || null,
-          page_url: window.location.href
-        });
+        feedback.textContent = 'Comentário enviado. Ele aparecerá após aprovação.';
+        trackMetric({ event_type: 'comment', story_id: storyId, video_id: videoId, page_url: window.location.href });
       }).catch(function (error) {
-        feedback.textContent =
-          error && error.message
-            ? error.message
-            : 'Não foi possível enviar o comentário.';
+        feedback.textContent = error && error.message ? error.message : 'Não foi possível enviar o comentário.';
       }).finally(function () {
         submit.disabled = false;
       });
     });
 
-    trackMetric({
-      event_type: 'comment_open',
-      story_id: storyId || null,
-      video_id: videoId || null,
-      page_url: window.location.href
-    });
+    trackMetric({ event_type: 'comment_open', story_id: storyId, video_id: videoId, page_url: window.location.href });
   }
-
 
   function closeOverlay() {
     if (overlay) overlay.className = 'vl-overlay';
@@ -1870,6 +1674,229 @@
     }
     resumePreviews();
   }
+
+  // ============== NOVO CÓDIGO DO MODAL (INÍCIO) ============== //
+  
+  function renderStoryModal() {
+    if (!modalContent) return;
+    modalContent.innerHTML = ''; 
+
+    var story = currentStories[currentStoryIndex];
+    if (!story) { closeOverlay(); return; }
+
+    var videos = story.videos || [];
+    var video = videos[currentVideoIndex];
+    var appearanceConfig = normalizeModalAppearanceConfig(currentAppearance);
+
+    var container = createEl('div');
+
+    if (videos.length > 1) {
+      var progress = createEl('div', 'vl-progress');
+      videos.forEach(function (_, idx) {
+        var bar = createEl('div', 'vl-progress-bar');
+        var fill = createEl('div', 'vl-progress-fill');
+        if (idx < currentVideoIndex) fill.style.width = '100%';
+        else fill.style.width = '0%';
+        bar.appendChild(fill);
+        progress.appendChild(bar);
+      });
+      container.appendChild(progress);
+    }
+
+    var header = createEl('div', 'vl-header');
+    var headerLeft = createEl('div', 'vl-header-left');
+    if (appearanceConfig.show_title) {
+      var title = createEl('div', 'vl-title');
+      title.textContent = story.title || '';
+      headerLeft.appendChild(title);
+    }
+    header.appendChild(headerLeft);
+
+    var headerActions = createEl('div', 'vl-header-actions');
+    var closeBtn = createEl('button', 'vl-close');
+    closeBtn.innerHTML = svgIcon('close');
+    closeBtn.onclick = function(e) { e.stopPropagation(); closeOverlay(); };
+    headerActions.appendChild(closeBtn);
+    header.appendChild(headerActions);
+    container.appendChild(header);
+
+    var body = createEl('div', 'vl-body');
+    if (video) {
+      var player = buildVideoPlayer(video, story.id, function() {
+         nextStoryOrVideo();
+      });
+      body.appendChild(player);
+
+      var vidEl = player.querySelector('video');
+      if (vidEl) {
+         vidEl.muted = false; 
+         vidEl.play().catch(function(){});
+      }
+    } else {
+      var empty = createEl('div');
+      empty.style.padding = '40px';
+      empty.style.textAlign = 'center';
+      empty.style.color = '#fff';
+      empty.textContent = 'Nenhum vídeo encontrado.';
+      body.appendChild(empty);
+    }
+
+    var nav = createEl('div', 'vl-nav');
+    var prevBtn = createEl('button', 'vl-nav-btn vl-nav-prev');
+    prevBtn.onclick = function(e) { e.stopPropagation(); prevStoryOrVideo(); };
+    var nextBtn = createEl('button', 'vl-nav-btn vl-nav-next');
+    nextBtn.onclick = function(e) { e.stopPropagation(); nextStoryOrVideo(); };
+    nav.appendChild(prevBtn);
+    nav.appendChild(nextBtn);
+    body.appendChild(nav);
+
+    var social = createEl('div', 'vl-social');
+
+    if (appearanceConfig.show_like_button) {
+      var likeBtn = createEl('button', 'vl-social-btn');
+      likeBtn.innerHTML = svgIcon('heart');
+      social.appendChild(likeBtn);
+    }
+
+    if (appearanceConfig.show_comment_button && video) {
+      var commentBtn = createEl('button', 'vl-social-btn');
+      commentBtn.innerHTML = svgIcon('comment');
+      var countStr = getCommentCount(video.id);
+      if (countStr > 0) {
+         var countEl = createEl('span', 'vl-social-count');
+         countEl.textContent = countStr;
+         commentBtn.appendChild(countEl);
+      }
+      commentBtn.onclick = function(e) {
+        e.stopPropagation();
+        openCommentsPanel(video.id, story.id);
+      };
+      social.appendChild(commentBtn);
+    }
+    
+    if (appearanceConfig.show_sizing_button && video) {
+      var sModelId = getSizingModelId(video);
+      if (sModelId) {
+         var sizeBtn = createEl('button', 'vl-social-btn');
+         sizeBtn.innerHTML = svgIcon('sizing');
+         sizeBtn.onclick = function(e) {
+            e.stopPropagation();
+            openSizingPanel(sModelId);
+         };
+         social.appendChild(sizeBtn);
+      }
+    }
+
+    if (appearanceConfig.show_whatsapp_button) {
+      var wpBtn = createEl('button', 'vl-social-btn whatsapp');
+      wpBtn.innerHTML = svgIcon('whatsapp');
+      wpBtn.onclick = function(e) {
+         e.stopPropagation();
+         window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(window.location.href), '_blank');
+      };
+      social.appendChild(wpBtn);
+    }
+
+    body.appendChild(social);
+    container.appendChild(body);
+
+    if (appearanceConfig.show_product && readStoryProductsData.length > 0) {
+       var sProducts = readStoryProductsData.filter(function(sp) { return idsEqual(sp.story_id, story.id); });
+       if (sProducts.length > 0) {
+          var footer = createEl('div', 'vl-footer');
+          var footerInner = createEl('div', 'vl-footer-inner');
+
+          var pId = sProducts[0].product_id;
+          var productData = readProductsData.find(function(p) { return idsEqual(p.id, pId); });
+
+          if (productData) {
+             var prodCard = createEl('div', 'vl-product');
+             prodCard.onclick = function(e) {
+                 e.stopPropagation();
+                 if (productData.url) window.location.href = productData.url;
+             };
+
+             var prodImg = createEl('img', 'vl-product-img');
+             prodImg.src = getThumbnailFromObject(productData) || '';
+             prodCard.appendChild(prodImg);
+
+             var prodInfo = createEl('div', 'vl-product-info');
+             var pName = createEl('div', 'vl-product-name');
+             pName.textContent = productData.name || 'Produto';
+             prodInfo.appendChild(pName);
+
+             if (productData.price) {
+                var pPrice = createEl('div', 'vl-product-price');
+                pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
+                prodInfo.appendChild(pPrice);
+             }
+
+             var pActions = createEl('div', 'vl-product-actions');
+             if (appearanceConfig.show_product_button) {
+                 var buyBtn = createEl('a', 'vl-product-btn');
+                 buyBtn.textContent = 'Ver Produto';
+                 buyBtn.href = productData.url || '#';
+                 pActions.appendChild(buyBtn);
+             }
+             prodInfo.appendChild(pActions);
+             prodCard.appendChild(prodInfo);
+             footerInner.appendChild(prodCard);
+          }
+          footer.appendChild(footerInner);
+          container.appendChild(footer);
+       }
+    }
+
+    modalContent.appendChild(container);
+  }
+
+  function nextStoryOrVideo() {
+     var story = currentStories[currentStoryIndex];
+     if (story && story.videos && currentVideoIndex < story.videos.length - 1) {
+         currentVideoIndex++;
+         renderStoryModal();
+     } else if (currentStoryIndex < currentStories.length - 1) {
+         currentStoryIndex++;
+         currentVideoIndex = 0;
+         renderStoryModal();
+     } else {
+         closeOverlay();
+     }
+  }
+
+  function prevStoryOrVideo() {
+     if (currentVideoIndex > 0) {
+         currentVideoIndex--;
+         renderStoryModal();
+     } else if (currentStoryIndex > 0) {
+         currentStoryIndex--;
+         var prevStory = currentStories[currentStoryIndex];
+         currentVideoIndex = prevStory && prevStory.videos ? Math.max(0, prevStory.videos.length - 1) : 0;
+         renderStoryModal();
+     }
+  }
+
+  function openStoryViewer(stories, index) {
+    currentStories = stories;
+    currentStoryIndex = index || 0;
+    currentVideoIndex = 0;
+
+    if (!overlay) {
+      overlay = createEl('div', 'vl-overlay');
+      modalContent = createEl('div', 'vl-modal');
+      overlay.appendChild(modalContent);
+      globalShadowRoot.appendChild(overlay);
+
+      overlay.addEventListener('click', function(e) {
+          if (e.target === overlay) closeOverlay();
+      });
+    }
+
+    pausePreviews(); 
+    overlay.className = 'vl-overlay is-open';
+    renderStoryModal();
+  }
+  // ============== NOVO CÓDIGO DO MODAL (FIM) ============== //
 
   function svgIcon(name) {
     var icons = {
@@ -1897,6 +1924,7 @@
     el.addEventListener('mousedown', function (e) {
       if (e.target.closest('.vl-dismiss')) return;
       isDragging = true;
+      floatingWasDragged = false; // Resetando o arraste
       startX = e.clientX;
       startY = e.clientY;
       var rect = el.getBoundingClientRect();
@@ -1907,13 +1935,17 @@
 
     document.addEventListener('mousemove', function (e) {
       if (!isDragging) return;
-      floatingWasDragged = true;
       var dx = startX - e.clientX;
       var dy = startY - e.clientY;
-      el.style.right = (initialRight + dx) + 'px';
-      el.style.bottom = (initialBottom + dy) + 'px';
-      el.style.left = 'auto';
-      el.style.top = 'auto';
+
+      // CORREÇÃO: Só aciona o arraste se mover o mouse em mais de 3 pixels
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+          floatingWasDragged = true; 
+          el.style.right = (initialRight + dx) + 'px';
+          el.style.bottom = (initialBottom + dy) + 'px';
+          el.style.left = 'auto';
+          el.style.top = 'auto';
+      }
     });
 
     document.addEventListener('mouseup', function () {
@@ -1940,7 +1972,6 @@
     var behavior = getFloatingBehaviorConfig(appearance);
 
     stories.forEach(function (story, index) {
-      // Agora procuramos se o story tem algum vídeo e passamos ele pra bolinha tocar
       var bubbleVideo = null;
       if (story.videos && story.videos.length > 0) {
         bubbleVideo = story.videos[0];
@@ -1955,7 +1986,6 @@
 
       var mediaEl;
       if (videoUrl && isDirectVideoUrl(videoUrl)) {
-        // Se tem vídeo em MP4, renderizamos a tag video em loop silencioso
         mediaEl = createEl('video', 'vl-img');
         mediaEl.src = videoUrl;
         if (cover) mediaEl.poster = cover;
@@ -1965,11 +1995,13 @@
         mediaEl.autoplay = true;
         mediaEl.setAttribute('playsinline', '');
         mediaEl.setAttribute('webkit-playsinline', '');
+        mediaEl.style.pointerEvents = 'none'; // CORREÇÃO: Evita que o <video> engula o clique
       } else {
-        // Se for Youtube ou não tiver URL, mostramos a imagem
         mediaEl = createEl('img', 'vl-img');
         if (cover) mediaEl.src = cover;
+        mediaEl.style.pointerEvents = 'none'; // CORREÇÃO: Mesma coisa para imagens
       }
+      
       mediaEl.loading = 'lazy';
       inner.appendChild(mediaEl);
 
@@ -2004,9 +2036,8 @@
         if (e.target.closest('.vl-dismiss')) return;
         if (floatingWasDragged) { floatingWasDragged = false; return; }
         
-        if (typeof window.VLStories !== 'undefined' && window.VLStories.open) {
-           window.VLStories.open({ stories: stories }, index);
-        }
+        // CORREÇÃO: Aqui chamamos a nova função nativa do modal!
+        openStoryViewer(stories, index);
       });
 
       container.appendChild(bubble);
@@ -2017,10 +2048,7 @@
   }
 
   function initWidget() {
-    if (!hasSupabase && !storeId) {
-      console.warn('[Vidlytics] storeId não configurado. Abortando carregamento.');
-      return;
-    }
+    if (!hasSupabase && !storeId) return;
 
     Promise.all([
       readAppearance(),
@@ -2069,9 +2097,7 @@
 
       renderFloating(stories, appearance);
 
-    }).catch(function (err) {
-      console.error('[Vidlytics] Erro crítico ao inicializar widget:', err);
-    });
+    }).catch(function (err) {});
   }
 
   if (document.readyState === 'loading') {
