@@ -121,6 +121,7 @@ type PageRuleUi = {
 
 type DisplayLocationUi = DisplayLocation & {
   location?: string | null;
+  page_type?: string | null;
 };
 
 const mapDbRuleToUiRule = (rule: any): PageRuleUi => {
@@ -272,6 +273,7 @@ const normalizedLocations = locations.map((location) => ({
   store_id: targetStoreId,
   story_id: targetStoryId,
   location: location.location || location.position || 'afterend',
+  page_type: location.page_type || 'all_pages',
   selector: String(location.selector || '').trim(),
   position: location.position,
   active: true,
@@ -279,7 +281,7 @@ const normalizedLocations = locations.map((location) => ({
   updated_at: now,
 }));
 
-    await Promise.all(normalizedLocations.map((location) => (db as any).displayLocations.save(location)));
+await Promise.all(normalizedLocations.map((location) => (db as any).displayLocations.save(location)));
 
     const existingRules = await getAllSafe<any>((db as any).pageRules, targetStoreId);
     const rulesToDelete = existingRules.filter((rule: any) => rule.story_id === targetStoryId && (!rule.store_id || rule.store_id === targetStoreId));
