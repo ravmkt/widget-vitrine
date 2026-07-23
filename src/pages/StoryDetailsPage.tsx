@@ -119,7 +119,10 @@ type PageRuleUi = {
   updated_at?: string;
 };
 
-type DisplayLocationUi = DisplayLocation;
+type DisplayLocationUi = DisplayLocation & {
+  location?: string | null;
+  page_type?: string | null;
+};
 
 const mapDbRuleToUiRule = (rule: any): PageRuleUi => {
   const legacyRuleType = String(rule.rule_type || '').toLowerCase();
@@ -240,7 +243,18 @@ const StoryDetailsPage = () => {
       const [relations, locs, rules] = await Promise.all([getAllSafe<StoryVideo>((db as any).storyVideos, finalStoreId), getAllSafe<DisplayLocationUi>((db as any).displayLocations, finalStoreId), getAllSafe<any>((db as any).pageRules, finalStoreId)]);
       const storyVideoIds = relations.filter((relation: any) => relation.story_id === currentStory.id && (!relation.store_id || relation.store_id === finalStoreId)).sort((a: any, b: any) => Number(a.position || 0) - Number(b.position || 0)).map((relation: any) => relation.video_id).filter((videoId: any) => videoId && isValidUuid(videoId));
       setSelectedVideoIds(storyVideoIds);
-      setLocations(locs.filter((location: any) => location.story_id === currentStory.id && (!location.store_id || location.store_id === finalStoreId)));
+      setLocations(
+        locs
+          .filter((location: any) => location.story_id === currentStory.id && (!location.store_id || location.store_id === finalStoreId))
+          .map((location: any) => ({
+            ...location,
+            location: location.location || location.position || 'afterend',
+            page_type: location.page_type || 'all_pages',
+            selector: location.selector || '',
+            position: location.position || 'beforeend',
+          })),
+      );
+
       setPageRules(
         rules
           .filter((rule: any) => rule.story_id === currentStory.id && (!rule.store_id || rule.store_id === finalStoreId))
@@ -270,7 +284,8 @@ const StoryDetailsPage = () => {
     const existingLocations = await getAllSafe<DisplayLocationUi>((db as any).displayLocations, targetStoreId);
     const locationsToDelete = existingLocations.filter((location: any) => location.story_id === targetStoryId && (!location.store_id || location.store_id === targetStoreId));
     await Promise.all(locationsToDelete.map((location: any) => deleteSafe((db as any).displayLocations, location.id, targetStoreId)));
-    const normalizedLocations = locations.map((location) => ({ id: isValidUuid(location.id) ? location.id : generateUuid(), store_id: targetStoreId, story_id: targetStoryId, selector: String(location.selector || '').trim(), position: location.position, created_at: location.created_at || now, updated_at: now }));
+    const normalizedLocations = locations.map((location) => ({ id: isValidUuid(location.id) ? location.id : generateUuid(), store_id: targetStoreId, story_id: targetStoryId, location: location.location || location.position || 'afterend', page_type: location.page_type || 'all_pages', selector: String(location.selector || '').trim(), position: location.position, active: true, created_at: location.created_at || now, updated_at: now }));
+
     await Promise.all(normalizedLocations.map((location) => (db as any).displayLocations.save(location)));
 
     const existingRules = await getAllSafe<any>((db as any).pageRules, targetStoreId);
