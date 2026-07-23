@@ -1389,14 +1389,12 @@
     if (!stories || !stories.length) return;
 
     // Procura onde o usuário quer que o carrossel apareça na página
-    // Geralmente as lojas criam uma div com id "vidlytics-carousel-root" ou "instory-root"
-    var containerId = 'vidlytics-carousel-root';
-    var targetDiv = document.getElementById(containerId) || document.getElementById('instory-root');
-    
-    // Se não achar a div, tenta colocar no topo do body
+    var targetDiv = document.getElementById('vidlytics-carousel-root') || document.getElementById('instory-root');
+
+    // Se não achar a div, cria uma e insere no topo do body
     if (!targetDiv) {
         targetDiv = createEl('div');
-        targetDiv.id = containerId;
+        targetDiv.id = 'vidlytics-carousel-root';
         if (document.body.firstChild) {
             document.body.insertBefore(targetDiv, document.body.firstChild);
         } else {
@@ -1407,8 +1405,8 @@
     targetDiv.innerHTML = ''; // Limpa antes de renderizar
 
     // Cria o Shadow DOM para isolar o CSS (igual o flutuante faz)
-    var shadow = targetDiv.attachShadow({ mode: 'open' });
-    
+    var shadow = targetDiv.shadowRoot || targetDiv.attachShadow({ mode: 'open' });
+
     var cfg = getFloatingConfig(appearance);
     var behavior = getFloatingBehaviorConfig(appearance);
     var font = getFontFamily(appearance);
