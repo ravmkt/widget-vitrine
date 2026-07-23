@@ -4035,14 +4035,15 @@ insertCarouselHostBySelector(shadowData.host, displayLocations, pageRules);
       setTimeout(forceHostPosition, 100);
       setTimeout(forceHostPosition, 500);
       setTimeout(forceHostPosition, 1500);
-    } else if (mode === 'carousel') {
-      renderCarousel(
-        applicableStories,
-        storyVideoMap,
-        activeVideos,
-         displayLocations 
-      );
-    }
+   } else if (mode === 'carousel') {
+  renderCarousel(
+    applicableStories,
+    storyVideoMap,
+    activeVideos,
+    displayLocations,
+    pageRules
+  );
+}
 
   })
 
