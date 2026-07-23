@@ -611,7 +611,7 @@ const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
     'created_at',
   ],
 
-  display_locations: [
+display_locations: [
   'id',
   'store_id',
   'story_id',
@@ -619,9 +619,12 @@ const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
   'position',
   'location',
   'page_type',
+  'page_rule',
+  'page_value',
   'created_at',
   'updated_at',
 ],
+
 
 
   page_rules: [
