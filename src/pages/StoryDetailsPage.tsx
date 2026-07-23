@@ -283,7 +283,17 @@ const StoryDetailsPage = () => {
     const existingLocations = await getAllSafe<DisplayLocationUi>((db as any).displayLocations, targetStoreId);
     const locationsToDelete = existingLocations.filter((location: any) => location.story_id === targetStoryId && (!location.store_id || location.store_id === targetStoreId));
     await Promise.all(locationsToDelete.map((location: any) => deleteSafe((db as any).displayLocations, location.id, targetStoreId)));
-    const normalizedLocations = locations.map((location) => ({ id: isValidUuid(location.id) ? location.id : generateUuid(), store_id: targetStoreId, story_id: targetStoryId, location: location.location || location.position || 'afterend', page_type: location.page_type || 'all_pages', selector: String(location.selector || '').trim(), position: location.position, active: true, created_at: location.created_at || now, updated_at: now }));
+const normalizedLocations = locations.map((location) => ({
+  id: isValidUuid(location.id) ? location.id : generateUuid(),
+  store_id: targetStoreId,
+  story_id: targetStoryId,
+  location: location.location || location.position || 'afterend',
+  selector: String(location.selector || '').trim(),
+  position: location.position,
+  active: true,
+  created_at: location.created_at || now,
+  updated_at: now,
+}));
 
     await Promise.all(normalizedLocations.map((location) => (db as any).displayLocations.save(location)));
 
