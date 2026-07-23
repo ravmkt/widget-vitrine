@@ -121,7 +121,6 @@ type PageRuleUi = {
 
 type DisplayLocationUi = DisplayLocation & {
   location?: string | null;
-  page_type?: string | null;
 };
 
 const mapDbRuleToUiRule = (rule: any): PageRuleUi => {
