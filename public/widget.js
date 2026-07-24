@@ -318,26 +318,25 @@ function tryTable(tableName) {
     });
 }
 
-  function fetchDbAppearance() {
+function fetchDbAppearance() {
     if (!storeId || !hasSupabase) return Promise.resolve({});
     return Promise.all([
       tryTable('appearances'),
-      tryTable('widget_appearances')
+      tryTable('widget_appearances'),
+      tryTable('general_settings')  // ← NOVA LINHA
     ]).then(function(results) {
       var app1 = results[0] || {};
       var app2 = results[1] || {};
+      var app3 = results[2] || {};  // ← NOVA LINHA
       var merged = {};
-      // Mescla: primeiro widget_appearances, depois appearances (prioridade maior)
       if (typeof mergeObject === 'function') {
         mergeObject(merged, app2);
         mergeObject(merged, app1);
-      } else {
-        for (var k in app2) { if (app2.hasOwnProperty(k)) merged[k] = app2[k]; }
-        for (var k in app1) { if (app1.hasOwnProperty(k)) merged[k] = app1[k]; }
+        mergeObject(merged, app3);  // ← NOVA LINHA (maior prioridade)
       }
       return normalizeAppearanceItem(merged);
     });
-  }
+}
 
 // Dentro de readAppearance(), logo antes do merge final:
 function readAppearance() {
