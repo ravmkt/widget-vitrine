@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.07.24-10';
+  var WIDGET_VERSION = '2026.07.24-11';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -1386,160 +1386,176 @@
   }
 
   function renderInlineWidget(stories, appearance, format) {
+    console.log("VIDLYTICS: Iniciando renderInlineWidget com", stories ? stories.length : 0, "stories");
     if (!stories || !stories.length) return;
 
-    // 1. Lê exatamente as configurações do seu painel
-    var itemsVisiveisDesktop = toNumber(readAppearanceValue(appearance, ['items_visible', 'itemsVisible', 'itens_visiveis']), 4);
-    var espacamento = toNumber(readAppearanceValue(appearance, ['spacing', 'gap', 'espacamento']), 16);
-    var corPrimaria = readAppearanceValue(appearance, ['primary_color', 'primaryColor', 'cor_primaria', 'cor_principal']) || '#00eb1b';
-    var corTexto = readAppearanceValue(appearance, ['text_color', 'textColor', 'cor_texto']) || '#0f172a';
-    var fonte = readAppearanceValue(appearance, ['font_family', 'fontFamily', 'fonte']) || 'Inter, sans-serif';
+    // 1. Lê as configurações com segurança (sem depender de outras funções que possam dar erro)
+    var itemsVisiveisDesktop = (appearance && (appearance.items_visible || appearance.itemsVisible || appearance.itens_visiveis)) || 4;
+    var espacamento = (appearance && (appearance.spacing || appearance.gap || appearance.espacamento)) || 16;
+    var corPrimaria = (appearance && (appearance.primary_color || appearance.primaryColor || appearance.cor_primaria)) || '#00eb1b';
+    var corTexto = (appearance && (appearance.text_color || appearance.textColor || appearance.cor_texto)) || '#0f172a';
+    var cssSelector = (appearance && (appearance.css_selector || appearance.seletor_css || appearance.seletor)) || '';
     
-    // 2. Busca o local exato onde o widget deve aparecer na loja
-    var cssSelector = readAppearanceValue(appearance, ['css_selector', 'seletor_css', 'seletor']);
-    var targetDiv = null;
-
     var renderInterval = setInterval(function () {
-      if (cssSelector) {
-          try { targetDiv = document.querySelector(String(cssSelector)); } catch(e){}
-      }
-      
-      if (!targetDiv) targetDiv = document.getElementById('vidlytics-carousel-root') || document.getElementById('instory-root');
+        var targetDiv = null;
 
-      // Se ainda não achou a seção da loja, espera mais um pouco
-      if (!targetDiv) return;
+        // 2. Busca o local no site (Com 5 planos de backup para NUNCA sumir da tela)
+        if (cssSelector) {
+            try { targetDiv = document.querySelector(String(cssSelector)); } catch(e){}
+        }
+        if (!targetDiv) targetDiv = document.getElementById('vidlytics-carousel-root');
+        if (!targetDiv) targetDiv = document.getElementById('instory-root');
+        if (!targetDiv) targetDiv = document.querySelector('main, #MainContent, .main-content, #main, .collection');
+        if (!targetDiv) targetDiv = document.body; // PLANO FINAL: Se não achar nada, joga no corpo do site!
 
-      clearInterval(renderInterval); // Achou! Para o loop.
-
-      // 3. Cria a div isolada para não quebrar o topo do seu site
-      var widgetContainer = document.getElementById('vl-carousel-wrapper-final');
-      if (!widgetContainer) {
-          widgetContainer = createEl('div');
-          widgetContainer.id = 'vl-carousel-wrapper-final';
-          widgetContainer.style.width = '100%';
-          widgetContainer.style.display = 'block';
-          widgetContainer.style.clear = 'both';
-          widgetContainer.style.margin = '20px 0';
-          
-          // Insere ABAIXO do elemento encontrado (conforme sua configuração)
-          if (targetDiv.nextSibling) {
-              targetDiv.parentNode.insertBefore(widgetContainer, targetDiv.nextSibling);
-          } else {
-              targetDiv.parentNode.appendChild(widgetContainer);
-          }
-      } else {
-          widgetContainer.innerHTML = '';
-      }
-
-      var shadow = widgetContainer.shadowRoot || widgetContainer.attachShadow({ mode: 'open' });
-      shadow.innerHTML = '';
-
-      // 4. CSS que TRAVA o tamanho (nunca mais ficará gigante) e aplica suas cores
-      var estilo = createEl('style');
-      estilo.textContent = `
-        :host { display: block; width: 100%; max-width: 1200px; margin: 0 auto; font-family: ${fonte}; }
-        * { box-sizing: border-box !important; }
+        if (!targetDiv) return; // Se incrivelmente não achar, continua tentando
         
-        .vl-slider {
-            display: flex; gap: ${espacamento}px; overflow-x: auto; scroll-snap-type: x mandatory;
-            scrollbar-width: none; padding-bottom: 10px;
-        }
-        .vl-slider::-webkit-scrollbar { display: none; }
+        clearInterval(renderInterval); // Achou! Para o loop.
+        console.log("VIDLYTICS: Local de inserção encontrado!", targetDiv);
+
+        // 3. Cria a caixa do widget
+        var wrapperId = 'vl-carousel-wrapper-final';
+        var widgetContainer = document.getElementById(wrapperId);
         
-        .vl-card {
-            all: unset; display: flex; flex-direction: column; cursor: pointer; scroll-snap-align: start;
-            /* A MÁGICA DO TAMANHO: Divide 100% por 4 itens */
-            flex: 0 0 calc((100% - (${espacamento}px * ${itemsVisiveisDesktop - 1})) / ${itemsVisiveisDesktop});
-            min-width: 0; position: relative; z-index: 10;
-        }
+        if (!widgetContainer) {
+            widgetContainer = document.createElement('div');
+            widgetContainer.id = wrapperId;
+            widgetContainer.style.width = '100%';
+            widgetContainer.style.maxWidth = '1200px';
+            widgetContainer.style.margin = '20px auto';
+            widgetContainer.style.display = 'block';
+            widgetContainer.style.clear = 'both';
 
-        @media (max-width: 768px) {
-            .vl-card { flex: 0 0 calc(40% - ${espacamento}px); }
-        }
-
-        .vl-media-wrap {
-            position: relative; width: 100%; aspect-ratio: 9 / 16; border-radius: 12px; overflow: hidden;
-            background: #000; border: 2px solid transparent; transition: transform 0.2s ease, border-color 0.2s ease;
-        }
-        
-        .vl-card:hover .vl-media-wrap {
-            border-color: ${corPrimaria}; transform: scale(0.98);
-        }
-
-        .vl-media-wrap img, 
-        .vl-media-wrap video {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;
-            /* A MÁGICA DO CLIQUE: Impede o vídeo de bloquear o mouse */
-            pointer-events: none; 
-        }
-
-        .vl-title {
-            margin-top: 10px; font-size: 13px; font-weight: 700; color: ${corTexto}; text-align: center;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; width: 100%;
-        }
-
-        .vl-play-icon {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 36px; height: 36px; background: rgba(0,0,0,0.6); border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; pointer-events: none; color: #fff;
-        }
-        .vl-play-icon svg { width: 18px; height: 18px; fill: white; margin-left: 2px; }
-      `;
-      shadow.appendChild(estilo);
-
-      // 5. Monta o HTML do carrossel
-      var slider = createEl('div', 'vl-slider');
-
-      stories.forEach(function (story, index) {
-        var videoObj = story.videos && story.videos.length > 0 ? story.videos[0] : null;
-        var videoUrl = videoObj ? getVideoUrl(videoObj) : '';
-        var cover = getStoryThumbnail(story, videoObj, null);
-
-        var card = createEl('button', 'vl-card');
-        var mediaWrap = createEl('div', 'vl-media-wrap');
-
-        var mediaEl;
-        if (videoUrl && isDirectVideoUrl(videoUrl)) {
-          mediaEl = createEl('video');
-          mediaEl.src = videoUrl;
-          if (cover) mediaEl.poster = cover;
-          mediaEl.muted = true;
-          mediaEl.loop = true;
-          mediaEl.autoplay = true;
-          mediaEl.setAttribute('playsinline', '');
-        } else {
-          mediaEl = createEl('img');
-          if (cover) mediaEl.src = cover;
-        }
-        mediaWrap.appendChild(mediaEl);
-
-        var playIcon = createEl('div', 'vl-play-icon');
-        playIcon.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
-        mediaWrap.appendChild(playIcon);
-        card.appendChild(mediaWrap);
-
-        var titulo = createEl('span', 'vl-title');
-        titulo.textContent = story.title || 'Ver Vídeo';
-        card.appendChild(titulo);
-
-        // 6. Garante que o Player abra ao clicar
-        card.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            // Verifica qual é a função original do seu código que abre o player e dispara
-            if (typeof openStoryViewer === 'function') {
-                openStoryViewer(stories, index);
-            } else if (typeof openModal === 'function') {
-                openModal(stories, index);
+            // Insere na página
+            if (targetDiv === document.body) {
+                document.body.insertBefore(widgetContainer, document.body.firstChild);
+            } else {
+                targetDiv.appendChild(widgetContainer);
             }
+        }
+        
+        widgetContainer.innerHTML = ''; // Limpa pra evitar duplicatas
+        
+        // 4. Cria o CSS blindado (Travando tamanho e cliques)
+        var estilo = document.createElement('style');
+        estilo.textContent = `
+            #vl-carousel-wrapper-final { font-family: sans-serif; }
+            #vl-carousel-wrapper-final * { box-sizing: border-box !important; }
+            
+            .vl-slider-container {
+                display: flex; gap: ${espacamento}px; overflow-x: auto; scroll-snap-type: x mandatory;
+                scrollbar-width: none; padding-bottom: 15px; width: 100%;
+            }
+            .vl-slider-container::-webkit-scrollbar { display: none; }
+            
+            .vl-card-item {
+                all: unset; display: flex; flex-direction: column; cursor: pointer; scroll-snap-align: start;
+                /* MÁGICA: Fixa a quantidade configurada no painel */
+                flex: 0 0 calc((100% - (${espacamento}px * ${itemsVisiveisDesktop - 1})) / ${itemsVisiveisDesktop});
+                min-width: 0; position: relative;
+            }
+
+            @media (max-width: 768px) {
+                .vl-card-item { flex: 0 0 calc(40% - ${espacamento}px); }
+            }
+
+            .vl-media-box {
+                position: relative; width: 100%; aspect-ratio: 9 / 16; border-radius: 12px; overflow: hidden;
+                background: #000; border: 2px solid transparent; transition: transform 0.2s ease, border-color 0.2s ease;
+            }
+            
+            .vl-card-item:hover .vl-media-box { border-color: ${corPrimaria}; transform: scale(0.98); }
+
+            .vl-media-box img, 
+            .vl-media-box video {
+                position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;
+                pointer-events: none; /* MÁGICA: Deixa o clique passar para o botão e abrir o modal */
+            }
+
+            .vl-title-text {
+                margin-top: 10px; font-size: 13px; font-weight: 700; color: ${corTexto}; text-align: center;
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; width: 100%;
+            }
+
+            .vl-play-btn-overlay {
+                position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                width: 40px; height: 40px; background: rgba(0,0,0,0.6); border-radius: 50%;
+                display: flex; align-items: center; justify-content: center; pointer-events: none; color: #fff;
+            }
+            .vl-play-btn-overlay svg { width: 20px; height: 20px; fill: white; margin-left: 2px; }
+        `;
+        widgetContainer.appendChild(estilo);
+
+        // 5. Constrói os cards do carrossel
+        var slider = document.createElement('div');
+        slider.className = 'vl-slider-container';
+
+        stories.forEach(function (story, index) {
+            var videoObj = story.videos && story.videos.length > 0 ? story.videos[0] : null;
+            
+            // Pega URL e Capa de forma totalmente segura
+            var videoUrl = '';
+            if (videoObj) videoUrl = videoObj.video_url || videoObj.videoUrl || videoObj.url || videoObj.file_url || '';
+            
+            var cover = ''; 
+            if (story.thumbnail_url || story.cover_url) cover = story.thumbnail_url || story.cover_url;
+            else if (videoObj && (videoObj.thumbnail_url || videoObj.cover_url)) cover = videoObj.thumbnail_url || videoObj.cover_url;
+
+            var card = document.createElement('button');
+            card.className = 'vl-card-item';
+            
+            var mediaWrap = document.createElement('div');
+            mediaWrap.className = 'vl-media-box';
+
+            var mediaEl;
+            var isVideo = videoUrl && (videoUrl.includes('.mp4') || videoUrl.includes('.webm') || videoUrl.includes('.mov') || videoUrl.includes('.m3u8'));
+            
+            if (isVideo) {
+                mediaEl = document.createElement('video');
+                mediaEl.src = videoUrl;
+                if (cover) mediaEl.poster = cover;
+                mediaEl.muted = true;
+                mediaEl.loop = true;
+                mediaEl.autoplay = true;
+                mediaEl.setAttribute('playsinline', '');
+            } else {
+                mediaEl = document.createElement('img');
+                mediaEl.src = cover || videoUrl; 
+            }
+            mediaWrap.appendChild(mediaEl);
+
+            var playIcon = document.createElement('div');
+            playIcon.className = 'vl-play-btn-overlay';
+            playIcon.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
+            mediaWrap.appendChild(playIcon);
+            
+            card.appendChild(mediaWrap);
+
+            var titulo = document.createElement('span');
+            titulo.className = 'vl-title-text';
+            titulo.textContent = story.title || 'Ver Vídeo';
+            card.appendChild(titulo);
+
+            // 6. Garante o Clique
+            card.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log("VIDLYTICS: Clicou no vídeo!", index);
+                
+                // Tenta chamar a função que abre o vídeo do seu arquivo original
+                if (typeof window.openStoryViewer === 'function') { window.openStoryViewer(stories, index); }
+                else if (typeof openStoryViewer === 'function') { openStoryViewer(stories, index); } 
+                else if (typeof window.openModal === 'function') { window.openModal(stories, index); }
+                else if (typeof openModal === 'function') { openModal(stories, index); }
+            });
+
+            slider.appendChild(card);
         });
 
-        slider.appendChild(card);
-      });
-
-      shadow.appendChild(slider);
-      
-    }, 300); // Fica tentando a cada 300ms até a loja estar 100% carregada
+        widgetContainer.appendChild(slider);
+        console.log("VIDLYTICS: Renderização na tela concluída com sucesso!");
+        
+    }, 300);
   }
 
   function renderFloating(stories, appearance) {
