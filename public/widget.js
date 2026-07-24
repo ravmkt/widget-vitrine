@@ -1573,18 +1573,24 @@ if (targetDiv.parentNode) {
                 mediaEl.autoplay = true;
                 mediaEl.setAttribute('playsinline', '');
                 mediaEl.setAttribute('webkit-playsinline', '');
+            } else if (videoUrl) {
+                mediaEl = document.createElement('img');
+                mediaEl.src = getVideoThumbnail(videoObj) || cover || videoUrl;
             } else {
                 mediaEl = document.createElement('div');
                 mediaEl.className = 'vl-title-text';
                 mediaEl.textContent = 'Vídeo';
             }
+
             mediaWrap.appendChild(mediaEl);
 
-            var playIcon = document.createElement('div');
-            playIcon.className = 'vl-play-btn-overlay';
-            playIcon.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
-            mediaWrap.appendChild(playIcon);
-            
+            if (videoUrl) {
+                var playIcon = document.createElement('div');
+                playIcon.className = 'vl-play-btn-overlay';
+                playIcon.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
+                mediaWrap.appendChild(playIcon);
+            }
+
             card.appendChild(mediaWrap);
 
             var titulo = document.createElement('span');
@@ -1751,7 +1757,7 @@ if (targetDiv.parentNode) {
          var rels = storyVideos.filter(function(sv) { return idsEqual(sv.story_id, story.id); });
          story.videos = rels.map(function(r) {
              return videos.find(function(v) { return idsEqual(v.id, r.video_id); }) || {};
-         });
+         }).filter(function(video) { return video && Object.keys(video).length > 0; });
       });
 
       // --- O CÉREBRO DA DECISÃO DE FORMATO ---
