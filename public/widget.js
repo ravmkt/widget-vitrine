@@ -1758,6 +1758,7 @@ if (targetDiv.parentNode) {
          story.videos = rels.map(function(r) {
              return videos.find(function(v) { return idsEqual(v.id, r.video_id); }) || {};
          }).filter(function(video) { return video && Object.keys(video).length > 0; });
+         console.info('VIDLYTICS: story videos', { storyId: story.id, relCount: rels.length, videoCount: story.videos.length });
       });
 
       // --- O CÉREBRO DA DECISÃO DE FORMATO ---
