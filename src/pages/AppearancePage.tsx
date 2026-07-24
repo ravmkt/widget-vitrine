@@ -2968,23 +2968,6 @@ window.dispatchEvent(new Event('storage'));
                         />
                       </FormField>
 
-                      <FormField label="URL específica (opcional)">
-                        <input
-                          type="text"
-                          value={formData.url || ''}
-                          onChange={e =>
-                            setFormData({
-                              ...formData,
-                              url: e.target.value,
-                            })
-                          }
-                          placeholder="Ex: /teste, /produtos, /categoria/calcados"
-                          className={inputClass}
-                        />
-                        <p className="text-xs font-semibold text-slate-400">
-                          Deixe em branco para mostrar em todas as páginas. Use uma palavra-chave que apareça na URL (ex: "teste" para mostrar em /pagina-teste).
-                        </p>
-                      </FormField>
                     </SectionCard>
                   )}
 
