@@ -1315,6 +1315,12 @@ function openStoryViewer(stories, index) {
   if (!globalShadowRoot) {
     var shadowData = getOrCreateShadowRoot(currentAppearance || {});
     globalShadowRoot = shadowData.shadow;
+    
+    // CORREÇÃO 2: Injetar o CSS do player caso o Shadow DOM tenha sido 
+    // criado apenas agora (como acontece no formato carrossel)
+    var style = createEl('style');
+    style.textContent = buildFloatingCss(currentAppearance || {});
+    globalShadowRoot.appendChild(style);
   }
 
   if (!overlay) {
