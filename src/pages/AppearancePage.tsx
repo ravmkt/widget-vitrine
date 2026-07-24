@@ -2693,40 +2693,17 @@ const AppearancePage = () => {
           throw new Error(`widget_appearances sync: ${widgetSyncError.message}`);
         }
 
-        const { error: generalSyncError } = await supabase
-          .from('general_settings')
-          .upsert({
-            store_id: finalStoreId,
-            primary_color: formData.primary_color,
-            secondary_color: formData.secondary_color,
-            text_color: formData.text_color,
-            background_color: formData.background_color,
-            button_color: formData.button_color,
-            font_family: formData.font_family,
-            font_size: Number(toNumberInputValue(formData.font_size)) || 14,
-            floating_position: normalizedFloatingPosition,
-            floating_shape: floatingDesktop.shape,
-            floating_width: Number(toNumberInputValue(floatingDesktop.width)) || 85,
-            floating_height: Number(toNumberInputValue(floatingDesktop.height)) || 142,
-            floating_border_radius: Number(toNumberInputValue(floatingDesktop.border_radius)) || 12,
-            floating_border_width: Number(toNumberInputValue(floatingDesktop.border_style)) || 0,
-            floating_border_color: floatingDesktop.border_color || formData.primary_color,
-            floating_top: Number(toNumberInputValue(floatingDesktop.top_spacing)) || 20,
-            floating_bottom: Number(toNumberInputValue(floatingDesktop.bottom_spacing)) || 20,
-            floating_side: Number(toNumberInputValue(floatingDesktop.right_spacing)) || 20,
-            floating_object_fit: floatingDesktop.object_fit || 'cover',
-            z_index: Number(toNumberInputValue(floatingDesktop.z_index)) || 2147483647,
-            show_title: modalConfig.show_title,
-            show_play_button: modalConfig.show_play_button,
-            show_product: modalConfig.show_product,
-            border_radius: Number(toNumberInputValue(floatingDesktop.border_radius)) || 12,
-            shadow_enabled: modalConfig.shadow_enabled,
-            allow_drag: Boolean(floatingDesktop.draggable),
-            default_appearance_id: shouldBeDefault ? id : null,
-            updated_at: now,
-          }, {
-            onConflict: 'store_id',
-          });
+const { error: generalSyncError } = await supabase
+  .from('general_settings')
+  .upsert({
+    store_id: finalStoreId,
+    primary_color: formData.primary_color,
+    secondary_color: formData.secondary_color,
+    default_appearance_id: shouldBeDefault ? id : null,
+    updated_at: now,
+  }, {
+    onConflict: 'store_id',
+  });
 
         if (generalSyncError) {
           console.error('Erro ao sincronizar general_settings:', generalSyncError);
