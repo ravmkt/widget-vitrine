@@ -1441,12 +1441,13 @@ var renderInterval = setInterval(function () {
             widgetContainer.style.display = 'block';
             widgetContainer.style.clear = 'both';
 
-            // Insere na página
-            if (targetDiv === document.body) {
-                document.body.insertBefore(widgetContainer, document.body.firstChild);
-            } else {
-                targetDiv.appendChild(widgetContainer);
-            }
+// Insere o carrossel imediatamente abaixo do elemento encontrado
+if (targetDiv.parentNode) {
+    targetDiv.parentNode.insertBefore(
+        widgetContainer,
+        targetDiv.nextSibling
+    );
+}
         }
         
         widgetContainer.innerHTML = ''; // Limpa pra evitar duplicatas
