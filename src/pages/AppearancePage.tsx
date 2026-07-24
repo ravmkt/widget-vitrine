@@ -3784,134 +3784,155 @@ window.dispatchEvent(new Event('storage'));
   </SectionCard>
 )}
 
-                  {activeTab === 'modal' && (
-                    <SectionCard
-                      title="Player Interativo e Modal"
-                      description="Controle quais botões e elementos aparecem dentro do player/modal."
-                    >
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <FormField label="Mostrar título">
-                          <ToggleSwitch
-                            label="Mostrar título"
-                            checked={formData.modal_config.show_title}
-                            onChange={e =>
-                              updateModalConfig({
-                                show_title: e.target.checked,
-                              })
-                            }
-                          />
-                        </FormField>
+{activeTab === 'modal' && (
+  <SectionCard
+    title="Player Interativo e Modal"
+    description="Controle quais botões e elementos aparecem dentro do player/modal, além da aparência das bordas."
+  >
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <FormField label="Mostrar título">
+        <ToggleSwitch
+          label="Mostrar título"
+          checked={formData.modal_config.show_title}
+          onChange={e =>
+            updateModalConfig({ show_title: e.target.checked })
+          }
+        />
+      </FormField>
 
-                        <FormField label="Mostrar botão play">
-                          <ToggleSwitch
-                            label="Mostrar botão play"
-                            checked={formData.modal_config.show_play_button}
-                            onChange={e =>
-                              updateModalConfig({
-                                show_play_button: e.target.checked,
-                              })
-                            }
-                          />
-                        </FormField>
+      <FormField label="Mostrar botão play">
+        <ToggleSwitch
+          label="Mostrar botão play"
+          checked={formData.modal_config.show_play_button}
+          onChange={e =>
+            updateModalConfig({ show_play_button: e.target.checked })
+          }
+        />
+      </FormField>
 
-                        <FormField label="Mostrar botão curtir">
-                          <ToggleSwitch
-                            label="Mostrar botão curtir"
-                            checked={formData.modal_config.show_like_button}
-                            onChange={e =>
-                              updateModalConfig({
-                                show_like_button: e.target.checked,
-                              })
-                            }
-                          />
-                        </FormField>
+      <FormField label="Mostrar botão curtir">
+        <ToggleSwitch
+          label="Mostrar botão curtir"
+          checked={formData.modal_config.show_like_button}
+          onChange={e =>
+            updateModalConfig({ show_like_button: e.target.checked })
+          }
+        />
+      </FormField>
 
-                        <FormField label="Mostrar botão WhatsApp">
-                          <ToggleSwitch
-                            label="Mostrar botão WhatsApp"
-                            checked={formData.modal_config.show_whatsapp_button}
-                            onChange={e =>
-                              updateModalConfig({
-                                show_whatsapp_button: e.target.checked,
-                              })
-                            }
-                          />
-                        </FormField>
+      <FormField label="Mostrar botão WhatsApp">
+        <ToggleSwitch
+          label="Mostrar botão WhatsApp"
+          checked={formData.modal_config.show_whatsapp_button}
+          onChange={e =>
+            updateModalConfig({ show_whatsapp_button: e.target.checked })
+          }
+        />
+      </FormField>
 
-                        <FormField label="Mostrar produto">
-                          <ToggleSwitch
-                            label="Mostrar produto"
-                            checked={formData.modal_config.show_product}
-                            onChange={e =>
-                              updateModalConfig({
-                                show_product: e.target.checked,
-                              })
-                            }
-                          />
-                        </FormField>
+      <FormField label="Mostrar produto">
+        <ToggleSwitch
+          label="Mostrar produto"
+          checked={formData.modal_config.show_product}
+          onChange={e =>
+            updateModalConfig({ show_product: e.target.checked })
+          }
+        />
+      </FormField>
 
-                        <FormField label="Mostrar botão produto">
-                          <ToggleSwitch
-                            label="Mostrar botão produto"
-                            checked={formData.modal_config.show_product_button}
-                            onChange={e =>
-                              updateModalConfig({
-                                show_product_button: e.target.checked,
-                              })
-                            }
-                          />
-                        </FormField>
+      <FormField label="Mostrar botão produto">
+        <ToggleSwitch
+          label="Mostrar botão produto"
+          checked={formData.modal_config.show_product_button}
+          onChange={e =>
+            updateModalConfig({ show_product_button: e.target.checked })
+          }
+        />
+      </FormField>
 
-                        <FormField label="Mostrar botão compartilhar">
-                          <ToggleSwitch
-                            label="Mostrar botão compartilhar"
-                            checked={formData.modal_config.show_share_button}
-                            onChange={e =>
-                              updateModalConfig({
-                                show_share_button: e.target.checked,
-                              })
-                            }
-                          />
-                        </FormField>
+      <FormField label="Mostrar botão compartilhar">
+        <ToggleSwitch
+          label="Mostrar botão compartilhar"
+          checked={formData.modal_config.show_share_button}
+          onChange={e =>
+            updateModalConfig({ show_share_button: e.target.checked })
+          }
+        />
+      </FormField>
 
-                        <FormField label="Mostrar botão comentários">
-                          <ToggleSwitch
-                            label="Mostrar botão comentários"
-                            checked={formData.modal_config.show_comment_button}
-                            onChange={e =>
-                              updateModalConfig({
-                                show_comment_button: e.target.checked,
-                              })
-                            }
-                          />
-                        </FormField>
+      <FormField label="Mostrar botão comentários">
+        <ToggleSwitch
+          label="Mostrar botão comentários"
+          checked={formData.modal_config.show_comment_button}
+          onChange={e =>
+            updateModalConfig({ show_comment_button: e.target.checked })
+          }
+        />
+      </FormField>
 
-                        <FormField label="Ocultar stories">
-                          <ToggleSwitch
-                            label="Ocultar stories"
-                            checked={formData.modal_config.hide_stories}
-                            onChange={e =>
-                              updateModalConfig({
-                                hide_stories: e.target.checked,
-                              })
-                            }
-                          />
-                        </FormField>
+      <FormField label="Ocultar stories">
+        <ToggleSwitch
+          label="Ocultar stories"
+          checked={formData.modal_config.hide_stories}
+          onChange={e =>
+            updateModalConfig({ hide_stories: e.target.checked })
+          }
+        />
+      </FormField>
 
-                        <FormField label="Sombra">
-                          <ToggleSwitch
-                            label="Ativar sombra"
-                            checked={formData.modal_config.shadow_enabled}
-                            onChange={e =>
-                              updateModalConfig({
-                                shadow_enabled: e.target.checked,
-                              })
-                            }
-                          />
-                        </FormField>
-                      </div>
-                    </SectionCard>
-                  )}
+      <FormField label="Sombra">
+        <ToggleSwitch
+          label="Ativar sombra"
+          checked={formData.modal_config.shadow_enabled}
+          onChange={e =>
+            updateModalConfig({ shadow_enabled: e.target.checked })
+          }
+        />
+      </FormField>
+
+      {/* ✅ NOVO: Cor da borda */}
+      <FormField label="Cor da borda">
+        <ColorInput
+          label="Cor da borda"
+          value={formData.modal_config.border_color || formData.primary_color}
+          onChange={e =>
+            updateModalConfig({ border_color: e.target.value })
+          }
+        />
+      </FormField>
+
+      {/* ✅ NOVO: Largura da borda */}
+      <FormField label="Largura da borda">
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value={toNumberInputValue(formData.modal_config.border_width)}
+          onChange={e =>
+            updateModalConfig({ border_width: e.target.value })
+          }
+          placeholder="Ex: 2"
+          className={inputClass}
+        />
+      </FormField>
+
+      {/* ✅ NOVO: Raio da borda */}
+      <FormField label="Raio da borda">
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value={toNumberInputValue(formData.modal_config.border_radius)}
+          onChange={e =>
+            updateModalConfig({ border_radius: e.target.value })
+          }
+          placeholder="Ex: 12"
+          className={inputClass}
+        />
+      </FormField>
+    </div>
+  </SectionCard>
+)}
                 </div>
 
                 <div className="xl:sticky xl:top-0 xl:self-start">
