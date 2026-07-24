@@ -2722,7 +2722,6 @@ const AppearancePage = () => {
             border_radius: Number(toNumberInputValue(floatingDesktop.border_radius)) || 12,
             shadow_enabled: modalConfig.shadow_enabled,
             allow_drag: Boolean(floatingDesktop.draggable),
-            allow_close: Boolean(floatingDesktop.allow_close),
             default_appearance_id: shouldBeDefault ? id : null,
             updated_at: now,
           }, {
