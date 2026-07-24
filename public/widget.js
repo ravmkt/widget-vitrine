@@ -292,20 +292,33 @@
     return normalizeAppearanceItem(merged);
   }
 
-  function fetchDbAppearance() {
-    if (!storeId || !hasSupabase) return Promise.resolve({});
-    function tryTable(tableName, extraQuery) {
-      var path = tableName + '?select=*&store_id=eq.' + encodeURIComponent(storeId) + (extraQuery || '') + '&order=is_default.desc,updated_at.desc.nullslast,created_at.desc.nullslast&limit=1';
-      return fetchJson(path).then(function (items) {
-        if (!items || !items.length) return null;
-        var appearance = extractAppearanceFromItem(items[0], true);
-        return appearanceHasUsefulData(appearance) ? appearance : null;
-      });
-    }
-    return tryTable('widget_appearances').then(function (appearance) {
-      if (appearance) return appearance; return tryTable('appearances');
-    }).then(function (appearance) { return appearance || {}; });
+function fetchDbAppearance() {
+  if (!storeId || !hasSupabase) return Promise.resolve({});
+  
+  function tryTable(tableName, extraQuery) {
+    var path = tableName + '?select=*&store_id=eq.' + encodeURIComponent(storeId) + (extraQuery || '') + '&order=is_default.desc,updated_at.desc.nullslast,created_at.desc.nullslast&limit=1';
+    return fetchJson(path).then(function (items) {
+      if (!items || !items.length) return null;
+      var appearance = extractAppearanceFromItem(items[0], true);
+      return appearanceHasUsefulData(appearance) ? appearance : null;
+    });
   }
+  
+  // ⬇️ CORREÇÃO: consulta AMBAS as tabelas e faz merge
+  return Promise.all([
+    tryTable('appearances'),
+    tryTable('widget_appearances')
+  ]).then(function (results) {
+    var appearancesData = results[0] || {};
+    var widgetAppearancesData = results[1] || {};
+    
+    // Merge: appearances tem PRIORIDADE (é a tabela que o story referencia)
+    var merged = {};
+    mergeObject(merged, widgetAppearancesData);  // fallback
+    mergeObject(merged, appearancesData);         // prioridade (sobrescreve)
+    return normalizeAppearanceItem(merged);
+  });
+}
 
   function readAppearance() {
     var configAppearance = normalizeAppearanceItem(getConfigAppearance());
