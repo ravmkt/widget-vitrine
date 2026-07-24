@@ -301,6 +301,23 @@
     return normalizeAppearanceItem(merged);
   }
 
+function tryTable(tableName) {
+  if (!storeId || !hasSupabase) return Promise.resolve(null);
+  var query = tableName + '?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1';
+  return supabaseFetch(query, { method: 'GET' })
+    .then(function (response) {
+      if (!response.ok) return null;
+      return response.json();
+    })
+    .then(function (data) {
+      if (Array.isArray(data) && data.length > 0) return data[0];
+      return null;
+    })
+    .catch(function () {
+      return null;
+    });
+}
+
   function fetchDbAppearance() {
     if (!storeId || !hasSupabase) return Promise.resolve({});
     return Promise.all([
