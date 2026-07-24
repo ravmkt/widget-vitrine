@@ -626,6 +626,9 @@ const createDefaultModalConfig = (): ModalConfig => ({
   show_product_button: true,
   hide_stories: false,
   shadow_enabled: true,
+  border_color: '#0094EB',
+border_width: '2',
+border_radius: '12',
 });
 
 const createResponsiveConfig = <T,>(
