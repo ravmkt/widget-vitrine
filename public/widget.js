@@ -1401,7 +1401,7 @@ function openStoryViewer(stories, index) {
     var espacamento = (appearance && (appearance.spacing || appearance.gap || appearance.espacamento)) || 16;
     var corPrimaria = (appearance && (appearance.primary_color || appearance.primaryColor || appearance.cor_primaria)) || '#00eb1b';
     var corTexto = (appearance && (appearance.text_color || appearance.textColor || appearance.cor_texto)) || '#0f172a';
-    var cssSelector = (appearance && (appearance.css_selector || appearance.seletor_css || appearance.seletor)) || '';
+var cssSelector = 'section.category-content .holder-results > div > .flex-.between-.vtop';
     
     var renderInterval = setInterval(function () {
         var targetDiv = null;
