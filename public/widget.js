@@ -1423,29 +1423,20 @@ function openStoryViewer(stories, index) {
 
     var ap = appearance || {};
 
-    // ========== LEITURA COM LOGS ==========
-    console.log("VIDLYTICS: --- CONFIGS ---");
-    console.log("VIDLYTICS: ap.visible_items =", ap.visible_items);
-    console.log("VIDLYTICS: ap.carousel_visible_items =", ap.carousel_visible_items);
-    console.log("VIDLYTICS: ap.items_visible =", ap.items_visible);
+    // ========== LEITURA ROBUSTA ==========
+    console.log("VIDLYTICS: --- CONFIGS RAW ---");
+    console.log("VIDLYTICS: ap completo:", JSON.stringify(ap));
 
-    var rawVisible = ap.visible_items || ap.carousel_visible_items || ap.items_visible;
-    console.log("VIDLYTICS: rawVisible =", rawVisible);
-    var itemsVisiveis = Number(rawVisible);
-    console.log("VIDLYTICS: Number(rawVisible) =", itemsVisiveis);
+    var itemsVisiveis = parseInt(ap.visible_items) || parseInt(ap.carousel_visible_items) || parseInt(ap.items_visible) || 4;
+    if (isNaN(itemsVisiveis) || itemsVisiveis < 1) itemsVisiveis = 4;
 
-    if (!itemsVisiveis || isNaN(itemsVisiveis) || itemsVisiveis < 1) {
-      console.warn("VIDLYTICS: itemsVisiveis inválido, fallback 4");
-      itemsVisiveis = 4;
-    }
-
-    var espacamento   = Number(ap.spacing || ap.gap || 16);
+    var espacamento   = parseInt(ap.spacing) || parseInt(ap.gap) || 16;
     var formato       = ap.format || 'portrait_9_16';
     var corPrimaria   = ap.primary_color   || '#0094EB';
     var corTexto      = ap.text_color      || '#0F172A';
     var corBorda      = ap.border_color    || '#0094EB';
-    var borderRadius  = Number(ap.radius || ap.border_radius || 12);
-    var borderWidth   = Number(ap.border_width || 2);
+    var borderRadius  = parseInt(ap.radius) || parseInt(ap.border_radius) || 12;
+    var borderWidth   = parseInt(ap.border_width) || 2;
     var fonte         = ap.font_family     || 'Inter, sans-serif';
     var exibirTitulo  = ap.show_title !== false;
     var exibirPlayBtn = ap.show_play_button !== false;
@@ -1514,24 +1505,25 @@ function openStoryViewer(stories, index) {
 
       var estilo = document.createElement('style');
       estilo.textContent = [
-        '#' + wrapperId + ' { font-family: ' + fonte + ', sans-serif; ' + (autoCenter ? 'display: flex; justify-content: center; ' : '') + 'overflow: visible !important; }',
+        '#' + wrapperId + ' { font-family: ' + fonte + ', sans-serif; ' + (autoCenter && allVideoItems.length <= itemsVisiveis ? 'display: flex; justify-content: center; ' : '') + 'overflow: visible !important; }',
         '#' + wrapperId + ' * { box-sizing: border-box !important; }',
         '.vl-slider-container {',
         '  display: flex !important; flex-wrap: nowrap !important; gap: ' + gapPx + 'px;',
         '  overflow-x: auto !important; overflow-y: hidden !important;',
         '  scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;',
-        '  scrollbar-width: thin; scrollbar-color: #ccc transparent;',
-        '  padding-bottom: 20px; width: 100%; max-width: 100%;',
+        '  scrollbar-width: none !important; /* Firefox: esconde scrollbar */',
+        '  -ms-overflow-style: none !important; /* IE/Edge: esconde scrollbar */',
+        '  padding-bottom: 0px; width: 100%; max-width: 100%;',
         '  cursor: grab; user-select: none; -webkit-user-select: none;',
         '}',
+        '.vl-slider-container::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }',
         '.vl-slider-container:active { cursor: grabbing; }',
-        '.vl-slider-container::-webkit-scrollbar { height: 6px; }',
-        '.vl-slider-container::-webkit-scrollbar-track { background: transparent; }',
-        '.vl-slider-container::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }',
+        '.vl-slider-container.dragging { cursor: grabbing !important; scroll-snap-type: none !important; }',
         '.vl-card-item {',
         '  all: unset; display: flex !important; flex-direction: column; cursor: pointer;',
         '  scroll-snap-align: start; flex: 0 0 ' + cardWidth + ' !important; min-width: 140px;',
         '  position: relative; transition: transform 0.2s ease; user-select: none; -webkit-user-select: none;',
+        '  pointer-events: auto;',
         '}',
         '.vl-card-item:hover { transform: translateY(-2px); }',
         '@media (max-width: 768px) { .vl-card-item { flex: 0 0 calc(50% - ' + gapPx + 'px) !important; min-width: 120px; } }',
@@ -1627,14 +1619,107 @@ function openStoryViewer(stories, index) {
       });
 
       widgetContainer.appendChild(slider);
-      console.log("VIDLYTICS: ✅ Renderizado! " + allVideoItems.length + " cards, " + itemsVisiveis + " visíveis");
+
+      // ========== DRAG-TO-SCROLL (SEM SCROLLBAR) ==========
+      (function() {
+        var isDown = false;
+        var startX = 0;
+        var scrollLeft = 0;
+        var moved = false;
+        var velX = 0;
+        var momentumID;
+
+        slider.addEventListener('mousedown', function(e) {
+          isDown = true;
+          moved = false;
+          slider.classList.add('dragging');
+          startX = e.pageX - slider.offsetLeft;
+          scrollLeft = slider.scrollLeft;
+          cancelMomentum();
+          e.preventDefault();
+        });
+
+        slider.addEventListener('mouseleave', function() {
+          if (isDown) {
+            isDown = false;
+            slider.classList.remove('dragging');
+            startMomentum();
+          }
+        });
+
+        slider.addEventListener('mouseup', function() {
+          if (isDown) {
+            isDown = false;
+            slider.classList.remove('dragging');
+            startMomentum();
+          }
+        });
+
+        slider.addEventListener('mousemove', function(e) {
+          if (!isDown) return;
+          e.preventDefault();
+          var x = e.pageX - slider.offsetLeft;
+          var walk = (x - startX) * 1.5; // Multiplicador de velocidade
+          velX = walk;
+          slider.scrollLeft = scrollLeft - walk;
+          if (Math.abs(walk) > 3) moved = true;
+        });
+
+        // Bloquear click se arrastou
+        slider.addEventListener('click', function(e) {
+          if (moved) {
+            e.stopPropagation();
+            e.preventDefault();
+          }
+        }, true);
+
+        // Touch
+        slider.addEventListener('touchstart', function(e) {
+          isDown = true;
+          moved = false;
+          startX = e.touches[0].pageX - slider.offsetLeft;
+          scrollLeft = slider.scrollLeft;
+          cancelMomentum();
+        }, { passive: false });
+
+        slider.addEventListener('touchend', function() {
+          isDown = false;
+          startMomentum();
+        });
+
+        slider.addEventListener('touchmove', function(e) {
+          if (!isDown) return;
+          var x = e.touches[0].pageX - slider.offsetLeft;
+          var walk = (x - startX) * 1.5;
+          slider.scrollLeft = scrollLeft - walk;
+          if (Math.abs(walk) > 3) moved = true;
+        }, { passive: false });
+
+        function startMomentum() {
+          cancelMomentum();
+          if (Math.abs(velX) < 2) return;
+          momentumID = requestAnimationFrame(function animate() {
+            velX *= 0.92;
+            slider.scrollLeft -= velX;
+            if (Math.abs(velX) > 0.5) {
+              momentumID = requestAnimationFrame(animate);
+            }
+          });
+        }
+
+        function cancelMomentum() {
+          if (momentumID) { cancelAnimationFrame(momentumID); momentumID = null; }
+          velX = 0;
+        }
+      })();
+      // ====================================================
+
+      console.log("VIDLYTICS: ✅ Renderizado! " + allVideoItems.length + " cards, " + itemsVisiveis + " visíveis, drag ativo, scrollbar oculta");
 
     }, 300);
   }
 
-  // Expor no escopo global
   window.renderInlineWidget = renderInlineWidget;
-
 })();
 
   function renderFloating(stories, appearance) {
