@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.07.24-30';
+  var WIDGET_VERSION = '2026.07.24-35';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -99,6 +99,12 @@
   function firstDefined() {
     for (var i = 0; i < arguments.length; i += 1) { if (arguments[i] !== undefined && arguments[i] !== null && arguments[i] !== '') return arguments[i]; }
     return undefined;
+  }
+
+  // ⬇️ NOVA FUNÇÃO: Resolve o problema do parseInt + || com zero
+  function safeInt(value, fallback) {
+    var num = parseInt(value);
+    return isNaN(num) ? fallback : num;
   }
 
   function idsEqual(a, b) { if (a === undefined || a === null || b === undefined || b === null) return false; return String(a) === String(b); }
@@ -295,43 +301,26 @@
     return normalizeAppearanceItem(merged);
   }
 
-function fetchDbAppearance() {
-  if (!storeId || !hasSupabase) return Promise.resolve({});
-  return Promise.all([
-    tryTable('appearances'),
-    tryTable('widget_appearances')
-  ]).then(function(results) {
-    var app1 = results[0] || {};
-    var app2 = results[1] || {};
-    var merged = {};
-    // Mescla: primeiro widget_appearances, depois appearances (prioridade maior)
-    if (typeof mergeObject === 'function') {
-      mergeObject(merged, app2);
-      mergeObject(merged, app1);
-    } else {
-      // fallback caso mergeObject não exista
-      for (var k in app2) { if (app2.hasOwnProperty(k)) merged[k] = app2[k]; }
-      for (var k in app1) { if (app1.hasOwnProperty(k)) merged[k] = app1[k]; }
-    }
-    return normalizeAppearanceItem(merged);
-  });
-}
-  
-  // ⬇️ CORREÇÃO: consulta AMBAS as tabelas e faz merge
-  return Promise.all([
-    tryTable('appearances'),
-    tryTable('widget_appearances')
-  ]).then(function (results) {
-    var appearancesData = results[0] || {};
-    var widgetAppearancesData = results[1] || {};
-    
-    // Merge: appearances tem PRIORIDADE (é a tabela que o story referencia)
-    var merged = {};
-    mergeObject(merged, widgetAppearancesData);  // fallback
-    mergeObject(merged, appearancesData);         // prioridade (sobrescreve)
-    return normalizeAppearanceItem(merged);
-  });
-}
+  function fetchDbAppearance() {
+    if (!storeId || !hasSupabase) return Promise.resolve({});
+    return Promise.all([
+      tryTable('appearances'),
+      tryTable('widget_appearances')
+    ]).then(function(results) {
+      var app1 = results[0] || {};
+      var app2 = results[1] || {};
+      var merged = {};
+      // Mescla: primeiro widget_appearances, depois appearances (prioridade maior)
+      if (typeof mergeObject === 'function') {
+        mergeObject(merged, app2);
+        mergeObject(merged, app1);
+      } else {
+        for (var k in app2) { if (app2.hasOwnProperty(k)) merged[k] = app2[k]; }
+        for (var k in app1) { if (app1.hasOwnProperty(k)) merged[k] = app1[k]; }
+      }
+      return normalizeAppearanceItem(merged);
+    });
+  }
 
   function readAppearance() {
     var configAppearance = normalizeAppearanceItem(getConfigAppearance());
@@ -1449,7 +1438,7 @@ function openStoryViewer(stories, index) {
 
     var ap = appearance || {};
 
-    // ========== LEITURA COM SUPORTE A CAROUSEL_CONFIG ==========
+    // ========== LEITURA COM SUPORTE A CAROUSEL_CONFIG (CORRIGIDA) ==========
     console.log("VIDLYTICS: --- CONFIGS RAW ---");
     console.log("VIDLYTICS: ap completo:", JSON.stringify(ap));
 
@@ -1460,37 +1449,53 @@ function openStoryViewer(stories, index) {
         carouselCfg = typeof ap.carousel_config === 'string' 
           ? JSON.parse(ap.carousel_config) 
           : ap.carousel_config;
-        console.log("VIDLYTICS: carousel_config encontrado:", JSON.stringify(carouselCfg));
-      } catch(e) {
-        console.log("VIDLYTICS: erro ao parse carousel_config:", e);
-      }
+      } catch(e) { /* ignora */ }
+    }
+
+    // ⬇️ FALLBACK: se carousel_config não veio ou está incompleto, monta dos campos avulsos
+    if (!carouselCfg || !carouselCfg.mobile) {
+      carouselCfg = {
+        mobile: {
+          card_shape: ap.card_shape || ap.format || ap.shape,
+          visible_items: ap.visible_items || ap.columns,
+          gap: ap.gap || ap.spacing,
+          border_color: ap.border_color,
+          border_width: ap.border_width,
+          border_radius: ap.border_radius || ap.radius,
+          show_title: ap.show_title,
+          auto_center: ap.auto_center,
+          show_play_icon: ap.show_play_button
+        }
+      };
     }
 
     // Pega as configs do device mobile (fallback desktop)
-    var deviceCfg = (carouselCfg && carouselCfg.mobile) || (carouselCfg && carouselCfg.desktop) || {};
+    var deviceCfg = carouselCfg.mobile || carouselCfg.desktop || {};
 
+    // ⬇️ CORRIGIDO: safeInt + firstDefined no lugar de parseInt || parseInt || ...
     // visible_items - prioridade: carousel_config > campo raiz > grid > default
-    var itemsVisiveis = parseInt(deviceCfg.visible_items)
-                     || parseInt(ap.carousel_visible_items)
-                     || parseInt(ap.visible_items)
-                     || parseInt(ap.columns)
-                     || 4;
-    if (isNaN(itemsVisiveis) || itemsVisiveis < 1) itemsVisiveis = 4;
+    var itemsVisiveis = safeInt(firstDefined(
+      deviceCfg.visible_items,
+      ap.carousel_visible_items,
+      ap.visible_items,
+      ap.columns
+    ), 4);
 
     // spacing
-    var espacamento = parseInt(deviceCfg.gap)
-                   || parseInt(ap.carousel_gap)
-                   || parseInt(ap.spacing)
-                   || parseInt(ap.gap)
-                   || 16;
-    if (isNaN(espacamento) || espacamento < 0) espacamento = 16;
+    var espacamento = safeInt(firstDefined(
+      deviceCfg.gap,
+      ap.carousel_gap,
+      ap.spacing,
+      ap.gap
+    ), 16);
 
     // formato do card
-    var formatoRaw = deviceCfg.card_shape
-                  || ap.carousel_card_shape
-                  || ap.format
-                  || ap.shape
-                  || 'portrait_9_16';
+    var formatoRaw = firstDefined(
+      deviceCfg.card_shape,
+      ap.carousel_card_shape,
+      ap.format,
+      ap.shape
+    ) || 'portrait_9_16';
     var formato;
     if (formatoRaw === 'circle' || formatoRaw === 'circular') {
       formato = 'square_1_1';
@@ -1504,17 +1509,17 @@ function openStoryViewer(stories, index) {
       formato = formatoRaw;
     }
 
-    // Demais configs
+    // Demais configs (com safeInt para border-radius e border-width)
     var corPrimaria   = ap.primary_color || ap.button_color || '#0094EB';
     var corTexto      = ap.text_color || '#0F172A';
     var bgColor       = ap.background_color || '#FFFFFF';
-    var borderRadius  = parseInt(ap.radius) || parseInt(ap.border_radius) || 12;
-    var borderWidth   = parseInt(ap.border_width) || 2;
+    var borderRadius  = safeInt(firstDefined(ap.radius, ap.border_radius), 12);
+    var borderWidth   = safeInt(ap.border_width, 2);
     var corBorda      = ap.border_color || corPrimaria;
     var fonte         = ap.font_family || 'Inter, sans-serif';
     var exibirTitulo  = ap.show_title !== false;
     var exibirPlayBtn = ap.show_play_button !== false;
-    var autoCenter    = !!(deviceCfg.auto_center || ap.auto_center);
+    var autoCenter    = !!(firstDefined(deviceCfg.auto_center, ap.auto_center));
 
     var aspectRatio = '9 / 16';
     if (formato.indexOf('landscape') !== -1 || formato.indexOf('16_9') !== -1) aspectRatio = '16 / 9';
@@ -1586,8 +1591,8 @@ function openStoryViewer(stories, index) {
         '  display: flex !important; flex-wrap: nowrap !important; gap: ' + gapPx + 'px;',
         '  overflow-x: auto !important; overflow-y: hidden !important;',
         '  scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;',
-        '  scrollbar-width: none !important; /* Firefox: esconde scrollbar */',
-        '  -ms-overflow-style: none !important; /* IE/Edge: esconde scrollbar */',
+        '  scrollbar-width: none !important;',
+        '  -ms-overflow-style: none !important;',
         '  padding-bottom: 0px; width: 100%; max-width: 100%;',
         '  cursor: grab; user-select: none; -webkit-user-select: none;',
         '}',
@@ -1734,13 +1739,12 @@ function openStoryViewer(stories, index) {
           if (!isDown) return;
           e.preventDefault();
           var x = e.pageX - slider.offsetLeft;
-          var walk = (x - startX) * 1.5; // Multiplicador de velocidade
+          var walk = (x - startX) * 1.5;
           velX = walk;
           slider.scrollLeft = scrollLeft - walk;
           if (Math.abs(walk) > 3) moved = true;
         });
 
-        // Bloquear click se arrastou
         slider.addEventListener('click', function(e) {
           if (moved) {
             e.stopPropagation();
@@ -1748,7 +1752,6 @@ function openStoryViewer(stories, index) {
           }
         }, true);
 
-        // Touch
         slider.addEventListener('touchstart', function(e) {
           isDown = true;
           moved = false;
@@ -1944,8 +1947,6 @@ function openStoryViewer(stories, index) {
          console.info('VIDLYTICS: story videos', { storyId: story.id, relCount: rels.length, videoCount: story.videos.length });
       });
 
-      // --- O CÉREBRO DA DECISÃO DE FORMATO ---
-      // Usa o formato salvo em cada story; se houver mais de um, prioriza o primeiro válido
       var widgetFormat = 'floating_widget';
 
       for (var i = 0; i < validStories.length; i += 1) {
@@ -1975,7 +1976,6 @@ function openStoryViewer(stories, index) {
         }
       }
 
-      // Executa a função certa dependendo do formato escolhido
       if (widgetFormat === 'carousel' || widgetFormat === 'grid') {
           console.info('Instory renderizando formato: ' + widgetFormat);
           renderInlineWidget(validStories, appearance, widgetFormat);
