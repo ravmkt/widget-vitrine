@@ -3375,177 +3375,238 @@ window.dispatchEvent(new Event('storage'));
   </SectionCard>
 )}
 
-                  {activeTab === 'carousel' && (
-                    <SectionCard
-                      title="Carrossel"
-                      description="Configure a exibição dos vídeos em carrossel, quantidade de itens, formato, centralização e margens."
-                    >
-                      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-                        <h4 className="text-sm font-black text-slate-800">
-                          Configuração ativa
-                        </h4>
+{activeTab === 'carousel' && (
+  <SectionCard
+    title="Carrossel"
+    description="Configure a exibição dos vídeos em carrossel, quantidade de itens, formato, centralização e margens."
+  >
+    <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+      <h4 className="text-sm font-black text-slate-800">
+        Configuração ativa
+      </h4>
 
-                        {formData.useGlobalAppearance ? (
-                          <GlobalDeviceNotice />
-                        ) : (
-                          <DeviceTabs
-                            activeDevice={carouselDevice}
-                            onChange={setCarouselDevice}
-                          />
-                        )}
-                      </div>
+      {formData.useGlobalAppearance ? (
+        <GlobalDeviceNotice />
+      ) : (
+        <DeviceTabs
+          activeDevice={carouselDevice}
+          onChange={setCarouselDevice}
+        />
+      )}
+    </div>
 
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <FormField label="Forma">
-                          <select
-                            value={activeCarouselConfig.card_shape}
-                            onChange={e =>
-                              updateCarouselConfig({
-                                card_shape: e.target.value as WidgetShape,
-                              })
-                            }
-                            className={selectClass}
-                          >
-                            <option value="circle">Circular</option>
-                            <option value="square">Quadrado</option>
-                            <option value="portrait">Retrato 9:16</option>
-                          </select>
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <FormField label="Forma">
+        <select
+          value={activeCarouselConfig.card_shape}
+          onChange={e =>
+            updateCarouselConfig({
+              card_shape: e.target.value as WidgetShape,
+            })
+          }
+          className={selectClass}
+        >
+          <option value="circle">Circular</option>
+          <option value="square">Quadrado</option>
+          <option value="portrait">Retrato 9:16</option>
+        </select>
+        {activeCarouselConfig.card_shape === 'portrait' && (
+          <p className="text-xs font-semibold text-slate-400">
+            No formato retrato, os cards ficam fixos na proporção 9:16.
+          </p>
+        )}
+      </FormField>
 
-                          {activeCarouselConfig.card_shape === 'portrait' && (
-                            <p className="text-xs font-semibold text-slate-400">
-                              No formato retrato, os cards ficam fixos na
-                              proporção 9:16.
-                            </p>
-                          )}
-                        </FormField>
+      {/* ✅ NOVO: Tamanho */}
+      <FormField label="Tamanho">
+        <input
+          type="number"
+          min="20"
+          step="1"
+          value={toNumberInputValue(activeCarouselConfig.card_size)}
+          onChange={e =>
+            updateCarouselConfig({ card_size: e.target.value })
+          }
+          placeholder="Ex: 80"
+          className={inputClass}
+        />
+        <p className="text-xs font-semibold text-slate-400">
+          Tamanho base dos cards no carrossel.
+        </p>
+      </FormField>
 
-                        <FormField label="Espaçamento">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={activeCarouselConfig.gap}
-                            onChange={e =>
-                              updateCarouselConfig({
-                                gap: safeNumber(e.target.value, 0, 0),
-                              })
-                            }
-                            className={inputClass}
-                          />
-                        </FormField>
+      <FormField label="Espaçamento">
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value={activeCarouselConfig.gap}
+          onChange={e =>
+            updateCarouselConfig({
+              gap: safeNumber(e.target.value, 0, 0),
+            })
+          }
+          className={inputClass}
+        />
+      </FormField>
 
-                        <FormField label="Itens visíveis">
-                          <input
-                            type="number"
-                            min="1"
-                            step="1"
-                            value={activeCarouselConfig.visible_items}
-                            onChange={e =>
-                              updateCarouselConfig({
-                                visible_items: safeNumber(
-                                  e.target.value,
-                                  1,
-                                  1,
-                                ),
-                              })
-                            }
-                            className={inputClass}
-                          />
-                        </FormField>
+      <FormField label="Itens visíveis">
+        <input
+          type="number"
+          min="1"
+          step="1"
+          value={activeCarouselConfig.visible_items}
+          onChange={e =>
+            updateCarouselConfig({
+              visible_items: safeNumber(e.target.value, 1, 1),
+            })
+          }
+          className={inputClass}
+        />
+      </FormField>
 
-                        <FormField label="Modo de visualização">
-                          <select
-                            value={activeCarouselConfig.view_mode}
-                            onChange={e =>
-                              updateCarouselConfig({
-                                view_mode: e.target.value,
-                              })
-                            }
-                            className={selectClass}
-                          >
-                            <option value="preview">
-                              Preview, vídeo no hover
-                            </option>
-                            <option value="poster">Poster/imagem apenas</option>
-                            <option value="custom">Personalizado</option>
-                          </select>
-                        </FormField>
+      <FormField label="Modo de visualização">
+        <select
+          value={activeCarouselConfig.view_mode}
+          onChange={e =>
+            updateCarouselConfig({ view_mode: e.target.value })
+          }
+          className={selectClass}
+        >
+          <option value="preview">Preview, vídeo no hover</option>
+          <option value="poster">Poster/imagem apenas</option>
+          <option value="custom">Personalizado</option>
+        </select>
+      </FormField>
 
-                        <FormField label="Margem superior">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={toNumberInputValue(
-                              activeCarouselConfig.margin_top,
-                            )}
-                            onChange={e =>
-                              updateCarouselConfig({
-                                margin_top: e.target.value,
-                              })
-                            }
-                            placeholder="Ex: 20"
-                            className={inputClass}
-                          />
-                        </FormField>
+      {/* ✅ NOVO: Cor da borda */}
+      <FormField label="Cor da borda">
+        <ColorInput
+          label="Cor da borda"
+          value={activeCarouselConfig.border_color || formData.primary_color}
+          onChange={e =>
+            updateCarouselConfig({ border_color: e.target.value })
+          }
+        />
+      </FormField>
 
-                        <FormField label="Margem inferior">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={toNumberInputValue(
-                              activeCarouselConfig.margin_bottom,
-                            )}
-                            onChange={e =>
-                              updateCarouselConfig({
-                                margin_bottom: e.target.value,
-                              })
-                            }
-                            placeholder="Ex: 20"
-                            className={inputClass}
-                          />
-                        </FormField>
+      {/* ✅ NOVO: Largura da borda */}
+      <FormField label="Largura da borda">
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value={toNumberInputValue(activeCarouselConfig.border_width)}
+          onChange={e =>
+            updateCarouselConfig({ border_width: e.target.value })
+          }
+          placeholder="Ex: 2"
+          className={inputClass}
+        />
+      </FormField>
 
-                        <FormField label="Exibir produto">
-                          <ToggleSwitch
-                            label="Exibir produto no carrossel"
-                            checked={activeCarouselConfig.show_product}
-                            onChange={e =>
-                              updateCarouselConfig({
-                                show_product: e.target.checked,
-                              })
-                            }
-                          />
-                        </FormField>
+      {/* ✅ NOVO: Raio da borda */}
+      <FormField label="Raio da borda">
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value={toNumberInputValue(activeCarouselConfig.border_radius)}
+          onChange={e =>
+            updateCarouselConfig({ border_radius: e.target.value })
+          }
+          placeholder="Ex: 12"
+          className={inputClass}
+        />
+      </FormField>
 
-                        <FormField label="Mostrar botão play">
-                          <ToggleSwitch
-                            label="Mostrar botão play no carrossel"
-                            checked={activeCarouselConfig.show_play_icon}
-                            onChange={e =>
-                              updateCarouselConfig({
-                                show_play_icon: e.target.checked,
-                              })
-                            }
-                          />
-                        </FormField>
+      {/* ✅ NOVO: Object fit */}
+      <FormField label="Object fit">
+        <select
+          value={activeCarouselConfig.object_fit || 'cover'}
+          onChange={e =>
+            updateCarouselConfig({ object_fit: e.target.value })
+          }
+          className={selectClass}
+        >
+          <option value="cover">Cover</option>
+          <option value="contain">Contain</option>
+          <option value="fill">Fill</option>
+        </select>
+      </FormField>
 
-                        <FormField label="Centralizar automático">
-                          <ToggleSwitch
-                            label="Centralizar carrossel automaticamente"
-                            checked={activeCarouselConfig.auto_center}
-                            onChange={e =>
-                              updateCarouselConfig({
-                                auto_center: e.target.checked,
-                              })
-                            }
-                            description="Quando ativado, os cards ficam centralizados dentro da área disponível."
-                          />
-                        </FormField>
-                      </div>
-                    </SectionCard>
-                  )}
+      <FormField label="Margem superior">
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value={toNumberInputValue(activeCarouselConfig.margin_top)}
+          onChange={e =>
+            updateCarouselConfig({ margin_top: e.target.value })
+          }
+          placeholder="Ex: 20"
+          className={inputClass}
+        />
+      </FormField>
+
+      <FormField label="Margem inferior">
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value={toNumberInputValue(activeCarouselConfig.margin_bottom)}
+          onChange={e =>
+            updateCarouselConfig({ margin_bottom: e.target.value })
+          }
+          placeholder="Ex: 20"
+          className={inputClass}
+        />
+      </FormField>
+
+      {/* ✅ NOVO: Mostrar título */}
+      <FormField label="Mostrar título">
+        <ToggleSwitch
+          label="Mostrar título no carrossel"
+          checked={activeCarouselConfig.show_title ?? false}
+          onChange={e =>
+            updateCarouselConfig({ show_title: e.target.checked })
+          }
+        />
+      </FormField>
+
+      <FormField label="Exibir produto">
+        <ToggleSwitch
+          label="Exibir produto no carrossel"
+          checked={activeCarouselConfig.show_product}
+          onChange={e =>
+            updateCarouselConfig({ show_product: e.target.checked })
+          }
+        />
+      </FormField>
+
+      <FormField label="Mostrar botão play">
+        <ToggleSwitch
+          label="Mostrar botão play no carrossel"
+          checked={activeCarouselConfig.show_play_icon}
+          onChange={e =>
+            updateCarouselConfig({ show_play_icon: e.target.checked })
+          }
+        />
+      </FormField>
+
+      <FormField label="Centralizar automático">
+        <ToggleSwitch
+          label="Centralizar carrossel automaticamente"
+          checked={activeCarouselConfig.auto_center}
+          onChange={e =>
+            updateCarouselConfig({ auto_center: e.target.checked })
+          }
+          description="Quando ativado, os cards ficam centralizados dentro da área disponível."
+        />
+      </FormField>
+    </div>
+  </SectionCard>
+)}
 
                   {activeTab === 'grid' && (
                     <SectionCard
