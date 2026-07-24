@@ -1401,10 +1401,39 @@ function openStoryViewer(stories, index) {
     var espacamento = (appearance && (appearance.spacing || appearance.gap || appearance.espacamento)) || 16;
     var corPrimaria = (appearance && (appearance.primary_color || appearance.primaryColor || appearance.cor_primaria)) || '#00eb1b';
     var corTexto = (appearance && (appearance.text_color || appearance.textColor || appearance.cor_texto)) || '#0f172a';
-var cssSelector = 'section.category-content .holder-results > div > .flex-.between-.vtop';
     
-var renderInterval = setInterval(function () {
-    var targetDiv = null;
+    // CORREÇÃO 1: Lê o seletor da configuração, com um fallback genérico
+    var cssSelector = (appearance && (
+        appearance.css_selector || 
+        appearance.cssSelector || 
+        appearance.inline_selector || 
+        appearance.inlineSelector || 
+        appearance.seletor
+    )) || '#vidlytics-carousel-root'; // Elemento padrão se o cliente não configurar
+    
+    var maxRetries = 30; // Evita loop infinito (tenta por ~9 segundos)
+    var currentRetries = 0;
+
+    var renderInterval = setInterval(function () {
+        var targetDiv = null;
+        currentRetries++;
+
+        try {
+            targetDiv = document.querySelector(cssSelector);
+        } catch (e) {
+            console.error('VIDLYTICS: Seletor CSS inválido configurado:', cssSelector);
+            clearInterval(renderInterval);
+            return;
+        }
+
+        // Se o elemento ainda não existir, continua tentando até o limite
+        if (!targetDiv) {
+            if (currentRetries >= maxRetries) {
+                console.warn('VIDLYTICS: Elemento alvo não encontrado para inserir o carrossel:', cssSelector);
+                clearInterval(renderInterval);
+            }
+            return;
+        }
 
     try {
         targetDiv = document.querySelector(cssSelector);
