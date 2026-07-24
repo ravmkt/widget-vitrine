@@ -1307,26 +1307,33 @@
      }
   }
 
-  function openStoryViewer(stories, index) {
-    currentStories = stories;
-    currentStoryIndex = index || 0;
-    currentVideoIndex = 0;
+function openStoryViewer(stories, index) {
+  currentStories = stories;
+  currentStoryIndex = index || 0;
+  currentVideoIndex = 0;
 
-    if (!overlay) {
-      overlay = createEl('div', 'vl-overlay');
-      modalContent = createEl('div', 'vl-modal');
-      overlay.appendChild(modalContent);
-      globalShadowRoot.appendChild(overlay);
-
-      overlay.addEventListener('click', function(e) {
-          if (e.target === overlay) closeOverlay();
-      });
-    }
-
-    pausePreviews(); 
-    overlay.className = 'vl-overlay is-open';
-    renderStoryModal();
+  if (!globalShadowRoot) {
+    var shadowData = getOrCreateShadowRoot(currentAppearance || {});
+    globalShadowRoot = shadowData.shadow;
   }
+
+  if (!overlay) {
+    overlay = createEl('div', 'vl-overlay');
+    modalContent = createEl('div', 'vl-modal');
+
+    overlay.appendChild(modalContent);
+    globalShadowRoot.appendChild(overlay);
+
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) closeOverlay();
+    });
+  }
+
+  pausePreviews();
+
+  overlay.className = 'vl-overlay is-open';
+  renderStoryModal();
+}
 
   function svgIcon(name) {
     var icons = {
