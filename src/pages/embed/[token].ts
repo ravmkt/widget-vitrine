@@ -13,26 +13,31 @@ const getPublicBaseUrl = (req: Request) => {
 };
 
 const buildScript = (block: any, baseUrl: string) => {
-  const blockId = block?.id;
+  const blockId = block?.id || '';
   const selector = block?.selector || '';
   const position = block?.position || 'beforeend';
-  const storyId = block?.story_id || block?.story?.id || null;
+  const storyId = block?.story_id || block?.story?.id || '';
   const rules = Array.isArray(block?.rules) ? block.rules : [];
 
   return `(function() {
   var script = document.currentScript;
-  var blockId = script.getAttribute('data-block-id');
-  var selector = script.getAttribute('data-selector') || '';
-  var position = script.getAttribute('data-position') || 'beforeend';
-  var storyId = script.getAttribute('data-story-id') || '';
+  
+  // 1. Resolvemos o bug: tenta ler da tag <script> e, se não achar, INJETA os dados do Banco de Dados!
+  // Usamos JSON.stringify() para injetar com segurança, evitando erro caso os seletores tenham aspas.
+  var blockId = (script && script.getAttribute('data-block-id')) ? script.getAttribute('data-block-id') : ${JSON.stringify(blockId)};
+  var selector = (script && script.getAttribute('data-selector')) ? script.getAttribute('data-selector') : ${JSON.stringify(selector)};
+  var position = (script && script.getAttribute('data-position')) ? script.getAttribute('data-position') : ${JSON.stringify(position)};
+  var storyId = (script && script.getAttribute('data-story-id')) ? script.getAttribute('data-story-id') : ${JSON.stringify(storyId)};
+  var baseUrl = (script && script.getAttribute('data-base-url')) ? script.getAttribute('data-base-url') : ${JSON.stringify(baseUrl)};
+  
   var rules = [];
   try {
-    rules = JSON.parse(script.getAttribute('data-rules') || '[]');
+    var attrRules = script && script.getAttribute('data-rules');
+    rules = attrRules ? JSON.parse(attrRules) : ${JSON.stringify(rules)};
     if (!Array.isArray(rules)) rules = [];
   } catch (e) {
-    rules = [];
+    rules = ${JSON.stringify(rules)};
   }
-  var baseUrl = script.getAttribute('data-base-url') || '';
 
   var injectedIds = new Set();
 
@@ -42,10 +47,10 @@ const buildScript = (block: any, baseUrl: string) => {
       var parsed = new URL(url, window.location.origin);
       parsed.hash = '';
       parsed.search = '';
-      var pathname = parsed.pathname.replace(/\/+$/, '') || '/';
+      var pathname = parsed.pathname.replace(/\\/+$/, '') || '/';
       return pathname === '' ? '/' : pathname;
     } catch (e) {
-      return String(url).trim().replace(/\/+$/, '') || '/';
+      return String(url).trim().replace(/\\/+$/, '') || '/';
     }
   }
 
