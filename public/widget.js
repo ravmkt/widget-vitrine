@@ -1399,23 +1399,18 @@ function openStoryViewer(stories, index) {
   }
 
   function renderInlineWidget(stories, appearance, format) {
-    console.log("VIDLYTICS: ===== INÍCIO renderInlineWidget =====");
+    console.log("VIDLYTICS: ===== INÍCIO =====");
     console.log("VIDLYTICS: stories:", stories ? stories.length : 0);
-    console.log("VIDLYTICS: appearance COMPLETO:", JSON.stringify(appearance, null, 2));
-    console.log("VIDLYTICS: format:", format);
 
     if (!stories || !stories.length) return;
 
-    // Monta lista plana de vídeos (1 card por vídeo)
     var allVideoItems = [];
     stories.forEach(function(story, sIdx) {
       var videos = story.videos || [];
       videos.forEach(function(video, vIdx) {
         allVideoItems.push({
-          story: story,
-          storyIndex: sIdx,
-          video: video,
-          videoIndex: vIdx
+          story: story, storyIndex: sIdx,
+          video: video, videoIndex: vIdx
         });
       });
     });
@@ -1425,56 +1420,50 @@ function openStoryViewer(stories, index) {
 
     var ap = appearance || {};
 
-    // ========== LEITURA MULTI-CAMINHO DAS CONFIGS ==========
-    var itemsVisiveis = null;
-    var espacamento = null;
+    // ========== LEITURA PASSO A PASSO COM LOGS ==========
+    console.log("VIDLYTICS: ---------- LEITURA DAS CONFIGS ----------");
+    console.log("VIDLYTICS: ap.visible_items =", ap.visible_items, "(tipo:", typeof ap.visible_items + ")");
+    console.log("VIDLYTICS: ap.carousel_visible_items =", ap.carousel_visible_items, "(tipo:", typeof ap.carousel_visible_items + ")");
+    console.log("VIDLYTICS: ap.items_visible =", ap.items_visible, "(tipo:", typeof ap.items_visible + ")");
 
-    // Caminho 1: colunas diretas da tabela
-    if (ap.carousel_visible_items) itemsVisiveis = Number(ap.carousel_visible_items);
-    if (ap.carousel_gap) espacamento = Number(ap.carousel_gap);
+    var rawVisible = ap.visible_items || ap.carousel_visible_items || ap.items_visible;
+    console.log("VIDLYTICS: rawVisible (após ||) =", rawVisible, "(tipo:", typeof rawVisible + ")");
 
-    // Caminho 2: JSON carousel_config (desktop / mobile)
-    var carouselConfig = ap.carousel_config;
-    if (typeof carouselConfig === 'string') {
-      try { carouselConfig = JSON.parse(carouselConfig); } catch(e) { carouselConfig = null; }
-    }
-    if (carouselConfig) {
-      var ccDesktop = carouselConfig.desktop || {};
-      var ccMobile  = carouselConfig.mobile  || {};
-      var ccMerged  = carouselConfig.same_for_all ? ccDesktop : ccDesktop; // prioriza desktop
+    var itemsVisiveis = Number(rawVisible);
+    console.log("VIDLYTICS: itemsVisiveis (Number(rawVisible)) =", itemsVisiveis);
 
-      if (!itemsVisiveis && ccMerged.visible_items)   itemsVisiveis = Number(ccMerged.visible_items);
-      if (!espacamento   && ccMerged.gap)              espacamento   = Number(ccMerged.gap);
-      if (!itemsVisiveis && ccDesktop.visible_items)   itemsVisiveis = Number(ccDesktop.visible_items);
-      if (!espacamento   && ccDesktop.gap)              espacamento   = Number(ccDesktop.gap);
+    // ⚠️ Se por algum motivo for NaN, 0, ou undefined, força 4 como fallback
+    if (!itemsVisiveis || isNaN(itemsVisiveis) || itemsVisiveis < 1) {
+      console.warn("VIDLYTICS: ⚠️ itemsVisiveis inválido! Usando fallback 4");
+      itemsVisiveis = 4;
     }
 
-    // Caminho 3: fallback para campos alternativos
-    if (!itemsVisiveis && ap.items_visible)     itemsVisiveis = Number(ap.items_visible);
-    if (!itemsVisiveis && ap.itemsVisible)      itemsVisiveis = Number(ap.itemsVisible);
-    if (!itemsVisiveis && ap.itens_visiveis)    itemsVisiveis = Number(ap.itens_visiveis);
-    if (!espacamento   && ap.spacing)           espacamento   = Number(ap.spacing);
-    if (!espacamento   && ap.gap)               espacamento   = Number(ap.gap);
-    if (!espacamento   && ap.espacamento)       espacamento   = Number(ap.espacamento);
+    console.log("VIDLYTICS: itemsVisiveis FINAL =", itemsVisiveis);
+    // ======================================================
 
-    // Padrão final
-    if (!itemsVisiveis || itemsVisiveis < 1) itemsVisiveis = 6; // FORÇA 6 como padrão!
-    if (!espacamento   || espacamento < 0)   espacamento   = 16;
+    var espacamento   = Number(ap.spacing || ap.carousel_gap || ap.gap || 16);
+    var formato       = ap.format || ap.carousel_card_shape || 'portrait_9_16';
 
-    // Demais propriedades
-    var corPrimaria  = ap.primary_color    || '#00eb1b';
-    var corTexto     = ap.text_color       || '#0f172a';
-    var corBorda     = ap.border_color     || '#FFFFFF';
-    var borderRadius = ap.border_radius    || 8;
-    var fonte        = ap.font_family      || 'Inter, sans-serif';
-    var cardShape    = ap.carousel_card_shape || (carouselConfig && carouselConfig.desktop && carouselConfig.desktop.card_shape) || 'portrait';
-    var exibirTitulo = ap.show_title !== false;
+    var corPrimaria   = ap.primary_color   || '#0094EB';
+    var corTexto      = ap.text_color      || '#0F172A';
+    var corFundo      = ap.background_color || '#FFFFFF';
+    var corBorda      = ap.border_color    || '#0094EB';
+    var borderRadius  = Number(ap.radius || ap.border_radius || 12);
+    var borderWidth   = Number(ap.border_width || 2);
+    var fonte         = ap.font_family     || 'Inter, sans-serif';
+
+    var exibirTitulo  = ap.show_title !== false;
     var exibirPlayBtn = ap.show_play_button !== false;
-    var autoCenter   = true;
+    var autoCenter    = ap.auto_center === true;
 
-    var aspectRatio  = cardShape === 'landscape' ? '16 / 9' : cardShape === 'square' ? '1 / 1' : '9 / 16';
+    var aspectRatio = '9 / 16';
+    if (formato.indexOf('landscape') !== -1 || formato.indexOf('16_9') !== -1) aspectRatio = '16 / 9';
+    else if (formato.indexOf('square') !== -1 || formato.indexOf('1_1') !== -1) aspectRatio = '1 / 1';
 
-    console.log("VIDLYTICS: >>> VALORES FINAIS <<<");
+    console.log("VIDLYTICS: VALORES -> items:", itemsVisiveis, "gap:", espacamento, "format:", formato, "aspectRatio:", aspectRatio);
+    // =======================================================
+
+    // ... (o resto do código continua IGUAL: seletor, CSS, cards, etc.)
     console.log("  itemsVisiveis:", itemsVisiveis);
     console.log("  espacamento:", espacamento);
     console.log("  cardShape:", cardShape, "| aspectRatio:", aspectRatio);
