@@ -88,6 +88,7 @@ type FloatingConfig = {
   draggable: boolean;
   allow_close: boolean;
   z_index: string;
+  show_title: boolean;
 };
 
 type CarouselConfig = {
