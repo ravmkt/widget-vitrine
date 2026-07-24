@@ -3608,98 +3608,181 @@ window.dispatchEvent(new Event('storage'));
   </SectionCard>
 )}
 
-                  {activeTab === 'grid' && (
-                    <SectionCard
-                      title="Grade"
-                      description="Configure quantidade de colunas, linhas, formato e espaçamento da grade de vídeos."
-                    >
-                      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-                        <h4 className="text-sm font-black text-slate-800">
-                          Configuração ativa
-                        </h4>
+{activeTab === 'grid' && (
+  <SectionCard
+    title="Grade"
+    description="Configure quantidade de colunas, linhas, formato e espaçamento da grade de vídeos."
+  >
+    <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+      <h4 className="text-sm font-black text-slate-800">
+        Configuração ativa
+      </h4>
 
-                        {formData.useGlobalAppearance ? (
-                          <GlobalDeviceNotice />
-                        ) : (
-                          <DeviceTabs
-                            activeDevice={gridDevice}
-                            onChange={setGridDevice}
-                          />
-                        )}
-                      </div>
+      {formData.useGlobalAppearance ? (
+        <GlobalDeviceNotice />
+      ) : (
+        <DeviceTabs
+          activeDevice={gridDevice}
+          onChange={setGridDevice}
+        />
+      )}
+    </div>
 
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <FormField label="Forma">
-                          <select
-                            value={activeGridConfig.card_shape}
-                            onChange={e =>
-                              updateGridConfig({
-                                card_shape: e.target.value as WidgetShape,
-                              })
-                            }
-                            className={selectClass}
-                          >
-                            <option value="circle">Circular</option>
-                            <option value="square">Quadrado</option>
-                            <option value="portrait">Retrato 9:16</option>
-                          </select>
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <FormField label="Forma">
+        <select
+          value={activeGridConfig.card_shape}
+          onChange={e =>
+            updateGridConfig({
+              card_shape: e.target.value as WidgetShape,
+            })
+          }
+          className={selectClass}
+        >
+          <option value="circle">Circular</option>
+          <option value="square">Quadrado</option>
+          <option value="portrait">Retrato 9:16</option>
+        </select>
+        {activeGridConfig.card_shape === 'portrait' && (
+          <p className="text-xs font-semibold text-slate-400">
+            No formato retrato, os itens da grade ficam fixos na proporção 9:16.
+          </p>
+        )}
+      </FormField>
 
-                          {activeGridConfig.card_shape === 'portrait' && (
-                            <p className="text-xs font-semibold text-slate-400">
-                              No formato retrato, os itens da grade ficam fixos
-                              na proporção 9:16.
-                            </p>
-                          )}
-                        </FormField>
+      {/* ✅ NOVO: Tamanho */}
+      <FormField label="Tamanho">
+        <input
+          type="number"
+          min="20"
+          step="1"
+          value={toNumberInputValue(activeGridConfig.card_size)}
+          onChange={e =>
+            updateGridConfig({ card_size: e.target.value })
+          }
+          placeholder="Ex: 80"
+          className={inputClass}
+        />
+        <p className="text-xs font-semibold text-slate-400">
+          Tamanho base dos cards na grade.
+        </p>
+      </FormField>
 
-                        <FormField label="Colunas">
-                          <input
-                            type="number"
-                            min="1"
-                            max="4"
-                            step="1"
-                            value={Math.min(activeGridConfig.columns, 4)}
-                            onChange={e =>
-                              updateGridConfig({
-                                columns: limitNumber(e.target.value, 1, 1, 4),
-                              })
-                            }
-                            className={inputClass}
-                          />
-                        </FormField>
+      <FormField label="Colunas">
+        <input
+          type="number"
+          min="1"
+          max="4"
+          step="1"
+          value={Math.min(activeGridConfig.columns, 4)}
+          onChange={e =>
+            updateGridConfig({
+              columns: limitNumber(e.target.value, 1, 1, 4),
+            })
+          }
+          className={inputClass}
+        />
+      </FormField>
 
-                        <FormField label="Linhas">
-                          <input
-                            type="number"
-                            min="1"
-                            step="1"
-                            value={activeGridConfig.rows}
-                            onChange={e =>
-                              updateGridConfig({
-                                rows: safeNumber(e.target.value, 1, 1),
-                              })
-                            }
-                            className={inputClass}
-                          />
-                        </FormField>
+      <FormField label="Linhas">
+        <input
+          type="number"
+          min="1"
+          step="1"
+          value={activeGridConfig.rows}
+          onChange={e =>
+            updateGridConfig({
+              rows: safeNumber(e.target.value, 1, 1),
+            })
+          }
+          className={inputClass}
+        />
+      </FormField>
 
-                        <FormField label="Espaçamento">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={activeGridConfig.gap}
-                            onChange={e =>
-                              updateGridConfig({
-                                gap: safeNumber(e.target.value, 0, 0),
-                              })
-                            }
-                            className={inputClass}
-                          />
-                        </FormField>
-                      </div>
-                    </SectionCard>
-                  )}
+      <FormField label="Espaçamento">
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value={activeGridConfig.gap}
+          onChange={e =>
+            updateGridConfig({
+              gap: safeNumber(e.target.value, 0, 0),
+            })
+          }
+          className={inputClass}
+        />
+      </FormField>
+
+      {/* ✅ NOVO: Cor da borda */}
+      <FormField label="Cor da borda">
+        <ColorInput
+          label="Cor da borda"
+          value={activeGridConfig.border_color || formData.primary_color}
+          onChange={e =>
+            updateGridConfig({ border_color: e.target.value })
+          }
+        />
+      </FormField>
+
+      {/* ✅ NOVO: Largura da borda */}
+      <FormField label="Largura da borda">
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value={toNumberInputValue(activeGridConfig.border_width)}
+          onChange={e =>
+            updateGridConfig({ border_width: e.target.value })
+          }
+          placeholder="Ex: 2"
+          className={inputClass}
+        />
+      </FormField>
+
+      {/* ✅ NOVO: Raio da borda */}
+      <FormField label="Raio da borda">
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value={toNumberInputValue(activeGridConfig.border_radius)}
+          onChange={e =>
+            updateGridConfig({ border_radius: e.target.value })
+          }
+          placeholder="Ex: 12"
+          className={inputClass}
+        />
+      </FormField>
+
+      {/* ✅ NOVO: Object fit */}
+      <FormField label="Object fit">
+        <select
+          value={activeGridConfig.object_fit || 'cover'}
+          onChange={e =>
+            updateGridConfig({ object_fit: e.target.value })
+          }
+          className={selectClass}
+        >
+          <option value="cover">Cover</option>
+          <option value="contain">Contain</option>
+          <option value="fill">Fill</option>
+        </select>
+      </FormField>
+
+      {/* ✅ NOVO: Mostrar título */}
+      <FormField label="Mostrar título">
+        <ToggleSwitch
+          label="Mostrar título na grade"
+          checked={activeGridConfig.show_title ?? false}
+          onChange={e =>
+            updateGridConfig({ show_title: e.target.checked })
+          }
+        />
+      </FormField>
+    </div>
+  </SectionCard>
+)}
 
                   {activeTab === 'modal' && (
                     <SectionCard
