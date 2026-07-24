@@ -323,16 +323,16 @@ function fetchDbAppearance() {
     return Promise.all([
       tryTable('appearances'),
       tryTable('widget_appearances'),
-      tryTable('general_settings')  // ← NOVA LINHA
+      tryTable('general_settings')    // ← NOVA
     ]).then(function(results) {
       var app1 = results[0] || {};
       var app2 = results[1] || {};
-      var app3 = results[2] || {};  // ← NOVA LINHA
+      var app3 = results[2] || {};    // ← NOVA
       var merged = {};
       if (typeof mergeObject === 'function') {
-        mergeObject(merged, app2);
-        mergeObject(merged, app1);
-        mergeObject(merged, app3);  // ← NOVA LINHA (maior prioridade)
+        mergeObject(merged, app2);    // widget_appearances
+        mergeObject(merged, app1);    // appearances
+        mergeObject(merged, app3);    // general_settings (MAIOR prioridade)
       }
       return normalizeAppearanceItem(merged);
     });
