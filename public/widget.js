@@ -339,24 +339,35 @@ function tryTable(tableName) {
     });
   }
 
-  function readAppearance() {
+// Dentro de readAppearance(), logo antes do merge final:
+function readAppearance() {
     var configAppearance = normalizeAppearanceItem(getConfigAppearance());
     var storageAppearance = normalizeAppearanceItem(getStorageAppearance());
+    
+    // 🔴 LOG TEMPORÁRIO
+    console.log('VIDLYTICS DEBUG — storageAppearance:', JSON.stringify(storageAppearance, null, 2));
+    
     return fetchDbAppearance().then(function (dbAppearance) {
+      // 🔴 LOG TEMPORÁRIO
+      console.log('VIDLYTICS DEBUG — dbAppearance:', JSON.stringify(dbAppearance, null, 2));
+      
       var finalAppearance = {};
       mergeObject(finalAppearance, DEFAULT_APPEARANCE);
       mergeObject(finalAppearance, configAppearance);
       mergeObject(finalAppearance, storageAppearance);
       if (appearanceHasUsefulData(dbAppearance)) mergeObject(finalAppearance, dbAppearance);
-      return normalizeAppearanceItem(finalAppearance);
-    }).catch(function () {
-      var finalAppearance = {};
-      mergeObject(finalAppearance, DEFAULT_APPEARANCE);
-      mergeObject(finalAppearance, configAppearance);
-      mergeObject(finalAppearance, storageAppearance);
-      return normalizeAppearanceItem(finalAppearance);
+      
+      // 🔴 LOG TEMPORÁRIO — resultado final ANTES de normalizar
+      console.log('VIDLYTICS DEBUG — finalAppearance (before normalize):', JSON.stringify(finalAppearance, null, 2));
+      
+      var normalized = normalizeAppearanceItem(finalAppearance);
+      
+      // 🔴 LOG TEMPORÁRIO — resultado final DEPOIS de normalizar
+      console.log('VIDLYTICS DEBUG — finalAppearance (after normalize):', JSON.stringify(normalized, null, 2));
+      
+      return normalized;
     });
-  }
+}
 
   function normalizeFloatingPosition(value) {
     var key = normalizeKey(value);
