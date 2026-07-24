@@ -288,23 +288,15 @@
   }
 
   // Lógica de Renderização do Carrossel (Totalmente reescrita para forçar horizontal e ler seletor)
-  function renderInlineWidget(stories, appearance, format) {
+  function renderInlineWidget(stories, appearance, format, widgetSelector, widgetPosition) {
     if (!stories || !stories.length) return;
 
-    // 1. Pega o Seletor CSS e Posição da Regra Exata (se existir) ou usa o Fallback global
-    var selectorString = null;
-    var positionConfig = 'after'; // default: 'abaixo'
+    // Pega o seletor da sua regra (Local de Exibição) ou do padrão global
+    var selectorValue = widgetSelector || readAppearanceValue(appearance, ['css_selector', 'inline_selector', 'cssSelector', 'inlineSelector']);
+    var selectorString = selectorValue ? String(selectorValue).trim() : null;
+    var posicaoAlvo = widgetPosition || 'after'; // default: 'abaixo'
 
-    if (activeDisplayRule) {
-        selectorString = firstDefined(activeDisplayRule.css_selector, activeDisplayRule.cssSelector);
-        positionConfig = String(firstDefined(activeDisplayRule.position, 'after')).toLowerCase();
-    } else {
-        selectorString = readAppearanceValue(appearance, ['css_selector', 'inline_selector']);
-    }
-
-    if (selectorString) selectorString = String(selectorString).trim();
-
-    // Polling System: Vai tentar achar a Div da Loja por até 15 segundos
+    // Polling: Vai tentar achar o elemento da Yampi por até 15 segundos
     var maxTentativas = 60; 
     var tentativas = 0;
 
@@ -312,12 +304,11 @@
       var targetDiv = null;
       var elementoAlvoDaLoja = null;
 
-      // Tenta achar na página o seletor que você configurou no painel
       if (selectorString) {
-          try { elementoAlvoDaLoja = document.querySelector(selectorString); } catch (e) { console.error("Seletor inválido:", e); }
+          try { elementoAlvoDaLoja = document.querySelector(selectorString); } catch (e) { console.error("Vidlytics: Seletor inválido."); }
       }
 
-      // Se a Yampi ainda não carregou a Div, agenda e tenta de novo (Polling)
+      // Se a Yampi ainda não carregou o elemento, aguarda 250ms e tenta de novo
       if (selectorString && !elementoAlvoDaLoja && tentativas < maxTentativas) {
           tentativas++;
           setTimeout(executarRenderizacao, 250);
@@ -326,8 +317,8 @@
 
       var nossaDivExistente = document.getElementById('vidlytics-carousel-root');
 
+      // 1. Se achou exatamente o lugar configurado na Foto 4
       if (elementoAlvoDaLoja) {
-          // Achou exatamente onde você quer colocar!
           if (nossaDivExistente) {
              targetDiv = nossaDivExistente;
              targetDiv.innerHTML = ''; 
@@ -339,21 +330,20 @@
              targetDiv.style.clear = 'both';
              targetDiv.style.display = 'block';
              
-             // Respeita a regra de "Abaixo", "Acima" ou "Dentro"
-             if (positionConfig.indexOf('abaixo') !== -1 || positionConfig.indexOf('after') !== -1 || positionConfig.indexOf('bottom') !== -1) {
+             // Insere "Abaixo do elemento"
+             if (posicaoAlvo === 'after' || posicaoAlvo.indexOf('abaixo') !== -1) {
                  if (elementoAlvoDaLoja.nextSibling) {
                      elementoAlvoDaLoja.parentNode.insertBefore(targetDiv, elementoAlvoDaLoja.nextSibling);
                  } else {
                      elementoAlvoDaLoja.parentNode.appendChild(targetDiv);
                  }
-             } else if (positionConfig.indexOf('acima') !== -1 || positionConfig.indexOf('before') !== -1 || positionConfig.indexOf('top') !== -1) {
-                 elementoAlvoDaLoja.parentNode.insertBefore(targetDiv, elementoAlvoDaLoja);
              } else {
                  elementoAlvoDaLoja.appendChild(targetDiv);
              }
           }
-      } else {
-          // Fallback seguro se o seletor falhar: Insere no final do conteúdo principal para não estragar o cabeçalho
+      } 
+      // 2. Fallback Seguro: Se falhar, nunca mais joga no topo do site!
+      else {
           if (nossaDivExistente) {
               targetDiv = nossaDivExistente;
               targetDiv.innerHTML = '';
@@ -363,14 +353,83 @@
               targetDiv.style.width = '100%';
               targetDiv.style.margin = '20px 0';
               
-              var contentContainer = document.querySelector('.showcase, .page-content, main, #MainContent, .product-list');
+              // Joga pro final do conteúdo principal para não estragar o Header
+              var contentContainer = document.querySelector('main, #MainContent, .showcase, .page-content');
               if (contentContainer) {
-                  contentContainer.parentNode.insertBefore(targetDiv, contentContainer);
+                  contentContainer.appendChild(targetDiv);
               } else {
-                  document.body.appendChild(targetDiv); // Vai pro final da página, bem seguro
+                  document.body.appendChild(targetDiv); // Último recurso
               }
           }
       }
+
+      // 3. Monta o Shadow DOM e CSS Blindado para Carrossel (Lado a Lado)
+      var shadow = targetDiv.shadowRoot || targetDiv.attachShadow({ mode: 'open' });
+      shadow.innerHTML = '';
+
+      var spacing = 12;
+      var cardRadius = 12;
+
+      var inlineCss = ':host{display:block;width:100%;max-width:1200px;margin:0 auto;padding:0 15px;box-sizing:border-box;font-family:sans-serif;}'
+        + '*,*::before,*::after{box-sizing:border-box!important;}'
+        + '.vl-carousel-track{width:100%;display:flex;flex-wrap:nowrap;gap:' + spacing + 'px;overflow-x:auto;padding-bottom:15px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}'
+        + '.vl-carousel-track::-webkit-scrollbar{display:none;}'
+        + '.vl-card{flex:0 0 auto;width:140px;display:flex;flex-direction:column;cursor:pointer;background:transparent;border:none;padding:0;margin:0;scroll-snap-align:start;}'
+        + '@media (min-width:768px){ .vl-card{width:160px;} }'
+        + '.vl-media-box{width:100%;aspect-ratio:9/16;background-color:#000;border-radius:' + cardRadius + 'px;overflow:hidden;position:relative;box-shadow:0 4px 10px rgba(0,0,0,0.1);}'
+        + '.vl-media{width:100%;height:100%;object-fit:cover;display:block;border:none;}'
+        + '.vl-title{margin-top:8px;font-size:13px;font-weight:700;color:#333;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:100%;}';
+
+      var style = createEl('style');
+      style.textContent = inlineCss;
+      shadow.appendChild(style);
+
+      var track = createEl('div', 'vl-carousel-track');
+
+      stories.forEach(function (story, index) {
+        var videoObj = story.videos && story.videos.length > 0 ? story.videos[0] : null;
+        var videoUrl = videoObj ? getVideoUrl(videoObj) : '';
+        var cover = getStoryThumbnail(story, videoObj, null);
+
+        var card = createEl('button', 'vl-card');
+        var mediaBox = createEl('div', 'vl-media-box');
+
+        var mediaEl;
+        if (videoUrl && isDirectVideoUrl(videoUrl)) {
+          mediaEl = createEl('video', 'vl-media');
+          mediaEl.src = videoUrl;
+          if (cover) mediaEl.poster = cover;
+          mediaEl.muted = true;
+          mediaEl.loop = true;
+          mediaEl.autoplay = true;
+          mediaEl.setAttribute('playsinline', '');
+        } else {
+          mediaEl = createEl('img', 'vl-media');
+          if (cover) mediaEl.src = cover;
+        }
+
+        mediaBox.appendChild(mediaEl);
+        card.appendChild(mediaBox);
+
+        var label = createEl('span', 'vl-title');
+        label.textContent = story.title || 'Ver produto';
+        card.appendChild(label);
+
+        // Chama o visualizador original do seu código
+        card.addEventListener('click', function () {
+          if (typeof openStoryViewer === 'function') {
+              openStoryViewer(stories, index);
+          }
+        });
+
+        track.appendChild(card);
+      });
+
+      shadow.appendChild(track);
+    } 
+
+    executarRenderizacao();
+  }
 
       // 3. Monta o Shadow DOM para isolar CSS e criar os Cards Horizontais
       var shadow = targetDiv.shadowRoot || targetDiv.attachShadow({ mode: 'open' });
