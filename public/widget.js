@@ -1398,6 +1398,9 @@ function openStoryViewer(stories, index) {
     });
   }
 
+(function() {
+  console.log("VIDLYTICS: Script carregado");
+
   function renderInlineWidget(stories, appearance, format) {
     console.log("VIDLYTICS: ===== INÍCIO =====");
     console.log("VIDLYTICS: stories:", stories ? stories.length : 0);
@@ -1420,38 +1423,30 @@ function openStoryViewer(stories, index) {
 
     var ap = appearance || {};
 
-    // ========== LEITURA PASSO A PASSO COM LOGS ==========
-    console.log("VIDLYTICS: ---------- LEITURA DAS CONFIGS ----------");
-    console.log("VIDLYTICS: ap.visible_items =", ap.visible_items, "(tipo:", typeof ap.visible_items + ")");
-    console.log("VIDLYTICS: ap.carousel_visible_items =", ap.carousel_visible_items, "(tipo:", typeof ap.carousel_visible_items + ")");
-    console.log("VIDLYTICS: ap.items_visible =", ap.items_visible, "(tipo:", typeof ap.items_visible + ")");
+    // ========== LEITURA COM LOGS ==========
+    console.log("VIDLYTICS: --- CONFIGS ---");
+    console.log("VIDLYTICS: ap.visible_items =", ap.visible_items);
+    console.log("VIDLYTICS: ap.carousel_visible_items =", ap.carousel_visible_items);
+    console.log("VIDLYTICS: ap.items_visible =", ap.items_visible);
 
     var rawVisible = ap.visible_items || ap.carousel_visible_items || ap.items_visible;
-    console.log("VIDLYTICS: rawVisible (após ||) =", rawVisible, "(tipo:", typeof rawVisible + ")");
-
+    console.log("VIDLYTICS: rawVisible =", rawVisible);
     var itemsVisiveis = Number(rawVisible);
-    console.log("VIDLYTICS: itemsVisiveis (Number(rawVisible)) =", itemsVisiveis);
+    console.log("VIDLYTICS: Number(rawVisible) =", itemsVisiveis);
 
-    // ⚠️ Se por algum motivo for NaN, 0, ou undefined, força 4 como fallback
     if (!itemsVisiveis || isNaN(itemsVisiveis) || itemsVisiveis < 1) {
-      console.warn("VIDLYTICS: ⚠️ itemsVisiveis inválido! Usando fallback 4");
+      console.warn("VIDLYTICS: itemsVisiveis inválido, fallback 4");
       itemsVisiveis = 4;
     }
 
-    console.log("VIDLYTICS: itemsVisiveis FINAL =", itemsVisiveis);
-    // ======================================================
-
-    var espacamento   = Number(ap.spacing || ap.carousel_gap || ap.gap || 16);
-    var formato       = ap.format || ap.carousel_card_shape || 'portrait_9_16';
-
+    var espacamento   = Number(ap.spacing || ap.gap || 16);
+    var formato       = ap.format || 'portrait_9_16';
     var corPrimaria   = ap.primary_color   || '#0094EB';
     var corTexto      = ap.text_color      || '#0F172A';
-    var corFundo      = ap.background_color || '#FFFFFF';
     var corBorda      = ap.border_color    || '#0094EB';
     var borderRadius  = Number(ap.radius || ap.border_radius || 12);
     var borderWidth   = Number(ap.border_width || 2);
     var fonte         = ap.font_family     || 'Inter, sans-serif';
-
     var exibirTitulo  = ap.show_title !== false;
     var exibirPlayBtn = ap.show_play_button !== false;
     var autoCenter    = ap.auto_center === true;
@@ -1460,16 +1455,8 @@ function openStoryViewer(stories, index) {
     if (formato.indexOf('landscape') !== -1 || formato.indexOf('16_9') !== -1) aspectRatio = '16 / 9';
     else if (formato.indexOf('square') !== -1 || formato.indexOf('1_1') !== -1) aspectRatio = '1 / 1';
 
-    console.log("VIDLYTICS: VALORES -> items:", itemsVisiveis, "gap:", espacamento, "format:", formato, "aspectRatio:", aspectRatio);
-    // =======================================================
-
-    // ... (o resto do código continua IGUAL: seletor, CSS, cards, etc.)
-    console.log("  itemsVisiveis:", itemsVisiveis);
-    console.log("  espacamento:", espacamento);
-    console.log("  cardShape:", cardShape, "| aspectRatio:", aspectRatio);
-    console.log("  corPrimaria:", corPrimaria, "| corTexto:", corTexto);
-    console.log("  exibirTitulo:", exibirTitulo, "| exibirPlayBtn:", exibirPlayBtn);
-    // =======================================================
+    console.log("VIDLYTICS: itemsVisiveis FINAL =", itemsVisiveis, "| gap:", espacamento, "| formato:", formato);
+    // =====================================
 
     // Seletor
     var dbSelector = ap.css_selector || ap.inline_selector || ap.seletor || '';
@@ -1484,7 +1471,7 @@ function openStoryViewer(stories, index) {
     var maxRetries = 25;
     var currentRetries = 0;
 
-    var renderInterval = setInterval(function () {
+    var renderInterval = setInterval(function() {
       var targetDiv = null;
       var usedSelector = '';
       currentRetries++;
@@ -1497,10 +1484,7 @@ function openStoryViewer(stories, index) {
       }
 
       if (!targetDiv) {
-        if (currentRetries >= maxRetries) {
-          console.warn('VIDLYTICS: Nenhum local encontrado.');
-          clearInterval(renderInterval);
-        }
+        if (currentRetries >= maxRetries) { clearInterval(renderInterval); }
         return;
       }
 
@@ -1513,7 +1497,7 @@ function openStoryViewer(stories, index) {
       if (!widgetContainer) {
         widgetContainer = document.createElement('div');
         widgetContainer.id = wrapperId;
-        widgetContainer.style.cssText = 'width:100%;max-width:1200px;margin:20px auto;display:block;clear:both;';
+        widgetContainer.style.cssText = 'width:100%;max-width:100%;margin:20px auto;display:block;clear:both;overflow:visible;';
         if (usedSelector.indexOf('.flex-.between') !== -1 && targetDiv.parentNode) {
           targetDiv.parentNode.insertBefore(widgetContainer, targetDiv.nextSibling);
         } else {
@@ -1523,92 +1507,58 @@ function openStoryViewer(stories, index) {
 
       widgetContainer.innerHTML = '';
 
-      // ---- CSS DINÂMICO COM OS VALORES REAIS ----
-      var estilo = document.createElement('style');
+      // CSS
       var gapPx = espacamento;
       var totalGap = gapPx * (itemsVisiveis - 1);
       var cardWidth = 'calc((100% - ' + totalGap + 'px) / ' + itemsVisiveis + ')';
 
-      console.log("VIDLYTICS: CSS -> cardWidth:", cardWidth, "| totalGap:", totalGap, "| gapPx:", gapPx);
-
-      estilo.textContent = `
-        #vl-carousel-wrapper-final {
-          font-family: ${fonte};
-          ${autoCenter ? 'display: flex; justify-content: center;' : ''}
-        }
-        #vl-carousel-wrapper-final * { box-sizing: border-box !important; }
-        .vl-slider-container {
-          display: flex;
-          gap: ${gapPx}px;
-          overflow-x: auto;
-          scroll-snap-type: x mandatory;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
-          padding-bottom: 15px;
-          width: 100%;
-          max-width: 100%;
-          cursor: grab;
-        }
-        .vl-slider-container:active { cursor: grabbing; }
-        .vl-slider-container::-webkit-scrollbar { display: none; }
-        .vl-card-item {
-          all: unset;
-          display: flex;
-          flex-direction: column;
-          cursor: pointer;
-          scroll-snap-align: start;
-          flex: 0 0 ${cardWidth};
-          min-width: 0;
-          position: relative;
-          transition: transform 0.2s ease;
-          user-select: none;
-          -webkit-user-select: none;
-        }
-        .vl-card-item:hover { transform: translateY(-2px); }
-        @media (max-width: 768px) {
-          .vl-card-item { flex: 0 0 calc(45% - ${gapPx}px); }
-        }
-        .vl-media-box {
-          position: relative;
-          width: 100%;
-          aspect-ratio: ${aspectRatio};
-          border-radius: ${borderRadius}px;
-          overflow: hidden;
-          background: #000;
-          border: 1px solid ${corBorda};
-          transition: box-shadow 0.2s ease;
-        }
-        .vl-card-item:hover .vl-media-box {
-          box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-        }
-        .vl-media-box img, .vl-media-box video {
-          position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;
-          pointer-events: none;
-        }
-        .vl-title-text {
-          margin-top: 8px;
-          font-size: 12px;
-          font-weight: 600;
-          color: ${corTexto};
-          text-align: center;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          display: ${exibirTitulo ? 'block' : 'none'};
-          width: 100%;
-          padding: 0 4px;
-        }
-        .vl-play-btn-overlay {
-          position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-          width: 36px; height: 36px; background: rgba(0,0,0,0.55); border-radius: 50%;
-          display: ${exibirPlayBtn ? 'flex' : 'none'}; align-items: center; justify-content: center;
-          pointer-events: none; color: #fff;
-        }
-        .vl-play-btn-overlay svg { width: 18px; height: 18px; fill: white; margin-left: 2px; }
-      `;
+      var estilo = document.createElement('style');
+      estilo.textContent = [
+        '#' + wrapperId + ' { font-family: ' + fonte + ', sans-serif; ' + (autoCenter ? 'display: flex; justify-content: center; ' : '') + 'overflow: visible !important; }',
+        '#' + wrapperId + ' * { box-sizing: border-box !important; }',
+        '.vl-slider-container {',
+        '  display: flex !important; flex-wrap: nowrap !important; gap: ' + gapPx + 'px;',
+        '  overflow-x: auto !important; overflow-y: hidden !important;',
+        '  scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;',
+        '  scrollbar-width: thin; scrollbar-color: #ccc transparent;',
+        '  padding-bottom: 20px; width: 100%; max-width: 100%;',
+        '  cursor: grab; user-select: none; -webkit-user-select: none;',
+        '}',
+        '.vl-slider-container:active { cursor: grabbing; }',
+        '.vl-slider-container::-webkit-scrollbar { height: 6px; }',
+        '.vl-slider-container::-webkit-scrollbar-track { background: transparent; }',
+        '.vl-slider-container::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }',
+        '.vl-card-item {',
+        '  all: unset; display: flex !important; flex-direction: column; cursor: pointer;',
+        '  scroll-snap-align: start; flex: 0 0 ' + cardWidth + ' !important; min-width: 140px;',
+        '  position: relative; transition: transform 0.2s ease; user-select: none; -webkit-user-select: none;',
+        '}',
+        '.vl-card-item:hover { transform: translateY(-2px); }',
+        '@media (max-width: 768px) { .vl-card-item { flex: 0 0 calc(50% - ' + gapPx + 'px) !important; min-width: 120px; } }',
+        '.vl-media-box {',
+        '  position: relative; width: 100%; aspect-ratio: ' + aspectRatio + ';',
+        '  border-radius: ' + borderRadius + 'px; overflow: hidden; background: #000;',
+        '  border: ' + borderWidth + 'px solid ' + corBorda + ';',
+        '}',
+        '.vl-card-item:hover .vl-media-box { box-shadow: 0 4px 20px rgba(0,0,0,0.15); }',
+        '.vl-media-box img, .vl-media-box video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }',
+        '.vl-title-text {',
+        '  margin-top: 8px; font-size: 12px; font-weight: 600; color: ' + corTexto + '; text-align: center;',
+        '  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
+        '  display: ' + (exibirTitulo ? 'block' : 'none') + '; width: 100%; padding: 0 4px;',
+        '}',
+        '.vl-play-btn-overlay {',
+        '  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);',
+        '  width: 38px; height: 38px; background: rgba(0,0,0,0.6); border-radius: 50%;',
+        '  display: ' + (exibirPlayBtn ? 'flex' : 'none') + '; align-items: center; justify-content: center;',
+        '  pointer-events: none; color: #fff;',
+        '}',
+        '.vl-card-item:hover .vl-play-btn-overlay { background: ' + corPrimaria + '; transform: translate(-50%, -50%) scale(1.1); }',
+        '.vl-play-btn-overlay svg { width: 18px; height: 18px; fill: white; margin-left: 2px; }'
+      ].join('\n');
       widgetContainer.appendChild(estilo);
 
-      // ---- CONSTRÓI OS CARDS ----
+      // Cards
       var slider = document.createElement('div');
       slider.className = 'vl-slider-container';
 
@@ -1641,6 +1591,7 @@ function openStoryViewer(stories, index) {
         } else {
           mediaEl = document.createElement('img');
           mediaEl.src = cover || videoUrl;
+          mediaEl.loading = 'lazy';
         }
         mediaWrap.appendChild(mediaEl);
 
@@ -1661,17 +1612,14 @@ function openStoryViewer(stories, index) {
         card.addEventListener('click', function(e) {
           e.preventDefault();
           e.stopPropagation();
-          console.log("VIDLYTICS: Clique -> story " + storyIndex + " vídeo " + videoIndex);
-
           window.__vlStories = stories;
           window.__vlStoryIndex = storyIndex;
           window.__vlVideoIndex = videoIndex;
-
           if (typeof openStoryViewer === 'function') {
             openStoryViewer(stories, storyIndex);
             setTimeout(function() {
               if (typeof goToVideoIndex === 'function') goToVideoIndex(videoIndex);
-            }, 100);
+            }, 150);
           }
         });
 
@@ -1679,10 +1627,15 @@ function openStoryViewer(stories, index) {
       });
 
       widgetContainer.appendChild(slider);
-      console.log("VIDLYTICS: " + allVideoItems.length + " cards renderizados, " + itemsVisiveis + " visíveis, scroll ativo!");
+      console.log("VIDLYTICS: ✅ Renderizado! " + allVideoItems.length + " cards, " + itemsVisiveis + " visíveis");
 
     }, 300);
   }
+
+  // Expor no escopo global
+  window.renderInlineWidget = renderInlineWidget;
+
+})();
 
   function renderFloating(stories, appearance) {
     if (!stories || !stories.length || floatingWasClosed) return;
