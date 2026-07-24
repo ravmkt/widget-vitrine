@@ -2681,7 +2681,11 @@ const AppearancePage = () => {
             show_comments_button: modalConfig.show_comment_button,
             hide_stories: modalConfig.hide_stories,
             shadow_enabled: modalConfig.shadow_enabled,
-carousel_format: carouselDesktop.card_shape,
+
+            // ═══════════════════════════════════════════
+            // 🆕 CARROSSEL — 15 colunas planas
+            // ═══════════════════════════════════════════
+            carousel_format: carouselDesktop.card_shape,
             carousel_size: Number(toNumberInputValue(carouselDesktop.card_size)) || 80,
             carousel_gap: safeNumber(carouselDesktop.gap, 16, 0),
             carousel_visible_items: safeNumber(carouselDesktop.visible_items, 4, 1),
@@ -2696,7 +2700,12 @@ carousel_format: carouselDesktop.card_shape,
             carousel_show_product: carouselDesktop.show_product ?? true,
             carousel_show_play_button: carouselDesktop.show_play_icon ?? true,
             carousel_auto_center: carouselDesktop.auto_center ?? false,
+
             carousel_config: carouselConfig,
+
+            // ═══════════════════════════════════════════
+            // 🆕 GRADE — 10 colunas planas
+            // ═══════════════════════════════════════════
             grid_format: gridDesktop.card_shape,
             grid_size: Number(toNumberInputValue(gridDesktop.card_size)) || 80,
             grid_columns: limitNumber(gridDesktop.columns, 4, 1, 4),
@@ -2707,7 +2716,9 @@ carousel_format: carouselDesktop.card_shape,
             grid_border_radius: Number(toNumberInputValue(gridDesktop.border_radius)) || 12,
             grid_object_fit: gridDesktop.object_fit || 'cover',
             grid_show_title: gridDesktop.show_title ?? false,
-            grid_config: gridConfig,            // ← mantém o JSON
+
+            grid_config: gridConfig,
+
             updated_at: now,
           }, {
             onConflict: 'store_id',
@@ -2717,6 +2728,8 @@ carousel_format: carouselDesktop.card_shape,
           showError(`Erro ao sincronizar widget: ${widgetSyncError.message}`);
           throw new Error(`widget_appearances sync: ${widgetSyncError.message}`);
         }
+
+        // ... (daqui pra baixo continua igual, com o general_settings)
 
 const { error: generalSyncError } = await supabase
   .from('general_settings')
