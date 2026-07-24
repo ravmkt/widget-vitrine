@@ -101,6 +101,12 @@ type CarouselConfig = {
   show_product: boolean;
   show_play_icon: boolean;
   auto_center: boolean;
+  card_size: string;
+  border_color: string;
+  border_width: string;
+  border_radius: string;
+  object_fit: string;
+  show_title: boolean;
 };
 
 type GridConfig = {
