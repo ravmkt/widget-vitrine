@@ -291,7 +291,7 @@
   function renderInlineWidget(stories, appearance, format, widgetSelector, widgetPosition) {
     if (!stories || !stories.length) return;
 
-    // Pega o seletor da sua regra (Local de Exibição) ou do padrão global
+    // Pega o seletor da sua regra ou do padrão global
     var selectorValue = widgetSelector || readAppearanceValue(appearance, ['css_selector', 'inline_selector', 'cssSelector', 'inlineSelector']);
     var selectorString = selectorValue ? String(selectorValue).trim() : null;
     var posicaoAlvo = widgetPosition || 'after'; // default: 'abaixo'
@@ -308,7 +308,7 @@
           try { elementoAlvoDaLoja = document.querySelector(selectorString); } catch (e) { console.error("Vidlytics: Seletor inválido."); }
       }
 
-      // Se a Yampi ainda não carregou o elemento, aguarda 250ms e tenta de novo
+      // Se a Yampi ainda não carregou o elemento, aguarda e tenta de novo
       if (selectorString && !elementoAlvoDaLoja && tentativas < maxTentativas) {
           tentativas++;
           setTimeout(executarRenderizacao, 250);
@@ -317,7 +317,7 @@
 
       var nossaDivExistente = document.getElementById('vidlytics-carousel-root');
 
-      // 1. Se achou exatamente o lugar configurado na Foto 4
+      // 1. Se achou o lugar configurado (onde os produtos estão)
       if (elementoAlvoDaLoja) {
           if (nossaDivExistente) {
              targetDiv = nossaDivExistente;
@@ -330,7 +330,7 @@
              targetDiv.style.clear = 'both';
              targetDiv.style.display = 'block';
              
-             // Insere "Abaixo do elemento"
+             // Insere "Abaixo" ou "Acima" do elemento escolhido
              if (posicaoAlvo === 'after' || posicaoAlvo.indexOf('abaixo') !== -1) {
                  if (elementoAlvoDaLoja.nextSibling) {
                      elementoAlvoDaLoja.parentNode.insertBefore(targetDiv, elementoAlvoDaLoja.nextSibling);
@@ -338,11 +338,11 @@
                      elementoAlvoDaLoja.parentNode.appendChild(targetDiv);
                  }
              } else {
-                 elementoAlvoDaLoja.appendChild(targetDiv);
+                 elementoAlvoDaLoja.parentNode.insertBefore(targetDiv, elementoAlvoDaLoja);
              }
           }
       } 
-      // 2. Fallback Seguro: Se falhar, nunca mais joga no topo do site!
+      // 2. Fallback Seguro: Se não achar o alvo (ex: página sem produtos)
       else {
           if (nossaDivExistente) {
               targetDiv = nossaDivExistente;
@@ -353,17 +353,16 @@
               targetDiv.style.width = '100%';
               targetDiv.style.margin = '20px 0';
               
-              // Joga pro final do conteúdo principal para não estragar o Header
               var contentContainer = document.querySelector('main, #MainContent, .showcase, .page-content');
               if (contentContainer) {
                   contentContainer.appendChild(targetDiv);
               } else {
-                  document.body.appendChild(targetDiv); // Último recurso
+                  document.body.appendChild(targetDiv);
               }
           }
       }
 
-      // 3. Monta o Shadow DOM e CSS Blindado para Carrossel (Lado a Lado)
+      // 3. Monta o Shadow DOM e CSS do Carrossel (Lado a Lado)
       var shadow = targetDiv.shadowRoot || targetDiv.attachShadow({ mode: 'open' });
       shadow.innerHTML = '';
 
