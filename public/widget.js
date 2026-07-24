@@ -1388,105 +1388,115 @@
   function renderInlineWidget(stories, appearance, format) {
     if (!stories || !stories.length) return;
 
-    var selectorValue = readAppearanceValue(appearance, ['css_selector', 'inline_selector', 'cssSelector', 'inlineSelector']);
-    var selectorString = selectorValue ? String(selectorValue).trim() : null;
-
-    var maxTentativas = 60;
-    var tentativas = 0;
+    // 1. Lê exatamente as configurações do seu painel
+    var itemsVisiveisDesktop = toNumber(readAppearanceValue(appearance, ['items_visible', 'itemsVisible', 'itens_visiveis']), 4);
+    var espacamento = toNumber(readAppearanceValue(appearance, ['spacing', 'gap', 'espacamento']), 16);
+    var corPrimaria = readAppearanceValue(appearance, ['primary_color', 'primaryColor', 'cor_primaria', 'cor_principal']) || '#00eb1b';
+    var corTexto = readAppearanceValue(appearance, ['text_color', 'textColor', 'cor_texto']) || '#0f172a';
+    var fonte = readAppearanceValue(appearance, ['font_family', 'fontFamily', 'fonte']) || 'Inter, sans-serif';
+    
+    // 2. Busca o local exato onde o widget deve aparecer na loja
+    var cssSelector = readAppearanceValue(appearance, ['css_selector', 'seletor_css', 'seletor']);
+    var targetDiv = null;
 
     var renderInterval = setInterval(function () {
-      var targetDiv = null;
-
-      // 1. Tenta achar o container configurado no painel
-      if (selectorString) {
-          try { targetDiv = document.querySelector(selectorString); } catch (e) {}
+      if (cssSelector) {
+          try { targetDiv = document.querySelector(String(cssSelector)); } catch(e){}
       }
+      
+      if (!targetDiv) targetDiv = document.getElementById('vidlytics-carousel-root') || document.getElementById('instory-root');
 
-      // Se configurou um seletor mas ainda não está na tela, tenta novamente na próxima rodada (polling)
-      if (selectorString && !targetDiv && tentativas < maxTentativas) {
-          tentativas++;
-          return;
-      }
+      // Se ainda não achou a seção da loja, espera mais um pouco
+      if (!targetDiv) return;
 
-      // Se achou, ou se esgotaram as tentativas, cancela o loop
-      clearInterval(renderInterval);
+      clearInterval(renderInterval); // Achou! Para o loop.
 
-      // 2. Tenta achar a div do widget caso você tenha colado o código manualmente
-      if (!targetDiv) {
-          targetDiv = document.getElementById('vidlytics-carousel-root') || document.getElementById('instory-root');
-      }
-
-      // 3. LÓGICA CORRIGIDA: Se não achar, cria a div com segurança e insere no topo/meio
-      if (!targetDiv) {
-          targetDiv = createEl('div');
-          targetDiv.id = 'vidlytics-carousel-root';
-
-          // Procura o corpo principal da loja
-          var mainContainer = document.querySelector('main, #MainContent, [role="main"], .showcase, .page-content');
-
-          if (mainContainer && mainContainer.parentNode) {
-              // Insere LOGO ANTES do conteúdo da loja (geralmente fica embaixo do menu/header)
-              mainContainer.parentNode.insertBefore(targetDiv, mainContainer);
+      // 3. Cria a div isolada para não quebrar o topo do seu site
+      var widgetContainer = document.getElementById('vl-carousel-wrapper-final');
+      if (!widgetContainer) {
+          widgetContainer = createEl('div');
+          widgetContainer.id = 'vl-carousel-wrapper-final';
+          widgetContainer.style.width = '100%';
+          widgetContainer.style.display = 'block';
+          widgetContainer.style.clear = 'both';
+          widgetContainer.style.margin = '20px 0';
+          
+          // Insere ABAIXO do elemento encontrado (conforme sua configuração)
+          if (targetDiv.nextSibling) {
+              targetDiv.parentNode.insertBefore(widgetContainer, targetDiv.nextSibling);
           } else {
-              // Fallback final: coloca no TOPO da página, não mais no rodapé
-              document.body.insertBefore(targetDiv, document.body.firstChild);
+              targetDiv.parentNode.appendChild(widgetContainer);
           }
       } else {
-          // Só limpa o conteúdo se já era a nossa div específica, não apaga a loja
-          targetDiv.innerHTML = '';
+          widgetContainer.innerHTML = '';
       }
 
-      var shadow = targetDiv.shadowRoot || targetDiv.attachShadow({ mode: 'open' });
+      var shadow = widgetContainer.shadowRoot || widgetContainer.attachShadow({ mode: 'open' });
       shadow.innerHTML = '';
 
-      appearance = normalizeAppearanceItem(appearance || {});
-      var inlineConfig = normalizeAppearanceItem({
-        spacing: firstDefined(readAppearanceValue(appearance, ['spacing', 'gap', 'grid_gap', 'card_gap']), 12),
-        items_visible: firstDefined(readAppearanceValue(appearance, ['items_visible', 'itemsVisible', 'visible_items', 'visibleItems']), 3),
-        columns: firstDefined(readAppearanceValue(appearance, ['columns', 'grid_columns', 'gridColumns']), 3),
-        card_radius: firstDefined(readAppearanceValue(appearance, ['card_radius', 'cardRadius', 'border_radius', 'borderRadius', 'radius']), 8),
-        object_fit: firstDefined(readAppearanceValue(appearance, ['object_fit', 'objectFit', 'image_fit', 'imageFit']), 'cover'),
-        format_style: firstDefined(readAppearanceValue(appearance, ['format_style', 'formatStyle', 'story_format', 'storyFormat', 'aspect_ratio', 'aspectRatio']), '9:16')
-      });
+      // 4. CSS que TRAVA o tamanho (nunca mais ficará gigante) e aplica suas cores
+      var estilo = createEl('style');
+      estilo.textContent = `
+        :host { display: block; width: 100%; max-width: 1200px; margin: 0 auto; font-family: ${fonte}; }
+        * { box-sizing: border-box !important; }
+        
+        .vl-slider {
+            display: flex; gap: ${espacamento}px; overflow-x: auto; scroll-snap-type: x mandatory;
+            scrollbar-width: none; padding-bottom: 10px;
+        }
+        .vl-slider::-webkit-scrollbar { display: none; }
+        
+        .vl-card {
+            all: unset; display: flex; flex-direction: column; cursor: pointer; scroll-snap-align: start;
+            /* A MÁGICA DO TAMANHO: Divide 100% por 4 itens */
+            flex: 0 0 calc((100% - (${espacamento}px * ${itemsVisiveisDesktop - 1})) / ${itemsVisiveisDesktop});
+            min-width: 0; position: relative; z-index: 10;
+        }
 
-      var spacing = Math.max(0, toNumber(inlineConfig.spacing, 12));
-      var itemsVisible = Math.max(1, toNumber(inlineConfig.items_visible, 3));
-      var columns = Math.max(1, toNumber(inlineConfig.columns, 3));
-      var cardRadius = Math.max(0, toNumber(inlineConfig.card_radius, 8));
-      var objectFit = String(inlineConfig.object_fit || 'cover').toLowerCase();
-      var formatStyle = String(inlineConfig.format_style || '9:16').toLowerCase();
-      var isPortrait = formatStyle.indexOf('9:16') !== -1 || formatStyle.indexOf('retrato') !== -1 || formatStyle.indexOf('portrait') !== -1;
+        @media (max-width: 768px) {
+            .vl-card { flex: 0 0 calc(40% - ${espacamento}px); }
+        }
 
-      var inlineCss = ':host{display:block;width:100%;max-width:1200px;margin:0 auto;padding:0 15px;box-sizing:border-box;font-family:' + getFontFamily(appearance) + ' !important;}'
-        + buildSharedCss(appearance)
-        + '.vidlytics-inline-root{width:100%;display:flex;flex-direction:row;gap:' + spacing + 'px;box-sizing:border-box;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;}'
-        + '.vidlytics-inline-root::-webkit-scrollbar{display:none;}'
+        .vl-media-wrap {
+            position: relative; width: 100%; aspect-ratio: 9 / 16; border-radius: 12px; overflow: hidden;
+            background: #000; border: 2px solid transparent; transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        
+        .vl-card:hover .vl-media-wrap {
+            border-color: ${corPrimaria}; transform: scale(0.98);
+        }
 
-        + '.vidlytics-inline-track{width:100%;display:flex !important;flex-direction:row !important;gap:' + spacing + 'px;overflow-x:auto !important;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;}'
-        + '.vidlytics-inline-track::-webkit-scrollbar{display:none;}'
-        + '.vidlytics-inline-grid{width:100%;display:grid;grid-template-columns:repeat(' + columns + ', minmax(0, 1fr));gap:' + spacing + 'px;}'
+        .vl-media-wrap img, 
+        .vl-media-wrap video {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;
+            /* A MÁGICA DO CLIQUE: Impede o vídeo de bloquear o mouse */
+            pointer-events: none; 
+        }
 
-        + '.vidlytics-inline-card{appearance:none;background:transparent;border:none;padding:0;margin:0;text-align:left;cursor:pointer;display:flex;flex-direction:column;flex:0 0 calc((100% - (' + spacing + 'px * ' + (itemsVisible - 1) + ')) / ' + itemsVisible + ');scroll-snap-align:start;min-width:0;}'
+        .vl-title {
+            margin-top: 10px; font-size: 13px; font-weight: 700; color: ${corTexto}; text-align: center;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; width: 100%;
+        }
 
-        + '.vidlytics-inline-grid .vidlytics-inline-card{flex:none;width:100%;}'
-        + '.vidlytics-inline-media{width:100%;' + (isPortrait ? 'aspect-ratio:9/16;' : '') + 'object-fit:' + objectFit + ';border-radius:' + cardRadius + 'px;display:block;overflow:hidden;}'
-        + '.vidlytics-inline-media img,.vidlytics-inline-media video{width:100%;height:100%;object-fit:' + objectFit + ';display:block;}'
-        + '.vidlytics-inline-title{margin-top:8px;font-size:11px;font-weight:700;color:' + (readAppearanceValue(appearance, ['text_color']) || '#333') + ';text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}';
+        .vl-play-icon {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 36px; height: 36px; background: rgba(0,0,0,0.6); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; pointer-events: none; color: #fff;
+        }
+        .vl-play-icon svg { width: 18px; height: 18px; fill: white; margin-left: 2px; }
+      `;
+      shadow.appendChild(estilo);
 
-      var style = createEl('style');
-      style.textContent = inlineCss;
-      shadow.appendChild(style);
-
-      var root = createEl('div', 'vidlytics-inline-root');
-      var wrapper = createEl('div', format === 'grid' || format === 'grade' ? 'vidlytics-inline-grid' : 'vidlytics-inline-track');
+      // 5. Monta o HTML do carrossel
+      var slider = createEl('div', 'vl-slider');
 
       stories.forEach(function (story, index) {
-        var bubbleVideo = story.videos && story.videos.length > 0 ? story.videos[0] : null;
-        var videoUrl = bubbleVideo ? getVideoUrl(bubbleVideo) : '';
-        var cover = getStoryThumbnail(story, bubbleVideo, null);
+        var videoObj = story.videos && story.videos.length > 0 ? story.videos[0] : null;
+        var videoUrl = videoObj ? getVideoUrl(videoObj) : '';
+        var cover = getStoryThumbnail(story, videoObj, null);
 
-        var card = createEl('button', 'vidlytics-inline-card');
-        var mediaWrap = createEl('div', 'vidlytics-inline-media');
+        var card = createEl('button', 'vl-card');
+        var mediaWrap = createEl('div', 'vl-media-wrap');
 
         var mediaEl;
         if (videoUrl && isDirectVideoUrl(videoUrl)) {
@@ -1501,28 +1511,35 @@
           mediaEl = createEl('img');
           if (cover) mediaEl.src = cover;
         }
-
-        mediaEl.className = 'w-full h-full';
         mediaWrap.appendChild(mediaEl);
+
+        var playIcon = createEl('div', 'vl-play-icon');
+        playIcon.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
+        mediaWrap.appendChild(playIcon);
         card.appendChild(mediaWrap);
 
-        var modalCfg = normalizeModalAppearanceConfig(appearance);
-        if (modalCfg.show_title) {
-          var label = createEl('span', 'vidlytics-inline-title');
-          label.textContent = story.title || '';
-          card.appendChild(label);
-        }
+        var titulo = createEl('span', 'vl-title');
+        titulo.textContent = story.title || 'Ver Vídeo';
+        card.appendChild(titulo);
 
-        card.addEventListener('click', function (e) {
-          openStoryViewer(stories, index);
+        // 6. Garante que o Player abra ao clicar
+        card.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Verifica qual é a função original do seu código que abre o player e dispara
+            if (typeof openStoryViewer === 'function') {
+                openStoryViewer(stories, index);
+            } else if (typeof openModal === 'function') {
+                openModal(stories, index);
+            }
         });
 
-        wrapper.appendChild(card);
+        slider.appendChild(card);
       });
 
-      root.appendChild(wrapper);
-      shadow.appendChild(root);
-    }, 250); // Fim do setInterval (250ms delay)
+      shadow.appendChild(slider);
+      
+    }, 300); // Fica tentando a cada 300ms até a loja estar 100% carregada
   }
 
   function renderFloating(stories, appearance) {
