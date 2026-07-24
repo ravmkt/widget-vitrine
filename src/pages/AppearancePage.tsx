@@ -84,6 +84,7 @@ type FloatingConfig = {
   border_color: string;
   border_style: string;
   show_play_icon: boolean;
+  show_title: boolean;
   object_fit: string;
   draggable: boolean;
   allow_close: boolean;
@@ -99,6 +100,11 @@ type CarouselConfig = {
   visible_items: number;
   show_product: boolean;
   show_play_icon: boolean;
+  show_title: boolean;
+  border_color: string;
+  border_width: string;
+  border_radius: string;
+  object_fit: string;
   auto_center: boolean;
 };
 
@@ -107,6 +113,11 @@ type GridConfig = {
   rows: number;
   gap: number;
   card_shape: WidgetShape;
+  show_title: boolean;
+  border_color: string;
+  border_width: string;
+  border_radius: string;
+  object_fit: string;
 };
 
 type ModalConfig = {
@@ -120,6 +131,9 @@ type ModalConfig = {
   show_product_button: boolean;
   hide_stories: boolean;
   shadow_enabled: boolean;
+  border_color?: string;
+  border_width?: string;
+  border_radius?: string;
 };
 
 type ExtendedAppearance = Appearance & {
@@ -522,6 +536,7 @@ const createDefaultFloatingDesktopConfig = (): FloatingConfig => ({
   border_color: '#0094EB',
   border_style: '2',
   show_play_icon: true,
+  show_title: true,
   object_fit: 'cover',
   draggable: false,
   allow_close: false,
@@ -542,6 +557,7 @@ const createDefaultFloatingMobileConfig = (): FloatingConfig => ({
   border_color: '#0094EB',
   border_style: '2',
   show_play_icon: true,
+  show_title: true,
   object_fit: 'cover',
   draggable: false,
   allow_close: false,
@@ -557,6 +573,11 @@ const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
   visible_items: 4,
   show_product: true,
   show_play_icon: true,
+  show_title: true,
+  border_color: '#E2E8F0',
+  border_width: '1',
+  border_radius: '12',
+  object_fit: 'cover',
   auto_center: false,
 });
 
@@ -569,6 +590,11 @@ const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
   visible_items: 2,
   show_product: true,
   show_play_icon: true,
+  show_title: true,
+  border_color: '#E2E8F0',
+  border_width: '1',
+  border_radius: '12',
+  object_fit: 'cover',
   auto_center: false,
 });
 
@@ -577,6 +603,11 @@ const createDefaultGridDesktopConfig = (): GridConfig => ({
   rows: 1,
   gap: 16,
   card_shape: 'portrait',
+  show_title: true,
+  border_color: '#E2E8F0',
+  border_width: '1',
+  border_radius: '12',
+  object_fit: 'cover',
 });
 
 const createDefaultGridMobileConfig = (): GridConfig => ({
@@ -2620,7 +2651,8 @@ if (supabase) {
       show_comments_button: modalConfig.show_comment_button,
       hide_stories: modalConfig.hide_stories,
       shadow_enabled: modalConfig.shadow_enabled,
-
+    carousel_config: carouselConfig,
+    grid_config: gridConfig,
       updated_at: now,
     }, {
       onConflict: 'store_id',
@@ -2967,23 +2999,6 @@ window.dispatchEvent(new Event('storage'));
                         />
                       </FormField>
 
-                      <FormField label="URL específica (opcional)">
-                        <input
-                          type="text"
-                          value={formData.url || ''}
-                          onChange={e =>
-                            setFormData({
-                              ...formData,
-                              url: e.target.value,
-                            })
-                          }
-                          placeholder="Ex: /teste, /produtos, /categoria/calcados"
-                          className={inputClass}
-                        />
-                        <p className="text-xs font-semibold text-slate-400">
-                          Deixe em branco para mostrar em todas as páginas. Use uma palavra-chave que apareça na URL (ex: "teste" para mostrar em /pagina-teste).
-                        </p>
-                      </FormField>
                     </SectionCard>
                   )}
 
@@ -3182,90 +3197,40 @@ window.dispatchEvent(new Event('storage'));
                           </select>
                         </FormField>
 
-                        {activeFloatingConfig.shape !== 'circle' && (
-                          <>
-                            <FormField label="Largura">
-                              <input
-                                type="number"
-                                min="1"
-                                step="1"
-                                value={toNumberInputValue(
-                                  activeFloatingConfig.width,
-                                )}
-                                onChange={e => {
-                                  const value = e.target.value;
+                        <FormField label="Tamanho">
+                          <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            value={toNumberInputValue(activeFloatingConfig.width)}
+                            onChange={e => {
+                              const value = e.target.value;
 
-                                  if (
-                                    activeFloatingConfig.shape === 'portrait'
-                                  ) {
-                                    updateFloatingConfig({
-                                      width: value,
-                                      height:
-                                        getPortraitHeightFromWidth(value),
-                                    });
+                              if (activeFloatingConfig.shape === 'portrait') {
+                                updateFloatingConfig({
+                                  width: value,
+                                  height: getPortraitHeightFromWidth(value),
+                                });
+                                return;
+                              }
 
-                                    return;
-                                  }
+                              if (activeFloatingConfig.shape === 'square') {
+                                updateFloatingConfig({
+                                  width: value,
+                                  height: value,
+                                });
+                                return;
+                              }
 
-                                  if (activeFloatingConfig.shape === 'square') {
-                                    updateFloatingConfig({
-                                      width: value,
-                                      height: value,
-                                    });
-
-                                    return;
-                                  }
-
-                                  updateFloatingConfig({
-                                    width: value,
-                                  });
-                                }}
-                                placeholder="Ex: 80"
-                                className={inputClass}
-                              />
-                            </FormField>
-
-                            <FormField label="Altura">
-                              <input
-                                type="number"
-                                min="1"
-                                step="1"
-                                value={toNumberInputValue(
-                                  activeFloatingConfig.height,
-                                )}
-                                onChange={e => {
-                                  const value = e.target.value;
-
-                                  if (
-                                    activeFloatingConfig.shape === 'portrait'
-                                  ) {
-                                    updateFloatingConfig({
-                                      height: value,
-                                      width: getPortraitWidthFromHeight(value),
-                                    });
-
-                                    return;
-                                  }
-
-                                  if (activeFloatingConfig.shape === 'square') {
-                                    updateFloatingConfig({
-                                      height: value,
-                                      width: value,
-                                    });
-
-                                    return;
-                                  }
-
-                                  updateFloatingConfig({
-                                    height: value,
-                                  });
-                                }}
-                                placeholder="Ex: 142"
-                                className={inputClass}
-                              />
-                            </FormField>
-                          </>
-                        )}
+                              updateFloatingConfig({
+                                width: value,
+                                height: value,
+                              });
+                            }}
+                            placeholder="Ex: 80"
+                            className={inputClass}
+                          />
+                        </FormField>
 
                         <FormField
                           label={
@@ -3309,41 +3274,15 @@ window.dispatchEvent(new Event('storage'));
                           )}
                         </FormField>
 
-                        <FormField label="Posição do widget">
-                          <select
-                            value={activeFloatingConfig.position}
-                            onChange={e =>
-                              updateFloatingConfig({
-                                position: e.target.value as PositionValue,
-                              })
-                            }
-                            className={selectClass}
-                          >
-                            <option value="fixed_bottom_right">
-                              Inferior direita
-                            </option>
-                            <option value="fixed_bottom_left">
-                              Inferior esquerda
-                            </option>
-                            <option value="fixed_top_right">
-                              Superior direita
-                            </option>
-                            <option value="fixed_top_left">
-                              Superior esquerda
-                            </option>
-                          </select>
-                        </FormField>
-
-                        <FormField label="Distância inferior">
+                        <FormField label="Margem vertical">
                           <input
                             type="number"
                             min="0"
                             step="1"
-                            value={toNumberInputValue(
-                              activeFloatingConfig.bottom_spacing,
-                            )}
+                            value={toNumberInputValue(activeFloatingConfig.top_spacing)}
                             onChange={e =>
                               updateFloatingConfig({
+                                top_spacing: e.target.value,
                                 bottom_spacing: e.target.value,
                               })
                             }
@@ -3352,32 +3291,12 @@ window.dispatchEvent(new Event('storage'));
                           />
                         </FormField>
 
-                        <FormField label="Distância superior">
+                        <FormField label="Margem horizontal">
                           <input
                             type="number"
                             min="0"
                             step="1"
-                            value={toNumberInputValue(
-                              activeFloatingConfig.top_spacing,
-                            )}
-                            onChange={e =>
-                              updateFloatingConfig({
-                                top_spacing: e.target.value,
-                              })
-                            }
-                            placeholder="Ex: 20"
-                            className={inputClass}
-                          />
-                        </FormField>
-
-                        <FormField label="Distância lateral">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={toNumberInputValue(
-                              activeFloatingConfig.left_spacing,
-                            )}
+                            value={toNumberInputValue(activeFloatingConfig.left_spacing)}
                             onChange={e =>
                               updateFloatingConfig({
                                 left_spacing: e.target.value,
@@ -3386,6 +3305,18 @@ window.dispatchEvent(new Event('storage'));
                             }
                             placeholder="Ex: 20"
                             className={inputClass}
+                          />
+                        </FormField>
+
+                        <FormField label="Mostrar título">
+                          <ToggleSwitch
+                            label="Mostrar título"
+                            checked={activeFloatingConfig.show_title}
+                            onChange={e =>
+                              updateFloatingConfig({
+                                show_title: e.target.checked,
+                              })
+                            }
                           />
                         </FormField>
 
@@ -3406,9 +3337,7 @@ window.dispatchEvent(new Event('storage'));
                             type="number"
                             min="0"
                             step="1"
-                            value={toNumberInputValue(
-                              activeFloatingConfig.border_style,
-                            )}
+                            value={toNumberInputValue(activeFloatingConfig.border_style)}
                             onChange={e =>
                               updateFloatingConfig({
                                 border_style: e.target.value,
@@ -3430,6 +3359,7 @@ window.dispatchEvent(new Event('storage'));
                               updateFloatingConfig({
                                 object_fit: e.target.value,
                               })
+
                             }
                             className={selectClass}
                           >
@@ -3517,7 +3447,7 @@ window.dispatchEvent(new Event('storage'));
                       </div>
 
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <FormField label="Forma">
+                        <FormField label="Tamanho">
                           <select
                             value={activeCarouselConfig.card_shape}
                             onChange={e =>
@@ -3540,37 +3470,73 @@ window.dispatchEvent(new Event('storage'));
                           )}
                         </FormField>
 
-                        <FormField label="Espaçamento">
+                        <FormField label="Cor da borda">
+                          <ColorInput
+                            label="Cor da borda"
+                            value={formData.carousel_config.border_color}
+                            onChange={e =>
+                              updateCarouselConfig({
+                                border_color: e.target.value,
+                              })
+                            }
+                          />
+                        </FormField>
+
+                        <FormField label="Largura da borda">
                           <input
                             type="number"
                             min="0"
                             step="1"
-                            value={activeCarouselConfig.gap}
+                            value={toNumberInputValue(formData.carousel_config.border_width)}
                             onChange={e =>
                               updateCarouselConfig({
-                                gap: safeNumber(e.target.value, 0, 0),
+                                border_width: e.target.value,
                               })
                             }
                             className={inputClass}
                           />
                         </FormField>
 
-                        <FormField label="Itens visíveis">
+                        <FormField label="Raio da borda">
                           <input
                             type="number"
-                            min="1"
+                            min="0"
                             step="1"
-                            value={activeCarouselConfig.visible_items}
+                            value={toNumberInputValue(formData.carousel_config.border_radius)}
                             onChange={e =>
                               updateCarouselConfig({
-                                visible_items: safeNumber(
-                                  e.target.value,
-                                  1,
-                                  1,
-                                ),
+                                border_radius: e.target.value,
                               })
                             }
                             className={inputClass}
+                          />
+                        </FormField>
+
+                        <FormField label="Object Fit">
+                          <select
+                            value={activeCarouselConfig.object_fit || 'cover'}
+                            onChange={e =>
+                              updateCarouselConfig({
+                                object_fit: e.target.value,
+                              })
+                            }
+                            className={selectClass}
+                          >
+                            <option value="cover">Cover</option>
+                            <option value="contain">Contain</option>
+                            <option value="fill">Fill</option>
+                          </select>
+                        </FormField>
+
+                        <FormField label="Mostrar título">
+                          <ToggleSwitch
+                            label="Mostrar título"
+                            checked={activeCarouselConfig.show_title ?? true}
+                            onChange={e =>
+                              updateCarouselConfig({
+                                show_title: e.target.checked,
+                              })
+                            }
                           />
                         </FormField>
 
@@ -3689,7 +3655,7 @@ window.dispatchEvent(new Event('storage'));
                       </div>
 
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <FormField label="Forma">
+                        <FormField label="Tamanho">
                           <select
                             value={activeGridConfig.card_shape}
                             onChange={e =>
@@ -3712,51 +3678,76 @@ window.dispatchEvent(new Event('storage'));
                           )}
                         </FormField>
 
-                        <FormField label="Colunas">
-                          <input
-                            type="number"
-                            min="1"
-                            max="4"
-                            step="1"
-                            value={Math.min(activeGridConfig.columns, 4)}
+                        <FormField label="Cor da borda">
+                          <ColorInput
+                            label="Cor da borda"
+                            value={formData.grid_config.border_color}
                             onChange={e =>
                               updateGridConfig({
-                                columns: limitNumber(e.target.value, 1, 1, 4),
+                                border_color: e.target.value,
                               })
                             }
-                            className={inputClass}
                           />
                         </FormField>
 
-                        <FormField label="Linhas">
-                          <input
-                            type="number"
-                            min="1"
-                            step="1"
-                            value={activeGridConfig.rows}
-                            onChange={e =>
-                              updateGridConfig({
-                                rows: safeNumber(e.target.value, 1, 1),
-                              })
-                            }
-                            className={inputClass}
-                          />
-                        </FormField>
-
-                        <FormField label="Espaçamento">
+                        <FormField label="Largura da borda">
                           <input
                             type="number"
                             min="0"
                             step="1"
-                            value={activeGridConfig.gap}
+                            value={toNumberInputValue(formData.grid_config.border_width)}
                             onChange={e =>
                               updateGridConfig({
-                                gap: safeNumber(e.target.value, 0, 0),
+                                border_width: e.target.value,
                               })
                             }
                             className={inputClass}
                           />
                         </FormField>
+
+                        <FormField label="Raio da borda">
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={toNumberInputValue(formData.grid_config.border_radius)}
+                            onChange={e =>
+                              updateGridConfig({
+                                border_radius: e.target.value,
+                              })
+                            }
+                            className={inputClass}
+                          />
+                        </FormField>
+
+                        <FormField label="Object Fit">
+                          <select
+                            value={activeGridConfig.object_fit || 'cover'}
+                            onChange={e =>
+                              updateGridConfig({
+                                object_fit: e.target.value,
+                              })
+                            }
+                            className={selectClass}
+                          >
+                            <option value="cover">Cover</option>
+                            <option value="contain">Contain</option>
+                            <option value="fill">Fill</option>
+                          </select>
+                        </FormField>
+
+                        <FormField label="Mostrar título">
+                          <ToggleSwitch
+                            label="Mostrar título"
+                            checked={activeGridConfig.show_title ?? true}
+                            onChange={e =>
+                              updateGridConfig({
+                                show_title: e.target.checked,
+                              })
+                            }
+                          />
+                        </FormField>
+
                       </div>
                     </SectionCard>
                   )}
@@ -3851,15 +3842,45 @@ window.dispatchEvent(new Event('storage'));
                           />
                         </FormField>
 
-                        <FormField label="Mostrar botão comentários">
-                          <ToggleSwitch
-                            label="Mostrar botão comentários"
-                            checked={formData.modal_config.show_comment_button}
+                        <FormField label="Cor da borda">
+                          <ColorInput
+                            label="Cor da borda"
+                            value={formData.modal_config.border_color}
                             onChange={e =>
                               updateModalConfig({
-                                show_comment_button: e.target.checked,
+                                border_color: e.target.value,
                               })
                             }
+                          />
+                        </FormField>
+
+                        <FormField label="Largura da borda">
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={toNumberInputValue(formData.modal_config.border_width)}
+                            onChange={e =>
+                              updateModalConfig({
+                                border_width: e.target.value,
+                              })
+                            }
+                            className={inputClass}
+                          />
+                        </FormField>
+
+                        <FormField label="Raio da borda">
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={toNumberInputValue(formData.modal_config.border_radius)}
+                            onChange={e =>
+                              updateModalConfig({
+                                border_radius: e.target.value,
+                              })
+                            }
+                            className={inputClass}
                           />
                         </FormField>
 
