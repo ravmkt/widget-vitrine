@@ -1403,21 +1403,29 @@ function openStoryViewer(stories, index) {
     var corTexto = (appearance && (appearance.text_color || appearance.textColor || appearance.cor_texto)) || '#0f172a';
 var cssSelector = 'section.category-content .holder-results > div > .flex-.between-.vtop';
     
-    var renderInterval = setInterval(function () {
-        var targetDiv = null;
+var renderInterval = setInterval(function () {
+    var targetDiv = null;
 
-        // 2. Busca o local no site (Com 5 planos de backup para NUNCA sumir da tela)
-        if (cssSelector) {
-            try { targetDiv = document.querySelector(String(cssSelector)); } catch(e){}
-        }
-        if (!targetDiv) targetDiv = document.getElementById('vidlytics-carousel-root');
-        if (!targetDiv) targetDiv = document.getElementById('instory-root');
-        if (!targetDiv) targetDiv = document.querySelector('main, #MainContent, .main-content, #main, .collection');
-        if (!targetDiv) targetDiv = document.body; // PLANO FINAL: Se não achar nada, joga no corpo do site!
+    try {
+        targetDiv = document.querySelector(cssSelector);
+    } catch (e) {
+        console.error('VIDLYTICS: Seletor CSS inválido:', cssSelector);
+        clearInterval(renderInterval);
+        return;
+    }
 
-        if (!targetDiv) return; // Se incrivelmente não achar, continua tentando
-        
-        clearInterval(renderInterval); // Achou! Para o loop.
+    // Se o elemento ainda não existir, continua tentando
+    if (!targetDiv) {
+        console.log('VIDLYTICS: Aguardando elemento:', cssSelector);
+        return;
+    }
+
+    clearInterval(renderInterval);
+
+    console.log(
+        'VIDLYTICS: Elemento encontrado. O carrossel será inserido abaixo dele.',
+        targetDiv
+    );
         console.log("VIDLYTICS: Local de inserção encontrado!", targetDiv);
 
         // 3. Cria a caixa do widget
