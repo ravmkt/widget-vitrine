@@ -1562,19 +1562,21 @@ if (targetDiv.parentNode) {
             mediaWrap.className = 'vl-media-box';
 
             var mediaEl;
-            var isVideo = videoUrl && (videoUrl.includes('.mp4') || videoUrl.includes('.webm') || videoUrl.includes('.mov') || videoUrl.includes('.m3u8'));
-            
-            if (isVideo) {
+            if (cover) {
+                mediaEl = document.createElement('img');
+                mediaEl.src = cover;
+            } else if (videoUrl && isVideoPlayableNatively(videoObj)) {
                 mediaEl = document.createElement('video');
                 mediaEl.src = videoUrl;
-                if (cover) mediaEl.poster = cover;
                 mediaEl.muted = true;
                 mediaEl.loop = true;
                 mediaEl.autoplay = true;
                 mediaEl.setAttribute('playsinline', '');
+                mediaEl.setAttribute('webkit-playsinline', '');
             } else {
-                mediaEl = document.createElement('img');
-                mediaEl.src = cover || videoUrl; 
+                mediaEl = document.createElement('div');
+                mediaEl.className = 'vl-title-text';
+                mediaEl.textContent = 'Vídeo';
             }
             mediaWrap.appendChild(mediaEl);
 
@@ -1590,17 +1592,11 @@ if (targetDiv.parentNode) {
             titulo.textContent = story.title || 'Ver Vídeo';
             card.appendChild(titulo);
 
-            // 6. Garante o Clique
             card.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log("VIDLYTICS: Clicou no vídeo!", index);
-                
-                // Tenta chamar a função que abre o vídeo do seu arquivo original
-                if (typeof window.openStoryViewer === 'function') { window.openStoryViewer(stories, index); }
-                else if (typeof openStoryViewer === 'function') { openStoryViewer(stories, index); } 
-                else if (typeof window.openModal === 'function') { window.openModal(stories, index); }
-                else if (typeof openModal === 'function') { openModal(stories, index); }
+                console.log('VIDLYTICS: Clicou no vídeo!', index);
+                openStoryViewer(stories, index);
             });
 
             slider.appendChild(card);
