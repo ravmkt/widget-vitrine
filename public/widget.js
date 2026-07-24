@@ -295,15 +295,25 @@
 
 function fetchDbAppearance() {
   if (!storeId || !hasSupabase) return Promise.resolve({});
-  
-  function tryTable(tableName, extraQuery) {
-    var path = tableName + '?select=*&store_id=eq.' + encodeURIComponent(storeId) + (extraQuery || '') + '&order=is_default.desc,updated_at.desc.nullslast,created_at.desc.nullslast&limit=1';
-    return fetchJson(path).then(function (items) {
-      if (!items || !items.length) return null;
-      var appearance = extractAppearanceFromItem(items[0], true);
-      return appearanceHasUsefulData(appearance) ? appearance : null;
-    });
-  }
+  return Promise.all([
+    tryTable('appearances'),
+    tryTable('widget_appearances')
+  ]).then(function(results) {
+    var app1 = results[0] || {};
+    var app2 = results[1] || {};
+    var merged = {};
+    // Mescla: primeiro widget_appearances, depois appearances (prioridade maior)
+    if (typeof mergeObject === 'function') {
+      mergeObject(merged, app2);
+      mergeObject(merged, app1);
+    } else {
+      // fallback caso mergeObject não exista
+      for (var k in app2) { if (app2.hasOwnProperty(k)) merged[k] = app2[k]; }
+      for (var k in app1) { if (app1.hasOwnProperty(k)) merged[k] = app1[k]; }
+    }
+    return normalizeAppearanceItem(merged);
+  });
+}
   
   // ⬇️ CORREÇÃO: consulta AMBAS as tabelas e faz merge
   return Promise.all([
