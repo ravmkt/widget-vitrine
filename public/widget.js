@@ -1385,81 +1385,44 @@
     });
   }
 
-  function renderInlineWidget(stories, appearance, format) {
+  function renderInlineWidget(stories, appearance, format, widgetSelector, widgetPosition) {
+
     if (!stories || !stories.length) return;
 
     var selectorValue = readAppearanceValue(appearance, ['css_selector', 'inline_selector', 'cssSelector', 'inlineSelector']);
     var selectorString = selectorValue ? String(selectorValue).trim() : null;
+    var widgetPosition = String(firstDefined(appearance.position, appearance.inline_position, appearance.inlinePosition, appearance.display_position, appearance.displayPosition) || '').toLowerCase();
 
-    // Vai tentar achar o elemento 40 vezes a cada 250ms (Total de 10 segundos aguardando a Yampi)
-    var maxTentativas = 40; 
-    var tentativas = 0;
-
-    function executarRenderizacao() {
-      var targetDiv = null;
-      var elementoAlvoDaLoja = null;
-
-      // 1. Tenta achar o elemento alvo da loja (se configurado)
+    function findTargetElement() {
+      var target = null;
       if (selectorString) {
-          try { elementoAlvoDaLoja = document.querySelector(selectorString); } catch (e) {}
+        try { target = document.querySelector(selectorString); } catch (e) {}
       }
-
-      // 2. Se temos seletor mas a loja ainda não carregou o elemento, aguarda e tenta de novo
-      if (selectorString && !elementoAlvoDaLoja && tentativas < maxTentativas) {
-          tentativas++;
-          setTimeout(executarRenderizacao, 250);
-          return;
+      if (!target) {
+        target = document.getElementById('vidlytics-carousel-root') || document.getElementById('instory-root');
       }
-
-      // 3. Verifica se a nossa div raiz já existe na página (para não duplicar)
-      var nossaDivExistente = document.getElementById('vidlytics-carousel-root') || document.getElementById('instory-root');
-
-      if (elementoAlvoDaLoja) {
-          // Achou o elemento alvo na loja! 
-          if (nossaDivExistente) {
-             targetDiv = nossaDivExistente;
-             targetDiv.innerHTML = ''; // Limpa só a nossa div (não apaga a loja)
-          } else {
-             targetDiv = createEl('div');
-             targetDiv.id = 'vidlytics-carousel-root';
-             targetDiv.style.width = '100%';
-             
-             // Insere o carrossel LOGO ABAIXO do elemento alvo escolhido
-             if (elementoAlvoDaLoja.nextSibling) {
-                 elementoAlvoDaLoja.parentNode.insertBefore(targetDiv, elementoAlvoDaLoja.nextSibling);
-             } else {
-                 elementoAlvoDaLoja.parentNode.appendChild(targetDiv);
-             }
-          }
-      } else if (nossaDivExistente) {
-          // Cliente inseriu nossa div manualmente via HTML
-          targetDiv = nossaDivExistente;
-          targetDiv.innerHTML = '';
-          targetDiv.style.width = '100%';
-      } else {
-          // 4. Fallback seguro melhorado (NÃO JOGA MAIS NO TOPO EXTREMO)
-          targetDiv = createEl('div');
-          targetDiv.id = 'vidlytics-carousel-root';
-          targetDiv.style.width = '100%';
-          targetDiv.style.marginBottom = '20px';
-          
-          var mainContainer = document.querySelector('.showcase, .page-content, main, #MainContent, .product-list');
-          var headerContainer = document.querySelector('header, .header');
-
-          if (mainContainer) {
-              // Coloca acima dos produtos/conteúdo principal (ideal)
-              mainContainer.parentNode.insertBefore(targetDiv, mainContainer);
-          } else if (headerContainer && headerContainer.nextSibling) {
-              // Coloca logo depois do cabeçalho
-              headerContainer.parentNode.insertBefore(targetDiv, headerContainer.nextSibling);
-          } else {
-              // Se falhar tudo, coloca no fim do body de forma segura
-              document.body.appendChild(targetDiv);
-          }
+      if (!target) {
+        target = document.querySelector('main') || document.getElementById('MainContent') || document.querySelector('#MainContent') || document.querySelector('[role="main"]');
       }
+      return target;
+    }
 
-      // Renderiza o Shadow DOM para isolar nosso CSS
-      var shadow = targetDiv.shadowRoot || targetDiv.attachShadow({ mode: 'open' });
+    var targetDiv = findTargetElement();
+    if (!targetDiv) {
+      targetDiv = createEl('div');
+      targetDiv.id = 'vidlytics-carousel-root';
+      document.body.appendChild(targetDiv);
+    }
+
+    if (widgetPosition === 'before' && targetDiv.parentNode && targetDiv.previousSibling) {
+      targetDiv.parentNode.insertBefore(targetDiv, targetDiv.previousSibling);
+    }
+
+    targetDiv.innerHTML = '';
+
+    // Renderiza o Shadow DOM para isolar nosso CSS
+    var shadow = targetDiv.shadowRoot || targetDiv.attachShadow({ mode: 'open' });
+
       shadow.innerHTML = '';
 
       appearance = normalizeAppearanceItem(appearance || {});
@@ -1485,9 +1448,10 @@
         + '.vidlytics-inline-root::-webkit-scrollbar{display:none;}'
         + '.vidlytics-inline-track{width:100%;display:flex !important;flex-direction:row !important;gap:' + spacing + 'px;overflow-x:auto !important;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;}'
         + '.vidlytics-inline-track::-webkit-scrollbar{display:none;}'
-        + '.vidlytics-inline-card{appearance:none;background:transparent;border:none;padding:0;margin:0;text-align:left;cursor:pointer;display:flex;flex-direction:column; flex: 0 0 auto; width: 140px; scroll-snap-align:start;min-width:0;}'
-        + '@media (min-width: 768px) { .vidlytics-inline-card { width: 180px; } }'
-        + '.vidlytics-inline-media{width:100%; position:relative; ' + (isPortrait ? 'aspect-ratio:9/16;' : '') + 'border-radius:' + cardRadius + 'px;display:block;overflow:hidden; background: #000;}'
+        + '.vidlytics-inline-card{appearance:none;background:transparent;border:none;padding:0;margin:0;text-align:left;cursor:pointer;display:flex;flex-direction:column;flex:0 0 auto;width:' + (isPortrait ? 'calc((100% - (' + spacing + 'px * ' + (Math.max(1, Math.min(3, 3)) - 1) + ')) / ' + Math.max(1, Math.min(3, 3)) + ')' : '140px') + ';scroll-snap-align:start;min-width:0;}'
+        + '@media (min-width: 768px) { .vidlytics-inline-card { width: ' + (isPortrait ? 'calc((100% - (' + spacing + 'px * ' + (Math.max(1, Math.min(4, 4)) - 1) + ')) / ' + Math.max(1, Math.min(4, 4)) + ')' : '180px') + '; } }'
+        + '.vidlytics-inline-media{width:100%;position:relative;' + (isPortrait ? 'aspect-ratio:9/16;' : '') + 'border-radius:' + cardRadius + 'px;display:block;overflow:hidden;background:#000;}'
+
         + '.vidlytics-inline-title{margin-top:8px;font-size:11px;font-weight:700;color:' + (readAppearanceValue(appearance, ['text_color']) || '#333') + ';text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}';
 
       var style = createEl('style');
@@ -1496,6 +1460,9 @@
 
       var root = createEl('div', 'vidlytics-inline-root');
       var wrapper = createEl('div', 'vidlytics-inline-track');
+      if (widgetPosition === 'before') {
+        root.style.marginTop = '0';
+      }
 
       stories.forEach(function (story, index) {
         var bubbleVideo = story.videos && story.videos.length > 0 ? story.videos[0] : null;
@@ -1702,7 +1669,7 @@
       });
 
       // --- O CÉREBRO DA DECISÃO DE FORMATO ---
-      // Usa o formato salvo em cada story; se houver mais de um, prioriza o primeiro válido
+      // Usa o formato salvo no story; se houver vários, prioriza o primeiro não-falha
       var widgetFormat = 'floating_widget';
 
       for (var i = 0; i < validStories.length; i += 1) {
@@ -1732,10 +1699,12 @@
         }
       }
 
-      // Executa a função certa dependendo do formato escolhido
+      var widgetSelector = String(firstDefined(appearance.css_selector, appearance.inline_selector, appearance.cssSelector, appearance.inlineSelector) || '').trim();
+      var widgetPosition = String(firstDefined(appearance.position, appearance.inline_position, appearance.inlinePosition, appearance.display_position, appearance.displayPosition) || '').toLowerCase();
+
       if (widgetFormat === 'carousel' || widgetFormat === 'grid') {
           console.info('Instory renderizando formato: ' + widgetFormat);
-          renderInlineWidget(validStories, appearance, widgetFormat);
+          renderInlineWidget(validStories, appearance, widgetFormat, widgetSelector, widgetPosition);
       } else {
           console.info('Instory renderizando formato: Flutuante');
           renderFloating(validStories, appearance);
