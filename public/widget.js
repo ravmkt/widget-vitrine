@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.07.24-00';
+  var WIDGET_VERSION = '2026.07.24-01';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -1385,45 +1385,72 @@
     });
   }
 
-    function renderInlineWidget(stories, appearance, format) {
-      if (!stories || !stories.length) return;
-  
-    var targetDiv = null;
+  function renderInlineWidget(stories, appearance, format) {
+    if (!stories || !stories.length) return;
+
     var selectorValue = readAppearanceValue(appearance, ['css_selector', 'inline_selector', 'cssSelector', 'inlineSelector']);
+    var selectorString = selectorValue ? String(selectorValue).trim() : null;
 
-    // 1. Tenta achar o container configurado no painel
-    if (selectorValue) {
-        try { targetDiv = document.querySelector(String(selectorValue)); } catch (e) {}
-    }
+    // Vai tentar achar o elemento 40 vezes a cada 250ms (Total de 10 segundos aguardando a Yampi)
+    var maxTentativas = 40; 
+    var tentativas = 0;
 
-    // 2. Tenta achar a div do widget caso você tenha colado o código manualmente
-    if (!targetDiv) {
-        targetDiv = document.getElementById('vidlytics-carousel-root') || document.getElementById('instory-root');
-    }
+    function executarRenderizacao() {
+      var targetDiv = null;
+      var elementoAlvoDaLoja = null;
 
-    // 3. LÓGICA CORRIGIDA: Se não achar, cria a div com segurança e insere no topo/meio
-    if (!targetDiv) {
-        targetDiv = createEl('div');
-        targetDiv.id = 'vidlytics-carousel-root';
+      // 1. Tenta achar o elemento alvo da loja (se configurado)
+      if (selectorString) {
+          try { elementoAlvoDaLoja = document.querySelector(selectorString); } catch (e) {}
+      }
 
-        // Procura o corpo principal da loja
-        var mainContainer = document.querySelector('main, #MainContent, [role="main"], .showcase, .page-content');
+      // 2. Se temos seletor mas a loja ainda não carregou o elemento, aguarda e tenta de novo
+      if (selectorString && !elementoAlvoDaLoja && tentativas < maxTentativas) {
+          tentativas++;
+          setTimeout(executarRenderizacao, 250);
+          return;
+      }
 
-        if (mainContainer && mainContainer.parentNode) {
-            // Insere LOGO ANTES do conteúdo da loja (geralmente fica embaixo do menu/header)
-            mainContainer.parentNode.insertBefore(targetDiv, mainContainer);
-        } else {
-            // Fallback final: coloca no TOPO da página, não mais no rodapé
-            document.body.insertBefore(targetDiv, document.body.firstChild);
-        }
-    } else {
-        // Só limpa o conteúdo se já era a nossa div específica, não apaga a loja
-        targetDiv.innerHTML = '';
-    }
-  
+      // 3. Verifica se a nossa div raiz já existe na página (para não duplicar)
+      var nossaDivExistente = document.getElementById('vidlytics-carousel-root') || document.getElementById('instory-root');
+
+      if (elementoAlvoDaLoja) {
+          // Achou o elemento alvo na loja! 
+          if (nossaDivExistente) {
+             targetDiv = nossaDivExistente;
+             targetDiv.innerHTML = ''; // Limpa só a nossa div (não apaga a loja)
+          } else {
+             targetDiv = createEl('div');
+             targetDiv.id = 'vidlytics-carousel-root';
+             
+             // MÁGICA DE SEGURANÇA: Insere o carrossel LOGO ABAIXO do elemento alvo escolhido
+             if (elementoAlvoDaLoja.nextSibling) {
+                 elementoAlvoDaLoja.parentNode.insertBefore(targetDiv, elementoAlvoDaLoja.nextSibling);
+             } else {
+                 elementoAlvoDaLoja.parentNode.appendChild(targetDiv);
+             }
+          }
+      } else if (nossaDivExistente) {
+          // Cliente inseriu nossa div manualmente via HTML
+          targetDiv = nossaDivExistente;
+          targetDiv.innerHTML = '';
+      } else {
+          // 4. Fallback seguro: Se não achou o alvo de jeito nenhum, insere no conteúdo principal
+          targetDiv = createEl('div');
+          targetDiv.id = 'vidlytics-carousel-root';
+          var mainContainer = document.querySelector('main, #MainContent, [role="main"], .showcase, .page-content');
+
+          if (mainContainer && mainContainer.parentNode) {
+              mainContainer.parentNode.insertBefore(targetDiv, mainContainer);
+          } else {
+              document.body.insertBefore(targetDiv, document.body.firstChild);
+          }
+      }
+
+      // Renderiza o Shadow DOM para isolar nosso CSS (agora no lugar certo)
       var shadow = targetDiv.shadowRoot || targetDiv.attachShadow({ mode: 'open' });
       shadow.innerHTML = '';
-  
+
       appearance = normalizeAppearanceItem(appearance || {});
       var inlineConfig = normalizeAppearanceItem({
         spacing: firstDefined(readAppearanceValue(appearance, ['spacing', 'gap', 'grid_gap', 'card_gap']), 12),
@@ -1433,7 +1460,7 @@
         object_fit: firstDefined(readAppearanceValue(appearance, ['object_fit', 'objectFit', 'image_fit', 'imageFit']), 'cover'),
         format_style: firstDefined(readAppearanceValue(appearance, ['format_style', 'formatStyle', 'story_format', 'storyFormat', 'aspect_ratio', 'aspectRatio']), '9:16')
       });
-  
+
       var spacing = Math.max(0, toNumber(inlineConfig.spacing, 12));
       var itemsVisible = Math.max(1, toNumber(inlineConfig.items_visible, 3));
       var columns = Math.max(1, toNumber(inlineConfig.columns, 3));
@@ -1441,72 +1468,73 @@
       var objectFit = String(inlineConfig.object_fit || 'cover').toLowerCase();
       var formatStyle = String(inlineConfig.format_style || '9:16').toLowerCase();
       var isPortrait = formatStyle.indexOf('9:16') !== -1 || formatStyle.indexOf('retrato') !== -1 || formatStyle.indexOf('portrait') !== -1;
-  
+
       var inlineCss = ':host{display:block;width:100%;max-width:1200px;margin:0 auto;padding:0 15px;box-sizing:border-box;font-family:' + getFontFamily(appearance) + ' !important;}'
         + buildSharedCss(appearance)
         + '.vidlytics-inline-root{width:100%;display:flex;flex-direction:row;gap:' + spacing + 'px;box-sizing:border-box;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;}'
         + '.vidlytics-inline-root::-webkit-scrollbar{display:none;}'
-  
         + '.vidlytics-inline-track{width:100%;display:flex !important;flex-direction:row !important;gap:' + spacing + 'px;overflow-x:auto !important;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;}'
         + '.vidlytics-inline-track::-webkit-scrollbar{display:none;}'
         + '.vidlytics-inline-grid{width:100%;display:grid;grid-template-columns:repeat(' + columns + ', minmax(0, 1fr));gap:' + spacing + 'px;}'
-  
         + '.vidlytics-inline-card{appearance:none;background:transparent;border:none;padding:0;margin:0;text-align:left;cursor:pointer;display:flex;flex-direction:column;flex:0 0 calc((100% - (' + spacing + 'px * ' + (itemsVisible - 1) + ')) / ' + itemsVisible + ');scroll-snap-align:start;min-width:0;}'
-  
         + '.vidlytics-inline-grid .vidlytics-inline-card{flex:none;width:100%;}'
         + '.vidlytics-inline-media{width:100%;' + (isPortrait ? 'aspect-ratio:9/16;' : '') + 'object-fit:' + objectFit + ';border-radius:' + cardRadius + 'px;display:block;overflow:hidden;}'
         + '.vidlytics-inline-media img,.vidlytics-inline-media video{width:100%;height:100%;object-fit:' + objectFit + ';display:block;}'
         + '.vidlytics-inline-title{margin-top:8px;font-size:11px;font-weight:700;color:' + (readAppearanceValue(appearance, ['text_color']) || '#333') + ';text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}';
-  
+
       var style = createEl('style');
       style.textContent = inlineCss;
       shadow.appendChild(style);
-  
+
       var root = createEl('div', 'vidlytics-inline-root');
       var wrapper = createEl('div', format === 'grid' || format === 'grade' ? 'vidlytics-inline-grid' : 'vidlytics-inline-track');
-  
-    stories.forEach(function (story, index) {
-      var bubbleVideo = story.videos && story.videos.length > 0 ? story.videos[0] : null;
-      var videoUrl = bubbleVideo ? getVideoUrl(bubbleVideo) : '';
-      var cover = getStoryThumbnail(story, bubbleVideo, null);
 
-      var card = createEl('button', 'vidlytics-inline-card');
-      var mediaWrap = createEl('div', 'vidlytics-inline-media');
+      stories.forEach(function (story, index) {
+        var bubbleVideo = story.videos && story.videos.length > 0 ? story.videos[0] : null;
+        var videoUrl = bubbleVideo ? getVideoUrl(bubbleVideo) : '';
+        var cover = getStoryThumbnail(story, bubbleVideo, null);
 
-      var mediaEl;
-      if (videoUrl && isDirectVideoUrl(videoUrl)) {
-        mediaEl = createEl('video');
-        mediaEl.src = videoUrl;
-        if (cover) mediaEl.poster = cover;
-        mediaEl.muted = true;
-        mediaEl.loop = true;
-        mediaEl.autoplay = true;
-        mediaEl.setAttribute('playsinline', '');
-      } else {
-        mediaEl = createEl('img');
-        if (cover) mediaEl.src = cover;
-      }
+        var card = createEl('button', 'vidlytics-inline-card');
+        var mediaWrap = createEl('div', 'vidlytics-inline-media');
 
-      mediaEl.className = 'w-full h-full';
-      mediaWrap.appendChild(mediaEl);
-      card.appendChild(mediaWrap);
+        var mediaEl;
+        if (videoUrl && isDirectVideoUrl(videoUrl)) {
+          mediaEl = createEl('video');
+          mediaEl.src = videoUrl;
+          if (cover) mediaEl.poster = cover;
+          mediaEl.muted = true;
+          mediaEl.loop = true;
+          mediaEl.autoplay = true;
+          mediaEl.setAttribute('playsinline', '');
+        } else {
+          mediaEl = createEl('img');
+          if (cover) mediaEl.src = cover;
+        }
 
-      var modalCfg = normalizeModalAppearanceConfig(appearance);
-      if (modalCfg.show_title) {
-        var label = createEl('span', 'vidlytics-inline-title');
-        label.textContent = story.title || '';
-        card.appendChild(label);
-      }
+        mediaEl.className = 'w-full h-full';
+        mediaWrap.appendChild(mediaEl);
+        card.appendChild(mediaWrap);
 
-      card.addEventListener('click', function (e) {
-        openStoryViewer(stories, index);
+        var modalCfg = normalizeModalAppearanceConfig(appearance);
+        if (modalCfg.show_title) {
+          var label = createEl('span', 'vidlytics-inline-title');
+          label.textContent = story.title || '';
+          card.appendChild(label);
+        }
+
+        card.addEventListener('click', function (e) {
+          openStoryViewer(stories, index);
+        });
+
+        wrapper.appendChild(card);
       });
 
-      wrapper.appendChild(card);
-    });
+      root.appendChild(wrapper);
+      shadow.appendChild(root);
+    } 
 
-    root.appendChild(wrapper);
-    shadow.appendChild(root);
+    // Dispara a lógica de renderização e de espera (Polling)
+    executarRenderizacao();
   }
 
 
