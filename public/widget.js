@@ -1423,30 +1423,79 @@ function openStoryViewer(stories, index) {
 
     var ap = appearance || {};
 
-    // ========== LEITURA ROBUSTA ==========
+    // ========== LEITURA COM SUPORTE A CAROUSEL_CONFIG ==========
     console.log("VIDLYTICS: --- CONFIGS RAW ---");
     console.log("VIDLYTICS: ap completo:", JSON.stringify(ap));
 
-    var itemsVisiveis = parseInt(ap.visible_items) || parseInt(ap.carousel_visible_items) || parseInt(ap.items_visible) || 4;
+    // Tenta carregar do carousel_config (string JSON ou objeto)
+    var carouselCfg = null;
+    if (ap.carousel_config) {
+      try {
+        carouselCfg = typeof ap.carousel_config === 'string' 
+          ? JSON.parse(ap.carousel_config) 
+          : ap.carousel_config;
+        console.log("VIDLYTICS: carousel_config encontrado:", JSON.stringify(carouselCfg));
+      } catch(e) {
+        console.log("VIDLYTICS: erro ao parse carousel_config:", e);
+      }
+    }
+
+    // Pega as configs do device mobile (fallback desktop)
+    var deviceCfg = (carouselCfg && carouselCfg.mobile) || (carouselCfg && carouselCfg.desktop) || {};
+
+    // visible_items - prioridade: carousel_config > campo raiz > grid > default
+    var itemsVisiveis = parseInt(deviceCfg.visible_items)
+                     || parseInt(ap.carousel_visible_items)
+                     || parseInt(ap.visible_items)
+                     || parseInt(ap.columns)
+                     || 4;
     if (isNaN(itemsVisiveis) || itemsVisiveis < 1) itemsVisiveis = 4;
 
-    var espacamento   = parseInt(ap.spacing) || parseInt(ap.gap) || 16;
-    var formato       = ap.format || 'portrait_9_16';
-    var corPrimaria   = ap.primary_color   || '#0094EB';
-    var corTexto      = ap.text_color      || '#0F172A';
-    var corBorda      = ap.border_color    || '#0094EB';
+    // spacing
+    var espacamento = parseInt(deviceCfg.gap)
+                   || parseInt(ap.carousel_gap)
+                   || parseInt(ap.spacing)
+                   || parseInt(ap.gap)
+                   || 16;
+    if (isNaN(espacamento) || espacamento < 0) espacamento = 16;
+
+    // formato do card
+    var formatoRaw = deviceCfg.card_shape
+                  || ap.carousel_card_shape
+                  || ap.format
+                  || ap.shape
+                  || 'portrait_9_16';
+    var formato;
+    if (formatoRaw === 'circle' || formatoRaw === 'circular') {
+      formato = 'square_1_1';
+    } else if (formatoRaw === 'portrait' || formatoRaw === 'portrait_9_16') {
+      formato = 'portrait_9_16';
+    } else if (formatoRaw === 'landscape' || formatoRaw === 'landscape_16_9') {
+      formato = 'landscape_16_9';
+    } else if (formatoRaw === 'square' || formatoRaw === 'square_1_1') {
+      formato = 'square_1_1';
+    } else {
+      formato = formatoRaw;
+    }
+
+    // Demais configs
+    var corPrimaria   = ap.primary_color || ap.button_color || '#0094EB';
+    var corTexto      = ap.text_color || '#0F172A';
+    var bgColor       = ap.background_color || '#FFFFFF';
     var borderRadius  = parseInt(ap.radius) || parseInt(ap.border_radius) || 12;
     var borderWidth   = parseInt(ap.border_width) || 2;
-    var fonte         = ap.font_family     || 'Inter, sans-serif';
+    var corBorda      = ap.border_color || corPrimaria;
+    var fonte         = ap.font_family || 'Inter, sans-serif';
     var exibirTitulo  = ap.show_title !== false;
     var exibirPlayBtn = ap.show_play_button !== false;
-    var autoCenter    = ap.auto_center === true;
+    var autoCenter    = !!(deviceCfg.auto_center || ap.auto_center);
 
     var aspectRatio = '9 / 16';
     if (formato.indexOf('landscape') !== -1 || formato.indexOf('16_9') !== -1) aspectRatio = '16 / 9';
     else if (formato.indexOf('square') !== -1 || formato.indexOf('1_1') !== -1) aspectRatio = '1 / 1';
 
-    console.log("VIDLYTICS: itemsVisiveis FINAL =", itemsVisiveis, "| gap:", espacamento, "| formato:", formato);
+    console.log("VIDLYTICS: itemsVisiveis=" + itemsVisiveis + " | gap=" + espacamento + " | formato=" + formato + " | aspectRatio=" + aspectRatio);
+    // ==============================================================
     // =====================================
 
     // Seletor
