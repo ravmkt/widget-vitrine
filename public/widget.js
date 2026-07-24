@@ -261,7 +261,9 @@
 
   function extractAppearanceFromItem(item, allowDirectFields) {
     if (!item) return {}; var merged = {};
-    [ item.appearance, item.aparencia, item.appearance_config, item.appearanceConfig, item.widget_appearance, item.widgetAppearance, item.widget_config, item.widgetConfig, item.settings, item.config, item.style, item.styles, item.data, item.metadata, item.customization, item.customization_config, item.theme, item.theme_config, item.floating, item.floating_config, item.floatingConfig, item.floatingAppearance, item.floating_video, item.floatingVideo, item.floatingVideoConfig, item.floatingVideoAppearance, item.carousel_config, item.carouselConfig, item.grid_config, item.gridConfig, item.player_config, item.playerConfig, item.modal_config, item.modalConfig, item.colors_config, item.colorsConfig
+    [ item.appearance, item.aparencia, item.appearance_config, item.appearanceConfig, item.widget_appearance, item.widgetAppearance, item.widget_config, item.widgetConfig, item.settings, item.config, item.style, item.styles, item.data, item.metadata, item.customization, item.customization_config, item.theme, item.theme_config, item.floating, item.floating_config, item.floatingConfig, item.floatingAppearance, item.floating_video, item.floatingVideo, item.floatingVideoConfig, item.floatingVideoAppearance, item.carousel_config, item.carouselConfig, item.grid_config, item.gridConfig, item.player_config, item.playerConfig, item.modal_config, item.modalConfig, item.colors_config, item.colorsConfig, 'carousel_config', 'carouselConfig',
+'grid_config', 'gridConfig', 'player_config', 'playerConfig', 'modal_config', 'modalConfig', 'colors_config', 'colorsConfig',
+
  ].forEach(function (src) { flattenAppearanceInto(merged, src, 0); });
 
     if (allowDirectFields) {
