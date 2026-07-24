@@ -114,6 +114,12 @@ type GridConfig = {
   rows: number;
   gap: number;
   card_shape: WidgetShape;
+  card_size: string;
+  border_color: string;
+  border_width: string;
+  border_radius: string;
+  object_fit: string;
+  show_title: boolean;
 };
 
 type ModalConfig = {
