@@ -3087,398 +3087,293 @@ window.dispatchEvent(new Event('storage'));
                     </SectionCard>
                   )}
 
-                  {activeTab === 'floating' && (
-                    <SectionCard
-                      title="Widget Flutuante"
-                      description="Controle tamanho, posição, borda, play, fechamento e comportamento do widget flutuante."
-                    >
-                      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-                        <h4 className="text-sm font-black text-slate-800">
-                          Configuração ativa
-                        </h4>
+{activeTab === 'floating' && (
+  <SectionCard
+    title="Widget Flutuante"
+    description="Controle tamanho, posição, borda, play, fechamento e comportamento do widget flutuante."
+  >
+    <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+      <h4 className="text-sm font-black text-slate-800">
+        Configuração ativa
+      </h4>
 
-                        {formData.useGlobalAppearance ? (
-                          <GlobalDeviceNotice />
-                        ) : (
-                          <DeviceTabs
-                            activeDevice={floatingDevice}
-                            onChange={setFloatingDevice}
-                          />
-                        )}
-                      </div>
+      {formData.useGlobalAppearance ? (
+        <GlobalDeviceNotice />
+      ) : (
+        <DeviceTabs
+          activeDevice={floatingDevice}
+          onChange={setFloatingDevice}
+        />
+      )}
+    </div>
 
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <FormField label="Forma">
-                          <select
-                            value={activeFloatingConfig.shape}
-                            onChange={e => {
-                              const shape = e.target.value as WidgetShape;
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <FormField label="Forma">
+        <select
+          value={activeFloatingConfig.shape}
+          onChange={e => {
+            const shape = e.target.value as WidgetShape;
 
-                              if (shape === 'portrait') {
-                                const width = formatNumberLikeCurrent(
-                                  activeFloatingConfig.width,
-                                  '80',
-                                );
+            if (shape === 'portrait') {
+              const size = formatNumberLikeCurrent(
+                activeFloatingConfig.width,
+                '80',
+              );
+              updateFloatingConfig({
+                shape,
+                width: size,
+                height: getPortraitHeightFromWidth(size),
+              });
+              return;
+            }
 
-                                updateFloatingConfig({
-                                  shape,
-                                  width,
-                                  height: getPortraitHeightFromWidth(width),
-                                });
+            if (shape === 'square') {
+              const size = formatNumberLikeCurrent(
+                activeFloatingConfig.width,
+                '80',
+              );
+              updateFloatingConfig({
+                shape,
+                width: size,
+                height: size,
+              });
+              return;
+            }
 
-                                return;
-                              }
+            const size =
+              toNumberInputValue(activeFloatingConfig.border_radius) ||
+              toNumberInputValue(activeFloatingConfig.width) ||
+              '80';
 
-                              if (shape === 'square') {
-                                const size = formatNumberLikeCurrent(
-                                  activeFloatingConfig.width,
-                                  '80',
-                                );
+            updateFloatingConfig({ shape, border_radius: size });
+          }}
+          className={selectClass}
+        >
+          <option value="circle">Circular</option>
+          <option value="square">Quadrado</option>
+          <option value="portrait">Retrato</option>
+        </select>
+      </FormField>
 
-                                updateFloatingConfig({
-                                  shape,
-                                  width: size,
-                                  height: size,
-                                });
+      {/* ✅ NOVO: Tamanho único com proporção mantida */}
+      <FormField label="Tamanho">
+        <input
+          type="number"
+          min="20"
+          step="1"
+          value={toNumberInputValue(activeFloatingConfig.width)}
+          onChange={e => {
+            const value = e.target.value;
 
-                                return;
-                              }
+            if (activeFloatingConfig.shape === 'portrait') {
+              updateFloatingConfig({
+                width: value,
+                height: getPortraitHeightFromWidth(value),
+              });
+              return;
+            }
 
-                              const size =
-                                toNumberInputValue(
-                                  activeFloatingConfig.border_radius,
-                                ) ||
-                                toNumberInputValue(
-                                  activeFloatingConfig.width,
-                                ) ||
-                                '80';
+            if (activeFloatingConfig.shape === 'square') {
+              updateFloatingConfig({ width: value, height: value });
+              return;
+            }
 
-                              updateFloatingConfig({
-                                shape,
-                                border_radius: size,
-                              });
-                            }}
-                            className={selectClass}
-                          >
-                            <option value="circle">Circular</option>
-                            <option value="square">Quadrado</option>
-                            <option value="portrait">Retrato</option>
-                          </select>
-                        </FormField>
+            // circle
+            updateFloatingConfig({
+              border_radius: value,
+              width: value,
+              height: value,
+            });
+          }}
+          placeholder="Ex: 80"
+          className={inputClass}
+        />
+        <p className="text-xs font-semibold text-slate-400">
+          {activeFloatingConfig.shape === 'circle'
+            ? 'Controla o diâmetro do círculo.'
+            : activeFloatingConfig.shape === 'portrait'
+              ? 'A altura é ajustada automaticamente na proporção 9:16.'
+              : 'Largura e altura são mantidas iguais (quadrado).'}
+        </p>
+      </FormField>
 
-                        {activeFloatingConfig.shape !== 'circle' && (
-                          <>
-                            <FormField label="Largura">
-                              <input
-                                type="number"
-                                min="1"
-                                step="1"
-                                value={toNumberInputValue(
-                                  activeFloatingConfig.width,
-                                )}
-                                onChange={e => {
-                                  const value = e.target.value;
+      <FormField label="Raio da borda">
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value={toNumberInputValue(activeFloatingConfig.border_radius)}
+          onChange={e =>
+            updateFloatingConfig({ border_radius: e.target.value })
+          }
+          placeholder="Ex: 12"
+          className={inputClass}
+        />
+      </FormField>
 
-                                  if (
-                                    activeFloatingConfig.shape === 'portrait'
-                                  ) {
-                                    updateFloatingConfig({
-                                      width: value,
-                                      height:
-                                        getPortraitHeightFromWidth(value),
-                                    });
+      <FormField label="Posição do widget">
+        <select
+          value={activeFloatingConfig.position}
+          onChange={e =>
+            updateFloatingConfig({
+              position: e.target.value as PositionValue,
+            })
+          }
+          className={selectClass}
+        >
+          <option value="fixed_bottom_right">Inferior direita</option>
+          <option value="fixed_bottom_left">Inferior esquerda</option>
+          <option value="fixed_top_right">Superior direita</option>
+          <option value="fixed_top_left">Superior esquerda</option>
+        </select>
+      </FormField>
 
-                                    return;
-                                  }
+      {/* ✅ RENOMEADO: Distância inferior → Margem inferior */}
+      <FormField label="Margem inferior">
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value={toNumberInputValue(activeFloatingConfig.bottom_spacing)}
+          onChange={e =>
+            updateFloatingConfig({ bottom_spacing: e.target.value })
+          }
+          placeholder="Ex: 20"
+          className={inputClass}
+        />
+      </FormField>
 
-                                  if (activeFloatingConfig.shape === 'square') {
-                                    updateFloatingConfig({
-                                      width: value,
-                                      height: value,
-                                    });
+      {/* ✅ RENOMEADO: Distância superior → Margem superior */}
+      <FormField label="Margem superior">
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value={toNumberInputValue(activeFloatingConfig.top_spacing)}
+          onChange={e =>
+            updateFloatingConfig({ top_spacing: e.target.value })
+          }
+          placeholder="Ex: 20"
+          className={inputClass}
+        />
+      </FormField>
 
-                                    return;
-                                  }
+      {/* ✅ RENOMEADO: Distância lateral → Margem lateral */}
+      <FormField label="Margem lateral">
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value={toNumberInputValue(activeFloatingConfig.left_spacing)}
+          onChange={e =>
+            updateFloatingConfig({
+              left_spacing: e.target.value,
+              right_spacing: e.target.value,
+            })
+          }
+          placeholder="Ex: 20"
+          className={inputClass}
+        />
+      </FormField>
 
-                                  updateFloatingConfig({
-                                    width: value,
-                                  });
-                                }}
-                                placeholder="Ex: 80"
-                                className={inputClass}
-                              />
-                            </FormField>
+      <FormField label="Cor da borda">
+        <ColorInput
+          label="Cor da borda"
+          value={activeFloatingConfig.border_color}
+          onChange={e =>
+            updateFloatingConfig({ border_color: e.target.value })
+          }
+        />
+      </FormField>
 
-                            <FormField label="Altura">
-                              <input
-                                type="number"
-                                min="1"
-                                step="1"
-                                value={toNumberInputValue(
-                                  activeFloatingConfig.height,
-                                )}
-                                onChange={e => {
-                                  const value = e.target.value;
+      <FormField label="Largura da borda">
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value={toNumberInputValue(activeFloatingConfig.border_style)}
+          onChange={e =>
+            updateFloatingConfig({ border_style: e.target.value })
+          }
+          placeholder="Ex: 2"
+          className={inputClass}
+        />
+        <p className="text-xs font-semibold text-slate-400">
+          O estilo da borda será sempre sólido.
+        </p>
+      </FormField>
 
-                                  if (
-                                    activeFloatingConfig.shape === 'portrait'
-                                  ) {
-                                    updateFloatingConfig({
-                                      height: value,
-                                      width: getPortraitWidthFromHeight(value),
-                                    });
+      <FormField label="Object fit">
+        <select
+          value={activeFloatingConfig.object_fit}
+          onChange={e =>
+            updateFloatingConfig({ object_fit: e.target.value })
+          }
+          className={selectClass}
+        >
+          <option value="cover">Cover</option>
+          <option value="contain">Contain</option>
+          <option value="fill">Fill</option>
+        </select>
+      </FormField>
 
-                                    return;
-                                  }
+      <FormField label="Z-index">
+        <input
+          type="number"
+          min="1"
+          step="1"
+          value={toNumberInputValue(activeFloatingConfig.z_index)}
+          onChange={e =>
+            updateFloatingConfig({ z_index: e.target.value })
+          }
+          placeholder="Ex: 2147483647"
+          className={inputClass}
+        />
+      </FormField>
 
-                                  if (activeFloatingConfig.shape === 'square') {
-                                    updateFloatingConfig({
-                                      height: value,
-                                      width: value,
-                                    });
+      {/* ✅ NOVO: Mostrar título */}
+      <FormField label="Mostrar título">
+        <ToggleSwitch
+          label="Mostrar título no flutuante"
+          checked={activeFloatingConfig.show_title ?? true}
+          onChange={e =>
+            updateFloatingConfig({ show_title: e.target.checked })
+          }
+        />
+      </FormField>
 
-                                    return;
-                                  }
+      <FormField label="Mostrar botão play">
+        <ToggleSwitch
+          label="Mostrar botão play no flutuante"
+          checked={activeFloatingConfig.show_play_icon}
+          onChange={e =>
+            updateFloatingConfig({ show_play_icon: e.target.checked })
+          }
+        />
+      </FormField>
 
-                                  updateFloatingConfig({
-                                    height: value,
-                                  });
-                                }}
-                                placeholder="Ex: 142"
-                                className={inputClass}
-                              />
-                            </FormField>
-                          </>
-                        )}
+      <FormField label="Permitir arrastar">
+        <ToggleSwitch
+          label="Permitir arrastar widget"
+          checked={activeFloatingConfig.draggable}
+          onChange={e =>
+            updateFloatingConfig({ draggable: e.target.checked })
+          }
+        />
+      </FormField>
 
-                        <FormField
-                          label={
-                            activeFloatingConfig.shape === 'circle'
-                              ? 'Raio/Tamanho do círculo'
-                              : 'Raio da borda'
-                          }
-                        >
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={toNumberInputValue(
-                              activeFloatingConfig.border_radius,
-                            )}
-                            onChange={e =>
-                              updateFloatingConfig({
-                                border_radius: e.target.value,
-                              })
-                            }
-                            placeholder={
-                              activeFloatingConfig.shape === 'circle'
-                                ? 'Ex: 80'
-                                : 'Ex: 12'
-                            }
-                            className={inputClass}
-                          />
-
-                          {activeFloatingConfig.shape === 'portrait' && (
-                            <p className="text-xs font-semibold text-slate-400">
-                              No formato retrato, largura e altura ficam
-                              travadas na proporção 9:16.
-                            </p>
-                          )}
-
-                          {activeFloatingConfig.shape === 'circle' && (
-                            <p className="text-xs font-semibold text-slate-400">
-                              No formato circular, o tamanho é controlado apenas
-                              por este campo.
-                            </p>
-                          )}
-                        </FormField>
-
-                        <FormField label="Posição do widget">
-                          <select
-                            value={activeFloatingConfig.position}
-                            onChange={e =>
-                              updateFloatingConfig({
-                                position: e.target.value as PositionValue,
-                              })
-                            }
-                            className={selectClass}
-                          >
-                            <option value="fixed_bottom_right">
-                              Inferior direita
-                            </option>
-                            <option value="fixed_bottom_left">
-                              Inferior esquerda
-                            </option>
-                            <option value="fixed_top_right">
-                              Superior direita
-                            </option>
-                            <option value="fixed_top_left">
-                              Superior esquerda
-                            </option>
-                          </select>
-                        </FormField>
-
-                        <FormField label="Distância inferior">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={toNumberInputValue(
-                              activeFloatingConfig.bottom_spacing,
-                            )}
-                            onChange={e =>
-                              updateFloatingConfig({
-                                bottom_spacing: e.target.value,
-                              })
-                            }
-                            placeholder="Ex: 20"
-                            className={inputClass}
-                          />
-                        </FormField>
-
-                        <FormField label="Distância superior">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={toNumberInputValue(
-                              activeFloatingConfig.top_spacing,
-                            )}
-                            onChange={e =>
-                              updateFloatingConfig({
-                                top_spacing: e.target.value,
-                              })
-                            }
-                            placeholder="Ex: 20"
-                            className={inputClass}
-                          />
-                        </FormField>
-
-                        <FormField label="Distância lateral">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={toNumberInputValue(
-                              activeFloatingConfig.left_spacing,
-                            )}
-                            onChange={e =>
-                              updateFloatingConfig({
-                                left_spacing: e.target.value,
-                                right_spacing: e.target.value,
-                              })
-                            }
-                            placeholder="Ex: 20"
-                            className={inputClass}
-                          />
-                        </FormField>
-
-                        <FormField label="Cor da borda">
-                          <ColorInput
-                            label="Cor da borda"
-                            value={activeFloatingConfig.border_color}
-                            onChange={e =>
-                              updateFloatingConfig({
-                                border_color: e.target.value,
-                              })
-                            }
-                          />
-                        </FormField>
-
-                        <FormField label="Largura da borda">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={toNumberInputValue(
-                              activeFloatingConfig.border_style,
-                            )}
-                            onChange={e =>
-                              updateFloatingConfig({
-                                border_style: e.target.value,
-                              })
-                            }
-                            placeholder="Ex: 2"
-                            className={inputClass}
-                          />
-
-                          <p className="text-xs font-semibold text-slate-400">
-                            O estilo da borda será sempre sólido.
-                          </p>
-                        </FormField>
-
-                        <FormField label="Object fit">
-                          <select
-                            value={activeFloatingConfig.object_fit}
-                            onChange={e =>
-                              updateFloatingConfig({
-                                object_fit: e.target.value,
-                              })
-                            }
-                            className={selectClass}
-                          >
-                            <option value="cover">Cover</option>
-                            <option value="contain">Contain</option>
-                            <option value="fill">Fill</option>
-                          </select>
-                        </FormField>
-
-                        <FormField label="Z-index">
-                          <input
-                            type="number"
-                            min="1"
-                            step="1"
-                            value={toNumberInputValue(
-                              activeFloatingConfig.z_index,
-                            )}
-                            onChange={e =>
-                              updateFloatingConfig({
-                                z_index: e.target.value,
-                              })
-                            }
-                            placeholder="Ex: 2147483647"
-                            className={inputClass}
-                          />
-                        </FormField>
-
-                        <FormField label="Mostrar botão play">
-                          <ToggleSwitch
-                            label="Mostrar botão play no flutuante"
-                            checked={activeFloatingConfig.show_play_icon}
-                            onChange={e =>
-                              updateFloatingConfig({
-                                show_play_icon: e.target.checked,
-                              })
-                            }
-                          />
-                        </FormField>
-
-                        <FormField label="Permitir arrastar">
-                          <ToggleSwitch
-                            label="Permitir arrastar widget"
-                            checked={activeFloatingConfig.draggable}
-                            onChange={e =>
-                              updateFloatingConfig({
-                                draggable: e.target.checked,
-                              })
-                            }
-                          />
-                        </FormField>
-
-                        <FormField label="Permitir fechar">
-                          <ToggleSwitch
-                            label="Permitir fechar widget"
-                            checked={activeFloatingConfig.allow_close}
-                            onChange={e =>
-                              updateFloatingConfig({
-                                allow_close: e.target.checked,
-                              })
-                            }
-                          />
-                        </FormField>
-                      </div>
-                    </SectionCard>
-                  )}
+      <FormField label="Permitir fechar">
+        <ToggleSwitch
+          label="Permitir fechar widget"
+          checked={activeFloatingConfig.allow_close}
+          onChange={e =>
+            updateFloatingConfig({ allow_close: e.target.checked })
+          }
+        />
+      </FormField>
+    </div>
+  </SectionCard>
+)}
 
                   {activeTab === 'carousel' && (
                     <SectionCard
