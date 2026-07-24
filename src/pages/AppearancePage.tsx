@@ -133,6 +133,9 @@ type ModalConfig = {
   show_product_button: boolean;
   hide_stories: boolean;
   shadow_enabled: boolean;
+  border_color: string;
+  border_width: string;
+  border_radius: string;
 };
 
 type ExtendedAppearance = Appearance & {
