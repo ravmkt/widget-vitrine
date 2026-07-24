@@ -600,6 +600,12 @@ const createDefaultGridDesktopConfig = (): GridConfig => ({
   rows: 1,
   gap: 16,
   card_shape: 'portrait',
+  card_size: '80',
+border_color: '#0094EB',
+border_width: '2',
+border_radius: '12',
+object_fit: 'cover',
+show_title: false,
 });
 
 const createDefaultGridMobileConfig = (): GridConfig => ({
