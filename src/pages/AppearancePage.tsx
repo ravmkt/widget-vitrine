@@ -2576,7 +2576,7 @@ await db.appearances.save(stylePayload as unknown as Appearance);
 
 /* Sincroniza com a tabela widget_appearances que o widget público lê */
 if (supabase) {
-  const { error: widgetSyncError } = await supabase
+const { error: widgetSyncError } = await supabase
     .from('widget_appearances')
     .upsert({
       store_id: finalStoreId,
@@ -2620,12 +2620,13 @@ if (supabase) {
       show_comments_button: modalConfig.show_comment_button,
       hide_stories: modalConfig.hide_stories,
       shadow_enabled: modalConfig.shadow_enabled,
-
+    carousel_config: carouselConfig,
+    grid_config: gridConfig,
       updated_at: now,
     }, {
       onConflict: 'store_id',
     });
-
+    
   if (widgetSyncError) {
     showError(`Erro ao sincronizar widget: ${widgetSyncError.message}`);
     throw new Error(`widget_appearances sync: ${widgetSyncError.message}`);
