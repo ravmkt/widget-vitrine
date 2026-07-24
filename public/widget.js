@@ -1435,11 +1435,14 @@ var renderInterval = setInterval(function () {
         if (!widgetContainer) {
             widgetContainer = document.createElement('div');
             widgetContainer.id = wrapperId;
-            widgetContainer.style.width = '100%';
-            widgetContainer.style.maxWidth = '1200px';
-            widgetContainer.style.margin = '20px auto';
-            widgetContainer.style.display = 'block';
-            widgetContainer.style.clear = 'both';
+widgetContainer.style.width = '100%';
+widgetContainer.style.maxWidth = '1200px';
+widgetContainer.style.marginTop = '20px';
+widgetContainer.style.marginBottom = '20px';
+widgetContainer.style.marginLeft = 'auto';
+widgetContainer.style.marginRight = 'auto';
+widgetContainer.style.display = 'block';
+widgetContainer.style.clear = 'both';
 
 // Insere o carrossel imediatamente abaixo do elemento encontrado
 if (targetDiv.parentNode) {
