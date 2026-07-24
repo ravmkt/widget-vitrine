@@ -575,6 +575,12 @@ const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
   show_product: true,
   show_play_icon: true,
   auto_center: false,
+  card_size: '80',
+border_color: '#0094EB',
+border_width: '2',
+border_radius: '12',
+object_fit: 'cover',
+show_title: false,
 });
 
 const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
