@@ -2666,10 +2666,8 @@ if (supabase) {
       floating_show_play_button: floatingDesktop.show_play_icon !== false,
       floating_draggable: Boolean(floatingDesktop.draggable),
 
-      /* URL específica onde o widget deve aparecer */
       url: formData.url || null,
 
-      /* Novas colunas para refletir todas as configurações no widget.js */
       primary_color: formData.primary_color,
       secondary_color: formData.secondary_color,
       text_color: formData.text_color,
@@ -2700,9 +2698,7 @@ if (supabase) {
     throw new Error(`widget_appearances sync: ${widgetSyncError.message}`);
   }
 
-  // ═══════════════════════════════════════
-  // 🆕 Sincroniza com general_settings
-  // ═══════════════════════════════════════
+  // Sync general_settings
   const { error: generalSyncError } = await supabase
     .from('general_settings')
     .upsert({
@@ -2742,9 +2738,6 @@ if (supabase) {
   if (generalSyncError) {
     console.error('Erro ao sincronizar general_settings:', generalSyncError);
   }
-  // ═══════════════════════════════════════
-  // FIM general_settings
-  // ═══════════════════════════════════════
 }
 
 if (stylePayload.is_default) {
