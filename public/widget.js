@@ -1445,6 +1445,12 @@ function openStoryViewer(stories, index) {
   console.log("VIDLYTICS: Script carregado");
 
   function renderInlineWidget(stories, appearance, format) {
+    // 🔴 LOG TEMPORÁRIO
+    console.log('VIDLYTICS DEBUG — appearance recebido no renderInlineWidget:', JSON.stringify(appearance, null, 2));
+    console.log('VIDLYTICS DEBUG — border_color:', appearance.border_color);
+    console.log('VIDLYTICS DEBUG — border_width:', appearance.border_width);
+    console.log('VIDLYTICS DEBUG — visible_items:', appearance.visible_items);
+    console.log('VIDLYTICS DEBUG — carousel_config:', appearance.carousel_config);
     console.log("VIDLYTICS: ===== INÍCIO =====");
     console.log("VIDLYTICS: stories:", stories ? stories.length : 0);
 
