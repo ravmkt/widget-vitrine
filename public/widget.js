@@ -287,148 +287,142 @@
     return getThumbnailFromObject(coverRelation) || getThumbnailFromObject(story) || getThumbnailFromObject(coverVideo) || '';
   }
 
-  // Lógica de Renderização do Carrossel (Totalmente reescrita para forçar horizontal e ler seletor)
-  function renderInlineWidget(stories, appearance, format, widgetSelector, widgetPosition) {
-    if (!stories || !stories.length) return;
+function renderInlineWidget(stories, appearance, format, widgetSelector, widgetPosition) {
+  if (!stories || !stories.length) return;
 
-    // Pega o seletor da sua regra ou do padrão global
-    var selectorValue = widgetSelector || readAppearanceValue(appearance, ['css_selector', 'inline_selector', 'cssSelector', 'inlineSelector']);
-    var selectorString = selectorValue ? String(selectorValue).trim() : null;
-    var posicaoAlvo = widgetPosition || 'after'; // default: 'abaixo'
+  var selectorValue = widgetSelector || readAppearanceValue(appearance, ['css_selector', 'inline_selector', 'cssSelector', 'inlineSelector']);
+  var selectorString = selectorValue ? String(selectorValue).trim() : null;
+  var posicaoAlvo = widgetPosition || 'after'; 
 
-    // Polling: Vai tentar achar o elemento da Yampi por até 15 segundos
-    var maxTentativas = 60; 
-    var tentativas = 0;
+  var maxTentativas = 60; 
+  var tentativas = 0;
 
-    function executarRenderizacao() {
-      var targetDiv = null;
-      var elementoAlvoDaLoja = null;
+  function executarRenderizacao() {
+    var targetDiv = null;
+    var elementoAlvoDaLoja = null;
 
-      if (selectorString) {
-          try { elementoAlvoDaLoja = document.querySelector(selectorString); } catch (e) { console.error("Vidlytics: Seletor inválido."); }
-      }
+    if (selectorString) {
+        try { elementoAlvoDaLoja = document.querySelector(selectorString); } catch (e) { console.error("Vidlytics: Seletor inválido."); }
+    }
 
-      // Se a Yampi ainda não carregou o elemento, aguarda e tenta de novo
-      if (selectorString && !elementoAlvoDaLoja && tentativas < maxTentativas) {
-          tentativas++;
-          setTimeout(executarRenderizacao, 250);
-          return;
-      }
+    if (selectorString && !elementoAlvoDaLoja && tentativas < maxTentativas) {
+        tentativas++;
+        setTimeout(executarRenderizacao, 250);
+        return;
+    }
 
-      var nossaDivExistente = document.getElementById('vidlytics-carousel-root');
+    var nossaDivExistente = document.getElementById('vidlytics-carousel-root');
 
-      // 1. Se achou o lugar configurado (onde os produtos estão)
-      if (elementoAlvoDaLoja) {
-          if (nossaDivExistente) {
-             targetDiv = nossaDivExistente;
-             targetDiv.innerHTML = ''; 
-          } else {
-             targetDiv = createEl('div', 'vidlytics-inline-wrapper');
-             targetDiv.id = 'vidlytics-carousel-root';
-             targetDiv.style.width = '100%';
-             targetDiv.style.margin = '20px 0';
-             targetDiv.style.clear = 'both';
-             targetDiv.style.display = 'block';
-             
-             // Insere "Abaixo" ou "Acima" do elemento escolhido
-             if (posicaoAlvo === 'after' || posicaoAlvo.indexOf('abaixo') !== -1) {
-                 if (elementoAlvoDaLoja.nextSibling) {
-                     elementoAlvoDaLoja.parentNode.insertBefore(targetDiv, elementoAlvoDaLoja.nextSibling);
-                 } else {
-                     elementoAlvoDaLoja.parentNode.appendChild(targetDiv);
-                 }
-             } else {
-                 elementoAlvoDaLoja.parentNode.insertBefore(targetDiv, elementoAlvoDaLoja);
-             }
-          }
-      } 
-      // 2. Fallback Seguro: Se não achar o alvo (ex: página sem produtos)
-      else {
-          if (nossaDivExistente) {
-              targetDiv = nossaDivExistente;
-              targetDiv.innerHTML = '';
-          } else {
-              targetDiv = createEl('div', 'vidlytics-inline-wrapper');
-              targetDiv.id = 'vidlytics-carousel-root';
-              targetDiv.style.width = '100%';
-              targetDiv.style.margin = '20px 0';
-              
-              var contentContainer = document.querySelector('main, #MainContent, .showcase, .page-content');
-              if (contentContainer) {
-                  contentContainer.appendChild(targetDiv);
-              } else {
-                  document.body.appendChild(targetDiv);
-              }
-          }
-      }
-
-      // 3. Monta o Shadow DOM e CSS do Carrossel (Lado a Lado)
-      var shadow = targetDiv.shadowRoot || targetDiv.attachShadow({ mode: 'open' });
-      shadow.innerHTML = '';
-
-      var spacing = 12;
-      var cardRadius = 12;
-
-      var inlineCss = ':host{display:block;width:100%;max-width:1200px;margin:0 auto;padding:0 15px;box-sizing:border-box;font-family:sans-serif;}'
-        + '*,*::before,*::after{box-sizing:border-box!important;}'
-        + '.vl-carousel-track{width:100%;display:flex;flex-wrap:nowrap;gap:' + spacing + 'px;overflow-x:auto;padding-bottom:15px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}'
-        + '.vl-carousel-track::-webkit-scrollbar{display:none;}'
-        + '.vl-card{flex:0 0 auto;width:140px;display:flex;flex-direction:column;cursor:pointer;background:transparent;border:none;padding:0;margin:0;scroll-snap-align:start;}'
-        + '@media (min-width:768px){ .vl-card{width:160px;} }'
-        + '.vl-media-box{width:100%;aspect-ratio:9/16;background-color:#000;border-radius:' + cardRadius + 'px;overflow:hidden;position:relative;box-shadow:0 4px 10px rgba(0,0,0,0.1);}'
-        + '.vl-media{width:100%;height:100%;object-fit:cover;display:block;border:none;}'
-        + '.vl-title{margin-top:8px;font-size:13px;font-weight:700;color:#333;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:100%;}';
-
-      var style = createEl('style');
-      style.textContent = inlineCss;
-      shadow.appendChild(style);
-
-      var track = createEl('div', 'vl-carousel-track');
-
-      stories.forEach(function (story, index) {
-        var videoObj = story.videos && story.videos.length > 0 ? story.videos[0] : null;
-        var videoUrl = videoObj ? getVideoUrl(videoObj) : '';
-        var cover = getStoryThumbnail(story, videoObj, null);
-
-        var card = createEl('button', 'vl-card');
-        var mediaBox = createEl('div', 'vl-media-box');
-
-        var mediaEl;
-        if (videoUrl && isDirectVideoUrl(videoUrl)) {
-          mediaEl = createEl('video', 'vl-media');
-          mediaEl.src = videoUrl;
-          if (cover) mediaEl.poster = cover;
-          mediaEl.muted = true;
-          mediaEl.loop = true;
-          mediaEl.autoplay = true;
-          mediaEl.setAttribute('playsinline', '');
+    if (elementoAlvoDaLoja) {
+        if (nossaDivExistente) {
+           targetDiv = nossaDivExistente;
+           targetDiv.innerHTML = ''; 
         } else {
-          mediaEl = createEl('img', 'vl-media');
-          if (cover) mediaEl.src = cover;
+           targetDiv = createEl('div', 'vidlytics-inline-wrapper');
+           targetDiv.id = 'vidlytics-carousel-root';
+           targetDiv.style.width = '100%';
+           targetDiv.style.margin = '20px 0';
+           targetDiv.style.clear = 'both';
+           targetDiv.style.display = 'block';
+           
+           if (posicaoAlvo === 'after' || posicaoAlvo.indexOf('abaixo') !== -1) {
+               if (elementoAlvoDaLoja.nextSibling) {
+                   elementoAlvoDaLoja.parentNode.insertBefore(targetDiv, elementoAlvoDaLoja.nextSibling);
+               } else {
+                   elementoAlvoDaLoja.parentNode.appendChild(targetDiv);
+               }
+           } else {
+               elementoAlvoDaLoja.parentNode.insertBefore(targetDiv, elementoAlvoDaLoja);
+           }
         }
+    } 
+    else {
+        if (nossaDivExistente) {
+            targetDiv = nossaDivExistente;
+            targetDiv.innerHTML = '';
+        } else {
+            targetDiv = createEl('div', 'vidlytics-inline-wrapper');
+            targetDiv.id = 'vidlytics-carousel-root';
+            targetDiv.style.width = '100%';
+            targetDiv.style.margin = '20px 0';
+            
+            var contentContainer = document.querySelector('main, #MainContent, .showcase, .page-content');
+            if (contentContainer) {
+                contentContainer.appendChild(targetDiv);
+            } else {
+                document.body.appendChild(targetDiv);
+            }
+        }
+    }
 
-        mediaBox.appendChild(mediaEl);
-        card.appendChild(mediaBox);
+    var shadow = targetDiv.shadowRoot || targetDiv.attachShadow({ mode: 'open' });
+    shadow.innerHTML = '';
 
-        var label = createEl('span', 'vl-title');
-        label.textContent = story.title || 'Ver produto';
-        card.appendChild(label);
+    var spacing = 12;
+    var cardRadius = 12;
 
-        // Chama o visualizador original do seu código
-        card.addEventListener('click', function () {
-          if (typeof openStoryViewer === 'function') {
-              openStoryViewer(stories, index);
-          }
-        });
+    var inlineCss = ':host{display:block;width:100%;max-width:1200px;margin:0 auto;padding:0 15px;box-sizing:border-box;font-family:sans-serif;}'
+      + '*,*::before,*::after{box-sizing:border-box!important;}'
+      + '.vl-carousel-track{width:100%;display:flex;flex-wrap:nowrap;gap:' + spacing + 'px;overflow-x:auto;padding-bottom:15px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}'
+      + '.vl-carousel-track::-webkit-scrollbar{display:none;}'
+      + '.vl-card{flex:0 0 auto;width:140px;display:flex;flex-direction:column;cursor:pointer;background:transparent;border:none;padding:0;margin:0;scroll-snap-align:start;}'
+      + '@media (min-width:768px){ .vl-card{width:160px;} }'
+      + '.vl-media-box{width:100%;aspect-ratio:9/16;background-color:#000;border-radius:' + cardRadius + 'px;overflow:hidden;position:relative;box-shadow:0 4px 10px rgba(0,0,0,0.1);}'
+      + '.vl-media{width:100%;height:100%;object-fit:cover;display:block;border:none;}'
+      + '.vl-title{margin-top:8px;font-size:13px;font-weight:700;color:#333;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:100%;}';
 
-        track.appendChild(card);
+    var style = createEl('style');
+    style.textContent = inlineCss;
+    shadow.appendChild(style);
+
+    var container = createEl('div', 'vl-carousel-track');
+
+    stories.forEach(function (story, index) {
+      var videoObj = story.videos && story.videos.length > 0 ? story.videos[0] : null;
+      var videoUrl = videoObj ? getVideoUrl(videoObj) : '';
+      var cover = getStoryThumbnail(story, videoObj, null);
+
+      var card = createEl('button', 'vl-card');
+      var mediaBox = createEl('div', 'vl-media-box');
+
+      var mediaEl;
+      if (videoUrl && isDirectVideoUrl(videoUrl)) {
+        mediaEl = createEl('video', 'vl-media');
+        mediaEl.src = videoUrl;
+        if (cover) mediaEl.poster = cover;
+        mediaEl.muted = true;
+        mediaEl.loop = true;
+        mediaEl.autoplay = true;
+        mediaEl.setAttribute('playsinline', '');
+      } else {
+        mediaEl = createEl('img', 'vl-media');
+        if (cover) mediaEl.src = cover;
+      }
+
+      mediaBox.appendChild(mediaEl);
+      card.appendChild(mediaBox);
+
+      var label = createEl('span', 'vl-title');
+      label.textContent = story.title || 'Ver produto';
+      card.appendChild(label);
+
+      // Listener de clique corrigido
+      card.addEventListener('click', function (e) {
+        console.log("Abrindo story:", story.title);
+        if (typeof openStoryViewer === 'function') {
+            openStoryViewer(stories, index);
+        }
       });
 
-      shadow.appendChild(track);
-    } 
+      // Essa linha estava no lugar errado no seu código!
+      container.appendChild(card);
+    });
 
-    executarRenderizacao();
-  }
+    shadow.appendChild(container);
+  } 
+
+  executarRenderizacao();
+}
 
       // 3. Monta o Shadow DOM para isolar CSS e criar os Cards Horizontais
       var shadow = targetDiv.shadowRoot || targetDiv.attachShadow({ mode: 'open' });
