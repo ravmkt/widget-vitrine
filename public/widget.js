@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.07.23-27';
+  var WIDGET_VERSION = '2026.07.24-00';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -1388,30 +1388,38 @@
     function renderInlineWidget(stories, appearance, format) {
       if (!stories || !stories.length) return;
   
-      var targetDiv = null;
-      var selectorValue = readAppearanceValue(appearance, ['css_selector', 'inline_selector', 'cssSelector', 'inlineSelector']);
-  
-      if (selectorValue) {
-          try {
-              targetDiv = document.querySelector(String(selectorValue));
-          } catch (e) {}
-      }
-  
-      if (!targetDiv) {
-          targetDiv = document.getElementById('vidlytics-carousel-root') || document.getElementById('instory-root');
-      }
-  
-      if (!targetDiv) {
-          targetDiv = document.querySelector('main') || document.getElementById('MainContent') || document.querySelector('#MainContent') || document.querySelector('[role="main"]');
-      }
-  
-      if (!targetDiv) {
-          targetDiv = createEl('div');
-          targetDiv.id = 'vidlytics-carousel-root';
-          document.body.appendChild(targetDiv);
-      }
-  
-      targetDiv.innerHTML = '';
+    var targetDiv = null;
+    var selectorValue = readAppearanceValue(appearance, ['css_selector', 'inline_selector', 'cssSelector', 'inlineSelector']);
+
+    // 1. Tenta achar o container configurado no painel
+    if (selectorValue) {
+        try { targetDiv = document.querySelector(String(selectorValue)); } catch (e) {}
+    }
+
+    // 2. Tenta achar a div do widget caso você tenha colado o código manualmente
+    if (!targetDiv) {
+        targetDiv = document.getElementById('vidlytics-carousel-root') || document.getElementById('instory-root');
+    }
+
+    // 3. LÓGICA CORRIGIDA: Se não achar, cria a div com segurança e insere no topo/meio
+    if (!targetDiv) {
+        targetDiv = createEl('div');
+        targetDiv.id = 'vidlytics-carousel-root';
+
+        // Procura o corpo principal da loja
+        var mainContainer = document.querySelector('main, #MainContent, [role="main"], .showcase, .page-content');
+
+        if (mainContainer && mainContainer.parentNode) {
+            // Insere LOGO ANTES do conteúdo da loja (geralmente fica embaixo do menu/header)
+            mainContainer.parentNode.insertBefore(targetDiv, mainContainer);
+        } else {
+            // Fallback final: coloca no TOPO da página, não mais no rodapé
+            document.body.insertBefore(targetDiv, document.body.firstChild);
+        }
+    } else {
+        // Só limpa o conteúdo se já era a nossa div específica, não apaga a loja
+        targetDiv.innerHTML = '';
+    }
   
       var shadow = targetDiv.shadowRoot || targetDiv.attachShadow({ mode: 'open' });
       shadow.innerHTML = '';
