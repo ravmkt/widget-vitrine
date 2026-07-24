@@ -563,6 +563,7 @@ const createDefaultFloatingMobileConfig = (): FloatingConfig => ({
   draggable: false,
   allow_close: false,
   z_index: '2147483647',
+  show_title: true,
 });
 
 const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
@@ -576,11 +577,11 @@ const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
   show_play_icon: true,
   auto_center: false,
   card_size: '80',
-border_color: '#0094EB',
-border_width: '2',
-border_radius: '12',
-object_fit: 'cover',
-show_title: false,
+  border_color: '#0094EB',
+  border_width: '2',
+  border_radius: '12',
+  object_fit: 'cover',
+  show_title: false,
 });
 
 const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
@@ -593,6 +594,12 @@ const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
   show_product: true,
   show_play_icon: true,
   auto_center: false,
+  card_size: '64',
+  border_color: '#0094EB',
+  border_width: '2',
+  border_radius: '10',
+  object_fit: 'cover',
+  show_title: false,
 });
 
 const createDefaultGridDesktopConfig = (): GridConfig => ({
@@ -601,11 +608,11 @@ const createDefaultGridDesktopConfig = (): GridConfig => ({
   gap: 16,
   card_shape: 'portrait',
   card_size: '80',
-border_color: '#0094EB',
-border_width: '2',
-border_radius: '12',
-object_fit: 'cover',
-show_title: false,
+  border_color: '#0094EB',
+  border_width: '2',
+  border_radius: '12',
+  object_fit: 'cover',
+  show_title: false,
 });
 
 const createDefaultGridMobileConfig = (): GridConfig => ({
@@ -613,6 +620,12 @@ const createDefaultGridMobileConfig = (): GridConfig => ({
   rows: 2,
   gap: 12,
   card_shape: 'portrait',
+  card_size: '64',
+  border_color: '#0094EB',
+  border_width: '2',
+  border_radius: '10',
+  object_fit: 'cover',
+  show_title: false,
 });
 
 const createDefaultModalConfig = (): ModalConfig => ({
@@ -627,8 +640,8 @@ const createDefaultModalConfig = (): ModalConfig => ({
   hide_stories: false,
   shadow_enabled: true,
   border_color: '#0094EB',
-border_width: '2',
-border_radius: '12',
+  border_width: '2',
+  border_radius: '12',
 });
 
 const createResponsiveConfig = <T,>(
@@ -1509,6 +1522,14 @@ const FloatingPreview = ({
               <X size={12} />
             </div>
           )}
+
+          {floating.show_title && (
+            <div className="absolute bottom-2 left-3 right-3 z-10">
+              <p className="truncate text-[11px] font-black text-white drop-shadow">
+                Story
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1596,7 +1617,13 @@ const CarouselPreview = ({
                 )}
                 style={{
                   aspectRatio: isPortrait ? '9 / 16' : '1 / 1',
-                  borderColor: colors.primary,
+                  borderColor: carousel.border_color || colors.primary,
+                  borderWidth: `${safeNumber(carousel.border_width, 2, 0)}px`,
+                  borderStyle: 'solid',
+                  borderRadius: isCircle
+                    ? '999px'
+                    : cssSize(carousel.border_radius, '12px'),
+                  objectFit: (carousel.object_fit || 'cover') as any,
                   background:
                     index % 2 === 0
                       ? `linear-gradient(160deg, ${colors.primary}, #dbeafe)`
@@ -1705,7 +1732,13 @@ const GridPreview = ({
                     width: isPortrait ? '72%' : '100%',
                     maxWidth: isPortrait ? '90px' : '120px',
                     aspectRatio: isPortrait ? '9 / 16' : '1 / 1',
-                    borderColor: colors.primary,
+                    borderColor: grid.border_color || colors.primary,
+                    borderWidth: `${safeNumber(grid.border_width, 2, 0)}px`,
+                    borderStyle: 'solid',
+                    borderRadius: isCircle
+                      ? '999px'
+                      : cssSize(grid.border_radius, '12px'),
+                    objectFit: (grid.object_fit || 'cover') as any,
                     background:
                       index % 2 === 0
                         ? `linear-gradient(160deg, ${colors.primary}, ${colors.secondary})`
@@ -1763,6 +1796,9 @@ const ModalPreview = ({
             boxShadow: formData.modal_config.shadow_enabled
               ? '0 22px 55px rgba(15, 23, 42, 0.22)'
               : 'none',
+            borderColor: formData.modal_config.border_color || colors.primary,
+            borderWidth: `${safeNumber(formData.modal_config.border_width, 0, 0)}px`,
+            borderRadius: cssSize(formData.modal_config.border_radius, '1.75rem'),
           }}
         >
           <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/10 to-black/75" />
