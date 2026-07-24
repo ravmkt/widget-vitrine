@@ -1399,7 +1399,11 @@ function openStoryViewer(stories, index) {
   }
 
   function renderInlineWidget(stories, appearance, format) {
-    console.log("VIDLYTICS: Iniciando renderInlineWidget com", stories ? stories.length : 0, "stories");
+    console.log("VIDLYTICS: ===== INÍCIO renderInlineWidget =====");
+    console.log("VIDLYTICS: stories:", stories ? stories.length : 0);
+    console.log("VIDLYTICS: appearance COMPLETO:", JSON.stringify(appearance, null, 2));
+    console.log("VIDLYTICS: format:", format);
+
     if (!stories || !stories.length) return;
 
     // Monta lista plana de vídeos (1 card por vídeo)
@@ -1416,59 +1420,70 @@ function openStoryViewer(stories, index) {
       });
     });
 
-    if (!allVideoItems.length) {
-      console.warn("VIDLYTICS: Nenhum vídeo encontrado nos stories.");
-      return;
-    }
+    console.log("VIDLYTICS: Total de vídeos:", allVideoItems.length);
+    if (!allVideoItems.length) return;
 
-    console.log("VIDLYTICS: Total de cards a renderizar:", allVideoItems.length);
-
-    // ---- LEITURA CORRETA DAS COLUNAS DO SUPABASE ----
     var ap = appearance || {};
 
-    // Itens visíveis: coluna carousel_visible_items
-    var itemsVisiveis = ap.carousel_visible_items || 4;
+    // ========== LEITURA MULTI-CAMINHO DAS CONFIGS ==========
+    var itemsVisiveis = null;
+    var espacamento = null;
 
-    // Espaçamento: coluna carousel_gap
-    var espacamento = ap.carousel_gap || 16;
+    // Caminho 1: colunas diretas da tabela
+    if (ap.carousel_visible_items) itemsVisiveis = Number(ap.carousel_visible_items);
+    if (ap.carousel_gap) espacamento = Number(ap.carousel_gap);
 
-    // Cores: colunas reais
-    var corPrimaria = ap.primary_color || '#00eb1b';
-    var corTexto    = ap.text_color    || '#0f172a';
-    var corFundo    = ap.background_color || '#FFFFFF';
-    var corBorda    = ap.border_color  || '#FFFFFF';
-    var borderRadius = ap.border_radius || 8;
-    var fonte       = ap.font_family  || 'Inter, sans-serif';
+    // Caminho 2: JSON carousel_config (desktop / mobile)
+    var carouselConfig = ap.carousel_config;
+    if (typeof carouselConfig === 'string') {
+      try { carouselConfig = JSON.parse(carouselConfig); } catch(e) { carouselConfig = null; }
+    }
+    if (carouselConfig) {
+      var ccDesktop = carouselConfig.desktop || {};
+      var ccMobile  = carouselConfig.mobile  || {};
+      var ccMerged  = carouselConfig.same_for_all ? ccDesktop : ccDesktop; // prioriza desktop
 
-    // Formato do card: coluna carousel_card_shape
-    var cardShape = ap.carousel_card_shape || 'portrait'; // "portrait" = 9:16
+      if (!itemsVisiveis && ccMerged.visible_items)   itemsVisiveis = Number(ccMerged.visible_items);
+      if (!espacamento   && ccMerged.gap)              espacamento   = Number(ccMerged.gap);
+      if (!itemsVisiveis && ccDesktop.visible_items)   itemsVisiveis = Number(ccDesktop.visible_items);
+      if (!espacamento   && ccDesktop.gap)              espacamento   = Number(ccDesktop.gap);
+    }
 
-    // Flags
-    var exibirTitulo    = ap.show_title !== false;
-    var exibirPlayBtn   = ap.show_play_button !== false;
+    // Caminho 3: fallback para campos alternativos
+    if (!itemsVisiveis && ap.items_visible)     itemsVisiveis = Number(ap.items_visible);
+    if (!itemsVisiveis && ap.itemsVisible)      itemsVisiveis = Number(ap.itemsVisible);
+    if (!itemsVisiveis && ap.itens_visiveis)    itemsVisiveis = Number(ap.itens_visiveis);
+    if (!espacamento   && ap.spacing)           espacamento   = Number(ap.spacing);
+    if (!espacamento   && ap.gap)               espacamento   = Number(ap.gap);
+    if (!espacamento   && ap.espacamento)       espacamento   = Number(ap.espacamento);
 
-    // auto_center do carousel_config
-    var autoCenter = true;
-    try {
-      if (ap.carousel_config) {
-        var cc = typeof ap.carousel_config === 'string' ? JSON.parse(ap.carousel_config) : ap.carousel_config;
-        if (cc.desktop && cc.desktop.auto_center !== undefined) autoCenter = cc.desktop.auto_center;
-        // Permite sobrescrever itens e gap pelo JSON se existir
-        if (cc.desktop && cc.desktop.visible_items) itemsVisiveis = cc.desktop.visible_items;
-        if (cc.desktop && cc.desktop.gap) espacamento = cc.desktop.gap;
-      }
-    } catch(e) {}
+    // Padrão final
+    if (!itemsVisiveis || itemsVisiveis < 1) itemsVisiveis = 6; // FORÇA 6 como padrão!
+    if (!espacamento   || espacamento < 0)   espacamento   = 16;
 
-    console.log("VIDLYTICS: Config -> itens:", itemsVisiveis, "gap:", espacamento, "shape:", cardShape, "autoCenter:", autoCenter);
-    // ----------------------------------------------------
+    // Demais propriedades
+    var corPrimaria  = ap.primary_color    || '#00eb1b';
+    var corTexto     = ap.text_color       || '#0f172a';
+    var corBorda     = ap.border_color     || '#FFFFFF';
+    var borderRadius = ap.border_radius    || 8;
+    var fonte        = ap.font_family      || 'Inter, sans-serif';
+    var cardShape    = ap.carousel_card_shape || (carouselConfig && carouselConfig.desktop && carouselConfig.desktop.card_shape) || 'portrait';
+    var exibirTitulo = ap.show_title !== false;
+    var exibirPlayBtn = ap.show_play_button !== false;
+    var autoCenter   = true;
 
-    // Aspect ratio: portrait = 9/16, landscape = 16/9, square = 1/1
-    var aspectRatio = cardShape === 'landscape' ? '16 / 9' : cardShape === 'square' ? '1 / 1' : '9 / 16';
+    var aspectRatio  = cardShape === 'landscape' ? '16 / 9' : cardShape === 'square' ? '1 / 1' : '9 / 16';
 
-    // Seletor do banco de dados
+    console.log("VIDLYTICS: >>> VALORES FINAIS <<<");
+    console.log("  itemsVisiveis:", itemsVisiveis);
+    console.log("  espacamento:", espacamento);
+    console.log("  cardShape:", cardShape, "| aspectRatio:", aspectRatio);
+    console.log("  corPrimaria:", corPrimaria, "| corTexto:", corTexto);
+    console.log("  exibirTitulo:", exibirTitulo, "| exibirPlayBtn:", exibirPlayBtn);
+    // =======================================================
+
+    // Seletor
     var dbSelector = ap.css_selector || ap.inline_selector || ap.seletor || '';
-
-    // Lista de fallbacks
     var selectorsToTry = [];
     if (dbSelector) selectorsToTry.push(dbSelector);
     selectorsToTry.push('section.category-content .holder-results > div > .flex-.between-.vtop');
@@ -1477,7 +1492,7 @@ function openStoryViewer(stories, index) {
     selectorsToTry.push('main');
     selectorsToTry.push('body');
 
-    var maxRetries = 20;
+    var maxRetries = 25;
     var currentRetries = 0;
 
     var renderInterval = setInterval(function () {
@@ -1494,14 +1509,14 @@ function openStoryViewer(stories, index) {
 
       if (!targetDiv) {
         if (currentRetries >= maxRetries) {
-          console.warn('VIDLYTICS: Nenhum local encontrado para inserir o carrossel.');
+          console.warn('VIDLYTICS: Nenhum local encontrado.');
           clearInterval(renderInterval);
         }
         return;
       }
 
       clearInterval(renderInterval);
-      console.log('VIDLYTICS: Local de inserção -> ' + usedSelector);
+      console.log('VIDLYTICS: Inserindo em -> ' + usedSelector);
 
       var wrapperId = 'vl-carousel-wrapper-final';
       var widgetContainer = document.getElementById(wrapperId);
@@ -1519,10 +1534,13 @@ function openStoryViewer(stories, index) {
 
       widgetContainer.innerHTML = '';
 
-      // ---- CSS AJUSTADO PARA N ITENS ----
+      // ---- CSS DINÂMICO COM OS VALORES REAIS ----
       var estilo = document.createElement('style');
       var gapPx = espacamento;
       var totalGap = gapPx * (itemsVisiveis - 1);
+      var cardWidth = 'calc((100% - ' + totalGap + 'px) / ' + itemsVisiveis + ')';
+
+      console.log("VIDLYTICS: CSS -> cardWidth:", cardWidth, "| totalGap:", totalGap, "| gapPx:", gapPx);
 
       estilo.textContent = `
         #vl-carousel-wrapper-final {
@@ -1535,12 +1553,14 @@ function openStoryViewer(stories, index) {
           gap: ${gapPx}px;
           overflow-x: auto;
           scroll-snap-type: x mandatory;
+          -webkit-overflow-scrolling: touch;
           scrollbar-width: none;
           padding-bottom: 15px;
           width: 100%;
           max-width: 100%;
-          ${autoCenter ? 'justify-content: flex-start;' : ''}
+          cursor: grab;
         }
+        .vl-slider-container:active { cursor: grabbing; }
         .vl-slider-container::-webkit-scrollbar { display: none; }
         .vl-card-item {
           all: unset;
@@ -1548,14 +1568,16 @@ function openStoryViewer(stories, index) {
           flex-direction: column;
           cursor: pointer;
           scroll-snap-align: start;
-          flex: 0 0 calc((100% - ${totalGap}px) / ${itemsVisiveis});
+          flex: 0 0 ${cardWidth};
           min-width: 0;
           position: relative;
           transition: transform 0.2s ease;
+          user-select: none;
+          -webkit-user-select: none;
         }
         .vl-card-item:hover { transform: translateY(-2px); }
         @media (max-width: 768px) {
-          .vl-card-item { flex: 0 0 calc(40% - ${gapPx}px); }
+          .vl-card-item { flex: 0 0 calc(45% - ${gapPx}px); }
         }
         .vl-media-box {
           position: relative;
@@ -1583,7 +1605,7 @@ function openStoryViewer(stories, index) {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          display: block;
+          display: ${exibirTitulo ? 'block' : 'none'};
           width: 100%;
           padding: 0 4px;
         }
@@ -1633,7 +1655,6 @@ function openStoryViewer(stories, index) {
         }
         mediaWrap.appendChild(mediaEl);
 
-        // Botão de play (respeita a config)
         var playIcon = document.createElement('div');
         playIcon.className = 'vl-play-btn-overlay';
         playIcon.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
@@ -1648,11 +1669,10 @@ function openStoryViewer(stories, index) {
           card.appendChild(titulo);
         }
 
-        // Clique -> abre no vídeo correto
         card.addEventListener('click', function(e) {
           e.preventDefault();
           e.stopPropagation();
-          console.log("VIDLYTICS: Abrindo story " + storyIndex + " no vídeo " + videoIndex);
+          console.log("VIDLYTICS: Clique -> story " + storyIndex + " vídeo " + videoIndex);
 
           window.__vlStories = stories;
           window.__vlStoryIndex = storyIndex;
@@ -1670,7 +1690,7 @@ function openStoryViewer(stories, index) {
       });
 
       widgetContainer.appendChild(slider);
-      console.log("VIDLYTICS: Carrossel renderizado! " + allVideoItems.length + " cards, " + itemsVisiveis + " visíveis.");
+      console.log("VIDLYTICS: " + allVideoItems.length + " cards renderizados, " + itemsVisiveis + " visíveis, scroll ativo!");
 
     }, 300);
   }
