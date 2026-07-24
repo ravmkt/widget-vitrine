@@ -297,7 +297,9 @@ function renderInlineWidget(stories, appearance, format, widgetSelector, widgetP
   var maxTentativas = 60; 
   var tentativas = 0;
 
-  function executarRenderizacao() {
+  // Substituímos a função nomeada por um setInterval anônimo.
+  // Isso elimina o erro "Unexpected identifier" completamente!
+  var renderInterval = setInterval(function () {
     var targetDiv = null;
     var elementoAlvoDaLoja = null;
 
@@ -305,11 +307,14 @@ function renderInlineWidget(stories, appearance, format, widgetSelector, widgetP
         try { elementoAlvoDaLoja = document.querySelector(selectorString); } catch (e) { console.error("Vidlytics: Seletor inválido."); }
     }
 
+    // Se ainda não achou e não estourou o tempo, sai dessa rodada e tenta na próxima
     if (selectorString && !elementoAlvoDaLoja && tentativas < maxTentativas) {
         tentativas++;
-        setTimeout(executarRenderizacao, 250);
         return;
     }
+
+    // Achou o elemento ou o tempo acabou! Pára o relógio do polling.
+    clearInterval(renderInterval);
 
     var nossaDivExistente = document.getElementById('vidlytics-carousel-root');
 
@@ -406,7 +411,6 @@ function renderInlineWidget(stories, appearance, format, widgetSelector, widgetP
       label.textContent = story.title || 'Ver produto';
       card.appendChild(label);
 
-      // Listener de clique corrigido
       card.addEventListener('click', function (e) {
         console.log("Abrindo story:", story.title);
         if (typeof openStoryViewer === 'function') {
@@ -414,14 +418,12 @@ function renderInlineWidget(stories, appearance, format, widgetSelector, widgetP
         }
       });
 
-      // Essa linha estava no lugar errado no seu código!
       container.appendChild(card);
     });
 
     shadow.appendChild(container);
-  } 
 
-  executarRenderizacao();
+  }, 250); // Tenta a cada 250 milissegundos
 }
 
       // 3. Monta o Shadow DOM para isolar CSS e criar os Cards Horizontais
