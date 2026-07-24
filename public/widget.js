@@ -1399,170 +1399,120 @@ function openStoryViewer(stories, index) {
   }
 
   function renderInlineWidget(stories, appearance, format) {
-    console.log("VIDLYTICS: Iniciando renderInlineWidget com", stories ? stories.length : 0, "stories");
+    console.log('VIDLYTICS: Iniciando renderInlineWidget com', stories ? stories.length : 0, 'stories');
     if (!stories || !stories.length) return;
 
-    // 1. Lê as configurações com segurança (sem depender de outras funções que possam dar erro)
-    var itemsVisiveisDesktop = (appearance && (appearance.items_visible || appearance.itemsVisible || appearance.itens_visiveis)) || 4;
-    var espacamento = (appearance && (appearance.spacing || appearance.gap || appearance.espacamento)) || 16;
-    var corPrimaria = (appearance && (appearance.primary_color || appearance.primaryColor || appearance.cor_primaria)) || '#00eb1b';
-    var corTexto = (appearance && (appearance.text_color || appearance.textColor || appearance.cor_texto)) || '#0f172a';
-    
-    // CORREÇÃO 1: Lê o seletor da configuração, com um fallback genérico
-    var cssSelector = (appearance && (
-        appearance.css_selector || 
-        appearance.cssSelector || 
-        appearance.inline_selector || 
-        appearance.inlineSelector || 
-        appearance.seletor
-    )) || '#vidlytics-carousel-root'; // Elemento padrão se o cliente não configurar
-    
-    var maxRetries = 30; // Evita loop infinito (tenta por ~9 segundos)
-    var currentRetries = 0;
+    var itemsVisible = Math.max(1, Number(firstDefined(appearance.items_visible, appearance.itemsVisible, appearance.itens_visiveis, 4)) || 4);
+    var spacing = Math.max(0, Number(firstDefined(appearance.spacing, appearance.gap, appearance.espacamento, 16)) || 16);
+    var columns = Math.max(1, Number(firstDefined(appearance.columns, appearance.grid_columns, appearance.gridColumns, 3)) || 3);
+    var cardRadius = Math.max(0, Number(firstDefined(appearance.card_radius, appearance.cardRadius, appearance.border_radius, appearance.borderRadius, 12)) || 12);
+    var textColor = firstDefined(appearance.text_color, appearance.textColor, appearance.cor_texto) || '#0f172a';
+    var primaryColor = firstDefined(appearance.primary_color, appearance.primaryColor, appearance.cor_primaria) || '#00eb1b';
+    var cssSelector = firstDefined(appearance.css_selector, appearance.cssSelector, appearance.inline_selector, appearance.inlineSelector, appearance.seletor) || '#vidlytics-carousel-root';
+    var position = String(firstDefined(appearance.position, appearance.inline_position, appearance.inlinePosition, appearance.display_position, appearance.displayPosition, 'after') || 'after').toLowerCase();
+    var layoutFormat = String(format || firstDefined(appearance.format, appearance.display_format, appearance.visual_style, 'carousel')).toLowerCase();
+    var isGrid = layoutFormat.indexOf('grid') !== -1 || layoutFormat.indexOf('grade') !== -1;
 
-    var renderInterval = setInterval(function () {
-        var targetDiv = null;
-        currentRetries++;
-
-        try {
-            targetDiv = document.querySelector(cssSelector);
-        } catch (e) {
-            console.error('VIDLYTICS: Seletor CSS inválido configurado:', cssSelector);
-            clearInterval(renderInterval);
-            return;
-        }
-
-        // Se o elemento ainda não existir, continua tentando até o limite
-        if (!targetDiv) {
-            if (currentRetries >= maxRetries) {
-                console.warn('VIDLYTICS: Elemento alvo não encontrado para inserir o carrossel:', cssSelector);
-                clearInterval(renderInterval);
-            }
-            return;
-        }
-
+    var targetDiv = null;
     try {
-        targetDiv = document.querySelector(cssSelector);
+      targetDiv = document.querySelector(cssSelector);
     } catch (e) {
-        console.error('VIDLYTICS: Seletor CSS inválido:', cssSelector);
-        clearInterval(renderInterval);
-        return;
+      targetDiv = null;
     }
 
-    // Se o elemento ainda não existir, continua tentando
     if (!targetDiv) {
-        console.log('VIDLYTICS: Aguardando elemento:', cssSelector);
-        return;
+      targetDiv = document.getElementById('vidlytics-carousel-root') || document.getElementById('instory-root');
     }
 
-    clearInterval(renderInterval);
-
-    console.log(
-        'VIDLYTICS: Elemento encontrado. O carrossel será inserido abaixo dele.',
-        targetDiv
-    );
-        console.log("VIDLYTICS: Local de inserção encontrado!", targetDiv);
-
-        // 3. Cria a caixa do widget
-        var wrapperId = 'vl-carousel-wrapper-final';
-        var widgetContainer = document.getElementById(wrapperId);
-        
-        if (!widgetContainer) {
-            widgetContainer = document.createElement('div');
-            widgetContainer.id = wrapperId;
-widgetContainer.style.width = '100%';
-widgetContainer.style.maxWidth = '1200px';
-widgetContainer.style.marginTop = '20px';
-widgetContainer.style.marginBottom = '20px';
-widgetContainer.style.marginLeft = 'auto';
-widgetContainer.style.marginRight = 'auto';
-widgetContainer.style.display = 'block';
-widgetContainer.style.clear = 'both';
-
-// Insere o carrossel imediatamente abaixo do elemento encontrado
-if (targetDiv.parentNode) {
-    targetDiv.parentNode.insertBefore(
-        widgetContainer,
-        targetDiv.nextSibling
-    );
-}
+    if (!targetDiv) {
+      var mainTarget = document.querySelector('main') || document.getElementById('MainContent') || document.querySelector('#MainContent') || document.querySelector('[role="main"]');
+      if (mainTarget) {
+        targetDiv = createEl('div');
+        targetDiv.id = 'vidlytics-carousel-root';
+        if (position === 'before' && mainTarget.parentNode) {
+          mainTarget.parentNode.insertBefore(targetDiv, mainTarget);
+        } else if (mainTarget.parentNode) {
+          if (mainTarget.nextSibling) mainTarget.parentNode.insertBefore(targetDiv, mainTarget.nextSibling);
+          else mainTarget.parentNode.appendChild(targetDiv);
+        } else {
+          document.body.appendChild(targetDiv);
         }
-        
-        widgetContainer.innerHTML = ''; // Limpa pra evitar duplicatas
-        
-        // 4. Cria o CSS blindado (Travando tamanho e cliques)
-        var estilo = document.createElement('style');
-        estilo.textContent = `
-            #vl-carousel-wrapper-final { font-family: sans-serif; }
-            #vl-carousel-wrapper-final * { box-sizing: border-box !important; }
-            
-            .vl-slider-container {
-                display: flex; gap: ${espacamento}px; overflow-x: auto; scroll-snap-type: x mandatory;
-                scrollbar-width: none; padding-bottom: 15px; width: 100%;
-            }
-            .vl-slider-container::-webkit-scrollbar { display: none; }
-            
-            .vl-card-item {
-                all: unset; display: flex; flex-direction: column; cursor: pointer; scroll-snap-align: start;
-                /* MÁGICA: Fixa a quantidade configurada no painel */
-                flex: 0 0 calc((100% - (${espacamento}px * ${itemsVisiveisDesktop - 1})) / ${itemsVisiveisDesktop});
-                min-width: 0; position: relative;
-            }
+      }
+    }
 
-            @media (max-width: 768px) {
-                .vl-card-item { flex: 0 0 calc(40% - ${espacamento}px); }
-            }
+    if (!targetDiv) {
+      targetDiv = createEl('div');
+      targetDiv.id = 'vidlytics-carousel-root';
+      document.body.appendChild(targetDiv);
+    }
 
-            .vl-media-box {
-                position: relative; width: 100%; aspect-ratio: 9 / 16; border-radius: 12px; overflow: hidden;
-                background: #000; border: 2px solid transparent; transition: transform 0.2s ease, border-color 0.2s ease;
-            }
-            
-            .vl-card-item:hover .vl-media-box { border-color: ${corPrimaria}; transform: scale(0.98); }
+    targetDiv.innerHTML = '';
+    var shadow = targetDiv.shadowRoot || targetDiv.attachShadow({ mode: 'open' });
+    shadow.innerHTML = '';
 
-            .vl-media-box img, 
-            .vl-media-box video {
-                position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;
-                pointer-events: none; /* MÁGICA: Deixa o clique passar para o botão e abrir o modal */
-            }
+    var style = createEl('style');
+    style.textContent =
+      ':host{display:block;width:100%;max-width:1200px;margin:0 auto;padding:0 15px;box-sizing:border-box;font-family:' + getFontFamily(appearance) + ' !important;}' +
+      buildSharedCss(appearance) +
+      '.vidlytics-inline-root{width:100%;display:flex;flex-direction:row;gap:' + spacing + 'px;box-sizing:border-box;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;}' +
+      '.vidlytics-inline-root::-webkit-scrollbar{display:none;}' +
+      '.vidlytics-inline-track{width:100%;display:flex !important;flex-direction:row !important;gap:' + spacing + 'px;overflow-x:auto !important;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;}' +
+      '.vidlytics-inline-track::-webkit-scrollbar{display:none;}' +
+      '.vidlytics-inline-card{appearance:none;background:transparent;border:none;padding:0;margin:0;text-align:left;cursor:pointer;display:flex;flex-direction:column;flex:0 0 calc((100% - (' + spacing + 'px * ' + (itemsVisible - 1) + ')) / ' + itemsVisible + ');scroll-snap-align:start;min-width:0;}' +
+      '.vidlytics-inline-grid .vidlytics-inline-card{flex:none;width:100%;}' +
+      '.vidlytics-inline-media{width:100%;position:relative;' + (layoutFormat.indexOf('9:16') !== -1 || layoutFormat.indexOf('retrato') !== -1 || layoutFormat.indexOf('portrait') !== -1 ? 'aspect-ratio:9/16;' : '') + 'border-radius:' + cardRadius + 'px;display:block;overflow:hidden;background:#000;}' +
+      '.vidlytics-inline-media img,.vidlytics-inline-media video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}' +
+      '.vidlytics-inline-title{margin-top:8px;font-size:11px;font-weight:700;color:' + textColor + ';text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}';
 
-            .vl-title-text {
-                margin-top: 10px; font-size: 13px; font-weight: 700; color: ${corTexto}; text-align: center;
-                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; width: 100%;
-            }
+    shadow.appendChild(style);
 
-            .vl-play-btn-overlay {
-                position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                width: 40px; height: 40px; background: rgba(0,0,0,0.6); border-radius: 50%;
-                display: flex; align-items: center; justify-content: center; pointer-events: none; color: #fff;
-            }
-            .vl-play-btn-overlay svg { width: 20px; height: 20px; fill: white; margin-left: 2px; }
-        `;
-        widgetContainer.appendChild(estilo);
+    var root = createEl('div', 'vidlytics-inline-root');
+    var wrapper = createEl('div', isGrid ? 'vidlytics-inline-grid' : 'vidlytics-inline-track');
+    root.appendChild(wrapper);
 
-        // 5. Constrói os cards do carrossel
-        var slider = document.createElement('div');
-        slider.className = 'vl-slider-container';
+    stories.forEach(function (story, index) {
+      var videoObj = story.videos && story.videos.length > 0 ? story.videos[0] : null;
+      var videoUrl = videoObj ? getVideoUrl(videoObj) : '';
+      var cover = getStoryThumbnail(story, videoObj, null);
 
-        stories.forEach(function (story, index) {
-            var videoObj = story.videos && story.videos.length > 0 ? story.videos[0] : null;
-            
-            // Pega URL e Capa de forma totalmente segura
-            var videoUrl = '';
-            if (videoObj) videoUrl = videoObj.video_url || videoObj.videoUrl || videoObj.url || videoObj.file_url || '';
-            
-            var cover = ''; 
-            if (story.thumbnail_url || story.cover_url) cover = story.thumbnail_url || story.cover_url;
-            else if (videoObj && (videoObj.thumbnail_url || videoObj.cover_url)) cover = videoObj.thumbnail_url || videoObj.cover_url;
+      var card = createEl('button', 'vidlytics-inline-card');
+      var mediaWrap = createEl('div', 'vidlytics-inline-media');
+      var mediaEl;
 
-            var card = document.createElement('button');
-            card.className = 'vl-card-item';
-            
-            var mediaWrap = document.createElement('div');
-            mediaWrap.className = 'vl-media-box';
+      if (videoUrl && isDirectVideoUrl(videoUrl)) {
+        mediaEl = createEl('video');
+        mediaEl.src = videoUrl;
+        if (cover) mediaEl.poster = cover;
+        mediaEl.muted = true;
+        mediaEl.loop = true;
+        mediaEl.autoplay = true;
+        mediaEl.setAttribute('playsinline', '');
+        mediaEl.setAttribute('webkit-playsinline', '');
+      } else {
+        mediaEl = createEl('img');
+        if (cover) mediaEl.src = cover;
+      }
 
-            var mediaEl;
-            var isVideo = videoUrl && (videoUrl.includes('.mp4') || videoUrl.includes('.webm') || videoUrl.includes('.mov') || videoUrl.includes('.m3u8'));
+      mediaWrap.appendChild(mediaEl);
+      card.appendChild(mediaWrap);
+
+      var modalCfg = normalizeModalAppearanceConfig(appearance);
+      if (modalCfg.show_title) {
+        var label = createEl('span', 'vidlytics-inline-title');
+        label.textContent = story.title || '';
+        card.appendChild(label);
+      }
+
+      card.addEventListener('click', function () {
+        openStoryViewer(stories, index);
+      });
+
+      wrapper.appendChild(card);
+    });
+
+    shadow.appendChild(root);
+  }
+
             
             if (isVideo) {
                 mediaEl = document.createElement('video');
