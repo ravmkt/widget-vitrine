@@ -1883,7 +1883,7 @@ generalSettings: createSupabaseCrudFunctions<GeneralSettings>(
   profiles: createSupabaseCrudFunctions<{
     id: string;
     user_id: string;
-    name: string;
+    full_name: string;
     email: string;
     created_at?: string;
   }>("profiles", []),
