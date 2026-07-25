@@ -85,9 +85,12 @@ const VideoPerformancePage = () => {
     customRange: { from: undefined as Date | undefined, to: undefined as Date | undefined }
   });
 
-  useEffect(() => {
+useEffect(() => {
     const load = async () => {
-      if (!storeId) return;
+      if (!storeId) {
+        setLoading(false); // ✅ Garante que sai do loading mesmo sem storeId
+        return;
+      }
       
       setLoading(true);
       try {
