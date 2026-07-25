@@ -430,7 +430,7 @@ const DEFAULT_APPEARANCES: Appearance[] = [
 ];
 
 let memoryStores = [DEFAULT_STORE];
-let memoryStoreSettings = [DEFAULT_GENERAL_SETTINGS];
+let memoryStoreSettings = [DEFAULT_store_settings];
 let memoryAppearances = [...DEFAULT_APPEARANCES];
 let memoryVideos: Video[] = [];
 let memoryStories: Story[] = [];
