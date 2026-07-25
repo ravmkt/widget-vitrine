@@ -864,7 +864,6 @@ const normalizeAppearance = (
   floatingConfig.mobile = normalizeFloatingShapeValues(floatingConfig.mobile);
 
   const carouselConfig = normalizeResponsiveConfig<CarouselConfig>({
-    rawValue: anyItem.carousel_config,
     desktopDefault: createDefaultCarouselDesktopConfig(),
     mobileDefault: createDefaultCarouselMobileConfig(),
     sameForAll: globalAppearance,
@@ -1019,7 +1018,6 @@ const normalizeAppearance = (
       ...floatingConfig,
       same_for_all: globalAppearance,
     },
-    carousel_config: {
       ...carouselConfig,
       same_for_all: globalAppearance,
     },
