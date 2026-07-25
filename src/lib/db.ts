@@ -1141,13 +1141,12 @@ const ensureSupabaseStoreExists = async (storeId?: string) => {
     console.warn('Não foi possível buscar loja no localStorage:', error);
   }
 
-  const storeToInsert = sanitizeTablePayload('stores', {
+const storeToInsert = sanitizeTablePayload('stores', {
     id: storeId,
     name: localStore?.name || DEFAULT_STORE.name || 'Loja',
     domain: localStore?.domain || DEFAULT_STORE.domain,
-    active: localStore?.active ?? true,
     owner_user_id: user.id,
-  });
+});
 
   const { error: insertError } = await supabase
     .from('stores' as any)
