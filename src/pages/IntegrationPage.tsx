@@ -71,7 +71,7 @@ const hasPlatform = Boolean(platform);
     return `<script>
 window.VIDLYTICS_CONFIG = {
   storeId: "${storeId || ''}",
-  platform: "yampi",
+  platform: `"${platform,
   supabaseUrl: "${supabaseUrl}",
   supabaseAnonKey: "${supabaseAnonKey}",
   widgets: {
