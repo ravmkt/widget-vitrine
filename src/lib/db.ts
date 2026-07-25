@@ -592,7 +592,6 @@ const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
 
   story_videos: [
     'id',
-    'store_id',
     'story_id',
     'video_id',
     'position',
