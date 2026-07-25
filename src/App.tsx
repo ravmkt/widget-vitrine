@@ -5,8 +5,9 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { TenantProvider, useTenant } from "@/context/TenantContext";
+import { TenantProvider } from "@/context/TenantContext";
 import { db } from "@/lib/db";
+import { AppLayout } from "@/components/AppLayout";
 import SettingsPage from "@/pages/SettingsPage";
 import IntegrationPage from "@/pages/IntegrationPage";
 import DashboardPage from "@/pages/DashboardPage";
@@ -60,10 +61,10 @@ function App() {
           {/* Rota raiz → verifica se há settings */}
           <Route path="/" element={<HomeGuard />} />
 
-          {/* Páginas da aplicação */}
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/integration" element={<IntegrationPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
+          {/* Páginas da aplicação com sidebar */}
+          <Route path="/settings" element={<AppLayout><SettingsPage /></AppLayout>} />
+          <Route path="/integration" element={<AppLayout><IntegrationPage /></AppLayout>} />
+          <Route path="/dashboard" element={<AppLayout><DashboardPage /></AppLayout>} />
 
           {/* Fallback — qualquer rota não encontrada */}
           <Route path="*" element={<Navigate to="/" replace />} />
