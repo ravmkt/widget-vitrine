@@ -430,7 +430,7 @@ const DEFAULT_APPEARANCES: Appearance[] = [
 ];
 
 let memoryStores = [DEFAULT_STORE];
-let memoryGeneralSettings = [DEFAULT_GENERAL_SETTINGS];
+let memoryStoreSettings = [DEFAULT_GENERAL_SETTINGS];
 let memoryAppearances = [...DEFAULT_APPEARANCES];
 let memoryVideos: Video[] = [];
 let memoryStories: Story[] = [];
@@ -850,7 +850,7 @@ const normalizeTablePayloadBeforeSave = <T extends Record<string, any>>(
     return normalizeAppearancePayloadBeforeSave(item);
   }
 
-  if (tableName === 'general_settings') {
+  if (tableName === 'store_settings') {
     return normalizeGeneralSettingsPayloadBeforeSave(item);
   }
 
@@ -1063,7 +1063,7 @@ const initLocalStorage = () => {
       const items = [
         { key: 'vidlytics_stores', default: [DEFAULT_STORE] },
         {
-          key: 'vidlytics_general_settings',
+          key: 'vidlytics_store_settings',
           default: [DEFAULT_GENERAL_SETTINGS],
         },
         { key: 'vidlytics_appearances', default: DEFAULT_APPEARANCES },
@@ -1315,7 +1315,7 @@ const normalizeSupabaseRelationsBeforeSave = async <
   }
 
   if (
-    tableName === 'general_settings' &&
+    tableName === 'store_settings' &&
     normalizedPayload.default_appearance_id
   ) {
     normalizedPayload.default_appearance_id =
@@ -1831,7 +1831,7 @@ export const db = {
 
   generalSettings: createSupabaseCrudFunctions<GeneralSettings>(
     "general_settings",
-    memoryGeneralSettings,
+    memoryStoreSettings,
   ),
 
   appearances: createSupabaseCrudFunctions<Appearance>(
