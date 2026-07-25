@@ -366,7 +366,7 @@ const DEFAULT_STORE: Store = {
   active: true,
 };
 
-const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
+const DEFAULT_store_settings: GeneralSettings = {
   id: DEFAULT_GENERAL_SETTINGS_ID,
   store_id: DEFAULT_STORE.id,
   store_name: DEFAULT_STORE.name,
@@ -535,7 +535,7 @@ const TABLE_UUID_FIELDS: Record<string, Record<string, UuidMode>> = {
     id: 'required',
     store_id: 'required',
   },
-  general_settings: {
+  store_settings: {
     id: 'required',
     store_id: 'required',
     default_appearance_id: 'optional',
@@ -697,7 +697,7 @@ display_locations: [
     'updated_at',
   ],
 
-  general_settings: [
+  store_settings: [
     'id',
     'store_id',
     'store_name',
