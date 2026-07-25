@@ -21,6 +21,8 @@ const PLATFORM_LABELS: Record<string, string> = {
   toggo: 'Toggo',
   magento: 'Magento',
   vtex: 'VTEX',
+  tray: 'Tray',
+  lojaintegrada: 'Loja Integrada',
 };
 
 const getPlatformLabel = (platform: string | null): string => {
