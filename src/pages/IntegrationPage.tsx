@@ -12,31 +12,12 @@ import {
   Store,
 } from 'lucide-react';
 import { useTenant } from '@/context/TenantContext';
-
-const PLATFORM_LABELS: Record<string, string> = {
-  yampi: 'Yampi',
-  shopify: 'Shopify',
-  woocommerce: 'WooCommerce',
-  nuvemshop: 'Nuvemshop',
-  toggo: 'Toggo',
-  magento: 'Magento',
-  vtex: 'VTEX',
-  tray: 'Tray',
-  lojaintegrada: 'Loja Integrada',
-  bagy: 'Bagy',
-  irroba: 'Irroba',
-  megazord: 'Megazord',
-  cartpanda: 'Cartpanda',
-};
-
-const getPlatformLabel = (platform: string | null): string => {
-  if (!platform) return '';
-  return PLATFORM_LABELS[platform] || platform;
-};
+import { getPlatformLabel, getPlatformUrl } from '@/lib/platforms';
 
 const IntegrationPage = () => {
   const { storeId, platform } = useTenant();
   const platformLabel = getPlatformLabel(platform);
+  const platformUrl = getPlatformUrl(platform);
   const hasPlatform = Boolean(platform);
   const platformSafe = platform || 'custom';
 
@@ -479,7 +460,7 @@ window.VIDLYTICS_CONFIG = {
           </div>
         </div>
 
-        {/* Card de Produtos — conteúdo muda conforme plataforma */}
+        {/* Card de Produtos */}
         <div className="rounded-[2.5rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
@@ -547,7 +528,7 @@ window.VIDLYTICS_CONFIG = {
         </div>
       </div>
 
-      {/* Seção "Como instalar" — conteúdo muda conforme plataforma */}
+      {/* Seção "Como instalar" */}
       <div className="rounded-[2.5rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
         <h2 className="text-xl font-black text-slate-900">
           Como instalar{platformLabel ? ` na ${platformLabel}` : ' na sua loja'}
@@ -622,14 +603,14 @@ window.VIDLYTICS_CONFIG = {
             </p>
           </div>
 
-          {platform === 'yampi' && (
+          {platformUrl && (
             <a
-              href="https://www.yampi.com.br/"
+              href={platformUrl}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-100"
             >
-              Abrir Yampi
+              Abrir {platformLabel}
               <ExternalLink className="h-4 w-4" />
             </a>
           )}
