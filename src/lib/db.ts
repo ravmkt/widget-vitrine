@@ -370,7 +370,7 @@ const DEFAULT_store_settings: GeneralSettings = {
   id: DEFAULT_GENERAL_SETTINGS_ID,
   store_id: DEFAULT_STORE.id,
   store_name: DEFAULT_STORE.name,
-  store_url: DEFAULT_STORE.domain,
+  store_url: DEFAULT_STORE.url,
   logo_url:
     'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=100&q=80',
   contact_email: 'contato@vitrinevideo.com.br',
