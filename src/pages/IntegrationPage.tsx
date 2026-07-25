@@ -96,7 +96,7 @@ window.VIDLYTICS_CONFIG = {
     return `<script>
 (function() {
   var script = document.createElement('script');
-  script.src = '${publicUrl}/yampi-tracking.js';
+  script.src = '${publicUrl}/`` `${platform';
   script.type = 'text/javascript';
   script.async = true;
   document.head.appendChild(script);
@@ -385,7 +385,7 @@ window.VIDLYTICS_CONFIG = {
                 <span className="h-3 w-3 rounded-full bg-yellow-400" />
                 <span className="h-3 w-3 rounded-full bg-green-400" />
               </div>
-              <span className="text-xs font-bold text-slate-400">yampi-tracking.js</span>
+              <span className="text-xs font-bold text-slate-400">`` `${platform</span>
             </div>
             <pre className="overflow-x-auto whitespace-pre-wrap p-6 text-xs font-medium leading-relaxed text-blue-400 md:text-sm">
               {trackingScriptCode}
