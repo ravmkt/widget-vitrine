@@ -808,7 +808,6 @@ const normalizeAppearance = (
     anyItem.useGlobalAppearance ??
       anyItem.use_global_appearance ??
       anyItem.floating_config?.same_for_all ??
-      anyItem.carousel_config?.same_for_all ??
       anyItem.grid_config?.same_for_all ??
       defaults.useGlobalAppearance,
   );
