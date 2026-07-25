@@ -104,35 +104,26 @@ const CommentsPage = () => {
    * Busca os dados da loja.
    * Este é o único useEffect responsável por buscar app_settings.
    */
-  useEffect(() => {
-    const fetchStoreSettings = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("app_settings")
-          .select("settings")
-          .limit(1)
-          .maybeSingle();
-
-        if (error) {
-          throw error;
-        }
-
-        const settings = data?.settings as StoreSettings | null;
-
-        if (settings) {
-          setStoreName(settings.store_name || "");
-          setStoreLogoUrl(settings.store_logo_url || "");
-        }
-      } catch (error) {
-        console.error(
-          "[CommentsPage] erro ao buscar configurações da loja:",
-          error,
-        );
+// ✅ DEPOIS
+useEffect(() => {
+  const fetchStoreSettings = async () => {
+    try {
+      const settings = await db.generalSettings.getAll();
+      if (settings.length > 0) {
+        const s = settings[0];
+        setStoreName(s.store_name || '');
+        setStoreLogoUrl(s.logo_url || '');
       }
-    };
+    } catch (error) {
+      console.error(
+        "[CommentsPage] erro ao buscar configurações da loja:",
+        error,
+      );
+    }
+  };
 
-    fetchStoreSettings();
-  }, []);
+  fetchStoreSettings();
+}, []);
 
   /*
    * Verifica a sessão atual do usuário.
