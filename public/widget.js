@@ -389,10 +389,9 @@
       var app3 = results[2] || {};
       var merged = {};
       // Prioridade: widget_appearances → appearances → general_settings (general_settings tem maior prioridade)
-      mergeObject(merged, app2);
-      mergeObject(merged, app1);
-      mergeObject(merged, app3);
-      return normalizeAppearanceItem(merged);
+mergeObject(merged, app1);  // appearances (base)
+mergeObject(merged, app2);  // widget_appearances (SOBRESCREVE appearances)
+mergeObject(merged, app3);  // general_settings (prioridade máxima)
     });
   }
 
