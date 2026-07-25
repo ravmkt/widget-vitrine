@@ -2303,6 +2303,18 @@ const mapWidgetAppearanceToFormFormat = (row: any) => {
 setResolvedStoreId(finalStoreId);
 
 const [styles, widgetStyles] = await Promise.all([
+console.log('🔍 DEBUG widgetStyles:', widgetStyles);
+console.log('🔍 DEBUG styles (appearances):', styles);
+
+if (widgetStyles.length > 0) {
+  const converted = mapWidgetAppearanceToFormFormat(widgetStyles[0]);
+  console.log('🔍 DEBUG converted:', converted);
+  setAppearances(converted ? [converted] : styles);
+} else {
+  console.log('⚠️ widgetStyles vazio, usando styles antigos');
+  setAppearances(styles);
+}
+
   getAppearancesSafe(finalStoreId),
   supabase
     ? supabase
