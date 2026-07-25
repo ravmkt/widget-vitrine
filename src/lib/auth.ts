@@ -59,7 +59,7 @@ export const createInitialTenantForUser = async ({
   await db.profiles.save({
     id: crypto.randomUUID(),
     user_id: userId,
-    name,
+    full_name: name,
     email,
     created_at: now,
   });
