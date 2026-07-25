@@ -168,13 +168,13 @@ function App() {
 
           {/* Rotas protegidas (só acessa se estiver logado) */}
           <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
-          <Route path="/stories" element={<ProtectedRoute><AppLayout><StoriesPage /></AppLayout></ProtectedRoute>} />
-          <Route path="/gallery" element={<ProtectedRoute><AppLayout><GalleryPage /></AppLayout></ProtectedRoute>} />
-          <Route path="/videos/performance" element={<ProtectedRoute><AppLayout><PerformancePage /></AppLayout></ProtectedRoute>} />
-          <Route path="/products" element={<ProtectedRoute><AppLayout><ProductsPage /></AppLayout></ProtectedRoute>} />
-          <Route path="/medidas" element={<ProtectedRoute><AppLayout><MedidasPage /></AppLayout></ProtectedRoute>} />
-          <Route path="/appearance" element={<ProtectedRoute><AppLayout><AppearancePage /></AppLayout></ProtectedRoute>} />
-          <Route path="/comments" element={<ProtectedRoute><AppLayout><CommentsPage /></AppLayout></ProtectedRoute>} />
+<Route path="/stories" element={<StoriesPage />} />
+<Route path="/gallery" element={<VideoGalleryPage />} />
+<Route path="/videos/performance" element={<VideoPerformancePage />} />
+<Route path="/produtos" element={<ProductsPage />} />
+<Route path="/medidas" element={<MedidasPage />} />
+<Route path="/aparencia" element={<AppearancePage />} />
+<Route path="/comentarios" element={<CommentsPage />} />
           <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
           <Route path="/integration" element={<ProtectedRoute><AppLayout><IntegrationPage /></AppLayout></ProtectedRoute>} />
 
