@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.07.24-36';
+  var WIDGET_VERSION = '2026.07.24-40';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -82,11 +82,74 @@
   var VIDEO_FILE_REGEX = /\.(mp4|webm|ogg|mov|m4v|m3u8)(\?.*)?$/i;
 
   var DEFAULT_APPEARANCE = {
-    floating_position: 'bottom-right', floating_shape: 'portrait', floating_top: 20, floating_bottom: 24, floating_side: 20,
-    floating_width: 85, floating_height: 151, floating_border_radius: 12, floating_border_width: 2, floating_object_fit: 'cover',
-    z_index: 2147483647, primary_color: '#0094EB', secondary_color: '#EC4899', text_color: '#0f172a',
-    font_family: 'Inter, system-ui, sans-serif', show_title: true, show_product: true, hide_stories: false, shadow_enabled: true,
-    show_play_button: false, allow_drag: false, allow_close: true
+    // ── Floating ──
+    floating_position: 'bottom-right',
+    floating_shape: 'portrait',
+    floating_top: 20,
+    floating_bottom: 20,
+    floating_side: 20,
+    floating_width: 80,
+    floating_height: 142,
+    floating_border_radius: 12,
+    floating_border_width: 2,
+    floating_border_color: '#0094EB',
+    floating_object_fit: 'cover',
+    floating_z_index: 2147483647,
+    floating_show_play_button: true,
+    floating_draggable: false,
+    floating_closable: true,
+    floating_show_title: true,
+
+    // ── Visual ──
+    primary_color: '#0094EB',
+    secondary_color: '#0094EB',
+    text_color: '#0F172A',
+    background_color: '#FFFFFF',
+    button_color: '#0094EB',
+    font_family: 'Inter, system-ui, sans-serif',
+    font_size: '14',
+
+    // ── Modal / Player ──
+    show_title: true,
+    show_play_button: true,
+    show_product: true,
+    show_product_button: true,
+    show_like_button: true,
+    show_comment_button: true,
+    show_share_button: true,
+    show_whatsapp_button: true,
+    show_sizing_button: true,
+    hide_stories: false,
+    shadow_enabled: true,
+
+    // ── Carrossel ──
+    carousel_format: 'portrait',
+    carousel_size: 80,
+    carousel_gap: 16,
+    carousel_visible_items: 4,
+    carousel_display_mode: 'preview',
+    carousel_border_color: '#0094EB',
+    carousel_border_width: 2,
+    carousel_border_radius: 12,
+    carousel_object_fit: 'cover',
+    carousel_margin_top: 0,
+    carousel_margin_bottom: 0,
+    carousel_show_title: false,
+    carousel_show_product: true,
+    carousel_show_play_button: true,
+    carousel_auto_center: false,
+
+    // ── Grade ──
+    grid_format: 'portrait',
+    grid_size: 80,
+    grid_columns: 4,
+    grid_rows: 1,
+    grid_gap: 16,
+    grid_border_color: '#0094EB',
+    grid_border_width: 2,
+    grid_border_radius: 12,
+    grid_object_fit: 'cover',
+    grid_show_title: false
   };
 
   function createEl(tag, className) { var el = document.createElement(tag); if (className) el.className = className; return el; }
@@ -101,7 +164,6 @@
     return undefined;
   }
 
-  // ⬇️ NOVA FUNÇÃO: Resolve o problema do parseInt + || com zero
   function safeInt(value, fallback) {
     var num = parseInt(value);
     return isNaN(num) ? fallback : num;
@@ -136,7 +198,7 @@
     var rawObjectFit = firstDefined(appearance.floating_object_fit, appearance.floatingObjectFit, appearance.object_fit, appearance.objectFit);
 
     return {
-      objectFit: rawObjectFit || 'cover',
+      objectFit: rawObjectFit || DEFAULT_APPEARANCE.floating_object_fit,
       showPlayButton: toBoolean(rawShowPlayButton, true),
       allowDrag: toBoolean(rawAllowDrag, false),
       allowClose: toBoolean(rawAllowClose, true)
@@ -267,10 +329,7 @@
 
   function extractAppearanceFromItem(item, allowDirectFields) {
     if (!item) return {}; var merged = {};
-    [ item.appearance, item.aparencia, item.appearance_config, item.appearanceConfig, item.widget_appearance, item.widgetAppearance, item.widget_config, item.widgetConfig, item.settings, item.config, item.style, item.styles, item.data, item.metadata, item.customization, item.customization_config, item.theme, item.theme_config, item.floating, item.floating_config, item.floatingConfig, item.floatingAppearance, item.floating_video, item.floatingVideo, item.floatingVideoConfig, item.floatingVideoAppearance, item.carousel_config, item.carouselConfig, item.grid_config, item.gridConfig, item.player_config, item.playerConfig, item.modal_config, item.modalConfig, item.colors_config, item.colorsConfig, 'carousel_config', 'carouselConfig',
-'grid_config', 'gridConfig', 'player_config', 'playerConfig', 'modal_config', 'modalConfig', 'colors_config', 'colorsConfig',
-
- ].forEach(function (src) { flattenAppearanceInto(merged, src, 0); });
+    [ item.appearance, item.aparencia, item.appearance_config, item.appearanceConfig, item.widget_appearance, item.widgetAppearance, item.widget_config, item.widgetConfig, item.settings, item.config, item.style, item.styles, item.data, item.metadata, item.customization, item.customization_config, item.theme, item.theme_config, item.floating, item.floating_config, item.floatingConfig, item.floatingAppearance, item.floating_video, item.floatingVideo, item.floatingVideoConfig, item.floatingVideoAppearance, item.carousel_config, item.carouselConfig, item.grid_config, item.gridConfig, item.player_config, item.playerConfig, item.modal_config, item.modalConfig, item.colors_config, item.colorsConfig ].forEach(function (src) { flattenAppearanceInto(merged, src, 0); });
 
     if (allowDirectFields) {
       if (firstDefined(item.widget_shape, item.shape)) merged.shape = firstDefined(item.widget_shape, item.shape);
@@ -301,72 +360,56 @@
     return normalizeAppearanceItem(merged);
   }
 
-function tryTable(tableName) {
-  if (!storeId || !hasSupabase) return Promise.resolve(null);
-  var query = tableName + '?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1';
-  return supabaseFetch(query, { method: 'GET' })
-    .then(function (response) {
-      if (!response.ok) return null;
-      return response.json();
-    })
-    .then(function (data) {
-      if (Array.isArray(data) && data.length > 0) return data[0];
-      return null;
-    })
-    .catch(function () {
-      return null;
-    });
-}
+  function tryTable(tableName) {
+    if (!storeId || !hasSupabase) return Promise.resolve(null);
+    var query = tableName + '?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1';
+    return supabaseFetch(query, { method: 'GET' })
+      .then(function (response) {
+        if (!response.ok) return null;
+        return response.json();
+      })
+      .then(function (data) {
+        if (Array.isArray(data) && data.length > 0) return data[0];
+        return null;
+      })
+      .catch(function () {
+        return null;
+      });
+  }
 
-function fetchDbAppearance() {
+  function fetchDbAppearance() {
     if (!storeId || !hasSupabase) return Promise.resolve({});
     return Promise.all([
       tryTable('appearances'),
       tryTable('widget_appearances'),
-      tryTable('general_settings')    // ← NOVA
+      tryTable('general_settings')
     ]).then(function(results) {
       var app1 = results[0] || {};
       var app2 = results[1] || {};
-      var app3 = results[2] || {};    // ← NOVA
+      var app3 = results[2] || {};
       var merged = {};
-      if (typeof mergeObject === 'function') {
-        mergeObject(merged, app2);    // widget_appearances
-        mergeObject(merged, app1);    // appearances
-        mergeObject(merged, app3);    // general_settings (MAIOR prioridade)
-      }
+      // Prioridade: widget_appearances → appearances → general_settings (general_settings tem maior prioridade)
+      mergeObject(merged, app2);
+      mergeObject(merged, app1);
+      mergeObject(merged, app3);
       return normalizeAppearanceItem(merged);
     });
-}
+  }
 
-// Dentro de readAppearance(), logo antes do merge final:
-function readAppearance() {
+  function readAppearance() {
     var configAppearance = normalizeAppearanceItem(getConfigAppearance());
     var storageAppearance = normalizeAppearanceItem(getStorageAppearance());
-    
-    // 🔴 LOG TEMPORÁRIO
-    console.log('VIDLYTICS DEBUG — storageAppearance:', JSON.stringify(storageAppearance, null, 2));
-    
+
     return fetchDbAppearance().then(function (dbAppearance) {
-      // 🔴 LOG TEMPORÁRIO
-      console.log('VIDLYTICS DEBUG — dbAppearance:', JSON.stringify(dbAppearance, null, 2));
-      
       var finalAppearance = {};
       mergeObject(finalAppearance, DEFAULT_APPEARANCE);
       mergeObject(finalAppearance, configAppearance);
       mergeObject(finalAppearance, storageAppearance);
       if (appearanceHasUsefulData(dbAppearance)) mergeObject(finalAppearance, dbAppearance);
-      
-      // 🔴 LOG TEMPORÁRIO — resultado final ANTES de normalizar
-      console.log('VIDLYTICS DEBUG — finalAppearance (before normalize):', JSON.stringify(finalAppearance, null, 2));
-      
-      var normalized = normalizeAppearanceItem(finalAppearance);
-      
-      // 🔴 LOG TEMPORÁRIO — resultado final DEPOIS de normalizar
-      console.log('VIDLYTICS DEBUG — finalAppearance (after normalize):', JSON.stringify(normalized, null, 2));
-      
-      return normalized;
+
+      return normalizeAppearanceItem(finalAppearance);
     });
-}
+  }
 
   function normalizeFloatingPosition(value) {
     var key = normalizeKey(value);
@@ -407,8 +450,8 @@ function readAppearance() {
 
     var defaultWidth = DEFAULT_APPEARANCE.floating_width;
     var defaultHeight = DEFAULT_APPEARANCE.floating_height;
-    if (shape === 'square') { defaultWidth = 96; defaultHeight = 96; }
-    if (shape === 'circle') { defaultWidth = 88; defaultHeight = 88; }
+    if (shape === 'square') { defaultWidth = 80; defaultHeight = 80; }
+    if (shape === 'circle') { defaultWidth = 80; defaultHeight = 80; }
 
     var widthNumber = toNumber(getValue(['floating_width', 'width'], defaultWidth), defaultWidth);
     var heightNumber = toNumber(getValue(['floating_height', 'height'], defaultHeight), defaultHeight);
@@ -421,7 +464,7 @@ function readAppearance() {
     var topNumber = toNumber(getValue(['floating_top', 'top'], DEFAULT_APPEARANCE.floating_top), DEFAULT_APPEARANCE.floating_top);
     var bottomNumber = toNumber(getValue(['floating_bottom', 'bottom'], DEFAULT_APPEARANCE.floating_bottom), DEFAULT_APPEARANCE.floating_bottom);
     var sideNumber = toNumber(getValue(['floating_side', 'side'], DEFAULT_APPEARANCE.floating_side), DEFAULT_APPEARANCE.floating_side);
-    var zIndexNumber = toNumber(getValue(['z_index', 'zIndex'], DEFAULT_APPEARANCE.z_index), DEFAULT_APPEARANCE.z_index);
+    var zIndexNumber = toNumber(getValue(['floating_z_index', 'z_index', 'zIndex'], DEFAULT_APPEARANCE.floating_z_index), DEFAULT_APPEARANCE.floating_z_index);
 
     var objectFitRaw = getValue(['floating_object_fit', 'object_fit'], DEFAULT_APPEARANCE.floating_object_fit);
     var objectFit = String(objectFitRaw || 'cover').trim().toLowerCase().replace(/_/g, '-');
@@ -491,7 +534,7 @@ function readAppearance() {
       show_product: getBoolean(['show_product', 'showProduct'], true),
       show_product_button: getBoolean(['show_product_button', 'showProductButton'], true),
       show_like_button: getBoolean(['show_like_button', 'showLikeButton'], true),
-      show_comment_button: getBoolean(['show_comment_button', 'showCommentsButton'], true),
+      show_comment_button: getBoolean(['show_comment_button', 'showCommentsButton', 'show_comments_button'], true),
       show_share_button: getBoolean(['show_share_button', 'showShareButton'], true),
       show_whatsapp_button: getBoolean(['show_whatsapp_button', 'showWhatsappButton'], true),
       show_sizing_button: getBoolean(['show_sizing_button', 'showSizingButton'], true),
@@ -1349,39 +1392,37 @@ function readAppearance() {
      }
   }
 
-function openStoryViewer(stories, index) {
-  currentStories = stories;
-  currentStoryIndex = index || 0;
-  currentVideoIndex = 0;
+  function openStoryViewer(stories, index) {
+    currentStories = stories;
+    currentStoryIndex = index || 0;
+    currentVideoIndex = 0;
 
-  if (!globalShadowRoot) {
-    var shadowData = getOrCreateShadowRoot(currentAppearance || {});
-    globalShadowRoot = shadowData.shadow;
-    
-    // CORREÇÃO 2: Injetar o CSS do player caso o Shadow DOM tenha sido 
-    // criado apenas agora (como acontece no formato carrossel)
-    var style = createEl('style');
-    style.textContent = buildFloatingCss(currentAppearance || {});
-    globalShadowRoot.appendChild(style);
+    if (!globalShadowRoot) {
+      var shadowData = getOrCreateShadowRoot(currentAppearance || {});
+      globalShadowRoot = shadowData.shadow;
+      
+      var style = createEl('style');
+      style.textContent = buildFloatingCss(currentAppearance || {});
+      globalShadowRoot.appendChild(style);
+    }
+
+    if (!overlay) {
+      overlay = createEl('div', 'vl-overlay');
+      modalContent = createEl('div', 'vl-modal');
+
+      overlay.appendChild(modalContent);
+      globalShadowRoot.appendChild(overlay);
+
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeOverlay();
+      });
+    }
+
+    pausePreviews();
+
+    overlay.className = 'vl-overlay is-open';
+    renderStoryModal();
   }
-
-  if (!overlay) {
-    overlay = createEl('div', 'vl-overlay');
-    modalContent = createEl('div', 'vl-modal');
-
-    overlay.appendChild(modalContent);
-    globalShadowRoot.appendChild(overlay);
-
-    overlay.addEventListener('click', function (e) {
-      if (e.target === overlay) closeOverlay();
-    });
-  }
-
-  pausePreviews();
-
-  overlay.className = 'vl-overlay is-open';
-  renderStoryModal();
-}
 
   function svgIcon(name) {
     var icons = {
@@ -1440,398 +1481,442 @@ function openStoryViewer(stories, index) {
     });
   }
 
-(function() {
-  console.log("VIDLYTICS: Script carregado");
+  // ═══════════════════════════════════════════════════════
+  // RENDERIZADOR INLINE (CARROSSEL / GRADE)
+  // ═══════════════════════════════════════════════════════
+  (function() {
+    function renderInlineWidget(stories, appearance, format) {
+      if (!stories || !stories.length) return;
 
-  function renderInlineWidget(stories, appearance, format) {
-    // 🔴 LOG TEMPORÁRIO
-    console.log('VIDLYTICS DEBUG — appearance recebido no renderInlineWidget:', JSON.stringify(appearance, null, 2));
-    console.log('VIDLYTICS DEBUG — border_color:', appearance.border_color);
-    console.log('VIDLYTICS DEBUG — border_width:', appearance.border_width);
-    console.log('VIDLYTICS DEBUG — visible_items:', appearance.visible_items);
-    console.log('VIDLYTICS DEBUG — carousel_config:', appearance.carousel_config);
-    console.log("VIDLYTICS: ===== INÍCIO =====");
-    console.log("VIDLYTICS: stories:", stories ? stories.length : 0);
-
-    if (!stories || !stories.length) return;
-
-    var allVideoItems = [];
-    stories.forEach(function(story, sIdx) {
-      var videos = story.videos || [];
-      videos.forEach(function(video, vIdx) {
-        allVideoItems.push({
-          story: story, storyIndex: sIdx,
-          video: video, videoIndex: vIdx
+      var allVideoItems = [];
+      stories.forEach(function(story, sIdx) {
+        var videos = story.videos || [];
+        videos.forEach(function(video, vIdx) {
+          allVideoItems.push({
+            story: story, storyIndex: sIdx,
+            video: video, videoIndex: vIdx
+          });
         });
       });
-    });
 
-    console.log("VIDLYTICS: Total de vídeos:", allVideoItems.length);
-    if (!allVideoItems.length) return;
+      if (!allVideoItems.length) return;
 
-    var ap = appearance || {};
+      var ap = appearance || {};
 
-    // ========== LEITURA COM SUPORTE A CAROUSEL_CONFIG (CORRIGIDA) ==========
-    console.log("VIDLYTICS: --- CONFIGS RAW ---");
-    console.log("VIDLYTICS: ap completo:", JSON.stringify(ap));
-
-    // Tenta carregar do carousel_config (string JSON ou objeto)
-    var carouselCfg = null;
-    if (ap.carousel_config) {
-      try {
-        carouselCfg = typeof ap.carousel_config === 'string' 
-          ? JSON.parse(ap.carousel_config) 
-          : ap.carousel_config;
-      } catch(e) { /* ignora */ }
-    }
-
-    // ⬇️ FALLBACK: se carousel_config não veio ou está incompleto, monta dos campos avulsos
-    if (!carouselCfg || !carouselCfg.mobile) {
-      carouselCfg = {
-        mobile: {
-          card_shape: ap.card_shape || ap.format || ap.shape,
-          visible_items: ap.visible_items || ap.columns,
-          gap: ap.gap || ap.spacing,
-          border_color: ap.border_color,
-          border_width: ap.border_width,
-          border_radius: ap.border_radius || ap.radius,
-          show_title: ap.show_title,
-          auto_center: ap.auto_center,
-          show_play_icon: ap.show_play_button
-        }
-      };
-    }
-
-    // Pega as configs do device mobile (fallback desktop)
-    var deviceCfg = carouselCfg.mobile || carouselCfg.desktop || {};
-
-    // ⬇️ CORRIGIDO: safeInt + firstDefined no lugar de parseInt || parseInt || ...
-    // visible_items - prioridade: carousel_config > campo raiz > grid > default
-    var itemsVisiveis = safeInt(firstDefined(
-      deviceCfg.visible_items,
-      ap.carousel_visible_items,
-      ap.visible_items,
-      ap.columns
-    ), 4);
-
-    // spacing
-    var espacamento = safeInt(firstDefined(
-      deviceCfg.gap,
-      ap.carousel_gap,
-      ap.spacing,
-      ap.gap
-    ), 16);
-
-    // formato do card
-    var formatoRaw = firstDefined(
-      deviceCfg.card_shape,
-      ap.carousel_card_shape,
-      ap.format,
-      ap.shape
-    ) || 'portrait_9_16';
-    var formato;
-    if (formatoRaw === 'circle' || formatoRaw === 'circular') {
-      formato = 'square_1_1';
-    } else if (formatoRaw === 'portrait' || formatoRaw === 'portrait_9_16') {
-      formato = 'portrait_9_16';
-    } else if (formatoRaw === 'landscape' || formatoRaw === 'landscape_16_9') {
-      formato = 'landscape_16_9';
-    } else if (formatoRaw === 'square' || formatoRaw === 'square_1_1') {
-      formato = 'square_1_1';
-    } else {
-      formato = formatoRaw;
-    }
-
-    // Demais configs (com safeInt para border-radius e border-width)
-    var corPrimaria   = ap.primary_color || ap.button_color || '#0094EB';
-    var corTexto      = ap.text_color || '#0F172A';
-    var bgColor       = ap.background_color || '#FFFFFF';
-    var borderRadius  = safeInt(firstDefined(ap.radius, ap.border_radius), 12);
-    var borderWidth   = safeInt(ap.border_width, 2);
-    var corBorda      = ap.border_color || corPrimaria;
-    var fonte         = ap.font_family || 'Inter, sans-serif';
-    var exibirTitulo  = ap.show_title !== false;
-    var exibirPlayBtn = ap.show_play_button !== false;
-    var autoCenter    = !!(firstDefined(deviceCfg.auto_center, ap.auto_center));
-
-    var aspectRatio = '9 / 16';
-    if (formato.indexOf('landscape') !== -1 || formato.indexOf('16_9') !== -1) aspectRatio = '16 / 9';
-    else if (formato.indexOf('square') !== -1 || formato.indexOf('1_1') !== -1) aspectRatio = '1 / 1';
-
-    console.log("VIDLYTICS: itemsVisiveis=" + itemsVisiveis + " | gap=" + espacamento + " | formato=" + formato + " | aspectRatio=" + aspectRatio);
-    // ==============================================================
-    // =====================================
-
-    // Seletor
-    var dbSelector = ap.css_selector || ap.inline_selector || ap.seletor || '';
-    var selectorsToTry = [];
-    if (dbSelector) selectorsToTry.push(dbSelector);
-    selectorsToTry.push('section.category-content .holder-results > div > .flex-.between-.vtop');
-    selectorsToTry.push('.category-content');
-    selectorsToTry.push('#main');
-    selectorsToTry.push('main');
-    selectorsToTry.push('body');
-
-    var maxRetries = 25;
-    var currentRetries = 0;
-
-    var renderInterval = setInterval(function() {
-      var targetDiv = null;
-      var usedSelector = '';
-      currentRetries++;
-
-      for (var i = 0; i < selectorsToTry.length; i++) {
+      // ── Tenta carregar do carousel_config (JSON string ou objeto) ──
+      var carouselCfg = null;
+      if (ap.carousel_config) {
         try {
-          targetDiv = document.querySelector(selectorsToTry[i]);
-          if (targetDiv) { usedSelector = selectorsToTry[i]; break; }
-        } catch (e) {}
+          carouselCfg = typeof ap.carousel_config === 'string' 
+            ? JSON.parse(ap.carousel_config) 
+            : ap.carousel_config;
+        } catch(e) { /* ignora */ }
       }
 
-      if (!targetDiv) {
-        if (currentRetries >= maxRetries) { clearInterval(renderInterval); }
-        return;
+      // ── Fallback: monta das colunas planas + campos avulsos ──
+      if (!carouselCfg || !carouselCfg.mobile) {
+        carouselCfg = {
+          mobile: {
+            card_shape: firstDefined(
+              ap.carousel_format, ap.carousel_card_shape,
+              ap.card_shape, ap.format, ap.shape
+            ),
+            visible_items: firstDefined(
+              ap.carousel_visible_items, ap.visible_items, ap.columns
+            ),
+            gap: firstDefined(
+              ap.carousel_gap, ap.gap, ap.spacing
+            ),
+            border_color: firstDefined(
+              ap.carousel_border_color, ap.border_color
+            ),
+            border_width: firstDefined(
+              ap.carousel_border_width, ap.border_width
+            ),
+            border_radius: firstDefined(
+              ap.carousel_border_radius, ap.border_radius, ap.radius
+            ),
+            show_title: firstDefined(
+              ap.carousel_show_title, ap.show_title
+            ),
+            auto_center: firstDefined(
+              ap.carousel_auto_center, ap.auto_center
+            ),
+            show_play_icon: firstDefined(
+              ap.carousel_show_play_button, ap.show_play_button
+            ),
+            object_fit: firstDefined(
+              ap.carousel_object_fit, ap.object_fit
+            ),
+            card_size: firstDefined(
+              ap.carousel_size, ap.card_size
+            ),
+            view_mode: firstDefined(
+              ap.carousel_display_mode, ap.view_mode
+            ),
+            margin_top: firstDefined(
+              ap.carousel_margin_top, ap.margin_top
+            ),
+            margin_bottom: firstDefined(
+              ap.carousel_margin_bottom, ap.margin_bottom
+            ),
+            show_product: firstDefined(
+              ap.carousel_show_product, ap.show_product
+            )
+          }
+        };
       }
 
-      clearInterval(renderInterval);
-      console.log('VIDLYTICS: Inserindo em -> ' + usedSelector);
+      // Pega as configs do device mobile (fallback desktop)
+      var deviceCfg = carouselCfg.mobile || carouselCfg.desktop || {};
 
-      var wrapperId = 'vl-carousel-wrapper-final';
-      var widgetContainer = document.getElementById(wrapperId);
+      // ── Valores finais com safeInt ──
+      var itemsVisiveis = safeInt(firstDefined(
+        deviceCfg.visible_items,
+        ap.carousel_visible_items,
+        ap.visible_items,
+        ap.columns
+      ), 4);
 
-      if (!widgetContainer) {
-        widgetContainer = document.createElement('div');
-        widgetContainer.id = wrapperId;
-        widgetContainer.style.cssText = 'width:100%;max-width:100%;margin:20px auto;display:block;clear:both;overflow:visible;';
-        if (usedSelector.indexOf('.flex-.between') !== -1 && targetDiv.parentNode) {
-          targetDiv.parentNode.insertBefore(widgetContainer, targetDiv.nextSibling);
-        } else {
-          targetDiv.appendChild(widgetContainer);
-        }
+      var espacamento = safeInt(firstDefined(
+        deviceCfg.gap,
+        ap.carousel_gap,
+        ap.spacing,
+        ap.gap
+      ), 16);
+
+      var formatoRaw = firstDefined(
+        deviceCfg.card_shape,
+        ap.carousel_format,
+        ap.carousel_card_shape,
+        ap.format,
+        ap.shape
+      ) || 'portrait';
+      var formato;
+      if (formatoRaw === 'circle' || formatoRaw === 'circular') {
+        formato = 'square_1_1';
+      } else if (formatoRaw === 'portrait' || formatoRaw === 'portrait_9_16') {
+        formato = 'portrait_9_16';
+      } else if (formatoRaw === 'landscape' || formatoRaw === 'landscape_16_9') {
+        formato = 'landscape_16_9';
+      } else if (formatoRaw === 'square' || formatoRaw === 'square_1_1') {
+        formato = 'square_1_1';
+      } else {
+        formato = formatoRaw;
       }
 
-      widgetContainer.innerHTML = '';
+      var corPrimaria   = ap.primary_color || ap.button_color || '#0094EB';
+      var corTexto      = ap.text_color || '#0F172A';
+      var bgColor       = ap.background_color || '#FFFFFF';
+      var borderRadius  = safeInt(firstDefined(
+        deviceCfg.border_radius,
+        ap.carousel_border_radius,
+        ap.radius,
+        ap.border_radius
+      ), 12);
+      var borderWidth   = safeInt(firstDefined(
+        deviceCfg.border_width,
+        ap.carousel_border_width,
+        ap.border_width
+      ), 2);
+      var corBorda      = firstDefined(
+        deviceCfg.border_color,
+        ap.carousel_border_color,
+        ap.border_color,
+        corPrimaria
+      );
+      var fonte         = ap.font_family || 'Inter, sans-serif';
+      var exibirTitulo  = firstDefined(
+        deviceCfg.show_title,
+        ap.carousel_show_title,
+        ap.show_title
+      ) !== false;
+      var exibirPlayBtn = firstDefined(
+        deviceCfg.show_play_icon,
+        ap.carousel_show_play_button,
+        ap.show_play_button
+      ) !== false;
+      var autoCenter    = !!(firstDefined(
+        deviceCfg.auto_center,
+        ap.carousel_auto_center,
+        ap.auto_center
+      ));
+      var objectFit     = firstDefined(
+        deviceCfg.object_fit,
+        ap.carousel_object_fit,
+        ap.object_fit
+      ) || 'cover';
 
-      // CSS
-      var gapPx = espacamento;
-      var totalGap = gapPx * (itemsVisiveis - 1);
-      var cardWidth = 'calc((100% - ' + totalGap + 'px) / ' + itemsVisiveis + ')';
+      var aspectRatio = '9 / 16';
+      if (formato.indexOf('landscape') !== -1 || formato.indexOf('16_9') !== -1) aspectRatio = '16 / 9';
+      else if (formato.indexOf('square') !== -1 || formato.indexOf('1_1') !== -1) aspectRatio = '1 / 1';
 
-      var estilo = document.createElement('style');
-      estilo.textContent = [
-        '#' + wrapperId + ' { font-family: ' + fonte + ', sans-serif; ' + (autoCenter && allVideoItems.length <= itemsVisiveis ? 'display: flex; justify-content: center; ' : '') + 'overflow: visible !important; }',
-        '#' + wrapperId + ' * { box-sizing: border-box !important; }',
-        '.vl-slider-container {',
-        '  display: flex !important; flex-wrap: nowrap !important; gap: ' + gapPx + 'px;',
-        '  overflow-x: auto !important; overflow-y: hidden !important;',
-        '  scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;',
-        '  scrollbar-width: none !important;',
-        '  -ms-overflow-style: none !important;',
-        '  padding-bottom: 0px; width: 100%; max-width: 100%;',
-        '  cursor: grab; user-select: none; -webkit-user-select: none;',
-        '}',
-        '.vl-slider-container::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }',
-        '.vl-slider-container:active { cursor: grabbing; }',
-        '.vl-slider-container.dragging { cursor: grabbing !important; scroll-snap-type: none !important; }',
-        '.vl-card-item {',
-        '  all: unset; display: flex !important; flex-direction: column; cursor: pointer;',
-        '  scroll-snap-align: start; flex: 0 0 ' + cardWidth + ' !important; min-width: 140px;',
-        '  position: relative; transition: transform 0.2s ease; user-select: none; -webkit-user-select: none;',
-        '  pointer-events: auto;',
-        '}',
-        '.vl-card-item:hover { transform: translateY(-2px); }',
-        '@media (max-width: 768px) { .vl-card-item { flex: 0 0 calc(50% - ' + gapPx + 'px) !important; min-width: 120px; } }',
-        '.vl-media-box {',
-        '  position: relative; width: 100%; aspect-ratio: ' + aspectRatio + ';',
-        '  border-radius: ' + borderRadius + 'px; overflow: hidden; background: #000;',
-        '  border: ' + borderWidth + 'px solid ' + corBorda + ';',
-        '}',
-        '.vl-card-item:hover .vl-media-box { box-shadow: 0 4px 20px rgba(0,0,0,0.15); }',
-        '.vl-media-box img, .vl-media-box video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }',
-        '.vl-title-text {',
-        '  margin-top: 8px; font-size: 12px; font-weight: 600; color: ' + corTexto + '; text-align: center;',
-        '  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
-        '  display: ' + (exibirTitulo ? 'block' : 'none') + '; width: 100%; padding: 0 4px;',
-        '}',
-        '.vl-play-btn-overlay {',
-        '  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);',
-        '  width: 38px; height: 38px; background: rgba(0,0,0,0.6); border-radius: 50%;',
-        '  display: ' + (exibirPlayBtn ? 'flex' : 'none') + '; align-items: center; justify-content: center;',
-        '  pointer-events: none; color: #fff;',
-        '}',
-        '.vl-card-item:hover .vl-play-btn-overlay { background: ' + corPrimaria + '; transform: translate(-50%, -50%) scale(1.1); }',
-        '.vl-play-btn-overlay svg { width: 18px; height: 18px; fill: white; margin-left: 2px; }'
-      ].join('\n');
-      widgetContainer.appendChild(estilo);
+      // ── Seletor ──
+      var dbSelector = ap.css_selector || ap.inline_selector || ap.seletor || '';
+      var selectorsToTry = [];
+      if (dbSelector) selectorsToTry.push(dbSelector);
+      selectorsToTry.push('section.category-content .holder-results > div > .flex-.between-.vtop');
+      selectorsToTry.push('.category-content');
+      selectorsToTry.push('#main');
+      selectorsToTry.push('main');
+      selectorsToTry.push('body');
 
-      // Cards
-      var slider = document.createElement('div');
-      slider.className = 'vl-slider-container';
+      var maxRetries = 25;
+      var currentRetries = 0;
 
-      allVideoItems.forEach(function(item) {
-        var story = item.story;
-        var video = item.video;
-        var storyIndex = item.storyIndex;
-        var videoIndex = item.videoIndex;
+      var renderInterval = setInterval(function() {
+        var targetDiv = null;
+        var usedSelector = '';
+        currentRetries++;
 
-        var videoUrl = video ? (video.video_url || video.videoUrl || video.url || video.file_url || '') : '';
-        var cover = video ? (video.thumbnail_url || video.cover_url || video.thumbnailUrl || video.coverUrl || '') : '';
-
-        var card = document.createElement('button');
-        card.className = 'vl-card-item';
-
-        var mediaWrap = document.createElement('div');
-        mediaWrap.className = 'vl-media-box';
-
-        var isVideo = videoUrl && (videoUrl.indexOf('.mp4') !== -1 || videoUrl.indexOf('.webm') !== -1 || videoUrl.indexOf('.mov') !== -1 || videoUrl.indexOf('.m3u8') !== -1);
-
-        var mediaEl;
-        if (isVideo) {
-          mediaEl = document.createElement('video');
-          mediaEl.src = videoUrl;
-          if (cover) mediaEl.poster = cover;
-          mediaEl.muted = true;
-          mediaEl.loop = true;
-          mediaEl.autoplay = true;
-          mediaEl.setAttribute('playsinline', '');
-        } else {
-          mediaEl = document.createElement('img');
-          mediaEl.src = cover || videoUrl;
-          mediaEl.loading = 'lazy';
-        }
-        mediaWrap.appendChild(mediaEl);
-
-        var playIcon = document.createElement('div');
-        playIcon.className = 'vl-play-btn-overlay';
-        playIcon.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
-        mediaWrap.appendChild(playIcon);
-
-        card.appendChild(mediaWrap);
-
-        if (exibirTitulo) {
-          var titulo = document.createElement('span');
-          titulo.className = 'vl-title-text';
-          titulo.textContent = story.title || story.name || 'Ver Vídeo';
-          card.appendChild(titulo);
+        for (var i = 0; i < selectorsToTry.length; i++) {
+          try {
+            targetDiv = document.querySelector(selectorsToTry[i]);
+            if (targetDiv) { usedSelector = selectorsToTry[i]; break; }
+          } catch (e) {}
         }
 
-        card.addEventListener('click', function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          window.__vlStories = stories;
-          window.__vlStoryIndex = storyIndex;
-          window.__vlVideoIndex = videoIndex;
-          if (typeof openStoryViewer === 'function') {
-            openStoryViewer(stories, storyIndex);
-            setTimeout(function() {
-              if (typeof goToVideoIndex === 'function') goToVideoIndex(videoIndex);
-            }, 150);
+        if (!targetDiv) {
+          if (currentRetries >= maxRetries) { clearInterval(renderInterval); }
+          return;
+        }
+
+        clearInterval(renderInterval);
+
+        var wrapperId = 'vl-carousel-wrapper-final';
+        var widgetContainer = document.getElementById(wrapperId);
+
+        if (!widgetContainer) {
+          widgetContainer = document.createElement('div');
+          widgetContainer.id = wrapperId;
+          widgetContainer.style.cssText = 'width:100%;max-width:100%;margin:20px auto;display:block;clear:both;overflow:visible;';
+          if (usedSelector.indexOf('.flex-.between') !== -1 && targetDiv.parentNode) {
+            targetDiv.parentNode.insertBefore(widgetContainer, targetDiv.nextSibling);
+          } else {
+            targetDiv.appendChild(widgetContainer);
           }
-        });
+        }
 
-        slider.appendChild(card);
-      });
+        widgetContainer.innerHTML = '';
 
-      widgetContainer.appendChild(slider);
+        // ── CSS ──
+        var gapPx = espacamento;
+        var totalGap = gapPx * (itemsVisiveis - 1);
+        var cardWidth = 'calc((100% - ' + totalGap + 'px) / ' + itemsVisiveis + ')';
 
-      // ========== DRAG-TO-SCROLL (SEM SCROLLBAR) ==========
-      (function() {
-        var isDown = false;
-        var startX = 0;
-        var scrollLeft = 0;
-        var moved = false;
-        var velX = 0;
-        var momentumID;
+        var estilo = document.createElement('style');
+        estilo.textContent = [
+          '#' + wrapperId + ' { font-family: ' + fonte + ', sans-serif; ' + (autoCenter && allVideoItems.length <= itemsVisiveis ? 'display: flex; justify-content: center; ' : '') + 'overflow: visible !important; }',
+          '#' + wrapperId + ' * { box-sizing: border-box !important; }',
+          '.vl-slider-container {',
+          '  display: flex !important; flex-wrap: nowrap !important; gap: ' + gapPx + 'px;',
+          '  overflow-x: auto !important; overflow-y: hidden !important;',
+          '  scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;',
+          '  scrollbar-width: none !important;',
+          '  -ms-overflow-style: none !important;',
+          '  padding-bottom: 0px; width: 100%; max-width: 100%;',
+          '  cursor: grab; user-select: none; -webkit-user-select: none;',
+          '}',
+          '.vl-slider-container::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }',
+          '.vl-slider-container:active { cursor: grabbing; }',
+          '.vl-slider-container.dragging { cursor: grabbing !important; scroll-snap-type: none !important; }',
+          '.vl-card-item {',
+          '  all: unset; display: flex !important; flex-direction: column; cursor: pointer;',
+          '  scroll-snap-align: start; flex: 0 0 ' + cardWidth + ' !important; min-width: 140px;',
+          '  position: relative; transition: transform 0.2s ease; user-select: none; -webkit-user-select: none;',
+          '  pointer-events: auto;',
+          '}',
+          '.vl-card-item:hover { transform: translateY(-2px); }',
+          '@media (max-width: 768px) { .vl-card-item { flex: 0 0 calc(50% - ' + gapPx + 'px) !important; min-width: 120px; } }',
+          '.vl-media-box {',
+          '  position: relative; width: 100%; aspect-ratio: ' + aspectRatio + ';',
+          '  border-radius: ' + borderRadius + 'px; overflow: hidden; background: #000;',
+          '  border: ' + borderWidth + 'px solid ' + corBorda + ';',
+          '}',
+          '.vl-card-item:hover .vl-media-box { box-shadow: 0 4px 20px rgba(0,0,0,0.15); }',
+          '.vl-media-box img, .vl-media-box video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: ' + objectFit + '; pointer-events: none; }',
+          '.vl-title-text {',
+          '  margin-top: 8px; font-size: 12px; font-weight: 600; color: ' + corTexto + '; text-align: center;',
+          '  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
+          '  display: ' + (exibirTitulo ? 'block' : 'none') + '; width: 100%; padding: 0 4px;',
+          '}',
+          '.vl-play-btn-overlay {',
+          '  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);',
+          '  width: 38px; height: 38px; background: rgba(0,0,0,0.6); border-radius: 50%;',
+          '  display: ' + (exibirPlayBtn ? 'flex' : 'none') + '; align-items: center; justify-content: center;',
+          '  pointer-events: none; color: #fff;',
+          '}',
+          '.vl-card-item:hover .vl-play-btn-overlay { background: ' + corPrimaria + '; transform: translate(-50%, -50%) scale(1.1); }',
+          '.vl-play-btn-overlay svg { width: 18px; height: 18px; fill: white; margin-left: 2px; }'
+        ].join('\n');
+        widgetContainer.appendChild(estilo);
 
-        slider.addEventListener('mousedown', function(e) {
-          isDown = true;
-          moved = false;
-          slider.classList.add('dragging');
-          startX = e.pageX - slider.offsetLeft;
-          scrollLeft = slider.scrollLeft;
-          cancelMomentum();
-          e.preventDefault();
-        });
+        // ── Cards ──
+        var slider = document.createElement('div');
+        slider.className = 'vl-slider-container';
 
-        slider.addEventListener('mouseleave', function() {
-          if (isDown) {
-            isDown = false;
-            slider.classList.remove('dragging');
-            startMomentum();
+        allVideoItems.forEach(function(item) {
+          var story = item.story;
+          var video = item.video;
+          var storyIndex = item.storyIndex;
+          var videoIndex = item.videoIndex;
+
+          var videoUrl = video ? (video.video_url || video.videoUrl || video.url || video.file_url || '') : '';
+          var cover = video ? (video.thumbnail_url || video.cover_url || video.thumbnailUrl || video.coverUrl || '') : '';
+
+          var card = document.createElement('button');
+          card.className = 'vl-card-item';
+
+          var mediaWrap = document.createElement('div');
+          mediaWrap.className = 'vl-media-box';
+
+          var isVideo = videoUrl && (videoUrl.indexOf('.mp4') !== -1 || videoUrl.indexOf('.webm') !== -1 || videoUrl.indexOf('.mov') !== -1 || videoUrl.indexOf('.m3u8') !== -1);
+
+          var mediaEl;
+          if (isVideo) {
+            mediaEl = document.createElement('video');
+            mediaEl.src = videoUrl;
+            if (cover) mediaEl.poster = cover;
+            mediaEl.muted = true;
+            mediaEl.loop = true;
+            mediaEl.autoplay = true;
+            mediaEl.setAttribute('playsinline', '');
+          } else {
+            mediaEl = document.createElement('img');
+            mediaEl.src = cover || videoUrl;
+            mediaEl.loading = 'lazy';
           }
-        });
+          mediaWrap.appendChild(mediaEl);
 
-        slider.addEventListener('mouseup', function() {
-          if (isDown) {
-            isDown = false;
-            slider.classList.remove('dragging');
-            startMomentum();
+          var playIcon = document.createElement('div');
+          playIcon.className = 'vl-play-btn-overlay';
+          playIcon.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
+          mediaWrap.appendChild(playIcon);
+
+          card.appendChild(mediaWrap);
+
+          if (exibirTitulo) {
+            var titulo = document.createElement('span');
+            titulo.className = 'vl-title-text';
+            titulo.textContent = story.title || story.name || 'Ver Vídeo';
+            card.appendChild(titulo);
           }
-        });
 
-        slider.addEventListener('mousemove', function(e) {
-          if (!isDown) return;
-          e.preventDefault();
-          var x = e.pageX - slider.offsetLeft;
-          var walk = (x - startX) * 1.5;
-          velX = walk;
-          slider.scrollLeft = scrollLeft - walk;
-          if (Math.abs(walk) > 3) moved = true;
-        });
-
-        slider.addEventListener('click', function(e) {
-          if (moved) {
-            e.stopPropagation();
+          card.addEventListener('click', function(e) {
             e.preventDefault();
-          }
-        }, true);
-
-        slider.addEventListener('touchstart', function(e) {
-          isDown = true;
-          moved = false;
-          startX = e.touches[0].pageX - slider.offsetLeft;
-          scrollLeft = slider.scrollLeft;
-          cancelMomentum();
-        }, { passive: false });
-
-        slider.addEventListener('touchend', function() {
-          isDown = false;
-          startMomentum();
-        });
-
-        slider.addEventListener('touchmove', function(e) {
-          if (!isDown) return;
-          var x = e.touches[0].pageX - slider.offsetLeft;
-          var walk = (x - startX) * 1.5;
-          slider.scrollLeft = scrollLeft - walk;
-          if (Math.abs(walk) > 3) moved = true;
-        }, { passive: false });
-
-        function startMomentum() {
-          cancelMomentum();
-          if (Math.abs(velX) < 2) return;
-          momentumID = requestAnimationFrame(function animate() {
-            velX *= 0.92;
-            slider.scrollLeft -= velX;
-            if (Math.abs(velX) > 0.5) {
-              momentumID = requestAnimationFrame(animate);
+            e.stopPropagation();
+            window.__vlStories = stories;
+            window.__vlStoryIndex = storyIndex;
+            window.__vlVideoIndex = videoIndex;
+            if (typeof openStoryViewer === 'function') {
+              openStoryViewer(stories, storyIndex);
+              setTimeout(function() {
+                if (typeof goToVideoIndex === 'function') goToVideoIndex(videoIndex);
+              }, 150);
             }
           });
-        }
 
-        function cancelMomentum() {
-          if (momentumID) { cancelAnimationFrame(momentumID); momentumID = null; }
-          velX = 0;
-        }
-      })();
-      // ====================================================
+          slider.appendChild(card);
+        });
 
-      console.log("VIDLYTICS: ✅ Renderizado! " + allVideoItems.length + " cards, " + itemsVisiveis + " visíveis, drag ativo, scrollbar oculta");
+        widgetContainer.appendChild(slider);
 
-    }, 300);
-  }
+        // ── Drag-to-scroll ──
+        (function() {
+          var isDown = false;
+          var startX = 0;
+          var scrollLeft = 0;
+          var moved = false;
+          var velX = 0;
+          var momentumID;
 
-  window.renderInlineWidget = renderInlineWidget;
-})();
+          slider.addEventListener('mousedown', function(e) {
+            isDown = true;
+            moved = false;
+            slider.classList.add('dragging');
+            startX = e.pageX - slider.offsetLeft;
+            scrollLeft = slider.scrollLeft;
+            cancelMomentum();
+            e.preventDefault();
+          });
+
+          slider.addEventListener('mouseleave', function() {
+            if (isDown) {
+              isDown = false;
+              slider.classList.remove('dragging');
+              startMomentum();
+            }
+          });
+
+          slider.addEventListener('mouseup', function() {
+            if (isDown) {
+              isDown = false;
+              slider.classList.remove('dragging');
+              startMomentum();
+            }
+          });
+
+          slider.addEventListener('mousemove', function(e) {
+            if (!isDown) return;
+            e.preventDefault();
+            var x = e.pageX - slider.offsetLeft;
+            var walk = (x - startX) * 1.5;
+            velX = walk;
+            slider.scrollLeft = scrollLeft - walk;
+            if (Math.abs(walk) > 3) moved = true;
+          });
+
+          slider.addEventListener('click', function(e) {
+            if (moved) {
+              e.stopPropagation();
+              e.preventDefault();
+            }
+          }, true);
+
+          slider.addEventListener('touchstart', function(e) {
+            isDown = true;
+            moved = false;
+            startX = e.touches[0].pageX - slider.offsetLeft;
+            scrollLeft = slider.scrollLeft;
+            cancelMomentum();
+          }, { passive: false });
+
+          slider.addEventListener('touchend', function() {
+            isDown = false;
+            startMomentum();
+          });
+
+          slider.addEventListener('touchmove', function(e) {
+            if (!isDown) return;
+            var x = e.touches[0].pageX - slider.offsetLeft;
+            var walk = (x - startX) * 1.5;
+            slider.scrollLeft = scrollLeft - walk;
+            if (Math.abs(walk) > 3) moved = true;
+          }, { passive: false });
+
+          function startMomentum() {
+            cancelMomentum();
+            if (Math.abs(velX) < 2) return;
+            momentumID = requestAnimationFrame(function animate() {
+              velX *= 0.92;
+              slider.scrollLeft -= velX;
+              if (Math.abs(velX) > 0.5) {
+                momentumID = requestAnimationFrame(animate);
+              }
+            });
+          }
+
+          function cancelMomentum() {
+            if (momentumID) { cancelAnimationFrame(momentumID); momentumID = null; }
+            velX = 0;
+          }
+        })();
+
+      }, 300);
+    }
+
+    window.renderInlineWidget = renderInlineWidget;
+  })();
 
   function renderFloating(stories, appearance) {
     if (!stories || !stories.length || floatingWasClosed) return;
@@ -1902,8 +1987,12 @@ function openStoryViewer(stories, index) {
 
       bubble.appendChild(ring);
 
-      var modalCfg = normalizeModalAppearanceConfig(appearance);
-      if (modalCfg.show_title) {
+      // ── Label do flutuante: lê floating_show_title + show_title ──
+      var showFloatingTitle = firstDefined(
+        appearance.floating_show_title,
+        appearance.show_title
+      );
+      if (showFloatingTitle !== false) {
         var label = createEl('span', 'vl-label');
         label.textContent = story.title || '';
         bubble.appendChild(label);
@@ -1977,7 +2066,6 @@ function openStoryViewer(stories, index) {
          story.videos = rels.map(function(r) {
              return videos.find(function(v) { return idsEqual(v.id, r.video_id); }) || {};
          }).filter(function(video) { return video && Object.keys(video).length > 0; });
-         console.info('VIDLYTICS: story videos', { storyId: story.id, relCount: rels.length, videoCount: story.videos.length });
       });
 
       var widgetFormat = 'floating_widget';
@@ -2010,15 +2098,13 @@ function openStoryViewer(stories, index) {
       }
 
       if (widgetFormat === 'carousel' || widgetFormat === 'grid') {
-          console.info('Instory renderizando formato: ' + widgetFormat);
           renderInlineWidget(validStories, appearance, widgetFormat);
       } else {
-          console.info('Instory renderizando formato: Flutuante');
           renderFloating(validStories, appearance);
       }
 
     }).catch(function (err) {
-        console.error("Erro ao inicializar o Instory:", err);
+        console.error('VIDLYTICS: Erro ao inicializar widget:', err);
     });
   }
 
