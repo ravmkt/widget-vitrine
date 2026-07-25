@@ -1829,10 +1829,9 @@ export const db = {
     memoryStores,
   ),
 
-  generalSettings: createSupabaseCrudFunctions<GeneralSettings>(
-    "general_settings",
-    memoryStoreSettings,
-  ),
+generalSettings: createSupabaseCrudFunctions<GeneralSettings>(
+    "store_settings",         // <-- Corrigido
+    memoryStoreSettings,  ),
 
   appearances: createSupabaseCrudFunctions<Appearance>(
     "appearances",
