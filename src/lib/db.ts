@@ -287,6 +287,7 @@ export interface GeneralSettings {
   carousel_enabled: boolean;
   floating_widget_enabled: boolean;
   default_appearance_id?: string | null;
+  platform?: string | null;
 
   /**
    * Alias usado no front.
