@@ -128,10 +128,19 @@ const fetchStoreSettings = async () => {
           </div>
         </div>
         <button
-          onClick={async () => {
-            await signOut();
-            navigate('/login');
-          }}
+onClick={async () => {
+  await signOut();
+  // Limpa TODOS os dados locais da aplicação
+  const keysToRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('vidlytics_')) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+  navigate('/login');
+}}
           className="flex w-full items-center gap-2 px-3 py-2 rounded-xl text-[#64748B] hover:bg-red-50 hover:text-red-500 transition-colors text-sm font-bold"
         >
           <LogOut size={16} />
