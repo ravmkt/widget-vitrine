@@ -362,7 +362,7 @@ const DEFAULT_APPEARANCE_ID = '33333333-3333-4333-8333-333333333333';
 const DEFAULT_STORE: Store = {
   id: DEFAULT_STORE_ID,
   name: 'Loja Exemplo',
-  domain: 'lojaexemplo.com.br',
+  url: 'lojaexemplo.com.br',
   active: true,
 };
 
