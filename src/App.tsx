@@ -14,59 +14,13 @@ import IntegrationPage from "@/pages/IntegrationPage";
 import DashboardPage from "@/pages/DashboardPage";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
-import StoriesPage from '@/pages/StoriesPage';
-import VideoGalleryPage from '@/pages/VideoGalleryPage';
-import VideoPerformancePage from '@/pages/VideoPerformancePage';
-import ProductsPage from '@/pages/ProductsPage';
-import MedidasPage from '@/pages/MedidasPage';
-import AppearancePage from '@/pages/AppearancePage';
-import CommentsPage from '@/pages/CommentsPage';
-
-
-// ── Placeholders para páginas ainda não criadas ──
-// Se você já tiver os imports, remova estes placeholders e importe normalmente.
-
-const StoriesPage = () => (
-  <div className="flex h-[200px] items-center justify-center">
-    <p className="text-slate-500 font-bold">Página de Stories — em construção</p>
-  </div>
-);
-
-const GalleryPage = () => (
-  <div className="flex h-[200px] items-center justify-center">
-    <p className="text-slate-500 font-bold">Página de Vídeos — em construção</p>
-  </div>
-);
-
-const PerformancePage = () => (
-  <div className="flex h-[200px] items-center justify-center">
-    <p className="text-slate-500 font-bold">Página de Performance — em construção</p>
-  </div>
-);
-
-const ProductsPage = () => (
-  <div className="flex h-[200px] items-center justify-center">
-    <p className="text-slate-500 font-bold">Página de Produtos — em construção</p>
-  </div>
-);
-
-const MedidasPage = () => (
-  <div className="flex h-[200px] items-center justify-center">
-    <p className="text-slate-500 font-bold">Página de Medidas — em construção</p>
-  </div>
-);
-
-const AppearancePage = () => (
-  <div className="flex h-[200px] items-center justify-center">
-    <p className="text-slate-500 font-bold">Página de Aparência — em construção</p>
-  </div>
-);
-
-const CommentsPage = () => (
-  <div className="flex h-[200px] items-center justify-center">
-    <p className="text-slate-500 font-bold">Página de Comentários — em construção</p>
-  </div>
-);
+import StoriesPage from "@/pages/StoriesPage";
+import VideoGalleryPage from "@/pages/VideoGalleryPage";
+import VideoPerformancePage from "@/pages/VideoPerformancePage";
+import ProductsPage from "@/pages/ProductsPage";
+import MedidasPage from "@/pages/MedidasPage";
+import AppearancePage from "@/pages/AppearancePage";
+import CommentsPage from "@/pages/CommentsPage";
 
 // ── Protege rotas que exigem login ──
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -168,13 +122,13 @@ function App() {
 
           {/* Rotas protegidas (só acessa se estiver logado) */}
           <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
-<Route path="/stories" element={<StoriesPage />} />
-<Route path="/gallery" element={<VideoGalleryPage />} />
-<Route path="/videos/performance" element={<VideoPerformancePage />} />
-<Route path="/produtos" element={<ProductsPage />} />
-<Route path="/medidas" element={<MedidasPage />} />
-<Route path="/aparencia" element={<AppearancePage />} />
-<Route path="/comentarios" element={<CommentsPage />} />
+          <Route path="/stories" element={<ProtectedRoute><AppLayout><StoriesPage /></AppLayout></ProtectedRoute>} />
+          <Route path="/gallery" element={<ProtectedRoute><AppLayout><VideoGalleryPage /></AppLayout></ProtectedRoute>} />
+          <Route path="/videos/performance" element={<ProtectedRoute><AppLayout><VideoPerformancePage /></AppLayout></ProtectedRoute>} />
+          <Route path="/produtos" element={<ProtectedRoute><AppLayout><ProductsPage /></AppLayout></ProtectedRoute>} />
+          <Route path="/medidas" element={<ProtectedRoute><AppLayout><MedidasPage /></AppLayout></ProtectedRoute>} />
+          <Route path="/aparencia" element={<ProtectedRoute><AppLayout><AppearancePage /></AppLayout></ProtectedRoute>} />
+          <Route path="/comentarios" element={<ProtectedRoute><AppLayout><CommentsPage /></AppLayout></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
           <Route path="/integration" element={<ProtectedRoute><AppLayout><IntegrationPage /></AppLayout></ProtectedRoute>} />
 
