@@ -13,6 +13,21 @@ import {
 } from 'lucide-react';
 import { useTenant } from '@/context/TenantContext';
 
+const PLATFORM_LABELS: Record<string, string> = {
+  yampi: 'Yampi',
+  shopify: 'Shopify',
+  woocommerce: 'WooCommerce',
+  nuvemshop: 'Nuvemshop',
+  toggo: 'Toggo',
+  magento: 'Magento',
+  vtex: 'VTEX',
+};
+
+const getPlatformLabel = (platform: string | null): string => {
+  if (!platform) return '';
+  return PLATFORM_LABELS[platform] || platform;
+};
+
 const IntegrationPage = () => {
   const { storeId } = useTenant();
   const [copied, setCopied] = useState(false);
