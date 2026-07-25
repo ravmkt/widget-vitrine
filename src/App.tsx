@@ -6,19 +6,61 @@ import {
   Navigate,
 } from "react-router-dom";
 import { TenantProvider } from "@/context/TenantContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/lib/db";
 import { AppLayout } from "@/components/AppLayout";
 import SettingsPage from "@/pages/SettingsPage";
 import IntegrationPage from "@/pages/IntegrationPage";
 import DashboardPage from "@/pages/DashboardPage";
 import LoginPage from "@/pages/LoginPage";
+import RegisterPage from "@/pages/RegisterPage";
 
-// ── Componente que redireciona se o banco estiver zerado ──
+// ── Protege rotas que exigem login ──
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-[#0094EB]" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// ── Redireciona usuário logado para o dashboard ──
+const GuestRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-[#0094EB]" />
+      </div>
+    );
+  }
+
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// ── HomeGuard: redireciona raiz conforme estado do banco ──
 const HomeGuard = () => {
+  const { user, loading: authLoading } = useAuth();
   const [checking, setChecking] = useState(true);
   const [hasSettings, setHasSettings] = useState(false);
 
   useEffect(() => {
+    if (authLoading) return;
     const check = async () => {
       try {
         const settingsArr = await db.generalSettings.getAll();
@@ -34,22 +76,27 @@ const HomeGuard = () => {
       }
     };
     check();
-  }, []);
+  }, [authLoading]);
 
-  if (checking) {
+  if (authLoading || checking) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-violet-600" />
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-[#0094EB]" />
       </div>
     );
   }
 
-  // Se não tem settings → manda pra Configurações do Sistema
+  // Não logado → login
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Logado mas sem settings → setup
   if (!hasSettings) {
     return <Navigate to="/settings" replace />;
   }
 
-  // Se já tem settings → vai pro Dashboard
+  // Logado e com settings → dashboard
   return <Navigate to="/dashboard" replace />;
 };
 
@@ -59,18 +106,19 @@ function App() {
     <TenantProvider>
       <BrowserRouter>
         <Routes>
-          {/* Rota de login — sem sidebar */}
-          <Route path="/login" element={<LoginPage />} />
+          {/* Rotas públicas (só acessa se NÃO estiver logado) */}
+          <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+          <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
 
-          {/* Rota raiz → verifica se há settings */}
+          {/* Raiz → verifica estado */}
           <Route path="/" element={<HomeGuard />} />
 
-          {/* Páginas da aplicação com sidebar */}
-          <Route path="/settings" element={<AppLayout><SettingsPage /></AppLayout>} />
-          <Route path="/integration" element={<AppLayout><IntegrationPage /></AppLayout>} />
-          <Route path="/dashboard" element={<AppLayout><DashboardPage /></AppLayout>} />
+          {/* Rotas protegidas (só acessa se estiver logado) */}
+          <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
+          <Route path="/integration" element={<ProtectedRoute><AppLayout><IntegrationPage /></AppLayout></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
 
-          {/* Fallback — qualquer rota não encontrada */}
+          {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
