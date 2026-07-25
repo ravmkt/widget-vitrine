@@ -326,6 +326,7 @@ export interface Store {
   name: string;
   url: string;
   active: boolean;
+  platform?: string; 
   owner_user_id?: string;
   created_at?: string;
 }
