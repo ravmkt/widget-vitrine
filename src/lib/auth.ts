@@ -56,13 +56,15 @@ export const createInitialTenantForUser = async ({
   const now = new Date().toISOString();
   const month = now.slice(0, 7);
 
-  await db.profiles.save({
-    id: crypto.randomUUID(),
-    user_id: userId,
-    full_name: name,
-    email,
-    created_at: now,
-  });
+await db.profiles.save({
+  id: crypto.randomUUID(),
+  user_id: userId,
+  name,
+  email,
+  avatar_url: null,
+  role: 'user',
+  created_at: now,
+});
 
   await db.stores.save({
     id: storeId,
