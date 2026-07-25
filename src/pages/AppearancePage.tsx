@@ -2642,6 +2642,9 @@ const AppearancePage = () => {
 
       await db.appearances.save(stylePayload as unknown as Appearance);
 
+      // ═══════════════════════════════════════════════════════════════
+      // 🆕 UPSERT NO SUPABASE — CORRIGIDO PARA NOVOS NOMES DE COLUNAS
+      // ═══════════════════════════════════════════════════════════════
       if (supabase) {
         const { error: widgetSyncError } = await supabase
           .from('widget_appearances')
@@ -2649,21 +2652,14 @@ const AppearancePage = () => {
             store_id: finalStoreId,
             status: 'active',
             active: true,
-            floating_position: normalizedFloatingPosition,
-            floating_shape: floatingDesktop.shape,
-            floating_width: Number(toNumberInputValue(floatingDesktop.width)) || 85,
-            floating_height: Number(toNumberInputValue(floatingDesktop.height)) || Math.round(((Number(toNumberInputValue(floatingDesktop.width)) || 85) * 16) / 9),
-            floating_border_radius: Number(toNumberInputValue(floatingDesktop.border_radius)) || 12,
-            floating_border_width: Number(toNumberInputValue(floatingDesktop.border_style)) || 0,
-            floating_border_color: floatingDesktop.border_color || formData.primary_color,
-            floating_top: Number(toNumberInputValue(floatingDesktop.top_spacing)) || 20,
-            floating_bottom: Number(toNumberInputValue(floatingDesktop.bottom_spacing)) || 20,
-            floating_side: Number(toNumberInputValue(floatingDesktop.right_spacing)) || 20,
-            floating_object_fit: floatingDesktop.object_fit || 'cover',
-            floating_z_index: Number(toNumberInputValue(floatingDesktop.z_index)) || 2147483647,
-            floating_show_play_button: floatingDesktop.show_play_icon !== false,
-            floating_draggable: Boolean(floatingDesktop.draggable),
+
+            // ── METADADOS ──
+            style_name: formData.name.trim(),
+            is_default: shouldBeDefault,
+            apply_to_all_devices: formData.useGlobalAppearance,
             url: formData.url || null,
+
+            // ── IDENTIDADE VISUAL ──
             primary_color: formData.primary_color,
             secondary_color: formData.secondary_color,
             text_color: formData.text_color,
@@ -2671,53 +2667,71 @@ const AppearancePage = () => {
             button_color: formData.button_color,
             font_family: formData.font_family,
             font_size: Number(toNumberInputValue(formData.font_size)) || 14,
-            show_title: modalConfig.show_title,
-            show_product: modalConfig.show_product,
-            show_play_button: modalConfig.show_play_button,
-            show_like_button: modalConfig.show_like_button,
-            show_whatsapp_button: modalConfig.show_whatsapp_button,
-            show_product_button: modalConfig.show_product_button,
-            show_share_button: modalConfig.show_share_button,
-            show_comments_button: modalConfig.show_comment_button,
-            hide_stories: modalConfig.hide_stories,
-            shadow_enabled: modalConfig.shadow_enabled,
 
-            // ═══════════════════════════════════════════
-            // 🆕 CARROSSEL — 15 colunas planas
-            // ═══════════════════════════════════════════
+            // ── FLUTUANTE ──
+            floating_shape: floatingDesktop.shape,
+            floating_size: Number(toNumberInputValue(floatingDesktop.width)) || 150,
+            floating_border_radius: Number(toNumberInputValue(floatingDesktop.border_radius)) || 20,
+            floating_position: normalizedFloatingPosition,
+            floating_margin_bottom: Number(toNumberInputValue(floatingDesktop.bottom_spacing)) || 20,
+            floating_margin_top: Number(toNumberInputValue(floatingDesktop.top_spacing)) || 13,
+            floating_margin_side: Number(toNumberInputValue(floatingDesktop.right_spacing)) || 10,
+            floating_border_color: floatingDesktop.border_color || formData.primary_color,
+            floating_border_width: Number(toNumberInputValue(floatingDesktop.border_style)) || 3,
+            floating_object_fit: floatingDesktop.object_fit || 'cover',
+            floating_z_index: Number(toNumberInputValue(floatingDesktop.z_index)) || 2147483647,
+            floating_show_title: floatingDesktop.show_title ?? true,
+            floating_show_play_button: floatingDesktop.show_play_icon !== false,
+            floating_draggable: Boolean(floatingDesktop.draggable),
+            floating_closable: Boolean(floatingDesktop.allow_close),
+
+            // ── CARROSSEL ──
             carousel_format: carouselDesktop.card_shape,
-            carousel_size: Number(toNumberInputValue(carouselDesktop.card_size)) || 80,
-            carousel_gap: safeNumber(carouselDesktop.gap, 16, 0),
-            carousel_visible_items: safeNumber(carouselDesktop.visible_items, 4, 1),
-            carousel_display_mode: carouselDesktop.view_mode || 'preview',
+            carousel_size: Number(toNumberInputValue(carouselDesktop.card_size)) || 100,
+            carousel_gap: safeNumber(carouselDesktop.gap, 15, 0),
+            carousel_visible_items: safeNumber(carouselDesktop.visible_items, 3, 1),
+            carousel_display_mode: carouselDesktop.view_mode || 'poster_image_only',
             carousel_border_color: carouselDesktop.border_color || formData.primary_color,
-            carousel_border_width: Number(toNumberInputValue(carouselDesktop.border_width)) || 2,
-            carousel_border_radius: Number(toNumberInputValue(carouselDesktop.border_radius)) || 12,
+            carousel_border_width: Number(toNumberInputValue(carouselDesktop.border_width)) || 7,
+            carousel_border_radius: Number(toNumberInputValue(carouselDesktop.border_radius)) || 0,
             carousel_object_fit: carouselDesktop.object_fit || 'cover',
             carousel_margin_top: Number(toNumberInputValue(carouselDesktop.margin_top)) || 0,
             carousel_margin_bottom: Number(toNumberInputValue(carouselDesktop.margin_bottom)) || 0,
             carousel_show_title: carouselDesktop.show_title ?? false,
             carousel_show_product: carouselDesktop.show_product ?? true,
             carousel_show_play_button: carouselDesktop.show_play_icon ?? true,
-            carousel_auto_center: carouselDesktop.auto_center ?? false,
+            carousel_auto_center: carouselDesktop.auto_center ?? true,
 
             carousel_config: carouselConfig,
 
-            // ═══════════════════════════════════════════
-            // 🆕 GRADE — 10 colunas planas
-            // ═══════════════════════════════════════════
+            // ── GRADE ──
             grid_format: gridDesktop.card_shape,
-            grid_size: Number(toNumberInputValue(gridDesktop.card_size)) || 80,
+            grid_size: Number(toNumberInputValue(gridDesktop.card_size)) || 82,
             grid_columns: limitNumber(gridDesktop.columns, 4, 1, 4),
-            grid_rows: safeNumber(gridDesktop.rows, 1, 1),
-            grid_gap: safeNumber(gridDesktop.gap, 16, 0),
+            grid_rows: safeNumber(gridDesktop.rows, 2, 1),
+            grid_gap: safeNumber(gridDesktop.gap, 5, 0),
             grid_border_color: gridDesktop.border_color || formData.primary_color,
             grid_border_width: Number(toNumberInputValue(gridDesktop.border_width)) || 2,
-            grid_border_radius: Number(toNumberInputValue(gridDesktop.border_radius)) || 12,
+            grid_border_radius: Number(toNumberInputValue(gridDesktop.border_radius)) || 10,
             grid_object_fit: gridDesktop.object_fit || 'cover',
             grid_show_title: gridDesktop.show_title ?? false,
 
             grid_config: gridConfig,
+
+            // ── PLAYER / MODAL ──
+            player_show_title: modalConfig.show_title ?? true,
+            player_show_play_button: modalConfig.show_play_button ?? false,
+            player_show_like_button: modalConfig.show_like_button ?? true,
+            player_show_whatsapp_button: modalConfig.show_whatsapp_button ?? true,
+            player_show_product: modalConfig.show_product ?? true,
+            player_show_product_button: modalConfig.show_product_button ?? false,
+            player_show_share_button: modalConfig.show_share_button ?? true,
+            player_show_comments_button: modalConfig.show_comment_button ?? true,
+            player_hide_stories: modalConfig.hide_stories ?? false,
+            player_enable_shadow: modalConfig.shadow_enabled ?? false,
+            player_border_color: modalConfig.border_color || formData.primary_color,
+            player_border_width: Number(toNumberInputValue(modalConfig.border_width)) || 4,
+            player_border_radius: Number(toNumberInputValue(modalConfig.border_radius)) || 14,
 
             updated_at: now,
           }, {
@@ -2729,19 +2743,17 @@ const AppearancePage = () => {
           throw new Error(`widget_appearances sync: ${widgetSyncError.message}`);
         }
 
-        // ... (daqui pra baixo continua igual, com o general_settings)
-
-const { error: generalSyncError } = await supabase
-  .from('general_settings')
-  .upsert({
-    store_id: finalStoreId,
-    primary_color: formData.primary_color,
-    secondary_color: formData.secondary_color,
-    default_appearance_id: shouldBeDefault ? id : null,
-    updated_at: now,
-  }, {
-    onConflict: 'store_id',
-  });
+        const { error: generalSyncError } = await supabase
+          .from('general_settings')
+          .upsert({
+            store_id: finalStoreId,
+            primary_color: formData.primary_color,
+            secondary_color: formData.secondary_color,
+            default_appearance_id: shouldBeDefault ? id : null,
+            updated_at: now,
+          }, {
+            onConflict: 'store_id',
+          });
 
         if (generalSyncError) {
           console.error('Erro ao sincronizar general_settings:', generalSyncError);
@@ -3758,357 +3770,4 @@ const { error: generalSyncError } = await supabase
           <option value="square">Quadrado</option>
           <option value="portrait">Retrato 9:16</option>
         </select>
-        {activeGridConfig.card_shape === 'portrait' && (
-          <p className="text-xs font-semibold text-slate-400">
-            No formato retrato, os itens da grade ficam fixos na proporção 9:16.
-          </p>
-        )}
-      </FormField>
-
-      {/* ✅ NOVO: Tamanho */}
-      <FormField label="Tamanho">
-        <input
-          type="number"
-          min="20"
-          step="1"
-          value={toNumberInputValue(activeGridConfig.card_size)}
-          onChange={e =>
-            updateGridConfig({ card_size: e.target.value })
-          }
-          placeholder="Ex: 80"
-          className={inputClass}
-        />
-        <p className="text-xs font-semibold text-slate-400">
-          Tamanho base dos cards na grade.
-        </p>
-      </FormField>
-
-      <FormField label="Colunas">
-        <input
-          type="number"
-          min="1"
-          max="4"
-          step="1"
-          value={Math.min(activeGridConfig.columns, 4)}
-          onChange={e =>
-            updateGridConfig({
-              columns: limitNumber(e.target.value, 1, 1, 4),
-            })
-          }
-          className={inputClass}
-        />
-      </FormField>
-
-      <FormField label="Linhas">
-        <input
-          type="number"
-          min="1"
-          step="1"
-          value={activeGridConfig.rows}
-          onChange={e =>
-            updateGridConfig({
-              rows: safeNumber(e.target.value, 1, 1),
-            })
-          }
-          className={inputClass}
-        />
-      </FormField>
-
-      <FormField label="Espaçamento">
-        <input
-          type="number"
-          min="0"
-          step="1"
-          value={activeGridConfig.gap}
-          onChange={e =>
-            updateGridConfig({
-              gap: safeNumber(e.target.value, 0, 0),
-            })
-          }
-          className={inputClass}
-        />
-      </FormField>
-
-      {/* ✅ NOVO: Cor da borda */}
-      <FormField label="Cor da borda">
-        <ColorInput
-          label="Cor da borda"
-          value={activeGridConfig.border_color || formData.primary_color}
-          onChange={e =>
-            updateGridConfig({ border_color: e.target.value })
-          }
-        />
-      </FormField>
-
-      {/* ✅ NOVO: Largura da borda */}
-      <FormField label="Largura da borda">
-        <input
-          type="number"
-          min="0"
-          step="1"
-          value={toNumberInputValue(activeGridConfig.border_width)}
-          onChange={e =>
-            updateGridConfig({ border_width: e.target.value })
-          }
-          placeholder="Ex: 2"
-          className={inputClass}
-        />
-      </FormField>
-
-      {/* ✅ NOVO: Raio da borda */}
-      <FormField label="Raio da borda">
-        <input
-          type="number"
-          min="0"
-          step="1"
-          value={toNumberInputValue(activeGridConfig.border_radius)}
-          onChange={e =>
-            updateGridConfig({ border_radius: e.target.value })
-          }
-          placeholder="Ex: 12"
-          className={inputClass}
-        />
-      </FormField>
-
-      {/* ✅ NOVO: Object fit */}
-      <FormField label="Object fit">
-        <select
-          value={activeGridConfig.object_fit || 'cover'}
-          onChange={e =>
-            updateGridConfig({ object_fit: e.target.value })
-          }
-          className={selectClass}
-        >
-          <option value="cover">Cover</option>
-          <option value="contain">Contain</option>
-          <option value="fill">Fill</option>
-        </select>
-      </FormField>
-
-      {/* ✅ NOVO: Mostrar título */}
-      <FormField label="Mostrar título">
-        <ToggleSwitch
-          label="Mostrar título na grade"
-          checked={activeGridConfig.show_title ?? false}
-          onChange={e =>
-            updateGridConfig({ show_title: e.target.checked })
-          }
-        />
-      </FormField>
-    </div>
-  </SectionCard>
-)}
-
-{activeTab === 'modal' && (
-  <SectionCard
-    title="Player Interativo e Modal"
-    description="Controle quais botões e elementos aparecem dentro do player/modal, além da aparência das bordas."
-  >
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-      <FormField label="Mostrar título">
-        <ToggleSwitch
-          label="Mostrar título"
-          checked={formData.modal_config.show_title}
-          onChange={e =>
-            updateModalConfig({ show_title: e.target.checked })
-          }
-        />
-      </FormField>
-
-      <FormField label="Mostrar botão play">
-        <ToggleSwitch
-          label="Mostrar botão play"
-          checked={formData.modal_config.show_play_button}
-          onChange={e =>
-            updateModalConfig({ show_play_button: e.target.checked })
-          }
-        />
-      </FormField>
-
-      <FormField label="Mostrar botão curtir">
-        <ToggleSwitch
-          label="Mostrar botão curtir"
-          checked={formData.modal_config.show_like_button}
-          onChange={e =>
-            updateModalConfig({ show_like_button: e.target.checked })
-          }
-        />
-      </FormField>
-
-      <FormField label="Mostrar botão WhatsApp">
-        <ToggleSwitch
-          label="Mostrar botão WhatsApp"
-          checked={formData.modal_config.show_whatsapp_button}
-          onChange={e =>
-            updateModalConfig({ show_whatsapp_button: e.target.checked })
-          }
-        />
-      </FormField>
-
-      <FormField label="Mostrar produto">
-        <ToggleSwitch
-          label="Mostrar produto"
-          checked={formData.modal_config.show_product}
-          onChange={e =>
-            updateModalConfig({ show_product: e.target.checked })
-          }
-        />
-      </FormField>
-
-      <FormField label="Mostrar botão produto">
-        <ToggleSwitch
-          label="Mostrar botão produto"
-          checked={formData.modal_config.show_product_button}
-          onChange={e =>
-            updateModalConfig({ show_product_button: e.target.checked })
-          }
-        />
-      </FormField>
-
-      <FormField label="Mostrar botão compartilhar">
-        <ToggleSwitch
-          label="Mostrar botão compartilhar"
-          checked={formData.modal_config.show_share_button}
-          onChange={e =>
-            updateModalConfig({ show_share_button: e.target.checked })
-          }
-        />
-      </FormField>
-
-      <FormField label="Mostrar botão comentários">
-        <ToggleSwitch
-          label="Mostrar botão comentários"
-          checked={formData.modal_config.show_comment_button}
-          onChange={e =>
-            updateModalConfig({ show_comment_button: e.target.checked })
-          }
-        />
-      </FormField>
-
-      <FormField label="Ocultar stories">
-        <ToggleSwitch
-          label="Ocultar stories"
-          checked={formData.modal_config.hide_stories}
-          onChange={e =>
-            updateModalConfig({ hide_stories: e.target.checked })
-          }
-        />
-      </FormField>
-
-      <FormField label="Sombra">
-        <ToggleSwitch
-          label="Ativar sombra"
-          checked={formData.modal_config.shadow_enabled}
-          onChange={e =>
-            updateModalConfig({ shadow_enabled: e.target.checked })
-          }
-        />
-      </FormField>
-
-      {/* ✅ NOVO: Cor da borda */}
-      <FormField label="Cor da borda">
-        <ColorInput
-          label="Cor da borda"
-          value={formData.modal_config.border_color || formData.primary_color}
-          onChange={e =>
-            updateModalConfig({ border_color: e.target.value })
-          }
-        />
-      </FormField>
-
-      {/* ✅ NOVO: Largura da borda */}
-      <FormField label="Largura da borda">
-        <input
-          type="number"
-          min="0"
-          step="1"
-          value={toNumberInputValue(formData.modal_config.border_width)}
-          onChange={e =>
-            updateModalConfig({ border_width: e.target.value })
-          }
-          placeholder="Ex: 2"
-          className={inputClass}
-        />
-      </FormField>
-
-      {/* ✅ NOVO: Raio da borda */}
-      <FormField label="Raio da borda">
-        <input
-          type="number"
-          min="0"
-          step="1"
-          value={toNumberInputValue(formData.modal_config.border_radius)}
-          onChange={e =>
-            updateModalConfig({ border_radius: e.target.value })
-          }
-          placeholder="Ex: 12"
-          className={inputClass}
-        />
-      </FormField>
-    </div>
-  </SectionCard>
-)}
-                </div>
-
-                <div className="xl:sticky xl:top-0 xl:self-start">
-                  <PreviewCard
-                    formData={formData}
-                    floatingDevice={floatingDevice}
-                    carouselDevice={carouselDevice}
-                    gridDevice={gridDevice}
-                    activeTab={activeTab}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 border-t border-slate-100 bg-white p-6 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={handleCancel}
-                disabled={saving}
-                className="rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-black text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                Cancelar
-              </button>
-
-              <button
-                type="button"
-                onClick={handleSaveStyle}
-                disabled={saving}
-                className="flex items-center justify-center gap-2 rounded-2xl bg-[#0094EB] px-6 py-3 text-sm font-black text-white shadow-lg transition hover:bg-[#0E4787] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    Salvando...
-                  </>
-                ) : (
-                  <>
-                    <Save size={18} />
-                    Salvar Estilo
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <ConfirmDeleteDialog
-        isOpen={deleteModal.isOpen}
-        title="Excluir Aparência"
-        itemName={deleteModal.name}
-        onConfirm={handleConfirmDelete}
-        onCancel={() =>
-          setDeleteModal(prev => ({
-            ...prev,
-            isOpen: false,
-          }))
-        }
-      />
-    </div>
-  );
-};
-
-export default AppearancePage;
+        {activeGridConfig.card_shape === 'portrait' &&
