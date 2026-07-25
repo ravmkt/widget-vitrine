@@ -249,8 +249,7 @@ const getCommentCounts = async (
       .from('comments')
       .select('video_id')
       .eq('store_id', storeId)
-      .eq('status', 'approved')
-      .eq('active', true);
+      .eq('status', 'approved');
 
     if (error) {
       console.error('[analytics] getCommentCounts erro:', error);
