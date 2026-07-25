@@ -1177,10 +1177,6 @@ const syncGlobalConfig = (
       ...prev.floating_config,
       same_for_all: false,
     },
-    carousel_config: {
-      ...prev.carousel_config,
-      same_for_all: false,
-    },
     grid_config: {
       ...prev.grid_config,
       same_for_all: false,
