@@ -377,23 +377,20 @@
       });
   }
 
-  function fetchDbAppearance() {
-    if (!storeId || !hasSupabase) return Promise.resolve({});
-    return Promise.all([
-      tryTable('appearances'),
-      tryTable('widget_appearances'),
-      tryTable('general_settings')
-    ]).then(function(results) {
-      var app1 = results[0] || {};
-      var app2 = results[1] || {};
-      var app3 = results[2] || {};
-      var merged = {};
-      // Prioridade: widget_appearances → appearances → general_settings (general_settings tem maior prioridade)
-mergeObject(merged, app1);  // appearances (base)
-mergeObject(merged, app2);  // widget_appearances (SOBRESCREVE appearances)
-mergeObject(merged, app3);  // general_settings (prioridade máxima)
-    });
-  }
+function fetchDbAppearance() {
+  if (!storeId || !hasSupabase) return Promise.resolve({});
+  return Promise.all([
+    tryTable('widget_appearances'),
+    tryTable('general_settings')
+  ]).then(function(results) {
+    var app2 = results[0] || {};  // widget_appearances
+    var app3 = results[1] || {};  // general_settings
+    var merged = {};
+    mergeObject(merged, app2);  // widget_appearances
+    mergeObject(merged, app3);  // general_settings (prioridade máxima)
+    return normalizeAppearanceItem(merged);
+  });
+}
 
   function readAppearance() {
     var configAppearance = normalizeAppearanceItem(getConfigAppearance());
