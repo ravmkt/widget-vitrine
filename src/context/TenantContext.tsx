@@ -17,6 +17,7 @@ type TenantContextValue = {
 const TenantContext = createContext<TenantContextValue>({
   currentStore: null,
   storeId: null,
+  platform: string | null;
   loading: true,
 });
 
