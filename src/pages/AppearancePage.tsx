@@ -1155,11 +1155,6 @@ const syncGlobalConfig = (
         desktop: prev.floating_config.desktop,
         mobile: prev.floating_config.desktop,
       },
-      carousel_config: {
-        same_for_all: true,
-        desktop: prev.carousel_config.desktop,
-        mobile: prev.carousel_config.desktop,
-      },
       grid_config: {
         same_for_all: true,
         desktop: {
