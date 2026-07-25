@@ -2580,8 +2580,6 @@ const AppearancePage = () => {
 
         use_global_appearance: formData.useGlobalAppearance,
         floating_config: floatingConfig,
-        carousel_config: carouselConfig,
-        grid_config: gridConfig,
         modal_config: modalConfig,
 
         width: floatingDesktop.width,
