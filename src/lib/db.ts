@@ -40,57 +40,91 @@ export type ResponsiveAppearanceConfig<
 export interface Appearance {
   id: string;
   store_id: string;
-  name: string;
-  is_default: boolean;
+  name?: string;
+  style_name?: string;
+  is_default?: boolean;
   isDefault?: boolean;
-  primary_color: string;
-  secondary_color: string;
-  text_color: string;
-  background_color: string;
-  button_color: string;
-  border_radius: string;
-  shadow_enabled: boolean;
-  font_family: string;
-  widget_shape: 'rounded' | 'square' | 'circle';
-  widget_size: 'small' | 'medium' | 'large';
-  widget_animation: 'none' | 'fade' | 'slide' | 'bounce';
-  carousel_card_shape: 'rounded' | 'square';
-  carousel_visible_items: number;
-  carousel_gap: number;
-  show_title: boolean;
-  show_play_button: boolean;
-  show_product: boolean;
-  show_like_button: boolean;
-  show_comment_button: boolean;
-  show_share_button: boolean;
-  show_whatsapp_button: boolean;
-  show_product_button: boolean;
-
-  /**
-   * URL específica onde o widget deve aparecer.
-   * Se null, aparece em todas as páginas.
-   */
-  url?: string | null;
-
-  /**
-   * Campo usado no Supabase.
-   */
+  active?: boolean;
+  status?: string;
+  apply_to_all_devices?: boolean;
   use_global_appearance?: boolean;
-
-  /**
-   * Campo usado no front.
-   * Ele é convertido automaticamente para use_global_appearance antes de salvar.
-   */
   useGlobalAppearance?: boolean;
-
-  /**
-   * Configurações responsivas novas.
-   */
+  url?: string | null;
+  primary_color?: string;
+  secondary_color?: string;
+  text_color?: string;
+  background_color?: string;
+  button_color?: string;
+  button_text_color?: string;
+  font_family?: string;
+  font_size?: number | string;
+  border_radius?: string;
+  border_width?: number | string;
+  border_color?: string;
+  shadow_enabled?: boolean;
+  show_title?: boolean;
+  show_progress?: boolean;
+  autoplay?: boolean;
+  muted?: boolean;
+  custom_css?: string | null;
+  floating_shape?: string;
+  floating_size?: number | string;
+  floating_height?: number | string | null;
+  floating_border_radius?: number | string;
+  floating_position?: string;
+  floating_margin_bottom?: number | string;
+  floating_margin_top?: number | string;
+  floating_margin_side?: number | string;
+  floating_border_color?: string;
+  floating_border_width?: number | string;
+  floating_object_fit?: string;
+  floating_z_index?: number | string;
+  floating_show_title?: boolean;
+  floating_show_play_button?: boolean;
+  floating_draggable?: boolean;
+  floating_closable?: boolean;
+  carousel_format?: string;
+  carousel_size?: number | string;
+  carousel_gap?: number;
+  carousel_visible_items?: number;
+  carousel_display_mode?: string;
+  carousel_border_color?: string;
+  carousel_border_width?: number | string;
+  carousel_border_radius?: number | string;
+  carousel_object_fit?: string;
+  carousel_margin_top?: number | string;
+  carousel_margin_bottom?: number | string;
+  carousel_show_title?: boolean;
+  carousel_show_product?: boolean;
+  carousel_show_play_button?: boolean;
+  carousel_auto_center?: boolean;
+  grid_format?: string;
+  grid_size?: number | string;
+  grid_columns?: number;
+  grid_rows?: number;
+  grid_gap?: number;
+  grid_border_color?: string;
+  grid_border_width?: number | string;
+  grid_border_radius?: number | string;
+  grid_object_fit?: string;
+  grid_show_title?: boolean;
+  player_show_title?: boolean;
+  player_show_play_button?: boolean;
+  player_show_like_button?: boolean;
+  player_show_whatsapp_button?: boolean;
+  player_show_product?: boolean;
+  player_show_product_button?: boolean;
+  player_show_share_button?: boolean;
+  player_show_comments_button?: boolean;
+  player_hide_stories?: boolean;
+  player_enable_shadow?: boolean;
+  player_border_color?: string;
+  player_border_width?: number | string;
+  player_border_radius?: number | string;
   floating_config?: ResponsiveAppearanceConfig;
   carousel_config?: ResponsiveAppearanceConfig;
   grid_config?: ResponsiveAppearanceConfig;
   modal_config?: ResponsiveAppearanceConfig;
-
   created_at?: string;
   updated_at?: string;
 }

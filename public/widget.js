@@ -1500,36 +1500,25 @@ function fetchDbAppearance() {
       var ap = appearance || {};
 
       // ── Tenta carregar do carousel_config (JSON string ou objeto) ──
-      var carouselCfg = null;
-      if (ap.carousel_config) {
-        try {
-          carouselCfg = typeof ap.carousel_config === 'string'
-            ? JSON.parse(ap.carousel_config)
-            : ap.carousel_config;
-        } catch(e) { /* ignora */ }
-      }
-
-      if (!carouselCfg && (ap.carousel_visible_items || ap.carousel_gap || ap.carousel_border_color || ap.carousel_border_width || ap.carousel_border_radius || ap.carousel_object_fit || ap.carousel_show_title || ap.carousel_format || ap.carousel_size)) {
-        carouselCfg = {
-          mobile: {
-            card_shape: ap.carousel_format || ap.carousel_card_shape || ap.card_shape || ap.format || ap.shape,
-            visible_items: ap.carousel_visible_items || ap.visible_items || ap.columns,
-            gap: ap.carousel_gap || ap.spacing || ap.gap,
-            border_color: ap.carousel_border_color || ap.border_color,
-            border_width: ap.carousel_border_width || ap.border_width,
-            border_radius: ap.carousel_border_radius || ap.border_radius || ap.radius,
-            show_title: ap.carousel_show_title,
-            auto_center: ap.carousel_auto_center,
-            show_play_icon: ap.carousel_show_play_button,
-            object_fit: ap.carousel_object_fit || ap.object_fit,
-            card_size: ap.carousel_size || ap.card_size,
-            view_mode: ap.carousel_display_mode || ap.view_mode,
-            margin_top: ap.carousel_margin_top || ap.margin_top,
-            margin_bottom: ap.carousel_margin_bottom || ap.margin_bottom,
-            show_product: ap.carousel_show_product || ap.show_product
-          }
-        };
-      }
+      var carouselCfg = {
+        mobile: {
+          card_shape: firstDefined(ap.carousel_format, ap.carousel_card_shape, ap.card_shape, ap.format, ap.shape),
+          visible_items: firstDefined(ap.carousel_visible_items, ap.visible_items, ap.columns),
+          gap: firstDefined(ap.carousel_gap, ap.spacing, ap.gap),
+          border_color: firstDefined(ap.carousel_border_color, ap.border_color),
+          border_width: firstDefined(ap.carousel_border_width, ap.border_width),
+          border_radius: firstDefined(ap.carousel_border_radius, ap.border_radius, ap.radius),
+          show_title: firstDefined(ap.carousel_show_title, ap.show_title),
+          auto_center: firstDefined(ap.carousel_auto_center, ap.auto_center),
+          show_play_icon: firstDefined(ap.carousel_show_play_button, ap.show_play_button),
+          object_fit: firstDefined(ap.carousel_object_fit, ap.object_fit),
+          card_size: firstDefined(ap.carousel_size, ap.card_size),
+          view_mode: firstDefined(ap.carousel_display_mode, ap.view_mode),
+          margin_top: firstDefined(ap.carousel_margin_top, ap.margin_top),
+          margin_bottom: firstDefined(ap.carousel_margin_bottom, ap.margin_bottom),
+          show_product: firstDefined(ap.carousel_show_product, ap.show_product)
+        }
+      };
 
       // ── Fallback: monta das colunas planas + campos avulsos ──
       if (!carouselCfg || !carouselCfg.mobile) {
