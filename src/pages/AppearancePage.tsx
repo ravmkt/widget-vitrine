@@ -1063,20 +1063,6 @@ const normalizeAppearance = (
 };
 const getAppearancesSafe = async (storeId: string): Promise<Appearance[]> => {
   try {
-    const widgetAppearances = await (supabase
-      ? supabase
-          .from('widget_appearances')
-          .select('*')
-          .eq('store_id', storeId)
-          .order('updated_at', { ascending: false })
-          .limit(1)
-          .then(({ data }) => (Array.isArray(data) ? data : []))
-      : Promise.resolve([]));
-
-    if (widgetAppearances.length > 0) {
-      return widgetAppearances as unknown as Appearance[];
-    }
-
     return await db.appearances.getAll(storeId);
   } catch {
     try {
@@ -2317,6 +2303,7 @@ const mapWidgetAppearanceToFormFormat = (row: any) => {
 setResolvedStoreId(finalStoreId);
 
 const [styles, widgetStyles] = await Promise.all([
+
 console.log('🔍 DEBUG widgetStyles:', widgetStyles);
 console.log('🔍 DEBUG styles (appearances):', styles);
 
