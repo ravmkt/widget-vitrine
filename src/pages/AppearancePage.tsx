@@ -2117,6 +2117,175 @@ const AppearancePage = () => {
     name: '',
   });
 
+// Converte widget_appearances (colunas planas) → formato appearances (objetos aninhados)
+const mapWidgetAppearanceToFormFormat = (row: any) => {
+  if (!row) return null;
+
+  const sameForAll = row.apply_to_all_devices ?? true;
+
+  return {
+    id: row.id,
+    store_id: row.store_id,
+    name: row.style_name || row.name,
+    is_default: row.is_default,
+    use_global_appearance: true,
+
+    // Cores
+    primary_color: row.primary_color,
+    secondary_color: row.secondary_color,
+    background_color: row.background_color,
+    text_color: row.text_color,
+    button_color: row.button_color,
+    border_color: row.floating_border_color,
+
+    // Fonte
+    font_family: row.font_family,
+    font_size: row.font_size,
+
+    // floating_config
+    floating_config: {
+      same_for_all: sameForAll,
+      desktop: {
+        shape: row.floating_shape,
+        width: row.floating_size,
+        height: row.floating_height,
+        z_index: row.floating_z_index,
+        position: row.floating_position?.includes('top-left') ? 'fixed_top_left'
+          : row.floating_position?.includes('top-right') ? 'fixed_top_right'
+          : row.floating_position?.includes('bottom-left') ? 'fixed_bottom_left'
+          : row.floating_position?.includes('bottom-right') ? 'fixed_bottom_right'
+          : 'fixed_top_left',
+        border_radius: row.floating_border_radius,
+        border_color: row.floating_border_color,
+        border_style: row.floating_border_width,
+        object_fit: row.floating_object_fit,
+        show_title: row.floating_show_title,
+        show_play_icon: row.floating_show_play_button,
+        draggable: row.floating_draggable,
+        allow_close: row.floating_closable,
+        top_spacing: row.floating_margin_top,
+        bottom_spacing: row.floating_margin_bottom,
+        left_spacing: row.floating_margin_side,
+        right_spacing: row.floating_margin_side,
+        floating_position: row.floating_position,
+      },
+      mobile: {
+        shape: row.floating_shape,
+        width: row.floating_size,
+        height: row.floating_height,
+        z_index: row.floating_z_index,
+        position: row.floating_position?.includes('top-left') ? 'fixed_top_left'
+          : row.floating_position?.includes('top-right') ? 'fixed_top_right'
+          : row.floating_position?.includes('bottom-left') ? 'fixed_bottom_left'
+          : row.floating_position?.includes('bottom-right') ? 'fixed_bottom_right'
+          : 'fixed_top_left',
+        border_radius: row.floating_border_radius,
+        border_color: row.floating_border_color,
+        border_style: row.floating_border_width,
+        object_fit: row.floating_object_fit,
+        show_title: row.floating_show_title,
+        show_play_icon: row.floating_show_play_button,
+        draggable: row.floating_draggable,
+        allow_close: row.floating_closable,
+        top_spacing: row.floating_margin_top,
+        bottom_spacing: row.floating_margin_bottom,
+        left_spacing: row.floating_margin_side,
+        right_spacing: row.floating_margin_side,
+        floating_position: row.floating_position,
+      },
+    },
+
+    // carousel_config (AQUI ESTAVA O ERRO PRINCIPAL!)
+    carousel_config: {
+      same_for_all: sameForAll,
+      desktop: {
+        card_shape: row.carousel_format,
+        card_size: row.carousel_size,
+        gap: row.carousel_gap,
+        visible_items: row.carousel_visible_items,
+        view_mode: row.carousel_display_mode,
+        object_fit: row.carousel_object_fit,
+        border_color: row.carousel_border_color,
+        border_width: row.carousel_border_width,
+        border_radius: row.carousel_border_radius,
+        margin_top: row.carousel_margin_top,
+        margin_bottom: row.carousel_margin_bottom,
+        show_title: row.carousel_show_title,
+        show_product: row.carousel_show_product,
+        show_play_icon: row.carousel_show_play_button,
+        auto_center: row.carousel_auto_center,
+      },
+      mobile: {
+        card_shape: row.carousel_format,
+        card_size: row.carousel_size,
+        gap: row.carousel_gap,
+        visible_items: row.carousel_visible_items,
+        view_mode: row.carousel_display_mode,
+        object_fit: row.carousel_object_fit,
+        border_color: row.carousel_border_color,
+        border_width: row.carousel_border_width,
+        border_radius: row.carousel_border_radius,
+        margin_top: row.carousel_margin_top,
+        margin_bottom: row.carousel_margin_bottom,
+        show_title: row.carousel_show_title,
+        show_product: row.carousel_show_product,
+        show_play_icon: row.carousel_show_play_button,
+        auto_center: row.carousel_auto_center,
+      },
+    },
+
+    // grid_config
+    grid_config: {
+      same_for_all: sameForAll,
+      desktop: {
+        card_shape: row.grid_format,
+        card_size: row.grid_size,
+        columns: row.grid_columns,
+        rows: row.grid_rows,
+        gap: row.grid_gap,
+        border_color: row.grid_border_color,
+        border_width: row.grid_border_width,
+        border_radius: row.grid_border_radius,
+        object_fit: row.grid_object_fit,
+        show_title: row.grid_show_title,
+      },
+      mobile: {
+        card_shape: row.grid_format,
+        card_size: row.grid_size,
+        columns: row.grid_columns,
+        rows: row.grid_rows,
+        gap: row.grid_gap,
+        border_color: row.grid_border_color,
+        border_width: row.grid_border_width,
+        border_radius: row.grid_border_radius,
+        object_fit: row.grid_object_fit,
+        show_title: row.grid_show_title,
+      },
+    },
+
+    // player_config
+    player_config: {
+      show_title: row.player_show_title,
+      show_play_button: row.player_show_play_button,
+      show_like_button: row.player_show_like_button,
+      show_whatsapp_button: row.player_show_whatsapp_button,
+      show_product: row.player_show_product,
+      show_product_button: row.player_show_product_button,
+      show_share_button: row.player_show_share_button,
+      show_comment_button: row.player_show_comments_button,
+      hide_stories: row.player_hide_stories,
+      shadow_enabled: row.player_enable_shadow,
+      border_color: row.player_border_color,
+      border_width: row.player_border_width,
+      border_radius: row.player_border_radius,
+    },
+
+    active: row.active ?? true,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+};
+
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
