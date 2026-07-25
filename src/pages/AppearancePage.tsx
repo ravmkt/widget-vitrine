@@ -2300,40 +2300,28 @@ const mapWidgetAppearanceToFormFormat = (row: any) => {
 
       setResolvedStoreId(finalStoreId);
 
-setResolvedStoreId(finalStoreId);
+      setResolvedStoreId(finalStoreId);
 
-const [styles, widgetStyles] = await Promise.all([
+      const [styles, widgetStyles] = await Promise.all([
+        getAppearancesSafe(finalStoreId),
+        supabase
+          ? supabase
+              .from('widget_appearances')
+              .select('*')
+              .eq('store_id', finalStoreId)
+              .order('updated_at', { ascending: false })
+              .limit(1)
+              .then(({ data }) => (Array.isArray(data) ? data : []))
+          : Promise.resolve([]),
+      ]);
 
-console.log('🔍 DEBUG widgetStyles:', widgetStyles);
-console.log('🔍 DEBUG styles (appearances):', styles);
-
-if (widgetStyles.length > 0) {
-  const converted = mapWidgetAppearanceToFormFormat(widgetStyles[0]);
-  console.log('🔍 DEBUG converted:', converted);
-  setAppearances(converted ? [converted] : styles);
-} else {
-  console.log('⚠️ widgetStyles vazio, usando styles antigos');
-  setAppearances(styles);
-}
-
-  getAppearancesSafe(finalStoreId),
-  supabase
-    ? supabase
-        .from('widget_appearances')
-        .select('*')
-        .eq('store_id', finalStoreId)
-        .limit(1)
-        .then(({ data }) => (Array.isArray(data) ? data : []))
-    : Promise.resolve([]),
-]);
-
-// 🔄 CONVERSÃO: transforma dados planos → formato que o formulário entende
-if (widgetStyles.length > 0) {
-  const converted = mapWidgetAppearanceToFormFormat(widgetStyles[0]);
-  setAppearances(converted ? [converted] : styles);
-} else {
-  setAppearances(styles);
-}
+      // 🔄 CONVERSÃO: transforma dados planos → formato que o formulário entende
+      if (widgetStyles.length > 0) {
+        const converted = mapWidgetAppearanceToFormFormat(widgetStyles[0]);
+        setAppearances(converted ? [converted] : styles);
+      } else {
+        setAppearances(styles);
+      }
 
     } catch (error) {
       console.error('Erro ao carregar aparências:', error);
