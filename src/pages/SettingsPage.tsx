@@ -95,7 +95,7 @@ const generalSettingsToAppSettings = (gs: GeneralSettings): AppSettings => ({
   store_name: gs.store_name ?? null,
   store_url: gs.store_url ?? null,
   store_logo_url: gs.logo_url ?? null,
-  platform: (gs as any).platform ?? null,       // 🆕 platform → platform
+platform: gs.platform ?? null,
   contact_email: gs.contact_email ?? null,
   widget_enabled: gs.widget_enabled ?? true,
   stories_enabled: gs.stories_enabled ?? true,
