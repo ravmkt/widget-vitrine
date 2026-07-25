@@ -24,7 +24,7 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { db } from "@/lib/db";
@@ -49,20 +49,34 @@ export function AppSidebar() {
   const [storeName, setStoreName] = useState('');
   const [storeLogoUrl, setStoreLogoUrl] = useState('');
 
-  useEffect(() => {
-    const loadStoreData = async () => {
-      try {
-        const settings = await db.getSettings();
-        if (settings) {
-          setStoreName(settings.store_name || '');
-          setStoreLogoUrl(settings.store_logo_url || '');
-        }
-      } catch (err) {
-        console.error('Erro ao carregar dados da loja:', err);
+  const loadStoreData = useCallback(async () => {
+    try {
+      const settings = await db.getSettings();
+      if (settings) {
+        setStoreName(settings.store_name || '');
+        // ✅ CORRIGIDO: era store_logo_url, o campo certo é logo_url
+        setStoreLogoUrl(settings.logo_url || '');
       }
-    };
-    loadStoreData();
+    } catch (err) {
+      console.error('Erro ao carregar dados da loja:', err);
+    }
   }, []);
+
+  useEffect(() => {
+    loadStoreData();
+
+    // ✅ CORRIGIDO: escuta eventos de atualização disparados pelo SettingsPage
+    const handleStorageChange = () => loadStoreData();
+    const handleFocus = () => loadStoreData();
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [loadStoreData]);
 
   return (
     <Sidebar className="border-r border-[#E2E8F0] bg-white shadow-none">
