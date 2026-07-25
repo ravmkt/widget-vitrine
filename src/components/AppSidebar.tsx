@@ -27,7 +27,7 @@ import {
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/lib/supabase";
+import { db } from "@/lib/db";
 import { signOut } from '@/lib/auth';
 
 const menuItems = [
