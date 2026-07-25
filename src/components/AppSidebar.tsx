@@ -1,4 +1,3 @@
-import { supabase } from '@/lib/supabase';
 import {
   LayoutDashboard, 
   PlayCircle, 
@@ -35,7 +34,7 @@ const menuItems = [
   { title: "Visão Geral", url: "/dashboard", icon: LayoutDashboard },
   { title: "Stories", url: "/stories", icon: PlayCircle },
   { title: "Vídeos", url: "/gallery", icon: Library },
-  { title: "Performance", url: "/videos/performance", icon: BarChart3 }, // Link corrigido
+  { title: "Performance", url: "/videos/performance", icon: BarChart3 },
   { title: "Produtos", url: "/products", icon: ShoppingCart },
   { title: "Medidas", url: "/medidas", icon: Ruler },
   { title: "Aparência", url: "/appearance", icon: Palette },
@@ -50,49 +49,26 @@ export function AppSidebar() {
   const [storeName, setStoreName] = useState('');
   const [storeLogoUrl, setStoreLogoUrl] = useState('');
 
-useEffect(() => {
-  if (!supabase) {
-    setLoading(false);
-    return;
-  }
-
-  const bootstrap = async () => {
-    const currentUser = await getCurrentUser();
-    setUser(currentUser);
-    setLoading(false);
-  };
-
-  bootstrap();
-
-  const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-    setUser(session?.user || null);
-    setLoading(false);
-
-    // Se fez logout, limpa o localStorage
-    if (!session?.user) {
-      const keysToRemove: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('vidlytics_')) {
-          keysToRemove.push(key);
+  useEffect(() => {
+    const loadStoreData = async () => {
+      try {
+        const settings = await db.getSettings();
+        if (settings) {
+          setStoreName(settings.store_name || '');
+          setStoreLogoUrl(settings.store_logo_url || '');
         }
+      } catch (err) {
+        console.error('Erro ao carregar dados da loja:', err);
       }
-      keysToRemove.forEach(key => localStorage.removeItem(key));
-    }
-  });
-
-  return () => {
-    listener.subscription.unsubscribe();
-  };
-}, []);
+    };
+    loadStoreData();
+  }, []);
 
   return (
     <Sidebar className="border-r border-[#E2E8F0] bg-white shadow-none">
-
       <SidebarHeader className="p-6">
         <div className="flex items-center gap-3">
           <img src="/assets/vidlytics-logo-wide.png" alt="Vidlytics" className="h-[58px] w-auto max-w-[260px]" />
-
         </div>
       </SidebarHeader>
 
@@ -139,19 +115,18 @@ useEffect(() => {
           </div>
         </div>
         <button
-onClick={async () => {
-  await signOut();
-  // Limpa TODOS os dados locais da aplicação
-  const keysToRemove: string[] = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith('vidlytics_')) {
-      keysToRemove.push(key);
-    }
-  }
-  keysToRemove.forEach(key => localStorage.removeItem(key));
-  navigate('/login');
-}}
+          onClick={async () => {
+            await signOut();
+            const keysToRemove: string[] = [];
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key && key.startsWith('vidlytics_')) {
+                keysToRemove.push(key);
+              }
+            }
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+            navigate('/login');
+          }}
           className="flex w-full items-center gap-2 px-3 py-2 rounded-xl text-[#64748B] hover:bg-red-50 hover:text-red-500 transition-colors text-sm font-bold"
         >
           <LogOut size={16} />
