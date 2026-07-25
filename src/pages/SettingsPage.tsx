@@ -24,6 +24,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { RefreshCw, Loader2, Copy, X, Image } from 'lucide-react';
+import { useNavigate } from 'react-router-dom'; // ✅ CORREÇÃO: import adicionado
 
 const LOGO_BUCKET = "store-assets";
 
@@ -34,7 +35,7 @@ interface AppSettings {
   store_name: string | null;
   store_url: string | null;
   store_logo_url: string | null;
-  platform: string | null;                      // 🆕 Plataforma de e-commerce
+  platform: string | null;
   contact_email: string | null;
   widget_enabled: boolean;
   stories_enabled: boolean;
@@ -63,7 +64,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   store_name: '',
   store_url: '',
   store_logo_url: '',
-  platform: null,                              // 🆕
+  platform: null,
   contact_email: '',
   widget_enabled: true,
   stories_enabled: true,
@@ -95,7 +96,7 @@ const generalSettingsToAppSettings = (gs: GeneralSettings): AppSettings => ({
   store_name: gs.store_name ?? null,
   store_url: gs.store_url ?? null,
   store_logo_url: gs.logo_url ?? null,
-platform: gs.platform ?? null,
+  platform: gs.platform ?? null,
   contact_email: gs.contact_email ?? null,
   widget_enabled: gs.widget_enabled ?? true,
   stories_enabled: gs.stories_enabled ?? true,
@@ -128,7 +129,7 @@ const appSettingsToGeneralSettings = (
   store_name: app.store_name || '',
   store_url: app.store_url || '',
   logo_url: app.store_logo_url,
-  platform: app.platform || '',                 // 🆕 platform → platform
+  platform: app.platform || '',
   contact_email: app.contact_email || '',
   widget_enabled: app.widget_enabled,
   stories_enabled: app.stories_enabled,
@@ -152,6 +153,8 @@ const appSettingsToGeneralSettings = (
 // ── Componente ──
 
 const SettingsPage = () => {
+  const navigate = useNavigate(); // ✅ CORREÇÃO: hook adicionado
+
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -262,8 +265,15 @@ const SettingsPage = () => {
       toast.success('Configurações salvas com sucesso');
       setSelectedLogoFile(null);
 
+      // ✅ CORREÇÃO: dispara eventos para o sidebar atualizar
       window.dispatchEvent(new Event('storage'));
       window.dispatchEvent(new Event('focus'));
+
+      // ✅ CORREÇÃO: redireciona para o dashboard após 800ms
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 800);
+
     } catch (err) {
       console.error("Erro completo ao salvar configurações:", err);
       toast.error('Falha ao salvar configurações');
