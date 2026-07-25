@@ -547,8 +547,7 @@ const TABLE_UUID_FIELDS: Record<string, Record<string, UuidMode>> = {
 };
 
 const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
-stores: ['id', 'name', 'url', 'platform', 'logo_url', 'contact_email', 'settings'],
-
+stores: ['id', 'name', 'url', 'platform', 'logo_url', 'contact_email', 'settings', 'owner_user_id'],
   videos: [
     'id',
     'store_id',
