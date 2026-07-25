@@ -1988,12 +1988,6 @@ const PreviewCard = ({
     formData.useGlobalAppearance,
   );
 
-  const carousel = getActiveResponsiveConfig(
-    formData.carousel_config,
-    carouselDevice,
-    formData.useGlobalAppearance,
-  );
-
   const grid = getActiveResponsiveConfig(
     formData.grid_config,
     gridDevice,
