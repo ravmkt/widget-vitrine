@@ -1503,9 +1503,10 @@ const createSupabaseCrudFunctions = <
         throw error;
       }
 
-if (!data || data.length === 0) {
+ if (!data || data.length === 0) {
     return localFallback.getAll(storeId);
-    
+  }
+      
       return ((data || []) as T[]).map(item =>
         normalizeTableItemForClient(tableName, item as any),
       ) as T[];
