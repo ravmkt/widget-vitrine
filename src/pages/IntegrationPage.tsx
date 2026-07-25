@@ -25,6 +25,8 @@ const PLATFORM_LABELS: Record<string, string> = {
   lojaintegrada: 'Loja Integrada',
   bagy: 'Bagy',
   irroba: 'Irroba',
+  megazord: 'Megazord',
+  cartpanda: 'Cartpanda',
 };
 
 const getPlatformLabel = (platform: string | null): string => {
