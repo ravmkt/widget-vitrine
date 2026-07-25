@@ -117,15 +117,14 @@ useEffect(() => {
           ctr: dashboardTotals.ctr,
           revenue: dashboardTotals.revenue
         });
-      } catch (error) {
+} catch (error) {
         console.error('Erro ao carregar métricas reais:', error);
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, [storeId, filters.period, filters.customRange]);
-
+}, [storeId, filters.period, filters.customRange]);
   const filteredVideoStats = useMemo(() => {
     return videoStats.filter(v => (v.title || '').toLowerCase().includes(filters.search.toLowerCase()));
   }, [videoStats, filters.search]);
