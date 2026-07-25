@@ -2131,9 +2131,20 @@ const AppearancePage = () => {
 
       setResolvedStoreId(finalStoreId);
 
-      const styles = await getAppearancesSafe(finalStoreId);
+      const [styles, widgetStyles] = await Promise.all([
+        getAppearancesSafe(finalStoreId),
+        supabase
+          ? supabase
+              .from('widget_appearances')
+              .select('*')
+              .eq('store_id', finalStoreId)
+              .limit(1)
+              .then(({ data }) => (Array.isArray(data) ? data : []))
+          : Promise.resolve([]),
+      ]);
 
-      setAppearances(styles);
+      setAppearances(widgetStyles.length > 0 ? widgetStyles : styles);
+
     } catch (error) {
       console.error('Erro ao carregar aparências:', error);
       showError('Erro ao carregar aparências.');

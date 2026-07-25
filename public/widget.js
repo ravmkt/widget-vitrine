@@ -1513,7 +1513,7 @@
         } catch(e) { /* ignora */ }
       }
 
-      if (!carouselCfg && (ap.carousel_visible_items || ap.carousel_gap || ap.carousel_border_color || ap.carousel_border_width || ap.carousel_border_radius || ap.carousel_object_fit || ap.carousel_show_title)) {
+      if (!carouselCfg && (ap.carousel_visible_items || ap.carousel_gap || ap.carousel_border_color || ap.carousel_border_width || ap.carousel_border_radius || ap.carousel_object_fit || ap.carousel_show_title || ap.carousel_format || ap.carousel_size)) {
         carouselCfg = {
           mobile: {
             card_shape: ap.carousel_format || ap.carousel_card_shape || ap.card_shape || ap.format || ap.shape,
