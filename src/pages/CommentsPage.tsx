@@ -28,11 +28,6 @@ interface CommentWithReplies extends Comment {
   is_store_reply?: boolean;
 }
 
-interface StoreSettings {
-  store_name?: string;
-  store_logo_url?: string;
-}
-
 const CommentsPage = () => {
   const { storeId, loading: tenantLoading } = useTenant();
 
