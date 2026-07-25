@@ -1143,9 +1143,8 @@ const ensureSupabaseStoreExists = async (storeId?: string) => {
 
 const storeToInsert = sanitizeTablePayload('stores', {
     id: storeId,
-    name: localStore?.name || DEFAULT_STORE.name || 'Loja',
-    domain: localStore?.domain || DEFAULT_STORE.domain,
-    owner_user_id: user.id,
+    name: localStore?.name || 'Loja',
+    url: localStore?.url || '',
 });
 
   const { error: insertError } = await supabase
