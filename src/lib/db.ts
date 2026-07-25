@@ -324,7 +324,7 @@ export interface GeneralSettings {
 export interface Store {
   id: string;
   name: string;
-  domain: string;
+  url: string;
   active: boolean;
   owner_user_id?: string;
   created_at?: string;
