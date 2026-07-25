@@ -1880,13 +1880,16 @@ generalSettings: createSupabaseCrudFunctions<GeneralSettings>(
     memorySizingModels,
   ),
 
-  profiles: createSupabaseCrudFunctions<{
-    id: string;
-    user_id: string;
-    full_name: string;
-    email: string;
-    created_at?: string;
-  }>("profiles", []),
+profiles: createSupabaseCrudFunctions<{
+  id: string;
+  user_id: string;
+  name: string;
+  email: string;
+  avatar_url?: string;
+  role?: string;
+  created_at?: string;
+  updated_at?: string;
+}>("profiles", []),
 
   storeMembers: createSupabaseCrudFunctions<{
     id: string;
