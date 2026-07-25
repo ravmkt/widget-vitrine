@@ -1,4 +1,5 @@
-import { 
+import { supabase } from '@/lib/supabase';
+
   LayoutDashboard, 
   PlayCircle, 
   Library, 
