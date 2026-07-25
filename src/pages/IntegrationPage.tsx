@@ -14,7 +14,7 @@ import {
 import { useTenant } from '@/context/TenantContext';
 
 const PLATFORM_LABELS: Record<string, string> = {
-  {platformLabel: 'Yampi',
+  yampi: 'Yampi',
   shopify: 'Shopify',
   woocommerce: 'WooCommerce',
   nuvemshop: 'Nuvemshop',
@@ -29,9 +29,11 @@ const getPlatformLabel = (platform: string | null): string => {
 };
 
 const IntegrationPage = () => {
-const { storeId, platform } = useTenant();
-const platformLabel = getPlatformLabel(platform);
-const hasPlatform = Boolean(platform);
+  const { storeId, platform } = useTenant();
+  const platformLabel = getPlatformLabel(platform);
+  const hasPlatform = Boolean(platform);
+  const platformSafe = platform || 'custom';
+
   const [copied, setCopied] = useState(false);
   const [copiedTracking, setCopiedTracking] = useState(false);
 
@@ -71,7 +73,7 @@ const hasPlatform = Boolean(platform);
     return `<script>
 window.VIDLYTICS_CONFIG = {
   storeId: "${storeId || ''}",
-  platform: `"${platform,
+  platform: "${platformSafe}",
   supabaseUrl: "${supabaseUrl}",
   supabaseAnonKey: "${supabaseAnonKey}",
   widgets: {
@@ -90,19 +92,19 @@ window.VIDLYTICS_CONFIG = {
   document.head.appendChild(script);
 })();
 </script>`;
-  }, [storeId, supabaseUrl, supabaseAnonKey, publicUrl, widgetVersion]);
+  }, [storeId, platformSafe, supabaseUrl, supabaseAnonKey, publicUrl, widgetVersion]);
 
   const trackingScriptCode = useMemo(() => {
     return `<script>
 (function() {
   var script = document.createElement('script');
-  script.src = '${publicUrl}/`` `${platform';
+  script.src = '${publicUrl}/${platformSafe}-tracking.js';
   script.type = 'text/javascript';
   script.async = true;
   document.head.appendChild(script);
 })();
 </script>`;
-  }, [publicUrl]);
+  }, [publicUrl, platformSafe]);
 
   const handleCopyScript = async () => {
     try {
@@ -164,7 +166,7 @@ window.VIDLYTICS_CONFIG = {
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700">
             <Store className="h-4 w-4" />
-            Integração${platformLabel ? ` ${platformLabel}` : ''}
+            Integração{platformLabel ? ` ${platformLabel}` : ''}
           </div>
 
           <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900">
@@ -172,7 +174,7 @@ window.VIDLYTICS_CONFIG = {
           </h1>
 
           <p className="mt-2 max-w-3xl text-base font-medium text-slate-500">
-            Instale o widget na sua loja${platformLabel ? ` ${platformLabel}` : ''} para exibir vídeos/stories como
+            Instale o widget na sua loja{platformLabel ? ` ${platformLabel}` : ''} para exibir vídeos/stories como
             vídeo flutuante, carrossel e galeria em páginas específicas da loja.
           </p>
         </div>
@@ -183,7 +185,9 @@ window.VIDLYTICS_CONFIG = {
             Plataforma selecionada
           </div>
 
-          <p className="mt-1 text-sm font-semibold text-emerald-900">{platformLabel</p>
+          <p className="mt-1 text-sm font-semibold text-emerald-900">
+            {platformLabel || 'Não definida'}
+          </p>
         </div>
       </div>
 
@@ -228,7 +232,7 @@ window.VIDLYTICS_CONFIG = {
 
             <p className="mt-1 opacity-80">
               O widget está usando uma URL local. Para funcionar dentro da loja
-              {platformLabel, configure uma URL pública de produção, por exemplo a URL da
+              {platformLabel ? ` ${platformLabel}` : ''}, configure uma URL pública de produção, por exemplo a URL da
               Vercel, na variável <strong>VITE_WIDGET_PUBLIC_URL</strong>.
             </p>
           </div>
@@ -354,7 +358,7 @@ window.VIDLYTICS_CONFIG = {
                 </div>
                 <p className="mt-2 max-w-3xl text-sm font-medium leading-relaxed text-slate-500">
                   Para medir o lucro gerado por cada vídeo, instale este script adicional.
-                  Ele captura as vendas finalizadas no checkout da {platformLabel e atribui ao vídeo assistido.
+                  Ele captura as vendas finalizadas no checkout{platformLabel ? ` da ${platformLabel}` : ''} e atribui ao vídeo assistido.
                 </p>
               </div>
             </div>
@@ -385,7 +389,7 @@ window.VIDLYTICS_CONFIG = {
                 <span className="h-3 w-3 rounded-full bg-yellow-400" />
                 <span className="h-3 w-3 rounded-full bg-green-400" />
               </div>
-              <span className="text-xs font-bold text-slate-400">`` `${platform</span>
+              <span className="text-xs font-bold text-slate-400">{platformSafe}-tracking.js</span>
             </div>
             <pre className="overflow-x-auto whitespace-pre-wrap p-6 text-xs font-medium leading-relaxed text-blue-400 md:text-sm">
               {trackingScriptCode}
@@ -408,8 +412,8 @@ window.VIDLYTICS_CONFIG = {
 
               <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
                 O widget pode ser exibido na página e no local configurado no
-                painel. Para carrossel e galeria, use seletores CSS do tema da
-                {platformLabel para escolher exatamente onde o bloco será inserido.
+                painel. Para carrossel e galeria, use seletores CSS do tema
+                {platformLabel ? ` da ${platformLabel}` : ' da loja'} para escolher exatamente onde o bloco será inserido.
               </p>
             </div>
           </div>
@@ -469,6 +473,7 @@ window.VIDLYTICS_CONFIG = {
           </div>
         </div>
 
+        {/* Card de Produtos — conteúdo muda conforme plataforma */}
         <div className="rounded-[2.5rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
@@ -477,11 +482,11 @@ window.VIDLYTICS_CONFIG = {
 
             <div>
               <h2 className="text-xl font-black text-slate-900">
-                Produtos da {platformLabel
+                Produtos{platformLabel ? ` da ${platformLabel}` : ''}
               </h2>
 
               <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
-                A integração também precisa importar os produtos da {platformLabel para
+                A integração também precisa importar os produtos{platformLabel ? ` da ${platformLabel}` : ''} para
                 que eles possam ser vinculados aos vídeos. Assim, quando o
                 cliente clicar no vídeo, o player pode mostrar o produto e levar
                 para a página de compra.
@@ -489,19 +494,32 @@ window.VIDLYTICS_CONFIG = {
             </div>
           </div>
 
-          <div className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-5">
-            <p className="text-sm font-black text-slate-900">
-              Próxima etapa da integração
-            </p>
+          {hasPlatform ? (
+            <div className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-5">
+              <p className="text-sm font-black text-slate-900">
+                Próxima etapa da integração
+              </p>
 
-            <ul className="mt-3 space-y-2 text-sm font-medium leading-relaxed text-slate-500">
-              <li>Conectar loja {platformLabel usando Alias, Token e Secret Key.</li>
-              <li>Sincronizar produtos da loja com o painel.</li>
-              <li>Salvar imagem, nome, preço e URL do produto.</li>
-              <li>Permitir vincular produtos aos vídeos.</li>
-              <li>Exibir botão “Ver produto” dentro do player.</li>
-            </ul>
-          </div>
+              <ul className="mt-3 space-y-2 text-sm font-medium leading-relaxed text-slate-500">
+                <li>Conectar loja {platformLabel} usando as credenciais de API.</li>
+                <li>Sincronizar produtos da loja com o painel.</li>
+                <li>Salvar imagem, nome, preço e URL do produto.</li>
+                <li>Permitir vincular produtos aos vídeos.</li>
+                <li>Exibir botão "Ver produto" dentro do player.</li>
+              </ul>
+            </div>
+          ) : (
+            <div className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-5">
+              <p className="text-sm font-black text-slate-900">
+                Produtos ainda não configurados
+              </p>
+
+              <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
+                Assim que a plataforma da loja for identificada, as instruções
+                específicas de importação de produtos aparecerão aqui.
+              </p>
+            </div>
+          )}
 
           <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
             <div className="flex items-start gap-3">
@@ -513,7 +531,7 @@ window.VIDLYTICS_CONFIG = {
                 </p>
 
                 <p className="mt-1 text-sm font-medium leading-relaxed text-amber-800">
-                  Os dados de API da {platformLabel não devem ficar no script público.
+                  Os dados de API{platformLabel ? ` da ${platformLabel}` : ' da plataforma'} não devem ficar no script público.
                   Eles precisam ser salvos apenas no backend/banco de dados da
                   aplicação.
                 </p>
@@ -523,56 +541,68 @@ window.VIDLYTICS_CONFIG = {
         </div>
       </div>
 
+      {/* Seção "Como instalar" — conteúdo muda conforme plataforma */}
       <div className="rounded-[2.5rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
         <h2 className="text-xl font-black text-slate-900">
-          Como instalar na {platformLabel
+          Como instalar{platformLabel ? ` na ${platformLabel}` : ' na sua loja'}
         </h2>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-900 shadow-sm">
-              <span className="text-sm font-black">1</span>
+        {hasPlatform ? (
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-900 shadow-sm">
+                <span className="text-sm font-black">1</span>
+              </div>
+
+              <h3 className="mt-4 text-sm font-black text-slate-900">
+                Acesse o painel da {platformLabel}
+              </h3>
+
+              <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
+                Entre no painel administrativo da sua loja e localize a área de
+                tema, scripts, HTML personalizado ou cabeçalho.
+              </p>
             </div>
 
-            <h3 className="mt-4 text-sm font-black text-slate-900">
-              Acesse o painel da {platformLabel
-            </h3>
+            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-900 shadow-sm">
+                <span className="text-sm font-black">2</span>
+              </div>
 
-            <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
-              Entre no painel administrativo da sua loja e localize a área de
-              tema, scripts, HTML personalizado ou cabeçalho.
-            </p>
-          </div>
+              <h3 className="mt-4 text-sm font-black text-slate-900">
+                Cole os scripts
+              </h3>
 
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-900 shadow-sm">
-              <span className="text-sm font-black">2</span>
+              <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
+                Cole os códigos de instalação (Passo 1 e Passo 2) no campo de scripts personalizados da {platformLabel}.
+              </p>
             </div>
 
-            <h3 className="mt-4 text-sm font-black text-slate-900">
-              Cole os scripts
-            </h3>
+            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-900 shadow-sm">
+                <span className="text-sm font-black">3</span>
+              </div>
 
-            <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
-              Cole os códigos de instalação (Passo 1 e Passo 2) no campo de scripts personalizados da {platformLabel.
-            </p>
-          </div>
+              <h3 className="mt-4 text-sm font-black text-slate-900">
+                Configure os vídeos
+              </h3>
 
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-900 shadow-sm">
-              <span className="text-sm font-black">3</span>
+              <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
+                Volte ao painel, cadastre seus vídeos, escolha onde eles aparecem
+                e vincule os produtos da {platformLabel}.
+              </p>
             </div>
-
-            <h3 className="mt-4 text-sm font-black text-slate-900">
-              Configure os vídeos
-            </h3>
-
-            <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
-              Volte ao painel, cadastre seus vídeos, escolha onde eles aparecem
-              e vincule os produtos da {platformLabel.
+          </div>
+        ) : (
+          <div className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6">
+            <p className="text-sm font-medium leading-relaxed text-slate-500">
+              As instruções de instalação serão exibidas aqui assim que a
+              plataforma da loja for identificada. Enquanto isso, você pode usar
+              os scripts genéricos acima em qualquer plataforma de e-commerce
+              que aceite código JavaScript personalizado no cabeçalho.
             </p>
           </div>
-        </div>
+        )}
 
         <div className="mt-6 flex flex-col gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-5 md:flex-row md:items-center md:justify-between">
           <div>
@@ -586,15 +616,17 @@ window.VIDLYTICS_CONFIG = {
             </p>
           </div>
 
-          <a
-            href="https://www.{platformLabel.com.br/"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-100"
-          >
-            Abrir {platformLabel
-            <ExternalLink className="h-4 w-4" />
-          </a>
+          {platform === 'yampi' && (
+            <a
+              href="https://www.yampi.com.br/"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-100"
+            >
+              Abrir Yampi
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          )}
         </div>
       </div>
     </div>
