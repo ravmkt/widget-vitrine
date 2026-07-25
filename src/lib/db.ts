@@ -1099,19 +1099,6 @@ const ensureSupabaseStoreExists = async (storeId?: string) => {
     throw new Error(`store_id inválido: ${storeId}`);
   }
 
-  const { data: existingStore, error: selectError } = await supabase
-    .from('stores' as any)
-    .select('id')
-    .eq('id', storeId)
-    .maybeSingle();
-
-  if (selectError) {
-    console.error('Erro ao verificar loja no Supabase:', selectError);
-    throw selectError;
-  }
-
-  if (existingStore) return;
-
   const {
     data: { user },
     error: userError,
@@ -1134,26 +1121,27 @@ const ensureSupabaseStoreExists = async (storeId?: string) => {
     if (typeof window !== 'undefined' && window.localStorage) {
       const local = localStorage.getItem('vidlytics_stores');
       const stores = local ? (JSON.parse(local) as Store[]) : [];
-
       localStore = stores.find(store => store.id === storeId) || null;
     }
   } catch (error) {
     console.warn('Não foi possível buscar loja no localStorage:', error);
   }
 
-const storeToInsert = sanitizeTablePayload('stores', {
+  const storeToInsert = sanitizeTablePayload('stores', {
     id: storeId,
     name: localStore?.name || 'Loja',
     url: localStore?.url || '',
-});
+  });
 
-  const { error: insertError } = await supabase
+  // ✅ UPSERT resolve o problema: insere se não existir, atualiza se existir
+  //    sem precisar de SELECT (que está bloqueado pelo RLS de membros)
+  const { error } = await supabase
     .from('stores' as any)
-    .insert(storeToInsert as any);
+    .upsert(storeToInsert as any, { onConflict: 'id' });
 
-  if (insertError) {
-    console.error('Erro ao criar loja no Supabase:', insertError);
-    throw insertError;
+  if (error) {
+    console.error('Erro ao criar/atualizar loja no Supabase:', error);
+    throw error;
   }
 };
 
