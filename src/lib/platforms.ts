@@ -1,0 +1,15 @@
+export const PLATFORM_OPTIONS = [
+  { value: "yampi", label: "Yampi" },
+  { value: "shopify", label: "Shopify" },
+  { value: "woocommerce", label: "WooCommerce" },
+  { value: "nuvemshop", label: "Nuvemshop" },
+  { value: "toggo", label: "Toggo" },
+  { value: "magento", label: "Magento" },
+  { value: "vtex", label: "VTEX" },
+  { value: "tray", label: "Tray" },
+  { value: "lojaintegrada", label: "Loja Integrada" },
+  { value: "bagy", label: "Bagy" },
+  { value: "irroba", label: "Irroba" },
+  { value: "megazord", label: "Megazord" },
+  { value: "cartpanda", label: "Cartpanda" },
+];
