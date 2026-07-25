@@ -1126,11 +1126,12 @@ const ensureSupabaseStoreExists = async (storeId?: string) => {
     console.warn('Não foi possível buscar loja no localStorage:', error);
   }
 
-  const storeToInsert = sanitizeTablePayload('stores', {
+const storeToInsert = sanitizeTablePayload('stores', {
     id: storeId,
     name: localStore?.name || 'Loja',
     url: localStore?.url || '',
-  });
+    owner_user_id: user.id,
+});
 
   // ✅ UPSERT resolve o problema: insere se não existir, atualiza se existir
   //    sem precisar de SELECT (que está bloqueado pelo RLS de membros)
