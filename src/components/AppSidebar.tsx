@@ -50,22 +50,18 @@ export function AppSidebar() {
   const [storeLogoUrl, setStoreLogoUrl] = useState('');
 
   useEffect(() => {
-    const fetchStoreSettings = async () => {
-      try {
-        if (!supabase) return;
-        const { data, error } = await supabase
-          .from('app_settings')
-          .select('settings')
-          .limit(1)
-          .maybeSingle();
-        if (error) throw error;
-        setStoreName(data?.settings?.store_name || '');
-        setStoreLogoUrl(data?.settings?.store_logo_url || '');
-      } catch (err) {
-        console.error('Error fetching sidebar store settings:', err);
-      }
-    };
-    fetchStoreSettings();
+const fetchStoreSettings = async () => {
+  try {
+    const settings = await db.generalSettings.getAll();
+    if (settings.length > 0) {
+      const s = settings[0];
+      setStoreName(s.store_name || '');
+      setStoreLogoUrl(s.logo_url || '');
+    }
+  } catch (err) {
+    console.error('Error fetching sidebar store settings:', err);
+  }
+};    fetchStoreSettings();
 
     const handleSettingsUpdated = () => {
       fetchStoreSettings();
