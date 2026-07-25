@@ -2131,19 +2131,27 @@ const AppearancePage = () => {
 
       setResolvedStoreId(finalStoreId);
 
-      const [styles, widgetStyles] = await Promise.all([
-        getAppearancesSafe(finalStoreId),
-        supabase
-          ? supabase
-              .from('widget_appearances')
-              .select('*')
-              .eq('store_id', finalStoreId)
-              .limit(1)
-              .then(({ data }) => (Array.isArray(data) ? data : []))
-          : Promise.resolve([]),
-      ]);
+setResolvedStoreId(finalStoreId);
 
-      setAppearances(widgetStyles.length > 0 ? widgetStyles : styles);
+const [styles, widgetStyles] = await Promise.all([
+  getAppearancesSafe(finalStoreId),
+  supabase
+    ? supabase
+        .from('widget_appearances')
+        .select('*')
+        .eq('store_id', finalStoreId)
+        .limit(1)
+        .then(({ data }) => (Array.isArray(data) ? data : []))
+    : Promise.resolve([]),
+]);
+
+// 🔄 CONVERSÃO: transforma dados planos → formato que o formulário entende
+if (widgetStyles.length > 0) {
+  const converted = mapWidgetAppearanceToFormFormat(widgetStyles[0]);
+  setAppearances(converted ? [converted] : styles);
+} else {
+  setAppearances(styles);
+}
 
     } catch (error) {
       console.error('Erro ao carregar aparências:', error);
