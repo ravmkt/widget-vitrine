@@ -712,7 +712,6 @@ display_locations: [
   'carousel_enabled',
   'floating_widget_enabled',
   'default_appearance_id',
-  'platform',         
   'timezone',
   'language',
     'open_product_new_tab',
