@@ -369,7 +369,7 @@ const DEFAULT_STORE: Store = {
 };
 
 const DEFAULT_store_settings: GeneralSettings = {
-  id: DEFAULT_GENERAL_SETTINGS_ID,
+  id: DEFAULT_store_settings_ID,
   store_id: DEFAULT_STORE.id,
   store_name: DEFAULT_STORE.name,
   store_url: DEFAULT_STORE.url,
