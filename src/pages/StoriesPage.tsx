@@ -54,7 +54,10 @@ const StoriesPage = () => {
       setCurrentStoreId(resolvedStoreId);
 
       const s = await db.stories.getAll(resolvedStoreId);
-      const sv = await db.storyVideos.getAll(resolvedStoreId);
+// story_videos não tem store_id no banco; filtra pelos stories da loja
+const storyIds = s.map(story => story.id);
+const allSv = await db.storyVideos.getAll();
+const sv = allSv.filter(v => storyIds.includes(v.story_id));
       const dl = await db.displayLocations.getAll(resolvedStoreId);
 
       const countMap: Record<string, number> = {};
