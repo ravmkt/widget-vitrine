@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { db, type GeneralSettings } from '@/lib/db';
+import { PLATFORM_OPTIONS } from '@/lib/platforms';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -32,7 +33,8 @@ interface AppSettings {
   store_id: string;
   store_name: string | null;
   store_url: string | null;
-  store_logo_url: string | null;   // ⚠️ No banco: logo_url
+  store_logo_url: string | null;
+  platform: string | null;                      // 🆕 Plataforma de e-commerce
   contact_email: string | null;
   widget_enabled: boolean;
   stories_enabled: boolean;
@@ -57,10 +59,11 @@ interface AppSettings {
 
 const DEFAULT_SETTINGS: AppSettings = {
   id: '',
-  store_id: '',  // será resolvido via db.resolveStoreId()
+  store_id: '',
   store_name: '',
   store_url: '',
   store_logo_url: '',
+  platform: null,                              // 🆕
   contact_email: '',
   widget_enabled: true,
   stories_enabled: true,
@@ -91,7 +94,8 @@ const generalSettingsToAppSettings = (gs: GeneralSettings): AppSettings => ({
   store_id: gs.store_id || '',
   store_name: gs.store_name ?? null,
   store_url: gs.store_url ?? null,
-  store_logo_url: gs.logo_url ?? null,           // 🔄 logo_url → store_logo_url
+  store_logo_url: gs.logo_url ?? null,
+  platform: (gs as any).platform ?? null,       // 🆕 platform → platform
   contact_email: gs.contact_email ?? null,
   widget_enabled: gs.widget_enabled ?? true,
   stories_enabled: gs.stories_enabled ?? true,
@@ -123,7 +127,8 @@ const appSettingsToGeneralSettings = (
   store_id: app.store_id,
   store_name: app.store_name || '',
   store_url: app.store_url || '',
-  logo_url: app.store_logo_url,                  // 🔄 store_logo_url → logo_url
+  logo_url: app.store_logo_url,
+  platform: app.platform || '',                 // 🆕 platform → platform
   contact_email: app.contact_email || '',
   widget_enabled: app.widget_enabled,
   stories_enabled: app.stories_enabled,
@@ -153,7 +158,6 @@ const SettingsPage = () => {
   const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>("");
 
-  // ── Busca via db.generalSettings.getAll() ──
   useEffect(() => {
     const fetchSettings = async () => {
       try {
@@ -165,7 +169,6 @@ const SettingsPage = () => {
           setSettings(loaded);
           setLogoPreview(loaded.store_logo_url || "");
         } else {
-          // Nenhum registro ainda → resolve um store_id válido
           const storeId = await db.resolveStoreId();
           setSettings({ ...DEFAULT_SETTINGS, store_id: storeId });
         }
@@ -179,7 +182,6 @@ const SettingsPage = () => {
     fetchSettings();
   }, []);
 
-  // ── Handlers de logo (inalterados) ──
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -202,13 +204,11 @@ const SettingsPage = () => {
     setSettings(prev => ({ ...prev, store_logo_url: null }));
   };
 
-  // ── Salvamento via db.generalSettings.save() ──
   const handleSave = async () => {
     setSaving(true);
     try {
       let finalLogoUrl = settings.store_logo_url || "";
 
-      // Upload de logo (ainda usa supabase.storage diretamente)
       if (selectedLogoFile) {
         if (!supabase) {
           toast.error('Upload de logo requer conexão com Supabase.');
@@ -256,14 +256,12 @@ const SettingsPage = () => {
         updated_at: now,
       };
 
-      // Converte para o formato do banco e salva
       const payload = appSettingsToGeneralSettings(updatedSettings);
       await db.generalSettings.save(payload as GeneralSettings);
 
       toast.success('Configurações salvas com sucesso');
       setSelectedLogoFile(null);
 
-      // Notifica outras abas/componentes
       window.dispatchEvent(new Event('storage'));
       window.dispatchEvent(new Event('focus'));
     } catch (err) {
@@ -274,7 +272,6 @@ const SettingsPage = () => {
     }
   };
 
-  // ── Loading state ──
   if (loading)
     return (
       <div className="flex h-[200px] items-center justify-center">
@@ -282,7 +279,6 @@ const SettingsPage = () => {
       </div>
     );
 
-  // ── JSX (inalterado) ──
   return (
     <div className="space-y-8 animate-fade-in pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -341,6 +337,33 @@ const SettingsPage = () => {
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
                   required
                 />
+              </div>
+              {/* 🆕 Campo de Plataforma */}
+              <div className="space-y-4">
+                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Plataforma de E-commerce
+                </Label>
+                <Select
+                  value={settings?.platform ?? ''}
+                  onValueChange={(value) =>
+                    setSettings(prev => ({ ...prev, platform: value || null }))
+                  }
+                >
+                  <SelectTrigger className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]">
+                    <SelectValue placeholder="Selecione uma plataforma..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Selecione uma plataforma...</SelectItem>
+                    {PLATFORM_OPTIONS.map((p) => (
+                      <SelectItem key={p.value} value={p.value}>
+                        {p.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-slate-500 mt-1">
+                  Isso nos ajuda a gerar o script de instalação correto para sua loja.
+                </p>
               </div>
               <div className="space-y-4">
                 <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
