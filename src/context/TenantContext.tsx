@@ -142,6 +142,7 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
     () => ({
       currentStore,
       storeId: currentStore?.id ? String(currentStore.id) : null,
+      platform: currentStore?.platform || null,
       loading,
     }),
     [currentStore, loading],
