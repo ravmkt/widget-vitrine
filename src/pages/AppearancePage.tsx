@@ -2218,8 +2218,6 @@ const AppearancePage = () => {
   const updateCarouselConfig = (patch: Partial<CarouselConfig>) => {
     setFormData(prev => {
       const device = prev.useGlobalAppearance ? 'desktop' : carouselDevice;
-      const current = prev.carousel_config[device];
-
       const updatedDeviceConfig: CarouselConfig = normalizeCarouselConfigShape({
         ...current,
         ...patch,
