@@ -29,7 +29,9 @@ const getPlatformLabel = (platform: string | null): string => {
 };
 
 const IntegrationPage = () => {
-  const { storeId } = useTenant();
+const { storeId, platform } = useTenant();
+const platformLabel = getPlatformLabel(platform);
+const hasPlatform = Boolean(platform);
   const [copied, setCopied] = useState(false);
   const [copiedTracking, setCopiedTracking] = useState(false);
 
