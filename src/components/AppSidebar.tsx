@@ -49,31 +49,41 @@ export function AppSidebar() {
   const [storeName, setStoreName] = useState('');
   const [storeLogoUrl, setStoreLogoUrl] = useState('');
 
-  useEffect(() => {
-const fetchStoreSettings = async () => {
-  try {
-    const settings = await db.generalSettings.getAll();
-    if (settings.length > 0) {
-      const s = settings[0];
-      setStoreName(s.store_name || '');
-      setStoreLogoUrl(s.logo_url || '');
-    }
-  } catch (err) {
-    console.error('Error fetching sidebar store settings:', err);
+useEffect(() => {
+  if (!supabase) {
+    setLoading(false);
+    return;
   }
-};    fetchStoreSettings();
 
-    const handleSettingsUpdated = () => {
-      fetchStoreSettings();
-    };
+  const bootstrap = async () => {
+    const currentUser = await getCurrentUser();
+    setUser(currentUser);
+    setLoading(false);
+  };
 
-    window.addEventListener('storage', handleSettingsUpdated);
-    window.addEventListener('focus', handleSettingsUpdated);
-    return () => {
-      window.removeEventListener('storage', handleSettingsUpdated);
-      window.removeEventListener('focus', handleSettingsUpdated);
-    };
-  }, []);
+  bootstrap();
+
+  const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    setUser(session?.user || null);
+    setLoading(false);
+
+    // Se fez logout, limpa o localStorage
+    if (!session?.user) {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('vidlytics_')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+    }
+  });
+
+  return () => {
+    listener.subscription.unsubscribe();
+  };
+}, []);
 
   return (
     <Sidebar className="border-r border-[#E2E8F0] bg-white shadow-none">
