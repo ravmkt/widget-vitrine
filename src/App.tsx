@@ -9,6 +9,7 @@ import { TenantProvider, useTenant } from "@/context/TenantContext";
 import { db } from "@/lib/db";
 import SettingsPage from "@/pages/SettingsPage";
 import IntegrationPage from "@/pages/IntegrationPage";
+import DashboardPage from "@/pages/DashboardPage";
 
 // ── Componente que redireciona se o banco estiver zerado ──
 const HomeGuard = () => {
@@ -62,17 +63,7 @@ function App() {
           {/* Páginas da aplicação */}
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/integration" element={<IntegrationPage />} />
-
-          {/* Substitua /dashboard pela sua página principal real */}
-          <Route
-            path="/dashboard"
-            element={
-              <div className="p-8">
-                <h1 className="text-2xl font-black">Dashboard</h1>
-                <p>Bem-vindo!</p>
-              </div>
-            }
-          />
+          <Route path="/dashboard" element={<DashboardPage />} />
 
           {/* Fallback — qualquer rota não encontrada */}
           <Route path="*" element={<Navigate to="/" replace />} />
