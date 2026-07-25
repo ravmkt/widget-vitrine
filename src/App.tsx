@@ -11,6 +11,7 @@ import { AppLayout } from "@/components/AppLayout";
 import SettingsPage from "@/pages/SettingsPage";
 import IntegrationPage from "@/pages/IntegrationPage";
 import DashboardPage from "@/pages/DashboardPage";
+import LoginPage from "@/pages/LoginPage";
 
 // ── Componente que redireciona se o banco estiver zerado ──
 const HomeGuard = () => {
@@ -48,7 +49,7 @@ const HomeGuard = () => {
     return <Navigate to="/settings" replace />;
   }
 
-  // Se já tem settings → vai pro Dashboard (ou página principal)
+  // Se já tem settings → vai pro Dashboard
   return <Navigate to="/dashboard" replace />;
 };
 
@@ -58,6 +59,9 @@ function App() {
     <TenantProvider>
       <BrowserRouter>
         <Routes>
+          {/* Rota de login — sem sidebar */}
+          <Route path="/login" element={<LoginPage />} />
+
           {/* Rota raiz → verifica se há settings */}
           <Route path="/" element={<HomeGuard />} />
 
