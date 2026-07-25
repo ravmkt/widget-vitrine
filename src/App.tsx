@@ -6,8 +6,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { TenantProvider } from "@/context/TenantContext";
-import { useAuth } from "@/contexts/AuthContext";
-import { db } from "@/lib/db";
+import { useAuth } from "@/context/AuthContext";import { db } from "@/lib/db";
 import { AppLayout } from "@/components/AppLayout";
 import SettingsPage from "@/pages/SettingsPage";
 import IntegrationPage from "@/pages/IntegrationPage";
