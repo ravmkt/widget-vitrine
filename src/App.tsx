@@ -14,6 +14,14 @@ import IntegrationPage from "@/pages/IntegrationPage";
 import DashboardPage from "@/pages/DashboardPage";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
+import StoriesPage from '@/pages/StoriesPage';
+import VideoGalleryPage from '@/pages/VideoGalleryPage';
+import VideoPerformancePage from '@/pages/VideoPerformancePage';
+import ProductsPage from '@/pages/ProductsPage';
+import MedidasPage from '@/pages/MedidasPage';
+import AppearancePage from '@/pages/AppearancePage';
+import CommentsPage from '@/pages/CommentsPage';
+
 
 // ── Placeholders para páginas ainda não criadas ──
 // Se você já tiver os imports, remova estes placeholders e importe normalmente.
