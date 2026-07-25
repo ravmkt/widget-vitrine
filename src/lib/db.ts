@@ -1063,10 +1063,10 @@ const initLocalStorage = () => {
     if (typeof window !== 'undefined' && window.localStorage) {
       const items = [
         { key: 'vidlytics_stores', default: [DEFAULT_STORE] },
-        {
-          key: 'vidlytics_store_settings',
-          default: [DEFAULT_GENERAL_SETTINGS],
-        },
+{
+  key: 'vidlytics_store_settings',
+  default: [DEFAULT_store_settings],
+},
         { key: 'vidlytics_appearances', default: DEFAULT_APPEARANCES },
         { key: 'vidlytics_videos', default: [] },
         { key: 'vidlytics_stories', default: [] },
