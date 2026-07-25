@@ -381,13 +381,13 @@ function fetchDbAppearance() {
   if (!storeId || !hasSupabase) return Promise.resolve({});
   return Promise.all([
     tryTable('widget_appearances'),
-    tryTable('general_settings')
+    tryTable('appearances')
   ]).then(function(results) {
-    var app2 = results[0] || {};  // widget_appearances
-    var app3 = results[1] || {};  // general_settings
+    var widgetAppearance = results[0] || {};
+    var legacyAppearance = results[1] || {};
     var merged = {};
-    mergeObject(merged, app2);  // widget_appearances
-    mergeObject(merged, app3);  // general_settings (prioridade máxima)
+    mergeObject(merged, legacyAppearance);
+    mergeObject(merged, widgetAppearance);
     return normalizeAppearanceItem(merged);
   });
 }
@@ -1618,13 +1618,14 @@ function fetchDbAppearance() {
       var borderRadius  = safeInt(firstDefined(
         deviceCfg.border_radius,
         ap.carousel_border_radius,
-        ap.radius,
-        ap.border_radius
+        ap.border_radius,
+        12
       ), 12);
       var borderWidth   = safeInt(firstDefined(
         deviceCfg.border_width,
         ap.carousel_border_width,
-        ap.border_width
+        ap.border_width,
+        2
       ), 2);
       var corBorda      = firstDefined(
         deviceCfg.border_color,
@@ -1651,7 +1652,8 @@ function fetchDbAppearance() {
       var objectFit     = firstDefined(
         deviceCfg.object_fit,
         ap.carousel_object_fit,
-        ap.object_fit
+        ap.object_fit,
+        'cover'
       ) || 'cover';
 
       var aspectRatio = '9 / 16';
@@ -1659,9 +1661,11 @@ function fetchDbAppearance() {
       else if (formato.indexOf('square') !== -1 || formato.indexOf('1_1') !== -1) aspectRatio = '1 / 1';
 
       // ── Seletor ──
-      var dbSelector = ap.css_selector || ap.inline_selector || ap.seletor || '';
+      var dbSelector = ap.css_selector || ap.inline_selector || ap.display_selector || ap.selector || '';
       var selectorsToTry = [];
       if (dbSelector) selectorsToTry.push(dbSelector);
+      selectorsToTry.push('#vidlytics-carousel-root');
+      selectorsToTry.push('#instory-root');
       selectorsToTry.push('.category-content');
       selectorsToTry.push('#main');
       selectorsToTry.push('main');
