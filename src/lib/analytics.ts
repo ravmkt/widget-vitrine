@@ -175,10 +175,16 @@ const getConversionData = async (
   if (!isSupabaseConfigured || !supabase) return {};
 
   try {
+    // conversions NÃO tem store_id — busca os vídeos da loja primeiro
+    const videos = await db.videos.getAll(storeId);
+    const videoIds = videos.map(v => v.id);
+
+    if (videoIds.length === 0) return {};
+
     const { data, error } = await supabase
       .from('conversions')
       .select('video_id, order_value, status')
-      .eq('store_id', storeId)
+      .in('video_id', videoIds)
       .eq('status', 'paid');
 
     if (error || !data) return {};
