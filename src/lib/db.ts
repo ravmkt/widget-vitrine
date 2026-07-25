@@ -699,21 +699,22 @@ display_locations: [
   ],
 
   store_settings: [
-    'id',
-    'store_id',
-    'store_name',
-    'store_url',
-    'logo_url',
-    'contact_email',
-    'whatsapp_number',
-    'whatsapp_default_message',
-    'app_enabled',
-    'stories_enabled',
-    'carousel_enabled',
-    'floating_widget_enabled',
-    'default_appearance_id',
-    'timezone',
-    'language',
+  'id',
+  'store_id',
+  'store_name',
+  'store_url',
+  'logo_url',
+  'contact_email',
+  'whatsapp_number',
+  'whatsapp_default_message',
+  'app_enabled',
+  'stories_enabled',
+  'carousel_enabled',
+  'floating_widget_enabled',
+  'default_appearance_id',
+  'platform',         
+  'timezone',
+  'language',
     'open_product_new_tab',
     'autoplay',
     'muted_by_default',
@@ -1821,9 +1822,15 @@ export const db = {
     memoryStores,
   ),
 
-generalSettings: createSupabaseCrudFunctions<GeneralSettings>(
-    "store_settings",         // <-- Corrigido
-    memoryStoreSettings,  ),
+  generalSettings: createSupabaseCrudFunctions<GeneralSettings>(
+    "store_settings",
+    memoryStoreSettings,
+  ),
+
+  getSettings: async (): Promise<GeneralSettings | null> => {
+    const settings = await db.generalSettings.getAll();
+    return settings[0] || null;
+  },
 
   appearances: createSupabaseCrudFunctions<Appearance>(
     "appearances",
@@ -1880,16 +1887,16 @@ generalSettings: createSupabaseCrudFunctions<GeneralSettings>(
     memorySizingModels,
   ),
 
-profiles: createSupabaseCrudFunctions<{
-  id: string;
-  user_id: string;
-  name: string;
-  email: string;
-  avatar_url?: string;
-  role?: string;
-  created_at?: string;
-  updated_at?: string;
-}>("profiles", []),
+  profiles: createSupabaseCrudFunctions<{
+    id: string;
+    user_id: string;
+    name: string;
+    email: string;
+    avatar_url?: string;
+    role?: string;
+    created_at?: string;
+    updated_at?: string;
+  }>("profiles", []),
 
   storeMembers: createSupabaseCrudFunctions<{
     id: string;
@@ -1926,4 +1933,3 @@ profiles: createSupabaseCrudFunctions<{
 
   replaceStoryRelations,
 };
-
