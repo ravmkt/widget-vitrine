@@ -204,24 +204,22 @@ const getVideoLikeCounts = async (
   storeId: string,
 ): Promise<Record<string, number>> => {
   if (!isSupabaseConfigured || !supabase) {
-    console.warn('[analytics] getVideoLikeCounts: Supabase não configurado');
     return {};
   }
 
   try {
+    // video_likes NÃO tem store_id — busca os vídeos da loja primeiro
+    const videos = await db.videos.getAll(storeId);
+    const videoIds = videos.map(v => v.id);
+
+    if (videoIds.length === 0) return {};
+
     const { data, error } = await supabase
       .from('video_likes')
       .select('video_id')
-      .eq('store_id', storeId);
+      .in('video_id', videoIds);
 
-    console.log('[analytics] getVideoLikeCounts:', { storeId, rowCount: data?.length, error: error?.message, data });
-
-    if (error) {
-      console.error('[analytics] getVideoLikeCounts erro:', error);
-      return {};
-    }
-
-    if (!data || data.length === 0) return {};
+    if (error || !data) return {};
 
     const counts: Record<string, number> = {};
     data.forEach((row: any) => {
@@ -229,10 +227,8 @@ const getVideoLikeCounts = async (
       if (vid) counts[vid] = (counts[vid] || 0) + 1;
     });
 
-    console.log('[analytics] getVideoLikeCounts final:', counts);
     return counts;
-  } catch (err) {
-    console.error('[analytics] getVideoLikeCounts exception:', err);
+  } catch {
     return {};
   }
 };
