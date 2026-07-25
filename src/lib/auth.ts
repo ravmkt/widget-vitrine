@@ -67,7 +67,7 @@ export const createInitialTenantForUser = async ({
   await db.stores.save({
     id: storeId,
     name: storeName,
-    domain: storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'empresa',
+    url: storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'empresa',
     active: true,
     created_at: now,
   });
