@@ -262,17 +262,17 @@ const SettingsPage = () => {
       const payload = appSettingsToGeneralSettings(updatedSettings);
       await db.generalSettings.save(payload as GeneralSettings);
 
-      toast.success('Configurações salvas com sucesso');
-      setSelectedLogoFile(null);
+setSelectedLogoFile(null);
 
-      // ✅ CORREÇÃO: dispara eventos para o sidebar atualizar
-      window.dispatchEvent(new Event('storage'));
-      window.dispatchEvent(new Event('focus'));
+window.dispatchEvent(new Event('storage'));
+window.dispatchEvent(new Event('focus'));
 
-      // ✅ CORREÇÃO: redireciona para o dashboard após 800ms
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 800);
+// Exibe o toast e só redireciona após ele sumir
+toast.success('Configurações salvas com sucesso!', {
+  duration: 2000,
+  onAutoClose: () => navigate('/dashboard'),
+  onDismiss: () => navigate('/dashboard'),
+});
 
     } catch (err) {
       console.error("Erro completo ao salvar configurações:", err);
