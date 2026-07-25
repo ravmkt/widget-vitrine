@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./globals.css";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const rootElement = document.getElementById("root");
 
@@ -22,7 +23,11 @@ if (!rootElement) {
 } else {
   try {
     const root = createRoot(rootElement);
-    root.render(<App />);
+    root.render(
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    );
     console.log("React montado com sucesso no elemento #root.");
   } catch (error) {
     console.error("Erro ao renderizar o React no elemento #root:", error);
