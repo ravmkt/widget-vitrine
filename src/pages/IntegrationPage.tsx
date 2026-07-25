@@ -23,6 +23,8 @@ const PLATFORM_LABELS: Record<string, string> = {
   vtex: 'VTEX',
   tray: 'Tray',
   lojaintegrada: 'Loja Integrada',
+  bagy: 'Bagy',
+  irroba: 'Irroba',
 };
 
 const getPlatformLabel = (platform: string | null): string => {
