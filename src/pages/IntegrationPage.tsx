@@ -14,7 +14,7 @@ import {
 import { useTenant } from '@/context/TenantContext';
 
 const PLATFORM_LABELS: Record<string, string> = {
-  yampi: 'Yampi',
+  {platformLabel: 'Yampi',
   shopify: 'Shopify',
   woocommerce: 'WooCommerce',
   nuvemshop: 'Nuvemshop',
@@ -164,7 +164,7 @@ window.VIDLYTICS_CONFIG = {
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700">
             <Store className="h-4 w-4" />
-            Integração Yampi
+            Integração${platformLabel ? ` ${platformLabel}` : ''}
           </div>
 
           <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900">
@@ -172,7 +172,7 @@ window.VIDLYTICS_CONFIG = {
           </h1>
 
           <p className="mt-2 max-w-3xl text-base font-medium text-slate-500">
-            Instale o widget na sua loja Yampi para exibir vídeos/stories como
+            Instale o widget na sua loja${platformLabel ? ` ${platformLabel}` : ''} para exibir vídeos/stories como
             vídeo flutuante, carrossel e galeria em páginas específicas da loja.
           </p>
         </div>
@@ -183,7 +183,7 @@ window.VIDLYTICS_CONFIG = {
             Plataforma selecionada
           </div>
 
-          <p className="mt-1 text-sm font-semibold text-emerald-900">Yampi</p>
+          <p className="mt-1 text-sm font-semibold text-emerald-900">{platformLabel</p>
         </div>
       </div>
 
@@ -228,7 +228,7 @@ window.VIDLYTICS_CONFIG = {
 
             <p className="mt-1 opacity-80">
               O widget está usando uma URL local. Para funcionar dentro da loja
-              Yampi, configure uma URL pública de produção, por exemplo a URL da
+              {platformLabel, configure uma URL pública de produção, por exemplo a URL da
               Vercel, na variável <strong>VITE_WIDGET_PUBLIC_URL</strong>.
             </p>
           </div>
@@ -354,7 +354,7 @@ window.VIDLYTICS_CONFIG = {
                 </div>
                 <p className="mt-2 max-w-3xl text-sm font-medium leading-relaxed text-slate-500">
                   Para medir o lucro gerado por cada vídeo, instale este script adicional.
-                  Ele captura as vendas finalizadas no checkout da Yampi e atribui ao vídeo assistido.
+                  Ele captura as vendas finalizadas no checkout da {platformLabel e atribui ao vídeo assistido.
                 </p>
               </div>
             </div>
@@ -409,7 +409,7 @@ window.VIDLYTICS_CONFIG = {
               <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
                 O widget pode ser exibido na página e no local configurado no
                 painel. Para carrossel e galeria, use seletores CSS do tema da
-                Yampi para escolher exatamente onde o bloco será inserido.
+                {platformLabel para escolher exatamente onde o bloco será inserido.
               </p>
             </div>
           </div>
@@ -477,11 +477,11 @@ window.VIDLYTICS_CONFIG = {
 
             <div>
               <h2 className="text-xl font-black text-slate-900">
-                Produtos da Yampi
+                Produtos da {platformLabel
               </h2>
 
               <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
-                A integração também precisa importar os produtos da Yampi para
+                A integração também precisa importar os produtos da {platformLabel para
                 que eles possam ser vinculados aos vídeos. Assim, quando o
                 cliente clicar no vídeo, o player pode mostrar o produto e levar
                 para a página de compra.
@@ -495,7 +495,7 @@ window.VIDLYTICS_CONFIG = {
             </p>
 
             <ul className="mt-3 space-y-2 text-sm font-medium leading-relaxed text-slate-500">
-              <li>Conectar loja Yampi usando Alias, Token e Secret Key.</li>
+              <li>Conectar loja {platformLabel usando Alias, Token e Secret Key.</li>
               <li>Sincronizar produtos da loja com o painel.</li>
               <li>Salvar imagem, nome, preço e URL do produto.</li>
               <li>Permitir vincular produtos aos vídeos.</li>
@@ -513,7 +513,7 @@ window.VIDLYTICS_CONFIG = {
                 </p>
 
                 <p className="mt-1 text-sm font-medium leading-relaxed text-amber-800">
-                  Os dados de API da Yampi não devem ficar no script público.
+                  Os dados de API da {platformLabel não devem ficar no script público.
                   Eles precisam ser salvos apenas no backend/banco de dados da
                   aplicação.
                 </p>
@@ -525,7 +525,7 @@ window.VIDLYTICS_CONFIG = {
 
       <div className="rounded-[2.5rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
         <h2 className="text-xl font-black text-slate-900">
-          Como instalar na Yampi
+          Como instalar na {platformLabel
         </h2>
 
         <div className="mt-6 grid gap-4 md:grid-cols-3">
@@ -535,7 +535,7 @@ window.VIDLYTICS_CONFIG = {
             </div>
 
             <h3 className="mt-4 text-sm font-black text-slate-900">
-              Acesse o painel da Yampi
+              Acesse o painel da {platformLabel
             </h3>
 
             <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
@@ -554,7 +554,7 @@ window.VIDLYTICS_CONFIG = {
             </h3>
 
             <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
-              Cole os códigos de instalação (Passo 1 e Passo 2) no campo de scripts personalizados da Yampi.
+              Cole os códigos de instalação (Passo 1 e Passo 2) no campo de scripts personalizados da {platformLabel.
             </p>
           </div>
 
@@ -569,7 +569,7 @@ window.VIDLYTICS_CONFIG = {
 
             <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
               Volte ao painel, cadastre seus vídeos, escolha onde eles aparecem
-              e vincule os produtos da Yampi.
+              e vincule os produtos da {platformLabel.
             </p>
           </div>
         </div>
@@ -587,12 +587,12 @@ window.VIDLYTICS_CONFIG = {
           </div>
 
           <a
-            href="https://www.yampi.com.br/"
+            href="https://www.{platformLabel.com.br/"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-100"
           >
-            Abrir Yampi
+            Abrir {platformLabel
             <ExternalLink className="h-4 w-4" />
           </a>
         </div>
