@@ -3,6 +3,7 @@ import { AppSidebar } from './AppSidebar';
 import FloatingSupportButton from './FloatingSupportButton';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TenantProvider } from '@/context/TenantContext';
+import { Toaster } from 'sonner';  // 👈 adicionar
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -23,6 +24,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </main>
           </SidebarInset>
         </div>
+        <Toaster position="top-right" richColors duration={3000} />  {/* 👈 adicionar */}
       </SidebarProvider>
     </TenantProvider>
   );
