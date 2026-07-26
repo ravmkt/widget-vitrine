@@ -12,6 +12,10 @@ import { useTenant } from '@/context/TenantContext';
 
 const STORAGE_BUCKET = 'store-assets';
 
+// ⬇️ Limite de upload em bytes (25 MB)
+const MAX_VIDEO_SIZE_BYTES = 25 * 1024 * 1024;
+const MAX_VIDEO_SIZE_MB = 25;
+
 const createSafeId = () => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
@@ -235,7 +239,7 @@ const VideoEditPage = () => {
             thumbnail_url: v.thumbnail_url || '',
             product_id: v.product_id || '',
             model_id: v.model_id || '',
-            active: v.active ?? true,
+            active: (v as any).active ?? true, // mantido apenas para UI local
             origin: mappedOrigin,
             video_file: null,
             thumbnail_file: null,
@@ -318,11 +322,12 @@ const VideoEditPage = () => {
     }
   };
 
+  // ⬇️ Validação com limite de 25 MB
   const validateFile = (file: File): boolean => {
     if (!file) return false;
 
-    if (file.size > 30 * 1024 * 1024) {
-      showError('O vídeo deve ter no máximo 30MB.');
+    if (file.size > MAX_VIDEO_SIZE_BYTES) {
+      showError(`O vídeo deve ter no máximo ${MAX_VIDEO_SIZE_MB} MB.`);
       return false;
     }
 
@@ -401,8 +406,8 @@ const VideoEditPage = () => {
   const getVideoFileHelperText = () => {
     if (!formData.video_file) return 'Selecione um arquivo de vídeo';
 
-    if (formData.video_file.size > 30 * 1024 * 1024) {
-      return 'O vídeo deve ter no máximo 30MB.';
+    if (formData.video_file.size > MAX_VIDEO_SIZE_BYTES) {
+      return `O vídeo deve ter no máximo ${MAX_VIDEO_SIZE_MB} MB.`;
     }
 
     const sizeMB = (formData.video_file.size / (1024 * 1024)).toFixed(1);
@@ -413,7 +418,7 @@ const VideoEditPage = () => {
   const getVideoFileHelperClass = () => {
     if (!formData.video_file) return 'mt-1 text-gray-500';
 
-    if (formData.video_file.size > 30 * 1024 * 1024) {
+    if (formData.video_file.size > MAX_VIDEO_SIZE_BYTES) {
       return 'mt-1 font-medium text-red-600';
     }
 
@@ -551,19 +556,17 @@ const VideoEditPage = () => {
         );
       }
 
+      // ⬇️ REMOVIDOS os campos `active` e `status` que não existem na tabela
       const videoData: Partial<Video> = {
         title: formData.title.trim(),
         source_type: sourceType,
         video_url: finalVideoUrl,
         thumbnail_url: finalThumbnailUrl,
-        active: formData.active,
-        status: formData.active ? 'active' : 'inactive',
         model_id: formData.model_id || null,
         product_id: formData.product_id || null,
         store_id: safeStoreId,
         updated_at: now,
       };
-
 
       if (isCreate) {
         const newVideo: Video = {
@@ -679,6 +682,12 @@ const VideoEditPage = () => {
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                 Arquivo de vídeo
               </label>
+
+              {/* ⬇️ OBSERVAÇÃO DO LIMITE ADICIONADA */}
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 font-medium">
+                ⚠️ O arquivo de vídeo deve ter no <strong>máximo {MAX_VIDEO_SIZE_MB} MB</strong>.
+                Formatos aceitos: MP4, MOV e WEBM.
+              </p>
 
               <input
                 type="file"
@@ -828,6 +837,7 @@ const VideoEditPage = () => {
             </select>
           </div>
 
+          {/* ⬇️ Select de Status mantido apenas para UI, não vai pro banco */}
           <div className="space-y-4">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
               Status
