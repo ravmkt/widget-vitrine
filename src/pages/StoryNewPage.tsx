@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   db,
   resolveStoreId,
@@ -23,6 +23,7 @@ import {
   Trash2,
   Play,
   ImageIcon,
+  Loader2,
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
@@ -44,20 +45,25 @@ const POSITION_LABELS: Record<DisplayPosition, string> = {
 
 const StoryNewPage = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id?: string }>();
+
+  const isEditing = Boolean(id);
 
   // ── Campos do Story ──────────────────────────────────
   const [title, setTitle] = useState('');
   const [format, setFormat] = useState<StoryFormat>('floating_widget');
   const [scrollDirection, setScrollDirection] = useState<ScrollDirection>('vertical');
   const [appearanceId, setAppearanceId] = useState<string>('');
+  const [active, setActive] = useState(true);
 
   // ── Display Location ─────────────────────────────────
   const [selector, setSelector] = useState('body');
   const [displayPosition, setDisplayPosition] = useState<DisplayPosition>('afterend');
+  const [displayLocationId, setDisplayLocationId] = useState<string | null>(null);
 
   // ── Page Rules ───────────────────────────────────────
   const [pageRules, setPageRules] = useState<
-    { key: string; condition_type: ConditionType; value: string }[]
+    { key: string; id?: string; condition_type: ConditionType; value: string }[]
   >([]);
 
   // ── Vídeos Selecionados ──────────────────────────────
@@ -68,7 +74,9 @@ const StoryNewPage = () => {
   const [appearances, setAppearances] = useState<Appearance[]>([]);
   const [videos, setVideos] = useState<Video[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [loadingStory, setLoadingStory] = useState(isEditing);
   const [saving, setSaving] = useState(false);
+  const [existingPosition, setExistingPosition] = useState<number | null>(null);
 
   // ── Carregar aparências e vídeos ─────────────────────
   useEffect(() => {
@@ -90,6 +98,71 @@ const StoryNewPage = () => {
     load();
   }, []);
 
+  // ── Carregar dados do Story se estiver editando ──────
+  useEffect(() => {
+    if (!id) {
+      setLoadingStory(false);
+      return;
+    }
+
+    const loadStory = async () => {
+      try {
+        const storeId = await resolveStoreId();
+
+        // Buscar story
+        const story = await db.stories.getById(id);
+        if (!story) {
+          showError('Story não encontrado.');
+          navigate('/stories', { replace: true });
+          return;
+        }
+
+        setTitle(story.title ?? '');
+        setFormat(story.format ?? 'floating_widget');
+        setScrollDirection(story.scroll_direction ?? 'vertical');
+        setAppearanceId(story.appearance_id ?? '');
+        setActive(story.active ?? true);
+        setExistingPosition(story.position ?? null);
+
+        // Buscar display location
+        const locations = await db.displayLocations.getAll(storeId);
+        const location = locations.find((l: any) => l.story_id === id);
+        if (location) {
+          setSelector(location.selector ?? 'body');
+          setDisplayPosition(location.position ?? 'afterend');
+          setDisplayLocationId(location.id ?? null);
+        }
+
+        // Buscar page rules
+        const allRules = await db.pageRules.getAll(storeId);
+        const storyRules = allRules.filter((r: any) => r.story_id === id);
+        setPageRules(
+          storyRules.map((r: any) => ({
+            key: generateUuid(),
+            id: r.id,
+            condition_type: r.condition_type,
+            value: r.value ?? '',
+          })),
+        );
+
+        // Buscar vídeos associados
+        const allStoryVideos = await db.storyVideos.getAll(storeId);
+        const storyVids = allStoryVideos
+          .filter((sv: any) => sv.story_id === id)
+          .sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0));
+        setSelectedVideoIds(storyVids.map((sv: any) => sv.video_id));
+      } catch (e) {
+        console.error('Erro ao carregar story:', e);
+        showError('Erro ao carregar dados do Story.');
+        navigate('/stories', { replace: true });
+      } finally {
+        setLoadingStory(false);
+      }
+    };
+
+    loadStory();
+  }, [id, navigate]);
+
   // ── Vídeos filtrados pela busca ──────────────────────
   const filteredVideos = videos.filter(v =>
     v.title.toLowerCase().includes(videoSearch.toLowerCase()),
@@ -107,7 +180,7 @@ const StoryNewPage = () => {
   const addPageRule = () => {
     setPageRules(prev => [
       ...prev,
-      { key: generateUuid(), condition_type: 'url_contains', value: '' },
+      { key: generateUuid(), condition_type: 'url_contains' as ConditionType, value: '' },
     ]);
   };
 
@@ -136,61 +209,138 @@ const StoryNewPage = () => {
     try {
       const storeId = await resolveStoreId();
 
-      // 1. Salvar Story
-      const story = await db.stories.save({
-        title: title.trim(),
-        format,
-        scroll_direction: scrollDirection,
-        appearance_id: appearanceId || null,
-        store_id: storeId,
-        active: true,
-        position: Math.floor(Date.now() / 1000),
-      });
+      // ── 1. Salvar/Atualizar Story ──
+      let storyId = id;
 
-      // 2. Salvar Display Location
-      await db.displayLocations.save({
-        store_id: storeId,
-        story_id: story.id,
-        selector,
-        position: displayPosition,
-      });
-
-      // 3. Salvar Page Rules
-      for (const rule of pageRules) {
-        if (!rule.value.trim() && rule.condition_type !== 'home' && rule.condition_type !== 'all_pages') {
-          continue; // pula regras sem valor para conditions que exigem URL
-        }
-        await db.pageRules.save({
+      if (isEditing && id) {
+        await db.stories.save({
+          id,
+          title: title.trim(),
+          format,
+          scroll_direction: scrollDirection,
+          appearance_id: appearanceId || null,
           store_id: storeId,
-          story_id: story.id,
-          condition_type: rule.condition_type,
-          value: rule.condition_type === 'home' || rule.condition_type === 'all_pages'
-            ? null
-            : rule.value.trim(),
+          active,
+          position: existingPosition ?? Math.floor(Date.now() / 1000),
+        });
+      } else {
+        const story = await db.stories.save({
+          title: title.trim(),
+          format,
+          scroll_direction: scrollDirection,
+          appearance_id: appearanceId || null,
+          store_id: storeId,
+          active: true,
+          position: Math.floor(Date.now() / 1000),
+        });
+        storyId = story.id;
+      }
+
+      if (!storyId) throw new Error('Falha ao obter ID do story');
+
+      // ── 2. Salvar/Atualizar Display Location ──
+      if (displayLocationId) {
+        await db.displayLocations.save({
+          id: displayLocationId,
+          store_id: storeId,
+          story_id: storyId,
+          selector,
+          position: displayPosition,
+        });
+      } else {
+        await db.displayLocations.save({
+          store_id: storeId,
+          story_id: storyId,
+          selector,
+          position: displayPosition,
         });
       }
 
-      // 4. Salvar Story Videos
+      // ── 3. Reconciliar Page Rules ──
+      if (isEditing) {
+        // Obter rules existentes para saber quais remover
+        const allRules = await db.pageRules.getAll(storeId);
+        const existingRuleIds = allRules
+          .filter((r: any) => r.story_id === storyId)
+          .map((r: any) => r.id);
+
+        const newRuleIds = pageRules.map(r => r.id).filter(Boolean);
+
+        // Remover rules que não estão mais na lista
+        for (const ruleId of existingRuleIds) {
+          if (!newRuleIds.includes(ruleId)) {
+            await db.pageRules.delete(ruleId);
+          }
+        }
+      }
+
+      // Salvar/atualizar cada rule
+      for (const rule of pageRules) {
+        if (
+          rule.condition_type !== 'home' &&
+          rule.condition_type !== 'all_pages' &&
+          !rule.value.trim()
+        ) {
+          continue;
+        }
+
+        await db.pageRules.save({
+          ...(rule.id ? { id: rule.id } : {}),
+          store_id: storeId,
+          story_id: storyId,
+          condition_type: rule.condition_type,
+          value:
+            rule.condition_type === 'home' || rule.condition_type === 'all_pages'
+              ? null
+              : rule.value.trim(),
+        });
+      }
+
+      // ── 4. Reconciliar Story Videos ──
+      if (isEditing) {
+        const allStoryVideos = await db.storyVideos.getAll(storeId);
+        const existingSVIds = allStoryVideos
+          .filter((sv: any) => sv.story_id === storyId)
+          .map((sv: any) => sv.id);
+
+        // Remover todos os vínculos antigos
+        for (const svId of existingSVIds) {
+          await db.storyVideos.delete(svId);
+        }
+      }
+
+      // Inserir novos vínculos
       for (let i = 0; i < selectedVideoIds.length; i++) {
         await db.storyVideos.save({
-          story_id: story.id,
+          story_id: storyId,
           video_id: selectedVideoIds[i],
           position: i,
           is_cover: i === 0,
         });
       }
 
-      showSuccess('Story criado com sucesso!');
+      showSuccess(isEditing ? 'Story atualizado com sucesso!' : 'Story criado com sucesso!');
       navigate('/stories');
     } catch (e) {
-      console.error('Erro ao criar story:', e);
-      showError('Erro ao criar o Story.');
+      console.error('Erro ao salvar story:', e);
+      showError('Erro ao salvar o Story.');
     } finally {
       setSaving(false);
     }
   };
 
+  // ── Loading (carregamento inicial dos dados base) ────
   if (loadingData) return null;
+
+  // ── Loading (carregamento do story para edição) ──────
+  if (loadingStory) {
+    return (
+      <div className="flex items-center justify-center h-64 gap-3">
+        <Loader2 size={24} className="animate-spin text-[#0094EB]" />
+        <p className="text-sm font-bold text-slate-500">Carregando story...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fade-in pb-20">
@@ -204,10 +354,12 @@ const StoryNewPage = () => {
         </button>
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-            Novo Story
+            {isEditing ? 'Editar Story' : 'Novo Story'}
           </h1>
           <p className="text-slate-500 font-medium mt-1">
-            Configure um novo agrupamento de vídeos.
+            {isEditing
+              ? 'Edite a configuração do seu agrupamento de vídeos.'
+              : 'Configure um novo agrupamento de vídeos.'}
           </p>
         </div>
       </div>
@@ -296,7 +448,7 @@ const StoryNewPage = () => {
               Nenhuma aparência disponível.{' '}
               <button
                 type="button"
-                onClick={() => navigate('/appearances')}
+                onClick={() => navigate('/aparencia')}
                 className="text-[#0094EB] underline font-bold"
               >
                 Criar aparência
@@ -321,6 +473,37 @@ const StoryNewPage = () => {
             Selecione uma aparência ou deixe em branco para usar o padrão da loja.
           </p>
         </div>
+
+        {/* ──────── Ativo/Inativo ──────── */}
+        {isEditing && (
+          <div>
+            <label className="block text-xs font-black uppercase text-slate-500 tracking-widest mb-2">
+              Status
+            </label>
+            <div className="flex gap-2">
+              {[
+                { value: true, label: 'Ativo' },
+                { value: false, label: 'Inativo' },
+              ].map(opt => (
+                <button
+                  key={String(opt.value)}
+                  type="button"
+                  onClick={() => setActive(opt.value)}
+                  className={cn(
+                    'px-5 py-3 rounded-xl text-sm font-bold transition-all border',
+                    active === opt.value
+                      ? opt.value
+                        ? 'bg-emerald-500 text-white border-emerald-500'
+                        : 'bg-slate-400 text-white border-slate-400'
+                      : 'bg-slate-50 text-slate-600 border-slate-100 hover:border-slate-200',
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ──────── Local de Exibição ──────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -555,7 +738,7 @@ const StoryNewPage = () => {
             className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl transition-all flex items-center gap-2 disabled:opacity-50"
           >
             <Save size={18} />
-            {saving ? 'Salvando...' : 'Salvar Story'}
+            {saving ? 'Salvando...' : isEditing ? 'Atualizar Story' : 'Salvar Story'}
           </button>
         </div>
       </div>
