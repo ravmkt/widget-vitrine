@@ -496,7 +496,7 @@ const TABLE_UUID_FIELDS: Record<string, Record<string, UuidMode>> = {
       },
 story_videos: {
   id: 'required',
-  store_id: 'required',    // ← ADICIONAR
+  store_id: 'optional',
   story_id: 'required',
   video_id: 'required',
 },
