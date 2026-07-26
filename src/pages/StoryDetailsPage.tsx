@@ -316,7 +316,7 @@ await Promise.all(normalizedLocations.map((location) => (db as any).displayLocat
       const validSelectedVideoIds = selectedVideoIds.filter((videoId) => isValidUuid(videoId));
       const storyPayload = { ...(story || ({} as Story)), id: story?.id && isValidUuid(story.id) ? story.id : generateUuid(), store_id: finalStoreId, title: formData.title.trim(), format: formData.format, scroll_direction: formData.scroll_direction, active: formData.active, appearance_id: formData.appearance_id && isValidUuid(formData.appearance_id) ? formData.appearance_id : null, cta_enabled: story?.cta_enabled ?? false, cta_type: story?.cta_type || 'none', cta_text: story?.cta_text || '', cta_url: story?.cta_url || '', whatsapp_message: story?.whatsapp_message || '', view_count: story?.view_count ?? 0, click_count: story?.click_count ?? 0, created_at: story?.created_at || now, updated_at: now } as Story;
       const savedStory = await (db as any).stories.save(storyPayload);
-      const newRelations: StoryVideo[] = validSelectedVideoIds.map((videoId, index) => ({ id: generateUuid(), store_id: finalStoreId, story_id: savedStory.id, video_id: videoId, position: index + 1, is_cover: index === 0, created_at: now }));
+      const newRelations: StoryVideo[] = validSelectedVideoIds.map((videoId, index) => ({ id: generateUuid(), store_id: finalStoreId, story_id: savedStory.id, video_id: videoId, position: index + 1, is_cover: index === 0 ? 1 : 0, created_at: now }));
       await replaceStoryRelations('story_videos', finalStoreId, savedStory.id, newRelations);
       await saveLocationsAndRules(savedStory.id, finalStoreId);
       window.dispatchEvent(new Event('storage'));
