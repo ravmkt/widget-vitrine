@@ -22,6 +22,8 @@ import ProductsPage from "@/pages/ProductsPage";
 import MedidasPage from "@/pages/MedidasPage";
 import AppearancePage from "@/pages/AppearancePage";
 import CommentsPage from "@/pages/CommentsPage";
+import StoryNewPage from "@/pages/StoryNewPage";
+
 
 // ── Protege rotas que exigem login ──
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
