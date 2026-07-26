@@ -346,6 +346,9 @@ const VideoEditPage = () => {
     return true;
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
     if (!file) return;
 
     if (!validateFile(file)) {
@@ -378,28 +381,26 @@ const VideoEditPage = () => {
     }
   };
 
-const MAX_THUMBNAIL_SIZE_BYTES = 350 * 1024;
+  const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
 
-const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
+    if (!file) return;
 
-  if (!file) return;
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-
-  if (!allowedTypes.includes(file.type)) {
-    showError('Formato de imagem inválido. Use JPG, PNG ou WEBP.');
-    e.target.value = '';
-    return;
-  }
+    if (!allowedTypes.includes(file.type)) {
+      showError('Formato de imagem inválido. Use JPG, PNG ou WEBP.');
+      e.target.value = '';
+      return;
+    }
 
     if (file.size > MAX_THUMBNAIL_SIZE_BYTES) {
-    showError('A imagem deve ter no máximo 350 KB.');
-    e.target.value = '';
-    return;
-  }
+      showError('A imagem deve ter no máximo 350 KB.');
+      e.target.value = '';
+      return;
+    }
 
-  const previewUrl = URL.createObjectURL(file);
+    const previewUrl = URL.createObjectURL(file);
     setFormData(prev => ({
       ...prev,
       thumbnail_file: file,
@@ -636,6 +637,7 @@ const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
 
       <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm">
         <form onSubmit={handleSave} className="space-y-6">
+          {/* Título do Vídeo */}
           <div className="space-y-4">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
               Título do Vídeo
@@ -649,6 +651,7 @@ const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
             />
           </div>
 
+          {/* Origem do Vídeo */}
           <div className="space-y-4">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
               Origem do Vídeo
@@ -664,6 +667,7 @@ const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
             </select>
           </div>
 
+          {/* URL do vídeo */}
           {formData.origin === 'external_url' && (
             <div className="space-y-4">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
@@ -680,13 +684,13 @@ const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
             </div>
           )}
 
+          {/* Upload de vídeo */}
           {formData.origin === 'upload' && (
             <div className="space-y-4">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                 Arquivo de vídeo
               </label>
 
-              {/* ⬇️ OBSERVAÇÃO DO LIMITE */}
               <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 font-medium">
                 ⚠️ O arquivo de vídeo deve ter no <strong>máximo {MAX_VIDEO_SIZE_MB} MB</strong>.
                 Formatos aceitos: MP4, MOV e WEBM.
@@ -726,6 +730,7 @@ const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
             </div>
           )}
 
+          {/* Capa do Vídeo (Thumbnail) */}
           <div className="space-y-4">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
               Capa do Vídeo (Thumbnail)
@@ -775,10 +780,12 @@ const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
               </div>
             </div>
 
-<p className="text-xs text-slate-400 font-medium">
-  JPG, PNG ou WEBP. Máx. 350 KB. Se deixado em branco, um frame do vídeo será usado automaticamente.
-</p>
+            <p className="text-xs text-slate-400 font-medium">
+              JPG, PNG ou WEBP. Máx. 350 KB. Se deixado em branco, um frame do vídeo será usado automaticamente.
+            </p>
+          </div>
 
+          {/* Produto Vinculado */}
           <div className="space-y-4">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
               Produto Vinculado (opcional)
@@ -819,6 +826,7 @@ const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
             </select>
           </div>
 
+          {/* Modelo/Medida Vinculado */}
           <div className="space-y-4">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
               Modelo/Medida Vinculado (opcional)
@@ -839,6 +847,7 @@ const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
             </select>
           </div>
 
+          {/* Status */}
           <div className="space-y-4">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
               Status
@@ -857,6 +866,7 @@ const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
             </select>
           </div>
 
+          {/* Usado em Stories */}
           {usedInStories.length > 0 && (
             <div className="space-y-4 pt-4 border-t border-slate-200">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
