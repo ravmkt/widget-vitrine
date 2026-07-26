@@ -568,20 +568,13 @@ stores: ['id', 'name', 'url', 'platform', 'logo_url', 'contact_email', 'settings
     'updated_at',
   ],
 
-  stories: [
-    'id',
-    'store_id',
-    'title',
-    'format',
-    'scroll_direction',
-    'active',
-    'appearance_id',
-    'model_id',
-    'position',
-    'created_at',
-    'updated_at',
-  ],
-
+stories: [
+  'id', 'store_id', 'title', 'format', 'scroll_direction',
+  'active', 'appearance_id', 'model_id', 'position',
+  'cta_enabled', 'cta_text', 'cta_type', 'cta_url',
+  'whatsapp_message', 'view_count', 'click_count',
+  'created_at', 'updated_at',
+],
 story_videos: [
   'id',
   'store_id',
