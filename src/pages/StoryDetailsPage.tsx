@@ -383,7 +383,10 @@ await Promise.all(normalizedLocations.map((location) => (db as any).displayLocat
         </div>
         <div className="mt-5 flex items-center justify-end gap-3">
           <button type="button" onClick={() => navigate('/videos/new')} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">Criar novo vídeo</button>
-          <button type="button" onClick={() => setIsGalleryOpen(false)} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">Adicionar ao Story</button>
+<button type="button" onClick={() => setIsGalleryOpen(false)} 
+  className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">
+  Adicionar {selectedVideoIds.length} vídeo(s) ao Story
+</button>
         </div>
       </div>
     </div>
