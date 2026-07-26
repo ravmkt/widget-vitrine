@@ -144,7 +144,7 @@ const StoryNewPage = () => {
         appearance_id: appearanceId || null,
         store_id: storeId,
         active: true,
-        position: Date.now(),
+        position: Math.floor(Date.now() / 1000),
       });
 
       // 2. Salvar Display Location
