@@ -145,8 +145,6 @@ const StoryNewPage = () => {
         store_id: storeId,
         active: true,
         position: Date.now(),
-        cta_enabled: false,
-        cta_type: 'none',
       });
 
       // 2. Salvar Display Location
