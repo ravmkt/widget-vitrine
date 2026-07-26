@@ -1087,10 +1087,16 @@ if (summary.imported > 0) {
       setXmlPreviewPage(1);
       setImportProgressMessage('');
 
-      if (duplicatedCount > 0) {
-        showError('Produto já existente na loja.');
-      }
-      showSuccess(`${saved} produtos importados com sucesso.`);
+const messages: string[] = [];
+if (saved > 0) messages.push(`✅ ${saved} ${saved === 1 ? 'produto importado' : 'produtos importados'}`);
+if (duplicatedCount > 0) messages.push(`⚠️ ${duplicatedCount} já existente(s)`);
+if (invalidCount > 0) messages.push(`⚠️ ${invalidCount} inválido(s)`);
+
+if (saved > 0) {
+  showSuccess(messages.join('  |  '));
+} else {
+  showError(messages.join('  |  ') || 'Nenhum produto importado.');
+}
 
     } catch (error) {
       console.error('Erro ao importar XML:', error);
