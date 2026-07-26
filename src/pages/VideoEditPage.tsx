@@ -15,7 +15,6 @@ const STORAGE_BUCKET = 'store-assets';
 // ⬇️ Limite de upload de vídeo (30 MB)
 const MAX_VIDEO_SIZE_BYTES = 30 * 1024 * 1024;
 const MAX_VIDEO_SIZE_MB = 30;
-const MAX_VIDEO_SIZE_BYTES = 30 * 1024 * 1024;
 const MAX_VIDEO_SIZE_MB = 30;
 const MAX_THUMBNAIL_SIZE_BYTES = 350 * 1024; // ← ADICIONE AQUI
 
