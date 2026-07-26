@@ -493,23 +493,19 @@ const TABLE_UUID_FIELDS: Record<string, Record<string, UuidMode>> = {
     store_id: 'required',
     appearance_id: 'optional',
     model_id: 'optional',
-  },
-  story_videos: {
-    id: 'required',
-    story_id: 'required',
-    video_id: 'required',
-  },
-  products: {
-    id: 'required',
-    store_id: 'required',
-  },
-  story_products: {
-    id: 'required',
-    store_id: 'required',
-    story_id: 'required',
-    video_id: 'optional',
-    product_id: 'required',
-  },
+story_videos: {
+  id: 'required',
+  store_id: 'required',    // ← ADICIONAR
+  story_id: 'required',
+  video_id: 'required',
+},
+story_products: {
+  id: 'required',
+  store_id: 'required',    // ← ADICIONAR
+  story_id: 'required',
+  video_id: 'optional',
+  product_id: 'required',
+},
   display_locations: {
     id: 'required',
     store_id: 'required',
