@@ -359,7 +359,10 @@ await Promise.all(normalizedLocations.map((location) => (db as any).displayLocat
       <div className="w-full max-w-5xl rounded-[28px] bg-white p-6 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-black text-slate-900">Galeria de Vídeos</h3>
-          <button type="button" onClick={() => setIsGalleryOpen(false)} className="rounded-full p-2 text-slate-500 hover:bg-slate-100"><X size={18} /></button>
+<button type="button" onClick={() => setIsGalleryOpen(true)} 
+  className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">
+  + Adicionar Vídeos
+</button>
         </div>
         <div className="max-h-[70vh] overflow-y-auto pr-1">
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
