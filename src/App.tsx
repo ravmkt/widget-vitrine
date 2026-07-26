@@ -17,6 +17,7 @@ import RegisterPage from "@/pages/RegisterPage";
 import StoriesPage from "@/pages/StoriesPage";
 import VideoGalleryPage from "@/pages/VideoGalleryPage";
 import VideoPerformancePage from "@/pages/VideoPerformancePage";
+import VideoEditPage from "@/pages/VideoEditPage";
 import ProductsPage from "@/pages/ProductsPage";
 import MedidasPage from "@/pages/MedidasPage";
 import AppearancePage from "@/pages/AppearancePage";
@@ -124,6 +125,8 @@ function App() {
           <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
           <Route path="/stories" element={<ProtectedRoute><AppLayout><StoriesPage /></AppLayout></ProtectedRoute>} />
           <Route path="/gallery" element={<ProtectedRoute><AppLayout><VideoGalleryPage /></AppLayout></ProtectedRoute>} />
+          <Route path="/videos/new" element={<ProtectedRoute><AppLayout><VideoEditPage /></AppLayout></ProtectedRoute>} />
+          <Route path="/videos/:id/edit" element={<ProtectedRoute><AppLayout><VideoEditPage /></AppLayout></ProtectedRoute>} />
           <Route path="/videos/performance" element={<ProtectedRoute><AppLayout><VideoPerformancePage /></AppLayout></ProtectedRoute>} />
           <Route path="/produtos" element={<ProtectedRoute><AppLayout><ProductsPage /></AppLayout></ProtectedRoute>} />
           <Route path="/medidas" element={<ProtectedRoute><AppLayout><MedidasPage /></AppLayout></ProtectedRoute>} />
