@@ -38,7 +38,7 @@ const menuItems = [
 { title: "Produtos", url: "/produtos", icon: ShoppingCart },
   { title: "Medidas", url: "/medidas", icon: Ruler },
 { title: "Aparência", url: "/aparencia", icon: Palette },
-  { title: "Comentários", url: "/comments", icon: MessageSquare },
+{ title: "Comentários", url: "/comentarios", icon: MessageSquare },
   { title: "Instalação", url: "/integration", icon: Code },
   { title: "Configurações", url: "/settings", icon: Settings },
 ];
