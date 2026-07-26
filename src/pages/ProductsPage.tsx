@@ -920,10 +920,17 @@ const ProductsPage = () => {
       setXmlPreviewCategory('all');
       setXmlPreviewPage(1);
       setImportProgressMessage('');
-      showSuccess(
-        [`Produtos importados: ${summary.imported}.`, `Já existentes: ${summary.existing}.`, `Repetidos no XML: ${summary.repeated}.`, `Sem SKU/erro: ${summary.invalid}.`].join(' '),
-      );
-      [...existingMessages, ...repeatedMessages, ...invalidMessages].forEach((message) => showError(message));
+const messages: string[] = [];
+if (summary.imported > 0) messages.push(`✅ ${summary.imported} ${summary.imported === 1 ? 'produto importado' : 'produtos importados'}`);
+if (summary.existing > 0) messages.push(`⚠️ ${summary.existing} já existente(s)`);
+if (summary.repeated > 0) messages.push(`⚠️ ${summary.repeated} repetido(s) no XML`);
+if (summary.invalid > 0) messages.push(`⚠️ ${summary.invalid} sem SKU/erro`);
+
+if (summary.imported > 0) {
+  showSuccess(messages.join('  |  '));
+} else {
+  showError(messages.join('  |  ') || 'Nenhum produto importado.');
+}
     } catch (error: unknown) {
       console.error('Erro ao importar XML:', error);
       showError(error instanceof Error ? error.message : 'Erro ao importar XML.');
