@@ -35,7 +35,7 @@ const menuItems = [
   { title: "Stories", url: "/stories", icon: PlayCircle },
   { title: "Vídeos", url: "/gallery", icon: Library },
   { title: "Performance", url: "/videos/performance", icon: BarChart3 },
-  { title: "Produtos", url: "/products", icon: ShoppingCart },
+{ title: "Produtos", url: "/produtos", icon: ShoppingCart },
   { title: "Medidas", url: "/medidas", icon: Ruler },
   { title: "Aparência", url: "/appearance", icon: Palette },
   { title: "Comentários", url: "/comments", icon: MessageSquare },
