@@ -399,7 +399,7 @@ const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     return;
   }
 
-  if (file.size > MAX_THUMBNAIL_SIZE_BYTES) {
+    if (file.size > MAX_THUMBNAIL_SIZE_BYTES) {
     showError('A imagem deve ter no máximo 350 KB.');
     e.target.value = '';
     return;
