@@ -188,10 +188,10 @@ const SettingsPage = () => {
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 500 * 1024) {
-      toast.error('A imagem deve ter no máximo 500 KB.');
-      return;
-    }
+if (file.size > 150 * 1024) {
+  toast.error('A imagem deve ter no máximo 150 KB.');
+  return;
+}
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
       toast.error('Formato inválido. Use JPG, PNG ou WEBP.');
