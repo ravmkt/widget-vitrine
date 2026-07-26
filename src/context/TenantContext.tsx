@@ -17,7 +17,6 @@ type TenantContextValue = {
 const TenantContext = createContext<TenantContextValue>({
   currentStore: null,
   storeId: null,
-  platform: null,
   loading: true,
 });
 
@@ -104,12 +103,6 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
             );
           }) || null;
 
-        /**
-         * Fallback importante:
-         * Em alguns ambientes locais a loja existe, mas o vínculo em
-         * storeMembers ainda não foi criado. Para evitar storeId vazio,
-         * usamos a primeira loja cadastrada como fallback.
-         */
         const fallbackStore = stores[0] || null;
 
         const selectedStore =
@@ -142,7 +135,6 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
     () => ({
       currentStore,
       storeId: currentStore?.id ? String(currentStore.id) : null,
-      platform: currentStore?.platform || null,
       loading,
     }),
     [currentStore, loading],
