@@ -380,21 +380,28 @@ const VideoEditPage = () => {
     }
   };
 
-  const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+const MAX_THUMBNAIL_SIZE_BYTES = 350 * 1024;
 
-    if (!file) return;
+const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+  if (!file) return;
 
-    if (!allowedTypes.includes(file.type)) {
-      showError('Formato de imagem inválido. Use JPG, PNG ou WEBP.');
-      e.target.value = '';
-      return;
-    }
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
-    const previewUrl = URL.createObjectURL(file);
+  if (!allowedTypes.includes(file.type)) {
+    showError('Formato de imagem inválido. Use JPG, PNG ou WEBP.');
+    e.target.value = '';
+    return;
+  }
 
+  if (file.size > MAX_THUMBNAIL_SIZE_BYTES) {
+    showError('A imagem deve ter no máximo 350 KB.');
+    e.target.value = '';
+    return;
+  }
+
+  const previewUrl = URL.createObjectURL(file);
     setFormData(prev => ({
       ...prev,
       thumbnail_file: file,
