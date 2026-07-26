@@ -569,7 +569,7 @@ const VideoEditPage = () => {
         model_id: formData.model_id || null,
         product_id: formData.product_id || null,
         store_id: safeStoreId,
-        updated_at: now,
+        active: formData.active,
       };
 
       if (isCreate) {
