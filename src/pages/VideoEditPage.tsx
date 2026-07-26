@@ -12,9 +12,9 @@ import { useTenant } from '@/context/TenantContext';
 
 const STORAGE_BUCKET = 'store-assets';
 
-// ⬇️ Limite de upload em bytes (25 MB)
-const MAX_VIDEO_SIZE_BYTES = 25 * 1024 * 1024;
-const MAX_VIDEO_SIZE_MB = 25;
+// ⬇️ Limite de upload de vídeo (30 MB)
+const MAX_VIDEO_SIZE_BYTES = 30 * 1024 * 1024;
+const MAX_VIDEO_SIZE_MB = 30;
 
 const createSafeId = () => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -239,7 +239,7 @@ const VideoEditPage = () => {
             thumbnail_url: v.thumbnail_url || '',
             product_id: v.product_id || '',
             model_id: v.model_id || '',
-            active: (v as any).active ?? true, // mantido apenas para UI local
+            active: (v as any).active ?? true,
             origin: mappedOrigin,
             video_file: null,
             thumbnail_file: null,
@@ -322,7 +322,6 @@ const VideoEditPage = () => {
     }
   };
 
-  // ⬇️ Validação com limite de 25 MB
   const validateFile = (file: File): boolean => {
     if (!file) return false;
 
@@ -556,7 +555,6 @@ const VideoEditPage = () => {
         );
       }
 
-      // ⬇️ REMOVIDOS os campos `active` e `status` que não existem na tabela
       const videoData: Partial<Video> = {
         title: formData.title.trim(),
         source_type: sourceType,
@@ -683,7 +681,7 @@ const VideoEditPage = () => {
                 Arquivo de vídeo
               </label>
 
-              {/* ⬇️ OBSERVAÇÃO DO LIMITE ADICIONADA */}
+              {/* ⬇️ OBSERVAÇÃO DO LIMITE */}
               <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 font-medium">
                 ⚠️ O arquivo de vídeo deve ter no <strong>máximo {MAX_VIDEO_SIZE_MB} MB</strong>.
                 Formatos aceitos: MP4, MOV e WEBM.
@@ -837,7 +835,6 @@ const VideoEditPage = () => {
             </select>
           </div>
 
-          {/* ⬇️ Select de Status mantido apenas para UI, não vai pro banco */}
           <div className="space-y-4">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
               Status
