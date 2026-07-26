@@ -781,10 +781,9 @@ const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
               </div>
             </div>
 
-            <p className="text-xs text-slate-400 font-medium">
-              Se deixado em branco, um frame do vídeo será usado automaticamente.
-            </p>
-          </div>
+<p className="text-xs text-slate-400 font-medium">
+  JPG, PNG ou WEBP. Máx. 350 KB. Se deixado em branco, um frame do vídeo será usado automaticamente.
+</p>
 
           <div className="space-y-4">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
