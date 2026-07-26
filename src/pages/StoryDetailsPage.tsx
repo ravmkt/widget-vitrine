@@ -30,6 +30,7 @@ import {
   Globe,
   CheckCircle2,
   Loader2,
+  GripVertical,
 } from 'lucide-react';
 import { showError } from '@/utils/toast';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
@@ -184,6 +185,7 @@ const StoryDetailsPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [formData, setFormData] = useState({ title: '', format: 'carousel' as StoryFormat, scroll_direction: 'horizontal' as ScrollDirection, active: true, appearance_id: '' });
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; type: 'location' | 'rule'; id: string; name: string }>({ isOpen: false, type: 'location', id: '', name: '' });
 
@@ -269,19 +271,19 @@ const StoryDetailsPage = () => {
     const existingLocations = await getAllSafe<DisplayLocationUi>((db as any).displayLocations, targetStoreId);
     const locationsToDelete = existingLocations.filter((location: any) => location.story_id === targetStoryId && (!location.store_id || location.store_id === targetStoreId));
     await Promise.all(locationsToDelete.map((location: any) => deleteSafe((db as any).displayLocations, location.id, targetStoreId)));
-const normalizedLocations = locations.map((location) => ({
-  id: isValidUuid(location.id) ? location.id : generateUuid(),
-  store_id: targetStoreId,
-  story_id: targetStoryId,
-  location: location.location || location.position || 'afterend',
-  selector: String(location.selector || '').trim(),
-  position: location.position || 'beforeend',
-  active: true,
-  created_at: location.created_at || now,
-  updated_at: now,
-}));
+    const normalizedLocations = locations.map((location) => ({
+      id: isValidUuid(location.id) ? location.id : generateUuid(),
+      store_id: targetStoreId,
+      story_id: targetStoryId,
+      location: location.location || location.position || 'afterend',
+      selector: String(location.selector || '').trim(),
+      position: location.position || 'beforeend',
+      active: true,
+      created_at: location.created_at || now,
+      updated_at: now,
+    }));
 
-await Promise.all(normalizedLocations.map((location) => (db as any).displayLocations.save(location)));
+    await Promise.all(normalizedLocations.map((location) => (db as any).displayLocations.save(location)));
 
     const existingRules = await getAllSafe<any>((db as any).pageRules, targetStoreId);
     const rulesToDelete = existingRules.filter((rule: any) => rule.story_id === targetStoryId && (!rule.store_id || rule.store_id === targetStoreId));
@@ -297,7 +299,6 @@ await Promise.all(normalizedLocations.map((location) => (db as any).displayLocat
       created_at: rule.created_at || now,
       updated_at: now,
     } as unknown as PageRule & Record<string, any>));
-
 
     await Promise.all(normalizedRules.map((rule) => (db as any).pageRules.save(rule)));
   };
@@ -316,6 +317,7 @@ await Promise.all(normalizedLocations.map((location) => (db as any).displayLocat
       const validSelectedVideoIds = selectedVideoIds.filter((videoId) => isValidUuid(videoId));
       const storyPayload = { ...(story || ({} as Story)), id: story?.id && isValidUuid(story.id) ? story.id : generateUuid(), store_id: finalStoreId, title: formData.title.trim(), format: formData.format, scroll_direction: formData.scroll_direction, active: formData.active, appearance_id: formData.appearance_id && isValidUuid(formData.appearance_id) ? formData.appearance_id : null, cta_enabled: story?.cta_enabled ?? false, cta_type: story?.cta_type || 'none', cta_text: story?.cta_text || '', cta_url: story?.cta_url || '', whatsapp_message: story?.whatsapp_message || '', view_count: story?.view_count ?? 0, click_count: story?.click_count ?? 0, created_at: story?.created_at || now, updated_at: now } as Story;
       const savedStory = await (db as any).stories.save(storyPayload);
+      // ✅ CORRIGIDO: is_cover agora é 1/0 (número) em vez de true/false (booleano)
       const newRelations: StoryVideo[] = validSelectedVideoIds.map((videoId, index) => ({ id: generateUuid(), store_id: finalStoreId, story_id: savedStory.id, video_id: videoId, position: index + 1, is_cover: index === 0 ? 1 : 0, created_at: now }));
       await replaceStoryRelations('story_videos', finalStoreId, savedStory.id, newRelations);
       await saveLocationsAndRules(savedStory.id, finalStoreId);
@@ -354,15 +356,43 @@ await Promise.all(normalizedLocations.map((location) => (db as any).displayLocat
 
   const handleSuccessClose = () => navigate('/stories');
 
+  // ──────────────── DRAG-AND-DROP ────────────────
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDragIndex(index);
+    e.dataTransfer.setData('text/plain', String(index));
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    const sourceIndex = Number(e.dataTransfer.getData('text/plain'));
+    if (sourceIndex === dropIndex) return;
+
+    setSelectedVideoIds((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(sourceIndex, 1);
+      next.splice(dropIndex, 0, moved);
+      return next;
+    });
+    setDragIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDragIndex(null);
+  };
+
+  // ──────────────── GALLERY MODAL ────────────────
   const GalleryModal = () => (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
       <div className="w-full max-w-5xl rounded-[28px] bg-white p-6 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-black text-slate-900">Galeria de Vídeos</h3>
-<button type="button" onClick={() => setIsGalleryOpen(true)} 
-  className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">
-  + Adicionar Vídeos
-</button>
+          <h3 className="text-lg font-black text-slate-900">Selecionar Vídeos</h3>
+          <button type="button" onClick={() => setIsGalleryOpen(false)} className="rounded-full p-2 text-slate-500 hover:bg-slate-100"><X size={18} /></button>
         </div>
         <div className="max-h-[70vh] overflow-y-auto pr-1">
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
@@ -383,10 +413,9 @@ await Promise.all(normalizedLocations.map((location) => (db as any).displayLocat
         </div>
         <div className="mt-5 flex items-center justify-end gap-3">
           <button type="button" onClick={() => navigate('/videos/new')} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">Criar novo vídeo</button>
-<button type="button" onClick={() => setIsGalleryOpen(false)} 
-  className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">
-  Adicionar {selectedVideoIds.length} vídeo(s) ao Story
-</button>
+          <button type="button" onClick={() => setIsGalleryOpen(false)} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">
+            Adicionar {selectedVideoIds.length} vídeo(s) ao Story
+          </button>
         </div>
       </div>
     </div>
@@ -418,6 +447,7 @@ await Promise.all(normalizedLocations.map((location) => (db as any).displayLocat
       <form onSubmit={handleSave}>
         <div className="grid grid-cols-1 gap-8">
           <div className="space-y-8">
+            {/* ── DESIGN E FORMATO ── */}
             <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
               <div className="mb-6 flex items-center gap-3 border-b border-slate-100 pb-6"><Layout className="text-[#0094EB]" size={20} /><h3 className="text-lg font-black uppercase tracking-tight text-slate-800">Design e Formato</h3></div>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -448,11 +478,95 @@ await Promise.all(normalizedLocations.map((location) => (db as any).displayLocat
               </div>
             </div>
 
+            {/* ── CONTEÚDO SELECIONADO (COM DRAG-AND-DROP) ── */}
             <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-              <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-6"><div className="flex items-center gap-3"><Film className="text-[#0094EB]" size={20} /><h3 className="text-lg font-black uppercase tracking-tight text-slate-800">Conteúdo selecionado</h3></div><button type="button" onClick={() => setIsGalleryOpen(true)} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">Galeria</button></div>
-              {selectedVideoIds.length > 0 ? <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5">{selectedVideoIds.map((videoId) => { const video = allVideos.find((item) => item.id === videoId); if (!video) return null; const posterUrl = getVideoPosterUrl(video); return (<button key={video.id} type="button" onClick={() => handleToggleVideo(video.id)} className="group relative aspect-[9/16] overflow-hidden rounded-2xl border-2 border-[#0094EB] shadow-lg shadow-blue-100">{posterUrl ? <img src={posterUrl} alt={video.title || 'Vídeo'} className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400"><div className="flex flex-col items-center gap-2"><Film size={24} /><span className="text-[10px] font-black uppercase tracking-widest">Sem capa</span></div></div>}<div className="absolute inset-0 flex items-center justify-center bg-[#0094EB]/15 transition-all"><div className="rounded-full bg-[#0094EB] p-1 text-white"><CheckCircle2 size={16} /></div></div><div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2"><p className="truncate text-[9px] font-black text-white">{video.title || 'Sem título'}</p></div></button>);})}</div> : <div className="p-10 text-center text-sm font-bold text-slate-400">Nenhum vídeo cadastrado para esta loja.</div>}
+              <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-6">
+                <div className="flex items-center gap-3">
+                  <Film className="text-[#0094EB]" size={20} />
+                  <div>
+                    <h3 className="text-lg font-black uppercase tracking-tight text-slate-800">Conteúdo selecionado</h3>
+                    {selectedVideoIds.length > 0 && (
+                      <p className="text-[10px] font-bold text-slate-400">Arraste para reordenar os vídeos</p>
+                    )}
+                  </div>
+                </div>
+                <button type="button" onClick={() => setIsGalleryOpen(true)} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">
+                  + Adicionar Vídeos
+                </button>
+              </div>
+
+              {selectedVideoIds.length > 0 ? (
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5">
+                  {selectedVideoIds.map((videoId, index) => {
+                    const video = allVideos.find((item) => item.id === videoId);
+                    if (!video) return null;
+                    const posterUrl = getVideoPosterUrl(video);
+                    const isDragging = dragIndex === index;
+                    return (
+                      <div
+                        key={video.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, index)}
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, index)}
+                        onDragEnd={handleDragEnd}
+                        className={cn(
+                          'group relative aspect-[9/16] cursor-grab overflow-hidden rounded-2xl border-2 transition-all active:cursor-grabbing',
+                          isDragging ? 'scale-105 border-[#0094EB] opacity-70 shadow-2xl' : 'border-[#0094EB] shadow-lg shadow-blue-100',
+                        )}
+                      >
+                        {/* Poster / Placeholder */}
+                        {posterUrl ? (
+                          <img src={posterUrl} alt={video.title || 'Vídeo'} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400">
+                            <div className="flex flex-col items-center gap-2">
+                              <Film size={24} />
+                              <span className="text-[10px] font-black uppercase tracking-widest">Sem capa</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Indicador de ordem (badge numerado) */}
+                        <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-[#0094EB] px-2 py-0.5 text-[10px] font-black text-white shadow-md">
+                          <GripVertical size={10} />
+                          {index + 1}
+                        </div>
+
+                        {/* Botão de remover (hover) */}
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleToggleVideo(video.id); }}
+                          className="absolute right-2 top-2 rounded-full bg-black/50 p-1 text-white opacity-0 transition-all hover:bg-red-500 group-hover:opacity-100"
+                          title="Remover vídeo"
+                        >
+                          <X size={14} />
+                        </button>
+
+                        {/* Título do vídeo */}
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                          <p className="truncate text-[9px] font-black text-white">{video.title || 'Sem título'}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-10 text-center">
+                  <Film size={28} className="mx-auto text-slate-300" />
+                  <p className="mt-2 text-sm font-bold text-slate-400">Nenhum vídeo selecionado</p>
+                  <button
+                    type="button"
+                    onClick={() => setIsGalleryOpen(true)}
+                    className="mt-3 rounded-xl bg-[#0094EB] px-5 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]"
+                  >
+                    + Adicionar Vídeos
+                  </button>
+                </div>
+              )}
             </div>
 
+            {/* ── LOCAL DE EXIBIÇÃO ── */}
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
               <div className="mb-6 flex items-center justify-between"><div className="flex items-center gap-2"><MapPin className="text-[#0094EB]" size={18} /><h4 className="text-sm font-black uppercase text-slate-800">Local de exibição</h4></div></div>
               <div className="grid gap-4 md:grid-cols-[1fr_220px] md:items-end">
@@ -461,20 +575,19 @@ await Promise.all(normalizedLocations.map((location) => (db as any).displayLocat
               </div>
             </div>
 
+            {/* ── REGRAS DE PÁGINA ── */}
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
               <div className="mb-6 flex items-center justify-between"><div className="flex items-center gap-2"><Globe className="text-[#0094EB]" size={18} /><h4 className="text-sm font-black uppercase text-slate-800">Qual página irá aparecer?</h4></div></div>
               <div className="space-y-4">
-                  {pageRules.map((rule) => (
+                {pageRules.map((rule) => (
                   <div key={rule.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
                     <div className="grid gap-4 md:grid-cols-[220px_1fr_auto] md:items-end">
                       <div className="space-y-2"><label className="text-[9px] font-black uppercase tracking-widest text-slate-400">REGRA</label><select value={rule.condition_type} onChange={(event) => handleUpdatePageRule(rule.id, { condition_type: event.target.value as PageRuleCondition })} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none">{PAGE_RULE_OPTIONS.map((ruleOption) => (<option key={ruleOption.value} value={ruleOption.value}>{ruleOption.label}</option>))}</select></div>
                       <div className="space-y-2"><label className="text-[9px] font-black uppercase tracking-widest text-slate-400">VALOR</label>{CONDITION_TYPES_WITH_VALUE.includes(rule.condition_type) ? <div className="flex items-center gap-2"><input type="text" value={rule.value} onChange={(event) => handleUpdatePageRule(rule.id, { value: event.target.value })} className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none" placeholder="/colecao, /produto/nome-do-produto ou trecho da URL" />{pageRules.length > 1 && <button type="button" onClick={() => handleDeletePageRule(rule.id)} className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition-all hover:border-rose-200 hover:text-rose-500">X</button>}</div> : <div className="h-[34px] rounded-xl border border-dashed border-slate-200 bg-slate-50" />}</div>
                       <div className="flex items-end justify-end"><button type="button" onClick={() => handleDeletePageRule(rule.id)} className="rounded-2xl border border-rose-200 bg-white px-4 py-3 text-[10px] font-black uppercase tracking-widest text-rose-500 shadow-sm transition-all hover:bg-rose-50">Remover</button></div>
-
                     </div>
                   </div>
                 ))}
-
                 <button type="button" onClick={handleAddPageRule} className="rounded-xl bg-[#0094EB] px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-sm hover:bg-[#0E4787]">+ Adicionar página</button>
               </div>
             </div>
