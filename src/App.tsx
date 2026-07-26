@@ -138,6 +138,9 @@ function App() {
           <Route path="/comentarios" element={<ProtectedRoute><AppLayout><CommentsPage /></AppLayout></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
           <Route path="/integration" element={<ProtectedRoute><AppLayout><IntegrationPage /></AppLayout></ProtectedRoute>} />
+          <Route path="/stories/:id" element={<ProtectedRoute><AppLayout><StoryNewPage /></AppLayout></ProtectedRoute>} />
+          <Route path="/stories/preview/:id" element={<ProtectedRoute><AppLayout><StoryPreviewPage /></AppLayout></ProtectedRoute>} />
+
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
