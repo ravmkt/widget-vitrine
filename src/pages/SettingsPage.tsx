@@ -267,12 +267,11 @@ setSelectedLogoFile(null);
 window.dispatchEvent(new Event('storage'));
 window.dispatchEvent(new Event('focus'));
 
-// Exibe o toast e só redireciona após ele sumir
 toast.success('Configurações salvas com sucesso!', {
   duration: 2000,
-  onAutoClose: () => navigate('/dashboard'),
   onDismiss: () => navigate('/dashboard'),
 });
+setTimeout(() => navigate('/dashboard'), 2200);
 
     } catch (err) {
       console.error("Erro completo ao salvar configurações:", err);
