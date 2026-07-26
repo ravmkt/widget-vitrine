@@ -582,15 +582,15 @@ stores: ['id', 'name', 'url', 'platform', 'logo_url', 'contact_email', 'settings
     'updated_at',
   ],
 
-  story_videos: [
-    'id',
-    'story_id',
-    'video_id',
-    'position',
-    'is_cover',
-    'created_at',
-  ],
-
+story_videos: [
+  'id',
+  'store_id',
+  'story_id',
+  'video_id',
+  'position',
+  'is_cover',
+  'created_at',
+],
   products: [
     'id',
     'store_id',
