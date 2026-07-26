@@ -493,6 +493,7 @@ const TABLE_UUID_FIELDS: Record<string, Record<string, UuidMode>> = {
     store_id: 'required',
     appearance_id: 'optional',
     model_id: 'optional',
+      },
 story_videos: {
   id: 'required',
   store_id: 'required',    // ← ADICIONAR
