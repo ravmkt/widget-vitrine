@@ -24,7 +24,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </main>
           </SidebarInset>
         </div>
-        <Toaster position="top-right" richColors duration={3000} />  {/* 👈 adicionar */}
+<Toaster position="top-center" richColors duration={3000} />
       </SidebarProvider>
     </TenantProvider>
   );
