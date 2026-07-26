@@ -378,39 +378,42 @@ setTimeout(() => navigate('/dashboard'), 2200);
                 <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                   Logo da Loja
                 </Label>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-4">
-                    <div className="h-20 w-20 rounded-2xl overflow-hidden bg-slate-200 border border-slate-300 flex items-center justify-center">
-                      {logoPreview ? (
-                        <img
-                          src={logoPreview}
-                          className="w-full h-full object-cover"
-                          alt="Logo"
-                        />
-                      ) : (
-                        <Image className="w-8 h-8 text-slate-400" />
-                      )}
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <div className="flex gap-2">
-                        <Input
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp"
-                          onChange={handleLogoChange}
-                          className="flex-1 text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-[#EAF6FF] file:text-[#0094EB] file:font-bold file:cursor-pointer hover:file:bg-[#0094EB] hover:file:text-white transition-all"
-                        />
-                        <Button variant="outline" size="icon" onClick={handleRemoveLogo}>
-                          <X size={20} className="text-rose-600" />
-                        </Button>
-                      </div>
-                      {logoPreview && (
-                        <p className="text-xs text-slate-500 mt-1">
-                          {new URL(logoPreview).pathname.split('/').pop()}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
+<div className="space-y-3">
+  <div className="flex items-center gap-4">
+    <div className="h-20 w-20 rounded-2xl overflow-hidden bg-slate-200 border border-slate-300 flex items-center justify-center">
+      {logoPreview ? (
+        <img
+          src={logoPreview}
+          className="w-full h-full object-cover"
+          alt="Logo"
+        />
+      ) : (
+        <Image className="w-8 h-8 text-slate-400" />
+      )}
+    </div>
+    <div className="flex-1 space-y-2">
+      <div className="flex gap-2">
+        <Input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handleLogoChange}
+          className="flex-1 text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-[#EAF6FF] file:text-[#0094EB] file:font-bold file:cursor-pointer hover:file:bg-[#0094EB] hover:file:text-white transition-all"
+        />
+        <Button variant="outline" size="icon" onClick={handleRemoveLogo}>
+          <X size={20} className="text-rose-600" />
+        </Button>
+      </div>
+      <p className="text-[10px] text-slate-400">
+        JPG, PNG ou WEBP. Máx. 150 KB.
+      </p>
+      {logoPreview && (
+        <p className="text-xs text-slate-500 mt-1">
+          {new URL(logoPreview).pathname.split('/').pop()}
+        </p>
+      )}
+    </div>
+  </div>
+</div>
               </div>
               <div className="space-y-4">
                 <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
