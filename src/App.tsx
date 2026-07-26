@@ -23,6 +23,8 @@ import MedidasPage from "@/pages/MedidasPage";
 import AppearancePage from "@/pages/AppearancePage";
 import CommentsPage from "@/pages/CommentsPage";
 import StoryNewPage from "@/pages/StoryNewPage";
+import StoryEditPage from "@/pages/StoryEditPage";
+
 
 
 // ── Protege rotas que exigem login ──
