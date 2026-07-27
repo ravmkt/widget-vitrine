@@ -319,6 +319,7 @@ const StoryDetailsPage = () => {
       const savedStory = await (db as any).stories.save(storyPayload);
       // ✅ CORRIGIDO: is_cover agora é 1/0 (número) em vez de true/false (booleano)
       const newRelations: StoryVideo[] = validSelectedVideoIds.map((videoId, index) => ({ id: generateUuid(), store_id: finalStoreId, story_id: savedStory.id, video_id: videoId, position: index + 1, is_cover: index === 0 ? 1 : 0, created_at: now }));
+
       await replaceStoryRelations('story_videos', finalStoreId, savedStory.id, newRelations);
       await saveLocationsAndRules(savedStory.id, finalStoreId);
       window.dispatchEvent(new Event('storage'));
