@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { showError } from '@/utils/toast';
 import SuccessDialog from '@/components/SuccessDialog';
-import { generateVideoThumbnail } from '@/lib/video';
+import { generateVideoThumbnail, fetchThumbnailViaEdgeFunction } from '@/lib/video';
 import { useTenant } from '@/context/TenantContext';
 
 const STORAGE_BUCKET = 'store-assets';
@@ -549,8 +549,17 @@ const VideoEditPage = () => {
 
       const now = new Date().toISOString();
 
+      // ── Thumbnail: tenta gerar do vídeo → fallback Edge Function ──
       if (!finalThumbnailUrl && finalVideoUrl) {
         finalThumbnailUrl = await generateAndUploadThumbnailFromUrl(finalVideoUrl, safeStoreId);
+
+        // Fallback para Instagram/TikTok via Edge Function
+        if (!finalThumbnailUrl) {
+          const fallbackUrl = await fetchThumbnailViaEdgeFunction(finalVideoUrl, safeStoreId);
+          if (fallbackUrl) {
+            finalThumbnailUrl = fallbackUrl;
+          }
+        }
       }
 
       if (finalThumbnailUrl.startsWith('data:image/')) {
