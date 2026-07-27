@@ -2821,8 +2821,6 @@ const mapWidgetAppearanceToFormFormat = (row: any) => {
           .from('widget_appearances')
           .upsert({
             store_id: finalStoreId,
-            status: 'active',
-            active: true,
 
             // ── METADADOS ──
             style_name: formData.name.trim(),
