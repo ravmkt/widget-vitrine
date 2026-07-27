@@ -20,7 +20,6 @@ import { showSuccess, showError } from '@/utils/toast';
 import CustomDialog from '@/components/CustomDialog';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import { cn } from '@/lib/utils';
-import { subDays, eachDayOfInterval } from 'date-fns';
 import {
   getVideoMetricsRows,
 } from '@/lib/analytics';
@@ -32,6 +31,7 @@ import {
   extractYouTubeId,
   isVideoPlayableNatively,
 } from '@/lib/videoEmbeds';
+import { fetchThumbnailViaEdgeFunction } from '@/lib/video';
 
 const getSafeExternalData = (video: Video | null) => {
   if (!video) return null;
@@ -222,7 +222,6 @@ const VideoGalleryPage = () => {
 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewingVideo, setViewingVideo] = useState<VideoWithMetrics | null>(null);
-  const [showExternalPlayer, setShowExternalPlayer] = useState(false);
 
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
@@ -317,6 +316,57 @@ const VideoGalleryPage = () => {
         }));
         
         setVideoWithMetrics(processed);
+
+        // Hidrata thumbnails de vídeos externos (TikTok, Instagram, etc.)
+        // que ainda não possuem thumbnail_url salvo no banco
+        const hydrateMissingThumbnails = async () => {
+          const videosSemThumb = (allVideos || []).filter(
+            v =>
+              v.source_type === 'external_url' &&
+              !v.thumbnail_url &&
+              v.video_url
+          );
+
+          if (videosSemThumb.length === 0) return;
+
+          for (const v of videosSemThumb) {
+            if (!mounted) return;
+
+            try {
+              const thumbUrl = await fetchThumbnailViaEdgeFunction(
+                v.video_url!,
+                safeStoreId
+              );
+
+              if (thumbUrl) {
+                // Salva no banco
+                await db.videos.save({
+                  ...v,
+                  thumbnail_url: thumbUrl,
+                  updated_at: new Date().toISOString(),
+                } as Video);
+
+                // Atualiza estado local (tanto lista pura quanto com métricas)
+                setVideos(prev =>
+                  prev.map(pv =>
+                    pv.id === v.id ? { ...pv, thumbnail_url: thumbUrl } : pv
+                  )
+                );
+
+                setVideoWithMetrics(prev =>
+                  prev.map(pv =>
+                    pv.id === v.id ? { ...pv, thumbnail_url: thumbUrl } : pv
+                  )
+                );
+              }
+            } catch {
+              // silencioso — tenta o próximo
+            }
+          }
+        };
+
+        // Dispara em background (não bloqueia a renderização da lista)
+        hydrateMissingThumbnails();
       } catch (e) {
         console.error('Erro ao carregar vídeos:', e);
         showError('Erro ao carregar vídeos.');
@@ -421,8 +471,6 @@ const VideoGalleryPage = () => {
 
   const handleViewVideo = (video: VideoWithMetrics) => {
     setViewingVideo(video);
-
-    setShowExternalPlayer(false);
     setIsViewModalOpen(true);
   };
 
@@ -466,25 +514,25 @@ const VideoGalleryPage = () => {
   };
 
   const handleConfirmDelete = async () => {
-  try {
-    const safeStoreId = resolvedStoreId || await resolveSafeStoreId();
-
     try {
-      await (db.videos as any).delete(deleteModal.videoId, safeStoreId);
-    } catch {
-      await db.videos.delete(deleteModal.videoId);
+      const safeStoreId = resolvedStoreId || await resolveSafeStoreId();
+
+      try {
+        await (db.videos as any).delete(deleteModal.videoId, safeStoreId);
+      } catch {
+        await db.videos.delete(deleteModal.videoId);
+      }
+
+      setVideos(prev => prev.filter(v => v.id !== deleteModal.videoId));
+      setVideoWithMetrics(prev => prev.filter(v => v.id !== deleteModal.videoId));
+
+      showSuccess('Vídeo removido permanentemente.');
+      setDeleteModal(prev => ({ ...prev, isOpen: false }));
+    } catch (e) {
+      console.error('Erro ao excluir o vídeo:', e);
+      showError('Erro ao excluir o vídeo.');
     }
-
-    setVideos(prev => prev.filter(v => v.id !== deleteModal.videoId));
-    setVideoWithMetrics(prev => prev.filter(v => v.id !== deleteModal.videoId));
-
-    showSuccess('Vídeo removido permanentemente.');
-    setDeleteModal(prev => ({ ...prev, isOpen: false }));
-  } catch (e) {
-    console.error('Erro ao excluir o vídeo:', e);
-    showError('Erro ao excluir o vídeo.');
-  }
-};
+  };
 
   const getHeaderClass = (
     column: string,
