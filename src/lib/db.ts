@@ -196,7 +196,7 @@ export interface StoryVideo {
   story_id: string;
   video_id: string;
   position: number;
-  is_cover: boolean;
+  is_cover: number;
   created_at?: string;
 }
 
