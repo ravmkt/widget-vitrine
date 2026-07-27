@@ -1633,6 +1633,7 @@ const createSupabaseCrudFunctions = <
 
     // ✅ CORRIGIDO: aceita storeId e adiciona ao filtro do Supabase
     //    Também usa .select() para diagnosticar bloqueios do RLS
+    //    E limpa localStorage para evitar "ressurreição" de itens deletados
     async delete(id: string, storeId?: string): Promise<boolean> {
       if (!isSupabaseConfigured) {
         return localFallback.delete(id, storeId);
@@ -1665,6 +1666,21 @@ const createSupabaseCrudFunctions = <
         );
 
         throw error;
+      }
+
+      if (count && count > 0) {
+        try {
+          if (typeof window !== "undefined" && window.localStorage) {
+            const local = localStorage.getItem(`vidlytics_${tableName}`);
+            if (local) {
+              const items = JSON.parse(local);
+              const filtered = items.filter((item: any) => item.id !== id);
+              localStorage.setItem(`vidlytics_${tableName}`, JSON.stringify(filtered));
+            }
+          }
+        } catch (e) {
+          console.warn(`Erro ao limpar localStorage após delete em ${tableName}:`, e);
+        }
       }
 
       if (count === 0) {
