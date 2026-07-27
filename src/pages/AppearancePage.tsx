@@ -2825,7 +2825,6 @@ const mapWidgetAppearanceToFormFormat = (row: any) => {
             // ── METADADOS ──
             style_name: formData.name.trim(),
             is_default: shouldBeDefault,
-            apply_to_all_devices: formData.useGlobalAppearance,
             url: formData.url || null,
 
             // ── IDENTIDADE VISUAL ──
