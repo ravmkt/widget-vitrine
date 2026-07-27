@@ -678,7 +678,7 @@ const VideoEditPage = () => {
                 type="url"
                 value={formData.video_url}
                 onChange={e => setFormData({ ...formData, video_url: e.target.value })}
-                placeholder="Cole o link do YouTube, Vimeo ou arquivo .mp4"
+                placeholder="Cole o link do YouTube Shorts, Instagram, TikTok ou arquivo MP4"
                 className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
               />
             </div>
