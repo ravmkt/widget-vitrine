@@ -3,7 +3,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   Copy,
-  ExternalLink,
   Film,
   Layers3,
   MapPin,
@@ -23,23 +22,23 @@ const IntegrationPage = () => {
     const envUrl = import.meta.env.VITE_WIDGET_PUBLIC_URL || '';
 
     if (envUrl) {
-      return String(envUrl).replace(/\/$/, '');
+      return String(envUrl).replace(/\/$/, '').trim();
     }
 
     if (typeof window !== 'undefined') {
-      return window.location.origin.replace(/\/$/, '');
+      return window.location.origin.replace(/\/$/, '').trim();
     }
 
     return '';
   }, []);
 
-const supabaseUrl = String(import.meta.env.VITE_SUPABASE_URL || '')
-  .replace(/\/$/, '')
-  .trim(); // ← adiciona isso
+  const supabaseUrl = String(import.meta.env.VITE_SUPABASE_URL || '')
+    .replace(/\/$/, '')
+    .trim();
 
   const supabaseAnonKey = String(
     import.meta.env.VITE_SUPABASE_ANON_KEY || ''
-  );
+  ).trim();
 
   const isLocal =
     publicUrl.includes('localhost') || publicUrl.includes('127.0.0.1');
