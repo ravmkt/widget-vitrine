@@ -33,10 +33,9 @@ const IntegrationPage = () => {
     return '';
   }, []);
 
-  const supabaseUrl = String(import.meta.env.VITE_SUPABASE_URL || '').replace(
-    /\/$/,
-    ''
-  );
+const supabaseUrl = String(import.meta.env.VITE_SUPABASE_URL || '')
+  .replace(/\/$/, '')
+  .trim(); // ← adiciona isso
 
   const supabaseAnonKey = String(
     import.meta.env.VITE_SUPABASE_ANON_KEY || ''
