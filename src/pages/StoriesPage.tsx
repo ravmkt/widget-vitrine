@@ -46,46 +46,49 @@ const StoriesPage = () => {
     storyName: '',
   });
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
+const loadData = async () => {
+  try {
+    setLoading(true);
 
-      const resolvedStoreId = await resolveStoreId();
-      setCurrentStoreId(resolvedStoreId);
+    const resolvedStoreId = await resolveStoreId();
+    setCurrentStoreId(resolvedStoreId);
 
-      const s = await db.stories.getAll(resolvedStoreId);
-const storyIds = s.map(story => story.id);
-const allSv = await db.storyVideos.getAll();
-const sv = allSv.filter(v => storyIds.includes(v.story_id));
-      const dl = await db.displayLocations.getAll(resolvedStoreId);
+    const s = await db.stories.getAll(resolvedStoreId);
+    const storyIds = s.map(story => story.id);
 
-      const countMap: Record<string, number> = {};
+    // Agora filtra direto pelo store_id no banco
+    const allSv = await db.storyVideos.getAll(resolvedStoreId);
+    const sv = allSv.filter(v => storyIds.includes(v.story_id));
 
-      sv.forEach(relation => {
-        countMap[relation.story_id] = (countMap[relation.story_id] || 0) + 1;
-      });
+    const dl = await db.displayLocations.getAll(resolvedStoreId);
 
-      setVideoCounts(countMap);
+    const countMap: Record<string, number> = {};
 
-      const locationMap: Record<string, string> = {};
+    sv.forEach(relation => {
+      countMap[relation.story_id] = (countMap[relation.story_id] || 0) + 1;
+    });
 
-      dl.forEach(loc => {
-        if (!locationMap[loc.story_id]) {
-          locationMap[loc.story_id] =
-            loc.selector === 'body' ? 'Página Inicial' : loc.selector;
-        }
-      });
+    setVideoCounts(countMap);
 
-      setLocations(locationMap);
+    const locationMap: Record<string, string> = {};
 
-      setStories(s.sort((a, b) => (a.position || 0) - (b.position || 0)));
-    } catch (e) {
-      console.error('Erro ao carregar os Stories:', e);
-      showError('Erro ao carregar os Stories.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    dl.forEach(loc => {
+      if (!locationMap[loc.story_id]) {
+        locationMap[loc.story_id] =
+          loc.selector === 'body' ? 'Página Inicial' : loc.selector;
+      }
+    });
+
+    setLocations(locationMap);
+
+    setStories(s.sort((a, b) => (a.position || 0) - (b.position || 0)));
+  } catch (e) {
+    console.error('Erro ao carregar os Stories:', e);
+    showError('Erro ao carregar os Stories.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     loadData();
