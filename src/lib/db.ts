@@ -499,7 +499,6 @@ story_videos: {
   store_id: 'optional',
   story_id: 'required',
   video_id: 'required',
-  is_cover: 'required',
 },
 story_products: {
   id: 'required',
