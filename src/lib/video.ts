@@ -1,3 +1,5 @@
+import { supabase } from '@/lib/supabase';
+
 /**
  * Generates a thumbnail data URL from a video by seeking to a frame.
  * Works with data URLs and same-origin/CORS-enabled URLs.
@@ -59,4 +61,30 @@ export const generateVideoThumbnail = (videoUrl: string): Promise<string | null>
       finish(null);
     };
   });
+};
+
+/**
+ * Fallback via Edge Function: busca thumbnail do Instagram/TikTok
+ * usando oEmbed/og:image e faz upload pro bucket store-assets.
+ * Só chama isso quando generateVideoThumbnail falhar (plataformas que não expõem .mp4 direto).
+ */
+export const fetchThumbnailViaEdgeFunction = async (
+  videoUrl: string,
+  storeId: string
+): Promise<string | null> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('fetch-thumbnail', {
+      body: { videoUrl, storeId },
+    });
+
+    if (error || !data?.thumbnailUrl) {
+      console.warn('Edge Function fallback failed:', error || 'no thumbnailUrl');
+      return null;
+    }
+
+    return data.thumbnailUrl;
+  } catch (err) {
+    console.warn('Edge Function call failed:', err);
+    return null;
+  }
 };
