@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
 import { cn } from '@/lib/utils';
-import { extractYouTubeId, isVideoPlayableNatively } from '@/lib/videoEmbeds';
+import { getExternalVideoData } from '@/lib/videoEmbeds';
 
 const EMOJIS = [
   '😎',
@@ -745,12 +745,44 @@ const StoryPreviewPage = () => {
             </div>
 
             {currentUrl && !videoError ? (() => {
-              const ytId = !isVideoPlayableNatively(currentVideo as any) ? extractYouTubeId(currentUrl) : '';
               const sharedProps = { key: currentVideo?.id, className: 'h-full w-full object-cover' };
-              if (ytId) {
-                return <iframe {...sharedProps} src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=${muted ? 1 : 0}&playsinline=1&rel=0`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen title={story.title || 'Story'} />;
+              const externalData = getExternalVideoData(currentVideo as any);
+
+              if (externalData.embedUrl && externalData.platform) {
+                let embedSrc: string;
+
+                if (externalData.platform === 'youtube') {
+                  embedSrc = `${externalData.embedUrl}?autoplay=1&mute=${muted ? 1 : 0}&playsinline=1&rel=0`;
+                } else {
+                  embedSrc = externalData.embedUrl;
+                }
+
+                return (
+                  <iframe
+                    {...sharedProps}
+                    src={embedSrc}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    title={story.title || 'Story'}
+                  />
+                );
               }
-              return <video {...sharedProps} ref={videoRef} src={currentUrl} poster={posterUrl || undefined} autoPlay playsInline muted={muted} onEnded={goNext} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onError={() => setVideoError(true)} />;
+
+              return (
+                <video
+                  {...sharedProps}
+                  ref={videoRef}
+                  src={currentUrl}
+                  poster={posterUrl || undefined}
+                  autoPlay
+                  playsInline
+                  muted={muted}
+                  onEnded={goNext}
+                  onPlay={() => setPlaying(true)}
+                  onPause={() => setPlaying(false)}
+                  onError={() => setVideoError(true)}
+                />
+              );
             })() : <div className="flex h-full items-center justify-center px-8 text-center text-white/70">Nenhum vídeo vinculado</div>}
 
             {videos.length > 1 && (
