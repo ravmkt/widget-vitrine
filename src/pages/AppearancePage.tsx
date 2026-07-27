@@ -2958,7 +2958,7 @@ const handleSaveStyle = async () => {
 
       // ── general_settings (continua igual) ──
       const { error: generalSyncError } = await supabase
-        .from('general_settings')
+        .from('store_settings')
         .upsert({
           store_id: finalStoreId,
           primary_color: formData.primary_color,
