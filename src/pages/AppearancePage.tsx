@@ -2636,320 +2636,369 @@ const mapWidgetAppearanceToFormFormat = (row: any) => {
     setShowModal(true);
   };
 
-  const handleSaveStyle = async () => {
-    if (saving) return;
+const handleSaveStyle = async () => {
+  if (saving) return;
 
-    const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
+  const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
 
-    if (!finalStoreId) {
-      showError('Não foi possível identificar a loja atual.');
-      return;
+  if (!finalStoreId) {
+    showError('Não foi possível identificar a loja atual.');
+    return;
+  }
+
+  if (!formData.name.trim()) {
+    showError('Nome do estilo é obrigatório.');
+    setActiveTab('basic');
+    return;
+  }
+
+  try {
+    setSaving(true);
+
+    const now = new Date().toISOString();
+    const id = editingStyle?.id || formData.id || generateUuid();
+
+    const floatingConfig: ResponsiveConfig<FloatingConfig> = {
+      ...formData.floating_config,
+      desktop: normalizeFloatingShapeValues(formData.floating_config.desktop),
+      mobile: normalizeFloatingShapeValues(formData.floating_config.mobile),
+      same_for_all: formData.useGlobalAppearance,
+    };
+
+    const carouselConfig: ResponsiveConfig<CarouselConfig> = {
+      ...formData.carousel_config,
+      desktop: normalizeCarouselConfigShape(formData.carousel_config.desktop),
+      mobile: normalizeCarouselConfigShape(formData.carousel_config.mobile),
+      same_for_all: formData.useGlobalAppearance,
+    };
+
+    const gridConfig: ResponsiveConfig<GridConfig> = {
+      ...formData.grid_config,
+      desktop: normalizeGridConfigShape(formData.grid_config.desktop),
+      mobile: normalizeGridConfigShape(formData.grid_config.mobile),
+      same_for_all: formData.useGlobalAppearance,
+    };
+
+    gridConfig.desktop = {
+      ...gridConfig.desktop,
+      columns: limitNumber(gridConfig.desktop.columns, 4, 1, 4),
+    };
+
+    gridConfig.mobile = {
+      ...gridConfig.mobile,
+      columns: limitNumber(gridConfig.mobile.columns, 2, 1, 4),
+    };
+
+    if (formData.useGlobalAppearance) {
+      floatingConfig.mobile = floatingConfig.desktop;
+      carouselConfig.mobile = carouselConfig.desktop;
+      gridConfig.mobile = gridConfig.desktop;
     }
 
-    if (!formData.name.trim()) {
-      showError('Nome do estilo é obrigatório.');
-      setActiveTab('basic');
-      return;
+    floatingConfig.desktop = normalizeFloatingConfigForSave(
+      floatingConfig.desktop,
+    );
+
+    floatingConfig.mobile = normalizeFloatingConfigForSave(
+      floatingConfig.mobile,
+    );
+
+    if (formData.useGlobalAppearance) {
+      floatingConfig.mobile = floatingConfig.desktop;
     }
 
-    try {
-      setSaving(true);
+    const normalizedPosition = floatingConfig.desktop.position;
+    const normalizedFloatingPosition =
+      floatingConfig.desktop.floating_position;
 
-      const now = new Date().toISOString();
-      const id = editingStyle?.id || formData.id || generateUuid();
+    const floatingDesktop = floatingConfig.desktop;
+    const carouselDesktop = carouselConfig.desktop;
+    const gridDesktop = gridConfig.desktop;
+    const gridMobile = gridConfig.mobile;
+    const modalConfig = formData.modal_config;
 
-      const floatingConfig: ResponsiveConfig<FloatingConfig> = {
-        ...formData.floating_config,
-        desktop: normalizeFloatingShapeValues(formData.floating_config.desktop),
-        mobile: normalizeFloatingShapeValues(formData.floating_config.mobile),
-        same_for_all: formData.useGlobalAppearance,
-      };
+    const shouldBeDefault = formData.is_default || appearances.length === 0;
 
-      const carouselConfig: ResponsiveConfig<CarouselConfig> = {
-        ...formData.carousel_config,
-        desktop: normalizeCarouselConfigShape(formData.carousel_config.desktop),
-        mobile: normalizeCarouselConfigShape(formData.carousel_config.mobile),
-        same_for_all: formData.useGlobalAppearance,
-      };
+    // ── Payload para IndexedDB (db.appearances) ──
+    const stylePayload = {
+      id,
+      store_id: finalStoreId,
+      name: formData.name.trim(),
+      is_default: shouldBeDefault,
 
-      const gridConfig: ResponsiveConfig<GridConfig> = {
-        ...formData.grid_config,
-        desktop: normalizeGridConfigShape(formData.grid_config.desktop),
-        mobile: normalizeGridConfigShape(formData.grid_config.mobile),
-        same_for_all: formData.useGlobalAppearance,
-      };
+      primary_color: formData.primary_color,
+      secondary_color: formData.secondary_color,
+      text_color: formData.text_color,
+      background_color: formData.background_color,
+      button_color: formData.button_color,
 
-      gridConfig.desktop = {
-        ...gridConfig.desktop,
-        columns: limitNumber(gridConfig.desktop.columns, 4, 1, 4),
-      };
+      border_radius: floatingDesktop.border_radius,
+      shadow_enabled: modalConfig.shadow_enabled,
+      font_family: formData.font_family,
+      widget_shape: floatingDesktop.shape,
+      widget_size: formData.widget_size || 'medium',
+      widget_animation: formData.widget_animation || 'none',
 
-      gridConfig.mobile = {
-        ...gridConfig.mobile,
-        columns: limitNumber(gridConfig.mobile.columns, 2, 1, 4),
-      };
+      carousel_card_shape: carouselDesktop.card_shape,
+      carousel_visible_items: carouselDesktop.visible_items,
+      carousel_gap: carouselDesktop.gap,
 
-      if (formData.useGlobalAppearance) {
-        floatingConfig.mobile = floatingConfig.desktop;
-        carouselConfig.mobile = carouselConfig.desktop;
-        gridConfig.mobile = gridConfig.desktop;
-      }
+      show_title: modalConfig.show_title,
+      show_play_button: modalConfig.show_play_button,
+      show_product: modalConfig.show_product,
+      show_like_button: modalConfig.show_like_button,
+      show_comment_button: modalConfig.show_comment_button,
+      show_share_button: modalConfig.show_share_button,
+      show_whatsapp_button: modalConfig.show_whatsapp_button,
+      show_product_button: modalConfig.show_product_button,
 
-      floatingConfig.desktop = normalizeFloatingConfigForSave(
-        floatingConfig.desktop,
+      use_global_appearance: formData.useGlobalAppearance,
+      floating_config: floatingConfig,
+      modal_config: modalConfig,
+
+      width: floatingDesktop.width,
+      height: floatingDesktop.height,
+      unit: formData.unit || 'px',
+
+      position: normalizedPosition,
+      floating_position: normalizedFloatingPosition,
+
+      bottom_spacing: floatingDesktop.bottom_spacing,
+      top_spacing: floatingDesktop.top_spacing,
+      left_spacing: floatingDesktop.left_spacing,
+      right_spacing: floatingDesktop.right_spacing,
+
+      color: floatingDesktop.border_color || formData.primary_color,
+      border_style: floatingDesktop.border_style,
+      show_play_icon: floatingDesktop.show_play_icon,
+      draggable: floatingDesktop.draggable,
+      allow_close: floatingDesktop.allow_close,
+      object_fit: floatingDesktop.object_fit,
+      z_index: floatingDesktop.z_index,
+
+      carousel_view_mode: carouselDesktop.view_mode,
+      margin_top: carouselDesktop.margin_top,
+      margin_bottom: carouselDesktop.margin_bottom,
+      auto_center: carouselDesktop.auto_center,
+
+      desktop_columns: gridDesktop.columns,
+      desktop_rows: gridDesktop.rows,
+      desktop_gap: gridDesktop.gap,
+      mobile_columns: gridMobile.columns,
+      mobile_rows: gridMobile.rows,
+      mobile_gap: gridMobile.gap,
+
+      hide_stories: modalConfig.hide_stories,
+      font_size: formData.font_size,
+
+      url: formData.url || null,
+
+      updated_at: now,
+      created_at: formData.created_at || editingStyle?.created_at || now,
+    };
+
+    if (stylePayload.is_default) {
+      await Promise.all(
+        appearances
+          .filter(style => style.id !== id)
+          .map(style =>
+            db.appearances.save({
+              ...style,
+              store_id: finalStoreId,
+              is_default: false,
+              updated_at: now,
+            } as Appearance),
+          ),
       );
+    }
 
-      floatingConfig.mobile = normalizeFloatingConfigForSave(
-        floatingConfig.mobile,
-      );
+    await db.appearances.save(stylePayload as unknown as Appearance);
 
-      if (formData.useGlobalAppearance) {
-        floatingConfig.mobile = floatingConfig.desktop;
-      }
+    // ════════════════════════════════════════════════════════════════
+    // 🆕 UPSERT NO SUPABASE — usando JSONB (floating/carousel/grid/modal_config)
+    // ════════════════════════════════════════════════════════════════
+    if (supabase) {
+      const { error: widgetSyncError } = await supabase
+        .from('widget_appearances')
+        .upsert({
+          store_id: finalStoreId,
 
-      const normalizedPosition = floatingConfig.desktop.position;
-      const normalizedFloatingPosition =
-        floatingConfig.desktop.floating_position;
+          // ── METADADOS ──
+          name: formData.name.trim(),
+          is_default: shouldBeDefault,
+          active: true,
 
-      const floatingDesktop = floatingConfig.desktop;
-      const carouselDesktop = carouselConfig.desktop;
-      const gridDesktop = gridConfig.desktop;
-      const gridMobile = gridConfig.mobile;
-      const modalConfig = formData.modal_config;
+          // ── IDENTIDADE VISUAL ──
+          primary_color: formData.primary_color,
+          secondary_color: formData.secondary_color,
+          text_color: formData.text_color,
+          background_color: formData.background_color,
+          button_color: formData.button_color,
+          font_family: formData.font_family,
 
-      const shouldBeDefault = formData.is_default || appearances.length === 0;
-
-      const stylePayload = {
-        id,
-        store_id: finalStoreId,
-        name: formData.name.trim(),
-        is_default: shouldBeDefault,
-
-        primary_color: formData.primary_color,
-        secondary_color: formData.secondary_color,
-        text_color: formData.text_color,
-        background_color: formData.background_color,
-        button_color: formData.button_color,
-
-        border_radius: floatingDesktop.border_radius,
-        shadow_enabled: modalConfig.shadow_enabled,
-        font_family: formData.font_family,
-        widget_shape: floatingDesktop.shape,
-        widget_size: formData.widget_size || 'medium',
-        widget_animation: formData.widget_animation || 'none',
-
-        carousel_card_shape: carouselDesktop.card_shape,
-        carousel_visible_items: carouselDesktop.visible_items,
-        carousel_gap: carouselDesktop.gap,
-
-        show_title: modalConfig.show_title,
-        show_play_button: modalConfig.show_play_button,
-        show_product: modalConfig.show_product,
-        show_like_button: modalConfig.show_like_button,
-        show_comment_button: modalConfig.show_comment_button,
-        show_share_button: modalConfig.show_share_button,
-        show_whatsapp_button: modalConfig.show_whatsapp_button,
-        show_product_button: modalConfig.show_product_button,
-
-        use_global_appearance: formData.useGlobalAppearance,
-        floating_config: floatingConfig,
-        modal_config: modalConfig,
-
-        width: floatingDesktop.width,
-        height: floatingDesktop.height,
-        unit: formData.unit || 'px',
-
-        position: normalizedPosition,
-        floating_position: normalizedFloatingPosition,
-
-        bottom_spacing: floatingDesktop.bottom_spacing,
-        top_spacing: floatingDesktop.top_spacing,
-        left_spacing: floatingDesktop.left_spacing,
-        right_spacing: floatingDesktop.right_spacing,
-
-        color: floatingDesktop.border_color || formData.primary_color,
-        border_style: floatingDesktop.border_style,
-        show_play_icon: floatingDesktop.show_play_icon,
-        draggable: floatingDesktop.draggable,
-        allow_close: floatingDesktop.allow_close,
-        object_fit: floatingDesktop.object_fit,
-        z_index: floatingDesktop.z_index,
-
-        carousel_view_mode: carouselDesktop.view_mode,
-        margin_top: carouselDesktop.margin_top,
-        margin_bottom: carouselDesktop.margin_bottom,
-        auto_center: carouselDesktop.auto_center,
-
-        desktop_columns: gridDesktop.columns,
-        desktop_rows: gridDesktop.rows,
-        desktop_gap: gridDesktop.gap,
-        mobile_columns: gridMobile.columns,
-        mobile_rows: gridMobile.rows,
-        mobile_gap: gridMobile.gap,
-
-        hide_stories: modalConfig.hide_stories,
-        font_size: formData.font_size,
-
-        url: formData.url || null,
-
-        updated_at: now,
-        created_at: formData.created_at || editingStyle?.created_at || now,
-      };
-
-      if (stylePayload.is_default) {
-        await Promise.all(
-          appearances
-            .filter(style => style.id !== id)
-            .map(style =>
-              db.appearances.save({
-                ...style,
-                store_id: finalStoreId,
-                is_default: false,
-                updated_at: now,
-              } as Appearance),
+          // ── FLUTUANTE (JSONB) ──
+          floating_config: {
+            shape: floatingDesktop.shape,
+            width: Number(toNumberInputValue(floatingDesktop.width)) || 80,
+            height:
+              floatingDesktop.shape === 'portrait'
+                ? Number(getPortraitHeightFromWidth(floatingDesktop.width))
+                : floatingDesktop.shape === 'square'
+                  ? Number(toNumberInputValue(floatingDesktop.width)) || 80
+                  : Number(toNumberInputValue(floatingDesktop.width)) || 80,
+            border_radius:
+              Number(toNumberInputValue(floatingDesktop.border_radius)) || 12,
+            position: normalizedPosition,
+            floating_position: normalizedFloatingPosition,
+            bottom_spacing:
+              Number(toNumberInputValue(floatingDesktop.bottom_spacing)) || 20,
+            top_spacing:
+              Number(toNumberInputValue(floatingDesktop.top_spacing)) || 20,
+            left_spacing:
+              Number(toNumberInputValue(floatingDesktop.left_spacing)) || 20,
+            right_spacing:
+              Number(toNumberInputValue(floatingDesktop.right_spacing)) || 20,
+            border_color:
+              floatingDesktop.border_color || formData.primary_color,
+            border_style: String(
+              toNumberInputValue(floatingDesktop.border_style) || '2',
             ),
+            show_play_icon: floatingDesktop.show_play_icon !== false,
+            object_fit: floatingDesktop.object_fit || 'cover',
+            draggable: Boolean(floatingDesktop.draggable),
+            allow_close: Boolean(floatingDesktop.allow_close),
+            z_index:
+              Number(toNumberInputValue(floatingDesktop.z_index)) ||
+              2147483647,
+            show_title: floatingDesktop.show_title ?? true,
+          },
+
+          // ── CARROSSEL (JSONB) ──
+          carousel_config: {
+            gap: safeNumber(carouselDesktop.gap, 16, 0),
+            card_shape: carouselDesktop.card_shape,
+            view_mode: carouselDesktop.view_mode || 'preview',
+            margin_top:
+              Number(toNumberInputValue(carouselDesktop.margin_top)) || 0,
+            margin_bottom:
+              Number(toNumberInputValue(carouselDesktop.margin_bottom)) || 0,
+            visible_items: safeNumber(
+              carouselDesktop.visible_items,
+              4,
+              1,
+            ),
+            show_product: carouselDesktop.show_product ?? true,
+            show_play_icon: carouselDesktop.show_play_icon ?? true,
+            auto_center: carouselDesktop.auto_center ?? false,
+            card_size:
+              Number(toNumberInputValue(carouselDesktop.card_size)) || 80,
+            border_color:
+              carouselDesktop.border_color || formData.primary_color,
+            border_width:
+              Number(toNumberInputValue(carouselDesktop.border_width)) || 2,
+            border_radius:
+              Number(toNumberInputValue(carouselDesktop.border_radius)) || 12,
+            object_fit: carouselDesktop.object_fit || 'cover',
+            show_title: carouselDesktop.show_title ?? false,
+          },
+
+          // ── GRADE (JSONB) ──
+          grid_config: {
+            columns: limitNumber(gridDesktop.columns, 4, 1, 4),
+            rows: safeNumber(gridDesktop.rows, 1, 1),
+            gap: safeNumber(gridDesktop.gap, 16, 0),
+            card_shape: gridDesktop.card_shape,
+            card_size:
+              Number(toNumberInputValue(gridDesktop.card_size)) || 80,
+            border_color:
+              gridDesktop.border_color || formData.primary_color,
+            border_width:
+              Number(toNumberInputValue(gridDesktop.border_width)) || 2,
+            border_radius:
+              Number(toNumberInputValue(gridDesktop.border_radius)) || 12,
+            object_fit: gridDesktop.object_fit || 'cover',
+            show_title: gridDesktop.show_title ?? false,
+          },
+
+          // ── MODAL (JSONB) ──
+          modal_config: {
+            show_title: modalConfig.show_title ?? true,
+            show_play_button: modalConfig.show_play_button ?? true,
+            show_product: modalConfig.show_product ?? true,
+            show_like_button: modalConfig.show_like_button ?? true,
+            show_comment_button: modalConfig.show_comment_button ?? true,
+            show_share_button: modalConfig.show_share_button ?? true,
+            show_whatsapp_button: modalConfig.show_whatsapp_button ?? true,
+            show_product_button: modalConfig.show_product_button ?? true,
+            hide_stories: modalConfig.hide_stories ?? false,
+            shadow_enabled: modalConfig.shadow_enabled ?? true,
+            border_color:
+              modalConfig.border_color || formData.primary_color,
+            border_width:
+              Number(toNumberInputValue(modalConfig.border_width)) || 2,
+            border_radius:
+              Number(toNumberInputValue(modalConfig.border_radius)) || 12,
+          },
+
+          updated_at: now,
+          created_at: formData.created_at || editingStyle?.created_at || now,
+        }, {
+          onConflict: 'store_id',
+        });
+
+      if (widgetSyncError) {
+        console.error('Erro widget_appearances:', widgetSyncError);
+        showError(
+          `Erro ao sincronizar widget: ${widgetSyncError.message}`,
+        );
+        throw new Error(
+          `widget_appearances sync: ${widgetSyncError.message}`,
         );
       }
 
-      await db.appearances.save(stylePayload as unknown as Appearance);
+      // ── general_settings (continua igual) ──
+      const { error: generalSyncError } = await supabase
+        .from('general_settings')
+        .upsert({
+          store_id: finalStoreId,
+          primary_color: formData.primary_color,
+          secondary_color: formData.secondary_color,
+          default_appearance_id: shouldBeDefault ? id : null,
+          updated_at: now,
+        }, {
+          onConflict: 'store_id',
+        });
 
-      // ═══════════════════════════════════════════════════════════════
-      // 🆕 UPSERT NO SUPABASE — carousel_config e grid_config REMOVIDOS
-      // ═══════════════════════════════════════════════════════════════
-      if (supabase) {
-        const { error: widgetSyncError } = await supabase
-          .from('widget_appearances')
-          .upsert({
-            store_id: finalStoreId,
-
-            // ── METADADOS ──
-            style_name: formData.name.trim(),
-            is_default: shouldBeDefault,
-            url: formData.url || null,
-
-            // ── IDENTIDADE VISUAL ──
-            primary_color: formData.primary_color,
-            secondary_color: formData.secondary_color,
-            text_color: formData.text_color,
-            background_color: formData.background_color,
-            button_color: formData.button_color,
-            font_family: formData.font_family,
-            font_size: Number(toNumberInputValue(formData.font_size)) || 14,
-
-            // ── FLUTUANTE ──
-            floating_shape: floatingDesktop.shape,
-            floating_size: Number(toNumberInputValue(floatingDesktop.width)) || 150,
-            floating_border_radius: Number(toNumberInputValue(floatingDesktop.border_radius)) || 20,
-            floating_position: normalizedFloatingPosition,
-            floating_margin_bottom: Number(toNumberInputValue(floatingDesktop.bottom_spacing)) || 20,
-            floating_margin_top: Number(toNumberInputValue(floatingDesktop.top_spacing)) || 13,
-            floating_margin_side: Number(toNumberInputValue(floatingDesktop.right_spacing)) || 10,
-            floating_border_color: floatingDesktop.border_color || formData.primary_color,
-            floating_border_width: Number(toNumberInputValue(floatingDesktop.border_style)) || 3,
-            floating_object_fit: floatingDesktop.object_fit || 'cover',
-            floating_z_index: Number(toNumberInputValue(floatingDesktop.z_index)) || 2147483647,
-            floating_show_title: floatingDesktop.show_title ?? true,
-            floating_show_play_button: floatingDesktop.show_play_icon !== false,
-            floating_draggable: Boolean(floatingDesktop.draggable),
-            floating_closable: Boolean(floatingDesktop.allow_close),
-
-            // ── CARROSSEL ──
-            carousel_format: carouselDesktop.card_shape,
-            carousel_size: Number(toNumberInputValue(carouselDesktop.card_size)) || 100,
-            carousel_gap: safeNumber(carouselDesktop.gap, 15, 0),
-            carousel_visible_items: safeNumber(carouselDesktop.visible_items, 3, 1),
-            carousel_display_mode: carouselDesktop.view_mode || 'poster_image_only',
-            carousel_border_color: carouselDesktop.border_color || formData.primary_color,
-            carousel_border_width: Number(toNumberInputValue(carouselDesktop.border_width)) || 7,
-            carousel_border_radius: Number(toNumberInputValue(carouselDesktop.border_radius)) || 0,
-            carousel_object_fit: carouselDesktop.object_fit || 'cover',
-            carousel_margin_top: Number(toNumberInputValue(carouselDesktop.margin_top)) || 0,
-            carousel_margin_bottom: Number(toNumberInputValue(carouselDesktop.margin_bottom)) || 0,
-            carousel_show_title: carouselDesktop.show_title ?? false,
-            carousel_show_product: carouselDesktop.show_product ?? true,
-            carousel_show_play_button: carouselDesktop.show_play_icon ?? true,
-            carousel_auto_center: carouselDesktop.auto_center ?? true,
-
-            // ✅ REMOVIDO: carousel_config (coluna não existe no banco)
-
-            // ── GRADE ──
-            grid_format: gridDesktop.card_shape,
-            grid_size: Number(toNumberInputValue(gridDesktop.card_size)) || 82,
-            grid_columns: limitNumber(gridDesktop.columns, 4, 1, 4),
-            grid_rows: safeNumber(gridDesktop.rows, 2, 1),
-            grid_gap: safeNumber(gridDesktop.gap, 5, 0),
-            grid_border_color: gridDesktop.border_color || formData.primary_color,
-            grid_border_width: Number(toNumberInputValue(gridDesktop.border_width)) || 2,
-            grid_border_radius: Number(toNumberInputValue(gridDesktop.border_radius)) || 10,
-            grid_object_fit: gridDesktop.object_fit || 'cover',
-            grid_show_title: gridDesktop.show_title ?? false,
-
-            // ✅ REMOVIDO: grid_config (coluna não existe no banco)
-
-            // ── PLAYER / MODAL ──
-            player_show_title: modalConfig.show_title ?? true,
-            player_show_play_button: modalConfig.show_play_button ?? false,
-            player_show_like_button: modalConfig.show_like_button ?? true,
-            player_show_whatsapp_button: modalConfig.show_whatsapp_button ?? true,
-            player_show_product: modalConfig.show_product ?? true,
-            player_show_product_button: modalConfig.show_product_button ?? false,
-            player_show_share_button: modalConfig.show_share_button ?? true,
-            player_show_comments_button: modalConfig.show_comment_button ?? true,
-            player_hide_stories: modalConfig.hide_stories ?? false,
-            player_enable_shadow: modalConfig.shadow_enabled ?? false,
-            player_border_color: modalConfig.border_color || formData.primary_color,
-            player_border_width: Number(toNumberInputValue(modalConfig.border_width)) || 4,
-            player_border_radius: Number(toNumberInputValue(modalConfig.border_radius)) || 14,
-
-            updated_at: now,
-          }, {
-            onConflict: 'store_id',
-          });
-
-        if (widgetSyncError) {
-          showError(`Erro ao sincronizar widget: ${widgetSyncError.message}`);
-          throw new Error(`widget_appearances sync: ${widgetSyncError.message}`);
-        }
-
-        const { error: generalSyncError } = await supabase
-          .from('general_settings')
-          .upsert({
-            store_id: finalStoreId,
-            primary_color: formData.primary_color,
-            secondary_color: formData.secondary_color,
-            default_appearance_id: shouldBeDefault ? id : null,
-            updated_at: now,
-          }, {
-            onConflict: 'store_id',
-          });
-
-        if (generalSyncError) {
-          console.error('Erro ao sincronizar general_settings:', generalSyncError);
-        }
+      if (generalSyncError) {
+        console.error(
+          'Erro ao sincronizar general_settings:',
+          generalSyncError,
+        );
       }
-
-      if (stylePayload.is_default) {
-        await syncDefaultAppearanceId(finalStoreId, id);
-      }
-
-      window.dispatchEvent(new Event('storage'));
-
-      showSuccess(
-        editingStyle
-          ? 'Estilo atualizado com sucesso!'
-          : 'Estilo criado com sucesso!',
-      );
-
-      setShowModal(false);
-      setEditingStyle(null);
-      await loadData();
-    } catch (error) {
-      console.error('Erro ao salvar estilo:', error);
-      showError('Erro ao salvar estilo.');
-    } finally {
-      setSaving(false);
     }
-  };
+
+    if (stylePayload.is_default) {
+      await syncDefaultAppearanceId(finalStoreId, id);
+    }
+
+    window.dispatchEvent(new Event('storage'));
+
+    showSuccess(
+      editingStyle
+        ? 'Estilo atualizado com sucesso!'
+        : 'Estilo criado com sucesso!',
+    );
+
+    setShowModal(false);
+    setEditingStyle(null);
+    await loadData();
+  } catch (error) {
+    console.error('Erro ao salvar estilo:', error);
+    showError('Erro ao salvar estilo.');
+  } finally {
+    setSaving(false);
+  }
+};
 
   const handleCancel = () => {
     if (saving) return;
