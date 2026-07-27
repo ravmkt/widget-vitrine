@@ -147,7 +147,6 @@ export interface DisplayLocation {
   updated_at?: string;
 }
 
-
 export type ConditionType =
   | 'home'
   | 'all_pages'
@@ -327,7 +326,7 @@ export interface Store {
   name: string;
   url: string;
   active: boolean;
-  platform?: string; 
+  platform?: string;
   owner_user_id?: string;
   created_at?: string;
 }
@@ -493,20 +492,20 @@ const TABLE_UUID_FIELDS: Record<string, Record<string, UuidMode>> = {
     store_id: 'required',
     appearance_id: 'optional',
     model_id: 'optional',
-      },
-story_videos: {
-  id: 'required',
-  store_id: 'required',
-  story_id: 'required',
-  video_id: 'required',
-},
-story_products: {
-  id: 'required',
-  store_id: 'required',    // ← ADICIONAR
-  story_id: 'required',
-  video_id: 'optional',
-  product_id: 'required',
-},
+  },
+  story_videos: {
+    id: 'required',
+    store_id: 'required',
+    story_id: 'required',
+    video_id: 'required',
+  },
+  story_products: {
+    id: 'required',
+    store_id: 'required',
+    story_id: 'required',
+    video_id: 'optional',
+    product_id: 'required',
+  },
   display_locations: {
     id: 'required',
     store_id: 'required',
@@ -546,7 +545,7 @@ story_products: {
 };
 
 const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
-stores: ['id', 'name', 'url', 'platform', 'logo_url', 'contact_email', 'settings', 'owner_user_id'],
+  stores: ['id', 'name', 'url', 'platform', 'logo_url', 'contact_email', 'settings', 'owner_user_id'],
   videos: [
     'id',
     'store_id',
@@ -566,23 +565,22 @@ stores: ['id', 'name', 'url', 'platform', 'logo_url', 'contact_email', 'settings
     'created_at',
     'updated_at',
   ],
-
-stories: [
-  'id', 'store_id', 'title', 'format', 'scroll_direction',
-  'active', 'appearance_id', 'model_id', 'position',
-  'cta_enabled', 'cta_text', 'cta_type', 'cta_url',
-  'whatsapp_message', 'view_count', 'click_count',
-  'created_at', 'updated_at',
-],
-story_videos: [
-  'id',
-  'store_id',
-  'story_id',
-  'video_id',
-  'position',
-  'is_cover',
-  'created_at',
-],
+  stories: [
+    'id', 'store_id', 'title', 'format', 'scroll_direction',
+    'active', 'appearance_id', 'model_id', 'position',
+    'cta_enabled', 'cta_text', 'cta_type', 'cta_url',
+    'whatsapp_message', 'view_count', 'click_count',
+    'created_at', 'updated_at',
+  ],
+  story_videos: [
+    'id',
+    'store_id',
+    'story_id',
+    'video_id',
+    'position',
+    'is_cover',
+    'created_at',
+  ],
   products: [
     'id',
     'store_id',
@@ -603,7 +601,6 @@ story_videos: [
     'created_at',
     'updated_at',
   ],
-
   story_products: [
     'id',
     'store_id',
@@ -612,21 +609,18 @@ story_videos: [
     'product_id',
     'created_at',
   ],
-
-display_locations: [
-  'id',
-  'store_id',
-  'story_id',
-  'location',
-  'selector',
-  'position',
-  'active',
-  'created_at',
-  'updated_at',
-],
-
+  display_locations: [
+    'id',
+    'store_id',
+    'story_id',
+    'location',
+    'selector',
+    'position',
+    'active',
+    'created_at',
+    'updated_at',
+  ],
   page_rules: [
-
     'id',
     'store_id',
     'story_id',
@@ -635,7 +629,6 @@ display_locations: [
     'created_at',
     'updated_at',
   ],
-
   comments: [
     'id',
     'store_id',
@@ -653,7 +646,6 @@ display_locations: [
     'created_at',
     'updated_at',
   ],
-
   metrics: [
     'id',
     'store_id',
@@ -669,7 +661,6 @@ display_locations: [
     'metadata',
     'created_at',
   ],
-
   sizing_models: [
     'id',
     'store_id',
@@ -680,23 +671,22 @@ display_locations: [
     'created_at',
     'updated_at',
   ],
-
   store_settings: [
-  'id',
-  'store_id',
-  'store_name',
-  'store_url',
-  'logo_url',
-  'contact_email',
-  'whatsapp_number',
-  'whatsapp_default_message',
-  'app_enabled',
-  'stories_enabled',
-  'carousel_enabled',
-  'floating_widget_enabled',
-  'default_appearance_id',
-  'timezone',
-  'language',
+    'id',
+    'store_id',
+    'store_name',
+    'store_url',
+    'logo_url',
+    'contact_email',
+    'whatsapp_number',
+    'whatsapp_default_message',
+    'app_enabled',
+    'stories_enabled',
+    'carousel_enabled',
+    'floating_widget_enabled',
+    'default_appearance_id',
+    'timezone',
+    'language',
     'open_product_new_tab',
     'autoplay',
     'muted_by_default',
@@ -714,7 +704,6 @@ display_locations: [
     'store_public_id',
     'public_live_key',
   ],
-
   appearances: [
     'id',
     'store_id',
@@ -1046,10 +1035,10 @@ const initLocalStorage = () => {
     if (typeof window !== 'undefined' && window.localStorage) {
       const items = [
         { key: 'vidlytics_stores', default: [DEFAULT_STORE] },
-{
-  key: 'vidlytics_store_settings',
-  default: [DEFAULT_store_settings],
-},
+        {
+          key: 'vidlytics_store_settings',
+          default: [DEFAULT_store_settings],
+        },
         { key: 'vidlytics_appearances', default: DEFAULT_APPEARANCES },
         { key: 'vidlytics_videos', default: [] },
         { key: 'vidlytics_stories', default: [] },
@@ -1111,12 +1100,12 @@ const ensureSupabaseStoreExists = async (storeId?: string) => {
     console.warn('Não foi possível buscar loja no localStorage:', error);
   }
 
-const storeToInsert = sanitizeTablePayload('stores', {
+  const storeToInsert = sanitizeTablePayload('stores', {
     id: storeId,
     name: localStore?.name || 'Loja',
     url: localStore?.url || '',
     owner_user_id: user.id,
-});
+  });
 
   // ✅ UPSERT resolve o problema: insere se não existir, atualiza se existir
   //    sem precisar de SELECT (que está bloqueado pelo RLS de membros)
@@ -1422,8 +1411,9 @@ const createCrudFunctions = <
       ) as T;
     },
 
-    async delete(id: string): Promise<boolean> {
-      const items = await this.getAll();
+    // ✅ CORRIGIDO: aceita storeId para manter compatibilidade com a versão Supabase
+    async delete(id: string, storeId?: string): Promise<boolean> {
+      const items = await this.getAll(storeId);
 
       const filtered = items.filter(item => item.id !== id);
 
@@ -1488,10 +1478,10 @@ const createSupabaseCrudFunctions = <
         throw error;
       }
 
- if (!data || data.length === 0) {
-    return localFallback.getAll(storeId);
-  }
-      
+      if (!data || data.length === 0) {
+        return localFallback.getAll(storeId);
+      }
+
       return ((data || []) as T[]).map(item =>
         normalizeTableItemForClient(tableName, item as any),
       ) as T[];
@@ -1641,9 +1631,11 @@ const createSupabaseCrudFunctions = <
       ) as T;
     },
 
-    async delete(id: string): Promise<boolean> {
+    // ✅ CORRIGIDO: aceita storeId e adiciona ao filtro do Supabase
+    //    Também usa .select() para diagnosticar bloqueios do RLS
+    async delete(id: string, storeId?: string): Promise<boolean> {
       if (!isSupabaseConfigured) {
-        return localFallback.delete(id);
+        return localFallback.delete(id, storeId);
       }
 
       if (!isValidUuid(id)) {
@@ -1655,10 +1647,16 @@ const createSupabaseCrudFunctions = <
         return true;
       }
 
-      const { error } = await supabase
+      let query = supabase
         .from(tableName as any)
         .delete()
         .eq("id", id);
+
+      if (storeId && isValidUuid(storeId)) {
+        query = query.eq("store_id", storeId);
+      }
+
+      const { error, count } = await query.select();
 
       if (error) {
         console.error(
@@ -1667,6 +1665,13 @@ const createSupabaseCrudFunctions = <
         );
 
         throw error;
+      }
+
+      if (count === 0) {
+        console.warn(
+          `Nenhum registro deletado em ${tableName} para id=${id}. ` +
+          `Verifique se o RLS está bloqueando a operação.`
+        );
       }
 
       return true;
