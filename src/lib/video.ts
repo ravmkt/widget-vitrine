@@ -15,17 +15,32 @@ export const generateVideoThumbnail = (videoUrl: string): Promise<string | null>
     const video = document.createElement('video');
     video.crossOrigin = 'anonymous';
     video.muted = true;
+    video.playsInline = true;
     video.preload = 'metadata';
     video.src = videoUrl;
 
     let settled = false;
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+
+    const cleanup = () => {
+      if (timeout) {
+        clearTimeout(timeout);
+        timeout = null;
+      }
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
+      video.remove();
+    };
+
     const finish = (val: string | null) => {
       if (settled) return;
       settled = true;
+      cleanup();
       resolve(val);
     };
 
-    const timeout = setTimeout(() => finish(null), 6000);
+    timeout = setTimeout(() => finish(null), 6000);
 
     video.onloadedmetadata = () => {
       try {
@@ -48,16 +63,13 @@ export const generateVideoThumbnail = (videoUrl: string): Promise<string | null>
         }
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-        clearTimeout(timeout);
         finish(dataUrl);
       } catch {
-        clearTimeout(timeout);
         finish(null);
       }
     };
 
     video.onerror = () => {
-      clearTimeout(timeout);
       finish(null);
     };
   });
