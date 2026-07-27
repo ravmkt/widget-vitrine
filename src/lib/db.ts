@@ -1581,6 +1581,9 @@ const createSupabaseCrudFunctions = <
         }
 
         if (existingItem) {
+            console.log('🟢 UPDATE payload.id:', payload.id);
+  console.log('🟢 SELECT existingItem.id:', existingItem.id);
+  console.log('🟢 IDs MATCH?', payload.id === existingItem.id);
           const {
             data,
             error: updateError,
