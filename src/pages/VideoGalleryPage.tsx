@@ -466,23 +466,25 @@ const VideoGalleryPage = () => {
   };
 
   const handleConfirmDelete = async () => {
+  try {
+    const safeStoreId = resolvedStoreId || await resolveSafeStoreId();
+
     try {
-      const safeStoreId = resolvedStoreId || await resolveSafeStoreId();
-
-      try {
-        await (db.videos as any).delete(deleteModal.videoId, safeStoreId);
-      } catch {
-        await db.videos.delete(deleteModal.videoId);
-      }
-
-      setVideos(prev => prev.filter(v => v.id !== deleteModal.videoId));
-      showSuccess('Vídeo removido permanentemente.');
-      setDeleteModal(prev => ({ ...prev, isOpen: false }));
-    } catch (e) {
-      console.error('Erro ao excluir o vídeo:', e);
-      showError('Erro ao excluir o vídeo.');
+      await (db.videos as any).delete(deleteModal.videoId, safeStoreId);
+    } catch {
+      await db.videos.delete(deleteModal.videoId);
     }
-  };
+
+    setVideos(prev => prev.filter(v => v.id !== deleteModal.videoId));
+    setVideoWithMetrics(prev => prev.filter(v => v.id !== deleteModal.videoId));
+
+    showSuccess('Vídeo removido permanentemente.');
+    setDeleteModal(prev => ({ ...prev, isOpen: false }));
+  } catch (e) {
+    console.error('Erro ao excluir o vídeo:', e);
+    showError('Erro ao excluir o vídeo.');
+  }
+};
 
   const getHeaderClass = (
     column: string,
