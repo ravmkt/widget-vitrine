@@ -311,12 +311,13 @@ const StoryNewPage = () => {
 
       // Inserir novos vínculos
       for (let i = 0; i < selectedVideoIds.length; i++) {
-        await db.storyVideos.save({
-          story_id: storyId,
-          video_id: selectedVideoIds[i],
-          position: i,
-          is_cover: i === 0,
-        });
+await db.storyVideos.save({
+  store_id: storeId,  // ← ✅ adicionar
+  story_id: storyId,
+  video_id: selectedVideoIds[i],
+  position: i,
+  is_cover: i === 0,
+});
       }
 
       showSuccess(isEditing ? 'Story atualizado com sucesso!' : 'Story criado com sucesso!');
