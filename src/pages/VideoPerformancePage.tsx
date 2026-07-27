@@ -35,6 +35,8 @@ import {
 } from '@/lib/videoEmbeds';
 import { fetchThumbnailViaEdgeFunction } from '@/lib/video';
 
+// ─── Helpers de thumbnail ───────────────────────────────────────────
+
 const getSafeExternalData = (video: any) => {
   if (!video) return null;
   if (video.source_type === 'upload') return null;
@@ -71,6 +73,68 @@ const getVideoThumbnail = (video: any) => {
 
   return '';
 };
+
+// ─── Busca de thumbnail com fallbacks ───────────────────────────────
+
+const fetchThumbnailWithFallbacks = async (
+  videoUrl: string,
+  storeId: string
+): Promise<string | null> => {
+  // 1) Tenta a Edge Function primeiro
+  try {
+    console.log('[Thumbnail] Tentando Edge Function para:', videoUrl);
+    const thumb = await fetchThumbnailViaEdgeFunction(videoUrl, storeId);
+    if (thumb) {
+      console.log('[Thumbnail] ✅ Edge Function retornou:', thumb);
+      return thumb;
+    }
+    console.log('[Thumbnail] Edge Function retornou vazio/null');
+  } catch (err) {
+    console.warn('[Thumbnail] ❌ Edge Function falhou:', err);
+  }
+
+  // 2) Fallback: noembed.com (gratuito, sem auth)
+  try {
+    console.log('[Thumbnail] Tentando noembed.com para:', videoUrl);
+    const noembedRes = await fetch(
+      `https://noembed.com/embed?url=${encodeURIComponent(videoUrl)}`
+    );
+    if (noembedRes.ok) {
+      const data = await noembedRes.json();
+      if (data?.thumbnail_url) {
+        console.log('[Thumbnail] ✅ noembed retornou:', data.thumbnail_url);
+        return data.thumbnail_url;
+      }
+    }
+    console.log('[Thumbnail] noembed não retornou thumbnail');
+  } catch (err) {
+    console.warn('[Thumbnail] ❌ noembed falhou:', err);
+  }
+
+  // 3) Fallback: extrai og:image da página (último recurso)
+  // Só funciona para URLs de redes sociais que expõem og:image no HTML público
+  try {
+    console.log('[Thumbnail] Tentando extrair og:image de:', videoUrl);
+    const pageRes = await fetch(
+      `https://api.microlink.io/?url=${encodeURIComponent(videoUrl)}&screenshot=true&meta=true`
+    );
+    if (pageRes.ok) {
+      const pageData = await pageRes.json();
+      if (pageData?.data?.image?.url) {
+        console.log('[Thumbnail] ✅ microlink retornou:', pageData.data.image.url);
+        return pageData.data.image.url;
+      }
+    }
+    console.log('[Thumbnail] microlink não retornou imagem');
+  } catch (err) {
+    console.warn('[Thumbnail] ❌ microlink falhou:', err);
+  }
+
+  console.log('[Thumbnail] ❌ Nenhum método retornou thumbnail para:', videoUrl);
+  return null;
+};
+
+// ─── Componente ─────────────────────────────────────────────────────
 
 const VideoPerformancePage = () => {
   const navigate = useNavigate();
@@ -130,8 +194,7 @@ const VideoPerformancePage = () => {
           revenue: dashboardTotals.revenue
         });
 
-        // Hidrata thumbnails de vídeos externos (TikTok, Instagram, etc.)
-        // que ainda não possuem thumbnail_url salvo no banco
+        // ─── Hidrata thumbnails faltantes (com fallbacks) ──────────
         const hydrateMissingThumbnails = async () => {
           const videosSemThumb = allVideos.filter(
             v =>
@@ -142,22 +205,28 @@ const VideoPerformancePage = () => {
 
           if (videosSemThumb.length === 0) return;
 
+          console.log(
+            `[Hydrate] ${videosSemThumb.length} vídeos externos sem thumbnail. Buscando...`
+          );
+
           for (const v of videosSemThumb) {
             if (!mounted) return;
 
             try {
-              const thumbUrl = await fetchThumbnailViaEdgeFunction(
+              const thumbUrl = await fetchThumbnailWithFallbacks(
                 v.video_url!,
                 storeId
               );
 
-              if (thumbUrl) {
+              if (thumbUrl && mounted) {
+                // Salva no banco
                 await db.videos.save({
                   ...v,
                   thumbnail_url: thumbUrl,
                   updated_at: new Date().toISOString(),
                 } as Video);
 
+                // Atualiza estados
                 setVideos(prev =>
                   prev.map(pv =>
                     pv.id === v.id ? { ...pv, thumbnail_url: thumbUrl } : pv
@@ -169,13 +238,16 @@ const VideoPerformancePage = () => {
                     pv.id === v.id ? { ...pv, thumbnail_url: thumbUrl } : pv
                   )
                 );
+
+                console.log(`[Hydrate] ✅ Thumbnail salva para: ${v.title}`);
               }
-            } catch {
-              // silencioso — tenta o próximo
+            } catch (err) {
+              console.warn(`[Hydrate] ❌ Falha ao buscar thumbnail para ${v.title}:`, err);
             }
           }
         };
 
+        // Dispara em background — não bloqueia o carregamento da página
         hydrateMissingThumbnails();
       } catch (error) {
         console.error('Erro ao carregar métricas reais:', error);
