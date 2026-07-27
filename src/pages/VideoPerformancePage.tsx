@@ -4,7 +4,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
-  Calendar,
   TrendingUp,
   CheckCircle2,
   Eye,
@@ -12,23 +11,16 @@ import {
   Film,
   ChevronUp,
   ChevronDown,
-  Info,
-  PlayCircle,
   MousePointer2,
-  MessageCircle,
-  ShoppingBag,
-  BarChart3,
-  Clock,
   DollarSign,
 } from 'lucide-react';
-import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { db, Video } from '@/lib/db';
 import { useTenant } from '@/context/TenantContext';
 import CustomDialog from '@/components/CustomDialog';
 import { DayPicker } from 'react-day-picker';
-import { getVideoInterval, VideoPeriod } from '@/lib/videoMetrics';
+import { VideoPeriod } from '@/lib/videoMetrics';
 import {
   getDashboardMetrics,
   getVideoMetricsRows,
@@ -41,6 +33,7 @@ import {
   getYouTubeThumbnailUrl,
   isVideoPlayableNatively,
 } from '@/lib/videoEmbeds';
+import { fetchThumbnailViaEdgeFunction } from '@/lib/video';
 
 const getSafeExternalData = (video: any) => {
   if (!video) return null;
@@ -56,15 +49,27 @@ const getSafeExternalData = (video: any) => {
 const getVideoThumbnail = (video: any) => {
   if (!video) return '';
 
-  return (
+  const directThumb =
     video.thumbnail_url ||
     video.poster_url ||
     video.image_url ||
     video.cover_url ||
     video.thumb_url ||
-    (video.source_type !== 'upload' ? getYouTubeThumbnailUrl(video) : '') ||
-    ''
-  );
+    '';
+
+  if (directThumb) return directThumb;
+
+  if (video.source_type !== 'upload') {
+    const youTubeThumb = getYouTubeThumbnailUrl(video);
+    if (youTubeThumb) return youTubeThumb;
+
+    const externalData = getSafeExternalData(video);
+    if (externalData?.thumbnailUrl || externalData?.thumbnail_url) {
+      return externalData.thumbnailUrl || externalData.thumbnail_url;
+    }
+  }
+
+  return '';
 };
 
 const VideoPerformancePage = () => {
@@ -76,8 +81,10 @@ const VideoPerformancePage = () => {
   const [totals, setTotals] = useState({ views: 0, clicks: 0, conversions: 0, ctr: 0, revenue: 0 });
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewingVideo, setViewingVideo] = useState<Video | null>(null);
-  const [showExternalPlayer, setShowExternalPlayer] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  const [sortColumn, setSortColumn] = useState<string | null>('recent');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   const [filters, setFilters] = useState({
     period: '30' as VideoPeriod,
@@ -85,16 +92,21 @@ const VideoPerformancePage = () => {
     customRange: { from: undefined as Date | undefined, to: undefined as Date | undefined }
   });
 
-useEffect(() => {
+  useEffect(() => {
+    let mounted = true;
+
     const load = async () => {
       if (!storeId) {
-        setLoading(false); // ✅ Garante que sai do loading mesmo sem storeId
+        setLoading(false);
         return;
       }
-      
+
       setLoading(true);
       try {
         const allVideos = await db.videos.getAll(storeId);
+
+        if (!mounted) return;
+
         setVideos(allVideos);
 
         const rows = await getVideoMetricsRows(storeId, allVideos, filters.period as any, filters.customRange);
@@ -117,26 +129,77 @@ useEffect(() => {
           ctr: dashboardTotals.ctr,
           revenue: dashboardTotals.revenue
         });
-} catch (error) {
+
+        // Hidrata thumbnails de vídeos externos (TikTok, Instagram, etc.)
+        // que ainda não possuem thumbnail_url salvo no banco
+        const hydrateMissingThumbnails = async () => {
+          const videosSemThumb = allVideos.filter(
+            v =>
+              v.source_type === 'external_url' &&
+              !v.thumbnail_url &&
+              v.video_url
+          );
+
+          if (videosSemThumb.length === 0) return;
+
+          for (const v of videosSemThumb) {
+            if (!mounted) return;
+
+            try {
+              const thumbUrl = await fetchThumbnailViaEdgeFunction(
+                v.video_url!,
+                storeId
+              );
+
+              if (thumbUrl) {
+                await db.videos.save({
+                  ...v,
+                  thumbnail_url: thumbUrl,
+                  updated_at: new Date().toISOString(),
+                } as Video);
+
+                setVideos(prev =>
+                  prev.map(pv =>
+                    pv.id === v.id ? { ...pv, thumbnail_url: thumbUrl } : pv
+                  )
+                );
+
+                setVideoStats(prev =>
+                  prev.map(pv =>
+                    pv.id === v.id ? { ...pv, thumbnail_url: thumbUrl } : pv
+                  )
+                );
+              }
+            } catch {
+              // silencioso — tenta o próximo
+            }
+          }
+        };
+
+        hydrateMissingThumbnails();
+      } catch (error) {
         console.error('Erro ao carregar métricas reais:', error);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
+
     load();
-}, [storeId, filters.period, filters.customRange]);
+
+    return () => {
+      mounted = false;
+    };
+  }, [storeId, filters.period, filters.customRange]);
+
   const filteredVideoStats = useMemo(() => {
     return videoStats.filter(v => (v.title || '').toLowerCase().includes(filters.search.toLowerCase()));
   }, [videoStats, filters.search]);
 
   const handleOpenPlayer = (video: any) => {
     setViewingVideo(video);
-    setShowExternalPlayer(false);
     setIsViewModalOpen(true);
-  };
-
-  const getProductName = (video: any) => {
-    return video.product_name || video.productName || 'Sem produto';
   };
 
   const getHeaderClass = (align: 'left' | 'center' | 'right' = 'left') =>
@@ -146,16 +209,16 @@ useEffect(() => {
       align === 'right' && 'text-right'
     );
 
-  const sortIcon = (column: string) => (
-    sortColumn === column ? (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />) : null
-  );
-
-  const [sortColumn, setSortColumn] = useState<string | null>('recent');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const sortIcon = (column: string) =>
+    sortColumn === column
+      ? sortDirection === 'asc'
+        ? <ChevronUp size={12} />
+        : <ChevronDown size={12} />
+      : null;
 
   const handleSort = (column: string) => {
     if (sortColumn === column) {
-      setSortDirection((current) => current === 'asc' ? 'desc' : 'asc');
+      setSortDirection(current => current === 'asc' ? 'desc' : 'asc');
       return;
     }
     setSortColumn(column);
@@ -164,21 +227,37 @@ useEffect(() => {
 
   const sortedVideoStats = useMemo(() => {
     const rows = [...filteredVideoStats];
-    if (!sortColumn || sortColumn === 'recent') return rows.sort((a, b) => sortDirection === 'asc'
-      ? new Date(a.updated_at || 0).getTime() - new Date(b.updated_at || 0).getTime()
-      : new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime());
+
+    if (!sortColumn || sortColumn === 'recent') {
+      return rows.sort((a, b) =>
+        sortDirection === 'asc'
+          ? new Date(a.updated_at || 0).getTime() - new Date(b.updated_at || 0).getTime()
+          : new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime()
+      );
+    }
 
     const getValue = (video: any) => {
       switch (sortColumn) {
-        case 'nome': return video.title || '';
-        case 'visualizacoes': return Number(video.metrics.views || 0);
-        case 'comentarios': return Number(video.metrics.comments || 0);
-        case 'curtidas': return Number(video.metrics.likes || 0);
-        case 'ctr': return Number(video.metrics.ctr || 0);
-        case 'cliques': return Number(video.metrics.clicks || 0);
-        case 'conversoes': return Number(video.metrics.conversions || 0);
-        case 'engajamento': return Number(video.metrics.engagement || 0);
-        default: return '';
+        case 'nome':
+          return video.title || '';
+        case 'visualizacoes':
+          return Number(video.metrics.views || 0);
+        case 'comentarios':
+          return Number(video.metrics.comments || 0);
+        case 'curtidas':
+          return Number(video.metrics.likes || 0);
+        case 'ctr':
+          return Number(video.metrics.ctr || 0);
+        case 'cliques':
+          return Number(video.metrics.clicks || 0);
+        case 'conversoes':
+          return Number(video.metrics.conversions || 0);
+        case 'engajamento':
+          return Number(video.metrics.engagement || 0);
+        case 'revenue':
+          return Number(video.metrics.revenue || 0);
+        default:
+          return '';
       }
     };
 
@@ -192,8 +271,9 @@ useEffect(() => {
         ? String(valueA).localeCompare(String(valueB), 'pt-BR')
         : String(valueB).localeCompare(String(valueA), 'pt-BR');
     });
+
     return rows;
-  }, [videoStats, sortColumn, sortDirection]);
+  }, [filteredVideoStats, sortColumn, sortDirection]);
 
   if (loading) return null;
 
@@ -243,7 +323,7 @@ useEffect(() => {
       </div>
 
       <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm">
-        <div className="overflow-x-hidden">
+        <div className="overflow-x-auto">
           <table className="w-full max-w-full table-fixed text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
@@ -275,39 +355,59 @@ useEffect(() => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {sortedVideoStats.map((v: any) => (
-                <tr key={v.id} className="hover:bg-slate-50/50 transition-colors align-middle">
-                  <td className="px-2 py-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <img
-                          src={getVideoThumbnail(v) || ''}
-                          className="h-14 w-14 rounded-xl object-cover shrink-0 bg-slate-200 border border-slate-200"
-                          alt={v.title}
-                          onError={e => { e.currentTarget.src = ''; e.currentTarget.style.display = 'none'; }}
-                        />
-                      <div className="min-w-0">
-                        <h4 className="text-sm font-black text-slate-800 truncate">{v.title}</h4>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">{v.source_type}</p>
+              {sortedVideoStats.map((v: any) => {
+                const thumb = getVideoThumbnail(v);
+
+                return (
+                  <tr key={v.id} className="hover:bg-slate-50/50 transition-colors align-middle">
+                    <td className="px-2 py-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        {thumb ? (
+                          <img
+                            src={thumb}
+                            className="h-14 w-14 rounded-xl object-cover shrink-0 bg-slate-200 border border-slate-200"
+                            alt={v.title}
+                            loading="lazy"
+                            onError={e => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <div className="h-14 w-14 rounded-xl shrink-0 bg-slate-100 border border-slate-200 flex items-center justify-center">
+                            <Film size={20} className="text-slate-300" />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-black text-slate-800 truncate">{v.title}</h4>
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">{v.source_type}</p>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.views || 0).toLocaleString()}</td>
-                  <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.comments || 0).toLocaleString()}</td>
-                  <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.likes || 0).toLocaleString()}</td>
-                  <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.ctr || 0).toFixed(1).replace('.', ',')}%</td>
-                  <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.clicks || 0).toLocaleString()}</td>
-                  <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.conversions || 0).toLocaleString()}</td>
-                  <td className="px-2 py-4 text-center font-black text-emerald-600">R$ {Number(v.metrics.revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                  <td className="px-2 py-4 text-center">
-                    <div className="flex items-center justify-center gap-1.5">
-                      <button onClick={() => handleOpenPlayer(v)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors" title="Ver"><Eye size={16} /></button>
-                      <button onClick={() => navigate(`/videos/${v.id}/edit`)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors" title="Editar"><Edit3 size={16} /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.views || 0).toLocaleString()}</td>
+                    <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.comments || 0).toLocaleString()}</td>
+                    <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.likes || 0).toLocaleString()}</td>
+                    <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.ctr || 0).toFixed(1).replace('.', ',')}%</td>
+                    <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.clicks || 0).toLocaleString()}</td>
+                    <td className="px-2 py-4 text-center font-black text-slate-800">{Number(v.metrics.conversions || 0).toLocaleString()}</td>
+                    <td className="px-2 py-4 text-center font-black text-emerald-600">R$ {Number(v.metrics.revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td className="px-2 py-4 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button onClick={() => handleOpenPlayer(v)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors" title="Ver"><Eye size={16} /></button>
+                        <button onClick={() => navigate(`/videos/${v.id}/edit`)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors" title="Editar"><Edit3 size={16} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
+
+          {sortedVideoStats.length === 0 && (
+            <div className="p-12 text-center">
+              <Film size={48} className="mx-auto text-slate-300 mb-4" />
+              <p className="text-slate-500 font-bold">Nenhum vídeo encontrado.</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -321,7 +421,6 @@ useEffect(() => {
           const shouldUseNativePlayer = isVideoPlayableNatively(viewingVideo as any);
           const shouldUseNativeForDirect = !shouldUseNativePlayer && isDirectVideoUrl(videoUrl);
           const shouldUseYouTubeEmbed = !shouldUseNativePlayer && !shouldUseNativeForDirect && Boolean(youTubeId);
-          const canPlayInApp = shouldUseNativePlayer || shouldUseNativeForDirect || shouldUseYouTubeEmbed;
 
           const embedUrl = youTubeId
             ? `https://www.youtube.com/embed/${youTubeId}`
@@ -347,20 +446,33 @@ useEffect(() => {
                     </div>
                   ) : (
                     <div className="aspect-[9/16] bg-slate-950 rounded-[1.5rem] overflow-hidden shadow-lg relative border-[4px] border-slate-900 max-h-[60vh] flex flex-col items-center justify-center gap-4 p-4">
-                      <p className="text-white text-sm font-bold text-center">Sem vídeo</p>
+                      {modalThumb ? (
+                        <img
+                          src={modalThumb}
+                          alt={viewingVideo.title}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <>
+                          <Film size={42} className="text-slate-500" />
+                          <p className="text-white text-sm font-bold text-center">Sem vídeo</p>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
                 <div className="flex-1 flex flex-col pt-1">
                   <div className="mb-4">
                     <h3 className="text-xl font-black text-slate-900 mb-1">{viewingVideo.title}</h3>
-                    <span className="bg-blue-50 text-[#0094EB] px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest">Conteúdo Real</span>
+                    <span className="bg-blue-50 text-[#0094EB] px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest">
+                      {viewingVideo.source_type === 'upload' ? 'UPLOAD' : 'URL'}
+                    </span>
                   </div>
                   <div className="grid grid-cols-2 gap-3 mb-6">
-                    <CompactMetric label="Views" value={Number((viewingVideo as any).metrics?.views || 0)} />
-                    <CompactMetric label="CTR" value={`${Number((viewingVideo as any).metrics?.ctr || 0).toFixed(1)}%`} color="text-[#0094EB]" />
-                    <CompactMetric label="Conversões" value={Number((viewingVideo as any).metrics?.conversions || 0)} color="text-emerald-600" />
-                    <CompactMetric label="Engajamento" value={`${(viewingVideo as any).metrics?.engagement || 0}%`} color="text-violet-600" />
+                    <CompactMetric label="Views" value={Number((viewingVideo as any).metrics?.views || 0).toLocaleString('pt-BR')} />
+                    <CompactMetric label="CTR" value={`${Number((viewingVideo as any).metrics?.ctr || 0).toFixed(1).replace('.', ',')}%`} color="text-[#0094EB]" />
+                    <CompactMetric label="Conversões" value={Number((viewingVideo as any).metrics?.conversions || 0).toLocaleString('pt-BR')} color="text-emerald-600" />
+                    <CompactMetric label="Engajamento" value={`${Number((viewingVideo as any).metrics?.engagement || 0).toFixed(1).replace('.', ',')}%`} color="text-violet-600" />
                   </div>
                   <div className="mt-auto flex gap-2">
                     <button onClick={() => navigate(`/videos/${viewingVideo.id}/edit`)} className="flex-1 py-3 bg-[#0094EB] text-white rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2"><Edit3 size={14} /> Editar</button>
@@ -401,7 +513,7 @@ useEffect(() => {
                     </div>
                     <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
                       <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Status</p>
-                      <p className="mt-1 text-sm font-black text-slate-800">{viewingVideo.active ? 'Ativo' : 'Desativado'}</p>
+                      <p className="mt-1 text-sm font-black text-slate-800">{(viewingVideo as any).active === false ? 'Desativado' : 'Ativo'}</p>
                     </div>
                     <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
                       <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Tipo</p>
@@ -420,24 +532,39 @@ useEffect(() => {
           return (
             <div className="flex flex-col lg:flex-row gap-6">
               <div className="w-full lg:max-w-[420px] mx-auto lg:mx-0 shrink-0 space-y-4">
+                {modalThumb ? (
+                  <div className="aspect-[9/16] w-full overflow-hidden rounded-[1.75rem] border border-slate-200 bg-slate-950 shadow-xl">
+                    <img
+                      src={modalThumb}
+                      alt={viewingVideo.title}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="rounded-[1.75rem] border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+                    <Film size={42} className="mx-auto mb-3 text-slate-300" />
+                    <p className="text-sm font-bold text-slate-700">Prévia indisponível</p>
+                    <p className="mt-1 text-xs text-slate-500">Abra o vídeo na plataforma original para assistir.</p>
+                  </div>
+                )}
+
                 <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white font-black text-sm">
-                      V
+                      {(externalData?.platform || 'V').charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Vídeo externo</p>
                       <h3 className="truncate text-lg font-black text-slate-900">{viewingVideo.title}</h3>
                     </div>
                   </div>
-                  <p className="text-sm text-slate-600">Este vídeo não pode ser reproduzido dentro do app.</p>
-                  <p className="text-xs leading-5 text-slate-500">Abra o vídeo na plataforma original para assistir.</p>
+                  <p className="text-sm text-slate-600">Este vídeo não pode ser reproduzido dentro do app. Abra na plataforma original.</p>
                   {videoUrl && (
                     <a
                       href={videoUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-black text-slate-600 transition-colors hover:bg-slate-50"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-black text-slate-600 transition-colors hover:bg-slate-50"
                     >
                       Abrir vídeo na plataforma
                     </a>
@@ -452,7 +579,7 @@ useEffect(() => {
                 <div className="grid grid-cols-2 gap-3 mb-6">
                   <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
                     <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Status</p>
-                    <p className="mt-1 text-sm font-black text-slate-800">{viewingVideo.active ? 'Ativo' : 'Desativado'}</p>
+                    <p className="mt-1 text-sm font-black text-slate-800">{(viewingVideo as any).active === false ? 'Desativado' : 'Ativo'}</p>
                   </div>
                   <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
                     <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Tipo</p>
@@ -488,16 +615,6 @@ const SummaryCard = ({ label, value, icon: Icon, color, trend }: any) => (
     </div>
     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
     <h3 className="text-2xl font-black text-slate-900">{value}</h3>
-  </div>
-);
-
-const MetricItem = ({ label, value, trend }: any) => (
-  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
-    <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">{label}</p>
-    <div className="flex items-center justify-between gap-2">
-      <span className="text-sm font-black text-slate-800">{value}</span>
-      {trend !== undefined && <span className="text-[10px] font-black text-emerald-500">{trend}%</span>}
-    </div>
   </div>
 );
 
