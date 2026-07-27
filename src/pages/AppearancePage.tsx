@@ -2280,7 +2280,6 @@ const mapWidgetAppearanceToFormFormat = (row: any) => {
       border_radius: row.player_border_radius,
     },
 
-    active: row.active ?? true,
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
