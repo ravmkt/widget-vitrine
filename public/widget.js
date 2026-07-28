@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.07.28-05';
+  var WIDGET_VERSION = '2026.07.28-06';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -320,10 +320,24 @@
     return normalizeAppearanceItem(merged);
   }
 
+  // ✅ CORREÇÃO 2: appearanceHasUsefulData — agora verifica também chaves sem prefixo floating_
   function appearanceHasUsefulData(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
-    var usefulNames = [ 'floating_position', 'floating_shape', 'floating_width', 'floating_height', 'floating_radius', 'floating_top', 'floating_bottom', 'floating_side', 'primary_color', 'secondary_color' ];
-    for (var i = 0; i < usefulNames.length; i += 1) { if (readAppearanceValue(appearance, [usefulNames[i]]) !== undefined) return true; }
+    var usefulNames = [
+      // com prefixo floating_
+      'floating_position', 'floating_shape', 'floating_width', 'floating_height',
+      'floating_radius', 'floating_top', 'floating_bottom', 'floating_side',
+      'floating_border_width', 'floating_border_radius', 'floating_border_color',
+      'floating_border_style', 'floating_object_fit',
+      'primary_color', 'secondary_color',
+      // sem prefixo (fallback caso floating_config tenha sido achatado sem prefixo)
+      'shape', 'width', 'height', 'radius', 'position',
+      'border_width', 'border_radius', 'border_color', 'border_style',
+      'object_fit', 'top', 'bottom', 'side'
+    ];
+    for (var i = 0; i < usefulNames.length; i += 1) {
+      if (readAppearanceValue(appearance, [usefulNames[i]]) !== undefined) return true;
+    }
     return false;
   }
 
@@ -377,18 +391,55 @@
       });
   }
 
-  // ✅ CORRIGIDO (1): floating_config é reaplicado após normalizeAppearanceItem
-  // para garantir que as configurações do floating prevaleçam sobre modal_config
+  // ✅ CORREÇÃO 1: fetchDbAppearance — extrai floating_config e prefixa cada chave com "floating_"
   function fetchDbAppearance() {
     if (!storeId || !hasSupabase) return Promise.resolve({});
-    return tryTable('appearances').then(function (dbAppearance) {
-      if (!dbAppearance) return {};
-      var merged = normalizeAppearanceItem(dbAppearance || {});
-      // Reaplica floating_config para sobrescrever modal_config
-      if (dbAppearance.floating_config) {
-        flattenAppearanceInto(merged, dbAppearance.floating_config, 0);
+    return Promise.all([
+      tryTable('widget_appearances'),
+      tryTable('appearances')
+    ]).then(function(results) {
+      var widgetAppearance = results[0] || {};
+      var legacyAppearance = results[1] || {};
+
+      // Função auxiliar: achata o item e depois prefixa chaves do floating_config
+      function processItem(item) {
+        if (!item || !Object.keys(item).length) return {};
+        var flat = normalizeAppearanceItem(item);
+
+        // Extrai floating_config (que pode vir como objeto ou JSON string)
+        if (item.floating_config) {
+          var fc = item.floating_config;
+          if (typeof fc === 'string') fc = parseJsonIfNeeded(fc);
+          if (isPlainObject(fc)) {
+            Object.keys(fc).forEach(function(key) {
+              // Se a chave já começa com floating_, mantém; senão, adiciona o prefixo
+              var prefixedKey = (key.indexOf('floating_') === 0) ? key : 'floating_' + key;
+              if (fc[key] !== undefined && fc[key] !== null && fc[key] !== '') {
+                flat[prefixedKey] = fc[key];
+              }
+            });
+          }
+        }
+
+        return flat;
       }
-      return merged;
+
+      var processedLegacy = processItem(legacyAppearance);
+      var processedWidget = processItem(widgetAppearance);
+
+      var merged = {};
+      mergeObject(merged, processedLegacy);
+      mergeObject(merged, processedWidget);
+
+      // 🔍 DEBUG: mostra o que veio do banco após processamento
+      console.log('🔍 DB APPEARANCE (após prefixar floating_config):', {
+        legacyKeys: Object.keys(processedLegacy).filter(function(k) { return k.indexOf('floating_') === 0 || k.indexOf('border') !== -1 || k.indexOf('color') !== -1 || k === 'shape'; }),
+        widgetKeys: Object.keys(processedWidget).filter(function(k) { return k.indexOf('floating_') === 0 || k.indexOf('border') !== -1 || k.indexOf('color') !== -1 || k === 'shape'; }),
+        mergedFloatingKeys: Object.keys(merged).filter(function(k) { return k.indexOf('floating_') === 0 || k.indexOf('border') !== -1 || k.indexOf('color') !== -1 || k === 'shape'; }),
+        hasUsefulData: appearanceHasUsefulData(merged)
+      });
+
+      return normalizeAppearanceItem(merged);
     });
   }
 
@@ -437,6 +488,7 @@
     return toNumber(value, fallback !== undefined ? fallback : 0) + 'px';
   }
 
+  // ✅ CORREÇÃO 3: getFloatingConfig — borderWidthNumber agora busca também floating_border_style e border_style
   function getFloatingConfig(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
     function getValue(names, fallback) { var value = readAppearanceValue(appearance, names); return (value !== undefined && value !== null && value !== '') ? value : fallback; }
@@ -453,8 +505,7 @@
     var heightNumber = toNumber(getValue(['floating_height', 'height'], defaultHeight), defaultHeight);
     if (shape === 'square' || shape === 'circle') heightNumber = widthNumber;
 
-    // ✅ CORRIGIDO (2): floating_border_style e border_style buscados ANTES de border_width
-    // para que o valor do floating_config prevaleça sobre modal_config
+    // ✅ floating_border_style e border_style vêm ANTES de border_width no fallback
     var borderWidthNumber = toNumber(getValue(['floating_border_width', 'floating_border_style', 'border_style', 'border_width'], DEFAULT_APPEARANCE.floating_border_width), DEFAULT_APPEARANCE.floating_border_width);
     var radiusNumber = toNumber(getValue(['floating_border_radius', 'floating_radius', 'border_radius', 'radius'], DEFAULT_APPEARANCE.floating_border_radius), DEFAULT_APPEARANCE.floating_border_radius);
     if (shape === 'circle') radiusNumber = 999;
@@ -612,7 +663,8 @@
     if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_sizing_models', []));
     return fetchJson('sizing_models?select=*&store_id=eq.' + encodeURIComponent(storeId));
   }
-    function matchesRule(rule) {
+
+  function matchesRule(rule) {
     if (!rule || rule.active === false) return false;
 
     var href = window.location.href;
@@ -869,6 +921,16 @@
     var borderColor = getBorderColor(appearance);
     var borderBackground = borderColor ? borderColor : 'linear-gradient(135deg,' + primary + ',' + secondary + ')';
     var font = getFontFamily(appearance);
+
+    // 🔍 DEBUG: mostra valores finais da borda
+    console.log('🔍 BORDA DEBUG:', {
+      borderColor: borderColor,
+      borderWidth: cfg.borderWidth,
+      borderBackground: borderBackground,
+      shape: cfg.shape,
+      position: cfg.position,
+      appearanceKeys: Object.keys(appearance).filter(function(k) { return k.indexOf('border') !== -1 || k.indexOf('color') !== -1 || k.indexOf('shape') !== -1 || k.indexOf('floating_') === 0; })
+    });
 
     return ':host{all:initial!important;position:fixed!important;top:' + cfg.top + '!important;right:' + cfg.right + '!important;bottom:' + cfg.bottom + '!important;left:' + cfg.left + '!important;z-index:' + cfg.zIndex + '!important;width:' + cfg.width + '!important;min-width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;height:auto!important;overflow:visible!important;background:transparent!important;pointer-events:auto!important;font-family:' + font + '!important;}'
       + buildSharedCss(appearance)
@@ -1500,6 +1562,7 @@
 
       var ap = appearance || {};
 
+      // ── Tenta carregar do carousel_config (JSON string ou objeto) ──
       var carouselCfg = {
         mobile: {
           card_shape: firstDefined(ap.carousel_format, ap.carousel_card_shape, ap.card_shape, ap.format, ap.shape),
@@ -1520,55 +1583,147 @@
         }
       };
 
+      // ── Fallback: monta das colunas planas + campos avulsos ──
       if (!carouselCfg || !carouselCfg.mobile) {
         carouselCfg = {
           mobile: {
-            card_shape: firstDefined(ap.carousel_format, ap.carousel_card_shape, ap.card_shape, ap.format, ap.shape),
-            visible_items: firstDefined(ap.carousel_visible_items, ap.visible_items, ap.columns),
-            gap: firstDefined(ap.carousel_gap, ap.gap, ap.spacing),
-            border_color: firstDefined(ap.carousel_border_color, ap.border_color),
-            border_width: firstDefined(ap.carousel_border_width, ap.border_width),
-            border_radius: firstDefined(ap.carousel_border_radius, ap.border_radius, ap.radius),
-            show_title: firstDefined(ap.carousel_show_title, ap.show_title),
-            auto_center: firstDefined(ap.carousel_auto_center, ap.auto_center),
-            show_play_icon: firstDefined(ap.carousel_show_play_button, ap.show_play_button),
-            object_fit: firstDefined(ap.carousel_object_fit, ap.object_fit),
-            card_size: firstDefined(ap.carousel_size, ap.card_size),
-            view_mode: firstDefined(ap.carousel_display_mode, ap.view_mode),
-            margin_top: firstDefined(ap.carousel_margin_top, ap.margin_top),
-            margin_bottom: firstDefined(ap.carousel_margin_bottom, ap.margin_bottom),
-            show_product: firstDefined(ap.carousel_show_product, ap.show_product)
+            card_shape: firstDefined(
+              ap.carousel_format, ap.carousel_card_shape,
+              ap.card_shape, ap.format, ap.shape
+            ),
+            visible_items: firstDefined(
+              ap.carousel_visible_items, ap.visible_items, ap.columns
+            ),
+            gap: firstDefined(
+              ap.carousel_gap, ap.gap, ap.spacing
+            ),
+            border_color: firstDefined(
+              ap.carousel_border_color, ap.border_color
+            ),
+            border_width: firstDefined(
+              ap.carousel_border_width, ap.border_width
+            ),
+            border_radius: firstDefined(
+              ap.carousel_border_radius, ap.border_radius, ap.radius
+            ),
+            show_title: firstDefined(
+              ap.carousel_show_title, ap.show_title
+            ),
+            auto_center: firstDefined(
+              ap.carousel_auto_center, ap.auto_center
+            ),
+            show_play_icon: firstDefined(
+              ap.carousel_show_play_button, ap.show_play_button
+            ),
+            object_fit: firstDefined(
+              ap.carousel_object_fit, ap.object_fit
+            ),
+            card_size: firstDefined(
+              ap.carousel_size, ap.card_size
+            ),
+            view_mode: firstDefined(
+              ap.carousel_display_mode, ap.view_mode
+            ),
+            margin_top: firstDefined(
+              ap.carousel_margin_top, ap.margin_top
+            ),
+            margin_bottom: firstDefined(
+              ap.carousel_margin_bottom, ap.margin_bottom
+            ),
+            show_product: firstDefined(
+              ap.carousel_show_product, ap.show_product
+            )
           }
         };
       }
 
+      // Pega as configs do device mobile (fallback desktop)
       var deviceCfg = carouselCfg.mobile || carouselCfg.desktop || {};
 
-      var itemsVisiveis = safeInt(firstDefined(deviceCfg.visible_items, ap.carousel_visible_items, ap.visible_items, ap.columns), 4);
-      var espacamento = safeInt(firstDefined(deviceCfg.gap, ap.carousel_gap, ap.spacing, ap.gap), 16);
-      var formatoRaw = firstDefined(deviceCfg.card_shape, ap.carousel_format, ap.carousel_card_shape, ap.format, ap.shape) || 'portrait';
+      // ── Valores finais com safeInt ──
+      var itemsVisiveis = safeInt(firstDefined(
+        deviceCfg.visible_items,
+        ap.carousel_visible_items,
+        ap.visible_items,
+        ap.columns
+      ), 4);
+
+      var espacamento = safeInt(firstDefined(
+        deviceCfg.gap,
+        ap.carousel_gap,
+        ap.spacing,
+        ap.gap
+      ), 16);
+
+      var formatoRaw = firstDefined(
+        deviceCfg.card_shape,
+        ap.carousel_format,
+        ap.carousel_card_shape,
+        ap.format,
+        ap.shape
+      ) || 'portrait';
       var formato;
-      if (formatoRaw === 'circle' || formatoRaw === 'circular') { formato = 'square_1_1'; }
-      else if (formatoRaw === 'portrait' || formatoRaw === 'portrait_9_16') { formato = 'portrait_9_16'; }
-      else if (formatoRaw === 'landscape' || formatoRaw === 'landscape_16_9') { formato = 'landscape_16_9'; }
-      else if (formatoRaw === 'square' || formatoRaw === 'square_1_1') { formato = 'square_1_1'; }
-      else { formato = formatoRaw; }
+      if (formatoRaw === 'circle' || formatoRaw === 'circular') {
+        formato = 'square_1_1';
+      } else if (formatoRaw === 'portrait' || formatoRaw === 'portrait_9_16') {
+        formato = 'portrait_9_16';
+      } else if (formatoRaw === 'landscape' || formatoRaw === 'landscape_16_9') {
+        formato = 'landscape_16_9';
+      } else if (formatoRaw === 'square' || formatoRaw === 'square_1_1') {
+        formato = 'square_1_1';
+      } else {
+        formato = formatoRaw;
+      }
 
       var corPrimaria   = ap.primary_color || ap.button_color || '#0094EB';
       var corTexto      = ap.text_color || '#0F172A';
-      var borderRadius  = safeInt(firstDefined(deviceCfg.border_radius, ap.carousel_border_radius, ap.border_radius, 12), 12);
-      var borderWidth   = safeInt(firstDefined(deviceCfg.border_width, ap.carousel_border_width, ap.border_width, 2), 2);
-      var corBorda      = firstDefined(deviceCfg.border_color, ap.carousel_border_color, ap.border_color, corPrimaria);
+      var bgColor       = ap.background_color || '#FFFFFF';
+      var borderRadius  = safeInt(firstDefined(
+        deviceCfg.border_radius,
+        ap.carousel_border_radius,
+        ap.border_radius,
+        12
+      ), 12);
+      var borderWidth   = safeInt(firstDefined(
+        deviceCfg.border_width,
+        ap.carousel_border_width,
+        ap.border_width,
+        2
+      ), 2);
+      var corBorda      = firstDefined(
+        deviceCfg.border_color,
+        ap.carousel_border_color,
+        ap.border_color,
+        corPrimaria
+      );
       var fonte         = ap.font_family || 'Inter, sans-serif';
-      var exibirTitulo  = firstDefined(deviceCfg.show_title, ap.carousel_show_title, ap.show_title) !== false;
-      var exibirPlayBtn = firstDefined(deviceCfg.show_play_icon, ap.carousel_show_play_button, ap.show_play_button) !== false;
-      var autoCenter    = !!(firstDefined(deviceCfg.auto_center, ap.carousel_auto_center, ap.auto_center));
-      var objectFit     = firstDefined(deviceCfg.object_fit, ap.carousel_object_fit, ap.object_fit, 'cover') || 'cover';
+      var exibirTitulo  = firstDefined(
+        deviceCfg.show_title,
+        ap.carousel_show_title,
+        ap.show_title
+      ) !== false;
+      var exibirPlayBtn = firstDefined(
+        deviceCfg.show_play_icon,
+        ap.carousel_show_play_button,
+        ap.show_play_button
+      ) !== false;
+      var autoCenter    = !!(firstDefined(
+        deviceCfg.auto_center,
+        ap.carousel_auto_center,
+        ap.auto_center
+      ));
+      var objectFit     = firstDefined(
+        deviceCfg.object_fit,
+        ap.carousel_object_fit,
+        ap.object_fit,
+        'cover'
+      ) || 'cover';
 
       var aspectRatio = '9 / 16';
       if (formato.indexOf('landscape') !== -1 || formato.indexOf('16_9') !== -1) aspectRatio = '16 / 9';
       else if (formato.indexOf('square') !== -1 || formato.indexOf('1_1') !== -1) aspectRatio = '1 / 1';
 
+      // ── Seletor ──
       var dbSelector = ap.css_selector || ap.inline_selector || ap.display_selector || ap.selector || '';
       var selectorsToTry = [];
       if (dbSelector) selectorsToTry.push(dbSelector);
@@ -1618,6 +1773,7 @@
 
         widgetContainer.innerHTML = '';
 
+        // ── CSS ──
         var gapPx = espacamento;
         var totalGap = gapPx * (itemsVisiveis - 1);
         var cardWidth = 'calc((100% - ' + totalGap + 'px) / ' + itemsVisiveis + ')';
@@ -1669,6 +1825,7 @@
         ].join('\n');
         widgetContainer.appendChild(estilo);
 
+        // ── Cards ──
         var slider = document.createElement('div');
         slider.className = 'vl-slider-container';
 
@@ -1738,6 +1895,7 @@
 
         widgetContainer.appendChild(slider);
 
+        // ── Drag-to-scroll ──
         (function() {
           var isDown = false;
           var startX = 0;
@@ -1757,11 +1915,19 @@
           });
 
           slider.addEventListener('mouseleave', function() {
-            if (isDown) { isDown = false; slider.classList.remove('dragging'); startMomentum(); }
+            if (isDown) {
+              isDown = false;
+              slider.classList.remove('dragging');
+              startMomentum();
+            }
           });
 
           slider.addEventListener('mouseup', function() {
-            if (isDown) { isDown = false; slider.classList.remove('dragging'); startMomentum(); }
+            if (isDown) {
+              isDown = false;
+              slider.classList.remove('dragging');
+              startMomentum();
+            }
           });
 
           slider.addEventListener('mousemove', function(e) {
@@ -1775,17 +1941,24 @@
           });
 
           slider.addEventListener('click', function(e) {
-            if (moved) { e.stopPropagation(); e.preventDefault(); }
+            if (moved) {
+              e.stopPropagation();
+              e.preventDefault();
+            }
           }, true);
 
           slider.addEventListener('touchstart', function(e) {
-            isDown = true; moved = false;
+            isDown = true;
+            moved = false;
             startX = e.touches[0].pageX - slider.offsetLeft;
             scrollLeft = slider.scrollLeft;
             cancelMomentum();
           }, { passive: false });
 
-          slider.addEventListener('touchend', function() { isDown = false; startMomentum(); });
+          slider.addEventListener('touchend', function() {
+            isDown = false;
+            startMomentum();
+          });
 
           slider.addEventListener('touchmove', function(e) {
             if (!isDown) return;
@@ -1801,11 +1974,16 @@
             momentumID = requestAnimationFrame(function animate() {
               velX *= 0.92;
               slider.scrollLeft -= velX;
-              if (Math.abs(velX) > 0.5) { momentumID = requestAnimationFrame(animate); }
+              if (Math.abs(velX) > 0.5) {
+                momentumID = requestAnimationFrame(animate);
+              }
             });
           }
 
-          function cancelMomentum() { if (momentumID) { cancelAnimationFrame(momentumID); momentumID = null; } velX = 0; }
+          function cancelMomentum() {
+            if (momentumID) { cancelAnimationFrame(momentumID); momentumID = null; }
+            velX = 0;
+          }
         })();
 
       }, 300);
@@ -1831,7 +2009,9 @@
 
     stories.forEach(function (story, index) {
       var bubbleVideo = null;
-      if (story.videos && story.videos.length > 0) { bubbleVideo = story.videos[0]; }
+      if (story.videos && story.videos.length > 0) {
+        bubbleVideo = story.videos[0];
+      }
       
       var videoUrl = bubbleVideo ? getVideoUrl(bubbleVideo) : '';
       var cover = getStoryThumbnail(story, bubbleVideo, null);
@@ -1881,7 +2061,11 @@
 
       bubble.appendChild(ring);
 
-      var showFloatingTitle = firstDefined(appearance.floating_show_title, appearance.show_title);
+      // ── Label do flutuante: lê floating_show_title + show_title ──
+      var showFloatingTitle = firstDefined(
+        appearance.floating_show_title,
+        appearance.show_title
+      );
       if (showFloatingTitle !== false) {
         var label = createEl('span', 'vl-label');
         label.textContent = story.title || '';
@@ -1891,6 +2075,7 @@
       bubble.addEventListener('click', function (e) {
         if (e.target.closest('.vl-dismiss')) return;
         if (floatingWasDragged) { floatingWasDragged = false; return; }
+        
         openStoryViewer(stories, index);
       });
 
@@ -1960,11 +2145,30 @@
       var widgetFormat = 'floating_widget';
 
       for (var i = 0; i < validStories.length; i += 1) {
-        var storyFormat = String(firstDefined(validStories[i].format, validStories[i].display_format, validStories[i].displayFormat, validStories[i].visual_style, validStories[i].visualStyle, 'floating_widget')).toLowerCase();
+        var storyFormat = String(
+          firstDefined(
+            validStories[i].format,
+            validStories[i].display_format,
+            validStories[i].displayFormat,
+            validStories[i].visual_style,
+            validStories[i].visualStyle,
+            'floating_widget'
+          )
+        ).toLowerCase();
 
-        if (storyFormat.indexOf('carousel') !== -1 || storyFormat.indexOf('carrossel') !== -1) { widgetFormat = 'carousel'; break; }
-        if (storyFormat.indexOf('grid') !== -1 || storyFormat.indexOf('grade') !== -1) { widgetFormat = 'grid'; break; }
-        if (storyFormat.indexOf('floating') !== -1 || storyFormat.indexOf('flutuante') !== -1 || storyFormat.indexOf('widget') !== -1) { widgetFormat = 'floating_widget'; }
+        if (storyFormat.indexOf('carousel') !== -1 || storyFormat.indexOf('carrossel') !== -1) {
+          widgetFormat = 'carousel';
+          break;
+        }
+
+        if (storyFormat.indexOf('grid') !== -1 || storyFormat.indexOf('grade') !== -1) {
+          widgetFormat = 'grid';
+          break;
+        }
+
+        if (storyFormat.indexOf('floating') !== -1 || storyFormat.indexOf('flutuante') !== -1 || storyFormat.indexOf('widget') !== -1) {
+          widgetFormat = 'floating_widget';
+        }
       }
 
       if (widgetFormat === 'carousel' || widgetFormat === 'grid') {
