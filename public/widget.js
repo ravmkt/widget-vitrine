@@ -1,58 +1,23 @@
 (function () {
-  var WIDGET_VERSION = '2026.07.28-08';
+  var WIDGET_VERSION = '2026.07.28-10';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
     'color: #22c55e; font-weight: bold; font-size: 13px;'
   );
 
-  var globalConfig =
-    window.VIDLYTICS_CONFIG ||
-    window.vidlyticsConfig ||
-    {};
+  var globalConfig = window.VIDLYTICS_CONFIG || window.vidlyticsConfig || {};
+  var config = globalConfig.config || globalConfig;
+  var widgetsCfg = globalConfig.widgets || globalConfig.widgetsConfig || {};
 
-  var config =
-    globalConfig.config ||
-    globalConfig;
+  var supabaseUrl = String(globalConfig.supabaseUrl || config.supabaseUrl || '').replace(/\/+$/, '');
+  var supabaseAnonKey = globalConfig.supabaseAnonKey || globalConfig.anonKey || config.supabaseAnonKey || config.anonKey || '';
+  var storeId = globalConfig.storeId || config.storeId || '';
 
-  var widgetsCfg =
-    globalConfig.widgets ||
-    globalConfig.widgetsConfig ||
-    {};
+  var hasSupabase = Boolean(supabaseUrl && supabaseAnonKey && storeId);
 
-  var supabaseUrl = String(
-    globalConfig.supabaseUrl ||
-    config.supabaseUrl ||
-    ''
-  ).replace(/\/+$/, '');
-
-  var supabaseAnonKey =
-    globalConfig.supabaseAnonKey ||
-    globalConfig.anonKey ||
-    config.supabaseAnonKey ||
-    config.anonKey ||
-    '';
-
-  var storeId =
-    globalConfig.storeId ||
-    config.storeId ||
-    '';
-
-  var hasSupabase = Boolean(
-    supabaseUrl &&
-    supabaseAnonKey &&
-    storeId
-  );
-
-  if (
-    window.__vidlytics_widget_loaded_version ===
-    WIDGET_VERSION
-  ) {
-    return;
-  }
-
-  window.__vidlytics_widget_loaded_version =
-    WIDGET_VERSION;
+  if (window.__vidlytics_widget_loaded_version === WIDGET_VERSION) return;
+  window.__vidlytics_widget_loaded_version = WIDGET_VERSION;
 
   try {
     var oldRoot = document.getElementById('vidlytics-widget-root');
@@ -81,26 +46,15 @@
 
   var VIDEO_FILE_REGEX = /\.(mp4|webm|ogg|mov|m4v|m3u8)(\?.*)?$/i;
 
+  // ═══════════════════════════════════════════════════════════════
+  // 🆕 NOVA ESTRUTURA: 62 colunas planas
+  // ═══════════════════════════════════════════════════════════════
   var DEFAULT_APPEARANCE = {
-    // ── Floating ──
-    floating_position: 'bottom-right',
-    floating_shape: 'portrait',
-    floating_top: 20,
-    floating_bottom: 20,
-    floating_side: 20,
-    floating_width: 80,
-    floating_height: 142,
-    floating_border_radius: 12,
-    floating_border_width: 2,
-    floating_border_color: '#0094EB',
-    floating_object_fit: 'cover',
-    floating_z_index: 2147483647,
-    floating_show_play_button: true,
-    floating_draggable: false,
-    floating_closable: true,
-    floating_show_title: true,
+    // ── 🟦 Básico ──
+    style_name: 'default',
+    same_appearance_all_devices: true,
 
-    // ── Visual ──
+    // ── 🟨 Identidade Visual ──
     primary_color: '#0094EB',
     secondary_color: '#0094EB',
     text_color: '#0F172A',
@@ -109,48 +63,118 @@
     font_family: 'Inter, system-ui, sans-serif',
     font_size: '14',
 
-    // ── Modal / Player ──
-    show_title: true,
-    show_play_button: true,
-    show_product: true,
-    show_product_button: true,
-    show_like_button: true,
-    show_comment_button: true,
-    show_share_button: true,
-    show_whatsapp_button: true,
-    show_sizing_button: true,
-    hide_stories: false,
-    shadow_enabled: true,
+    // ── 🔴 Flutuante (Base) ──
+    floating_shape: 'portrait',
+    floating_size: '80',
+    floating_border_radius: '12',
+    floating_position: 'bottom-right',
+    floating_margin_bottom: '20',
+    floating_margin_top: '20',
+    floating_margin_side: '20',
+    floating_border_color: '#0094EB',
+    floating_border_width: '2',
+    floating_object_fit: 'cover',
+    floating_z_index: '2147483647',
+    floating_show_title: true,
+    floating_show_play_button: true,
+    floating_allow_drag: false,
+    floating_allow_close: true,
 
-    // ── Carrossel ──
-    carousel_format: 'portrait',
-    carousel_size: 80,
-    carousel_gap: 16,
-    carousel_visible_items: 4,
-    carousel_display_mode: 'preview',
+    // ── 🟢 Carrossel (Base) ──
+    carousel_shape: 'portrait',
+    carousel_size: '80',
+    carousel_visible_items: '4',
+    carousel_spacing: '16',
     carousel_border_color: '#0094EB',
-    carousel_border_width: 2,
-    carousel_border_radius: 12,
+    carousel_border_width: '2',
+    carousel_border_radius: '12',
     carousel_object_fit: 'cover',
-    carousel_margin_top: 0,
-    carousel_margin_bottom: 0,
+    carousel_margin_top: '0',
+    carousel_margin_bottom: '0',
     carousel_show_title: false,
     carousel_show_product: true,
     carousel_show_play_button: true,
     carousel_auto_center: false,
 
-    // ── Grade ──
-    grid_format: 'portrait',
-    grid_size: 80,
-    grid_columns: 4,
-    grid_rows: 1,
-    grid_gap: 16,
+    // ── 🟣 Grade (Base) ──
+    grid_shape: 'portrait',
+    grid_size: '80',
+    grid_columns: '4',
+    grid_rows: '1',
+    grid_spacing: '16',
     grid_border_color: '#0094EB',
-    grid_border_width: 2,
-    grid_border_radius: 12,
+    grid_border_width: '2',
+    grid_border_radius: '12',
     grid_object_fit: 'cover',
-    grid_show_title: false
+    grid_show_title: false,
+
+    // ── 🔵 Player Modal ──
+    modal_show_title: true,
+    modal_show_play_button: true,
+    modal_show_product: true,
+    modal_show_product_button: true,
+    modal_show_like_button: true,
+    modal_show_comment_button: true,
+    modal_show_share_button: true,
+    modal_show_whatsapp_button: true,
+    modal_show_sizing_button: true,
+    modal_hide_stories: false,
+    modal_shadow_enabled: true,
+    modal_border_color: '',
+    modal_border_width: '',
+    modal_border_radius: ''
   };
+
+  // ═══════════════════════════════════════════════════════════════
+  // 🆕 HELPERS DE DISPOSITIVO
+  // ═══════════════════════════════════════════════════════════════
+
+  /**
+   * Detecta o dispositivo atual baseado na largura da janela.
+   * @returns {'mobile' | 'desktop'}
+   */
+  function getDevice() {
+    return window.innerWidth < 768 ? 'mobile' : 'desktop';
+  }
+
+  /**
+   * Lê um valor de aparência respeitando a lógica de same_appearance_all_devices.
+   * 
+   * Se same_appearance_all_devices === true → usa a coluna base (sem sufixo).
+   * Se same_appearance_all_devices === false → tenta a coluna com sufixo _mobile/_desktop,
+   *   com fallback para a coluna base.
+   * 
+   * @param {Object} appearance - Objeto de aparência normalizado
+   * @param {string} baseName - Nome da coluna base (ex: 'floating_size')
+   * @param {*} fallback - Valor padrão se nada for encontrado
+   * @returns {*}
+   */
+  function readDeviceValue(appearance, baseName, fallback) {
+    var sameAll = appearance.same_appearance_all_devices;
+
+    // Se não definido ou true → usa coluna base
+    if (sameAll === undefined || sameAll === null || sameAll === true || sameAll === 'true' || sameAll === 1 || sameAll === '1') {
+      var baseVal = appearance[baseName];
+      return (baseVal !== undefined && baseVal !== null && baseVal !== '') ? baseVal : fallback;
+    }
+
+    // same_appearance_all_devices === false → tenta coluna específica do dispositivo
+    var device = getDevice();
+    var deviceKey = baseName + '_' + device;
+    var deviceVal = appearance[deviceKey];
+
+    if (deviceVal !== undefined && deviceVal !== null && deviceVal !== '') {
+      return deviceVal;
+    }
+
+    // Fallback para coluna base
+    var fallbackBase = appearance[baseName];
+    return (fallbackBase !== undefined && fallbackBase !== null && fallbackBase !== '') ? fallbackBase : fallback;
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // FUNÇÕES UTILITÁRIAS
+  // ═══════════════════════════════════════════════════════════════
 
   function createEl(tag, className) { var el = document.createElement(tag); if (className) el.className = className; return el; }
 
@@ -160,7 +184,9 @@
   }
 
   function firstDefined() {
-    for (var i = 0; i < arguments.length; i += 1) { if (arguments[i] !== undefined && arguments[i] !== null && arguments[i] !== '') return arguments[i]; }
+    for (var i = 0; i < arguments.length; i += 1) {
+      if (arguments[i] !== undefined && arguments[i] !== null && arguments[i] !== '') return arguments[i];
+    }
     return undefined;
   }
 
@@ -169,44 +195,62 @@
     return isNaN(num) ? fallback : num;
   }
 
-  function idsEqual(a, b) { if (a === undefined || a === null || b === undefined || b === null) return false; return String(a) === String(b); }
+  function idsEqual(a, b) {
+    if (a === undefined || a === null || b === undefined || b === null) return false;
+    return String(a) === String(b);
+  }
+
   function isPlainObject(value) { return value && typeof value === 'object' && !Array.isArray(value); }
+
   function parseJsonIfNeeded(value) {
-    if (!value) return {}; if (isPlainObject(value)) return value;
+    if (!value) return {};
+    if (isPlainObject(value)) return value;
     if (typeof value === 'string') {
-      var trimmed = value.trim(); if (!trimmed || (trimmed.charAt(0) !== '{' && trimmed.charAt(0) !== '[')) return {};
+      var trimmed = value.trim();
+      if (!trimmed || (trimmed.charAt(0) !== '{' && trimmed.charAt(0) !== '[')) return {};
       try { var parsed = JSON.parse(trimmed); return isPlainObject(parsed) ? parsed : {}; } catch (e) { return {}; }
     }
     return {};
   }
 
-  function normalizeKey(value) { return String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/_/g, '-').replace(/\s+/g, '-'); }
+  function normalizeKey(value) {
+    return String(value || '').trim().toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/_/g, '-').replace(/\s+/g, '-');
+  }
 
   function toBoolean(value, fallback) {
     if (value === undefined || value === null || value === '') return fallback;
     if (value === true || value === 1 || value === '1') return true;
-    if (typeof value === 'string') { var norm = value.trim().toLowerCase(); if (norm === 'true') return true; if (norm === 'false') return false; }
+    if (typeof value === 'string') {
+      var norm = value.trim().toLowerCase();
+      if (norm === 'true') return true;
+      if (norm === 'false') return false;
+    }
     if (value === false || value === 0 || value === '0') return false;
     return fallback;
   }
 
-  function getFloatingBehaviorConfig(appearance) {
-    appearance = appearance || {};
-    var rawShowPlayButton = firstDefined(appearance.floating_show_play_button, appearance.floatingShowPlayButton, appearance.show_play_button, appearance.showPlayButton);
-    var rawAllowDrag = firstDefined(appearance.floating_draggable, appearance.floatingDraggable, appearance.allow_drag, appearance.allowDrag, appearance.draggable);
-    var rawAllowClose = firstDefined(appearance.floating_closable, appearance.floatingClosable, appearance.allow_close, appearance.allowClose, appearance.closable);
-    var rawObjectFit = firstDefined(appearance.floating_object_fit, appearance.floatingObjectFit, appearance.object_fit, appearance.objectFit);
+  function toNumber(value, fallback) {
+    if (value === undefined || value === null || value === '') return fallback;
+    if (typeof value === 'number') return Number.isFinite(value) ? value : fallback;
+    var parsed = Number(String(value).trim().replace('px', '').replace(',', '.'));
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
 
-    return {
-      objectFit: rawObjectFit || DEFAULT_APPEARANCE.floating_object_fit,
-      showPlayButton: toBoolean(rawShowPlayButton, true),
-      allowDrag: toBoolean(rawAllowDrag, false),
-      allowClose: toBoolean(rawAllowClose, true)
-    };
+  function px(value, fallback) {
+    if (value === undefined || value === null || value === '') value = fallback !== undefined ? fallback : 0;
+    if (typeof value === 'string') {
+      var trimmed = value.trim();
+      if (trimmed === 'auto' || trimmed.indexOf('px') !== -1 || trimmed.indexOf('%') !== -1 || trimmed.indexOf('vh') !== -1 || trimmed.indexOf('vw') !== -1) return trimmed;
+    }
+    return toNumber(value, fallback !== undefined ? fallback : 0) + 'px';
   }
 
   function normalizeMediaUrl(url) {
-    if (!url) return ''; var value = String(url).trim(); if (!value) return '';
+    if (!url) return '';
+    var value = String(url).trim();
+    if (!value) return '';
     if (value.indexOf('http://') === 0 || value.indexOf('https://') === 0 || value.indexOf('data:') === 0 || value.indexOf('blob:') === 0) return value;
     if (value.indexOf('//') === 0) return window.location.protocol + value;
     if (value.charAt(0) === '/' && supabaseUrl) return supabaseUrl + value;
@@ -216,33 +260,20 @@
   function getStorageItem(key, fallback) {
     try { var item = localStorage.getItem(key); if (!item) return fallback; try { return JSON.parse(item); } catch (e) { return item; } } catch (e2) { return fallback; }
   }
+
   function setStorageItem(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
 
-  function supabaseFetch(path, options) {
-    if (!hasSupabase) return Promise.reject(new Error('Supabase não configurado.'));
-    options = options || {};
-    var headers = {
-      'apikey': supabaseAnonKey,
-      'Authorization': 'Bearer ' + supabaseAnonKey,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Cache-Control': 'no-cache'
-    };
-    if (options.headers) {
-      Object.keys(options.headers).forEach(function (key) { headers[key] = options.headers[key]; });
-    }
-    return fetch(supabaseUrl + '/rest/v1/' + path, { method: options.method || 'GET', headers: headers, body: options.body || undefined, cache: 'no-store' });
-  }
-
-  function fetchJson(path) {
-    return supabaseFetch(path, { method: 'GET' })
-      .then(function (response) { if (!response.ok) return []; return response.json(); })
-      .then(function (data) { return Array.isArray(data) ? data : []; })
-      .catch(function () { return []; });
+  function normalizeAppearanceItem(item) {
+    var merged = {};
+    flattenAppearanceInto(merged, item || {}, 0);
+    delete merged.storageAppearance; delete merged.configAppearance; delete merged.dbAppearance;
+    delete merged.widgetsAppearance; delete merged.widgetsAparencia;
+    return merged;
   }
 
   function flattenAppearanceInto(target, source, depth) {
-    if (depth === undefined) depth = 0; if (depth > 12 || !source) return target;
+    if (depth === undefined) depth = 0;
+    if (depth > 12 || !source) return target;
     if (typeof source === 'string') source = parseJsonIfNeeded(source);
     if (!isPlainObject(source)) return target;
     Object.keys(source).forEach(function (key) {
@@ -258,32 +289,6 @@
     return target;
   }
 
-  function createComment(commentData) {
-    if (!hasSupabase) return Promise.reject(new Error('Supabase não configurado.'));
-    commentData = commentData || {};
-    var payload = { store_id: storeId, story_id: commentData.story_id || null, video_id: commentData.video_id || null, author_name: String(commentData.author_name || '').trim(), author_email: commentData.author_email ? String(commentData.author_email).trim() : null, content: String(commentData.content || '').trim(), status: 'pending', active: true };
-    if (!payload.author_name) return Promise.reject(new Error('Informe seu nome.'));
-    if (!payload.content) return Promise.reject(new Error('Digite um comentário.'));
-
-    return supabaseFetch('comments', { method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify(payload) })
-      .then(function (response) {
-        if (response.ok) return true;
-        return response.text().then(function (rawMessage) {
-          var parsed = {};
-          try { parsed = JSON.parse(rawMessage || '{}'); } catch (error) {}
-          if (response.status === 401) throw new Error('A chave pública ou a URL do Supabase são inválidas.');
-          if (response.status === 403 || parsed.code === '42501') throw new Error('Inserção bloqueada pelas políticas RLS da tabela comments.');
-          throw new Error(parsed.message || parsed.error_description || parsed.hint || parsed.details || 'Não foi possível enviar o comentário.');
-        });
-      });
-  }
-
-  function normalizeAppearanceItem(item) {
-    var merged = {}; flattenAppearanceInto(merged, item || {}, 0);
-    delete merged.storageAppearance; delete merged.configAppearance; delete merged.dbAppearance; delete merged.widgetsAppearance; delete merged.widgetsAparencia;
-    return merged;
-  }
-
   function mergeObject(target, source) {
     source = normalizeAppearanceItem(source || {});
     Object.keys(source).forEach(function (key) {
@@ -295,7 +300,9 @@
 
   function readAppearanceValue(appearance, names) {
     appearance = normalizeAppearanceItem(appearance || {});
-    for (var i = 0; i < names.length; i += 1) { if (appearance[names[i]] !== undefined && appearance[names[i]] !== null && appearance[names[i]] !== '') return appearance[names[i]]; }
+    for (var i = 0; i < names.length; i += 1) {
+      if (appearance[names[i]] !== undefined && appearance[names[i]] !== null && appearance[names[i]] !== '') return appearance[names[i]];
+    }
     var normalizedNames = names.map(function (name) { return normalizeKey(name); });
     var keys = Object.keys(appearance);
     for (var k = 0; k < keys.length; k += 1) {
@@ -307,235 +314,153 @@
     return undefined;
   }
 
-  function getConfigAppearance() {
-    var merged = {};
-    [ config.appearance, config.aparencia, config.appearanceConfig, config.appearance_config, config.floating, config.floatingConfig, config.floatingAppearance, config.floatingVideoConfig, config.floatingVideoAppearance, config.floating_video, widgetsCfg.appearance, widgetsCfg.aparencia, widgetsCfg.appearanceConfig, widgetsCfg.appearance_config, widgetsCfg.floating, widgetsCfg.floatingConfig, widgetsCfg.floatingAppearance, widgetsCfg.floatingVideoConfig, widgetsCfg.floatingVideoAppearance, widgetsCfg.floating_video ].forEach(function (src) { flattenAppearanceInto(merged, src, 0); });
-    return normalizeAppearanceItem(merged);
-  }
+  // ═══════════════════════════════════════════════════════════════
+  // SUPABASE FETCH
+  // ═══════════════════════════════════════════════════════════════
 
-  function getStorageAppearance() {
-    var merged = {};
-    var keys = [ 'vidlytics_appearance', 'vidlytics_appearance_' + storeId, 'vidlytics_aparencia', 'vidlytics_aparencia_' + storeId, 'vidlytics_widget_appearance', 'vidlytics_widget_appearance_' + storeId, 'vidlytics_config', 'vidlytics_config_' + storeId, 'VIDLYTICS_APPEARANCE', 'VIDLYTICS_CONFIG' ];
-    keys.forEach(function (key) { flattenAppearanceInto(merged, getStorageItem(key, {}), 0); });
-    return normalizeAppearanceItem(merged);
-  }
-
-  function appearanceHasUsefulData(appearance) {
-    appearance = normalizeAppearanceItem(appearance || {});
-    var usefulNames = [
-      'floating_position', 'floating_shape', 'floating_width', 'floating_height',
-      'floating_radius', 'floating_top', 'floating_bottom', 'floating_side',
-      'floating_border_width', 'floating_border_radius', 'floating_border_color',
-      'floating_border_style', 'floating_object_fit',
-      'primary_color', 'secondary_color',
-      'shape', 'width', 'height', 'radius', 'position',
-      'border_width', 'border_radius', 'border_color', 'border_style',
-      'object_fit', 'top', 'bottom', 'side'
-    ];
-    for (var i = 0; i < usefulNames.length; i += 1) {
-      if (readAppearanceValue(appearance, [usefulNames[i]]) !== undefined) return true;
+  function supabaseFetch(path, options) {
+    if (!hasSupabase) return Promise.reject(new Error('Supabase não configurado.'));
+    options = options || {};
+    var headers = {
+      'apikey': supabaseAnonKey,
+      'Authorization': 'Bearer ' + supabaseAnonKey,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Cache-Control': 'no-cache'
+    };
+    if (options.headers) {
+      Object.keys(options.headers).forEach(function (key) { headers[key] = options.headers[key]; });
     }
-    return false;
+    return fetch(supabaseUrl + '/rest/v1/' + path, {
+      method: options.method || 'GET',
+      headers: headers,
+      body: options.body || undefined,
+      cache: 'no-store'
+    });
   }
 
-  function extractAppearanceFromItem(item, allowDirectFields) {
-    if (!item) return {}; var merged = {};
-    [ item.appearance, item.aparencia, item.appearance_config, item.appearanceConfig, item.widget_appearance, item.widgetAppearance, item.widget_config, item.widgetConfig, item.settings, item.config, item.style, item.styles, item.data, item.metadata, item.customization, item.customization_config, item.theme, item.theme_config, item.floating, item.floating_config, item.floatingConfig, item.floatingAppearance, item.floating_video, item.floatingVideo, item.floatingVideoConfig, item.floatingVideoAppearance, item.carousel_config, item.carouselConfig, item.grid_config, item.gridConfig, item.player_config, item.playerConfig, item.modal_config, item.modalConfig, item.colors_config, item.colorsConfig ].forEach(function (src) { flattenAppearanceInto(merged, src, 0); });
-
-    if (allowDirectFields) {
-      if (firstDefined(item.widget_shape, item.shape)) merged.shape = firstDefined(item.widget_shape, item.shape);
-      if (firstDefined(item.widget_size, item.size)) merged.size = firstDefined(item.widget_size, item.size);
-      if (firstDefined(item.shadow_enabled, item.shadowEnabled) !== undefined) merged.shadow_enabled = firstDefined(item.shadow_enabled, item.shadowEnabled);
-      if (firstDefined(item.font_family, item.fontFamily)) merged.font_family = firstDefined(item.font_family, item.fontFamily);
-      if (firstDefined(item.floating_shape, item.floatingShape)) merged.floating_shape = firstDefined(item.floating_shape, item.floatingShape);
-      if (firstDefined(item.floating_width, item.floatingWidth)) merged.floating_width = firstDefined(item.floating_width, item.floatingWidth);
-      if (firstDefined(item.floating_height, item.floatingHeight)) merged.floating_height = firstDefined(item.floating_height, item.floatingHeight);
-      var directRadius = firstDefined(item.floating_radius, item.floatingRadius, item.floating_border_radius, item.floatingBorderRadius, item.widget_radius, item.widgetRadius, item.border_radius, item.borderRadius, item.radius, item.raio);
-      if (directRadius !== undefined) merged.floating_radius = directRadius;
-      if (firstDefined(item.floating_position, item.floatingPosition)) merged.floating_position = firstDefined(item.floating_position, item.floatingPosition);
-      if (firstDefined(item.floating_top, item.floatingTop)) merged.floating_top = firstDefined(item.floating_top, item.floatingTop);
-      if (firstDefined(item.floating_bottom, item.floatingBottom)) merged.floating_bottom = firstDefined(item.floating_bottom, item.floatingBottom);
-      if (firstDefined(item.floating_side, item.floatingSide)) merged.floating_side = firstDefined(item.floating_side, item.floatingSide);
-      var directBorderColor = firstDefined(item.floating_border_color, item.floatingBorderColor, item.border_color, item.borderColor, item.cor_borda);
-      if (directBorderColor !== undefined) merged.border_color = directBorderColor;
-      var directObjectFit = firstDefined(item.floating_object_fit, item.floatingObjectFit, item.object_fit, item.objectFit, item.fit);
-      if (directObjectFit !== undefined) merged.object_fit = directObjectFit;
-      var directShowPlayButton = firstDefined(item.show_play_button, item.showPlayButton, item.play_button_enabled, item.mostrar_play);
-      if (directShowPlayButton !== undefined && directShowPlayButton !== null) merged.show_play_button = toBoolean(directShowPlayButton, false);
-      var directAllowDrag = firstDefined(item.allow_drag, item.allowDrag, item.draggable, item.drag_enabled);
-      if (directAllowDrag !== undefined && directAllowDrag !== null) merged.allow_drag = toBoolean(directAllowDrag, false);
-      var directAllowClose = firstDefined(item.allow_close, item.allowClose, item.closable, item.close_enabled, item.show_close_button);
-      if (directAllowClose !== undefined && directAllowClose !== null) merged.allow_close = toBoolean(directAllowClose, false);
-      flattenAppearanceInto(merged, item, 0);
-    }
-    return normalizeAppearanceItem(merged);
+  function fetchJson(path) {
+    return supabaseFetch(path, { method: 'GET' })
+      .then(function (response) { if (!response.ok) return []; return response.json(); })
+      .then(function (data) { return Array.isArray(data) ? data : []; })
+      .catch(function () { return []; });
   }
 
-  function tryTable(tableName) {
-    if (!storeId || !hasSupabase) return Promise.resolve(null);
-    var query = tableName + '?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1';
-    return supabaseFetch(query, { method: 'GET' })
+  // ═══════════════════════════════════════════════════════════════
+  // 🆕 fetchDbAppearance — Lê da nova tabela appearances (62 colunas)
+  //    Fallback para widget_appearances (legado)
+  // ═══════════════════════════════════════════════════════════════
+  function fetchDbAppearance() {
+    if (!storeId || !hasSupabase) return Promise.resolve({});
+
+    // Tenta a nova tabela primeiro
+    return supabaseFetch(
+      'appearances?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
+      { method: 'GET' }
+    )
       .then(function (response) {
         if (!response.ok) return null;
         return response.json();
       })
       .then(function (data) {
-        if (Array.isArray(data) && data.length > 0) return data[0];
-        return null;
+        if (Array.isArray(data) && data.length > 0) {
+          var row = data[0];
+          console.log('🔍 fetchDbAppearance — appearances (nova):', row);
+          return normalizeAppearanceItem(row);
+        }
+        // Fallback: tenta tabela legada
+        return tryLegacyTable();
       })
       .catch(function () {
-        return null;
+        return tryLegacyTable();
       });
+
+    function tryLegacyTable() {
+      return supabaseFetch(
+        'widget_appearances?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
+        { method: 'GET' }
+      )
+        .then(function (response) {
+          if (!response.ok) return null;
+          return response.json();
+        })
+        .then(function (data) {
+          if (Array.isArray(data) && data.length > 0) {
+            console.log('🔍 fetchDbAppearance — widget_appearances (legado):', data[0]);
+            return normalizeAppearanceItem(data[0]);
+          }
+          return {};
+        })
+        .catch(function () { return {}; });
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // ✅ fetchDbAppearance REFEITO: extrai floating_config manualmente
-  //    sem depender do flattenAppearanceInto para evitar que as
-  //    chaves sejam achatadas sem o prefixo "floating_"
+  // LEITURA DE APARÊNCIA (config → storage → db)
   // ═══════════════════════════════════════════════════════════════
-  function fetchDbAppearance() {
-    if (!storeId || !hasSupabase) return Promise.resolve({});
 
-    return Promise.all([
-      tryTable('widget_appearances'),
-      tryTable('appearances')
-    ]).then(function(results) {
-      var widgetRow = results[0] || {};
-      var legacyRow = results[1] || {};
-
-      // Lista de campos diretos (não são floating_config) que podem vir nas tabelas
-      var directFields = [
-        'primary_color', 'secondary_color', 'text_color', 'background_color',
-        'button_color', 'font_family', 'font_size', 'shadow_enabled',
-        'show_title', 'show_play_button', 'show_product', 'show_product_button',
-        'show_like_button', 'show_comment_button', 'show_share_button',
-        'show_whatsapp_button', 'show_sizing_button', 'hide_stories'
-      ];
-
-      // Lista de chaves que SEMPRE devem ser prefixadas com floating_
-      // (mapeia do que pode vir sem prefixo → nome com prefixo)
-      var floatingKeyMap = {
-        'position': 'floating_position',
-        'shape': 'floating_shape',
-        'top': 'floating_top',
-        'bottom': 'floating_bottom',
-        'side': 'floating_side',
-        'width': 'floating_width',
-        'height': 'floating_height',
-        'radius': 'floating_border_radius',
-        'border_radius': 'floating_border_radius',
-        'border_width': 'floating_border_width',
-        'border_color': 'floating_border_color',
-        'border_style': 'floating_border_style',
-        'object_fit': 'floating_object_fit',
-        'z_index': 'floating_z_index',
-        'show_play_button_f': 'floating_show_play_button',
-        'draggable': 'floating_draggable',
-        'closable': 'floating_closable',
-        'show_title_f': 'floating_show_title'
-      };
-
-      function extractFromRow(row, rowLabel) {
-        var out = {};
-
-        // 1. Extrai campos diretos
-        directFields.forEach(function(field) {
-          if (row[field] !== undefined && row[field] !== null && row[field] !== '') {
-            out[field] = row[field];
-          }
-        });
-
-        // 2. Extrai chaves que JÁ têm prefixo floating_ no row
-        Object.keys(row).forEach(function(key) {
-          if (key.indexOf('floating_') === 0 &&
-              row[key] !== undefined && row[key] !== null && row[key] !== '') {
-            out[key] = row[key];
-          }
-        });
-
-        // 3. Trata floating_config (objeto ou JSON string)
-        var fc = row.floating_config;
-        if (fc) {
-          if (typeof fc === 'string') fc = parseJsonIfNeeded(fc);
-          if (isPlainObject(fc)) {
-            Object.keys(fc).forEach(function(rawKey) {
-              // Se a chave já tem o prefixo, usa direto
-              if (rawKey.indexOf('floating_') === 0) {
-                if (fc[rawKey] !== undefined && fc[rawKey] !== null && fc[rawKey] !== '') {
-                  out[rawKey] = fc[rawKey];
-                }
-              } else {
-                // Tenta mapear pelo dicionário
-                var mapped = floatingKeyMap[rawKey];
-                if (mapped) {
-                  if (fc[rawKey] !== undefined && fc[rawKey] !== null && fc[rawKey] !== '') {
-                    out[mapped] = fc[rawKey];
-                  }
-                } else {
-                  // Fallback: prefixa automaticamente
-                  var autoPrefixed = 'floating_' + rawKey;
-                  if (fc[rawKey] !== undefined && fc[rawKey] !== null && fc[rawKey] !== '') {
-                    out[autoPrefixed] = fc[rawKey];
-                  }
-                }
-              }
-            });
-          }
-        }
-
-        console.log('🔍 fetchDbAppearance — ' + rowLabel + ':', out);
-        return out;
-      }
-
-      // Processa ambas as linhas (legacy primeiro, widget depois = widget ganha)
-      var legacyExtracted = extractFromRow(legacyRow, 'appearances (legacy)');
-      var widgetExtracted = extractFromRow(widgetRow, 'widget_appearances');
-
-      // Merge: widget_appearances tem prioridade máxima
-      var merged = {};
-      Object.keys(legacyExtracted).forEach(function(k) { merged[k] = legacyExtracted[k]; });
-      Object.keys(widgetExtracted).forEach(function(k) { merged[k] = widgetExtracted[k]; });
-
-      console.log('🔍 fetchDbAppearance — RESULTADO FINAL:', merged);
-      return normalizeAppearanceItem(merged);
-    });
+  function getConfigAppearance() {
+    var merged = {};
+    [
+      config.appearance, config.aparencia, config.appearanceConfig, config.appearance_config,
+      config.floating, config.floatingConfig, config.floatingAppearance, config.floatingVideoConfig,
+      config.floatingVideoAppearance, config.floating_video,
+      widgetsCfg.appearance, widgetsCfg.aparencia, widgetsCfg.appearanceConfig, widgetsCfg.appearance_config,
+      widgetsCfg.floating, widgetsCfg.floatingConfig, widgetsCfg.floatingAppearance,
+      widgetsCfg.floatingVideoConfig, widgetsCfg.floatingVideoAppearance, widgetsCfg.floating_video
+    ].forEach(function (src) { flattenAppearanceInto(merged, src, 0); });
+    return normalizeAppearanceItem(merged);
   }
 
-  // ✅ readAppearance: dbAppearance SEMPRE aplicado (sem verificação condicional)
+  function getStorageAppearance() {
+    var merged = {};
+    var keys = [
+      'vidlytics_appearance', 'vidlytics_appearance_' + storeId,
+      'vidlytics_aparencia', 'vidlytics_aparencia_' + storeId,
+      'vidlytics_widget_appearance', 'vidlytics_widget_appearance_' + storeId,
+      'vidlytics_config', 'vidlytics_config_' + storeId,
+      'VIDLYTICS_APPEARANCE', 'VIDLYTICS_CONFIG'
+    ];
+    keys.forEach(function (key) { flattenAppearanceInto(merged, getStorageItem(key, {}), 0); });
+    return normalizeAppearanceItem(merged);
+  }
+
   function readAppearance() {
     var configAppearance = normalizeAppearanceItem(getConfigAppearance());
     var storageAppearance = normalizeAppearanceItem(getStorageAppearance());
 
     return fetchDbAppearance().then(function (dbAppearance) {
       var finalAppearance = {};
+
+      // 1. Defaults
       mergeObject(finalAppearance, DEFAULT_APPEARANCE);
+
+      // 2. Config inline
       mergeObject(finalAppearance, configAppearance);
+
+      // 3. Storage local
       mergeObject(finalAppearance, storageAppearance);
 
-      // ✅ SEMPRE aplica o dbAppearance — banco tem prioridade máxima
-      if (appearanceHasUsefulData(dbAppearance)) {
-        mergeObject(finalAppearance, dbAppearance);
-        console.log('🔍 readAppearance — dbAppearance APLICADO ao finalAppearance');
-      } else {
-        console.warn('⚠️ readAppearance — dbAppearance NÃO tem dados úteis, ignorado');
-      }
+      // 4. Banco de dados (prioridade máxima)
+      mergeObject(finalAppearance, dbAppearance);
 
       console.log('🔍 readAppearance — FINAL:', {
-        floating_position: finalAppearance.floating_position,
-        floating_shape: finalAppearance.floating_shape,
-        floating_border_color: finalAppearance.floating_border_color,
-        floating_border_width: finalAppearance.floating_border_width,
-        floating_top: finalAppearance.floating_top,
-        floating_bottom: finalAppearance.floating_bottom,
-        floating_side: finalAppearance.floating_side,
-        floating_width: finalAppearance.floating_width,
-        floating_height: finalAppearance.floating_height,
-        primary_color: finalAppearance.primary_color
+        same_appearance_all_devices: finalAppearance.same_appearance_all_devices,
+        floating_position: readDeviceValue(finalAppearance, 'floating_position'),
+        floating_shape: readDeviceValue(finalAppearance, 'floating_shape'),
+        floating_size: readDeviceValue(finalAppearance, 'floating_size'),
+        floating_border_color: readDeviceValue(finalAppearance, 'floating_border_color'),
+        primary_color: finalAppearance.primary_color,
+        device: getDevice()
       });
 
       return normalizeAppearanceItem(finalAppearance);
     });
   }
+
+  // ═══════════════════════════════════════════════════════════════
+  // 🆕 NORMALIZADORES DE VALORES
+  // ═══════════════════════════════════════════════════════════════
 
   function normalizeFloatingPosition(value) {
     var key = normalizeKey(value);
@@ -554,128 +479,244 @@
     return DEFAULT_APPEARANCE.floating_shape;
   }
 
-  function toNumber(value, fallback) {
-    if (value === undefined || value === null || value === '') return fallback;
-    if (typeof value === 'number') return Number.isFinite(value) ? value : fallback;
-    var parsed = Number(String(value).trim().replace('px', '').replace(',', '.'));
-    return Number.isFinite(parsed) ? parsed : fallback;
-  }
+  // ═══════════════════════════════════════════════════════════════
+  // 🆕 CONFIGS POR WIDGET (usando readDeviceValue)
+  // ═══════════════════════════════════════════════════════════════
 
-  function px(value, fallback) {
-    if (value === undefined || value === null || value === '') value = fallback !== undefined ? fallback : 0;
-    if (typeof value === 'string') { var trimmed = value.trim(); if (trimmed === 'auto' || trimmed.indexOf('px') !== -1 || trimmed.indexOf('%') !== -1 || trimmed.indexOf('vh') !== -1 || trimmed.indexOf('vw') !== -1) return trimmed; }
-    return toNumber(value, fallback !== undefined ? fallback : 0) + 'px';
-  }
-
+  /**
+   * Configuração do widget flutuante com suporte a mobile/desktop.
+   */
   function getFloatingConfig(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
-    function getValue(names, fallback) { var value = readAppearanceValue(appearance, names); return (value !== undefined && value !== null && value !== '') ? value : fallback; }
 
-    var position = normalizeFloatingPosition(getValue(['floating_position', 'position'], DEFAULT_APPEARANCE.floating_position));
-    var shape = normalizeFloatingShape(getValue(['floating_shape', 'shape'], DEFAULT_APPEARANCE.floating_shape));
+    function rdv(name, fallback) {
+      return readDeviceValue(appearance, name, fallback);
+    }
 
-    var defaultWidth = DEFAULT_APPEARANCE.floating_width;
-    var defaultHeight = DEFAULT_APPEARANCE.floating_height;
-    if (shape === 'square') { defaultWidth = 80; defaultHeight = 80; }
-    if (shape === 'circle') { defaultWidth = 80; defaultHeight = 80; }
+    var position = normalizeFloatingPosition(
+      rdv('floating_position', DEFAULT_APPEARANCE.floating_position)
+    );
+    var shape = normalizeFloatingShape(
+      rdv('floating_shape', DEFAULT_APPEARANCE.floating_shape)
+    );
 
-    var widthNumber = toNumber(getValue(['floating_width', 'width'], defaultWidth), defaultWidth);
-    var heightNumber = toNumber(getValue(['floating_height', 'height'], defaultHeight), defaultHeight);
-    if (shape === 'square' || shape === 'circle') heightNumber = widthNumber;
+    var sizeNumber = toNumber(rdv('floating_size', '80'), 80);
+    var widthNumber = sizeNumber;
+    var heightNumber;
 
-    var borderWidthNumber = toNumber(getValue(['floating_border_width', 'floating_border_style', 'border_style', 'border_width'], DEFAULT_APPEARANCE.floating_border_width), DEFAULT_APPEARANCE.floating_border_width);
-    var radiusNumber = toNumber(getValue(['floating_border_radius', 'floating_radius', 'border_radius', 'radius'], DEFAULT_APPEARANCE.floating_border_radius), DEFAULT_APPEARANCE.floating_border_radius);
+    if (shape === 'square' || shape === 'circle') {
+      heightNumber = widthNumber;
+    } else {
+      // portrait → proporção 9:16
+      heightNumber = Math.round(widthNumber * 16 / 9);
+    }
+
+    var borderWidthNumber = toNumber(rdv('floating_border_width', '2'), 2);
+    var radiusNumber = toNumber(rdv('floating_border_radius', '12'), 12);
     if (shape === 'circle') radiusNumber = 999;
 
-    var topNumber = toNumber(getValue(['floating_top', 'top'], DEFAULT_APPEARANCE.floating_top), DEFAULT_APPEARANCE.floating_top);
-    var bottomNumber = toNumber(getValue(['floating_bottom', 'bottom'], DEFAULT_APPEARANCE.floating_bottom), DEFAULT_APPEARANCE.floating_bottom);
-    var sideNumber = toNumber(getValue(['floating_side', 'side'], DEFAULT_APPEARANCE.floating_side), DEFAULT_APPEARANCE.floating_side);
-    var zIndexNumber = toNumber(getValue(['floating_z_index', 'z_index', 'zIndex'], DEFAULT_APPEARANCE.floating_z_index), DEFAULT_APPEARANCE.floating_z_index);
+    var marginTopNumber = toNumber(rdv('floating_margin_top', '20'), 20);
+    var marginBottomNumber = toNumber(rdv('floating_margin_bottom', '20'), 20);
+    var marginSideNumber = toNumber(rdv('floating_margin_side', '20'), 20);
+    var zIndexNumber = toNumber(rdv('floating_z_index', '2147483647'), 2147483647);
 
-    var objectFitRaw = getValue(['floating_object_fit', 'object_fit'], DEFAULT_APPEARANCE.floating_object_fit);
-    var objectFit = String(objectFitRaw || 'cover').trim().toLowerCase().replace(/_/g, '-');
+    var objectFit = String(rdv('floating_object_fit', 'cover') || 'cover').trim().toLowerCase();
 
     var top = 'auto', right = 'auto', bottom = 'auto', left = 'auto', alignItems = 'flex-end';
-    if (position === 'top-left') { top = px(topNumber); left = px(sideNumber); alignItems = 'flex-start'; }
-    if (position === 'top-right') { top = px(topNumber); right = px(sideNumber); alignItems = 'flex-end'; }
-    if (position === 'bottom-left') { bottom = px(bottomNumber); left = px(sideNumber); alignItems = 'flex-start'; }
-    if (position === 'bottom-right') { bottom = px(bottomNumber); right = px(sideNumber); alignItems = 'flex-end'; }
+    if (position === 'top-left') { top = px(marginTopNumber); left = px(marginSideNumber); alignItems = 'flex-start'; }
+    if (position === 'top-right') { top = px(marginTopNumber); right = px(marginSideNumber); alignItems = 'flex-end'; }
+    if (position === 'bottom-left') { bottom = px(marginBottomNumber); left = px(marginSideNumber); alignItems = 'flex-start'; }
+    if (position === 'bottom-right') { bottom = px(marginBottomNumber); right = px(marginSideNumber); alignItems = 'flex-end'; }
 
     console.log('🔍 getFloatingConfig — RESULTADO:', {
       position: position, shape: shape,
       top: top, right: right, bottom: bottom, left: left,
       width: px(widthNumber), height: px(heightNumber),
-      borderWidth: px(borderWidthNumber), radius: shape === 'circle' ? '999px' : px(radiusNumber),
+      borderWidth: px(borderWidthNumber),
+      radius: shape === 'circle' ? '999px' : px(radiusNumber),
       objectFit: objectFit, zIndex: zIndexNumber
     });
 
     return {
-      position: position, shape: shape, top: top, right: right, bottom: bottom, left: left,
-      width: px(widthNumber), height: px(heightNumber), borderWidth: px(borderWidthNumber),
+      position: position, shape: shape,
+      top: top, right: right, bottom: bottom, left: left,
+      width: px(widthNumber), height: px(heightNumber),
+      borderWidth: px(borderWidthNumber),
       radius: shape === 'circle' ? '999px' : px(radiusNumber),
       innerRadius: shape === 'circle' ? '999px' : px(Math.max(0, radiusNumber - borderWidthNumber)),
       zIndex: zIndexNumber, alignItems: alignItems, objectFit: objectFit
     };
   }
 
-  function getPrimaryColor(appearance) { return readAppearanceValue(appearance, ['primary_color', 'primaryColor', 'cor_primaria']) || DEFAULT_APPEARANCE.primary_color; }
-  function getSecondaryColor(appearance) { return readAppearanceValue(appearance, ['secondary_color', 'secondaryColor', 'cor_secundaria']) || DEFAULT_APPEARANCE.secondary_color; }
-  function getBorderColor(appearance) { return readAppearanceValue(appearance, ['floating_border_color', 'border_color', 'borderColor', 'cor_borda']); }
-  function getButtonColor(appearance) { return readAppearanceValue(appearance, ['button_color', 'buttonColor', 'btn_color', 'cor_botao']) || getPrimaryColor(appearance); }
-  function getFontFamily(appearance) { return readAppearanceValue(appearance, ['font_family', 'fontFamily', 'fonte']) || DEFAULT_APPEARANCE.font_family; }
+  /**
+   * Configuração de comportamento do flutuante (play, drag, close).
+   */
+  function getFloatingBehaviorConfig(appearance) {
+    appearance = appearance || {};
+    return {
+      objectFit: readDeviceValue(appearance, 'floating_object_fit', DEFAULT_APPEARANCE.floating_object_fit),
+      showPlayButton: toBoolean(readDeviceValue(appearance, 'floating_show_play_button', true), true),
+      allowDrag: toBoolean(readDeviceValue(appearance, 'floating_allow_drag', false), false),
+      allowClose: toBoolean(readDeviceValue(appearance, 'floating_allow_close', true), true)
+    };
+  }
+
+  /**
+   * 🆕 Configuração do carrossel com suporte a mobile/desktop.
+   */
+  function getCarouselConfig(appearance) {
+    appearance = normalizeAppearanceItem(appearance || {});
+
+    function rdv(name, fallback) {
+      return readDeviceValue(appearance, name, fallback);
+    }
+
+    var shape = String(rdv('carousel_shape', 'portrait') || 'portrait').trim().toLowerCase();
+    var sizeNumber = toNumber(rdv('carousel_size', '80'), 80);
+    var visibleItems = safeInt(rdv('carousel_visible_items', '4'), 4);
+    var spacing = safeInt(rdv('carousel_spacing', '16'), 16);
+    var borderColor = rdv('carousel_border_color', '#0094EB') || '#0094EB';
+    var borderWidth = safeInt(rdv('carousel_border_width', '2'), 2);
+    var borderRadius = safeInt(rdv('carousel_border_radius', '12'), 12);
+    var objectFit = String(rdv('carousel_object_fit', 'cover') || 'cover').trim().toLowerCase();
+    var marginTop = safeInt(rdv('carousel_margin_top', '0'), 0);
+    var marginBottom = safeInt(rdv('carousel_margin_bottom', '0'), 0);
+    var showTitle = toBoolean(rdv('carousel_show_title', false), false);
+    var showProduct = toBoolean(rdv('carousel_show_product', true), true);
+    var showPlayButton = toBoolean(rdv('carousel_show_play_button', true), true);
+    var autoCenter = toBoolean(rdv('carousel_auto_center', false), false);
+
+    // Calcula aspectRatio baseado no shape
+    var aspectRatio = '9 / 16'; // portrait
+    if (shape.indexOf('landscape') !== -1 || shape.indexOf('16_9') !== -1 || shape.indexOf('16-9') !== -1) {
+      aspectRatio = '16 / 9';
+    } else if (shape.indexOf('square') !== -1 || shape.indexOf('1_1') !== -1 || shape.indexOf('1-1') !== -1 || shape === 'circle') {
+      aspectRatio = '1 / 1';
+    }
+
+    return {
+      shape: shape, size: sizeNumber,
+      visibleItems: visibleItems, spacing: spacing,
+      borderColor: borderColor, borderWidth: borderWidth,
+      borderRadius: borderRadius, objectFit: objectFit,
+      marginTop: marginTop, marginBottom: marginBottom,
+      showTitle: showTitle, showProduct: showProduct,
+      showPlayButton: showPlayButton, autoCenter: autoCenter,
+      aspectRatio: aspectRatio
+    };
+  }
+
+  /**
+   * 🆕 Configuração da grade com suporte a mobile/desktop.
+   */
+  function getGridConfig(appearance) {
+    appearance = normalizeAppearanceItem(appearance || {});
+
+    function rdv(name, fallback) {
+      return readDeviceValue(appearance, name, fallback);
+    }
+
+    var shape = String(rdv('grid_shape', 'portrait') || 'portrait').trim().toLowerCase();
+    var sizeNumber = toNumber(rdv('grid_size', '80'), 80);
+    var columns = safeInt(rdv('grid_columns', '4'), 4);
+    var rows = safeInt(rdv('grid_rows', '1'), 1);
+    var spacing = safeInt(rdv('grid_spacing', '16'), 16);
+    var borderColor = rdv('grid_border_color', '#0094EB') || '#0094EB';
+    var borderWidth = safeInt(rdv('grid_border_width', '2'), 2);
+    var borderRadius = safeInt(rdv('grid_border_radius', '12'), 12);
+    var objectFit = String(rdv('grid_object_fit', 'cover') || 'cover').trim().toLowerCase();
+    var showTitle = toBoolean(rdv('grid_show_title', false), false);
+
+    var aspectRatio = '9 / 16';
+    if (shape.indexOf('landscape') !== -1 || shape.indexOf('16_9') !== -1 || shape.indexOf('16-9') !== -1) {
+      aspectRatio = '16 / 9';
+    } else if (shape.indexOf('square') !== -1 || shape.indexOf('1_1') !== -1 || shape.indexOf('1-1') !== -1 || shape === 'circle') {
+      aspectRatio = '1 / 1';
+    }
+
+    return {
+      shape: shape, size: sizeNumber,
+      columns: columns, rows: rows, spacing: spacing,
+      borderColor: borderColor, borderWidth: borderWidth,
+      borderRadius: borderRadius, objectFit: objectFit,
+      showTitle: showTitle, aspectRatio: aspectRatio
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // CORES E FONTES
+  // ═══════════════════════════════════════════════════════════════
+
+  function getPrimaryColor(appearance) {
+    return readAppearanceValue(appearance, ['primary_color', 'primaryColor', 'cor_primaria']) || DEFAULT_APPEARANCE.primary_color;
+  }
+
+  function getSecondaryColor(appearance) {
+    return readAppearanceValue(appearance, ['secondary_color', 'secondaryColor', 'cor_secundaria']) || DEFAULT_APPEARANCE.secondary_color;
+  }
+
+  function getBorderColor(appearance) {
+    return readDeviceValue(appearance, 'floating_border_color') || readAppearanceValue(appearance, ['floating_border_color', 'border_color', 'borderColor', 'cor_borda']);
+  }
+
+  function getButtonColor(appearance) {
+    return readAppearanceValue(appearance, ['button_color', 'buttonColor', 'btn_color', 'cor_botao']) || getPrimaryColor(appearance);
+  }
+
+  function getFontFamily(appearance) {
+    return readAppearanceValue(appearance, ['font_family', 'fontFamily', 'fonte']) || DEFAULT_APPEARANCE.font_family;
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // 🆕 normalizeModalAppearanceConfig — Usa colunas modal_*
+  // ═══════════════════════════════════════════════════════════════
 
   function normalizeModalAppearanceConfig(appearance) {
     appearance = appearance || {};
 
-    if (appearance.appearance && typeof appearance.appearance === 'object') {
-      appearance = appearance.appearance;
+    function getBool(name, fallback) {
+      // Prioridade: coluna com prefixo modal_
+      var val = appearance[name];
+      if (val !== undefined && val !== null && val !== '') return toBoolean(val, fallback);
+
+      // Fallback para versão sem prefixo (compatibilidade)
+      var legacyName = name.replace('modal_', '');
+      var legacyVal = appearance[legacyName];
+      if (legacyVal !== undefined && legacyVal !== null && legacyVal !== '') return toBoolean(legacyVal, fallback);
+
+      return fallback;
     }
 
-    if (appearance.data && typeof appearance.data === 'object') {
-      appearance = appearance.data;
-    }
-
-    function parseConfig(value) {
-      if (!value) return {};
-      if (typeof value === 'string') { try { return JSON.parse(value); } catch (e) { return {}; } }
-      if (typeof value === 'object') return value;
-      return {};
-    }
-
-    var modalConfig = parseConfig(
-      appearance.modal_config ||
-      appearance.modalConfig ||
-      appearance.player_config ||
-      appearance.playerConfig
-    );
-
-    function getBoolean(keys, fallback) {
-      var i; var value;
-      for (i = 0; i < keys.length; i++) {
-        value = modalConfig[keys[i]];
-        if (value !== undefined && value !== null && value !== '') return value === true || value === 'true' || value === 1 || value === '1';
-      }
-      for (i = 0; i < keys.length; i++) {
-        value = appearance[keys[i]];
-        if (value !== undefined && value !== null && value !== '') return value === true || value === 'true' || value === 1 || value === '1';
-      }
+    function getString(name, fallback) {
+      var val = appearance[name];
+      if (val !== undefined && val !== null && val !== '') return val;
+      var legacyName = name.replace('modal_', '');
+      var legacyVal = appearance[legacyName];
+      if (legacyVal !== undefined && legacyVal !== null && legacyVal !== '') return legacyVal;
       return fallback;
     }
 
     return {
-      show_title: getBoolean(['show_title', 'showTitle'], true),
-      show_play_button: getBoolean(['show_play_button', 'showPlayButton'], true),
-      show_product: getBoolean(['show_product', 'showProduct'], true),
-      show_product_button: getBoolean(['show_product_button', 'showProductButton'], true),
-      show_like_button: getBoolean(['show_like_button', 'showLikeButton'], true),
-      show_comment_button: getBoolean(['show_comment_button', 'showCommentsButton', 'show_comments_button'], true),
-      show_share_button: getBoolean(['show_share_button', 'showShareButton'], true),
-      show_whatsapp_button: getBoolean(['show_whatsapp_button', 'showWhatsappButton'], true),
-      show_sizing_button: getBoolean(['show_sizing_button', 'showSizingButton'], true),
-      hide_stories: getBoolean(['hide_stories', 'hideStories'], false),
-      shadow_enabled: getBoolean(['shadow_enabled', 'shadowEnabled'], true)
+      show_title: getBool('modal_show_title', true),
+      show_play_button: getBool('modal_show_play_button', true),
+      show_product: getBool('modal_show_product', true),
+      show_product_button: getBool('modal_show_product_button', true),
+      show_like_button: getBool('modal_show_like_button', true),
+      show_comment_button: getBool('modal_show_comment_button', true),
+      show_share_button: getBool('modal_show_share_button', true),
+      show_whatsapp_button: getBool('modal_show_whatsapp_button', true),
+      show_sizing_button: getBool('modal_show_sizing_button', true),
+      hide_stories: getBool('modal_hide_stories', false),
+      shadow_enabled: getBool('modal_shadow_enabled', true),
+      border_color: getString('modal_border_color', ''),
+      border_width: getString('modal_border_width', ''),
+      border_radius: getString('modal_border_radius', '')
     };
   }
+
+  // ═══════════════════════════════════════════════════════════════
+  // MÉTRICAS
+  // ═══════════════════════════════════════════════════════════════
 
   function trackMetric(metric) {
     metric = metric || {};
@@ -686,7 +727,7 @@
       product_id: metric.product_id || null,
       event_type: String(metric.event_type || 'unknown'),
       page_url: metric.page_url || window.location.href,
-      device_type: window.innerWidth < 768 ? 'mobile' : 'desktop',
+      device_type: getDevice(),
       browser: navigator.userAgent,
       user_agent: navigator.userAgent,
       referrer: document.referrer || null,
@@ -701,25 +742,58 @@
 
     if (!hasSupabase) return Promise.resolve({ saved: false, local: true, payload: payload });
 
-    return supabaseFetch('metrics', { method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify(payload) })
+    return supabaseFetch('metrics', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify(payload)
+    })
       .then(function (response) { if (response.ok) return { saved: true, payload: payload }; return { saved: false, payload: payload }; })
       .catch(function () { return { saved: false, payload: payload }; });
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // FETCH DE DADOS
+  // ═══════════════════════════════════════════════════════════════
+
   function readStories() {
     if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_stories', []));
-    return fetchJson('stories?select=*&store_id=eq.' + encodeURIComponent(storeId)).then(function (items) {
-      return items.filter(function (story) { return ('status' in story ? story.status === 'active' : true) && ('active' in story ? story.active !== false : true); });
-    });
+    return fetchJson('stories?select=*&store_id=eq.' + encodeURIComponent(storeId))
+      .then(function (items) {
+        return items.filter(function (story) {
+          return ('status' in story ? story.status === 'active' : true) &&
+                 ('active' in story ? story.active !== false : true);
+        });
+      });
   }
 
-  function readStoryVideos() { return (!storeId || !hasSupabase) ? Promise.resolve(getStorageItem('vidlytics_story_videos', [])) : fetchJson('story_videos?select=*&store_id=eq.' + encodeURIComponent(storeId)); }
-  function readVideos() { return (!storeId || !hasSupabase) ? Promise.resolve(getStorageItem('vidlytics_videos', [])) : fetchJson('videos?select=*&store_id=eq.' + encodeURIComponent(storeId)); }
-  function readStoryProducts() { return (!storeId || !hasSupabase) ? Promise.resolve(getStorageItem('vidlytics_story_products', [])) : fetchJson('story_products?select=*&store_id=eq.' + encodeURIComponent(storeId)); }
-  function readProducts() { return (!storeId || !hasSupabase) ? Promise.resolve(getStorageItem('vidlytics_products', [])) : fetchJson('products?select=*&store_id=eq.' + encodeURIComponent(storeId)); }
+  function readStoryVideos() {
+    return (!storeId || !hasSupabase)
+      ? Promise.resolve(getStorageItem('vidlytics_story_videos', []))
+      : fetchJson('story_videos?select=*&store_id=eq.' + encodeURIComponent(storeId));
+  }
+
+  function readVideos() {
+    return (!storeId || !hasSupabase)
+      ? Promise.resolve(getStorageItem('vidlytics_videos', []))
+      : fetchJson('videos?select=*&store_id=eq.' + encodeURIComponent(storeId));
+  }
+
+  function readStoryProducts() {
+    return (!storeId || !hasSupabase)
+      ? Promise.resolve(getStorageItem('vidlytics_story_products', []))
+      : fetchJson('story_products?select=*&store_id=eq.' + encodeURIComponent(storeId));
+  }
+
+  function readProducts() {
+    return (!storeId || !hasSupabase)
+      ? Promise.resolve(getStorageItem('vidlytics_products', []))
+      : fetchJson('products?select=*&store_id=eq.' + encodeURIComponent(storeId));
+  }
+
   function readComments() {
     if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_comments', []));
-    var query = 'comments?select=id,store_id,story_id,video_id,author_name,content,status,active,created_at,reply_content,replied_at,reply_status&store_id=eq.' + encodeURIComponent(storeId) + '&status=eq.approved&active=eq.true&order=created_at.asc';
+    var query = 'comments?select=id,store_id,story_id,video_id,author_name,content,status,active,created_at,reply_content,replied_at,reply_status&store_id=eq.' +
+      encodeURIComponent(storeId) + '&status=eq.approved&active=eq.true&order=created_at.asc';
     return fetchJson(query);
   }
 
@@ -749,6 +823,10 @@
     return fetchJson('sizing_models?select=*&store_id=eq.' + encodeURIComponent(storeId));
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // REGRAS DE PÁGINA
+  // ═══════════════════════════════════════════════════════════════
+
   function matchesRule(rule) {
     if (!rule || rule.active === false) return false;
 
@@ -764,9 +842,7 @@
     if (conditionType.indexOf('inicial') !== -1 || conditionType === 'home') conditionType = 'home_only';
 
     var value = String(firstDefined(rule.url_pattern, rule.page_url, rule.value) || '').trim();
-
     if (!conditionType) return true;
-    
     if (!value && conditionType !== 'all_pages' && conditionType !== 'home_only') return false;
 
     switch (conditionType) {
@@ -787,7 +863,7 @@
   function matchesUrl(appearance) {
     if (!appearance) return true;
     var rawUrl = firstDefined(appearance.url, appearance.pageUrl, appearance.page_url);
-    if (!rawUrl || String(rawUrl).trim() === '') return true; 
+    if (!rawUrl || String(rawUrl).trim() === '') return true;
 
     var pattern = String(rawUrl).trim().toLowerCase();
     var href = window.location.href.toLowerCase();
@@ -799,19 +875,10 @@
 
     return patterns.some(function (p) {
       var normalizedPattern = p.replace(/\/+$/, '').replace(/^https?:\/\/[^/]+/i, '');
-      
       if (p === '/') normalizedPattern = '/';
-
       if (!normalizedPattern) return false;
-
-      if (normalizedPattern === 'all' || normalizedPattern === 'todas' || normalizedPattern === 'all_pages') {
-        return true;
-      }
-
-      if (normalizedPattern === '/') {
-        return path === '/' || path === '';
-      }
-
+      if (normalizedPattern === 'all' || normalizedPattern === 'todas' || normalizedPattern === 'all_pages') return true;
+      if (normalizedPattern === '/') return path === '/' || path === '';
       return (
         href.indexOf(normalizedPattern) !== -1 ||
         fullPath.indexOf(normalizedPattern) !== -1 ||
@@ -820,9 +887,16 @@
     });
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // MÍDIA / THUMBNAILS
+  // ═══════════════════════════════════════════════════════════════
+
   function getVideoUrl(video) {
     if (!video) return '';
-    return normalizeMediaUrl(firstDefined(video.video_url, video.videoUrl, video.url, video.source_url, video.sourceUrl, video.file_url, video.fileUrl, video.video, video.src, ''));
+    return normalizeMediaUrl(firstDefined(
+      video.video_url, video.videoUrl, video.url, video.source_url,
+      video.sourceUrl, video.file_url, video.fileUrl, video.video, video.src, ''
+    ));
   }
 
   function isDirectVideoUrl(url) { return url && VIDEO_FILE_REGEX.test(url); }
@@ -830,7 +904,8 @@
   function extractYouTubeId(url) {
     if (!url) return '';
     try {
-      var parsed = new URL(String(url).trim()), host = parsed.hostname.replace(/^www\./, '').toLowerCase();
+      var parsed = new URL(String(url).trim());
+      var host = parsed.hostname.replace(/^www\./, '').toLowerCase();
       if (host === 'youtu.be') return parsed.pathname.replace(/^\//, '').split('/')[0] || '';
       if (host === 'youtube.com' || host === 'm.youtube.com') {
         if (parsed.pathname.indexOf('/shorts/') === 0) return parsed.pathname.split('/')[2] || '';
@@ -850,8 +925,16 @@
     if (!obj) return '';
     var meta = parseJsonIfNeeded(firstDefined(obj.metadata, obj.meta, obj.extra, obj.data, {}));
     return normalizeMediaUrl(firstDefined(
-      obj.thumbnail_url, obj.thumbnailUrl, obj.thumbnail, obj.cover_url, obj.coverUrl, obj.cover, obj.poster_url, obj.posterUrl, obj.poster, obj.image_url, obj.imageUrl, obj.image, obj.url, obj.src,
-      meta.thumbnail_url, meta.thumbnailUrl, meta.thumbnail, meta.cover_url, meta.coverUrl, meta.cover, meta.poster_url, meta.posterUrl, meta.poster, meta.image_url, meta.imageUrl, meta.image, meta.url, meta.src, ''
+      obj.thumbnail_url, obj.thumbnailUrl, obj.thumbnail,
+      obj.cover_url, obj.coverUrl, obj.cover,
+      obj.poster_url, obj.posterUrl, obj.poster,
+      obj.image_url, obj.imageUrl, obj.image,
+      obj.url, obj.src,
+      meta.thumbnail_url, meta.thumbnailUrl, meta.thumbnail,
+      meta.cover_url, meta.coverUrl, meta.cover,
+      meta.poster_url, meta.posterUrl, meta.poster,
+      meta.image_url, meta.imageUrl, meta.image,
+      meta.url, meta.src, ''
     ) || '');
   }
 
@@ -867,16 +950,28 @@
     return getThumbnailFromObject(coverRelation) || getThumbnailFromObject(story) || getVideoThumbnail(coverVideo) || getThumbnailFromObject(coverVideo) || '';
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // SHADOW DOM
+  // ═══════════════════════════════════════════════════════════════
+
   function applyHostPosition(host, appearance) {
     var cfg = getFloatingConfig(appearance || currentAppearance);
-    setImportant(host, 'position', 'fixed'); setImportant(host, 'top', cfg.top);
-    setImportant(host, 'right', cfg.right); setImportant(host, 'bottom', cfg.bottom);
-    setImportant(host, 'left', cfg.left); setImportant(host, 'z-index', cfg.zIndex);
-    setImportant(host, 'width', cfg.width); setImportant(host, 'min-width', cfg.width);
-    setImportant(host, 'max-width', cfg.width); setImportant(host, 'height', 'auto');
-    setImportant(host, 'overflow', 'visible'); setImportant(host, 'background', 'transparent');
-    setImportant(host, 'border', '0'); setImportant(host, 'box-shadow', 'none');
-    setImportant(host, 'pointer-events', 'auto'); setImportant(host, 'transform', 'none');
+    setImportant(host, 'position', 'fixed');
+    setImportant(host, 'top', cfg.top);
+    setImportant(host, 'right', cfg.right);
+    setImportant(host, 'bottom', cfg.bottom);
+    setImportant(host, 'left', cfg.left);
+    setImportant(host, 'z-index', cfg.zIndex);
+    setImportant(host, 'width', cfg.width);
+    setImportant(host, 'min-width', cfg.width);
+    setImportant(host, 'max-width', cfg.width);
+    setImportant(host, 'height', 'auto');
+    setImportant(host, 'overflow', 'visible');
+    setImportant(host, 'background', 'transparent');
+    setImportant(host, 'border', '0');
+    setImportant(host, 'box-shadow', 'none');
+    setImportant(host, 'pointer-events', 'auto');
+    setImportant(host, 'transform', 'none');
   }
 
   function getOrCreateShadowRoot(appearance) {
@@ -890,15 +985,17 @@
     return { host: host, shadow: globalShadowRoot };
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // CSS
+  // ═══════════════════════════════════════════════════════════════
+
   function buildSharedCss(appearance) {
     var cfg = getFloatingConfig(appearance);
     var primary = getPrimaryColor(appearance);
     var secondary = getSecondaryColor(appearance);
     var buttonColor = getButtonColor(appearance);
-
     var textColor = readAppearanceValue(appearance, ['text_color', 'textColor']) || '#0f172a';
     var bgColor = readAppearanceValue(appearance, ['background_color', 'backgroundColor']) || '#ffffff';
-
     var modalBackground = readAppearanceValue(appearance, ['modal_background_color', 'modalBackgroundColor', 'background_color', 'backgroundColor']) || bgColor;
     var modalText = readAppearanceValue(appearance, ['modal_text_color', 'modalTextColor', 'text_color', 'textColor']) || textColor;
     var modalBorder = readAppearanceValue(appearance, ['modal_border_color', 'modalBorderColor']) || 'rgba(15,23,42,.12)';
@@ -1020,6 +1117,10 @@
       + '.vl-label{pointer-events:none!important;width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;font-family:' + font + '!important;font-size:11px!important;line-height:12px!important;font-weight:700!important;color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.8)!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;display:block!important;}';
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // STORY MODAL / PLAYER
+  // ═══════════════════════════════════════════════════════════════
+
   function pausePreviews() {
     if (!globalShadowRoot) return;
     var vids = globalShadowRoot.querySelectorAll('.vl-bubble video.vl-img');
@@ -1030,7 +1131,7 @@
     if (!globalShadowRoot) return;
     var vids = globalShadowRoot.querySelectorAll('.vl-bubble video.vl-img');
     for (var i = 0; i < vids.length; i++) {
-      var p = vids[i].play(); if (p) p.catch(function(){});
+      var p = vids[i].play(); if (p) p.catch(function () {});
     }
   }
 
@@ -1067,7 +1168,7 @@
       media.addEventListener('play', function () {
         trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
       });
-      media.addEventListener('ended', function() {
+      media.addEventListener('ended', function () {
         if (typeof onEnded === 'function') onEnded();
       });
       wrapper.appendChild(media);
@@ -1128,6 +1229,39 @@
     return firstDefined(video.model_id, video.modelId, video.sizing_model_id, video.sizingModelId, video.modelo_id, video.modeloId, video.model) || null;
   }
 
+  function createComment(commentData) {
+    if (!hasSupabase) return Promise.reject(new Error('Supabase não configurado.'));
+    commentData = commentData || {};
+    var payload = {
+      store_id: storeId,
+      story_id: commentData.story_id || null,
+      video_id: commentData.video_id || null,
+      author_name: String(commentData.author_name || '').trim(),
+      author_email: commentData.author_email ? String(commentData.author_email).trim() : null,
+      content: String(commentData.content || '').trim(),
+      status: 'pending',
+      active: true
+    };
+    if (!payload.author_name) return Promise.reject(new Error('Informe seu nome.'));
+    if (!payload.content) return Promise.reject(new Error('Digite um comentário.'));
+
+    return supabaseFetch('comments', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify(payload)
+    })
+      .then(function (response) {
+        if (response.ok) return true;
+        return response.text().then(function (rawMessage) {
+          var parsed = {};
+          try { parsed = JSON.parse(rawMessage || '{}'); } catch (error) {}
+          if (response.status === 401) throw new Error('A chave pública ou a URL do Supabase são inválidas.');
+          if (response.status === 403 || parsed.code === '42501') throw new Error('Inserção bloqueada pelas políticas RLS da tabela comments.');
+          throw new Error(parsed.message || parsed.error_description || parsed.hint || parsed.details || 'Não foi possível enviar o comentário.');
+        });
+      });
+  }
+
   function openSizingPanel(modelId) {
     if (!modalContent) return;
     var model = readSizingModelsData.find(function (m) { return idsEqual(m.id, modelId); });
@@ -1145,7 +1279,7 @@
     var closeButton = createEl('button', 'vl-sizing-close');
     closeButton.type = 'button';
     closeButton.innerHTML = '&times;';
-    closeButton.onclick = function() { panel.remove(); };
+    closeButton.onclick = function () { panel.remove(); };
     header.appendChild(title);
     header.appendChild(closeButton);
     panel.appendChild(header);
@@ -1223,6 +1357,7 @@
     closeButton.type = 'button';
     closeButton.setAttribute('aria-label', 'Fechar comentários');
     closeButton.innerHTML = '&times;';
+    closeButton.onclick = function () { panel.remove(); };
     header.appendChild(title);
     header.appendChild(closeButton);
 
@@ -1230,9 +1365,9 @@
     var comments = getCommentsForVideo(videoId);
 
     if (!comments.length) {
-      var empty = createEl('div', 'vl-comments-empty');
-      empty.textContent = 'Ainda não há comentários neste vídeo.';
-      list.appendChild(empty);
+      var emptyMsg = createEl('div', 'vl-comments-empty');
+      emptyMsg.textContent = 'Ainda não há comentários neste vídeo.';
+      list.appendChild(emptyMsg);
     } else {
       comments.forEach(function (comment) { list.appendChild(renderCommentItem(comment)); });
     }
@@ -1290,6 +1425,10 @@
       }
     });
 
+    editor.appendChild(contentInput);
+    editor.appendChild(emojiButton);
+    editor.appendChild(emojiPicker);
+
     var feedback = createEl('div', 'vl-comments-feedback');
     var submit = createEl('button', 'vl-comments-submit');
     submit.type = 'submit';
@@ -1304,11 +1443,6 @@
     panel.appendChild(list);
     panel.appendChild(form);
     modalContent.appendChild(panel);
-
-    closeButton.addEventListener('click', function (event) {
-      event.preventDefault(); event.stopPropagation();
-      panel.remove();
-    });
 
     form.addEventListener('submit', function (event) {
       event.preventDefault(); event.stopPropagation();
@@ -1347,10 +1481,10 @@
     }
     resumePreviews();
   }
-  
+
   function renderStoryModal() {
     if (!modalContent) return;
-    modalContent.innerHTML = ''; 
+    modalContent.innerHTML = '';
 
     var story = currentStories[currentStoryIndex];
     if (!story) { closeOverlay(); return; }
@@ -1386,33 +1520,33 @@
     var headerActions = createEl('div', 'vl-header-actions');
     var closeBtn = createEl('button', 'vl-close');
     closeBtn.innerHTML = svgIcon('close');
-    closeBtn.onclick = function(e) { e.stopPropagation(); closeOverlay(); };
+    closeBtn.onclick = function (e) { e.stopPropagation(); closeOverlay(); };
     headerActions.appendChild(closeBtn);
     header.appendChild(headerActions);
     container.appendChild(header);
 
     var body = createEl('div', 'vl-body');
     if (video) {
-      var player = buildVideoPlayer(video, story.id, function() {
-         nextStoryOrVideo();
+      var player = buildVideoPlayer(video, story.id, function () {
+        nextStoryOrVideo();
       });
       body.appendChild(player);
       var vidEl = player.querySelector('video');
-      if (vidEl) { vidEl.muted = false; vidEl.play().catch(function(){}); }
+      if (vidEl) { vidEl.muted = false; vidEl.play().catch(function () {}); }
     } else {
-      var empty = createEl('div');
-      empty.style.padding = '40px';
-      empty.style.textAlign = 'center';
-      empty.style.color = '#fff';
-      empty.textContent = 'Nenhum vídeo encontrado.';
-      body.appendChild(empty);
+      var emptyBody = createEl('div');
+      emptyBody.style.padding = '40px';
+      emptyBody.style.textAlign = 'center';
+      emptyBody.style.color = '#fff';
+      emptyBody.textContent = 'Nenhum vídeo encontrado.';
+      body.appendChild(emptyBody);
     }
 
     var nav = createEl('div', 'vl-nav');
     var prevBtn = createEl('button', 'vl-nav-btn vl-nav-prev');
-    prevBtn.onclick = function(e) { e.stopPropagation(); prevStoryOrVideo(); };
+    prevBtn.onclick = function (e) { e.stopPropagation(); prevStoryOrVideo(); };
     var nextBtn = createEl('button', 'vl-nav-btn vl-nav-next');
-    nextBtn.onclick = function(e) { e.stopPropagation(); nextStoryOrVideo(); };
+    nextBtn.onclick = function (e) { e.stopPropagation(); nextStoryOrVideo(); };
     nav.appendChild(prevBtn);
     nav.appendChild(nextBtn);
     body.appendChild(nav);
@@ -1430,30 +1564,30 @@
       commentBtn.innerHTML = svgIcon('comment');
       var countStr = getCommentCount(video.id);
       if (countStr > 0) {
-         var countEl = createEl('span', 'vl-social-count');
-         countEl.textContent = countStr;
-         commentBtn.appendChild(countEl);
+        var countEl = createEl('span', 'vl-social-count');
+        countEl.textContent = countStr;
+        commentBtn.appendChild(countEl);
       }
-      commentBtn.onclick = function(e) { e.stopPropagation(); openCommentsPanel(video.id, story.id); };
+      commentBtn.onclick = function (e) { e.stopPropagation(); openCommentsPanel(video.id, story.id); };
       social.appendChild(commentBtn);
     }
-    
+
     if (appearanceConfig.show_sizing_button && video) {
       var sModelId = getSizingModelId(video);
       if (sModelId) {
-         var sizeBtn = createEl('button', 'vl-social-btn');
-         sizeBtn.innerHTML = svgIcon('sizing');
-         sizeBtn.onclick = function(e) { e.stopPropagation(); openSizingPanel(sModelId); };
-         social.appendChild(sizeBtn);
+        var sizeBtn = createEl('button', 'vl-social-btn');
+        sizeBtn.innerHTML = svgIcon('sizing');
+        sizeBtn.onclick = function (e) { e.stopPropagation(); openSizingPanel(sModelId); };
+        social.appendChild(sizeBtn);
       }
     }
 
     if (appearanceConfig.show_whatsapp_button) {
       var wpBtn = createEl('button', 'vl-social-btn whatsapp');
       wpBtn.innerHTML = svgIcon('whatsapp');
-      wpBtn.onclick = function(e) {
-         e.stopPropagation();
-         window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(window.location.href), '_blank');
+      wpBtn.onclick = function (e) {
+        e.stopPropagation();
+        window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(window.location.href), '_blank');
       };
       social.appendChild(wpBtn);
     }
@@ -1462,68 +1596,68 @@
     container.appendChild(body);
 
     if (appearanceConfig.show_product && readStoryProductsData.length > 0) {
-       var sProducts = readStoryProductsData.filter(function(sp) { return idsEqual(sp.story_id, story.id); });
-       if (sProducts.length > 0) {
-          var footer = createEl('div', 'vl-footer');
-          var footerInner = createEl('div', 'vl-footer-inner');
-          var pId = sProducts[0].product_id;
-          var productData = readProductsData.find(function(p) { return idsEqual(p.id, pId); });
+      var sProducts = readStoryProductsData.filter(function (sp) { return idsEqual(sp.story_id, story.id); });
+      if (sProducts.length > 0) {
+        var footer = createEl('div', 'vl-footer');
+        var footerInner = createEl('div', 'vl-footer-inner');
+        var pId = sProducts[0].product_id;
+        var productData = readProductsData.find(function (p) { return idsEqual(p.id, pId); });
 
-          if (productData) {
-             var prodCard = createEl('div', 'vl-product');
-             prodCard.onclick = function(e) { e.stopPropagation(); if (productData.url) window.location.href = productData.url; };
-             var prodImg = createEl('img', 'vl-product-img');
-             prodImg.src = getThumbnailFromObject(productData) || '';
-             prodCard.appendChild(prodImg);
-             var prodInfo = createEl('div', 'vl-product-info');
-             var pName = createEl('div', 'vl-product-name');
-             pName.textContent = productData.name || 'Produto';
-             prodInfo.appendChild(pName);
+        if (productData) {
+          var prodCard = createEl('div', 'vl-product');
+          prodCard.onclick = function (e) { e.stopPropagation(); if (productData.url) window.location.href = productData.url; };
+          var prodImg = createEl('img', 'vl-product-img');
+          prodImg.src = getThumbnailFromObject(productData) || '';
+          prodCard.appendChild(prodImg);
+          var prodInfo = createEl('div', 'vl-product-info');
+          var pName = createEl('div', 'vl-product-name');
+          pName.textContent = productData.name || 'Produto';
+          prodInfo.appendChild(pName);
 
-             if (productData.price) {
-                var pPrice = createEl('div', 'vl-product-price');
-                pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
-                prodInfo.appendChild(pPrice);
-             }
-
-             var pActions = createEl('div', 'vl-product-actions');
-             if (appearanceConfig.show_product_button) {
-                 var buyBtn = createEl('a', 'vl-product-btn');
-                 buyBtn.textContent = 'Ver Produto';
-                 buyBtn.href = productData.url || '#';
-                 pActions.appendChild(buyBtn);
-             }
-             prodInfo.appendChild(pActions);
-             prodCard.appendChild(prodInfo);
-             footerInner.appendChild(prodCard);
+          if (productData.price) {
+            var pPrice = createEl('div', 'vl-product-price');
+            pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
+            prodInfo.appendChild(pPrice);
           }
-          footer.appendChild(footerInner);
-          container.appendChild(footer);
-       }
+
+          var pActions = createEl('div', 'vl-product-actions');
+          if (appearanceConfig.show_product_button) {
+            var buyBtn = createEl('a', 'vl-product-btn');
+            buyBtn.textContent = 'Ver Produto';
+            buyBtn.href = productData.url || '#';
+            pActions.appendChild(buyBtn);
+          }
+          prodInfo.appendChild(pActions);
+          prodCard.appendChild(prodInfo);
+          footerInner.appendChild(prodCard);
+        }
+        footer.appendChild(footerInner);
+        container.appendChild(footer);
+      }
     }
     modalContent.appendChild(container);
   }
 
   function nextStoryOrVideo() {
-     var story = currentStories[currentStoryIndex];
-     if (story && story.videos && currentVideoIndex < story.videos.length - 1) {
-         currentVideoIndex++; renderStoryModal();
-     } else if (currentStoryIndex < currentStories.length - 1) {
-         currentStoryIndex++; currentVideoIndex = 0; renderStoryModal();
-     } else {
-         closeOverlay();
-     }
+    var story = currentStories[currentStoryIndex];
+    if (story && story.videos && currentVideoIndex < story.videos.length - 1) {
+      currentVideoIndex++; renderStoryModal();
+    } else if (currentStoryIndex < currentStories.length - 1) {
+      currentStoryIndex++; currentVideoIndex = 0; renderStoryModal();
+    } else {
+      closeOverlay();
+    }
   }
 
   function prevStoryOrVideo() {
-     if (currentVideoIndex > 0) {
-         currentVideoIndex--; renderStoryModal();
-     } else if (currentStoryIndex > 0) {
-         currentStoryIndex--;
-         var prevStory = currentStories[currentStoryIndex];
-         currentVideoIndex = prevStory && prevStory.videos ? Math.max(0, prevStory.videos.length - 1) : 0;
-         renderStoryModal();
-     }
+    if (currentVideoIndex > 0) {
+      currentVideoIndex--; renderStoryModal();
+    } else if (currentStoryIndex > 0) {
+      currentStoryIndex--;
+      var prevStory = currentStories[currentStoryIndex];
+      currentVideoIndex = prevStory && prevStory.videos ? Math.max(0, prevStory.videos.length - 1) : 0;
+      renderStoryModal();
+    }
   }
 
   function openStoryViewer(stories, index) {
@@ -1534,7 +1668,7 @@
     if (!globalShadowRoot) {
       var shadowData = getOrCreateShadowRoot(currentAppearance || {});
       globalShadowRoot = shadowData.shadow;
-      
+
       var style = createEl('style');
       style.textContent = buildFloatingCss(currentAppearance || {});
       globalShadowRoot.appendChild(style);
@@ -1543,7 +1677,6 @@
     if (!overlay) {
       overlay = createEl('div', 'vl-overlay');
       modalContent = createEl('div', 'vl-modal');
-
       overlay.appendChild(modalContent);
       globalShadowRoot.appendChild(overlay);
 
@@ -1553,7 +1686,6 @@
     }
 
     pausePreviews();
-
     overlay.className = 'vl-overlay is-open';
     renderStoryModal();
   }
@@ -1584,7 +1716,7 @@
     el.addEventListener('mousedown', function (e) {
       if (e.target.closest('.vl-dismiss')) return;
       isDragging = true;
-      floatingWasDragged = false; 
+      floatingWasDragged = false;
       startX = e.clientX;
       startY = e.clientY;
       var rect = el.getBoundingClientRect();
@@ -1599,11 +1731,11 @@
       var dy = startY - e.clientY;
 
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-          floatingWasDragged = true; 
-          el.style.right = (initialRight + dx) + 'px';
-          el.style.bottom = (initialBottom + dy) + 'px';
-          el.style.left = 'auto';
-          el.style.top = 'auto';
+        floatingWasDragged = true;
+        el.style.right = (initialRight + dx) + 'px';
+        el.style.bottom = (initialBottom + dy) + 'px';
+        el.style.left = 'auto';
+        el.style.top = 'auto';
       }
     });
 
@@ -1615,270 +1747,214 @@
     });
   }
 
-  // ═══════════════════════════════════════════════════════
-  // RENDERIZADOR INLINE (CARROSSEL / GRADE)
-  // ═══════════════════════════════════════════════════════
-  (function() {
-    function renderInlineWidget(stories, appearance, format) {
-      if (!stories || !stories.length) return;
+  // ═══════════════════════════════════════════════════════════════
+  // 🆕 RENDERIZADOR INLINE (CARROSSEL / GRADE)
+  //    Usando getCarouselConfig e getGridConfig com readDeviceValue
+  // ═══════════════════════════════════════════════════════════════
 
-      var allVideoItems = [];
-      stories.forEach(function(story, sIdx) {
-        var videos = story.videos || [];
-        videos.forEach(function(video, vIdx) {
-          allVideoItems.push({
-            story: story, storyIndex: sIdx,
-            video: video, videoIndex: vIdx
-          });
+  function renderInlineWidget(stories, appearance, format) {
+    if (!stories || !stories.length) return;
+
+    var allVideoItems = [];
+    stories.forEach(function (story, sIdx) {
+      var videos = story.videos || [];
+      videos.forEach(function (video, vIdx) {
+        allVideoItems.push({
+          story: story, storyIndex: sIdx,
+          video: video, videoIndex: vIdx
         });
       });
+    });
 
-      if (!allVideoItems.length) return;
+    if (!allVideoItems.length) return;
 
-      var ap = appearance || {};
+    // 🆕 Obtém config do carrossel ou grade com suporte a mobile/desktop
+    var cfg;
+    if (format === 'grid' || format === 'grade') {
+      cfg = getGridConfig(appearance);
+      cfg.isGrid = true;
+    } else {
+      cfg = getCarouselConfig(appearance);
+      cfg.isGrid = false;
+    }
 
-      var carouselCfg = {
-        mobile: {
-          card_shape: firstDefined(ap.carousel_format, ap.carousel_card_shape, ap.card_shape, ap.format, ap.shape),
-          visible_items: firstDefined(ap.carousel_visible_items, ap.visible_items, ap.columns),
-          gap: firstDefined(ap.carousel_gap, ap.spacing, ap.gap),
-          border_color: firstDefined(ap.carousel_border_color, ap.border_color),
-          border_width: firstDefined(ap.carousel_border_width, ap.border_width),
-          border_radius: firstDefined(ap.carousel_border_radius, ap.border_radius, ap.radius),
-          show_title: firstDefined(ap.carousel_show_title, ap.show_title),
-          auto_center: firstDefined(ap.carousel_auto_center, ap.auto_center),
-          show_play_icon: firstDefined(ap.carousel_show_play_button, ap.show_play_button),
-          object_fit: firstDefined(ap.carousel_object_fit, ap.object_fit),
-          card_size: firstDefined(ap.carousel_size, ap.card_size),
-          view_mode: firstDefined(ap.carousel_display_mode, ap.view_mode),
-          margin_top: firstDefined(ap.carousel_margin_top, ap.margin_top),
-          margin_bottom: firstDefined(ap.carousel_margin_bottom, ap.margin_bottom),
-          show_product: firstDefined(ap.carousel_show_product, ap.show_product)
-        }
-      };
+    var itemsVisiveis = cfg.isGrid ? cfg.columns : cfg.visibleItems;
+    var espacamento = cfg.spacing;
 
-      if (!carouselCfg || !carouselCfg.mobile) {
-        carouselCfg = {
-          mobile: {
-            card_shape: firstDefined(ap.carousel_format, ap.carousel_card_shape, ap.card_shape, ap.format, ap.shape),
-            visible_items: firstDefined(ap.carousel_visible_items, ap.visible_items, ap.columns),
-            gap: firstDefined(ap.carousel_gap, ap.gap, ap.spacing),
-            border_color: firstDefined(ap.carousel_border_color, ap.border_color),
-            border_width: firstDefined(ap.carousel_border_width, ap.border_width),
-            border_radius: firstDefined(ap.carousel_border_radius, ap.border_radius, ap.radius),
-            show_title: firstDefined(ap.carousel_show_title, ap.show_title),
-            auto_center: firstDefined(ap.carousel_auto_center, ap.auto_center),
-            show_play_icon: firstDefined(ap.carousel_show_play_button, ap.show_play_button),
-            object_fit: firstDefined(ap.carousel_object_fit, ap.object_fit),
-            card_size: firstDefined(ap.carousel_size, ap.card_size),
-            view_mode: firstDefined(ap.carousel_display_mode, ap.view_mode),
-            margin_top: firstDefined(ap.carousel_margin_top, ap.margin_top),
-            margin_bottom: firstDefined(ap.carousel_margin_bottom, ap.margin_bottom),
-            show_product: firstDefined(ap.carousel_show_product, ap.show_product)
-          }
-        };
+    var corPrimaria = appearance.primary_color || appearance.button_color || '#0094EB';
+    var corTexto = appearance.text_color || '#0F172A';
+    var fonte = appearance.font_family || 'Inter, sans-serif';
+
+    var dbSelector = appearance.css_selector || appearance.inline_selector || appearance.display_selector || appearance.selector || '';
+    var selectorsToTry = [];
+    if (dbSelector) selectorsToTry.push(dbSelector);
+    selectorsToTry.push('#vidlytics-carousel-root');
+    selectorsToTry.push('#instory-root');
+    selectorsToTry.push('.category-content');
+    selectorsToTry.push('#main');
+    selectorsToTry.push('main');
+    selectorsToTry.push('[role="main"]');
+    selectorsToTry.push('body');
+
+    var maxRetries = 25;
+    var currentRetries = 0;
+
+    var renderInterval = setInterval(function () {
+      var targetDiv = null;
+      var usedSelector = '';
+      currentRetries++;
+
+      for (var i = 0; i < selectorsToTry.length; i++) {
+        try {
+          targetDiv = document.querySelector(selectorsToTry[i]);
+          if (targetDiv) { usedSelector = selectorsToTry[i]; break; }
+        } catch (e) {}
       }
 
-      var deviceCfg = carouselCfg.mobile || carouselCfg.desktop || {};
+      if (!targetDiv) {
+        if (currentRetries >= maxRetries) { clearInterval(renderInterval); }
+        return;
+      }
 
-      var itemsVisiveis = safeInt(firstDefined(deviceCfg.visible_items, ap.carousel_visible_items, ap.visible_items, ap.columns), 4);
-      var espacamento = safeInt(firstDefined(deviceCfg.gap, ap.carousel_gap, ap.spacing, ap.gap), 16);
+      clearInterval(renderInterval);
 
-      var formatoRaw = firstDefined(deviceCfg.card_shape, ap.carousel_format, ap.carousel_card_shape, ap.format, ap.shape) || 'portrait';
-      var formato;
-      if (formatoRaw === 'circle' || formatoRaw === 'circular') { formato = 'square_1_1'; }
-      else if (formatoRaw === 'portrait' || formatoRaw === 'portrait_9_16') { formato = 'portrait_9_16'; }
-      else if (formatoRaw === 'landscape' || formatoRaw === 'landscape_16_9') { formato = 'landscape_16_9'; }
-      else if (formatoRaw === 'square' || formatoRaw === 'square_1_1') { formato = 'square_1_1'; }
-      else { formato = formatoRaw; }
+      var wrapperId = 'vl-carousel-wrapper-final';
+      var widgetContainer = document.getElementById(wrapperId);
 
-      var corPrimaria = ap.primary_color || ap.button_color || '#0094EB';
-      var corTexto = ap.text_color || '#0F172A';
-      var bgColor = ap.background_color || '#FFFFFF';
-      var borderRadius = safeInt(firstDefined(deviceCfg.border_radius, ap.carousel_border_radius, ap.border_radius, 12), 12);
-      var borderWidth = safeInt(firstDefined(deviceCfg.border_width, ap.carousel_border_width, ap.border_width, 2), 2);
-      var corBorda = firstDefined(deviceCfg.border_color, ap.carousel_border_color, ap.border_color, corPrimaria);
-      var fonte = ap.font_family || 'Inter, sans-serif';
-      var exibirTitulo = firstDefined(deviceCfg.show_title, ap.carousel_show_title, ap.show_title) !== false;
-      var exibirPlayBtn = firstDefined(deviceCfg.show_play_icon, ap.carousel_show_play_button, ap.show_play_button) !== false;
-      var autoCenter = !!(firstDefined(deviceCfg.auto_center, ap.carousel_auto_center, ap.auto_center));
-      var objectFit = firstDefined(deviceCfg.object_fit, ap.carousel_object_fit, ap.object_fit, 'cover') || 'cover';
+      if (!widgetContainer) {
+        widgetContainer = document.createElement('div');
+        widgetContainer.id = wrapperId;
+        widgetContainer.style.cssText = 'width:100%;max-width:100%;margin:20px auto;display:block;clear:both;overflow:visible;';
+        if (usedSelector.indexOf('.flex-.between') !== -1 && targetDiv.parentNode) {
+          targetDiv.parentNode.insertBefore(widgetContainer, targetDiv.nextSibling);
+        } else {
+          targetDiv.appendChild(widgetContainer);
+        }
+      }
 
-      var aspectRatio = '9 / 16';
-      if (formato.indexOf('landscape') !== -1 || formato.indexOf('16_9') !== -1) aspectRatio = '16 / 9';
-      else if (formato.indexOf('square') !== -1 || formato.indexOf('1_1') !== -1) aspectRatio = '1 / 1';
+      widgetContainer.innerHTML = '';
 
-      var dbSelector = ap.css_selector || ap.inline_selector || ap.display_selector || ap.selector || '';
-      var selectorsToTry = [];
-      if (dbSelector) selectorsToTry.push(dbSelector);
-      selectorsToTry.push('#vidlytics-carousel-root');
-      selectorsToTry.push('#instory-root');
-      selectorsToTry.push('.category-content');
-      selectorsToTry.push('#main');
-      selectorsToTry.push('main');
-      selectorsToTry.push('[role="main"]');
-      selectorsToTry.push('body');
+      var gapPx = espacamento;
+      var totalGap = gapPx * (itemsVisiveis - 1);
+      var cardWidth = 'calc((100% - ' + totalGap + 'px) / ' + itemsVisiveis + ')';
 
-      var maxRetries = 25;
-      var currentRetries = 0;
+      var estilo = document.createElement('style');
+      estilo.textContent = [
+        '#' + wrapperId + ' { font-family: ' + fonte + ', sans-serif; ' +
+          (cfg.autoCenter && allVideoItems.length <= itemsVisiveis ? 'display: flex; justify-content: center; ' : '') +
+          'overflow: visible !important; }',
+        '#' + wrapperId + ' * { box-sizing: border-box !important; }',
+        '.vl-slider-container {',
+        '  display: flex !important; flex-wrap: ' + (cfg.isGrid ? 'wrap' : 'nowrap') + ' !important;',
+        '  gap: ' + gapPx + 'px;',
+        '  overflow-x: ' + (cfg.isGrid ? 'hidden' : 'auto') + ' !important; overflow-y: hidden !important;',
+        '  scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;',
+        '  scrollbar-width: none !important;',
+        '  -ms-overflow-style: none !important;',
+        '  padding-bottom: 0px; width: 100%; max-width: 100%;',
+        '  cursor: ' + (cfg.isGrid ? 'auto' : 'grab') + '; user-select: none; -webkit-user-select: none;',
+        '}',
+        '.vl-slider-container::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }',
+        '.vl-slider-container:active { cursor: grabbing; }',
+        '.vl-slider-container.dragging { cursor: grabbing !important; scroll-snap-type: none !important; }',
+        '.vl-card-item {',
+        '  all: unset; display: flex !important; flex-direction: column; cursor: pointer;',
+        '  scroll-snap-align: start; flex: 0 0 ' + cardWidth + ' !important; min-width: 140px;',
+        '  position: relative; transition: transform 0.2s ease; user-select: none; -webkit-user-select: none;',
+        '  pointer-events: auto;',
+        '}',
+        '.vl-card-item:hover { transform: translateY(-2px); }',
+        '@media (max-width: 768px) { .vl-card-item { flex: 0 0 calc(50% - ' + gapPx + 'px) !important; min-width: 120px; } }',
+        '.vl-media-box {',
+        '  position: relative; width: 100%; aspect-ratio: ' + cfg.aspectRatio + ';',
+        '  border-radius: ' + cfg.borderRadius + 'px; overflow: hidden; background: #000;',
+        '  border: ' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';',
+        '}',
+        '.vl-card-item:hover .vl-media-box { box-shadow: 0 4px 20px rgba(0,0,0,0.15); }',
+        '.vl-media-box img, .vl-media-box video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: ' + cfg.objectFit + '; pointer-events: none; }',
+        '.vl-title-text {',
+        '  margin-top: 8px; font-size: 12px; font-weight: 600; color: ' + corTexto + '; text-align: center;',
+        '  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
+        '  display: ' + (cfg.showTitle ? 'block' : 'none') + '; width: 100%; padding: 0 4px;',
+        '}',
+        '.vl-play-btn-overlay {',
+        '  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);',
+        '  width: 38px; height: 38px; background: rgba(0,0,0,0.6); border-radius: 50%;',
+        '  display: ' + (cfg.showPlayButton ? 'flex' : 'none') + '; align-items: center; justify-content: center;',
+        '  pointer-events: none; color: #fff;',
+        '}',
+        '.vl-card-item:hover .vl-play-btn-overlay { background: ' + corPrimaria + '; transform: translate(-50%, -50%) scale(1.1); }',
+        '.vl-play-btn-overlay svg { width: 18px; height: 18px; fill: white; margin-left: 2px; }'
+      ].join('\n');
+      widgetContainer.appendChild(estilo);
 
-      var renderInterval = setInterval(function() {
-        var targetDiv = null;
-        var usedSelector = '';
-        currentRetries++;
+      var slider = document.createElement('div');
+      slider.className = 'vl-slider-container';
 
-        for (var i = 0; i < selectorsToTry.length; i++) {
-          try {
-            targetDiv = document.querySelector(selectorsToTry[i]);
-            if (targetDiv) { usedSelector = selectorsToTry[i]; break; }
-          } catch (e) {}
+      allVideoItems.forEach(function (item) {
+        var story = item.story;
+        var video = item.video;
+        var storyIndex = item.storyIndex;
+        var videoIndex = item.videoIndex;
+
+        var videoUrl = video ? (video.video_url || video.videoUrl || video.url || video.file_url || '') : '';
+        var cover = video ? (video.thumbnail_url || video.cover_url || video.thumbnailUrl || video.coverUrl || '') : '';
+
+        var card = document.createElement('button');
+        card.className = 'vl-card-item';
+
+        var mediaWrap = document.createElement('div');
+        mediaWrap.className = 'vl-media-box';
+
+        var isVideo = videoUrl && (videoUrl.indexOf('.mp4') !== -1 || videoUrl.indexOf('.webm') !== -1 || videoUrl.indexOf('.mov') !== -1 || videoUrl.indexOf('.m3u8') !== -1);
+
+        var mediaEl;
+        if (isVideo) {
+          mediaEl = document.createElement('video');
+          mediaEl.src = videoUrl;
+          if (cover) mediaEl.poster = cover;
+          mediaEl.muted = true;
+          mediaEl.loop = true;
+          mediaEl.autoplay = true;
+          mediaEl.setAttribute('playsinline', '');
+        } else {
+          mediaEl = document.createElement('img');
+          mediaEl.src = cover || videoUrl;
+          mediaEl.loading = 'lazy';
+        }
+        mediaWrap.appendChild(mediaEl);
+
+        var playIcon = document.createElement('div');
+        playIcon.className = 'vl-play-btn-overlay';
+        playIcon.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
+        mediaWrap.appendChild(playIcon);
+
+        card.appendChild(mediaWrap);
+
+        if (cfg.showTitle) {
+          var titulo = document.createElement('span');
+          titulo.className = 'vl-title-text';
+          titulo.textContent = story.title || story.name || 'Ver Vídeo';
+          card.appendChild(titulo);
         }
 
-        if (!targetDiv) {
-          if (currentRetries >= maxRetries) { clearInterval(renderInterval); }
-          return;
-        }
-
-        clearInterval(renderInterval);
-
-        var wrapperId = 'vl-carousel-wrapper-final';
-        var widgetContainer = document.getElementById(wrapperId);
-
-        if (!widgetContainer) {
-          widgetContainer = document.createElement('div');
-          widgetContainer.id = wrapperId;
-          widgetContainer.style.cssText = 'width:100%;max-width:100%;margin:20px auto;display:block;clear:both;overflow:visible;';
-          if (usedSelector.indexOf('.flex-.between') !== -1 && targetDiv.parentNode) {
-            targetDiv.parentNode.insertBefore(widgetContainer, targetDiv.nextSibling);
-          } else {
-            targetDiv.appendChild(widgetContainer);
-          }
-        }
-
-        widgetContainer.innerHTML = '';
-
-        var gapPx = espacamento;
-        var totalGap = gapPx * (itemsVisiveis - 1);
-        var cardWidth = 'calc((100% - ' + totalGap + 'px) / ' + itemsVisiveis + ')';
-
-        var estilo = document.createElement('style');
-        estilo.textContent = [
-          '#' + wrapperId + ' { font-family: ' + fonte + ', sans-serif; ' + (autoCenter && allVideoItems.length <= itemsVisiveis ? 'display: flex; justify-content: center; ' : '') + 'overflow: visible !important; }',
-          '#' + wrapperId + ' * { box-sizing: border-box !important; }',
-          '.vl-slider-container {',
-          '  display: flex !important; flex-wrap: nowrap !important; gap: ' + gapPx + 'px;',
-          '  overflow-x: auto !important; overflow-y: hidden !important;',
-          '  scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;',
-          '  scrollbar-width: none !important;',
-          '  -ms-overflow-style: none !important;',
-          '  padding-bottom: 0px; width: 100%; max-width: 100%;',
-          '  cursor: grab; user-select: none; -webkit-user-select: none;',
-          '}',
-          '.vl-slider-container::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }',
-          '.vl-slider-container:active { cursor: grabbing; }',
-          '.vl-slider-container.dragging { cursor: grabbing !important; scroll-snap-type: none !important; }',
-          '.vl-card-item {',
-          '  all: unset; display: flex !important; flex-direction: column; cursor: pointer;',
-          '  scroll-snap-align: start; flex: 0 0 ' + cardWidth + ' !important; min-width: 140px;',
-          '  position: relative; transition: transform 0.2s ease; user-select: none; -webkit-user-select: none;',
-          '  pointer-events: auto;',
-          '}',
-          '.vl-card-item:hover { transform: translateY(-2px); }',
-          '@media (max-width: 768px) { .vl-card-item { flex: 0 0 calc(50% - ' + gapPx + 'px) !important; min-width: 120px; } }',
-          '.vl-media-box {',
-          '  position: relative; width: 100%; aspect-ratio: ' + aspectRatio + ';',
-          '  border-radius: ' + borderRadius + 'px; overflow: hidden; background: #000;',
-          '  border: ' + borderWidth + 'px solid ' + corBorda + ';',
-          '}',
-          '.vl-card-item:hover .vl-media-box { box-shadow: 0 4px 20px rgba(0,0,0,0.15); }',
-          '.vl-media-box img, .vl-media-box video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: ' + objectFit + '; pointer-events: none; }',
-          '.vl-title-text {',
-          '  margin-top: 8px; font-size: 12px; font-weight: 600; color: ' + corTexto + '; text-align: center;',
-          '  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
-          '  display: ' + (exibirTitulo ? 'block' : 'none') + '; width: 100%; padding: 0 4px;',
-          '}',
-          '.vl-play-btn-overlay {',
-          '  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);',
-          '  width: 38px; height: 38px; background: rgba(0,0,0,0.6); border-radius: 50%;',
-          '  display: ' + (exibirPlayBtn ? 'flex' : 'none') + '; align-items: center; justify-content: center;',
-          '  pointer-events: none; color: #fff;',
-          '}',
-          '.vl-card-item:hover .vl-play-btn-overlay { background: ' + corPrimaria + '; transform: translate(-50%, -50%) scale(1.1); }',
-          '.vl-play-btn-overlay svg { width: 18px; height: 18px; fill: white; margin-left: 2px; }'
-        ].join('\n');
-        widgetContainer.appendChild(estilo);
-
-        var slider = document.createElement('div');
-        slider.className = 'vl-slider-container';
-
-        allVideoItems.forEach(function(item) {
-          var story = item.story;
-          var video = item.video;
-          var storyIndex = item.storyIndex;
-          var videoIndex = item.videoIndex;
-
-          var videoUrl = video ? (video.video_url || video.videoUrl || video.url || video.file_url || '') : '';
-          var cover = video ? (video.thumbnail_url || video.cover_url || video.thumbnailUrl || video.coverUrl || '') : '';
-
-          var card = document.createElement('button');
-          card.className = 'vl-card-item';
-
-          var mediaWrap = document.createElement('div');
-          mediaWrap.className = 'vl-media-box';
-
-          var isVideo = videoUrl && (videoUrl.indexOf('.mp4') !== -1 || videoUrl.indexOf('.webm') !== -1 || videoUrl.indexOf('.mov') !== -1 || videoUrl.indexOf('.m3u8') !== -1);
-
-          var mediaEl;
-          if (isVideo) {
-            mediaEl = document.createElement('video');
-            mediaEl.src = videoUrl;
-            if (cover) mediaEl.poster = cover;
-            mediaEl.muted = true;
-            mediaEl.loop = true;
-            mediaEl.autoplay = true;
-            mediaEl.setAttribute('playsinline', '');
-          } else {
-            mediaEl = document.createElement('img');
-            mediaEl.src = cover || videoUrl;
-            mediaEl.loading = 'lazy';
-          }
-          mediaWrap.appendChild(mediaEl);
-
-          var playIcon = document.createElement('div');
-          playIcon.className = 'vl-play-btn-overlay';
-          playIcon.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
-          mediaWrap.appendChild(playIcon);
-
-          card.appendChild(mediaWrap);
-
-          if (exibirTitulo) {
-            var titulo = document.createElement('span');
-            titulo.className = 'vl-title-text';
-            titulo.textContent = story.title || story.name || 'Ver Vídeo';
-            card.appendChild(titulo);
-          }
-
-          card.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            window.__vlStories = stories;
-            window.__vlStoryIndex = storyIndex;
-            window.__vlVideoIndex = videoIndex;
-            if (typeof openStoryViewer === 'function') {
-              openStoryViewer(stories, storyIndex);
-              setTimeout(function() { if (typeof goToVideoIndex === 'function') goToVideoIndex(videoIndex); }, 150);
-            }
-          });
-
-          slider.appendChild(card);
+        card.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          openStoryViewer(stories, storyIndex);
         });
 
-        widgetContainer.appendChild(slider);
+        slider.appendChild(card);
+      });
 
-        (function() {
+      widgetContainer.appendChild(slider);
+
+      // Drag/swipe só para carrossel (não grid)
+      if (!cfg.isGrid) {
+        (function () {
           var isDown = false, startX = 0, scrollLeft = 0, moved = false, velX = 0, momentumID;
 
-          slider.addEventListener('mousedown', function(e) {
+          slider.addEventListener('mousedown', function (e) {
             isDown = true; moved = false;
             slider.classList.add('dragging');
             startX = e.pageX - slider.offsetLeft;
@@ -1887,15 +1963,15 @@
             e.preventDefault();
           });
 
-          slider.addEventListener('mouseleave', function() {
+          slider.addEventListener('mouseleave', function () {
             if (isDown) { isDown = false; slider.classList.remove('dragging'); startMomentum(); }
           });
 
-          slider.addEventListener('mouseup', function() {
+          slider.addEventListener('mouseup', function () {
             if (isDown) { isDown = false; slider.classList.remove('dragging'); startMomentum(); }
           });
 
-          slider.addEventListener('mousemove', function(e) {
+          slider.addEventListener('mousemove', function (e) {
             if (!isDown) return;
             e.preventDefault();
             var x = e.pageX - slider.offsetLeft;
@@ -1905,18 +1981,18 @@
             if (Math.abs(walk) > 3) moved = true;
           });
 
-          slider.addEventListener('click', function(e) { if (moved) { e.stopPropagation(); e.preventDefault(); } }, true);
+          slider.addEventListener('click', function (e) { if (moved) { e.stopPropagation(); e.preventDefault(); } }, true);
 
-          slider.addEventListener('touchstart', function(e) {
+          slider.addEventListener('touchstart', function (e) {
             isDown = true; moved = false;
             startX = e.touches[0].pageX - slider.offsetLeft;
             scrollLeft = slider.scrollLeft;
             cancelMomentum();
           }, { passive: false });
 
-          slider.addEventListener('touchend', function() { isDown = false; startMomentum(); });
+          slider.addEventListener('touchend', function () { isDown = false; startMomentum(); });
 
-          slider.addEventListener('touchmove', function(e) {
+          slider.addEventListener('touchmove', function (e) {
             if (!isDown) return;
             var x = e.touches[0].pageX - slider.offsetLeft;
             var walk = (x - startX) * 1.5;
@@ -1935,12 +2011,14 @@
           }
           function cancelMomentum() { if (momentumID) { cancelAnimationFrame(momentumID); momentumID = null; } velX = 0; }
         })();
+      }
 
-      }, 300);
-    }
+    }, 300);
+  }
 
-    window.renderInlineWidget = renderInlineWidget;
-  })();
+  // ═══════════════════════════════════════════════════════════════
+  // RENDERIZADOR FLUTUANTE
+  // ═══════════════════════════════════════════════════════════════
 
   function renderFloating(stories, appearance) {
     if (!stories || !stories.length || floatingWasClosed) return;
@@ -1960,7 +2038,7 @@
     stories.forEach(function (story, index) {
       var bubbleVideo = null;
       if (story.videos && story.videos.length > 0) { bubbleVideo = story.videos[0]; }
-      
+
       var videoUrl = bubbleVideo ? getVideoUrl(bubbleVideo) : '';
       var cover = getStoryThumbnail(story, bubbleVideo, null);
 
@@ -1985,7 +2063,7 @@
         if (cover) mediaEl.src = cover;
         mediaEl.style.pointerEvents = 'none';
       }
-      
+
       mediaEl.loading = 'lazy';
       inner.appendChild(mediaEl);
 
@@ -2009,8 +2087,9 @@
 
       bubble.appendChild(ring);
 
-      var showFloatingTitle = firstDefined(appearance.floating_show_title, appearance.show_title);
-      if (showFloatingTitle !== false) {
+      // 🆕 Usa readDeviceValue para floating_show_title
+      var showFloatingTitle = toBoolean(readDeviceValue(appearance, 'floating_show_title', true), true);
+      if (showFloatingTitle) {
         var label = createEl('span', 'vl-label');
         label.textContent = story.title || '';
         bubble.appendChild(label);
@@ -2028,6 +2107,10 @@
     applyDraggable(host, appearance);
     shadow.appendChild(container);
   }
+
+  // ═══════════════════════════════════════════════════════════════
+  // INIT
+  // ═══════════════════════════════════════════════════════════════
 
   function initWidget() {
     if (!hasSupabase && !storeId) return;
@@ -2062,13 +2145,13 @@
       if (!stories || stories.length === 0) return;
 
       function storyMatchesCurrentPage(story) {
-        var locs = locations.filter(function(l) { return idsEqual(l.story_id, story.id); });
-        var rules = pageRules.filter(function(r) { return idsEqual(r.story_id, story.id); });
+        var locs = locations.filter(function (l) { return idsEqual(l.story_id, story.id); });
+        var rules = pageRules.filter(function (r) { return idsEqual(r.story_id, story.id); });
 
         if (locs.length > 0) return locs.some(matchesRule);
         if (rules.length > 0) return rules.some(matchesRule);
 
-        var globalRules = pageRules.filter(function(r) { return !r.story_id; });
+        var globalRules = pageRules.filter(function (r) { return !r.story_id; });
         if (globalRules.length > 0) return globalRules.some(matchesRule);
 
         return matchesUrl(appearance);
@@ -2078,11 +2161,11 @@
 
       if (!validStories || validStories.length === 0) return;
 
-      validStories.forEach(function(story) {
-         var rels = storyVideos.filter(function(sv) { return idsEqual(sv.story_id, story.id); });
-         story.videos = rels.map(function(r) {
-             return videos.find(function(v) { return idsEqual(v.id, r.video_id); }) || {};
-         }).filter(function(video) { return video && Object.keys(video).length > 0; });
+      validStories.forEach(function (story) {
+        var rels = storyVideos.filter(function (sv) { return idsEqual(sv.story_id, story.id); });
+        story.videos = rels.map(function (r) {
+          return videos.find(function (v) { return idsEqual(v.id, r.video_id); }) || {};
+        }).filter(function (video) { return video && Object.keys(video).length > 0; });
       });
 
       var widgetFormat = 'floating_widget';
@@ -2099,13 +2182,13 @@
       }
 
       if (widgetFormat === 'carousel' || widgetFormat === 'grid') {
-          renderInlineWidget(validStories, appearance, widgetFormat);
+        renderInlineWidget(validStories, appearance, widgetFormat);
       } else {
-          renderFloating(validStories, appearance);
+        renderFloating(validStories, appearance);
       }
 
     }).catch(function (err) {
-        console.error('VIDLYTICS: Erro ao inicializar widget:', err);
+      console.error('VIDLYTICS: Erro ao inicializar widget:', err);
     });
   }
 
