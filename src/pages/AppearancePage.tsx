@@ -2306,47 +2306,43 @@ const handleSaveStyle = async () => {
     const modalConfig = formData.modal_config;
     const shouldBeDefault = formData.is_default || appearances.length === 0;
 
-    // ✅ Payload com SOMENTE os campos que EXISTEM na tabela appearances do Supabase
+    // ✅ Payload com SOMENTE os campos que EXISTEM na tabela appearances
     const stylePayload = {
       id,
       store_id: finalStoreId,
       name: formData.name.trim(),
-      style_name: formData.name.trim(),
       is_default: shouldBeDefault,
 
+      // 🟨 Identidade Visual
       primary_color: formData.primary_color,
       secondary_color: formData.secondary_color,
       text_color: formData.text_color,
       background_color: formData.background_color,
       button_color: formData.button_color,
-
-      border_radius: floatingDesktop.border_radius,
-      shadow_enabled: modalConfig.shadow_enabled,
       font_family: formData.font_family,
-      font_size: formData.font_size,
+      font_size: String(formData.font_size || '14'),
+      border_radius: safeNumber(floatingDesktop.border_radius, 12),
+      shadow_enabled: modalConfig.shadow_enabled,
 
+      // 🔴 Flutuante
       widget_shape: floatingDesktop.shape,
       widget_size: formData.widget_size || 'medium',
       widget_animation: formData.widget_animation || 'none',
+      floating_config: floatingConfig,
 
-      // ✅ ÚNICAS 3 colunas planas de carrossel que existem no Supabase
+      // 🟢 Carrossel (colunas planas + JSONB)
       carousel_card_shape: carouselDesktop.shape,
       carousel_visible_items: carouselDesktop.visible_items,
       carousel_gap: carouselDesktop.spacing,
-
-      // ✅ O resto do carrossel vai DENTRO do JSONB carousel_config
       carousel_config: carouselConfig,
 
-      // Grid
+      // 🟣 Grade (só JSONB)
       grid_config: gridConfig,
 
-      // Floating
-      floating_config: floatingConfig,
-
-      // Modal
+      // 🔵 Modal (só JSONB)
       modal_config: modalConfig,
 
-      // Legados (compatibilidade)
+      // 👁️ Visibilidade de botões (colunas planas + legado)
       show_title: modalConfig.show_title,
       show_play_button: modalConfig.show_play_button,
       show_product: modalConfig.show_product,
@@ -2356,10 +2352,11 @@ const handleSaveStyle = async () => {
       show_whatsapp_button: modalConfig.show_whatsapp_button,
       show_product_button: modalConfig.show_product_button,
 
+      // 🟦 Básico
       use_global_appearance: formData.useGlobalAppearance,
-
       url: formData.url || null,
 
+      // ⏱️ Timestamps
       created_at: formData.created_at || editingStyle?.created_at || now,
       updated_at: now,
     };
