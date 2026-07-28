@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.07.28-25';
+  var WIDGET_VERSION = '2026.07.28-16';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -149,11 +149,23 @@
     return (fallbackBase !== undefined && fallbackBase !== null && fallbackBase !== '') ? fallbackBase : fallback;
   }
 
+  /**
+   * 🆕 Lê um valor de dentro de um campo JSONB de configuração
+   * (floating_config, carousel_config, grid_config, modal_config),
+   * respeitando same_for_all e mobile/desktop.
+   *
+   * @param {Object} appearance - Objeto de aparência completo
+   * @param {string} configKey - Nome da chave JSONB (ex: 'floating_config')
+   * @param {string} fieldName - Nome do campo dentro do JSONB (ex: 'border_color')
+   * @param {*} fallback - Valor padrão se nada for encontrado
+   * @returns {*}
+   */
   function readJsonbConfigValue(appearance, configKey, fieldName, fallback) {
     var configObj = appearance[configKey];
 
     if (configObj === undefined || configObj === null) return fallback;
 
+    // Parse se for string JSON
     if (typeof configObj === 'string') {
       try { configObj = JSON.parse(configObj); } catch(e) { return fallback; }
     }
@@ -163,6 +175,7 @@
     var device = getDevice();
     var sameAll = configObj.same_for_all;
 
+    // same_for_all === true/undefined/null → prioridade desktop > mobile
     if (sameAll === true || sameAll === undefined || sameAll === null) {
       if (configObj.desktop && configObj.desktop[fieldName] !== undefined &&
           configObj.desktop[fieldName] !== null && configObj.desktop[fieldName] !== '') {
@@ -175,12 +188,14 @@
       return fallback;
     }
 
+    // same_for_all === false → tenta device específico
     var deviceConfig = configObj[device];
     if (deviceConfig && deviceConfig[fieldName] !== undefined &&
         deviceConfig[fieldName] !== null && deviceConfig[fieldName] !== '') {
       return deviceConfig[fieldName];
     }
 
+    // Fallback para o outro device
     var otherDevice = device === 'mobile' ? 'desktop' : 'mobile';
     var otherConfig = configObj[otherDevice];
     if (otherConfig && otherConfig[fieldName] !== undefined &&
@@ -191,10 +206,16 @@
     return fallback;
   }
 
+  /**
+   * 🆕 Lê valor de aparência com prioridade: JSONB → coluna plana → fallback.
+   * Para campos que existem tanto no JSONB (floating_config) quanto como coluna plana.
+   */
   function readConfigValue(appearance, configKey, jsonbField, flatField, fallback) {
+    // 1ª prioridade: JSONB config
     var jsonbVal = readJsonbConfigValue(appearance, configKey, jsonbField);
     if (jsonbVal !== undefined && jsonbVal !== null && jsonbVal !== '') return jsonbVal;
 
+    // 2ª prioridade: coluna plana (com suporte a mobile/desktop)
     if (flatField) {
       var flatVal = readDeviceValue(appearance, flatField);
       if (flatVal !== undefined && flatVal !== null && flatVal !== '') return flatVal;
@@ -313,6 +334,7 @@ function flattenAppearanceInto(target, source, depth) {
       var value = source[key];
       if (value === undefined || value === null || value === '') return;
       
+      // ⬇️ NOVO: preserva JSONB keys intactos
       if (JSONB_KEYS.indexOf(key) !== -1) {
         target[key] = value;
         return;
@@ -469,9 +491,16 @@ function flattenAppearanceInto(target, source, depth) {
     return fetchDbAppearance().then(function (dbAppearance) {
       var finalAppearance = {};
 
+      // 1. Defaults
       mergeObject(finalAppearance, DEFAULT_APPEARANCE);
+
+      // 2. Config inline
       mergeObject(finalAppearance, configAppearance);
+
+      // 3. Storage local
       mergeObject(finalAppearance, storageAppearance);
+
+      // 4. Banco de dados (prioridade máxima)
       mergeObject(finalAppearance, dbAppearance);
 
       console.log('🔍 readAppearance — FINAL:', {
@@ -514,9 +543,14 @@ function flattenAppearanceInto(target, source, depth) {
   // 🆕 CONFIGS POR WIDGET (lendo dos JSONBs)
   // ═══════════════════════════════════════════════════════════════
 
+  /**
+   * Configuração do widget flutuante.
+   * Lê do floating_config JSONB com fallback para colunas planas e defaults.
+   */
   function getFloatingConfig(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
 
+    // Helper: lê com prioridade JSONB → coluna plana → fallback
     function rcv(jsonbField, flatField, fallback) {
       return readConfigValue(appearance, 'floating_config', jsonbField, flatField, fallback);
     }
@@ -538,10 +572,12 @@ function flattenAppearanceInto(target, source, depth) {
       heightNumber = Math.round(widthNumber * 16 / 9);
     }
 
+    // 🔧 CORREÇÃO: border_style no JSONB = largura da borda
     var borderWidthNumber = toNumber(rcv('border_style', 'floating_border_width', '2'), 2);
     var radiusNumber = toNumber(rcv('border_radius', 'floating_border_radius', '12'), 12);
     if (shape === 'circle') radiusNumber = 999;
 
+    // 🔧 CORREÇÃO: spacing no JSONB → margin no código
     var marginTopNumber = toNumber(rcv('top_spacing', 'floating_margin_top', '20'), 20);
     var marginBottomNumber = toNumber(rcv('bottom_spacing', 'floating_margin_bottom', '20'), 20);
     var marginSideNumber = toNumber(rcv('left_spacing', 'floating_margin_side', '20'), 20);
@@ -575,6 +611,9 @@ function flattenAppearanceInto(target, source, depth) {
     };
   }
 
+  /**
+   * Configuração de comportamento do flutuante (play, drag, close).
+   */
   function getFloatingBehaviorConfig(appearance) {
     appearance = appearance || {};
 
@@ -589,7 +628,10 @@ function flattenAppearanceInto(target, source, depth) {
       allowClose: toBoolean(rcv('allow_close', 'floating_allow_close', true), true)
     };
   }
-
+  /**
+   * 🆕 Configuração do carrossel com suporte a mobile/desktop.
+   * Lê do carousel_config JSONB com fallback para colunas planas.
+   */
   function getCarouselConfig(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
 
@@ -631,6 +673,10 @@ function flattenAppearanceInto(target, source, depth) {
     };
   }
 
+  /**
+   * 🆕 Configuração da grade com suporte a mobile/desktop.
+   * Lê do grid_config JSONB com fallback para colunas planas.
+   */
   function getGridConfig(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
 
@@ -677,13 +723,19 @@ function flattenAppearanceInto(target, source, depth) {
     return readAppearanceValue(appearance, ['secondary_color', 'secondaryColor', 'cor_secundaria']) || DEFAULT_APPEARANCE.secondary_color;
   }
 
+  /**
+   * 🆕 getBorderColor — Prioridade: floating_config JSONB > coluna plana > primary_color
+   */
   function getBorderColor(appearance) {
+    // 1. floating_config JSONB
     var jsonbVal = readJsonbConfigValue(appearance, 'floating_config', 'border_color');
     if (jsonbVal && String(jsonbVal).trim() !== '') return jsonbVal;
 
+    // 2. Coluna plana floating_border_color
     var flatVal = readDeviceValue(appearance, 'floating_border_color');
     if (flatVal && String(flatVal).trim() !== '') return flatVal;
 
+    // 3. Fallback: primary_color
     return getPrimaryColor(appearance);
   }
 
@@ -709,12 +761,15 @@ function flattenAppearanceInto(target, source, depth) {
     }
 
     function getBool(name, fallback) {
+      // 1. modal_config JSONB
       var jsonbVal = getFromJsonb(name, undefined);
       if (jsonbVal !== undefined && jsonbVal !== null && jsonbVal !== '') return toBoolean(jsonbVal, fallback);
 
+      // 2. Coluna plana com prefixo modal_
       var flatVal = appearance[name];
       if (flatVal !== undefined && flatVal !== null && flatVal !== '') return toBoolean(flatVal, fallback);
 
+      // 3. Fallback para coluna plana sem prefixo (compatibilidade)
       var legacyName = name.replace('modal_', '');
       var legacyVal = appearance[legacyName];
       if (legacyVal !== undefined && legacyVal !== null && legacyVal !== '') return toBoolean(legacyVal, fallback);
@@ -753,6 +808,7 @@ function flattenAppearanceInto(target, source, depth) {
       border_radius: getString('modal_border_radius', '')
     };
   }
+
   // ═══════════════════════════════════════════════════════════════
   // MÉTRICAS
   // ═══════════════════════════════════════════════════════════════
@@ -1134,7 +1190,6 @@ function flattenAppearanceInto(target, source, depth) {
     );
   }
 
-  // 🔧 CORRIGIDO: .vl-bubble com position:relative + .vl-dismiss único e completo
   function buildFloatingCss(appearance, behaviorConfig) {
     behaviorConfig = behaviorConfig || getFloatingBehaviorConfig(appearance);
     var cfg = getFloatingConfig(appearance);
@@ -1144,17 +1199,16 @@ function flattenAppearanceInto(target, source, depth) {
     var borderBackground = borderColor ? borderColor : 'linear-gradient(135deg,' + primary + ',' + secondary + ')';
     var font = getFontFamily(appearance);
 
-    return ':host{all:initial!important;display:block!important;position:fixed!important;top:' + cfg.top + '!important;right:' + cfg.right + '!important;bottom:' + cfg.bottom + '!important;left:' + cfg.left + '!important;z-index:' + cfg.zIndex + '!important;width:' + cfg.width + '!important;min-width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;height:auto!important;overflow:visible!important;background:transparent!important;pointer-events:auto!important;font-family:' + font + '!important;}'
+    return ':host{all:initial!important;position:fixed!important;top:' + cfg.top + '!important;right:' + cfg.right + '!important;bottom:' + cfg.bottom + '!important;left:' + cfg.left + '!important;z-index:' + cfg.zIndex + '!important;width:' + cfg.width + '!important;min-width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;height:auto!important;overflow:visible!important;background:transparent!important;pointer-events:auto!important;font-family:' + font + '!important;}'
       + buildSharedCss(appearance)
-      // 🟢 NOVO: .vl-bubble com position:relative (necessário para o X ancorar corretamente)
-      + '.vl-bubble{all:unset!important;position:relative!important;display:block!important;cursor:pointer!important;}'
       + '.vl-bubbles{width:' + cfg.width + '!important;display:flex!important;flex-direction:column!important;align-items:' + cfg.alignItems + '!important;justify-content:flex-start!important;gap:10px!important;overflow:visible!important;position:relative!important;}'
-      // 🟢 ÚNICA regra .vl-dismiss (completa, com -webkit-appearance:none, padding:0, margin:0)
-      + '.vl-dismiss{all:unset!important;-webkit-appearance:none!important;appearance:none!important;position:absolute!important;top:-18px!important;right:-18px!important;width:30px!important;height:30px!important;background:transparent!important;color:#000!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:30px!important;font-weight:900!important;line-height:1!important;cursor:pointer!important;z-index:20!important;pointer-events:auto!important;text-shadow:0 0 5px rgba(255,255,255,.9)!important;border-radius:0!important;box-shadow:none!important;outline:none!important;border:none!important;padding:0!important;margin:0!important;}'
+      + '.vl-bubble{all:unset!important;width:' + cfg.width + '!important;min-width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;height:auto!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;gap:4px!important;cursor:pointer!important;overflow:visible!important;pointer-events:auto!important;}'
+      + '.vl-ring{pointer-events:none!important;width:' + cfg.width + '!important;height:' + cfg.height + '!important;border-radius:' + cfg.radius + '!important;padding:' + cfg.borderWidth + '!important;overflow:hidden!important;display:block!important;position:relative!important;background:' + borderBackground + '!important;box-shadow:0 12px 30px rgba(15,23,42,.18)!important;}'
       + '.vl-inner{pointer-events:none!important;position:relative!important;width:100%!important;height:100%!important;border-radius:' + cfg.innerRadius + '!important;overflow:hidden!important;background:#000!important;display:block!important;}'
       + '.vl-img{pointer-events:none!important;position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;object-fit:' + behaviorConfig.objectFit + '!important;object-position:center!important;display:block!important;border:none!important;border-radius:' + cfg.innerRadius + '!important;}'
       + '.vl-play-badge{pointer-events:none!important;position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;width:34px!important;height:34px!important;border-radius:999px!important;background:rgba(15,23,42,.62)!important;color:#fff!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:15px!important;line-height:1!important;box-shadow:0 6px 18px rgba(0,0,0,.25)!important;}'
       + '.vl-play-badge::before{content:""!important;margin-left:3px!important;width:0!important;height:0!important;border-top:8px solid transparent!important;border-bottom:8px solid transparent!important;border-left:12px solid #fff!important;display:block!important;}'
+      + '.vl-dismiss{all:unset!important;position:absolute!important;top:-10px!important;right:-10px!important;width:24px!important;height:24px!important;border-radius:999px!important;background:#0f172a!important;color:#fff!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:16px!important;font-weight:800!important;line-height:1!important;cursor:pointer!important;z-index:3!important;box-shadow:0 6px 18px rgba(0,0,0,.25)!important;pointer-events:auto!important;}'
       + '.vl-label{pointer-events:none!important;width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;font-family:' + font + '!important;font-size:11px!important;line-height:12px!important;font-weight:700!important;color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.8)!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;display:block!important;}';
   }
 
@@ -1773,10 +1827,10 @@ function flattenAppearanceInto(target, source, depth) {
 
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
         floatingWasDragged = true;
-        el.style.setProperty('right', (initialRight + dx) + 'px', 'important');
-        el.style.setProperty('bottom', (initialBottom + dy) + 'px', 'important');
-        el.style.setProperty('left', 'auto', 'important');
-        el.style.setProperty('top', 'auto', 'important');
+        el.style.right = (initialRight + dx) + 'px';
+        el.style.bottom = (initialBottom + dy) + 'px';
+        el.style.left = 'auto';
+        el.style.top = 'auto';
       }
     });
 
@@ -1790,6 +1844,7 @@ function flattenAppearanceInto(target, source, depth) {
 
   // ═══════════════════════════════════════════════════════════════
   // 🆕 RENDERIZADOR INLINE (CARROSSEL / GRADE)
+  //    Usando getCarouselConfig e getGridConfig com readConfigValue
   // ═══════════════════════════════════════════════════════════════
 
   function renderInlineWidget(stories, appearance, format) {
@@ -2114,18 +2169,18 @@ function flattenAppearanceInto(target, source, depth) {
 
       if (behavior.allowClose) {
         var dismiss = createEl('button', 'vl-dismiss');
-        dismiss.innerHTML = '\u2715';
+        dismiss.innerHTML = '&times;';
         dismiss.addEventListener('click', function (e) {
           e.stopPropagation();
           host.remove();
           floatingWasClosed = true;
         });
-        // 🔧 CORRIGIDO: dismiss vai dentro do bubble (que tem position:relative)
-        bubble.appendChild(dismiss);
+        ring.appendChild(dismiss);
       }
 
       bubble.appendChild(ring);
 
+      // Lê show_title do floating_config JSONB → coluna plana
       var showFloatingTitle = toBoolean(
         readConfigValue(appearance, 'floating_config', 'show_title', 'floating_show_title', true),
         true
