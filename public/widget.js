@@ -208,8 +208,6 @@
 
     return fallback;
   }
-  }
-} 
 
   /**
    * 🆕 Lê valor de aparência com prioridade: JSONB → coluna plana → fallback.
