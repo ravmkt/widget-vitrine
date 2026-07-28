@@ -567,7 +567,7 @@ appearances: [
     'name', 'is_default', 'use_global_appearance',
     // 🟨 Identidade Visual
     'primary_color', 'secondary_color', 'text_color', 'background_color',
-    'button_color', 'font_family', 'border_radius', 'shadow_enabled',
+    'button_color', 'font_family', 'font_size', 'border_radius', 'shadow_enabled',
     // Flutuante
     'widget_shape', 'widget_size', 'widget_animation',
     // Carrossel
