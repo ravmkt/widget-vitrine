@@ -172,10 +172,17 @@
 
     if (!isPlainObject(configObj)) return fallback;
 
+    // 🆕 1ª prioridade: campo direto na raiz do JSONB (formato flat)
+    if (configObj[fieldName] !== undefined &&
+        configObj[fieldName] !== null &&
+        configObj[fieldName] !== '') {
+      return configObj[fieldName];
+    }
+
+    // 2ª prioridade: formato aninhado (desktop/mobile)
     var device = getDevice();
     var sameAll = configObj.same_for_all;
 
-    // same_for_all === true/undefined/null → prioridade desktop > mobile
     if (sameAll === true || sameAll === undefined || sameAll === null) {
       if (configObj.desktop && configObj.desktop[fieldName] !== undefined &&
           configObj.desktop[fieldName] !== null && configObj.desktop[fieldName] !== '') {
@@ -187,6 +194,22 @@
       }
       return fallback;
     }
+
+    var deviceConfig = configObj[device];
+    if (deviceConfig && deviceConfig[fieldName] !== undefined &&
+        deviceConfig[fieldName] !== null && deviceConfig[fieldName] !== '') {
+      return deviceConfig[fieldName];
+    }
+
+    var otherDevice = device === 'mobile' ? 'desktop' : 'mobile';
+    var otherConfig = configObj[otherDevice];
+    if (otherConfig && otherConfig[fieldName] !== undefined &&
+        otherConfig[fieldName] !== null && otherConfig[fieldName] !== '') {
+      return otherConfig[fieldName];
+    }
+
+    return fallback;
+  }
 
     // same_for_all === false → tenta device específico
     var deviceConfig = configObj[device];
