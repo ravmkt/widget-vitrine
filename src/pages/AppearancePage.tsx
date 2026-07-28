@@ -500,12 +500,12 @@ const normalizeCarouselConfigShape = (
   config: CarouselConfig,
 ): CarouselConfig => ({
   ...config,
-  card_shape: normalizeWidgetShape(config.card_shape, 'portrait'),
+  card_shape: normalizeWidgetShape(config.shape, 'portrait'),
 });
 
 const normalizeGridConfigShape = (config: GridConfig): GridConfig => ({
   ...config,
-  card_shape: normalizeWidgetShape(config.card_shape, 'portrait'),
+  card_shape: normalizeWidgetShape(config.shape, 'portrait'),
 });
 
 const parseJsonIfNeeded = <T,>(value: unknown): Partial<T> | null => {
@@ -724,7 +724,7 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
     widget_size: 'medium',
     widget_animation: 'none',
 
-    carousel_card_shape: carouselDesktop.card_shape as any,
+    carousel_card_shape: carouselDesktop.shape as any,
     carousel_visible_items: carouselDesktop.visible_items,
     carousel_gap: carouselDesktop.gap,
 
@@ -993,7 +993,7 @@ const normalizeAppearance = (
     widget_size: item.widget_size || defaults.widget_size,
     widget_animation: item.widget_animation || defaults.widget_animation,
 
-    carousel_card_shape: carouselDesktop.card_shape as any,
+    carousel_card_shape: carouselDesktop.shape as any,
     carousel_visible_items: carouselDesktop.visible_items,
     carousel_gap: carouselDesktop.gap,
 
@@ -1555,7 +1555,7 @@ const CarouselPreview = ({
   colors: PreviewColors;
 }) => {
   const visibleItems = safeNumber(carousel.visible_items, 1, 1);
-  const shape = normalizeWidgetShape(carousel.card_shape, 'portrait');
+  const shape = normalizeWidgetShape(carousel.shape, 'portrait');
 
   const items = Array.from({
     length: Math.max(1, Math.min(visibleItems, 8)),
@@ -1667,7 +1667,7 @@ const GridPreview = ({
 }) => {
   const columns = limitNumber(grid.columns, 4, 1, 4);
   const rows = safeNumber(grid.rows, 1, 1);
-  const shape = normalizeWidgetShape(grid.card_shape, 'portrait');
+  const shape = normalizeWidgetShape(grid.shape, 'portrait');
   const totalItems = Math.max(1, Math.min(columns * rows, 20));
 
   const items = Array.from({
@@ -2262,7 +2262,7 @@ const AppearancePage = () => {
         ...prev,
         carousel_config: nextConfig,
         carousel_gap: desktop.gap,
-        carousel_card_shape: desktop.card_shape as any,
+        carousel_card_shape: desktop.shape as any,
         carousel_view_mode: desktop.view_mode,
         margin_top: desktop.margin_top,
         margin_bottom: desktop.margin_bottom,
@@ -2559,7 +2559,7 @@ const AppearancePage = () => {
   widget_size: formData.widget_size || 'medium',
   widget_animation: formData.widget_animation || 'none',
 
-  carousel_card_shape: carouselDesktop.card_shape,
+  carousel_card_shape: carouselDesktop.shape,
   carousel_visible_items: carouselDesktop.visible_items,
   carousel_gap: carouselDesktop.gap,
 
@@ -3383,7 +3383,7 @@ const AppearancePage = () => {
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <FormField label="Forma">
                           <select
-                            value={activeCarouselConfig.card_shape}
+                            value={activeCarouselConfig.shape}
                             onChange={e =>
                               updateCarouselConfig({
                                 card_shape: e.target.value as WidgetShape,
@@ -3395,7 +3395,7 @@ const AppearancePage = () => {
                             <option value="square">Quadrado</option>
                             <option value="portrait">Retrato 9:16</option>
                           </select>
-                          {activeCarouselConfig.card_shape === 'portrait' && (
+                          {activeCarouselConfig.shape === 'portrait' && (
                             <p className="text-xs font-semibold text-slate-400">
                               No formato retrato, os cards ficam fixos na proporção 9:16.
                             </p>
@@ -3595,7 +3595,7 @@ const AppearancePage = () => {
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <FormField label="Forma">
                           <select
-                            value={activeGridConfig.card_shape}
+                            value={activeGridConfig.shape}
                             onChange={e =>
                               updateGridConfig({
                                 card_shape: e.target.value as WidgetShape,
@@ -3607,7 +3607,7 @@ const AppearancePage = () => {
                             <option value="square">Quadrado</option>
                             <option value="portrait">Retrato 9:16</option>
                           </select>
-                          {activeGridConfig.card_shape === 'portrait' && (
+                          {activeGridConfig.shape === 'portrait' && (
                             <p className="text-xs font-semibold text-slate-400">
                               No formato retrato, os cards ficam fixos na proporção 9:16.
                             </p>
