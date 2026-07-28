@@ -2175,7 +2175,7 @@ el.style.setProperty('top', 'auto', 'important');
           host.remove();
           floatingWasClosed = true;
         });
-        ring.appendChild(dismiss);
+        bubble.appendChild(dismiss);
       }
 
       bubble.appendChild(ring);
