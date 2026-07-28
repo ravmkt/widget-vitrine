@@ -2459,7 +2459,23 @@ console.log('🔴 PAYLOAD COMPLETO ANTES DO SAVE:', JSON.stringify({
 }, null, 2));
 
       await db.appearances.save(stylePayload as unknown as Appearance);
-
+const allStyles = await db.appearances.getAll(finalStoreId);
+const savedStyle = allStyles.find((s: any) => s.id === id);
+console.log('🟢 DADO SALVO (lido de volta):', JSON.stringify({
+  carousel_shape: (savedStyle as any)?.carousel_shape,
+  carousel_size: (savedStyle as any)?.carousel_size,
+  carousel_visible_items: (savedStyle as any)?.carousel_visible_items,
+  carousel_spacing: (savedStyle as any)?.carousel_spacing,
+  carousel_border_color: (savedStyle as any)?.carousel_border_color,
+  carousel_border_width: (savedStyle as any)?.carousel_border_width,
+  carousel_border_radius: (savedStyle as any)?.carousel_border_radius,
+  carousel_margin_top: (savedStyle as any)?.carousel_margin_top,
+  carousel_margin_bottom: (savedStyle as any)?.carousel_margin_bottom,
+  carousel_show_title: (savedStyle as any)?.carousel_show_title,
+  carousel_show_product: (savedStyle as any)?.carousel_show_product,
+  carousel_show_play_button: (savedStyle as any)?.carousel_show_play_button,
+  carousel_auto_center: (savedStyle as any)?.carousel_auto_center,
+}, null, 2));
       if (supabase) {
         const { error: storeSettingsError } = await supabase
           .from('store_settings')
