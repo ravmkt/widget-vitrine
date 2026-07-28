@@ -38,7 +38,7 @@ import { showSuccess, showError } from '@/utils/toast';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import { cn } from '@/lib/utils';
 
-// ──────────────────── tipos — sem alterações ────────────────────
+// ──────────────────── tipos ────────────────────
 
 type DeviceType = 'desktop' | 'mobile';
 
@@ -93,9 +93,10 @@ type FloatingConfig = {
   show_title: boolean;
 };
 
+// 🆕 NOMES ALINHADOS COM widget.js (carousel_config JSONB)
 type CarouselConfig = {
-  spacing: number;
-  shape: WidgetShape;
+  spacing: number;          // era gap
+  shape: WidgetShape;       // era card_shape
   view_mode: string;
   margin_top: string;
   margin_bottom: string;
@@ -103,9 +104,9 @@ type CarouselConfig = {
   show_product: boolean;
   show_play_icon: boolean;
   auto_center: boolean;
-  width: string;
+  width: string;            // era card_size
   border_color: string;
-  border_style: string;
+  border_style: string;     // era border_width
   border_radius: string;
   object_fit: string;
   show_title: boolean;
@@ -196,7 +197,7 @@ type PreviewColors = {
   floatingBorder: string;
 };
 
-// ──────────────────── utilitários — sem alterações ────────────────────
+// ──────────────────── utilitários ────────────────────
 
 const inputClass =
   'w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 outline-none placeholder:text-slate-400 transition focus:border-[#0094EB] focus:bg-white focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-50';
@@ -214,11 +215,8 @@ const normalizeWidgetShape = (
   fallback: WidgetShape = 'portrait',
 ): WidgetShape => {
   const text = String(value || '').trim();
-
   if (isValidWidgetShape(text)) return text;
-
   if (text === 'rounded' || text === 'custom') return 'portrait';
-
   return fallback;
 };
 
@@ -292,32 +290,26 @@ const mapAnyPositionToPositionValueForSave = (
   value: unknown,
 ): PositionValue | null => {
   const text = String(value || '').trim();
-
   const map: Record<string, PositionValue> = {
     fixed_bottom_right: 'fixed_bottom_right',
     fixed_bottom_left: 'fixed_bottom_left',
     fixed_top_right: 'fixed_top_right',
     fixed_top_left: 'fixed_top_left',
-
     'bottom-right': 'fixed_bottom_right',
     'bottom-left': 'fixed_bottom_left',
     'top-right': 'fixed_top_right',
     'top-left': 'fixed_top_left',
-
     right: 'fixed_bottom_right',
     left: 'fixed_bottom_left',
-
     'Inferior direita': 'fixed_bottom_right',
     'Inferior esquerda': 'fixed_bottom_left',
     'Superior direita': 'fixed_top_right',
     'Superior esquerda': 'fixed_top_left',
-
     'inferior direita': 'fixed_bottom_right',
     'inferior esquerda': 'fixed_bottom_left',
     'superior direita': 'fixed_top_right',
     'superior esquerda': 'fixed_top_left',
   };
-
   return map[text] || null;
 };
 
@@ -336,11 +328,7 @@ const normalizeFloatingPositionForSave = (
   position?: unknown,
   floatingPosition?: unknown,
 ): FloatingPosition => {
-  const normalizedPosition = normalizePositionForSave(
-    position,
-    floatingPosition,
-  );
-
+  const normalizedPosition = normalizePositionForSave(position, floatingPosition);
   return positionToFloatingPosition(normalizedPosition);
 };
 
@@ -351,12 +339,10 @@ const normalizeFloatingConfigForSave = (
     config.position,
     config.floating_position,
   );
-
   const normalizedFloatingPosition = normalizeFloatingPositionForSave(
     normalizedPosition,
     config.floating_position,
   );
-
   return normalizeFloatingShapeValues({
     ...config,
     border_style: normalizeBorderWidth(config.border_style, '2'),
@@ -365,16 +351,10 @@ const normalizeFloatingConfigForSave = (
   });
 };
 
-const safeNumber = (
-  value: unknown,
-  fallback: number,
-  min?: number,
-): number => {
+const safeNumber = (value: unknown, fallback: number, min?: number): number => {
   const parsed = Number(value);
-
   if (Number.isNaN(parsed)) return fallback;
   if (typeof min === 'number' && parsed < min) return min;
-
   return parsed;
 };
 
@@ -385,66 +365,49 @@ const limitNumber = (
   max: number,
 ) => {
   const parsed = safeNumber(value, fallback, min);
-
   return Math.min(max, Math.max(min, parsed));
 };
 
 const toNumberInputValue = (value: unknown) => {
   if (value === null || value === undefined) return '';
-
   const text = String(value).trim();
   const match = text.match(/-?\d+(\.\d+)?/);
-
   return match ? match[0] : '';
 };
 
 const extractNumericCssSize = (value: unknown, fallback = '0px') => {
   const numeric = toNumberInputValue(value);
-
   if (!numeric) return fallback;
-
   return `${numeric}px`;
 };
 
 const formatNumberLikeCurrent = (value: unknown, fallback = '0') => {
   const numeric = toNumberInputValue(value);
-
   return numeric || fallback;
 };
 
 const getPortraitHeightFromWidth = (width: unknown) => {
   const numeric = Number(toNumberInputValue(width));
-
   if (!numeric || Number.isNaN(numeric)) return '142';
-
   return String(Math.round((numeric * 16) / 9));
 };
 
 const getPortraitWidthFromHeight = (height: unknown) => {
   const numeric = Number(toNumberInputValue(height));
-
   if (!numeric || Number.isNaN(numeric)) return '80';
-
   return String(Math.round((numeric * 9) / 16));
 };
 
 const cssSize = (value: unknown, fallback = '0px') => {
   if (value === null || value === undefined) return fallback;
-
   const text = String(value).trim();
-
   if (!text) return fallback;
-
-  if (/^-?\d+(\.\d+)?$/.test(text)) {
-    return `${text}px`;
-  }
-
+  if (/^-?\d+(\.\d+)?$/.test(text)) return `${text}px`;
   return text;
 };
 
 const cssBorder = (borderWidth: string, color: string) => {
   const width = extractNumericCssSize(borderWidth, '0px');
-
   return `${width} solid ${color}`;
 };
 
@@ -456,10 +419,8 @@ const normalizeFloatingShapeValues = (
   config: FloatingConfig,
 ): FloatingConfig => {
   const shape = normalizeWidgetShape(config.shape);
-
   if (shape === 'portrait') {
     const width = formatNumberLikeCurrent(config.width, '80');
-
     return {
       ...config,
       shape,
@@ -469,10 +430,8 @@ const normalizeFloatingShapeValues = (
       border_style: normalizeBorderWidth(config.border_style, '2'),
     };
   }
-
   if (shape === 'square') {
     const size = formatNumberLikeCurrent(config.width, '80');
-
     return {
       ...config,
       shape,
@@ -482,12 +441,10 @@ const normalizeFloatingShapeValues = (
       border_style: normalizeBorderWidth(config.border_style, '2'),
     };
   }
-
   const circleSize =
     toNumberInputValue(config.border_radius) ||
     toNumberInputValue(config.width) ||
     '80';
-
   return {
     ...config,
     shape,
@@ -496,23 +453,23 @@ const normalizeFloatingShapeValues = (
   };
 };
 
+// 🆕 CORRIGIDO: usa shape (não card_shape)
 const normalizeCarouselConfigShape = (
   config: CarouselConfig,
 ): CarouselConfig => ({
   ...config,
-  card_shape: normalizeWidgetShape(config.shape, 'portrait'),
+  shape: normalizeWidgetShape(config.shape, 'portrait'),
 });
 
+// 🆕 CORRIGIDO: usa card_shape (GridConfig não mudou)
 const normalizeGridConfigShape = (config: GridConfig): GridConfig => ({
   ...config,
-  card_shape: normalizeWidgetShape(config.shape, 'portrait'),
+  card_shape: normalizeWidgetShape(config.card_shape, 'portrait'),
 });
 
 const parseJsonIfNeeded = <T,>(value: unknown): Partial<T> | null => {
   if (!value) return null;
-
   if (typeof value === 'object') return value as Partial<T>;
-
   if (typeof value === 'string') {
     try {
       return JSON.parse(value) as Partial<T>;
@@ -520,7 +477,6 @@ const parseJsonIfNeeded = <T,>(value: unknown): Partial<T> | null => {
       return null;
     }
   }
-
   return null;
 };
 
@@ -566,6 +522,7 @@ const createDefaultFloatingMobileConfig = (): FloatingConfig => ({
   show_title: true,
 });
 
+// 🆕 CORRIGIDO: nomes alinhados com widget.js
 const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
   spacing: 16,
   shape: 'portrait',
@@ -584,6 +541,7 @@ const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
   show_title: false,
 });
 
+// 🆕 CORRIGIDO: nomes alinhados com widget.js
 const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
   spacing: 12,
   shape: 'portrait',
@@ -670,7 +628,6 @@ const normalizeResponsiveConfig = <T extends Record<string, any>>({
   sameForAll?: boolean;
 }): ResponsiveConfig<T> => {
   const parsed = parseJsonIfNeeded<ResponsiveConfig<T>>(rawValue);
-
   return {
     same_for_all: Boolean(parsed?.same_for_all ?? sameForAll),
     desktop: {
@@ -695,9 +652,9 @@ const getActiveResponsiveConfig = <T,>(
   return config[device];
 };
 
+// 🆕 CORRIGIDO: carouselDesktop.spacing no lugar de .gap
 const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
   const now = new Date().toISOString();
-
   const floatingDesktop = createDefaultFloatingDesktopConfig();
   const floatingMobile = createDefaultFloatingMobileConfig();
   const carouselDesktop = createDefaultCarouselDesktopConfig();
@@ -726,7 +683,7 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
 
     carousel_card_shape: carouselDesktop.shape as any,
     carousel_visible_items: carouselDesktop.visible_items,
-    carousel_gap: carouselDesktop.gap,
+    carousel_gap: carouselDesktop.spacing,
 
     show_title: modalConfig.show_title,
     show_play_button: modalConfig.show_play_button,
@@ -785,6 +742,7 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
   } as ExtendedAppearance;
 };
 
+// 🆕 CORRIGIDO: rawValue adicionado, legacyDesktop usa spacing/shape
 const normalizeAppearance = (
   style: Appearance,
   storeId?: string,
@@ -797,7 +755,6 @@ const normalizeAppearance = (
     anyItem.position,
     anyItem.floating_position,
   );
-
   const normalizedFloatingPosition = normalizeFloatingPosition(
     anyItem.floating_position,
     normalizedPosition,
@@ -861,14 +818,15 @@ const normalizeAppearance = (
   floatingConfig.desktop = normalizeFloatingShapeValues(floatingConfig.desktop);
   floatingConfig.mobile = normalizeFloatingShapeValues(floatingConfig.mobile);
 
+  // 🆕 CORRIGIDO: rawValue + legacyDesktop usa spacing e shape
   const carouselConfig = normalizeResponsiveConfig<CarouselConfig>({
-    rawValue: anyItem.carousel_config,  // ← ADICIONAR ESTA LINHA
+    rawValue: anyItem.carousel_config,
     desktopDefault: createDefaultCarouselDesktopConfig(),
     mobileDefault: createDefaultCarouselMobileConfig(),
     sameForAll: globalAppearance,
     legacyDesktop: {
-      gap: safeNumber(item.carousel_gap, defaults.carousel_gap, 0),
-      card_shape: normalizeWidgetShape(
+      spacing: safeNumber(item.carousel_gap, defaults.carousel_gap, 0),
+      shape: normalizeWidgetShape(
         item.carousel_card_shape,
         defaults.carousel_card_shape as WidgetShape,
       ),
@@ -898,23 +856,13 @@ const normalizeAppearance = (
     mobileDefault: createDefaultGridMobileConfig(),
     sameForAll: globalAppearance,
     legacyDesktop: {
-      columns: limitNumber(
-        anyItem.desktop_columns,
-        defaults.desktop_columns,
-        1,
-        4,
-      ),
+      columns: limitNumber(anyItem.desktop_columns, defaults.desktop_columns, 1, 4),
       rows: safeNumber(anyItem.desktop_rows, defaults.desktop_rows, 1),
       gap: safeNumber(anyItem.desktop_gap, defaults.desktop_gap, 0),
       card_shape: normalizeWidgetShape(anyItem.grid_card_shape, 'portrait'),
     },
     legacyMobile: {
-      columns: limitNumber(
-        anyItem.mobile_columns,
-        defaults.mobile_columns,
-        1,
-        4,
-      ),
+      columns: limitNumber(anyItem.mobile_columns, defaults.mobile_columns, 1, 4),
       rows: safeNumber(anyItem.mobile_rows, defaults.mobile_rows, 1),
       gap: safeNumber(anyItem.mobile_gap, defaults.mobile_gap, 0),
       card_shape: normalizeWidgetShape(anyItem.grid_card_shape, 'portrait'),
@@ -923,48 +871,32 @@ const normalizeAppearance = (
 
   gridConfig.desktop = normalizeGridConfigShape(gridConfig.desktop);
   gridConfig.mobile = normalizeGridConfigShape(gridConfig.mobile);
-
   gridConfig.desktop.columns = limitNumber(gridConfig.desktop.columns, 4, 1, 4);
   gridConfig.mobile.columns = limitNumber(gridConfig.mobile.columns, 2, 1, 4);
 
   const modalRaw = parseJsonIfNeeded<ModalConfig>(anyItem.modal_config);
-
   const modalConfig: ModalConfig = {
     ...createDefaultModalConfig(),
     ...modalRaw,
     show_title: item.show_title ?? modalRaw?.show_title ?? defaults.show_title,
     show_play_button:
-      item.show_play_button ??
-      modalRaw?.show_play_button ??
-      defaults.show_play_button,
+      item.show_play_button ?? modalRaw?.show_play_button ?? defaults.show_play_button,
     show_product:
       item.show_product ?? modalRaw?.show_product ?? defaults.show_product,
     show_like_button:
-      item.show_like_button ??
-      modalRaw?.show_like_button ??
-      defaults.show_like_button,
+      item.show_like_button ?? modalRaw?.show_like_button ?? defaults.show_like_button,
     show_comment_button:
-      item.show_comment_button ??
-      modalRaw?.show_comment_button ??
-      defaults.show_comment_button,
+      item.show_comment_button ?? modalRaw?.show_comment_button ?? defaults.show_comment_button,
     show_share_button:
-      item.show_share_button ??
-      modalRaw?.show_share_button ??
-      defaults.show_share_button,
+      item.show_share_button ?? modalRaw?.show_share_button ?? defaults.show_share_button,
     show_whatsapp_button:
-      item.show_whatsapp_button ??
-      modalRaw?.show_whatsapp_button ??
-      defaults.show_whatsapp_button,
+      item.show_whatsapp_button ?? modalRaw?.show_whatsapp_button ?? defaults.show_whatsapp_button,
     show_product_button:
-      item.show_product_button ??
-      modalRaw?.show_product_button ??
-      defaults.show_product_button,
+      item.show_product_button ?? modalRaw?.show_product_button ?? defaults.show_product_button,
     hide_stories:
       anyItem.hide_stories ?? modalRaw?.hide_stories ?? defaults.hide_stories,
     shadow_enabled:
-      item.shadow_enabled ??
-      modalRaw?.shadow_enabled ??
-      defaults.shadow_enabled,
+      item.shadow_enabled ?? modalRaw?.shadow_enabled ?? defaults.shadow_enabled,
   };
 
   const floatingDesktop = floatingConfig.desktop;
@@ -993,9 +925,10 @@ const normalizeAppearance = (
     widget_size: item.widget_size || defaults.widget_size,
     widget_animation: item.widget_animation || defaults.widget_animation,
 
+    // 🆕 CORRIGIDO: carouselDesktop.spacing
     carousel_card_shape: carouselDesktop.shape as any,
     carousel_visible_items: carouselDesktop.visible_items,
-    carousel_gap: carouselDesktop.gap,
+    carousel_gap: carouselDesktop.spacing,
 
     show_title: modalConfig.show_title,
     show_play_button: modalConfig.show_play_button,
@@ -1012,18 +945,9 @@ const normalizeAppearance = (
     useGlobalAppearance: globalAppearance,
     use_global_appearance: globalAppearance,
 
-    floating_config: {
-      ...floatingConfig,
-      same_for_all: globalAppearance,
-    },
-    carousel_config: {
-      ...carouselConfig,
-      same_for_all: globalAppearance,
-    },
-    grid_config: {
-      ...gridConfig,
-      same_for_all: globalAppearance,
-    },
+    floating_config: { ...floatingConfig, same_for_all: globalAppearance },
+    carousel_config: { ...carouselConfig, same_for_all: globalAppearance },
+    grid_config: { ...gridConfig, same_for_all: globalAppearance },
     modal_config: modalConfig,
 
     width: floatingDesktop.width ?? defaults.width,
@@ -1063,6 +987,8 @@ const normalizeAppearance = (
   } as ExtendedAppearance;
 };
 
+// ──────────────────── DB helpers ────────────────────
+
 const getAppearancesSafe = async (storeId: string): Promise<Appearance[]> => {
   try {
     return await db.appearances.getAll(storeId);
@@ -1081,7 +1007,6 @@ const deleteAppearanceSafe = async (id: string, storeId?: string) => {
       await (db.appearances as any).delete(id, storeId);
       return;
     }
-
     await db.appearances.delete(id);
   } catch {
     await db.appearances.delete(id);
@@ -1090,9 +1015,7 @@ const deleteAppearanceSafe = async (id: string, storeId?: string) => {
 
 const getGeneralSettingsSafe = async (storeId?: string): Promise<any[]> => {
   const collection = (db as any).generalSettings;
-
   if (!collection?.getAll) return [];
-
   try {
     if (storeId) return await collection.getAll(storeId);
     return await collection.getAll();
@@ -1107,9 +1030,7 @@ const getGeneralSettingsSafe = async (storeId?: string): Promise<any[]> => {
 
 const saveGeneralSettingsSafe = async (payload: any) => {
   const collection = (db as any).generalSettings;
-
   if (!collection?.save) return;
-
   await collection.save(payload);
 };
 
@@ -1120,14 +1041,12 @@ const syncDefaultAppearanceId = async (
   try {
     const settingsList = await getGeneralSettingsSafe(finalStoreId);
     const currentSettings = settingsList?.[0];
-
     if (!currentSettings) {
       console.warn(
         'Nenhuma configuração geral encontrada para sincronizar default_appearance_id.',
       );
       return;
     }
-
     await saveGeneralSettingsSafe({
       ...currentSettings,
       store_id: currentSettings.store_id || finalStoreId,
@@ -1140,6 +1059,7 @@ const syncDefaultAppearanceId = async (
   }
 };
 
+// 🆕 CORRIGIDO: sincroniza também carousel_config
 const syncGlobalConfig = (
   checked: boolean,
   prev: ExtendedAppearance,
@@ -1153,6 +1073,11 @@ const syncGlobalConfig = (
         same_for_all: true,
         desktop: prev.floating_config.desktop,
         mobile: prev.floating_config.desktop,
+      },
+      carousel_config: {
+        same_for_all: true,
+        desktop: prev.carousel_config.desktop,
+        mobile: prev.carousel_config.desktop,
       },
       grid_config: {
         same_for_all: true,
@@ -1176,6 +1101,10 @@ const syncGlobalConfig = (
       ...prev.floating_config,
       same_for_all: false,
     },
+    carousel_config: {
+      ...prev.carousel_config,
+      same_for_all: false,
+    },
     grid_config: {
       ...prev.grid_config,
       same_for_all: false,
@@ -1191,7 +1120,7 @@ const syncGlobalConfig = (
   };
 };
 
-// ──────────────────── componentes de UI — sem alterações ────────────────────
+// ──────────────────── componentes de UI ────────────────────
 
 const ToggleSwitch = ({
   label,
@@ -1212,12 +1141,8 @@ const ToggleSwitch = ({
         onChange={onChange}
         className="mt-0.5 h-5 w-5 rounded border-slate-300 text-[#0094EB] accent-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
       />
-
       <span>
-        <span className="block text-sm font-bold text-slate-800">
-          {label}
-        </span>
-
+        <span className="block text-sm font-bold text-slate-800">{label}</span>
         {description && (
           <span className="mt-1 block text-xs font-medium text-slate-500">
             {description}
@@ -1238,14 +1163,11 @@ const ColorInput = ({
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) => {
   const safeColor = isValidHexColor(value) ? value : '#000000';
-
   return (
     <div className="flex items-center gap-2">
       <div
         className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm"
-        style={{
-          backgroundColor: safeColor,
-        }}
+        style={{ backgroundColor: safeColor }}
       >
         <input
           type="color"
@@ -1255,13 +1177,7 @@ const ColorInput = ({
           className="h-8 w-8 cursor-pointer appearance-none rounded-full border-0 bg-transparent text-transparent"
         />
       </div>
-
-      <input
-        type="text"
-        value={value}
-        onChange={onChange}
-        className={inputClass}
-      />
+      <input type="text" value={value} onChange={onChange} className={inputClass} />
     </div>
   );
 };
@@ -1288,7 +1204,6 @@ const DeviceTabs = ({
         <Monitor size={15} />
         Desktop
       </button>
-
       <button
         type="button"
         onClick={() => onChange('mobile')}
@@ -1334,14 +1249,10 @@ const SectionCard = ({
     >
       <div>
         <h3 className="text-lg font-black text-slate-900">{title}</h3>
-
         {description && (
-          <p className="mt-1 text-sm font-medium text-slate-500">
-            {description}
-          </p>
+          <p className="mt-1 text-sm font-medium text-slate-500">{description}</p>
         )}
       </div>
-
       {children}
     </div>
   );
@@ -1361,7 +1272,6 @@ const FormField = ({
       <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500">
         {label}
       </label>
-
       {children}
     </div>
   );
@@ -1400,7 +1310,6 @@ const PreviewInfo = ({ label, value }: { label: string; value: string }) => (
     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
       {label}
     </p>
-
     <p className="mt-1 truncate font-black text-slate-700">{value}</p>
   </div>
 );
@@ -1417,7 +1326,7 @@ const getShapeLabel = (shape: WidgetShape) => {
   }
 };
 
-// ──────────────────── previews — sem alterações ────────────────────
+// ──────────────────── previews ────────────────────
 
 const FloatingPreview = ({
   floating,
@@ -1427,16 +1336,12 @@ const FloatingPreview = ({
   colors: PreviewColors;
 }) => {
   const isCircle = floating.shape === 'circle';
-
   const width = cssSize(floating.width, '80px');
   const height = cssSize(floating.height, '142px');
   const circleSize = cssSize(floating.border_radius || floating.width, '80px');
-
   const finalWidth = isCircle ? circleSize : width;
   const finalHeight = isCircle ? circleSize : height;
-
   const lateralSpacing = cssSize(floating.left_spacing, '20px');
-
   const positionStyle: React.CSSProperties = {};
 
   if (
@@ -1445,21 +1350,18 @@ const FloatingPreview = ({
   ) {
     positionStyle.bottom = cssSize(floating.bottom_spacing, '20px');
   }
-
   if (
     floating.position === 'fixed_top_right' ||
     floating.position === 'fixed_top_left'
   ) {
     positionStyle.top = cssSize(floating.top_spacing, '20px');
   }
-
   if (
     floating.position === 'fixed_bottom_left' ||
     floating.position === 'fixed_top_left'
   ) {
     positionStyle.left = lateralSpacing;
   }
-
   if (
     floating.position === 'fixed_bottom_right' ||
     floating.position === 'fixed_top_right'
@@ -1473,7 +1375,6 @@ const FloatingPreview = ({
         <div className="p-5">
           <div className="h-3 w-28 rounded-full bg-slate-200" />
           <div className="mt-2 h-3 w-48 rounded-full bg-slate-100" />
-
           <div className="mt-8 grid grid-cols-2 gap-4">
             <div className="h-24 rounded-2xl bg-slate-100" />
             <div className="h-24 rounded-2xl bg-slate-100" />
@@ -1481,15 +1382,12 @@ const FloatingPreview = ({
             <div className="h-24 rounded-2xl bg-slate-100" />
           </div>
         </div>
-
         <div
           className="absolute flex items-center justify-center overflow-hidden bg-white shadow-xl"
           style={{
             width: finalWidth,
             height: finalHeight,
-            borderRadius: isCircle
-              ? '999px'
-              : cssSize(floating.border_radius, '12px'),
+            borderRadius: isCircle ? '999px' : cssSize(floating.border_radius, '12px'),
             border: cssBorder(floating.border_style, colors.floatingBorder),
             zIndex: safeNumber(floating.z_index, 5, 1),
             ...positionStyle,
@@ -1501,19 +1399,16 @@ const FloatingPreview = ({
               background: `linear-gradient(160deg, ${colors.primary}, ${colors.secondary})`,
             }}
           />
-
           {floating.show_play_icon && (
             <div className="relative z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
               <PlaySquare size={16} />
             </div>
           )}
-
           {floating.allow_close && (
             <div className="absolute right-1 top-1 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
               <X size={12} />
             </div>
           )}
-
           {floating.show_title && (
             <div className="absolute bottom-2 left-3 right-3 z-10">
               <p className="truncate text-[11px] font-black text-white drop-shadow">
@@ -1523,21 +1418,17 @@ const FloatingPreview = ({
           )}
         </div>
       </div>
-
       <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
         {isCircle ? (
           <PreviewInfo label="Raio/Tamanho" value={circleSize} />
         ) : (
           <PreviewInfo label="Tamanho" value={`${width} x ${height}`} />
         )}
-
         <PreviewInfo label="Forma" value={getShapeLabel(floating.shape)} />
-
         <PreviewInfo
           label="Raio da borda"
           value={isCircle ? 'Circular fixo' : cssSize(floating.border_radius)}
         />
-
         <PreviewInfo
           label="Borda"
           value={`${extractNumericCssSize(floating.border_style)} solid`}
@@ -1547,6 +1438,7 @@ const FloatingPreview = ({
   );
 };
 
+// 🆕 CORRIGIDO: usa carousel.spacing, carousel.border_style, carousel.width, carousel.shape
 const CarouselPreview = ({
   carousel,
   colors,
@@ -1556,11 +1448,7 @@ const CarouselPreview = ({
 }) => {
   const visibleItems = safeNumber(carousel.visible_items, 1, 1);
   const shape = normalizeWidgetShape(carousel.shape, 'portrait');
-
-  const items = Array.from({
-    length: Math.max(1, Math.min(visibleItems, 8)),
-  });
-
+  const items = Array.from({ length: Math.max(1, Math.min(visibleItems, 8)) });
   const isCircle = shape === 'circle';
   const isSquare = shape === 'square';
   const isPortrait = shape === 'portrait';
@@ -1571,16 +1459,12 @@ const CarouselPreview = ({
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h4 className="text-sm font-black text-slate-900">Stories</h4>
-            <p className="text-xs font-medium text-slate-500">
-              Carrossel de vídeos
-            </p>
+            <p className="text-xs font-medium text-slate-500">Carrossel de vídeos</p>
           </div>
-
           <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black text-slate-500">
             {visibleItems} itens
           </span>
         </div>
-
         <div
           className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-3"
           style={{
@@ -1593,9 +1477,7 @@ const CarouselPreview = ({
               'flex overflow-hidden',
               carousel.auto_center && 'justify-center',
             )}
-            style={{
-              gap: `${safeNumber(carousel.gap, 0, 0)}px`,
-            }}
+            style={{ gap: `${safeNumber(carousel.spacing, 0, 0)}px` }}
           >
             {items.map((_, index) => (
               <div
@@ -1609,7 +1491,7 @@ const CarouselPreview = ({
                 style={{
                   aspectRatio: isPortrait ? '9 / 16' : '1 / 1',
                   borderColor: carousel.border_color || colors.primary,
-                  borderWidth: `${safeNumber(carousel.border_width, 2, 0)}px`,
+                  borderWidth: `${safeNumber(carousel.border_style, 2, 0)}px`,
                   borderStyle: 'solid',
                   borderRadius: isCircle
                     ? '999px'
@@ -1628,7 +1510,6 @@ const CarouselPreview = ({
                     </div>
                   </div>
                 )}
-
                 {carousel.show_product && !isCircle && (
                   <div className="absolute bottom-2 left-2 right-2 rounded-lg bg-white/90 px-2 py-1 text-center text-[10px] font-black text-slate-700">
                     Produto
@@ -1639,25 +1520,19 @@ const CarouselPreview = ({
           </div>
         </div>
       </div>
-
       <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
         <PreviewInfo label="Forma" value={getShapeLabel(shape)} />
-        <PreviewInfo label="Espaçamento" value={`${carousel.gap}px`} />
+        <PreviewInfo label="Espaçamento" value={`${carousel.spacing}px`} />
         <PreviewInfo label="Itens" value={`${visibleItems}`} />
         <PreviewInfo label="Margem topo" value={cssSize(carousel.margin_top)} />
-        <PreviewInfo
-          label="Margem inferior"
-          value={cssSize(carousel.margin_bottom)}
-        />
-        <PreviewInfo
-          label="Centralizar"
-          value={carousel.auto_center ? 'Sim' : 'Não'}
-        />
+        <PreviewInfo label="Margem inferior" value={cssSize(carousel.margin_bottom)} />
+        <PreviewInfo label="Centralizar" value={carousel.auto_center ? 'Sim' : 'Não'} />
       </div>
     </div>
   );
 };
 
+// GridPreview — sem alterações necessárias (GridConfig não mudou)
 const GridPreview = ({
   grid,
   colors,
@@ -1667,13 +1542,9 @@ const GridPreview = ({
 }) => {
   const columns = limitNumber(grid.columns, 4, 1, 4);
   const rows = safeNumber(grid.rows, 1, 1);
-  const shape = normalizeWidgetShape(grid.shape, 'portrait');
+  const shape = normalizeWidgetShape(grid.card_shape, 'portrait');
   const totalItems = Math.max(1, Math.min(columns * rows, 20));
-
-  const items = Array.from({
-    length: totalItems,
-  });
-
+  const items = Array.from({ length: totalItems });
   const isCircle = shape === 'circle';
   const isSquare = shape === 'square';
   const isPortrait = shape === 'portrait';
@@ -1684,21 +1555,15 @@ const GridPreview = ({
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h4 className="text-sm font-black text-slate-900">Grade</h4>
-            <p className="text-xs font-medium text-slate-500">
-              Máximo de 4 colunas
-            </p>
+            <p className="text-xs font-medium text-slate-500">Máximo de 4 colunas</p>
           </div>
-
           <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black text-slate-500">
             {columns} x {rows}
           </span>
         </div>
-
         <div
           className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 p-3"
-          style={{
-            padding: `${Math.max(8, safeNumber(grid.gap, 0, 0))}px`,
-          }}
+          style={{ padding: `${Math.max(8, safeNumber(grid.gap, 0, 0))}px` }}
         >
           <div
             className="grid"
@@ -1708,10 +1573,7 @@ const GridPreview = ({
             }}
           >
             {items.map((_, index) => (
-              <div
-                key={index}
-                className="flex min-w-0 justify-center"
-              >
+              <div key={index} className="flex min-w-0 justify-center">
                 <div
                   className={cn(
                     'relative overflow-hidden border shadow-sm',
@@ -1726,9 +1588,7 @@ const GridPreview = ({
                     borderColor: grid.border_color || colors.primary,
                     borderWidth: `${safeNumber(grid.border_width, 2, 0)}px`,
                     borderStyle: 'solid',
-                    borderRadius: isCircle
-                      ? '999px'
-                      : cssSize(grid.border_radius, '12px'),
+                    borderRadius: isCircle ? '999px' : cssSize(grid.border_radius, '12px'),
                     objectFit: (grid.object_fit || 'cover') as any,
                     background:
                       index % 2 === 0
@@ -1737,13 +1597,11 @@ const GridPreview = ({
                   }}
                 >
                   <div className="absolute inset-0 bg-white/10" />
-
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
                       <PlaySquare size={16} />
                     </div>
                   </div>
-
                   {!isCircle && (
                     <div className="absolute bottom-2 left-2 right-2 rounded-lg bg-white/90 px-2 py-1 text-center text-[10px] font-black text-slate-700">
                       Vídeo
@@ -1755,7 +1613,6 @@ const GridPreview = ({
           </div>
         </div>
       </div>
-
       <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
         <PreviewInfo label="Forma" value={getShapeLabel(shape)} />
         <PreviewInfo label="Colunas" value={`${columns}`} />
@@ -1793,14 +1650,12 @@ const ModalPreview = ({
           }}
         >
           <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/10 to-black/75" />
-
           <div className="absolute left-4 right-4 top-4 z-20 flex items-start justify-between gap-3">
             {formData.modal_config.show_title && (
               <h4 className="line-clamp-2 text-lg font-black text-white drop-shadow">
                 Blusa vermelha
               </h4>
             )}
-
             <div className="flex shrink-0 items-center gap-2">
               <button
                 type="button"
@@ -1810,21 +1665,18 @@ const ModalPreview = ({
               </button>
             </div>
           </div>
-
           <button
             type="button"
             className="absolute left-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/80 bg-black/10 text-2xl text-white backdrop-blur"
           >
             ‹
           </button>
-
           <button
             type="button"
             className="absolute right-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/80 bg-black/10 text-2xl text-white backdrop-blur"
           >
             ›
           </button>
-
           <div className="absolute right-4 top-[58%] z-20 flex -translate-y-1/2 flex-col items-center gap-3">
             {formData.modal_config.show_like_button && (
               <button
@@ -1834,7 +1686,6 @@ const ModalPreview = ({
                 <Heart size={24} />
               </button>
             )}
-
             {formData.modal_config.show_comment_button && (
               <button
                 type="button"
@@ -1843,7 +1694,6 @@ const ModalPreview = ({
                 <MessageCircle size={24} />
               </button>
             )}
-
             {formData.modal_config.show_share_button && (
               <button
                 type="button"
@@ -1852,7 +1702,6 @@ const ModalPreview = ({
                 <Share2 size={24} />
               </button>
             )}
-
             {formData.modal_config.show_whatsapp_button && (
               <button
                 type="button"
@@ -1862,7 +1711,6 @@ const ModalPreview = ({
               </button>
             )}
           </div>
-
           {formData.modal_config.show_play_button && (
             <div className="absolute left-1/2 top-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur">
@@ -1870,7 +1718,6 @@ const ModalPreview = ({
               </div>
             </div>
           )}
-
           {formData.modal_config.show_product && (
             <div className="absolute bottom-4 left-4 right-4 z-30 rounded-2xl border border-slate-900/10 bg-white/95 p-3 text-slate-900 shadow-xl backdrop-blur">
               <div className="flex items-center gap-3">
@@ -1880,16 +1727,9 @@ const ModalPreview = ({
                     background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
                   }}
                 />
-
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-black">
-                    Blusa vermelha
-                  </p>
-
-                  <p className="text-sm font-black text-slate-700">
-                    R$ 259,90
-                  </p>
-
+                  <p className="truncate text-sm font-black">Blusa vermelha</p>
+                  <p className="text-sm font-black text-slate-700">R$ 259,90</p>
                   {formData.modal_config.show_product_button && (
                     <button
                       type="button"
@@ -1932,15 +1772,11 @@ const VisualPreview = ({
             className="h-12 w-12 rounded-2xl"
             style={{ backgroundColor: colors.primary }}
           />
-
           <div>
             <h4 className="font-black">Preview visual</h4>
-            <p className="text-xs font-medium opacity-70">
-              Fonte, cores e botões
-            </p>
+            <p className="text-xs font-medium opacity-70">Fonte, cores e botões</p>
           </div>
         </div>
-
         <div
           className="mb-5 rounded-2xl p-4"
           style={{
@@ -1952,7 +1788,6 @@ const VisualPreview = ({
             Exemplo de texto usando a identidade visual configurada.
           </p>
         </div>
-
         <button
           type="button"
           className="w-full rounded-2xl px-4 py-3 text-sm font-black text-white"
@@ -1961,7 +1796,6 @@ const VisualPreview = ({
           Botão principal
         </button>
       </div>
-
       <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
         <PreviewInfo label="Principal" value={colors.primary} />
         <PreviewInfo label="Secundária" value={colors.secondary} />
@@ -1990,13 +1824,11 @@ const PreviewCard = ({
     floatingDevice,
     formData.useGlobalAppearance,
   );
-
   const carousel = getActiveResponsiveConfig(
     formData.carousel_config,
     carouselDevice,
     formData.useGlobalAppearance,
   );
-
   const grid = getActiveResponsiveConfig(
     formData.grid_config,
     gridDevice,
@@ -2004,24 +1836,12 @@ const PreviewCard = ({
   );
 
   const colors: PreviewColors = {
-    primary: isValidHexColor(formData.primary_color)
-      ? formData.primary_color
-      : '#0094EB',
-    secondary: isValidHexColor(formData.secondary_color)
-      ? formData.secondary_color
-      : '#0094EB',
-    text: isValidHexColor(formData.text_color)
-      ? formData.text_color
-      : '#0F172A',
-    background: isValidHexColor(formData.background_color)
-      ? formData.background_color
-      : '#FFFFFF',
-    button: isValidHexColor(formData.button_color)
-      ? formData.button_color
-      : '#0094EB',
-    floatingBorder: isValidHexColor(floating.border_color)
-      ? floating.border_color
-      : '#0094EB',
+    primary: isValidHexColor(formData.primary_color) ? formData.primary_color : '#0094EB',
+    secondary: isValidHexColor(formData.secondary_color) ? formData.secondary_color : '#0094EB',
+    text: isValidHexColor(formData.text_color) ? formData.text_color : '#0F172A',
+    background: isValidHexColor(formData.background_color) ? formData.background_color : '#FFFFFF',
+    button: isValidHexColor(formData.button_color) ? formData.button_color : '#0094EB',
+    floatingBorder: isValidHexColor(floating.border_color) ? floating.border_color : '#0094EB',
   };
 
   const titleByTab: Record<ModalTab, string> = {
@@ -2049,32 +1869,19 @@ const PreviewCard = ({
           <h3 className="text-base font-black text-slate-900">
             {titleByTab[activeTab]}
           </h3>
-
           <p className="mt-1 text-xs font-medium text-slate-500">
             {descriptionByTab[activeTab]}
           </p>
         </div>
-
         <span
           className="h-8 w-8 rounded-full border border-slate-200 shadow-sm"
           style={{ backgroundColor: colors.primary }}
         />
       </div>
-
-      {activeTab === 'floating' && (
-        <FloatingPreview floating={floating} colors={colors} />
-      )}
-
-      {activeTab === 'carousel' && (
-        <CarouselPreview carousel={carousel} colors={colors} />
-      )}
-
+      {activeTab === 'floating' && <FloatingPreview floating={floating} colors={colors} />}
+      {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} />}
       {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} />}
-
-      {activeTab === 'modal' && (
-        <ModalPreview formData={formData} colors={colors} />
-      )}
-
+      {activeTab === 'modal' && <ModalPreview formData={formData} colors={colors} />}
       {(activeTab === 'basic' || activeTab === 'visual') && (
         <VisualPreview formData={formData} colors={colors} />
       )}
@@ -2088,7 +1895,6 @@ const PreviewCard = ({
 
 const AppearancePage = () => {
   const tenantContext = useTenant() as any;
-
   const storeId =
     tenantContext?.storeId ||
     tenantContext?.store?.id ||
@@ -2096,7 +1902,6 @@ const AppearancePage = () => {
     tenantContext?.tenant?.id ||
     tenantContext?.tenantId ||
     '';
-
   const tenantLoading =
     tenantContext?.loading ||
     tenantContext?.isLoading ||
@@ -2114,10 +1919,8 @@ const AppearancePage = () => {
     createDefaultFormData(storeId),
   );
 
-  const [floatingDevice, setFloatingDevice] =
-    useState<DeviceType>('desktop');
-  const [carouselDevice, setCarouselDevice] =
-    useState<DeviceType>('desktop');
+  const [floatingDevice, setFloatingDevice] = useState<DeviceType>('desktop');
+  const [carouselDevice, setCarouselDevice] = useState<DeviceType>('desktop');
   const [gridDevice, setGridDevice] = useState<DeviceType>('desktop');
   const [activeTab, setActiveTab] = useState<ModalTab>('basic');
 
@@ -2130,17 +1933,12 @@ const AppearancePage = () => {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-
-      const finalStoreId =
-        resolvedStoreId || (await resolveStoreId(storeId));
-
+      const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
       if (!finalStoreId) {
         setAppearances([]);
         return;
       }
-
       setResolvedStoreId(finalStoreId);
-
       const styles = await getAppearancesSafe(finalStoreId);
       setAppearances(styles);
     } catch (error) {
@@ -2162,11 +1960,7 @@ const AppearancePage = () => {
     setFormData(prev => {
       const device = prev.useGlobalAppearance ? 'desktop' : floatingDevice;
       const current = prev.floating_config[device];
-
-      let updatedDeviceConfig: FloatingConfig = {
-        ...current,
-        ...patch,
-      };
+      let updatedDeviceConfig: FloatingConfig = { ...current, ...patch };
 
       if (patch.position) {
         updatedDeviceConfig = {
@@ -2175,34 +1969,20 @@ const AppearancePage = () => {
           floating_position: positionToFloatingPosition(patch.position),
         };
       }
-
       if (patch.floating_position) {
         updatedDeviceConfig = {
           ...updatedDeviceConfig,
-          floating_position: normalizeFloatingPosition(
-            patch.floating_position,
-          ),
+          floating_position: normalizeFloatingPosition(patch.floating_position),
           position: floatingPositionToPosition(patch.floating_position),
         };
       }
-
       updatedDeviceConfig = normalizeFloatingShapeValues(updatedDeviceConfig);
 
-      const nextConfig: ResponsiveConfig<FloatingConfig> =
-        prev.useGlobalAppearance
-          ? {
-              same_for_all: true,
-              desktop: updatedDeviceConfig,
-              mobile: updatedDeviceConfig,
-            }
-          : {
-              ...prev.floating_config,
-              same_for_all: false,
-              [device]: updatedDeviceConfig,
-            };
+      const nextConfig: ResponsiveConfig<FloatingConfig> = prev.useGlobalAppearance
+        ? { same_for_all: true, desktop: updatedDeviceConfig, mobile: updatedDeviceConfig }
+        : { ...prev.floating_config, same_for_all: false, [device]: updatedDeviceConfig };
 
       const desktop = nextConfig.desktop;
-
       return {
         ...prev,
         floating_config: nextConfig,
@@ -2226,6 +2006,7 @@ const AppearancePage = () => {
     });
   };
 
+  // 🆕 CORRIGIDO: usa spacing, shape, width, border_style
   const updateCarouselConfig = (patch: Partial<CarouselConfig>) => {
     setFormData(prev => {
       const device = prev.useGlobalAppearance ? 'desktop' : carouselDevice;
@@ -2234,7 +2015,7 @@ const AppearancePage = () => {
       const updatedDeviceConfig: CarouselConfig = normalizeCarouselConfigShape({
         ...current,
         ...patch,
-        gap: safeNumber(patch.gap ?? current.gap, current.gap || 0, 0),
+        spacing: safeNumber(patch.spacing ?? current.spacing, current.spacing || 0, 0),
         visible_items: safeNumber(
           patch.visible_items ?? current.visible_items,
           current.visible_items || 1,
@@ -2243,25 +2024,15 @@ const AppearancePage = () => {
         auto_center: patch.auto_center ?? current.auto_center ?? false,
       });
 
-      const nextConfig: ResponsiveConfig<CarouselConfig> =
-        prev.useGlobalAppearance
-          ? {
-              same_for_all: true,
-              desktop: updatedDeviceConfig,
-              mobile: updatedDeviceConfig,
-            }
-          : {
-              ...prev.carousel_config,
-              same_for_all: false,
-              [device]: updatedDeviceConfig,
-            };
+      const nextConfig: ResponsiveConfig<CarouselConfig> = prev.useGlobalAppearance
+        ? { same_for_all: true, desktop: updatedDeviceConfig, mobile: updatedDeviceConfig }
+        : { ...prev.carousel_config, same_for_all: false, [device]: updatedDeviceConfig };
 
       const desktop = nextConfig.desktop;
-
       return {
         ...prev,
         carousel_config: nextConfig,
-        carousel_gap: desktop.gap,
+        carousel_gap: desktop.spacing,
         carousel_card_shape: desktop.shape as any,
         carousel_view_mode: desktop.view_mode,
         margin_top: desktop.margin_top,
@@ -2282,28 +2053,14 @@ const AppearancePage = () => {
       const updatedDeviceConfig: GridConfig = normalizeGridConfigShape({
         ...current,
         ...patch,
-        columns: limitNumber(
-          patch.columns ?? current.columns,
-          current.columns || 1,
-          1,
-          4,
-        ),
+        columns: limitNumber(patch.columns ?? current.columns, current.columns || 1, 1, 4),
         rows: safeNumber(patch.rows ?? current.rows, current.rows || 1, 1),
         gap: safeNumber(patch.gap ?? current.gap, current.gap || 0, 0),
       });
 
-      const nextConfig: ResponsiveConfig<GridConfig> =
-        prev.useGlobalAppearance
-          ? {
-              same_for_all: true,
-              desktop: updatedDeviceConfig,
-              mobile: updatedDeviceConfig,
-            }
-          : {
-              ...prev.grid_config,
-              same_for_all: false,
-              [device]: updatedDeviceConfig,
-            };
+      const nextConfig: ResponsiveConfig<GridConfig> = prev.useGlobalAppearance
+        ? { same_for_all: true, desktop: updatedDeviceConfig, mobile: updatedDeviceConfig }
+        : { ...prev.grid_config, same_for_all: false, [device]: updatedDeviceConfig };
 
       return {
         ...prev,
@@ -2320,11 +2077,7 @@ const AppearancePage = () => {
 
   const updateModalConfig = (patch: Partial<ModalConfig>) => {
     setFormData(prev => {
-      const modalConfig: ModalConfig = {
-        ...prev.modal_config,
-        ...patch,
-      };
-
+      const modalConfig: ModalConfig = { ...prev.modal_config, ...patch };
       return {
         ...prev,
         modal_config: modalConfig,
@@ -2345,14 +2098,11 @@ const AppearancePage = () => {
   const handleSetDefault = async (id: string) => {
     try {
       const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
-
       if (!finalStoreId) {
         showError('Não foi possível identificar a loja atual.');
         return;
       }
-
       const now = new Date().toISOString();
-
       await Promise.all(
         appearances.map(style =>
           db.appearances.save({
@@ -2363,11 +2113,8 @@ const AppearancePage = () => {
           } as Appearance),
         ),
       );
-
       await syncDefaultAppearanceId(finalStoreId, id);
-
       window.dispatchEvent(new Event('storage'));
-
       showSuccess('Estilo padrão atualizado!');
       await loadData();
     } catch (error) {
@@ -2377,55 +2124,34 @@ const AppearancePage = () => {
   };
 
   const handleDeleteClick = (app: Appearance) => {
-    setDeleteModal({
-      isOpen: true,
-      id: app.id,
-      name: app.name,
-    });
+    setDeleteModal({ isOpen: true, id: app.id, name: app.name });
   };
 
   const handleConfirmDelete = async () => {
     try {
       const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
-
-      const deletedAppearance = appearances.find(
-        app => app.id === deleteModal.id,
-      );
-
+      const deletedAppearance = appearances.find(app => app.id === deleteModal.id);
       await deleteAppearanceSafe(deleteModal.id, finalStoreId);
-
-      const remainingAppearances = appearances.filter(
-        app => app.id !== deleteModal.id,
-      );
+      const remainingAppearances = appearances.filter(app => app.id !== deleteModal.id);
 
       if (deletedAppearance?.is_default) {
         const nextDefault = remainingAppearances[0];
-
         if (nextDefault) {
           const now = new Date().toISOString();
-
           await db.appearances.save({
             ...nextDefault,
             store_id: finalStoreId,
             is_default: true,
             updated_at: now,
           } as Appearance);
-
           await syncDefaultAppearanceId(finalStoreId, nextDefault.id);
         } else if (finalStoreId) {
           await syncDefaultAppearanceId(finalStoreId, null);
         }
       }
-
       window.dispatchEvent(new Event('storage'));
-
       showSuccess('Estilo excluído com sucesso.');
-
-      setDeleteModal(prev => ({
-        ...prev,
-        isOpen: false,
-      }));
-
+      setDeleteModal(prev => ({ ...prev, isOpen: false }));
       await loadData();
     } catch (error) {
       console.error('Erro ao excluir estilo:', error);
@@ -2435,7 +2161,6 @@ const AppearancePage = () => {
 
   const handleNewStyle = async () => {
     const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
-
     setEditingStyle(null);
     setFormData(createDefaultFormData(finalStoreId));
     setFloatingDevice('desktop');
@@ -2457,14 +2182,11 @@ const AppearancePage = () => {
 
   const handleSaveStyle = async () => {
     if (saving) return;
-
     const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
-
     if (!finalStoreId) {
       showError('Não foi possível identificar a loja atual.');
       return;
     }
-
     if (!formData.name.trim()) {
       showError('Nome do estilo é obrigatório.');
       setActiveTab('basic');
@@ -2473,7 +2195,6 @@ const AppearancePage = () => {
 
     try {
       setSaving(true);
-
       const now = new Date().toISOString();
       const id = editingStyle?.id || formData.id || generateUuid();
 
@@ -2498,15 +2219,8 @@ const AppearancePage = () => {
         same_for_all: formData.useGlobalAppearance,
       };
 
-      gridConfig.desktop = {
-        ...gridConfig.desktop,
-        columns: limitNumber(gridConfig.desktop.columns, 4, 1, 4),
-      };
-
-      gridConfig.mobile = {
-        ...gridConfig.mobile,
-        columns: limitNumber(gridConfig.mobile.columns, 2, 1, 4),
-      };
+      gridConfig.desktop = { ...gridConfig.desktop, columns: limitNumber(gridConfig.desktop.columns, 4, 1, 4) };
+      gridConfig.mobile = { ...gridConfig.mobile, columns: limitNumber(gridConfig.mobile.columns, 2, 1, 4) };
 
       if (formData.useGlobalAppearance) {
         floatingConfig.mobile = floatingConfig.desktop;
@@ -2514,76 +2228,65 @@ const AppearancePage = () => {
         gridConfig.mobile = gridConfig.desktop;
       }
 
-      floatingConfig.desktop = normalizeFloatingConfigForSave(
-        floatingConfig.desktop,
-      );
-
-      floatingConfig.mobile = normalizeFloatingConfigForSave(
-        floatingConfig.mobile,
-      );
-
+      floatingConfig.desktop = normalizeFloatingConfigForSave(floatingConfig.desktop);
+      floatingConfig.mobile = normalizeFloatingConfigForSave(floatingConfig.mobile);
       if (formData.useGlobalAppearance) {
         floatingConfig.mobile = floatingConfig.desktop;
       }
-
-      const normalizedPosition = floatingConfig.desktop.position;
-      const normalizedFloatingPosition =
-        floatingConfig.desktop.floating_position;
 
       const floatingDesktop = floatingConfig.desktop;
       const carouselDesktop = carouselConfig.desktop;
       const gridDesktop = gridConfig.desktop;
       const gridMobile = gridConfig.mobile;
       const modalConfig = formData.modal_config;
-
       const shouldBeDefault = formData.is_default || appearances.length === 0;
 
-      // ── Payload para IndexedDB (db.appearances) ──
+      // 🆕 CORRIGIDO: carouselDesktop.spacing no payload
       const stylePayload = {
-  id,
-  store_id: finalStoreId,
-  name: formData.name.trim(),
-  is_default: shouldBeDefault,
+        id,
+        store_id: finalStoreId,
+        name: formData.name.trim(),
+        is_default: shouldBeDefault,
 
-  primary_color: formData.primary_color,
-  secondary_color: formData.secondary_color,
-  text_color: formData.text_color,
-  background_color: formData.background_color,
-  button_color: formData.button_color,
+        primary_color: formData.primary_color,
+        secondary_color: formData.secondary_color,
+        text_color: formData.text_color,
+        background_color: formData.background_color,
+        button_color: formData.button_color,
 
-  border_radius: activeFloatingConfig.border_radius,       // ← estava faltando
-  shadow_enabled: modalConfig.shadow_enabled,
-  font_family: formData.font_family,
+        border_radius: floatingDesktop.border_radius,
+        shadow_enabled: modalConfig.shadow_enabled,
+        font_family: formData.font_family,
 
-  widget_shape: floatingDesktop.shape,
-  widget_size: formData.widget_size || 'medium',
-  widget_animation: formData.widget_animation || 'none',
+        widget_shape: floatingDesktop.shape,
+        widget_size: formData.widget_size || 'medium',
+        widget_animation: formData.widget_animation || 'none',
 
-  carousel_card_shape: carouselDesktop.shape,
-  carousel_visible_items: carouselDesktop.visible_items,
-  carousel_gap: carouselDesktop.gap,
+        carousel_card_shape: carouselDesktop.shape,
+        carousel_visible_items: carouselDesktop.visible_items,
+        carousel_gap: carouselDesktop.spacing,
 
-  show_title: modalConfig.show_title,
-  show_play_button: modalConfig.show_play_button,
-  show_product: modalConfig.show_product,
-  show_like_button: modalConfig.show_like_button,
-  show_comment_button: modalConfig.show_comment_button,
-  show_share_button: modalConfig.show_share_button,
-  show_whatsapp_button: modalConfig.show_whatsapp_button,
-  show_product_button: modalConfig.show_product_button,
+        show_title: modalConfig.show_title,
+        show_play_button: modalConfig.show_play_button,
+        show_product: modalConfig.show_product,
+        show_like_button: modalConfig.show_like_button,
+        show_comment_button: modalConfig.show_comment_button,
+        show_share_button: modalConfig.show_share_button,
+        show_whatsapp_button: modalConfig.show_whatsapp_button,
+        show_product_button: modalConfig.show_product_button,
 
-  use_global_appearance: formData.useGlobalAppearance,
+        use_global_appearance: formData.useGlobalAppearance,
 
-  floating_config: floatingConfig,    // ← JSONB com TUDO do flutuante
-  carousel_config: carouselConfig,    // ← JSONB com TUDO do carrossel
-  grid_config: gridConfig,            // ← JSONB com TUDO da grade
-  modal_config: modalConfig,          // ← JSONB com TUDO do modal
+        floating_config: floatingConfig,
+        carousel_config: carouselConfig,
+        grid_config: gridConfig,
+        modal_config: modalConfig,
 
-  url: formData.url || null,
+        url: formData.url || null,
 
-  created_at: formData.created_at || editingStyle?.created_at || now,
-  updated_at: now,
-};
+        created_at: formData.created_at || editingStyle?.created_at || now,
+        updated_at: now,
+      };
 
       if (stylePayload.is_default) {
         await Promise.all(
@@ -2602,25 +2305,19 @@ const AppearancePage = () => {
 
       await db.appearances.save(stylePayload as unknown as Appearance);
 
-      // ════════════════════════════════════════════════════════════
-      // Sincronizar store_settings com o appearance_id padrão
-      // ════════════════════════════════════════════════════════════
       if (supabase) {
         const { error: storeSettingsError } = await supabase
           .from('store_settings')
-          .upsert({
-            store_id: finalStoreId,
-            default_appearance_id: shouldBeDefault ? id : null,
-            updated_at: now,
-          }, {
-            onConflict: 'store_id',
-          });
-
-        if (storeSettingsError) {
-          console.error(
-            'Erro ao sincronizar store_settings:',
-            storeSettingsError,
+          .upsert(
+            {
+              store_id: finalStoreId,
+              default_appearance_id: shouldBeDefault ? id : null,
+              updated_at: now,
+            },
+            { onConflict: 'store_id' },
           );
+        if (storeSettingsError) {
+          console.error('Erro ao sincronizar store_settings:', storeSettingsError);
         }
       }
 
@@ -2629,13 +2326,7 @@ const AppearancePage = () => {
       }
 
       window.dispatchEvent(new Event('storage'));
-
-      showSuccess(
-        editingStyle
-          ? 'Estilo atualizado com sucesso!'
-          : 'Estilo criado com sucesso!',
-      );
-
+      showSuccess(editingStyle ? 'Estilo atualizado com sucesso!' : 'Estilo criado com sucesso!');
       setShowModal(false);
       setEditingStyle(null);
       await loadData();
@@ -2649,38 +2340,25 @@ const AppearancePage = () => {
 
   const handleCancel = () => {
     if (saving) return;
-
     setShowModal(false);
     setEditingStyle(null);
   };
 
   const activeFloatingConfig = useMemo(
     () =>
-      getActiveResponsiveConfig(
-        formData.floating_config,
-        floatingDevice,
-        formData.useGlobalAppearance,
-      ),
+      getActiveResponsiveConfig(formData.floating_config, floatingDevice, formData.useGlobalAppearance),
     [formData.floating_config, floatingDevice, formData.useGlobalAppearance],
   );
 
   const activeCarouselConfig = useMemo(
     () =>
-      getActiveResponsiveConfig(
-        formData.carousel_config,
-        carouselDevice,
-        formData.useGlobalAppearance,
-      ),
+      getActiveResponsiveConfig(formData.carousel_config, carouselDevice, formData.useGlobalAppearance),
     [formData.carousel_config, carouselDevice, formData.useGlobalAppearance],
   );
 
   const activeGridConfig = useMemo(
     () =>
-      getActiveResponsiveConfig(
-        formData.grid_config,
-        gridDevice,
-        formData.useGlobalAppearance,
-      ),
+      getActiveResponsiveConfig(formData.grid_config, gridDevice, formData.useGlobalAppearance),
     [formData.grid_config, gridDevice, formData.useGlobalAppearance],
   );
 
@@ -2694,18 +2372,14 @@ const AppearancePage = () => {
 
   return (
     <div className="animate-fade-in space-y-8 pb-20">
+      {/* Header */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900">
-            Aparência
-          </h1>
-
+          <h1 className="text-3xl font-black tracking-tight text-slate-900">Aparência</h1>
           <p className="mt-1 font-medium text-slate-500">
-            Customize a identidade visual, widgets, carrosséis, grades e player
-            da sua loja.
+            Customize a identidade visual, widgets, carrosséis, grades e player da sua loja.
           </p>
         </div>
-
         <button
           type="button"
           onClick={handleNewStyle}
@@ -2716,15 +2390,12 @@ const AppearancePage = () => {
         </button>
       </div>
 
+      {/* Tabela de estilos */}
       <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
         <div className="flex items-center gap-3 border-b border-slate-100 p-6">
           <Brush className="h-5 w-5 text-[#0094EB]" />
-
-          <h3 className="font-extrabold text-slate-800">
-            Estilos Cadastrados
-          </h3>
+          <h3 className="font-extrabold text-slate-800">Estilos Cadastrados</h3>
         </div>
-
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
             <thead>
@@ -2732,56 +2403,39 @@ const AppearancePage = () => {
                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
                   Template
                 </th>
-
                 <th className="px-6 py-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">
                   Cor Principal
                 </th>
-
                 <th className="px-6 py-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">
                   Status
                 </th>
-
                 <th className="px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-500">
                   Ações
                 </th>
               </tr>
             </thead>
-
             <tbody className="divide-y divide-slate-100">
               {appearances.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={4}
-                    className="px-6 py-10 text-center text-sm font-semibold text-slate-500"
-                  >
+                  <td colSpan={4} className="px-6 py-10 text-center text-sm font-semibold text-slate-500">
                     Nenhum estilo cadastrado ainda.
                   </td>
                 </tr>
               ) : (
                 appearances.map(app => (
-                  <tr
-                    key={app.id}
-                    className="transition-colors hover:bg-slate-50/50"
-                  >
+                  <tr key={app.id} className="transition-colors hover:bg-slate-50/50">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div
                           className="h-8 w-8 rounded-lg border border-slate-200 shadow-sm"
-                          style={{
-                            backgroundColor: app.primary_color || '#0094EB',
-                          }}
+                          style={{ backgroundColor: app.primary_color || '#0094EB' }}
                         />
-
-                        <span className="text-sm font-bold text-slate-800">
-                          {app.name}
-                        </span>
+                        <span className="text-sm font-bold text-slate-800">{app.name}</span>
                       </div>
                     </td>
-
                     <td className="px-6 py-4 text-center font-mono text-xs text-slate-500">
                       {app.primary_color}
                     </td>
-
                     <td className="px-6 py-4 text-center">
                       {app.is_default ? (
                         <span className="mx-auto flex w-fit items-center justify-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#0094EB]">
@@ -2798,7 +2452,6 @@ const AppearancePage = () => {
                         </button>
                       )}
                     </td>
-
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
                         <button
@@ -2809,7 +2462,6 @@ const AppearancePage = () => {
                         >
                           <Edit3 size={18} />
                         </button>
-
                         <button
                           type="button"
                           onClick={() => handleDeleteClick(app)}
@@ -2828,21 +2480,20 @@ const AppearancePage = () => {
         </div>
       </div>
 
+      {/* Modal de edição */}
       {showModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
           <div className="flex max-h-[92vh] w-full max-w-7xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
+            {/* Header do modal */}
             <div className="flex items-center justify-between border-b border-slate-100 bg-white p-6">
               <div>
                 <h2 className="text-xl font-black text-slate-900">
                   {editingStyle ? 'Editar Estilo' : 'Criar Novo Estilo'}
                 </h2>
-
                 <p className="mt-1 text-sm font-medium text-slate-500">
-                  Configure a identidade visual por área: global, flutuante,
-                  carrossel, grade e player.
+                  Configure a identidade visual por área: global, flutuante, carrossel, grade e player.
                 </p>
               </div>
-
               <button
                 type="button"
                 onClick={handleCancel}
@@ -2854,101 +2505,50 @@ const AppearancePage = () => {
               </button>
             </div>
 
+            {/* Tabs */}
             <div className="border-b border-slate-100 bg-slate-50/70 px-6 py-4">
               <div className="flex flex-wrap gap-2">
-                <ModalTabButton
-                  active={activeTab === 'basic'}
-                  icon={<Settings2 size={16} />}
-                  label="Básico"
-                  onClick={() => setActiveTab('basic')}
-                />
-
-                <ModalTabButton
-                  active={activeTab === 'visual'}
-                  icon={<Palette size={16} />}
-                  label="Identidade Visual"
-                  onClick={() => setActiveTab('visual')}
-                />
-
-                <ModalTabButton
-                  active={activeTab === 'floating'}
-                  icon={<PlaySquare size={16} />}
-                  label="Flutuante"
-                  onClick={() => setActiveTab('floating')}
-                />
-
-                <ModalTabButton
-                  active={activeTab === 'carousel'}
-                  icon={<Rows3 size={16} />}
-                  label="Carrossel"
-                  onClick={() => setActiveTab('carousel')}
-                />
-
-                <ModalTabButton
-                  active={activeTab === 'grid'}
-                  icon={<LayoutGrid size={16} />}
-                  label="Grade"
-                  onClick={() => setActiveTab('grid')}
-                />
-
-                <ModalTabButton
-                  active={activeTab === 'modal'}
-                  icon={<PlaySquare size={16} />}
-                  label="Player / Modal"
-                  onClick={() => setActiveTab('modal')}
-                />
+                <ModalTabButton active={activeTab === 'basic'} icon={<Settings2 size={16} />} label="Básico" onClick={() => setActiveTab('basic')} />
+                <ModalTabButton active={activeTab === 'visual'} icon={<Palette size={16} />} label="Identidade Visual" onClick={() => setActiveTab('visual')} />
+                <ModalTabButton active={activeTab === 'floating'} icon={<PlaySquare size={16} />} label="Flutuante" onClick={() => setActiveTab('floating')} />
+                <ModalTabButton active={activeTab === 'carousel'} icon={<Rows3 size={16} />} label="Carrossel" onClick={() => setActiveTab('carousel')} />
+                <ModalTabButton active={activeTab === 'grid'} icon={<LayoutGrid size={16} />} label="Grade" onClick={() => setActiveTab('grid')} />
+                <ModalTabButton active={activeTab === 'modal'} icon={<PlaySquare size={16} />} label="Player / Modal" onClick={() => setActiveTab('modal')} />
               </div>
             </div>
 
+            {/* Conteúdo */}
             <div className="flex-1 overflow-y-auto bg-slate-50/60 p-6">
               <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
                 <div className="space-y-6">
+                  {/* ── Básico ── */}
                   {activeTab === 'basic' && (
-                    <SectionCard
-                      title="Dados Básicos"
-                      description="Defina o nome do estilo e o comportamento global entre Desktop e Mobile."
-                    >
+                    <SectionCard title="Dados Básicos" description="Defina o nome do estilo e o comportamento global entre Desktop e Mobile.">
                       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <FormField label="Nome do Estilo">
                           <input
                             type="text"
                             value={formData.name}
-                            onChange={e =>
-                              setFormData({
-                                ...formData,
-                                name: e.target.value,
-                              })
-                            }
+                            onChange={e => setFormData({ ...formData, name: e.target.value })}
                             placeholder="Ex: Estilo padrão"
                             className={inputClass}
                           />
                         </FormField>
-
                         <FormField label="Definir como padrão">
                           <ToggleSwitch
                             label="Definir como padrão da loja"
                             checked={formData.is_default}
-                            onChange={e =>
-                              setFormData({
-                                ...formData,
-                                is_default: e.target.checked,
-                              })
-                            }
+                            onChange={e => setFormData({ ...formData, is_default: e.target.checked })}
                           />
                         </FormField>
                       </div>
-
                       <FormField label="Usar aparência em todos os dispositivos">
                         <ToggleSwitch
                           label="Usar aparência em todos os dispositivos"
                           checked={formData.useGlobalAppearance}
                           onChange={e => {
                             const checked = e.target.checked;
-
-                            setFormData(prev =>
-                              syncGlobalConfig(checked, prev),
-                            );
-
+                            setFormData(prev => syncGlobalConfig(checked, prev));
                             if (checked) {
                               setFloatingDevice('desktop');
                               setCarouselDevice('desktop');
@@ -2958,118 +2558,69 @@ const AppearancePage = () => {
                           description="Quando ativado, as configurações de Desktop serão aplicadas também no Mobile."
                         />
                       </FormField>
-
                     </SectionCard>
                   )}
 
+                  {/* ── Identidade Visual ── */}
                   {activeTab === 'visual' && (
-                    <SectionCard
-                      title="Identidade Visual"
-                      description="Configure as cores, fonte e elementos globais da experiência visual."
-                    >
+                    <SectionCard title="Identidade Visual" description="Configure as cores, fonte e elementos globais da experiência visual.">
                       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <FormField label="Cor principal">
                           <ColorInput
                             label="Cor principal"
                             value={formData.primary_color}
-                            onChange={e =>
-                              setFormData({
-                                ...formData,
-                                primary_color: e.target.value,
-                                secondary_color: e.target.value,
-                              })
-                            }
+                            onChange={e => setFormData({ ...formData, primary_color: e.target.value, secondary_color: e.target.value })}
                           />
                         </FormField>
-
                         <FormField label="Cor secundária">
                           <ColorInput
                             label="Cor secundária"
                             value={formData.secondary_color}
-                            onChange={e =>
-                              setFormData({
-                                ...formData,
-                                secondary_color: e.target.value,
-                              })
-                            }
+                            onChange={e => setFormData({ ...formData, secondary_color: e.target.value })}
                           />
                         </FormField>
-
                         <FormField label="Cor do texto">
                           <ColorInput
                             label="Cor do texto"
                             value={formData.text_color}
-                            onChange={e =>
-                              setFormData({
-                                ...formData,
-                                text_color: e.target.value,
-                              })
-                            }
+                            onChange={e => setFormData({ ...formData, text_color: e.target.value })}
                           />
                         </FormField>
-
                         <FormField label="Cor do fundo">
                           <ColorInput
                             label="Cor do fundo"
                             value={formData.background_color}
-                            onChange={e =>
-                              setFormData({
-                                ...formData,
-                                background_color: e.target.value,
-                              })
-                            }
+                            onChange={e => setFormData({ ...formData, background_color: e.target.value })}
                           />
                         </FormField>
-
                         <FormField label="Cor do botão">
                           <ColorInput
                             label="Cor do botão"
                             value={formData.button_color}
-                            onChange={e =>
-                              setFormData({
-                                ...formData,
-                                button_color: e.target.value,
-                              })
-                            }
+                            onChange={e => setFormData({ ...formData, button_color: e.target.value })}
                           />
                         </FormField>
-
                         <FormField label="Fonte de texto">
                           <select
                             value={formData.font_family}
-                            onChange={e =>
-                              setFormData({
-                                ...formData,
-                                font_family: e.target.value,
-                              })
-                            }
+                            onChange={e => setFormData({ ...formData, font_family: e.target.value })}
                             className={selectClass}
                           >
                             <option value="Inter, sans-serif">Inter</option>
                             <option value="Roboto, sans-serif">Roboto</option>
-                            <option value="Open Sans, sans-serif">
-                              Open Sans
-                            </option>
+                            <option value="Open Sans, sans-serif">Open Sans</option>
                             <option value="Lato, sans-serif">Lato</option>
-                            <option value="Montserrat, sans-serif">
-                              Montserrat
-                            </option>
+                            <option value="Montserrat, sans-serif">Montserrat</option>
                             <option value="Poppins, sans-serif">Poppins</option>
                           </select>
                         </FormField>
-
                         <FormField label="Tamanho do texto">
                           <input
                             type="number"
                             min="8"
                             step="1"
                             value={toNumberInputValue(formData.font_size)}
-                            onChange={e =>
-                              setFormData({
-                                ...formData,
-                                font_size: e.target.value,
-                              })
-                            }
+                            onChange={e => setFormData({ ...formData, font_size: e.target.value })}
                             placeholder="Ex: 14"
                             className={inputClass}
                           />
@@ -3078,64 +2629,30 @@ const AppearancePage = () => {
                     </SectionCard>
                   )}
 
+                  {/* ── Flutuante ── */}
                   {activeTab === 'floating' && (
-                    <SectionCard
-                      title="Widget Flutuante"
-                      description="Controle tamanho, posição, borda, play, fechamento e comportamento do widget flutuante."
-                    >
+                    <SectionCard title="Widget Flutuante" description="Controle tamanho, posição, borda, play, fechamento e comportamento do widget flutuante.">
                       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-                        <h4 className="text-sm font-black text-slate-800">
-                          Configuração ativa
-                        </h4>
-
-                        {formData.useGlobalAppearance ? (
-                          <GlobalDeviceNotice />
-                        ) : (
-                          <DeviceTabs
-                            activeDevice={floatingDevice}
-                            onChange={setFloatingDevice}
-                          />
-                        )}
+                        <h4 className="text-sm font-black text-slate-800">Configuração ativa</h4>
+                        {formData.useGlobalAppearance ? <GlobalDeviceNotice /> : <DeviceTabs activeDevice={floatingDevice} onChange={setFloatingDevice} />}
                       </div>
-
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <FormField label="Forma">
                           <select
                             value={activeFloatingConfig.shape}
                             onChange={e => {
                               const shape = e.target.value as WidgetShape;
-
                               if (shape === 'portrait') {
-                                const size = formatNumberLikeCurrent(
-                                  activeFloatingConfig.width,
-                                  '80',
-                                );
-                                updateFloatingConfig({
-                                  shape,
-                                  width: size,
-                                  height: getPortraitHeightFromWidth(size),
-                                });
+                                const size = formatNumberLikeCurrent(activeFloatingConfig.width, '80');
+                                updateFloatingConfig({ shape, width: size, height: getPortraitHeightFromWidth(size) });
                                 return;
                               }
-
                               if (shape === 'square') {
-                                const size = formatNumberLikeCurrent(
-                                  activeFloatingConfig.width,
-                                  '80',
-                                );
-                                updateFloatingConfig({
-                                  shape,
-                                  width: size,
-                                  height: size,
-                                });
+                                const size = formatNumberLikeCurrent(activeFloatingConfig.width, '80');
+                                updateFloatingConfig({ shape, width: size, height: size });
                                 return;
                               }
-
-                              const size =
-                                toNumberInputValue(activeFloatingConfig.border_radius) ||
-                                toNumberInputValue(activeFloatingConfig.width) ||
-                                '80';
-
+                              const size = toNumberInputValue(activeFloatingConfig.border_radius) || toNumberInputValue(activeFloatingConfig.width) || '80';
                               updateFloatingConfig({ shape, border_radius: size });
                             }}
                             className={selectClass}
@@ -3145,34 +2662,21 @@ const AppearancePage = () => {
                             <option value="portrait">Retrato</option>
                           </select>
                         </FormField>
-
                         <FormField label="Tamanho">
                           <input
-                            type="number"
-                            min="20"
-                            step="1"
+                            type="number" min="20" step="1"
                             value={toNumberInputValue(activeFloatingConfig.width)}
                             onChange={e => {
                               const value = e.target.value;
-
                               if (activeFloatingConfig.shape === 'portrait') {
-                                updateFloatingConfig({
-                                  width: value,
-                                  height: getPortraitHeightFromWidth(value),
-                                });
+                                updateFloatingConfig({ width: value, height: getPortraitHeightFromWidth(value) });
                                 return;
                               }
-
                               if (activeFloatingConfig.shape === 'square') {
                                 updateFloatingConfig({ width: value, height: value });
                                 return;
                               }
-
-                              updateFloatingConfig({
-                                border_radius: value,
-                                width: value,
-                                height: value,
-                              });
+                              updateFloatingConfig({ border_radius: value, width: value, height: value });
                             }}
                             placeholder="Ex: 80"
                             className={inputClass}
@@ -3185,210 +2689,72 @@ const AppearancePage = () => {
                                 : 'Largura e altura são mantidas iguais (quadrado).'}
                           </p>
                         </FormField>
-
                         <FormField label="Raio da borda">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={toNumberInputValue(activeFloatingConfig.border_radius)}
-                            onChange={e =>
-                              updateFloatingConfig({ border_radius: e.target.value })
-                            }
-                            placeholder="Ex: 12"
-                            className={inputClass}
-                          />
+                          <input type="number" min="0" step="1" value={toNumberInputValue(activeFloatingConfig.border_radius)} onChange={e => updateFloatingConfig({ border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
                         </FormField>
-
                         <FormField label="Posição do widget">
-                          <select
-                            value={activeFloatingConfig.position}
-                            onChange={e =>
-                              updateFloatingConfig({
-                                position: e.target.value as PositionValue,
-                              })
-                            }
-                            className={selectClass}
-                          >
+                          <select value={activeFloatingConfig.position} onChange={e => updateFloatingConfig({ position: e.target.value as PositionValue })} className={selectClass}>
                             <option value="fixed_bottom_right">Inferior direita</option>
                             <option value="fixed_bottom_left">Inferior esquerda</option>
                             <option value="fixed_top_right">Superior direita</option>
                             <option value="fixed_top_left">Superior esquerda</option>
                           </select>
                         </FormField>
-
                         <FormField label="Margem inferior">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={toNumberInputValue(activeFloatingConfig.bottom_spacing)}
-                            onChange={e =>
-                              updateFloatingConfig({ bottom_spacing: e.target.value })
-                            }
-                            placeholder="Ex: 20"
-                            className={inputClass}
-                          />
+                          <input type="number" min="0" step="1" value={toNumberInputValue(activeFloatingConfig.bottom_spacing)} onChange={e => updateFloatingConfig({ bottom_spacing: e.target.value })} placeholder="Ex: 20" className={inputClass} />
                         </FormField>
-
                         <FormField label="Margem superior">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={toNumberInputValue(activeFloatingConfig.top_spacing)}
-                            onChange={e =>
-                              updateFloatingConfig({ top_spacing: e.target.value })
-                            }
-                            placeholder="Ex: 20"
-                            className={inputClass}
-                          />
+                          <input type="number" min="0" step="1" value={toNumberInputValue(activeFloatingConfig.top_spacing)} onChange={e => updateFloatingConfig({ top_spacing: e.target.value })} placeholder="Ex: 20" className={inputClass} />
                         </FormField>
-
                         <FormField label="Margem lateral">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={toNumberInputValue(activeFloatingConfig.left_spacing)}
-                            onChange={e =>
-                              updateFloatingConfig({
-                                left_spacing: e.target.value,
-                                right_spacing: e.target.value,
-                              })
-                            }
-                            placeholder="Ex: 20"
-                            className={inputClass}
-                          />
+                          <input type="number" min="0" step="1" value={toNumberInputValue(activeFloatingConfig.left_spacing)} onChange={e => updateFloatingConfig({ left_spacing: e.target.value, right_spacing: e.target.value })} placeholder="Ex: 20" className={inputClass} />
                         </FormField>
-
                         <FormField label="Cor da borda">
-                          <ColorInput
-                            label="Cor da borda"
-                            value={activeFloatingConfig.border_color}
-                            onChange={e =>
-                              updateFloatingConfig({ border_color: e.target.value })
-                            }
-                          />
+                          <ColorInput label="Cor da borda" value={activeFloatingConfig.border_color} onChange={e => updateFloatingConfig({ border_color: e.target.value })} />
                         </FormField>
-
                         <FormField label="Largura da borda">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={toNumberInputValue(activeFloatingConfig.border_style)}
-                            onChange={e =>
-                              updateFloatingConfig({ border_style: e.target.value })
-                            }
-                            placeholder="Ex: 2"
-                            className={inputClass}
-                          />
-                          <p className="text-xs font-semibold text-slate-400">
-                            O estilo da borda será sempre sólido.
-                          </p>
+                          <input type="number" min="0" step="1" value={toNumberInputValue(activeFloatingConfig.border_style)} onChange={e => updateFloatingConfig({ border_style: e.target.value })} placeholder="Ex: 2" className={inputClass} />
+                          <p className="text-xs font-semibold text-slate-400">O estilo da borda será sempre sólido.</p>
                         </FormField>
-
                         <FormField label="Object fit">
-                          <select
-                            value={activeFloatingConfig.object_fit}
-                            onChange={e =>
-                              updateFloatingConfig({ object_fit: e.target.value })
-                            }
-                            className={selectClass}
-                          >
+                          <select value={activeFloatingConfig.object_fit} onChange={e => updateFloatingConfig({ object_fit: e.target.value })} className={selectClass}>
                             <option value="cover">Cover</option>
                             <option value="contain">Contain</option>
                             <option value="fill">Fill</option>
                           </select>
                         </FormField>
-
                         <FormField label="Z-index">
-                          <input
-                            type="number"
-                            min="1"
-                            step="1"
-                            value={toNumberInputValue(activeFloatingConfig.z_index)}
-                            onChange={e =>
-                              updateFloatingConfig({ z_index: e.target.value })
-                            }
-                            placeholder="Ex: 2147483647"
-                            className={inputClass}
-                          />
+                          <input type="number" min="1" step="1" value={toNumberInputValue(activeFloatingConfig.z_index)} onChange={e => updateFloatingConfig({ z_index: e.target.value })} placeholder="Ex: 2147483647" className={inputClass} />
                         </FormField>
-
                         <FormField label="Mostrar título">
-                          <ToggleSwitch
-                            label="Mostrar título no flutuante"
-                            checked={activeFloatingConfig.show_title ?? true}
-                            onChange={e =>
-                              updateFloatingConfig({ show_title: e.target.checked })
-                            }
-                          />
+                          <ToggleSwitch label="Mostrar título no flutuante" checked={activeFloatingConfig.show_title ?? true} onChange={e => updateFloatingConfig({ show_title: e.target.checked })} />
                         </FormField>
-
                         <FormField label="Mostrar botão play">
-                          <ToggleSwitch
-                            label="Mostrar botão play no flutuante"
-                            checked={activeFloatingConfig.show_play_icon}
-                            onChange={e =>
-                              updateFloatingConfig({ show_play_icon: e.target.checked })
-                            }
-                          />
+                          <ToggleSwitch label="Mostrar botão play no flutuante" checked={activeFloatingConfig.show_play_icon} onChange={e => updateFloatingConfig({ show_play_icon: e.target.checked })} />
                         </FormField>
-
                         <FormField label="Permitir arrastar">
-                          <ToggleSwitch
-                            label="Permitir arrastar widget"
-                            checked={activeFloatingConfig.draggable}
-                            onChange={e =>
-                              updateFloatingConfig({ draggable: e.target.checked })
-                            }
-                          />
+                          <ToggleSwitch label="Permitir arrastar widget" checked={activeFloatingConfig.draggable} onChange={e => updateFloatingConfig({ draggable: e.target.checked })} />
                         </FormField>
-
                         <FormField label="Permitir fechar">
-                          <ToggleSwitch
-                            label="Permitir fechar widget"
-                            checked={activeFloatingConfig.allow_close}
-                            onChange={e =>
-                              updateFloatingConfig({ allow_close: e.target.checked })
-                            }
-                          />
+                          <ToggleSwitch label="Permitir fechar widget" checked={activeFloatingConfig.allow_close} onChange={e => updateFloatingConfig({ allow_close: e.target.checked })} />
                         </FormField>
                       </div>
                     </SectionCard>
                   )}
 
+                  {/* ── Carrossel ── */}
+                  {/* 🆕 CORRIGIDO: usa shape, width, spacing, border_style */}
                   {activeTab === 'carousel' && (
-                    <SectionCard
-                      title="Carrossel"
-                      description="Configure a exibição dos vídeos em carrossel, quantidade de itens, formato, centralização e margens."
-                    >
+                    <SectionCard title="Carrossel" description="Configure a exibição dos vídeos em carrossel, quantidade de itens, formato, centralização e margens.">
                       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-                        <h4 className="text-sm font-black text-slate-800">
-                          Configuração ativa
-                        </h4>
-
-                        {formData.useGlobalAppearance ? (
-                          <GlobalDeviceNotice />
-                        ) : (
-                          <DeviceTabs
-                            activeDevice={carouselDevice}
-                            onChange={setCarouselDevice}
-                          />
-                        )}
+                        <h4 className="text-sm font-black text-slate-800">Configuração ativa</h4>
+                        {formData.useGlobalAppearance ? <GlobalDeviceNotice /> : <DeviceTabs activeDevice={carouselDevice} onChange={setCarouselDevice} />}
                       </div>
-
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <FormField label="Forma">
                           <select
                             value={activeCarouselConfig.shape}
-                            onChange={e =>
-                              updateCarouselConfig({
-                                card_shape: e.target.value as WidgetShape,
-                              })
-                            }
+                            onChange={e => updateCarouselConfig({ shape: e.target.value as WidgetShape })}
                             className={selectClass}
                           >
                             <option value="circle">Circular</option>
@@ -3396,497 +2762,182 @@ const AppearancePage = () => {
                             <option value="portrait">Retrato 9:16</option>
                           </select>
                           {activeCarouselConfig.shape === 'portrait' && (
-                            <p className="text-xs font-semibold text-slate-400">
-                              No formato retrato, os cards ficam fixos na proporção 9:16.
-                            </p>
+                            <p className="text-xs font-semibold text-slate-400">No formato retrato, os cards ficam fixos na proporção 9:16.</p>
                           )}
                         </FormField>
-
                         <FormField label="Tamanho">
                           <input
-                            type="number"
-                            min="20"
-                            step="1"
-                            value={toNumberInputValue(activeCarouselConfig.card_size)}
-                            onChange={e =>
-                              updateCarouselConfig({ card_size: e.target.value })
-                            }
+                            type="number" min="20" step="1"
+                            value={toNumberInputValue(activeCarouselConfig.width)}
+                            onChange={e => updateCarouselConfig({ width: e.target.value })}
                             placeholder="Ex: 80"
                             className={inputClass}
                           />
-                          <p className="text-xs font-semibold text-slate-400">
-                            Tamanho base dos cards no carrossel.
-                          </p>
+                          <p className="text-xs font-semibold text-slate-400">Tamanho base dos cards no carrossel.</p>
                         </FormField>
-
                         <FormField label="Itens visíveis">
                           <input
-                            type="number"
-                            min="1"
-                            step="1"
+                            type="number" min="1" step="1"
                             value={activeCarouselConfig.visible_items}
-                            onChange={e =>
-                              updateCarouselConfig({
-                                visible_items: safeNumber(e.target.value, 1, 1),
-                              })
-                            }
+                            onChange={e => updateCarouselConfig({ visible_items: safeNumber(e.target.value, 1, 1) })}
                             className={inputClass}
                           />
                         </FormField>
-
                         <FormField label="Espaçamento">
                           <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={activeCarouselConfig.gap}
-                            onChange={e =>
-                              updateCarouselConfig({
-                                gap: safeNumber(e.target.value, 0, 0),
-                              })
-                            }
+                            type="number" min="0" step="1"
+                            value={activeCarouselConfig.spacing}
+                            onChange={e => updateCarouselConfig({ spacing: safeNumber(e.target.value, 0, 0) })}
                             className={inputClass}
                           />
                         </FormField>
-
                         <FormField label="Cor da borda">
-                          <ColorInput
-                            label="Cor da borda"
-                            value={activeCarouselConfig.border_color || formData.primary_color}
-                            onChange={e =>
-                              updateCarouselConfig({ border_color: e.target.value })
-                            }
-                          />
+                          <ColorInput label="Cor da borda" value={activeCarouselConfig.border_color || formData.primary_color} onChange={e => updateCarouselConfig({ border_color: e.target.value })} />
                         </FormField>
-
                         <FormField label="Largura da borda">
                           <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={toNumberInputValue(activeCarouselConfig.border_width)}
-                            onChange={e =>
-                              updateCarouselConfig({ border_width: e.target.value })
-                            }
+                            type="number" min="0" step="1"
+                            value={toNumberInputValue(activeCarouselConfig.border_style)}
+                            onChange={e => updateCarouselConfig({ border_style: e.target.value })}
                             placeholder="Ex: 2"
                             className={inputClass}
                           />
                         </FormField>
-
                         <FormField label="Raio da borda">
                           <input
-                            type="number"
-                            min="0"
-                            step="1"
+                            type="number" min="0" step="1"
                             value={toNumberInputValue(activeCarouselConfig.border_radius)}
-                            onChange={e =>
-                              updateCarouselConfig({ border_radius: e.target.value })
-                            }
+                            onChange={e => updateCarouselConfig({ border_radius: e.target.value })}
                             placeholder="Ex: 12"
                             className={inputClass}
                           />
                         </FormField>
-
                         <FormField label="Object fit">
-                          <select
-                            value={activeCarouselConfig.object_fit || 'cover'}
-                            onChange={e =>
-                              updateCarouselConfig({ object_fit: e.target.value })
-                            }
-                            className={selectClass}
-                          >
+                          <select value={activeCarouselConfig.object_fit || 'cover'} onChange={e => updateCarouselConfig({ object_fit: e.target.value })} className={selectClass}>
                             <option value="cover">Cover</option>
                             <option value="contain">Contain</option>
                             <option value="fill">Fill</option>
                           </select>
                         </FormField>
-
                         <FormField label="Margem superior">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={toNumberInputValue(activeCarouselConfig.margin_top)}
-                            onChange={e =>
-                              updateCarouselConfig({ margin_top: e.target.value })
-                            }
-                            placeholder="Ex: 0"
-                            className={inputClass}
-                          />
+                          <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.margin_top)} onChange={e => updateCarouselConfig({ margin_top: e.target.value })} placeholder="Ex: 0" className={inputClass} />
                         </FormField>
-
                         <FormField label="Margem inferior">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={toNumberInputValue(activeCarouselConfig.margin_bottom)}
-                            onChange={e =>
-                              updateCarouselConfig({ margin_bottom: e.target.value })
-                            }
-                            placeholder="Ex: 0"
-                            className={inputClass}
-                          />
+                          <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.margin_bottom)} onChange={e => updateCarouselConfig({ margin_bottom: e.target.value })} placeholder="Ex: 0" className={inputClass} />
                         </FormField>
-
                         <FormField label="Mostrar título">
-                          <ToggleSwitch
-                            label="Mostrar título no carrossel"
-                            checked={activeCarouselConfig.show_title ?? false}
-                            onChange={e =>
-                              updateCarouselConfig({ show_title: e.target.checked })
-                            }
-                          />
+                          <ToggleSwitch label="Mostrar título no carrossel" checked={activeCarouselConfig.show_title ?? false} onChange={e => updateCarouselConfig({ show_title: e.target.checked })} />
                         </FormField>
-
                         <FormField label="Mostrar produto">
-                          <ToggleSwitch
-                            label="Mostrar produto no carrossel"
-                            checked={activeCarouselConfig.show_product}
-                            onChange={e =>
-                              updateCarouselConfig({ show_product: e.target.checked })
-                            }
-                          />
+                          <ToggleSwitch label="Mostrar produto no carrossel" checked={activeCarouselConfig.show_product} onChange={e => updateCarouselConfig({ show_product: e.target.checked })} />
                         </FormField>
-
                         <FormField label="Mostrar botão play">
-                          <ToggleSwitch
-                            label="Mostrar botão play no carrossel"
-                            checked={activeCarouselConfig.show_play_icon}
-                            onChange={e =>
-                              updateCarouselConfig({ show_play_icon: e.target.checked })
-                            }
-                          />
+                          <ToggleSwitch label="Mostrar botão play no carrossel" checked={activeCarouselConfig.show_play_icon} onChange={e => updateCarouselConfig({ show_play_icon: e.target.checked })} />
                         </FormField>
-
                         <FormField label="Centralizar automaticamente">
-                          <ToggleSwitch
-                            label="Centralizar carrossel automático"
-                            checked={activeCarouselConfig.auto_center}
-                            onChange={e =>
-                              updateCarouselConfig({ auto_center: e.target.checked })
-                            }
-                          />
+                          <ToggleSwitch label="Centralizar carrossel automático" checked={activeCarouselConfig.auto_center} onChange={e => updateCarouselConfig({ auto_center: e.target.checked })} />
                         </FormField>
                       </div>
                     </SectionCard>
                   )}
 
+                  {/* ── Grade ── */}
                   {activeTab === 'grid' && (
-                    <SectionCard
-                      title="Grade"
-                      description="Configure a exibição dos vídeos em grade, colunas, linhas, formato e espaçamento."
-                    >
+                    <SectionCard title="Grade" description="Configure a exibição dos vídeos em grade, colunas, linhas, formato e espaçamento.">
                       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-                        <h4 className="text-sm font-black text-slate-800">
-                          Configuração ativa
-                        </h4>
-
-                        {formData.useGlobalAppearance ? (
-                          <GlobalDeviceNotice />
-                        ) : (
-                          <DeviceTabs
-                            activeDevice={gridDevice}
-                            onChange={setGridDevice}
-                          />
-                        )}
+                        <h4 className="text-sm font-black text-slate-800">Configuração ativa</h4>
+                        {formData.useGlobalAppearance ? <GlobalDeviceNotice /> : <DeviceTabs activeDevice={gridDevice} onChange={setGridDevice} />}
                       </div>
-
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <FormField label="Forma">
-                          <select
-                            value={activeGridConfig.shape}
-                            onChange={e =>
-                              updateGridConfig({
-                                card_shape: e.target.value as WidgetShape,
-                              })
-                            }
-                            className={selectClass}
-                          >
+                          <select value={activeGridConfig.card_shape} onChange={e => updateGridConfig({ card_shape: e.target.value as WidgetShape })} className={selectClass}>
                             <option value="circle">Circular</option>
                             <option value="square">Quadrado</option>
                             <option value="portrait">Retrato 9:16</option>
                           </select>
-                          {activeGridConfig.shape === 'portrait' && (
-                            <p className="text-xs font-semibold text-slate-400">
-                              No formato retrato, os cards ficam fixos na proporção 9:16.
-                            </p>
+                          {activeGridConfig.card_shape === 'portrait' && (
+                            <p className="text-xs font-semibold text-slate-400">No formato retrato, os cards ficam fixos na proporção 9:16.</p>
                           )}
                         </FormField>
-
                         <FormField label="Tamanho">
-                          <input
-                            type="number"
-                            min="20"
-                            step="1"
-                            value={toNumberInputValue(activeGridConfig.card_size)}
-                            onChange={e =>
-                              updateGridConfig({ card_size: e.target.value })
-                            }
-                            placeholder="Ex: 80"
-                            className={inputClass}
-                          />
-                          <p className="text-xs font-semibold text-slate-400">
-                            Tamanho base dos cards na grade.
-                          </p>
+                          <input type="number" min="20" step="1" value={toNumberInputValue(activeGridConfig.card_size)} onChange={e => updateGridConfig({ card_size: e.target.value })} placeholder="Ex: 80" className={inputClass} />
+                          <p className="text-xs font-semibold text-slate-400">Tamanho base dos cards na grade.</p>
                         </FormField>
-
                         <FormField label="Colunas">
-                          <input
-                            type="number"
-                            min="1"
-                            max="4"
-                            step="1"
-                            value={activeGridConfig.columns}
-                            onChange={e =>
-                              updateGridConfig({
-                                columns: limitNumber(e.target.value, 1, 1, 4),
-                              })
-                            }
-                            className={inputClass}
-                          />
-                          <p className="text-xs font-semibold text-slate-400">
-                            Máximo de 4 colunas por linha.
-                          </p>
+                          <input type="number" min="1" max="4" step="1" value={activeGridConfig.columns} onChange={e => updateGridConfig({ columns: limitNumber(e.target.value, 1, 1, 4) })} className={inputClass} />
+                          <p className="text-xs font-semibold text-slate-400">Máximo de 4 colunas por linha.</p>
                         </FormField>
-
                         <FormField label="Linhas">
-                          <input
-                            type="number"
-                            min="1"
-                            step="1"
-                            value={activeGridConfig.rows}
-                            onChange={e =>
-                              updateGridConfig({
-                                rows: safeNumber(e.target.value, 1, 1),
-                              })
-                            }
-                            className={inputClass}
-                          />
+                          <input type="number" min="1" step="1" value={activeGridConfig.rows} onChange={e => updateGridConfig({ rows: safeNumber(e.target.value, 1, 1) })} className={inputClass} />
                         </FormField>
-
                         <FormField label="Espaçamento">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={activeGridConfig.gap}
-                            onChange={e =>
-                              updateGridConfig({
-                                gap: safeNumber(e.target.value, 0, 0),
-                              })
-                            }
-                            className={inputClass}
-                          />
+                          <input type="number" min="0" step="1" value={activeGridConfig.gap} onChange={e => updateGridConfig({ gap: safeNumber(e.target.value, 0, 0) })} className={inputClass} />
                         </FormField>
-
                         <FormField label="Cor da borda">
-                          <ColorInput
-                            label="Cor da borda"
-                            value={activeGridConfig.border_color || formData.primary_color}
-                            onChange={e =>
-                              updateGridConfig({ border_color: e.target.value })
-                            }
-                          />
+                          <ColorInput label="Cor da borda" value={activeGridConfig.border_color || formData.primary_color} onChange={e => updateGridConfig({ border_color: e.target.value })} />
                         </FormField>
-
                         <FormField label="Largura da borda">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={toNumberInputValue(activeGridConfig.border_width)}
-                            onChange={e =>
-                              updateGridConfig({ border_width: e.target.value })
-                            }
-                            placeholder="Ex: 2"
-                            className={inputClass}
-                          />
+                          <input type="number" min="0" step="1" value={toNumberInputValue(activeGridConfig.border_width)} onChange={e => updateGridConfig({ border_width: e.target.value })} placeholder="Ex: 2" className={inputClass} />
                         </FormField>
-
                         <FormField label="Raio da borda">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={toNumberInputValue(activeGridConfig.border_radius)}
-                            onChange={e =>
-                              updateGridConfig({ border_radius: e.target.value })
-                            }
-                            placeholder="Ex: 12"
-                            className={inputClass}
-                          />
+                          <input type="number" min="0" step="1" value={toNumberInputValue(activeGridConfig.border_radius)} onChange={e => updateGridConfig({ border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
                         </FormField>
-
                         <FormField label="Object fit">
-                          <select
-                            value={activeGridConfig.object_fit || 'cover'}
-                            onChange={e =>
-                              updateGridConfig({ object_fit: e.target.value })
-                            }
-                            className={selectClass}
-                          >
+                          <select value={activeGridConfig.object_fit || 'cover'} onChange={e => updateGridConfig({ object_fit: e.target.value })} className={selectClass}>
                             <option value="cover">Cover</option>
                             <option value="contain">Contain</option>
                             <option value="fill">Fill</option>
                           </select>
                         </FormField>
-
                         <FormField label="Mostrar título">
-                          <ToggleSwitch
-                            label="Mostrar título na grade"
-                            checked={activeGridConfig.show_title ?? false}
-                            onChange={e =>
-                              updateGridConfig({ show_title: e.target.checked })
-                            }
-                          />
+                          <ToggleSwitch label="Mostrar título na grade" checked={activeGridConfig.show_title ?? false} onChange={e => updateGridConfig({ show_title: e.target.checked })} />
                         </FormField>
                       </div>
                     </SectionCard>
                   )}
 
+                  {/* ── Modal ── */}
                   {activeTab === 'modal' && (
-                    <SectionCard
-                      title="Player / Modal"
-                      description="Controle quais elementos são exibidos dentro do player de vídeo."
-                    >
+                    <SectionCard title="Player / Modal" description="Controle quais elementos são exibidos dentro do player de vídeo.">
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <FormField label="Mostrar título">
-                          <ToggleSwitch
-                            label="Mostrar título"
-                            checked={formData.modal_config.show_title}
-                            onChange={e =>
-                              updateModalConfig({ show_title: e.target.checked })
-                            }
-                          />
+                          <ToggleSwitch label="Mostrar título" checked={formData.modal_config.show_title} onChange={e => updateModalConfig({ show_title: e.target.checked })} />
                         </FormField>
-
                         <FormField label="Mostrar botão play">
-                          <ToggleSwitch
-                            label="Mostrar botão play"
-                            checked={formData.modal_config.show_play_button}
-                            onChange={e =>
-                              updateModalConfig({ show_play_button: e.target.checked })
-                            }
-                          />
+                          <ToggleSwitch label="Mostrar botão play" checked={formData.modal_config.show_play_button} onChange={e => updateModalConfig({ show_play_button: e.target.checked })} />
                         </FormField>
-
                         <FormField label="Mostrar produto">
-                          <ToggleSwitch
-                            label="Mostrar produto"
-                            checked={formData.modal_config.show_product}
-                            onChange={e =>
-                              updateModalConfig({ show_product: e.target.checked })
-                            }
-                          />
+                          <ToggleSwitch label="Mostrar produto" checked={formData.modal_config.show_product} onChange={e => updateModalConfig({ show_product: e.target.checked })} />
                         </FormField>
-
                         <FormField label="Mostrar botão like">
-                          <ToggleSwitch
-                            label="Mostrar botão like"
-                            checked={formData.modal_config.show_like_button}
-                            onChange={e =>
-                              updateModalConfig({ show_like_button: e.target.checked })
-                            }
-                          />
+                          <ToggleSwitch label="Mostrar botão like" checked={formData.modal_config.show_like_button} onChange={e => updateModalConfig({ show_like_button: e.target.checked })} />
                         </FormField>
-
                         <FormField label="Mostrar botão comentário">
-                          <ToggleSwitch
-                            label="Mostrar botão comentário"
-                            checked={formData.modal_config.show_comment_button}
-                            onChange={e =>
-                              updateModalConfig({ show_comment_button: e.target.checked })
-                            }
-                          />
+                          <ToggleSwitch label="Mostrar botão comentário" checked={formData.modal_config.show_comment_button} onChange={e => updateModalConfig({ show_comment_button: e.target.checked })} />
                         </FormField>
-
                         <FormField label="Mostrar botão compartilhar">
-                          <ToggleSwitch
-                            label="Mostrar botão compartilhar"
-                            checked={formData.modal_config.show_share_button}
-                            onChange={e =>
-                              updateModalConfig({ show_share_button: e.target.checked })
-                            }
-                          />
+                          <ToggleSwitch label="Mostrar botão compartilhar" checked={formData.modal_config.show_share_button} onChange={e => updateModalConfig({ show_share_button: e.target.checked })} />
                         </FormField>
-
                         <FormField label="Mostrar botão WhatsApp">
-                          <ToggleSwitch
-                            label="Mostrar botão WhatsApp"
-                            checked={formData.modal_config.show_whatsapp_button}
-                            onChange={e =>
-                              updateModalConfig({ show_whatsapp_button: e.target.checked })
-                            }
-                          />
+                          <ToggleSwitch label="Mostrar botão WhatsApp" checked={formData.modal_config.show_whatsapp_button} onChange={e => updateModalConfig({ show_whatsapp_button: e.target.checked })} />
                         </FormField>
-
                         <FormField label="Mostrar botão do produto">
-                          <ToggleSwitch
-                            label="Mostrar botão do produto"
-                            checked={formData.modal_config.show_product_button}
-                            onChange={e =>
-                              updateModalConfig({ show_product_button: e.target.checked })
-                            }
-                          />
+                          <ToggleSwitch label="Mostrar botão do produto" checked={formData.modal_config.show_product_button} onChange={e => updateModalConfig({ show_product_button: e.target.checked })} />
                         </FormField>
-
                         <FormField label="Ocultar stories">
-                          <ToggleSwitch
-                            label="Ocultar stories"
-                            checked={formData.modal_config.hide_stories}
-                            onChange={e =>
-                              updateModalConfig({ hide_stories: e.target.checked })
-                            }
-                          />
+                          <ToggleSwitch label="Ocultar stories" checked={formData.modal_config.hide_stories} onChange={e => updateModalConfig({ hide_stories: e.target.checked })} />
                         </FormField>
-
                         <FormField label="Habilitar sombra">
-                          <ToggleSwitch
-                            label="Habilitar sombra"
-                            checked={formData.modal_config.shadow_enabled}
-                            onChange={e =>
-                              updateModalConfig({ shadow_enabled: e.target.checked })
-                            }
-                          />
+                          <ToggleSwitch label="Habilitar sombra" checked={formData.modal_config.shadow_enabled} onChange={e => updateModalConfig({ shadow_enabled: e.target.checked })} />
                         </FormField>
-
                         <FormField label="Cor da borda">
-                          <ColorInput
-                            label="Cor da borda"
-                            value={formData.modal_config.border_color || formData.primary_color}
-                            onChange={e =>
-                              updateModalConfig({ border_color: e.target.value })
-                            }
-                          />
+                          <ColorInput label="Cor da borda" value={formData.modal_config.border_color || formData.primary_color} onChange={e => updateModalConfig({ border_color: e.target.value })} />
                         </FormField>
-
                         <FormField label="Largura da borda">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={toNumberInputValue(formData.modal_config.border_width)}
-                            onChange={e =>
-                              updateModalConfig({ border_width: e.target.value })
-                            }
-                            placeholder="Ex: 2"
-                            className={inputClass}
-                          />
+                          <input type="number" min="0" step="1" value={toNumberInputValue(formData.modal_config.border_width)} onChange={e => updateModalConfig({ border_width: e.target.value })} placeholder="Ex: 2" className={inputClass} />
                         </FormField>
-
                         <FormField label="Raio da borda">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={toNumberInputValue(formData.modal_config.border_radius)}
-                            onChange={e =>
-                              updateModalConfig({ border_radius: e.target.value })
-                            }
-                            placeholder="Ex: 12"
-                            className={inputClass}
-                          />
+                          <input type="number" min="0" step="1" value={toNumberInputValue(formData.modal_config.border_radius)} onChange={e => updateModalConfig({ border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
                         </FormField>
                       </div>
                     </SectionCard>
@@ -3903,6 +2954,7 @@ const AppearancePage = () => {
               </div>
             </div>
 
+            {/* Footer do modal */}
             <div className="flex items-center justify-end gap-3 border-t border-slate-100 bg-white px-6 py-4">
               <button
                 type="button"
@@ -3913,18 +2965,13 @@ const AppearancePage = () => {
                 <X size={16} />
                 Cancelar
               </button>
-
               <button
                 type="button"
                 onClick={handleSaveStyle}
                 disabled={saving}
                 className="flex items-center gap-2 rounded-2xl bg-[#0094EB] px-6 py-3 text-sm font-bold text-white shadow-lg hover:bg-[#0E4787] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {saving ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <Save size={16} />
-                )}
+                {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                 {saving ? 'Salvando...' : 'Salvar'}
               </button>
             </div>
@@ -3934,12 +2981,7 @@ const AppearancePage = () => {
 
       <ConfirmDeleteDialog
         isOpen={deleteModal.isOpen}
-        onClose={() =>
-          setDeleteModal(prev => ({
-            ...prev,
-            isOpen: false,
-          }))
-        }
+        onClose={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))}
         onConfirm={handleConfirmDelete}
         title="Excluir estilo?"
         description={`Tem certeza que deseja excluir "${deleteModal.name}"? Esta ação não pode ser desfeita.`}
