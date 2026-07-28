@@ -2060,49 +2060,75 @@ const AppearancePage = () => {
     });
   };
 
-  const updateCarouselConfig = (patch: Partial<CarouselConfig>) => {
-    setFormData(prev => {
-      const device = prev.useGlobalAppearance ? 'desktop' : carouselDevice;
-      const current = prev.carousel_config[device];
+const updateCarouselConfig = (patch: Partial<CarouselConfig>) => {
+  setFormData(prev => {
+    const device = prev.useGlobalAppearance ? 'desktop' : carouselDevice;
+    const current = prev.carousel_config[device];
 
-      const updatedDeviceConfig: CarouselConfig = normalizeCarouselConfigShape({
-        ...current,
-        ...patch,
-        spacing: safeNumber(patch.spacing ?? current.spacing, current.spacing || 0, 0),
-        visible_items: safeNumber(
-          patch.visible_items ?? current.visible_items,
-          current.visible_items || 1,
-          1,
-        ),
-        auto_center: patch.auto_center ?? current.auto_center ?? false,
-      });
+    let updatedDeviceConfig: CarouselConfig = {
+      ...current,
+      ...patch,
+      spacing: safeNumber(patch.spacing ?? current.spacing, current.spacing || 0, 0),
+      visible_items: safeNumber(
+        patch.visible_items ?? current.visible_items,
+        current.visible_items || 1,
+        1,
+      ),
+      auto_center: patch.auto_center ?? current.auto_center ?? false,
+    };
 
-      const nextConfig: ResponsiveConfig<CarouselConfig> = prev.useGlobalAppearance
-        ? { same_for_all: true, desktop: updatedDeviceConfig, mobile: updatedDeviceConfig }
-        : { ...prev.carousel_config, same_for_all: false, [device]: updatedDeviceConfig };
+    // 🔧 Sincroniza dimensões ao trocar de forma
+    if (patch.shape !== undefined) {
+      const newShape = normalizeWidgetShape(patch.shape, 'portrait');
+      const width = formatNumberLikeCurrent(
+        patch.width ?? current.width ?? '80',
+        '80',
+      );
 
-      const desktop = nextConfig.desktop;
-      return {
-        ...prev,
-        carousel_config: nextConfig,
-        carousel_spacing: desktop.spacing,
-        carousel_shape: desktop.shape,
-        carousel_size: desktop.width,
-        carousel_border_color: desktop.border_color,
-        carousel_border_width: desktop.border_style,
-        carousel_border_radius: desktop.border_radius,
-        carousel_object_fit: desktop.object_fit,
-        carousel_view_mode: desktop.view_mode,
-        carousel_margin_top: desktop.margin_top,
-        carousel_margin_bottom: desktop.margin_bottom,
-        carousel_visible_items: desktop.visible_items,
-        carousel_show_product: desktop.show_product,
-        carousel_show_play_button: desktop.show_play_icon,
-        carousel_show_title: desktop.show_title,
-        carousel_auto_center: desktop.auto_center,
-      };
-    });
-  };
+      if (newShape === 'circle' || newShape === 'square') {
+        updatedDeviceConfig = {
+          ...updatedDeviceConfig,
+          shape: newShape,
+          width,
+        };
+      } else {
+        // portrait
+        updatedDeviceConfig = {
+          ...updatedDeviceConfig,
+          shape: newShape,
+          width,
+        };
+      }
+    }
+
+    updatedDeviceConfig = normalizeCarouselConfigShape(updatedDeviceConfig);
+
+    const nextConfig: ResponsiveConfig<CarouselConfig> = prev.useGlobalAppearance
+      ? { same_for_all: true, desktop: updatedDeviceConfig, mobile: updatedDeviceConfig }
+      : { ...prev.carousel_config, same_for_all: false, [device]: updatedDeviceConfig };
+
+    const desktop = nextConfig.desktop;
+    return {
+      ...prev,
+      carousel_config: nextConfig,
+      carousel_spacing: desktop.spacing,
+      carousel_shape: desktop.shape,
+      carousel_size: desktop.width,
+      carousel_border_color: desktop.border_color,
+      carousel_border_width: desktop.border_style,
+      carousel_border_radius: desktop.border_radius,
+      carousel_object_fit: desktop.object_fit,
+      carousel_view_mode: desktop.view_mode,
+      carousel_margin_top: desktop.margin_top,
+      carousel_margin_bottom: desktop.margin_bottom,
+      carousel_visible_items: desktop.visible_items,
+      carousel_show_product: desktop.show_product,
+      carousel_show_play_button: desktop.show_play_icon,
+      carousel_show_title: desktop.show_title,
+      carousel_auto_center: desktop.auto_center,
+    };
+  });
+};
 
   const updateGridConfig = (patch: Partial<GridConfig>) => {
     setFormData(prev => {
