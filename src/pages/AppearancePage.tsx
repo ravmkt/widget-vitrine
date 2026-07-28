@@ -567,8 +567,8 @@ const createDefaultFloatingMobileConfig = (): FloatingConfig => ({
 });
 
 const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
-  gap: 16,
-  card_shape: 'portrait',
+  spacing: 16,
+  shape: 'portrait',
   view_mode: 'preview',
   margin_top: '0',
   margin_bottom: '0',
@@ -576,9 +576,9 @@ const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
   show_product: true,
   show_play_icon: true,
   auto_center: false,
-  card_size: '80',
+  width: '80',
   border_color: '#0094EB',
-  border_width: '2',
+  border_style: '2',
   border_radius: '12',
   object_fit: 'cover',
   show_title: false,
