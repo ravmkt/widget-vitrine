@@ -1,6 +1,9 @@
 import { supabase } from './supabase';
 
-// Interfaces
+// ═══════════════════════════════════════════════════════
+// INTERFACES
+// ═══════════════════════════════════════════════════════
+
 export interface Video {
   id: string;
   store_id: string;
@@ -40,74 +43,202 @@ export type ResponsiveAppearanceConfig<
 export interface Appearance {
   id: string;
   store_id: string;
-  name?: string;
+  created_at?: string;
+  updated_at?: string;
+
+  // 🟦 ABA BÁSICO
   style_name?: string;
   is_default?: boolean;
-  isDefault?: boolean;
-  active?: boolean;
-  status?: string;
-  apply_to_all_devices?: boolean;
-  use_global_appearance?: boolean;
-  useGlobalAppearance?: boolean;
-  url?: string | null;
+  isDefault?: boolean; // alias frontend
+  same_appearance_all_devices?: boolean;
+
+  // 🟨 ABA IDENTIDADE VISUAL
   primary_color?: string;
   secondary_color?: string;
   text_color?: string;
   background_color?: string;
   button_color?: string;
-  button_text_color?: string;
   font_family?: string;
-  font_size?: number | string;
-  border_radius?: string;
-  border_width?: number | string;
-  border_color?: string;
+  font_size?: string;
+
+  // 🔴 ABA FLUTUANTE — Base
+  floating_shape?: string;
+  floating_size?: string;
+  floating_border_radius?: string;
+  floating_position?: string;
+  floating_margin_bottom?: string;
+  floating_margin_top?: string;
+  floating_margin_side?: string;
+  floating_border_color?: string;
+  floating_border_width?: string;
+  floating_object_fit?: string;
+  floating_z_index?: string;
+  floating_show_title?: boolean;
+  floating_show_play_button?: boolean;
+  floating_allow_drag?: boolean;
+  floating_allow_close?: boolean;
+
+  // 🔴 ABA FLUTUANTE — Mobile
+  floating_shape_mobile?: string;
+  floating_size_mobile?: string;
+  floating_border_radius_mobile?: string;
+  floating_position_mobile?: string;
+  floating_margin_bottom_mobile?: string;
+  floating_margin_top_mobile?: string;
+  floating_margin_side_mobile?: string;
+  floating_border_color_mobile?: string;
+  floating_border_width_mobile?: string;
+  floating_object_fit_mobile?: string;
+  floating_z_index_mobile?: string;
+  floating_show_title_mobile?: boolean;
+  floating_show_play_button_mobile?: boolean;
+  floating_allow_drag_mobile?: boolean;
+  floating_allow_close_mobile?: boolean;
+
+  // 🔴 ABA FLUTUANTE — Desktop
+  floating_shape_desktop?: string;
+  floating_size_desktop?: string;
+  floating_border_radius_desktop?: string;
+  floating_position_desktop?: string;
+  floating_margin_bottom_desktop?: string;
+  floating_margin_top_desktop?: string;
+  floating_margin_side_desktop?: string;
+  floating_border_color_desktop?: string;
+  floating_border_width_desktop?: string;
+  floating_object_fit_desktop?: string;
+  floating_z_index_desktop?: string;
+  floating_show_title_desktop?: boolean;
+  floating_show_play_button_desktop?: boolean;
+  floating_allow_drag_desktop?: boolean;
+  floating_allow_close_desktop?: boolean;
+
+  // 🟢 ABA CARROSSEL — Base
+  carousel_shape?: string;
+  carousel_size?: string;
+  carousel_visible_items?: string;
+  carousel_spacing?: string;
+  carousel_border_color?: string;
+  carousel_border_width?: string;
+  carousel_border_radius?: string;
+  carousel_object_fit?: string;
+  carousel_margin_top?: string;
+  carousel_margin_bottom?: string;
+  carousel_show_title?: boolean;
+  carousel_show_product?: boolean;
+  carousel_show_play_button?: boolean;
+  carousel_auto_center?: boolean;
+
+  // 🟢 ABA CARROSSEL — Mobile
+  carousel_shape_mobile?: string;
+  carousel_size_mobile?: string;
+  carousel_visible_items_mobile?: string;
+  carousel_spacing_mobile?: string;
+  carousel_border_color_mobile?: string;
+  carousel_border_width_mobile?: string;
+  carousel_border_radius_mobile?: string;
+  carousel_object_fit_mobile?: string;
+  carousel_margin_top_mobile?: string;
+  carousel_margin_bottom_mobile?: string;
+  carousel_show_title_mobile?: boolean;
+  carousel_show_product_mobile?: boolean;
+  carousel_show_play_button_mobile?: boolean;
+  carousel_auto_center_mobile?: boolean;
+
+  // 🟢 ABA CARROSSEL — Desktop
+  carousel_shape_desktop?: string;
+  carousel_size_desktop?: string;
+  carousel_visible_items_desktop?: string;
+  carousel_spacing_desktop?: string;
+  carousel_border_color_desktop?: string;
+  carousel_border_width_desktop?: string;
+  carousel_border_radius_desktop?: string;
+  carousel_object_fit_desktop?: string;
+  carousel_margin_top_desktop?: string;
+  carousel_margin_bottom_desktop?: string;
+  carousel_show_title_desktop?: boolean;
+  carousel_show_product_desktop?: boolean;
+  carousel_show_play_button_desktop?: boolean;
+  carousel_auto_center_desktop?: boolean;
+
+  // 🟣 ABA GRADE — Base
+  grid_shape?: string;
+  grid_size?: string;
+  grid_columns?: string;
+  grid_rows?: string;
+  grid_spacing?: string;
+  grid_border_color?: string;
+  grid_border_width?: string;
+  grid_border_radius?: string;
+  grid_object_fit?: string;
+  grid_show_title?: boolean;
+
+  // 🟣 ABA GRADE — Mobile
+  grid_shape_mobile?: string;
+  grid_size_mobile?: string;
+  grid_columns_mobile?: string;
+  grid_rows_mobile?: string;
+  grid_spacing_mobile?: string;
+  grid_border_color_mobile?: string;
+  grid_border_width_mobile?: string;
+  grid_border_radius_mobile?: string;
+  grid_object_fit_mobile?: string;
+  grid_show_title_mobile?: boolean;
+
+  // 🟣 ABA GRADE — Desktop
+  grid_shape_desktop?: string;
+  grid_size_desktop?: string;
+  grid_columns_desktop?: string;
+  grid_rows_desktop?: string;
+  grid_spacing_desktop?: string;
+  grid_border_color_desktop?: string;
+  grid_border_width_desktop?: string;
+  grid_border_radius_desktop?: string;
+  grid_object_fit_desktop?: string;
+  grid_show_title_desktop?: boolean;
+
+  // 🔵 ABA PLAYER MODAL
+  modal_show_title?: boolean;
+  modal_show_play_button?: boolean;
+  modal_show_product?: boolean;
+  modal_show_like_button?: boolean;
+  modal_show_comment_button?: boolean;
+  modal_show_share_button?: boolean;
+  modal_show_whatsapp_button?: boolean;
+  modal_show_product_button?: boolean;
+  modal_hide_stories?: boolean;
+  modal_shadow_enabled?: boolean;
+  modal_border_color?: string;
+  modal_border_width?: string;
+  modal_border_radius?: string;
+
+  // ⚠️ DEPRECATED — mantidos para compatibilidade com código legado
+  floating_config?: ResponsiveAppearanceConfig;
+  carousel_config?: ResponsiveAppearanceConfig;
+  grid_config?: ResponsiveAppearanceConfig;
+  modal_config?: ResponsiveAppearanceConfig;
+  use_global_appearance?: boolean;
+  useGlobalAppearance?: boolean;
+  name?: string;
   shadow_enabled?: boolean;
+  border_radius?: string;
+  button_text_color?: string;
   show_title?: boolean;
   show_progress?: boolean;
   autoplay?: boolean;
   muted?: boolean;
   custom_css?: string | null;
-  floating_shape?: string;
-  floating_size?: number | string;
+  url?: string | null;
+  active?: boolean;
+  status?: string;
+  apply_to_all_devices?: boolean;
   floating_height?: number | string | null;
-  floating_border_radius?: number | string;
-  floating_position?: string;
-  floating_margin_bottom?: number | string;
-  floating_margin_top?: number | string;
-  floating_margin_side?: number | string;
-  floating_border_color?: string;
-  floating_border_width?: number | string;
-  floating_object_fit?: string;
-  floating_z_index?: number | string;
-  floating_show_title?: boolean;
-  floating_show_play_button?: boolean;
   floating_draggable?: boolean;
   floating_closable?: boolean;
   carousel_format?: string;
-  carousel_size?: number | string;
   carousel_gap?: number;
-  carousel_visible_items?: number;
   carousel_display_mode?: string;
-  carousel_border_color?: string;
-  carousel_border_width?: number | string;
-  carousel_border_radius?: number | string;
-  carousel_object_fit?: string;
-  carousel_margin_top?: number | string;
-  carousel_margin_bottom?: number | string;
-  carousel_show_title?: boolean;
-  carousel_show_product?: boolean;
-  carousel_show_play_button?: boolean;
-  carousel_auto_center?: boolean;
   grid_format?: string;
-  grid_size?: number | string;
-  grid_columns?: number;
-  grid_rows?: number;
   grid_gap?: number;
-  grid_border_color?: string;
-  grid_border_width?: number | string;
-  grid_border_radius?: number | string;
-  grid_object_fit?: string;
-  grid_show_title?: boolean;
   player_show_title?: boolean;
   player_show_play_button?: boolean;
   player_show_like_button?: boolean;
@@ -121,12 +252,9 @@ export interface Appearance {
   player_border_color?: string;
   player_border_width?: number | string;
   player_border_radius?: number | string;
-  floating_config?: ResponsiveAppearanceConfig;
-  carousel_config?: ResponsiveAppearanceConfig;
-  grid_config?: ResponsiveAppearanceConfig;
-  modal_config?: ResponsiveAppearanceConfig;
-  created_at?: string;
-  updated_at?: string;
+  border_width?: number | string;
+  border_color?: string;
+  font_size_legacy?: number | string;
 }
 
 export type DisplayPosition =
@@ -211,11 +339,6 @@ export interface Product {
   active: boolean;
   created_at?: string;
   updated_at?: string;
-
-  /**
-   * Este campo pode existir no front, mas será removido automaticamente
-   * antes de salvar se a tabela products não tiver a coluna origin.
-   */
   origin?: 'manual' | 'integration' | string;
 }
 
@@ -287,25 +410,13 @@ export interface GeneralSettings {
   floating_widget_enabled: boolean;
   default_appearance_id?: string | null;
   platform?: string | null;
-
-  /**
-   * Alias usado no front.
-   * No Supabase salvamos como default_appearance_id.
-   */
   defaultAppearanceId?: string | null;
-
   timezone: string;
   language: string;
   open_product_new_tab: boolean;
   autoplay: boolean;
   muted_by_default: boolean;
-
-  /**
-   * Alias usado no front.
-   * No Supabase salvamos como muted_by_default.
-   */
   mutedByDefault?: boolean;
-
   show_video_controls: boolean;
   created_at?: string;
   updated_at?: string;
@@ -348,14 +459,15 @@ export interface SizingModel {
   updated_at?: string;
 }
 
+// ═══════════════════════════════════════════════════════
+// CONSTANTES E DADOS PADRÃO
+// ═══════════════════════════════════════════════════════
+
 export const isSupabaseConfigured =
   !!import.meta.env.VITE_SUPABASE_URL &&
   !!import.meta.env.VITE_SUPABASE_ANON_KEY &&
   !!supabase;
 
-/**
- * UUIDs fixos válidos.
- */
 const DEFAULT_STORE_ID = '11111111-1111-4111-8111-111111111111';
 const DEFAULT_store_settings_ID = '22222222-2222-4222-8222-222222222222';
 const DEFAULT_APPEARANCE_ID = '33333333-3333-4333-8333-333333333333';
@@ -401,32 +513,46 @@ const DEFAULT_store_settings: GeneralSettings = {
   public_live_key: `pub_live_${Math.random().toString(36).substring(2, 26)}`,
 };
 
-const createDefaultResponsiveConfig = (): ResponsiveAppearanceConfig => ({
-  desktop: {},
-  mobile: {},
-});
-
 const DEFAULT_APPEARANCES: Appearance[] = [
   {
     id: DEFAULT_APPEARANCE_ID,
     store_id: DEFAULT_STORE.id,
-    name: 'Estilo Vitrine Azul',
+    style_name: 'Estilo Vitrine Azul',
     is_default: true,
     isDefault: true,
+    same_appearance_all_devices: true,
     primary_color: '#0094EB',
     secondary_color: '#0E4787',
     text_color: '#0F172A',
     background_color: '#FFFFFF',
     button_color: '#0094EB',
-    border_radius: '12px',
-    shadow_enabled: true,
     font_family: 'Inter, sans-serif',
+    font_size: '16px',
+    floating_shape: 'circle',
+    floating_size: '80',
+    floating_position: 'bottom-right',
+    floating_show_title: true,
+    floating_show_play_button: true,
+    floating_allow_drag: true,
+    floating_allow_close: true,
+    carousel_show_title: true,
+    carousel_show_product: true,
+    carousel_show_play_button: true,
+    carousel_auto_center: true,
+    grid_show_title: true,
+    modal_show_title: true,
+    modal_show_play_button: true,
+    modal_show_product: true,
+    modal_show_like_button: true,
+    modal_show_comment_button: true,
+    modal_show_share_button: true,
+    modal_show_whatsapp_button: true,
+    modal_show_product_button: true,
+    modal_shadow_enabled: true,
     use_global_appearance: true,
     useGlobalAppearance: true,
-    floating_config: createDefaultResponsiveConfig(),
-    carousel_config: createDefaultResponsiveConfig(),
-    grid_config: createDefaultResponsiveConfig(),
-    modal_config: createDefaultResponsiveConfig(),
+    shadow_enabled: true,
+    border_radius: '12px',
   },
 ];
 
@@ -444,12 +570,12 @@ let memoryComments: Comment[] = [];
 let memoryMetrics: Metric[] = [];
 let memorySizingModels: SizingModel[] = [];
 
-/**
- * Helpers de UUID
- */
+// ═══════════════════════════════════════════════════════
+// HELPERS DE UUID
+// ═══════════════════════════════════════════════════════
+
 export const isValidUuid = (value: unknown): value is string => {
   if (!value || typeof value !== 'string') return false;
-
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
     value,
   );
@@ -462,11 +588,9 @@ export const generateUuid = (): string => {
   ) {
     return crypto.randomUUID();
   }
-
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, char => {
     const random = (Math.random() * 16) | 0;
     const value = char === 'x' ? random : (random & 0x3) | 0x8;
-
     return value.toString(16);
   });
 };
@@ -477,93 +601,27 @@ const isEmptyValue = (value: unknown) =>
 type UuidMode = 'required' | 'optional';
 
 const TABLE_UUID_FIELDS: Record<string, Record<string, UuidMode>> = {
-  stores: {
-    id: 'required',
-    owner_user_id: 'optional',
-  },
-  videos: {
-    id: 'required',
-    store_id: 'required',
-    product_id: 'optional',
-    model_id: 'optional',
-  },
-  stories: {
-    id: 'required',
-    store_id: 'required',
-    appearance_id: 'optional',
-    model_id: 'optional',
-  },
-  story_videos: {
-    id: 'required',
-    store_id: 'required',
-    story_id: 'required',
-    video_id: 'required',
-  },
-  story_products: {
-    id: 'required',
-    store_id: 'required',
-    story_id: 'required',
-    video_id: 'optional',
-    product_id: 'required',
-  },
-  display_locations: {
-    id: 'required',
-    store_id: 'required',
-    story_id: 'required',
-  },
-  page_rules: {
-    id: 'required',
-    store_id: 'required',
-    story_id: 'required',
-  },
-  comments: {
-    id: 'required',
-    store_id: 'required',
-    story_id: 'required',
-    video_id: 'optional',
-  },
-  metrics: {
-    id: 'required',
-    store_id: 'required',
-    story_id: 'required',
-    video_id: 'optional',
-    product_id: 'optional',
-  },
-  sizing_models: {
-    id: 'required',
-    store_id: 'required',
-  },
-  store_settings: {
-    id: 'required',
-    store_id: 'required',
-    default_appearance_id: 'optional',
-  },
-  appearances: {
-    id: 'required',
-    store_id: 'required',
-  },
+  stores: { id: 'required', owner_user_id: 'optional' },
+  videos: { id: 'required', store_id: 'required', product_id: 'optional', model_id: 'optional' },
+  stories: { id: 'required', store_id: 'required', appearance_id: 'optional', model_id: 'optional' },
+  story_videos: { id: 'required', store_id: 'required', story_id: 'required', video_id: 'required' },
+  story_products: { id: 'required', store_id: 'required', story_id: 'required', video_id: 'optional', product_id: 'required' },
+  display_locations: { id: 'required', store_id: 'required', story_id: 'required' },
+  page_rules: { id: 'required', store_id: 'required', story_id: 'required' },
+  comments: { id: 'required', store_id: 'required', story_id: 'required', video_id: 'optional' },
+  metrics: { id: 'required', store_id: 'required', story_id: 'required', video_id: 'optional', product_id: 'optional' },
+  sizing_models: { id: 'required', store_id: 'required' },
+  store_settings: { id: 'required', store_id: 'required', default_appearance_id: 'optional' },
+  appearances: { id: 'required', store_id: 'required' },
 };
 
 const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
   stores: ['id', 'name', 'url', 'platform', 'logo_url', 'contact_email', 'settings', 'owner_user_id'],
   videos: [
-    'id',
-    'store_id',
-    'title',
-    'description',
-    'source_type',
-    'video_url',
-    'thumbnail_url',
-    'poster_url',
-    'image_url',
-    'duration',
-    'file_size',
-    'status',
-    'active',
-    'product_id',
-    'model_id',
-    'created_at',
-    'updated_at',
+    'id', 'store_id', 'title', 'description', 'source_type',
+    'video_url', 'thumbnail_url', 'poster_url', 'image_url',
+    'duration', 'file_size', 'status', 'active', 'product_id',
+    'model_id', 'created_at', 'updated_at',
   ],
   stories: [
     'id', 'store_id', 'title', 'format', 'scroll_direction',
@@ -573,1369 +631,123 @@ const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
     'created_at', 'updated_at',
   ],
   story_videos: [
-    'id',
-    'store_id',
-    'story_id',
-    'video_id',
-    'position',
-    'is_cover',
-    'created_at',
+    'id', 'store_id', 'story_id', 'video_id', 'position', 'is_cover', 'created_at',
   ],
   products: [
-    'id',
-    'store_id',
-    'name',
-    'image_url',
-    'product_url',
-    'price',
-    'sku',
-    'short_description',
-    'active',
-    'origin',
-    'import_source',
-    'external_id',
-    'xml_id',
-    'category',
-    'is_active',
-    'last_imported_at',
-    'created_at',
-    'updated_at',
+    'id', 'store_id', 'name', 'image_url', 'product_url',
+    'price', 'sku', 'short_description', 'active', 'origin',
+    'import_source', 'external_id', 'xml_id', 'category',
+    'is_active', 'last_imported_at', 'created_at', 'updated_at',
   ],
   story_products: [
-    'id',
-    'store_id',
-    'story_id',
-    'video_id',
-    'product_id',
-    'created_at',
+    'id', 'store_id', 'story_id', 'video_id', 'product_id', 'created_at',
   ],
   display_locations: [
-    'id',
-    'store_id',
-    'story_id',
-    'location',
-    'selector',
-    'position',
-    'active',
-    'created_at',
-    'updated_at',
+    'id', 'store_id', 'story_id', 'location', 'selector',
+    'position', 'active', 'created_at', 'updated_at',
   ],
   page_rules: [
-    'id',
-    'store_id',
-    'story_id',
-    'condition_type',
-    'value',
-    'created_at',
-    'updated_at',
+    'id', 'store_id', 'story_id', 'condition_type', 'value',
+    'created_at', 'updated_at',
   ],
   comments: [
-    'id',
-    'store_id',
-    'story_id',
-    'video_id',
-    'author_name',
-    'author_email',
-    'content',
-    'status',
-    'active',
-    'reply_content',
-    'reply_status',
-    'replied_at',
-    'replied_by',
-    'created_at',
-    'updated_at',
+    'id', 'store_id', 'story_id', 'video_id', 'author_name',
+    'author_email', 'content', 'status', 'active', 'reply_content',
+    'reply_status', 'replied_at', 'replied_by', 'created_at', 'updated_at',
   ],
   metrics: [
-    'id',
-    'store_id',
-    'story_id',
-    'video_id',
-    'product_id',
-    'event_type',
-    'page_url',
-    'device_type',
-    'browser',
-    'user_agent',
-    'referrer',
-    'metadata',
-    'created_at',
+    'id', 'store_id', 'story_id', 'video_id', 'product_id',
+    'event_type', 'page_url', 'device_type', 'browser',
+    'user_agent', 'referrer', 'metadata', 'created_at',
   ],
   sizing_models: [
-    'id',
-    'store_id',
-    'name',
-    'image_url',
-    'measures',
-    'size_name',
-    'created_at',
-    'updated_at',
+    'id', 'store_id', 'name', 'image_url', 'measures',
+    'size_name', 'created_at', 'updated_at',
   ],
   store_settings: [
-    'id',
-    'store_id',
-    'store_name',
-    'store_url',
-    'logo_url',
-    'contact_email',
-    'whatsapp_number',
-    'whatsapp_default_message',
-    'app_enabled',
-    'stories_enabled',
-    'carousel_enabled',
-    'floating_widget_enabled',
-    'default_appearance_id',
-    'timezone',
-    'language',
-    'open_product_new_tab',
-    'autoplay',
-    'muted_by_default',
-    'show_video_controls',
-    'created_at',
-    'updated_at',
-    'whatsapp_button_enabled',
-    'pause_on_invisible',
-    'public_installation_key',
-    'widget_enabled',
-    'default_template',
-    'whatsapp_enabled',
-    'whatsapp_message_template',
-    'pause_on_leave',
-    'store_public_id',
-    'public_live_key',
+    'id', 'store_id', 'store_name', 'store_url', 'logo_url',
+    'contact_email', 'whatsapp_number', 'whatsapp_default_message',
+    'app_enabled', 'stories_enabled', 'carousel_enabled',
+    'floating_widget_enabled', 'default_appearance_id',
+    'timezone', 'language', 'open_product_new_tab', 'autoplay',
+    'muted_by_default', 'show_video_controls', 'created_at',
+    'updated_at', 'whatsapp_button_enabled', 'pause_on_invisible',
+    'public_installation_key', 'widget_enabled', 'default_template',
+    'whatsapp_enabled', 'whatsapp_message_template', 'pause_on_leave',
+    'store_public_id', 'public_live_key',
   ],
   appearances: [
-    'id',
-    'store_id',
-    'name',
-    'is_default',
-    'primary_color',
-    'secondary_color',
-    'text_color',
-    'background_color',
-    'button_color',
-    'border_radius',
-    'shadow_enabled',
-    'font_family',
-    'widget_shape',
-    'widget_size',
-    'widget_animation',
-    'carousel_card_shape',
-    'carousel_visible_items',
-    'carousel_gap',
-    'show_title',
-    'show_play_button',
-    'show_product',
-    'show_like_button',
-    'show_comment_button',
-    'show_share_button',
-    'show_whatsapp_button',
-    'show_product_button',
-    'use_global_appearance',
-    'floating_config',
-    'carousel_config',
-    'grid_config',
-    'modal_config',
-    'url',
-    'created_at',
-    'updated_at',
+    'id', 'store_id', 'created_at', 'updated_at',
+    // 🟦 Básico
+    'style_name', 'is_default', 'same_appearance_all_devices',
+    // 🟨 Identidade Visual
+    'primary_color', 'secondary_color', 'text_color', 'background_color',
+    'button_color', 'font_family', 'font_size',
+    // 🔴 Flutuante — Base
+    'floating_shape', 'floating_size', 'floating_border_radius',
+    'floating_position', 'floating_margin_bottom', 'floating_margin_top',
+    'floating_margin_side', 'floating_border_color', 'floating_border_width',
+    'floating_object_fit', 'floating_z_index',
+    'floating_show_title', 'floating_show_play_button',
+    'floating_allow_drag', 'floating_allow_close',
+    // 🔴 Flutuante — Mobile
+    'floating_shape_mobile', 'floating_size_mobile', 'floating_border_radius_mobile',
+    'floating_position_mobile', 'floating_margin_bottom_mobile', 'floating_margin_top_mobile',
+    'floating_margin_side_mobile', 'floating_border_color_mobile', 'floating_border_width_mobile',
+    'floating_object_fit_mobile', 'floating_z_index_mobile',
+    'floating_show_title_mobile', 'floating_show_play_button_mobile',
+    'floating_allow_drag_mobile', 'floating_allow_close_mobile',
+    // 🔴 Flutuante — Desktop
+    'floating_shape_desktop', 'floating_size_desktop', 'floating_border_radius_desktop',
+    'floating_position_desktop', 'floating_margin_bottom_desktop', 'floating_margin_top_desktop',
+    'floating_margin_side_desktop', 'floating_border_color_desktop', 'floating_border_width_desktop',
+    'floating_object_fit_desktop', 'floating_z_index_desktop',
+    'floating_show_title_desktop', 'floating_show_play_button_desktop',
+    'floating_allow_drag_desktop', 'floating_allow_close_desktop',
+    // 🟢 Carrossel — Base
+    'carousel_shape', 'carousel_size', 'carousel_visible_items', 'carousel_spacing',
+    'carousel_border_color', 'carousel_border_width', 'carousel_border_radius',
+    'carousel_object_fit', 'carousel_margin_top', 'carousel_margin_bottom',
+    'carousel_show_title', 'carousel_show_product', 'carousel_show_play_button',
+    'carousel_auto_center',
+    // 🟢 Carrossel — Mobile
+    'carousel_shape_mobile', 'carousel_size_mobile', 'carousel_visible_items_mobile',
+    'carousel_spacing_mobile', 'carousel_border_color_mobile', 'carousel_border_width_mobile',
+    'carousel_border_radius_mobile', 'carousel_object_fit_mobile',
+    'carousel_margin_top_mobile', 'carousel_margin_bottom_mobile',
+    'carousel_show_title_mobile', 'carousel_show_product_mobile',
+    'carousel_show_play_button_mobile', 'carousel_auto_center_mobile',
+    // 🟢 Carrossel — Desktop
+    'carousel_shape_desktop', 'carousel_size_desktop', 'carousel_visible_items_desktop',
+    'carousel_spacing_desktop', 'carousel_border_color_desktop', 'carousel_border_width_desktop',
+    'carousel_border_radius_desktop', 'carousel_object_fit_desktop',
+    'carousel_margin_top_desktop', 'carousel_margin_bottom_desktop',
+    'carousel_show_title_desktop', 'carousel_show_product_desktop',
+    'carousel_show_play_button_desktop', 'carousel_auto_center_desktop',
+    // 🟣 Grade — Base
+    'grid_shape', 'grid_size', 'grid_columns', 'grid_rows', 'grid_spacing',
+    'grid_border_color', 'grid_border_width', 'grid_border_radius',
+    'grid_object_fit', 'grid_show_title',
+    // 🟣 Grade — Mobile
+    'grid_shape_mobile', 'grid_size_mobile', 'grid_columns_mobile',
+    'grid_rows_mobile', 'grid_spacing_mobile', 'grid_border_color_mobile',
+    'grid_border_width_mobile', 'grid_border_radius_mobile',
+    'grid_object_fit_mobile', 'grid_show_title_mobile',
+    // 🟣 Grade — Desktop
+    'grid_shape_desktop', 'grid_size_desktop', 'grid_columns_desktop',
+    'grid_rows_desktop', 'grid_spacing_desktop', 'grid_border_color_desktop',
+    'grid_border_width_desktop', 'grid_border_radius_desktop',
+    'grid_object_fit_desktop', 'grid_show_title_desktop',
+    // 🔵 Player Modal
+    'modal_show_title', 'modal_show_play_button', 'modal_show_product',
+    'modal_show_like_button', 'modal_show_comment_button', 'modal_show_share_button',
+    'modal_show_whatsapp_button', 'modal_show_product_button',
+    'modal_hide_stories', 'modal_shadow_enabled',
+    'modal_border_color', 'modal_border_width', 'modal_border_radius',
+    // ⚠️ Deprecated — compatibilidade legada
+    'name', 'use_global_appearance', 'floating_config', 'carousel_config',
+    'grid_config', 'modal_config', 'shadow_enabled', 'border_radius',
+    'button_text_color', 'show_title', 'show_progress', 'autoplay',
+    'muted', 'custom_css', 'url',
   ],
-};
-
-const normalizeAppearancePayloadBeforeSave = <T extends Record<string, any>>(
-  item: T,
-): T => {
-  const payload: Record<string, any> = { ...item };
-
-  /**
-   * Compatibilidade:
-   * - Front usa useGlobalAppearance.
-   * - Banco usa use_global_appearance.
-   */
-  if (
-    payload.useGlobalAppearance !== undefined &&
-    payload.use_global_appearance === undefined
-  ) {
-    payload.use_global_appearance = payload.useGlobalAppearance;
-  }
-
-  /**
-   * Compatibilidade:
-   * - Front pode usar isDefault.
-   * - Banco usa is_default.
-   */
-  if (payload.isDefault !== undefined && payload.is_default === undefined) {
-    payload.is_default = payload.isDefault;
-  }
-
-  /**
-   * Nunca envia camelCase para o Supabase/localStorage sanitizado,
-   * pois a coluna real deve ser snake_case.
-   */
-  delete payload.useGlobalAppearance;
-  delete payload.isDefault;
-
-  return payload as T;
-};
-
-const normalizeGeneralSettingsPayloadBeforeSave = <
-  T extends Record<string, any>,
->(
-  item: T,
-): T => {
-  const payload: Record<string, any> = { ...item };
-
-  /**
-   * Compatibilidade:
-   * - Front pode usar defaultAppearanceId.
-   * - Banco usa default_appearance_id.
-   */
-  if (
-    payload.defaultAppearanceId !== undefined &&
-    payload.default_appearance_id === undefined
-  ) {
-    payload.default_appearance_id = payload.defaultAppearanceId;
-  }
-
-  /**
-   * Compatibilidade:
-   * - Front pode usar mutedByDefault.
-   * - Banco usa muted_by_default.
-   */
-  if (
-    payload.mutedByDefault !== undefined &&
-    payload.muted_by_default === undefined
-  ) {
-    payload.muted_by_default = payload.mutedByDefault;
-  }
-
-  delete payload.defaultAppearanceId;
-  delete payload.mutedByDefault;
-
-  return payload as T;
-};
-
-const normalizeTablePayloadBeforeSave = <T extends Record<string, any>>(
-  tableName: string,
-  item: T,
-): T => {
-  if (tableName === 'appearances') {
-    return normalizeAppearancePayloadBeforeSave(item);
-  }
-
-  if (tableName === 'store_settings') {
-    return normalizeGeneralSettingsPayloadBeforeSave(item);
-  }
-
-  return item;
-};
-
-const normalizeResponsiveConfigForClient = (
-  value: unknown,
-): ResponsiveAppearanceConfig => {
-  if (!value || typeof value !== 'object') {
-    return {
-      desktop: {},
-      mobile: {},
-    };
-  }
-
-  const config = value as Record<string, any>;
-
-  return {
-    ...config,
-    desktop:
-      config.desktop && typeof config.desktop === 'object'
-        ? config.desktop
-        : {},
-    mobile:
-      config.mobile && typeof config.mobile === 'object' ? config.mobile : {},
-  };
-};
-
-const normalizeTableItemForClient = <T extends Record<string, any>>(
-  tableName: string,
-  item: T,
-): T => {
-  const normalized: Record<string, any> = { ...item };
-
-  // Normalização de comentários: banco usa author_name/content, app usa user_name/text
-  if (tableName === 'comments') {
-    if (item.author_name !== undefined) normalized.user_name = item.author_name;
-    if (item.author_email !== undefined) normalized.user_email = item.author_email;
-    if (item.content !== undefined) normalized.text = item.content;
-
-    // Converte colunas de resposta do banco para o formato de array de replies do app
-    if (item.reply_content) {
-      normalized.replies = [
-        {
-          id: `reply-${item.id}`,
-          user_name: 'Loja',
-          text: item.reply_content,
-          created_at: item.replied_at || item.updated_at || item.created_at,
-          is_store_reply: true,
-        },
-      ];
-    } else {
-      normalized.replies = [];
-    }
-  }
-
-  if (tableName !== 'appearances') {
-    return normalized as T;
-  }
-
-  const appearance: Record<string, any> = normalized;
-
-  appearance.useGlobalAppearance =
-    appearance.useGlobalAppearance ??
-    appearance.use_global_appearance ??
-    true;
-
-  appearance.use_global_appearance =
-    appearance.use_global_appearance ??
-    appearance.useGlobalAppearance ??
-    true;
-
-  appearance.isDefault = appearance.isDefault ?? appearance.is_default ?? false;
-
-  appearance.is_default = appearance.is_default ?? appearance.isDefault ?? false;
-
-  appearance.floating_config = normalizeResponsiveConfigForClient(
-    appearance.floating_config,
-  );
-
-  appearance.carousel_config = normalizeResponsiveConfigForClient(
-    appearance.carousel_config,
-  );
-
-  appearance.grid_config = normalizeResponsiveConfigForClient(
-    appearance.grid_config,
-  );
-
-  appearance.modal_config = normalizeResponsiveConfigForClient(
-    appearance.modal_config,
-  );
-
-  return appearance as T;
-};
-
-const sanitizeTablePayload = <T extends Record<string, any>>(
-  tableName: string,
-  item: T,
-): T => {
-  const normalizedItem = normalizeTablePayloadBeforeSave(tableName, item);
-  const allowedFields = TABLE_ALLOWED_FIELDS[tableName];
-
-  if (!allowedFields) return normalizedItem;
-
-  const clean: Record<string, any> = {};
-
-  Object.entries(normalizedItem).forEach(([key, value]) => {
-    if (allowedFields.includes(key)) {
-      clean[key] = value;
-    }
-  });
-
-  return clean as T;
-};
-
-const normalizeUuidPayload = <T extends Record<string, any>>(
-  tableName: string,
-  item: T,
-): T => {
-  const payload: Record<string, any> = { ...item };
-  const uuidFields = TABLE_UUID_FIELDS[tableName] || { id: 'required' };
-
-  Object.entries(uuidFields).forEach(([field, mode]) => {
-    const value = payload[field];
-
-    if (field === 'id') {
-      if (isEmptyValue(value) || !isValidUuid(value)) {
-        payload[field] = generateUuid();
-      }
-
-      return;
-    }
-
-    if (mode === 'required') {
-      if (isEmptyValue(value) || !isValidUuid(value)) {
-        throw new Error(
-          `Campo UUID obrigatório inválido em "${tableName}.${field}": ${String(
-            value,
-          )}`,
-        );
-      }
-
-      return;
-    }
-
-    if (mode === 'optional') {
-      if (isEmptyValue(value) || !isValidUuid(value)) {
-        payload[field] = null;
-      }
-    }
-  });
-
-  return payload as T;
-};
-
-const removeUndefinedValues = <T extends Record<string, any>>(item: T): T => {
-  const clean: Record<string, any> = {};
-
-  Object.entries(item).forEach(([key, value]) => {
-    if (value !== undefined) {
-      clean[key] = value;
-    }
-  });
-
-  return clean as T;
-};
-
-const preparePayloadForSave = <T extends Record<string, any>>(
-  tableName: string,
-  item: T,
-): T => {
-  const normalizedPayload: Record<string, any> = { ...item };
-
-  // Normalização inversa para comentários: app usa user_name/text, banco usa author_name/content
-  if (tableName === 'comments') {
-    if (item.user_name !== undefined) normalizedPayload.author_name = item.user_name;
-    if (item.user_email !== undefined) normalizedPayload.author_email = item.user_email;
-    if (item.text !== undefined) normalizedPayload.content = item.text;
-
-    // Mapeia o array de replies do app para as colunas de resposta do banco
-    if (item.replies && Array.isArray(item.replies) && item.replies.length > 0) {
-      // Filtra apenas as respostas da loja
-      const storeReplies = item.replies.filter(r => r.is_store_reply);
-      if (storeReplies.length > 0) {
-        const lastReply = storeReplies[storeReplies.length - 1];
-        normalizedPayload.reply_content = lastReply.text;
-        normalizedPayload.reply_status = 'replied';
-        normalizedPayload.replied_at = lastReply.created_at || new Date().toISOString();
-      }
-    }
-
-    // Remove campos que não existem no banco
-    delete normalizedPayload.user_name;
-    delete normalizedPayload.user_email;
-    delete normalizedPayload.text;
-    delete normalizedPayload.replies;
-    delete normalizedPayload.is_store_reply;
-  }
-
-  return normalizeUuidPayload(
-    tableName,
-    sanitizeTablePayload(tableName, removeUndefinedValues(normalizedPayload)),
-  ) as T;
-};
-
-const initLocalStorage = () => {
-  try {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const items = [
-        { key: 'vidlytics_stores', default: [DEFAULT_STORE] },
-        {
-          key: 'vidlytics_store_settings',
-          default: [DEFAULT_store_settings],
-        },
-        { key: 'vidlytics_appearances', default: DEFAULT_APPEARANCES },
-        { key: 'vidlytics_videos', default: [] },
-        { key: 'vidlytics_stories', default: [] },
-        { key: 'vidlytics_story_videos', default: [] },
-        { key: 'vidlytics_products', default: [] },
-        { key: 'vidlytics_story_products', default: [] },
-        { key: 'vidlytics_display_locations', default: [] },
-        { key: 'vidlytics_page_rules', default: [] },
-        { key: 'vidlytics_comments', default: [] },
-        { key: 'vidlytics_metrics', default: [] },
-        { key: 'vidlytics_sizing_models', default: [] },
-      ];
-
-      items.forEach(item => {
-        if (!localStorage.getItem(item.key)) {
-          localStorage.setItem(item.key, JSON.stringify(item.default));
-        }
-      });
-    }
-  } catch (e) {
-    console.warn('Não foi possível inicializar localStorage:', e);
-  }
-};
-
-initLocalStorage();
-
-const ensureSupabaseStoreExists = async (storeId?: string) => {
-  if (!isSupabaseConfigured || !storeId) return;
-
-  if (!isValidUuid(storeId)) {
-    throw new Error(`store_id inválido: ${storeId}`);
-  }
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError) {
-    console.error('Erro ao buscar usuário autenticado:', userError);
-    throw userError;
-  }
-
-  if (!user) {
-    throw new Error(
-      'Usuário não autenticado. Faça login antes de criar uma loja no Supabase.',
-    );
-  }
-
-  let localStore: Store | null = null;
-
-  try {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const local = localStorage.getItem('vidlytics_stores');
-      const stores = local ? (JSON.parse(local) as Store[]) : [];
-      localStore = stores.find(store => store.id === storeId) || null;
-    }
-  } catch (error) {
-    console.warn('Não foi possível buscar loja no localStorage:', error);
-  }
-
-  const storeToInsert = sanitizeTablePayload('stores', {
-    id: storeId,
-    name: localStore?.name || 'Loja',
-    url: localStore?.url || '',
-    owner_user_id: user.id,
-  });
-
-  // ✅ UPSERT resolve o problema: insere se não existir, atualiza se existir
-  //    sem precisar de SELECT (que está bloqueado pelo RLS de membros)
-  const { error } = await supabase
-    .from('stores' as any)
-    .upsert(storeToInsert as any, { onConflict: 'id' });
-
-  if (error) {
-    console.error('Erro ao criar/atualizar loja no Supabase:', error);
-    throw error;
-  }
-};
-
-const ensureSupabaseAppearanceExists = async (
-  appearanceId?: string | null,
-  storeId?: string,
-): Promise<string | null> => {
-  if (!isSupabaseConfigured) {
-    return appearanceId || null;
-  }
-
-  if (!appearanceId || !isValidUuid(appearanceId)) {
-    return null;
-  }
-
-  let query = supabase
-    .from('appearances' as any)
-    .select('id')
-    .eq('id', appearanceId);
-
-  if (storeId && isValidUuid(storeId)) {
-    query = query.eq('store_id', storeId);
-  }
-
-  const { data: existingAppearance, error: selectError } =
-    await query.maybeSingle();
-
-  if (selectError) {
-    console.error(
-      'Erro ao verificar appearance_id em appearances:',
-      selectError,
-    );
-    throw selectError;
-  }
-
-  if (existingAppearance) {
-    return appearanceId;
-  }
-
-  let localAppearance: Appearance | null = null;
-
-  try {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const local = localStorage.getItem('vidlytics_appearances');
-      const appearances = local ? (JSON.parse(local) as Appearance[]) : [];
-
-      localAppearance =
-        appearances.find(appearance => appearance.id === appearanceId) || null;
-    }
-  } catch (error) {
-    console.warn('Não foi possível buscar aparência no localStorage:', error);
-  }
-
-  if (!localAppearance) {
-    console.warn(
-      `appearance_id "${appearanceId}" não encontrado em appearances. Salvando Story sem aparência vinculada.`,
-    );
-
-    return null;
-  }
-
-  const now = new Date().toISOString();
-
-  const payload = preparePayloadForSave('appearances', {
-    ...localAppearance,
-    id: appearanceId,
-    store_id:
-      storeId && isValidUuid(storeId) ? storeId : localAppearance.store_id,
-    created_at: localAppearance.created_at || now,
-    updated_at: now,
-  } as any);
-
-  const { data: insertedAppearance, error: insertError } = await supabase
-    .from('appearances' as any)
-    .upsert(payload as any, { onConflict: 'id' })
-    .select('id')
-    .single();
-
-  if (insertError) {
-    console.error(
-      'Erro ao migrar aparência local para o Supabase:',
-      insertError,
-    );
-    throw insertError;
-  }
-
-  return insertedAppearance?.id || appearanceId;
-};
-
-/**
- * Corrige foreign keys opcionais antes de salvar no Supabase.
- *
- * Problemas resolvidos:
- *
- * 1. Ao salvar vídeos ou stories com model_id apontando para modelo inexistente,
- *    o Supabase retornava erro de foreign key.
- *
- * 2. Ao salvar Story com appearance_id de uma aparência que estava apenas no
- *    localStorage, o Supabase retornava erro de foreign key.
- *
- * Agora:
- * - model_id inexistente vira null;
- * - product_id inexistente vira null;
- * - appearance_id é verificado e, se existir no localStorage, é migrado para
- *   o Supabase automaticamente.
- */
-const normalizeSupabaseRelationsBeforeSave = async <
-  T extends Record<string, any>,
->(
-  tableName: string,
-  payload: T,
-): Promise<T> => {
-  if (!isSupabaseConfigured) return payload;
-
-  const normalizedPayload: Record<string, any> = { ...payload };
-
-  if (
-    (tableName === 'videos' || tableName === 'stories') &&
-    normalizedPayload.model_id
-  ) {
-    if (!isValidUuid(normalizedPayload.model_id)) {
-      normalizedPayload.model_id = null;
-
-      return normalizedPayload as T;
-    }
-
-    let query = supabase
-      .from('sizing_models' as any)
-      .select('id')
-      .eq('id', normalizedPayload.model_id);
-
-    if (normalizedPayload.store_id && isValidUuid(normalizedPayload.store_id)) {
-      query = query.eq('store_id', normalizedPayload.store_id);
-    }
-
-    const { data: existingModel, error } = await query.maybeSingle();
-
-    if (error) {
-      console.error('Erro ao verificar model_id em sizing_models:', error);
-      throw error;
-    }
-
-    if (!existingModel) {
-      console.warn(
-        `model_id "${normalizedPayload.model_id}" não encontrado em sizing_models. Salvando como null.`,
-      );
-
-      normalizedPayload.model_id = null;
-    }
-  }
-
-  if (tableName === 'stories' && normalizedPayload.appearance_id) {
-    normalizedPayload.appearance_id = await ensureSupabaseAppearanceExists(
-      normalizedPayload.appearance_id,
-      normalizedPayload.store_id,
-    );
-  }
-
-  if (
-    tableName === 'store_settings' &&
-    normalizedPayload.default_appearance_id
-  ) {
-    normalizedPayload.default_appearance_id =
-      await ensureSupabaseAppearanceExists(
-        normalizedPayload.default_appearance_id,
-        normalizedPayload.store_id,
-      );
-  }
-
-  if (tableName === 'videos' && normalizedPayload.product_id) {
-    if (!isValidUuid(normalizedPayload.product_id)) {
-      normalizedPayload.product_id = null;
-
-      return normalizedPayload as T;
-    }
-
-    let query = supabase
-      .from('products' as any)
-      .select('id')
-      .eq('id', normalizedPayload.product_id);
-
-    if (normalizedPayload.store_id && isValidUuid(normalizedPayload.store_id)) {
-      query = query.eq('store_id', normalizedPayload.store_id);
-    }
-
-    const { data: existingProduct, error } = await query.maybeSingle();
-
-    if (error) {
-      console.error('Erro ao verificar product_id em products:', error);
-      throw error;
-    }
-
-    if (!existingProduct) {
-      console.warn(
-        `product_id "${normalizedPayload.product_id}" não encontrado em products. Salvando como null.`,
-      );
-
-      normalizedPayload.product_id = null;
-    }
-  }
-
-  return normalizedPayload as T;
-};
-
-const createCrudFunctions = <
-  T extends {
-    id: string;
-    store_id?: string;
-    created_at?: string;
-    updated_at?: string;
-  },
->(
-  tableName: string,
-  memoryArray: T[],
-) => {
-  const getLocalItems = (): T[] => {
-    try {
-      if (typeof window !== "undefined" && window.localStorage) {
-        const local = localStorage.getItem(`vidlytics_${tableName}`);
-
-        if (local) {
-          const parsed = JSON.parse(local);
-
-          if (Array.isArray(parsed)) {
-            return parsed as T[];
-          }
-        }
-      }
-    } catch (error) {
-      console.warn(
-        `Erro ao ler dados locais da tabela ${tableName}:`,
-        error,
-      );
-    }
-
-    return memoryArray;
-  };
-
-  return {
-    async getAll(storeId?: string): Promise<T[]> {
-      const items = getLocalItems();
-
-      const filteredItems = storeId
-        ? items.filter(item => item.store_id === storeId)
-        : items;
-
-      return filteredItems.map(item =>
-        normalizeTableItemForClient(tableName, item as any),
-      ) as T[];
-    },
-
-    async getById(id: string, storeId?: string): Promise<T | null> {
-      const items = await this.getAll(storeId);
-
-      return items.find(item => item.id === id) || null;
-    },
-
-    async save(item: T): Promise<T> {
-      const now = new Date().toISOString();
-      const items = await this.getAll();
-
-      const normalizedItem = preparePayloadForSave(
-        tableName,
-        item as any,
-      ) as T;
-
-      const index = items.findIndex(existing => existing.id === normalizedItem.id);
-
-      const updatedItem = {
-        ...normalizedItem,
-        updated_at: now,
-      };
-
-      if (index >= 0) {
-        items[index] = updatedItem;
-      } else {
-        items.push({
-          ...updatedItem,
-          created_at: normalizedItem.created_at || now,
-        });
-      }
-
-      if (typeof window !== "undefined" && window.localStorage) {
-        localStorage.setItem(
-          `vidlytics_${tableName}`,
-          JSON.stringify(items),
-        );
-      }
-
-      return normalizeTableItemForClient(
-        tableName,
-        updatedItem as any,
-      ) as T;
-    },
-
-    // ✅ CORRIGIDO: aceita storeId para manter compatibilidade com a versão Supabase
-    async delete(id: string, storeId?: string): Promise<boolean> {
-      const items = await this.getAll(storeId);
-
-      const filtered = items.filter(item => item.id !== id);
-
-      if (typeof window !== "undefined" && window.localStorage) {
-        localStorage.setItem(
-          `vidlytics_${tableName}`,
-          JSON.stringify(filtered),
-        );
-      }
-
-      return true;
-    },
-  };
-};
-
-const createSupabaseCrudFunctions = <
-  T extends {
-    id: string;
-    store_id?: string;
-    created_at?: string;
-    updated_at?: string;
-  },
->(
-  tableName: string,
-  fallbackMemoryArray: T[],
-) => {
-  const localFallback = createCrudFunctions<T>(
-    tableName,
-    fallbackMemoryArray,
-  );
-
-  return {
-    async getAll(storeId?: string): Promise<T[]> {
-      if (!isSupabaseConfigured) {
-        return localFallback.getAll(storeId);
-      }
-
-      let query = supabase
-        .from(tableName as any)
-        .select("*");
-
-      if (storeId) {
-        if (!isValidUuid(storeId)) {
-          return [];
-        }
-
-        query = query.eq("store_id", storeId);
-      }
-
-      query = query.order("created_at", {
-        ascending: false,
-      });
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error(
-          `Erro ao buscar dados da tabela ${tableName}:`,
-          error,
-        );
-
-        throw error;
-      }
-
-      if (!data || data.length === 0) {
-        return localFallback.getAll(storeId);
-      }
-
-      return ((data || []) as T[]).map(item =>
-        normalizeTableItemForClient(tableName, item as any),
-      ) as T[];
-    },
-
-    async getById(
-      id: string,
-      storeId?: string,
-    ): Promise<T | null> {
-      if (!isSupabaseConfigured) {
-        return localFallback.getById(id, storeId);
-      }
-
-      if (!isValidUuid(id)) {
-        return null;
-      }
-
-      let query = supabase
-        .from(tableName as any)
-        .select("*")
-        .eq("id", id);
-
-      if (storeId) {
-        if (!isValidUuid(storeId)) {
-          return null;
-        }
-
-        query = query.eq("store_id", storeId);
-      }
-
-      const { data, error } = await query.maybeSingle();
-
-      if (error) {
-        console.error(
-          `Erro ao buscar ${tableName} por ID:`,
-          error,
-        );
-
-        throw error;
-      }
-
-      if (!data) {
-        return null;
-      }
-
-      return normalizeTableItemForClient(
-        tableName,
-        data as any,
-      ) as T;
-    },
-
-    async save(item: T): Promise<T> {
-      if (!isSupabaseConfigured) {
-        return localFallback.save(item);
-      }
-
-      const now = new Date().toISOString();
-
-      const originalId = item.id;
-      const originalIdIsValid = isValidUuid(originalId);
-
-      let payload = preparePayloadForSave(tableName, {
-        ...item,
-        created_at: item.created_at || now,
-        updated_at: now,
-      } as any);
-
-      if (
-        tableName !== "stores" &&
-        payload.store_id
-      ) {
-        await ensureSupabaseStoreExists(payload.store_id);
-      }
-
-      payload = await normalizeSupabaseRelationsBeforeSave(
-        tableName,
-        payload,
-      );
-
-      if (originalIdIsValid) {
-        const {
-          data: existingItem,
-          error: selectError,
-        } = await supabase
-          .from(tableName as any)
-          .select("id")
-          .eq("id", payload.id)
-          .maybeSingle();
-
-        if (selectError) {
-          console.error(
-            `Erro ao verificar ${tableName}:`,
-            selectError,
-          );
-
-          throw selectError;
-        }
-
-        if (existingItem) {
-            console.log('🟢 UPDATE payload.id:', payload.id);
-  console.log('🟢 SELECT existingItem.id:', existingItem.id);
-  console.log('🟢 IDs MATCH?', payload.id === existingItem.id);
-          const {
-            data,
-            error: updateError,
-          } = await supabase
-            .from(tableName as any)
-            .update(payload as any)
-            .eq("id", payload.id)
-            .select()
-            .single();
-
-          if (updateError) {
-            console.error(
-              `Erro ao atualizar ${tableName}:`,
-              updateError,
-            );
-
-            throw updateError;
-          }
-
-          return normalizeTableItemForClient(
-            tableName,
-            data as any,
-          ) as T;
-        }
-      }
-
-      const {
-        data,
-        error: insertError,
-      } = await supabase
-        .from(tableName as any)
-        .insert(payload as any)
-        .select()
-        .single();
-
-      if (insertError) {
-        console.error(
-          `Erro ao inserir ${tableName}:`,
-          insertError,
-        );
-
-        throw insertError;
-      }
-
-      return normalizeTableItemForClient(
-        tableName,
-        data as any,
-      ) as T;
-    },
-
-    // ✅ CORRIGIDO: aceita storeId e adiciona ao filtro do Supabase
-    //    Também usa .select() para diagnosticar bloqueios do RLS
-    //    E limpa localStorage para evitar "ressurreição" de itens deletados
-    async delete(id: string, storeId?: string): Promise<boolean> {
-      if (!isSupabaseConfigured) {
-        return localFallback.delete(id, storeId);
-      }
-
-      if (!isValidUuid(id)) {
-        console.warn(
-          `ID inválido ignorado ao deletar ${tableName}:`,
-          id,
-        );
-
-        return true;
-      }
-
-      let query = supabase
-        .from(tableName as any)
-        .delete()
-        .eq("id", id);
-
-      if (storeId && isValidUuid(storeId)) {
-        query = query.eq("store_id", storeId);
-      }
-
-      const { error, count } = await query.select();
-
-      if (error) {
-        console.error(
-          `Erro ao deletar ${tableName}:`,
-          error,
-        );
-
-        throw error;
-      }
-
-      if (count && count > 0) {
-        try {
-          if (typeof window !== "undefined" && window.localStorage) {
-            const local = localStorage.getItem(`vidlytics_${tableName}`);
-            if (local) {
-              const items = JSON.parse(local);
-              const filtered = items.filter((item: any) => item.id !== id);
-              localStorage.setItem(`vidlytics_${tableName}`, JSON.stringify(filtered));
-            }
-          }
-        } catch (e) {
-          console.warn(`Erro ao limpar localStorage após delete em ${tableName}:`, e);
-        }
-      }
-
-      if (count === 0) {
-        console.warn(
-          `Nenhum registro deletado em ${tableName} para id=${id}. ` +
-          `Verifique se o RLS está bloqueando a operação.`
-        );
-      }
-
-      return true;
-    },
-  };
-};
-
-export const resolveStoreId = async (
-  storeId?: string | null,
-): Promise<string> => {
-  if (storeId && isValidUuid(storeId)) {
-    return storeId;
-  }
-
-  try {
-    const stores = await db.stores.getAll();
-    const firstValidStore = stores.find(store => isValidUuid(store.id));
-
-    if (firstValidStore?.id) {
-      return firstValidStore.id;
-    }
-  } catch (error) {
-    console.warn(
-      'Não foi possível buscar loja atual, usando loja padrão:',
-      error,
-    );
-  }
-
-  return DEFAULT_STORE.id;
-};
-
-export const withStoreId = async <T extends { store_id?: string }>(
-  item: T,
-  storeId?: string | null,
-): Promise<T & { store_id: string }> => {
-  const resolvedStoreId =
-    item.store_id && isValidUuid(item.store_id)
-      ? item.store_id
-      : await resolveStoreId(storeId);
-
-  return {
-    ...item,
-    store_id: resolvedStoreId,
-  };
-};
-
-export const replaceStoryRelations = async <
-  T extends {
-    id: string;
-    store_id: string;
-    story_id: string;
-  },
->(
-  tableName: 'story_videos' | 'story_products',
-  storeId: string,
-  storyId: string,
-  relations: T[],
-) => {
-  if (!isValidUuid(storeId)) {
-    throw new Error(`storeId inválido em replaceStoryRelations: ${storeId}`);
-  }
-
-  if (!isValidUuid(storyId)) {
-    throw new Error(`storyId inválido em replaceStoryRelations: ${storyId}`);
-  }
-
-  if (isSupabaseConfigured) {
-    await ensureSupabaseStoreExists(storeId);
-
-    const { error: deleteError } = await supabase
-      .from(tableName as any)
-      .delete()
-      .eq('store_id', storeId)
-      .eq('story_id', storyId);
-
-    if (deleteError) {
-      console.error(`Erro ao limpar relações em ${tableName}:`, deleteError);
-      throw deleteError;
-    }
-
-    if (!relations.length) return;
-
-    const payload = relations.map(relation =>
-      preparePayloadForSave(tableName, {
-        ...relation,
-        id: isValidUuid(relation.id) ? relation.id : generateUuid(),
-        store_id: storeId,
-        story_id: storyId,
-      } as any),
-    );
-
-    const { error: insertError } = await supabase
-      .from(tableName as any)
-      .insert(payload as any);
-
-    if (insertError) {
-      console.error(`Erro ao inserir relações em ${tableName}:`, insertError);
-      throw insertError;
-    }
-
-    return;
-  }
-
-  const local =
-    typeof window !== 'undefined'
-      ? localStorage.getItem(`vidlytics_${tableName}`)
-      : null;
-
-  const items = local ? JSON.parse(local) : [];
-
-  const preserved = items.filter(
-    (item: T) => !(item.store_id === storeId && item.story_id === storyId),
-  );
-
-  const normalizedRelations = relations.map(relation =>
-    preparePayloadForSave(tableName, {
-      ...relation,
-      id: isValidUuid(relation.id) ? relation.id : generateUuid(),
-      store_id: storeId,
-      story_id: storyId,
-    } as any),
-  );
-
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(
-      `vidlytics_${tableName}`,
-      JSON.stringify([...preserved, ...normalizedRelations]),
-    );
-  }
-};
-
-export const db = {
-  stores: createSupabaseCrudFunctions<Store>(
-    "stores",
-    memoryStores,
-  ),
-
-  generalSettings: createSupabaseCrudFunctions<GeneralSettings>(
-    "store_settings",
-    memoryStoreSettings,
-  ),
-
-  getSettings: async (): Promise<GeneralSettings | null> => {
-    const settings = await db.generalSettings.getAll();
-    return settings[0] || null;
-  },
-
-  appearances: createSupabaseCrudFunctions<Appearance>(
-    "appearances",
-    memoryAppearances,
-  ),
-
-  videos: createSupabaseCrudFunctions<Video>(
-    "videos",
-    memoryVideos,
-  ),
-
-  stories: createSupabaseCrudFunctions<Story>(
-    "stories",
-    memoryStories,
-  ),
-
-  storyVideos: createSupabaseCrudFunctions<StoryVideo>(
-    "story_videos",
-    memoryStoryVideos,
-  ),
-
-  products: createSupabaseCrudFunctions<Product>(
-    "products",
-    memoryProducts,
-  ),
-
-  storyProducts: createSupabaseCrudFunctions<StoryProduct>(
-    "story_products",
-    memoryStoryProducts,
-  ),
-
-  displayLocations: createSupabaseCrudFunctions<DisplayLocation>(
-    "display_locations",
-    memoryDisplayLocations,
-  ),
-
-  pageRules: createSupabaseCrudFunctions<PageRule>(
-    "page_rules",
-    memoryPageRules,
-  ),
-
-  comments: createSupabaseCrudFunctions<Comment>(
-    "comments",
-    memoryComments,
-  ),
-
-  metrics: createSupabaseCrudFunctions<Metric>(
-    "metrics",
-    memoryMetrics,
-  ),
-
-  sizingModels: createSupabaseCrudFunctions<SizingModel>(
-    "sizing_models",
-    memorySizingModels,
-  ),
-
-  profiles: createSupabaseCrudFunctions<{
-    id: string;
-    user_id: string;
-    name: string;
-    email: string;
-    avatar_url?: string;
-    role?: string;
-    created_at?: string;
-    updated_at?: string;
-  }>("profiles", []),
-
-  storeMembers: createSupabaseCrudFunctions<{
-    id: string;
-    store_id: string;
-    user_id: string;
-    role: "owner" | "admin" | "member";
-    created_at?: string;
-  }>("store_members", []),
-
-  subscriptions: createSupabaseCrudFunctions<{
-    id: string;
-    store_id: string;
-    plan_name: string;
-    status: "trialing" | "active" | "past_due" | "canceled";
-    current_period_start?: string;
-    current_period_end?: string;
-    created_at?: string;
-  }>("subscriptions", []),
-
-  usageCounters: createSupabaseCrudFunctions<{
-    id: string;
-    store_id: string;
-    month: string;
-    videos_count: number;
-    views_count: number;
-    users_count: number;
-    created_at?: string;
-    updated_at?: string;
-  }>("usage_counters", []),
-
-  resolveStoreId,
-
-  withStoreId,
-
-  replaceStoryRelations,
 };
