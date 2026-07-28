@@ -94,8 +94,8 @@ type FloatingConfig = {
 };
 
 type CarouselConfig = {
-  gap: number;
-  card_shape: WidgetShape;
+  spacing: number;
+  shape: WidgetShape;
   view_mode: string;
   margin_top: string;
   margin_bottom: string;
@@ -103,9 +103,9 @@ type CarouselConfig = {
   show_product: boolean;
   show_play_icon: boolean;
   auto_center: boolean;
-  card_size: string;
+  width: string;
   border_color: string;
-  border_width: string;
+  border_style: string;
   border_radius: string;
   object_fit: string;
   show_title: boolean;
