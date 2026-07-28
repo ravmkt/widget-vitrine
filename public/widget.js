@@ -621,3 +621,354 @@
   }
 
   // ═══ CONTINUA NA PARTE 3 ═══
+  // ═══ CONTINUAÇÃO DA PARTE 2 ═══
+
+  // ═══════════════════════════════════════════════════════════════
+  // CORES E FONTES
+  // ═══════════════════════════════════════════════════════════════
+
+  function getPrimaryColor(appearance) {
+    return readAppearanceValue(appearance, ['primary_color', 'primaryColor', 'cor_primaria']) || DEFAULT_APPEARANCE.primary_color;
+  }
+
+  function getSecondaryColor(appearance) {
+    return readAppearanceValue(appearance, ['secondary_color', 'secondaryColor', 'cor_secundaria']) || DEFAULT_APPEARANCE.secondary_color;
+  }
+
+  function getBorderColor(appearance) {
+    var jsonbVal = readJsonbConfigValue(appearance, 'floating_config', 'border_color');
+    if (jsonbVal && String(jsonbVal).trim() !== '') return jsonbVal;
+    var flatVal = readDeviceValue(appearance, 'floating_border_color');
+    if (flatVal && String(flatVal).trim() !== '') return flatVal;
+    return getPrimaryColor(appearance);
+  }
+
+  function getButtonColor(appearance) {
+    return readAppearanceValue(appearance, ['button_color', 'buttonColor', 'btn_color', 'cor_botao']) || getPrimaryColor(appearance);
+  }
+
+  function getFontFamily(appearance) {
+    return readAppearanceValue(appearance, ['font_family', 'fontFamily', 'fonte']) || DEFAULT_APPEARANCE.font_family;
+  }
+
+  function normalizeModalAppearanceConfig(appearance) {
+    appearance = appearance || {};
+
+    function getFromJsonb(fieldName, fallback) {
+      var val = readJsonbConfigValue(appearance, 'modal_config', fieldName);
+      if (val !== undefined && val !== null && val !== '') return val;
+      return fallback;
+    }
+
+    function getBool(name, fallback) {
+      var jsonbVal = getFromJsonb(name, undefined);
+      if (jsonbVal !== undefined && jsonbVal !== null && jsonbVal !== '') return toBoolean(jsonbVal, fallback);
+      var flatVal = appearance[name];
+      if (flatVal !== undefined && flatVal !== null && flatVal !== '') return toBoolean(flatVal, fallback);
+      var legacyName = name.replace('modal_', '');
+      var legacyVal = appearance[legacyName];
+      if (legacyVal !== undefined && legacyVal !== null && legacyVal !== '') return toBoolean(legacyVal, fallback);
+      return fallback;
+    }
+
+    function getString(name, fallback) {
+      var jsonbVal = getFromJsonb(name, undefined);
+      if (jsonbVal !== undefined && jsonbVal !== null && jsonbVal !== '') return jsonbVal;
+      var flatVal = appearance[name];
+      if (flatVal !== undefined && flatVal !== null && flatVal !== '') return flatVal;
+      var legacyName = name.replace('modal_', '');
+      var legacyVal = appearance[legacyName];
+      if (legacyVal !== undefined && legacyVal !== null && legacyVal !== '') return legacyVal;
+      return fallback;
+    }
+
+    return {
+      show_title: getBool('modal_show_title', true),
+      show_play_button: getBool('modal_show_play_button', true),
+      show_product: getBool('modal_show_product', true),
+      show_product_button: getBool('modal_show_product_button', true),
+      show_like_button: getBool('modal_show_like_button', true),
+      show_comment_button: getBool('modal_show_comment_button', true),
+      show_share_button: getBool('modal_show_share_button', true),
+      show_whatsapp_button: getBool('modal_show_whatsapp_button', true),
+      show_sizing_button: getBool('modal_show_sizing_button', true),
+      hide_stories: getBool('modal_hide_stories', false),
+      shadow_enabled: getBool('modal_shadow_enabled', true),
+      border_color: getString('modal_border_color', ''),
+      border_width: getString('modal_border_width', ''),
+      border_radius: getString('modal_border_radius', '')
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // MÉTRICAS
+  // ═══════════════════════════════════════════════════════════════
+
+  function trackMetric(metric) {
+    metric = metric || {};
+    var payload = {
+      store_id: storeId || null,
+      story_id: metric.story_id || null,
+      video_id: metric.video_id || null,
+      product_id: metric.product_id || null,
+      event_type: String(metric.event_type || 'unknown'),
+      page_url: metric.page_url || window.location.href,
+      device_type: getDevice(),
+      browser: navigator.userAgent,
+      user_agent: navigator.userAgent,
+      referrer: document.referrer || null,
+      metadata: {},
+      created_at: new Date().toISOString()
+    };
+
+    var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
+    if (!Array.isArray(fallbackMetrics)) fallbackMetrics = [];
+    fallbackMetrics.push(payload);
+    setStorageItem('vidlytics_metrics', fallbackMetrics);
+
+    if (!hasSupabase) return Promise.resolve({ saved: false, local: true, payload: payload });
+
+    return supabaseFetch('metrics', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify(payload)
+    })
+      .then(function (response) { if (response.ok) return { saved: true, payload: payload }; return { saved: false, payload: payload }; })
+      .catch(function () { return { saved: false, payload: payload }; });
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // FETCH DE DADOS
+  // ═══════════════════════════════════════════════════════════════
+
+  function readStories() {
+    if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_stories', []));
+    return fetchJson('stories?select=*&store_id=eq.' + encodeURIComponent(storeId))
+      .then(function (items) {
+        return items.filter(function (story) {
+          return ('status' in story ? story.status === 'active' : true) &&
+                 ('active' in story ? story.active !== false : true);
+        });
+      });
+  }
+
+  function readStoryVideos() {
+    return (!storeId || !hasSupabase)
+      ? Promise.resolve(getStorageItem('vidlytics_story_videos', []))
+      : fetchJson('story_videos?select=*&store_id=eq.' + encodeURIComponent(storeId));
+  }
+
+  function readVideos() {
+    return (!storeId || !hasSupabase)
+      ? Promise.resolve(getStorageItem('vidlytics_videos', []))
+      : fetchJson('videos?select=*&store_id=eq.' + encodeURIComponent(storeId));
+  }
+
+  function readStoryProducts() {
+    return (!storeId || !hasSupabase)
+      ? Promise.resolve(getStorageItem('vidlytics_story_products', []))
+      : fetchJson('story_products?select=*&store_id=eq.' + encodeURIComponent(storeId));
+  }
+
+  function readProducts() {
+    return (!storeId || !hasSupabase)
+      ? Promise.resolve(getStorageItem('vidlytics_products', []))
+      : fetchJson('products?select=*&store_id=eq.' + encodeURIComponent(storeId));
+  }
+
+  function readComments() {
+    if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_comments', []));
+    var query = 'comments?select=id,store_id,story_id,video_id,author_name,content,status,active,created_at,reply_content,replied_at,reply_status&store_id=eq.' +
+      encodeURIComponent(storeId) + '&status=eq.approved&active=eq.true&order=created_at.asc';
+    return fetchJson(query);
+  }
+
+  function readPageRules() {
+    if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_page_rules', []));
+    return fetchJson('page_rules?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&active=is.true');
+  }
+
+  function readDisplayLocations() {
+    if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_display_locations', []));
+    return fetchJson('display_locations?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&active=is.true');
+  }
+
+  function readLikesFromDb() {
+    if (!storeId || !hasSupabase) return Promise.resolve([]);
+    var params = new URLSearchParams();
+    params.set('select', 'video_id,visitor_id');
+    params.set('store_id', 'eq.' + String(storeId).trim());
+    return supabaseFetch('video_likes?' + params.toString(), { method: 'GET' })
+      .then(function (response) { if (!response.ok) return []; return response.json(); })
+      .then(function (data) { return Array.isArray(data) ? data : []; })
+      .catch(function () { return []; });
+  }
+
+  function readSizingModels() {
+    if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_sizing_models', []));
+    return fetchJson('sizing_models?select=*&store_id=eq.' + encodeURIComponent(storeId));
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // REGRAS DE PÁGINA
+  // ═══════════════════════════════════════════════════════════════
+
+  function matchesRule(rule) {
+    if (!rule || rule.active === false) return false;
+
+    var href = window.location.href;
+    var path = window.location.pathname || '/';
+
+    var rawCondition = String(firstDefined(rule.condition_type, rule.rule_type, rule.match_type) || '').trim().toLowerCase();
+    var conditionType = rawCondition.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    if (conditionType.indexOf('contem') !== -1 || conditionType === 'url_contains') conditionType = 'contains';
+    if (conditionType.indexOf('exata') !== -1 || conditionType === 'url_equals' || conditionType === 'exact') conditionType = 'equals';
+    if (conditionType.indexOf('todas') !== -1 || conditionType === 'all') conditionType = 'all_pages';
+    if (conditionType.indexOf('inicial') !== -1 || conditionType === 'home') conditionType = 'home_only';
+
+    var value = String(firstDefined(rule.url_pattern, rule.page_url, rule.value) || '').trim();
+    if (!conditionType) return true;
+    if (!value && conditionType !== 'all_pages' && conditionType !== 'home_only') return false;
+
+    switch (conditionType) {
+      case 'all_pages': return true;
+      case 'home_only': return path === '/' || path === '/home' || path === '/index.html' || path === '';
+      case 'product_pages': return path.indexOf('/product') !== -1 || path.indexOf('/produto') !== -1;
+      case 'category_pages': return path.indexOf('/category') !== -1 || path.indexOf('/categoria') !== -1 || path.indexOf('/colecao') !== -1;
+      case 'contains': return href.indexOf(value) !== -1 || path.indexOf(value) !== -1;
+      case 'equals': return href === value || path === value;
+      case 'not_equals': return href !== value && path !== value;
+      case 'starts_with': return href.indexOf(value) === 0 || path.indexOf(value) === 0;
+      case 'ends_with': return href.endsWith(value) || path.endsWith(value);
+      case 'regex': try { return new RegExp(value).test(href); } catch (e) { return false; }
+      default: return true;
+    }
+  }
+
+  function matchesUrl(appearance) {
+    if (!appearance) return true;
+    var rawUrl = firstDefined(appearance.url, appearance.pageUrl, appearance.page_url);
+    if (!rawUrl || String(rawUrl).trim() === '') return true;
+
+    var pattern = String(rawUrl).trim().toLowerCase();
+    var href = window.location.href.toLowerCase();
+    var path = (window.location.pathname || '/').toLowerCase();
+    var search = (window.location.search || '').toLowerCase();
+    var fullPath = (path + search).replace(/\/+$/, '');
+
+    var patterns = pattern.split(',').map(function (p) { return p.trim(); }).filter(Boolean);
+
+    return patterns.some(function (p) {
+      var normalizedPattern = p.replace(/\/+$/, '').replace(/^https?:\/\/[^/]+/i, '');
+      if (p === '/') normalizedPattern = '/';
+      if (!normalizedPattern) return false;
+      if (normalizedPattern === 'all' || normalizedPattern === 'todas' || normalizedPattern === 'all_pages') return true;
+      if (normalizedPattern === '/') return path === '/' || path === '';
+      return (
+        href.indexOf(normalizedPattern) !== -1 ||
+        fullPath.indexOf(normalizedPattern) !== -1 ||
+        path.indexOf(normalizedPattern) !== -1
+      );
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // MÍDIA / THUMBNAILS
+  // ═══════════════════════════════════════════════════════════════
+
+  function getVideoUrl(video) {
+    if (!video) return '';
+    return normalizeMediaUrl(firstDefined(
+      video.video_url, video.videoUrl, video.url, video.source_url,
+      video.sourceUrl, video.file_url, video.fileUrl, video.video, video.src, ''
+    ));
+  }
+
+  function isDirectVideoUrl(url) { return url && VIDEO_FILE_REGEX.test(url); }
+
+  function extractYouTubeId(url) {
+    if (!url) return '';
+    try {
+      var parsed = new URL(String(url).trim());
+      var host = parsed.hostname.replace(/^www\./, '').toLowerCase();
+      if (host === 'youtu.be') return parsed.pathname.replace(/^\//, '').split('/')[0] || '';
+      if (host === 'youtube.com' || host === 'm.youtube.com') {
+        if (parsed.pathname.indexOf('/shorts/') === 0) return parsed.pathname.split('/')[2] || '';
+        if (parsed.pathname.indexOf('/embed/') === 0) return parsed.pathname.replace(/^\/embed\//, '').split('/')[0] || '';
+        if (parsed.pathname === '/watch') return parsed.searchParams.get('v') || '';
+      }
+    } catch (e) { return ''; }
+    return '';
+  }
+
+  function getYouTubeThumbnail(url) {
+    var id = extractYouTubeId(url);
+    return id ? 'https://img.youtube.com/vi/' + id + '/hqdefault.jpg' : '';
+  }
+
+  function getThumbnailFromObject(obj) {
+    if (!obj) return '';
+    var meta = parseJsonIfNeeded(firstDefined(obj.metadata, obj.meta, obj.extra, obj.data, {}));
+    return normalizeMediaUrl(firstDefined(
+      obj.thumbnail_url, obj.thumbnailUrl, obj.thumbnail,
+      obj.cover_url, obj.coverUrl, obj.cover,
+      obj.poster_url, obj.posterUrl, obj.poster,
+      obj.image_url, obj.imageUrl, obj.image,
+      obj.url, obj.src,
+      meta.thumbnail_url, meta.thumbnailUrl, meta.thumbnail,
+      meta.cover_url, meta.coverUrl, meta.cover,
+      meta.poster_url, meta.posterUrl, meta.poster,
+      meta.image_url, meta.imageUrl, meta.image,
+      meta.url, meta.src, ''
+    ) || '');
+  }
+
+  function getVideoThumbnail(video) {
+    if (!video) return '';
+    var direct = getThumbnailFromObject(video);
+    if (direct) return direct;
+    if (video.source_type !== 'upload' && video.sourceType !== 'upload') return getYouTubeThumbnail(getVideoUrl(video));
+    return '';
+  }
+
+  function getStoryThumbnail(story, coverVideo, coverRelation) {
+    return getThumbnailFromObject(coverRelation) || getThumbnailFromObject(story) || getVideoThumbnail(coverVideo) || getThumbnailFromObject(coverVideo) || '';
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // SHADOW DOM
+  // ═══════════════════════════════════════════════════════════════
+
+  function applyHostPosition(host, appearance) {
+    var cfg = getFloatingConfig(appearance || currentAppearance);
+    setImportant(host, 'position', 'fixed');
+    setImportant(host, 'top', cfg.top);
+    setImportant(host, 'right', cfg.right);
+    setImportant(host, 'bottom', cfg.bottom);
+    setImportant(host, 'left', cfg.left);
+    setImportant(host, 'z-index', cfg.zIndex);
+    setImportant(host, 'width', cfg.width);
+    setImportant(host, 'min-width', cfg.width);
+    setImportant(host, 'max-width', cfg.width);
+    setImportant(host, 'height', 'auto');
+    setImportant(host, 'overflow', 'visible');
+    setImportant(host, 'background', 'transparent');
+    setImportant(host, 'border', '0');
+    setImportant(host, 'box-shadow', 'none');
+    setImportant(host, 'pointer-events', 'auto');
+    setImportant(host, 'transform', 'none');
+  }
+
+  function getOrCreateShadowRoot(appearance) {
+    var existingRoot = document.getElementById('vidlytics-widget-root');
+    if (existingRoot) existingRoot.remove();
+    var host = createEl('div', 'vidlytics-widget-root');
+    host.id = 'vidlytics-widget-root';
+    applyHostPosition(host, appearance);
+    document.body.appendChild(host);
+    globalShadowRoot = host.attachShadow({ mode: 'open' });
+    return { host: host, shadow: globalShadowRoot };
+  }
+
+  // ═══ CONTINUA NA PARTE 4 (CSS + FINAL) ═══
