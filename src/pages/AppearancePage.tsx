@@ -454,27 +454,23 @@ const normalizeFloatingShapeValues = (
 
 const normalizeCarouselConfigShape = (
   config: CarouselConfig,
-): CarouselConfig => ({
-  ...config,
-  shape: normalizeWidgetShape(config.shape, 'portrait'),
-});
+): CarouselConfig => {
+  const shape = normalizeWidgetShape(config.shape, 'portrait');
+  const width = formatNumberLikeCurrent(config.width, '80');
 
-const normalizeGridConfigShape = (config: GridConfig): GridConfig => ({
-  ...config,
-  card_shape: normalizeWidgetShape(config.card_shape, 'portrait'),
-});
-
-const parseJsonIfNeeded = <T,>(value: unknown): Partial<T> | null => {
-  if (!value) return null;
-  if (typeof value === 'object') return value as Partial<T>;
-  if (typeof value === 'string') {
-    try {
-      return JSON.parse(value) as Partial<T>;
-    } catch {
-      return null;
-    }
+  if (shape === 'portrait') {
+    return {
+      ...config,
+      shape,
+      width,
+    };
   }
-  return null;
+  // círculo e quadrado: largura = altura
+  return {
+    ...config,
+    shape,
+    width,
+  };
 };
 
 const createDefaultFloatingDesktopConfig = (): FloatingConfig => ({
