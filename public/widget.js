@@ -323,3 +323,301 @@
   }
 
   // ═══ CONTINUA NA PARTE 2 ═══
+  // ═══ CONTINUAÇÃO DA PARTE 1 ═══
+
+  // ═══════════════════════════════════════════════════════════════
+  // SUPABASE FETCH
+  // ═══════════════════════════════════════════════════════════════
+
+  function supabaseFetch(path, options) {
+    if (!hasSupabase) return Promise.reject(new Error('Supabase não configurado.'));
+    options = options || {};
+    var headers = {
+      'apikey': supabaseAnonKey,
+      'Authorization': 'Bearer ' + supabaseAnonKey,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Cache-Control': 'no-cache'
+    };
+    if (options.headers) {
+      Object.keys(options.headers).forEach(function (key) { headers[key] = options.headers[key]; });
+    }
+    return fetch(supabaseUrl + '/rest/v1/' + path, {
+      method: options.method || 'GET',
+      headers: headers,
+      body: options.body || undefined,
+      cache: 'no-store'
+    });
+  }
+
+  function fetchJson(path) {
+    return supabaseFetch(path, { method: 'GET' })
+      .then(function (response) { if (!response.ok) return []; return response.json(); })
+      .then(function (data) { return Array.isArray(data) ? data : []; })
+      .catch(function () { return []; });
+  }
+
+  function fetchDbAppearance() {
+    if (!storeId || !hasSupabase) return Promise.resolve({});
+
+    return supabaseFetch(
+      'appearances?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
+      { method: 'GET' }
+    )
+      .then(function (response) {
+        if (!response.ok) return null;
+        return response.json();
+      })
+      .then(function (data) {
+        if (Array.isArray(data) && data.length > 0) {
+          var row = data[0];
+          console.log('🔍 fetchDbAppearance — appearances (nova):', row);
+          return normalizeAppearanceItem(row);
+        }
+        return tryLegacyTable();
+      })
+      .catch(function () {
+        return tryLegacyTable();
+      });
+
+    function tryLegacyTable() {
+      return supabaseFetch(
+        'widget_appearances?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
+        { method: 'GET' }
+      )
+        .then(function (response) {
+          if (!response.ok) return null;
+          return response.json();
+        })
+        .then(function (data) {
+          if (Array.isArray(data) && data.length > 0) {
+            console.log('🔍 fetchDbAppearance — widget_appearances (legado):', data[0]);
+            return normalizeAppearanceItem(data[0]);
+          }
+          return {};
+        })
+        .catch(function () { return {}; });
+    }
+  }
+
+  function getConfigAppearance() {
+    var merged = {};
+    [
+      config.appearance, config.aparencia, config.appearanceConfig, config.appearance_config,
+      config.floating, config.floatingConfig, config.floatingAppearance, config.floatingVideoConfig,
+      config.floatingVideoAppearance, config.floating_video,
+      widgetsCfg.appearance, widgetsCfg.aparencia, widgetsCfg.appearanceConfig, widgetsCfg.appearance_config,
+      widgetsCfg.floating, widgetsCfg.floatingConfig, widgetsCfg.floatingAppearance,
+      widgetsCfg.floatingVideoConfig, widgetsCfg.floatingVideoAppearance, widgetsCfg.floating_video
+    ].forEach(function (src) { flattenAppearanceInto(merged, src, 0); });
+    return normalizeAppearanceItem(merged);
+  }
+
+  function getStorageAppearance() {
+    var merged = {};
+    var keys = [
+      'vidlytics_appearance', 'vidlytics_appearance_' + storeId,
+      'vidlytics_aparencia', 'vidlytics_aparencia_' + storeId,
+      'vidlytics_widget_appearance', 'vidlytics_widget_appearance_' + storeId,
+      'vidlytics_config', 'vidlytics_config_' + storeId,
+      'VIDLYTICS_APPEARANCE', 'VIDLYTICS_CONFIG'
+    ];
+    keys.forEach(function (key) { flattenAppearanceInto(merged, getStorageItem(key, {}), 0); });
+    return normalizeAppearanceItem(merged);
+  }
+
+  function readAppearance() {
+    var configAppearance = normalizeAppearanceItem(getConfigAppearance());
+    var storageAppearance = normalizeAppearanceItem(getStorageAppearance());
+
+    return fetchDbAppearance().then(function (dbAppearance) {
+      var finalAppearance = {};
+      mergeObject(finalAppearance, DEFAULT_APPEARANCE);
+      mergeObject(finalAppearance, configAppearance);
+      mergeObject(finalAppearance, storageAppearance);
+      mergeObject(finalAppearance, dbAppearance);
+
+      console.log('🔍 readAppearance — FINAL:', {
+        same_appearance_all_devices: finalAppearance.same_appearance_all_devices,
+        floating_position: readJsonbConfigValue(finalAppearance, 'floating_config', 'floating_position'),
+        floating_shape: readJsonbConfigValue(finalAppearance, 'floating_config', 'shape'),
+        floating_size: readJsonbConfigValue(finalAppearance, 'floating_config', 'width'),
+        floating_border_color: readJsonbConfigValue(finalAppearance, 'floating_config', 'border_color'),
+        floating_border_width: readJsonbConfigValue(finalAppearance, 'floating_config', 'border_style'),
+        primary_color: finalAppearance.primary_color,
+        device: getDevice()
+      });
+
+      return finalAppearance;
+    });
+  }
+
+  function normalizeFloatingPosition(value) {
+    var key = normalizeKey(value);
+    if (key === 'fixed-top-left' || key === 'top-left' || key === 'superior-esquerda') return 'top-left';
+    if (key === 'fixed-top-right' || key === 'top-right' || key === 'superior-direita') return 'top-right';
+    if (key === 'fixed-bottom-left' || key === 'bottom-left' || key === 'inferior-esquerda') return 'bottom-left';
+    if (key === 'fixed-bottom-right' || key === 'bottom-right' || key === 'inferior-direita') return 'bottom-right';
+    return DEFAULT_APPEARANCE.floating_position;
+  }
+
+  function normalizeFloatingShape(value) {
+    var key = normalizeKey(value);
+    if (key === 'square' || key === 'quadrado') return 'square';
+    if (key === 'portrait' || key === 'retrato' || key === '9-16') return 'portrait';
+    if (key === 'circle' || key === 'circulo' || key === 'redondo') return 'circle';
+    return DEFAULT_APPEARANCE.floating_shape;
+  }
+
+  function getFloatingConfig(appearance) {
+    appearance = normalizeAppearanceItem(appearance || {});
+
+    function rcv(jsonbField, flatField, fallback) {
+      return readConfigValue(appearance, 'floating_config', jsonbField, flatField, fallback);
+    }
+
+    var position = normalizeFloatingPosition(
+      rcv('floating_position', 'floating_position', DEFAULT_APPEARANCE.floating_position)
+    );
+    var shape = normalizeFloatingShape(
+      rcv('shape', 'floating_shape', DEFAULT_APPEARANCE.floating_shape)
+    );
+
+    var sizeNumber = toNumber(rcv('width', 'floating_size', '80'), 80);
+    var widthNumber = sizeNumber;
+    var heightNumber;
+
+    if (shape === 'square' || shape === 'circle') {
+      heightNumber = widthNumber;
+    } else {
+      heightNumber = Math.round(widthNumber * 16 / 9);
+    }
+
+    var borderWidthNumber = toNumber(rcv('border_style', 'floating_border_width', '2'), 2);
+    var radiusNumber = toNumber(rcv('border_radius', 'floating_border_radius', '12'), 12);
+    if (shape === 'circle') radiusNumber = 999;
+
+    var marginTopNumber = toNumber(rcv('top_spacing', 'floating_margin_top', '20'), 20);
+    var marginBottomNumber = toNumber(rcv('bottom_spacing', 'floating_margin_bottom', '20'), 20);
+    var marginSideNumber = toNumber(rcv('left_spacing', 'floating_margin_side', '20'), 20);
+    var zIndexNumber = toNumber(rcv('z_index', 'floating_z_index', '2147483647'), 2147483647);
+
+    var objectFit = String(rcv('object_fit', 'floating_object_fit', 'cover') || 'cover').trim().toLowerCase();
+
+    var top = 'auto', right = 'auto', bottom = 'auto', left = 'auto', alignItems = 'flex-end';
+    if (position === 'top-left') { top = px(marginTopNumber); left = px(marginSideNumber); alignItems = 'flex-start'; }
+    if (position === 'top-right') { top = px(marginTopNumber); right = px(marginSideNumber); alignItems = 'flex-end'; }
+    if (position === 'bottom-left') { bottom = px(marginBottomNumber); left = px(marginSideNumber); alignItems = 'flex-start'; }
+    if (position === 'bottom-right') { bottom = px(marginBottomNumber); right = px(marginSideNumber); alignItems = 'flex-end'; }
+
+    console.log('🔍 getFloatingConfig — RESULTADO:', {
+      position: position, shape: shape,
+      top: top, right: right, bottom: bottom, left: left,
+      width: px(widthNumber), height: px(heightNumber),
+      borderWidth: px(borderWidthNumber),
+      radius: shape === 'circle' ? '999px' : px(radiusNumber),
+      objectFit: objectFit, zIndex: zIndexNumber
+    });
+
+    return {
+      position: position, shape: shape,
+      top: top, right: right, bottom: bottom, left: left,
+      width: px(widthNumber), height: px(heightNumber),
+      borderWidth: px(borderWidthNumber),
+      radius: shape === 'circle' ? '999px' : px(radiusNumber),
+      innerRadius: shape === 'circle' ? '999px' : px(Math.max(0, radiusNumber - borderWidthNumber)),
+      zIndex: zIndexNumber, alignItems: alignItems, objectFit: objectFit
+    };
+  }
+
+  function getFloatingBehaviorConfig(appearance) {
+    appearance = appearance || {};
+
+    function rcv(jsonbField, flatField, fallback) {
+      return readConfigValue(appearance, 'floating_config', jsonbField, flatField, fallback);
+    }
+
+    return {
+      objectFit: rcv('object_fit', 'floating_object_fit', DEFAULT_APPEARANCE.floating_object_fit),
+      showPlayButton: toBoolean(rcv('show_play_icon', 'floating_show_play_button', true), true),
+      allowDrag: toBoolean(rcv('draggable', 'floating_allow_drag', false), false),
+      allowClose: toBoolean(rcv('allow_close', 'floating_allow_close', true), true)
+    };
+  }
+
+  function getCarouselConfig(appearance) {
+    appearance = normalizeAppearanceItem(appearance || {});
+
+    function rcv(jsonbField, flatField, fallback) {
+      return readConfigValue(appearance, 'carousel_config', jsonbField, flatField, fallback);
+    }
+
+    var shape = String(rcv('shape', 'carousel_shape', 'portrait') || 'portrait').trim().toLowerCase();
+    var sizeNumber = toNumber(rcv('width', 'carousel_size', '80'), 80);
+    var visibleItems = safeInt(rcv('visible_items', 'carousel_visible_items', '4'), 4);
+    var spacing = safeInt(rcv('spacing', 'carousel_spacing', '16'), 16);
+    var borderColor = rcv('border_color', 'carousel_border_color', '#0094EB') || '#0094EB';
+    var borderWidth = safeInt(rcv('border_style', 'carousel_border_width', '2'), 2);
+    var borderRadius = safeInt(rcv('border_radius', 'carousel_border_radius', '12'), 12);
+    var objectFit = String(rcv('object_fit', 'carousel_object_fit', 'cover') || 'cover').trim().toLowerCase();
+    var marginTop = safeInt(rcv('margin_top', 'carousel_margin_top', '0'), 0);
+    var marginBottom = safeInt(rcv('margin_bottom', 'carousel_margin_bottom', '0'), 0);
+    var showTitle = toBoolean(rcv('show_title', 'carousel_show_title', false), false);
+    var showProduct = toBoolean(rcv('show_product', 'carousel_show_product', true), true);
+    var showPlayButton = toBoolean(rcv('show_play_icon', 'carousel_show_play_button', true), true);
+    var autoCenter = toBoolean(rcv('auto_center', 'carousel_auto_center', false), false);
+
+    var aspectRatio = '9 / 16';
+    if (shape.indexOf('landscape') !== -1 || shape.indexOf('16_9') !== -1 || shape.indexOf('16-9') !== -1) {
+      aspectRatio = '16 / 9';
+    } else if (shape.indexOf('square') !== -1 || shape.indexOf('1_1') !== -1 || shape.indexOf('1-1') !== -1 || shape === 'circle') {
+      aspectRatio = '1 / 1';
+    }
+
+    return {
+      shape: shape, size: sizeNumber,
+      visibleItems: visibleItems, spacing: spacing,
+      borderColor: borderColor, borderWidth: borderWidth,
+      borderRadius: borderRadius, objectFit: objectFit,
+      marginTop: marginTop, marginBottom: marginBottom,
+      showTitle: showTitle, showProduct: showProduct,
+      showPlayButton: showPlayButton, autoCenter: autoCenter,
+      aspectRatio: aspectRatio
+    };
+  }
+
+  function getGridConfig(appearance) {
+    appearance = normalizeAppearanceItem(appearance || {});
+
+    function rcv(jsonbField, flatField, fallback) {
+      return readConfigValue(appearance, 'grid_config', jsonbField, flatField, fallback);
+    }
+
+    var shape = String(rcv('shape', 'grid_shape', 'portrait') || 'portrait').trim().toLowerCase();
+    var sizeNumber = toNumber(rcv('width', 'grid_size', '80'), 80);
+    var columns = safeInt(rcv('visible_items', 'grid_columns', '4'), 4);
+    var rows = safeInt(rcv('rows', 'grid_rows', '1'), 1);
+    var spacing = safeInt(rcv('spacing', 'grid_spacing', '16'), 16);
+    var borderColor = rcv('border_color', 'grid_border_color', '#0094EB') || '#0094EB';
+    var borderWidth = safeInt(rcv('border_style', 'grid_border_width', '2'), 2);
+    var borderRadius = safeInt(rcv('border_radius', 'grid_border_radius', '12'), 12);
+    var objectFit = String(rcv('object_fit', 'grid_object_fit', 'cover') || 'cover').trim().toLowerCase();
+    var showTitle = toBoolean(rcv('show_title', 'grid_show_title', false), false);
+
+    var aspectRatio = '9 / 16';
+    if (shape.indexOf('landscape') !== -1 || shape.indexOf('16_9') !== -1 || shape.indexOf('16-9') !== -1) {
+      aspectRatio = '16 / 9';
+    } else if (shape.indexOf('square') !== -1 || shape.indexOf('1_1') !== -1 || shape.indexOf('1-1') !== -1 || shape === 'circle') {
+      aspectRatio = '1 / 1';
+    }
+
+    return {
+      shape: shape, size: sizeNumber,
+      columns: columns, rows: rows, spacing: spacing,
+      borderColor: borderColor, borderWidth: borderWidth,
+      borderRadius: borderRadius, objectFit: objectFit,
+      showTitle: showTitle, aspectRatio: aspectRatio
+    };
+  }
+
+  // ═══ CONTINUA NA PARTE 3 ═══
