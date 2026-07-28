@@ -682,23 +682,29 @@ const normalizeTableItemForClient = <T extends Record<string, any>>(
 
   const appearance: Record<string, any> = normalized;
 
-  // Aliases camelCase → snake_case e vice-versa para compatibilidade
-  appearance.useGlobalAppearance =
-    appearance.useGlobalAppearance ??
-    appearance.use_global_appearance ??
-    true;
+  // Aliases camelCase → snake_case bidirecionais
+  if (appearance.useGlobalAppearance !== undefined && appearance.use_global_appearance === undefined) {
+    appearance.use_global_appearance = appearance.useGlobalAppearance;
+  }
+  if (appearance.use_global_appearance !== undefined && appearance.useGlobalAppearance === undefined) {
+    appearance.useGlobalAppearance = appearance.use_global_appearance;
+  }
+  if (appearance.isDefault !== undefined && appearance.is_default === undefined) {
+    appearance.is_default = appearance.isDefault;
+  }
+  if (appearance.is_default !== undefined && appearance.isDefault === undefined) {
+    appearance.isDefault = appearance.is_default;
+  }
 
-  appearance.use_global_appearance =
-    appearance.use_global_appearance ??
-    appearance.useGlobalAppearance ??
-    true;
-
-  appearance.isDefault = appearance.isDefault ?? appearance.is_default ?? false;
-  appearance.is_default = appearance.is_default ?? appearance.isDefault ?? false;
-
-  // NOTA: floating_config, carousel_config, grid_config, modal_config
-  // NÃO são mais normalizados como objetos — os dados agora vêm planos
-  // das colunas _mobile e _desktop. Mantemos os campos como vieram do banco.
+  // Garante que os JSONBs sejam objetos (defensivo)
+  ['floating_config', 'carousel_config', 'grid_config', 'modal_config'].forEach(key => {
+    if (appearance[key] && typeof appearance[key] === 'string') {
+      try { appearance[key] = JSON.parse(appearance[key]); } catch { /* mantém string */ }
+    }
+    if (!appearance[key] || typeof appearance[key] !== 'object') {
+      appearance[key] = { desktop: {}, mobile: {} };
+    }
+  });
 
   return appearance as T;
 };
