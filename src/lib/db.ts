@@ -46,214 +46,53 @@ export interface Appearance {
   created_at?: string;
   updated_at?: string;
 
-  // 🟦 ABA BÁSICO
-  style_name?: string;
+  // 🟦 Básico
+  name?: string;
   is_default?: boolean;
-  isDefault?: boolean; // alias frontend
-  same_appearance_all_devices?: boolean;
+  use_global_appearance?: boolean;
 
-  // 🟨 ABA IDENTIDADE VISUAL
+  // 🟨 Identidade Visual
   primary_color?: string;
   secondary_color?: string;
   text_color?: string;
   background_color?: string;
   button_color?: string;
   font_family?: string;
-  font_size?: string;
+  border_radius?: number;
+  shadow_enabled?: boolean;
 
-  // 🔴 ABA FLUTUANTE — Base
-  floating_shape?: string;
-  floating_size?: string;
-  floating_border_radius?: string;
-  floating_position?: string;
-  floating_margin_bottom?: string;
-  floating_margin_top?: string;
-  floating_margin_side?: string;
-  floating_border_color?: string;
-  floating_border_width?: string;
-  floating_object_fit?: string;
-  floating_z_index?: string;
-  floating_show_title?: boolean;
-  floating_show_play_button?: boolean;
-  floating_allow_drag?: boolean;
-  floating_allow_close?: boolean;
+  // 🔴 Flutuante
+  widget_shape?: string;
+  widget_size?: string;
+  widget_animation?: string;
 
-  // 🔴 ABA FLUTUANTE — Mobile
-  floating_shape_mobile?: string;
-  floating_size_mobile?: string;
-  floating_border_radius_mobile?: string;
-  floating_position_mobile?: string;
-  floating_margin_bottom_mobile?: string;
-  floating_margin_top_mobile?: string;
-  floating_margin_side_mobile?: string;
-  floating_border_color_mobile?: string;
-  floating_border_width_mobile?: string;
-  floating_object_fit_mobile?: string;
-  floating_z_index_mobile?: string;
-  floating_show_title_mobile?: boolean;
-  floating_show_play_button_mobile?: boolean;
-  floating_allow_drag_mobile?: boolean;
-  floating_allow_close_mobile?: boolean;
+  // 🟢 Carrossel
+  carousel_card_shape?: string;
+  carousel_visible_items?: number;
+  carousel_gap?: number;
 
-  // 🔴 ABA FLUTUANTE — Desktop
-  floating_shape_desktop?: string;
-  floating_size_desktop?: string;
-  floating_border_radius_desktop?: string;
-  floating_position_desktop?: string;
-  floating_margin_bottom_desktop?: string;
-  floating_margin_top_desktop?: string;
-  floating_margin_side_desktop?: string;
-  floating_border_color_desktop?: string;
-  floating_border_width_desktop?: string;
-  floating_object_fit_desktop?: string;
-  floating_z_index_desktop?: string;
-  floating_show_title_desktop?: boolean;
-  floating_show_play_button_desktop?: boolean;
-  floating_allow_drag_desktop?: boolean;
-  floating_allow_close_desktop?: boolean;
+  // 👁️ Visibilidade dos botões
+  show_title?: boolean;
+  show_play_button?: boolean;
+  show_product?: boolean;
+  show_like_button?: boolean;
+  show_comment_button?: boolean;
+  show_share_button?: boolean;
+  show_whatsapp_button?: boolean;
+  show_product_button?: boolean;
 
-  // 🟢 ABA CARROSSEL — Base
-  carousel_shape?: string;
-  carousel_size?: string;
-  carousel_visible_items?: string;
-  carousel_spacing?: string;
-  carousel_border_color?: string;
-  carousel_border_width?: string;
-  carousel_border_radius?: string;
-  carousel_object_fit?: string;
-  carousel_margin_top?: string;
-  carousel_margin_bottom?: string;
-  carousel_show_title?: boolean;
-  carousel_show_product?: boolean;
-  carousel_show_play_button?: boolean;
-  carousel_auto_center?: boolean;
-
-  // 🟢 ABA CARROSSEL — Mobile
-  carousel_shape_mobile?: string;
-  carousel_size_mobile?: string;
-  carousel_visible_items_mobile?: string;
-  carousel_spacing_mobile?: string;
-  carousel_border_color_mobile?: string;
-  carousel_border_width_mobile?: string;
-  carousel_border_radius_mobile?: string;
-  carousel_object_fit_mobile?: string;
-  carousel_margin_top_mobile?: string;
-  carousel_margin_bottom_mobile?: string;
-  carousel_show_title_mobile?: boolean;
-  carousel_show_product_mobile?: boolean;
-  carousel_show_play_button_mobile?: boolean;
-  carousel_auto_center_mobile?: boolean;
-
-  // 🟢 ABA CARROSSEL — Desktop
-  carousel_shape_desktop?: string;
-  carousel_size_desktop?: string;
-  carousel_visible_items_desktop?: string;
-  carousel_spacing_desktop?: string;
-  carousel_border_color_desktop?: string;
-  carousel_border_width_desktop?: string;
-  carousel_border_radius_desktop?: string;
-  carousel_object_fit_desktop?: string;
-  carousel_margin_top_desktop?: string;
-  carousel_margin_bottom_desktop?: string;
-  carousel_show_title_desktop?: boolean;
-  carousel_show_product_desktop?: boolean;
-  carousel_show_play_button_desktop?: boolean;
-  carousel_auto_center_desktop?: boolean;
-
-  // 🟣 ABA GRADE — Base
-  grid_shape?: string;
-  grid_size?: string;
-  grid_columns?: string;
-  grid_rows?: string;
-  grid_spacing?: string;
-  grid_border_color?: string;
-  grid_border_width?: string;
-  grid_border_radius?: string;
-  grid_object_fit?: string;
-  grid_show_title?: boolean;
-
-  // 🟣 ABA GRADE — Mobile
-  grid_shape_mobile?: string;
-  grid_size_mobile?: string;
-  grid_columns_mobile?: string;
-  grid_rows_mobile?: string;
-  grid_spacing_mobile?: string;
-  grid_border_color_mobile?: string;
-  grid_border_width_mobile?: string;
-  grid_border_radius_mobile?: string;
-  grid_object_fit_mobile?: string;
-  grid_show_title_mobile?: boolean;
-
-  // 🟣 ABA GRADE — Desktop
-  grid_shape_desktop?: string;
-  grid_size_desktop?: string;
-  grid_columns_desktop?: string;
-  grid_rows_desktop?: string;
-  grid_spacing_desktop?: string;
-  grid_border_color_desktop?: string;
-  grid_border_width_desktop?: string;
-  grid_border_radius_desktop?: string;
-  grid_object_fit_desktop?: string;
-  grid_show_title_desktop?: boolean;
-
-  // 🔵 ABA PLAYER MODAL
-  modal_show_title?: boolean;
-  modal_show_play_button?: boolean;
-  modal_show_product?: boolean;
-  modal_show_like_button?: boolean;
-  modal_show_comment_button?: boolean;
-  modal_show_share_button?: boolean;
-  modal_show_whatsapp_button?: boolean;
-  modal_show_product_button?: boolean;
-  modal_hide_stories?: boolean;
-  modal_shadow_enabled?: boolean;
-  modal_border_color?: string;
-  modal_border_width?: string;
-  modal_border_radius?: string;
-
-  // ⚠️ DEPRECATED — mantidos para compatibilidade com código legado
+  // 📦 JSONB Configs (estes são objetos reais salvos no banco)
   floating_config?: ResponsiveAppearanceConfig;
   carousel_config?: ResponsiveAppearanceConfig;
   grid_config?: ResponsiveAppearanceConfig;
   modal_config?: ResponsiveAppearanceConfig;
-  use_global_appearance?: boolean;
-  useGlobalAppearance?: boolean;
-  name?: string;
-  shadow_enabled?: boolean;
-  button_text_color?: string;
-  show_title?: boolean;
-  show_progress?: boolean;
-  autoplay?: boolean;
-  muted?: boolean;
-  custom_css?: string | null;
+
+  // 🔗 Outros
   url?: string | null;
-  active?: boolean;
-  status?: string;
-  apply_to_all_devices?: boolean;
-  floating_height?: number | string | null;
-  floating_draggable?: boolean;
-  floating_closable?: boolean;
-  carousel_format?: string;
-  carousel_gap?: number;
-  carousel_display_mode?: string;
-  grid_format?: string;
-  grid_gap?: number;
-  player_show_title?: boolean;
-  player_show_play_button?: boolean;
-  player_show_like_button?: boolean;
-  player_show_whatsapp_button?: boolean;
-  player_show_product?: boolean;
-  player_show_product_button?: boolean;
-  player_show_share_button?: boolean;
-  player_show_comments_button?: boolean;
-  player_hide_stories?: boolean;
-  player_enable_shadow?: boolean;
-  player_border_color?: string;
-  player_border_width?: number | string;
-  player_border_radius?: number | string;
-  border_width?: number | string;
-  border_color?: string;
-  font_size_legacy?: number | string;
+
+  // ⚠️ Aliases legados (normalizados em runtime, não salvos)
+  isDefault?: boolean;
+  useGlobalAppearance?: boolean;
 }
 
 export type DisplayPosition =
