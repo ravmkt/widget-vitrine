@@ -323,7 +323,9 @@
     return merged;
   }
 
-  function flattenAppearanceInto(target, source, depth) {
+var JSONB_KEYS = ['floating_config', 'carousel_config', 'grid_config', 'modal_config'];
+
+function flattenAppearanceInto(target, source, depth) {
     if (depth === undefined) depth = 0;
     if (depth > 12 || !source) return target;
     if (typeof source === 'string') source = parseJsonIfNeeded(source);
@@ -331,6 +333,13 @@
     Object.keys(source).forEach(function (key) {
       var value = source[key];
       if (value === undefined || value === null || value === '') return;
+      
+      // ⬇️ NOVO: preserva JSONB keys intactos
+      if (JSONB_KEYS.indexOf(key) !== -1) {
+        target[key] = value;
+        return;
+      }
+      
       if (isPlainObject(value)) { flattenAppearanceInto(target, value, depth + 1); return; }
       if (typeof value === 'string') {
         var parsed = parseJsonIfNeeded(value);
@@ -339,7 +348,7 @@
       target[key] = value;
     });
     return target;
-  }
+}
 
   function mergeObject(target, source) {
     source = normalizeAppearanceItem(source || {});
