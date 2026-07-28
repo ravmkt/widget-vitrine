@@ -674,80 +674,20 @@ const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
     'whatsapp_enabled', 'whatsapp_message_template', 'pause_on_leave',
     'store_public_id', 'public_live_key',
   ],
-  appearances: [
+appearances: [
     'id', 'store_id', 'created_at', 'updated_at',
     // 🟦 Básico
     'style_name', 'is_default', 'same_appearance_all_devices',
     // 🟨 Identidade Visual
     'primary_color', 'secondary_color', 'text_color', 'background_color',
     'button_color', 'font_family', 'font_size',
-    // 🔴 Flutuante — Base
-    'floating_shape', 'floating_size', 'floating_border_radius',
-    'floating_position', 'floating_margin_bottom', 'floating_margin_top',
-    'floating_margin_side', 'floating_border_color', 'floating_border_width',
-    'floating_object_fit', 'floating_z_index',
-    'floating_show_title', 'floating_show_play_button',
-    'floating_allow_drag', 'floating_allow_close',
-    // 🔴 Flutuante — Mobile
-    'floating_shape_mobile', 'floating_size_mobile', 'floating_border_radius_mobile',
-    'floating_position_mobile', 'floating_margin_bottom_mobile', 'floating_margin_top_mobile',
-    'floating_margin_side_mobile', 'floating_border_color_mobile', 'floating_border_width_mobile',
-    'floating_object_fit_mobile', 'floating_z_index_mobile',
-    'floating_show_title_mobile', 'floating_show_play_button_mobile',
-    'floating_allow_drag_mobile', 'floating_allow_close_mobile',
-    // 🔴 Flutuante — Desktop
-    'floating_shape_desktop', 'floating_size_desktop', 'floating_border_radius_desktop',
-    'floating_position_desktop', 'floating_margin_bottom_desktop', 'floating_margin_top_desktop',
-    'floating_margin_side_desktop', 'floating_border_color_desktop', 'floating_border_width_desktop',
-    'floating_object_fit_desktop', 'floating_z_index_desktop',
-    'floating_show_title_desktop', 'floating_show_play_button_desktop',
-    'floating_allow_drag_desktop', 'floating_allow_close_desktop',
-    // 🟢 Carrossel — Base
-    'carousel_shape', 'carousel_size', 'carousel_visible_items', 'carousel_spacing',
-    'carousel_border_color', 'carousel_border_width', 'carousel_border_radius',
-    'carousel_object_fit', 'carousel_margin_top', 'carousel_margin_bottom',
-    'carousel_show_title', 'carousel_show_product', 'carousel_show_play_button',
-    'carousel_auto_center',
-    // 🟢 Carrossel — Mobile
-    'carousel_shape_mobile', 'carousel_size_mobile', 'carousel_visible_items_mobile',
-    'carousel_spacing_mobile', 'carousel_border_color_mobile', 'carousel_border_width_mobile',
-    'carousel_border_radius_mobile', 'carousel_object_fit_mobile',
-    'carousel_margin_top_mobile', 'carousel_margin_bottom_mobile',
-    'carousel_show_title_mobile', 'carousel_show_product_mobile',
-    'carousel_show_play_button_mobile', 'carousel_auto_center_mobile',
-    // 🟢 Carrossel — Desktop
-    'carousel_shape_desktop', 'carousel_size_desktop', 'carousel_visible_items_desktop',
-    'carousel_spacing_desktop', 'carousel_border_color_desktop', 'carousel_border_width_desktop',
-    'carousel_border_radius_desktop', 'carousel_object_fit_desktop',
-    'carousel_margin_top_desktop', 'carousel_margin_bottom_desktop',
-    'carousel_show_title_desktop', 'carousel_show_product_desktop',
-    'carousel_show_play_button_desktop', 'carousel_auto_center_desktop',
-    // 🟣 Grade — Base
-    'grid_shape', 'grid_size', 'grid_columns', 'grid_rows', 'grid_spacing',
-    'grid_border_color', 'grid_border_width', 'grid_border_radius',
-    'grid_object_fit', 'grid_show_title',
-    // 🟣 Grade — Mobile
-    'grid_shape_mobile', 'grid_size_mobile', 'grid_columns_mobile',
-    'grid_rows_mobile', 'grid_spacing_mobile', 'grid_border_color_mobile',
-    'grid_border_width_mobile', 'grid_border_radius_mobile',
-    'grid_object_fit_mobile', 'grid_show_title_mobile',
-    // 🟣 Grade — Desktop
-    'grid_shape_desktop', 'grid_size_desktop', 'grid_columns_desktop',
-    'grid_rows_desktop', 'grid_spacing_desktop', 'grid_border_color_desktop',
-    'grid_border_width_desktop', 'grid_border_radius_desktop',
-    'grid_object_fit_desktop', 'grid_show_title_desktop',
-    // 🔵 Player Modal
-    'modal_show_title', 'modal_show_play_button', 'modal_show_product',
-    'modal_show_like_button', 'modal_show_comment_button', 'modal_show_share_button',
-    'modal_show_whatsapp_button', 'modal_show_product_button',
-    'modal_hide_stories', 'modal_shadow_enabled',
-    'modal_border_color', 'modal_border_width', 'modal_border_radius',
+    // 📦 JSONB Configs — única fonte de verdade para os widgets
+    'floating_config', 'carousel_config', 'grid_config', 'modal_config',
     // ⚠️ Deprecated — compatibilidade legada
-    'name', 'use_global_appearance', 'floating_config', 'carousel_config',
-    'grid_config', 'modal_config', 'shadow_enabled',
+    'name', 'use_global_appearance', 'shadow_enabled',
     'button_text_color', 'show_title', 'show_progress', 'autoplay',
     'muted', 'custom_css', 'url',
-  ],
+],
 };
 // ═══════════════════════════════════════════════════════
 // NORMALIZAÇÃO DE PAYLOAD PARA SAVE
