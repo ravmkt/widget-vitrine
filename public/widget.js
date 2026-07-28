@@ -1827,10 +1827,10 @@ function flattenAppearanceInto(target, source, depth) {
 
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
         floatingWasDragged = true;
-        el.style.right = (initialRight + dx) + 'px';
-        el.style.bottom = (initialBottom + dy) + 'px';
-        el.style.left = 'auto';
-        el.style.top = 'auto';
+el.style.setProperty('right', (initialRight + dx) + 'px', 'important');
+el.style.setProperty('bottom', (initialBottom + dy) + 'px', 'important');
+el.style.setProperty('left', 'auto', 'important');
+el.style.setProperty('top', 'auto', 'important');
       }
     });
 
