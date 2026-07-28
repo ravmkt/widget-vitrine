@@ -93,10 +93,9 @@ type FloatingConfig = {
   show_title: boolean;
 };
 
-// 🆕 NOMES ALINHADOS COM widget.js (carousel_config JSONB)
 type CarouselConfig = {
-  spacing: number;          // era gap
-  shape: WidgetShape;       // era card_shape
+  spacing: number;
+  shape: WidgetShape;
   view_mode: string;
   margin_top: string;
   margin_bottom: string;
@@ -104,9 +103,9 @@ type CarouselConfig = {
   show_product: boolean;
   show_play_icon: boolean;
   auto_center: boolean;
-  width: string;            // era card_size
+  width: string;
   border_color: string;
-  border_style: string;     // era border_width
+  border_style: string;
   border_radius: string;
   object_fit: string;
   show_title: boolean;
@@ -453,7 +452,6 @@ const normalizeFloatingShapeValues = (
   };
 };
 
-// 🆕 CORRIGIDO: usa shape (não card_shape)
 const normalizeCarouselConfigShape = (
   config: CarouselConfig,
 ): CarouselConfig => ({
@@ -461,7 +459,6 @@ const normalizeCarouselConfigShape = (
   shape: normalizeWidgetShape(config.shape, 'portrait'),
 });
 
-// 🆕 CORRIGIDO: usa card_shape (GridConfig não mudou)
 const normalizeGridConfigShape = (config: GridConfig): GridConfig => ({
   ...config,
   card_shape: normalizeWidgetShape(config.card_shape, 'portrait'),
@@ -522,7 +519,6 @@ const createDefaultFloatingMobileConfig = (): FloatingConfig => ({
   show_title: true,
 });
 
-// 🆕 CORRIGIDO: nomes alinhados com widget.js
 const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
   spacing: 16,
   shape: 'portrait',
@@ -541,7 +537,6 @@ const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
   show_title: false,
 });
 
-// 🆕 CORRIGIDO: nomes alinhados com widget.js
 const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
   spacing: 12,
   shape: 'portrait',
@@ -652,7 +647,7 @@ const getActiveResponsiveConfig = <T,>(
   return config[device];
 };
 
-// 🆕 CORRIGIDO: carouselDesktop.spacing no lugar de .gap
+// 🔧 CORREÇÃO 1: createDefaultFormData — campos com nomes da whitelist
 const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
   const now = new Date().toISOString();
   const floatingDesktop = createDefaultFloatingDesktopConfig();
@@ -681,9 +676,32 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
     widget_size: 'medium',
     widget_animation: 'none',
 
-    carousel_card_shape: carouselDesktop.shape as any,
+    // ✅ whitelist: carousel_shape, carousel_visible_items, carousel_spacing, etc.
+    carousel_shape: carouselDesktop.shape,
     carousel_visible_items: carouselDesktop.visible_items,
-    carousel_gap: carouselDesktop.spacing,
+    carousel_spacing: carouselDesktop.spacing,
+    carousel_size: carouselDesktop.width,
+    carousel_border_color: carouselDesktop.border_color,
+    carousel_border_width: carouselDesktop.border_style,
+    carousel_border_radius: carouselDesktop.border_radius,
+    carousel_object_fit: carouselDesktop.object_fit,
+    carousel_margin_top: carouselDesktop.margin_top,
+    carousel_margin_bottom: carouselDesktop.margin_bottom,
+    carousel_show_title: carouselDesktop.show_title,
+    carousel_show_product: carouselDesktop.show_product,
+    carousel_show_play_button: carouselDesktop.show_play_icon,
+    carousel_auto_center: carouselDesktop.auto_center,
+
+    grid_shape: gridDesktop.card_shape,
+    grid_columns: String(gridDesktop.columns),
+    grid_rows: String(gridDesktop.rows),
+    grid_spacing: String(gridDesktop.gap),
+    grid_size: gridDesktop.card_size,
+    grid_border_color: gridDesktop.border_color,
+    grid_border_width: gridDesktop.border_width,
+    grid_border_radius: gridDesktop.border_radius,
+    grid_object_fit: gridDesktop.object_fit,
+    grid_show_title: gridDesktop.show_title,
 
     show_title: modalConfig.show_title,
     show_play_button: modalConfig.show_play_button,
@@ -693,6 +711,20 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
     show_share_button: modalConfig.show_share_button,
     show_whatsapp_button: modalConfig.show_whatsapp_button,
     show_product_button: modalConfig.show_product_button,
+
+    modal_show_title: modalConfig.show_title,
+    modal_show_play_button: modalConfig.show_play_button,
+    modal_show_product: modalConfig.show_product,
+    modal_show_like_button: modalConfig.show_like_button,
+    modal_show_comment_button: modalConfig.show_comment_button,
+    modal_show_share_button: modalConfig.show_share_button,
+    modal_show_whatsapp_button: modalConfig.show_whatsapp_button,
+    modal_show_product_button: modalConfig.show_product_button,
+    modal_hide_stories: modalConfig.hide_stories,
+    modal_shadow_enabled: modalConfig.shadow_enabled,
+    modal_border_color: modalConfig.border_color,
+    modal_border_width: modalConfig.border_width,
+    modal_border_radius: modalConfig.border_radius,
 
     created_at: now,
     updated_at: now,
@@ -742,7 +774,7 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
   } as ExtendedAppearance;
 };
 
-// 🆕 CORRIGIDO: rawValue adicionado, legacyDesktop usa spacing/shape
+// 🔧 CORREÇÃO 2: normalizeAppearance — legacyDesktop lê dos campos da whitelist
 const normalizeAppearance = (
   style: Appearance,
   storeId?: string,
@@ -818,32 +850,52 @@ const normalizeAppearance = (
   floatingConfig.desktop = normalizeFloatingShapeValues(floatingConfig.desktop);
   floatingConfig.mobile = normalizeFloatingShapeValues(floatingConfig.mobile);
 
-  // 🆕 CORRIGIDO: rawValue + legacyDesktop usa spacing e shape
+  // ✅ Lê dos campos da whitelist: carousel_spacing, carousel_shape, carousel_size, etc.
   const carouselConfig = normalizeResponsiveConfig<CarouselConfig>({
     rawValue: anyItem.carousel_config,
     desktopDefault: createDefaultCarouselDesktopConfig(),
     mobileDefault: createDefaultCarouselMobileConfig(),
     sameForAll: globalAppearance,
     legacyDesktop: {
-      spacing: safeNumber(item.carousel_gap, defaults.carousel_gap, 0),
-      shape: normalizeWidgetShape(
-        item.carousel_card_shape,
-        defaults.carousel_card_shape as WidgetShape,
+      spacing: safeNumber(
+        anyItem.carousel_spacing ?? item.carousel_gap,
+        defaults.carousel_spacing ?? 0,
+        0,
       ),
+      shape: normalizeWidgetShape(
+        anyItem.carousel_shape ?? item.carousel_card_shape,
+        'portrait',
+      ),
+      width: anyItem.carousel_size ?? defaults.carousel_size ?? '80',
+      border_color:
+        anyItem.carousel_border_color ||
+        item.primary_color ||
+        '#0094EB',
+      border_style:
+        anyItem.carousel_border_width ?? defaults.carousel_border_width ?? '2',
+      border_radius:
+        anyItem.carousel_border_radius ?? defaults.carousel_border_radius ?? '12',
+      object_fit:
+        anyItem.carousel_object_fit ?? defaults.carousel_object_fit ?? 'cover',
+      margin_top: anyItem.carousel_margin_top ?? '0',
+      margin_bottom: anyItem.carousel_margin_bottom ?? '0',
+      show_title: anyItem.carousel_show_title ?? false,
+      show_product:
+        anyItem.carousel_show_product ?? item.show_product ?? true,
+      show_play_icon:
+        anyItem.carousel_show_play_button ?? item.show_play_button ?? true,
+      auto_center:
+        anyItem.carousel_auto_center ?? item.auto_center ?? false,
       view_mode: anyItem.carousel_view_mode ?? defaults.carousel_view_mode,
-      margin_top: anyItem.margin_top ?? defaults.margin_top,
-      margin_bottom: anyItem.margin_bottom ?? defaults.margin_bottom,
       visible_items: safeNumber(
-        item.carousel_visible_items,
-        defaults.carousel_visible_items || 4,
+        anyItem.carousel_visible_items ?? item.carousel_visible_items,
+        4,
         1,
       ),
-      show_product: item.show_product ?? defaults.show_product,
-      show_play_icon: anyItem.show_play_icon ?? item.show_play_button ?? true,
-      auto_center: anyItem.auto_center ?? defaults.auto_center ?? false,
     },
     legacyMobile: {
-      auto_center: anyItem.auto_center ?? defaults.auto_center ?? false,
+      auto_center:
+        anyItem.carousel_auto_center ?? item.auto_center ?? false,
     },
   });
 
@@ -925,10 +977,21 @@ const normalizeAppearance = (
     widget_size: item.widget_size || defaults.widget_size,
     widget_animation: item.widget_animation || defaults.widget_animation,
 
-    // 🆕 CORRIGIDO: carouselDesktop.spacing
-    carousel_card_shape: carouselDesktop.shape as any,
+    // ✅ whitelist fields
+    carousel_shape: carouselDesktop.shape,
     carousel_visible_items: carouselDesktop.visible_items,
-    carousel_gap: carouselDesktop.spacing,
+    carousel_spacing: carouselDesktop.spacing,
+    carousel_size: carouselDesktop.width,
+    carousel_border_color: carouselDesktop.border_color,
+    carousel_border_width: carouselDesktop.border_style,
+    carousel_border_radius: carouselDesktop.border_radius,
+    carousel_object_fit: carouselDesktop.object_fit,
+    carousel_margin_top: carouselDesktop.margin_top,
+    carousel_margin_bottom: carouselDesktop.margin_bottom,
+    carousel_show_title: carouselDesktop.show_title,
+    carousel_show_product: carouselDesktop.show_product,
+    carousel_show_play_button: carouselDesktop.show_play_icon,
+    carousel_auto_center: carouselDesktop.auto_center,
 
     show_title: modalConfig.show_title,
     show_play_button: modalConfig.show_play_button,
@@ -1059,7 +1122,6 @@ const syncDefaultAppearanceId = async (
   }
 };
 
-// 🆕 CORRIGIDO: sincroniza também carousel_config
 const syncGlobalConfig = (
   checked: boolean,
   prev: ExtendedAppearance,
@@ -1438,7 +1500,6 @@ const FloatingPreview = ({
   );
 };
 
-// 🆕 CORRIGIDO: usa carousel.spacing, carousel.border_style, carousel.width, carousel.shape
 const CarouselPreview = ({
   carousel,
   colors,
@@ -1532,7 +1593,6 @@ const CarouselPreview = ({
   );
 };
 
-// GridPreview — sem alterações necessárias (GridConfig não mudou)
 const GridPreview = ({
   grid,
   colors,
@@ -2006,7 +2066,6 @@ const AppearancePage = () => {
     });
   };
 
-  // 🆕 CORRIGIDO: usa spacing, shape, width, border_style
   const updateCarouselConfig = (patch: Partial<CarouselConfig>) => {
     setFormData(prev => {
       const device = prev.useGlobalAppearance ? 'desktop' : carouselDevice;
@@ -2032,15 +2091,21 @@ const AppearancePage = () => {
       return {
         ...prev,
         carousel_config: nextConfig,
-        carousel_gap: desktop.spacing,
-        carousel_card_shape: desktop.shape as any,
+        carousel_spacing: desktop.spacing,
+        carousel_shape: desktop.shape,
+        carousel_size: desktop.width,
+        carousel_border_color: desktop.border_color,
+        carousel_border_width: desktop.border_style,
+        carousel_border_radius: desktop.border_radius,
+        carousel_object_fit: desktop.object_fit,
         carousel_view_mode: desktop.view_mode,
-        margin_top: desktop.margin_top,
-        margin_bottom: desktop.margin_bottom,
+        carousel_margin_top: desktop.margin_top,
+        carousel_margin_bottom: desktop.margin_bottom,
         carousel_visible_items: desktop.visible_items,
-        show_product: desktop.show_product,
-        show_play_icon: desktop.show_play_icon,
-        auto_center: desktop.auto_center,
+        carousel_show_product: desktop.show_product,
+        carousel_show_play_button: desktop.show_play_icon,
+        carousel_show_title: desktop.show_title,
+        carousel_auto_center: desktop.auto_center,
       };
     });
   };
@@ -2180,6 +2245,7 @@ const AppearancePage = () => {
     setShowModal(true);
   };
 
+  // 🔧 CORREÇÃO 3: handleSaveStyle — stylePayload usa nomes da whitelist + _desktop/_mobile
   const handleSaveStyle = async () => {
     if (saving) return;
     const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
@@ -2241,11 +2307,12 @@ const AppearancePage = () => {
       const modalConfig = formData.modal_config;
       const shouldBeDefault = formData.is_default || appearances.length === 0;
 
-      // 🆕 CORRIGIDO: carouselDesktop.spacing no payload
+      // ✅ Payload com TODOS os campos da whitelist TABLE_ALLOWED_FIELDS['appearances']
       const stylePayload = {
         id,
         store_id: finalStoreId,
         name: formData.name.trim(),
+        style_name: formData.name.trim(),
         is_default: shouldBeDefault,
 
         primary_color: formData.primary_color,
@@ -2257,15 +2324,88 @@ const AppearancePage = () => {
         border_radius: floatingDesktop.border_radius,
         shadow_enabled: modalConfig.shadow_enabled,
         font_family: formData.font_family,
+        font_size: formData.font_size,
 
         widget_shape: floatingDesktop.shape,
         widget_size: formData.widget_size || 'medium',
         widget_animation: formData.widget_animation || 'none',
 
-        carousel_card_shape: carouselDesktop.shape,
+        // ✅ Carrossel — Base (whitelist)
+        carousel_shape: carouselDesktop.shape,
+        carousel_size: carouselDesktop.width,
         carousel_visible_items: carouselDesktop.visible_items,
-        carousel_gap: carouselDesktop.spacing,
+        carousel_spacing: carouselDesktop.spacing,
+        carousel_border_color: carouselDesktop.border_color,
+        carousel_border_width: carouselDesktop.border_style,
+        carousel_border_radius: carouselDesktop.border_radius,
+        carousel_object_fit: carouselDesktop.object_fit,
+        carousel_margin_top: carouselDesktop.margin_top,
+        carousel_margin_bottom: carouselDesktop.margin_bottom,
+        carousel_show_title: carouselDesktop.show_title,
+        carousel_show_product: carouselDesktop.show_product,
+        carousel_show_play_button: carouselDesktop.show_play_icon,
+        carousel_auto_center: carouselDesktop.auto_center,
 
+        // ✅ Carrossel — Desktop (whitelist)
+        carousel_shape_desktop: carouselConfig.desktop.shape,
+        carousel_size_desktop: carouselConfig.desktop.width,
+        carousel_visible_items_desktop: carouselConfig.desktop.visible_items,
+        carousel_spacing_desktop: carouselConfig.desktop.spacing,
+        carousel_border_color_desktop: carouselConfig.desktop.border_color,
+        carousel_border_width_desktop: carouselConfig.desktop.border_style,
+        carousel_border_radius_desktop: carouselConfig.desktop.border_radius,
+        carousel_object_fit_desktop: carouselConfig.desktop.object_fit,
+        carousel_margin_top_desktop: carouselConfig.desktop.margin_top,
+        carousel_margin_bottom_desktop: carouselConfig.desktop.margin_bottom,
+        carousel_show_title_desktop: carouselConfig.desktop.show_title,
+        carousel_show_product_desktop: carouselConfig.desktop.show_product,
+        carousel_show_play_button_desktop: carouselConfig.desktop.show_play_icon,
+        carousel_auto_center_desktop: carouselConfig.desktop.auto_center,
+
+        // ✅ Carrossel — Mobile (whitelist)
+        carousel_shape_mobile: carouselConfig.mobile.shape,
+        carousel_size_mobile: carouselConfig.mobile.width,
+        carousel_visible_items_mobile: carouselConfig.mobile.visible_items,
+        carousel_spacing_mobile: carouselConfig.mobile.spacing,
+        carousel_border_color_mobile: carouselConfig.mobile.border_color,
+        carousel_border_width_mobile: carouselConfig.mobile.border_style,
+        carousel_border_radius_mobile: carouselConfig.mobile.border_radius,
+        carousel_object_fit_mobile: carouselConfig.mobile.object_fit,
+        carousel_margin_top_mobile: carouselConfig.mobile.margin_top,
+        carousel_margin_bottom_mobile: carouselConfig.mobile.margin_bottom,
+        carousel_show_title_mobile: carouselConfig.mobile.show_title,
+        carousel_show_product_mobile: carouselConfig.mobile.show_product,
+        carousel_show_play_button_mobile: carouselConfig.mobile.show_play_icon,
+        carousel_auto_center_mobile: carouselConfig.mobile.auto_center,
+
+        // Grid — Base
+        grid_shape: gridDesktop.card_shape,
+        grid_size: gridDesktop.card_size,
+        grid_columns: String(gridDesktop.columns),
+        grid_rows: String(gridDesktop.rows),
+        grid_spacing: String(gridDesktop.gap),
+        grid_border_color: gridDesktop.border_color,
+        grid_border_width: gridDesktop.border_width,
+        grid_border_radius: gridDesktop.border_radius,
+        grid_object_fit: gridDesktop.object_fit,
+        grid_show_title: gridDesktop.show_title,
+
+        // Modal
+        modal_show_title: modalConfig.show_title,
+        modal_show_play_button: modalConfig.show_play_button,
+        modal_show_product: modalConfig.show_product,
+        modal_show_like_button: modalConfig.show_like_button,
+        modal_show_comment_button: modalConfig.show_comment_button,
+        modal_show_share_button: modalConfig.show_share_button,
+        modal_show_whatsapp_button: modalConfig.show_whatsapp_button,
+        modal_show_product_button: modalConfig.show_product_button,
+        modal_hide_stories: modalConfig.hide_stories,
+        modal_shadow_enabled: modalConfig.shadow_enabled,
+        modal_border_color: modalConfig.border_color,
+        modal_border_width: modalConfig.border_width,
+        modal_border_radius: modalConfig.border_radius,
+
+        // Legados (compatibilidade)
         show_title: modalConfig.show_title,
         show_play_button: modalConfig.show_play_button,
         show_product: modalConfig.show_product,
@@ -2743,7 +2883,6 @@ const AppearancePage = () => {
                   )}
 
                   {/* ── Carrossel ── */}
-                  {/* 🆕 CORRIGIDO: usa shape, width, spacing, border_style */}
                   {activeTab === 'carousel' && (
                     <SectionCard title="Carrossel" description="Configure a exibição dos vídeos em carrossel, quantidade de itens, formato, centralização e margens.">
                       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
