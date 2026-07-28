@@ -514,7 +514,7 @@ function flattenAppearanceInto(target, source, depth) {
         device: getDevice()
       });
 
-      return normalizeAppearanceItem(finalAppearance);
+      return finalAppearance;
     });
   }
 
