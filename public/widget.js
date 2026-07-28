@@ -2167,7 +2167,7 @@ el.style.setProperty('top', 'auto', 'important');
 
       if (behavior.allowClose) {
         var dismiss = createEl('button', 'vl-dismiss');
-        dismiss.innerHTML = '&times;';
+        dismiss.innerHTML = '\u2715';
         dismiss.addEventListener('click', function (e) {
           e.stopPropagation();
           host.remove();
