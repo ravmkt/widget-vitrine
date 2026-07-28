@@ -677,15 +677,21 @@ const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
 appearances: [
     'id', 'store_id', 'created_at', 'updated_at',
     // 🟦 Básico
-    'style_name', 'is_default', 'same_appearance_all_devices',
+    'name', 'is_default', 'use_global_appearance',
     // 🟨 Identidade Visual
-'primary_color', 'secondary_color', 'text_color', 'background_color',
-    'button_color', 'font_family',    // 📦 JSONB Configs — única fonte de verdade para os widgets
+    'primary_color', 'secondary_color', 'text_color', 'background_color',
+    'button_color', 'font_family', 'border_radius', 'shadow_enabled',
+    // Flutuante
+    'widget_shape', 'widget_size', 'widget_animation',
+    // Carrossel
+    'carousel_card_shape', 'carousel_visible_items', 'carousel_gap',
+    // Visibilidade dos botões
+    'show_title', 'show_play_button', 'show_product', 'show_like_button',
+    'show_comment_button', 'show_share_button', 'show_whatsapp_button', 'show_product_button',
+    // 📦 JSONB Configs
     'floating_config', 'carousel_config', 'grid_config', 'modal_config',
-    // ⚠️ Deprecated — compatibilidade legada
-    'name', 'use_global_appearance', 'shadow_enabled',
-    'button_text_color', 'show_title', 'show_progress', 'autoplay',
-    'muted', 'custom_css', 'url',
+    // 🔗 Outros
+    'url',
 ],
 };
 // ═══════════════════════════════════════════════════════
