@@ -220,7 +220,6 @@ export interface Appearance {
   useGlobalAppearance?: boolean;
   name?: string;
   shadow_enabled?: boolean;
-  border_radius?: string;
   button_text_color?: string;
   show_title?: boolean;
   show_progress?: boolean;
@@ -552,7 +551,6 @@ const DEFAULT_APPEARANCES: Appearance[] = [
     use_global_appearance: true,
     useGlobalAppearance: true,
     shadow_enabled: true,
-    border_radius: '12px',
   },
 ];
 
@@ -746,7 +744,7 @@ const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
     'modal_border_color', 'modal_border_width', 'modal_border_radius',
     // ⚠️ Deprecated — compatibilidade legada
     'name', 'use_global_appearance', 'floating_config', 'carousel_config',
-    'grid_config', 'modal_config', 'shadow_enabled', 'border_radius',
+    'grid_config', 'modal_config', 'shadow_enabled',
     'button_text_color', 'show_title', 'show_progress', 'autoplay',
     'muted', 'custom_css', 'url',
   ],
