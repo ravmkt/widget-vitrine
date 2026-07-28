@@ -718,7 +718,6 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
     background_color: '#FFFFFF',
     button_color: '#0094EB',
 
-    border_radius: floatingDesktop.border_radius,
     shadow_enabled: modalConfig.shadow_enabled,
     font_family: 'Inter, sans-serif',
     widget_shape: floatingDesktop.shape,
@@ -821,7 +820,6 @@ const normalizeAppearance = (
       shape: normalizeWidgetShape(item.widget_shape, defaults.widget_shape),
       width: anyItem.width ?? defaults.width,
       height: anyItem.height ?? defaults.height,
-      border_radius: item.border_radius || defaults.border_radius,
       position: normalizedPosition,
       floating_position: normalizedFloatingPosition,
       bottom_spacing:
@@ -988,7 +986,6 @@ const normalizeAppearance = (
     background_color: item.background_color || defaults.background_color,
     button_color: item.button_color || defaults.button_color,
 
-    border_radius: floatingDesktop.border_radius || defaults.border_radius,
     shadow_enabled: modalConfig.shadow_enabled,
     font_family: item.font_family || defaults.font_family,
     widget_shape: floatingDesktop.shape as any,
@@ -2210,7 +2207,6 @@ const AppearancePage = () => {
         floating_config: nextConfig,
         width: desktop.width,
         height: desktop.height,
-        border_radius: desktop.border_radius,
         widget_shape: desktop.shape as any,
         position: desktop.position,
         floating_position: desktop.floating_position,
@@ -2554,7 +2550,6 @@ const AppearancePage = () => {
         background_color: formData.background_color,
         button_color: formData.button_color,
 
-        border_radius: floatingDesktop.border_radius,
         shadow_enabled: modalConfig.shadow_enabled,
         font_family: formData.font_family,
         widget_shape: floatingDesktop.shape,
