@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.07.25-00';
+  var WIDGET_VERSION = '2026.07.28-00';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -376,11 +376,19 @@
         return null;
       });
   }
+
 function fetchDbAppearance() {
   if (!storeId || !hasSupabase) return Promise.resolve({});
-  return tryTable('appearances').then(function(result) {
-    var appearance = result || {};
-    return normalizeAppearanceItem(appearance);
+  return Promise.all([
+    tryTable('widget_appearances'),
+    tryTable('appearances')
+  ]).then(function(results) {
+    var widgetAppearance = results[0] || {};
+    var legacyAppearance = results[1] || {};
+    var merged = {};
+    mergeObject(merged, legacyAppearance);
+    mergeObject(merged, widgetAppearance);
+    return normalizeAppearanceItem(merged);
   });
 }
 
@@ -860,6 +868,16 @@ function fetchDbAppearance() {
     var borderColor = getBorderColor(appearance);
     var borderBackground = borderColor ? borderColor : 'linear-gradient(135deg,' + primary + ',' + secondary + ')';
     var font = getFontFamily(appearance);
+
+    //  DEBUG
+console.log('🔍 BORDA DEBUG:', {
+    borderColor: borderColor,
+    borderWidthRaw: cfg.borderWidth,  // ✅ Use cfg.borderWidth
+    borderWidth: cfg.borderWidth,
+    borderBackground: borderBackground,
+    appearanceKeys: Object.keys(appearance).filter(k => k.includes('border') || k.includes('color'))
+});
+
 
     return ':host{all:initial!important;position:fixed!important;top:' + cfg.top + '!important;right:' + cfg.right + '!important;bottom:' + cfg.bottom + '!important;left:' + cfg.left + '!important;z-index:' + cfg.zIndex + '!important;width:' + cfg.width + '!important;min-width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;height:auto!important;overflow:visible!important;background:transparent!important;pointer-events:auto!important;font-family:' + font + '!important;}'
       + buildSharedCss(appearance)
