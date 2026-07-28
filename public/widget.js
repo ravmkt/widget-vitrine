@@ -165,21 +165,18 @@
 
     if (configObj === undefined || configObj === null) return fallback;
 
-    // Parse se for string JSON
     if (typeof configObj === 'string') {
       try { configObj = JSON.parse(configObj); } catch(e) { return fallback; }
     }
 
     if (!isPlainObject(configObj)) return fallback;
 
-    // 🆕 1ª prioridade: campo direto na raiz do JSONB (formato flat)
     if (configObj[fieldName] !== undefined &&
         configObj[fieldName] !== null &&
         configObj[fieldName] !== '') {
       return configObj[fieldName];
     }
 
-    // 2ª prioridade: formato aninhado (desktop/mobile)
     var device = getDevice();
     var sameAll = configObj.same_for_all;
 
@@ -194,7 +191,6 @@
       }
       return fallback;
 }
-  }
 }
     var deviceConfig = configObj[device];
     if (deviceConfig && deviceConfig[fieldName] !== undefined &&
