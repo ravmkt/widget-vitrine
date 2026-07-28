@@ -2245,269 +2245,174 @@ const AppearancePage = () => {
     setShowModal(true);
   };
 
-  // 🔧 CORREÇÃO 3: handleSaveStyle — stylePayload usa nomes da whitelist + _desktop/_mobile
-  const handleSaveStyle = async () => {
-    if (saving) return;
-    const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
-    if (!finalStoreId) {
-      showError('Não foi possível identificar a loja atual.');
-      return;
+const handleSaveStyle = async () => {
+  if (saving) return;
+  const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
+  if (!finalStoreId) {
+    showError('Não foi possível identificar a loja atual.');
+    return;
+  }
+  if (!formData.name.trim()) {
+    showError('Nome do estilo é obrigatório.');
+    setActiveTab('basic');
+    return;
+  }
+
+  try {
+    setSaving(true);
+    const now = new Date().toISOString();
+    const id = editingStyle?.id || formData.id || generateUuid();
+
+    const floatingConfig: ResponsiveConfig<FloatingConfig> = {
+      ...formData.floating_config,
+      desktop: normalizeFloatingShapeValues(formData.floating_config.desktop),
+      mobile: normalizeFloatingShapeValues(formData.floating_config.mobile),
+      same_for_all: formData.useGlobalAppearance,
+    };
+
+    const carouselConfig: ResponsiveConfig<CarouselConfig> = {
+      ...formData.carousel_config,
+      desktop: normalizeCarouselConfigShape(formData.carousel_config.desktop),
+      mobile: normalizeCarouselConfigShape(formData.carousel_config.mobile),
+      same_for_all: formData.useGlobalAppearance,
+    };
+
+    const gridConfig: ResponsiveConfig<GridConfig> = {
+      ...formData.grid_config,
+      desktop: normalizeGridConfigShape(formData.grid_config.desktop),
+      mobile: normalizeGridConfigShape(formData.grid_config.mobile),
+      same_for_all: formData.useGlobalAppearance,
+    };
+
+    gridConfig.desktop = { ...gridConfig.desktop, columns: limitNumber(gridConfig.desktop.columns, 4, 1, 4) };
+    gridConfig.mobile = { ...gridConfig.mobile, columns: limitNumber(gridConfig.mobile.columns, 2, 1, 4) };
+
+    if (formData.useGlobalAppearance) {
+      floatingConfig.mobile = floatingConfig.desktop;
+      carouselConfig.mobile = carouselConfig.desktop;
+      gridConfig.mobile = gridConfig.desktop;
     }
-    if (!formData.name.trim()) {
-      showError('Nome do estilo é obrigatório.');
-      setActiveTab('basic');
-      return;
+
+    floatingConfig.desktop = normalizeFloatingConfigForSave(floatingConfig.desktop);
+    floatingConfig.mobile = normalizeFloatingConfigForSave(floatingConfig.mobile);
+    if (formData.useGlobalAppearance) {
+      floatingConfig.mobile = floatingConfig.desktop;
     }
 
-    try {
-      setSaving(true);
-      const now = new Date().toISOString();
-      const id = editingStyle?.id || formData.id || generateUuid();
+    const floatingDesktop = floatingConfig.desktop;
+    const carouselDesktop = carouselConfig.desktop;
+    const gridDesktop = gridConfig.desktop;
+    const gridMobile = gridConfig.mobile;
+    const modalConfig = formData.modal_config;
+    const shouldBeDefault = formData.is_default || appearances.length === 0;
 
-      const floatingConfig: ResponsiveConfig<FloatingConfig> = {
-        ...formData.floating_config,
-        desktop: normalizeFloatingShapeValues(formData.floating_config.desktop),
-        mobile: normalizeFloatingShapeValues(formData.floating_config.mobile),
-        same_for_all: formData.useGlobalAppearance,
-      };
+    // ✅ Payload com SOMENTE os campos que EXISTEM na tabela appearances do Supabase
+    const stylePayload = {
+      id,
+      store_id: finalStoreId,
+      name: formData.name.trim(),
+      style_name: formData.name.trim(),
+      is_default: shouldBeDefault,
 
-      const carouselConfig: ResponsiveConfig<CarouselConfig> = {
-        ...formData.carousel_config,
-        desktop: normalizeCarouselConfigShape(formData.carousel_config.desktop),
-        mobile: normalizeCarouselConfigShape(formData.carousel_config.mobile),
-        same_for_all: formData.useGlobalAppearance,
-      };
+      primary_color: formData.primary_color,
+      secondary_color: formData.secondary_color,
+      text_color: formData.text_color,
+      background_color: formData.background_color,
+      button_color: formData.button_color,
 
-      const gridConfig: ResponsiveConfig<GridConfig> = {
-        ...formData.grid_config,
-        desktop: normalizeGridConfigShape(formData.grid_config.desktop),
-        mobile: normalizeGridConfigShape(formData.grid_config.mobile),
-        same_for_all: formData.useGlobalAppearance,
-      };
+      border_radius: floatingDesktop.border_radius,
+      shadow_enabled: modalConfig.shadow_enabled,
+      font_family: formData.font_family,
+      font_size: formData.font_size,
 
-      gridConfig.desktop = { ...gridConfig.desktop, columns: limitNumber(gridConfig.desktop.columns, 4, 1, 4) };
-      gridConfig.mobile = { ...gridConfig.mobile, columns: limitNumber(gridConfig.mobile.columns, 2, 1, 4) };
+      widget_shape: floatingDesktop.shape,
+      widget_size: formData.widget_size || 'medium',
+      widget_animation: formData.widget_animation || 'none',
 
-      if (formData.useGlobalAppearance) {
-        floatingConfig.mobile = floatingConfig.desktop;
-        carouselConfig.mobile = carouselConfig.desktop;
-        gridConfig.mobile = gridConfig.desktop;
-      }
+      // ✅ ÚNICAS 3 colunas planas de carrossel que existem no Supabase
+      carousel_card_shape: carouselDesktop.shape,
+      carousel_visible_items: carouselDesktop.visible_items,
+      carousel_gap: carouselDesktop.spacing,
 
-      floatingConfig.desktop = normalizeFloatingConfigForSave(floatingConfig.desktop);
-      floatingConfig.mobile = normalizeFloatingConfigForSave(floatingConfig.mobile);
-      if (formData.useGlobalAppearance) {
-        floatingConfig.mobile = floatingConfig.desktop;
-      }
+      // ✅ O resto do carrossel vai DENTRO do JSONB carousel_config
+      carousel_config: carouselConfig,
 
-      const floatingDesktop = floatingConfig.desktop;
-      const carouselDesktop = carouselConfig.desktop;
-      const gridDesktop = gridConfig.desktop;
-      const gridMobile = gridConfig.mobile;
-      const modalConfig = formData.modal_config;
-      const shouldBeDefault = formData.is_default || appearances.length === 0;
+      // Grid
+      grid_config: gridConfig,
 
-      // ✅ Payload com TODOS os campos da whitelist TABLE_ALLOWED_FIELDS['appearances']
-      const stylePayload = {
-        id,
-        store_id: finalStoreId,
-        name: formData.name.trim(),
-        style_name: formData.name.trim(),
-        is_default: shouldBeDefault,
+      // Floating
+      floating_config: floatingConfig,
 
-        primary_color: formData.primary_color,
-        secondary_color: formData.secondary_color,
-        text_color: formData.text_color,
-        background_color: formData.background_color,
-        button_color: formData.button_color,
+      // Modal
+      modal_config: modalConfig,
 
-        border_radius: floatingDesktop.border_radius,
-        shadow_enabled: modalConfig.shadow_enabled,
-        font_family: formData.font_family,
-        font_size: formData.font_size,
+      // Legados (compatibilidade)
+      show_title: modalConfig.show_title,
+      show_play_button: modalConfig.show_play_button,
+      show_product: modalConfig.show_product,
+      show_like_button: modalConfig.show_like_button,
+      show_comment_button: modalConfig.show_comment_button,
+      show_share_button: modalConfig.show_share_button,
+      show_whatsapp_button: modalConfig.show_whatsapp_button,
+      show_product_button: modalConfig.show_product_button,
 
-        widget_shape: floatingDesktop.shape,
-        widget_size: formData.widget_size || 'medium',
-        widget_animation: formData.widget_animation || 'none',
+      use_global_appearance: formData.useGlobalAppearance,
 
-        // ✅ Carrossel — Base (whitelist)
-        carousel_shape: carouselDesktop.shape,
-        carousel_size: carouselDesktop.width,
-        carousel_visible_items: carouselDesktop.visible_items,
-        carousel_spacing: carouselDesktop.spacing,
-        carousel_border_color: carouselDesktop.border_color,
-        carousel_border_width: carouselDesktop.border_style,
-        carousel_border_radius: carouselDesktop.border_radius,
-        carousel_object_fit: carouselDesktop.object_fit,
-        carousel_margin_top: carouselDesktop.margin_top,
-        carousel_margin_bottom: carouselDesktop.margin_bottom,
-        carousel_show_title: carouselDesktop.show_title,
-        carousel_show_product: carouselDesktop.show_product,
-        carousel_show_play_button: carouselDesktop.show_play_icon,
-        carousel_auto_center: carouselDesktop.auto_center,
+      url: formData.url || null,
 
-        // ✅ Carrossel — Desktop (whitelist)
-        carousel_shape_desktop: carouselConfig.desktop.shape,
-        carousel_size_desktop: carouselConfig.desktop.width,
-        carousel_visible_items_desktop: carouselConfig.desktop.visible_items,
-        carousel_spacing_desktop: carouselConfig.desktop.spacing,
-        carousel_border_color_desktop: carouselConfig.desktop.border_color,
-        carousel_border_width_desktop: carouselConfig.desktop.border_style,
-        carousel_border_radius_desktop: carouselConfig.desktop.border_radius,
-        carousel_object_fit_desktop: carouselConfig.desktop.object_fit,
-        carousel_margin_top_desktop: carouselConfig.desktop.margin_top,
-        carousel_margin_bottom_desktop: carouselConfig.desktop.margin_bottom,
-        carousel_show_title_desktop: carouselConfig.desktop.show_title,
-        carousel_show_product_desktop: carouselConfig.desktop.show_product,
-        carousel_show_play_button_desktop: carouselConfig.desktop.show_play_icon,
-        carousel_auto_center_desktop: carouselConfig.desktop.auto_center,
+      created_at: formData.created_at || editingStyle?.created_at || now,
+      updated_at: now,
+    };
 
-        // ✅ Carrossel — Mobile (whitelist)
-        carousel_shape_mobile: carouselConfig.mobile.shape,
-        carousel_size_mobile: carouselConfig.mobile.width,
-        carousel_visible_items_mobile: carouselConfig.mobile.visible_items,
-        carousel_spacing_mobile: carouselConfig.mobile.spacing,
-        carousel_border_color_mobile: carouselConfig.mobile.border_color,
-        carousel_border_width_mobile: carouselConfig.mobile.border_style,
-        carousel_border_radius_mobile: carouselConfig.mobile.border_radius,
-        carousel_object_fit_mobile: carouselConfig.mobile.object_fit,
-        carousel_margin_top_mobile: carouselConfig.mobile.margin_top,
-        carousel_margin_bottom_mobile: carouselConfig.mobile.margin_bottom,
-        carousel_show_title_mobile: carouselConfig.mobile.show_title,
-        carousel_show_product_mobile: carouselConfig.mobile.show_product,
-        carousel_show_play_button_mobile: carouselConfig.mobile.show_play_icon,
-        carousel_auto_center_mobile: carouselConfig.mobile.auto_center,
-
-        // Grid — Base
-        grid_shape: gridDesktop.card_shape,
-        grid_size: gridDesktop.card_size,
-        grid_columns: String(gridDesktop.columns),
-        grid_rows: String(gridDesktop.rows),
-        grid_spacing: String(gridDesktop.gap),
-        grid_border_color: gridDesktop.border_color,
-        grid_border_width: gridDesktop.border_width,
-        grid_border_radius: gridDesktop.border_radius,
-        grid_object_fit: gridDesktop.object_fit,
-        grid_show_title: gridDesktop.show_title,
-
-        // Modal
-        modal_show_title: modalConfig.show_title,
-        modal_show_play_button: modalConfig.show_play_button,
-        modal_show_product: modalConfig.show_product,
-        modal_show_like_button: modalConfig.show_like_button,
-        modal_show_comment_button: modalConfig.show_comment_button,
-        modal_show_share_button: modalConfig.show_share_button,
-        modal_show_whatsapp_button: modalConfig.show_whatsapp_button,
-        modal_show_product_button: modalConfig.show_product_button,
-        modal_hide_stories: modalConfig.hide_stories,
-        modal_shadow_enabled: modalConfig.shadow_enabled,
-        modal_border_color: modalConfig.border_color,
-        modal_border_width: modalConfig.border_width,
-        modal_border_radius: modalConfig.border_radius,
-
-        // Legados (compatibilidade)
-        show_title: modalConfig.show_title,
-        show_play_button: modalConfig.show_play_button,
-        show_product: modalConfig.show_product,
-        show_like_button: modalConfig.show_like_button,
-        show_comment_button: modalConfig.show_comment_button,
-        show_share_button: modalConfig.show_share_button,
-        show_whatsapp_button: modalConfig.show_whatsapp_button,
-        show_product_button: modalConfig.show_product_button,
-
-        use_global_appearance: formData.useGlobalAppearance,
-
-        floating_config: floatingConfig,
-        carousel_config: carouselConfig,
-        grid_config: gridConfig,
-        modal_config: modalConfig,
-
-        url: formData.url || null,
-
-        created_at: formData.created_at || editingStyle?.created_at || now,
-        updated_at: now,
-      };
-
-      if (stylePayload.is_default) {
-        await Promise.all(
-          appearances
-            .filter(style => style.id !== id)
-            .map(style =>
-              db.appearances.save({
-                ...style,
-                store_id: finalStoreId,
-                is_default: false,
-                updated_at: now,
-              } as Appearance),
-            ),
-        );
-      }
-console.log('🔴 PAYLOAD COMPLETO ANTES DO SAVE:', JSON.stringify({
-  carousel_shape: stylePayload.carousel_shape,
-  carousel_size: stylePayload.carousel_size,
-  carousel_visible_items: stylePayload.carousel_visible_items,
-  carousel_spacing: stylePayload.carousel_spacing,
-  carousel_border_color: stylePayload.carousel_border_color,
-  carousel_border_width: stylePayload.carousel_border_width,
-  carousel_border_radius: stylePayload.carousel_border_radius,
-  carousel_margin_top: stylePayload.carousel_margin_top,
-  carousel_margin_bottom: stylePayload.carousel_margin_bottom,
-  carousel_show_title: stylePayload.carousel_show_title,
-  carousel_show_product: stylePayload.carousel_show_product,
-  carousel_show_play_button: stylePayload.carousel_show_play_button,
-  carousel_auto_center: stylePayload.carousel_auto_center,
-}, null, 2));
-
-      await db.appearances.save(stylePayload as unknown as Appearance);
-const allStyles = await db.appearances.getAll(finalStoreId);
-const savedStyle = allStyles.find((s: any) => s.id === id);
-console.log('🟢 DADO SALVO (lido de volta):', JSON.stringify({
-  carousel_shape: (savedStyle as any)?.carousel_shape,
-  carousel_size: (savedStyle as any)?.carousel_size,
-  carousel_visible_items: (savedStyle as any)?.carousel_visible_items,
-  carousel_spacing: (savedStyle as any)?.carousel_spacing,
-  carousel_border_color: (savedStyle as any)?.carousel_border_color,
-  carousel_border_width: (savedStyle as any)?.carousel_border_width,
-  carousel_border_radius: (savedStyle as any)?.carousel_border_radius,
-  carousel_margin_top: (savedStyle as any)?.carousel_margin_top,
-  carousel_margin_bottom: (savedStyle as any)?.carousel_margin_bottom,
-  carousel_show_title: (savedStyle as any)?.carousel_show_title,
-  carousel_show_product: (savedStyle as any)?.carousel_show_product,
-  carousel_show_play_button: (savedStyle as any)?.carousel_show_play_button,
-  carousel_auto_center: (savedStyle as any)?.carousel_auto_center,
-}, null, 2));
-      if (supabase) {
-        const { error: storeSettingsError } = await supabase
-          .from('store_settings')
-          .upsert(
-            {
+    if (stylePayload.is_default) {
+      await Promise.all(
+        appearances
+          .filter(style => style.id !== id)
+          .map(style =>
+            db.appearances.save({
+              ...style,
               store_id: finalStoreId,
-              default_appearance_id: shouldBeDefault ? id : null,
+              is_default: false,
               updated_at: now,
-            },
-            { onConflict: 'store_id' },
-          );
-        if (storeSettingsError) {
-          console.error('Erro ao sincronizar store_settings:', storeSettingsError);
-        }
-      }
-
-      if (stylePayload.is_default) {
-        await syncDefaultAppearanceId(finalStoreId, id);
-      }
-
-      window.dispatchEvent(new Event('storage'));
-      showSuccess(editingStyle ? 'Estilo atualizado com sucesso!' : 'Estilo criado com sucesso!');
-      setShowModal(false);
-      setEditingStyle(null);
-      await loadData();
-    } catch (error) {
-      console.error('Erro ao salvar estilo:', error);
-      showError('Erro ao salvar estilo.');
-    } finally {
-      setSaving(false);
+            } as Appearance),
+          ),
+      );
     }
-  };
+
+    await db.appearances.save(stylePayload as unknown as Appearance);
+
+    if (supabase) {
+      const { error: storeSettingsError } = await supabase
+        .from('store_settings')
+        .upsert(
+          {
+            store_id: finalStoreId,
+            default_appearance_id: shouldBeDefault ? id : null,
+            updated_at: now,
+          },
+          { onConflict: 'store_id' },
+        );
+      if (storeSettingsError) {
+        console.error('Erro ao sincronizar store_settings:', storeSettingsError);
+      }
+    }
+
+    if (stylePayload.is_default) {
+      await syncDefaultAppearanceId(finalStoreId, id);
+    }
+
+    window.dispatchEvent(new Event('storage'));
+    showSuccess(editingStyle ? 'Estilo atualizado com sucesso!' : 'Estilo criado com sucesso!');
+    setShowModal(false);
+    setEditingStyle(null);
+    await loadData();
+  } catch (error) {
+    console.error('Erro ao salvar estilo:', error);
+    showError('Erro ao salvar estilo.');
+  } finally {
+    setSaving(false);
+  }
+};
 
   const handleCancel = () => {
     if (saving) return;
