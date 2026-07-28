@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.07.28-30';
+  var WIDGET_VERSION = '2026.07.28-31';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -2175,7 +2175,7 @@ dismiss.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"
           host.remove();
           floatingWasClosed = true;
         });
-        ring.appendChild(dismiss);
+bubble.appendChild(dismiss);
       }
 
       bubble.appendChild(ring);
