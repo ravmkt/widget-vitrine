@@ -1541,29 +1541,27 @@ const CarouselPreview = ({
             style={{ gap: `${safeNumber(carousel.spacing, 0, 0)}px` }}
           >
             {items.map((_, index) => (
-              <div
-                key={index}
-                className={cn(
-                  'relative shrink-0 overflow-hidden border shadow-sm',
-                  isCircle && 'h-24 w-24 rounded-full',
-                  isSquare && 'h-24 w-24 rounded-2xl',
-                  isPortrait && 'h-[142px] w-20 rounded-2xl',
-                )}
-                style={{
-                  aspectRatio: isPortrait ? '9 / 16' : '1 / 1',
-                  borderColor: carousel.border_color || colors.primary,
-                  borderWidth: `${safeNumber(carousel.border_style, 2, 0)}px`,
-                  borderStyle: 'solid',
-                  borderRadius: isCircle
-                    ? '999px'
-                    : cssSize(carousel.border_radius, '12px'),
-                  objectFit: (carousel.object_fit || 'cover') as any,
-                  background:
-                    index % 2 === 0
-                      ? `linear-gradient(160deg, ${colors.primary}, #dbeafe)`
-                      : `linear-gradient(160deg, ${colors.secondary}, #f8fafc)`,
-                }}
-              >
+<div
+  key={index}
+  className="relative shrink-0 overflow-hidden border shadow-sm"
+  style={{
+    width: cssSize(carousel.width, '80px'),
+    height: isPortrait
+      ? `${Math.round(safeNumber(parseFloat(carousel.width), 80, 20) * 16 / 9)}px`
+      : cssSize(carousel.width, '80px'),
+    borderColor: carousel.border_color || colors.primary,
+    borderWidth: `${safeNumber(carousel.border_style, 2, 0)}px`,
+    borderStyle: 'solid',
+    borderRadius: isCircle
+      ? '50%'
+      : cssSize(carousel.border_radius, '12px'),
+    objectFit: (carousel.object_fit || 'cover') as any,
+    background:
+      index % 2 === 0
+        ? `linear-gradient(160deg, ${colors.primary}, #dbeafe)`
+        : `linear-gradient(160deg, ${colors.secondary}, #f8fafc)`,
+  }}
+>
                 {carousel.show_play_icon && (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
