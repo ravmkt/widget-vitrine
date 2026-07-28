@@ -208,23 +208,6 @@
     return fallback;
   }
 
-    // same_for_all === false → tenta device específico
-    var deviceConfig = configObj[device];
-    if (deviceConfig && deviceConfig[fieldName] !== undefined &&
-        deviceConfig[fieldName] !== null && deviceConfig[fieldName] !== '') {
-      return deviceConfig[fieldName];
-    }
-
-    // Fallback para o outro device
-    var otherDevice = device === 'mobile' ? 'desktop' : 'mobile';
-    var otherConfig = configObj[otherDevice];
-    if (otherConfig && otherConfig[fieldName] !== undefined &&
-        otherConfig[fieldName] !== null && otherConfig[fieldName] !== '') {
-      return otherConfig[fieldName];
-    }
-
-    return fallback;
-  }
 
   /**
    * 🆕 Lê valor de aparência com prioridade: JSONB → coluna plana → fallback.
