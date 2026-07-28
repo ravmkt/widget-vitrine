@@ -2442,6 +2442,21 @@ const AppearancePage = () => {
             ),
         );
       }
+console.log('🔴 PAYLOAD COMPLETO ANTES DO SAVE:', JSON.stringify({
+  carousel_shape: stylePayload.carousel_shape,
+  carousel_size: stylePayload.carousel_size,
+  carousel_visible_items: stylePayload.carousel_visible_items,
+  carousel_spacing: stylePayload.carousel_spacing,
+  carousel_border_color: stylePayload.carousel_border_color,
+  carousel_border_width: stylePayload.carousel_border_width,
+  carousel_border_radius: stylePayload.carousel_border_radius,
+  carousel_margin_top: stylePayload.carousel_margin_top,
+  carousel_margin_bottom: stylePayload.carousel_margin_bottom,
+  carousel_show_title: stylePayload.carousel_show_title,
+  carousel_show_product: stylePayload.carousel_show_product,
+  carousel_show_play_button: stylePayload.carousel_show_play_button,
+  carousel_auto_center: stylePayload.carousel_auto_center,
+}, null, 2));
 
       await db.appearances.save(stylePayload as unknown as Appearance);
 
