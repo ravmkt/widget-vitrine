@@ -193,8 +193,9 @@
         return configObj.mobile[fieldName];
       }
       return fallback;
-    }
-
+}
+  }
+}
     var deviceConfig = configObj[device];
     if (deviceConfig && deviceConfig[fieldName] !== undefined &&
         deviceConfig[fieldName] !== null && deviceConfig[fieldName] !== '') {
