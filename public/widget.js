@@ -190,8 +190,9 @@
         return configObj.mobile[fieldName];
       }
       return fallback;
-}
-}
+    }
+
+    // same_for_all === false → tenta device específico
     var deviceConfig = configObj[device];
     if (deviceConfig && deviceConfig[fieldName] !== undefined &&
         deviceConfig[fieldName] !== null && deviceConfig[fieldName] !== '') {
@@ -205,8 +206,8 @@
       return otherConfig[fieldName];
     }
 
-      return fallback;
-    }
+    return fallback;
+  }
   }
 } 
 
