@@ -377,11 +377,18 @@
       });
   }
 
-  // ✅ CORRIGIDO: tabela unificada chama-se "appearances" (plural)
+  // ✅ CORRIGIDO (1): floating_config é reaplicado após normalizeAppearanceItem
+  // para garantir que as configurações do floating prevaleçam sobre modal_config
   function fetchDbAppearance() {
     if (!storeId || !hasSupabase) return Promise.resolve({});
     return tryTable('appearances').then(function (dbAppearance) {
-      return normalizeAppearanceItem(dbAppearance || {});
+      if (!dbAppearance) return {};
+      var merged = normalizeAppearanceItem(dbAppearance || {});
+      // Reaplica floating_config para sobrescrever modal_config
+      if (dbAppearance.floating_config) {
+        flattenAppearanceInto(merged, dbAppearance.floating_config, 0);
+      }
+      return merged;
     });
   }
 
@@ -446,8 +453,9 @@
     var heightNumber = toNumber(getValue(['floating_height', 'height'], defaultHeight), defaultHeight);
     if (shape === 'square' || shape === 'circle') heightNumber = widthNumber;
 
-    // ✅ CORRIGIDO: adicionado 'border_style' como alias para espessura da borda
-    var borderWidthNumber = toNumber(getValue(['floating_border_width', 'border_width', 'border_style'], DEFAULT_APPEARANCE.floating_border_width), DEFAULT_APPEARANCE.floating_border_width);
+    // ✅ CORRIGIDO (2): floating_border_style e border_style buscados ANTES de border_width
+    // para que o valor do floating_config prevaleça sobre modal_config
+    var borderWidthNumber = toNumber(getValue(['floating_border_width', 'floating_border_style', 'border_style', 'border_width'], DEFAULT_APPEARANCE.floating_border_width), DEFAULT_APPEARANCE.floating_border_width);
     var radiusNumber = toNumber(getValue(['floating_border_radius', 'floating_radius', 'border_radius', 'radius'], DEFAULT_APPEARANCE.floating_border_radius), DEFAULT_APPEARANCE.floating_border_radius);
     if (shape === 'circle') radiusNumber = 999;
 
@@ -1977,4 +1985,3 @@
   }
 
 })();
-
