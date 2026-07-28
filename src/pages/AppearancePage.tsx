@@ -2539,80 +2539,50 @@ const AppearancePage = () => {
 
       // ── Payload para IndexedDB (db.appearances) ──
       const stylePayload = {
-        id,
-        store_id: finalStoreId,
-        name: formData.name.trim(),
-        is_default: shouldBeDefault,
+  id,
+  store_id: finalStoreId,
+  name: formData.name.trim(),
+  is_default: shouldBeDefault,
 
-        primary_color: formData.primary_color,
-        secondary_color: formData.secondary_color,
-        text_color: formData.text_color,
-        background_color: formData.background_color,
-        button_color: formData.button_color,
+  primary_color: formData.primary_color,
+  secondary_color: formData.secondary_color,
+  text_color: formData.text_color,
+  background_color: formData.background_color,
+  button_color: formData.button_color,
 
-        shadow_enabled: modalConfig.shadow_enabled,
-        font_family: formData.font_family,
-        widget_shape: floatingDesktop.shape,
-        widget_size: formData.widget_size || 'medium',
-        widget_animation: formData.widget_animation || 'none',
+  border_radius: activeFloatingConfig.border_radius,       // ← estava faltando
+  shadow_enabled: modalConfig.shadow_enabled,
+  font_family: formData.font_family,
 
-        carousel_card_shape: carouselDesktop.card_shape,
-        carousel_visible_items: carouselDesktop.visible_items,
-        carousel_gap: carouselDesktop.gap,
+  widget_shape: floatingDesktop.shape,
+  widget_size: formData.widget_size || 'medium',
+  widget_animation: formData.widget_animation || 'none',
 
-        show_title: modalConfig.show_title,
-        show_play_button: modalConfig.show_play_button,
-        show_product: modalConfig.show_product,
-        show_like_button: modalConfig.show_like_button,
-        show_comment_button: modalConfig.show_comment_button,
-        show_share_button: modalConfig.show_share_button,
-        show_whatsapp_button: modalConfig.show_whatsapp_button,
-        show_product_button: modalConfig.show_product_button,
+  carousel_card_shape: carouselDesktop.card_shape,
+  carousel_visible_items: carouselDesktop.visible_items,
+  carousel_gap: carouselDesktop.gap,
 
-        use_global_appearance: formData.useGlobalAppearance,
-        floating_config: floatingConfig,
-        modal_config: modalConfig,
+  show_title: modalConfig.show_title,
+  show_play_button: modalConfig.show_play_button,
+  show_product: modalConfig.show_product,
+  show_like_button: modalConfig.show_like_button,
+  show_comment_button: modalConfig.show_comment_button,
+  show_share_button: modalConfig.show_share_button,
+  show_whatsapp_button: modalConfig.show_whatsapp_button,
+  show_product_button: modalConfig.show_product_button,
 
-        width: floatingDesktop.width,
-        height: floatingDesktop.height,
-        unit: formData.unit || 'px',
+  use_global_appearance: formData.useGlobalAppearance,
 
-        position: normalizedPosition,
-        floating_position: normalizedFloatingPosition,
+  floating_config: floatingConfig,    // ← JSONB com TUDO do flutuante
+  carousel_config: carouselConfig,    // ← JSONB com TUDO do carrossel
+  grid_config: gridConfig,            // ← JSONB com TUDO da grade
+  modal_config: modalConfig,          // ← JSONB com TUDO do modal
 
-        bottom_spacing: floatingDesktop.bottom_spacing,
-        top_spacing: floatingDesktop.top_spacing,
-        left_spacing: floatingDesktop.left_spacing,
-        right_spacing: floatingDesktop.right_spacing,
+  url: formData.url || null,
 
-        color: floatingDesktop.border_color || formData.primary_color,
-        border_style: floatingDesktop.border_style,
-        show_play_icon: floatingDesktop.show_play_icon,
-        draggable: floatingDesktop.draggable,
-        allow_close: floatingDesktop.allow_close,
-        object_fit: floatingDesktop.object_fit,
-        z_index: floatingDesktop.z_index,
-
-        carousel_view_mode: carouselDesktop.view_mode,
-        margin_top: carouselDesktop.margin_top,
-        margin_bottom: carouselDesktop.margin_bottom,
-        auto_center: carouselDesktop.auto_center,
-
-        desktop_columns: gridDesktop.columns,
-        desktop_rows: gridDesktop.rows,
-        desktop_gap: gridDesktop.gap,
-        mobile_columns: gridMobile.columns,
-        mobile_rows: gridMobile.rows,
-        mobile_gap: gridMobile.gap,
-
-        hide_stories: modalConfig.hide_stories,
-        font_size: formData.font_size,
-
-        url: formData.url || null,
-
-        updated_at: now,
-        created_at: formData.created_at || editingStyle?.created_at || now,
-      };
+  created_at: formData.created_at || editingStyle?.created_at || now,
+  updated_at: now,
+};
 
       if (stylePayload.is_default) {
         await Promise.all(
