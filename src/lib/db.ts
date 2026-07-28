@@ -679,9 +679,8 @@ appearances: [
     // 🟦 Básico
     'style_name', 'is_default', 'same_appearance_all_devices',
     // 🟨 Identidade Visual
-    'primary_color', 'secondary_color', 'text_color', 'background_color',
-    'button_color', 'font_family', 'font_size',
-    // 📦 JSONB Configs — única fonte de verdade para os widgets
+'primary_color', 'secondary_color', 'text_color', 'background_color',
+    'button_color', 'font_family',    // 📦 JSONB Configs — única fonte de verdade para os widgets
     'floating_config', 'carousel_config', 'grid_config', 'modal_config',
     // ⚠️ Deprecated — compatibilidade legada
     'name', 'use_global_appearance', 'shadow_enabled',
