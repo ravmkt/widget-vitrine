@@ -1507,8 +1507,21 @@ const CarouselPreview = ({
   const shape = normalizeWidgetShape(carousel.shape, 'portrait');
   const items = Array.from({ length: Math.max(1, Math.min(visibleItems, 8)) });
   const isCircle = shape === 'circle';
-  const isSquare = shape === 'square';
   const isPortrait = shape === 'portrait';
+  const isSquare = shape === 'square';
+
+  const cardWidthPx = safeNumber(parseFloat(carousel.width || '80'), 80, 20);
+  const cardWidth = `${cardWidthPx}px`;
+
+  // altura: portrait = 16/9 * largura, circle/square = mesma largura
+  const cardHeightPx = isPortrait
+    ? Math.round((cardWidthPx * 16) / 9)
+    : cardWidthPx;
+  const cardHeight = `${cardHeightPx}px`;
+
+  const borderRadius = isCircle
+    ? '50%'
+    : cssSize(carousel.border_radius, '12px');
 
   return (
     <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
@@ -1537,27 +1550,24 @@ const CarouselPreview = ({
             style={{ gap: `${safeNumber(carousel.spacing, 0, 0)}px` }}
           >
             {items.map((_, index) => (
-<div
-  key={index}
-  className="relative shrink-0 overflow-hidden border shadow-sm"
-  style={{
-    width: cssSize(carousel.width, '80px'),
-    height: isPortrait
-      ? `${Math.round(safeNumber(parseFloat(carousel.width), 80, 20) * 16 / 9)}px`
-      : cssSize(carousel.width, '80px'),
-    borderColor: carousel.border_color || colors.primary,
-    borderWidth: `${safeNumber(carousel.border_style, 2, 0)}px`,
-    borderStyle: 'solid',
-    borderRadius: isCircle
-      ? '50%'
-      : cssSize(carousel.border_radius, '12px'),
-    objectFit: (carousel.object_fit || 'cover') as any,
-    background:
-      index % 2 === 0
-        ? `linear-gradient(160deg, ${colors.primary}, #dbeafe)`
-        : `linear-gradient(160deg, ${colors.secondary}, #f8fafc)`,
-  }}
->
+              <div
+                key={index}
+                className="relative shrink-0 overflow-hidden border shadow-sm"
+                style={{
+                  width: cardWidth,
+                  height: cardHeight,
+                  minWidth: cardWidth,
+                  flexShrink: 0,
+                  borderColor: carousel.border_color || colors.primary,
+                  borderWidth: `${safeNumber(carousel.border_style, 2, 0)}px`,
+                  borderStyle: 'solid',
+                  borderRadius,
+                  background:
+                    index % 2 === 0
+                      ? `linear-gradient(160deg, ${colors.primary}, #dbeafe)`
+                      : `linear-gradient(160deg, ${colors.secondary}, #f8fafc)`,
+                }}
+              >
                 {carousel.show_play_icon && (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
@@ -1577,7 +1587,7 @@ const CarouselPreview = ({
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
         <PreviewInfo label="Forma" value={getShapeLabel(shape)} />
-        <PreviewInfo label="Espaçamento" value={`${carousel.spacing}px`} />
+        <PreviewInfo label="Tamanho" value={`${cardWidth} × ${cardHeight}`} />
         <PreviewInfo label="Itens" value={`${visibleItems}`} />
         <PreviewInfo label="Margem topo" value={cssSize(carousel.margin_top)} />
         <PreviewInfo label="Margem inferior" value={cssSize(carousel.margin_bottom)} />
