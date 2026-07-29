@@ -1309,7 +1309,8 @@ var payload = {
     modalContent.appendChild(panel);
   }
 
-  function openCommentsPanel(videoId, storyId) {
+function openCommentsPanel(videoId, storyId) {
+    console.log('>>> openCommentsPanel chamado', videoId, storyId, !!modalContent);
     var existing = modalContent.querySelector('.vl-comments-panel-full');
     if (existing) { existing.remove(); return; }
     var story = currentStories[currentStoryIndex];
