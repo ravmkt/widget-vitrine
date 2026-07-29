@@ -971,7 +971,13 @@ var query = 'comments?select=id,store_id,video_id,user_name,user_email,content,s
 + 'box-shadow:0 12px 35px rgba(0,0,0,.35)!important;'
 + 'box-sizing:border-box!important;'
 + '}'
-+ '.vl-modal.has-comments-open{height:100%!important;max-height:100vh!important;aspect-ratio:auto!important;border-radius:0!important;}'
++ '.vl-modal.has-comments-open{'
++ 'height:100%!important;'
++ 'max-height:100vh!important;'
++ 'aspect-ratio:auto!important;'
++ 'border-radius:0!important;'
++ 'overflow:hidden!important;'
++ '}'
 
     );
   }
