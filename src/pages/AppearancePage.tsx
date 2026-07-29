@@ -2882,9 +2882,12 @@ const handleSaveStyle = async () => {
                       </div>
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <FormField label="Forma">
-                          <select
-                            value={activeCarouselConfig.shape}
-                            onChange={e => updateCarouselConfig({ shape: e.target.value as WidgetShape })}
+<select
+  value={activeCarouselConfig.shape}
+  onChange={e => {
+    console.log('🎯 select forma disparado:', e.target.value);
+    updateCarouselConfig({ shape: e.target.value as WidgetShape });
+  }}
                             className={selectClass}
                           >
                             <option value="circle">Circular</option>
