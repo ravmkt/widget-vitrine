@@ -1315,7 +1315,34 @@ var payload = {
 function openCommentsPanel(videoId, storyId) {
     console.log('>>> openCommentsPanel chamado', videoId, storyId, !!modalContent);
     var existing = modalContent.querySelector('.vl-comments-panel-full');
-    if (existing) { existing.remove(); return; }
+    if (existing) {
+      existing.remove();
+      modalContent.classList.remove('has-comments-open');
+      // Re-exibe header, footer e botões sociais
+      var header = modalContent.querySelector('.vl-header');
+      var footer = modalContent.querySelector('.vl-footer');
+      var social = modalContent.querySelector('.vl-social');
+      if (header) header.style.display = '';
+      if (footer) footer.style.display = '';
+      if (social) social.style.display = '';
+      var vid = modalContent.querySelector('video');
+      if (vid) vid.play().catch(function(){});
+      return;
+    }
+
+    // 🛑 Pausa o vídeo e esconde elementos sobrepostos
+    var vid = modalContent.querySelector('video');
+    if (vid) vid.pause();
+    
+    modalContent.classList.add('has-comments-open');
+    
+    var header = modalContent.querySelector('.vl-header');
+    var footer = modalContent.querySelector('.vl-footer');
+    var social = modalContent.querySelector('.vl-social');
+    if (header) header.style.display = 'none';
+    if (footer) footer.style.display = 'none';
+    if (social) social.style.display = 'none';
+
     var story = currentStories[currentStoryIndex];
     var primaryColor = getPrimaryColor(currentAppearance);
     var buttonColor = getButtonColor(currentAppearance);
@@ -1353,7 +1380,18 @@ function openCommentsPanel(videoId, storyId) {
     ].join('');
     closeBtn.onmouseenter = function () { closeBtn.style.background = '#e2e8f0'; };
     closeBtn.onmouseleave = function () { closeBtn.style.background = '#f1f5f9'; };
-    closeBtn.onclick = function () { panel.remove(); };
+    closeBtn.onclick = function () {
+      panel.remove();
+      modalContent.classList.remove('has-comments-open');
+      var h = modalContent.querySelector('.vl-header');
+      var f = modalContent.querySelector('.vl-footer');
+      var s = modalContent.querySelector('.vl-social');
+      if (h) h.style.display = '';
+      if (f) f.style.display = '';
+      if (s) s.style.display = '';
+      var v = modalContent.querySelector('video');
+      if (v) v.play().catch(function(){});
+    };
     panelHeader.appendChild(closeBtn);
     panel.appendChild(panelHeader);
     var commentsList = createEl('div');
