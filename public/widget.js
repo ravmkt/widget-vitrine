@@ -2106,8 +2106,8 @@ panelTitle.style.cssText = [
 
   emojiRow.appendChild(emojiToggle);
   emojiRow.appendChild(emojiGrid);
-  editor.appendChild(emojiRow);
   formSection.appendChild(editor);
+formSection.appendChild(emojiRow);
 
   var charCounter = createEl('div');
   charCounter.textContent = '0/1000';
