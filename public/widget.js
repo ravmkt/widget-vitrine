@@ -1317,7 +1317,6 @@ function openCommentsPanel(videoId, storyId) {
     var existing = modalContent.querySelector('.vl-comments-panel-full');
     if (existing) {
       existing.remove();
-      modalContent.classList.remove('has-comments-open');
       // Re-exibe header, footer e botões sociais
       var header = modalContent.querySelector('.vl-header');
       var footer = modalContent.querySelector('.vl-footer');
@@ -1334,8 +1333,6 @@ function openCommentsPanel(videoId, storyId) {
     var vid = modalContent.querySelector('video');
     if (vid) vid.pause();
     
-    modalContent.classList.add('has-comments-open');
-    
     var header = modalContent.querySelector('.vl-header');
     var footer = modalContent.querySelector('.vl-footer');
     var social = modalContent.querySelector('.vl-social');
@@ -1347,23 +1344,32 @@ function openCommentsPanel(videoId, storyId) {
     var primaryColor = getPrimaryColor(currentAppearance);
     var buttonColor = getButtonColor(currentAppearance);
     var fontFamily = getFontFamily(currentAppearance);
+
+    // 🎯 Painel centralizado sobre o vídeo com borda mostrando o vídeo ao redor
     var panel = createEl('div', 'vl-comments-panel-full');
     panel.style.cssText = [
-      'position:absolute;inset:0;z-index:100;',
+      'position:absolute;',
+      'top:3%;bottom:3%;left:3%;right:3%;',
+      'z-index:100;',
       'background:#FFFFFF;',
       'display:flex;flex-direction:column;',
       'font-family:' + fontFamily + ';',
       'overflow-y:auto;overflow-x:hidden;',
-      'animation:vlSlideUp 0.25s ease;',
-      'padding-bottom:20px;'
+      'animation:vlFadeScale 0.22s ease;',
+      'border-radius:20px;',
+      'box-shadow:0 16px 48px rgba(0,0,0,0.45);',
+      'padding-bottom:16px;'
     ].join('');
+
     var panelHeader = createEl('div');
     panelHeader.style.cssText = [
       'display:flex;align-items:center;justify-content:space-between;',
-      'padding:16px 20px;',
+      'padding:14px 18px;',
       'border-bottom:1px solid #e2e8f0;',
       'flex-shrink:0;',
-      'background:#fff;'
+      'background:#fff;',
+      'position:sticky;top:0;z-index:5;',
+      'border-radius:20px 20px 0 0;'
     ].join('');
     var commentsCount = getCommentCountForVideo(videoId);
     var panelTitle = createEl('h3');
@@ -1376,13 +1382,12 @@ function openCommentsPanel(videoId, storyId) {
       'background:#f1f5f9;border:none;color:#475569;cursor:pointer;',
       'width:32px;height:32px;border-radius:50%;',
       'display:flex;align-items:center;justify-content:center;',
-      'font-size:18px;transition:all 0.15s;'
+      'font-size:18px;transition:all 0.15s;flex-shrink:0;'
     ].join('');
     closeBtn.onmouseenter = function () { closeBtn.style.background = '#e2e8f0'; };
     closeBtn.onmouseleave = function () { closeBtn.style.background = '#f1f5f9'; };
     closeBtn.onclick = function () {
       panel.remove();
-      modalContent.classList.remove('has-comments-open');
       var h = modalContent.querySelector('.vl-header');
       var f = modalContent.querySelector('.vl-footer');
       var s = modalContent.querySelector('.vl-social');
@@ -1394,10 +1399,11 @@ function openCommentsPanel(videoId, storyId) {
     };
     panelHeader.appendChild(closeBtn);
     panel.appendChild(panelHeader);
+
     var commentsList = createEl('div');
     commentsList.style.cssText = [
-      'flex:1;overflow-y:auto;padding:12px 20px;',
-      'display:flex;flex-direction:column;gap:12px;',
+      'flex:1;overflow-y:auto;padding:10px 18px;',
+      'display:flex;flex-direction:column;gap:10px;',
       '-webkit-overflow-scrolling:touch;'
     ].join('');
     var videoComments = readCommentsData.filter(function (c) {
@@ -1407,12 +1413,12 @@ function openCommentsPanel(videoId, storyId) {
       var emptyState = createEl('div');
       emptyState.style.cssText = [
         'display:flex;flex-direction:column;align-items:center;justify-content:center;',
-        'padding:20px 20px;text-align:center;',
-        'flex:1;min-height:120px;max-height:180px;'
+        'padding:20px 16px;text-align:center;',
+        'flex:1;min-height:100px;'
       ].join('');
       var emptyIcon = createEl('div');
       emptyIcon.innerHTML = svgIcon('comment');
-      emptyIcon.style.cssText = 'opacity:0.15;margin-bottom:12px;';
+      emptyIcon.style.cssText = 'opacity:0.15;margin-bottom:10px;';
       emptyState.appendChild(emptyIcon);
       var emptyText = createEl('p');
       emptyText.textContent = 'Nenhum comentário ainda. Seja o primeiro!';
@@ -1426,7 +1432,7 @@ function openCommentsPanel(videoId, storyId) {
         var avatar = createEl('div');
         var initial = (c.user_name || 'V').charAt(0).toUpperCase();
         avatar.textContent = initial;
-        avatar.style.cssText = 'width:36px;height:36px;border-radius:50%;background:' + primaryColor + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;';
+        avatar.style.cssText = 'width:34px;height:34px;border-radius:50%;background:' + primaryColor + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;';
         commentCard.appendChild(avatar);
         var commentBody = createEl('div');
         commentBody.style.cssText = 'flex:1;min-width:0;';
@@ -1469,34 +1475,40 @@ function openCommentsPanel(videoId, storyId) {
     }
     panel.appendChild(commentsList);
 
+    // ── FORMULÁRIO ──
     var formSection = createEl('div');
-    formSection.style.cssText = 'flex-shrink:0;padding:12px 20px 16px;border-top:1px solid #e2e8f0;background:#fff;';
+    formSection.style.cssText = 'flex-shrink:0;padding:12px 18px 8px;border-top:1px solid #e2e8f0;background:#fff;';
+    
     var nameLabel = createEl('label');
     nameLabel.textContent = 'Seu nome';
     nameLabel.style.cssText = 'display:block;font-size:12px;font-weight:600;color:#64748b;margin-bottom:4px;';
     formSection.appendChild(nameLabel);
+    
     var nameInput = createEl('input');
     nameInput.type = 'text';
     nameInput.placeholder = 'Digite seu nome...';
     nameInput.maxLength = 80;
-    nameInput.style.cssText = 'width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#0f172a;outline:none;transition:border-color 0.2s;margin-bottom:10px;box-sizing:border-box;background:#f8fafc;';
+    nameInput.style.cssText = 'width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#0f172a;outline:none;transition:border-color 0.2s;margin-bottom:10px;box-sizing:border-box;background:#f8fafc;';
     nameInput.onfocus = function () { nameInput.style.borderColor = primaryColor; nameInput.style.background = '#fff'; };
     nameInput.onblur = function () { nameInput.style.borderColor = '#e2e8f0'; nameInput.style.background = '#f8fafc'; };
     formSection.appendChild(nameInput);
+    
     var commentLabel = createEl('label');
     commentLabel.textContent = 'Seu comentário';
     commentLabel.style.cssText = 'display:block;font-size:12px;font-weight:600;color:#64748b;margin-bottom:4px;';
     formSection.appendChild(commentLabel);
+    
     var commentTextarea = createEl('textarea');
     commentTextarea.placeholder = 'Escreva seu comentário...';
     commentTextarea.maxLength = 1000;
     commentTextarea.rows = 3;
-    commentTextarea.style.cssText = 'width:100%;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#0f172a;resize:vertical;min-height:80px;max-height:160px;outline:none;transition:border-color 0.2s;margin-bottom:8px;box-sizing:border-box;background:#f8fafc;font-family:' + fontFamily + ';';
+    commentTextarea.style.cssText = 'width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#0f172a;resize:vertical;min-height:72px;max-height:140px;outline:none;transition:border-color 0.2s;margin-bottom:8px;box-sizing:border-box;background:#f8fafc;font-family:' + fontFamily + ';';
     commentTextarea.onfocus = function () { commentTextarea.style.borderColor = primaryColor; commentTextarea.style.background = '#fff'; };
     commentTextarea.onblur = function () { commentTextarea.style.borderColor = '#e2e8f0'; commentTextarea.style.background = '#f8fafc'; };
     formSection.appendChild(commentTextarea);
+    
     var charCounter = createEl('div');
-    charCounter.style.cssText = 'text-align:right;font-size:11px;color:#94a3b8;margin-bottom:4px;';
+    charCounter.style.cssText = 'text-align:right;font-size:11px;color:#94a3b8;margin-bottom:6px;';
     charCounter.textContent = '0/1000';
     commentTextarea.addEventListener('input', function () {
       charCounter.textContent = commentTextarea.value.length + '/1000';
@@ -1504,8 +1516,9 @@ function openCommentsPanel(videoId, storyId) {
     formSection.appendChild(charCounter);
 
     var actionRow = createEl('div');
-    actionRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;';
+    actionRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;flex-wrap:wrap;';
 
+    // 😊 EMOJI — abre para baixo com 2 linhas
     var emojiRow = createEl('div');
     emojiRow.style.cssText = 'position:relative;';
     var emojiToggle = createEl('button');
@@ -1517,13 +1530,29 @@ function openCommentsPanel(videoId, storyId) {
     emojiRow.appendChild(emojiToggle);
 
     var emojiGrid = createEl('div');
-    emojiGrid.style.cssText = 'display:none;flex-wrap:wrap;gap:6px;position:absolute;bottom:calc(100% + 6px);left:0;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.12);z-index:10;max-width:280px;';
+    emojiGrid.style.cssText = [
+      'display:none;',
+      'position:absolute;',
+      'top:calc(100% + 8px);',
+      'left:0;',
+      'grid-template-columns:repeat(12,1fr);',
+      'grid-template-rows:repeat(2,1fr);',
+      'gap:4px;',
+      'padding:8px;',
+      'background:#fff;',
+      'border:1px solid #e2e8f0;',
+      'border-radius:12px;',
+      'box-shadow:0 8px 30px rgba(0,0,0,0.15);',
+      'z-index:20;',
+      'max-width:460px;',
+      'width:max-content;'
+    ].join('');
     var emojiList = ['😍','🔥','👏','❤️','😂','😱','🙌','💯','✨','😢','🤔','👍','💪','🎉','😊','🥰','😎','🙏','💙','⭐','✅','😡','👀','🤩'];
     emojiList.forEach(function (emoji) {
       var emojiBtn = createEl('button');
       emojiBtn.type = 'button';
       emojiBtn.textContent = emoji;
-      emojiBtn.style.cssText = 'width:36px;height:36px;border:none;background:transparent;border-radius:8px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;';
+      emojiBtn.style.cssText = 'width:34px;height:34px;border:none;background:transparent;border-radius:8px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;';
       emojiBtn.onmouseenter = function () { emojiBtn.style.background = '#f1f5f9'; emojiBtn.style.transform = 'scale(1.15)'; };
       emojiBtn.onmouseleave = function () { emojiBtn.style.background = 'transparent'; emojiBtn.style.transform = 'scale(1)'; };
       emojiBtn.onmousedown = function (ev) {
@@ -1547,7 +1576,7 @@ function openCommentsPanel(videoId, storyId) {
     emojiToggle.onmousedown = function (ev) {
       ev.preventDefault();
       if (emojiGrid.style.display === 'none' || emojiGrid.style.display === '') {
-        emojiGrid.style.display = 'flex';
+        emojiGrid.style.display = 'grid';
         emojiToggle.innerHTML = '✕ Fechar';
       } else {
         emojiGrid.style.display = 'none';
@@ -1557,7 +1586,7 @@ function openCommentsPanel(videoId, storyId) {
     };
 
     document.addEventListener('mousedown', function closeEmoji(ev) {
-      if (emojiGrid.style.display === 'flex' && !emojiRow.contains(ev.target)) {
+      if (emojiGrid.style.display === 'grid' && !emojiRow.contains(ev.target)) {
         emojiGrid.style.display = 'none';
         emojiToggle.innerHTML = '😊 Emoji';
         document.removeEventListener('mousedown', closeEmoji);
@@ -1568,7 +1597,7 @@ function openCommentsPanel(videoId, storyId) {
 
     var sendBtn = createEl('button');
     sendBtn.textContent = 'Enviar';
-    sendBtn.style.cssText = 'padding:10px 22px;border:none;border-radius:10px;background:' + buttonColor + ';color:#fff;font-weight:700;font-size:14px;cursor:pointer;transition:all 0.2s;white-space:nowrap;flex-shrink:0;';
+    sendBtn.style.cssText = 'padding:9px 20px;border:none;border-radius:10px;background:' + buttonColor + ';color:#fff;font-weight:700;font-size:14px;cursor:pointer;transition:all 0.2s;white-space:nowrap;flex-shrink:0;';
     sendBtn.onmouseenter = function () { sendBtn.style.opacity = '0.9'; sendBtn.style.transform = 'scale(1.03)'; };
     sendBtn.onmouseleave = function () { sendBtn.style.opacity = '1'; sendBtn.style.transform = 'scale(1)'; };
     sendBtn.onmousedown = function (ev) {
@@ -1649,11 +1678,10 @@ function openCommentsPanel(videoId, storyId) {
       }
     };
     actionRow.appendChild(sendBtn);
-
     formSection.appendChild(actionRow);
 
     var statusMsg = createEl('div');
-    statusMsg.style.cssText = 'min-height:16px;text-align:center;font-size:12px;transition:all 0.2s;';
+    statusMsg.style.cssText = 'min-height:16px;text-align:center;font-size:12px;transition:all 0.2s;margin-top:4px;';
     formSection.appendChild(statusMsg);
 
     panel.appendChild(formSection);
@@ -1665,10 +1693,10 @@ function openCommentsPanel(videoId, storyId) {
       var updated = readCommentsData.filter(function (c) { return idsEqual(c.video_id, vId); });
       if (updated.length === 0) {
         var es = createEl('div');
-        es.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 20px;text-align:center;flex:1;min-height:120px;max-height:180px;';
+        es.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 16px;text-align:center;flex:1;min-height:100px;';
         var ei = createEl('div');
         ei.innerHTML = svgIcon('comment');
-        ei.style.cssText = 'opacity:0.15;margin-bottom:12px;';
+        ei.style.cssText = 'opacity:0.15;margin-bottom:10px;';
         es.appendChild(ei);
         var et = createEl('p');
         et.textContent = 'Nenhum comentário ainda. Seja o primeiro!';
@@ -1681,7 +1709,7 @@ function openCommentsPanel(videoId, storyId) {
           card.style.cssText = 'display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9;';
           var av = createEl('div');
           av.textContent = (c.user_name || 'V').charAt(0).toUpperCase();
-          av.style.cssText = 'width:36px;height:36px;border-radius:50%;background:' + pColor + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;';
+          av.style.cssText = 'width:34px;height:34px;border-radius:50%;background:' + pColor + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;';
           card.appendChild(av);
           var body = createEl('div');
           body.style.cssText = 'flex:1;min-width:0;';
