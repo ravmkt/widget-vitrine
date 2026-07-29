@@ -1652,8 +1652,6 @@ return {
 
       userCommentedVideos[videoId] = true;
 
-      var autoApprove = toggleInput.checked;
-
       if (hasSupabase) {
         createComment({
           story_id: storyId,
