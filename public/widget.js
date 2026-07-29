@@ -1159,6 +1159,24 @@ return {
     }).length;
   }
 
+  function formatRelativeTime(dateStr) {
+    if (!dateStr) return '';
+    var now = new Date();
+    var date = new Date(dateStr);
+    var diffMs = now - date;
+    var diffSec = Math.floor(diffMs / 1000);
+    var diffMin = Math.floor(diffSec / 60);
+    var diffHour = Math.floor(diffMin / 60);
+    var diffDay = Math.floor(diffHour / 24);
+
+    if (diffSec < 60) return 'agora';
+    if (diffMin < 60) return diffMin + 'min';
+    if (diffHour < 24) return diffHour + 'h';
+    if (diffDay < 7) return diffDay + 'd';
+    if (diffDay < 30) return Math.floor(diffDay / 7) + 'sem';
+    return date.toLocaleDateString('pt-BR');
+  }
+
   function toggleLike(video, btnEl) {
     if (!video || !video.id) return;
     var vidId = video.id;
