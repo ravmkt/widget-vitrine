@@ -2295,18 +2295,25 @@ function openCommentsPanel(videoId, storyId) {
 
       var commentBtn = createEl('button', 'vl-social-btn');
       commentBtn.id = 'vl-comment-btn';
-      commentBtn.innerHTML = svgIcon(hasCommented ? 'commentFilled' : 'comment');
+      commentBtn.innerHTML = svgIcon(
+        hasCommented ? 'commentFilled' : 'comment'
+      );
       commentBtn.title = 'Comentários';
 
       var commentCountEl = createEl('span', 'vl-social-count');
-      commentCountEl.textContent = commentCountVal > 0 ? commentCountVal : '';
+      commentCountEl.textContent =
+        commentCountVal > 0 ? commentCountVal : '';
+
       commentBtn.appendChild(commentCountEl);
 
-commentBtn.onclick = function (e) {
-  e.preventDefault();
-  e.stopPropagation();
-  openCommentsPanel(video.id, story.id);
-};
+      commentBtn.onclick = function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openCommentsPanel(video.id, story.id);
+      };
+
+      social.appendChild(commentBtn);
+    }
 
     if (appearanceConfig.show_share_button) {
       var shareBtn = createEl('button', 'vl-social-btn');
