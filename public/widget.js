@@ -1807,10 +1807,10 @@
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // 🔧 RENDERIZADOR INLINE CORRIGIDO (CARROSSEL / GRADE)
-  //    ✅ Container centralizado com max-width baseado no carousel_size
-  //    ✅ Card width: cfg.size → vw (viewport width)
-  //    ✅ Círculo: border-radius: 50%
+  // 🔧 RENDERIZADOR INLINE CORRIGIDO v2 (CARROSSEL / GRADE)
+  //    ✅ overflow-x: auto SEMPRE (nunca hidden) → sem corte
+  //    ✅ Folga de 4px no container para arredondamento
+  //    ✅ min-width reduzido: 30px (não força card grande)
   // ═══════════════════════════════════════════════════════════════
 
   function renderInlineWidget(stories, appearance, format) {
@@ -1820,104 +1820,77 @@
     stories.forEach(function (story, sIdx) {
       var videos = story.videos || [];
       videos.forEach(function (video, vIdx) {
-        allVideoItems.push({
-          story: story, storyIndex: sIdx,
-          video: video, videoIndex: vIdx
-        });
+        allVideoItems.push({ story: story, storyIndex: sIdx, video: video, videoIndex: vIdx });
       });
     });
-
     if (!allVideoItems.length) return;
 
     var cfg;
-    if (format === 'grid' || format === 'grade') {
-      cfg = getGridConfig(appearance);
-      cfg.isGrid = true;
-    } else {
-      cfg = getCarouselConfig(appearance);
-      cfg.isGrid = false;
-    }
+    if (format === 'grid' || format === 'grade') { cfg = getGridConfig(appearance); cfg.isGrid = true; }
+    else { cfg = getCarouselConfig(appearance); cfg.isGrid = false; }
 
     var itemsVisiveis = cfg.isGrid ? cfg.columns : cfg.visibleItems;
     var espacamento = cfg.spacing;
-
     var corPrimaria = appearance.primary_color || appearance.button_color || '#0094EB';
     var corTexto = appearance.text_color || '#0F172A';
     var fonte = appearance.font_family || 'Inter, sans-serif';
 
-    // ── 🆕 CARD SIZE: usa cfg.size como vw (porcentagem da viewport) ──
+    // ── CARD SIZE ──
     var cardSizeVw = cfg.size;
     var cardWidth = cardSizeVw + 'vw';
 
-    // ── 🆕 BORDER RADIUS: círculo = 50%, outros = valor configurado ──
+    // ── 🔧 MIN-WIDTH BEM BAIXO: não força o card maior que o size ──
+    var cardSizePx = Math.round(cardSizeVw * window.innerWidth / 100);
+    var minCardWidth = Math.min(30, cardSizePx) + 'px';
+
+    // ── BORDER RADIUS ──
     var boxBorderRadius = cfg.shape === 'circle' ? '50%' : cfg.borderRadius + 'px';
 
-    // ── 🆕 CONTAINER MAX-WIDTH: cardWidth × itens visíveis + gaps ──
+    // ── 🔧 CONTAINER: folga de 4px para arredondamento do browser ──
     var effectiveItems = (cfg.autoCenter && allVideoItems.length < itemsVisiveis) ? allVideoItems.length : itemsVisiveis;
     var totalGap = espacamento * (effectiveItems - 1);
-    var containerMaxWidth = 'min(100vw, calc((' + cardWidth + ' * ' + effectiveItems + ') + ' + totalGap + 'px))';
+    // Adiciona 8px de folga total (4px de cada lado) para evitar corte por subpixel
+    var containerMaxWidth = 'min(100vw, calc((' + cardWidth + ' * ' + effectiveItems + ') + ' + totalGap + 'px + 8px))';
 
     var dbSelector = appearance.css_selector || appearance.inline_selector || appearance.display_selector || appearance.selector || '';
     var selectorsToTry = [];
     if (dbSelector) selectorsToTry.push(dbSelector);
-    selectorsToTry.push('#vidlytics-carousel-root');
-    selectorsToTry.push('#instory-root');
-    selectorsToTry.push('.category-content');
-    selectorsToTry.push('#main');
-    selectorsToTry.push('main');
-    selectorsToTry.push('[role="main"]');
-    selectorsToTry.push('body');
+    selectorsToTry.push('#vidlytics-carousel-root'); selectorsToTry.push('#instory-root');
+    selectorsToTry.push('.category-content'); selectorsToTry.push('#main');
+    selectorsToTry.push('main'); selectorsToTry.push('[role="main"]'); selectorsToTry.push('body');
 
-    var maxRetries = 25;
-    var currentRetries = 0;
+    var maxRetries = 25, currentRetries = 0;
 
     var renderInterval = setInterval(function () {
-      var targetDiv = null;
-      var usedSelector = '';
-      currentRetries++;
-
-      for (var i = 0; i < selectorsToTry.length; i++) {
-        try {
-          targetDiv = document.querySelector(selectorsToTry[i]);
-          if (targetDiv) { usedSelector = selectorsToTry[i]; break; }
-        } catch (e) {}
-      }
-
-      if (!targetDiv) {
-        if (currentRetries >= maxRetries) { clearInterval(renderInterval); }
-        return;
-      }
-
+      var targetDiv = null; var usedSelector = ''; currentRetries++;
+      for (var i = 0; i < selectorsToTry.length; i++) { try { targetDiv = document.querySelector(selectorsToTry[i]); if (targetDiv) { usedSelector = selectorsToTry[i]; break; } } catch (e) {} }
+      if (!targetDiv) { if (currentRetries >= maxRetries) { clearInterval(renderInterval); } return; }
       clearInterval(renderInterval);
 
       var wrapperId = 'vl-carousel-wrapper-final';
       var widgetContainer = document.getElementById(wrapperId);
-
       if (!widgetContainer) {
         widgetContainer = document.createElement('div');
         widgetContainer.id = wrapperId;
 
-        // ── 🆕 CONTAINER CENTRALIZADO ──
-        var containerCss = 'max-width:' + containerMaxWidth + ';margin:20px auto;display:block;clear:both;overflow:visible;';
+        // ── 🔧 WRAPPER: sempre centralizado com max-width + folga ──
+        var wrapperCss = 'max-width:' + containerMaxWidth + ';margin:20px auto;display:block;clear:both;overflow:visible;';
         if (cfg.autoCenter && allVideoItems.length < itemsVisiveis) {
-          containerCss = 'display:flex;justify-content:center;margin:20px auto;clear:both;overflow:visible;';
+          wrapperCss = 'display:flex;justify-content:center;max-width:' + containerMaxWidth + ';margin:20px auto;clear:both;overflow:visible;';
         }
-        widgetContainer.style.cssText = containerCss;
+        widgetContainer.style.cssText = wrapperCss;
 
         if (usedSelector.indexOf('.flex-.between') !== -1 && targetDiv.parentNode) {
           targetDiv.parentNode.insertBefore(widgetContainer, targetDiv.nextSibling);
-        } else {
-          targetDiv.appendChild(widgetContainer);
-        }
+        } else { targetDiv.appendChild(widgetContainer); }
       }
 
       widgetContainer.innerHTML = '';
 
       var gapPx = espacamento;
-      var totalGapStyle = gapPx * (itemsVisiveis - 1);
 
-      // ── 🆕 slider overflow: hidden para autoCenter com poucos itens ──
-      var overflowX = cfg.isGrid ? 'hidden' : (cfg.autoCenter && allVideoItems.length <= itemsVisiveis ? 'hidden' : 'auto');
+      // ── 🔧 OVERFLOW: SEMPRE auto para carrossel (nunca hidden) ──
+      var overflowX = cfg.isGrid ? 'hidden' : 'auto';
 
       var estilo = document.createElement('style');
       estilo.textContent = [
@@ -1928,11 +1901,10 @@
         '  gap: ' + gapPx + 'px;',
         '  overflow-x: ' + overflowX + ' !important; overflow-y: hidden !important;',
         '  scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;',
-        '  scrollbar-width: none !important;',
-        '  -ms-overflow-style: none !important;',
-        '  padding-bottom: 0px; width: 100%; max-width: 100%;',
-        '  cursor: ' + (cfg.isGrid || overflowX === 'hidden' ? 'auto' : 'grab') + '; user-select: none; -webkit-user-select: none;',
-        (cfg.autoCenter && allVideoItems.length <= itemsVisiveis ? 'justify-content: center;' : ''),
+        '  scrollbar-width: none !important; -ms-overflow-style: none !important;',
+        '  padding: 0 4px; width: 100%; max-width: 100%;',
+        '  cursor: ' + (cfg.isGrid ? 'auto' : 'grab') + '; user-select: none; -webkit-user-select: none;',
+        (cfg.autoCenter && allVideoItems.length < itemsVisiveis ? 'justify-content: center;' : ''),
         '}',
         '.vl-slider-container::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }',
         '.vl-slider-container:active { cursor: grabbing; }',
@@ -1940,12 +1912,12 @@
         '.vl-card-item {',
         '  all: unset; display: flex !important; flex-direction: column; cursor: pointer;',
         '  scroll-snap-align: start; flex: 0 0 ' + cardWidth + ' !important;',
-        '  min-width: 100px; max-width: ' + cardWidth + ';',
+        '  min-width: ' + minCardWidth + '; max-width: ' + cardWidth + ';',
         '  position: relative; transition: transform 0.2s ease; user-select: none; -webkit-user-select: none;',
         '  pointer-events: auto;',
         '}',
         '.vl-card-item:hover { transform: translateY(-2px); }',
-        '@media (max-width: 768px) { .vl-card-item { flex: 0 0 min(45vw, ' + cardWidth + ') !important; min-width: 100px; max-width: 48vw; } }',
+        '@media (max-width: 768px) { .vl-card-item { flex: 0 0 min(45vw, ' + cardWidth + ') !important; min-width: 40px; max-width: 48vw; } }',
         '.vl-media-box {',
         '  position: relative; width: 100%; aspect-ratio: ' + cfg.aspectRatio + ';',
         '  border-radius: ' + boxBorderRadius + '; overflow: hidden; background: #000;',
@@ -1973,127 +1945,41 @@
       slider.className = 'vl-slider-container';
 
       allVideoItems.forEach(function (item) {
-        var story = item.story;
-        var video = item.video;
-        var storyIndex = item.storyIndex;
-        var videoIndex = item.videoIndex;
-
+        var story = item.story; var video = item.video; var storyIndex = item.storyIndex; var videoIndex = item.videoIndex;
         var videoUrl = video ? (video.video_url || video.videoUrl || video.url || video.file_url || '') : '';
         var cover = video ? (video.thumbnail_url || video.cover_url || video.thumbnailUrl || video.coverUrl || '') : '';
-
-        var card = document.createElement('button');
-        card.className = 'vl-card-item';
-
-        var mediaWrap = document.createElement('div');
-        mediaWrap.className = 'vl-media-box';
-
+        var card = document.createElement('button'); card.className = 'vl-card-item';
+        var mediaWrap = document.createElement('div'); mediaWrap.className = 'vl-media-box';
         var isVideo = videoUrl && (videoUrl.indexOf('.mp4') !== -1 || videoUrl.indexOf('.webm') !== -1 || videoUrl.indexOf('.mov') !== -1 || videoUrl.indexOf('.m3u8') !== -1);
-
         var mediaEl;
-        if (isVideo) {
-          mediaEl = document.createElement('video');
-          mediaEl.src = videoUrl;
-          if (cover) mediaEl.poster = cover;
-          mediaEl.muted = true;
-          mediaEl.loop = true;
-          mediaEl.autoplay = true;
-          mediaEl.setAttribute('playsinline', '');
-        } else {
-          mediaEl = document.createElement('img');
-          mediaEl.src = cover || videoUrl;
-          mediaEl.loading = 'lazy';
-        }
+        if (isVideo) { mediaEl = document.createElement('video'); mediaEl.src = videoUrl; if (cover) mediaEl.poster = cover; mediaEl.muted = true; mediaEl.loop = true; mediaEl.autoplay = true; mediaEl.setAttribute('playsinline', ''); }
+        else { mediaEl = document.createElement('img'); mediaEl.src = cover || videoUrl; mediaEl.loading = 'lazy'; }
         mediaWrap.appendChild(mediaEl);
-
-        var playIcon = document.createElement('div');
-        playIcon.className = 'vl-play-btn-overlay';
-        playIcon.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
-        mediaWrap.appendChild(playIcon);
-
+        var playIcon = document.createElement('div'); playIcon.className = 'vl-play-btn-overlay'; playIcon.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>'; mediaWrap.appendChild(playIcon);
         card.appendChild(mediaWrap);
-
-        if (cfg.showTitle) {
-          var titulo = document.createElement('span');
-          titulo.className = 'vl-title-text';
-          titulo.textContent = story.title || story.name || 'Ver Vídeo';
-          card.appendChild(titulo);
-        }
-
-        card.addEventListener('click', function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          openStoryViewer(stories, storyIndex);
-        });
-
+        if (cfg.showTitle) { var titulo = document.createElement('span'); titulo.className = 'vl-title-text'; titulo.textContent = story.title || story.name || 'Ver Vídeo'; card.appendChild(titulo); }
+        card.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); openStoryViewer(stories, storyIndex); });
         slider.appendChild(card);
       });
 
       widgetContainer.appendChild(slider);
 
-      // ── Drag/scroll só para carrossel (não grid) com overflow: auto ──
-      if (!cfg.isGrid && overflowX === 'auto') {
+      // ── 🔧 Drag/scroll: SEMPRE ativo para carrossel (não depende mais de overflowX) ──
+      if (!cfg.isGrid) {
         (function () {
           var isDown = false, startX = 0, scrollLeft = 0, moved = false, velX = 0, momentumID;
-
-          slider.addEventListener('mousedown', function (e) {
-            isDown = true; moved = false;
-            slider.classList.add('dragging');
-            startX = e.pageX - slider.offsetLeft;
-            scrollLeft = slider.scrollLeft;
-            cancelMomentum();
-            e.preventDefault();
-          });
-
-          slider.addEventListener('mouseleave', function () {
-            if (isDown) { isDown = false; slider.classList.remove('dragging'); startMomentum(); }
-          });
-
-          slider.addEventListener('mouseup', function () {
-            if (isDown) { isDown = false; slider.classList.remove('dragging'); startMomentum(); }
-          });
-
-          slider.addEventListener('mousemove', function (e) {
-            if (!isDown) return;
-            e.preventDefault();
-            var x = e.pageX - slider.offsetLeft;
-            var walk = (x - startX) * 1.5;
-            velX = walk;
-            slider.scrollLeft = scrollLeft - walk;
-            if (Math.abs(walk) > 3) moved = true;
-          });
-
+          slider.addEventListener('mousedown', function (e) { isDown = true; moved = false; slider.classList.add('dragging'); startX = e.pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft; cancelMomentum(); e.preventDefault(); });
+          slider.addEventListener('mouseleave', function () { if (isDown) { isDown = false; slider.classList.remove('dragging'); startMomentum(); } });
+          slider.addEventListener('mouseup', function () { if (isDown) { isDown = false; slider.classList.remove('dragging'); startMomentum(); } });
+          slider.addEventListener('mousemove', function (e) { if (!isDown) return; e.preventDefault(); var x = e.pageX - slider.offsetLeft; var walk = (x - startX) * 1.5; velX = walk; slider.scrollLeft = scrollLeft - walk; if (Math.abs(walk) > 3) moved = true; });
           slider.addEventListener('click', function (e) { if (moved) { e.stopPropagation(); e.preventDefault(); } }, true);
-
-          slider.addEventListener('touchstart', function (e) {
-            isDown = true; moved = false;
-            startX = e.touches[0].pageX - slider.offsetLeft;
-            scrollLeft = slider.scrollLeft;
-            cancelMomentum();
-          }, { passive: false });
-
+          slider.addEventListener('touchstart', function (e) { isDown = true; moved = false; startX = e.touches[0].pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft; cancelMomentum(); }, { passive: false });
           slider.addEventListener('touchend', function () { isDown = false; startMomentum(); });
-
-          slider.addEventListener('touchmove', function (e) {
-            if (!isDown) return;
-            var x = e.touches[0].pageX - slider.offsetLeft;
-            var walk = (x - startX) * 1.5;
-            slider.scrollLeft = scrollLeft - walk;
-            if (Math.abs(walk) > 3) moved = true;
-          }, { passive: false });
-
-          function startMomentum() {
-            cancelMomentum();
-            if (Math.abs(velX) < 2) return;
-            momentumID = requestAnimationFrame(function animate() {
-              velX *= 0.92;
-              slider.scrollLeft -= velX;
-              if (Math.abs(velX) > 0.5) { momentumID = requestAnimationFrame(animate); }
-            });
-          }
+          slider.addEventListener('touchmove', function (e) { if (!isDown) return; var x = e.touches[0].pageX - slider.offsetLeft; var walk = (x - startX) * 1.5; slider.scrollLeft = scrollLeft - walk; if (Math.abs(walk) > 3) moved = true; }, { passive: false });
+          function startMomentum() { cancelMomentum(); if (Math.abs(velX) < 2) return; momentumID = requestAnimationFrame(function animate() { velX *= 0.92; slider.scrollLeft -= velX; if (Math.abs(velX) > 0.5) { momentumID = requestAnimationFrame(animate); } }); }
           function cancelMomentum() { if (momentumID) { cancelAnimationFrame(momentumID); momentumID = null; } velX = 0; }
         })();
       }
-
     }, 300);
   }
 
