@@ -1521,7 +1521,7 @@
     formSection.appendChild(statusMsg);
     var sendBtn = createEl('button');
     sendBtn.textContent = 'Enviar comentário';
-    sendBtn.style.cssText = 'width:100%;padding:14px;border:none;border-radius:12px;background:' + primaryColor + ';color:#fff;font-weight:700;font-size:15px;cursor:pointer;transition:all 0.2s;letter-spacing:0.3px;';
+sendBtn.style.cssText = 'width:100%;padding:14px;border:none;border-radius:12px;background:' + buttonColor + ';...
     sendBtn.onmouseenter = function () { sendBtn.style.opacity = '0.9'; sendBtn.style.transform = 'scale(1.01)'; };
     sendBtn.onmouseleave = function () { sendBtn.style.opacity = '1'; sendBtn.style.transform = 'scale(1)'; };
     sendBtn.onclick = function () {
