@@ -951,6 +951,9 @@ var query = 'comments?select=id,store_id,video_id,user_name,user_email,content,s
       + '.vl-comments-panel-full ::-webkit-scrollbar{width:4px!important;}'
       + '.vl-comments-panel-full ::-webkit-scrollbar-track{background:transparent!important;}'
       + '.vl-comments-panel-full ::-webkit-scrollbar-thumb{background:#cbd5e1!important;border-radius:4px!important;}'
+      + '.vl-comments-panel-full{position:absolute!important;inset:0!important;z-index:200!important;background:#FFFFFF!important;display:flex!important;flex-direction:column!important;overflow-y:auto!important;overflow-x:hidden!important;animation:vlSlideUp 0.25s ease!important;padding-bottom:20px!important;border-radius:0!important;}'
++ '.vl-modal.has-comments-open{height:100%!important;max-height:100vh!important;aspect-ratio:auto!important;border-radius:0!important;}'
+
     );
   }
 
