@@ -1562,16 +1562,20 @@ return {
     formSection.appendChild(charCounter);
 
     // ═══════════ SELETOR DE EMOJIS ═══════════
+    var emojiRow = createEl('div');
+    emojiRow.style.cssText = 'position:relative;margin-bottom:8px;';
+
     var emojiToggle = createEl('button');
     emojiToggle.type = 'button';
     emojiToggle.innerHTML = '😊 Emoji';
-    emojiToggle.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border:1.5px solid #e2e8f0;border-radius:20px;background:#fff;color:#64748b;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:8px;transition:all 0.15s;';
+    emojiToggle.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border:1.5px solid #e2e8f0;border-radius:20px;background:#fff;color:#64748b;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;';
     emojiToggle.onmouseenter = function () { emojiToggle.style.borderColor = primaryColor; emojiToggle.style.color = primaryColor; };
     emojiToggle.onmouseleave = function () { emojiToggle.style.borderColor = '#e2e8f0'; emojiToggle.style.color = '#64748b'; };
-    formSection.appendChild(emojiToggle);
+    emojiRow.appendChild(emojiToggle);
 
+    // Grid de emojis — abre ACIMA do botão, posição absoluta
     var emojiGrid = createEl('div');
-    emojiGrid.style.cssText = 'display:none;flex-wrap:wrap;gap:6px;margin-bottom:8px;padding:8px;background:#f8fafc;border-radius:10px;';
+    emojiGrid.style.cssText = 'display:none;flex-wrap:wrap;gap:6px;position:absolute;bottom:calc(100% + 6px);left:0;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.12);z-index:10;max-width:280px;';
 
     var emojiList = ['😍', '🔥', '👏', '❤️', '😂', '😱', '🙌', '💯', '✨', '😢', '🤔', '👍', '💪', '🎉', '😊', '🥰', '😎', '🙏', '💙', '⭐', '✅', '😡', '👀', '🤩'];
 
@@ -1580,7 +1584,7 @@ return {
       emojiBtn.type = 'button';
       emojiBtn.textContent = emoji;
       emojiBtn.style.cssText = 'width:36px;height:36px;border:none;background:transparent;border-radius:8px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;';
-      emojiBtn.onmouseenter = function () { emojiBtn.style.background = '#e2e8f0'; emojiBtn.style.transform = 'scale(1.15)'; };
+      emojiBtn.onmouseenter = function () { emojiBtn.style.background = '#f1f5f9'; emojiBtn.style.transform = 'scale(1.15)'; };
       emojiBtn.onmouseleave = function () { emojiBtn.style.background = 'transparent'; emojiBtn.style.transform = 'scale(1)'; };
       emojiBtn.onclick = function () {
         var start = commentTextarea.selectionStart || commentTextarea.value.length;
@@ -1596,6 +1600,9 @@ return {
       emojiGrid.appendChild(emojiBtn);
     });
 
+    emojiRow.appendChild(emojiGrid);
+    formSection.appendChild(emojiRow);
+
     emojiToggle.onclick = function () {
       if (emojiGrid.style.display === 'none') {
         emojiGrid.style.display = 'flex';
@@ -1605,45 +1612,15 @@ return {
         emojiToggle.innerHTML = '😊 Emoji';
       }
     };
-    formSection.appendChild(emojiGrid);
 
-    // ═══════════ TOGGLE: APROVAR COMENTÁRIOS ═══════════
-    var autoApproveRow = createEl('div');
-    autoApproveRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:8px 0;';
-
-    var autoApproveLabel = createEl('span');
-    autoApproveLabel.textContent = 'Aprovar comentários automaticamente';
-    autoApproveLabel.style.cssText = 'font-size:13px;color:#475569;flex:1;';
-
-    var toggleWrapper = createEl('label');
-    toggleWrapper.style.cssText = 'position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;';
-
-    var toggleInput = createEl('input');
-    toggleInput.type = 'checkbox';
-    toggleInput.style.cssText = 'opacity:0;width:0;height:0;';
-    toggleInput.checked = false;
-
-    var toggleSlider = createEl('span');
-    toggleSlider.style.cssText = 'position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#cbd5e1;border-radius:24px;transition:0.3s;';
-    toggleSlider.onclick = function () {
-      toggleInput.checked = !toggleInput.checked;
-      if (toggleInput.checked) {
-        toggleSlider.style.background = '#22c55e';
-      } else {
-        toggleSlider.style.background = '#cbd5e1';
+    // Fecha grid ao clicar fora
+    document.addEventListener('click', function closeEmoji(ev) {
+      if (emojiGrid.style.display === 'flex' && !emojiRow.contains(ev.target)) {
+        emojiGrid.style.display = 'none';
+        emojiToggle.innerHTML = '😊 Emoji';
+        document.removeEventListener('click', closeEmoji);
       }
-    };
-
-    var toggleKnob = createEl('span');
-    toggleKnob.style.cssText = 'position:absolute;height:20px;width:20px;left:2px;bottom:2px;background:#fff;border-radius:50%;transition:0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2);';
-
-    toggleWrapper.appendChild(toggleInput);
-    toggleWrapper.appendChild(toggleSlider);
-    toggleSlider.appendChild(toggleKnob);
-
-    autoApproveRow.appendChild(autoApproveLabel);
-    autoApproveRow.appendChild(toggleWrapper);
-    formSection.appendChild(autoApproveRow);
+    });
 
     // ═══════════ MENSAGEM DE STATUS ═══════════
     var statusMsg = createEl('div');
