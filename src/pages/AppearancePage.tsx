@@ -2297,8 +2297,8 @@ const AppearancePage = () => {
     setShowModal(true);
   };
 
-  // 🔧 handleSaveStyle — adiciona campos planos da grade e carrossel
-  const handleSaveStyle = async () => {
+// 🔧 handleSaveStyle — apenas colunas reais da tabela + JSONBs
+const handleSaveStyle = async () => {
     if (saving) return;
     const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
     if (!finalStoreId) {
@@ -2353,11 +2353,11 @@ const AppearancePage = () => {
       }
 
       const floatingDesktop = floatingConfig.desktop;
-      const carouselDesktop = carouselConfig.desktop;
-      const gridDesktop = gridConfig.desktop;
       const modalConfig = formData.modal_config;
       const shouldBeDefault = formData.is_default || appearances.length === 0;
 
+      // 🔧 Apenas colunas que REALMENTE existem na tabela appearances
+      // NADA de grid_*, carousel_* planos — tudo fica nos JSONBs
       const stylePayload = {
         id,
         store_id: finalStoreId,
@@ -2377,40 +2377,11 @@ const AppearancePage = () => {
         widget_shape: floatingDesktop.shape,
         widget_size: formData.widget_size || 'medium',
         widget_animation: formData.widget_animation || 'none',
+
+        // ✅ JSONBs — os dados da grade e carrossel ficam AQUI
         floating_config: floatingConfig,
-
-        // 🟢 Carrossel — JSONB + campos planos
         carousel_config: carouselConfig,
-        carousel_card_shape: carouselDesktop.shape,
-        carousel_shape: carouselDesktop.shape,
-        carousel_size: carouselDesktop.width,
-        carousel_visible_items: carouselDesktop.visible_items,
-        carousel_spacing: carouselDesktop.spacing,
-        carousel_gap: carouselDesktop.spacing,
-        carousel_border_color: carouselDesktop.border_color,
-        carousel_border_width: carouselDesktop.border_style,
-        carousel_border_radius: carouselDesktop.border_radius,
-        carousel_object_fit: carouselDesktop.object_fit,
-        carousel_margin_top: carouselDesktop.margin_top,
-        carousel_margin_bottom: carouselDesktop.margin_bottom,
-        carousel_show_title: carouselDesktop.show_title,
-        carousel_show_product: carouselDesktop.show_product,
-        carousel_show_play_button: carouselDesktop.show_play_icon,
-        carousel_auto_center: carouselDesktop.auto_center,
-
-        // 🟣 Grade — JSONB + campos planos (🔧 ADICIONADOS)
         grid_config: gridConfig,
-        grid_shape: gridDesktop.shape,
-        grid_columns: String(gridDesktop.visible_items),
-        grid_rows: String(gridDesktop.rows),
-        grid_spacing: String(gridDesktop.spacing),
-        grid_size: gridDesktop.width,
-        grid_border_color: gridDesktop.border_color,
-        grid_border_width: gridDesktop.border_style,
-        grid_border_radius: gridDesktop.border_radius,
-        grid_object_fit: gridDesktop.object_fit,
-        grid_show_title: gridDesktop.show_title,
-
         modal_config: modalConfig,
 
         show_title: modalConfig.show_title,
