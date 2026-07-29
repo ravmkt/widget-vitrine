@@ -1433,7 +1433,7 @@
     }
     panel.appendChild(commentsList);
     var formSection = createEl('div');
-    formSection.style.cssText = 'flex-shrink:0;padding:12px 20px 16px;border-top:1px solid #e2e8f0;background:#fff;';
+formSection.style.cssText = 'flex-shrink:0;padding:16px 20px 24px;border-top:1px solid #e2e8f0;background:#fff;';
     var nameLabel = createEl('label');
     nameLabel.textContent = 'Seu nome';
     nameLabel.style.cssText = 'display:block;font-size:12px;font-weight:600;color:#64748b;margin-bottom:4px;';
