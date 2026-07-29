@@ -126,14 +126,15 @@ type CarouselConfig = {
   show_title: boolean;
 };
 
+// 🔧 GridConfig ALINHADO com o widget: shape, width, visible_items, spacing, border_style
 type GridConfig = {
-  columns: number;
+  visible_items: number;   // widget lê visible_items
   rows: number;
-  gap: number;
-  card_shape: WidgetShape;
-  card_size: string;
+  spacing: number;         // widget lê spacing
+  shape: WidgetShape;      // widget lê shape
+  width: string;           // widget lê width
   border_color: string;
-  border_width: string;
+  border_style: string;    // widget lê border_style
   border_radius: string;
   object_fit: string;
   show_title: boolean;
@@ -472,14 +473,6 @@ const normalizeCarouselConfigShape = (
 ): CarouselConfig => {
   const shape = normalizeWidgetShape(config.shape, 'portrait');
   const width = formatNumberLikeCurrent(config.width, '80');
-
-  if (shape === 'portrait') {
-    return {
-      ...config,
-      shape,
-      width,
-    };
-  }
   return {
     ...config,
     shape,
@@ -488,10 +481,10 @@ const normalizeCarouselConfigShape = (
 };
 
 const normalizeGridConfigShape = (config: GridConfig): GridConfig => {
-  const shape = normalizeWidgetShape(config.card_shape, 'portrait');
+  const shape = normalizeWidgetShape(config.shape, 'portrait');
   return {
     ...config,
-    card_shape: shape,
+    shape,
   };
 };
 
@@ -573,27 +566,28 @@ const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
   show_title: false,
 });
 
+// 🔧 Default GridConfig ALINHADO: visible_items, spacing, shape, width, border_style
 const createDefaultGridDesktopConfig = (): GridConfig => ({
-  columns: 4,
+  visible_items: 4,
   rows: 1,
-  gap: 16,
-  card_shape: 'portrait',
-  card_size: '80',
+  spacing: 16,
+  shape: 'portrait',
+  width: '80',
   border_color: '#0094EB',
-  border_width: '2',
+  border_style: '2',
   border_radius: '12',
   object_fit: 'cover',
   show_title: false,
 });
 
 const createDefaultGridMobileConfig = (): GridConfig => ({
-  columns: 2,
+  visible_items: 2,
   rows: 2,
-  gap: 12,
-  card_shape: 'portrait',
-  card_size: '64',
+  spacing: 12,
+  shape: 'portrait',
+  width: '64',
   border_color: '#0094EB',
-  border_width: '2',
+  border_style: '2',
   border_radius: '10',
   object_fit: 'cover',
   show_title: false,
@@ -665,7 +659,7 @@ const getActiveResponsiveConfig = <T,>(
   return config[device];
 };
 
-// 🔧 CORREÇÃO 1: createDefaultFormData — campos com nomes da whitelist
+// 🔧 createDefaultFormData — campos planos da grade alinhados com GridConfig
 const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
   const now = new Date().toISOString();
   const floatingDesktop = createDefaultFloatingDesktopConfig();
@@ -709,13 +703,14 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
     carousel_show_play_button: carouselDesktop.show_play_icon,
     carousel_auto_center: carouselDesktop.auto_center,
 
-    grid_shape: gridDesktop.card_shape,
-    grid_columns: String(gridDesktop.columns),
+    // 🔧 Grade — usando as novas chaves do GridConfig
+    grid_shape: gridDesktop.shape,
+    grid_columns: String(gridDesktop.visible_items),
     grid_rows: String(gridDesktop.rows),
-    grid_spacing: String(gridDesktop.gap),
-    grid_size: gridDesktop.card_size,
+    grid_spacing: String(gridDesktop.spacing),
+    grid_size: gridDesktop.width,
     grid_border_color: gridDesktop.border_color,
-    grid_border_width: gridDesktop.border_width,
+    grid_border_width: gridDesktop.border_style,
     grid_border_radius: gridDesktop.border_radius,
     grid_object_fit: gridDesktop.object_fit,
     grid_show_title: gridDesktop.show_title,
@@ -781,16 +776,17 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
     allow_close: floatingDesktop.allow_close,
     object_fit: floatingDesktop.object_fit,
     z_index: floatingDesktop.z_index,
-    desktop_columns: gridDesktop.columns,
+    desktop_columns: gridDesktop.visible_items,
     desktop_rows: gridDesktop.rows,
-    desktop_gap: gridDesktop.gap,
-    mobile_columns: gridMobile.columns,
+    desktop_gap: gridDesktop.spacing,
+    mobile_columns: gridMobile.visible_items,
     mobile_rows: gridMobile.rows,
-    mobile_gap: gridMobile.gap,
+    mobile_gap: gridMobile.spacing,
     font_size: '14',
   } as ExtendedAppearance;
 };
-// 🔧 CORREÇÃO 2: normalizeAppearance — legacyDesktop lê dos campos da whitelist
+
+// 🔧 normalizeAppearance — legacyDesktop/Mobile do grid alinhado + campos planos
 const normalizeAppearance = (
   style: Appearance,
   storeId?: string,
@@ -917,29 +913,30 @@ const normalizeAppearance = (
   carouselConfig.desktop = normalizeCarouselConfigShape(carouselConfig.desktop);
   carouselConfig.mobile = normalizeCarouselConfigShape(carouselConfig.mobile);
 
+  // 🔧 GridConfig — legacy usando as novas chaves (visible_items, spacing, shape)
   const gridConfig = normalizeResponsiveConfig<GridConfig>({
     rawValue: anyItem.grid_config,
     desktopDefault: createDefaultGridDesktopConfig(),
     mobileDefault: createDefaultGridMobileConfig(),
     sameForAll: globalAppearance,
     legacyDesktop: {
-      columns: limitNumber(anyItem.desktop_columns, defaults.desktop_columns, 1, 4),
+      visible_items: limitNumber(anyItem.desktop_columns, defaults.desktop_columns, 1, 4),
       rows: safeNumber(anyItem.desktop_rows, defaults.desktop_rows, 1),
-      gap: safeNumber(anyItem.desktop_gap, defaults.desktop_gap, 0),
-      card_shape: normalizeWidgetShape(anyItem.grid_card_shape, 'portrait'),
+      spacing: safeNumber(anyItem.desktop_gap, defaults.desktop_gap, 0),
+      shape: normalizeWidgetShape(anyItem.grid_card_shape, 'portrait'),
     },
     legacyMobile: {
-      columns: limitNumber(anyItem.mobile_columns, defaults.mobile_columns, 1, 4),
+      visible_items: limitNumber(anyItem.mobile_columns, defaults.mobile_columns, 1, 4),
       rows: safeNumber(anyItem.mobile_rows, defaults.mobile_rows, 1),
-      gap: safeNumber(anyItem.mobile_gap, defaults.mobile_gap, 0),
-      card_shape: normalizeWidgetShape(anyItem.grid_card_shape, 'portrait'),
+      spacing: safeNumber(anyItem.mobile_gap, defaults.mobile_gap, 0),
+      shape: normalizeWidgetShape(anyItem.grid_card_shape, 'portrait'),
     },
   });
 
   gridConfig.desktop = normalizeGridConfigShape(gridConfig.desktop);
   gridConfig.mobile = normalizeGridConfigShape(gridConfig.mobile);
-  gridConfig.desktop.columns = limitNumber(gridConfig.desktop.columns, 4, 1, 4);
-  gridConfig.mobile.columns = limitNumber(gridConfig.mobile.columns, 2, 1, 4);
+  gridConfig.desktop.visible_items = limitNumber(gridConfig.desktop.visible_items, 4, 1, 4);
+  gridConfig.mobile.visible_items = limitNumber(gridConfig.mobile.visible_items, 2, 1, 4);
 
   const modalRaw = parseJsonIfNeeded<ModalConfig>(anyItem.modal_config);
   const modalConfig: ModalConfig = {
@@ -1007,6 +1004,18 @@ const normalizeAppearance = (
     carousel_show_play_button: carouselDesktop.show_play_icon,
     carousel_auto_center: carouselDesktop.auto_center,
 
+    // 🔧 Campos planos da grade populados corretamente
+    grid_shape: gridDesktop.shape,
+    grid_columns: String(gridDesktop.visible_items),
+    grid_rows: String(gridDesktop.rows),
+    grid_spacing: String(gridDesktop.spacing),
+    grid_size: gridDesktop.width,
+    grid_border_color: gridDesktop.border_color,
+    grid_border_width: gridDesktop.border_style,
+    grid_border_radius: gridDesktop.border_radius,
+    grid_object_fit: gridDesktop.object_fit,
+    grid_show_title: gridDesktop.show_title,
+
     show_title: modalConfig.show_title,
     show_play_button: modalConfig.show_play_button,
     show_product: modalConfig.show_product,
@@ -1054,12 +1063,12 @@ const normalizeAppearance = (
     allow_close: floatingDesktop.allow_close,
     object_fit: floatingDesktop.object_fit,
     z_index: floatingDesktop.z_index,
-    desktop_columns: gridDesktop.columns,
+    desktop_columns: gridDesktop.visible_items,
     desktop_rows: gridDesktop.rows,
-    desktop_gap: gridDesktop.gap,
-    mobile_columns: gridMobile.columns,
+    desktop_gap: gridDesktop.spacing,
+    mobile_columns: gridMobile.visible_items,
     mobile_rows: gridMobile.rows,
-    mobile_gap: gridMobile.gap,
+    mobile_gap: gridMobile.spacing,
     font_size: anyItem.font_size ?? defaults.font_size,
   } as ExtendedAppearance;
 };
@@ -1159,11 +1168,11 @@ const syncGlobalConfig = (
         same_for_all: true,
         desktop: {
           ...prev.grid_config.desktop,
-          columns: limitNumber(prev.grid_config.desktop.columns, 4, 1, 4),
+          visible_items: limitNumber(prev.grid_config.desktop.visible_items, 4, 1, 4),
         },
         mobile: {
           ...prev.grid_config.desktop,
-          columns: limitNumber(prev.grid_config.desktop.columns, 4, 1, 4),
+          visible_items: limitNumber(prev.grid_config.desktop.visible_items, 4, 1, 4),
         },
       },
     };
@@ -1186,11 +1195,11 @@ const syncGlobalConfig = (
       same_for_all: false,
       desktop: {
         ...prev.grid_config.desktop,
-        columns: limitNumber(prev.grid_config.desktop.columns, 4, 1, 4),
+        visible_items: limitNumber(prev.grid_config.desktop.visible_items, 4, 1, 4),
       },
       mobile: {
         ...prev.grid_config.mobile,
-        columns: limitNumber(prev.grid_config.mobile.columns, 2, 1, 4),
+        visible_items: limitNumber(prev.grid_config.mobile.visible_items, 2, 1, 4),
       },
     },
   };
@@ -1540,18 +1549,6 @@ const CarouselPreview = ({
     ? '50%'
     : cssSize(carousel.border_radius, '12px');
 
-  console.log('🔍 CarouselPreview recebeu:', {
-    shape,
-    width: carousel.width,
-    isCircle,
-    isPortrait,
-    isSquare,
-    cardWidthPx,
-    cardHeightPx,
-    borderRadius,
-    carouselCompleto: carousel,
-  });
-
   return (
     <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
       <div className="rounded-[1rem] border border-slate-200 bg-white p-5">
@@ -1626,6 +1623,7 @@ const CarouselPreview = ({
   );
 };
 
+// 🔧 GridPreview — usa as novas chaves do GridConfig
 const GridPreview = ({
   grid,
   colors,
@@ -1633,10 +1631,10 @@ const GridPreview = ({
   grid: GridConfig;
   colors: PreviewColors;
 }) => {
-  const columns = limitNumber(grid.columns, 4, 1, 4);
+  const cols = limitNumber(grid.visible_items, 4, 1, 4);
   const rows = safeNumber(grid.rows, 1, 1);
-  const shape = normalizeWidgetShape(grid.card_shape, 'portrait');
-  const totalItems = Math.max(1, Math.min(columns * rows, 20));
+  const shape = normalizeWidgetShape(grid.shape, 'portrait');
+  const totalItems = Math.max(1, Math.min(cols * rows, 20));
   const items = Array.from({ length: totalItems });
   const isCircle = shape === 'circle';
   const isSquare = shape === 'square';
@@ -1651,18 +1649,18 @@ const GridPreview = ({
             <p className="text-xs font-medium text-slate-500">Máximo de 4 colunas</p>
           </div>
           <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black text-slate-500">
-            {columns} x {rows}
+            {cols} x {rows}
           </span>
         </div>
         <div
           className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 p-3"
-          style={{ padding: `${Math.max(8, safeNumber(grid.gap, 0, 0))}px` }}
+          style={{ padding: `${Math.max(8, safeNumber(grid.spacing, 0, 0))}px` }}
         >
           <div
             className="grid"
             style={{
-              gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
-              gap: `${safeNumber(grid.gap, 0, 0)}px`,
+              gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+              gap: `${safeNumber(grid.spacing, 0, 0)}px`,
             }}
           >
             {items.map((_, index) => (
@@ -1679,7 +1677,7 @@ const GridPreview = ({
                     maxWidth: isPortrait ? '90px' : '120px',
                     aspectRatio: isPortrait ? '9 / 16' : '1 / 1',
                     borderColor: grid.border_color || colors.primary,
-                    borderWidth: `${safeNumber(grid.border_width, 2, 0)}px`,
+                    borderWidth: `${safeNumber(grid.border_style, 2, 0)}px`,
                     borderStyle: 'solid',
                     borderRadius: isCircle ? '999px' : cssSize(grid.border_radius, '12px'),
                     objectFit: (grid.object_fit || 'cover') as any,
@@ -1708,9 +1706,9 @@ const GridPreview = ({
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
         <PreviewInfo label="Forma" value={getShapeLabel(shape)} />
-        <PreviewInfo label="Colunas" value={`${columns}`} />
+        <PreviewInfo label="Colunas" value={`${cols}`} />
         <PreviewInfo label="Linhas" value={`${rows}`} />
-        <PreviewInfo label="Espaçamento" value={`${grid.gap}px`} />
+        <PreviewInfo label="Espaçamento" value={`${grid.spacing}px`} />
         <PreviewInfo label="Limite" value="4 colunas" />
       </div>
     </div>
@@ -2100,9 +2098,6 @@ const AppearancePage = () => {
   };
 
   const updateCarouselConfig = (patch: Partial<CarouselConfig>) => {
-    console.log('🔧 updateCarouselConfig chamado com:', patch);
-    console.log('   device atual:', carouselDevice);
-
     setFormData(prev => {
       const device = prev.useGlobalAppearance ? 'desktop' : carouselDevice;
       const current = prev.carousel_config[device];
@@ -2125,20 +2120,11 @@ const AppearancePage = () => {
           patch.width ?? current.width ?? '80',
           '80',
         );
-
-        if (newShape === 'circle' || newShape === 'square') {
-          updatedDeviceConfig = {
-            ...updatedDeviceConfig,
-            shape: newShape,
-            width,
-          };
-        } else {
-          updatedDeviceConfig = {
-            ...updatedDeviceConfig,
-            shape: newShape,
-            width,
-          };
-        }
+        updatedDeviceConfig = {
+          ...updatedDeviceConfig,
+          shape: newShape,
+          width,
+        };
       }
 
       updatedDeviceConfig = normalizeCarouselConfigShape(updatedDeviceConfig);
@@ -2170,6 +2156,7 @@ const AppearancePage = () => {
     });
   };
 
+  // 🔧 updateGridConfig — usando as novas chaves
   const updateGridConfig = (patch: Partial<GridConfig>) => {
     setFormData(prev => {
       const device = prev.useGlobalAppearance ? 'desktop' : gridDevice;
@@ -2178,9 +2165,14 @@ const AppearancePage = () => {
       const updatedDeviceConfig: GridConfig = normalizeGridConfigShape({
         ...current,
         ...patch,
-        columns: limitNumber(patch.columns ?? current.columns, current.columns || 1, 1, 4),
+        visible_items: limitNumber(
+          patch.visible_items ?? current.visible_items,
+          current.visible_items || 1,
+          1,
+          4,
+        ),
         rows: safeNumber(patch.rows ?? current.rows, current.rows || 1, 1),
-        gap: safeNumber(patch.gap ?? current.gap, current.gap || 0, 0),
+        spacing: safeNumber(patch.spacing ?? current.spacing, current.spacing || 0, 0),
       });
 
       const nextConfig: ResponsiveConfig<GridConfig> = prev.useGlobalAppearance
@@ -2190,12 +2182,12 @@ const AppearancePage = () => {
       return {
         ...prev,
         grid_config: nextConfig,
-        desktop_columns: nextConfig.desktop.columns,
+        desktop_columns: nextConfig.desktop.visible_items,
         desktop_rows: nextConfig.desktop.rows,
-        desktop_gap: nextConfig.desktop.gap,
-        mobile_columns: nextConfig.mobile.columns,
+        desktop_gap: nextConfig.desktop.spacing,
+        mobile_columns: nextConfig.mobile.visible_items,
         mobile_rows: nextConfig.mobile.rows,
-        mobile_gap: nextConfig.mobile.gap,
+        mobile_gap: nextConfig.mobile.spacing,
       };
     });
   };
@@ -2305,6 +2297,7 @@ const AppearancePage = () => {
     setShowModal(true);
   };
 
+  // 🔧 handleSaveStyle — adiciona campos planos da grade e carrossel
   const handleSaveStyle = async () => {
     if (saving) return;
     const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
@@ -2344,8 +2337,8 @@ const AppearancePage = () => {
         same_for_all: formData.useGlobalAppearance,
       };
 
-      gridConfig.desktop = { ...gridConfig.desktop, columns: limitNumber(gridConfig.desktop.columns, 4, 1, 4) };
-      gridConfig.mobile = { ...gridConfig.mobile, columns: limitNumber(gridConfig.mobile.columns, 2, 1, 4) };
+      gridConfig.desktop = { ...gridConfig.desktop, visible_items: limitNumber(gridConfig.desktop.visible_items, 4, 1, 4) };
+      gridConfig.mobile = { ...gridConfig.mobile, visible_items: limitNumber(gridConfig.mobile.visible_items, 2, 1, 4) };
 
       if (formData.useGlobalAppearance) {
         floatingConfig.mobile = floatingConfig.desktop;
@@ -2361,6 +2354,7 @@ const AppearancePage = () => {
 
       const floatingDesktop = floatingConfig.desktop;
       const carouselDesktop = carouselConfig.desktop;
+      const gridDesktop = gridConfig.desktop;
       const modalConfig = formData.modal_config;
       const shouldBeDefault = formData.is_default || appearances.length === 0;
 
@@ -2385,12 +2379,37 @@ const AppearancePage = () => {
         widget_animation: formData.widget_animation || 'none',
         floating_config: floatingConfig,
 
-        carousel_card_shape: carouselDesktop.shape,
-        carousel_visible_items: carouselDesktop.visible_items,
-        carousel_gap: carouselDesktop.spacing,
+        // 🟢 Carrossel — JSONB + campos planos
         carousel_config: carouselConfig,
+        carousel_card_shape: carouselDesktop.shape,
+        carousel_shape: carouselDesktop.shape,
+        carousel_size: carouselDesktop.width,
+        carousel_visible_items: carouselDesktop.visible_items,
+        carousel_spacing: carouselDesktop.spacing,
+        carousel_gap: carouselDesktop.spacing,
+        carousel_border_color: carouselDesktop.border_color,
+        carousel_border_width: carouselDesktop.border_style,
+        carousel_border_radius: carouselDesktop.border_radius,
+        carousel_object_fit: carouselDesktop.object_fit,
+        carousel_margin_top: carouselDesktop.margin_top,
+        carousel_margin_bottom: carouselDesktop.margin_bottom,
+        carousel_show_title: carouselDesktop.show_title,
+        carousel_show_product: carouselDesktop.show_product,
+        carousel_show_play_button: carouselDesktop.show_play_icon,
+        carousel_auto_center: carouselDesktop.auto_center,
 
+        // 🟣 Grade — JSONB + campos planos (🔧 ADICIONADOS)
         grid_config: gridConfig,
+        grid_shape: gridDesktop.shape,
+        grid_columns: String(gridDesktop.visible_items),
+        grid_rows: String(gridDesktop.rows),
+        grid_spacing: String(gridDesktop.spacing),
+        grid_size: gridDesktop.width,
+        grid_border_color: gridDesktop.border_color,
+        grid_border_width: gridDesktop.border_style,
+        grid_border_radius: gridDesktop.border_radius,
+        grid_object_fit: gridDesktop.object_fit,
+        grid_show_title: gridDesktop.show_title,
 
         modal_config: modalConfig,
 
@@ -2875,10 +2894,7 @@ const AppearancePage = () => {
                         <FormField label="Forma">
                           <select
                             value={activeCarouselConfig.shape}
-                            onChange={e => {
-                              console.log('🎯 select forma disparado:', e.target.value);
-                              updateCarouselConfig({ shape: e.target.value as WidgetShape });
-                            }}
+                            onChange={e => updateCarouselConfig({ shape: e.target.value as WidgetShape })}
                             className={selectClass}
                           >
                             <option value="circle">Circular</option>
@@ -2974,37 +2990,74 @@ const AppearancePage = () => {
                       </div>
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <FormField label="Forma">
-                          <select value={activeGridConfig.card_shape} onChange={e => updateGridConfig({ card_shape: e.target.value as WidgetShape })} className={selectClass}>
+                          <select
+                            value={activeGridConfig.shape}
+                            onChange={e => updateGridConfig({ shape: e.target.value as WidgetShape })}
+                            className={selectClass}
+                          >
                             <option value="circle">Circular</option>
                             <option value="square">Quadrado</option>
                             <option value="portrait">Retrato 9:16</option>
                           </select>
-                          {activeGridConfig.card_shape === 'portrait' && (
+                          {activeGridConfig.shape === 'portrait' && (
                             <p className="text-xs font-semibold text-slate-400">No formato retrato, os cards ficam fixos na proporção 9:16.</p>
                           )}
                         </FormField>
                         <FormField label="Tamanho">
-                          <input type="number" min="20" step="1" value={toNumberInputValue(activeGridConfig.card_size)} onChange={e => updateGridConfig({ card_size: e.target.value })} placeholder="Ex: 80" className={inputClass} />
+                          <input
+                            type="number" min="20" step="1"
+                            value={toNumberInputValue(activeGridConfig.width)}
+                            onChange={e => updateGridConfig({ width: e.target.value })}
+                            placeholder="Ex: 80"
+                            className={inputClass}
+                          />
                           <p className="text-xs font-semibold text-slate-400">Tamanho base dos cards na grade.</p>
                         </FormField>
                         <FormField label="Colunas">
-                          <input type="number" min="1" max="4" step="1" value={activeGridConfig.columns} onChange={e => updateGridConfig({ columns: limitNumber(e.target.value, 1, 1, 4) })} className={inputClass} />
+                          <input
+                            type="number" min="1" max="4" step="1"
+                            value={activeGridConfig.visible_items}
+                            onChange={e => updateGridConfig({ visible_items: limitNumber(e.target.value, 1, 1, 4) })}
+                            className={inputClass}
+                          />
                           <p className="text-xs font-semibold text-slate-400">Máximo de 4 colunas por linha.</p>
                         </FormField>
                         <FormField label="Linhas">
-                          <input type="number" min="1" step="1" value={activeGridConfig.rows} onChange={e => updateGridConfig({ rows: safeNumber(e.target.value, 1, 1) })} className={inputClass} />
+                          <input
+                            type="number" min="1" step="1"
+                            value={activeGridConfig.rows}
+                            onChange={e => updateGridConfig({ rows: safeNumber(e.target.value, 1, 1) })}
+                            className={inputClass}
+                          />
                         </FormField>
                         <FormField label="Espaçamento">
-                          <input type="number" min="0" step="1" value={activeGridConfig.gap} onChange={e => updateGridConfig({ gap: safeNumber(e.target.value, 0, 0) })} className={inputClass} />
+                          <input
+                            type="number" min="0" step="1"
+                            value={activeGridConfig.spacing}
+                            onChange={e => updateGridConfig({ spacing: safeNumber(e.target.value, 0, 0) })}
+                            className={inputClass}
+                          />
                         </FormField>
                         <FormField label="Cor da borda">
                           <ColorInput label="Cor da borda" value={activeGridConfig.border_color || formData.primary_color} onChange={e => updateGridConfig({ border_color: e.target.value })} />
                         </FormField>
                         <FormField label="Largura da borda">
-                          <input type="number" min="0" step="1" value={toNumberInputValue(activeGridConfig.border_width)} onChange={e => updateGridConfig({ border_width: e.target.value })} placeholder="Ex: 2" className={inputClass} />
+                          <input
+                            type="number" min="0" step="1"
+                            value={toNumberInputValue(activeGridConfig.border_style)}
+                            onChange={e => updateGridConfig({ border_style: e.target.value })}
+                            placeholder="Ex: 2"
+                            className={inputClass}
+                          />
                         </FormField>
                         <FormField label="Raio da borda">
-                          <input type="number" min="0" step="1" value={toNumberInputValue(activeGridConfig.border_radius)} onChange={e => updateGridConfig({ border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
+                          <input
+                            type="number" min="0" step="1"
+                            value={toNumberInputValue(activeGridConfig.border_radius)}
+                            onChange={e => updateGridConfig({ border_radius: e.target.value })}
+                            placeholder="Ex: 12"
+                            className={inputClass}
+                          />
                         </FormField>
                         <FormField label="Object fit">
                           <select value={activeGridConfig.object_fit || 'cover'} onChange={e => updateGridConfig({ object_fit: e.target.value })} className={selectClass}>
