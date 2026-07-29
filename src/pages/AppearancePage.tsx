@@ -1522,6 +1522,7 @@ const CarouselPreview = ({
     ? '50%'
     : cssSize(carousel.border_radius, '12px');
 
+  // ✅ AGORA sim, depois de tudo declarado
   console.log('🔍 CarouselPreview recebeu:', {
     shape,
     width: carousel.width,
@@ -1533,6 +1534,8 @@ const CarouselPreview = ({
     borderRadius,
     carouselCompleto: carousel,
   });
+
+  return (
 
 
   const cardWidthPx = safeNumber(parseFloat(carousel.width || '80'), 80, 20);
