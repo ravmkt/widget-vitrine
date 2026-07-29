@@ -2096,8 +2096,11 @@ const AppearancePage = () => {
   };
 
 const updateCarouselConfig = (patch: Partial<CarouselConfig>) => {
+  console.log('🔧 updateCarouselConfig chamado com:', patch);
+  console.log('   device atual:', carouselDevice);
+
   setFormData(prev => {
-    const device = prev.useGlobalAppearance ? 'desktop' : carouselDevice;
+        const device = prev.useGlobalAppearance ? 'desktop' : carouselDevice;
     const current = prev.carousel_config[device];
 
     let updatedDeviceConfig: CarouselConfig = {
