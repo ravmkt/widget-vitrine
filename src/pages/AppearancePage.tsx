@@ -126,15 +126,14 @@ type CarouselConfig = {
   show_title: boolean;
 };
 
-// 🔧 GridConfig ALINHADO com o widget: shape, width, visible_items, spacing, border_style
 type GridConfig = {
-  visible_items: number;   // widget lê visible_items
+  visible_items: number;
   rows: number;
-  spacing: number;         // widget lê spacing
-  shape: WidgetShape;      // widget lê shape
-  width: string;           // widget lê width
+  spacing: number;
+  shape: WidgetShape;
+  width: string;
   border_color: string;
-  border_style: string;    // widget lê border_style
+  border_style: string;
   border_radius: string;
   object_fit: string;
   show_title: boolean;
@@ -539,7 +538,7 @@ const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
   visible_items: 4,
   show_product: true,
   show_play_icon: true,
-  auto_center: false,
+  auto_center: true,
   width: '80',
   border_color: '#0094EB',
   border_style: '2',
@@ -557,7 +556,7 @@ const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
   visible_items: 2,
   show_product: true,
   show_play_icon: true,
-  auto_center: false,
+  auto_center: true,
   width: '64',
   border_color: '#0094EB',
   border_style: '2',
@@ -566,7 +565,6 @@ const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
   show_title: false,
 });
 
-// 🔧 Default GridConfig ALINHADO: visible_items, spacing, shape, width, border_style
 const createDefaultGridDesktopConfig = (): GridConfig => ({
   visible_items: 4,
   rows: 1,
@@ -659,7 +657,6 @@ const getActiveResponsiveConfig = <T,>(
   return config[device];
 };
 
-// 🔧 createDefaultFormData — campos planos da grade alinhados com GridConfig
 const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
   const now = new Date().toISOString();
   const floatingDesktop = createDefaultFloatingDesktopConfig();
@@ -703,7 +700,6 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
     carousel_show_play_button: carouselDesktop.show_play_icon,
     carousel_auto_center: carouselDesktop.auto_center,
 
-    // 🔧 Grade — usando as novas chaves do GridConfig
     grid_shape: gridDesktop.shape,
     grid_columns: String(gridDesktop.visible_items),
     grid_rows: String(gridDesktop.rows),
@@ -786,7 +782,6 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
   } as ExtendedAppearance;
 };
 
-// 🔧 normalizeAppearance — legacyDesktop/Mobile do grid alinhado + campos planos
 const normalizeAppearance = (
   style: Appearance,
   storeId?: string,
@@ -896,7 +891,7 @@ const normalizeAppearance = (
       show_play_icon:
         anyItem.carousel_show_play_button ?? item.show_play_button ?? true,
       auto_center:
-        anyItem.carousel_auto_center ?? item.auto_center ?? false,
+        anyItem.carousel_auto_center ?? item.auto_center ?? true,
       view_mode: anyItem.carousel_view_mode ?? defaults.carousel_view_mode,
       visible_items: safeNumber(
         anyItem.carousel_visible_items ?? item.carousel_visible_items,
@@ -906,27 +901,26 @@ const normalizeAppearance = (
     },
     legacyMobile: {
       auto_center:
-        anyItem.carousel_auto_center ?? item.auto_center ?? false,
+        anyItem.carousel_auto_center ?? item.auto_center ?? true,
     },
   });
 
   carouselConfig.desktop = normalizeCarouselConfigShape(carouselConfig.desktop);
   carouselConfig.mobile = normalizeCarouselConfigShape(carouselConfig.mobile);
 
-  // 🔧 GridConfig — legacy usando as novas chaves (visible_items, spacing, shape)
   const gridConfig = normalizeResponsiveConfig<GridConfig>({
     rawValue: anyItem.grid_config,
     desktopDefault: createDefaultGridDesktopConfig(),
     mobileDefault: createDefaultGridMobileConfig(),
     sameForAll: globalAppearance,
     legacyDesktop: {
-      visible_items: limitNumber(anyItem.desktop_columns, defaults.desktop_columns, 1, 4),
+      visible_items: limitNumber(anyItem.desktop_columns, defaults.desktop_columns, 1, 10),
       rows: safeNumber(anyItem.desktop_rows, defaults.desktop_rows, 1),
       spacing: safeNumber(anyItem.desktop_gap, defaults.desktop_gap, 0),
       shape: normalizeWidgetShape(anyItem.grid_card_shape, 'portrait'),
     },
     legacyMobile: {
-      visible_items: limitNumber(anyItem.mobile_columns, defaults.mobile_columns, 1, 4),
+      visible_items: limitNumber(anyItem.mobile_columns, defaults.mobile_columns, 1, 10),
       rows: safeNumber(anyItem.mobile_rows, defaults.mobile_rows, 1),
       spacing: safeNumber(anyItem.mobile_gap, defaults.mobile_gap, 0),
       shape: normalizeWidgetShape(anyItem.grid_card_shape, 'portrait'),
@@ -935,8 +929,8 @@ const normalizeAppearance = (
 
   gridConfig.desktop = normalizeGridConfigShape(gridConfig.desktop);
   gridConfig.mobile = normalizeGridConfigShape(gridConfig.mobile);
-  gridConfig.desktop.visible_items = limitNumber(gridConfig.desktop.visible_items, 4, 1, 4);
-  gridConfig.mobile.visible_items = limitNumber(gridConfig.mobile.visible_items, 2, 1, 4);
+  gridConfig.desktop.visible_items = limitNumber(gridConfig.desktop.visible_items, 10, 1, 10);
+  gridConfig.mobile.visible_items = limitNumber(gridConfig.mobile.visible_items, 2, 1, 10);
 
   const modalRaw = parseJsonIfNeeded<ModalConfig>(anyItem.modal_config);
   const modalConfig: ModalConfig = {
@@ -1004,7 +998,6 @@ const normalizeAppearance = (
     carousel_show_play_button: carouselDesktop.show_play_icon,
     carousel_auto_center: carouselDesktop.auto_center,
 
-    // 🔧 Campos planos da grade populados corretamente
     grid_shape: gridDesktop.shape,
     grid_columns: String(gridDesktop.visible_items),
     grid_rows: String(gridDesktop.rows),
@@ -1168,11 +1161,11 @@ const syncGlobalConfig = (
         same_for_all: true,
         desktop: {
           ...prev.grid_config.desktop,
-          visible_items: limitNumber(prev.grid_config.desktop.visible_items, 4, 1, 4),
+          visible_items: limitNumber(prev.grid_config.desktop.visible_items, 10, 1, 10),
         },
         mobile: {
           ...prev.grid_config.desktop,
-          visible_items: limitNumber(prev.grid_config.desktop.visible_items, 4, 1, 4),
+          visible_items: limitNumber(prev.grid_config.desktop.visible_items, 10, 1, 10),
         },
       },
     };
@@ -1195,11 +1188,11 @@ const syncGlobalConfig = (
       same_for_all: false,
       desktop: {
         ...prev.grid_config.desktop,
-        visible_items: limitNumber(prev.grid_config.desktop.visible_items, 4, 1, 4),
+        visible_items: limitNumber(prev.grid_config.desktop.visible_items, 10, 1, 10),
       },
       mobile: {
         ...prev.grid_config.mobile,
-        visible_items: limitNumber(prev.grid_config.mobile.visible_items, 2, 1, 4),
+        visible_items: limitNumber(prev.grid_config.mobile.visible_items, 2, 1, 10),
       },
     },
   };
@@ -1623,7 +1616,6 @@ const CarouselPreview = ({
   );
 };
 
-// 🔧 GridPreview — usa as novas chaves do GridConfig
 const GridPreview = ({
   grid,
   colors,
@@ -1631,7 +1623,7 @@ const GridPreview = ({
   grid: GridConfig;
   colors: PreviewColors;
 }) => {
-  const cols = limitNumber(grid.visible_items, 4, 1, 4);
+  const cols = limitNumber(grid.visible_items, 10, 1, 10);
   const rows = safeNumber(grid.rows, 1, 1);
   const shape = normalizeWidgetShape(grid.shape, 'portrait');
   const totalItems = Math.max(1, Math.min(cols * rows, 20));
@@ -1646,7 +1638,7 @@ const GridPreview = ({
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h4 className="text-sm font-black text-slate-900">Grade</h4>
-            <p className="text-xs font-medium text-slate-500">Máximo de 4 colunas</p>
+            <p className="text-xs font-medium text-slate-500">Máximo de 10 colunas</p>
           </div>
           <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black text-slate-500">
             {cols} x {rows}
@@ -1709,7 +1701,7 @@ const GridPreview = ({
         <PreviewInfo label="Colunas" value={`${cols}`} />
         <PreviewInfo label="Linhas" value={`${rows}`} />
         <PreviewInfo label="Espaçamento" value={`${grid.spacing}px`} />
-        <PreviewInfo label="Limite" value="4 colunas" />
+        <PreviewInfo label="Limite" value="10 colunas" />
       </div>
     </div>
   );
@@ -2111,7 +2103,7 @@ const AppearancePage = () => {
           current.visible_items || 1,
           1,
         ),
-        auto_center: patch.auto_center ?? current.auto_center ?? false,
+        auto_center: patch.auto_center ?? current.auto_center ?? true,
       };
 
       if (patch.shape !== undefined) {
@@ -2156,7 +2148,6 @@ const AppearancePage = () => {
     });
   };
 
-  // 🔧 updateGridConfig — usando as novas chaves
   const updateGridConfig = (patch: Partial<GridConfig>) => {
     setFormData(prev => {
       const device = prev.useGlobalAppearance ? 'desktop' : gridDevice;
@@ -2169,7 +2160,7 @@ const AppearancePage = () => {
           patch.visible_items ?? current.visible_items,
           current.visible_items || 1,
           1,
-          4,
+          10,
         ),
         rows: safeNumber(patch.rows ?? current.rows, current.rows || 1, 1),
         spacing: safeNumber(patch.spacing ?? current.spacing, current.spacing || 0, 0),
@@ -2297,8 +2288,7 @@ const AppearancePage = () => {
     setShowModal(true);
   };
 
-// 🔧 handleSaveStyle — apenas colunas reais da tabela + JSONBs
-const handleSaveStyle = async () => {
+  const handleSaveStyle = async () => {
     if (saving) return;
     const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
     if (!finalStoreId) {
@@ -2337,8 +2327,8 @@ const handleSaveStyle = async () => {
         same_for_all: formData.useGlobalAppearance,
       };
 
-      gridConfig.desktop = { ...gridConfig.desktop, visible_items: limitNumber(gridConfig.desktop.visible_items, 4, 1, 4) };
-      gridConfig.mobile = { ...gridConfig.mobile, visible_items: limitNumber(gridConfig.mobile.visible_items, 2, 1, 4) };
+      gridConfig.desktop = { ...gridConfig.desktop, visible_items: limitNumber(gridConfig.desktop.visible_items, 10, 1, 10) };
+      gridConfig.mobile = { ...gridConfig.mobile, visible_items: limitNumber(gridConfig.mobile.visible_items, 2, 1, 10) };
 
       if (formData.useGlobalAppearance) {
         floatingConfig.mobile = floatingConfig.desktop;
@@ -2356,8 +2346,6 @@ const handleSaveStyle = async () => {
       const modalConfig = formData.modal_config;
       const shouldBeDefault = formData.is_default || appearances.length === 0;
 
-      // 🔧 Apenas colunas que REALMENTE existem na tabela appearances
-      // NADA de grid_*, carousel_* planos — tudo fica nos JSONBs
       const stylePayload = {
         id,
         store_id: finalStoreId,
@@ -2378,7 +2366,6 @@ const handleSaveStyle = async () => {
         widget_size: formData.widget_size || 'medium',
         widget_animation: formData.widget_animation || 'none',
 
-        // ✅ JSONBs — os dados da grade e carrossel ficam AQUI
         floating_config: floatingConfig,
         carousel_config: carouselConfig,
         grid_config: gridConfig,
@@ -2856,7 +2843,7 @@ const handleSaveStyle = async () => {
 
                   {/* ── Carrossel ── */}
                   {activeTab === 'carousel' && (
-                    <SectionCard title="Carrossel" description="Configure a exibição dos vídeos em carrossel, quantidade de itens, formato, centralização e margens.">
+                    <SectionCard title="Carrossel" description="Configure a exibição dos vídeos em carrossel, quantidade de itens, formato e margens.">
                       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
                         <h4 className="text-sm font-black text-slate-800">Configuração ativa</h4>
                         {formData.useGlobalAppearance ? <GlobalDeviceNotice /> : <DeviceTabs activeDevice={carouselDevice} onChange={setCarouselDevice} />}
@@ -2945,16 +2932,13 @@ const handleSaveStyle = async () => {
                         <FormField label="Mostrar botão play">
                           <ToggleSwitch label="Mostrar botão play no carrossel" checked={activeCarouselConfig.show_play_icon} onChange={e => updateCarouselConfig({ show_play_icon: e.target.checked })} />
                         </FormField>
-                        <FormField label="Centralizar automaticamente">
-                          <ToggleSwitch label="Centralizar carrossel automático" checked={activeCarouselConfig.auto_center} onChange={e => updateCarouselConfig({ auto_center: e.target.checked })} />
-                        </FormField>
                       </div>
                     </SectionCard>
                   )}
 
                   {/* ── Grade ── */}
                   {activeTab === 'grid' && (
-                    <SectionCard title="Grade" description="Configure a exibição dos vídeos em grade, colunas, linhas, formato e espaçamento.">
+                    <SectionCard title="Grade" description="Configure a exibição dos vídeos em grade, colunas, formato e espaçamento.">
                       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
                         <h4 className="text-sm font-black text-slate-800">Configuração ativa</h4>
                         {formData.useGlobalAppearance ? <GlobalDeviceNotice /> : <DeviceTabs activeDevice={gridDevice} onChange={setGridDevice} />}
@@ -2986,20 +2970,12 @@ const handleSaveStyle = async () => {
                         </FormField>
                         <FormField label="Colunas">
                           <input
-                            type="number" min="1" max="4" step="1"
+                            type="number" min="1" max="10" step="1"
                             value={activeGridConfig.visible_items}
-                            onChange={e => updateGridConfig({ visible_items: limitNumber(e.target.value, 1, 1, 4) })}
+                            onChange={e => updateGridConfig({ visible_items: limitNumber(e.target.value, 1, 1, 10) })}
                             className={inputClass}
                           />
-                          <p className="text-xs font-semibold text-slate-400">Máximo de 4 colunas por linha.</p>
-                        </FormField>
-                        <FormField label="Linhas">
-                          <input
-                            type="number" min="1" step="1"
-                            value={activeGridConfig.rows}
-                            onChange={e => updateGridConfig({ rows: safeNumber(e.target.value, 1, 1) })}
-                            className={inputClass}
-                          />
+                          <p className="text-xs font-semibold text-slate-400">Máximo de 10 colunas por linha.</p>
                         </FormField>
                         <FormField label="Espaçamento">
                           <input
