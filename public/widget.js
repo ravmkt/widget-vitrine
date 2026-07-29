@@ -1676,15 +1676,18 @@ function renderStoryModal() {
   
   /* Comentar */
   if (appearanceConfig.show_comment_button && video) {
+    var hasCommented = !!userCommentedVideos[video.id];
+    var commentCountVal = getCommentCountForVideo(video.id);
+
     var commentBtn = createEl('button', 'vl-social-btn');
-    commentBtn.innerHTML = svgIcon('comment');
+    commentBtn.id = 'vl-comment-btn';
+    commentBtn.innerHTML = svgIcon(hasCommented ? 'commentFilled' : 'comment');
     commentBtn.title = 'Comentários';
-    var countStr = getCommentCount(video.id);
-    if (countStr > 0) {
-      var countEl = createEl('span', 'vl-social-count');
-      countEl.textContent = countStr;
-      commentBtn.appendChild(countEl);
-    }
+
+    var commentCountEl = createEl('span', 'vl-social-count');
+    commentCountEl.textContent = commentCountVal > 0 ? commentCountVal : '';
+    commentBtn.appendChild(commentCountEl);
+
     commentBtn.onclick = function (e) { e.stopPropagation(); openCommentsPanel(video.id, story.id); };
     social.appendChild(commentBtn);
   }
