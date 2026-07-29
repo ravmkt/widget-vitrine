@@ -1667,10 +1667,24 @@ function renderStoryModal() {
   var social = createEl('div', 'vl-social');
   
   /* Curtir */
-  if (appearanceConfig.show_like_button) {
+  if (appearanceConfig.show_like_button && video) {
+    var vidId = video.id;
+    var isLiked = !!likedVideos[vidId];
+    var likeCount = videoLikeCounts[vidId] || 0;
+
     var likeBtn = createEl('button', 'vl-social-btn');
-    likeBtn.innerHTML = svgIcon('heart');
-    likeBtn.title = 'Curtir';
+    likeBtn.id = 'vl-like-btn';
+    likeBtn.innerHTML = svgIcon(isLiked ? 'heartFilled' : 'heart');
+    likeBtn.title = isLiked ? 'Descurtir' : 'Curtir';
+
+    var likeCountEl = createEl('span', 'vl-social-count');
+    likeCountEl.textContent = likeCount > 0 ? likeCount : '';
+    likeBtn.appendChild(likeCountEl);
+
+    likeBtn.onclick = function (e) {
+      e.stopPropagation();
+      toggleLike(video, likeBtn);
+    };
     social.appendChild(likeBtn);
   }
   
