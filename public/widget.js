@@ -1667,13 +1667,8 @@ return {
             created_at: new Date().toISOString()
           });
 
-          if (autoApprove) {
-            statusMsg.textContent = 'Comentário publicado! ✅';
-            statusMsg.style.color = '#22c55e';
-          } else {
-            statusMsg.textContent = 'Comentário enviado! Ele passará por moderação antes de aparecer. 📝';
-            statusMsg.style.color = '#f59e0b';
-          }
+          statusMsg.textContent = 'Comentário enviado! Ele passará por moderação antes de aparecer. 📝';
+          statusMsg.style.color = '#f59e0b';
 
           commentTextarea.value = '';
           charCounter.textContent = '0/1000';
