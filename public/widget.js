@@ -1322,6 +1322,7 @@
     if (existing) { existing.remove(); return; }
     var story = currentStories[currentStoryIndex];
     var primaryColor = getPrimaryColor(currentAppearance);
+    var buttonColor = getButtonColor(currentAppearance);
     var fontFamily = getFontFamily(currentAppearance);
     var panel = createEl('div', 'vl-comments-panel-full');
     panel.style.cssText = [
