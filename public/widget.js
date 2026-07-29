@@ -1337,6 +1337,798 @@ var payload = {
     modalContent.appendChild(panel);
   }
 
+function openCommentsPanel(videoId, storyId) {
+  if (!modalContent) return;
+
+  var existing = modalContent.querySelector('.vl-comments-panel-full');
+
+  function restoreVideoView() {
+    if (existing && existing.parentNode) {
+      existing.parentNode.removeChild(existing);
+    }
+
+    var header = modalContent.querySelector('.vl-header');
+    var footer = modalContent.querySelector('.vl-footer');
+    var social = modalContent.querySelector('.vl-social');
+
+    if (header) header.style.display = '';
+    if (footer) footer.style.display = '';
+    if (social) social.style.display = '';
+
+    var videoElement = modalContent.querySelector('video');
+    if (videoElement) {
+      videoElement.play().catch(function () {});
+    }
+  }
+
+  if (existing) {
+    restoreVideoView();
+    return;
+  }
+
+  var videoElement = modalContent.querySelector('video');
+  if (videoElement) {
+    videoElement.pause();
+  }
+
+  var header = modalContent.querySelector('.vl-header');
+  var footer = modalContent.querySelector('.vl-footer');
+  var social = modalContent.querySelector('.vl-social');
+
+  if (header) header.style.display = 'none';
+  if (footer) footer.style.display = 'none';
+  if (social) social.style.display = 'none';
+
+  var primaryColor = getPrimaryColor(currentAppearance);
+  var buttonColor = getButtonColor(currentAppearance);
+  var fontFamily = getFontFamily(currentAppearance);
+
+  var panel = createEl('div', 'vl-comments-panel-full');
+
+  panel.style.cssText = [
+    'position:absolute;',
+    'top:0;',
+    'bottom:0;',
+    'left:22px;',
+    'right:22px;',
+    'width:auto;',
+    'height:100%;',
+    'max-height:100%;',
+    'z-index:200;',
+    'background:#fff;',
+    'display:flex;',
+    'flex-direction:column;',
+    'overflow:hidden;',
+    'box-sizing:border-box;',
+    'border-radius:0 0 24px 24px;',
+    'box-shadow:0 12px 35px rgba(0,0,0,.35);',
+    'font-family:' + fontFamily + ';'
+  ].join('');
+
+  var panelHeader = createEl('div');
+
+  panelHeader.style.cssText = [
+    'display:flex;',
+    'align-items:center;',
+    'justify-content:space-between;',
+    'height:62px;',
+    'min-height:62px;',
+    'box-sizing:border-box;',
+    'padding:14px 18px;',
+    'border-bottom:1px solid #e2e8f0;',
+    'flex-shrink:0;',
+    'background:#fff;',
+    'position:relative;',
+    'z-index:5;'
+  ].join('');
+
+  var commentsCount = getCommentCountForVideo(videoId);
+
+  var panelTitle = createEl('h3');
+  panelTitle.textContent =
+    'Comentários' +
+    (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
+
+  panelTitle.style.cssText = [
+    'margin:0;',
+    'font-size:16px;',
+    'font-weight:700;',
+    'color:#0f172a;'
+  ].join('');
+
+  panelHeader.appendChild(panelTitle);
+
+  var closeBtn = createEl('button');
+  closeBtn.type = 'button';
+  closeBtn.innerHTML = svgIcon('close');
+
+  closeBtn.style.cssText = [
+    'background:#f1f5f9;',
+    'border:none;',
+    'color:#475569;',
+    'cursor:pointer;',
+    'width:32px;',
+    'height:32px;',
+    'border-radius:50%;',
+    'display:flex;',
+    'align-items:center;',
+    'justify-content:center;',
+    'font-size:18px;',
+    'transition:all .15s;',
+    'flex-shrink:0;'
+  ].join('');
+
+  closeBtn.onmouseenter = function () {
+    closeBtn.style.background = '#e2e8f0';
+  };
+
+  closeBtn.onmouseleave = function () {
+    closeBtn.style.background = '#f1f5f9';
+  };
+
+  closeBtn.onclick = function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+    restoreVideoView();
+  };
+
+  panelHeader.appendChild(closeBtn);
+  panel.appendChild(panelHeader);
+
+  var commentsList = createEl('div');
+
+  commentsList.style.cssText = [
+    'flex:1 1 auto;',
+    'min-height:0;',
+    'overflow-y:auto;',
+    'overflow-x:hidden;',
+    'padding:10px 18px;',
+    'display:flex;',
+    'flex-direction:column;',
+    'gap:10px;',
+    'box-sizing:border-box;',
+    '-webkit-overflow-scrolling:touch;'
+  ].join('');
+
+  function renderComments() {
+    while (commentsList.firstChild) {
+      commentsList.removeChild(commentsList.firstChild);
+    }
+
+    var videoComments = readCommentsData.filter(function (comment) {
+      return idsEqual(comment.video_id, videoId);
+    });
+
+    if (videoComments.length === 0) {
+      var emptyState = createEl('div');
+
+      emptyState.style.cssText = [
+        'display:flex;',
+        'flex-direction:column;',
+        'align-items:center;',
+        'justify-content:center;',
+        'padding:20px 16px;',
+        'text-align:center;',
+        'flex:1;',
+        'min-height:100px;'
+      ].join('');
+
+      var emptyIcon = createEl('div');
+      emptyIcon.innerHTML = svgIcon('comment');
+      emptyIcon.style.cssText = 'opacity:.15;margin-bottom:10px;';
+
+      var emptyText = createEl('p');
+      emptyText.textContent =
+        'Nenhum comentário ainda. Seja o primeiro!';
+
+      emptyText.style.cssText = [
+        'color:#94a3b8;',
+        'font-size:14px;',
+        'margin:0;'
+      ].join('');
+
+      emptyState.appendChild(emptyIcon);
+      emptyState.appendChild(emptyText);
+      commentsList.appendChild(emptyState);
+      return;
+    }
+
+    videoComments.forEach(function (comment) {
+      var commentCard = createEl('div');
+
+      commentCard.style.cssText = [
+        'display:flex;',
+        'gap:10px;',
+        'padding:10px 0;',
+        'border-bottom:1px solid #f1f5f9;'
+      ].join('');
+
+      var avatar = createEl('div');
+      avatar.textContent =
+        (comment.user_name || 'V').charAt(0).toUpperCase();
+
+      avatar.style.cssText = [
+        'width:34px;',
+        'height:34px;',
+        'border-radius:50%;',
+        'background:' + primaryColor + ';',
+        'color:#fff;',
+        'display:flex;',
+        'align-items:center;',
+        'justify-content:center;',
+        'font-size:14px;',
+        'font-weight:700;',
+        'flex-shrink:0;'
+      ].join('');
+
+      var commentBody = createEl('div');
+
+      commentBody.style.cssText = [
+        'flex:1;',
+        'min-width:0;'
+      ].join('');
+
+      var commentMeta = createEl('div');
+
+      commentMeta.style.cssText = [
+        'display:flex;',
+        'align-items:center;',
+        'gap:8px;',
+        'margin-bottom:2px;'
+      ].join('');
+
+      var authorName = createEl('span');
+      authorName.textContent = comment.user_name || 'Visitante';
+
+      authorName.style.cssText = [
+        'font-weight:700;',
+        'font-size:13px;',
+        'color:#0f172a;'
+      ].join('');
+
+      commentMeta.appendChild(authorName);
+
+      if (comment.created_at) {
+        var commentDate = createEl('span');
+        commentDate.textContent =
+          formatRelativeTime(comment.created_at);
+
+        commentDate.style.cssText = [
+          'font-size:11px;',
+          'color:#94a3b8;'
+        ].join('');
+
+        commentMeta.appendChild(commentDate);
+      }
+
+      var commentText = createEl('p');
+      commentText.textContent =
+        comment.content || comment.text || '';
+
+      commentText.style.cssText = [
+        'margin:0;',
+        'font-size:14px;',
+        'color:#334155;',
+        'line-height:1.5;',
+        'word-break:break-word;'
+      ].join('');
+
+      commentBody.appendChild(commentMeta);
+      commentBody.appendChild(commentText);
+
+      var replyContent = String(
+        comment.reply_content ||
+        comment.replyContent ||
+        ''
+      ).trim();
+
+      var replyStatus = String(
+        comment.reply_status ||
+        comment.replyStatus ||
+        ''
+      ).trim().toLowerCase();
+
+      var replyIsVisible =
+        replyContent &&
+        (
+          !replyStatus ||
+          replyStatus === 'replied' ||
+          replyStatus === 'respondido' ||
+          replyStatus === 'published' ||
+          replyStatus === 'publicado'
+        );
+
+      if (replyIsVisible) {
+        var replyBox = createEl('div');
+
+        replyBox.style.cssText = [
+          'margin-top:8px;',
+          'padding:8px 12px;',
+          'background:#f0f9ff;',
+          'border-left:3px solid ' + primaryColor + ';',
+          'border-radius:6px;'
+        ].join('');
+
+        var replyLabel = createEl('div');
+        replyLabel.textContent = 'Resposta da loja';
+
+        replyLabel.style.cssText = [
+          'font-size:10px;',
+          'font-weight:700;',
+          'color:' + primaryColor + ';',
+          'margin-bottom:3px;',
+          'text-transform:uppercase;',
+          'letter-spacing:.5px;'
+        ].join('');
+
+        var replyText = createEl('p');
+        replyText.textContent = replyContent;
+
+        replyText.style.cssText = [
+          'margin:0;',
+          'font-size:13px;',
+          'color:#334155;',
+          'line-height:1.4;',
+          'word-break:break-word;'
+        ].join('');
+
+        replyBox.appendChild(replyLabel);
+        replyBox.appendChild(replyText);
+        commentBody.appendChild(replyBox);
+      }
+
+      commentCard.appendChild(avatar);
+      commentCard.appendChild(commentBody);
+      commentsList.appendChild(commentCard);
+    });
+  }
+
+  renderComments();
+  panel.appendChild(commentsList);
+
+  var formSection = createEl('div');
+
+  formSection.style.cssText = [
+    'flex:0 0 auto;',
+    'width:100%;',
+    'border-top:1px solid #e2e8f0;',
+    'padding:12px 18px 10px;',
+    'background:#fff;',
+    'box-sizing:border-box;',
+    'position:relative;',
+    'z-index:6;'
+  ].join('');
+
+  var nameLabel = createEl('label');
+  nameLabel.textContent = 'Seu nome';
+
+  nameLabel.style.cssText = [
+    'display:block;',
+    'font-size:12px;',
+    'font-weight:600;',
+    'color:#64748b;',
+    'margin-bottom:4px;'
+  ].join('');
+
+  formSection.appendChild(nameLabel);
+
+  var nameInput = createEl('input');
+  nameInput.type = 'text';
+  nameInput.placeholder = 'Digite seu nome...';
+  nameInput.maxLength = 80;
+
+  nameInput.style.cssText = [
+    'width:100%;',
+    'height:42px;',
+    'padding:9px 12px;',
+    'border:1.5px solid #e2e8f0;',
+    'border-radius:10px;',
+    'font-size:14px;',
+    'color:#0f172a;',
+    'outline:none;',
+    'transition:border-color .2s;',
+    'margin-bottom:10px;',
+    'box-sizing:border-box;',
+    'background:#f8fafc;',
+    'font-family:' + fontFamily + ';'
+  ].join('');
+
+  nameInput.onfocus = function () {
+    nameInput.style.borderColor = primaryColor;
+    nameInput.style.background = '#fff';
+  };
+
+  nameInput.onblur = function () {
+    nameInput.style.borderColor = '#e2e8f0';
+    nameInput.style.background = '#f8fafc';
+  };
+
+  formSection.appendChild(nameInput);
+
+  var commentLabel = createEl('label');
+  commentLabel.textContent = 'Seu comentário';
+
+  commentLabel.style.cssText = [
+    'display:block;',
+    'font-size:12px;',
+    'font-weight:600;',
+    'color:#64748b;',
+    'margin-bottom:4px;'
+  ].join('');
+
+  formSection.appendChild(commentLabel);
+
+  var editor = createEl('div');
+
+  editor.style.cssText = [
+    'position:relative;',
+    'width:100%;'
+  ].join('');
+
+  var commentTextarea = createEl('textarea');
+  commentTextarea.placeholder = 'Escreva seu comentário...';
+  commentTextarea.maxLength = 1000;
+  commentTextarea.rows = 3;
+
+  commentTextarea.style.cssText = [
+    'width:100%;',
+    'height:78px;',
+    'min-height:78px;',
+    'max-height:110px;',
+    'padding:10px 48px 10px 12px;',
+    'border:1.5px solid #e2e8f0;',
+    'border-radius:10px;',
+    'font-size:14px;',
+    'color:#0f172a;',
+    'resize:vertical;',
+    'outline:none;',
+    'transition:border-color .2s;',
+    'margin:0;',
+    'box-sizing:border-box;',
+    'background:#f8fafc;',
+    'font-family:' + fontFamily + ';'
+  ].join('');
+
+  commentTextarea.onfocus = function () {
+    commentTextarea.style.borderColor = primaryColor;
+    commentTextarea.style.background = '#fff';
+  };
+
+  commentTextarea.onblur = function () {
+    commentTextarea.style.borderColor = '#e2e8f0';
+    commentTextarea.style.background = '#f8fafc';
+  };
+
+  editor.appendChild(commentTextarea);
+
+  var emojiRow = createEl('div');
+
+  emojiRow.style.cssText = [
+    'position:absolute;',
+    'left:10px;',
+    'top:10px;',
+    'z-index:10;'
+  ].join('');
+
+  var emojiToggle = createEl('button');
+  emojiToggle.type = 'button';
+  emojiToggle.textContent = '😊';
+
+  emojiToggle.style.cssText = [
+    'width:32px;',
+    'height:32px;',
+    'padding:0;',
+    'border:1px solid #e2e8f0;',
+    'border-radius:50%;',
+    'background:#fff;',
+    'color:#64748b;',
+    'font-size:18px;',
+    'display:flex;',
+    'align-items:center;',
+    'justify-content:center;',
+    'cursor:pointer;'
+  ].join('');
+
+  var emojiGrid = createEl('div');
+
+  emojiGrid.style.cssText = [
+    'display:none;',
+    'position:absolute;',
+    'left:calc(100% + 8px);',
+    'top:0;',
+    'bottom:auto;',
+    'grid-template-columns:repeat(6,34px);',
+    'grid-template-rows:repeat(4,34px);',
+    'gap:4px;',
+    'width:max-content;',
+    'max-width:230px;',
+    'padding:8px;',
+    'background:#fff;',
+    'border:1px solid #e2e8f0;',
+    'border-radius:12px;',
+    'box-shadow:0 8px 30px rgba(0,0,0,.18);',
+    'z-index:30;'
+  ].join('');
+
+  var emojiList = [
+    '😍', '🔥', '👏', '❤️', '😂', '😱',
+    '🙌', '💯', '✨', '😢', '🤔', '👍',
+    '💪', '🎉', '😊', '🥰', '😎', '🙏',
+    '💙', '⭐', '✅', '😡', '👀', '🤩'
+  ];
+
+  emojiList.forEach(function (emoji) {
+    var emojiButton = createEl('button');
+    emojiButton.type = 'button';
+    emojiButton.textContent = emoji;
+
+    emojiButton.style.cssText = [
+      'width:34px;',
+      'height:34px;',
+      'border:none;',
+      'background:transparent;',
+      'border-radius:8px;',
+      'font-size:20px;',
+      'cursor:pointer;',
+      'display:flex;',
+      'align-items:center;',
+      'justify-content:center;'
+    ].join('');
+
+    emojiButton.onmouseenter = function () {
+      emojiButton.style.background = '#f1f5f9';
+      emojiButton.style.transform = 'scale(1.12)';
+    };
+
+    emojiButton.onmouseleave = function () {
+      emojiButton.style.background = 'transparent';
+      emojiButton.style.transform = 'scale(1)';
+    };
+
+    emojiButton.onmousedown = function (event) {
+      event.preventDefault();
+
+      var start = commentTextarea.selectionStart ||
+        commentTextarea.value.length;
+
+      var end = commentTextarea.selectionEnd ||
+        commentTextarea.value.length;
+
+      commentTextarea.value =
+        commentTextarea.value.substring(0, start) +
+        emoji +
+        commentTextarea.value.substring(end);
+
+      var newPosition = start + emoji.length;
+
+      commentTextarea.focus();
+      commentTextarea.setSelectionRange(
+        newPosition,
+        newPosition
+      );
+
+      charCounter.textContent =
+        commentTextarea.value.length + '/1000';
+
+      emojiGrid.style.display = 'none';
+    };
+
+    emojiGrid.appendChild(emojiButton);
+  });
+
+  emojiToggle.onclick = function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (emojiGrid.style.display === 'grid') {
+      emojiGrid.style.display = 'none';
+    } else {
+      emojiGrid.style.display = 'grid';
+    }
+  };
+
+  emojiRow.appendChild(emojiToggle);
+  emojiRow.appendChild(emojiGrid);
+  editor.appendChild(emojiRow);
+  formSection.appendChild(editor);
+
+  var charCounter = createEl('div');
+  charCounter.textContent = '0/1000';
+
+  charCounter.style.cssText = [
+    'text-align:right;',
+    'font-size:11px;',
+    'color:#94a3b8;',
+    'margin-top:4px;',
+    'margin-bottom:6px;'
+  ].join('');
+
+  commentTextarea.addEventListener('input', function () {
+    charCounter.textContent =
+      commentTextarea.value.length + '/1000';
+  });
+
+  formSection.appendChild(charCounter);
+
+  var actionRow = createEl('div');
+
+  actionRow.style.cssText = [
+    'display:flex;',
+    'align-items:center;',
+    'justify-content:flex-end;',
+    'gap:8px;',
+    'margin-bottom:4px;'
+  ].join('');
+
+  var sendBtn = createEl('button');
+  sendBtn.type = 'button';
+  sendBtn.textContent = 'Enviar';
+
+  sendBtn.style.cssText = [
+    'padding:9px 20px;',
+    'border:none;',
+    'border-radius:10px;',
+    'background:' + buttonColor + ';',
+    'color:#fff;',
+    'font-weight:700;',
+    'font-size:14px;',
+    'cursor:pointer;',
+    'transition:all .2s;',
+    'white-space:nowrap;',
+    'flex-shrink:0;'
+  ].join('');
+
+  var statusMsg = createEl('div');
+
+  statusMsg.style.cssText = [
+    'min-height:16px;',
+    'text-align:center;',
+    'font-size:12px;',
+    'transition:all .2s;',
+    'margin-top:4px;'
+  ].join('');
+
+  sendBtn.onmouseenter = function () {
+    sendBtn.style.opacity = '.9';
+    sendBtn.style.transform = 'scale(1.03)';
+  };
+
+  sendBtn.onmouseleave = function () {
+    sendBtn.style.opacity = '1';
+    sendBtn.style.transform = 'scale(1)';
+  };
+
+  sendBtn.onclick = function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    var name = nameInput.value.trim();
+    var text = commentTextarea.value.trim();
+
+    if (!text) {
+      statusMsg.textContent =
+        'Digite um comentário para enviar.';
+      statusMsg.style.color = '#ef4444';
+      return;
+    }
+
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Enviando...';
+    sendBtn.style.opacity = '.6';
+    statusMsg.textContent = '';
+
+    userCommentedVideos[videoId] = true;
+
+    var commentStatus =
+      autoApproveComments ? 'approved' : 'pending';
+
+    if (hasSupabase) {
+      createComment({
+        story_id: storyId,
+        video_id: videoId,
+        author_name: name || 'Visitante',
+        content: text,
+        status: commentStatus
+      })
+        .then(function () {
+          if (autoApproveComments) {
+            readCommentsData.push({
+              video_id: videoId,
+              user_name: name || 'Visitante',
+              content: text,
+              text: text,
+              created_at: new Date().toISOString(),
+              status: 'approved'
+            });
+
+            statusMsg.textContent =
+              'Comentário enviado com sucesso! ✅';
+
+            statusMsg.style.color = '#22c55e';
+            renderComments();
+          } else {
+            statusMsg.textContent =
+              'Em breve sua mensagem será publicada. 📝';
+
+            statusMsg.style.color = '#f59e0b';
+          }
+
+          commentTextarea.value = '';
+          charCounter.textContent = '0/1000';
+          emojiGrid.style.display = 'none';
+          sendBtn.textContent = 'Enviar';
+          sendBtn.disabled = false;
+          sendBtn.style.opacity = '1';
+
+          trackMetric({
+            event_type: 'comment',
+            story_id: storyId,
+            video_id: videoId,
+            page_url: window.location.href
+          });
+        })
+        .catch(function (error) {
+          statusMsg.textContent =
+            error && error.message
+              ? error.message
+              : 'Erro ao enviar. Tente novamente.';
+
+          statusMsg.style.color = '#ef4444';
+          sendBtn.textContent = 'Enviar';
+          sendBtn.disabled = false;
+          sendBtn.style.opacity = '1';
+        });
+
+      return;
+    }
+
+    readCommentsData.push({
+      video_id: videoId,
+      user_name: name || 'Visitante',
+      content: text,
+      text: text,
+      created_at: new Date().toISOString()
+    });
+
+    statusMsg.textContent =
+      'Comentário enviado (modo offline).';
+
+    statusMsg.style.color = '#22c55e';
+
+    commentTextarea.value = '';
+    charCounter.textContent = '0/1000';
+    emojiGrid.style.display = 'none';
+    sendBtn.textContent = 'Enviar';
+    sendBtn.disabled = false;
+    sendBtn.style.opacity = '1';
+
+    renderComments();
+  };
+
+  actionRow.appendChild(sendBtn);
+  formSection.appendChild(actionRow);
+  formSection.appendChild(statusMsg);
+
+  panel.appendChild(formSection);
+  modalContent.appendChild(panel);
+
+  setTimeout(function () {
+    nameInput.focus();
+  }, 200);
+
+  document.addEventListener('mousedown', function closeEmoji(event) {
+    if (
+      emojiGrid.style.display === 'grid' &&
+      !emojiRow.contains(event.target)
+    ) {
+      emojiGrid.style.display = 'none';
+      document.removeEventListener(
+        'mousedown',
+        closeEmoji
+      );
+    }
+  });
+}
 
   function closeOverlay() {
     if (overlay) overlay.className = 'vl-overlay';
