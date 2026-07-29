@@ -8,6 +8,7 @@ import {
   Search,
   MessageSquare,
   Trash2,
+  ShieldCheck,
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import CustomDialog from "@/components/CustomDialog";
@@ -66,6 +67,9 @@ const CommentsPage = () => {
   const [storeName, setStoreName] = useState("");
   const [storeLogoUrl, setStoreLogoUrl] = useState("");
 
+  const [autoApprove, setAutoApprove] = useState(false);
+  const [autoApproveLoading, setAutoApproveLoading] = useState(false);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const EMOJIS = [
@@ -99,26 +103,72 @@ const CommentsPage = () => {
    * Busca os dados da loja.
    * Este é o único useEffect responsável por buscar app_settings.
    */
-// ✅ DEPOIS
-useEffect(() => {
-  const fetchStoreSettings = async () => {
-    try {
-      const settings = await db.generalSettings.getAll();
-      if (settings.length > 0) {
-        const s = settings[0];
-        setStoreName(s.store_name || '');
-        setStoreLogoUrl(s.logo_url || '');
+  useEffect(() => {
+    const fetchStoreSettings = async () => {
+      try {
+        const settings = await db.generalSettings.getAll();
+        if (settings.length > 0) {
+          const s = settings[0];
+          setStoreName(s.store_name || '');
+          setStoreLogoUrl(s.logo_url || '');
+        }
+
+        // 🆕 Busca configuração de aprovação automática
+        if (storeId) {
+          const { data: storeConfig } = await supabase
+            .from('store_settings')
+            .select('auto_approve_comments')
+            .eq('store_id', storeId)
+            .maybeSingle();
+
+          if (storeConfig) {
+            setAutoApprove(!!storeConfig.auto_approve_comments);
+          }
+        }
+      } catch (error) {
+        console.error(
+          "[CommentsPage] erro ao buscar configurações da loja:",
+          error,
+        );
       }
-    } catch (error) {
-      console.error(
-        "[CommentsPage] erro ao buscar configurações da loja:",
-        error,
+    };
+
+    fetchStoreSettings();
+  }, []);
+
+  const handleAutoApproveToggle = async () => {
+    if (!storeId) return;
+
+    const newValue = !autoApprove;
+    setAutoApprove(newValue);
+    setAutoApproveLoading(true);
+
+    try {
+      const { error } = await supabase
+        .from('store_settings')
+        .upsert({
+          store_id: storeId,
+          auto_approve_comments: newValue,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'store_id'
+        });
+
+      if (error) throw error;
+
+      showSuccess(
+        newValue
+          ? 'Comentários serão aprovados automaticamente.'
+          : 'Comentários passarão por moderação.'
       );
+    } catch (err) {
+      console.error('[CommentsPage] erro ao salvar config:', err);
+      setAutoApprove(!newValue); // Reverte
+      showError('Erro ao salvar configuração.');
+    } finally {
+      setAutoApproveLoading(false);
     }
   };
-
-  fetchStoreSettings();
-}, []);
 
   /*
    * Verifica a sessão atual do usuário.
@@ -539,6 +589,41 @@ useEffect(() => {
           <p className="mt-1 font-medium text-slate-500">
             Gerencie a interação dos clientes nos seus stories.
           </p>
+
+          {/* 🆕 Toggle: Aprovar comentários automaticamente */}
+          <div className="mt-4 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleAutoApproveToggle}
+              disabled={autoApproveLoading}
+              className={cn(
+                "relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200",
+                autoApprove
+                  ? "bg-emerald-500"
+                  : "bg-slate-300"
+              )}
+            >
+              <span
+                className={cn(
+                  "inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200",
+                  autoApprove ? "translate-x-6" : "translate-x-1"
+                )}
+              />
+            </button>
+
+            <div>
+              <span className="text-sm font-bold text-slate-700">
+                {autoApprove
+                  ? "Aprovação automática ativada"
+                  : "Moderação manual ativada"}
+              </span>
+              <p className="text-xs text-slate-400">
+                {autoApprove
+                  ? "Comentários são publicados imediatamente."
+                  : "Comentários precisam ser aprovados antes de aparecer."}
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:flex-row">
