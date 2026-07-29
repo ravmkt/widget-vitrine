@@ -667,7 +667,7 @@
 
   function readComments() {
     if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_comments', []));
-    var query = 'comments?select=id,store_id,story_id,video_id,user_name,user_email,content,status,created_at,reply_content,replied_at,reply_status&store_id=eq.' +
+var query = 'comments?select=id,store_id,video_id,user_name,user_email,content,status,created_at,reply_content,replied_at,reply_status&store_id=eq.' +
       encodeURIComponent(storeId) + '&status=eq.approved&order=created_at.asc';
     return fetchJson(query);
   }
