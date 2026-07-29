@@ -39,6 +39,10 @@
   var readCommentsData = [];
   var readSizingModelsData = [];
   var readLikeCounts = {};
+  var likedVideos = {};         // { videoId: true } — vídeos curtidos pelo usuário
+var videoLikeCounts = {};     // { videoId: number } — total de curtidas por vídeo
+var userCommentedVideos = {}; // { videoId: true } — vídeos onde o usuário comentou
+
 
   var currentStories = [];
   var currentStoryIndex = 0;
