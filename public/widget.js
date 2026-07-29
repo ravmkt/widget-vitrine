@@ -1091,7 +1091,6 @@
       story_id: commentData.story_id || null,
       video_id: commentData.video_id || null,
       author_name: String(commentData.author_name || '').trim(),
-      author_email: commentData.author_email ? String(commentData.author_email).trim() : null,
       content: String(commentData.content || '').trim(),
       status: commentData.status || 'pending',
     };
