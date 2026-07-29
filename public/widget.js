@@ -1981,11 +1981,15 @@ panelTitle.style.cssText = [
   var emojiRow = createEl('div');
 
   emojiRow.style.cssText = [
-    'position:absolute;',
-    'left:10px;',
-    'top:10px;',
-    'z-index:10;'
-  ].join('');
+  'height:28px;',
+  'display:flex;',
+  'align-items:center;',
+  'justify-content:flex-start;',
+  'position:relative;',
+  'left:auto;',
+  'top:auto;',
+  'z-index:10;'
+].join('');
 
   var emojiToggle = createEl('button');
   emojiToggle.type = 'button';
