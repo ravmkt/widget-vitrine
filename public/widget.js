@@ -1094,7 +1094,6 @@
       author_email: commentData.author_email ? String(commentData.author_email).trim() : null,
       content: String(commentData.content || '').trim(),
       status: commentData.status || 'pending',
-      active: true
     };
     if (!payload.author_name) return Promise.reject(new Error('Informe seu nome.'));
     if (!payload.content) return Promise.reject(new Error('Digite um comentário.'));
