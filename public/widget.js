@@ -1606,12 +1606,12 @@ panelHeader.style.cssText = [
     'Comentários' +
     (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
 
-  panelTitle.style.cssText = [
-    'margin:0;',
-    'font-size:16px;',
-    'font-weight:700;',
-    'color:#0f172a;'
-  ].join('');
+panelTitle.style.cssText = [
+  'margin:0;',
+  'font-size:16px;',
+  'font-weight:700;',
+  'color:#111;'
+].join('');
 
   panelHeader.appendChild(panelTitle);
 
