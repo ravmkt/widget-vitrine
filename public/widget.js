@@ -1466,7 +1466,7 @@ charCounter.style.cssText = 'text-align:right;font-size:11px;color:#94a3b8;margi
     });
     formSection.appendChild(charCounter);
     var emojiRow = createEl('div');
-    emojiRow.style.cssText = 'position:relative;margin-bottom:8px;';
+emojiRow.style.cssText = 'position:relative;margin-bottom:4px;';
     var emojiToggle = createEl('button');
     emojiToggle.type = 'button';
     emojiToggle.innerHTML = '😊 Emoji';
