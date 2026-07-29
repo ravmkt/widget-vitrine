@@ -622,24 +622,24 @@ var userCommentedVideos = {}; // { videoId: true } — vídeos onde o usuário c
       if (legacyVal !== undefined && legacyVal !== null && legacyVal !== '') return legacyVal;
       return fallback;
     }
-    return {
-      show_title: getBool('modal_show_title', true),
-      show_play_button: getBool('modal_show_play_button', true),
-      show_product: getBool('modal_show_product', true),
-      show_product_button: getBool('modal_show_product_button', true),
-      show_like_button: getBool('modal_show_like_button', true),
-      show_comment_button: getBool('modal_show_comment_button', true),
-      show_share_button: getBool('modal_show_share_button', true),
-      show_whatsapp_button: getBool('modal_show_whatsapp_button', true),
-      show_sizing_button: getBool('modal_show_sizing_button', true),
-      hide_stories: getBool('modal_hide_stories', false),
-      shadow_enabled: getBool('modal_shadow_enabled', true),
-      border_color: getString('modal_border_color', ''),
-      border_width: getString('modal_border_width', ''),
-      border_radius: getString('modal_border_radius', '')
+return {
+      show_title: readConfigValue(appearance, 'modal_config', 'show_title', 'modal_show_title', true),
+      show_play_button: readConfigValue(appearance, 'modal_config', 'show_play_button', 'modal_show_play_button', true),
+      show_product: readConfigValue(appearance, 'modal_config', 'show_product', 'modal_show_product', true),
+      show_product_button: readConfigValue(appearance, 'modal_config', 'show_product_button', 'modal_show_product_button', true),
+      show_like_button: readConfigValue(appearance, 'modal_config', 'show_like_button', 'modal_show_like_button', true),
+      show_comment_button: readConfigValue(appearance, 'modal_config', 'show_comment_button', 'modal_show_comment_button', true),
+      show_share_button: readConfigValue(appearance, 'modal_config', 'show_share_button', 'modal_show_share_button', true),
+      show_whatsapp_button: readConfigValue(appearance, 'modal_config', 'show_whatsapp_button', 'modal_show_whatsapp_button', true),
+      show_sizing_button: readConfigValue(appearance, 'modal_config', 'show_sizing_button', 'modal_show_sizing_button', true),
+      hide_stories: readConfigValue(appearance, 'modal_config', 'hide_stories', 'modal_hide_stories', false),
+      shadow_enabled: readConfigValue(appearance, 'modal_config', 'shadow_enabled', 'modal_shadow_enabled', true),
+      border_color: readConfigValue(appearance, 'modal_config', 'border_color', 'modal_border_color', ''),
+      border_width: readConfigValue(appearance, 'modal_config', 'border_width', 'modal_border_width', ''),
+      border_radius: readConfigValue(appearance, 'modal_config', 'border_radius', 'modal_border_radius', '')
     };
   }
-
+  
   function trackMetric(metric) {
     metric = metric || {};
     var payload = {
