@@ -1427,7 +1427,199 @@ function openCommentsPanel(videoId, storyId) {
       });
     }
     panel.appendChild(commentsList);
- var formSection = createEl('div');    function refreshCommentsList(listEl, vId, pColor) {
+
+    var formSection = createEl('div');
+    formSection.style.cssText = 'flex-shrink:0;padding:12px 20px 16px;border-top:1px solid #e2e8f0;background:#fff;';
+    var nameLabel = createEl('label');
+    nameLabel.textContent = 'Seu nome';
+    nameLabel.style.cssText = 'display:block;font-size:12px;font-weight:600;color:#64748b;margin-bottom:4px;';
+    formSection.appendChild(nameLabel);
+    var nameInput = createEl('input');
+    nameInput.type = 'text';
+    nameInput.placeholder = 'Digite seu nome...';
+    nameInput.maxLength = 80;
+    nameInput.style.cssText = 'width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#0f172a;outline:none;transition:border-color 0.2s;margin-bottom:10px;box-sizing:border-box;background:#f8fafc;';
+    nameInput.onfocus = function () { nameInput.style.borderColor = primaryColor; nameInput.style.background = '#fff'; };
+    nameInput.onblur = function () { nameInput.style.borderColor = '#e2e8f0'; nameInput.style.background = '#f8fafc'; };
+    formSection.appendChild(nameInput);
+    var commentLabel = createEl('label');
+    commentLabel.textContent = 'Seu comentário';
+    commentLabel.style.cssText = 'display:block;font-size:12px;font-weight:600;color:#64748b;margin-bottom:4px;';
+    formSection.appendChild(commentLabel);
+    var commentTextarea = createEl('textarea');
+    commentTextarea.placeholder = 'Escreva seu comentário...';
+    commentTextarea.maxLength = 1000;
+    commentTextarea.rows = 3;
+    commentTextarea.style.cssText = 'width:100%;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#0f172a;resize:vertical;min-height:80px;max-height:160px;outline:none;transition:border-color 0.2s;margin-bottom:8px;box-sizing:border-box;background:#f8fafc;font-family:' + fontFamily + ';';
+    commentTextarea.onfocus = function () { commentTextarea.style.borderColor = primaryColor; commentTextarea.style.background = '#fff'; };
+    commentTextarea.onblur = function () { commentTextarea.style.borderColor = '#e2e8f0'; commentTextarea.style.background = '#f8fafc'; };
+    formSection.appendChild(commentTextarea);
+    var charCounter = createEl('div');
+    charCounter.style.cssText = 'text-align:right;font-size:11px;color:#94a3b8;margin-bottom:4px;';
+    charCounter.textContent = '0/1000';
+    commentTextarea.addEventListener('input', function () {
+      charCounter.textContent = commentTextarea.value.length + '/1000';
+    });
+    formSection.appendChild(charCounter);
+
+    var actionRow = createEl('div');
+    actionRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;';
+
+    var emojiRow = createEl('div');
+    emojiRow.style.cssText = 'position:relative;';
+    var emojiToggle = createEl('button');
+    emojiToggle.type = 'button';
+    emojiToggle.innerHTML = '😊 Emoji';
+    emojiToggle.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border:1.5px solid #e2e8f0;border-radius:20px;background:#fff;color:#64748b;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;';
+    emojiToggle.onmouseenter = function () { emojiToggle.style.borderColor = primaryColor; emojiToggle.style.color = primaryColor; };
+    emojiToggle.onmouseleave = function () { emojiToggle.style.borderColor = '#e2e8f0'; emojiToggle.style.color = '#64748b'; };
+    emojiRow.appendChild(emojiToggle);
+
+    var emojiGrid = createEl('div');
+    emojiGrid.style.cssText = 'display:none;flex-wrap:wrap;gap:6px;position:absolute;bottom:calc(100% + 6px);left:0;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.12);z-index:10;max-width:280px;';
+    var emojiList = ['😍','🔥','👏','❤️','😂','😱','🙌','💯','✨','😢','🤔','👍','💪','🎉','😊','🥰','😎','🙏','💙','⭐','✅','😡','👀','🤩'];
+    emojiList.forEach(function (emoji) {
+      var emojiBtn = createEl('button');
+      emojiBtn.type = 'button';
+      emojiBtn.textContent = emoji;
+      emojiBtn.style.cssText = 'width:36px;height:36px;border:none;background:transparent;border-radius:8px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;';
+      emojiBtn.onmouseenter = function () { emojiBtn.style.background = '#f1f5f9'; emojiBtn.style.transform = 'scale(1.15)'; };
+      emojiBtn.onmouseleave = function () { emojiBtn.style.background = 'transparent'; emojiBtn.style.transform = 'scale(1)'; };
+      emojiBtn.onmousedown = function (ev) {
+        ev.preventDefault();
+        var start = commentTextarea.selectionStart || commentTextarea.value.length;
+        var end = commentTextarea.selectionEnd || commentTextarea.value.length;
+        var before = commentTextarea.value.substring(0, start);
+        var after = commentTextarea.value.substring(end);
+        commentTextarea.value = before + emoji + after;
+        var newPos = start + emoji.length;
+        commentTextarea.focus();
+        commentTextarea.setSelectionRange(newPos, newPos);
+        charCounter.textContent = commentTextarea.value.length + '/1000';
+        emojiGrid.style.display = 'none';
+        emojiToggle.innerHTML = '😊 Emoji';
+      };
+      emojiGrid.appendChild(emojiBtn);
+    });
+    emojiRow.appendChild(emojiGrid);
+
+    emojiToggle.onmousedown = function (ev) {
+      ev.preventDefault();
+      if (emojiGrid.style.display === 'none' || emojiGrid.style.display === '') {
+        emojiGrid.style.display = 'flex';
+        emojiToggle.innerHTML = '✕ Fechar';
+      } else {
+        emojiGrid.style.display = 'none';
+        emojiToggle.innerHTML = '😊 Emoji';
+        commentTextarea.focus();
+      }
+    };
+
+    document.addEventListener('mousedown', function closeEmoji(ev) {
+      if (emojiGrid.style.display === 'flex' && !emojiRow.contains(ev.target)) {
+        emojiGrid.style.display = 'none';
+        emojiToggle.innerHTML = '😊 Emoji';
+        document.removeEventListener('mousedown', closeEmoji);
+      }
+    });
+
+    actionRow.appendChild(emojiRow);
+
+    var sendBtn = createEl('button');
+    sendBtn.textContent = 'Enviar';
+    sendBtn.style.cssText = 'padding:10px 22px;border:none;border-radius:10px;background:' + buttonColor + ';color:#fff;font-weight:700;font-size:14px;cursor:pointer;transition:all 0.2s;white-space:nowrap;flex-shrink:0;';
+    sendBtn.onmouseenter = function () { sendBtn.style.opacity = '0.9'; sendBtn.style.transform = 'scale(1.03)'; };
+    sendBtn.onmouseleave = function () { sendBtn.style.opacity = '1'; sendBtn.style.transform = 'scale(1)'; };
+    sendBtn.onmousedown = function (ev) {
+      ev.preventDefault();
+      var name = nameInput.value.trim();
+      var text = commentTextarea.value.trim();
+      if (!text) {
+        statusMsg.textContent = 'Digite um comentário para enviar.';
+        statusMsg.style.color = '#ef4444';
+        return;
+      }
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Enviando...';
+      sendBtn.style.opacity = '0.6';
+      statusMsg.textContent = '';
+      statusMsg.style.color = '#64748b';
+      userCommentedVideos[videoId] = true;
+      if (hasSupabase) {
+        var commentStatus = autoApproveComments ? 'approved' : 'pending';
+        createComment({
+          story_id: storyId,
+          video_id: videoId,
+          author_name: name || 'Visitante',
+          content: text,
+          status: commentStatus
+        }).then(function () {
+          if (autoApproveComments) {
+            readCommentsData.push({
+              video_id: videoId,
+              user_name: name || 'Visitante',
+              content: text,
+              text: text,
+              created_at: new Date().toISOString(),
+              status: 'approved'
+            });
+            statusMsg.textContent = 'Comentário enviado com sucesso! ✅';
+            statusMsg.style.color = '#22c55e';
+            refreshCommentsList(commentsList, videoId, primaryColor);
+            updateCommentButton();
+          } else {
+            statusMsg.textContent = 'Em breve sua mensagem será publicada. 📝';
+            statusMsg.style.color = '#f59e0b';
+          }
+          commentTextarea.value = '';
+          charCounter.textContent = '0/1000';
+          sendBtn.textContent = 'Enviar';
+          sendBtn.disabled = false;
+          sendBtn.style.opacity = '1';
+          emojiGrid.style.display = 'none';
+          emojiToggle.innerHTML = '😊 Emoji';
+          trackMetric({ event_type: 'comment', story_id: storyId, video_id: videoId, page_url: window.location.href });
+        }).catch(function (err) {
+          statusMsg.textContent = err && err.message ? err.message : 'Erro ao enviar. Tente novamente.';
+          statusMsg.style.color = '#ef4444';
+          sendBtn.textContent = 'Enviar';
+          sendBtn.disabled = false;
+          sendBtn.style.opacity = '1';
+        });
+      } else {
+        readCommentsData.push({
+          video_id: videoId,
+          user_name: name || 'Visitante',
+          content: text,
+          text: text,
+          created_at: new Date().toISOString()
+        });
+        statusMsg.textContent = 'Comentário enviado (modo offline).';
+        statusMsg.style.color = '#22c55e';
+        commentTextarea.value = '';
+        charCounter.textContent = '0/1000';
+        sendBtn.textContent = 'Enviar';
+        sendBtn.disabled = false;
+        sendBtn.style.opacity = '1';
+        refreshCommentsList(commentsList, videoId, primaryColor);
+        updateCommentButton();
+        emojiGrid.style.display = 'none';
+        emojiToggle.innerHTML = '😊 Emoji';
+      }
+    };
+    actionRow.appendChild(sendBtn);
+
+    formSection.appendChild(actionRow);
+
+    var statusMsg = createEl('div');
+    statusMsg.style.cssText = 'min-height:16px;text-align:center;font-size:12px;transition:all 0.2s;';
+    formSection.appendChild(statusMsg);
+
+    panel.appendChild(formSection);
+    modalContent.appendChild(panel);
+    setTimeout(function () { commentTextarea.focus(); }, 200);
+
+    function refreshCommentsList(listEl, vId, pColor) {
       while (listEl.firstChild) listEl.removeChild(listEl.firstChild);
       var updated = readCommentsData.filter(function (c) { return idsEqual(c.video_id, vId); });
       if (updated.length === 0) {
