@@ -2012,24 +2012,22 @@ panelTitle.style.cssText = [
 
   var emojiGrid = createEl('div');
 
-  emojiGrid.style.cssText = [
-    'display:none;',
-    'position:absolute;',
-    'left:calc(100% + 8px);',
-    'top:0;',
-    'bottom:auto;',
-    'grid-template-columns:repeat(6,34px);',
-    'grid-template-rows:repeat(4,34px);',
-    'gap:4px;',
-    'width:max-content;',
-    'max-width:230px;',
-    'padding:8px;',
-    'background:#fff;',
-    'border:1px solid #e2e8f0;',
-    'border-radius:12px;',
-    'box-shadow:0 8px 30px rgba(0,0,0,.18);',
-    'z-index:30;'
-  ].join('');
+emojiGrid.style.cssText = [
+  'display:none;',
+  'position:absolute;',
+  'left:0;',
+  'bottom:32px;',
+  'grid-template-columns:repeat(6,34px);',
+  'gap:4px;',
+  'width:max-content;',
+  'max-width:230px;',
+  'padding:8px;',
+  'background:#fff;',
+  'border:1px solid #e2e8f0;',
+  'border-radius:12px;',
+  'box-shadow:0 8px 30px rgba(0,0,0,.18);',
+  'z-index:30;'
+].join('');
 
   var emojiList = [
     '😍', '🔥', '👏', '❤️', '😂', '😱',
