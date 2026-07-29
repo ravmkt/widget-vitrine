@@ -1329,149 +1329,269 @@
     resumePreviews();
   }
 
-  function renderStoryModal() {
-    if (!modalContent) return;
-    modalContent.innerHTML = '';
-    var story = currentStories[currentStoryIndex];
-    if (!story) { closeOverlay(); return; }
-    var videos = story.videos || [];
-    var video = videos[currentVideoIndex];
-    var appearanceConfig = normalizeModalAppearanceConfig(currentAppearance);
-    var container = createEl('div');
+function renderStoryModal() {
+  if (!modalContent) return;
+  modalContent.innerHTML = '';
+  var story = currentStories[currentStoryIndex];
+  if (!story) { closeOverlay(); return; }
+  var videos = story.videos || [];
+  var video = videos[currentVideoIndex];
+  var appearanceConfig = normalizeModalAppearanceConfig(currentAppearance);
+  var container = createEl('div');
 
-    if (videos.length > 1) {
-      var progress = createEl('div', 'vl-progress');
-      videos.forEach(function (_, idx) {
-        var bar = createEl('div', 'vl-progress-bar');
-        var fill = createEl('div', 'vl-progress-fill');
-        if (idx < currentVideoIndex) fill.style.width = '100%';
-        else fill.style.width = '0%';
-        bar.appendChild(fill);
-        progress.appendChild(bar);
-      });
-      container.appendChild(progress);
-    }
-
-    var header = createEl('div', 'vl-header');
-    var headerLeft = createEl('div', 'vl-header-left');
-    if (appearanceConfig.show_title) {
-      var title = createEl('div', 'vl-title');
-      title.textContent = story.title || '';
-      headerLeft.appendChild(title);
-    }
-    header.appendChild(headerLeft);
-    var headerActions = createEl('div', 'vl-header-actions');
-    var closeBtn = createEl('button', 'vl-close');
-    closeBtn.innerHTML = svgIcon('close');
-    closeBtn.onclick = function (e) { e.stopPropagation(); closeOverlay(); };
-    headerActions.appendChild(closeBtn);
-    header.appendChild(headerActions);
-    container.appendChild(header);
-
-    var body = createEl('div', 'vl-body');
-    if (video) {
-      var player = buildVideoPlayer(video, story.id, function () {
-        nextStoryOrVideo();
-      });
-      body.appendChild(player);
-      var vidEl = player.querySelector('video');
-      if (vidEl) { vidEl.muted = false; vidEl.play().catch(function () {}); }
-    } else {
-      var emptyBody = createEl('div');
-      emptyBody.style.padding = '40px';
-      emptyBody.style.textAlign = 'center';
-      emptyBody.style.color = '#fff';
-      emptyBody.textContent = 'Nenhum vídeo encontrado.';
-      body.appendChild(emptyBody);
-    }
-
-    var nav = createEl('div', 'vl-nav');
-    var prevBtn = createEl('button', 'vl-nav-btn vl-nav-prev');
-    prevBtn.onclick = function (e) { e.stopPropagation(); prevStoryOrVideo(); };
-    var nextBtn = createEl('button', 'vl-nav-btn vl-nav-next');
-    nextBtn.onclick = function (e) { e.stopPropagation(); nextStoryOrVideo(); };
-    nav.appendChild(prevBtn);
-    nav.appendChild(nextBtn);
-    body.appendChild(nav);
-
-    var social = createEl('div', 'vl-social');
-    if (appearanceConfig.show_like_button) {
-      var likeBtn = createEl('button', 'vl-social-btn');
-      likeBtn.innerHTML = svgIcon('heart');
-      social.appendChild(likeBtn);
-    }
-    if (appearanceConfig.show_comment_button && video) {
-      var commentBtn = createEl('button', 'vl-social-btn');
-      commentBtn.innerHTML = svgIcon('comment');
-      var countStr = getCommentCount(video.id);
-      if (countStr > 0) {
-        var countEl = createEl('span', 'vl-social-count');
-        countEl.textContent = countStr;
-        commentBtn.appendChild(countEl);
-      }
-      commentBtn.onclick = function (e) { e.stopPropagation(); openCommentsPanel(video.id, story.id); };
-      social.appendChild(commentBtn);
-    }
-    if (appearanceConfig.show_sizing_button && video) {
-      var sModelId = getSizingModelId(video);
-      if (sModelId) {
-        var sizeBtn = createEl('button', 'vl-social-btn');
-        sizeBtn.innerHTML = svgIcon('sizing');
-        sizeBtn.onclick = function (e) { e.stopPropagation(); openSizingPanel(sModelId); };
-        social.appendChild(sizeBtn);
-      }
-    }
-    if (appearanceConfig.show_whatsapp_button) {
-      var wpBtn = createEl('button', 'vl-social-btn whatsapp');
-      wpBtn.innerHTML = svgIcon('whatsapp');
-      wpBtn.onclick = function (e) {
-        e.stopPropagation();
-        window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(window.location.href), '_blank');
-      };
-      social.appendChild(wpBtn);
-    }
-    body.appendChild(social);
-    container.appendChild(body);
-
-    if (appearanceConfig.show_product && readStoryProductsData.length > 0) {
-      var sProducts = readStoryProductsData.filter(function (sp) { return idsEqual(sp.story_id, story.id); });
-      if (sProducts.length > 0) {
-        var footer = createEl('div', 'vl-footer');
-        var footerInner = createEl('div', 'vl-footer-inner');
-        var pId = sProducts[0].product_id;
-        var productData = readProductsData.find(function (p) { return idsEqual(p.id, pId); });
-        if (productData) {
-          var prodCard = createEl('div', 'vl-product');
-          prodCard.onclick = function (e) { e.stopPropagation(); if (productData.url) window.location.href = productData.url; };
-          var prodImg = createEl('img', 'vl-product-img');
-          prodImg.src = getThumbnailFromObject(productData) || '';
-          prodCard.appendChild(prodImg);
-          var prodInfo = createEl('div', 'vl-product-info');
-          var pName = createEl('div', 'vl-product-name');
-          pName.textContent = productData.name || 'Produto';
-          prodInfo.appendChild(pName);
-          if (productData.price) {
-            var pPrice = createEl('div', 'vl-product-price');
-            pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
-            prodInfo.appendChild(pPrice);
-          }
-          var pActions = createEl('div', 'vl-product-actions');
-          if (appearanceConfig.show_product_button) {
-            var buyBtn = createEl('a', 'vl-product-btn');
-            buyBtn.textContent = 'Ver Produto';
-            buyBtn.href = productData.url || '#';
-            pActions.appendChild(buyBtn);
-          }
-          prodInfo.appendChild(pActions);
-          prodCard.appendChild(prodInfo);
-          footerInner.appendChild(prodCard);
-        }
-        footer.appendChild(footerInner);
-        container.appendChild(footer);
-      }
-    }
-    modalContent.appendChild(container);
+  /* ── Progress Bar ── */
+  if (videos.length > 1) {
+    var progress = createEl('div', 'vl-progress');
+    videos.forEach(function (_, idx) {
+      var bar = createEl('div', 'vl-progress-bar');
+      var fill = createEl('div', 'vl-progress-fill');
+      if (idx < currentVideoIndex) fill.style.width = '100%';
+      else fill.style.width = '0%';
+      bar.appendChild(fill);
+      progress.appendChild(bar);
+    });
+    container.appendChild(progress);
   }
+
+  /* ── HEADER (TOPO): Mudo + Play + Fechar ── */
+  var header = createEl('div', 'vl-header');
+  var headerLeft = createEl('div', 'vl-header-left');
+  if (appearanceConfig.show_title) {
+    var title = createEl('div', 'vl-title');
+    title.textContent = story.title || '';
+    headerLeft.appendChild(title);
+  }
+  header.appendChild(headerLeft);
+  
+  var headerActions = createEl('div', 'vl-header-actions');
+
+  /* 🆕 BOTÃO MUDO */
+  var muteBtn = createEl('button', 'vl-control');
+  muteBtn.id = 'vl-mute-btn';
+  muteBtn.innerHTML = svgIcon('volume');
+  muteBtn.title = 'Mudo';
+  muteBtn.onclick = function (e) {
+    e.stopPropagation();
+    var vid = modalContent.querySelector('video');
+    if (!vid) return;
+    vid.muted = !vid.muted;
+    muteBtn.innerHTML = vid.muted ? svgIcon('volumeOff') : svgIcon('volume');
+    muteBtn.title = vid.muted ? 'Ativar som' : 'Mudo';
+  };
+  headerActions.appendChild(muteBtn);
+
+  /* 🆕 BOTÃO PLAY/PAUSE */
+  var playBtn = createEl('button', 'vl-control');
+  playBtn.id = 'vl-play-btn';
+  playBtn.innerHTML = svgIcon('pause');
+  playBtn.title = 'Pausar';
+  playBtn.onclick = function (e) {
+    e.stopPropagation();
+    var vid = modalContent.querySelector('video');
+    if (!vid) return;
+    if (vid.paused) {
+      vid.play().catch(function () {});
+      playBtn.innerHTML = svgIcon('pause');
+      playBtn.title = 'Pausar';
+    } else {
+      vid.pause();
+      playBtn.innerHTML = svgIcon('play');
+      playBtn.title = 'Reproduzir';
+    }
+  };
+  headerActions.appendChild(playBtn);
+
+  /* BOTÃO FECHAR (X) */
+  var closeBtn = createEl('button', 'vl-close');
+  closeBtn.innerHTML = svgIcon('close');
+  closeBtn.title = 'Fechar';
+  closeBtn.onclick = function (e) { e.stopPropagation(); closeOverlay(); };
+  headerActions.appendChild(closeBtn);
+
+  header.appendChild(headerActions);
+  container.appendChild(header);
+  /* ─── FIM HEADER ─── */
+
+  /* ── BODY: Player + Navegação + Social + Footer ── */
+  var body = createEl('div', 'vl-body');
+  
+  if (video) {
+    var player = buildVideoPlayer(video, story.id, function () {
+      nextStoryOrVideo();
+    });
+    body.appendChild(player);
+    
+    /* Sincroniza botões com o estado do vídeo */
+    setTimeout(function () {
+      var vidEl = player.querySelector('video');
+      if (vidEl) {
+        vidEl.muted = false;
+        vidEl.play().catch(function () {});
+        
+        /* Atualiza ícones conforme eventos do vídeo */
+        vidEl.addEventListener('play', function () {
+          var pb = modalContent.querySelector('#vl-play-btn');
+          if (pb) { pb.innerHTML = svgIcon('pause'); pb.title = 'Pausar'; }
+        });
+        vidEl.addEventListener('pause', function () {
+          var pb = modalContent.querySelector('#vl-play-btn');
+          if (pb) { pb.innerHTML = svgIcon('play'); pb.title = 'Reproduzir'; }
+        });
+        vidEl.addEventListener('volumechange', function () {
+          var mb = modalContent.querySelector('#vl-mute-btn');
+          if (mb) { 
+            mb.innerHTML = vidEl.muted ? svgIcon('volumeOff') : svgIcon('volume');
+            mb.title = vidEl.muted ? 'Ativar som' : 'Mudo';
+          }
+        });
+      }
+    }, 200);
+  } else {
+    var emptyBody = createEl('div');
+    emptyBody.style.cssText = 'padding:40px;text-align:center;color:#fff;';
+    emptyBody.textContent = 'Nenhum vídeo encontrado.';
+    body.appendChild(emptyBody);
+  }
+
+  /* ── NAVEGAÇÃO (toque/click nos lados) ── */
+  var nav = createEl('div', 'vl-nav');
+  var prevBtn = createEl('button', 'vl-nav-btn vl-nav-prev');
+  prevBtn.onclick = function (e) { e.stopPropagation(); prevStoryOrVideo(); };
+  var nextBtn = createEl('button', 'vl-nav-btn vl-nav-next');
+  nextBtn.onclick = function (e) { e.stopPropagation(); nextStoryOrVideo(); };
+  nav.appendChild(prevBtn);
+  nav.appendChild(nextBtn);
+  body.appendChild(nav);
+
+  /* ── LATERAL DIREITA: Curtir, Comentar, Compartilhar, Medidas, WhatsApp ── */
+  var social = createEl('div', 'vl-social');
+  
+  /* Curtir */
+  if (appearanceConfig.show_like_button) {
+    var likeBtn = createEl('button', 'vl-social-btn');
+    likeBtn.innerHTML = svgIcon('heart');
+    likeBtn.title = 'Curtir';
+    social.appendChild(likeBtn);
+  }
+  
+  /* Comentar */
+  if (appearanceConfig.show_comment_button && video) {
+    var commentBtn = createEl('button', 'vl-social-btn');
+    commentBtn.innerHTML = svgIcon('comment');
+    commentBtn.title = 'Comentários';
+    var countStr = getCommentCount(video.id);
+    if (countStr > 0) {
+      var countEl = createEl('span', 'vl-social-count');
+      countEl.textContent = countStr;
+      commentBtn.appendChild(countEl);
+    }
+    commentBtn.onclick = function (e) { e.stopPropagation(); openCommentsPanel(video.id, story.id); };
+    social.appendChild(commentBtn);
+  }
+  
+  /* 🆕 COMPARTILHAR */
+  if (appearanceConfig.show_share_button) {
+    var shareBtn = createEl('button', 'vl-social-btn');
+    shareBtn.innerHTML = svgIcon('share');
+    shareBtn.title = 'Compartilhar';
+    shareBtn.onclick = function (e) {
+      e.stopPropagation();
+      var shareUrl = window.location.href;
+      if (navigator.share) {
+        navigator.share({ title: story.title || '', url: shareUrl }).catch(function () {});
+      } else {
+        navigator.clipboard.writeText(shareUrl).then(function () {
+          shareBtn.style.background = '#22c55e';
+          shareBtn.innerHTML = '✓';
+          setTimeout(function () {
+            shareBtn.style.background = '';
+            shareBtn.innerHTML = svgIcon('share');
+          }, 1500);
+        }).catch(function () {
+          window.open('https://wa.me/?text=' + encodeURIComponent(shareUrl), '_blank');
+        });
+      }
+      trackMetric({ event_type: 'share', story_id: story.id, video_id: video ? video.id : null, page_url: window.location.href });
+    };
+    social.appendChild(shareBtn);
+  }
+  
+  /* Medidas (modelo vinculado) */
+  if (appearanceConfig.show_sizing_button && video) {
+    var sModelId = getSizingModelId(video);
+    if (sModelId) {
+      var sizeBtn = createEl('button', 'vl-social-btn');
+      sizeBtn.innerHTML = svgIcon('sizing');
+      sizeBtn.title = 'Medidas';
+      sizeBtn.onclick = function (e) { e.stopPropagation(); openSizingPanel(sModelId); };
+      social.appendChild(sizeBtn);
+    }
+  }
+  
+  /* WhatsApp */
+  if (appearanceConfig.show_whatsapp_button) {
+    var wpBtn = createEl('button', 'vl-social-btn whatsapp');
+    wpBtn.innerHTML = svgIcon('whatsapp');
+    wpBtn.title = 'WhatsApp';
+    wpBtn.onclick = function (e) {
+      e.stopPropagation();
+      window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(window.location.href), '_blank');
+    };
+    social.appendChild(wpBtn);
+  }
+  
+  body.appendChild(social);
+  container.appendChild(body);
+
+  /* ── RODAPÉ: Card do Produto ── */
+  if (appearanceConfig.show_product && readStoryProductsData.length > 0) {
+    var sProducts = readStoryProductsData.filter(function (sp) { return idsEqual(sp.story_id, story.id); });
+    if (sProducts.length > 0) {
+      var footer = createEl('div', 'vl-footer');
+      var footerInner = createEl('div', 'vl-footer-inner');
+      var pId = sProducts[0].product_id;
+      var productData = readProductsData.find(function (p) { return idsEqual(p.id, pId); });
+      if (productData) {
+        var prodCard = createEl('div', 'vl-product');
+        prodCard.onclick = function (e) {
+          e.stopPropagation();
+          if (productData.url) {
+            window.open(productData.url, '_blank');
+            trackMetric({ event_type: 'product_click', story_id: story.id, video_id: video ? video.id : null, product_id: productData.id, page_url: window.location.href });
+          }
+        };
+        var prodImg = createEl('img', 'vl-product-img');
+        prodImg.src = getThumbnailFromObject(productData) || '';
+        prodImg.alt = productData.name || 'Produto';
+        prodCard.appendChild(prodImg);
+        var prodInfo = createEl('div', 'vl-product-info');
+        var pName = createEl('div', 'vl-product-name');
+        pName.textContent = productData.name || 'Produto';
+        prodInfo.appendChild(pName);
+        if (productData.price) {
+          var pPrice = createEl('div', 'vl-product-price');
+          pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
+          prodInfo.appendChild(pPrice);
+        }
+        var pActions = createEl('div', 'vl-product-actions');
+        if (appearanceConfig.show_product_button) {
+          var buyBtn = createEl('a', 'vl-product-btn');
+          buyBtn.textContent = 'Ver Produto';
+          buyBtn.href = productData.url || '#';
+          buyBtn.target = '_blank';
+          pActions.appendChild(buyBtn);
+        }
+        prodInfo.appendChild(pActions);
+        prodCard.appendChild(prodInfo);
+        footerInner.appendChild(prodCard);
+      }
+      footer.appendChild(footerInner);
+      container.appendChild(footer);
+    }
+  }
+  
+  modalContent.appendChild(container);
+}
 
   function nextStoryOrVideo() {
     var story = currentStories[currentStoryIndex];
