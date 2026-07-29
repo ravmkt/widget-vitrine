@@ -1509,6 +1509,18 @@ const CarouselPreview = ({
   const isCircle = shape === 'circle';
   const isPortrait = shape === 'portrait';
   const isSquare = shape === 'square';
+  console.log('🔍 CarouselPreview recebeu:', {
+  shape,
+  width: carousel.width,
+  isCircle,
+  isPortrait,
+  isSquare,
+  cardWidthPx,
+  cardHeightPx,
+  borderRadius,
+  carouselCompleto: carousel,
+});
+
 
   const cardWidthPx = safeNumber(parseFloat(carousel.width || '80'), 80, 20);
   const cardWidth = `${cardWidthPx}px`;
