@@ -1522,7 +1522,6 @@ const CarouselPreview = ({
     ? '50%'
     : cssSize(carousel.border_radius, '12px');
 
-  // ✅ AGORA sim, depois de tudo declarado
   console.log('🔍 CarouselPreview recebeu:', {
     shape,
     width: carousel.width,
@@ -1534,22 +1533,6 @@ const CarouselPreview = ({
     borderRadius,
     carouselCompleto: carousel,
   });
-
-  return (
-
-
-  const cardWidthPx = safeNumber(parseFloat(carousel.width || '80'), 80, 20);
-  const cardWidth = `${cardWidthPx}px`;
-
-  // altura: portrait = 16/9 * largura, circle/square = mesma largura
-  const cardHeightPx = isPortrait
-    ? Math.round((cardWidthPx * 16) / 9)
-    : cardWidthPx;
-  const cardHeight = `${cardHeightPx}px`;
-
-  const borderRadius = isCircle
-    ? '50%'
-    : cssSize(carousel.border_radius, '12px');
 
   return (
     <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
