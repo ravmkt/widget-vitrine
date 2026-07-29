@@ -683,14 +683,7 @@ var query = 'comments?select=id,store_id,video_id,user_name,user_email,content,s
   }
 
   function readLikesFromDb() {
-    if (!storeId || !hasSupabase) return Promise.resolve([]);
-    var params = new URLSearchParams();
-    params.set('select', 'video_id,user_fingerprint');
-    params.set('store_id', 'eq.' + String(storeId).trim());
-    return supabaseFetch('video_likes?' + params.toString(), { method: 'GET' })
-      .then(function (response) { if (!response.ok) return []; return response.json(); })
-      .then(function (data) { return Array.isArray(data) ? data : []; })
-      .catch(function () { return []; });
+    return Promise.resolve([]);
   }
 
   function readSizingModels() {
