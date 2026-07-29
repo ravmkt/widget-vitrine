@@ -1509,17 +1509,30 @@ const CarouselPreview = ({
   const isCircle = shape === 'circle';
   const isPortrait = shape === 'portrait';
   const isSquare = shape === 'square';
+
+  const cardWidthPx = safeNumber(parseFloat(carousel.width || '80'), 80, 20);
+  const cardWidth = `${cardWidthPx}px`;
+
+  const cardHeightPx = isPortrait
+    ? Math.round((cardWidthPx * 16) / 9)
+    : cardWidthPx;
+  const cardHeight = `${cardHeightPx}px`;
+
+  const borderRadius = isCircle
+    ? '50%'
+    : cssSize(carousel.border_radius, '12px');
+
   console.log('🔍 CarouselPreview recebeu:', {
-  shape,
-  width: carousel.width,
-  isCircle,
-  isPortrait,
-  isSquare,
-  cardWidthPx,
-  cardHeightPx,
-  borderRadius,
-  carouselCompleto: carousel,
-});
+    shape,
+    width: carousel.width,
+    isCircle,
+    isPortrait,
+    isSquare,
+    cardWidthPx,
+    cardHeightPx,
+    borderRadius,
+    carouselCompleto: carousel,
+  });
 
 
   const cardWidthPx = safeNumber(parseFloat(carousel.width || '80'), 80, 20);
