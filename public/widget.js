@@ -1459,7 +1459,7 @@ formSection.style.cssText = 'flex-shrink:0;padding:16px 20px 24px;border-top:1px
     commentTextarea.onblur = function () { commentTextarea.style.borderColor = '#e2e8f0'; commentTextarea.style.background = '#f8fafc'; };
     formSection.appendChild(commentTextarea);
     var charCounter = createEl('div');
-    charCounter.style.cssText = 'text-align:right;font-size:11px;color:#94a3b8;margin-bottom:6px;';
+charCounter.style.cssText = 'text-align:right;font-size:11px;color:#94a3b8;margin-bottom:2px;';
     charCounter.textContent = '0/1000';
     commentTextarea.addEventListener('input', function () {
       charCounter.textContent = commentTextarea.value.length + '/1000';
