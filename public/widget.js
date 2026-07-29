@@ -1659,7 +1659,7 @@ var payload = {
       commentCountEl.textContent = commentCountVal > 0 ? commentCountVal : '';
       commentBtn.appendChild(commentCountEl);
 
-      commentBtn.onclick = function (e) { e.stopPropagation(); openCommentsPanel(video.id, story.id); };
+commentBtn.onmousedown = function (e) { e.preventDefault(); e.stopPropagation(); console.log('>>> BOTÃO COMENTÁRIOS CLICADO', video.id, story.id); openCommentsPanel(video.id, story.id); };
       social.appendChild(commentBtn);
     }
 
