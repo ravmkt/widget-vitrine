@@ -1342,10 +1342,9 @@ const [model, setModel] = useState<any | null>(null);
     );
   }
 
-  const isGridLayout = activeStoryFormat === 'grid';
-  const isFloatingLayout = activeStoryFormat === 'floating_widget';
-
-  const isCarouselLayout = activeStoryFormat === 'carousel';
+const effectiveLayout = forcePlayerView ? 'carousel' : activeStoryFormat;
+const isGridLayout = effectiveLayout === 'grid';
+const isCarouselLayout = effectiveLayout === 'carousel';;
 
   return (
     <div
