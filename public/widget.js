@@ -1586,20 +1586,18 @@ panel.style.cssText = [
 
   var panelHeader = createEl('div');
 
-  panelHeader.style.cssText = [
-    'display:flex;',
-    'align-items:center;',
-    'justify-content:space-between;',
-    'height:62px;',
-    'min-height:62px;',
-    'box-sizing:border-box;',
-    'padding:14px 18px;',
-    'border-bottom:1px solid #e2e8f0;',
-    'flex-shrink:0;',
-    'background:#fff;',
-    'position:relative;',
-    'z-index:5;'
-  ].join('');
+panelHeader.style.cssText = [
+  'display:flex;',
+  'align-items:center;',
+  'justify-content:space-between;',
+  'height:48px;',
+  'min-height:48px;',
+  'padding:0 10px;',
+  'border-bottom:1px solid #9ca3af;',
+  'background:#fff;',
+  'box-sizing:border-box;',
+  'flex-shrink:0;'
+].join('');
 
   var commentsCount = getCommentCountForVideo(videoId);
 
