@@ -2302,9 +2302,11 @@ function openCommentsPanel(videoId, storyId) {
       commentCountEl.textContent = commentCountVal > 0 ? commentCountVal : '';
       commentBtn.appendChild(commentCountEl);
 
-commentBtn.onmousedown = function (e) { e.preventDefault(); e.stopPropagation(); console.log('>>> BOTÃO COMENTÁRIOS CLICADO', video.id, story.id); openCommentsPanel(video.id, story.id); };
-      social.appendChild(commentBtn);
-    }
+commentBtn.onclick = function (e) {
+  e.preventDefault();
+  e.stopPropagation();
+  openCommentsPanel(video.id, story.id);
+};
 
     if (appearanceConfig.show_share_button) {
       var shareBtn = createEl('button', 'vl-social-btn');
