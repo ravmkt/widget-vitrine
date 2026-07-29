@@ -2144,18 +2144,19 @@ formSection.appendChild(emojiRow);
   sendBtn.textContent = 'Enviar';
 
   sendBtn.style.cssText = [
-    'padding:9px 20px;',
-    'border:none;',
-    'border-radius:10px;',
-    'background:' + buttonColor + ';',
-    'color:#fff;',
-    'font-weight:700;',
-    'font-size:14px;',
-    'cursor:pointer;',
-    'transition:all .2s;',
-    'white-space:nowrap;',
-    'flex-shrink:0;'
-  ].join('');
+  'height:32px;',
+  'padding:0 20px;',
+  'border:none;',
+  'border-radius:10px;',
+  'background:#1198e5;',
+  'color:#fff;',
+  'font-weight:700;',
+  'font-size:16px;',
+  'text-transform:uppercase;',
+  'cursor:pointer;',
+  'white-space:nowrap;',
+  'flex-shrink:0;'
+].join('');
 
   var statusMsg = createEl('div');
 
