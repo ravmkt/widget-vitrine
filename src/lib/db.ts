@@ -99,6 +99,8 @@ export interface Appearance {
   grid_border_radius?: string;
   grid_object_fit?: string;
   grid_show_title?: boolean;
+  grid_margin_top?: string | number;
+  grid_margin_bottom?: string | number;
 
   // 🔵 Modal — JSONB + CAMPOS PLANOS
   modal_config?: ResponsiveAppearanceConfig;
@@ -479,39 +481,46 @@ const DEFAULT_APPEARANCES: Appearance[] = [
       },
     },
 
-    // 🟣 Grade — JSONB + CAMPOS PLANOS
+    // 🟣 Grade — JSONB + CAMPOS PLANOS (🔧 CORRIGIDO)
     grid_shape: 'rounded',
     grid_columns: '3',
     grid_rows: '2',
     grid_spacing: '12',
-    grid_size: 'medium',
+    grid_size: '30',
     grid_show_title: true,
     grid_border_radius: '8',
     grid_object_fit: 'cover',
+    grid_border_color: '#E2E8F0',
+    grid_border_width: '0',
     grid_config: {
+      // 🔧 CHAVES ALINHADAS COM O WIDGET: shape, width, visible_items, spacing
       desktop: {
-        card_shape: 'rounded',
-        columns: 3,
+        shape: 'rounded',         // ✅ antes era card_shape
+        width: '30',              // ✅ antes era card_size: 'medium'
+        visible_items: 3,         // ✅ antes era columns
         rows: 2,
-        gap: 12,
-        card_size: 'medium',
+        spacing: 12,              // ✅ antes era gap
         show_title: true,
         border_radius: 8,
         object_fit: 'cover',
+        margin_top: 0,
+        margin_bottom: 0,
         border_color: '#E2E8F0',
-        border_width: '0',
+        border_style: '0',        // ✅ antes era border_width: '0'
       },
       mobile: {
-        card_shape: 'rounded',
-        columns: 2,
+        shape: 'rounded',
+        width: '30',
+        visible_items: 2,
         rows: 2,
-        gap: 8,
-        card_size: 'small',
+        spacing: 8,
         show_title: true,
         border_radius: 8,
         object_fit: 'cover',
+        margin_top: 0,
+        margin_bottom: 0,
         border_color: '#E2E8F0',
-        border_width: '0',
+        border_style: '0',
       },
     },
 
@@ -630,6 +639,7 @@ const TABLE_UUID_FIELDS: Record<string, Record<string, UuidMode>> = {
   store_settings: { id: 'required', store_id: 'required', default_appearance_id: 'optional' },
   appearances: { id: 'required', store_id: 'required' },
 };
+
 // ═══════════════════════════════════════════════════════
 // CAMPOS PERMITIDOS POR TABELA (SANITIZAÇÃO)
 // ═══════════════════════════════════════════════════════
@@ -702,7 +712,7 @@ const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
     // 🟨 Identidade Visual
     'primary_color', 'secondary_color', 'text_color', 'background_color',
     'button_color', 'font_family', 'font_size', 'border_radius', 'shadow_enabled',
-    // 🔴 Flutuante (não mexer — já funciona)
+    // 🔴 Flutuante
     'widget_shape', 'widget_size', 'widget_animation',
     // 🟢 Carrossel — JSONB + CAMPOS PLANOS
     'carousel_config',
@@ -716,7 +726,7 @@ const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
     'grid_config',
     'grid_shape', 'grid_columns', 'grid_rows', 'grid_spacing', 'grid_size',
     'grid_border_color', 'grid_border_width', 'grid_border_radius',
-    'grid_object_fit', 'grid_show_title',
+    'grid_object_fit', 'grid_show_title', 'grid_margin_top', 'grid_margin_bottom',
     // 🔵 Modal — JSONB + CAMPOS PLANOS
     'modal_config',
     'modal_show_title', 'modal_show_play_button', 'modal_show_product',
