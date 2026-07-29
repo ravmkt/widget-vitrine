@@ -1563,25 +1563,26 @@ function openCommentsPanel(videoId, storyId) {
 
   var panel = createEl('div', 'vl-comments-panel-full');
 
-  panel.style.cssText = [
-    'position:absolute;',
-    'top:0;',
-    'bottom:0;',
-    'left:22px;',
-    'right:22px;',
-    'width:auto;',
-    'height:100%;',
-    'max-height:100%;',
-    'z-index:200;',
-    'background:#fff;',
-    'display:flex;',
-    'flex-direction:column;',
-    'overflow:hidden;',
-    'box-sizing:border-box;',
-    'border-radius:0 0 24px 24px;',
-    'box-shadow:0 12px 35px rgba(0,0,0,.35);',
-    'font-family:' + fontFamily + ';'
-  ].join('');
+panel.style.cssText = [
+  'position:absolute;',
+  'top:16px;',
+  'bottom:16px;',
+  'left:8px;',
+  'right:8px;',
+  'width:auto;',
+  'height:auto;',
+  'max-height:none;',
+  'z-index:200;',
+  'background:#fff;',
+  'border:2px solid #0094EB;',
+  'border-radius:22px;',
+  'box-shadow:0 8px 20px rgba(0,0,0,.28);',
+  'display:flex;',
+  'flex-direction:column;',
+  'overflow:hidden;',
+  'box-sizing:border-box;',
+  'font-family:Arial,Helvetica,sans-serif;'
+].join('');
 
   var panelHeader = createEl('div');
 
