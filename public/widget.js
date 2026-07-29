@@ -1360,114 +1360,163 @@ var userCommentedVideos = {}; // { videoId: true } — vídeos onde o usuário c
   }
 
   function openCommentsPanel(videoId, storyId) {
-    if (!modalContent) return;
-    var oldPanel = modalContent.querySelector('.vl-comments-panel');
-    if (oldPanel) oldPanel.remove();
-    var panel = createEl('div', 'vl-comments-panel');
-    panel.className = 'vl-comments-panel is-open';
-    var header = createEl('div', 'vl-comments-header');
-    var title = createEl('div', 'vl-comments-title');
-    title.textContent = 'Comentários';
-    var closeButton = createEl('button', 'vl-comments-close');
-    closeButton.type = 'button';
-    closeButton.setAttribute('aria-label', 'Fechar comentários');
-    closeButton.innerHTML = '&times;';
-    closeButton.onclick = function () { panel.remove(); };
-    header.appendChild(title);
-    header.appendChild(closeButton);
-    var list = createEl('div', 'vl-comments-list');
-    var comments = getCommentsForVideo(videoId);
-    if (!comments.length) {
-      var emptyMsg = createEl('div', 'vl-comments-empty');
-      emptyMsg.textContent = 'Ainda não há comentários neste vídeo.';
+    var existing = modalContent.querySelector('.vl-comments-panel-full');
+    if (existing) { existing.remove(); return; }
+
+    var panel = createEl('div', 'vl-comments-panel-full');
+    panel.style.cssText = 'position:absolute;inset:0;z-index:100;background:rgba(15,23,42,0.97);display:flex;flex-direction:column;padding:20px;color:#fff;overflow:hidden;';
+
+    // Header
+    var panelHeader = createEl('div');
+    panelHeader.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-shrink:0;';
+
+    var panelTitle = createEl('h3');
+    panelTitle.textContent = 'Comentários';
+    panelTitle.style.cssText = 'margin:0;font-size:17px;font-weight:800;';
+    panelHeader.appendChild(panelTitle);
+
+    var closeBtn = createEl('button');
+    closeBtn.innerHTML = svgIcon('close');
+    closeBtn.style.cssText = 'background:rgba(255,255,255,0.1);border:none;color:#fff;cursor:pointer;padding:8px;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;';
+    closeBtn.onclick = function () { panel.remove(); };
+    panelHeader.appendChild(closeBtn);
+    panel.appendChild(panelHeader);
+
+    // Lista de comentários
+    var list = createEl('div');
+    list.style.cssText = 'flex:1;overflow-y:auto;margin-bottom:16px;';
+
+    var videoComments = readCommentsData.filter(function (c) {
+      return idsEqual(c.video_id, videoId);
+    });
+
+    if (videoComments.length === 0) {
+      var emptyMsg = createEl('p');
+      emptyMsg.textContent = 'Nenhum comentário ainda. Seja o primeiro!';
+      emptyMsg.style.cssText = 'color:#94a3b8;text-align:center;padding:40px 0;font-size:14px;';
       list.appendChild(emptyMsg);
     } else {
-      comments.forEach(function (comment) { list.appendChild(renderCommentItem(comment)); });
+      videoComments.forEach(function (c) {
+        var item = createEl('div');
+        item.style.cssText = 'background:rgba(255,255,255,0.06);border-radius:10px;padding:12px;margin-bottom:8px;';
+
+        var author = createEl('div');
+        author.textContent = c.author_name || 'Visitante';
+        author.style.cssText = 'font-weight:700;font-size:12px;color:#0094EB;margin-bottom:4px;';
+        item.appendChild(author);
+
+        var text = createEl('div');
+        text.textContent = c.content || c.text || '';
+        text.style.cssText = 'font-size:14px;color:#e2e8f0;white-space:pre-wrap;';
+        item.appendChild(text);
+
+        list.appendChild(item);
+      });
     }
-    var form = createEl('form', 'vl-comments-form');
-    var nameInput = createEl('input', 'vl-comments-input');
+    panel.appendChild(list);
+
+    // Input de comentário
+    var inputRow = createEl('div');
+    inputRow.style.cssText = 'display:flex;gap:8px;flex-shrink:0;';
+
+    var nameInput = createEl('input');
     nameInput.type = 'text';
     nameInput.placeholder = 'Seu nome';
-    nameInput.maxLength = 100;
-    nameInput.required = true;
-    nameInput.autocomplete = 'name';
-    var editor = createEl('div', 'vl-comments-editor');
-    var contentInput = createEl('textarea', 'vl-comments-input vl-comments-textarea');
-    contentInput.placeholder = 'Escreva um comentário...';
-    contentInput.maxLength = 1000;
-    contentInput.required = true;
-    var emojiButton = createEl('button', 'vl-emoji-button');
-    emojiButton.type = 'button';
-    emojiButton.textContent = '☺️';
-    emojiButton.setAttribute('aria-label', 'Adicionar emoji');
-    var emojiPicker = createEl('div', 'vl-emoji-picker');
-    getCommentEmojis().forEach(function (emoji) {
-      var emojiItem = createEl('button', 'vl-emoji-item');
-      emojiItem.type = 'button';
-      emojiItem.textContent = emoji;
-      emojiItem.addEventListener('click', function (event) {
-        event.preventDefault(); event.stopPropagation();
-        var start = contentInput.selectionStart || contentInput.value.length;
-        var end = contentInput.selectionEnd || contentInput.value.length;
-        var before = contentInput.value.substring(0, start);
-        var after = contentInput.value.substring(end);
-        contentInput.value = before + emoji + after;
-        var nextPosition = start + emoji.length;
-        contentInput.focus();
-        contentInput.setSelectionRange(nextPosition, nextPosition);
-        emojiPicker.classList.remove('is-open');
+    nameInput.style.cssText = 'width:30%;padding:10px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:#fff;font-size:13px;outline:none;';
+    inputRow.appendChild(nameInput);
+
+    var commentInput = createEl('input');
+    commentInput.type = 'text';
+    commentInput.placeholder = 'Escreva um comentário...';
+    commentInput.style.cssText = 'flex:1;padding:10px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:#fff;font-size:13px;outline:none;';
+    inputRow.appendChild(commentInput);
+
+    var sendBtn = createEl('button');
+    sendBtn.textContent = 'Enviar';
+    sendBtn.style.cssText = 'padding:10px 18px;border-radius:20px;border:none;background:#0094EB;color:#fff;font-weight:700;cursor:pointer;font-size:13px;white-space:nowrap;';
+    sendBtn.onclick = function () {
+      var name = nameInput.value.trim();
+      var text = commentInput.value.trim();
+      if (!text) return;
+
+      // Marca que o usuário comentou neste vídeo
+      userCommentedVideos[videoId] = true;
+
+      // Adiciona localmente para contagem imediata
+      readCommentsData.push({
+        video_id: videoId,
+        author_name: name || 'Visitante',
+        content: text,
+        text: text
       });
-      emojiPicker.appendChild(emojiItem);
-    });
-    emojiButton.addEventListener('click', function (event) {
-      event.preventDefault(); event.stopPropagation();
-      emojiPicker.classList.toggle('is-open');
-      if (emojiPicker.classList.contains('is-open')) contentInput.focus();
-    });
-    document.addEventListener('click', function closeEmojiPicker(event) {
-      if (emojiPicker.classList.contains('is-open') && !editor.contains(event.target)) {
-        emojiPicker.classList.remove('is-open');
-        document.removeEventListener('click', closeEmojiPicker);
+
+      if (hasSupabase) {
+        createComment({
+          story_id: storyId,
+          video_id: videoId,
+          author_name: name || 'Visitante',
+          content: text
+        }).catch(function () {});
       }
-    });
-    editor.appendChild(contentInput);
-    editor.appendChild(emojiButton);
-    editor.appendChild(emojiPicker);
-    var feedback = createEl('div', 'vl-comments-feedback');
-    var submit = createEl('button', 'vl-comments-submit');
-    submit.type = 'submit';
-    submit.textContent = 'Enviar comentário';
-    form.appendChild(nameInput);
-    form.appendChild(editor);
-    form.appendChild(feedback);
-    form.appendChild(submit);
-    panel.appendChild(header);
-    panel.appendChild(list);
-    panel.appendChild(form);
-    modalContent.appendChild(panel);
-    form.addEventListener('submit', function (event) {
-      event.preventDefault(); event.stopPropagation();
-      var authorName = nameInput.value.trim();
-      var content = contentInput.value.trim();
-      if (!authorName || !content) { feedback.textContent = 'Preencha seu nome e seu comentário.'; return; }
-      submit.disabled = true;
-      feedback.textContent = 'Enviando...';
-      createComment({
-        story_id: storyId || null,
-        video_id: videoId || null,
-        author_name: authorName,
-        content: content
-      }).then(function () {
-        contentInput.value = '';
-        feedback.textContent = 'Comentário enviado. Ele aparecerá após aprovação.';
-        trackMetric({ event_type: 'comment', story_id: storyId, video_id: videoId, page_url: window.location.href });
-      }).catch(function (error) {
-        feedback.textContent = error && error.message ? error.message : 'Não foi possível enviar o comentário.';
-      }).finally(function () {
-        submit.disabled = false;
+
+      commentInput.value = '';
+      nameInput.value = '';
+
+      // Atualiza o botão de comentário na lateral
+      var cb = modalContent.querySelector('#vl-comment-btn');
+      if (cb) {
+        cb.innerHTML = svgIcon('commentFilled');
+        var cnt = getCommentCountForVideo(videoId);
+        var span = cb.querySelector('.vl-social-count');
+        if (span) span.textContent = cnt > 0 ? cnt : '';
+        else if (cnt > 0) {
+          var newSpan = createEl('span', 'vl-social-count');
+          newSpan.textContent = cnt;
+          cb.appendChild(newSpan);
+        }
+      }
+
+      // Recria a lista
+      while (list.firstChild) list.removeChild(list.firstChild);
+      var updated = readCommentsData.filter(function (c) { return idsEqual(c.video_id, videoId); });
+      if (updated.length === 0) {
+        var em = createEl('p');
+        em.textContent = 'Comentário enviado! Aguardando moderação.';
+        em.style.cssText = 'color:#94a3b8;text-align:center;padding:40px 0;font-size:14px;';
+        list.appendChild(em);
+      } else {
+        updated.forEach(function (c) {
+          var item = createEl('div');
+          item.style.cssText = 'background:rgba(255,255,255,0.06);border-radius:10px;padding:12px;margin-bottom:8px;';
+          var author = createEl('div');
+          author.textContent = c.author_name || 'Visitante';
+          author.style.cssText = 'font-weight:700;font-size:12px;color:#0094EB;margin-bottom:4px;';
+          item.appendChild(author);
+          var t = createEl('div');
+          t.textContent = c.content || c.text || '';
+          t.style.cssText = 'font-size:14px;color:#e2e8f0;white-space:pre-wrap;';
+          item.appendChild(t);
+          list.appendChild(item);
+        });
+      }
+
+      trackMetric({
+        event_type: 'comment',
+        story_id: storyId,
+        video_id: videoId,
+        page_url: window.location.href
       });
+    };
+    inputRow.appendChild(sendBtn);
+
+    // Enter envia
+    commentInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') sendBtn.click();
     });
-    trackMetric({ event_type: 'comment_open', story_id: storyId, video_id: videoId, page_url: window.location.href });
+
+    panel.appendChild(inputRow);
+    modalContent.appendChild(panel);
+    setTimeout(function () { commentInput.focus(); }, 100);
   }
 
   function closeOverlay() {
