@@ -1140,6 +1140,152 @@ var userCommentedVideos = {}; // { videoId: true } — vídeos onde o usuário c
       });
   }
 
+  /* ═══════════════════════════════════════════════════════════════
+     🆕 NOVAS FUNÇÕES: Fingerprint, Likes, Comentários, Share
+     ═══════════════════════════════════════════════════════════════ */
+
+  function getFingerprint() {
+    var key = '__vid_fp';
+    var stored = localStorage.getItem(key);
+    if (stored) return stored;
+    var fp = 'fp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem(key, fp);
+    return fp;
+  }
+
+  function getCommentCountForVideo(videoId) {
+    return readCommentsData.filter(function (c) {
+      return idsEqual(c.video_id, videoId);
+    }).length;
+  }
+
+  function toggleLike(video, btnEl) {
+    if (!video || !video.id) return;
+    var vidId = video.id;
+    var isCurrentlyLiked = !!likedVideos[vidId];
+
+    if (isCurrentlyLiked) {
+      // DEScurtir
+      delete likedVideos[vidId];
+      videoLikeCounts[vidId] = Math.max(0, (videoLikeCounts[vidId] || 1) - 1);
+
+      if (hasSupabase) {
+        supabaseFetch('video_likes?video_id=eq.' + encodeURIComponent(vidId) + '&user_fingerprint=eq.' + encodeURIComponent(getFingerprint()), { method: 'DELETE' })
+          .catch(function () {});
+      }
+    } else {
+      // Curtir
+      likedVideos[vidId] = true;
+      videoLikeCounts[vidId] = (videoLikeCounts[vidId] || 0) + 1;
+
+      if (hasSupabase) {
+        supabaseFetch('video_likes', {
+          method: 'POST',
+          headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify({
+            video_id: vidId,
+            user_fingerprint: getFingerprint(),
+            store_id: storeId,
+            story_id: currentStories[currentStoryIndex].id,
+            page_url: window.location.href,
+            created_at: new Date().toISOString()
+          })
+        }).catch(function () {});
+      }
+    }
+
+    // Atualiza botão na UI
+    if (btnEl) {
+      var isNowLiked = !!likedVideos[vidId];
+      btnEl.innerHTML = svgIcon(isNowLiked ? 'heartFilled' : 'heart');
+      btnEl.title = isNowLiked ? 'Descurtir' : 'Curtir';
+
+      var count = videoLikeCounts[vidId] || 0;
+      var existingCount = btnEl.querySelector('.vl-social-count');
+      if (existingCount) existingCount.remove();
+      if (count > 0) {
+        var newCountEl = createEl('span', 'vl-social-count');
+        newCountEl.textContent = count;
+        btnEl.appendChild(newCountEl);
+      }
+    }
+
+    trackMetric({
+      event_type: isCurrentlyLiked ? 'unlike' : 'like',
+      story_id: currentStories[currentStoryIndex].id,
+      video_id: vidId,
+      page_url: window.location.href
+    });
+  }
+
+  function openSharePanel(btnEl) {
+    var existing = document.getElementById('vl-share-panel');
+    if (existing) { existing.remove(); return; }
+
+    var shareUrl = window.location.href;
+    var story = currentStories[currentStoryIndex];
+    var shareText = story ? (story.title || 'Confira este vídeo!') : 'Confira este vídeo!';
+
+    var panel = createEl('div');
+    panel.id = 'vl-share-panel';
+    panel.style.cssText = 'position:absolute;bottom:calc(100% + 8px);right:-20px;background:#1e293b;border-radius:12px;padding:8px;min-width:180px;box-shadow:0 10px 25px rgba(0,0,0,0.5);z-index:200;animation:vlFadeIn 0.15s ease;';
+
+    // Opção: Copiar link
+    var copyBtn = createEl('button');
+    copyBtn.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border:none;background:transparent;color:#fff;font-size:14px;cursor:pointer;border-radius:8px;';
+    copyBtn.innerHTML = svgIcon('copy') + ' Copiar link';
+    copyBtn.onmouseenter = function () { copyBtn.style.background = 'rgba(255,255,255,0.1)'; };
+    copyBtn.onmouseleave = function () { copyBtn.style.background = 'transparent'; };
+    copyBtn.onclick = function () {
+      navigator.clipboard.writeText(shareUrl).then(function () {
+        copyBtn.innerHTML = svgIcon('check') + ' Copiado!';
+        setTimeout(function () { panel.remove(); }, 1500);
+      }).catch(function () {
+        var ta = document.createElement('textarea');
+        ta.value = shareUrl;
+        ta.style.cssText = 'position:fixed;left:-9999px;';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        copyBtn.innerHTML = svgIcon('check') + ' Copiado!';
+        setTimeout(function () { panel.remove(); }, 1500);
+      });
+    };
+    panel.appendChild(copyBtn);
+
+    // Opção: WhatsApp
+    var waBtn = createEl('button');
+    waBtn.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border:none;background:transparent;color:#fff;font-size:14px;cursor:pointer;border-radius:8px;';
+    waBtn.innerHTML = svgIcon('whatsapp') + ' WhatsApp';
+    waBtn.onmouseenter = function () { waBtn.style.background = 'rgba(255,255,255,0.1)'; };
+    waBtn.onmouseleave = function () { waBtn.style.background = 'transparent'; };
+    waBtn.onclick = function () {
+      window.open('https://wa.me/?text=' + encodeURIComponent(shareText + ' ' + shareUrl), '_blank');
+      panel.remove();
+    };
+    panel.appendChild(waBtn);
+
+    btnEl.style.position = 'relative';
+    btnEl.appendChild(panel);
+
+    setTimeout(function () {
+      var handler = function (ev) {
+        if (!panel.contains(ev.target) && ev.target !== btnEl) {
+          panel.remove();
+          document.removeEventListener('click', handler);
+        }
+      };
+      document.addEventListener('click', handler);
+    }, 0);
+
+    trackMetric({
+      event_type: 'share',
+      story_id: story ? story.id : null,
+      page_url: shareUrl
+    });
+  }
+
   function openSizingPanel(modelId) {
     if (!modalContent) return;
     var model = readSizingModelsData.find(function (m) { return idsEqual(m.id, modelId); });
