@@ -377,11 +377,21 @@ const CommentsPage = () => {
         return;
       }
 
-      await db.comments.save({
-        ...(current as Comment & Record<string, unknown>),
+      // 🛡️ Monta os dados limpos, removendo campos que NÃO existem na tabela comments
+      const cleanData: any = {
+        ...current,
         status: newStatus,
         store_id: storeId,
-      } as Comment);
+      };
+
+      // Remove campos fantasmas que causam erro no Supabase
+      delete cleanData.story_id;
+      delete cleanData.reply_content;
+      delete cleanData.reply_status;
+      delete cleanData.replyContent;
+      delete cleanData.replyStatus;
+
+      await db.comments.save(cleanData as Comment);
 
       await loadComments();
 
