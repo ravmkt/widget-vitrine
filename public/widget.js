@@ -1360,95 +1360,303 @@ return {
   }
 
   function openCommentsPanel(videoId, storyId) {
+    // Remove painel existente (toggle)
     var existing = modalContent.querySelector('.vl-comments-panel-full');
     if (existing) { existing.remove(); return; }
 
-    var panel = createEl('div', 'vl-comments-panel-full');
-    panel.style.cssText = 'position:absolute;inset:0;z-index:100;background:rgba(15,23,42,0.97);display:flex;flex-direction:column;padding:20px;color:#fff;overflow:hidden;';
+    var story = currentStories[currentStoryIndex];
+    var primaryColor = getPrimaryColor(currentAppearance);
+    var fontFamily = getFontFamily(currentAppearance);
 
-    // Header
+    // ═══════════ PAINEL PRINCIPAL ═══════════
+    var panel = createEl('div', 'vl-comments-panel-full');
+    panel.style.cssText = [
+      'position:absolute;inset:0;z-index:100;',
+      'background:#FFFFFF;',
+      'display:flex;flex-direction:column;',
+      'font-family:' + fontFamily + ';',
+      'overflow:hidden;',
+      'animation:vlSlideUp 0.25s ease;'
+    ].join('');
+
+    // ═══════════ HEADER ═══════════
     var panelHeader = createEl('div');
-    panelHeader.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-shrink:0;';
+    panelHeader.style.cssText = [
+      'display:flex;align-items:center;justify-content:space-between;',
+      'padding:16px 20px;',
+      'border-bottom:1px solid #e2e8f0;',
+      'flex-shrink:0;',
+      'background:#fff;'
+    ].join('');
+
+    var commentsCount = getCommentCountForVideo(videoId);
 
     var panelTitle = createEl('h3');
-    panelTitle.textContent = 'Comentários';
-    panelTitle.style.cssText = 'margin:0;font-size:17px;font-weight:800;';
+    panelTitle.textContent = 'Comentários' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
+    panelTitle.style.cssText = 'margin:0;font-size:16px;font-weight:700;color:#0f172a;';
     panelHeader.appendChild(panelTitle);
 
     var closeBtn = createEl('button');
     closeBtn.innerHTML = svgIcon('close');
-    closeBtn.style.cssText = 'background:rgba(255,255,255,0.1);border:none;color:#fff;cursor:pointer;padding:8px;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;';
+    closeBtn.style.cssText = [
+      'background:#f1f5f9;border:none;color:#475569;cursor:pointer;',
+      'width:32px;height:32px;border-radius:50%;',
+      'display:flex;align-items:center;justify-content:center;',
+      'font-size:18px;transition:all 0.15s;'
+    ].join('');
+    closeBtn.onmouseenter = function () { closeBtn.style.background = '#e2e8f0'; };
+    closeBtn.onmouseleave = function () { closeBtn.style.background = '#f1f5f9'; };
     closeBtn.onclick = function () { panel.remove(); };
     panelHeader.appendChild(closeBtn);
     panel.appendChild(panelHeader);
 
-    // Lista de comentários
-    var list = createEl('div');
-    list.style.cssText = 'flex:1;overflow-y:auto;margin-bottom:16px;';
+    // ═══════════ LISTA DE COMENTÁRIOS (scrollável) ═══════════
+    var commentsList = createEl('div');
+    commentsList.style.cssText = [
+      'flex:1;overflow-y:auto;padding:12px 20px;',
+      'display:flex;flex-direction:column;gap:12px;',
+      '-webkit-overflow-scrolling:touch;'
+    ].join('');
 
     var videoComments = readCommentsData.filter(function (c) {
       return idsEqual(c.video_id, videoId);
     });
 
     if (videoComments.length === 0) {
-      var emptyMsg = createEl('p');
-      emptyMsg.textContent = 'Nenhum comentário ainda. Seja o primeiro!';
-      emptyMsg.style.cssText = 'color:#94a3b8;text-align:center;padding:40px 0;font-size:14px;';
-      list.appendChild(emptyMsg);
+      var emptyState = createEl('div');
+      emptyState.style.cssText = [
+        'display:flex;flex-direction:column;align-items:center;justify-content:center;',
+        'padding:40px 20px;text-align:center;',
+        'flex:1;min-height:200px;'
+      ].join('');
+
+      var emptyIcon = createEl('div');
+      emptyIcon.innerHTML = svgIcon('comment');
+      emptyIcon.style.cssText = 'opacity:0.15;margin-bottom:12px;';
+      emptyState.appendChild(emptyIcon);
+
+      var emptyText = createEl('p');
+      emptyText.textContent = 'Nenhum comentário ainda. Seja o primeiro!';
+      emptyText.style.cssText = 'color:#94a3b8;font-size:14px;margin:0;';
+      emptyState.appendChild(emptyText);
+
+      commentsList.appendChild(emptyState);
     } else {
       videoComments.forEach(function (c) {
-        var item = createEl('div');
-        item.style.cssText = 'background:rgba(255,255,255,0.06);border-radius:10px;padding:12px;margin-bottom:8px;';
+        var commentCard = createEl('div');
+        commentCard.style.cssText = 'display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9;';
 
-        var author = createEl('div');
-        author.textContent = c.author_name || 'Visitante';
-        author.style.cssText = 'font-weight:700;font-size:12px;color:#0094EB;margin-bottom:4px;';
-        item.appendChild(author);
+        var avatar = createEl('div');
+        var initial = (c.author_name || 'V').charAt(0).toUpperCase();
+        avatar.textContent = initial;
+        avatar.style.cssText = 'width:36px;height:36px;border-radius:50%;background:' + primaryColor + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;';
+        commentCard.appendChild(avatar);
 
-        var text = createEl('div');
-        text.textContent = c.content || c.text || '';
-        text.style.cssText = 'font-size:14px;color:#e2e8f0;white-space:pre-wrap;';
-        item.appendChild(text);
+        var commentBody = createEl('div');
+        commentBody.style.cssText = 'flex:1;min-width:0;';
 
-        list.appendChild(item);
+        var commentMeta = createEl('div');
+        commentMeta.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:2px;';
+        var authorName = createEl('span');
+        authorName.textContent = c.author_name || 'Visitante';
+        authorName.style.cssText = 'font-weight:700;font-size:13px;color:#0f172a;';
+        commentMeta.appendChild(authorName);
+
+        if (c.created_at) {
+          var commentDate = createEl('span');
+          commentDate.textContent = formatRelativeTime(c.created_at);
+          commentDate.style.cssText = 'font-size:11px;color:#94a3b8;';
+          commentMeta.appendChild(commentDate);
+        }
+        commentBody.appendChild(commentMeta);
+
+        var commentText = createEl('p');
+        commentText.textContent = c.content || c.text || '';
+        commentText.style.cssText = 'margin:0;font-size:14px;color:#334155;line-height:1.5;word-break:break-word;';
+        commentBody.appendChild(commentText);
+
+        var replyContent = String(c.reply_content || c.replyContent || '').trim();
+        var replyStatus = String(c.reply_status || c.replyStatus || '').trim().toLowerCase();
+        var replyIsVisible = replyContent && (!replyStatus || replyStatus === 'replied' || replyStatus === 'respondido' || replyStatus === 'published' || replyStatus === 'publicado');
+
+        if (replyIsVisible) {
+          var replyBox = createEl('div');
+          replyBox.style.cssText = 'margin-top:8px;padding:8px 12px;background:#f0f9ff;border-left:3px solid ' + primaryColor + ';border-radius:6px;';
+          var replyLabel = createEl('div');
+          replyLabel.textContent = 'Resposta da loja';
+          replyLabel.style.cssText = 'font-size:10px;font-weight:700;color:' + primaryColor + ';margin-bottom:3px;text-transform:uppercase;letter-spacing:0.5px;';
+          replyBox.appendChild(replyLabel);
+          var replyText = createEl('p');
+          replyText.textContent = replyContent;
+          replyText.style.cssText = 'margin:0;font-size:13px;color:#334155;line-height:1.4;';
+          replyBox.appendChild(replyText);
+          commentBody.appendChild(replyBox);
+        }
+
+        commentCard.appendChild(commentBody);
+        commentsList.appendChild(commentCard);
       });
     }
-    panel.appendChild(list);
+    panel.appendChild(commentsList);
 
-    // Input de comentário
-    var inputRow = createEl('div');
-    inputRow.style.cssText = 'display:flex;gap:8px;flex-shrink:0;';
+    // ═══════════ FORMULÁRIO (fixo no rodapé) ═══════════
+    var formSection = createEl('div');
+    formSection.style.cssText = 'flex-shrink:0;padding:12px 20px 16px;border-top:1px solid #e2e8f0;background:#fff;';
+
+    // Campo: Seu nome
+    var nameLabel = createEl('label');
+    nameLabel.textContent = 'Seu nome';
+    nameLabel.style.cssText = 'display:block;font-size:12px;font-weight:600;color:#64748b;margin-bottom:4px;';
+    formSection.appendChild(nameLabel);
 
     var nameInput = createEl('input');
     nameInput.type = 'text';
-    nameInput.placeholder = 'Seu nome';
-    nameInput.style.cssText = 'width:30%;padding:10px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:#fff;font-size:13px;outline:none;';
-    inputRow.appendChild(nameInput);
+    nameInput.placeholder = 'Digite seu nome...';
+    nameInput.maxLength = 80;
+    nameInput.style.cssText = 'width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#0f172a;outline:none;transition:border-color 0.2s;margin-bottom:10px;box-sizing:border-box;background:#f8fafc;';
+    nameInput.onfocus = function () { nameInput.style.borderColor = primaryColor; nameInput.style.background = '#fff'; };
+    nameInput.onblur = function () { nameInput.style.borderColor = '#e2e8f0'; nameInput.style.background = '#f8fafc'; };
+    formSection.appendChild(nameInput);
 
-    var commentInput = createEl('input');
-    commentInput.type = 'text';
-    commentInput.placeholder = 'Escreva um comentário...';
-    commentInput.style.cssText = 'flex:1;padding:10px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:#fff;font-size:13px;outline:none;';
-    inputRow.appendChild(commentInput);
+    // Campo: Comentário (textarea grande)
+    var commentLabel = createEl('label');
+    commentLabel.textContent = 'Seu comentário';
+    commentLabel.style.cssText = 'display:block;font-size:12px;font-weight:600;color:#64748b;margin-bottom:4px;';
+    formSection.appendChild(commentLabel);
 
+    var commentTextarea = createEl('textarea');
+    commentTextarea.placeholder = 'Escreva seu comentário...';
+    commentTextarea.maxLength = 1000;
+    commentTextarea.rows = 3;
+    commentTextarea.style.cssText = 'width:100%;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#0f172a;resize:vertical;min-height:80px;max-height:160px;outline:none;transition:border-color 0.2s;margin-bottom:8px;box-sizing:border-box;background:#f8fafc;font-family:' + fontFamily + ';';
+    commentTextarea.onfocus = function () { commentTextarea.style.borderColor = primaryColor; commentTextarea.style.background = '#fff'; };
+    commentTextarea.onblur = function () { commentTextarea.style.borderColor = '#e2e8f0'; commentTextarea.style.background = '#f8fafc'; };
+    formSection.appendChild(commentTextarea);
+
+    // Contador de caracteres
+    var charCounter = createEl('div');
+    charCounter.style.cssText = 'text-align:right;font-size:11px;color:#94a3b8;margin-bottom:6px;';
+    charCounter.textContent = '0/1000';
+    commentTextarea.addEventListener('input', function () {
+      charCounter.textContent = commentTextarea.value.length + '/1000';
+    });
+    formSection.appendChild(charCounter);
+
+    // ═══════════ SELETOR DE EMOJIS ═══════════
+    var emojiToggle = createEl('button');
+    emojiToggle.type = 'button';
+    emojiToggle.innerHTML = '😊 Emoji';
+    emojiToggle.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border:1.5px solid #e2e8f0;border-radius:20px;background:#fff;color:#64748b;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:8px;transition:all 0.15s;';
+    emojiToggle.onmouseenter = function () { emojiToggle.style.borderColor = primaryColor; emojiToggle.style.color = primaryColor; };
+    emojiToggle.onmouseleave = function () { emojiToggle.style.borderColor = '#e2e8f0'; emojiToggle.style.color = '#64748b'; };
+    formSection.appendChild(emojiToggle);
+
+    var emojiGrid = createEl('div');
+    emojiGrid.style.cssText = 'display:none;flex-wrap:wrap;gap:6px;margin-bottom:8px;padding:8px;background:#f8fafc;border-radius:10px;';
+
+    var emojiList = ['😍', '🔥', '👏', '❤️', '😂', '😱', '🙌', '💯', '✨', '😢', '🤔', '👍', '💪', '🎉', '😊', '🥰', '😎', '🙏', '💙', '⭐', '✅', '😡', '👀', '🤩'];
+
+    emojiList.forEach(function (emoji) {
+      var emojiBtn = createEl('button');
+      emojiBtn.type = 'button';
+      emojiBtn.textContent = emoji;
+      emojiBtn.style.cssText = 'width:36px;height:36px;border:none;background:transparent;border-radius:8px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;';
+      emojiBtn.onmouseenter = function () { emojiBtn.style.background = '#e2e8f0'; emojiBtn.style.transform = 'scale(1.15)'; };
+      emojiBtn.onmouseleave = function () { emojiBtn.style.background = 'transparent'; emojiBtn.style.transform = 'scale(1)'; };
+      emojiBtn.onclick = function () {
+        var start = commentTextarea.selectionStart || commentTextarea.value.length;
+        var end = commentTextarea.selectionEnd || commentTextarea.value.length;
+        var before = commentTextarea.value.substring(0, start);
+        var after = commentTextarea.value.substring(end);
+        commentTextarea.value = before + emoji + after;
+        var newPos = start + emoji.length;
+        commentTextarea.focus();
+        commentTextarea.setSelectionRange(newPos, newPos);
+        charCounter.textContent = commentTextarea.value.length + '/1000';
+      };
+      emojiGrid.appendChild(emojiBtn);
+    });
+
+    emojiToggle.onclick = function () {
+      if (emojiGrid.style.display === 'none') {
+        emojiGrid.style.display = 'flex';
+        emojiToggle.innerHTML = '✕ Fechar';
+      } else {
+        emojiGrid.style.display = 'none';
+        emojiToggle.innerHTML = '😊 Emoji';
+      }
+    };
+    formSection.appendChild(emojiGrid);
+
+    // ═══════════ TOGGLE: APROVAR COMENTÁRIOS ═══════════
+    var autoApproveRow = createEl('div');
+    autoApproveRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:8px 0;';
+
+    var autoApproveLabel = createEl('span');
+    autoApproveLabel.textContent = 'Aprovar comentários automaticamente';
+    autoApproveLabel.style.cssText = 'font-size:13px;color:#475569;flex:1;';
+
+    var toggleWrapper = createEl('label');
+    toggleWrapper.style.cssText = 'position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;';
+
+    var toggleInput = createEl('input');
+    toggleInput.type = 'checkbox';
+    toggleInput.style.cssText = 'opacity:0;width:0;height:0;';
+    toggleInput.checked = false;
+
+    var toggleSlider = createEl('span');
+    toggleSlider.style.cssText = 'position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#cbd5e1;border-radius:24px;transition:0.3s;';
+    toggleSlider.onclick = function () {
+      toggleInput.checked = !toggleInput.checked;
+      if (toggleInput.checked) {
+        toggleSlider.style.background = '#22c55e';
+      } else {
+        toggleSlider.style.background = '#cbd5e1';
+      }
+    };
+
+    var toggleKnob = createEl('span');
+    toggleKnob.style.cssText = 'position:absolute;height:20px;width:20px;left:2px;bottom:2px;background:#fff;border-radius:50%;transition:0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2);';
+
+    toggleWrapper.appendChild(toggleInput);
+    toggleWrapper.appendChild(toggleSlider);
+    toggleSlider.appendChild(toggleKnob);
+
+    autoApproveRow.appendChild(autoApproveLabel);
+    autoApproveRow.appendChild(toggleWrapper);
+    formSection.appendChild(autoApproveRow);
+
+    // ═══════════ MENSAGEM DE STATUS ═══════════
+    var statusMsg = createEl('div');
+    statusMsg.style.cssText = 'min-height:18px;text-align:center;font-size:12px;margin-bottom:8px;transition:all 0.2s;';
+    formSection.appendChild(statusMsg);
+
+    // ═══════════ BOTÃO ENVIAR ═══════════
     var sendBtn = createEl('button');
-    sendBtn.textContent = 'Enviar';
-    sendBtn.style.cssText = 'padding:10px 18px;border-radius:20px;border:none;background:#0094EB;color:#fff;font-weight:700;cursor:pointer;font-size:13px;white-space:nowrap;';
+    sendBtn.textContent = 'Enviar comentário';
+    sendBtn.style.cssText = 'width:100%;padding:14px;border:none;border-radius:12px;background:' + primaryColor + ';color:#fff;font-weight:700;font-size:15px;cursor:pointer;transition:all 0.2s;letter-spacing:0.3px;';
+    sendBtn.onmouseenter = function () { sendBtn.style.opacity = '0.9'; sendBtn.style.transform = 'scale(1.01)'; };
+    sendBtn.onmouseleave = function () { sendBtn.style.opacity = '1'; sendBtn.style.transform = 'scale(1)'; };
+
     sendBtn.onclick = function () {
       var name = nameInput.value.trim();
-      var text = commentInput.value.trim();
-      if (!text) return;
+      var text = commentTextarea.value.trim();
 
-      // Marca que o usuário comentou neste vídeo
+      if (!text) {
+        statusMsg.textContent = 'Digite um comentário para enviar.';
+        statusMsg.style.color = '#ef4444';
+        return;
+      }
+
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Enviando...';
+      sendBtn.style.opacity = '0.6';
+      statusMsg.textContent = '';
+      statusMsg.style.color = '#64748b';
+
       userCommentedVideos[videoId] = true;
 
-      // Adiciona localmente para contagem imediata
-      readCommentsData.push({
-        video_id: videoId,
-        author_name: name || 'Visitante',
-        content: text,
-        text: text
-      });
+      var autoApprove = toggleInput.checked;
 
       if (hasSupabase) {
         createComment({
@@ -1456,13 +1664,121 @@ return {
           video_id: videoId,
           author_name: name || 'Visitante',
           content: text
-        }).catch(function () {});
+        }).then(function () {
+          readCommentsData.push({
+            video_id: videoId,
+            author_name: name || 'Visitante',
+            content: text,
+            text: text,
+            created_at: new Date().toISOString()
+          });
+
+          if (autoApprove) {
+            statusMsg.textContent = 'Comentário publicado! ✅';
+            statusMsg.style.color = '#22c55e';
+          } else {
+            statusMsg.textContent = 'Comentário enviado! Ele passará por moderação antes de aparecer. 📝';
+            statusMsg.style.color = '#f59e0b';
+          }
+
+          commentTextarea.value = '';
+          charCounter.textContent = '0/1000';
+          sendBtn.textContent = 'Enviar comentário';
+          sendBtn.disabled = false;
+          sendBtn.style.opacity = '1';
+
+          refreshCommentsList(commentsList, videoId, primaryColor);
+          updateCommentButton();
+          emojiGrid.style.display = 'none';
+          emojiToggle.innerHTML = '😊 Emoji';
+
+          trackMetric({ event_type: 'comment', story_id: storyId, video_id: videoId, page_url: window.location.href });
+        }).catch(function (err) {
+          statusMsg.textContent = err && err.message ? err.message : 'Erro ao enviar. Tente novamente.';
+          statusMsg.style.color = '#ef4444';
+          sendBtn.textContent = 'Enviar comentário';
+          sendBtn.disabled = false;
+          sendBtn.style.opacity = '1';
+        });
+      } else {
+        readCommentsData.push({
+          video_id: videoId,
+          author_name: name || 'Visitante',
+          content: text,
+          text: text,
+          created_at: new Date().toISOString()
+        });
+        statusMsg.textContent = 'Comentário enviado (modo offline).';
+        statusMsg.style.color = '#22c55e';
+        commentTextarea.value = '';
+        charCounter.textContent = '0/1000';
+        sendBtn.textContent = 'Enviar comentário';
+        sendBtn.disabled = false;
+        sendBtn.style.opacity = '1';
+        refreshCommentsList(commentsList, videoId, primaryColor);
+        updateCommentButton();
+        emojiGrid.style.display = 'none';
+        emojiToggle.innerHTML = '😊 Emoji';
       }
+    };
 
-      commentInput.value = '';
-      nameInput.value = '';
+    formSection.appendChild(sendBtn);
+    panel.appendChild(formSection);
 
-      // Atualiza o botão de comentário na lateral
+
+    modalContent.appendChild(panel);
+    setTimeout(function () { commentTextarea.focus(); }, 200);
+
+    // ═══════════ Helpers internos ═══════════
+    function refreshCommentsList(listEl, vId, pColor) {
+      while (listEl.firstChild) listEl.removeChild(listEl.firstChild);
+      var updated = readCommentsData.filter(function (c) { return idsEqual(c.video_id, vId); });
+      if (updated.length === 0) {
+        var es = createEl('div');
+        es.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;flex:1;min-height:200px;';
+        var ei = createEl('div');
+        ei.innerHTML = svgIcon('comment');
+        ei.style.cssText = 'opacity:0.15;margin-bottom:12px;';
+        es.appendChild(ei);
+        var et = createEl('p');
+        et.textContent = 'Nenhum comentário ainda. Seja o primeiro!';
+        et.style.cssText = 'color:#94a3b8;font-size:14px;margin:0;';
+        es.appendChild(et);
+        listEl.appendChild(es);
+      } else {
+        updated.forEach(function (c) {
+          var card = createEl('div');
+          card.style.cssText = 'display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9;';
+          var av = createEl('div');
+          av.textContent = (c.author_name || 'V').charAt(0).toUpperCase();
+          av.style.cssText = 'width:36px;height:36px;border-radius:50%;background:' + pColor + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;';
+          card.appendChild(av);
+          var body = createEl('div');
+          body.style.cssText = 'flex:1;min-width:0;';
+          var meta = createEl('div');
+          meta.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:2px;';
+          var nm = createEl('span');
+          nm.textContent = c.author_name || 'Visitante';
+          nm.style.cssText = 'font-weight:700;font-size:13px;color:#0f172a;';
+          meta.appendChild(nm);
+          if (c.created_at) {
+            var dt = createEl('span');
+            dt.textContent = formatRelativeTime(c.created_at);
+            dt.style.cssText = 'font-size:11px;color:#94a3b8;';
+            meta.appendChild(dt);
+          }
+          body.appendChild(meta);
+          var txt = createEl('p');
+          txt.textContent = c.content || c.text || '';
+          txt.style.cssText = 'margin:0;font-size:14px;color:#334155;line-height:1.5;word-break:break-word;';
+          body.appendChild(txt);
+          card.appendChild(body);
+          listEl.appendChild(card);
+        });
+      }
+    }
+
+    function updateCommentButton() {
       var cb = modalContent.querySelector('#vl-comment-btn');
       if (cb) {
         cb.innerHTML = svgIcon('commentFilled');
@@ -1475,48 +1791,7 @@ return {
           cb.appendChild(newSpan);
         }
       }
-
-      // Recria a lista
-      while (list.firstChild) list.removeChild(list.firstChild);
-      var updated = readCommentsData.filter(function (c) { return idsEqual(c.video_id, videoId); });
-      if (updated.length === 0) {
-        var em = createEl('p');
-        em.textContent = 'Comentário enviado! Aguardando moderação.';
-        em.style.cssText = 'color:#94a3b8;text-align:center;padding:40px 0;font-size:14px;';
-        list.appendChild(em);
-      } else {
-        updated.forEach(function (c) {
-          var item = createEl('div');
-          item.style.cssText = 'background:rgba(255,255,255,0.06);border-radius:10px;padding:12px;margin-bottom:8px;';
-          var author = createEl('div');
-          author.textContent = c.author_name || 'Visitante';
-          author.style.cssText = 'font-weight:700;font-size:12px;color:#0094EB;margin-bottom:4px;';
-          item.appendChild(author);
-          var t = createEl('div');
-          t.textContent = c.content || c.text || '';
-          t.style.cssText = 'font-size:14px;color:#e2e8f0;white-space:pre-wrap;';
-          item.appendChild(t);
-          list.appendChild(item);
-        });
-      }
-
-      trackMetric({
-        event_type: 'comment',
-        story_id: storyId,
-        video_id: videoId,
-        page_url: window.location.href
-      });
-    };
-    inputRow.appendChild(sendBtn);
-
-    // Enter envia
-    commentInput.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') sendBtn.click();
-    });
-
-    panel.appendChild(inputRow);
-    modalContent.appendChild(panel);
-    setTimeout(function () { commentInput.focus(); }, 100);
+    }
   }
 
   function closeOverlay() {
