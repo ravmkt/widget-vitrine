@@ -1713,22 +1713,7 @@ function renderStoryModal() {
     shareBtn.title = 'Compartilhar';
     shareBtn.onclick = function (e) {
       e.stopPropagation();
-      var shareUrl = window.location.href;
-      if (navigator.share) {
-        navigator.share({ title: story.title || '', url: shareUrl }).catch(function () {});
-      } else {
-        navigator.clipboard.writeText(shareUrl).then(function () {
-          shareBtn.style.background = '#22c55e';
-          shareBtn.innerHTML = '✓';
-          setTimeout(function () {
-            shareBtn.style.background = '';
-            shareBtn.innerHTML = svgIcon('share');
-          }, 1500);
-        }).catch(function () {
-          window.open('https://wa.me/?text=' + encodeURIComponent(shareUrl), '_blank');
-        });
-      }
-      trackMetric({ event_type: 'share', story_id: story.id, video_id: video ? video.id : null, page_url: window.location.href });
+      openSharePanel(shareBtn);
     };
     social.appendChild(shareBtn);
   }
