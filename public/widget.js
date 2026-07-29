@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.07.29-33';
+  var WIDGET_VERSION = '2026.07.29-34';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -47,14 +47,11 @@
   var VIDEO_FILE_REGEX = /\.(mp4|webm|ogg|mov|m4v|m3u8)(\?.*)?$/i;
 
   // ═══════════════════════════════════════════════════════════════
-  // 🆕 NOVA ESTRUTURA: 62 colunas planas
+  // NOVA ESTRUTURA: 62 colunas planas
   // ═══════════════════════════════════════════════════════════════
   var DEFAULT_APPEARANCE = {
-    // ── 🟦 Básico ──
     style_name: 'default',
     same_appearance_all_devices: true,
-
-    // ── 🟨 Identidade Visual ──
     primary_color: '#0094EB',
     secondary_color: '#0094EB',
     text_color: '#0F172A',
@@ -62,8 +59,6 @@
     button_color: '#0094EB',
     font_family: 'Inter, system-ui, sans-serif',
     font_size: '14',
-
-    // ── 🔴 Flutuante (Base) ──
     floating_shape: 'portrait',
     floating_size: '80',
     floating_border_radius: '12',
@@ -79,8 +74,6 @@
     floating_show_play_button: true,
     floating_allow_drag: false,
     floating_allow_close: true,
-
-    // ── 🟢 Carrossel (Base) ──
     carousel_shape: 'portrait',
     carousel_size: '30',
     carousel_visible_items: '4',
@@ -95,8 +88,6 @@
     carousel_show_product: true,
     carousel_show_play_button: true,
     carousel_auto_center: false,
-
-    // ── 🟣 Grade (Base) ──
     grid_shape: 'portrait',
     grid_size: '30',
     grid_columns: '4',
@@ -107,8 +98,6 @@
     grid_border_radius: '12',
     grid_object_fit: 'cover',
     grid_show_title: false,
-
-    // ── 🔵 Player Modal ──
     modal_show_title: true,
     modal_show_play_button: true,
     modal_show_product: true,
@@ -126,7 +115,7 @@
   };
 
   // ═══════════════════════════════════════════════════════════════
-  // 🆕 HELPERS DE DISPOSITIVO
+  // HELPERS DE DISPOSITIVO
   // ═══════════════════════════════════════════════════════════════
 
   function getDevice() {
@@ -149,71 +138,46 @@
     return (fallbackBase !== undefined && fallbackBase !== null && fallbackBase !== '') ? fallbackBase : fallback;
   }
 
-  /**
-   * 🆕 Lê um valor de dentro de um campo JSONB de configuração
-   * (floating_config, carousel_config, grid_config, modal_config),
-   * respeitando same_for_all e mobile/desktop.
-   */
   function readJsonbConfigValue(appearance, configKey, fieldName, fallback) {
     var configObj = appearance[configKey];
-
     if (configObj === undefined || configObj === null) return fallback;
-
     if (typeof configObj === 'string') {
       try { configObj = JSON.parse(configObj); } catch(e) { return fallback; }
     }
-
     if (!isPlainObject(configObj)) return fallback;
-
-    if (configObj[fieldName] !== undefined &&
-        configObj[fieldName] !== null &&
-        configObj[fieldName] !== '') {
+    if (configObj[fieldName] !== undefined && configObj[fieldName] !== null && configObj[fieldName] !== '') {
       return configObj[fieldName];
     }
-
     var device = getDevice();
     var sameAll = configObj.same_for_all;
-
     if (sameAll === true || sameAll === undefined || sameAll === null) {
-      if (configObj.desktop && configObj.desktop[fieldName] !== undefined &&
-          configObj.desktop[fieldName] !== null && configObj.desktop[fieldName] !== '') {
+      if (configObj.desktop && configObj.desktop[fieldName] !== undefined && configObj.desktop[fieldName] !== null && configObj.desktop[fieldName] !== '') {
         return configObj.desktop[fieldName];
       }
-      if (configObj.mobile && configObj.mobile[fieldName] !== undefined &&
-          configObj.mobile[fieldName] !== null && configObj.mobile[fieldName] !== '') {
+      if (configObj.mobile && configObj.mobile[fieldName] !== undefined && configObj.mobile[fieldName] !== null && configObj.mobile[fieldName] !== '') {
         return configObj.mobile[fieldName];
       }
       return fallback;
     }
-
     var deviceConfig = configObj[device];
-    if (deviceConfig && deviceConfig[fieldName] !== undefined &&
-        deviceConfig[fieldName] !== null && deviceConfig[fieldName] !== '') {
+    if (deviceConfig && deviceConfig[fieldName] !== undefined && deviceConfig[fieldName] !== null && deviceConfig[fieldName] !== '') {
       return deviceConfig[fieldName];
     }
-
     var otherDevice = device === 'mobile' ? 'desktop' : 'mobile';
     var otherConfig = configObj[otherDevice];
-    if (otherConfig && otherConfig[fieldName] !== undefined &&
-        otherConfig[fieldName] !== null && otherConfig[fieldName] !== '') {
+    if (otherConfig && otherConfig[fieldName] !== undefined && otherConfig[fieldName] !== null && otherConfig[fieldName] !== '') {
       return otherConfig[fieldName];
     }
-
     return fallback;
   }
 
-  /**
-   * 🆕 Lê valor de aparência com prioridade: JSONB → coluna plana → fallback.
-   */
   function readConfigValue(appearance, configKey, jsonbField, flatField, fallback) {
     var jsonbVal = readJsonbConfigValue(appearance, configKey, jsonbField);
     if (jsonbVal !== undefined && jsonbVal !== null && jsonbVal !== '') return jsonbVal;
-
     if (flatField) {
       var flatVal = readDeviceValue(appearance, flatField);
       if (flatVal !== undefined && flatVal !== null && flatVal !== '') return flatVal;
     }
-
     return fallback;
   }
 
@@ -326,12 +290,7 @@
     Object.keys(source).forEach(function (key) {
       var value = source[key];
       if (value === undefined || value === null || value === '') return;
-      
-      if (JSONB_KEYS.indexOf(key) !== -1) {
-        target[key] = value;
-        return;
-      }
-      
+      if (JSONB_KEYS.indexOf(key) !== -1) { target[key] = value; return; }
       if (isPlainObject(value)) { flattenAppearanceInto(target, value, depth + 1); return; }
       if (typeof value === 'string') {
         var parsed = parseJsonIfNeeded(value);
@@ -399,12 +358,8 @@
       .catch(function () { return []; });
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // 🆕 fetchDbAppearance — Lê da nova tabela appearances (62 colunas)
-  // ═══════════════════════════════════════════════════════════════
   function fetchDbAppearance() {
     if (!storeId || !hasSupabase) return Promise.resolve({});
-
     return supabaseFetch(
       'appearances?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
       { method: 'GET' }
@@ -415,15 +370,11 @@
       })
       .then(function (data) {
         if (Array.isArray(data) && data.length > 0) {
-          var row = data[0];
-          console.log('🔍 fetchDbAppearance — appearances (nova):', row);
-          return normalizeAppearanceItem(row);
+          return normalizeAppearanceItem(data[0]);
         }
         return tryLegacyTable();
       })
-      .catch(function () {
-        return tryLegacyTable();
-      });
+      .catch(function () { return tryLegacyTable(); });
 
     function tryLegacyTable() {
       return supabaseFetch(
@@ -436,7 +387,6 @@
         })
         .then(function (data) {
           if (Array.isArray(data) && data.length > 0) {
-            console.log('🔍 fetchDbAppearance — widget_appearances (legado):', data[0]);
             return normalizeAppearanceItem(data[0]);
           }
           return {};
@@ -444,10 +394,6 @@
         .catch(function () { return {}; });
     }
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // LEITURA DE APARÊNCIA (config → storage → db)
-  // ═══════════════════════════════════════════════════════════════
 
   function getConfigAppearance() {
     var merged = {};
@@ -478,33 +424,15 @@
   function readAppearance() {
     var configAppearance = normalizeAppearanceItem(getConfigAppearance());
     var storageAppearance = normalizeAppearanceItem(getStorageAppearance());
-
     return fetchDbAppearance().then(function (dbAppearance) {
       var finalAppearance = {};
-
       mergeObject(finalAppearance, DEFAULT_APPEARANCE);
       mergeObject(finalAppearance, configAppearance);
       mergeObject(finalAppearance, storageAppearance);
       mergeObject(finalAppearance, dbAppearance);
-
-      console.log('🔍 readAppearance — FINAL:', {
-        same_appearance_all_devices: finalAppearance.same_appearance_all_devices,
-        floating_position: readJsonbConfigValue(finalAppearance, 'floating_config', 'floating_position'),
-        floating_shape: readJsonbConfigValue(finalAppearance, 'floating_config', 'shape'),
-        floating_size: readJsonbConfigValue(finalAppearance, 'floating_config', 'width'),
-        floating_border_color: readJsonbConfigValue(finalAppearance, 'floating_config', 'border_color'),
-        floating_border_width: readJsonbConfigValue(finalAppearance, 'floating_config', 'border_style'),
-        primary_color: finalAppearance.primary_color,
-        device: getDevice()
-      });
-
       return finalAppearance;
     });
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // 🆕 NORMALIZADORES DE VALORES
-  // ═══════════════════════════════════════════════════════════════
 
   function normalizeFloatingPosition(value) {
     var key = normalizeKey(value);
@@ -522,60 +450,32 @@
     if (key === 'circle' || key === 'circulo' || key === 'redondo') return 'circle';
     return DEFAULT_APPEARANCE.floating_shape;
   }
-  // ═══════════════════════════════════════════════════════════════
-  // 🆕 CONFIGS POR WIDGET (lendo dos JSONBs)
-  // ═══════════════════════════════════════════════════════════════
 
   function getFloatingConfig(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
-
     function rcv(jsonbField, flatField, fallback) {
       return readConfigValue(appearance, 'floating_config', jsonbField, flatField, fallback);
     }
-
-    var position = normalizeFloatingPosition(
-      rcv('floating_position', 'floating_position', DEFAULT_APPEARANCE.floating_position)
-    );
-    var shape = normalizeFloatingShape(
-      rcv('shape', 'floating_shape', DEFAULT_APPEARANCE.floating_shape)
-    );
-
+    var position = normalizeFloatingPosition(rcv('floating_position', 'floating_position', DEFAULT_APPEARANCE.floating_position));
+    var shape = normalizeFloatingShape(rcv('shape', 'floating_shape', DEFAULT_APPEARANCE.floating_shape));
     var sizeNumber = toNumber(rcv('width', 'floating_size', '80'), 80);
     var widthNumber = sizeNumber;
     var heightNumber;
-
-    if (shape === 'square' || shape === 'circle') {
-      heightNumber = widthNumber;
-    } else {
-      heightNumber = Math.round(widthNumber * 16 / 9);
-    }
-
+    if (shape === 'square' || shape === 'circle') { heightNumber = widthNumber; }
+    else { heightNumber = Math.round(widthNumber * 16 / 9); }
     var borderWidthNumber = toNumber(rcv('border_style', 'floating_border_width', '2'), 2);
     var radiusNumber = toNumber(rcv('border_radius', 'floating_border_radius', '12'), 12);
     if (shape === 'circle') radiusNumber = 999;
-
     var marginTopNumber = toNumber(rcv('top_spacing', 'floating_margin_top', '20'), 20);
     var marginBottomNumber = toNumber(rcv('bottom_spacing', 'floating_margin_bottom', '20'), 20);
     var marginSideNumber = toNumber(rcv('left_spacing', 'floating_margin_side', '20'), 20);
     var zIndexNumber = toNumber(rcv('z_index', 'floating_z_index', '2147483647'), 2147483647);
-
     var objectFit = String(rcv('object_fit', 'floating_object_fit', 'cover') || 'cover').trim().toLowerCase();
-
     var top = 'auto', right = 'auto', bottom = 'auto', left = 'auto', alignItems = 'flex-end';
     if (position === 'top-left') { top = px(marginTopNumber); left = px(marginSideNumber); alignItems = 'flex-start'; }
     if (position === 'top-right') { top = px(marginTopNumber); right = px(marginSideNumber); alignItems = 'flex-end'; }
     if (position === 'bottom-left') { bottom = px(marginBottomNumber); left = px(marginSideNumber); alignItems = 'flex-start'; }
     if (position === 'bottom-right') { bottom = px(marginBottomNumber); right = px(marginSideNumber); alignItems = 'flex-end'; }
-
-    console.log('🔍 getFloatingConfig — RESULTADO:', {
-      position: position, shape: shape,
-      top: top, right: right, bottom: bottom, left: left,
-      width: px(widthNumber), height: px(heightNumber),
-      borderWidth: px(borderWidthNumber),
-      radius: shape === 'circle' ? '999px' : px(radiusNumber),
-      objectFit: objectFit, zIndex: zIndexNumber
-    });
-
     return {
       position: position, shape: shape,
       top: top, right: right, bottom: bottom, left: left,
@@ -589,11 +489,9 @@
 
   function getFloatingBehaviorConfig(appearance) {
     appearance = appearance || {};
-
     function rcv(jsonbField, flatField, fallback) {
       return readConfigValue(appearance, 'floating_config', jsonbField, flatField, fallback);
     }
-
     return {
       objectFit: rcv('object_fit', 'floating_object_fit', DEFAULT_APPEARANCE.floating_object_fit),
       showPlayButton: toBoolean(rcv('show_play_icon', 'floating_show_play_button', true), true),
@@ -602,17 +500,11 @@
     };
   }
 
-  /**
-   * 🆕 Configuração do carrossel com suporte a mobile/desktop.
-   * Lê do carousel_config JSONB com fallback para colunas planas.
-   */
   function getCarouselConfig(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
-
     function rcv(jsonbField, flatField, fallback) {
       return readConfigValue(appearance, 'carousel_config', jsonbField, flatField, fallback);
     }
-
     var shape = String(rcv('shape', 'carousel_shape', 'portrait') || 'portrait').trim().toLowerCase();
     var sizeNumber = toNumber(rcv('width', 'carousel_size', '30'), 30);
     var visibleItems = safeInt(rcv('visible_items', 'carousel_visible_items', '4'), 4);
@@ -627,14 +519,12 @@
     var showProduct = toBoolean(rcv('show_product', 'carousel_show_product', true), true);
     var showPlayButton = toBoolean(rcv('show_play_icon', 'carousel_show_play_button', true), true);
     var autoCenter = toBoolean(rcv('auto_center', 'carousel_auto_center', false), false);
-
     var aspectRatio = '9 / 16';
     if (shape.indexOf('landscape') !== -1 || shape.indexOf('16_9') !== -1 || shape.indexOf('16-9') !== -1) {
       aspectRatio = '16 / 9';
     } else if (shape.indexOf('square') !== -1 || shape.indexOf('1_1') !== -1 || shape.indexOf('1-1') !== -1 || shape === 'circle') {
       aspectRatio = '1 / 1';
     }
-
     return {
       shape: shape, size: sizeNumber,
       visibleItems: visibleItems, spacing: spacing,
@@ -647,16 +537,11 @@
     };
   }
 
-  /**
-   * 🆕 Configuração da grade com suporte a mobile/desktop.
-   */
   function getGridConfig(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
-
     function rcv(jsonbField, flatField, fallback) {
       return readConfigValue(appearance, 'grid_config', jsonbField, flatField, fallback);
     }
-
     var shape = String(rcv('shape', 'grid_shape', 'portrait') || 'portrait').trim().toLowerCase();
     var sizeNumber = toNumber(rcv('width', 'grid_size', '30'), 30);
     var columns = safeInt(rcv('visible_items', 'grid_columns', '4'), 4);
@@ -667,14 +552,12 @@
     var borderRadius = safeInt(rcv('border_radius', 'grid_border_radius', '12'), 12);
     var objectFit = String(rcv('object_fit', 'grid_object_fit', 'cover') || 'cover').trim().toLowerCase();
     var showTitle = toBoolean(rcv('show_title', 'grid_show_title', false), false);
-
     var aspectRatio = '9 / 16';
     if (shape.indexOf('landscape') !== -1 || shape.indexOf('16_9') !== -1 || shape.indexOf('16-9') !== -1) {
       aspectRatio = '16 / 9';
     } else if (shape.indexOf('square') !== -1 || shape.indexOf('1_1') !== -1 || shape.indexOf('1-1') !== -1 || shape === 'circle') {
       aspectRatio = '1 / 1';
     }
-
     return {
       shape: shape, size: sizeNumber,
       columns: columns, rows: rows, spacing: spacing,
@@ -683,10 +566,6 @@
       showTitle: showTitle, aspectRatio: aspectRatio
     };
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // CORES E FONTES
-  // ═══════════════════════════════════════════════════════════════
 
   function getPrimaryColor(appearance) {
     return readAppearanceValue(appearance, ['primary_color', 'primaryColor', 'cor_primaria']) || DEFAULT_APPEARANCE.primary_color;
@@ -699,10 +578,8 @@
   function getBorderColor(appearance) {
     var jsonbVal = readJsonbConfigValue(appearance, 'floating_config', 'border_color');
     if (jsonbVal && String(jsonbVal).trim() !== '') return jsonbVal;
-
     var flatVal = readDeviceValue(appearance, 'floating_border_color');
     if (flatVal && String(flatVal).trim() !== '') return flatVal;
-
     return getPrimaryColor(appearance);
   }
 
@@ -714,47 +591,33 @@
     return readAppearanceValue(appearance, ['font_family', 'fontFamily', 'fonte']) || DEFAULT_APPEARANCE.font_family;
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // 🆕 normalizeModalAppearanceConfig — Usa modal_config JSONB
-  // ═══════════════════════════════════════════════════════════════
-
   function normalizeModalAppearanceConfig(appearance) {
     appearance = appearance || {};
-
     function getFromJsonb(fieldName, fallback) {
       var val = readJsonbConfigValue(appearance, 'modal_config', fieldName);
       if (val !== undefined && val !== null && val !== '') return val;
       return fallback;
     }
-
     function getBool(name, fallback) {
       var jsonbVal = getFromJsonb(name, undefined);
       if (jsonbVal !== undefined && jsonbVal !== null && jsonbVal !== '') return toBoolean(jsonbVal, fallback);
-
       var flatVal = appearance[name];
       if (flatVal !== undefined && flatVal !== null && flatVal !== '') return toBoolean(flatVal, fallback);
-
       var legacyName = name.replace('modal_', '');
       var legacyVal = appearance[legacyName];
       if (legacyVal !== undefined && legacyVal !== null && legacyVal !== '') return toBoolean(legacyVal, fallback);
-
       return fallback;
     }
-
     function getString(name, fallback) {
       var jsonbVal = getFromJsonb(name, undefined);
       if (jsonbVal !== undefined && jsonbVal !== null && jsonbVal !== '') return jsonbVal;
-
       var flatVal = appearance[name];
       if (flatVal !== undefined && flatVal !== null && flatVal !== '') return flatVal;
-
       var legacyName = name.replace('modal_', '');
       var legacyVal = appearance[legacyName];
       if (legacyVal !== undefined && legacyVal !== null && legacyVal !== '') return legacyVal;
-
       return fallback;
     }
-
     return {
       show_title: getBool('modal_show_title', true),
       show_play_button: getBool('modal_show_play_button', true),
@@ -773,10 +636,6 @@
     };
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // MÉTRICAS
-  // ═══════════════════════════════════════════════════════════════
-
   function trackMetric(metric) {
     metric = metric || {};
     var payload = {
@@ -793,14 +652,11 @@
       metadata: {},
       created_at: new Date().toISOString()
     };
-
     var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
     if (!Array.isArray(fallbackMetrics)) fallbackMetrics = [];
     fallbackMetrics.push(payload);
     setStorageItem('vidlytics_metrics', fallbackMetrics);
-
     if (!hasSupabase) return Promise.resolve({ saved: false, local: true, payload: payload });
-
     return supabaseFetch('metrics', {
       method: 'POST',
       headers: { 'Prefer': 'return=minimal' },
@@ -809,10 +665,6 @@
       .then(function (response) { if (response.ok) return { saved: true, payload: payload }; return { saved: false, payload: payload }; })
       .catch(function () { return { saved: false, payload: payload }; });
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // FETCH DE DADOS
-  // ═══════════════════════════════════════════════════════════════
 
   function readStories() {
     if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_stories', []));
@@ -882,28 +734,19 @@
     return fetchJson('sizing_models?select=*&store_id=eq.' + encodeURIComponent(storeId));
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // REGRAS DE PÁGINA
-  // ═══════════════════════════════════════════════════════════════
-
   function matchesRule(rule) {
     if (!rule || rule.active === false) return false;
-
     var href = window.location.href;
     var path = window.location.pathname || '/';
-
     var rawCondition = String(firstDefined(rule.condition_type, rule.rule_type, rule.match_type) || '').trim().toLowerCase();
     var conditionType = rawCondition.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-
     if (conditionType.indexOf('contem') !== -1 || conditionType === 'url_contains') conditionType = 'contains';
     if (conditionType.indexOf('exata') !== -1 || conditionType === 'url_equals' || conditionType === 'exact') conditionType = 'equals';
     if (conditionType.indexOf('todas') !== -1 || conditionType === 'all') conditionType = 'all_pages';
     if (conditionType.indexOf('inicial') !== -1 || conditionType === 'home') conditionType = 'home_only';
-
     var value = String(firstDefined(rule.url_pattern, rule.page_url, rule.value) || '').trim();
     if (!conditionType) return true;
     if (!value && conditionType !== 'all_pages' && conditionType !== 'home_only') return false;
-
     switch (conditionType) {
       case 'all_pages': return true;
       case 'home_only': return path === '/' || path === '/home' || path === '/index.html' || path === '';
@@ -923,15 +766,12 @@
     if (!appearance) return true;
     var rawUrl = firstDefined(appearance.url, appearance.pageUrl, appearance.page_url);
     if (!rawUrl || String(rawUrl).trim() === '') return true;
-
     var pattern = String(rawUrl).trim().toLowerCase();
     var href = window.location.href.toLowerCase();
     var path = (window.location.pathname || '/').toLowerCase();
     var search = (window.location.search || '').toLowerCase();
     var fullPath = (path + search).replace(/\/+$/, '');
-
     var patterns = pattern.split(',').map(function (p) { return p.trim(); }).filter(Boolean);
-
     return patterns.some(function (p) {
       var normalizedPattern = p.replace(/\/+$/, '').replace(/^https?:\/\/[^/]+/i, '');
       if (p === '/') normalizedPattern = '/';
@@ -945,10 +785,6 @@
       );
     });
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // MÍDIA / THUMBNAILS
-  // ═══════════════════════════════════════════════════════════════
 
   function getVideoUrl(video) {
     if (!video) return '';
@@ -1009,10 +845,6 @@
     return getThumbnailFromObject(coverRelation) || getThumbnailFromObject(story) || getVideoThumbnail(coverVideo) || getThumbnailFromObject(coverVideo) || '';
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // SHADOW DOM
-  // ═══════════════════════════════════════════════════════════════
-
   function applyHostPosition(host, appearance) {
     var cfg = getFloatingConfig(appearance || currentAppearance);
     setImportant(host, 'position', 'fixed');
@@ -1044,10 +876,6 @@
     return { host: host, shadow: globalShadowRoot };
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // CSS
-  // ═══════════════════════════════════════════════════════════════
-
   function buildSharedCss(appearance) {
     var cfg = getFloatingConfig(appearance);
     var primary = getPrimaryColor(appearance);
@@ -1063,7 +891,6 @@
     var fontSize = readAppearanceValue(appearance, ['font_size', 'fontSize']) || '14';
     var modalConfig = normalizeModalAppearanceConfig(appearance);
     var shadow = modalConfig.shadow_enabled !== false ? '0 24px 80px rgba(15,23,42,.24)' : 'none';
-
     return (
       '*,*::before,*::after{box-sizing:border-box!important;}'
       + '.vl-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;background:rgba(15,23,42,.62)!important;display:none!important;align-items:center!important;justify-content:center!important;z-index:' + cfg.zIndex + '!important;font-family:' + font + '!important;font-size:' + toNumber(fontSize, 14) + 'px!important;}'
@@ -1162,7 +989,6 @@
     var borderColor = getBorderColor(appearance);
     var borderBackground = borderColor ? borderColor : 'linear-gradient(135deg,' + primary + ',' + secondary + ')';
     var font = getFontFamily(appearance);
-
     return ':host{all:initial!important;position:fixed!important;top:' + cfg.top + '!important;right:' + cfg.right + '!important;bottom:' + cfg.bottom + '!important;left:' + cfg.left + '!important;z-index:' + cfg.zIndex + '!important;width:' + cfg.width + '!important;min-width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;height:auto!important;overflow:visible!important;background:transparent!important;pointer-events:auto!important;font-family:' + font + '!important;}'
       + buildSharedCss(appearance)
       + '.vl-bubbles{width:' + cfg.width + '!important;display:flex!important;flex-direction:column!important;align-items:' + cfg.alignItems + '!important;justify-content:flex-start!important;gap:10px!important;overflow:visible!important;position:relative!important;}'
@@ -1175,10 +1001,6 @@
       + '.vl-dismiss{all:unset!important;-webkit-appearance:none!important;appearance:none!important;position:absolute!important;top:-14px!important;right:-14px!important;width:22px!important;height:22px!important;background:transparent!important;color:#000!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:16px!important;font-weight:900!important;line-height:1!important;cursor:pointer!important;z-index:20!important;pointer-events:auto!important;border-radius:0!important;box-shadow:none!important;outline:none!important;border:none!important;padding:0!important;margin:0!important;text-shadow:0 0 4px rgba(255,255,255,.9)!important;}'
       + '.vl-label{pointer-events:none!important;width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;font-family:' + font + '!important;font-size:11px!important;line-height:12px!important;font-weight:700!important;color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.8)!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;display:block!important;}';
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // STORY MODAL / PLAYER
-  // ═══════════════════════════════════════════════════════════════
 
   function pausePreviews() {
     if (!globalShadowRoot) return;
@@ -1200,7 +1022,6 @@
     var isUpload = video.source_type === 'upload' || video.sourceType === 'upload';
     var isDirect = isDirectVideoUrl(url);
     var wrapper = createEl('div', 'vl-player');
-
     if (!isUpload && ytId) {
       var iframe = createEl('iframe');
       iframe.src = 'https://www.youtube.com/embed/' + ytId + '?autoplay=1&playsinline=1&rel=0&loop=1&playlist=' + ytId;
@@ -1210,7 +1031,6 @@
       trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
       return wrapper;
     }
-
     if ((isUpload || isDirect) && url) {
       var media = createEl('video');
       media.controls = false;
@@ -1223,7 +1043,6 @@
       var thumb = getVideoThumbnail(video);
       if (thumb) media.poster = thumb;
       media.src = url;
-
       media.addEventListener('play', function () {
         trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
       });
@@ -1233,7 +1052,6 @@
       wrapper.appendChild(media);
       return wrapper;
     }
-
     var link = createEl('a');
     link.href = url || '#';
     link.target = '_blank';
@@ -1261,11 +1079,9 @@
     content.textContent = comment.content || '';
     item.appendChild(author);
     item.appendChild(content);
-
     var replyContent = String(comment.reply_content || comment.replyContent || '').trim();
     var replyStatus = String(comment.reply_status || comment.replyStatus || '').trim().toLowerCase();
     var replyIsVisible = replyContent && (!replyStatus || replyStatus === 'replied' || replyStatus === 'respondido' || replyStatus === 'published' || replyStatus === 'publicado');
-
     if (replyIsVisible) {
       var reply = createEl('div', 'vl-comment-reply');
       var replyLabel = createEl('div', 'vl-comment-reply-label');
@@ -1303,7 +1119,6 @@
     };
     if (!payload.author_name) return Promise.reject(new Error('Informe seu nome.'));
     if (!payload.content) return Promise.reject(new Error('Digite um comentário.'));
-
     return supabaseFetch('comments', {
       method: 'POST',
       headers: { 'Prefer': 'return=minimal' },
@@ -1325,13 +1140,10 @@
     if (!modalContent) return;
     var model = readSizingModelsData.find(function (m) { return idsEqual(m.id, modelId); });
     if (!model) return;
-
     var oldPanel = modalContent.querySelector('.vl-sizing-panel');
     if (oldPanel) oldPanel.remove();
-
     var panel = createEl('div', 'vl-sizing-panel');
     panel.className = 'vl-sizing-panel is-open';
-
     var header = createEl('div', 'vl-sizing-header');
     var title = createEl('div', 'vl-sizing-title');
     title.textContent = 'Medidas da modelo';
@@ -1342,7 +1154,6 @@
     header.appendChild(title);
     header.appendChild(closeButton);
     panel.appendChild(header);
-
     var content = createEl('div', 'vl-sizing-content');
     var modelName = createEl('div');
     modelName.style.fontWeight = '800';
@@ -1350,7 +1161,6 @@
     modelName.style.marginBottom = '4px';
     modelName.textContent = model.name || 'Modelo';
     content.appendChild(modelName);
-
     if (model.size_name) {
       var sizeLabel = createEl('div');
       sizeLabel.style.fontSize = '12px';
@@ -1360,10 +1170,8 @@
       sizeLabel.textContent = 'Veste tamanho: ' + model.size_name;
       content.appendChild(sizeLabel);
     }
-
     var measures = [];
     try { measures = typeof model.measures === 'string' ? JSON.parse(model.measures) : (model.measures || []); } catch (e) {}
-
     if (measures && measures.length > 0) {
       var table = createEl('table', 'vl-sizing-table');
       var thead = createEl('thead');
@@ -1373,7 +1181,6 @@
       trHead.appendChild(th1); trHead.appendChild(th2);
       thead.appendChild(trHead);
       table.appendChild(thead);
-
       var tbody = createEl('tbody');
       measures.forEach(function (m) {
         var label = m.name || m.label || '';
@@ -1405,10 +1212,8 @@
     if (!modalContent) return;
     var oldPanel = modalContent.querySelector('.vl-comments-panel');
     if (oldPanel) oldPanel.remove();
-
     var panel = createEl('div', 'vl-comments-panel');
     panel.className = 'vl-comments-panel is-open';
-
     var header = createEl('div', 'vl-comments-header');
     var title = createEl('div', 'vl-comments-title');
     title.textContent = 'Comentários';
@@ -1419,10 +1224,8 @@
     closeButton.onclick = function () { panel.remove(); };
     header.appendChild(title);
     header.appendChild(closeButton);
-
     var list = createEl('div', 'vl-comments-list');
     var comments = getCommentsForVideo(videoId);
-
     if (!comments.length) {
       var emptyMsg = createEl('div', 'vl-comments-empty');
       emptyMsg.textContent = 'Ainda não há comentários neste vídeo.';
@@ -1430,7 +1233,6 @@
     } else {
       comments.forEach(function (comment) { list.appendChild(renderCommentItem(comment)); });
     }
-
     var form = createEl('form', 'vl-comments-form');
     var nameInput = createEl('input', 'vl-comments-input');
     nameInput.type = 'text';
@@ -1438,20 +1240,16 @@
     nameInput.maxLength = 100;
     nameInput.required = true;
     nameInput.autocomplete = 'name';
-
     var editor = createEl('div', 'vl-comments-editor');
     var contentInput = createEl('textarea', 'vl-comments-input vl-comments-textarea');
     contentInput.placeholder = 'Escreva um comentário...';
     contentInput.maxLength = 1000;
     contentInput.required = true;
-
     var emojiButton = createEl('button', 'vl-emoji-button');
     emojiButton.type = 'button';
     emojiButton.textContent = '☺️';
     emojiButton.setAttribute('aria-label', 'Adicionar emoji');
-
     var emojiPicker = createEl('div', 'vl-emoji-picker');
-
     getCommentEmojis().forEach(function (emoji) {
       var emojiItem = createEl('button', 'vl-emoji-item');
       emojiItem.type = 'button';
@@ -1470,48 +1268,39 @@
       });
       emojiPicker.appendChild(emojiItem);
     });
-
     emojiButton.addEventListener('click', function (event) {
       event.preventDefault(); event.stopPropagation();
       emojiPicker.classList.toggle('is-open');
       if (emojiPicker.classList.contains('is-open')) contentInput.focus();
     });
-
     document.addEventListener('click', function closeEmojiPicker(event) {
       if (emojiPicker.classList.contains('is-open') && !editor.contains(event.target)) {
         emojiPicker.classList.remove('is-open');
         document.removeEventListener('click', closeEmojiPicker);
       }
     });
-
     editor.appendChild(contentInput);
     editor.appendChild(emojiButton);
     editor.appendChild(emojiPicker);
-
     var feedback = createEl('div', 'vl-comments-feedback');
     var submit = createEl('button', 'vl-comments-submit');
     submit.type = 'submit';
     submit.textContent = 'Enviar comentário';
-
     form.appendChild(nameInput);
     form.appendChild(editor);
     form.appendChild(feedback);
     form.appendChild(submit);
-
     panel.appendChild(header);
     panel.appendChild(list);
     panel.appendChild(form);
     modalContent.appendChild(panel);
-
     form.addEventListener('submit', function (event) {
       event.preventDefault(); event.stopPropagation();
       var authorName = nameInput.value.trim();
       var content = contentInput.value.trim();
       if (!authorName || !content) { feedback.textContent = 'Preencha seu nome e seu comentário.'; return; }
-
       submit.disabled = true;
       feedback.textContent = 'Enviando...';
-
       createComment({
         story_id: storyId || null,
         video_id: videoId || null,
@@ -1527,7 +1316,6 @@
         submit.disabled = false;
       });
     });
-
     trackMetric({ event_type: 'comment_open', story_id: storyId, video_id: videoId, page_url: window.location.href });
   }
 
@@ -1544,14 +1332,11 @@
   function renderStoryModal() {
     if (!modalContent) return;
     modalContent.innerHTML = '';
-
     var story = currentStories[currentStoryIndex];
     if (!story) { closeOverlay(); return; }
-
     var videos = story.videos || [];
     var video = videos[currentVideoIndex];
     var appearanceConfig = normalizeModalAppearanceConfig(currentAppearance);
-
     var container = createEl('div');
 
     if (videos.length > 1) {
@@ -1575,7 +1360,6 @@
       headerLeft.appendChild(title);
     }
     header.appendChild(headerLeft);
-
     var headerActions = createEl('div', 'vl-header-actions');
     var closeBtn = createEl('button', 'vl-close');
     closeBtn.innerHTML = svgIcon('close');
@@ -1611,13 +1395,11 @@
     body.appendChild(nav);
 
     var social = createEl('div', 'vl-social');
-
     if (appearanceConfig.show_like_button) {
       var likeBtn = createEl('button', 'vl-social-btn');
       likeBtn.innerHTML = svgIcon('heart');
       social.appendChild(likeBtn);
     }
-
     if (appearanceConfig.show_comment_button && video) {
       var commentBtn = createEl('button', 'vl-social-btn');
       commentBtn.innerHTML = svgIcon('comment');
@@ -1630,7 +1412,6 @@
       commentBtn.onclick = function (e) { e.stopPropagation(); openCommentsPanel(video.id, story.id); };
       social.appendChild(commentBtn);
     }
-
     if (appearanceConfig.show_sizing_button && video) {
       var sModelId = getSizingModelId(video);
       if (sModelId) {
@@ -1640,7 +1421,6 @@
         social.appendChild(sizeBtn);
       }
     }
-
     if (appearanceConfig.show_whatsapp_button) {
       var wpBtn = createEl('button', 'vl-social-btn whatsapp');
       wpBtn.innerHTML = svgIcon('whatsapp');
@@ -1650,7 +1430,6 @@
       };
       social.appendChild(wpBtn);
     }
-
     body.appendChild(social);
     container.appendChild(body);
 
@@ -1661,7 +1440,6 @@
         var footerInner = createEl('div', 'vl-footer-inner');
         var pId = sProducts[0].product_id;
         var productData = readProductsData.find(function (p) { return idsEqual(p.id, pId); });
-
         if (productData) {
           var prodCard = createEl('div', 'vl-product');
           prodCard.onclick = function (e) { e.stopPropagation(); if (productData.url) window.location.href = productData.url; };
@@ -1672,13 +1450,11 @@
           var pName = createEl('div', 'vl-product-name');
           pName.textContent = productData.name || 'Produto';
           prodInfo.appendChild(pName);
-
           if (productData.price) {
             var pPrice = createEl('div', 'vl-product-price');
             pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
             prodInfo.appendChild(pPrice);
           }
-
           var pActions = createEl('div', 'vl-product-actions');
           if (appearanceConfig.show_product_button) {
             var buyBtn = createEl('a', 'vl-product-btn');
@@ -1719,15 +1495,16 @@
     }
   }
 
-  function openStoryViewer(stories, index) {
+  /* 🆕 MODIFICADO: openStoryViewer agora aceita videoIndex opcional */
+  function openStoryViewer(stories, storyIndex, videoIndex) {
     currentStories = stories;
-    currentStoryIndex = index || 0;
-    currentVideoIndex = 0;
+    currentStoryIndex = storyIndex || 0;
+    /* 🆕 Usa o videoIndex passado, senão default 0 */
+    currentVideoIndex = (videoIndex !== undefined && videoIndex !== null) ? videoIndex : 0;
 
     if (!globalShadowRoot) {
       var shadowData = getOrCreateShadowRoot(currentAppearance || {});
       globalShadowRoot = shadowData.shadow;
-
       var style = createEl('style');
       style.textContent = buildFloatingCss(currentAppearance || {});
       globalShadowRoot.appendChild(style);
@@ -1738,7 +1515,6 @@
       modalContent = createEl('div', 'vl-modal');
       overlay.appendChild(modalContent);
       globalShadowRoot.appendChild(overlay);
-
       overlay.addEventListener('click', function (e) {
         if (e.target === overlay) closeOverlay();
       });
@@ -1768,10 +1544,8 @@
   function applyDraggable(el, appearance) {
     var behaviorConfig = getFloatingBehaviorConfig(appearance);
     if (!behaviorConfig.allowDrag) return;
-
     var isDragging = false;
     var startX, startY, initialRight, initialBottom;
-
     el.addEventListener('mousedown', function (e) {
       if (e.target.closest('.vl-dismiss')) return;
       isDragging = true;
@@ -1783,12 +1557,10 @@
       initialBottom = window.innerHeight - rect.bottom;
       el.style.transition = 'none';
     });
-
     document.addEventListener('mousemove', function (e) {
       if (!isDragging) return;
       var dx = startX - e.clientX;
       var dy = startY - e.clientY;
-
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
         floatingWasDragged = true;
         el.style.right = (initialRight + dx) + 'px';
@@ -1797,7 +1569,6 @@
         el.style.top = 'auto';
       }
     });
-
     document.addEventListener('mouseup', function () {
       if (isDragging) {
         isDragging = false;
@@ -1807,10 +1578,7 @@
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // 🔧 RENDERIZADOR INLINE CORRIGIDO v2 (CARROSSEL / GRADE)
-  //    ✅ overflow-x: auto SEMPRE (nunca hidden) → sem corte
-  //    ✅ Folga de 4px no container para arredondamento
-  //    ✅ min-width reduzido: 30px (não força card grande)
+  // RENDERIZADOR INLINE (CARROSSEL / GRADE)
   // ═══════════════════════════════════════════════════════════════
 
   function renderInlineWidget(stories, appearance, format) {
@@ -1835,21 +1603,14 @@
     var corTexto = appearance.text_color || '#0F172A';
     var fonte = appearance.font_family || 'Inter, sans-serif';
 
-    // ── CARD SIZE ──
     var cardSizeVw = cfg.size;
     var cardWidth = cardSizeVw + 'vw';
-
-    // ── 🔧 MIN-WIDTH BEM BAIXO: não força o card maior que o size ──
     var cardSizePx = Math.round(cardSizeVw * window.innerWidth / 100);
     var minCardWidth = Math.min(30, cardSizePx) + 'px';
-
-    // ── BORDER RADIUS ──
     var boxBorderRadius = cfg.shape === 'circle' ? '50%' : cfg.borderRadius + 'px';
 
-    // ── 🔧 CONTAINER: folga de 4px para arredondamento do browser ──
     var effectiveItems = (cfg.autoCenter && allVideoItems.length < itemsVisiveis) ? allVideoItems.length : itemsVisiveis;
     var totalGap = espacamento * (effectiveItems - 1);
-    // Adiciona 8px de folga total (4px de cada lado) para evitar corte por subpixel
     var containerMaxWidth = 'min(100vw, calc((' + cardWidth + ' * ' + effectiveItems + ') + ' + totalGap + 'px + 8px))';
 
     var dbSelector = appearance.css_selector || appearance.inline_selector || appearance.display_selector || appearance.selector || '';
@@ -1872,24 +1633,18 @@
       if (!widgetContainer) {
         widgetContainer = document.createElement('div');
         widgetContainer.id = wrapperId;
-
-        // ── 🔧 WRAPPER: sempre centralizado com max-width + folga ──
         var wrapperCss = 'max-width:' + containerMaxWidth + ';margin:20px auto;display:block;clear:both;overflow:visible;';
         if (cfg.autoCenter && allVideoItems.length < itemsVisiveis) {
           wrapperCss = 'display:flex;justify-content:center;max-width:' + containerMaxWidth + ';margin:20px auto;clear:both;overflow:visible;';
         }
         widgetContainer.style.cssText = wrapperCss;
-
         if (usedSelector.indexOf('.flex-.between') !== -1 && targetDiv.parentNode) {
           targetDiv.parentNode.insertBefore(widgetContainer, targetDiv.nextSibling);
         } else { targetDiv.appendChild(widgetContainer); }
       }
 
       widgetContainer.innerHTML = '';
-
       var gapPx = espacamento;
-
-      // ── 🔧 OVERFLOW: SEMPRE auto para carrossel (nunca hidden) ──
       var overflowX = cfg.isGrid ? 'hidden' : 'auto';
 
       var estilo = document.createElement('style');
@@ -1945,7 +1700,9 @@
       slider.className = 'vl-slider-container';
 
       allVideoItems.forEach(function (item) {
-        var story = item.story; var video = item.video; var storyIndex = item.storyIndex; var videoIndex = item.videoIndex;
+        var story = item.story; var video = item.video;
+        /* 🆕 Captura os índices corretos do story e do vídeo */
+        var storyIndex = item.storyIndex; var videoIndex = item.videoIndex;
         var videoUrl = video ? (video.video_url || video.videoUrl || video.url || video.file_url || '') : '';
         var cover = video ? (video.thumbnail_url || video.cover_url || video.thumbnailUrl || video.coverUrl || '') : '';
         var card = document.createElement('button'); card.className = 'vl-card-item';
@@ -1958,13 +1715,16 @@
         var playIcon = document.createElement('div'); playIcon.className = 'vl-play-btn-overlay'; playIcon.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>'; mediaWrap.appendChild(playIcon);
         card.appendChild(mediaWrap);
         if (cfg.showTitle) { var titulo = document.createElement('span'); titulo.className = 'vl-title-text'; titulo.textContent = story.title || story.name || 'Ver Vídeo'; card.appendChild(titulo); }
-        card.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); openStoryViewer(stories, storyIndex); });
+        /* 🆕 MODIFICADO: passa storyIndex E videoIndex para abrir o vídeo correto */
+        card.addEventListener('click', function (e) {
+          e.preventDefault(); e.stopPropagation();
+          openStoryViewer(stories, storyIndex, videoIndex);
+        });
         slider.appendChild(card);
       });
 
       widgetContainer.appendChild(slider);
 
-      // ── 🔧 Drag/scroll: SEMPRE ativo para carrossel (não depende mais de overflowX) ──
       if (!cfg.isGrid) {
         (function () {
           var isDown = false, startX = 0, scrollLeft = 0, moved = false, velX = 0, momentumID;
@@ -2067,7 +1827,8 @@
       bubble.addEventListener('click', function (e) {
         if (e.target.closest('.vl-dismiss')) return;
         if (floatingWasDragged) { floatingWasDragged = false; return; }
-        openStoryViewer(stories, index);
+        /* 🆕 Flutuante: abre sempre no índice 0 (comportamento original mantido) */
+        openStoryViewer(stories, index, 0);
       });
 
       container.appendChild(bubble);
@@ -2116,18 +1877,14 @@
       function storyMatchesCurrentPage(story) {
         var locs = locations.filter(function (l) { return idsEqual(l.story_id, story.id); });
         var rules = pageRules.filter(function (r) { return idsEqual(r.story_id, story.id); });
-
         if (locs.length > 0) return locs.some(matchesRule);
         if (rules.length > 0) return rules.some(matchesRule);
-
         var globalRules = pageRules.filter(function (r) { return !r.story_id; });
         if (globalRules.length > 0) return globalRules.some(matchesRule);
-
         return matchesUrl(appearance);
       }
 
       var validStories = stories.filter(storyMatchesCurrentPage);
-
       if (!validStories || validStories.length === 0) return;
 
       validStories.forEach(function (story) {
@@ -2138,13 +1895,11 @@
       });
 
       var widgetFormat = 'floating_widget';
-
       for (var i = 0; i < validStories.length; i += 1) {
         var storyFormat = String(firstDefined(
           validStories[i].format, validStories[i].display_format, validStories[i].displayFormat,
           validStories[i].visual_style, validStories[i].visualStyle, 'floating_widget'
         )).toLowerCase();
-
         if (storyFormat.indexOf('carousel') !== -1 || storyFormat.indexOf('carrossel') !== -1) { widgetFormat = 'carousel'; break; }
         if (storyFormat.indexOf('grid') !== -1 || storyFormat.indexOf('grade') !== -1) { widgetFormat = 'grid'; break; }
         if (storyFormat.indexOf('floating') !== -1 || storyFormat.indexOf('flutuante') !== -1 || storyFormat.indexOf('widget') !== -1) { widgetFormat = 'floating_widget'; }
@@ -2155,7 +1910,6 @@
       } else {
         renderFloating(validStories, appearance);
       }
-
     }).catch(function (err) {
       console.error('VIDLYTICS: Erro ao inicializar widget:', err);
     });
@@ -2166,5 +1920,4 @@
   } else {
     initWidget();
   }
-
 })();
