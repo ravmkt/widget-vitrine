@@ -697,7 +697,7 @@ var query = 'comments?select=id,store_id,video_id,user_name,user_email,content,s
 function readStoreSettings() {
   if (!storeId || !hasSupabase) return Promise.resolve({});
   return supabaseFetch(
-'store_settings?select=auto_approve_comments,whatsapp_number,whatsapp_message,whatsapp_message_template&store_id=eq.'
+    'store_settings?select=auto_approve_comments,whatsapp_number,whatsapp_message,whatsapp_message_template&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
     { method: 'GET' }
   )
     .then(function (response) { if (!response.ok) return {}; return response.json(); })
