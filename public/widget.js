@@ -2075,6 +2075,8 @@ applyInputFocusStyle(nameInput);
     'font-family:' + fontFamily + ';'
   ].join('');
 
+  applyInputFocusStyle(commentTextarea);
+
   editor.appendChild(commentTextarea);
 
   var emojiRow = createEl('div');
