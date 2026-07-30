@@ -1569,7 +1569,7 @@ var panelHeader = createEl('div', 'vl-panel-header');
   panel.appendChild(panelHeader);
 
   // ── CORPO (área rolável) ──
-  var panelBody = createEl('div');
+var panelBody = createEl('div', 'vl-panel-body');
   panelBody.style.cssText = [
     'flex:1 1 auto;','min-height:0;','overflow-y:auto;','overflow-x:hidden;',
     'padding:0;','display:flex;','flex-direction:column;',
