@@ -1532,6 +1532,8 @@ function openCommentsPanel(videoId, storyId) {
       existing.parentNode.removeChild(existing);
     }
 
+modalContent.classList.remove('has-comments-open');
+
     var header = modalContent.querySelector('.vl-header');
     var footer = modalContent.querySelector('.vl-footer');
     var social = modalContent.querySelector('.vl-social');
