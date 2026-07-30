@@ -2992,4 +2992,154 @@ const AppearancePage = () => {
                         </FormField>
                         <FormField label="Espaçamento">
                           <input
-                            type="number"
+                            type="number" min="0" step="1"
+                            value={activeGridConfig.spacing}
+                            onChange={e => updateGridConfig({ spacing: safeNumber(e.target.value, 0, 0) })}
+                            className={inputClass}
+                          />
+                        </FormField>
+                        <FormField label="Cor da borda">
+                          <ColorInput label="Cor da borda" value={activeGridConfig.border_color || formData.primary_color} onChange={e => updateGridConfig({ border_color: e.target.value })} />
+                        </FormField>
+                        <FormField label="Largura da borda">
+                          <input
+                            type="number" min="0" step="1"
+                            value={toNumberInputValue(activeGridConfig.border_style)}
+                            onChange={e => updateGridConfig({ border_style: e.target.value })}
+                            placeholder="Ex: 2"
+                            className={inputClass}
+                          />
+                        </FormField>
+                        <FormField label="Raio da borda">
+                          <input
+                            type="number" min="0" step="1"
+                            value={toNumberInputValue(activeGridConfig.border_radius)}
+                            onChange={e => updateGridConfig({ border_radius: e.target.value })}
+                            placeholder="Ex: 12"
+                            className={inputClass}
+                          />
+                        </FormField>
+                        <FormField label="Object fit">
+                          <select value={activeGridConfig.object_fit || 'cover'} onChange={e => updateGridConfig({ object_fit: e.target.value })} className={selectClass}>
+                            <option value="cover">Cover</option>
+                            <option value="contain">Contain</option>
+                            <option value="fill">Fill</option>
+                          </select>
+                        </FormField>
+                        <FormField label="Mostrar título">
+                          <ToggleSwitch label="Mostrar título na grade" checked={activeGridConfig.show_title ?? false} onChange={e => updateGridConfig({ show_title: e.target.checked })} />
+                        </FormField>
+                      </div>
+                    </SectionCard>
+                  )}
+
+                  {/* ── Modal ── */}
+                  {activeTab === 'modal' && (
+                    <SectionCard title="Player / Modal" description="Controle quais elementos são exibidos dentro do player de vídeo.">
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <FormField label="Mostrar título">
+                          <ToggleSwitch label="Mostrar título" checked={formData.modal_config.show_title} onChange={e => updateModalConfig({ show_title: e.target.checked })} />
+                        </FormField>
+                        <FormField label="Mostrar botão play">
+                          <ToggleSwitch label="Mostrar botão play" checked={formData.modal_config.show_play_button} onChange={e => updateModalConfig({ show_play_button: e.target.checked })} />
+                        </FormField>
+
+                        {/* ── Card do Produto ── */}
+                        <div className="md:col-span-2 space-y-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
+                          <FormField label="Mostrar card do produto">
+                            <ToggleSwitch
+                              label="Exibe o card com imagem, nome, preço e botões do produto"
+                              checked={formData.modal_config.show_product}
+                              onChange={e => updateModalConfig({ show_product: e.target.checked })}
+                            />
+                          </FormField>
+                          {formData.modal_config.show_product && (
+                            <div className="ml-6 space-y-4 border-l-2 border-blue-200 pl-5">
+                              <FormField label="Mostrar botão Ver produto">
+                                <ToggleSwitch
+                                  label='Exibe o botão "Ver no site" dentro do card'
+                                  checked={formData.modal_config.show_product_button}
+                                  onChange={e => updateModalConfig({ show_product_button: e.target.checked })}
+                                />
+                              </FormField>
+                              <FormField label="Mostrar botão Comprar pelo WhatsApp">
+                                <ToggleSwitch
+                                  label='Exibe o botão "Comprar pelo WhatsApp" dentro do card'
+                                  checked={formData.modal_config.show_product_whatsapp_button}
+                                  onChange={e => updateModalConfig({ show_product_whatsapp_button: e.target.checked })}
+                                />
+                              </FormField>
+                            </div>
+                          )}
+                        </div>
+
+                        <FormField label="Mostrar botão like">
+                          <ToggleSwitch label="Mostrar botão like" checked={formData.modal_config.show_like_button} onChange={e => updateModalConfig({ show_like_button: e.target.checked })} />
+                        </FormField>
+                        <FormField label="Mostrar botão comentário">
+                          <ToggleSwitch label="Mostrar botão comentário" checked={formData.modal_config.show_comment_button} onChange={e => updateModalConfig({ show_comment_button: e.target.checked })} />
+                        </FormField>
+                        <FormField label="Mostrar botão compartilhar">
+                          <ToggleSwitch label="Mostrar botão compartilhar" checked={formData.modal_config.show_share_button} onChange={e => updateModalConfig({ show_share_button: e.target.checked })} />
+                        </FormField>
+                        <FormField label="Cor da borda">
+                          <ColorInput label="Cor da borda" value={formData.modal_config.border_color || formData.primary_color} onChange={e => updateModalConfig({ border_color: e.target.value })} />
+                        </FormField>
+                        <FormField label="Largura da borda">
+                          <input type="number" min="0" step="1" value={toNumberInputValue(formData.modal_config.border_width)} onChange={e => updateModalConfig({ border_width: e.target.value })} placeholder="Ex: 2" className={inputClass} />
+                        </FormField>
+                        <FormField label="Raio da borda">
+                          <input type="number" min="0" step="1" value={toNumberInputValue(formData.modal_config.border_radius)} onChange={e => updateModalConfig({ border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
+                        </FormField>
+                      </div>
+                    </SectionCard>
+                  )}
+                </div>
+
+                <PreviewCard
+                  formData={formData}
+                  floatingDevice={floatingDevice}
+                  carouselDevice={carouselDevice}
+                  gridDevice={gridDevice}
+                  activeTab={activeTab}
+                />
+              </div>
+            </div>
+
+            {/* Footer do modal */}
+            <div className="flex items-center justify-end gap-3 border-t border-slate-100 bg-white px-6 py-4">
+              <button
+                type="button"
+                onClick={handleCancel}
+                disabled={saving}
+                className="flex items-center gap-2 rounded-2xl border border-slate-200 px-6 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <X size={16} />
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveStyle}
+                disabled={saving}
+                className="flex items-center gap-2 rounded-2xl bg-[#0094EB] px-6 py-3 text-sm font-bold text-white shadow-lg hover:bg-[#0E4787] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                {saving ? 'Salvando...' : 'Salvar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ConfirmDeleteDialog
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={handleConfirmDelete}
+        title="Excluir estilo?"
+        description={`Tem certeza que deseja excluir "${deleteModal.name}"? Esta ação não pode ser desfeita.`}
+      />
+    </div>
+  );
+};
+
+export default AppearancePage;
