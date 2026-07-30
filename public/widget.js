@@ -1744,18 +1744,18 @@ panelTitle.style.cssText = [
 
   var commentsList = createEl('div');
 
-  commentsList.style.cssText = [
-    'flex:1 1 auto;',
-    'min-height:0;',
-    'overflow-y:auto;',
-    'overflow-x:hidden;',
-    'padding:10px 18px;',
-    'display:flex;',
-    'flex-direction:column;',
-    'gap:10px;',
-    'box-sizing:border-box;',
-    '-webkit-overflow-scrolling:touch;'
-  ].join('');
+commentsList.style.cssText = [
+  'flex:1 1 auto;',
+  'min-height:0;',
+  'overflow-y:auto;',
+  'overflow-x:hidden;',
+  'padding:8px 16px;',
+  'display:flex;',
+  'flex-direction:column;',
+  'gap:0;',
+  'box-sizing:border-box;',
+  '-webkit-overflow-scrolling:touch;'
+].join('');
 
   function renderComments() {
     while (commentsList.firstChild) {
