@@ -1634,7 +1634,7 @@ var avatar = createEl('div', 'vl-comment-avatar');
 var commentBody = createEl('div', 'vl-comment-body');
       commentBody.style.cssText = 'flex:1;min-width:0;';
 
-      var commentMeta = createEl('div');
+var commentMeta = createEl('div', 'vl-comment-meta');
       commentMeta.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:2px;';
 
       var authorName = createEl('span');
