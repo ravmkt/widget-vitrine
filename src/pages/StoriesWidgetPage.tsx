@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type FC } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { db, Video, resolveStoreId, generateUuid } from '@/lib/db';
-import {
+import {s
   X,
   ChevronLeft,
   ChevronRight,
