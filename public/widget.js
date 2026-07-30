@@ -1538,7 +1538,7 @@ function openCommentsPanel(videoId, storyId) {
   ].join('');
 
   // ── CABEÇALHO ──
-  var panelHeader = createEl('div');
+var panelHeader = createEl('div', 'vl-panel-header');
   panelHeader.style.cssText = [
     'display:flex;','align-items:center;','justify-content:space-between;',
     'height:48px;','min-height:48px;','padding:0 14px;',
