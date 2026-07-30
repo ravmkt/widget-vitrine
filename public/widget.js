@@ -1125,3 +1125,481 @@ function readStoreSettings() {
 + '}'
 + '.vl-form-status{min-height:18px!important;text-align:center!important;font-size:12px!important;margin-top:6px!important;}'
 + '.vl-form-charcount{text-align:right!important;font-size:11px!important;color:#94a3b8!important;margin-bottom:8px!important;}'
+      + '.vl-modal.has-comments-open{'
+      + 'height:100%!important;'
+      + 'max-height:90vh!important;'
+      + 'border-radius:36px!important;'
+      + '}'
+      + '}'
+    );
+  }
+
+  function buildFloatingCss(appearance, behaviorConfig) {
+    behaviorConfig = behaviorConfig || getFloatingBehaviorConfig(appearance);
+    var cfg = getFloatingConfig(appearance);
+    var primary = getPrimaryColor(appearance);
+    var secondary = getSecondaryColor(appearance);
+    var borderColor = getBorderColor(appearance);
+    var borderBackground = borderColor ? borderColor : 'linear-gradient(135deg,' + primary + ',' + secondary + ')';
+    var font = getFontFamily(appearance);
+    return ':host{all:initial!important;position:fixed!important;top:' + cfg.top + '!important;right:' + cfg.right + '!important;bottom:' + cfg.bottom + '!important;left:' + cfg.left + '!important;z-index:' + cfg.zIndex + '!important;width:' + cfg.width + '!important;min-width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;height:auto!important;overflow:visible!important;background:transparent!important;pointer-events:auto!important;font-family:' + font + '!important;}'
+      + buildSharedCss(appearance)
+      + '.vl-bubbles{width:' + cfg.width + '!important;display:flex!important;flex-direction:column!important;align-items:' + cfg.alignItems + '!important;justify-content:flex-start!important;gap:10px!important;overflow:visible!important;position:relative!important;}'
+      + '.vl-bubble{all:unset!important;position:relative!important;overflow:visible!important;width:' + cfg.width + '!important;min-width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;height:auto!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;gap:4px!important;cursor:pointer!important;pointer-events:auto!important;}'
+      + '.vl-ring{pointer-events:none!important;width:' + cfg.width + '!important;height:' + cfg.height + '!important;border-radius:' + cfg.radius + '!important;padding:' + cfg.borderWidth + '!important;overflow:hidden!important;display:block!important;position:relative!important;background:' + borderBackground + '!important;box-shadow:0 12px 30px rgba(15,23,42,.18)!important;}'
+      + '.vl-inner{pointer-events:none!important;position:relative!important;width:100%!important;height:100%!important;border-radius:' + cfg.innerRadius + '!important;overflow:hidden!important;background:#000!important;display:block!important;}'
+      + '.vl-img{pointer-events:none!important;position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;object-fit:' + behaviorConfig.objectFit + '!important;object-position:center!important;display:block!important;border:none!important;border-radius:' + cfg.innerRadius + '!important;}'
+      + '.vl-play-badge{pointer-events:none!important;position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;width:34px!important;height:34px!important;border-radius:999px!important;background:rgba(15,23,42,.62)!important;color:#fff!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:15px!important;line-height:1!important;box-shadow:0 6px 18px rgba(0,0,0,.25)!important;}'
+      + '.vl-play-badge::before{content:""!important;margin-left:3px!important;width:0!important;height:0!important;border-top:8px solid transparent!important;border-bottom:8px solid transparent!important;border-left:12px solid #fff!important;display:block!important;}'
+      + '.vl-dismiss{all:unset!important;-webkit-appearance:none!important;appearance:none!important;position:absolute!important;top:-14px!important;right:-14px!important;width:22px!important;height:22px!important;background:transparent!important;color:#000!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:16px!important;font-weight:900!important;line-height:1!important;cursor:pointer!important;z-index:20!important;pointer-events:auto!important;border-radius:0!important;box-shadow:none!important;outline:none!important;border:none!important;padding:0!important;margin:0!important;text-shadow:0 0 4px rgba(255,255,255,.9)!important;}'
+      + '.vl-label{pointer-events:none!important;width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;font-family:' + font + '!important;font-size:11px!important;line-height:12px!important;font-weight:700!important;color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.8)!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;display:block!important;}';
+  }
+
+  function pausePreviews() {
+    if (!globalShadowRoot) return;
+    var vids = globalShadowRoot.querySelectorAll('.vl-bubble video.vl-img');
+    for (var i = 0; i < vids.length; i++) { vids[i].pause(); }
+  }
+
+  function resumePreviews() {
+    if (!globalShadowRoot) return;
+    var vids = globalShadowRoot.querySelectorAll('.vl-bubble video.vl-img');
+    for (var i = 0; i < vids.length; i++) {
+      var p = vids[i].play(); if (p) p.catch(function () {});
+    }
+  }
+
+  function buildVideoPlayer(video, storyId, onEnded) {
+    var url = getVideoUrl(video);
+    var ytId = extractYouTubeId(url);
+    var isUpload = video.source_type === 'upload' || video.sourceType === 'upload';
+    var isDirect = isDirectVideoUrl(url);
+    var wrapper = createEl('div', 'vl-player');
+    if (!isUpload && ytId) {
+      var iframe = createEl('iframe');
+      iframe.src = 'https://www.youtube.com/embed/' + ytId + '?autoplay=1&playsinline=1&rel=0&loop=1&playlist=' + ytId;
+      iframe.allow = 'autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      iframe.allowFullscreen = true;
+      wrapper.appendChild(iframe);
+      trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
+      return wrapper;
+    }
+    if ((isUpload || isDirect) && url) {
+      var media = createEl('video');
+      media.controls = false;
+      media.preload = 'auto';
+      media.setAttribute('playsinline', '');
+      media.setAttribute('webkit-playsinline', '');
+      media.playsInline = true;
+      media.muted = false;
+      media.loop = true;
+      var thumb = getVideoThumbnail(video);
+      if (thumb) media.poster = thumb;
+      media.src = url;
+      media.addEventListener('play', function () {
+        trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
+      });
+      media.addEventListener('ended', function () {
+        if (typeof onEnded === 'function') onEnded();
+      });
+      wrapper.appendChild(media);
+      return wrapper;
+    }
+    var link = createEl('a');
+    link.href = url || '#';
+    link.target = '_blank';
+    link.textContent = 'Abrir vídeo';
+    link.className = 'vl-cta';
+    wrapper.appendChild(link);
+    return wrapper;
+  }
+
+  function getCommentCount(videoId) {
+    return getCommentsForVideo(videoId).length;
+  }
+
+  function getCommentsForVideo(videoId) {
+    return (readCommentsData || []).filter(function (comment) {
+      return idsEqual(comment.video_id, videoId);
+    });
+  }
+
+  function renderCommentItem(comment) {
+    var item = createEl('div', 'vl-comment-item');
+    var author = createEl('div', 'vl-comment-author');
+    author.textContent = comment.user_name || 'Visitante';
+    var content = createEl('div', 'vl-comment-content');
+    content.textContent = comment.content || '';
+    item.appendChild(author);
+    item.appendChild(content);
+    var replyContent = String(comment.reply_content || comment.replyContent || '').trim();
+    var replyStatus = String(comment.reply_status || comment.replyStatus || '').trim().toLowerCase();
+    var replyIsVisible = replyContent && (!replyStatus || replyStatus === 'replied' || replyStatus === 'respondido' || replyStatus === 'published' || replyStatus === 'publicado');
+    if (replyIsVisible) {
+      var reply = createEl('div', 'vl-comment-reply');
+      var replyLabel = createEl('div', 'vl-comment-reply-label');
+      replyLabel.textContent = 'Resposta da loja';
+      var replyText = createEl('div', 'vl-comment-reply-content');
+      replyText.textContent = replyContent;
+      reply.appendChild(replyLabel);
+      reply.appendChild(replyText);
+      item.appendChild(reply);
+    }
+    return item;
+  }
+
+  function getCommentEmojis() {
+    return ['😎', '👍', '👏', '😱', '🙏', '💪', '🔥', '❤️', '💙', '✨', '🎉', '✅', '⭐', '😢', '😡', '🤔', '👀', '😊', '🥰'];
+  }
+
+  function getSizingModelId(video) {
+    if (!video) return null;
+    return firstDefined(video.model_id, video.modelId, video.sizing_model_id, video.sizingModelId, video.modelo_id, video.modeloId, video.model) || null;
+  }
+
+  function createComment(commentData) {
+    if (!hasSupabase) return Promise.reject(new Error('Supabase não configurado.'));
+    commentData = commentData || {};
+var payload = {
+  store_id: storeId,
+  video_id: commentData.video_id || null,
+  user_name: String(commentData.author_name || '').trim(),
+  user_email: commentData.author_email ? String(commentData.author_email).trim() : null,
+  content: String(commentData.content || '').trim(),
+  status: commentData.status || 'pending'
+};
+    if (!payload.user_name) return Promise.reject(new Error('Informe seu nome.'));
+    if (!payload.content) return Promise.reject(new Error('Digite um comentário.'));
+    return supabaseFetch('comments', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify(payload)
+    })
+      .then(function (response) {
+        if (response.ok) return true;
+        return response.text().then(function (rawMessage) {
+          var parsed = {};
+          try { parsed = JSON.parse(rawMessage || '{}'); } catch (error) {}
+          if (response.status === 401) throw new Error('A chave pública ou a URL do Supabase são inválidas.');
+          if (response.status === 403 || parsed.code === '42501') throw new Error('Inserção bloqueada pelas políticas RLS da tabela comments.');
+          throw new Error(parsed.message || parsed.error_description || parsed.hint || parsed.details || 'Não foi possível enviar o comentário.');
+        });
+      });
+  }
+
+  function getFingerprint() {
+    var key = '__vid_fp';
+    var stored = localStorage.getItem(key);
+    if (stored) return stored;
+    var fp = 'fp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem(key, fp);
+    return fp;
+  }
+
+  function getCommentCountForVideo(videoId) {
+    return readCommentsData.filter(function (c) {
+      return idsEqual(c.video_id, videoId);
+    }).length;
+  }
+
+  function formatRelativeTime(dateStr) {
+    if (!dateStr) return '';
+    var now = new Date();
+    var date = new Date(dateStr);
+    var diffMs = now - date;
+    var diffSec = Math.floor(diffMs / 1000);
+    var diffMin = Math.floor(diffSec / 60);
+    var diffHour = Math.floor(diffMin / 60);
+    var diffDay = Math.floor(diffHour / 24);
+    if (diffSec < 60) return 'agora';
+    if (diffMin < 60) return diffMin + 'min';
+    if (diffHour < 24) return diffHour + 'h';
+    if (diffDay < 7) return diffDay + 'd';
+    if (diffDay < 30) return Math.floor(diffDay / 7) + 'sem';
+    return date.toLocaleDateString('pt-BR');
+  }
+
+function toggleLike(video, btnEl) {
+  if (!video || !video.id) return;
+  var vidId = video.id;
+  var isCurrentlyLiked = !!likedVideos[vidId];
+  if (isCurrentlyLiked) {
+    delete likedVideos[vidId];
+    videoLikeCounts[vidId] = Math.max(0, (videoLikeCounts[vidId] || 1) - 1);
+    if (hasSupabase) {
+      supabaseFetch('video_likes?video_id=eq.' + encodeURIComponent(vidId) + '&user_fingerprint=eq.' + encodeURIComponent(getFingerprint()), { method: 'DELETE' })
+        .catch(function () {});
+    }
+  } else {
+    likedVideos[vidId] = true;
+    videoLikeCounts[vidId] = (videoLikeCounts[vidId] || 0) + 1;
+    if (hasSupabase) {
+      supabaseFetch('video_likes', {
+        method: 'POST',
+        headers: { 'Prefer': 'return=minimal' },
+        body: JSON.stringify({
+          video_id: vidId,
+          user_fingerprint: getFingerprint(),
+          store_id: storeId,
+          story_id: currentStories[currentStoryIndex].id,
+          page_url: window.location.href,
+          created_at: new Date().toISOString()
+        })
+      }).catch(function () {});
+    }
+  }
+
+  // Atualiza o visual do botão
+  var isNowLiked = !!likedVideos[vidId];
+  var count = videoLikeCounts[vidId] || 0;
+  btnEl.innerHTML = svgIcon(isNowLiked ? 'heartFilled' : 'heart');
+  btnEl.title = isNowLiked ? 'Descurtir' : 'Curtir';
+
+  // Atualiza o contador no span irmão (fora do botão)
+  var wrapper = btnEl.parentNode;
+  if (wrapper && wrapper.classList.contains('vl-social-wrapper')) {
+    var countEl = wrapper.querySelector('.vl-social-count');
+    if (countEl) {
+      countEl.textContent = count > 0 ? count : '';
+    }
+  }
+
+  trackMetric({
+    event_type: isCurrentlyLiked ? 'unlike' : 'like',
+    story_id: currentStories[currentStoryIndex].id,
+    video_id: vidId,
+    page_url: window.location.href
+  });
+}
+
+  function openSharePanel(btnEl) {
+    var existing = document.getElementById('vl-share-panel');
+    if (existing) { existing.remove(); return; }
+    var shareUrl = window.location.href;
+    var story = currentStories[currentStoryIndex];
+    var shareText = story ? (story.title || 'Confira este vídeo!') : 'Confira este vídeo!';
+    var panel = createEl('div');
+    panel.id = 'vl-share-panel';
+    panel.style.cssText = 'position:absolute;bottom:calc(100% + 8px);right:-20px;background:#1e293b;border-radius:12px;padding:8px;min-width:180px;box-shadow:0 10px 25px rgba(0,0,0,0.5);z-index:200;animation:vlFadeIn 0.15s ease;';
+    var copyBtn = createEl('button');
+    copyBtn.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border:none;background:transparent;color:#fff;font-size:14px;cursor:pointer;border-radius:8px;';
+    copyBtn.innerHTML = svgIcon('copy') + ' Copiar link';
+    copyBtn.onmouseenter = function () { copyBtn.style.background = 'rgba(255,255,255,0.1)'; };
+    copyBtn.onmouseleave = function () { copyBtn.style.background = 'transparent'; };
+    copyBtn.onclick = function () {
+      navigator.clipboard.writeText(shareUrl).then(function () {
+        copyBtn.innerHTML = svgIcon('check') + ' Copiado!';
+        setTimeout(function () { panel.remove(); }, 1500);
+      }).catch(function () {
+        var ta = document.createElement('textarea');
+        ta.value = shareUrl;
+        ta.style.cssText = 'position:fixed;left:-9999px;';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        copyBtn.innerHTML = svgIcon('check') + ' Copiado!';
+        setTimeout(function () { panel.remove(); }, 1500);
+      });
+    };
+    panel.appendChild(copyBtn);
+    var waBtn = createEl('button');
+    waBtn.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border:none;background:transparent;color:#fff;font-size:14px;cursor:pointer;border-radius:8px;';
+    waBtn.innerHTML = svgIcon('whatsapp') + ' WhatsApp';
+    waBtn.onmouseenter = function () { waBtn.style.background = 'rgba(255,255,255,0.1)'; };
+    waBtn.onmouseleave = function () { waBtn.style.background = 'transparent'; };
+    waBtn.onclick = function () {
+      window.open('https://wa.me/?text=' + encodeURIComponent(shareText + ' ' + shareUrl), '_blank');
+      panel.remove();
+    };
+    panel.appendChild(waBtn);
+    btnEl.style.position = 'relative';
+    btnEl.appendChild(panel);
+    setTimeout(function () {
+      var handler = function (ev) {
+        if (!panel.contains(ev.target) && ev.target !== btnEl) {
+          panel.remove();
+          document.removeEventListener('click', handler);
+        }
+      };
+      document.addEventListener('click', handler);
+    }, 0);
+    trackMetric({
+      event_type: 'share',
+      story_id: story ? story.id : null,
+      page_url: shareUrl
+    });
+  }
+
+function openSizingPanel(modelId) {
+  if (!modalContent) return;
+
+  var existing = modalContent.querySelector('.vl-sizing-panel-full');
+
+  function restoreVideoView() {
+    var currentPanel = modalContent.querySelector('.vl-sizing-panel-full');
+    if (currentPanel && currentPanel.parentNode) {
+      currentPanel.parentNode.removeChild(currentPanel);
+    }
+    modalContent.classList.remove('has-comments-open');
+
+    var header = modalContent.querySelector('.vl-header');
+    var footer = modalContent.querySelector('.vl-footer');
+    var social = modalContent.querySelector('.vl-social');
+    if (header) { header.style.display = ''; header.style.visibility = ''; header.style.pointerEvents = ''; }
+    if (footer) { footer.style.display = ''; footer.style.visibility = ''; footer.style.pointerEvents = ''; }
+    if (social) { social.style.display = ''; social.style.visibility = ''; social.style.pointerEvents = ''; }
+
+    var videoElement = modalContent.querySelector('video');
+    if (videoElement) { videoElement.play().catch(function () {}); }
+  }
+
+  if (existing) {
+    restoreVideoView();
+    return;
+  }
+
+  var model = readSizingModelsData.find(function (m) {
+    return idsEqual(m.id, modelId);
+  });
+  if (!model) return;
+
+  var videoElement = modalContent.querySelector('video');
+  if (videoElement) { videoElement.pause(); }
+
+  var header = modalContent.querySelector('.vl-header');
+  var footer = modalContent.querySelector('.vl-footer');
+  var social = modalContent.querySelector('.vl-social');
+  if (header) header.style.display = 'none';
+  if (footer) footer.style.display = 'none';
+  if (social) social.style.display = 'none';
+
+  var primaryColor = getPrimaryColor(currentAppearance);
+  var fontFamily = getFontFamily(currentAppearance);
+
+  // ── PAINEL ──
+  var panel = createEl('div', 'vl-sizing-panel-full');
+  panel.style.cssText = [
+    'position:absolute;','top:8px;','right:8px;','bottom:8px;','left:8px;',
+    'width:auto;','height:auto;','max-height:none;','z-index:200;',
+    'display:flex;','flex-direction:column;','overflow:hidden;',
+    'box-sizing:border-box;','background:#fff;',
+    'border:2px solid ' + primaryColor + ';','border-radius:20px;',
+    'box-shadow:0 12px 30px rgba(0,0,0,.35);','font-family:' + fontFamily + ';',
+    'animation:vlSlideUp .25s ease;'
+  ].join('');
+
+  // ── CABEÇALHO ──
+  var panelHeader = createEl('div', 'vl-panel-header');
+  panelHeader.style.cssText = [
+    'display:flex;','align-items:center;','justify-content:space-between;',
+    'height:48px;','min-height:48px;','padding:0 14px;',
+    'border-bottom:1px solid #e2e8f0;','background:#fff;',
+    'box-sizing:border-box;','flex-shrink:0;'
+  ].join('');
+
+  var panelTitle = createEl('h3');
+  panelTitle.textContent = 'Medidas';
+  panelTitle.style.cssText = 'margin:0;font-size:16px;font-weight:700;color:#111;';
+  panelHeader.appendChild(panelTitle);
+
+  var closeBtn = createEl('button');
+  closeBtn.type = 'button';
+  closeBtn.innerHTML = svgIcon('close');
+  closeBtn.style.cssText = [
+    'background:#f1f5f9;','border:none;','color:#475569;','cursor:pointer;',
+    'width:32px;','height:32px;','border-radius:50%;','display:flex;',
+    'align-items:center;','justify-content:center;','font-size:18px;',
+    'transition:all .15s;','flex-shrink:0;'
+  ].join('');
+  closeBtn.onmouseenter = function () { closeBtn.style.background = '#e2e8f0'; };
+  closeBtn.onmouseleave = function () { closeBtn.style.background = '#f1f5f9'; };
+  closeBtn.addEventListener('click', function (event) {
+    event.preventDefault(); event.stopPropagation(); restoreVideoView();
+  });
+  panelHeader.appendChild(closeBtn);
+  panel.appendChild(panelHeader);
+
+  // ── CORPO ──
+  var panelBody = createEl('div', 'vl-panel-body');
+  panelBody.style.cssText = [
+    'flex:1 1 auto;','min-height:0;','overflow-y:auto;','overflow-x:hidden;',
+    'padding:16px 18px;','display:flex;','flex-direction:column;',
+    'box-sizing:border-box;','-webkit-overflow-scrolling:touch;'
+  ].join('');
+
+  // Nome da modelo
+  var modelName = createEl('div');
+  modelName.textContent = model.name || 'Modelo';
+  modelName.style.cssText = 'font-size:15px;font-weight:800;color:#0f172a;margin-bottom:2px;';
+  panelBody.appendChild(modelName);
+
+  // Tag de tamanho
+  if (model.size_name) {
+    var sizeTag = createEl('div');
+    sizeTag.style.cssText = 'display:inline-block;background:#f1f5f9;color:' + primaryColor + ';font-size:12px;font-weight:700;padding:4px 12px;border-radius:999px;margin-bottom:20px;align-self:flex-start;';
+    sizeTag.textContent = 'Veste: ' + model.size_name;
+    panelBody.appendChild(sizeTag);
+  } else {
+    var spacer = createEl('div');
+    spacer.style.cssText = 'height:12px;';
+    panelBody.appendChild(spacer);
+  }
+
+  // Tabela de medidas
+  var measures = [];
+  try {
+    measures = typeof model.measures === 'string' ? JSON.parse(model.measures) : (model.measures || []);
+  } catch (e) {}
+
+  if (measures && measures.length > 0) {
+    var table = createEl('table');
+    table.style.cssText = 'width:100%;border-collapse:separate;border-spacing:0 6px;';
+
+    measures.forEach(function (m) {
+      var label = m.name || m.label || '';
+      var val = m.value || '';
+      var unit = m.unit || '';
+      if (!label || !val) return;
+
+      var tr = createEl('tr');
+
+      var td1 = createEl('td');
+      td1.textContent = label;
+      td1.style.cssText = 'padding:14px 16px;font-size:14px;font-weight:600;color:#475569;background:#f8fafc;border-radius:12px 0 0 12px;';
+
+      var td2 = createEl('td');
+      td2.textContent = val + (unit ? ' ' + unit : '');
+      td2.style.cssText = 'padding:14px 16px;font-size:14px;font-weight:700;color:#0f172a;text-align:right;background:#f8fafc;border-radius:0 12px 12px 0;';
+
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      table.appendChild(tr);
+    });
+
+    panelBody.appendChild(table);
+  } else {
+    var emptyWrap = createEl('div', 'vl-empty-state');
+    emptyWrap.style.cssText = [
+      'display:flex;','flex-direction:column;','align-items:center;',
+      'justify-content:center;','flex:1;','min-height:160px;',
+      'padding:20px;','text-align:center;'
+    ].join('');
+
+    var emptyIcon = createEl('div');
+    emptyIcon.innerHTML = svgIcon('sizing');
+    emptyIcon.style.cssText = 'opacity:.12;margin-bottom:12px;';
+
+    var emptyTitle = createEl('p');
+    emptyTitle.textContent = 'Nenhuma medida cadastrada';
+    emptyTitle.style.cssText = 'font-size:15px;font-weight:700;color:#334155;margin:0;';
+
+    emptyWrap.appendChild(emptyIcon);
+    emptyWrap.appendChild(emptyTitle);
+    panelBody.appendChild(emptyWrap);
+  }
+
+  panel.appendChild(panelBody);
+  modalContent.appendChild(panel);
+  modalContent.classList.add('has-comments-open');
+}
