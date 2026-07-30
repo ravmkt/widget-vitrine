@@ -2050,9 +2050,9 @@ applyInputFocusStyle(nameInput);
 
   commentTextarea.style.cssText = [
     'width:100%;',
-    'height:78px;',
-    'min-height:78px;',
-    'max-height:110px;',
+'height:64px;',
+'min-height:64px;',
+'max-height:64px;',
     'padding:10px 48px 10px 12px;',
     'border:1.5px solid #e2e8f0;',
     'border-radius:10px;',
