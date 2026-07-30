@@ -106,10 +106,13 @@ const VideoGalleryPage = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [storyMap, setStoryMap] = useState<Record<string, string>>({});
+  const [videoStoryMap, setVideoStoryMap] = useState<Record<string, Set<string>>>({});
+  const [storyList, setStoryList] = useState<{ id: string; title: string }[]>([]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSource, setFilterSource] = useState<'all' | 'upload' | 'external_url'>('all');
   const [productFilter, setProductFilter] = useState<string>('all');
+  const [storyFilter, setStoryFilter] = useState<string>('all');
   const [sortColumn, setSortColumn] = useState<string | null>('recent');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
@@ -139,7 +142,7 @@ const VideoGalleryPage = () => {
         const safeStoreId = await resolveSafeStoreId();
         if (!mounted) return;
         if (!safeStoreId) {
-          setVideos([]); setProducts([]); setStoryMap({}); setResolvedStoreId('');
+          setVideos([]); setProducts([]); setStoryMap({}); setVideoStoryMap({}); setStoryList([]); setResolvedStoreId('');
           showError('Não foi possível identificar a loja atual.');
           return;
         }
@@ -156,32 +159,34 @@ const VideoGalleryPage = () => {
         setVideos(allVideos || []);
         setProducts(allProducts || []);
 
-const storyNameById: Record<string, string> = {};
-(allStories || []).forEach(s => {
-  storyNameById[s.id] = (s as any).title || (s as any).name || (s as any).nome || 'Story sem nome';
-});
+        const storyNameById: Record<string, string> = {};
+        (allStories || []).forEach(s => {
+          storyNameById[s.id] = (s as any).title || (s as any).name || (s as any).nome || 'Story sem nome';
+        });
 
-const storyList = (allStories || []).map(s => ({ id: s.id, title: storyNameById[s.id] }));
+        const sl = (allStories || []).map(s => ({ id: s.id, title: storyNameById[s.id] }));
+        setStoryList(sl);
 
-// Mapa: videoId → Set de storyIds (para o filtro por ID)
-const videoStoryMap: Record<string, Set<string>> = {};
-const map: Record<string, string> = {};
-(allStoryVideos || []).forEach(sv => {
-  const videoId = sv.video_id || (sv as any).videoId;
-  const storyId = sv.story_id || (sv as any).storyId;
+        // Mapa: videoId → Set de storyIds (para o filtro por ID)
+        const vsMap: Record<string, Set<string>> = {};
+        const map: Record<string, string> = {};
+        (allStoryVideos || []).forEach(sv => {
+          const videoId = sv.video_id || (sv as any).videoId;
+          const storyId = sv.story_id || (sv as any).storyId;
 
-  if (videoId && storyId && storyNameById[storyId]) {
-    // Para exibição (nome do story)
-    const existing = map[videoId];
-    map[videoId] = existing ? `${existing}, ${storyNameById[storyId]}` : storyNameById[storyId];
+          if (videoId && storyId && storyNameById[storyId]) {
+            // Para exibição (nome do story)
+            const existing = map[videoId];
+            map[videoId] = existing ? `${existing}, ${storyNameById[storyId]}` : storyNameById[storyId];
 
-    // Para filtro (ID do story)
-    if (!videoStoryMap[videoId]) videoStoryMap[videoId] = new Set();
-    videoStoryMap[videoId].add(storyId);
-  }
-});
+            // Para filtro (ID do story)
+            if (!vsMap[videoId]) vsMap[videoId] = new Set();
+            vsMap[videoId].add(storyId);
+          }
+        });
 
-setStoryMap(map);
+        setStoryMap(map);
+        setVideoStoryMap(vsMap);
 
         const videosSemThumb = (allVideos || []).filter(v => v.source_type === 'external_url' && !v.thumbnail_url && v.video_url);
         for (const v of videosSemThumb) {
@@ -211,7 +216,8 @@ setStoryMap(map);
         const matchSearch = (v.title || '').toLowerCase().includes(searchTerm.toLowerCase());
         const matchSource = filterSource === 'all' || v.source_type === filterSource;
         const matchProduct = productFilter === 'all' || (v as any).product_id === productFilter;
-        return matchSearch && matchSource && matchProduct;
+        const matchStory = storyFilter === 'all' || videoStoryMap[v.id]?.has(storyFilter);
+        return matchSearch && matchSource && matchProduct && matchStory;
       })
       .sort((a, b) => {
         if (!sortColumn || sortColumn === 'recent') {
@@ -231,7 +237,7 @@ setStoryMap(map);
         if (typeof va === 'number' && typeof vb === 'number') return sortDirection === 'asc' ? va - vb : vb - va;
         return sortDirection === 'asc' ? String(va).localeCompare(String(vb), 'pt-BR') : String(vb).localeCompare(String(va), 'pt-BR');
       });
-  }, [videos, products, storyMap, searchTerm, filterSource, productFilter, sortColumn, sortDirection]);
+  }, [videos, products, storyMap, videoStoryMap, searchTerm, filterSource, productFilter, storyFilter, sortColumn, sortDirection]);
 
   const handleSort = (col: string) => {
     if (sortColumn === col) { setSortDirection(d => d === 'asc' ? 'desc' : 'asc'); return; }
@@ -308,6 +314,12 @@ setStoryMap(map);
             <option value="all">Todos os Produtos</option>
             {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
+          <select value={storyFilter} onChange={e => setStoryFilter(e.target.value)} className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]">
+            <option value="all">Todos os Stories</option>
+            {storyList.map(s => (
+              <option key={s.id} value={s.id}>{s.title}</option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -316,23 +328,9 @@ setStoryMap(map);
           ═══════════════════════════════════════════════════════ */}
       <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm">
         <div className="w-full overflow-x-auto">
-          {/*
-            min-w-[880px] garante que as colunas % tenham espaço.
-            w-full faz a tabela ocupar 100% do container (não estoura).
-            table-fixed = table-layout:fixed → respeita larguras definidas.
-          */}
           <table className="w-full min-w-[880px] table-fixed border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                {/*
-                  Distribuição:
-                    Thumb:     72px (fixo, não encolhe)
-                    Nome:      ~29% (maior coluna, título + badge)
-                    Produto:   ~23%
-                    Story:     ~23%
-                    Ações:     120px (fixo)
-                  Total aproximado: 72 + 29% + 23% + 23% + 120 ≈ 880px+
-                */}
                 <th className="w-[72px] px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-left">
                   Vídeo
                 </th>
