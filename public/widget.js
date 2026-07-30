@@ -1425,66 +1425,178 @@ function toggleLike(video, btnEl) {
     });
   }
 
-  function openSizingPanel(modelId) {
-    var existing = modalContent.querySelector('.vl-sizing-panel-full');
-    if (existing) { existing.remove(); return; }
-    var model = readSizingModelsData.find(function (m) {
-      return idsEqual(m.id, modelId);
-    });
-    if (!model) return;
-    var panel = createEl('div', 'vl-sizing-panel-full');
-    panel.style.cssText = 'position:absolute;inset:0;z-index:100;background:rgba(15,23,42,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;color:#fff;';
-    var closeBtn = createEl('button');
-    closeBtn.innerHTML = svgIcon('close');
-    closeBtn.style.cssText = 'position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:none;color:#fff;cursor:pointer;padding:8px;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;';
-    closeBtn.onclick = function () { panel.remove(); };
-    panel.appendChild(closeBtn);
-    var iconWrap = createEl('div');
-    iconWrap.style.cssText = 'margin-bottom:12px;';
-    iconWrap.innerHTML = svgIcon('sizing');
-    panel.appendChild(iconWrap);
-    var modelName = createEl('h3');
-    modelName.textContent = model.name || 'Modelo';
-    modelName.style.cssText = 'font-size:18px;font-weight:800;margin:0 0 20px 0;';
-    panel.appendChild(modelName);
-    if (model.size_name) {
-      var sizeLabel = createEl('p');
-      sizeLabel.textContent = 'Veste tamanho: ' + model.size_name;
-      sizeLabel.style.cssText = 'font-size:13px;color:#94a3b8;margin:0 0 16px 0;';
-      panel.appendChild(sizeLabel);
+function openSizingPanel(modelId) {
+  if (!modalContent) return;
+
+  var existing = modalContent.querySelector('.vl-sizing-panel-full');
+
+  function restoreVideoView() {
+    var currentPanel = modalContent.querySelector('.vl-sizing-panel-full');
+    if (currentPanel && currentPanel.parentNode) {
+      currentPanel.parentNode.removeChild(currentPanel);
     }
-    var measures = [];
-    try {
-      measures = typeof model.measures === 'string' ? JSON.parse(model.measures) : (model.measures || []);
-    } catch (e) {}
-    if (measures && measures.length > 0) {
-      var table = createEl('table');
-      table.style.cssText = 'border-collapse:collapse;width:100%;max-width:280px;';
-      measures.forEach(function (m) {
-        var label = m.name || m.label || '';
-        var val = m.value || '';
-        var unit = m.unit || '';
-        if (!label || !val) return;
-        var tr = createEl('tr');
-        var td1 = createEl('td');
-        td1.textContent = label;
-        td1.style.cssText = 'padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.08);font-weight:600;color:#cbd5e1;';
-        var td2 = createEl('td');
-        td2.textContent = val + (unit ? ' ' + unit : '');
-        td2.style.cssText = 'padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.08);text-align:right;font-weight:800;';
-        tr.appendChild(td1);
-        tr.appendChild(td2);
-        table.appendChild(tr);
-      });
-      panel.appendChild(table);
-    } else {
-      var empty = createEl('p');
-      empty.textContent = 'Nenhuma medida cadastrada.';
-      empty.style.cssText = 'color:#94a3b8;font-size:14px;margin-top:8px;';
-      panel.appendChild(empty);
-    }
-    modalContent.appendChild(panel);
+    modalContent.classList.remove('has-comments-open');
+
+    var header = modalContent.querySelector('.vl-header');
+    var footer = modalContent.querySelector('.vl-footer');
+    var social = modalContent.querySelector('.vl-social');
+    if (header) { header.style.display = ''; header.style.visibility = ''; header.style.pointerEvents = ''; }
+    if (footer) { footer.style.display = ''; footer.style.visibility = ''; footer.style.pointerEvents = ''; }
+    if (social) { social.style.display = ''; social.style.visibility = ''; social.style.pointerEvents = ''; }
+
+    var videoElement = modalContent.querySelector('video');
+    if (videoElement) { videoElement.play().catch(function () {}); }
   }
+
+  if (existing) {
+    restoreVideoView();
+    return;
+  }
+
+  var model = readSizingModelsData.find(function (m) {
+    return idsEqual(m.id, modelId);
+  });
+  if (!model) return;
+
+  var videoElement = modalContent.querySelector('video');
+  if (videoElement) { videoElement.pause(); }
+
+  var header = modalContent.querySelector('.vl-header');
+  var footer = modalContent.querySelector('.vl-footer');
+  var social = modalContent.querySelector('.vl-social');
+  if (header) header.style.display = 'none';
+  if (footer) footer.style.display = 'none';
+  if (social) social.style.display = 'none';
+
+  var primaryColor = getPrimaryColor(currentAppearance);
+  var fontFamily = getFontFamily(currentAppearance);
+
+  // ── PAINEL ──
+  var panel = createEl('div', 'vl-sizing-panel-full');
+  panel.style.cssText = [
+    'position:absolute;','top:8px;','right:8px;','bottom:8px;','left:8px;',
+    'width:auto;','height:auto;','max-height:none;','z-index:200;',
+    'display:flex;','flex-direction:column;','overflow:hidden;',
+    'box-sizing:border-box;','background:#fff;',
+    'border:2px solid ' + primaryColor + ';','border-radius:20px;',
+    'box-shadow:0 12px 30px rgba(0,0,0,.35);','font-family:' + fontFamily + ';',
+    'animation:vlSlideUp .25s ease;'
+  ].join('');
+
+  // ── CABEÇALHO ──
+  var panelHeader = createEl('div', 'vl-panel-header');
+  panelHeader.style.cssText = [
+    'display:flex;','align-items:center;','justify-content:space-between;',
+    'height:48px;','min-height:48px;','padding:0 14px;',
+    'border-bottom:1px solid #e2e8f0;','background:#fff;',
+    'box-sizing:border-box;','flex-shrink:0;'
+  ].join('');
+
+  var panelTitle = createEl('h3');
+  panelTitle.textContent = 'Medidas';
+  panelTitle.style.cssText = 'margin:0;font-size:16px;font-weight:700;color:#111;';
+  panelHeader.appendChild(panelTitle);
+
+  var closeBtn = createEl('button');
+  closeBtn.type = 'button';
+  closeBtn.innerHTML = svgIcon('close');
+  closeBtn.style.cssText = [
+    'background:#f1f5f9;','border:none;','color:#475569;','cursor:pointer;',
+    'width:32px;','height:32px;','border-radius:50%;','display:flex;',
+    'align-items:center;','justify-content:center;','font-size:18px;',
+    'transition:all .15s;','flex-shrink:0;'
+  ].join('');
+  closeBtn.onmouseenter = function () { closeBtn.style.background = '#e2e8f0'; };
+  closeBtn.onmouseleave = function () { closeBtn.style.background = '#f1f5f9'; };
+  closeBtn.addEventListener('click', function (event) {
+    event.preventDefault(); event.stopPropagation(); restoreVideoView();
+  });
+  panelHeader.appendChild(closeBtn);
+  panel.appendChild(panelHeader);
+
+  // ── CORPO ──
+  var panelBody = createEl('div', 'vl-panel-body');
+  panelBody.style.cssText = [
+    'flex:1 1 auto;','min-height:0;','overflow-y:auto;','overflow-x:hidden;',
+    'padding:16px 18px;','display:flex;','flex-direction:column;',
+    'box-sizing:border-box;','-webkit-overflow-scrolling:touch;'
+  ].join('');
+
+  // Nome da modelo
+  var modelName = createEl('div');
+  modelName.textContent = model.name || 'Modelo';
+  modelName.style.cssText = 'font-size:15px;font-weight:800;color:#0f172a;margin-bottom:2px;';
+  panelBody.appendChild(modelName);
+
+  // Tag de tamanho
+  if (model.size_name) {
+    var sizeTag = createEl('div');
+    sizeTag.style.cssText = 'display:inline-block;background:#f1f5f9;color:' + primaryColor + ';font-size:12px;font-weight:700;padding:4px 12px;border-radius:999px;margin-bottom:20px;align-self:flex-start;';
+    sizeTag.textContent = 'Veste: ' + model.size_name;
+    panelBody.appendChild(sizeTag);
+  } else {
+    var spacer = createEl('div');
+    spacer.style.cssText = 'height:12px;';
+    panelBody.appendChild(spacer);
+  }
+
+  // Tabela de medidas
+  var measures = [];
+  try {
+    measures = typeof model.measures === 'string' ? JSON.parse(model.measures) : (model.measures || []);
+  } catch (e) {}
+
+  if (measures && measures.length > 0) {
+    var table = createEl('table');
+    table.style.cssText = 'width:100%;border-collapse:separate;border-spacing:0 6px;';
+
+    measures.forEach(function (m) {
+      var label = m.name || m.label || '';
+      var val = m.value || '';
+      var unit = m.unit || '';
+      if (!label || !val) return;
+
+      var tr = createEl('tr');
+
+      var td1 = createEl('td');
+      td1.textContent = label;
+      td1.style.cssText = 'padding:14px 16px;font-size:14px;font-weight:600;color:#475569;background:#f8fafc;border-radius:12px 0 0 12px;';
+
+      var td2 = createEl('td');
+      td2.textContent = val + (unit ? ' ' + unit : '');
+      td2.style.cssText = 'padding:14px 16px;font-size:14px;font-weight:700;color:#0f172a;text-align:right;background:#f8fafc;border-radius:0 12px 12px 0;';
+
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      table.appendChild(tr);
+    });
+
+    panelBody.appendChild(table);
+  } else {
+    var emptyWrap = createEl('div', 'vl-empty-state');
+    emptyWrap.style.cssText = [
+      'display:flex;','flex-direction:column;','align-items:center;',
+      'justify-content:center;','flex:1;','min-height:160px;',
+      'padding:20px;','text-align:center;'
+    ].join('');
+
+    var emptyIcon = createEl('div');
+    emptyIcon.innerHTML = svgIcon('sizing');
+    emptyIcon.style.cssText = 'opacity:.12;margin-bottom:12px;';
+
+    var emptyTitle = createEl('p');
+    emptyTitle.textContent = 'Nenhuma medida cadastrada';
+    emptyTitle.style.cssText = 'font-size:15px;font-weight:700;color:#334155;margin:0;';
+
+    emptyWrap.appendChild(emptyIcon);
+    emptyWrap.appendChild(emptyTitle);
+    panelBody.appendChild(emptyWrap);
+  }
+
+  panel.appendChild(panelBody);
+  modalContent.appendChild(panel);
+  modalContent.classList.add('has-comments-open');
+}
 
 function openCommentsPanel(videoId, storyId) {
   if (!modalContent) return;
