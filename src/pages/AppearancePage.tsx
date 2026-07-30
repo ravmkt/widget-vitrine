@@ -1708,3 +1708,501 @@ const GridPreview = ({
     </div>
   );
 };
+const ModalPreview = ({
+  formData,
+  colors,
+}: {
+  formData: ExtendedAppearance;
+  colors: PreviewColors;
+}) => {
+  return (
+    <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
+      <div className="rounded-[1rem] border border-slate-200 bg-white p-4">
+        <div
+          className="relative mx-auto h-[560px] max-w-[320px] overflow-hidden rounded-[1.75rem] border border-slate-900/10 shadow-xl"
+          style={{
+            background: `linear-gradient(160deg, ${colors.primary}, ${colors.secondary})`,
+            color: '#FFFFFF',
+            fontFamily: formData.font_family,
+            fontSize: cssSize(formData.font_size, '14px'),
+            boxShadow: formData.modal_config.shadow_enabled
+              ? '0 22px 55px rgba(15, 23, 42, 0.22)'
+              : 'none',
+            borderColor: formData.modal_config.border_color || colors.primary,
+            borderWidth: `${safeNumber(formData.modal_config.border_width, 0, 0)}px`,
+            borderRadius: cssSize(formData.modal_config.border_radius, '1.75rem'),
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/10 to-black/75" />
+          <div className="absolute left-4 right-4 top-4 z-20 flex items-start justify-between gap-3">
+            {formData.modal_config.show_title && (
+              <h4 className="line-clamp-2 text-lg font-black text-white drop-shadow">
+                Blusa vermelha
+              </h4>
+            )}
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-white/70 bg-black/20 text-white backdrop-blur"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="absolute left-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/80 bg-black/10 text-2xl text-white backdrop-blur"
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            className="absolute right-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/80 bg-black/10 text-2xl text-white backdrop-blur"
+          >
+            ›
+          </button>
+          <div className="absolute right-4 top-[58%] z-20 flex -translate-y-1/2 flex-col items-center gap-3">
+            {formData.modal_config.show_like_button && (
+              <button
+                type="button"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/80 bg-black/10 text-white backdrop-blur"
+              >
+                <Heart size={24} />
+              </button>
+            )}
+            {formData.modal_config.show_comment_button && (
+              <button
+                type="button"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/80 bg-black/10 text-white backdrop-blur"
+              >
+                <MessageCircle size={24} />
+              </button>
+            )}
+            {formData.modal_config.show_share_button && (
+              <button
+                type="button"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/80 bg-black/10 text-white backdrop-blur"
+              >
+                <Share2 size={24} />
+              </button>
+            )}
+          </div>
+          {formData.modal_config.show_play_button && (
+            <div className="absolute left-1/2 top-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur">
+                <PlaySquare size={28} />
+              </div>
+            </div>
+          )}
+          {formData.modal_config.show_product && (
+            <div className="absolute bottom-4 left-4 right-4 z-30 rounded-2xl border border-slate-900/10 bg-white/95 p-3 text-slate-900 shadow-xl backdrop-blur">
+              <div className="flex items-center gap-3">
+                <div
+                  className="h-16 w-16 shrink-0 rounded-xl"
+                  style={{
+                    background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+                  }}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-black">Blusa vermelha</p>
+                  <p className="text-sm font-black text-slate-700">R$ 259,90</p>
+                  <div className="mt-2 flex gap-2">
+                    {formData.modal_config.show_product_button && (
+                      <button
+                        type="button"
+                        className="flex-1 rounded-lg px-3 py-2 text-xs font-black text-white"
+                        style={{ backgroundColor: colors.button }}
+                      >
+                        Ver produto
+                      </button>
+                    )}
+                    {formData.modal_config.show_product_whatsapp_button && (
+                      <button
+                        type="button"
+                        className="flex-1 rounded-lg px-3 py-2 text-xs font-black text-white"
+                        style={{ backgroundColor: '#25D366' }}
+                      >
+                        WhatsApp
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const VisualPreview = ({
+  formData,
+  colors,
+}: {
+  formData: ExtendedAppearance;
+  colors: PreviewColors;
+}) => {
+  return (
+    <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
+      <div
+        className="rounded-[1rem] border border-slate-200 p-5"
+        style={{
+          backgroundColor: colors.background,
+          color: colors.text,
+          fontFamily: formData.font_family,
+          fontSize: cssSize(formData.font_size, '14px'),
+        }}
+      >
+        <div className="mb-5 flex items-center gap-3">
+          <div
+            className="h-12 w-12 rounded-2xl"
+            style={{ backgroundColor: colors.primary }}
+          />
+          <div>
+            <h4 className="font-black">Preview visual</h4>
+            <p className="text-xs font-medium opacity-70">Fonte, cores e botões</p>
+          </div>
+        </div>
+        <div
+          className="mb-5 rounded-2xl p-4"
+          style={{
+            background: `linear-gradient(135deg, ${colors.primary}25, ${colors.secondary}25)`,
+          }}
+        >
+          <p className="font-black">Título do widget</p>
+          <p className="mt-1 text-sm opacity-70">
+            Exemplo de texto usando a identidade visual configurada.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="w-full rounded-2xl px-4 py-3 text-sm font-black text-white"
+          style={{ backgroundColor: colors.button }}
+        >
+          Botão principal
+        </button>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+        <PreviewInfo label="Principal" value={colors.primary} />
+        <PreviewInfo label="Secundária" value={colors.secondary} />
+        <PreviewInfo label="Texto" value={colors.text} />
+        <PreviewInfo label="Fonte" value={formData.font_family} />
+      </div>
+    </div>
+  );
+};
+
+const PreviewCard = ({
+  formData,
+  floatingDevice,
+  carouselDevice,
+  gridDevice,
+  activeTab,
+}: {
+  formData: ExtendedAppearance;
+  floatingDevice: DeviceType;
+  carouselDevice: DeviceType;
+  gridDevice: DeviceType;
+  activeTab: ModalTab;
+}) => {
+  const floating = getActiveResponsiveConfig(
+    formData.floating_config,
+    floatingDevice,
+    formData.useGlobalAppearance,
+  );
+  const carousel = getActiveResponsiveConfig(
+    formData.carousel_config,
+    carouselDevice,
+    formData.useGlobalAppearance,
+  );
+  const grid = getActiveResponsiveConfig(
+    formData.grid_config,
+    gridDevice,
+    formData.useGlobalAppearance,
+  );
+
+  const colors: PreviewColors = {
+    primary: isValidHexColor(formData.primary_color) ? formData.primary_color : '#0094EB',
+    secondary: isValidHexColor(formData.secondary_color) ? formData.secondary_color : '#0094EB',
+    text: isValidHexColor(formData.text_color) ? formData.text_color : '#0F172A',
+    background: isValidHexColor(formData.background_color) ? formData.background_color : '#FFFFFF',
+    button: isValidHexColor(formData.button_color) ? formData.button_color : '#0094EB',
+    floatingBorder: isValidHexColor(floating.border_color) ? floating.border_color : '#0094EB',
+  };
+
+  const titleByTab: Record<ModalTab, string> = {
+    basic: 'Resumo do estilo',
+    visual: 'Identidade visual',
+    floating: 'Preview do flutuante',
+    carousel: 'Preview do carrossel',
+    grid: 'Preview da grade',
+    modal: 'Preview do player/modal',
+  };
+
+  const descriptionByTab: Record<ModalTab, string> = {
+    basic: 'Visualização geral do estilo selecionado.',
+    visual: 'Cores, fonte, fundo e botão.',
+    floating: 'Tamanho, forma, borda e posição do widget.',
+    carousel: 'Formato dos cards, espaçamento, margens e centralização.',
+    grid: 'Colunas, linhas, formato e espaçamento da grade.',
+    modal: 'Botões e elementos exibidos no player/modal.',
+  };
+
+  return (
+    <aside className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-base font-black text-slate-900">
+            {titleByTab[activeTab]}
+          </h3>
+          <p className="mt-1 text-xs font-medium text-slate-500">
+            {descriptionByTab[activeTab]}
+          </p>
+        </div>
+        <span
+          className="h-8 w-8 rounded-full border border-slate-200 shadow-sm"
+          style={{ backgroundColor: colors.primary }}
+        />
+      </div>
+      {activeTab === 'floating' && <FloatingPreview floating={floating} colors={colors} />}
+      {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} />}
+      {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} />}
+      {activeTab === 'modal' && <ModalPreview formData={formData} colors={colors} />}
+      {(activeTab === 'basic' || activeTab === 'visual') && (
+        <VisualPreview formData={formData} colors={colors} />
+      )}
+    </aside>
+  );
+};
+
+// ════════════════════════════════════════════════════════════════
+// COMPONENTE PRINCIPAL
+// ════════════════════════════════════════════════════════════════
+
+const AppearancePage = () => {
+  const tenantContext = useTenant() as any;
+  const storeId =
+    tenantContext?.storeId ||
+    tenantContext?.store?.id ||
+    tenantContext?.tenant?.store_id ||
+    tenantContext?.tenant?.id ||
+    tenantContext?.tenantId ||
+    '';
+  const tenantLoading =
+    tenantContext?.loading ||
+    tenantContext?.isLoading ||
+    tenantContext?.tenantLoading ||
+    false;
+
+  const [resolvedStoreId, setResolvedStoreId] = useState<string>('');
+  const [appearances, setAppearances] = useState<Appearance[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const [showModal, setShowModal] = useState(false);
+  const [editingStyle, setEditingStyle] = useState<Appearance | null>(null);
+  const [formData, setFormData] = useState<ExtendedAppearance>(() =>
+    createDefaultFormData(storeId),
+  );
+
+  const [floatingDevice, setFloatingDevice] = useState<DeviceType>('desktop');
+  const [carouselDevice, setCarouselDevice] = useState<DeviceType>('desktop');
+  const [gridDevice, setGridDevice] = useState<DeviceType>('desktop');
+  const [activeTab, setActiveTab] = useState<ModalTab>('basic');
+
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    id: '',
+    name: '',
+  });
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const finalStoreId = resolvedStoreId || (await resolveStoreId(storeId));
+      if (!finalStoreId) {
+        setAppearances([]);
+        return;
+      }
+      setResolvedStoreId(finalStoreId);
+      const styles = await getAppearancesSafe(finalStoreId);
+      setAppearances(styles);
+    } catch (error) {
+      console.error('Erro ao carregar aparências:', error);
+      showError('Erro ao carregar aparências.');
+      setAppearances([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [resolvedStoreId, storeId]);
+
+  useEffect(() => {
+    if (!tenantLoading) {
+      loadData();
+    }
+  }, [tenantLoading, loadData]);
+
+  const updateFloatingConfig = (patch: Partial<FloatingConfig>) => {
+    setFormData(prev => {
+      const device = prev.useGlobalAppearance ? 'desktop' : floatingDevice;
+      const current = prev.floating_config[device];
+      let updatedDeviceConfig: FloatingConfig = { ...current, ...patch };
+
+      if (patch.position) {
+        updatedDeviceConfig = {
+          ...updatedDeviceConfig,
+          position: normalizePosition(patch.position),
+          floating_position: positionToFloatingPosition(patch.position),
+        };
+      }
+      if (patch.floating_position) {
+        updatedDeviceConfig = {
+          ...updatedDeviceConfig,
+          floating_position: normalizeFloatingPosition(patch.floating_position),
+          position: floatingPositionToPosition(patch.floating_position),
+        };
+      }
+      updatedDeviceConfig = normalizeFloatingShapeValues(updatedDeviceConfig);
+
+      const nextConfig: ResponsiveConfig<FloatingConfig> = prev.useGlobalAppearance
+        ? { same_for_all: true, desktop: updatedDeviceConfig, mobile: updatedDeviceConfig }
+        : { ...prev.floating_config, same_for_all: false, [device]: updatedDeviceConfig };
+
+      const desktop = nextConfig.desktop;
+      return {
+        ...prev,
+        floating_config: nextConfig,
+        width: desktop.width,
+        height: desktop.height,
+        widget_shape: desktop.shape as any,
+        position: desktop.position,
+        floating_position: desktop.floating_position,
+        bottom_spacing: desktop.bottom_spacing,
+        top_spacing: desktop.top_spacing,
+        left_spacing: desktop.left_spacing,
+        right_spacing: desktop.right_spacing,
+        color: desktop.border_color,
+        border_style: desktop.border_style,
+        show_play_icon: desktop.show_play_icon,
+        draggable: desktop.draggable,
+        allow_close: desktop.allow_close,
+        object_fit: desktop.object_fit,
+        z_index: desktop.z_index,
+      };
+    });
+  };
+
+  const updateCarouselConfig = (patch: Partial<CarouselConfig>) => {
+    setFormData(prev => {
+      const device = prev.useGlobalAppearance ? 'desktop' : carouselDevice;
+      const current = prev.carousel_config[device];
+
+      let updatedDeviceConfig: CarouselConfig = {
+        ...current,
+        ...patch,
+        spacing: safeNumber(patch.spacing ?? current.spacing, current.spacing || 0, 0),
+        visible_items: safeNumber(
+          patch.visible_items ?? current.visible_items,
+          current.visible_items || 1,
+          1,
+        ),
+        auto_center: patch.auto_center ?? current.auto_center ?? true,
+      };
+
+      if (patch.shape !== undefined) {
+        const newShape = normalizeWidgetShape(patch.shape, 'portrait');
+        const width = formatNumberLikeCurrent(
+          patch.width ?? current.width ?? '80',
+          '80',
+        );
+        updatedDeviceConfig = {
+          ...updatedDeviceConfig,
+          shape: newShape,
+          width,
+        };
+      }
+
+      updatedDeviceConfig = normalizeCarouselConfigShape(updatedDeviceConfig);
+
+      const nextConfig: ResponsiveConfig<CarouselConfig> = prev.useGlobalAppearance
+        ? { same_for_all: true, desktop: updatedDeviceConfig, mobile: updatedDeviceConfig }
+        : { ...prev.carousel_config, same_for_all: false, [device]: updatedDeviceConfig };
+
+      const desktop = nextConfig.desktop;
+      return {
+        ...prev,
+        carousel_config: nextConfig,
+        carousel_spacing: desktop.spacing,
+        carousel_shape: desktop.shape,
+        carousel_size: desktop.width,
+        carousel_border_color: desktop.border_color,
+        carousel_border_width: desktop.border_style,
+        carousel_border_radius: desktop.border_radius,
+        carousel_object_fit: desktop.object_fit,
+        carousel_view_mode: desktop.view_mode,
+        carousel_margin_top: desktop.margin_top,
+        carousel_margin_bottom: desktop.margin_bottom,
+        carousel_visible_items: desktop.visible_items,
+        carousel_show_product: desktop.show_product,
+        carousel_show_play_button: desktop.show_play_icon,
+        carousel_show_title: desktop.show_title,
+        carousel_auto_center: desktop.auto_center,
+      };
+    });
+  };
+
+  const updateGridConfig = (patch: Partial<GridConfig>) => {
+    setFormData(prev => {
+      const device = prev.useGlobalAppearance ? 'desktop' : gridDevice;
+      const current = prev.grid_config[device];
+
+      const updatedDeviceConfig: GridConfig = normalizeGridConfigShape({
+        ...current,
+        ...patch,
+        visible_items: limitNumber(
+          patch.visible_items ?? current.visible_items,
+          current.visible_items || 1,
+          1,
+          10,
+        ),
+        rows: safeNumber(patch.rows ?? current.rows, current.rows || 1, 1),
+        spacing: safeNumber(patch.spacing ?? current.spacing, current.spacing || 0, 0),
+      });
+
+      const nextConfig: ResponsiveConfig<GridConfig> = prev.useGlobalAppearance
+        ? { same_for_all: true, desktop: updatedDeviceConfig, mobile: updatedDeviceConfig }
+        : { ...prev.grid_config, same_for_all: false, [device]: updatedDeviceConfig };
+
+      return {
+        ...prev,
+        grid_config: nextConfig,
+        desktop_columns: nextConfig.desktop.visible_items,
+        desktop_rows: nextConfig.desktop.rows,
+        desktop_gap: nextConfig.desktop.spacing,
+        mobile_columns: nextConfig.mobile.visible_items,
+        mobile_rows: nextConfig.mobile.rows,
+        mobile_gap: nextConfig.mobile.spacing,
+      };
+    });
+  };
+
+  const updateModalConfig = (patch: Partial<ModalConfig>) => {
+    setFormData(prev => {
+      const modalConfig: ModalConfig = { ...prev.modal_config, ...patch };
+      return {
+        ...prev,
+        modal_config: modalConfig,
+        show_title: modalConfig.show_title,
+        show_play_button: modalConfig.show_play_button,
+        show_product: modalConfig.show_product,
+        show_like_button: modalConfig.show_like_button,
+        show_comment_button: modalConfig.show_comment_button,
+        show_share_button: modalConfig.show_share_button,
+        show_product_button: modalConfig.show_product_button,
+        show_product_whatsapp_button: modalConfig.show_product_whatsapp_button,
+        hide_stories: modalConfig.hide_stories,
+        shadow_enabled: modalConfig.shadow_enabled,
+      } as ExtendedAppearance;
+    });
+  };
