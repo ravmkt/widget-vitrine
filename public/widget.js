@@ -1674,11 +1674,11 @@ panel.style.cssText = [
   'height:50%;',
   'max-height:50%;',
   'z-index:200;',
-  'background:#fff;',
   'display:flex;',
   'flex-direction:column;',
   'overflow:hidden;',
   'box-sizing:border-box;',
+  'background:#fff;',
   'border-radius:0 0 24px 24px;',
   'box-shadow:0 -4px 18px rgba(0,0,0,.18);',
   'font-family:' + fontFamily + ';'
