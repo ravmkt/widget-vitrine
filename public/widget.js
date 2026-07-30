@@ -1643,7 +1643,7 @@ var authorName = createEl('span', 'vl-comment-author');
       commentMeta.appendChild(authorName);
 
       if (comment.created_at) {
-        var commentDate = createEl('span');
+var commentDate = createEl('span', 'vl-comment-date');
         commentDate.textContent = formatRelativeTime(comment.created_at);
         commentDate.style.cssText = 'font-size:11px;color:#94a3b8;';
         commentMeta.appendChild(commentDate);
