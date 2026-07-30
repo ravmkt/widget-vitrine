@@ -1986,7 +1986,7 @@ commentsList.style.cssText = [
 
   nameInput.style.cssText = [
     'width:100%;',
-    'height:42px;',
+    'height:34px;',
     'padding:9px 12px;',
     'border:1.5px solid #e2e8f0;',
     'border-radius:10px;',
