@@ -2274,12 +2274,15 @@ if (appearanceConfig.show_like_button && video) {
     body.appendChild(social);
     container.appendChild(body);
 
-if (appearanceConfig.show_product) {
+var showVerProduto = appearanceConfig.show_product !== false;
+var showWhatsAppProduto = appearanceConfig.show_product_whatsapp_button !== false;
+
+if (showVerProduto || showWhatsAppProduto) {
   var videoProductId = video.product_id || (video.productId) || null;
   var productData = videoProductId ? readProductsData.find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
 
   if (productData) {
-    var priColor = (appearanceConfig.primary_color || '#6C5CE7');
+    var priColor = getPrimaryColor(currentAppearance);
     var productUrl = productData.product_url || productData.url || '';
 
     var footer = createEl('div', 'vl-footer');
@@ -2311,53 +2314,57 @@ if (appearanceConfig.show_product) {
       prodInfo.appendChild(pPrice);
     }
 
-    // Botões
+    // Botões — cada um com sua flag independente
     var pActions = createEl('div', 'vl-product-actions');
     pActions.style.cssText = 'display:flex;gap:8px;flex-shrink:0;margin-top:4px;';
 
-    // Botão "Ver no site"
-    var buyBtn = createEl('a', 'vl-product-btn');
-    buyBtn.textContent = 'Ver no site';
-    buyBtn.href = productUrl || '#';
-    buyBtn.target = '_blank';
-    buyBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;background:' + priColor + ';color:#fff;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;';
-    if (!productUrl) {
-      buyBtn.style.opacity = '0.5';
-      buyBtn.style.pointerEvents = 'none';
-      buyBtn.title = 'URL do produto não cadastrada';
-    }
-    buyBtn.onclick = function (e) {
-      e.stopPropagation();
-      trackMetric({ event_type: 'product_click', story_id: story.id, video_id: video ? video.id : null, product_id: productData.id, page_url: window.location.href });
-    };
-    pActions.appendChild(buyBtn);
-
-    // Botão "Comprar pelo WhatsApp"
-    var waNumber = storeWhatsappNumber || productData.whatsapp_number || productData.whatsappNumber || '';
-    if (waNumber) {
-      var waNumberClean = waNumber.replace(/\D/g, '');
-      var productName = productData.name || 'Produto';
-
-      var waMsgRaw = storeWhatsappMessage || 'Olá! Tenho interesse no produto: {{product_name}}';
-      waMsgRaw = waMsgRaw
-        .replace(/\{\{story_title\}\}/g, productName)
-        .replace(/\{\{product_name\}\}/g, productName)
-        .replace(/\{\{product_url\}\}/g, productUrl);
-
-      if (productUrl && waMsgRaw.indexOf(productUrl) === -1) {
-        waMsgRaw += '\n\n' + productUrl;
+    // ═══ Botão "Ver no site" (flag: show_product) ═══
+    if (showVerProduto) {
+      var buyBtn = createEl('a', 'vl-product-btn');
+      buyBtn.textContent = 'Ver no site';
+      buyBtn.href = productUrl || '#';
+      buyBtn.target = '_blank';
+      buyBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;background:' + priColor + ';color:#fff;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;';
+      if (!productUrl) {
+        buyBtn.style.opacity = '0.5';
+        buyBtn.style.pointerEvents = 'none';
+        buyBtn.title = 'URL do produto não cadastrada';
       }
-
-      var waBtn = createEl('a', 'vl-product-whatsapp-btn');
-      waBtn.textContent = 'Comprar pelo WhatsApp';
-      waBtn.href = 'https://wa.me/' + waNumberClean + '?text=' + encodeURIComponent(waMsgRaw);
-      waBtn.target = '_blank';
-      waBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;background:#25D366;color:#fff;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;';
-      waBtn.onclick = function (e) {
+      buyBtn.onclick = function (e) {
         e.stopPropagation();
-        trackMetric({ event_type: 'whatsapp_click', story_id: story.id, video_id: video ? video.id : null, product_id: productData.id, page_url: window.location.href });
+        trackMetric({ event_type: 'product_click', story_id: story.id, video_id: video ? video.id : null, product_id: productData.id, page_url: window.location.href });
       };
-      pActions.appendChild(waBtn);
+      pActions.appendChild(buyBtn);
+    }
+
+    // ═══ Botão "Comprar pelo WhatsApp" (flag: show_product_whatsapp_button) ═══
+    if (showWhatsAppProduto) {
+      var waNumber = storeWhatsappNumber || productData.whatsapp_number || productData.whatsappNumber || '';
+      if (waNumber) {
+        var waNumberClean = waNumber.replace(/\D/g, '');
+        var productName = productData.name || 'Produto';
+
+        var waMsgRaw = storeWhatsappMessage || 'Olá! Tenho interesse no produto: {{product_name}}';
+        waMsgRaw = waMsgRaw
+          .replace(/\{\{story_title\}\}/g, productName)
+          .replace(/\{\{product_name\}\}/g, productName)
+          .replace(/\{\{product_url\}\}/g, productUrl);
+
+        if (productUrl && waMsgRaw.indexOf(productUrl) === -1) {
+          waMsgRaw += '\n\n' + productUrl;
+        }
+
+        var waBtn = createEl('a', 'vl-product-whatsapp-btn');
+        waBtn.textContent = 'Comprar pelo WhatsApp';
+        waBtn.href = 'https://wa.me/' + waNumberClean + '?text=' + encodeURIComponent(waMsgRaw);
+        waBtn.target = '_blank';
+        waBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;background:#25D366;color:#fff;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;';
+        waBtn.onclick = function (e) {
+          e.stopPropagation();
+          trackMetric({ event_type: 'whatsapp_click', story_id: story.id, video_id: video ? video.id : null, product_id: productData.id, page_url: window.location.href });
+        };
+        pActions.appendChild(waBtn);
+      }
     }
 
     prodInfo.appendChild(pActions);
