@@ -583,13 +583,14 @@ var storeWhatsappMessage = '';
     return readAppearanceValue(appearance, ['font_family', 'fontFamily', 'fonte']) || DEFAULT_APPEARANCE.font_family;
   }
 
-  function normalizeModalAppearanceConfig(appearance) {
+function normalizeModalAppearanceConfig(appearance) {
     appearance = appearance || {};
     return {
       show_title: readConfigValue(appearance, 'modal_config', 'show_title', 'modal_show_title', true),
       show_play_button: readConfigValue(appearance, 'modal_config', 'show_play_button', 'modal_show_play_button', true),
       show_product: readConfigValue(appearance, 'modal_config', 'show_product', 'modal_show_product', true),
       show_product_button: readConfigValue(appearance, 'modal_config', 'show_product_button', 'modal_show_product_button', true),
+      show_product_whatsapp_button: readConfigValue(appearance, 'modal_config', 'show_product_whatsapp_button', null, true),
       show_like_button: readConfigValue(appearance, 'modal_config', 'show_like_button', 'modal_show_like_button', true),
       show_comment_button: readConfigValue(appearance, 'modal_config', 'show_comment_button', 'modal_show_comment_button', true),
       show_share_button: readConfigValue(appearance, 'modal_config', 'show_share_button', 'modal_show_share_button', true),
@@ -601,7 +602,7 @@ var storeWhatsappMessage = '';
       border_width: readConfigValue(appearance, 'modal_config', 'border_width', 'modal_border_width', ''),
       border_radius: readConfigValue(appearance, 'modal_config', 'border_radius', 'modal_border_radius', '')
     };
-  }
+}
 
   function trackMetric(metric) {
     metric = metric || {};
