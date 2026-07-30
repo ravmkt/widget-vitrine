@@ -1989,16 +1989,6 @@ panelTitle.style.cssText = [
     'font-family:' + fontFamily + ';'
   ].join('');
 
-  commentTextarea.onfocus = function () {
-    commentTextarea.style.borderColor = primaryColor;
-    commentTextarea.style.background = '#fff';
-  };
-
-  commentTextarea.onblur = function () {
-    commentTextarea.style.borderColor = '#e2e8f0';
-    commentTextarea.style.background = '#f8fafc';
-  };
-
   editor.appendChild(commentTextarea);
 
   var emojiRow = createEl('div');
