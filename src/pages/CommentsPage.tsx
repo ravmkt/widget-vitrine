@@ -774,57 +774,35 @@ const submitReply = async () => {
                         &quot;{row.text}&quot;
                       </p>
 
-                      {row.replies && row.replies.length > 0 && (
-                        <div className="mt-3 ml-4 space-y-2 border-l-2 border-[#0094EB]/20 pl-3">
-                          {row.replies.map((reply) => {
-                            const isReplyStore =
-                              reply.is_store_reply === true;
-
-                            const replyName = isReplyStore
-                              ? storeName || "Loja"
-                              : reply.user_name;
-
-                            const replyLogo = isReplyStore
-                              ? storeLogoUrl
-                              : reply.user_logo;
-
-                            return (
-                              <div
-                                key={reply.id}
-                                className="rounded-xl bg-blue-50/50 p-3"
-                              >
-                                <div className="mb-1 flex items-center gap-2">
-                                  {replyLogo ? (
-                                    <img
-                                      src={replyLogo}
-                                      alt={replyName}
-                                      className="h-6 w-6 rounded-full border border-[#0094EB] object-cover"
-                                    />
-                                  ) : (
-                                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0094EB] text-xs font-black text-white">
-                                      {replyName
-                                        ?.charAt(0)
-                                        .toUpperCase() || "?"}
-                                    </div>
-                                  )}
-
-                                  <span className="text-xs font-bold text-slate-700">
-                                    {replyName}
-                                  </span>
-
-                                  <span className="text-[9px] text-slate-400">
-                                    {new Date(
-                                      reply.created_at,
-                                    ).toLocaleString("pt-BR")}
-                                  </span>
+                      {row.reply_content && row.reply_status !== 'hidden' && (
+                        <div className="mt-3 ml-4 border-l-2 border-[#0094EB]/20 pl-3">
+                          <div className="rounded-xl bg-blue-50/50 p-3">
+                            <div className="mb-1 flex items-center gap-2">
+                              {storeLogoUrl ? (
+                                <img
+                                  src={storeLogoUrl}
+                                  alt={storeName || 'Loja'}
+                                  className="h-6 w-6 rounded-full border border-[#0094EB] object-cover"
+                                />
+                              ) : (
+                                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0094EB] text-xs font-black text-white">
+                                  {(storeName || 'L').charAt(0).toUpperCase()}
                                 </div>
+                              )}
 
-                                <p className="ml-8 text-sm text-slate-600">
-                                  {reply.text}
-                                </p>
-                              </div>
-                            );
-                          })}
+                              <span className="text-xs font-bold text-slate-700">
+                                {storeName || 'Loja'}
+                              </span>
+
+                              <span className="text-[9px] text-slate-400">
+                                Resposta da loja
+                              </span>
+                            </div>
+
+                            <p className="ml-8 text-sm text-slate-600">
+                              {row.reply_content}
+                            </p>
+                          </div>
                         </div>
                       )}
 
