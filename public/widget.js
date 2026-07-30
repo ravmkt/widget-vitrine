@@ -665,12 +665,12 @@
       : fetchJson('products?select=*&store_id=eq.' + encodeURIComponent(storeId));
   }
 
-  function readComments() {
+function readComments() {
     if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_comments', []));
-var query = 'comments?select=id,store_id,video_id,user_name,user_email,content,status,created_at&store_id=eq.' +
+var query = 'comments?select=id,store_id,video_id,user_name,user_email,content,status,created_at,reply_content,reply_status&store_id=eq.' +
   encodeURIComponent(storeId) + '&status=eq.approved&order=created_at.asc';
     return fetchJson(query);
-  }
+}
 
   function readPageRules() {
     if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_page_rules', []));
