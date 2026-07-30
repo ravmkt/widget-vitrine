@@ -2732,6 +2732,9 @@ storeWhatsappMessage = storeSettings.whatsapp_message || storeSettings.whatsappM
 
       currentAppearance = appearance;
 
+      window.__vidlytics_debug_show_product = appearance.show_product;
+
+
       if (!stories || stories.length === 0) return;
 
       function storyMatchesCurrentPage(story) {
