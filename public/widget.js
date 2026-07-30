@@ -585,54 +585,34 @@ var storeWhatsappMessage = '';
 
 function normalizeModalAppearanceConfig(appearance) {
     appearance = appearance || {};
+    var rawModalConfig = parseJsonIfNeeded(appearance.modal_config || appearance.modalConfig) || {};
+    function rcv(jsonbField, flatField, fallback) {
+      var jsonbVal = rawModalConfig[jsonbField];
+      if (jsonbVal !== undefined && jsonbVal !== null && jsonbVal !== '') return jsonbVal;
+      if (flatField) {
+        var flatVal = readDeviceValue(appearance, flatField);
+        if (flatVal !== undefined && flatVal !== null && flatVal !== '') return flatVal;
+      }
+      return fallback;
+    }
     return {
-      show_title: readConfigValue(appearance, 'modal_config', 'show_title', 'modal_show_title', true),
-      show_play_button: readConfigValue(appearance, 'modal_config', 'show_play_button', 'modal_show_play_button', true),
-      show_product: readConfigValue(appearance, 'modal_config', 'show_product', 'modal_show_product', true),
-      show_product_button: readConfigValue(appearance, 'modal_config', 'show_product_button', 'modal_show_product_button', true),
-      show_product_whatsapp_button: readConfigValue(appearance, 'modal_config', 'show_product_whatsapp_button', null, true),
-      show_like_button: readConfigValue(appearance, 'modal_config', 'show_like_button', 'modal_show_like_button', true),
-      show_comment_button: readConfigValue(appearance, 'modal_config', 'show_comment_button', 'modal_show_comment_button', true),
-      show_share_button: readConfigValue(appearance, 'modal_config', 'show_share_button', 'modal_show_share_button', true),
-      show_whatsapp_button: readConfigValue(appearance, 'modal_config', 'show_whatsapp_button', 'modal_show_whatsapp_button', true),
-      show_sizing_button: readConfigValue(appearance, 'modal_config', 'show_sizing_button', 'modal_show_sizing_button', true),
-      hide_stories: readConfigValue(appearance, 'modal_config', 'hide_stories', 'modal_hide_stories', false),
-      shadow_enabled: readConfigValue(appearance, 'modal_config', 'shadow_enabled', 'modal_shadow_enabled', true),
-      border_color: readConfigValue(appearance, 'modal_config', 'border_color', 'modal_border_color', ''),
-      border_width: readConfigValue(appearance, 'modal_config', 'border_width', 'modal_border_width', ''),
-      border_radius: readConfigValue(appearance, 'modal_config', 'border_radius', 'modal_border_radius', '')
+      show_title: rcv('show_title', 'modal_show_title', true),
+      show_play_button: rcv('show_play_button', 'modal_show_play_button', true),
+      show_product: rcv('show_product', 'modal_show_product', true),
+      show_product_button: rcv('show_product_button', 'modal_show_product_button', true),
+      show_product_whatsapp_button: rcv('show_product_whatsapp_button', null, true),
+      show_like_button: rcv('show_like_button', 'modal_show_like_button', true),
+      show_comment_button: rcv('show_comment_button', 'modal_show_comment_button', true),
+      show_share_button: rcv('show_share_button', 'modal_show_share_button', true),
+      show_whatsapp_button: rcv('show_whatsapp_button', 'modal_show_whatsapp_button', true),
+      show_sizing_button: rcv('show_sizing_button', 'modal_show_sizing_button', true),
+      hide_stories: rcv('hide_stories', 'modal_hide_stories', false),
+      shadow_enabled: rcv('shadow_enabled', 'modal_shadow_enabled', true),
+      border_color: rcv('border_color', 'modal_border_color', ''),
+      border_width: rcv('border_width', 'modal_border_width', ''),
+      border_radius: rcv('border_radius', 'modal_border_radius', '')
     };
 }
-
-  function trackMetric(metric) {
-    metric = metric || {};
-    var payload = {
-      store_id: storeId || null,
-      story_id: metric.story_id || null,
-      video_id: metric.video_id || null,
-      product_id: metric.product_id || null,
-      event_type: String(metric.event_type || 'unknown'),
-      page_url: metric.page_url || window.location.href,
-      device_type: getDevice(),
-      browser: navigator.userAgent,
-      user_agent: navigator.userAgent,
-      referrer: document.referrer || null,
-      metadata: {},
-      created_at: new Date().toISOString()
-    };
-    var fallbackMetrics = getStorageItem('vidlytics_metrics', []);
-    if (!Array.isArray(fallbackMetrics)) fallbackMetrics = [];
-    fallbackMetrics.push(payload);
-    setStorageItem('vidlytics_metrics', fallbackMetrics);
-    if (!hasSupabase) return Promise.resolve({ saved: false, local: true, payload: payload });
-    return supabaseFetch('metrics', {
-      method: 'POST',
-      headers: { 'Prefer': 'return=minimal' },
-      body: JSON.stringify(payload)
-    })
-      .then(function (response) { if (response.ok) return { saved: true, payload: payload }; return { saved: false, payload: payload }; })
-      .catch(function () { return { saved: false, payload: payload }; });
-  }
 
   function readStories() {
     if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_stories', []));
