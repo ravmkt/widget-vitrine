@@ -539,13 +539,13 @@ const SocialActionButtons: FC<{
         </button>
       )}
 
-      {/* Comentários */}
-      {(modalConfig.show_comment_button || modalConfig.show_comments_button) && (
-        <button type="button" onClick={onComment} className="relative rounded-full p-3 text-white backdrop-blur-md transition hover:brightness-110" style={btnStyle} aria-label="Comentários">
-          <MessageCircle className="h-5 w-5" />
-          <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-black text-white">{commentCount}</span>
-        </button>
-      )}
+{/* Comentários */}
+{(modalConfig.show_comment_button || modalConfig.show_comments_button) && (
+  <button type="button" onClick={onComment} className="relative rounded-full p-3 text-white backdrop-blur-md transition hover:brightness-110" style={btnStyle} aria-label="Comentários">
+    <MessageCircle className={cn('h-5 w-5', commentCount > 0 && 'fill-white')} />
+    <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-black text-white">{commentCount}</span>
+  </button>
+)}
 
       {/* Share */}
       {modalConfig.show_share_button && (
