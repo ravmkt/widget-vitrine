@@ -2010,7 +2010,9 @@ panelTitle.style.cssText = [
     'font-family:' + fontFamily + ';'
   ].join('');
 
-  function applyInputFocusStyle(input) {
+function applyInputFocusStyle(input) {
+  if (!input) return;
+
   input.addEventListener('focus', function () {
     input.style.borderColor = primaryColor;
     input.style.boxShadow = '0 0 0 2px ' + primaryColor + '33';
@@ -2018,11 +2020,13 @@ panelTitle.style.cssText = [
   });
 
   input.addEventListener('blur', function () {
-    input.style.borderColor = '#e2e8f0';
+    input.style.borderColor = '#b6b6b6';
     input.style.boxShadow = 'none';
-    input.style.background = '#f8fafc';
+    input.style.background = '#fff';
   });
 }
+
+applyInputFocusStyle(nameInput);
 
 
   formSection.appendChild(nameInput);
