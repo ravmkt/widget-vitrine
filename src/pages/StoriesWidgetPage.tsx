@@ -541,37 +541,34 @@ const SocialActionButtons: FC<{
 
 {/* Comentários */}
 {(modalConfig.show_comment_button || modalConfig.show_comments_button) && (
-  <div className="flex flex-col items-center">
-    <button
-      type="button"
-      onClick={onComment}
-      className="flex h-11 w-11 items-center justify-center rounded-full text-white backdrop-blur-md transition hover:brightness-110"
-      style={btnStyle}
-      aria-label="Comentários"
-    >
-      {commentCount > 0 ? (
-        <svg
-          viewBox="0 0 24 24"
-          className="h-5 w-5"
-          aria-hidden="true"
-        >
-          <path
-            fill="currentColor"
-            d="M20.5 3.5h-17A2.5 2.5 0 0 0 1 6v10a2.5 2.5 0 0 0 2.5 2.5H7l3.4 2.55a2.7 2.7 0 0 0 3.2 0l3.4-2.55h3.5A2.5 2.5 0 0 0 23 16V6a2.5 2.5 0 0 0-2.5-2.5Z"
-          />
-          <circle cx="8" cy="11" r="1.1" fill={primaryColor} />
-          <circle cx="12" cy="11" r="1.1" fill={primaryColor} />
-          <circle cx="16" cy="11" r="1.1" fill={primaryColor} />
-        </svg>
-      ) : (
-        <MessageCircle className="h-5 w-5" />
-      )}
-    </button>
+  <button
+    type="button"
+    onClick={onComment}
+    className="flex flex-col items-center gap-1"
+    aria-label="Comentários"
+  >
+    {/* Círculo de fundo, como TikTok */}
+    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 shadow-md transition hover:scale-105">
+      {/* Balão preenchido */}
+      <svg
+        viewBox="0 0 24 24"
+        className="h-6 w-6 text-slate-900"
+        fill="currentColor"
+        aria-hidden="true"
+      >
+        <path d="M4.5 3.5h15A2.5 2.5 0 0 1 22 6v9a2.5 2.5 0 0 1-2.5 2.5h-4.2l-2.1 2.1a1.7 1.7 0 0 1-2.4 0l-2.1-2.1H4.5A2.5 2.5 0 0 1 2 15V6a2.5 2.5 0 0 1 2.5-2.5Z" />
 
-    <span className="mt-1 block text-center text-[10px] font-black leading-none text-white">
-TESTE-{commentCount}
+        <circle cx="8" cy="10.5" r="1" fill="white" />
+        <circle cx="12" cy="10.5" r="1" fill="white" />
+        <circle cx="16" cy="10.5" r="1" fill="white" />
+      </svg>
     </span>
-  </div>
+
+    {/* Número fora e abaixo do círculo */}
+    <span className="text-center text-xs font-bold leading-none text-white">
+      {commentCount}
+    </span>
+  </button>
 )}
 
       {/* Share */}
