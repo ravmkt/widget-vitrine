@@ -880,6 +880,10 @@ function readStoreSettings() {
     var font = getFontFamily(appearance);
     var fontSize = readAppearanceValue(appearance, ['font_size', 'fontSize']) || '14';
     var modalConfig = normalizeModalAppearanceConfig(appearance);
+    var modalBorderColor = modalConfig.border_color || 'transparent';
+var modalBorderWidthNum = parseInt(modalConfig.border_width) || 0;
+var modalBorderRadiusNum = parseInt(modalConfig.border_radius) || 0;
+
     var shadow = modalConfig.shadow_enabled !== false ? '0 24px 80px rgba(15,23,42,.24)' : 'none';
     return (
       '*,*::before,*::after{box-sizing:border-box!important;}'
