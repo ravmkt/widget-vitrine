@@ -1701,7 +1701,7 @@ var commentText = createEl('p', 'vl-comment-text');
     while (panelBody.firstChild) { panelBody.removeChild(panelBody.firstChild); }
     while (panelFooter.firstChild) { panelFooter.removeChild(panelFooter.firstChild); }
 
-    var formWrap = createEl('div');
+var formWrap = createEl('div', 'vl-comment-form');
     formWrap.style.cssText = 'padding:16px 18px;display:flex;flex-direction:column;gap:0;flex:1;';
 
     var nameLabel = createEl('label');
