@@ -1313,55 +1313,58 @@ var payload = {
     return date.toLocaleDateString('pt-BR');
   }
 
-  function toggleLike(video, btnEl) {
-    if (!video || !video.id) return;
-    var vidId = video.id;
-    var isCurrentlyLiked = !!likedVideos[vidId];
-    if (isCurrentlyLiked) {
-      delete likedVideos[vidId];
-      videoLikeCounts[vidId] = Math.max(0, (videoLikeCounts[vidId] || 1) - 1);
-      if (hasSupabase) {
-        supabaseFetch('video_likes?video_id=eq.' + encodeURIComponent(vidId) + '&user_fingerprint=eq.' + encodeURIComponent(getFingerprint()), { method: 'DELETE' })
-          .catch(function () {});
-      }
-    } else {
-      likedVideos[vidId] = true;
-      videoLikeCounts[vidId] = (videoLikeCounts[vidId] || 0) + 1;
-      if (hasSupabase) {
-        supabaseFetch('video_likes', {
-          method: 'POST',
-          headers: { 'Prefer': 'return=minimal' },
-          body: JSON.stringify({
-            video_id: vidId,
-            user_fingerprint: getFingerprint(),
-            store_id: storeId,
-            story_id: currentStories[currentStoryIndex].id,
-            page_url: window.location.href,
-            created_at: new Date().toISOString()
-          })
-        }).catch(function () {});
-      }
+function toggleLike(video, btnEl) {
+  if (!video || !video.id) return;
+  var vidId = video.id;
+  var isCurrentlyLiked = !!likedVideos[vidId];
+  if (isCurrentlyLiked) {
+    delete likedVideos[vidId];
+    videoLikeCounts[vidId] = Math.max(0, (videoLikeCounts[vidId] || 1) - 1);
+    if (hasSupabase) {
+      supabaseFetch('video_likes?video_id=eq.' + encodeURIComponent(vidId) + '&user_fingerprint=eq.' + encodeURIComponent(getFingerprint()), { method: 'DELETE' })
+        .catch(function () {});
     }
-    if (btnEl) {
-      var isNowLiked = !!likedVideos[vidId];
-      btnEl.innerHTML = svgIcon(isNowLiked ? 'heartFilled' : 'heart');
-      btnEl.title = isNowLiked ? 'Descurtir' : 'Curtir';
-      var count = videoLikeCounts[vidId] || 0;
-      var existingCount = btnEl.querySelector('.vl-social-count');
-      if (existingCount) existingCount.remove();
-      if (count > 0) {
-        var newCountEl = createEl('span', 'vl-social-count');
-        newCountEl.textContent = count;
-        btnEl.appendChild(newCountEl);
-      }
+  } else {
+    likedVideos[vidId] = true;
+    videoLikeCounts[vidId] = (videoLikeCounts[vidId] || 0) + 1;
+    if (hasSupabase) {
+      supabaseFetch('video_likes', {
+        method: 'POST',
+        headers: { 'Prefer': 'return=minimal' },
+        body: JSON.stringify({
+          video_id: vidId,
+          user_fingerprint: getFingerprint(),
+          store_id: storeId,
+          story_id: currentStories[currentStoryIndex].id,
+          page_url: window.location.href,
+          created_at: new Date().toISOString()
+        })
+      }).catch(function () {});
     }
-    trackMetric({
-      event_type: isCurrentlyLiked ? 'unlike' : 'like',
-      story_id: currentStories[currentStoryIndex].id,
-      video_id: vidId,
-      page_url: window.location.href
-    });
   }
+
+  // Atualiza o visual do botão
+  var isNowLiked = !!likedVideos[vidId];
+  var count = videoLikeCounts[vidId] || 0;
+  btnEl.innerHTML = svgIcon(isNowLiked ? 'heartFilled' : 'heart');
+  btnEl.title = isNowLiked ? 'Descurtir' : 'Curtir';
+
+  // Atualiza o contador no span irmão (fora do botão)
+  var wrapper = btnEl.parentNode;
+  if (wrapper && wrapper.classList.contains('vl-social-wrapper')) {
+    var countEl = wrapper.querySelector('.vl-social-count');
+    if (countEl) {
+      countEl.textContent = count > 0 ? count : '';
+    }
+  }
+
+  trackMetric({
+    event_type: isCurrentlyLiked ? 'unlike' : 'like',
+    story_id: currentStories[currentStoryIndex].id,
+    video_id: vidId,
+    page_url: window.location.href
+  });
+}
 
   function openSharePanel(btnEl) {
     var existing = document.getElementById('vl-share-panel');
