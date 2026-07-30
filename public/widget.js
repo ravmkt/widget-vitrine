@@ -2052,26 +2052,32 @@ var formWrap = createEl('div', 'vl-comment-form');
 
     var social = createEl('div', 'vl-social');
 
-    if (appearanceConfig.show_like_button && video) {
-      var vidId = video.id;
-      var isLiked = !!likedVideos[vidId];
-      var likeCount = videoLikeCounts[vidId] || 0;
+if (appearanceConfig.show_like_button && video) {
+  var vidId = video.id;
+  var isLiked = !!likedVideos[vidId];
+  var likeCount = videoLikeCounts[vidId] || 0;
+  var hasLikes = likeCount > 0;
 
-      var likeBtn = createEl('button', 'vl-social-btn');
-      likeBtn.id = 'vl-like-btn';
-      likeBtn.innerHTML = svgIcon(isLiked ? 'heartFilled' : 'heart');
-      likeBtn.title = isLiked ? 'Descurtir' : 'Curtir';
+  var likeWrapper = createEl('div', 'vl-social-wrapper');
 
-      var likeCountEl = createEl('span', 'vl-social-count');
-      likeCountEl.textContent = likeCount > 0 ? likeCount : '';
-      likeBtn.appendChild(likeCountEl);
+  var likeBtn = createEl('button', 'vl-social-btn');
+  likeBtn.id = 'vl-like-btn';
+  likeBtn.innerHTML = svgIcon(hasLikes ? 'heartFilled' : 'heart');
+  likeBtn.title = isLiked ? 'Descurtir' : 'Curtir';
 
-      likeBtn.onclick = function (e) {
-        e.stopPropagation();
-        toggleLike(video, likeBtn);
-      };
-      social.appendChild(likeBtn);
-    }
+  likeBtn.onclick = function (e) {
+    e.stopPropagation();
+    toggleLike(video, likeBtn);
+  };
+
+  likeWrapper.appendChild(likeBtn);
+
+  var likeCountEl = createEl('span', 'vl-social-count');
+  likeCountEl.textContent = likeCount > 0 ? likeCount : '';
+
+  likeWrapper.appendChild(likeCountEl);
+  social.appendChild(likeWrapper);
+}
 
     if (appearanceConfig.show_comment_button && video) {
       var commentCountVal = getCommentCountForVideo(video.id);
