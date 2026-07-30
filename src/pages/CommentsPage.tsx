@@ -474,71 +474,68 @@ useEffect(() => {
     }, 100);
   };
 
-  const submitReply = async () => {
-    if (!editingCommentId || !textareaRef.current) {
-      return;
-    }
+const submitReply = async () => {
+  if (!editingCommentId || !textareaRef.current) {
+    return;
+  }
 
-    const text = commentText.trim();
+  const text = commentText.trim();
 
-    if (!text) {
-      showError("Digite um comentário.");
-      return;
-    }
+  if (!text) {
+    showError("Digite um comentário.");
+    return;
+  }
 
-    const currentComment = comments.find(
-      (comment) => comment.id === editingCommentId,
+  const currentComment = comments.find(
+    (comment) => comment.id === editingCommentId,
+  );
+
+  if (!currentComment) {
+    showError("Comentário não encontrado.");
+    return;
+  }
+
+  try {
+    // 🔥 Atualiza diretamente no Supabase os campos de resposta
+    const { error } = await supabase
+      .from('comments')
+      .update({
+        reply_content: text,
+        reply_status: 'replied',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', editingCommentId)
+      .eq('store_id', storeId);
+
+    if (error) throw error;
+
+    // Atualiza o estado local
+    setComments((previousComments) =>
+      previousComments.map((comment) =>
+        comment.id === editingCommentId
+          ? {
+              ...comment,
+              reply_content: text,
+              reply_status: 'replied',
+            }
+          : comment,
+      ),
     );
 
-    if (!currentComment) {
-      showError("Comentário não encontrado.");
-      return;
-    }
+    setCommentText("");
+    setShowEmoji(false);
+    setEditingCommentId(null);
 
-    const newReply: CommentReply = {
-      id: `${Date.now()}-${Math.random()
-        .toString(36)
-        .substring(2, 11)}`,
-      user_name: storeName || "Loja",
-      user_logo: storeLogoUrl || undefined,
-      text,
-      created_at: new Date().toISOString(),
-      is_store_reply: true,
-    };
+    showSuccess("Resposta enviada.");
+  } catch (error) {
+    console.error(
+      "[CommentsPage] erro ao enviar resposta:",
+      error,
+    );
 
-    try {
-      const updatedComment: CommentWithReplies = {
-        ...currentComment,
-        replies: [
-          ...(currentComment.replies || []),
-          newReply,
-        ],
-      };
-
-      await db.comments.save(updatedComment as Comment);
-
-      setComments((previousComments) =>
-        previousComments.map((comment) =>
-          comment.id === editingCommentId
-            ? updatedComment
-            : comment,
-        ),
-      );
-
-      setCommentText("");
-      setShowEmoji(false);
-      setEditingCommentId(null);
-
-      showSuccess("Resposta enviada.");
-    } catch (error) {
-      console.error(
-        "[CommentsPage] erro ao enviar resposta:",
-        error,
-      );
-
-      showError("Erro ao enviar resposta.");
-    }
-  };
+    showError("Erro ao enviar resposta.");
+  }
+};
 
   const insertEmojiAtCursor = (emoji: string) => {
     const element = textareaRef.current;
