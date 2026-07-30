@@ -2764,7 +2764,7 @@ window.__vidlytics_debug_products = readProductsData;
       }
 
 storeWhatsappNumber = storeSettings.whatsapp_number || storeSettings.whatsappNumber || '';
-storeWhatsappMessage = storeSettings.whatsapp_message || storeSettings.whatsappMessage || '';
+storeWhatsappMessage = 'XXX'; // TESTE - depois remova esta linha
 console.log('🔍 DEBUG - storeWhatsappMessage:', JSON.stringify(storeWhatsappMessage));
 console.log('🔍 DEBUG - storeSettings completo:', JSON.stringify(storeSettings));
 
