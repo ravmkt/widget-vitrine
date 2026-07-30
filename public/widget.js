@@ -1699,7 +1699,9 @@ function openCommentsPanel(videoId, storyId) {
 
   var panel = createEl('div', 'vl-comments-panel-full');
 
-panel.style.cssText = [
+  existing = panel;
+
+  panel.style.cssText = [
   'position:absolute;',
   'top:50%;',
   'right:0;',
