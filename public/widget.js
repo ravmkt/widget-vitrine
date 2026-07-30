@@ -1933,11 +1933,6 @@ panelTitle.style.cssText = [
 }
 
 
-  nameInput.onblur = function () {
-    nameInput.style.borderColor = '#e2e8f0';
-    nameInput.style.background = '#f8fafc';
-  };
-
   formSection.appendChild(nameInput);
 
   var commentLabel = createEl('label');
