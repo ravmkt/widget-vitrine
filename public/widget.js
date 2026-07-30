@@ -1786,32 +1786,37 @@ var formWrap = createEl('div', 'vl-comment-form');
     emojiRow.appendChild(emojiGrid);
     formWrap.appendChild(emojiRow);
 
-    var charCounter = createEl('div');
+    var charCounter = createEl('div', 'vl-form-charcount');
     charCounter.textContent = '0/1000';
-    charCounter.style.cssText = 'text-align:right;font-size:11px;color:#94a3b8;margin-bottom:8px;';
     commentTextarea.addEventListener('input', function () {
       charCounter.textContent = commentTextarea.value.length + '/1000';
     });
     formWrap.appendChild(charCounter);
 
-    var statusMsg = createEl('div');
-    statusMsg.style.cssText = 'min-height:18px;text-align:center;font-size:12px;transition:all .2s;margin-bottom:4px;';
+    var statusMsg = createEl('div', 'vl-form-status');
     formWrap.appendChild(statusMsg);
 
     panelBody.appendChild(formWrap);
 
-var btnRow = createEl('div', 'vl-form-btn-row');
-    btnRow.style.cssText = 'display:flex;gap:8px;';
+    // ── Botões: Voltar + Enviar ──
+    var btnRow = createEl('div', 'vl-form-btn-row');
 
-    var backBtn = createEl('button');
-    backBtn.type = 'button'; backBtn.textContent = 'Voltar';
-    backBtn.style.cssText = 'flex:1;height:40px;border:1.5px solid #e2e8f0;border-radius:12px;background:#fff;color:#64748b;font-size:14px;font-weight:600;cursor:pointer;font-family:' + fontFamily + ';';
-    backBtn.onclick = function (e) { e.preventDefault(); e.stopPropagation(); renderInitialState(); };
+    var backBtn = createEl('button', 'vl-form-btn-back');
+    backBtn.type = 'button';
+    backBtn.textContent = 'Voltar';
+    backBtn.style.fontFamily = fontFamily;
+    backBtn.onclick = function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      renderInitialState();
+    };
     btnRow.appendChild(backBtn);
 
-    var sendBtn = createEl('button');
-    sendBtn.type = 'button'; sendBtn.textContent = 'Enviar';
-    sendBtn.style.cssText = 'flex:1;height:40px;border:none;border-radius:12px;background:' + buttonColor + ';color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:' + fontFamily + ';';
+    var sendBtn = createEl('button', 'vl-form-btn-send');
+    sendBtn.type = 'button';
+    sendBtn.textContent = 'Enviar';
+    sendBtn.style.background = buttonColor;
+    sendBtn.style.fontFamily = fontFamily;
     sendBtn.onmouseenter = function () { sendBtn.style.opacity = '.9'; };
     sendBtn.onmouseleave = function () { sendBtn.style.opacity = '1'; };
 
