@@ -541,28 +541,37 @@ const SocialActionButtons: FC<{
 
 {/* Comentários */}
 {(modalConfig.show_comment_button || modalConfig.show_comments_button) && (
-  <button
-    type="button"
-    onClick={onComment}
-    className="flex flex-col items-center gap-1"
-    aria-label="Comentários"
-  >
-    <div
-      className="flex items-center justify-center rounded-full p-3 text-white backdrop-blur-md transition hover:brightness-110"
+  <div className="flex flex-col items-center">
+    <button
+      type="button"
+      onClick={onComment}
+      className="flex h-11 w-11 items-center justify-center rounded-full text-white backdrop-blur-md transition hover:brightness-110"
       style={btnStyle}
+      aria-label="Comentários"
     >
       {commentCount > 0 ? (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="1.5" xmlns="http://www.w3.org/2000/svg">
-          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+        <svg
+          viewBox="0 0 24 24"
+          className="h-5 w-5"
+          aria-hidden="true"
+        >
+          <path
+            fill="currentColor"
+            d="M20.5 3.5h-17A2.5 2.5 0 0 0 1 6v10a2.5 2.5 0 0 0 2.5 2.5H7l3.4 2.55a2.7 2.7 0 0 0 3.2 0l3.4-2.55h3.5A2.5 2.5 0 0 0 23 16V6a2.5 2.5 0 0 0-2.5-2.5Z"
+          />
+          <circle cx="8" cy="11" r="1.1" fill={primaryColor} />
+          <circle cx="12" cy="11" r="1.1" fill={primaryColor} />
+          <circle cx="16" cy="11" r="1.1" fill={primaryColor} />
         </svg>
       ) : (
-        <MessageCircle size={20} color="white" />
+        <MessageCircle className="h-5 w-5" />
       )}
-    </div>
-    <span className="text-[10px] font-black text-white leading-none">
+    </button>
+
+    <span className="mt-1 block text-center text-[10px] font-black leading-none text-white">
       {commentCount}
     </span>
-  </button>
+  </div>
 )}
 
       {/* Share */}
