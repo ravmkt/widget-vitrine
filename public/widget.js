@@ -2782,7 +2782,7 @@ window.__vidlytics_debug_products = readProductsData;
       }
 
 storeWhatsappNumber = storeSettings.whatsapp_number || storeSettings.whatsappNumber || '';
-storeWhatsappNumber = storeSettings.whatsapp_number || storeSettings.whatsappNumber || '';
+storeWhatsappMessage = storeSettings.whatsapp_message_template || storeSettings.whatsapp_message || storeSettings.whatsappMessage || '';
 
       currentAppearance = appearance;
 
