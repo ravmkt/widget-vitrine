@@ -2764,8 +2764,7 @@ window.__vidlytics_debug_products = readProductsData;
       }
 
 storeWhatsappNumber = storeSettings.whatsapp_number || storeSettings.whatsappNumber || '';
-console.log('🔍 DEBUG - storeWhatsappMessage:', JSON.stringify(storeWhatsappMessage));
-console.log('🔍 DEBUG - storeSettings completo:', JSON.stringify(storeSettings));
+storeWhatsappMessage = storeSettings.whatsapp_message || storeSettings.whatsappMessage || storeSettings.whatsapp_message_template || '';
 
       currentAppearance = appearance;
 
