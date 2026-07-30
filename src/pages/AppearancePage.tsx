@@ -3071,6 +3071,8 @@ const AppearancePage = () => {
                     </SectionCard>
                   )}
 
+                  </div>
+
                 <PreviewCard
                   formData={formData}
                   floatingDevice={floatingDevice}
