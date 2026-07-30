@@ -156,17 +156,28 @@ const VideoGalleryPage = () => {
         setVideos(allVideos || []);
         setProducts(allProducts || []);
 
-        const storyNameById: Record<string, string> = {};
-        (allStories || []).forEach(s => { storyNameById[s.id] = s.name; });
+const storyNameById: Record<string, string> = {};
+(allStories || []).forEach(s => { storyNameById[s.id] = s.name; });
 
-        const map: Record<string, string> = {};
-        (allStoryVideos || []).forEach(sv => {
-          if (sv.video_id && storyNameById[sv.story_id]) {
-            const existing = map[sv.video_id];
-            map[sv.video_id] = existing ? `${existing}, ${storyNameById[sv.story_id]}` : storyNameById[sv.story_id];
-          }
-        });
-        setStoryMap(map);
+console.log('[Galeria] Stories carregados:', allStories?.length, storyNameById);
+console.log('[Galeria] StoryVideos carregados:', allStoryVideos?.length, allStoryVideos);
+
+const map: Record<string, string> = {};
+(allStoryVideos || []).forEach(sv => {
+  // Garante compatibilidade snake_case e camelCase
+  const videoId = sv.video_id || (sv as any).videoId;
+  const storyId = sv.story_id || (sv as any).storyId;
+
+  console.log('[Galeria] StoryVideo item:', { videoId, storyId, storyName: storyNameById[storyId] });
+
+  if (videoId && storyId && storyNameById[storyId]) {
+    const existing = map[videoId];
+    map[videoId] = existing ? `${existing}, ${storyNameById[storyId]}` : storyNameById[storyId];
+  }
+});
+
+console.log('[Galeria] StoryMap final:', map);
+setStoryMap(map);
 
         const videosSemThumb = (allVideos || []).filter(v => v.source_type === 'external_url' && !v.thumbnail_url && v.video_url);
         for (const v of videosSemThumb) {
