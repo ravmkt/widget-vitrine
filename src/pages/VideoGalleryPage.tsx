@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { db, Video, Product, resolveStoreId } from '@/lib/db';
+import { db, Video, Product, SizingModel, resolveStoreId } from '@/lib/db';
 import { useTenant } from '@/context/TenantContext';
 import {
   Plus,
@@ -105,6 +105,7 @@ const VideoGalleryPage = () => {
   const [loading, setLoading] = useState(true);
   const [videos, setVideos] = useState<Video[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [models, setModels] = useState<SizingModel[]>([]);
   const [storyMap, setStoryMap] = useState<Record<string, string>>({});
   const [videoStoryMap, setVideoStoryMap] = useState<Record<string, Set<string>>>({});
   const [storyList, setStoryList] = useState<{ id: string; title: string }[]>([]);
@@ -142,22 +143,24 @@ const VideoGalleryPage = () => {
         const safeStoreId = await resolveSafeStoreId();
         if (!mounted) return;
         if (!safeStoreId) {
-          setVideos([]); setProducts([]); setStoryMap({}); setVideoStoryMap({}); setStoryList([]); setResolvedStoreId('');
+          setVideos([]); setProducts([]); setModels([]); setStoryMap({}); setVideoStoryMap({}); setStoryList([]); setResolvedStoreId('');
           showError('Não foi possível identificar a loja atual.');
           return;
         }
         setResolvedStoreId(safeStoreId);
 
-        const [allVideos, allProducts, allStories, allStoryVideos] = await Promise.all([
+        const [allVideos, allProducts, allStories, allStoryVideos, allModels] = await Promise.all([
           db.videos.getAll(safeStoreId),
           db.products.getAll(safeStoreId),
           db.stories.getAll(safeStoreId),
           db.storyVideos.getAll(safeStoreId),
+          db.sizingModels.getAll(safeStoreId),
         ]);
 
         if (!mounted) return;
         setVideos(allVideos || []);
         setProducts(allProducts || []);
+        setModels(allModels || []);
 
         const storyNameById: Record<string, string> = {};
         (allStories || []).forEach(s => {
@@ -275,11 +278,6 @@ const VideoGalleryPage = () => {
     }
   };
 
-  const getHeaderClass = (col: string, align: 'left' | 'center' | 'right' = 'left') =>
-    cn('cursor-pointer select-none whitespace-nowrap px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest hover:opacity-75', align === 'center' && 'text-center', align === 'right' && 'text-right');
-
-  const sortIcon = (col: string) => sortColumn === col ? (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />) : null;
-
   if (loading || tenantLoading) return null;
 
   return (
@@ -328,21 +326,17 @@ const VideoGalleryPage = () => {
           <table className="w-full min-w-[880px] table-fixed border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="w-[72px] px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-left">
-                  Vídeo
-                </th>
+                <th className="w-[72px] px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-left">Vídeo</th>
                 <th onClick={() => handleSort('nome')} className="w-[29%] cursor-pointer select-none px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-left hover:opacity-75">
-                  <span className="inline-flex items-center gap-1">Nome {sortIcon('nome')}</span>
+                  <span className="inline-flex items-center gap-1">Nome {sortColumn === 'nome' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</span>
                 </th>
                 <th onClick={() => handleSort('produto')} className="w-[23%] cursor-pointer select-none px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-left hover:opacity-75">
-                  <span className="inline-flex items-center gap-1">Produto {sortIcon('produto')}</span>
+                  <span className="inline-flex items-center gap-1">Produto {sortColumn === 'produto' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</span>
                 </th>
                 <th onClick={() => handleSort('story')} className="w-[23%] cursor-pointer select-none px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-left hover:opacity-75">
-                  <span className="inline-flex items-center gap-1">Story vinculado {sortIcon('story')}</span>
+                  <span className="inline-flex items-center gap-1">Story vinculado {sortColumn === 'story' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</span>
                 </th>
-                <th className="w-[120px] px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center">
-                  Ações
-                </th>
+                <th className="w-[120px] px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -356,7 +350,6 @@ const VideoGalleryPage = () => {
                     <td className="px-3 py-4">
                       <VideoThumb video={video} onClick={() => handleViewVideo(video)} />
                     </td>
-
                     <td className="px-3 py-4 overflow-hidden">
                       <div className="min-w-0">
                         <p className="font-bold text-slate-800 truncate">{video.title}</p>
@@ -370,7 +363,6 @@ const VideoGalleryPage = () => {
                         </span>
                       </div>
                     </td>
-
                     <td className="px-3 py-4 overflow-hidden">
                       <div className="min-w-0 max-w-full">
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-xs font-bold border border-slate-100 truncate max-w-full">
@@ -379,7 +371,6 @@ const VideoGalleryPage = () => {
                         </span>
                       </div>
                     </td>
-
                     <td className="px-3 py-4 overflow-hidden">
                       <div className="min-w-0 max-w-full">
                         {storyName !== '—' ? (
@@ -392,7 +383,6 @@ const VideoGalleryPage = () => {
                         )}
                       </div>
                     </td>
-
                     <td className="px-3 py-4 text-center">
                       <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                         <button onClick={() => handleViewVideo(video)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors shrink-0" title="Ver"><Eye size={16} /></button>
@@ -424,6 +414,7 @@ const VideoGalleryPage = () => {
         const youTubeId = extractYouTubeId(videoUrl);
         const productName = products.find(p => p.id === (viewingVideo as any).product_id)?.name || 'Sem produto';
         const storyName = storyMap[viewingVideo.id] || '—';
+        const modelName = models.find(m => m.id === (viewingVideo as any).model_id)?.name || '—';
 
         const shouldUseNativePlayer = isVideoPlayableNatively(viewingVideo as any);
         const shouldUseNativeForDirect = !shouldUseNativePlayer && isDirectVideoUrl(videoUrl);
@@ -476,6 +467,7 @@ const VideoGalleryPage = () => {
                 <div className="grid grid-cols-2 gap-2 mb-4">
                   <InfoCard label="Produto" value={productName} />
                   <InfoCard label="Story vinculado" value={storyName} />
+                  <InfoCard label="Modelo" value={modelName} />
                   <InfoCard label="Fonte" value={getSourceLabel(viewingVideo.source_type)} />
                   <InfoCard label="Status" value={(viewingVideo as any).active === false ? 'Desativado' : 'Ativo'} />
                 </div>
