@@ -45,7 +45,10 @@ const eventTypes = [
   'conversion',
 ] as const;
 
-const getRange = (interval: AnalyticsInterval, customRange?: { from?: Date; to?: Date }): AnalyticsDateRange => {
+const getRange = (
+  interval: AnalyticsInterval,
+  customRange?: { from?: Date; to?: Date },
+): AnalyticsDateRange => {
   const now = new Date();
 
   if (interval === 'today') return { start: startOfDay(now), end: endOfDay(now) };
@@ -93,7 +96,6 @@ const mapMetrics = (items: Metric[]): DashboardMetrics => {
     if (item.event_type === 'conversion') totals.conversions += 1;
   });
 
-  // CTR = soma de todos os cliques de engajamento ÷ visualizações × 100
   const engagementClicks = totals.ctaClicks + totals.productClicks + totals.whatsappClicks;
   totals.ctr = totals.views > 0
     ? Number(((engagementClicks / totals.views) * 100).toFixed(1))
@@ -102,7 +104,9 @@ const mapMetrics = (items: Metric[]): DashboardMetrics => {
   return totals;
 };
 
-export const trackMetric = async (metric: Partial<Metric> & { store_id: string; event_type: Metric['event_type'] }) => {
+export const trackMetric = async (
+  metric: Partial<Metric> & { store_id: string; event_type: Metric['event_type'] },
+) => {
   const payload = {
     store_id: metric.store_id,
     story_id: metric.story_id ?? null,
@@ -110,10 +114,18 @@ export const trackMetric = async (metric: Partial<Metric> & { store_id: string; 
     product_id: metric.product_id ?? null,
     event_type: metric.event_type,
     page_url: metric.page_url ?? (typeof window !== 'undefined' ? window.location.href : ''),
-    device_type: metric.device_type ?? (typeof window !== 'undefined' ? (window.innerWidth < 768 ? 'mobile' : 'desktop') : 'desktop'),
+    device_type:
+      metric.device_type ??
+      (typeof window !== 'undefined'
+        ? window.innerWidth < 768
+          ? 'mobile'
+          : 'desktop'
+        : 'desktop'),
     browser: metric.browser ?? (typeof navigator !== 'undefined' ? navigator.userAgent : ''),
-    user_agent: metric.browser ?? (typeof navigator !== 'undefined' ? navigator.userAgent : ''),
-    referrer: metric.referrer ?? (typeof document !== 'undefined' ? document.referrer : null),
+    user_agent:
+      metric.browser ?? (typeof navigator !== 'undefined' ? navigator.userAgent : ''),
+    referrer:
+      metric.referrer ?? (typeof document !== 'undefined' ? document.referrer : null),
     metadata: {},
   };
 
@@ -145,7 +157,11 @@ export const trackMetric = async (metric: Partial<Metric> & { store_id: string; 
   }
 };
 
-export const getMetricsByStore = async (storeId: string, interval: AnalyticsInterval, customRange?: { from?: Date; to?: Date }) => {
+export const getMetricsByStore = async (
+  storeId: string,
+  interval: AnalyticsInterval,
+  customRange?: { from?: Date; to?: Date },
+) => {
   const range = getRange(interval, customRange);
 
   if (isSupabaseConfigured && supabase) {
@@ -166,26 +182,27 @@ export const getMetricsByStore = async (storeId: string, interval: AnalyticsInte
   });
 };
 
-/**
- * Busca conversões (vendas) e receita por vídeo a partir da tabela conversions.
- */
+/* ══════════════════════════════════════════════════════════════
+   CONVERSÕES (vendas + receita) — agora com filtro de período
+   ══════════════════════════════════════════════════════════════ */
 const getConversionData = async (
   storeId: string,
+  range: AnalyticsDateRange,
 ): Promise<Record<string, { count: number; revenue: number }>> => {
   if (!isSupabaseConfigured || !supabase) return {};
 
   try {
-    // conversions NÃO tem store_id — busca os vídeos da loja primeiro
     const videos = await db.videos.getAll(storeId);
-    const videoIds = videos.map(v => v.id);
-
+    const videoIds = videos.map((v) => v.id);
     if (videoIds.length === 0) return {};
 
     const { data, error } = await supabase
       .from('conversions')
-      .select('video_id, order_value, status')
+      .select('video_id, order_value, status, created_at')
       .in('video_id', videoIds)
-      .eq('status', 'paid');
+      .eq('status', 'paid')
+      .gte('created_at', range.start.toISOString())
+      .lte('created_at', range.end.toISOString());
 
     if (error || !data) return {};
 
@@ -203,27 +220,26 @@ const getConversionData = async (
   }
 };
 
-/**
- * Busca a contagem real de curtidas por vídeo a partir da tabela video_likes.
- */
+/* ══════════════════════════════════════════════════════════════
+   CURTIDAS — agora com filtro de período
+   ══════════════════════════════════════════════════════════════ */
 const getVideoLikeCounts = async (
   storeId: string,
+  range: AnalyticsDateRange,
 ): Promise<Record<string, number>> => {
-  if (!isSupabaseConfigured || !supabase) {
-    return {};
-  }
+  if (!isSupabaseConfigured || !supabase) return {};
 
   try {
-    // video_likes NÃO tem store_id — busca os vídeos da loja primeiro
     const videos = await db.videos.getAll(storeId);
-    const videoIds = videos.map(v => v.id);
-
+    const videoIds = videos.map((v) => v.id);
     if (videoIds.length === 0) return {};
 
     const { data, error } = await supabase
       .from('video_likes')
       .select('video_id')
-      .in('video_id', videoIds);
+      .in('video_id', videoIds)
+      .gte('created_at', range.start.toISOString())
+      .lte('created_at', range.end.toISOString());
 
     if (error || !data) return {};
 
@@ -239,11 +255,12 @@ const getVideoLikeCounts = async (
   }
 };
 
-/**
- * Busca a contagem real de comentários aprovados por vídeo a partir da tabela comments.
- */
+/* ══════════════════════════════════════════════════════════════
+   COMENTÁRIOS — agora com filtro de período
+   ══════════════════════════════════════════════════════════════ */
 const getCommentCounts = async (
   storeId: string,
+  range: AnalyticsDateRange,
 ): Promise<Record<string, number>> => {
   if (!isSupabaseConfigured || !supabase) {
     console.warn('[analytics] getCommentCounts: Supabase não configurado');
@@ -255,7 +272,9 @@ const getCommentCounts = async (
       .from('comments')
       .select('video_id')
       .eq('store_id', storeId)
-      .eq('status', 'approved');
+      .eq('status', 'approved')
+      .gte('created_at', range.start.toISOString())
+      .lte('created_at', range.end.toISOString());
 
     if (error) {
       console.error('[analytics] getCommentCounts erro:', error);
@@ -276,15 +295,23 @@ const getCommentCounts = async (
   }
 };
 
-export const getDashboardMetrics = async (storeId: string, interval: AnalyticsInterval, customRange?: { from?: Date; to?: Date }) => {
+/* ══════════════════════════════════════════════════════════════
+   DASHBOARD — totais agregados com filtro
+   ══════════════════════════════════════════════════════════════ */
+export const getDashboardMetrics = async (
+  storeId: string,
+  interval: AnalyticsInterval,
+  customRange?: { from?: Date; to?: Date },
+) => {
+  const range = getRange(interval, customRange);
   const items = await getMetricsByStore(storeId, interval, customRange);
   const mapped = mapMetrics(items);
 
-  // Sobrescreve com totais reais
+  // Agora passa o range para filtrar por período também
   const [realLikes, realComments, conversions] = await Promise.all([
-    getVideoLikeCounts(storeId),
-    getCommentCounts(storeId),
-    getConversionData(storeId),
+    getVideoLikeCounts(storeId, range),
+    getCommentCounts(storeId, range),
+    getConversionData(storeId, range),
   ]);
 
   mapped.likes = Object.values(realLikes).reduce((sum, n) => sum + n, 0);
@@ -295,21 +322,28 @@ export const getDashboardMetrics = async (storeId: string, interval: AnalyticsIn
   return mapped;
 };
 
-export const getVideoMetricsRows = async (storeId: string, videos: Video[], interval: AnalyticsInterval, customRange?: { from?: Date; to?: Date }) => {
+/* ══════════════════════════════════════════════════════════════
+   LINHAS POR VÍDEO — métricas individuais com filtro
+   ══════════════════════════════════════════════════════════════ */
+export const getVideoMetricsRows = async (
+  storeId: string,
+  videos: Video[],
+  interval: AnalyticsInterval,
+  customRange?: { from?: Date; to?: Date },
+) => {
+  const range = getRange(interval, customRange);
   const items = await getMetricsByStore(storeId, interval, customRange);
 
-  // Busca contagens reais em paralelo
   const [realLikes, realComments, conversions] = await Promise.all([
-    getVideoLikeCounts(storeId),
-    getCommentCounts(storeId),
-    getConversionData(storeId),
+    getVideoLikeCounts(storeId, range),
+    getCommentCounts(storeId, range),
+    getConversionData(storeId, range),
   ]);
 
   return videos.map((video) => {
     const videoItems = items.filter((item) => item.video_id === video.id);
     const mapped = mapMetrics(videoItems);
 
-    // Sobrescreve com contagens reais
     mapped.likes = realLikes[video.id] || 0;
     mapped.comments = realComments[video.id] || 0;
     mapped.conversions = conversions[video.id]?.count || 0;
@@ -322,7 +356,11 @@ export const getVideoMetricsRows = async (storeId: string, videos: Video[], inte
   });
 };
 
-export const getMetricsFlow = async (storeId: string, interval: AnalyticsInterval, customRange?: { from?: Date; to?: Date }) => {
+export const getMetricsFlow = async (
+  storeId: string,
+  interval: AnalyticsInterval,
+  customRange?: { from?: Date; to?: Date },
+) => {
   const range = getRange(interval, customRange);
   const items = await getMetricsByStore(storeId, interval, customRange);
   const days: Date[] = [];
