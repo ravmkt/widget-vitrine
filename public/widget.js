@@ -1572,23 +1572,22 @@ function openCommentsPanel(videoId, storyId) {
 
 panel.style.cssText = [
   'position:absolute;',
-  'top:16px;',
-  'bottom:16px;',
-  'left:8px;',
-  'right:8px;',
-  'width:auto;',
-  'height:auto;',
-  'max-height:none;',
+  'top:50%;',
+  'right:0;',
+  'bottom:0;',
+  'left:0;',
+  'width:100%;',
+  'height:50%;',
+  'max-height:50%;',
   'z-index:200;',
   'background:#fff;',
-  'border:2px solid #0094EB;',
-  'border-radius:22px;',
-  'box-shadow:0 8px 20px rgba(0,0,0,.28);',
   'display:flex;',
   'flex-direction:column;',
   'overflow:hidden;',
   'box-sizing:border-box;',
-  'font-family:Arial,Helvetica,sans-serif;'
+  'border-radius:0 0 24px 24px;',
+  'box-shadow:0 -4px 18px rgba(0,0,0,.18);',
+  'font-family:' + fontFamily + ';'
 ].join('');
 
   var panelHeader = createEl('div');
