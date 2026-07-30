@@ -1800,7 +1800,7 @@ var formWrap = createEl('div', 'vl-comment-form');
 
     panelBody.appendChild(formWrap);
 
-    var btnRow = createEl('div');
+var btnRow = createEl('div', 'vl-form-btn-row');
     btnRow.style.cssText = 'display:flex;gap:8px;';
 
     var backBtn = createEl('button');
