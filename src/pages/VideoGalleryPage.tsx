@@ -167,7 +167,6 @@ const VideoGalleryPage = () => {
         const sl = (allStories || []).map(s => ({ id: s.id, title: storyNameById[s.id] }));
         setStoryList(sl);
 
-        // Mapa: videoId → Set de storyIds (para o filtro por ID)
         const vsMap: Record<string, Set<string>> = {};
         const map: Record<string, string> = {};
         (allStoryVideos || []).forEach(sv => {
@@ -175,11 +174,9 @@ const VideoGalleryPage = () => {
           const storyId = sv.story_id || (sv as any).storyId;
 
           if (videoId && storyId && storyNameById[storyId]) {
-            // Para exibição (nome do story)
             const existing = map[videoId];
             map[videoId] = existing ? `${existing}, ${storyNameById[storyId]}` : storyNameById[storyId];
 
-            // Para filtro (ID do story)
             if (!vsMap[videoId]) vsMap[videoId] = new Set();
             vsMap[videoId].add(storyId);
           }
@@ -324,7 +321,7 @@ const VideoGalleryPage = () => {
       </div>
 
       {/* ═══════════════════════════════════════════════════════
-          TABELA — larguras recalibradas
+          TABELA
           ═══════════════════════════════════════════════════════ */}
       <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm">
         <div className="w-full overflow-x-auto">
@@ -356,12 +353,10 @@ const VideoGalleryPage = () => {
 
                 return (
                   <tr key={video.id} className="hover:bg-slate-50/50 transition-colors align-middle">
-                    {/* Thumb */}
                     <td className="px-3 py-4">
                       <VideoThumb video={video} onClick={() => handleViewVideo(video)} />
                     </td>
 
-                    {/* Nome + badge de fonte */}
                     <td className="px-3 py-4 overflow-hidden">
                       <div className="min-w-0">
                         <p className="font-bold text-slate-800 truncate">{video.title}</p>
@@ -376,7 +371,6 @@ const VideoGalleryPage = () => {
                       </div>
                     </td>
 
-                    {/* Produto */}
                     <td className="px-3 py-4 overflow-hidden">
                       <div className="min-w-0 max-w-full">
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-xs font-bold border border-slate-100 truncate max-w-full">
@@ -386,7 +380,6 @@ const VideoGalleryPage = () => {
                       </div>
                     </td>
 
-                    {/* Story vinculado */}
                     <td className="px-3 py-4 overflow-hidden">
                       <div className="min-w-0 max-w-full">
                         {storyName !== '—' ? (
@@ -400,7 +393,6 @@ const VideoGalleryPage = () => {
                       </div>
                     </td>
 
-                    {/* Ações */}
                     <td className="px-3 py-4 text-center">
                       <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                         <button onClick={() => handleViewVideo(video)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors shrink-0" title="Ver"><Eye size={16} /></button>
@@ -423,80 +415,84 @@ const VideoGalleryPage = () => {
       </div>
 
       {/* ═══════════════════════════════════════════════════════
-          MODAL — idêntico ao anterior (sem métricas)
+          MODAL DE VISUALIZAÇÃO
           ═══════════════════════════════════════════════════════ */}
-<CustomDialog isOpen={isViewModalOpen} type="form" title="Visualizar Vídeo" maxWidth="max-w-3xl" onCancel={() => setIsViewModalOpen(false)}>
-  {viewingVideo && (() => {
-    const videoUrl = getVideoUrl(viewingVideo as any);
-    const externalData = getSafeExternalData(viewingVideo);
-    const modalThumb = getVideoThumbnail(viewingVideo);
-    const youTubeId = extractYouTubeId(videoUrl);
-    const productName = products.find(p => p.id === (viewingVideo as any).product_id)?.name || 'Sem produto';
-    const storyName = storyMap[viewingVideo.id] || '—';
+      {isViewModalOpen && viewingVideo && (() => {
+        const videoUrl = getVideoUrl(viewingVideo as any);
+        const externalData = getSafeExternalData(viewingVideo);
+        const modalThumb = getVideoThumbnail(viewingVideo);
+        const youTubeId = extractYouTubeId(videoUrl);
+        const productName = products.find(p => p.id === (viewingVideo as any).product_id)?.name || 'Sem produto';
+        const storyName = storyMap[viewingVideo.id] || '—';
 
-    const shouldUseNativePlayer = isVideoPlayableNatively(viewingVideo as any);
-    const shouldUseNativeForDirect = !shouldUseNativePlayer && isDirectVideoUrl(videoUrl);
-    const shouldUseYouTubeEmbed = !shouldUseNativePlayer && !shouldUseNativeForDirect && Boolean(youTubeId);
-    const embedUrl = youTubeId ? `https://www.youtube.com/embed/${youTubeId}` : externalData?.embedUrl || '';
+        const shouldUseNativePlayer = isVideoPlayableNatively(viewingVideo as any);
+        const shouldUseNativeForDirect = !shouldUseNativePlayer && isDirectVideoUrl(videoUrl);
+        const shouldUseYouTubeEmbed = !shouldUseNativePlayer && !shouldUseNativeForDirect && Boolean(youTubeId);
+        const embedUrl = youTubeId ? `https://www.youtube.com/embed/${youTubeId}` : externalData?.embedUrl || '';
+        const hasPlayer = shouldUseNativePlayer || shouldUseNativeForDirect || shouldUseYouTubeEmbed;
 
-    const hasPlayer = shouldUseNativePlayer || shouldUseNativeForDirect || shouldUseYouTubeEmbed;
+        return (
+          <CustomDialog
+            isOpen={isViewModalOpen}
+            title="Visualizar Vídeo"
+            maxWidth="max-w-3xl"
+            onCancel={() => setIsViewModalOpen(false)}
+          >
+            <div className="flex flex-col lg:flex-row gap-4">
+              {/* Player / Thumb */}
+              <div className="w-full lg:w-[280px] shrink-0 mx-auto lg:mx-0">
+                {hasPlayer ? (
+                  <div className="overflow-hidden rounded-2xl border border-slate-200 bg-black aspect-[9/16] w-full max-w-[280px] mx-auto">
+                    {shouldUseYouTubeEmbed ? (
+                      <iframe src={embedUrl} className="h-full w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen loading="lazy" referrerPolicy="strict-origin-when-cross-origin" title={viewingVideo.title} />
+                    ) : videoUrl ? (
+                      <video src={videoUrl} className="w-full h-full object-contain" poster={modalThumb || undefined} controls playsInline />
+                    ) : (
+                      <div className="flex items-center justify-center h-full"><Film size={36} className="text-slate-500" /></div>
+                    )}
+                  </div>
+                ) : modalThumb ? (
+                  <VideoThumb video={viewingVideo} size="large" onClick={() => {}} />
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center aspect-[9/16] max-w-[280px] mx-auto flex flex-col items-center justify-center">
+                    <Film size={36} className="mb-2 text-slate-300" />
+                    <p className="text-xs font-bold text-slate-500">Prévia indisponível</p>
+                  </div>
+                )}
+                {videoUrl && !hasPlayer && (
+                  <a href={videoUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold text-slate-600 hover:bg-slate-50 w-full">
+                    Abrir na plataforma <ExternalLink size={12} />
+                  </a>
+                )}
+              </div>
 
-    return (
-      <div className="flex flex-col lg:flex-row gap-4">
-        {/* Player / Thumb */}
-        <div className="w-full lg:w-[280px] shrink-0 mx-auto lg:mx-0">
-          {hasPlayer ? (
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-black aspect-[9/16] w-full max-w-[280px] mx-auto">
-              {shouldUseYouTubeEmbed ? (
-                <iframe src={embedUrl} className="h-full w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen loading="lazy" referrerPolicy="strict-origin-when-cross-origin" title={viewingVideo.title} />
-              ) : videoUrl ? (
-                <video src={videoUrl} className="w-full h-full object-contain" poster={modalThumb || undefined} controls playsInline />
-              ) : (
-                <div className="flex items-center justify-center h-full"><Film size={36} className="text-slate-500" /></div>
-              )}
+              {/* Info + Ações */}
+              <div className="flex-1 flex flex-col min-w-0">
+                <div className="mb-3">
+                  <h3 className="text-lg font-black text-slate-900 truncate">{viewingVideo.title}</h3>
+                  <span className="inline-block mt-1 bg-blue-50 text-[#0094EB] px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest">{getSourceLabel(viewingVideo.source_type)}</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  <InfoCard label="Produto" value={productName} />
+                  <InfoCard label="Story vinculado" value={storyName} />
+                  <InfoCard label="Fonte" value={getSourceLabel(viewingVideo.source_type)} />
+                  <InfoCard label="Status" value={(viewingVideo as any).active === false ? 'Desativado' : 'Ativo'} />
+                </div>
+
+                <div className="flex gap-2 mt-auto pt-2 border-t border-slate-100">
+                  <button onClick={() => { setIsViewModalOpen(false); navigate(`/videos/${viewingVideo.id}/edit`); }} className="flex-1 py-2.5 bg-[#0094EB] text-white rounded-xl font-black text-xs flex items-center justify-center gap-1.5">
+                    <Edit3 size={14} /> Editar
+                  </button>
+                  <button onClick={() => setIsViewModalOpen(false)} className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-black text-xs">
+                    Fechar
+                  </button>
+                </div>
+              </div>
             </div>
-          ) : modalThumb ? (
-            <VideoThumb video={viewingVideo} size="large" onClick={() => {}} />
-          ) : (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center aspect-[9/16] max-w-[280px] mx-auto flex flex-col items-center justify-center">
-              <Film size={36} className="mb-2 text-slate-300" />
-              <p className="text-xs font-bold text-slate-500">Prévia indisponível</p>
-            </div>
-          )}
-          {videoUrl && !hasPlayer && (
-            <a href={videoUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold text-slate-600 hover:bg-slate-50 w-full">
-              Abrir na plataforma <ExternalLink size={12} />
-            </a>
-          )}
-        </div>
-
-        {/* Info + Ações */}
-        <div className="flex-1 flex flex-col min-w-0">
-          <div className="mb-3">
-            <h3 className="text-lg font-black text-slate-900 truncate">{viewingVideo.title}</h3>
-            <span className="inline-block mt-1 bg-blue-50 text-[#0094EB] px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest">{getSourceLabel(viewingVideo.source_type)}</span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 mb-4">
-            <InfoCard label="Produto" value={productName} />
-            <InfoCard label="Story vinculado" value={storyName} />
-            <InfoCard label="Fonte" value={getSourceLabel(viewingVideo.source_type)} />
-            <InfoCard label="Status" value={(viewingVideo as any).active === false ? 'Desativado' : 'Ativo'} />
-          </div>
-
-          <div className="flex gap-2 mt-auto pt-2 border-t border-slate-100">
-            <button onClick={() => { setIsViewModalOpen(false); navigate(`/videos/${viewingVideo.id}/edit`); }} className="flex-1 py-2.5 bg-[#0094EB] text-white rounded-xl font-black text-xs flex items-center justify-center gap-1.5">
-              <Edit3 size={14} /> Editar
-            </button>
-            <button onClick={() => setIsViewModalOpen(false)} className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-black text-xs">
-              Fechar
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  })()}
-</CustomDialog>
+          </CustomDialog>
+        );
+      })()}
 
       <ConfirmDeleteDialog isOpen={deleteModal.isOpen} title="Excluir Vídeo" itemName={deleteModal.videoTitle} onConfirm={handleConfirmDelete} onCancel={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))} usedInStories={deleteModal.usedInStories} />
     </div>
