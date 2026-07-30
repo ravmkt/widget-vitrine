@@ -2700,6 +2700,9 @@ if (appearanceConfig.show_like_button && video) {
         autoApproveComments = !!storeSettings.auto_approve_comments;
       }
 
+storeWhatsappNumber = storeSettings.whatsapp_number || storeSettings.whatsappNumber || '';
+storeWhatsappMessage = storeSettings.whatsapp_message || storeSettings.whatsappMessage || '';
+
       currentAppearance = appearance;
 
       if (!stories || stories.length === 0) return;
