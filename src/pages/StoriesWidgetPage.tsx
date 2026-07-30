@@ -848,3 +848,586 @@ const MeasuresModal: FC<{
     </div>
   </div>
 );
+// ═══════════════════════════════════════════════════════════════
+// COMPONENTE PRINCIPAL
+// ═══════════════════════════════════════════════════════════════
+
+export default function StoriesWidgetPage() {
+  const { storeId } = useParams();
+  const [searchParams] = useSearchParams();
+
+  const storyIdParam = searchParams.get('storyId') || searchParams.get('storyid');
+  const videoIdParam = searchParams.get('videoId') || searchParams.get('videoid');
+  const appearanceIdParam = searchParams.get('appearanceId') || searchParams.get('appearanceid');
+
+  // ── Refs ──
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // ── Estados de carregamento ──
+  const [loading, setLoading] = useState(true);
+  const [resolvedStoreId, setResolvedStoreId] = useState('');
+  const [storeName, setStoreName] = useState('');
+
+  // ── Stories e vídeos ──
+  const [stories, setStories] = useState<any[]>([]);
+  const [storyVideosMap, setStoryVideosMap] = useState<Map<string, Video[]>>(new Map());
+  const [storyIdx, setStoryIdx] = useState<number | null>(null);
+  const [videoIdx, setVideoIdx] = useState(0);
+
+  // ── Player ──
+  const [playing, setPlaying] = useState(true);
+  const [muted, setMuted] = useState(true);
+  const [videoError, setVideoError] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  // ── Interações ──
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [comments, setComments] = useState<CommentItem[]>([]);
+  const [showComments, setShowComments] = useState(false);
+  const [commentName, setCommentName] = useState('');
+  const [commentText, setCommentText] = useState('');
+  const [showEmoji, setShowEmoji] = useState(false);
+
+  // ── Produto / modelo ──
+  const [product, setProduct] = useState<any | null>(null);
+  const [model, setModel] = useState<any | null>(null);
+  const [showMeasures, setShowMeasures] = useState(false);
+
+  // ── Configurações ──
+  const [settings, setSettings] = useState<any | null>(null);
+  const [appearances, setAppearances] = useState<any[]>([]);
+
+  // ── 🆕 Controle de layout forçado (grid → player) ──
+  const [forcePlayerView, setForcePlayerView] = useState(false);
+
+  // ── Derivados ──
+  const story = stories[storyIdx ?? -1] ?? null;
+  const rawActiveStoryFormat = String(
+    story?.format || story?.display_format || story?.displayFormat ||
+    story?.visual_style || story?.visualStyle || 'carousel',
+  );
+  const activeStoryFormat = normalizeStoryFormat(rawActiveStoryFormat);
+
+  // Layout efetivo: grid pode ser sobrescrito para carousel quando o player é forçado
+  const effectiveLayout: StoryFormat = forcePlayerView ? 'carousel' : activeStoryFormat;
+  const isGridLayout = effectiveLayout === 'grid';
+  const isCarouselLayout = effectiveLayout === 'carousel';
+  const isFloatingLayout = effectiveLayout === 'floating_widget';
+
+  const currentVideos = story ? storyVideosMap.get(story.id) || [] : [];
+  const currentVideo = currentVideos[videoIdx] ?? null;
+
+  const appearance = useMemo(
+    () => findAppearanceForStory({ appearances, story, settings, appearanceIdParam, currentUrl: typeof window !== 'undefined' ? window.location.href : null }),
+    [appearances, story, settings, appearanceIdParam],
+  );
+
+  const currentUrl = getVideoUrl(currentVideo);
+  const posterUrl = getVideoPosterUrl(currentVideo);
+  const productImageUrl = getProductImageUrl(product);
+  const productUrl = getProductUrl(product);
+  const productPrice = getProductPrice(product);
+
+  const modalConfig = useMemo(() => normalizeModalAppearanceConfig(appearance), [appearance]);
+
+  const primaryColor = getPrimaryColor(appearance);
+  const secondaryColor = getSecondaryColor(appearance);
+  const textColor = getTextColor(appearance);
+  const backgroundColor = getBackgroundColor(appearance);
+  const buttonColor = getButtonColor(appearance);
+  const fontFamily = getFontFamily(appearance);
+  const fontSize = getFontSize(appearance);
+  const accentColor = secondaryColor || primaryColor;
+
+  // ── Borda do player ──
+  const borderColor = isValidHexColor(modalConfig.border_color) ? modalConfig.border_color : primaryColor;
+  const borderWidthNum = safeNumber(modalConfig.border_width, 0, 0);
+  const borderWidthPx = `${borderWidthNum}px`;
+  const borderRadiusPx = toCssSize(modalConfig.border_radius, '0px');
+
+  const activeCommentCount = useMemo(() => getVideoCommentCount(currentVideo?.id, comments), [currentVideo?.id, comments]);
+  const modelData = useMemo(() => parseMeasures(model), [model]);
+
+  const displayStoreName = storeName || settings?.store_name || settings?.storeName || settings?.name || 'Loja';
+
+  const whatsappNumber = String(
+    settings?.whatsapp_number ||
+    settings?.whatsappNumber ||
+    settings?.whatsapp ||
+    settings?.phone ||
+    '',
+  );
+
+  // ── Handlers ──
+
+  const close = () => {
+    setForcePlayerView(false);
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'CLOSE_STORY_WIDGET' }, '*');
+      window.parent.postMessage('CLOSE_STORY_WIDGET', '*');
+    } else {
+      if (window.history.length > 1) window.history.back();
+      else window.location.href = '/';
+    }
+  };
+
+  const goNext = () => {
+    if (storyIdx === null || stories.length === 0) return;
+    const videos = storyVideosMap.get(stories[storyIdx]?.id) || [];
+    if (videos.length > 0 && videoIdx < videos.length - 1) {
+      setVideoIdx(v => v + 1);
+      return;
+    }
+    const nextStoryIdx = storyIdx < stories.length - 1 ? storyIdx + 1 : 0;
+    setStoryIdx(nextStoryIdx);
+    setVideoIdx(0);
+  };
+
+  const goPrev = () => {
+    if (storyIdx === null || stories.length === 0) return;
+    if (videoIdx > 0) {
+      setVideoIdx(v => v - 1);
+      return;
+    }
+    const prevStoryIdx = storyIdx > 0 ? storyIdx - 1 : stories.length - 1;
+    const prevVideos = storyVideosMap.get(stories[prevStoryIdx]?.id) || [];
+    setStoryIdx(prevStoryIdx);
+    setVideoIdx(Math.max(0, prevVideos.length - 1));
+  };
+
+  const handleTogglePlay = async () => {
+    if (!videoRef.current) return;
+    try {
+      if (playing) { videoRef.current.pause(); setPlaying(false); }
+      else { await videoRef.current.play(); setPlaying(true); }
+    } catch { setPlaying(false); }
+  };
+
+  const handleToggleMute = () => {
+    const next = !muted;
+    setMuted(next);
+    if (videoRef.current) videoRef.current.muted = next;
+  };
+
+  const handleLike = () => {
+    if (!currentVideo?.id) return;
+    const likes = readLikes();
+    const current = likes[currentVideo.id] || { liked: false, count: 0 };
+    const nextLiked = !current.liked;
+    const nextCount = Math.max(0, current.count + (nextLiked ? 1 : -1));
+    likes[currentVideo.id] = { liked: nextLiked, count: nextCount };
+    saveLikes(likes);
+    setLiked(nextLiked);
+    setLikeCount(nextCount);
+  };
+
+  /** 🆕 Clique em vídeo do grid: seta o índice e ativa o player */
+  const handleGridVideoClick = (video: any) => {
+    const idx = currentVideos.findIndex((item: any) => item.id === video.id);
+    if (idx >= 0) {
+      setVideoIdx(idx);
+      setForcePlayerView(true);
+    }
+  };
+
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}${window.location.pathname}?storyId=${story?.id || ''}&videoId=${currentVideo?.id || ''}`;
+    const shareText = `Olha esse produto que lindo${product?.name ? `: ${product.name}` : ''}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: product?.name || story?.title || 'Story', text: shareText, url: shareUrl });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl);
+        showSuccess('Link copiado para compartilhar.');
+      } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText}\n${shareUrl}`)}`, '_blank', 'noopener,noreferrer');
+      }
+    } catch { showError('Erro ao compartilhar.'); }
+  };
+
+  const handleWhatsApp = () => {
+    const phone = String(settings?.whatsapp_number || settings?.whatsappNumber || settings?.whatsapp || settings?.phone || '').replace(/\D/g, '');
+    const link = productUrl !== '#' ? productUrl : `${window.location.origin}${window.location.pathname}?storyId=${story?.id || ''}&videoId=${currentVideo?.id || ''}`;
+    const message = `Quero mais informações sobre esse produto${product?.name ? `: ${product.name}` : ''}\n${link}`;
+    const url = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}` : `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleCommentSubmit = async () => {
+    const name = commentName.trim();
+    const text = commentText.trim();
+    if (!name) { showError('Informe seu nome.'); return; }
+    if (!text) { showError('Escreva um comentário.'); return; }
+    if (!currentVideo?.id || !story || !resolvedStoreId) { showError('Não foi possível identificar o vídeo.'); return; }
+
+    const now = new Date().toISOString();
+    const newComment: CommentItem = {
+      id: generateUuid(), store_id: resolvedStoreId, video_id: currentVideo.id,
+      story_id: story.id, user_name: name, name, text, status: 'pending',
+      created_at: now, updated_at: now,
+    };
+
+    try {
+      await (db as any).comments.save(newComment);
+      const next = await getAllSafe<CommentItem>((db as any).comments, resolvedStoreId);
+      const filtered = (next || []).filter((item: any) => {
+        const sameVideo = getCommentVideoId(item) === currentVideo.id;
+        const sameStore = !item.store_id || item.store_id === resolvedStoreId;
+        return sameVideo && sameStore;
+      });
+      setComments(filtered);
+      mergeLocalCommentsByVideo(currentVideo.id, filtered);
+      setCommentText(''); setCommentName(''); setShowEmoji(false);
+      showSuccess('Comentário enviado com sucesso.');
+    } catch {
+      const previousComments = readLocalComments();
+      const nextComments = [...previousComments, newComment];
+      saveLocalComments(nextComments);
+      setComments(nextComments.filter(item => getCommentVideoId(item) === currentVideo.id));
+      setCommentText(''); setCommentName(''); setShowEmoji(false);
+      showSuccess('Comentário enviado com sucesso.');
+    }
+  };
+
+  const insertEmoji = (emoji: string) => {
+    const el = textareaRef.current;
+    if (!el) { setCommentText(prev => `${prev}${emoji}`); return; }
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const next = commentText.slice(0, start) + emoji + commentText.slice(end);
+    setCommentText(next);
+    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(start + emoji.length, start + emoji.length); });
+  };
+
+  // ── Load helpers ──
+
+  const loadComments = async (videoId: string, currentStoreId: string) => {
+    try {
+      const dbComments = await getAllSafe<CommentItem>((db as any).comments, currentStoreId);
+      const filtered = (dbComments || []).filter((item: any) => {
+        const sameVideo = getCommentVideoId(item) === videoId;
+        const sameStore = !item.store_id || item.store_id === currentStoreId;
+        return sameVideo && sameStore;
+      });
+      setComments(filtered);
+      mergeLocalCommentsByVideo(videoId, filtered);
+    } catch {
+      const localComments = readLocalComments().filter(item => getCommentVideoId(item) === videoId);
+      setComments(localComments);
+    }
+  };
+
+  const loadLinkedData = async (currentStory: any, currentVideoItem: Video | null, currentStoreId: string) => {
+    try {
+      if (!currentStory || !currentVideoItem) { setProduct(null); setModel(null); return; }
+      const relations = await getAllSafe<any>((db as any).storyProducts, currentStoreId);
+      const relation = Array.isArray(relations)
+        ? relations.find((item: any) => {
+            const sameStory = item.story_id === currentStory.id;
+            const sameVideo = item.video_id === currentVideoItem.id;
+            const sameStore = !item.store_id || item.store_id === currentStoreId;
+            return sameStory && sameVideo && sameStore;
+          })
+        : null;
+      const videoAny = currentVideoItem as any;
+      const productId = videoAny.product_id || videoAny.productId || relation?.product_id || relation?.productId || null;
+      const modelId = videoAny.model_id || videoAny.modelId || videoAny.measurement_id || videoAny.measurementId || relation?.model_id || relation?.modelId || relation?.measurement_id || relation?.measurementId || null;
+      const [resolvedProduct, resolvedModel] = await Promise.all([
+        getByIdSafe<any>((db as any).products, productId, currentStoreId),
+        getByIdSafe<any>((db as any).sizingModels, modelId, currentStoreId),
+      ]);
+      setProduct(resolvedProduct || null);
+      setModel(resolvedModel || null);
+    } catch { setProduct(null); setModel(null); }
+  };
+
+  // ── Helper: safe number ──
+  const safeNumber = (value: any, fallback: number, min = 0): number => {
+    const n = Number(value);
+    return Number.isFinite(n) ? Math.max(min, n) : fallback;
+  };
+
+  // ── Effects ──
+
+  // Carregamento inicial
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        setLoading(true);
+        const currentStoreId = await resolveStoreId(storeId);
+        const storeList = await getAllSafe<any>((db as any).stores);
+        const currentStore = storeList.find((s: any) => s.id === currentStoreId) || storeList.find((s: any) => s.id === storeId) || storeList[0];
+        if (!mounted) return;
+        if (!currentStore) {
+          setStories([]); setStoryVideosMap(new Map()); setStoryIdx(null);
+          setResolvedStoreId(''); setStoreName(''); setSettings(null); setAppearances([]);
+          return;
+        }
+        setResolvedStoreId(currentStoreId);
+        setStoreName(currentStore.name || currentStore.store_name || '');
+
+        const [settingsList, appearancesList, allStories, storyRelations, allVideos] = await Promise.all([
+          getAllSafe<any>((db as any).generalSettings, currentStoreId),
+          getAllSafe<any>((db as any).appearances, currentStoreId),
+          getAllSafe<any>((db as any).stories, currentStoreId),
+          getAllSafe<any>((db as any).storyVideos, currentStoreId),
+          getAllSafe<Video>((db as any).videos, currentStoreId),
+        ]);
+        if (!mounted) return;
+
+        const genSettings = settingsList[0] || null;
+        setSettings(genSettings);
+        setAppearances(appearancesList || []);
+        setMuted(genSettings?.muted_by_default ?? genSettings?.mutedByDefault ?? true);
+
+        const activeStories = (allStories || [])
+          .filter((item: any) => !(item.is_active === false || item.active === false || item.status === 'inactive' || item.status === 'inativo'))
+          .sort((a: any, b: any) => Number(a.position || 0) - Number(b.position || 0));
+
+        const normalizedStories = activeStories.map((item: any) => {
+          const fmt = normalizeStoryFormat(String(item.format || item.display_format || item.displayFormat || item.visual_style || item.visualStyle || 'carousel'));
+          return { ...item, format: fmt, display_format: fmt, visual_style: fmt };
+        });
+
+        const filteredStories = storyIdParam
+          ? normalizedStories.filter((item: any) => item.id === storyIdParam)
+          : normalizedStories;
+
+        const map = new Map<string, Video[]>();
+        filteredStories.forEach((currentStory: any) => {
+          const relationVideos = (storyRelations || [])
+            .filter((rel: any) => rel.story_id === currentStory.id && (!rel.store_id || rel.store_id === currentStoreId))
+            .sort((a: any, b: any) => Number(a.position || 0) - Number(b.position || 0))
+            .map((rel: any) => (allVideos || []).find((v: any) => v.id === rel.video_id))
+            .filter(Boolean) as Video[];
+          map.set(currentStory.id, relationVideos);
+        });
+
+        let startStoryIdx: number | null = filteredStories.length > 0 ? 0 : null;
+        let startVideoIdx = 0;
+        if (videoIdParam && filteredStories.length > 0) {
+          for (let i = 0; i < filteredStories.length; i++) {
+            const videos = map.get(filteredStories[i].id) || [];
+            const foundIdx = videos.findIndex(v => v.id === videoIdParam);
+            if (foundIdx >= 0) { startStoryIdx = i; startVideoIdx = foundIdx; break; }
+          }
+        }
+
+        setStories(normalizedStories);
+        setStoryVideosMap(map);
+        setStoryIdx(startStoryIdx);
+        setVideoIdx(startVideoIdx);
+      } catch (err) {
+        console.error('Erro ao carregar widget de Stories:', err);
+        showError('Erro ao carregar Stories.');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, [storeId, storyIdParam, videoIdParam]);
+
+  // Reset ao trocar de vídeo/story
+  useEffect(() => {
+    if (!story || !currentVideo?.id || !resolvedStoreId) return;
+    setVideoError(false);
+    setShowComments(false);
+    setShowEmoji(false);
+    setShowMeasures(false);
+    setCommentText('');
+    setCommentName('');
+    setProgress(0);
+    setPlaying(true);
+    setForcePlayerView(false);
+
+    const likes = readLikes();
+    setLikeCount(getVideoLikeCount(currentVideo.id));
+    setLiked(Boolean(likes[currentVideo.id]?.liked));
+
+    loadComments(currentVideo.id, resolvedStoreId);
+    loadLinkedData(story, currentVideo, resolvedStoreId);
+  }, [story?.id, currentVideo?.id, resolvedStoreId]);
+
+  // Progresso do vídeo nativo
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    const onTime = () => { if (el.duration) setProgress((el.currentTime / el.duration) * 100); };
+    el.addEventListener('timeupdate', onTime);
+    return () => el.removeEventListener('timeupdate', onTime);
+  }, [currentVideo?.id]);
+
+  // Progresso simulado para YouTube
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    const isYt = !isVideoPlayableNatively(currentVideo as any) && extractYouTubeId(currentUrl);
+    if (isYt && playing) {
+      let ms = 0;
+      interval = setInterval(() => {
+        ms += 100;
+        setProgress((ms / 15000) * 100);
+        if (ms >= 15000) { clearInterval(interval); goNext(); }
+      }, 100);
+    }
+    return () => { if (interval) clearInterval(interval); };
+  }, [currentVideo?.id, playing, currentUrl]);
+
+  // ═══════════════════════════════════════════════════════════════
+  // RENDER
+  // ═══════════════════════════════════════════════════════════════
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black text-white">
+        Carregando...
+      </div>
+    );
+  }
+
+  if (!story) {
+    return (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black px-6 text-center text-white">
+        Story não encontrado
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={cn('fixed inset-0 z-[9999] flex overflow-hidden bg-black', isFloatingLayout ? 'items-center justify-center' : 'items-start justify-center')}
+      style={{ fontFamily, fontSize }}
+    >
+      <div
+        className={cn(
+          'relative h-full w-full overflow-hidden bg-black',
+          isGridLayout ? 'max-w-[1080px] sm:max-h-screen' : isCarouselLayout ? 'max-w-[420px] sm:aspect-[9/16] sm:max-h-screen' : 'max-w-[380px] sm:aspect-[9/16] sm:max-h-screen',
+        )}
+        style={{
+          borderColor: borderWidthNum > 0 ? borderColor : 'transparent',
+          borderWidth: borderWidthPx,
+          borderStyle: borderWidthNum > 0 ? 'solid' : 'none',
+          borderRadius: borderRadiusPx,
+        }}
+      >
+        {/* Barras de progresso — sempre visíveis (sem hide_stories) */}
+        <ProgressBars videos={currentVideos} videoIdx={videoIdx} progress={progress} primaryColor={primaryColor} />
+
+        {/* Cabeçalho */}
+        <StoryHeader
+          title={story.title || 'Story'}
+          storeName={displayStoreName}
+          videoCount={currentVideos.length}
+          videoIdx={videoIdx}
+          onClose={close}
+          showTitle={modalConfig.show_title}
+        />
+
+        {/* ── Corpo: Grid / Player / Flutuante ── */}
+
+        {isGridLayout ? (
+          <GridThumbnails videos={currentVideos} onVideoClick={handleGridVideoClick} />
+        ) : isCarouselLayout && currentUrl && !videoError ? (
+          <VideoPlayer
+            videoRef={videoRef}
+            currentVideo={currentVideo}
+            currentUrl={currentUrl}
+            posterUrl={posterUrl}
+            muted={muted}
+            storyTitle={story.title || 'Story'}
+            onEnded={goNext}
+            onPlay={() => setPlaying(true)}
+            onPause={() => setPlaying(false)}
+            onError={() => setVideoError(true)}
+          />
+        ) : isFloatingLayout ? (
+          <div className="flex h-full items-center justify-center px-6 pt-20 text-center text-white/70">
+            <div className="max-w-[280px] rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
+              <p className="text-sm font-semibold text-white">Visual flutuante</p>
+              <p className="mt-2 text-xs text-white/65">{story.title || 'Story'}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex h-full items-center justify-center px-8 text-center text-white/70">
+            Nenhum vídeo vinculado
+          </div>
+        )}
+
+        {/* Navegação (anterior / próximo) */}
+        {isCarouselLayout && (stories.length > 1 || currentVideos.length > 1) && (
+          <>
+            <button type="button" className="absolute left-3 top-1/2 z-50 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md transition hover:bg-black/60" onClick={goPrev} aria-label="Anterior">
+              <ChevronLeft className="h-7 w-7" />
+            </button>
+            <button type="button" className="absolute right-3 top-1/2 z-50 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md transition hover:bg-black/60" onClick={goNext} aria-label="Próximo">
+              <ChevronRight className="h-7 w-7" />
+            </button>
+          </>
+        )}
+
+        {/* Botões sociais */}
+        <SocialActionButtons
+          modalConfig={modalConfig}
+          primaryColor={primaryColor}
+          playing={playing}
+          muted={muted}
+          liked={liked}
+          likeCount={likeCount}
+          commentCount={activeCommentCount}
+          hasModel={!!model}
+          onTogglePlay={handleTogglePlay}
+          onToggleMute={handleToggleMute}
+          onLike={handleLike}
+          onComment={() => setShowComments(true)}
+          onShare={handleShare}
+          onMeasures={() => setShowMeasures(true)}
+          onWhatsApp={handleWhatsApp}
+        />
+
+        {/* Card do produto — botões agora independentes */}
+        {product && modalConfig.show_product && (
+          <ProductInfoCard
+            product={product}
+            productImageUrl={productImageUrl}
+            productUrl={productUrl}
+            productPrice={productPrice}
+            backgroundColor={backgroundColor}
+            textColor={textColor}
+            accentColor={accentColor}
+            buttonColor={buttonColor}
+            showProductButton={modalConfig.show_product_button}
+            showProductWhatsappButton={modalConfig.show_product_whatsapp_button}
+            whatsappNumber={whatsappNumber}
+            settings={settings}
+          />
+        )}
+
+        {/* Painel de comentários */}
+        {showComments && (
+          <CommentsPanel
+            comments={comments}
+            commentName={commentName}
+            commentText={commentText}
+            showEmoji={showEmoji}
+            buttonColor={buttonColor}
+            textareaRef={textareaRef}
+            onClose={() => setShowComments(false)}
+            onNameChange={setCommentName}
+            onTextChange={setCommentText}
+            onToggleEmoji={() => setShowEmoji(v => !v)}
+            onInsertEmoji={insertEmoji}
+            onSubmit={handleCommentSubmit}
+          />
+        )}
+
+        {/* Modal de medidas */}
+        {model && showMeasures && (
+          <MeasuresModal model={model} modelData={modelData} onClose={() => setShowMeasures(false)} />
+        )}
+      </div>
+    </div>
+  );
+}
