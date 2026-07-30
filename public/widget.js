@@ -43,6 +43,9 @@
   var likedVideos = {};
   var videoLikeCounts = {};
   var userCommentedVideos = {};
+  var storeWhatsappNumber = '';
+var storeWhatsappMessage = '';
+
 
   var currentStories = [];
   var currentStoryIndex = 0;
