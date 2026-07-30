@@ -1923,6 +1923,21 @@ panelTitle.style.cssText = [
     nameInput.style.background = '#fff';
   };
 
+  function applyInputFocusStyle(input) {
+  input.addEventListener('focus', function () {
+    input.style.borderColor = primaryColor;
+    input.style.boxShadow = '0 0 0 2px ' + primaryColor + '33';
+    input.style.background = '#fff';
+  });
+
+  input.addEventListener('blur', function () {
+    input.style.borderColor = '#e2e8f0';
+    input.style.boxShadow = 'none';
+    input.style.background = '#f8fafc';
+  });
+}
+
+
   nameInput.onblur = function () {
     nameInput.style.borderColor = '#e2e8f0';
     nameInput.style.background = '#f8fafc';
