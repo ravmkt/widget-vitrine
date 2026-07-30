@@ -1649,7 +1649,7 @@ var authorName = createEl('span', 'vl-comment-author');
         commentMeta.appendChild(commentDate);
       }
 
-      var commentText = createEl('p');
+var commentText = createEl('p', 'vl-comment-text');
       commentText.textContent = comment.content || comment.text || '';
       commentText.style.cssText = 'margin:0;font-size:14px;color:#334155;line-height:1.5;word-break:break-word;';
 
