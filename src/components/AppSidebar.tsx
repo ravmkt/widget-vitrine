@@ -33,7 +33,7 @@ import { signOut } from '@/lib/auth';
 const menuItems = [
   { title: "Visão Geral", url: "/dashboard", icon: LayoutDashboard },
   { title: "Stories", url: "/stories", icon: PlayCircle },
-  { title: "Vídeos", url: "/gallery", icon: Library },
+  { title: "Galeria", url: "/gallery", icon: Library },
   { title: "Performance", url: "/videos/performance", icon: BarChart3 },
 { title: "Produtos", url: "/produtos", icon: ShoppingCart },
   { title: "Medidas", url: "/medidas", icon: Ruler },
