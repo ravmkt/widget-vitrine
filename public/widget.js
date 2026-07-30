@@ -2713,6 +2713,9 @@ if (appearanceConfig.show_product && readStoryProductsData.length > 0) {
       var videos = results[3];
       readStoryProductsData = results[4];
       readProductsData = results[5];
+      window.__vidlytics_debug_story_products = readStoryProductsData;
+window.__vidlytics_debug_products = readProductsData;
+
       readCommentsData = results[6];
       readSizingModelsData = results[7];
       readLikeCounts = results[8];
