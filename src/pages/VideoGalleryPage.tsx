@@ -161,14 +161,23 @@ const storyNameById: Record<string, string> = {};
   storyNameById[s.id] = (s as any).title || (s as any).name || (s as any).nome || 'Story sem nome';
 });
 
+const storyList = (allStories || []).map(s => ({ id: s.id, title: storyNameById[s.id] }));
+
+// Mapa: videoId → Set de storyIds (para o filtro por ID)
+const videoStoryMap: Record<string, Set<string>> = {};
 const map: Record<string, string> = {};
 (allStoryVideos || []).forEach(sv => {
   const videoId = sv.video_id || (sv as any).videoId;
   const storyId = sv.story_id || (sv as any).storyId;
 
   if (videoId && storyId && storyNameById[storyId]) {
+    // Para exibição (nome do story)
     const existing = map[videoId];
     map[videoId] = existing ? `${existing}, ${storyNameById[storyId]}` : storyNameById[storyId];
+
+    // Para filtro (ID do story)
+    if (!videoStoryMap[videoId]) videoStoryMap[videoId] = new Set();
+    videoStoryMap[videoId].add(storyId);
   }
 });
 
