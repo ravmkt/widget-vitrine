@@ -1591,7 +1591,7 @@ var panelFooter = createEl('div', 'vl-panel-footer');
   function renderEmptyState() {
     while (panelBody.firstChild) { panelBody.removeChild(panelBody.firstChild); }
 
-    var emptyWrap = createEl('div');
+var emptyWrap = createEl('div', 'vl-empty-state');
     emptyWrap.style.cssText = [
       'display:flex;','flex-direction:column;','align-items:center;',
       'justify-content:center;','flex:1;','min-height:180px;',
