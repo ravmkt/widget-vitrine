@@ -694,16 +694,16 @@ var query = 'comments?select=id,store_id,video_id,user_name,user_email,content,s
     return fetchJson('sizing_models?select=*&store_id=eq.' + encodeURIComponent(storeId));
   }
 
-  function readStoreSettings() {
-    if (!storeId || !hasSupabase) return Promise.resolve({});
-    return supabaseFetch(
-      'store_settings?select=auto_approve_comments&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
-      { method: 'GET' }
-    )
-      .then(function (response) { if (!response.ok) return {}; return response.json(); })
-      .then(function (data) { return Array.isArray(data) && data.length > 0 ? data[0] : {}; })
-      .catch(function () { return {}; });
-  }
+function readStoreSettings() {
+  if (!storeId || !hasSupabase) return Promise.resolve({});
+  return supabaseFetch(
+    'store_settings?select=auto_approve_comments,whatsapp_number,whatsapp_message&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
+    { method: 'GET' }
+  )
+    .then(function (response) { if (!response.ok) return {}; return response.json(); })
+    .then(function (data) { return Array.isArray(data) && data.length > 0 ? data[0] : {}; })
+    .catch(function () { return {}; });
+}
 
   function matchesRule(rule) {
     if (!rule || rule.active === false) return false;
