@@ -654,3 +654,533 @@ const getActiveResponsiveConfig = <T,>(
   if (useGlobalAppearance || config.same_for_all) return config.desktop;
   return config[device];
 };
+const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
+  const now = new Date().toISOString();
+  const floatingDesktop = createDefaultFloatingDesktopConfig();
+  const floatingMobile = createDefaultFloatingMobileConfig();
+  const carouselDesktop = createDefaultCarouselDesktopConfig();
+  const carouselMobile = createDefaultCarouselMobileConfig();
+  const gridDesktop = createDefaultGridDesktopConfig();
+  const gridMobile = createDefaultGridMobileConfig();
+  const modalConfig = createDefaultModalConfig();
+
+  return {
+    id: '',
+    store_id: storeId || '',
+    name: '',
+    is_default: false,
+
+    primary_color: '#0094EB',
+    secondary_color: '#0094EB',
+    text_color: '#0F172A',
+    background_color: '#FFFFFF',
+    button_color: '#0094EB',
+
+    font_family: 'Inter, sans-serif',
+    widget_shape: floatingDesktop.shape,
+    widget_size: 'medium',
+    widget_animation: 'none',
+
+    carousel_shape: carouselDesktop.shape,
+    carousel_visible_items: carouselDesktop.visible_items,
+    carousel_spacing: carouselDesktop.spacing,
+    carousel_size: carouselDesktop.width,
+    carousel_border_color: carouselDesktop.border_color,
+    carousel_border_width: carouselDesktop.border_style,
+    carousel_border_radius: carouselDesktop.border_radius,
+    carousel_object_fit: carouselDesktop.object_fit,
+    carousel_margin_top: carouselDesktop.margin_top,
+    carousel_margin_bottom: carouselDesktop.margin_bottom,
+    carousel_show_title: carouselDesktop.show_title,
+    carousel_show_product: carouselDesktop.show_product,
+    carousel_show_play_button: carouselDesktop.show_play_icon,
+    carousel_auto_center: carouselDesktop.auto_center,
+
+    grid_shape: gridDesktop.shape,
+    grid_columns: String(gridDesktop.visible_items),
+    grid_rows: String(gridDesktop.rows),
+    grid_spacing: String(gridDesktop.spacing),
+    grid_size: gridDesktop.width,
+    grid_border_color: gridDesktop.border_color,
+    grid_border_width: gridDesktop.border_style,
+    grid_border_radius: gridDesktop.border_radius,
+    grid_object_fit: gridDesktop.object_fit,
+    grid_show_title: gridDesktop.show_title,
+
+    show_title: modalConfig.show_title,
+    show_play_button: modalConfig.show_play_button,
+    show_product: modalConfig.show_product,
+    show_like_button: modalConfig.show_like_button,
+    show_comment_button: modalConfig.show_comment_button,
+    show_share_button: modalConfig.show_share_button,
+    show_product_button: modalConfig.show_product_button,
+    show_product_whatsapp_button: modalConfig.show_product_whatsapp_button,
+
+    modal_show_title: modalConfig.show_title,
+    modal_show_play_button: modalConfig.show_play_button,
+    modal_show_product: modalConfig.show_product,
+    modal_show_like_button: modalConfig.show_like_button,
+    modal_show_comment_button: modalConfig.show_comment_button,
+    modal_show_share_button: modalConfig.show_share_button,
+    modal_show_product_button: modalConfig.show_product_button,
+    modal_show_product_whatsapp_button: modalConfig.show_product_whatsapp_button,
+    modal_border_color: modalConfig.border_color,
+    modal_border_width: modalConfig.border_width,
+    modal_border_radius: modalConfig.border_radius,
+
+    created_at: now,
+    updated_at: now,
+
+    useGlobalAppearance: false,
+    use_global_appearance: false,
+
+    floating_config: createResponsiveConfig(floatingDesktop, floatingMobile),
+    carousel_config: createResponsiveConfig(carouselDesktop, carouselMobile),
+    grid_config: createResponsiveConfig(gridDesktop, gridMobile),
+    modal_config: modalConfig,
+
+    width: floatingDesktop.width,
+    unit: 'px',
+    height: floatingDesktop.height,
+
+    position: floatingDesktop.position,
+    floating_position: floatingDesktop.floating_position,
+
+    bottom_spacing: floatingDesktop.bottom_spacing,
+    top_spacing: floatingDesktop.top_spacing,
+    left_spacing: floatingDesktop.left_spacing,
+    right_spacing: floatingDesktop.right_spacing,
+
+    cta_text: '',
+    cta_size: '',
+    cta_duration: '',
+    border_style: floatingDesktop.border_style,
+    color: floatingDesktop.border_color,
+    show_play_icon: floatingDesktop.show_play_icon,
+    auto_center: carouselDesktop.auto_center,
+    carousel_view_mode: carouselDesktop.view_mode,
+    margin_top: carouselDesktop.margin_top,
+    margin_bottom: carouselDesktop.margin_bottom,
+    draggable: floatingDesktop.draggable,
+    allow_close: floatingDesktop.allow_close,
+    object_fit: floatingDesktop.object_fit,
+    z_index: floatingDesktop.z_index,
+    desktop_columns: gridDesktop.visible_items,
+    desktop_rows: gridDesktop.rows,
+    desktop_gap: gridDesktop.spacing,
+    mobile_columns: gridMobile.visible_items,
+    mobile_rows: gridMobile.rows,
+    mobile_gap: gridMobile.spacing,
+    font_size: '14',
+  } as ExtendedAppearance;
+};
+
+const normalizeAppearance = (
+  style: Appearance,
+  storeId?: string,
+): ExtendedAppearance => {
+  const defaults = createDefaultFormData(storeId);
+  const item = style as Appearance & Partial<ExtendedAppearance>;
+  const anyItem = item as any;
+
+  const normalizedPosition = normalizePosition(
+    anyItem.position,
+    anyItem.floating_position,
+  );
+  const normalizedFloatingPosition = normalizeFloatingPosition(
+    anyItem.floating_position,
+    normalizedPosition,
+  );
+
+  const globalAppearance = Boolean(
+    anyItem.useGlobalAppearance ??
+      anyItem.use_global_appearance ??
+      anyItem.floating_config?.same_for_all ??
+      anyItem.grid_config?.same_for_all ??
+      defaults.useGlobalAppearance,
+  );
+
+  const floatingConfig = normalizeResponsiveConfig<FloatingConfig>({
+    rawValue: anyItem.floating_config,
+    desktopDefault: createDefaultFloatingDesktopConfig(),
+    mobileDefault: createDefaultFloatingMobileConfig(),
+    sameForAll: globalAppearance,
+    legacyDesktop: {
+      shape: normalizeWidgetShape(item.widget_shape, defaults.widget_shape),
+      width: anyItem.width ?? defaults.width,
+      height: anyItem.height ?? defaults.height,
+      position: normalizedPosition,
+      floating_position: normalizedFloatingPosition,
+      bottom_spacing:
+        anyItem.bottom_spacing ??
+        anyItem.spacing_bottom ??
+        anyItem.offset_bottom ??
+        defaults.bottom_spacing,
+      top_spacing:
+        anyItem.top_spacing ??
+        anyItem.spacing_top ??
+        anyItem.offset_top ??
+        defaults.top_spacing,
+      left_spacing:
+        anyItem.left_spacing ??
+        anyItem.spacing_left ??
+        anyItem.offset_left ??
+        defaults.left_spacing,
+      right_spacing:
+        anyItem.right_spacing ??
+        anyItem.spacing_right ??
+        anyItem.offset_right ??
+        anyItem.left_spacing ??
+        anyItem.spacing_left ??
+        anyItem.offset_left ??
+        defaults.right_spacing,
+      border_color: anyItem.color || item.primary_color || defaults.color,
+      border_style: anyItem.border_style ?? defaults.border_style,
+      show_play_icon: anyItem.show_play_icon ?? item.show_play_button ?? true,
+      object_fit: anyItem.object_fit ?? defaults.object_fit,
+      draggable: anyItem.draggable ?? defaults.draggable,
+      allow_close: anyItem.allow_close ?? defaults.allow_close,
+      z_index: anyItem.z_index ?? defaults.z_index,
+    },
+    legacyMobile: {
+      border_color: anyItem.color || item.primary_color || defaults.color,
+    },
+  });
+
+  floatingConfig.desktop = normalizeFloatingShapeValues(floatingConfig.desktop);
+  floatingConfig.mobile = normalizeFloatingShapeValues(floatingConfig.mobile);
+
+  const carouselConfig = normalizeResponsiveConfig<CarouselConfig>({
+    rawValue: anyItem.carousel_config,
+    desktopDefault: createDefaultCarouselDesktopConfig(),
+    mobileDefault: createDefaultCarouselMobileConfig(),
+    sameForAll: globalAppearance,
+    legacyDesktop: {
+      spacing: safeNumber(
+        anyItem.carousel_spacing ?? item.carousel_gap,
+        defaults.carousel_spacing ?? 0,
+        0,
+      ),
+      shape: normalizeWidgetShape(
+        anyItem.carousel_shape ?? item.carousel_card_shape,
+        'portrait',
+      ),
+      width: anyItem.carousel_size ?? defaults.carousel_size ?? '80',
+      border_color:
+        anyItem.carousel_border_color ||
+        item.primary_color ||
+        '#0094EB',
+      border_style:
+        anyItem.carousel_border_width ?? defaults.carousel_border_width ?? '2',
+      border_radius:
+        anyItem.carousel_border_radius ?? defaults.carousel_border_radius ?? '12',
+      object_fit:
+        anyItem.carousel_object_fit ?? defaults.carousel_object_fit ?? 'cover',
+      margin_top: anyItem.carousel_margin_top ?? '0',
+      margin_bottom: anyItem.carousel_margin_bottom ?? '0',
+      show_title: anyItem.carousel_show_title ?? false,
+      show_product:
+        anyItem.carousel_show_product ?? item.show_product ?? true,
+      show_play_icon:
+        anyItem.carousel_show_play_button ?? item.show_play_button ?? true,
+      auto_center:
+        anyItem.carousel_auto_center ?? item.auto_center ?? true,
+      view_mode: anyItem.carousel_view_mode ?? defaults.carousel_view_mode,
+      visible_items: safeNumber(
+        anyItem.carousel_visible_items ?? item.carousel_visible_items,
+        4,
+        1,
+      ),
+    },
+    legacyMobile: {
+      auto_center:
+        anyItem.carousel_auto_center ?? item.auto_center ?? true,
+    },
+  });
+
+  carouselConfig.desktop = normalizeCarouselConfigShape(carouselConfig.desktop);
+  carouselConfig.mobile = normalizeCarouselConfigShape(carouselConfig.mobile);
+
+  const gridConfig = normalizeResponsiveConfig<GridConfig>({
+    rawValue: anyItem.grid_config,
+    desktopDefault: createDefaultGridDesktopConfig(),
+    mobileDefault: createDefaultGridMobileConfig(),
+    sameForAll: globalAppearance,
+    legacyDesktop: {
+      visible_items: limitNumber(anyItem.desktop_columns, defaults.desktop_columns, 1, 10),
+      rows: safeNumber(anyItem.desktop_rows, defaults.desktop_rows, 1),
+      spacing: safeNumber(anyItem.desktop_gap, defaults.desktop_gap, 0),
+      shape: normalizeWidgetShape(anyItem.grid_card_shape, 'portrait'),
+    },
+    legacyMobile: {
+      visible_items: limitNumber(anyItem.mobile_columns, defaults.mobile_columns, 1, 10),
+      rows: safeNumber(anyItem.mobile_rows, defaults.mobile_rows, 1),
+      spacing: safeNumber(anyItem.mobile_gap, defaults.mobile_gap, 0),
+      shape: normalizeWidgetShape(anyItem.grid_card_shape, 'portrait'),
+    },
+  });
+
+  gridConfig.desktop = normalizeGridConfigShape(gridConfig.desktop);
+  gridConfig.mobile = normalizeGridConfigShape(gridConfig.mobile);
+  gridConfig.desktop.visible_items = limitNumber(gridConfig.desktop.visible_items, 10, 1, 10);
+  gridConfig.mobile.visible_items = limitNumber(gridConfig.mobile.visible_items, 2, 1, 10);
+
+  const modalRaw = parseJsonIfNeeded<ModalConfig>(anyItem.modal_config);
+  const modalConfig: ModalConfig = {
+    ...createDefaultModalConfig(),
+    ...modalRaw,
+    show_title: item.show_title ?? modalRaw?.show_title ?? defaults.show_title,
+    show_play_button:
+      item.show_play_button ?? modalRaw?.show_play_button ?? defaults.show_play_button,
+    show_product:
+      item.show_product ?? modalRaw?.show_product ?? defaults.show_product,
+    show_like_button:
+      item.show_like_button ?? modalRaw?.show_like_button ?? defaults.show_like_button,
+    show_comment_button:
+      item.show_comment_button ?? modalRaw?.show_comment_button ?? defaults.show_comment_button,
+    show_share_button:
+      item.show_share_button ?? modalRaw?.show_share_button ?? defaults.show_share_button,
+    show_product_button:
+      item.show_product_button ?? modalRaw?.show_product_button ?? defaults.show_product_button,
+    show_product_whatsapp_button:
+      item.show_product_whatsapp_button ?? modalRaw?.show_product_whatsapp_button ?? defaults.show_product_whatsapp_button,
+  };
+
+  const floatingDesktop = floatingConfig.desktop;
+  const carouselDesktop = carouselConfig.desktop;
+  const gridDesktop = gridConfig.desktop;
+  const gridMobile = gridConfig.mobile;
+
+  return {
+    ...defaults,
+    ...item,
+
+    id: item.id || '',
+    store_id: item.store_id || storeId || '',
+    name: item.name || '',
+    is_default: Boolean(item.is_default),
+
+    primary_color: item.primary_color || defaults.primary_color,
+    secondary_color: item.secondary_color || defaults.secondary_color,
+    text_color: item.text_color || defaults.text_color,
+    background_color: item.background_color || defaults.background_color,
+    button_color: item.button_color || defaults.button_color,
+
+    font_family: item.font_family || defaults.font_family,
+    widget_shape: floatingDesktop.shape as any,
+    widget_size: item.widget_size || defaults.widget_size,
+    widget_animation: item.widget_animation || defaults.widget_animation,
+
+    carousel_shape: carouselDesktop.shape,
+    carousel_visible_items: carouselDesktop.visible_items,
+    carousel_spacing: carouselDesktop.spacing,
+    carousel_size: carouselDesktop.width,
+    carousel_border_color: carouselDesktop.border_color,
+    carousel_border_width: carouselDesktop.border_style,
+    carousel_border_radius: carouselDesktop.border_radius,
+    carousel_object_fit: carouselDesktop.object_fit,
+    carousel_margin_top: carouselDesktop.margin_top,
+    carousel_margin_bottom: carouselDesktop.margin_bottom,
+    carousel_show_title: carouselDesktop.show_title,
+    carousel_show_product: carouselDesktop.show_product,
+    carousel_show_play_button: carouselDesktop.show_play_icon,
+    carousel_auto_center: carouselDesktop.auto_center,
+
+    grid_shape: gridDesktop.shape,
+    grid_columns: String(gridDesktop.visible_items),
+    grid_rows: String(gridDesktop.rows),
+    grid_spacing: String(gridDesktop.spacing),
+    grid_size: gridDesktop.width,
+    grid_border_color: gridDesktop.border_color,
+    grid_border_width: gridDesktop.border_style,
+    grid_border_radius: gridDesktop.border_radius,
+    grid_object_fit: gridDesktop.object_fit,
+    grid_show_title: gridDesktop.show_title,
+
+    show_title: modalConfig.show_title,
+    show_play_button: modalConfig.show_play_button,
+    show_product: modalConfig.show_product,
+    show_like_button: modalConfig.show_like_button,
+    show_comment_button: modalConfig.show_comment_button,
+    show_share_button: modalConfig.show_share_button,
+    show_product_button: modalConfig.show_product_button,
+    show_product_whatsapp_button: modalConfig.show_product_whatsapp_button,
+
+    created_at: item.created_at || defaults.created_at,
+    updated_at: item.updated_at || defaults.updated_at,
+
+    useGlobalAppearance: globalAppearance,
+    use_global_appearance: globalAppearance,
+
+    floating_config: { ...floatingConfig, same_for_all: globalAppearance },
+    carousel_config: { ...carouselConfig, same_for_all: globalAppearance },
+    grid_config: { ...gridConfig, same_for_all: globalAppearance },
+    modal_config: modalConfig,
+
+    width: floatingDesktop.width ?? defaults.width,
+    unit: anyItem.unit ?? defaults.unit,
+    height: floatingDesktop.height ?? defaults.height,
+
+    position: floatingDesktop.position,
+    floating_position: floatingDesktop.floating_position,
+
+    bottom_spacing: floatingDesktop.bottom_spacing,
+    top_spacing: floatingDesktop.top_spacing,
+    left_spacing: floatingDesktop.left_spacing,
+    right_spacing: floatingDesktop.right_spacing,
+
+    cta_text: anyItem.cta_text ?? defaults.cta_text,
+    cta_size: anyItem.cta_size ?? defaults.cta_size,
+    cta_duration: anyItem.cta_duration ?? defaults.cta_duration,
+    border_style: floatingDesktop.border_style,
+    color: floatingDesktop.border_color || item.primary_color || defaults.color,
+    show_play_icon: floatingDesktop.show_play_icon,
+    auto_center: carouselDesktop.auto_center ?? defaults.auto_center,
+    carousel_view_mode: carouselDesktop.view_mode,
+    margin_top: carouselDesktop.margin_top,
+    margin_bottom: carouselDesktop.margin_bottom,
+    draggable: floatingDesktop.draggable,
+    allow_close: floatingDesktop.allow_close,
+    object_fit: floatingDesktop.object_fit,
+    z_index: floatingDesktop.z_index,
+    desktop_columns: gridDesktop.visible_items,
+    desktop_rows: gridDesktop.rows,
+    desktop_gap: gridDesktop.spacing,
+    mobile_columns: gridMobile.visible_items,
+    mobile_rows: gridMobile.rows,
+    mobile_gap: gridMobile.spacing,
+    font_size: anyItem.font_size ?? defaults.font_size,
+  } as ExtendedAppearance;
+};
+
+// ──────────────────── DB helpers ────────────────────
+
+const getAppearancesSafe = async (storeId: string): Promise<Appearance[]> => {
+  try {
+    return await db.appearances.getAll(storeId);
+  } catch {
+    try {
+      return await db.appearances.getAll();
+    } catch {
+      return [];
+    }
+  }
+};
+
+const deleteAppearanceSafe = async (id: string, storeId?: string) => {
+  try {
+    if (storeId) {
+      await (db.appearances as any).delete(id, storeId);
+      return;
+    }
+    await db.appearances.delete(id);
+  } catch {
+    await db.appearances.delete(id);
+  }
+};
+
+const getGeneralSettingsSafe = async (storeId?: string): Promise<any[]> => {
+  const collection = (db as any).generalSettings;
+  if (!collection?.getAll) return [];
+  try {
+    if (storeId) return await collection.getAll(storeId);
+    return await collection.getAll();
+  } catch {
+    try {
+      return await collection.getAll();
+    } catch {
+      return [];
+    }
+  }
+};
+
+const saveGeneralSettingsSafe = async (payload: any) => {
+  const collection = (db as any).generalSettings;
+  if (!collection?.save) return;
+  await collection.save(payload);
+};
+
+const syncDefaultAppearanceId = async (
+  finalStoreId: string,
+  appearanceId: string | null,
+) => {
+  try {
+    const settingsList = await getGeneralSettingsSafe(finalStoreId);
+    const currentSettings = settingsList?.[0];
+    if (!currentSettings) {
+      console.warn(
+        'Nenhuma configuração geral encontrada para sincronizar default_appearance_id.',
+      );
+      return;
+    }
+    await saveGeneralSettingsSafe({
+      ...currentSettings,
+      store_id: currentSettings.store_id || finalStoreId,
+      default_appearance_id: appearanceId,
+      defaultAppearanceId: appearanceId,
+      updated_at: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Erro ao sincronizar default_appearance_id:', error);
+  }
+};
+
+const syncGlobalConfig = (
+  checked: boolean,
+  prev: ExtendedAppearance,
+): ExtendedAppearance => {
+  if (checked) {
+    return {
+      ...prev,
+      useGlobalAppearance: true,
+      use_global_appearance: true,
+      floating_config: {
+        same_for_all: true,
+        desktop: prev.floating_config.desktop,
+        mobile: prev.floating_config.desktop,
+      },
+      carousel_config: {
+        same_for_all: true,
+        desktop: prev.carousel_config.desktop,
+        mobile: prev.carousel_config.desktop,
+      },
+      grid_config: {
+        same_for_all: true,
+        desktop: {
+          ...prev.grid_config.desktop,
+          visible_items: limitNumber(prev.grid_config.desktop.visible_items, 10, 1, 10),
+        },
+        mobile: {
+          ...prev.grid_config.desktop,
+          visible_items: limitNumber(prev.grid_config.desktop.visible_items, 10, 1, 10),
+        },
+      },
+    };
+  }
+
+  return {
+    ...prev,
+    useGlobalAppearance: false,
+    use_global_appearance: false,
+    floating_config: {
+      ...prev.floating_config,
+      same_for_all: false,
+    },
+    carousel_config: {
+      ...prev.carousel_config,
+      same_for_all: false,
+    },
+    grid_config: {
+      ...prev.grid_config,
+      same_for_all: false,
+      desktop: {
+        ...prev.grid_config.desktop,
+        visible_items: limitNumber(prev.grid_config.desktop.visible_items, 10, 1, 10),
+      },
+      mobile: {
+        ...prev.grid_config.mobile,
+        visible_items: limitNumber(prev.grid_config.mobile.visible_items, 2, 1, 10),
+      },
+    },
+  };
+};
