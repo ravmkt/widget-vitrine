@@ -2010,6 +2010,8 @@ panelTitle.style.cssText = [
     'font-family:' + fontFamily + ';'
   ].join('');
 
+applyInputFocusStyle(nameInput);
+
 function applyInputFocusStyle(input) {
   if (!input) return;
 
