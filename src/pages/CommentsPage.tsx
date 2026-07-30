@@ -135,7 +135,7 @@ useEffect(() => {
     };
 
     fetchStoreSettings();
-  }, []);
+  }, [storeId]);
 
   const handleAutoApproveToggle = async () => {
     if (!storeId) return;
