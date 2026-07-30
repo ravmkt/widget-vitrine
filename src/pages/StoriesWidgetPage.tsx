@@ -569,7 +569,7 @@ const SocialActionButtons: FC<{
     </button>
 
     <span className="mt-1 block text-center text-[10px] font-black leading-none text-white">
-      {commentCount}
+TESTE-{commentCount}
     </span>
   </div>
 )}
