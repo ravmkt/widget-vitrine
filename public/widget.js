@@ -1589,40 +1589,20 @@ function openCommentsPanel(videoId, storyId) {
 
   function restoreVideoView() {
     var currentPanel = modalContent.querySelector('.vl-comments-panel-full');
-
     if (currentPanel && currentPanel.parentNode) {
       currentPanel.parentNode.removeChild(currentPanel);
     }
-
     modalContent.classList.remove('has-comments-open');
 
     var header = modalContent.querySelector('.vl-header');
     var footer = modalContent.querySelector('.vl-footer');
     var social = modalContent.querySelector('.vl-social');
-
-    if (header) {
-      header.style.display = '';
-      header.style.visibility = '';
-      header.style.pointerEvents = '';
-    }
-
-    if (footer) {
-      footer.style.display = '';
-      footer.style.visibility = '';
-      footer.style.pointerEvents = '';
-    }
-
-    if (social) {
-      social.style.display = '';
-      social.style.visibility = '';
-      social.style.pointerEvents = '';
-    }
+    if (header) { header.style.display = ''; header.style.visibility = ''; header.style.pointerEvents = ''; }
+    if (footer) { footer.style.display = ''; footer.style.visibility = ''; footer.style.pointerEvents = ''; }
+    if (social) { social.style.display = ''; social.style.visibility = ''; social.style.pointerEvents = ''; }
 
     var videoElement = modalContent.querySelector('video');
-
-    if (videoElement) {
-      videoElement.play().catch(function () {});
-    }
+    if (videoElement) { videoElement.play().catch(function () {}); }
   }
 
   if (existing) {
@@ -1631,14 +1611,11 @@ function openCommentsPanel(videoId, storyId) {
   }
 
   var videoElement = modalContent.querySelector('video');
-  if (videoElement) {
-    videoElement.pause();
-  }
+  if (videoElement) { videoElement.pause(); }
 
   var header = modalContent.querySelector('.vl-header');
   var footer = modalContent.querySelector('.vl-footer');
   var social = modalContent.querySelector('.vl-social');
-
   if (header) header.style.display = 'none';
   if (footer) footer.style.display = 'none';
   if (social) social.style.display = 'none';
@@ -1646,299 +1623,152 @@ function openCommentsPanel(videoId, storyId) {
   var primaryColor = getPrimaryColor(currentAppearance);
   var buttonColor = getButtonColor(currentAppearance);
   var fontFamily = getFontFamily(currentAppearance);
-
-  var panel = createEl('div', 'vl-comments-panel-full');
-
-  existing = panel;
-
-panel.style.cssText = [
-  'position:absolute;',
-  'top:8px;',
-  'right:8px;',
-  'bottom:8px;',
-  'left:8px;',
-  'width:auto;',
-  'height:auto;',
-  'max-height:none;',
-  'z-index:200;',
-  'display:flex;',
-  'flex-direction:column;',
-  'overflow:hidden;',
-  'box-sizing:border-box;',
-  'background:#fff;',
-  'border:2px solid ' + primaryColor + ';',
-  'border-radius:20px;',
-  'box-shadow:0 12px 30px rgba(0,0,0,.35);',
-  'font-family:' + fontFamily + ';'
-].join('');
-
-  var panelHeader = createEl('div');
-
-panelHeader.style.cssText = [
-  'display:flex;',
-  'align-items:center;',
-  'justify-content:space-between;',
-  'height:48px;',
-  'min-height:48px;',
-  'padding:0 10px;',
-  'border-bottom:1px solid #9ca3af;',
-  'background:#fff;',
-  'box-sizing:border-box;',
-  'flex-shrink:0;'
-].join('');
-
   var commentsCount = getCommentCountForVideo(videoId);
+  var hasComments = commentsCount > 0;
+
+  // ── PAINEL ──
+  var panel = createEl('div', 'vl-comments-panel-full');
+  panel.style.cssText = [
+    'position:absolute;','top:8px;','right:8px;','bottom:8px;','left:8px;',
+    'width:auto;','height:auto;','max-height:none;','z-index:200;',
+    'display:flex;','flex-direction:column;','overflow:hidden;',
+    'box-sizing:border-box;','background:#fff;',
+    'border:2px solid ' + primaryColor + ';','border-radius:20px;',
+    'box-shadow:0 12px 30px rgba(0,0,0,.35);','font-family:' + fontFamily + ';'
+  ].join('');
+
+  // ── CABEÇALHO ──
+  var panelHeader = createEl('div');
+  panelHeader.style.cssText = [
+    'display:flex;','align-items:center;','justify-content:space-between;',
+    'height:48px;','min-height:48px;','padding:0 14px;',
+    'border-bottom:1px solid #e2e8f0;','background:#fff;',
+    'box-sizing:border-box;','flex-shrink:0;'
+  ].join('');
 
   var panelTitle = createEl('h3');
-  panelTitle.textContent =
-    'Comentários' +
-    (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
-
-panelTitle.style.cssText = [
-  'margin:0;',
-  'font-size:16px;',
-  'font-weight:700;',
-  'color:#111;'
-].join('');
-
+  panelTitle.textContent = 'Comentários' + (hasComments ? ' (' + commentsCount + ')' : '');
+  panelTitle.style.cssText = 'margin:0;font-size:16px;font-weight:700;color:#111;';
   panelHeader.appendChild(panelTitle);
 
   var closeBtn = createEl('button');
   closeBtn.type = 'button';
   closeBtn.innerHTML = svgIcon('close');
-
   closeBtn.style.cssText = [
-    'background:#f1f5f9;',
-    'border:none;',
-    'color:#475569;',
-    'cursor:pointer;',
-    'width:32px;',
-    'height:32px;',
-    'border-radius:50%;',
-    'display:flex;',
-    'align-items:center;',
-    'justify-content:center;',
-    'font-size:18px;',
-    'transition:all .15s;',
-    'flex-shrink:0;'
+    'background:#f1f5f9;','border:none;','color:#475569;','cursor:pointer;',
+    'width:32px;','height:32px;','border-radius:50%;','display:flex;',
+    'align-items:center;','justify-content:center;','font-size:18px;',
+    'transition:all .15s;','flex-shrink:0;'
   ].join('');
-
-  closeBtn.onmouseenter = function () {
-    closeBtn.style.background = '#e2e8f0';
-  };
-
-  closeBtn.onmouseleave = function () {
-    closeBtn.style.background = '#f1f5f9';
-  };
-
+  closeBtn.onmouseenter = function () { closeBtn.style.background = '#e2e8f0'; };
+  closeBtn.onmouseleave = function () { closeBtn.style.background = '#f1f5f9'; };
   closeBtn.addEventListener('click', function (event) {
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-
-    restoreVideoView();
+    event.preventDefault(); event.stopPropagation(); restoreVideoView();
   });
-
   panelHeader.appendChild(closeBtn);
   panel.appendChild(panelHeader);
 
-  var commentsList = createEl('div');
+  // ── CORPO (área rolável) ──
+  var panelBody = createEl('div');
+  panelBody.style.cssText = [
+    'flex:1 1 auto;','min-height:0;','overflow-y:auto;','overflow-x:hidden;',
+    'padding:0;','display:flex;','flex-direction:column;',
+    'box-sizing:border-box;','-webkit-overflow-scrolling:touch;'
+  ].join('');
 
-commentsList.style.cssText = [
-  'flex:1 1 auto;',
-  'min-height:0;',
-  'overflow-y:auto;',
-  'overflow-x:hidden;',
-  'padding:8px 16px;',
-  'display:flex;',
-  'flex-direction:column;',
-  'gap:0;',
-  'box-sizing:border-box;',
-  '-webkit-overflow-scrolling:touch;'
-].join('');
+  // ── RODAPÉ ──
+  var panelFooter = createEl('div');
+  panelFooter.style.cssText = [
+    'flex:0 0 auto;','width:100%;','border-top:1px solid #e2e8f0;',
+    'padding:12px 14px 10px;','background:#fff;','box-sizing:border-box;',
+    'position:relative;','z-index:6;','display:flex;','justify-content:center;'
+  ].join('');
 
-  function renderComments() {
-    while (commentsList.firstChild) {
-      commentsList.removeChild(commentsList.firstChild);
-    }
+  // ═══════════════════════════════════
+  //  FUNÇÕES INTERNAS
+  // ═══════════════════════════════════
 
-    var videoComments = readCommentsData.filter(function (comment) {
-      return idsEqual(comment.video_id, videoId);
+  function renderEmptyState() {
+    while (panelBody.firstChild) { panelBody.removeChild(panelBody.firstChild); }
+
+    var emptyWrap = createEl('div');
+    emptyWrap.style.cssText = [
+      'display:flex;','flex-direction:column;','align-items:center;',
+      'justify-content:center;','flex:1;','min-height:180px;',
+      'padding:20px;','text-align:center;'
+    ].join('');
+
+    var emptyIcon = createEl('div');
+    emptyIcon.innerHTML = svgIcon('comment');
+    emptyIcon.style.cssText = 'opacity:.15;margin-bottom:12px;';
+
+    var emptyTitle = createEl('p');
+    emptyTitle.textContent = 'Seja o primeiro a comentar';
+    emptyTitle.style.cssText = 'font-size:15px;font-weight:700;color:#334155;margin:0 0 16px 0;';
+
+    emptyWrap.appendChild(emptyIcon);
+    emptyWrap.appendChild(emptyTitle);
+    panelBody.appendChild(emptyWrap);
+  }
+
+  function renderCommentList() {
+    while (panelBody.firstChild) { panelBody.removeChild(panelBody.firstChild); }
+
+    var videoComments = readCommentsData.filter(function (c) {
+      return idsEqual(c.video_id, videoId);
     });
 
-    if (videoComments.length === 0) {
-      var emptyState = createEl('div');
+    if (videoComments.length === 0) { renderEmptyState(); return; }
 
-      emptyState.style.cssText = [
-        'display:flex;',
-        'flex-direction:column;',
-        'align-items:center;',
-        'justify-content:center;',
-        'padding:20px 16px;',
-        'text-align:center;',
-        'flex:1;',
-        'min-height:100px;'
-      ].join('');
-
-      var emptyIcon = createEl('div');
-      emptyIcon.innerHTML = svgIcon('comment');
-      emptyIcon.style.cssText = 'opacity:.15;margin-bottom:10px;';
-
-      var emptyText = createEl('p');
-      emptyText.textContent =
-        'Nenhum comentário ainda. Seja o primeiro!';
-
-      emptyText.style.cssText = [
-        'color:#94a3b8;',
-        'font-size:14px;',
-        'margin:0;'
-      ].join('');
-
-      emptyState.appendChild(emptyIcon);
-      emptyState.appendChild(emptyText);
-      commentsList.appendChild(emptyState);
-      return;
-    }
+    var listWrap = createEl('div');
+    listWrap.style.cssText = 'padding:10px 18px;display:flex;flex-direction:column;gap:10px;flex:1;';
 
     videoComments.forEach(function (comment) {
       var commentCard = createEl('div');
-
-      commentCard.style.cssText = [
-        'display:flex;',
-        'gap:10px;',
-        'padding:10px 0;',
-        'border-bottom:1px solid #f1f5f9;'
-      ].join('');
+      commentCard.style.cssText = 'display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9;';
 
       var avatar = createEl('div');
-      avatar.textContent =
-        (comment.user_name || 'V').charAt(0).toUpperCase();
-
-      avatar.style.cssText = [
-        'width:34px;',
-        'height:34px;',
-        'border-radius:50%;',
-        'background:' + primaryColor + ';',
-        'color:#fff;',
-        'display:flex;',
-        'align-items:center;',
-        'justify-content:center;',
-        'font-size:14px;',
-        'font-weight:700;',
-        'flex-shrink:0;'
-      ].join('');
+      avatar.textContent = (comment.user_name || 'V').charAt(0).toUpperCase();
+      avatar.style.cssText = 'width:34px;height:34px;border-radius:50%;background:' + primaryColor + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;';
 
       var commentBody = createEl('div');
-
-      commentBody.style.cssText = [
-        'flex:1;',
-        'min-width:0;'
-      ].join('');
+      commentBody.style.cssText = 'flex:1;min-width:0;';
 
       var commentMeta = createEl('div');
-
-      commentMeta.style.cssText = [
-        'display:flex;',
-        'align-items:center;',
-        'gap:8px;',
-        'margin-bottom:2px;'
-      ].join('');
+      commentMeta.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:2px;';
 
       var authorName = createEl('span');
       authorName.textContent = comment.user_name || 'Visitante';
-
-      authorName.style.cssText = [
-        'font-weight:700;',
-        'font-size:13px;',
-        'color:#0f172a;'
-      ].join('');
-
+      authorName.style.cssText = 'font-weight:700;font-size:13px;color:#0f172a;';
       commentMeta.appendChild(authorName);
 
       if (comment.created_at) {
         var commentDate = createEl('span');
-        commentDate.textContent =
-          formatRelativeTime(comment.created_at);
-
-        commentDate.style.cssText = [
-          'font-size:11px;',
-          'color:#94a3b8;'
-        ].join('');
-
+        commentDate.textContent = formatRelativeTime(comment.created_at);
+        commentDate.style.cssText = 'font-size:11px;color:#94a3b8;';
         commentMeta.appendChild(commentDate);
       }
 
       var commentText = createEl('p');
-      commentText.textContent =
-        comment.content || comment.text || '';
-
-      commentText.style.cssText = [
-        'margin:0;',
-        'font-size:14px;',
-        'color:#334155;',
-        'line-height:1.5;',
-        'word-break:break-word;'
-      ].join('');
+      commentText.textContent = comment.content || comment.text || '';
+      commentText.style.cssText = 'margin:0;font-size:14px;color:#334155;line-height:1.5;word-break:break-word;';
 
       commentBody.appendChild(commentMeta);
       commentBody.appendChild(commentText);
 
-      var replyContent = String(
-        comment.reply_content ||
-        comment.replyContent ||
-        ''
-      ).trim();
-
-      var replyStatus = String(
-        comment.reply_status ||
-        comment.replyStatus ||
-        ''
-      ).trim().toLowerCase();
-
-      var replyIsVisible =
-        replyContent &&
-        (
-          !replyStatus ||
-          replyStatus === 'replied' ||
-          replyStatus === 'respondido' ||
-          replyStatus === 'published' ||
-          replyStatus === 'publicado'
-        );
+      var replyContent = String(comment.reply_content || comment.replyContent || '').trim();
+      var replyStatus = String(comment.reply_status || comment.replyStatus || '').trim().toLowerCase();
+      var replyIsVisible = replyContent && (!replyStatus || replyStatus === 'replied' || replyStatus === 'respondido' || replyStatus === 'published' || replyStatus === 'publicado');
 
       if (replyIsVisible) {
         var replyBox = createEl('div');
-
-        replyBox.style.cssText = [
-          'margin-top:8px;',
-          'padding:8px 12px;',
-          'background:#f0f9ff;',
-          'border-left:3px solid ' + primaryColor + ';',
-          'border-radius:6px;'
-        ].join('');
-
+        replyBox.style.cssText = 'margin-top:8px;padding:8px 12px;background:#f0f9ff;border-left:3px solid ' + primaryColor + ';border-radius:6px;';
         var replyLabel = createEl('div');
         replyLabel.textContent = 'Resposta da loja';
-
-        replyLabel.style.cssText = [
-          'font-size:10px;',
-          'font-weight:700;',
-          'color:' + primaryColor + ';',
-          'margin-bottom:3px;',
-          'text-transform:uppercase;',
-          'letter-spacing:.5px;'
-        ].join('');
-
+        replyLabel.style.cssText = 'font-size:10px;font-weight:700;color:' + primaryColor + ';margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px;';
         var replyText = createEl('p');
         replyText.textContent = replyContent;
-
-        replyText.style.cssText = [
-          'margin:0;',
-          'font-size:13px;',
-          'color:#334155;',
-          'line-height:1.4;',
-          'word-break:break-word;'
-        ].join('');
-
+        replyText.style.cssText = 'margin:0;font-size:13px;color:#334155;line-height:1.4;word-break:break-word;';
         replyBox.appendChild(replyLabel);
         replyBox.appendChild(replyText);
         commentBody.appendChild(replyBox);
@@ -1946,462 +1776,238 @@ commentsList.style.cssText = [
 
       commentCard.appendChild(avatar);
       commentCard.appendChild(commentBody);
-      commentsList.appendChild(commentCard);
+      listWrap.appendChild(commentCard);
     });
+
+    panelBody.appendChild(listWrap);
   }
 
-  renderComments();
-  panel.appendChild(commentsList);
+  function renderCommentButton() {
+    while (panelFooter.firstChild) { panelFooter.removeChild(panelFooter.firstChild); }
 
-  var formSection = createEl('div');
-
-  formSection.style.cssText = [
-  'flex:0 0 auto;',
-  'width:100%;',
-  'border-top:1px solid #cbd5e1;',
-  'padding:8px 12px 8px;',
-  'background:#fff;',
-  'box-sizing:border-box;',
-  'position:relative;',
-  'z-index:6;'
-].join('');
-
-  var nameLabel = createEl('label');
-  nameLabel.textContent = 'Seu nome';
-
-  nameLabel.style.cssText = [
-    'display:block;',
-    'font-size:12px;',
-    'font-weight:600;',
-    'color:#64748b;',
-    'margin-bottom:4px;'
-  ].join('');
-
-  formSection.appendChild(nameLabel);
-
-  var nameInput = createEl('input');
-  nameInput.type = 'text';
-  nameInput.placeholder = 'Digite seu nome...';
-  nameInput.maxLength = 80;
-
-  nameInput.style.cssText = [
-    'width:100%;',
-    'height:34px;',
-    'padding:9px 12px;',
-    'border:1.5px solid #e2e8f0;',
-    'border-radius:10px;',
-    'font-size:14px;',
-    'color:#0f172a;',
-    'outline:none;',
-    'transition:border-color .2s;',
-    'margin-bottom:10px;',
-    'box-sizing:border-box;',
-    'background:#f8fafc;',
-    'font-family:' + fontFamily + ';'
-  ].join('');
-
-applyInputFocusStyle(nameInput);
-
-function applyInputFocusStyle(input) {
-  if (!input) return;
-
-  input.addEventListener('focus', function () {
-    input.style.borderColor = primaryColor;
-    input.style.boxShadow = '0 0 0 2px ' + primaryColor + '33';
-    input.style.background = '#fff';
-  });
-
-  input.addEventListener('blur', function () {
-    input.style.borderColor = '#b6b6b6';
-    input.style.boxShadow = 'none';
-    input.style.background = '#fff';
-  });
-}
-
-applyInputFocusStyle(nameInput);
-
-
-  formSection.appendChild(nameInput);
-
-  var commentLabel = createEl('label');
-  commentLabel.textContent = 'Seu comentário';
-
-  commentLabel.style.cssText = [
-    'display:block;',
-    'font-size:12px;',
-    'font-weight:600;',
-    'color:#64748b;',
-    'margin-bottom:4px;'
-  ].join('');
-
-  formSection.appendChild(commentLabel);
-
-  var editor = createEl('div');
-
-  editor.style.cssText = [
-    'position:relative;',
-    'width:100%;'
-  ].join('');
-
-  var commentTextarea = createEl('textarea');
-  commentTextarea.placeholder = 'Escreva seu comentário...';
-  commentTextarea.maxLength = 1000;
-  commentTextarea.rows = 3;
-
-  commentTextarea.style.cssText = [
-    'width:100%;',
-'height:64px;',
-'min-height:64px;',
-'max-height:64px;',
-    'padding:10px 48px 10px 12px;',
-    'border:1.5px solid #e2e8f0;',
-    'border-radius:10px;',
-    'font-size:14px;',
-    'color:#0f172a;',
-    'resize:vertical;',
-    'outline:none;',
-    'transition:border-color .2s;',
-    'margin:0;',
-    'box-sizing:border-box;',
-    'background:#f8fafc;',
-    'font-family:' + fontFamily + ';'
-  ].join('');
-
-  applyInputFocusStyle(commentTextarea);
-
-  editor.appendChild(commentTextarea);
-
-  var emojiRow = createEl('div');
-
-  emojiRow.style.cssText = [
-  'height:28px;',
-  'display:flex;',
-  'align-items:center;',
-  'justify-content:flex-start;',
-  'position:relative;',
-  'left:auto;',
-  'top:auto;',
-  'z-index:10;'
-].join('');
-
-  var emojiToggle = createEl('button');
-  emojiToggle.type = 'button';
-  emojiToggle.textContent = '😊';
-
-  emojiToggle.style.cssText = [
-    'width:32px;',
-    'height:32px;',
-    'padding:0;',
-    'border:1px solid #e2e8f0;',
-    'border-radius:50%;',
-    'background:#fff;',
-    'color:#64748b;',
-    'font-size:18px;',
-    'display:flex;',
-    'align-items:center;',
-    'justify-content:center;',
-    'cursor:pointer;'
-  ].join('');
-
-  var emojiGrid = createEl('div');
-
-emojiGrid.style.cssText = [
-  'display:none;',
-  'position:absolute;',
-  'left:0;',
-  'bottom:32px;',
-  'grid-template-columns:repeat(6,34px);',
-  'gap:4px;',
-  'width:max-content;',
-  'max-width:230px;',
-  'padding:8px;',
-  'background:#fff;',
-  'border:1px solid #e2e8f0;',
-  'border-radius:12px;',
-  'box-shadow:0 8px 30px rgba(0,0,0,.18);',
-  'z-index:30;'
-].join('');
-
-  var emojiList = [
-    '😍', '🔥', '👏', '❤️', '😂', '😱',
-    '🙌', '💯', '✨', '😢', '🤔', '👍',
-    '💪', '🎉', '😊', '🥰', '😎', '🙏',
-    '💙', '⭐', '✅', '😡', '👀', '🤩'
-  ];
-
-  emojiList.forEach(function (emoji) {
-    var emojiButton = createEl('button');
-    emojiButton.type = 'button';
-    emojiButton.textContent = emoji;
-
-    emojiButton.style.cssText = [
-      'width:34px;',
-      'height:34px;',
-      'border:none;',
-      'background:transparent;',
-      'border-radius:8px;',
-      'font-size:20px;',
-      'cursor:pointer;',
-      'display:flex;',
-      'align-items:center;',
-      'justify-content:center;'
-    ].join('');
-
-    emojiButton.onmouseenter = function () {
-      emojiButton.style.background = '#f1f5f9';
-      emojiButton.style.transform = 'scale(1.12)';
+    var ctaBtn = createEl('button');
+    ctaBtn.type = 'button';
+    ctaBtn.textContent = 'Deixe seu comentário';
+    ctaBtn.style.cssText = 'width:100%;height:40px;border:none;border-radius:12px;background:' + buttonColor + ';color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:' + fontFamily + ';';
+    ctaBtn.onmouseenter = function () { ctaBtn.style.opacity = '.9'; };
+    ctaBtn.onmouseleave = function () { ctaBtn.style.opacity = '1'; };
+    ctaBtn.onclick = function (e) {
+      e.preventDefault(); e.stopPropagation(); renderCommentForm();
     };
+    panelFooter.appendChild(ctaBtn);
+  }
 
-    emojiButton.onmouseleave = function () {
-      emojiButton.style.background = 'transparent';
-      emojiButton.style.transform = 'scale(1)';
-    };
+  function renderCommentForm() {
+    while (panelBody.firstChild) { panelBody.removeChild(panelBody.firstChild); }
+    while (panelFooter.firstChild) { panelFooter.removeChild(panelFooter.firstChild); }
 
-    emojiButton.onmousedown = function (event) {
-      event.preventDefault();
+    var formWrap = createEl('div');
+    formWrap.style.cssText = 'padding:16px 18px;display:flex;flex-direction:column;gap:0;flex:1;';
 
-      var start = commentTextarea.selectionStart ||
-        commentTextarea.value.length;
+    var nameLabel = createEl('label');
+    nameLabel.textContent = 'Seu nome';
+    nameLabel.style.cssText = 'display:block;font-size:12px;font-weight:600;color:#64748b;margin-bottom:4px;';
+    formWrap.appendChild(nameLabel);
 
-      var end = commentTextarea.selectionEnd ||
-        commentTextarea.value.length;
+    var nameInput = createEl('input');
+    nameInput.type = 'text'; nameInput.placeholder = 'Digite seu nome...'; nameInput.maxLength = 80;
+    nameInput.style.cssText = 'width:100%;height:40px;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#0f172a;outline:none;transition:border-color .2s;margin-bottom:12px;box-sizing:border-box;background:#f8fafc;font-family:' + fontFamily + ';';
+    nameInput.addEventListener('focus', function () {
+      nameInput.style.borderColor = primaryColor;
+      nameInput.style.boxShadow = '0 0 0 2px ' + primaryColor + '33';
+      nameInput.style.background = '#fff';
+    });
+    nameInput.addEventListener('blur', function () {
+      nameInput.style.borderColor = '#e2e8f0';
+      nameInput.style.boxShadow = 'none';
+      nameInput.style.background = '#f8fafc';
+    });
+    formWrap.appendChild(nameInput);
 
-      commentTextarea.value =
-        commentTextarea.value.substring(0, start) +
-        emoji +
-        commentTextarea.value.substring(end);
+    var commentLabel = createEl('label');
+    commentLabel.textContent = 'Seu comentário';
+    commentLabel.style.cssText = 'display:block;font-size:12px;font-weight:600;color:#64748b;margin-bottom:4px;';
+    formWrap.appendChild(commentLabel);
 
-      var newPosition = start + emoji.length;
+    var commentTextarea = createEl('textarea');
+    commentTextarea.placeholder = 'Escreva seu comentário...';
+    commentTextarea.maxLength = 1000; commentTextarea.rows = 3;
+    commentTextarea.style.cssText = 'width:100%;height:70px;min-height:70px;max-height:70px;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#0f172a;resize:none;outline:none;transition:border-color .2s;margin-bottom:8px;box-sizing:border-box;background:#f8fafc;font-family:' + fontFamily + ';';
+    commentTextarea.addEventListener('focus', function () {
+      commentTextarea.style.borderColor = primaryColor;
+      commentTextarea.style.boxShadow = '0 0 0 2px ' + primaryColor + '33';
+      commentTextarea.style.background = '#fff';
+    });
+    commentTextarea.addEventListener('blur', function () {
+      commentTextarea.style.borderColor = '#e2e8f0';
+      commentTextarea.style.boxShadow = 'none';
+      commentTextarea.style.background = '#f8fafc';
+    });
+    formWrap.appendChild(commentTextarea);
 
-      commentTextarea.focus();
-      commentTextarea.setSelectionRange(
-        newPosition,
-        newPosition
-      );
+    var emojiRow = createEl('div');
+    emojiRow.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:6px;position:relative;';
 
-      charCounter.textContent =
-        commentTextarea.value.length + '/1000';
+    var emojiToggle = createEl('button');
+    emojiToggle.type = 'button'; emojiToggle.textContent = '😊';
+    emojiToggle.style.cssText = 'width:32px;height:32px;padding:0;border:1px solid #e2e8f0;border-radius:50%;background:#fff;color:#64748b;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;';
 
-      emojiGrid.style.display = 'none';
-    };
+    var emojiGrid = createEl('div');
+    emojiGrid.style.cssText = 'display:none;position:absolute;left:0;bottom:36px;grid-template-columns:repeat(6,34px);gap:4px;width:max-content;max-width:230px;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.18);z-index:30;';
 
-    emojiGrid.appendChild(emojiButton);
-  });
+    var emojiList = ['😍','🔥','👏','❤️','😂','😱','🙌','💯','✨','😢','🤔','👍','💪','🎉','😊','🥰','😎','🙏','💙','⭐','✅','😡','👀','🤩'];
 
-  emojiToggle.onclick = function (event) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (emojiGrid.style.display === 'grid') {
-      emojiGrid.style.display = 'none';
-    } else {
-      emojiGrid.style.display = 'grid';
-    }
-  };
-
-  emojiRow.appendChild(emojiToggle);
-  emojiRow.appendChild(emojiGrid);
-  formSection.appendChild(editor);
-formSection.appendChild(emojiRow);
-
-  var charCounter = createEl('div');
-  charCounter.textContent = '0/1000';
-
-  charCounter.style.cssText = [
-    'text-align:right;',
-    'font-size:11px;',
-    'color:#94a3b8;',
-    'margin-top:4px;',
-    'margin-bottom:6px;'
-  ].join('');
-
-  commentTextarea.addEventListener('input', function () {
-    charCounter.textContent =
-      commentTextarea.value.length + '/1000';
-  });
-
-  formSection.appendChild(charCounter);
-
-  var actionRow = createEl('div');
-
-  actionRow.style.cssText = [
-    'display:flex;',
-    'align-items:center;',
-    'justify-content:flex-end;',
-    'gap:8px;',
-    'margin-bottom:4px;'
-  ].join('');
-
-  var sendBtn = createEl('button');
-  sendBtn.type = 'button';
-  sendBtn.textContent = 'Enviar';
-
-  sendBtn.style.cssText = [
-  'height:32px;',
-  'padding:0 20px;',
-  'border:none;',
-  'border-radius:10px;',
-  'background:#1198e5;',
-  'color:#fff;',
-  'font-weight:700;',
-  'font-size:16px;',
-  'text-transform:uppercase;',
-  'cursor:pointer;',
-  'white-space:nowrap;',
-  'flex-shrink:0;'
-].join('');
-
-  var statusMsg = createEl('div');
-
-  statusMsg.style.cssText = [
-    'min-height:16px;',
-    'text-align:center;',
-    'font-size:12px;',
-    'transition:all .2s;',
-    'margin-top:4px;'
-  ].join('');
-
-  sendBtn.onmouseenter = function () {
-    sendBtn.style.opacity = '.9';
-    sendBtn.style.transform = 'scale(1.03)';
-  };
-
-  sendBtn.onmouseleave = function () {
-    sendBtn.style.opacity = '1';
-    sendBtn.style.transform = 'scale(1)';
-  };
-
-  sendBtn.onclick = function (event) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    var name = nameInput.value.trim();
-    var text = commentTextarea.value.trim();
-
-    if (!text) {
-      statusMsg.textContent =
-        'Digite um comentário para enviar.';
-      statusMsg.style.color = '#ef4444';
-      return;
-    }
-
-    sendBtn.disabled = true;
-    sendBtn.textContent = 'Enviando...';
-    sendBtn.style.opacity = '.6';
-    statusMsg.textContent = '';
-
-    userCommentedVideos[videoId] = true;
-
-    var commentStatus =
-      autoApproveComments ? 'approved' : 'pending';
-
-    if (hasSupabase) {
-      createComment({
-        story_id: storyId,
-        video_id: videoId,
-        author_name: name || 'Visitante',
-        content: text,
-        status: commentStatus
-      })
-        .then(function () {
-          if (autoApproveComments) {
-            readCommentsData.push({
-              video_id: videoId,
-              user_name: name || 'Visitante',
-              content: text,
-              text: text,
-              created_at: new Date().toISOString(),
-              status: 'approved'
-            });
-
-            statusMsg.textContent =
-              'Comentário enviado com sucesso! ✅';
-
-            statusMsg.style.color = '#22c55e';
-            renderComments();
-          } else {
-            statusMsg.textContent =
-              'Obrigado pelo seu comentário! Em breve será publicado. 🥰';
-
-            statusMsg.style.color = '#f59e0b';
-          }
-
-          commentTextarea.value = '';
-          charCounter.textContent = '0/1000';
-          emojiGrid.style.display = 'none';
-          sendBtn.textContent = 'Enviar';
-          sendBtn.disabled = false;
-          sendBtn.style.opacity = '1';
-
-          trackMetric({
-            event_type: 'comment',
-            story_id: storyId,
-            video_id: videoId,
-            page_url: window.location.href
-          });
-        })
-        .catch(function (error) {
-          statusMsg.textContent =
-            error && error.message
-              ? error.message
-              : 'Erro ao enviar. Tente novamente.';
-
-          statusMsg.style.color = '#ef4444';
-          sendBtn.textContent = 'Enviar';
-          sendBtn.disabled = false;
-          sendBtn.style.opacity = '1';
-        });
-
-      return;
-    }
-
-    readCommentsData.push({
-      video_id: videoId,
-      user_name: name || 'Visitante',
-      content: text,
-      text: text,
-      created_at: new Date().toISOString()
+    emojiList.forEach(function (emoji) {
+      var emojiBtn = createEl('button');
+      emojiBtn.type = 'button'; emojiBtn.textContent = emoji;
+      emojiBtn.style.cssText = 'width:34px;height:34px;border:none;background:transparent;border-radius:8px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;';
+      emojiBtn.onmouseenter = function () { emojiBtn.style.background = '#f1f5f9'; emojiBtn.style.transform = 'scale(1.12)'; };
+      emojiBtn.onmouseleave = function () { emojiBtn.style.background = 'transparent'; emojiBtn.style.transform = 'scale(1)'; };
+      emojiBtn.onmousedown = function (ev) {
+        ev.preventDefault();
+        var start = commentTextarea.selectionStart || commentTextarea.value.length;
+        var end = commentTextarea.selectionEnd || commentTextarea.value.length;
+        commentTextarea.value = commentTextarea.value.substring(0, start) + emoji + commentTextarea.value.substring(end);
+        var newPos = start + emoji.length;
+        commentTextarea.focus();
+        commentTextarea.setSelectionRange(newPos, newPos);
+        charCounter.textContent = commentTextarea.value.length + '/1000';
+        emojiGrid.style.display = 'none';
+      };
+      emojiGrid.appendChild(emojiBtn);
     });
 
-    statusMsg.textContent =
-      'Comentário enviado (modo offline).';
+    emojiToggle.onclick = function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      emojiGrid.style.display = emojiGrid.style.display === 'grid' ? 'none' : 'grid';
+    };
 
-    statusMsg.style.color = '#22c55e';
+    emojiRow.appendChild(emojiToggle);
+    emojiRow.appendChild(emojiGrid);
+    formWrap.appendChild(emojiRow);
 
-    commentTextarea.value = '';
+    var charCounter = createEl('div');
     charCounter.textContent = '0/1000';
-    emojiGrid.style.display = 'none';
-    sendBtn.textContent = 'Enviar';
-    sendBtn.disabled = false;
-    sendBtn.style.opacity = '1';
+    charCounter.style.cssText = 'text-align:right;font-size:11px;color:#94a3b8;margin-bottom:8px;';
+    commentTextarea.addEventListener('input', function () {
+      charCounter.textContent = commentTextarea.value.length + '/1000';
+    });
+    formWrap.appendChild(charCounter);
 
-    renderComments();
-  };
+    var statusMsg = createEl('div');
+    statusMsg.style.cssText = 'min-height:18px;text-align:center;font-size:12px;transition:all .2s;margin-bottom:4px;';
+    formWrap.appendChild(statusMsg);
 
-  actionRow.appendChild(sendBtn);
-  formSection.appendChild(actionRow);
-  formSection.appendChild(statusMsg);
+    panelBody.appendChild(formWrap);
 
-  panel.appendChild(formSection);
+    var btnRow = createEl('div');
+    btnRow.style.cssText = 'display:flex;gap:8px;';
+
+    var backBtn = createEl('button');
+    backBtn.type = 'button'; backBtn.textContent = 'Voltar';
+    backBtn.style.cssText = 'flex:1;height:40px;border:1.5px solid #e2e8f0;border-radius:12px;background:#fff;color:#64748b;font-size:14px;font-weight:600;cursor:pointer;font-family:' + fontFamily + ';';
+    backBtn.onclick = function (e) { e.preventDefault(); e.stopPropagation(); renderInitialState(); };
+    btnRow.appendChild(backBtn);
+
+    var sendBtn = createEl('button');
+    sendBtn.type = 'button'; sendBtn.textContent = 'Enviar';
+    sendBtn.style.cssText = 'flex:1;height:40px;border:none;border-radius:12px;background:' + buttonColor + ';color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:' + fontFamily + ';';
+    sendBtn.onmouseenter = function () { sendBtn.style.opacity = '.9'; };
+    sendBtn.onmouseleave = function () { sendBtn.style.opacity = '1'; };
+
+    sendBtn.onclick = function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+
+      var name = nameInput.value.trim();
+      var text = commentTextarea.value.trim();
+
+      if (!text) {
+        statusMsg.textContent = 'Digite um comentário para enviar.';
+        statusMsg.style.color = '#ef4444';
+        return;
+      }
+
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Enviando...';
+      sendBtn.style.opacity = '.6';
+      statusMsg.textContent = '';
+
+      userCommentedVideos[videoId] = true;
+      var commentStatus = autoApproveComments ? 'approved' : 'pending';
+
+      if (hasSupabase) {
+        createComment({
+          story_id: storyId,
+          video_id: videoId,
+          author_name: name || 'Visitante',
+          content: text,
+          status: commentStatus
+        })
+          .then(function () {
+            if (autoApproveComments) {
+              readCommentsData.push({
+                video_id: videoId, user_name: name || 'Visitante',
+                content: text, text: text,
+                created_at: new Date().toISOString(), status: 'approved'
+              });
+              statusMsg.textContent = 'Obrigado pelo seu comentário! ❤️';
+              statusMsg.style.color = '#22c55e';
+            } else {
+              statusMsg.textContent = 'Obrigado pelo seu comentário! Sua mensagem será publicada em breve. 📝';
+              statusMsg.style.color = '#f59e0b';
+            }
+            commentsCount = getCommentCountForVideo(videoId);
+            panelTitle.textContent = 'Comentários' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
+            setTimeout(function () { renderInitialState(); }, 2000);
+            trackMetric({ event_type: 'comment', story_id: storyId, video_id: videoId, page_url: window.location.href });
+          })
+          .catch(function (error) {
+            statusMsg.textContent = error && error.message ? error.message : 'Erro ao enviar. Tente novamente.';
+            statusMsg.style.color = '#ef4444';
+            sendBtn.textContent = 'Enviar';
+            sendBtn.disabled = false;
+            sendBtn.style.opacity = '1';
+          });
+        return;
+      }
+
+      readCommentsData.push({
+        video_id: videoId, user_name: name || 'Visitante',
+        content: text, text: text, created_at: new Date().toISOString()
+      });
+      statusMsg.textContent = 'Obrigado pelo seu comentário!';
+      statusMsg.style.color = '#22c55e';
+      commentsCount = getCommentCountForVideo(videoId);
+      panelTitle.textContent = 'Comentários' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
+      setTimeout(function () { renderInitialState(); }, 2000);
+    };
+
+    btnRow.appendChild(sendBtn);
+    panelFooter.appendChild(btnRow);
+
+    document.addEventListener('mousedown', function closeEmoji(ev) {
+      if (emojiGrid.style.display === 'grid' && !emojiRow.contains(ev.target)) {
+        emojiGrid.style.display = 'none';
+        document.removeEventListener('mousedown', closeEmoji);
+      }
+    });
+
+    setTimeout(function () { nameInput.focus(); }, 200);
+  }
+
+  function renderInitialState() {
+    commentsCount = getCommentCountForVideo(videoId);
+    panelTitle.textContent = 'Comentários' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
+    if (commentsCount > 0) { renderCommentList(); } else { renderEmptyState(); }
+    renderCommentButton();
+  }
+
+  // ── INICIALIZA ──
+  renderInitialState();
+  panel.appendChild(panelBody);
+  panel.appendChild(panelFooter);
   modalContent.appendChild(panel);
-modalContent.classList.add('has-comments-open');
-
-  setTimeout(function () {
-    nameInput.focus();
-  }, 200);
-
-  document.addEventListener('mousedown', function closeEmoji(event) {
-    if (
-      emojiGrid.style.display === 'grid' &&
-      !emojiRow.contains(event.target)
-    ) {
-      emojiGrid.style.display = 'none';
-      document.removeEventListener(
-        'mousedown',
-        closeEmoji
-      );
-    }
-  });
+  modalContent.classList.add('has-comments-open');
 }
 
   function closeOverlay() {
