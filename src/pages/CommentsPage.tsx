@@ -103,9 +103,10 @@ const CommentsPage = () => {
    * Busca os dados da loja.
    * Este é o único useEffect responsável por buscar app_settings.
    */
-  useEffect(() => {
+useEffect(() => {
     const fetchStoreSettings = async () => {
-      try {
+      if (!storeId) return;
+            try {
         const settings = await db.generalSettings.getAll();
         if (settings.length > 0) {
           const s = settings[0];
