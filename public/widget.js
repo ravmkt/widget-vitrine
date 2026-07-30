@@ -2261,71 +2261,80 @@ if (appearanceConfig.show_like_button && video) {
     body.appendChild(social);
     container.appendChild(body);
 
-if (appearanceConfig.show_product && readStoryProductsData.length > 0) {
-  var sProducts = readStoryProductsData.filter(function (sp) { return idsEqual(sp.story_id, story.id); });
-  if (sProducts.length > 0) {
+if (appearanceConfig.show_product) {
+  // Pega o product_id direto do vídeo atual
+  var videoProductId = video.product_id || (video.productId) || null;
+  var productData = videoProductId ? readProductsData.find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
+
+  if (productData) {
     var footer = createEl('div', 'vl-footer');
     var footerInner = createEl('div', 'vl-footer-inner');
-    var pId = sProducts[0].product_id;
-    var productData = readProductsData.find(function (p) { return idsEqual(p.id, pId); });
-    if (productData) {
-      var prodCard = createEl('div', 'vl-product');
 
-      // Miniatura
-      var prodImg = createEl('img', 'vl-product-img');
-      prodImg.src = getThumbnailFromObject(productData) || '';
-      prodImg.alt = productData.name || 'Produto';
-      prodCard.appendChild(prodImg);
+    var prodCard = createEl('div', 'vl-product');
+    prodCard.style.cssText = 'display:flex;align-items:center;gap:12px;width:100%;padding:0;';
 
-      // Info: nome + preço
-      var prodInfo = createEl('div', 'vl-product-info');
+    // Miniatura
+    var prodImg = createEl('img', 'vl-product-img');
+    prodImg.src = getThumbnailFromObject(productData) || '';
+    prodImg.alt = productData.name || 'Produto';
+    prodImg.style.cssText = 'width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0;';
+    prodCard.appendChild(prodImg);
 
-      var pName = createEl('div', 'vl-product-name');
-      pName.textContent = productData.name || 'Produto';
-      prodInfo.appendChild(pName);
+    // Info: nome + preço
+    var prodInfo = createEl('div', 'vl-product-info');
+    prodInfo.style.cssText = 'flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;';
 
-      if (productData.price) {
-        var pPrice = createEl('div', 'vl-product-price');
-        pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
-        prodInfo.appendChild(pPrice);
-      }
+    var pName = createEl('div', 'vl-product-name');
+    pName.textContent = productData.name || 'Produto';
+    pName.style.cssText = 'font-size:13px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    prodInfo.appendChild(pName);
 
-      // Botões
-      var pActions = createEl('div', 'vl-product-actions');
-
-      // Botão "Ver Produto"
-      if (appearanceConfig.show_product_button && productData.url) {
-        var buyBtn = createEl('a', 'vl-product-btn');
-        buyBtn.textContent = 'Ver Produto';
-        buyBtn.href = productData.url || '#';
-        buyBtn.target = '_blank';
-        buyBtn.onclick = function (e) {
-          e.stopPropagation();
-          trackMetric({ event_type: 'product_click', story_id: story.id, video_id: video ? video.id : null, product_id: productData.id, page_url: window.location.href });
-        };
-        pActions.appendChild(buyBtn);
-      }
-
-      // Botão WhatsApp
-      var waNumber = storeWhatsappNumber || productData.whatsapp_number || productData.whatsappNumber || '';
-      if (waNumber) {
-        var waNumberClean = waNumber.replace(/\D/g, '');
-        var waMessage = storeWhatsappMessage || 'Olá! Tenho interesse no produto: ' + (productData.name || 'Produto');
-        var waBtn = createEl('a', 'vl-product-whatsapp-btn');
-        waBtn.textContent = 'WhatsApp';
-        waBtn.href = 'https://wa.me/' + waNumberClean + '?text=' + encodeURIComponent(waMessage);
-        waBtn.target = '_blank';
-        waBtn.onclick = function (e) {
-          e.stopPropagation();
-          trackMetric({ event_type: 'whatsapp_click', story_id: story.id, video_id: video ? video.id : null, product_id: productData.id, page_url: window.location.href });
-        };
-        pActions.appendChild(waBtn);
-      }
-
-      prodInfo.appendChild(pActions);
-      prodCard.appendChild(prodInfo);
-      footerInner.appendChild(prodCard);
+    if (productData.price) {
+      var pPrice = createEl('div', 'vl-product-price');
+      pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
+      pPrice.style.cssText = 'font-size:15px;font-weight:800;color:' + primaryColor + ';';
+      prodInfo.appendChild(pPrice);
     }
+
+    prodCard.appendChild(prodInfo);
+
+    // Botões
+    var pActions = createEl('div', 'vl-product-actions');
+    pActions.style.cssText = 'display:flex;gap:8px;flex-shrink:0;';
+
+    // Botão "Ver Produto"
+    if (appearanceConfig.show_product_button && productData.url) {
+      var buyBtn = createEl('a', 'vl-product-btn');
+      buyBtn.textContent = 'Ver Produto';
+      buyBtn.href = productData.url || '#';
+      buyBtn.target = '_blank';
+      buyBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;background:' + primaryColor + ';color:#fff;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;transition:opacity .15s;';
+      buyBtn.onclick = function (e) {
+        e.stopPropagation();
+        trackMetric({ event_type: 'product_click', story_id: story.id, video_id: video ? video.id : null, product_id: productData.id, page_url: window.location.href });
+      };
+      pActions.appendChild(buyBtn);
+    }
+
+    // Botão WhatsApp
+    var waNumber = storeWhatsappNumber || productData.whatsapp_number || productData.whatsappNumber || '';
+    if (waNumber) {
+      var waNumberClean = waNumber.replace(/\D/g, '');
+      var waMessage = storeWhatsappMessage || 'Olá! Tenho interesse no produto: ' + (productData.name || 'Produto');
+      var waBtn = createEl('a', 'vl-product-whatsapp-btn');
+      waBtn.textContent = 'WhatsApp';
+      waBtn.href = 'https://wa.me/' + waNumberClean + '?text=' + encodeURIComponent(waMessage);
+      waBtn.target = '_blank';
+      waBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;background:#25D366;color:#fff;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;transition:opacity .15s;';
+      waBtn.onclick = function (e) {
+        e.stopPropagation();
+        trackMetric({ event_type: 'whatsapp_click', story_id: story.id, video_id: video ? video.id : null, product_id: productData.id, page_url: window.location.href });
+      };
+      pActions.appendChild(waBtn);
+    }
+
+    prodCard.appendChild(pActions);
+    footerInner.appendChild(prodCard);
     footer.appendChild(footerInner);
     container.appendChild(footer);
   }
