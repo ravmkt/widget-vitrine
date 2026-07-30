@@ -2321,7 +2321,7 @@ formSection.appendChild(emojiRow);
             renderComments();
           } else {
             statusMsg.textContent =
-              'Obrigado pelo seu comentário! Em breve será publicado. ';
+              'Obrigado pelo seu comentário! Em breve será publicado. 🥰';
 
             statusMsg.style.color = '#f59e0b';
           }
