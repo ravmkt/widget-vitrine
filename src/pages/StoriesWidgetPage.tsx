@@ -111,59 +111,89 @@ const safeColor = (value: unknown, fallback: string) => {
 const normalizeModalAppearanceConfig = (
   appearance?: any | null,
 ): ModalAppearanceConfig => {
-  const rawPlayerConfig =
-    parseJsonIfNeeded<ModalAppearanceConfig>(
-      appearance?.player_config || appearance?.playerConfig,
-    ) || {};
-  const rawModalConfig =
+  // ⚠️ PRECISA parsear a string JSON primeiro!
+  const rawModalConfigObj =
     parseJsonIfNeeded<ModalAppearanceConfig>(
       appearance?.modal_config || appearance?.modalConfig,
     ) || {};
 
-  const merged: any = {
+  const rawPlayerConfigObj =
+    parseJsonIfNeeded<ModalAppearanceConfig>(
+      appearance?.player_config || appearance?.playerConfig,
+    ) || {};
+
+  // Merge: defaults → modal_config → player_config
+  const merged = {
     ...createDefaultModalAppearanceConfig(),
-    ...rawModalConfig,
-    ...rawPlayerConfig,
+    ...rawModalConfigObj,
+    ...rawPlayerConfigObj,
   };
 
   const showCommentButton =
+    rawModalConfigObj?.show_comment_button ??
+    rawModalConfigObj?.show_comments_button ??
     appearance?.show_comment_button ??
     appearance?.show_comments_button ??
-    appearance?.showCommentButton ??
-    appearance?.showCommentsButton ??
     merged?.show_comment_button ??
     merged?.show_comments_button ??
     true;
 
   return {
-    show_title: appearance?.show_title ?? appearance?.showTitle ?? merged?.show_title ?? true,
-    show_play_button: appearance?.show_play_button ?? appearance?.showPlayButton ?? merged?.show_play_button ?? true,
-    show_product: appearance?.show_product ?? appearance?.showProduct ?? merged?.show_product ?? true,
-    show_like_button: appearance?.show_like_button ?? appearance?.showLikeButton ?? merged?.show_like_button ?? true,
+    // ✅ Agora rawModalConfigObj (já parseado) tem PRIORIDADE
+    show_title:
+      rawModalConfigObj?.show_title ??
+      appearance?.show_title ??
+      merged?.show_title ??
+      true,
+    show_play_button:
+      rawModalConfigObj?.show_play_button ??
+      appearance?.show_play_button ??
+      merged?.show_play_button ??
+      true,
+    show_product:
+      rawModalConfigObj?.show_product ??
+      appearance?.show_product ??
+      merged?.show_product ??
+      true,
+    show_like_button:
+      rawModalConfigObj?.show_like_button ??
+      appearance?.show_like_button ??
+      merged?.show_like_button ??
+      true,
     show_comment_button: showCommentButton,
     show_comments_button: showCommentButton,
-    show_share_button: appearance?.show_share_button ?? appearance?.showShareButton ?? merged?.show_share_button ?? true,
-    show_whatsapp_button: appearance?.show_whatsapp_button ?? appearance?.showWhatsappButton ?? merged?.show_whatsapp_button ?? true,
-    show_product_button: appearance?.show_product_button ?? appearance?.showProductButton ?? merged?.show_product_button ?? true,
-    show_product_whatsapp_button: appearance?.show_product_whatsapp_button ?? appearance?.showProductWhatsappButton ?? merged?.show_product_whatsapp_button ?? true,
+    show_share_button:
+      rawModalConfigObj?.show_share_button ??
+      appearance?.show_share_button ??
+      merged?.show_share_button ??
+      true,
+    show_whatsapp_button:
+      rawModalConfigObj?.show_whatsapp_button ??
+      appearance?.show_whatsapp_button ??
+      merged?.show_whatsapp_button ??
+      true,
+    // 🔴 Esses eram os bugs:
+    show_product_button:
+      rawModalConfigObj?.show_product_button ??
+      appearance?.show_product_button ??
+      merged?.show_product_button ??
+      true,
+    show_product_whatsapp_button:
+      rawModalConfigObj?.show_product_whatsapp_button ??
+      merged?.show_product_whatsapp_button ??
+      true,
+    // 🔴 border_radius, border_color, border_width também não funcionavam:
     border_color: safeColor(
-      appearance?.modal_config?.border_color ??
-        appearance?.border_color ??
+      rawModalConfigObj?.border_color ??
         merged?.border_color ??
         DEFAULT_PRIMARY_COLOR,
       DEFAULT_PRIMARY_COLOR,
     ),
     border_width: String(
-      appearance?.modal_config?.border_width ??
-        appearance?.border_width ??
-        merged?.border_width ??
-        '2',
+      rawModalConfigObj?.border_width ?? merged?.border_width ?? '2',
     ),
     border_radius: String(
-      appearance?.modal_config?.border_radius ??
-        appearance?.border_radius ??
-        merged?.border_radius ??
-        '12',
+      rawModalConfigObj?.border_radius ?? merged?.border_radius ?? '12',
     ),
   };
 };
