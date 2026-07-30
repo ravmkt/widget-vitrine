@@ -1638,21 +1638,38 @@ function openCommentsPanel(videoId, storyId) {
   var existing = modalContent.querySelector('.vl-comments-panel-full');
 
   function restoreVideoView() {
-    if (existing && existing.parentNode) {
-      existing.parentNode.removeChild(existing);
+    var currentPanel = modalContent.querySelector('.vl-comments-panel-full');
+
+    if (currentPanel && currentPanel.parentNode) {
+      currentPanel.parentNode.removeChild(currentPanel);
     }
 
-modalContent.classList.remove('has-comments-open');
+    modalContent.classList.remove('has-comments-open');
 
     var header = modalContent.querySelector('.vl-header');
     var footer = modalContent.querySelector('.vl-footer');
     var social = modalContent.querySelector('.vl-social');
 
-if (header) header.style.display = 'none';
-if (footer) footer.style.display = 'none';
-if (social) social.style.display = 'none';
+    if (header) {
+      header.style.display = '';
+      header.style.visibility = '';
+      header.style.pointerEvents = '';
+    }
+
+    if (footer) {
+      footer.style.display = '';
+      footer.style.visibility = '';
+      footer.style.pointerEvents = '';
+    }
+
+    if (social) {
+      social.style.display = '';
+      social.style.visibility = '';
+      social.style.pointerEvents = '';
+    }
 
     var videoElement = modalContent.querySelector('video');
+
     if (videoElement) {
       videoElement.play().catch(function () {});
     }
