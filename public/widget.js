@@ -2262,22 +2262,23 @@ if (appearanceConfig.show_like_button && video) {
     container.appendChild(body);
 
 if (appearanceConfig.show_product) {
-  // Pega o product_id direto do vídeo atual
   var videoProductId = video.product_id || (video.productId) || null;
   var productData = videoProductId ? readProductsData.find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
 
   if (productData) {
+    var priColor = (appearanceConfig.primary_color || '#6C5CE7');
+
     var footer = createEl('div', 'vl-footer');
     var footerInner = createEl('div', 'vl-footer-inner');
 
     var prodCard = createEl('div', 'vl-product');
-    prodCard.style.cssText = 'display:flex;align-items:center;gap:12px;width:100%;padding:0;';
+    prodCard.style.cssText = 'display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border-radius:14px;background:#fff;';
 
     // Miniatura
     var prodImg = createEl('img', 'vl-product-img');
     prodImg.src = getThumbnailFromObject(productData) || '';
     prodImg.alt = productData.name || 'Produto';
-    prodImg.style.cssText = 'width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0;';
+    prodImg.style.cssText = 'width:52px;height:52px;border-radius:10px;object-fit:cover;flex-shrink:0;';
     prodCard.appendChild(prodImg);
 
     // Info: nome + preço
@@ -2292,7 +2293,7 @@ if (appearanceConfig.show_product) {
     if (productData.price) {
       var pPrice = createEl('div', 'vl-product-price');
       pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
-      pPrice.style.cssText = 'font-size:15px;font-weight:800;color:' + primaryColor + ';';
+      pPrice.style.cssText = 'font-size:15px;font-weight:800;color:' + priColor + ';';
       prodInfo.appendChild(pPrice);
     }
 
@@ -2302,13 +2303,12 @@ if (appearanceConfig.show_product) {
     var pActions = createEl('div', 'vl-product-actions');
     pActions.style.cssText = 'display:flex;gap:8px;flex-shrink:0;';
 
-    // Botão "Ver Produto"
     if (appearanceConfig.show_product_button && productData.url) {
       var buyBtn = createEl('a', 'vl-product-btn');
       buyBtn.textContent = 'Ver Produto';
       buyBtn.href = productData.url || '#';
       buyBtn.target = '_blank';
-      buyBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;background:' + primaryColor + ';color:#fff;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;transition:opacity .15s;';
+      buyBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;background:' + priColor + ';color:#fff;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;';
       buyBtn.onclick = function (e) {
         e.stopPropagation();
         trackMetric({ event_type: 'product_click', story_id: story.id, video_id: video ? video.id : null, product_id: productData.id, page_url: window.location.href });
@@ -2316,7 +2316,6 @@ if (appearanceConfig.show_product) {
       pActions.appendChild(buyBtn);
     }
 
-    // Botão WhatsApp
     var waNumber = storeWhatsappNumber || productData.whatsapp_number || productData.whatsappNumber || '';
     if (waNumber) {
       var waNumberClean = waNumber.replace(/\D/g, '');
@@ -2325,7 +2324,7 @@ if (appearanceConfig.show_product) {
       waBtn.textContent = 'WhatsApp';
       waBtn.href = 'https://wa.me/' + waNumberClean + '?text=' + encodeURIComponent(waMessage);
       waBtn.target = '_blank';
-      waBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;background:#25D366;color:#fff;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;transition:opacity .15s;';
+      waBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;background:#25D366;color:#fff;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;';
       waBtn.onclick = function (e) {
         e.stopPropagation();
         trackMetric({ event_type: 'whatsapp_click', story_id: story.id, video_id: video ? video.id : null, product_id: productData.id, page_url: window.location.href });
