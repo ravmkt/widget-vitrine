@@ -1637,7 +1637,7 @@ var commentBody = createEl('div', 'vl-comment-body');
 var commentMeta = createEl('div', 'vl-comment-meta');
       commentMeta.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:2px;';
 
-      var authorName = createEl('span');
+var authorName = createEl('span', 'vl-comment-author');
       authorName.textContent = comment.user_name || 'Visitante';
       authorName.style.cssText = 'font-weight:700;font-size:13px;color:#0f172a;';
       commentMeta.appendChild(authorName);
