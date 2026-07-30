@@ -541,14 +541,25 @@ const SocialActionButtons: FC<{
 
 {/* Comentários */}
 {(modalConfig.show_comment_button || modalConfig.show_comments_button) && (
-  <button type="button" onClick={onComment} className="relative flex flex-col items-center" aria-label="Comentários">
-    <div className="rounded-full p-3 text-white backdrop-blur-md transition hover:brightness-110" style={btnStyle}>
+  <button
+    type="button"
+    onClick={onComment}
+    className="flex flex-col items-center gap-1"
+    aria-label="Comentários"
+  >
+    <div
+      className="flex items-center justify-center rounded-full p-3 text-white backdrop-blur-md transition hover:brightness-110"
+      style={btnStyle}
+    >
       <MessageCircle
-        className="h-5 w-5"
-        style={commentCount > 0 ? { fill: 'white' } : undefined}
+        size={20}
+        fill={commentCount > 0 ? 'white' : 'none'}
+        color="white"
       />
     </div>
-    <span className="mt-1 text-[10px] font-black text-white">{commentCount}</span>
+    <span className="text-[10px] font-black text-white leading-none">
+      {commentCount}
+    </span>
   </button>
 )}
 
