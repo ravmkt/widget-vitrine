@@ -2074,21 +2074,16 @@ var formWrap = createEl('div', 'vl-comment-form');
     }
 
     if (appearanceConfig.show_comment_button && video) {
-      var hasCommented = !!userCommentedVideos[video.id];
       var commentCountVal = getCommentCountForVideo(video.id);
+
+      var wrapper = createEl('div', 'vl-social-wrapper');
 
       var commentBtn = createEl('button', 'vl-social-btn');
       commentBtn.id = 'vl-comment-btn';
       commentBtn.innerHTML = svgIcon(
-        hasCommented ? 'commentFilled' : 'comment'
+        commentCountVal > 0 ? 'commentFilled' : 'comment'
       );
       commentBtn.title = 'Comentários';
-
-      var commentCountEl = createEl('span', 'vl-social-count');
-      commentCountEl.textContent =
-        commentCountVal > 0 ? commentCountVal : '';
-
-      commentBtn.appendChild(commentCountEl);
 
       commentBtn.onclick = function (e) {
         e.preventDefault();
@@ -2096,7 +2091,14 @@ var formWrap = createEl('div', 'vl-comment-form');
         openCommentsPanel(video.id, story.id);
       };
 
-      social.appendChild(commentBtn);
+      wrapper.appendChild(commentBtn);
+
+      var commentCountEl = createEl('span', 'vl-social-count');
+      commentCountEl.textContent =
+        commentCountVal > 0 ? commentCountVal : '';
+
+      wrapper.appendChild(commentCountEl);
+      social.appendChild(wrapper);
     }
 
     if (appearanceConfig.show_share_button) {
