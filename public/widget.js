@@ -1956,15 +1956,15 @@ commentsList.style.cssText = [
   var formSection = createEl('div');
 
   formSection.style.cssText = [
-    'flex:0 0 auto;',
-    'width:100%;',
-    'border-top:1px solid #e2e8f0;',
-    'padding:12px 18px 10px;',
-    'background:#fff;',
-    'box-sizing:border-box;',
-    'position:relative;',
-    'z-index:6;'
-  ].join('');
+  'flex:0 0 auto;',
+  'width:100%;',
+  'border-top:1px solid #cbd5e1;',
+  'padding:8px 12px 8px;',
+  'background:#fff;',
+  'box-sizing:border-box;',
+  'position:relative;',
+  'z-index:6;'
+].join('');
 
   var nameLabel = createEl('label');
   nameLabel.textContent = 'Seu nome';
