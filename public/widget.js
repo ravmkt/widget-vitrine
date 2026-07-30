@@ -1918,11 +1918,6 @@ panelTitle.style.cssText = [
     'font-family:' + fontFamily + ';'
   ].join('');
 
-  nameInput.onfocus = function () {
-    nameInput.style.borderColor = primaryColor;
-    nameInput.style.background = '#fff';
-  };
-
   function applyInputFocusStyle(input) {
   input.addEventListener('focus', function () {
     input.style.borderColor = primaryColor;
