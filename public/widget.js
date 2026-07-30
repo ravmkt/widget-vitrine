@@ -1624,7 +1624,7 @@ var panelFooter = createEl('div', 'vl-panel-footer');
     listWrap.style.cssText = 'padding:10px 18px;display:flex;flex-direction:column;gap:10px;flex:1;';
 
     videoComments.forEach(function (comment) {
-      var commentCard = createEl('div');
+var commentCard = createEl('div', 'vl-comment-card');
       commentCard.style.cssText = 'display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9;';
 
       var avatar = createEl('div');
