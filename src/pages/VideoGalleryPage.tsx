@@ -105,7 +105,7 @@ const VideoGalleryPage = () => {
   const [loading, setLoading] = useState(true);
   const [videos, setVideos] = useState<Video[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [storyMap, setStoryMap] = useState<Record<string, string>>({}); // video_id → story_name
+  const [storyMap, setStoryMap] = useState<Record<string, string>>({});
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSource, setFilterSource] = useState<'all' | 'upload' | 'external_url'>('all');
@@ -118,7 +118,6 @@ const VideoGalleryPage = () => {
 
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; videoId: string; videoTitle: string; usedInStories: boolean }>({ isOpen: false, videoId: '', videoTitle: '', usedInStories: false });
 
-  /* ─── resolve store ─── */
   const resolveSafeStoreId = useCallback(async () => {
     try {
       const candidate = tenantStoreId || localStorage.getItem('current_store_id') || localStorage.getItem('store_id') || localStorage.getItem('selected_store_id') || '';
@@ -132,7 +131,6 @@ const VideoGalleryPage = () => {
     return '';
   }, [tenantStoreId]);
 
-  /* ─── carrega dados ─── */
   useEffect(() => {
     let mounted = true;
     const load = async () => {
@@ -158,21 +156,18 @@ const VideoGalleryPage = () => {
         setVideos(allVideos || []);
         setProducts(allProducts || []);
 
-        // Mapeia video_id → nome do story
         const storyNameById: Record<string, string> = {};
         (allStories || []).forEach(s => { storyNameById[s.id] = s.name; });
 
         const map: Record<string, string> = {};
         (allStoryVideos || []).forEach(sv => {
           if (sv.video_id && storyNameById[sv.story_id]) {
-            // Se um vídeo está em múltiplos stories, concatena
             const existing = map[sv.video_id];
             map[sv.video_id] = existing ? `${existing}, ${storyNameById[sv.story_id]}` : storyNameById[sv.story_id];
           }
         });
         setStoryMap(map);
 
-        // Hidrata thumbnails de vídeos externos
         const videosSemThumb = (allVideos || []).filter(v => v.source_type === 'external_url' && !v.thumbnail_url && v.video_url);
         for (const v of videosSemThumb) {
           if (!mounted) return;
@@ -195,7 +190,6 @@ const VideoGalleryPage = () => {
     return () => { mounted = false; };
   }, [tenantLoading, resolveSafeStoreId]);
 
-  /* ─── filtragem e ordenação ─── */
   const processedVideos = useMemo(() => {
     return videos
       .filter(v => {
@@ -302,23 +296,43 @@ const VideoGalleryPage = () => {
         </div>
       </div>
 
-      {/* Tabela */}
-      <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm max-w-full">
-        <div className="w-full max-w-full overflow-x-auto">
-          <table className="w-full min-w-[720px] table-fixed text-left border-collapse">
+      {/* ═══════════════════════════════════════════════════════
+          TABELA — larguras recalibradas
+          ═══════════════════════════════════════════════════════ */}
+      <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm">
+        <div className="w-full overflow-x-auto">
+          {/*
+            min-w-[880px] garante que as colunas % tenham espaço.
+            w-full faz a tabela ocupar 100% do container (não estoura).
+            table-fixed = table-layout:fixed → respeita larguras definidas.
+          */}
+          <table className="w-full min-w-[880px] table-fixed border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                <th className={cn(getHeaderClass('preview'), 'w-[78px]')}>Vídeo</th>
-                <th onClick={() => handleSort('nome')} className={cn(getHeaderClass('nome'), 'w-[30%]')}>
+                {/*
+                  Distribuição:
+                    Thumb:     72px (fixo, não encolhe)
+                    Nome:      ~29% (maior coluna, título + badge)
+                    Produto:   ~23%
+                    Story:     ~23%
+                    Ações:     120px (fixo)
+                  Total aproximado: 72 + 29% + 23% + 23% + 120 ≈ 880px+
+                */}
+                <th className="w-[72px] px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-left">
+                  Vídeo
+                </th>
+                <th onClick={() => handleSort('nome')} className="w-[29%] cursor-pointer select-none px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-left hover:opacity-75">
                   <span className="inline-flex items-center gap-1">Nome {sortIcon('nome')}</span>
                 </th>
-                <th onClick={() => handleSort('produto')} className={cn(getHeaderClass('produto'), 'w-[22%]')}>
+                <th onClick={() => handleSort('produto')} className="w-[23%] cursor-pointer select-none px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-left hover:opacity-75">
                   <span className="inline-flex items-center gap-1">Produto {sortIcon('produto')}</span>
                 </th>
-                <th onClick={() => handleSort('story')} className={cn(getHeaderClass('story'), 'w-[22%]')}>
+                <th onClick={() => handleSort('story')} className="w-[23%] cursor-pointer select-none px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-left hover:opacity-75">
                   <span className="inline-flex items-center gap-1">Story vinculado {sortIcon('story')}</span>
                 </th>
-                <th className={cn(getHeaderClass('acoes', 'center'), 'w-[150px]')}>Ações</th>
+                <th className="w-[120px] px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center">
+                  Ações
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -329,34 +343,51 @@ const VideoGalleryPage = () => {
 
                 return (
                   <tr key={video.id} className="hover:bg-slate-50/50 transition-colors align-middle">
+                    {/* Thumb */}
                     <td className="px-3 py-4">
                       <VideoThumb video={video} onClick={() => handleViewVideo(video)} />
                     </td>
-                    <td className="px-3 py-4 min-w-0">
-                      <p className="font-bold text-slate-800 truncate">{video.title}</p>
-                      <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border mt-1',
-                        video.source_type === 'upload' && 'bg-blue-50 text-blue-600 border-blue-100',
-                        isUrlLike && 'bg-red-50 text-red-600 border-red-100',
-                        video.source_type !== 'upload' && !isUrlLike && 'bg-slate-50 text-slate-500 border-slate-100')}>
-                        {getSourceLabel(video.source_type)}
-                      </span>
-                    </td>
-                    <td className="px-3 py-4 min-w-0">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-xs font-bold border border-slate-100 truncate">
-                        <Film size={12} className="shrink-0" />
-                        <span className="truncate">{productName}</span>
-                      </span>
-                    </td>
-                    <td className="px-3 py-4 min-w-0">
-                      {storyName !== '—' ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-600 text-xs font-bold border border-purple-100 truncate">
-                          <BookOpen size={12} className="shrink-0" />
-                          <span className="truncate">{storyName}</span>
+
+                    {/* Nome + badge de fonte */}
+                    <td className="px-3 py-4 overflow-hidden">
+                      <div className="min-w-0">
+                        <p className="font-bold text-slate-800 truncate">{video.title}</p>
+                        <span className={cn(
+                          'inline-block mt-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border',
+                          video.source_type === 'upload' && 'bg-blue-50 text-blue-600 border-blue-100',
+                          isUrlLike && 'bg-red-50 text-red-600 border-red-100',
+                          video.source_type !== 'upload' && !isUrlLike && 'bg-slate-50 text-slate-500 border-slate-100',
+                        )}>
+                          {getSourceLabel(video.source_type)}
                         </span>
-                      ) : (
-                        <span className="text-xs font-medium text-slate-400">—</span>
-                      )}
+                      </div>
                     </td>
+
+                    {/* Produto */}
+                    <td className="px-3 py-4 overflow-hidden">
+                      <div className="min-w-0 max-w-full">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-xs font-bold border border-slate-100 truncate max-w-full">
+                          <Film size={12} className="shrink-0" />
+                          <span className="truncate">{productName}</span>
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Story vinculado */}
+                    <td className="px-3 py-4 overflow-hidden">
+                      <div className="min-w-0 max-w-full">
+                        {storyName !== '—' ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-600 text-xs font-bold border border-purple-100 truncate max-w-full">
+                            <BookOpen size={12} className="shrink-0" />
+                            <span className="truncate">{storyName}</span>
+                          </span>
+                        ) : (
+                          <span className="text-xs font-medium text-slate-400">—</span>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Ações */}
                     <td className="px-3 py-4 text-center">
                       <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                         <button onClick={() => handleViewVideo(video)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors shrink-0" title="Ver"><Eye size={16} /></button>
@@ -378,7 +409,9 @@ const VideoGalleryPage = () => {
         )}
       </div>
 
-      {/* Modal de visualização */}
+      {/* ═══════════════════════════════════════════════════════
+          MODAL — idêntico ao anterior (sem métricas)
+          ═══════════════════════════════════════════════════════ */}
       <CustomDialog isOpen={isViewModalOpen} type="form" title="Visualizar Vídeo" maxWidth="max-w-4xl" onCancel={() => setIsViewModalOpen(false)}>
         {viewingVideo && (() => {
           const videoUrl = getVideoUrl(viewingVideo as any);
@@ -391,10 +424,8 @@ const VideoGalleryPage = () => {
           const shouldUseNativePlayer = isVideoPlayableNatively(viewingVideo as any);
           const shouldUseNativeForDirect = !shouldUseNativePlayer && isDirectVideoUrl(videoUrl);
           const shouldUseYouTubeEmbed = !shouldUseNativePlayer && !shouldUseNativeForDirect && Boolean(youTubeId);
-          const canPlayInApp = shouldUseNativePlayer || shouldUseNativeForDirect || shouldUseYouTubeEmbed;
           const embedUrl = youTubeId ? `https://www.youtube.com/embed/${youTubeId}` : externalData?.embedUrl || '';
 
-          // Player nativo ou YouTube
           if (shouldUseNativePlayer || shouldUseNativeForDirect || shouldUseYouTubeEmbed) {
             return (
               <div className="flex flex-col lg:flex-row gap-6">
@@ -431,7 +462,6 @@ const VideoGalleryPage = () => {
             );
           }
 
-          // Fallback: sem player interno
           return (
             <div className="flex flex-col lg:flex-row gap-6">
               <div className="w-full lg:max-w-[420px] mx-auto lg:mx-0 shrink-0 space-y-4">
@@ -477,7 +507,7 @@ const VideoGalleryPage = () => {
 const InfoCard = ({ label, value }: { label: string; value: string }) => (
   <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
     <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{label}</p>
-    <p className="mt-1 text-sm font-black text-slate-800">{value}</p>
+    <p className="mt-1 text-sm font-black text-slate-800 truncate">{value}</p>
   </div>
 );
 
