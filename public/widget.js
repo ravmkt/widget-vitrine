@@ -1631,7 +1631,7 @@ var avatar = createEl('div', 'vl-comment-avatar');
       avatar.textContent = (comment.user_name || 'V').charAt(0).toUpperCase();
       avatar.style.cssText = 'width:34px;height:34px;border-radius:50%;background:' + primaryColor + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;';
 
-      var commentBody = createEl('div');
+var commentBody = createEl('div', 'vl-comment-body');
       commentBody.style.cssText = 'flex:1;min-width:0;';
 
       var commentMeta = createEl('div');
