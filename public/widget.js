@@ -1630,9 +1630,9 @@ modalContent.classList.remove('has-comments-open');
     var footer = modalContent.querySelector('.vl-footer');
     var social = modalContent.querySelector('.vl-social');
 
-    if (header) header.style.display = '';
-    if (footer) footer.style.display = '';
-    if (social) social.style.display = '';
+if (header) header.style.display = 'none';
+if (footer) footer.style.display = 'none';
+if (social) social.style.display = 'none';
 
     var videoElement = modalContent.querySelector('video');
     if (videoElement) {
