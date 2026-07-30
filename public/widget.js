@@ -1627,7 +1627,7 @@ var panelFooter = createEl('div', 'vl-panel-footer');
 var commentCard = createEl('div', 'vl-comment-card');
       commentCard.style.cssText = 'display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9;';
 
-      var avatar = createEl('div');
+var avatar = createEl('div', 'vl-comment-avatar');
       avatar.textContent = (comment.user_name || 'V').charAt(0).toUpperCase();
       avatar.style.cssText = 'width:34px;height:34px;border-radius:50%;background:' + primaryColor + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;';
 
