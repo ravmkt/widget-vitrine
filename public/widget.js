@@ -2297,6 +2297,7 @@ formSection.appendChild(emojiRow);
 
   panel.appendChild(formSection);
   modalContent.appendChild(panel);
+modalContent.classList.add('has-comments-open');
 
   setTimeout(function () {
     nameInput.focus();
