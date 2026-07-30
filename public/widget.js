@@ -887,7 +887,7 @@ function readStoreSettings() {
       + '.vl-nav-btn{all:unset!important;height:100%!important;cursor:pointer!important;}'
       + '.vl-nav-prev{width:30%!important;}'
       + '.vl-nav-next{width:70%!important;}'
-      + '.vl-social{position:absolute!important;top:61%!important;right:12px!important;transform:translateY(-50%)!important;z-index:45!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:12px!important;}'
++ '.vl-social{position:absolute!important;top:78%!important;right:12px!important;transform:translateY(-50%)!important;z-index:45!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:12px!important;}'
       + '.vl-social-btn{all:unset!important;width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;border-radius:999px!important;border:1px solid rgba(255,255,255,.8)!important;background:rgba(0,0,0,.1)!important;backdrop-filter:blur(4px)!important;display:flex!important;align-items:center!important;justify-content:center!important;color:#fff!important;cursor:pointer!important;flex-shrink:0!important;padding:0!important;}'
       + '.vl-social-btn svg{width:18px!important;height:18px!important;}'
       + '.vl-social-btn:hover{background:rgba(0,0,0,.25)!important;}'
