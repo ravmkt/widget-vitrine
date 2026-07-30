@@ -391,3 +391,121 @@ const normalizeStoryFormat = (raw: string): StoryFormat => {
   if (normalized === 'carousel' || normalized === 'grid' || normalized === 'floating_widget') return normalized;
   return 'carousel';
 };
+// ═══════════════════════════════════════════════════════════════
+// COMPONENTES INTERNOS
+// ═══════════════════════════════════════════════════════════════
+
+/** Barra de progresso dos stories */
+const ProgressBars: FC<{
+  videos: Video[];
+  videoIdx: number;
+  progress: number;
+  primaryColor: string;
+}> = ({ videos, videoIdx, progress, primaryColor }) => {
+  if (videos.length === 0) {
+    return (
+      <div className="absolute top-3 z-50 flex gap-1.5 left-[max(1rem,env(safe-area-inset-left))] right-[max(1rem,env(safe-area-inset-right))]">
+        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/25" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="absolute top-3 z-50 flex gap-1.5 left-[max(1rem,env(safe-area-inset-left))] right-[max(1rem,env(safe-area-inset-right))]">
+      {videos.map((video, idx) => (
+        <div key={video.id} className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/25">
+          <div
+            className={cn('h-full rounded-full transition-all', idx < videoIdx ? 'w-full' : idx === videoIdx ? '' : 'w-0')}
+            style={
+              idx === videoIdx
+                ? { width: `${progress}%`, backgroundColor: primaryColor }
+                : idx < videoIdx
+                  ? { backgroundColor: primaryColor }
+                  : undefined
+            }
+          />
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/** Cabeçalho com título e botão fechar */
+const StoryHeader: FC<{
+  title: string;
+  storeName: string;
+  videoCount: number;
+  videoIdx: number;
+  onClose: () => void;
+  showTitle: boolean;
+}> = ({ title, storeName, videoCount, videoIdx, onClose, showTitle }) => (
+  <div
+    className="absolute left-0 right-0 top-0 z-40 flex items-start justify-between bg-gradient-to-b from-black/70 to-transparent p-5"
+    style={{ paddingTop: 'max(2rem, env(safe-area-inset-top))' }}
+  >
+    {showTitle ? (
+      <div className="min-w-0 pr-16">
+        <h3 className="truncate text-sm font-black text-white">{title || 'Story'}</h3>
+        <p className="text-[10px] font-bold uppercase text-white/65">
+          {storeName}
+          {videoCount > 1 ? ` • ${videoIdx + 1}/${videoCount}` : ''}
+        </p>
+      </div>
+    ) : (
+      <div />
+    )}
+    <button
+      type="button"
+      onClick={onClose}
+      className="rounded-full bg-black/40 p-2 text-white backdrop-blur-md transition hover:bg-black/60"
+      aria-label="Fechar"
+    >
+      <X className="h-5 w-5" />
+    </button>
+  </div>
+);
+
+/** Player de vídeo (nativo ou YouTube iframe) */
+const VideoPlayer: FC<{
+  videoRef: React.RefObject<HTMLVideoElement | null>;
+  currentVideo: Video | null;
+  currentUrl: string;
+  posterUrl: string;
+  muted: boolean;
+  storyTitle: string;
+  onEnded: () => void;
+  onPlay: () => void;
+  onPause: () => void;
+  onError: () => void;
+}> = ({ videoRef, currentVideo, currentUrl, posterUrl, muted, storyTitle, onEnded, onPlay, onPause, onError }) => {
+  const ytId = !isVideoPlayableNatively(currentVideo as any) ? extractYouTubeId(currentUrl) : '';
+  const sharedProps = { key: currentVideo?.id, className: 'h-full w-full object-cover' };
+
+  if (ytId) {
+    return (
+      <iframe
+        {...sharedProps}
+        src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=${muted ? 1 : 0}&playsinline=1&rel=0`}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
+        title={storyTitle || 'Story'}
+      />
+    );
+  }
+
+  return (
+    <video
+      {...sharedProps}
+      ref={videoRef}
+      src={currentUrl}
+      poster={posterUrl || undefined}
+      autoPlay
+      muted={muted}
+      playsInline
+      onEnded={onEnded}
+      onPlay={onPlay}
+      onPause={onPause}
+      onError={onError}
+    />
+  );
+};
