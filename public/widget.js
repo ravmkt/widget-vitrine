@@ -1780,11 +1780,13 @@ panelTitle.style.cssText = [
     closeBtn.style.background = '#f1f5f9';
   };
 
-  closeBtn.onclick = function (event) {
+  closeBtn.addEventListener('click', function (event) {
     event.preventDefault();
     event.stopPropagation();
+    event.stopImmediatePropagation();
+
     restoreVideoView();
-  };
+  });
 
   panelHeader.appendChild(closeBtn);
   panel.appendChild(panelHeader);
