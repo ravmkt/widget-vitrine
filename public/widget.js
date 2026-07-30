@@ -1577,7 +1577,7 @@ var panelBody = createEl('div', 'vl-panel-body');
   ].join('');
 
   // ── RODAPÉ ──
-  var panelFooter = createEl('div');
+var panelFooter = createEl('div', 'vl-panel-footer');
   panelFooter.style.cssText = [
     'flex:0 0 auto;','width:100%;','border-top:1px solid #e2e8f0;',
     'padding:12px 14px 10px;','background:#fff;','box-sizing:border-box;',
