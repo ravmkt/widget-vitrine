@@ -157,7 +157,16 @@ const VideoGalleryPage = () => {
         setProducts(allProducts || []);
 
 const storyNameById: Record<string, string> = {};
-(allStories || []).forEach(s => { storyNameById[s.id] = s.name; });
+(allStories || []).forEach(s => {
+  // Tenta name, title ou nome (fallback encadeado)
+  const nome = (s as any).name || (s as any).title || (s as any).nome || 'Story sem nome';
+  storyNameById[s.id] = nome;
+});
+
+// Log pra confirmar a estrutura
+if (allStories?.length) {
+  console.log('[Galeria] Exemplo de story:', allStories[0]);
+}
 
 console.log('[Galeria] Stories carregados:', allStories?.length, storyNameById);
 console.log('[Galeria] StoryVideos carregados:', allStoryVideos?.length, allStoryVideos);
