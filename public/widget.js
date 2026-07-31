@@ -92,7 +92,7 @@
     carousel_show_play_button: true,
     carousel_auto_center: false,
     grid_shape: 'portrait',
-    grid_size: '30',
+    grid_size: '200',
     grid_columns: '4',
     grid_rows: '1',
     grid_spacing: '16',
