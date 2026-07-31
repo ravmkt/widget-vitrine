@@ -271,60 +271,147 @@ const StoryPreviewPage = () => {
     };
   },[appearance]);
 
-  /* ═══════════════════ floatingCfg ═══════════════════ */
+/* ════════════════ floatingConfig ═══════════════════ */
 
-  const floatingCfg = useMemo(()=>{
+const floatingCfg = useMemo(() => {
     const a = appearance || {};
     const raw = parseJsonSafe(a.floating_config);
     const d = raw?.desktop || raw || {};
 
     const shape = (
-      d.shape || a.floating_shape || d.format || a.floating_format || d.display || a.floating_display || 'portrait'
+      d.shape ||
+      a.floating_shape ||
+      d.format ||
+      a.floating_format ||
+      d.display ||
+      a.floating_display ||
+      'portrait'
     ).toLowerCase();
 
     const size = Number(
-      d.width || a.floating_size || a.floating_width || d.size || a.size || 80
+      d.width ||
+        a.floating_size ||
+        a.floating_width ||
+        d.size ||
+        a.size ||
+        80,
     );
 
-    const h = (shape === 'square' || shape === 'circle')
-      ? size
-      : Math.round(size * 16 / 9);
+    const height =
+      shape === 'square' || shape === 'circle'
+        ? size
+        : Math.round(size * 16 / 9);
 
-    const pos = String(
-      d.floating_position || d.position || a.floating_position || a.position || 'bottom-right'
-    ).toLowerCase();
+    // 🔧 Normaliza posição: fixed_top_right → top-right
+    const p = String(
+      d.floating_position ||
+      d.position ||
+      a.floating_position ||
+      a.position ||
+      'bottom-right'
+    ).toLowerCase()
+     .replace(/_/g, '-')
+     .replace('fixed-', '');
 
-    // BORDA
-    const borderWidthRaw = d.border_width ?? d.borderWidth ?? d.border_size ?? a.floating_border_width ?? a.floating_borderWidth ?? a.floating_border ?? a.border_width ?? a.borderWidth ?? 2;
+    // 🔧 border_width: inclui border_style (nome real do backend)
+    const borderWidthRaw =
+      d.border_width ??
+      d.borderWidth ??
+      d.border_size ??
+      d.border_style ??
+      a.floating_border_width ??
+      a.floating_borderWidth ??
+      a.floating_border ??
+      a.border_width ??
+      a.borderWidth ??
+      2;
     const borderWidth = Number(borderWidthRaw);
 
-    const borderRadiusRaw = d.border_radius ?? d.borderRadius ?? d.radius ?? a.floating_border_radius ?? a.floating_borderRadius ?? a.floating_radius ?? a.border_radius ?? (shape === 'circle' ? 50 : 12);
+    const borderRadiusRaw =
+      d.border_radius ??
+      d.borderRadius ??
+      d.radius ??
+      a.floating_border_radius ??
+      a.floating_borderRadius ??
+      a.floating_radius ??
+      a.border_radius ??
+      (shape === 'circle' ? 50 : 12);
     const borderRadius = Number(borderRadiusRaw);
 
-    const borderColor = d.border_color ?? d.borderColor ?? a.floating_border_color ?? a.floating_borderColor ?? a.border_color ?? colors.primary;
+    const borderColor =
+      d.border_color ?? d.borderColor ?? a.floating_border_color ?? a.floating_borderColor ?? a.border_color ?? colors.primary;
 
-    // MARGENS
-    const marginBottom = Number(d.margin_bottom ?? d.marginBottom ?? a.floating_margin_bottom ?? a.floating_marginBottom ?? 16);
-    const marginSide = Number(d.margin_side ?? d.marginSide ?? d.margin_x ?? a.floating_margin_side ?? a.floating_marginSide ?? a.floating_margin_x ?? 16);
-    const marginTop = Number(d.margin_top ?? d.marginTop ?? a.floating_margin_top ?? a.floating_marginTop ?? 16);
+    // 🔧 margins: inclui top_spacing, left_spacing, right_spacing, bottom_spacing
+    const marginBottom =
+      Number(d.margin_bottom ?? d.marginBottom ?? d.bottom_spacing ?? a.floating_margin_bottom ?? a.floating_marginBottom ?? 16);
+    const marginSide =
+      Number(d.margin_side ?? d.marginSide ?? d.margin_x ?? d.left_spacing ?? d.right_spacing ?? a.floating_margin_side ?? a.floating_marginSide ?? a.floating_margin_x ?? 16);
+    const marginTop =
+      Number(d.margin_top ?? d.marginTop ?? d.top_spacing ?? a.floating_margin_top ?? a.floating_marginTop ?? 16);
 
-    // SHOW PLAY
-    const showPlayRaw = d.show_play_button ?? d.show_play ?? d.showPlayButton ?? d.showPlay ?? d.play_button ?? d.playButton ?? a.floating_show_play_button ?? a.floating_show_play ?? a.floating_showPlayButton ?? a.floating_showPlay ?? a.floating_play_button ?? a.show_play_button ?? true;
-    const showPlay = showPlayRaw === true || showPlayRaw === 1 || showPlayRaw === 'true' || showPlayRaw === '1';
+    // 🔧 show_play: inclui show_play_icon
+    const showPlayRaw =
+      d.show_play_button ??
+      d.show_play ??
+      d.showPlayButton ??
+      d.showPlay ??
+      d.play_button ??
+      d.playButton ??
+      d.show_play_icon ??
+      a.floating_show_play_button ??
+      a.floating_show_play ??
+      a.floating_showPlayButton ??
+      a.floating_showPlay ??
+      a.floating_play_button ??
+      a.show_play_button ??
+      true;
+    const showPlay =
+      showPlayRaw === true ||
+      showPlayRaw === 1 ||
+      showPlayRaw === 'true' ||
+      showPlayRaw === '1';
 
-    // SHOW CLOSE
-    const showCloseRaw = d.show_close_button ?? d.show_close ?? d.showCloseButton ?? d.showClose ?? d.close_button ?? d.closeButton ?? a.floating_show_close_button ?? a.floating_show_close ?? a.floating_showCloseButton ?? a.floating_showClose ?? a.floating_close_button ?? a.show_close_button ?? true;
-    const showClose = showCloseRaw === true || showCloseRaw === 1 || showCloseRaw === 'true' || showCloseRaw === '1';
+    // 🔧 show_close: inclui allow_close
+    const showCloseRaw =
+      d.show_close_button ??
+      d.show_close ??
+      d.showCloseButton ??
+      d.showClose ??
+      d.close_button ??
+      d.closeButton ??
+      d.allow_close ??
+      a.floating_show_close_button ??
+      a.floating_show_close ??
+      a.floating_showCloseButton ??
+      a.floating_showClose ??
+      a.floating_close_button ??
+      a.show_close_button ??
+      true;
+    const showClose =
+      showCloseRaw === true ||
+      showCloseRaw === 1 ||
+      showCloseRaw === 'true' ||
+      showCloseRaw === '1';
 
-    // SHOW TITLE
-    const showTitleRaw = d.show_title ?? d.showTitle ?? a.floating_show_title ?? a.floating_showTitle ?? a.floating_title ?? a.show_title ?? true;
-    const showTitle = showTitleRaw === true || showTitleRaw === 1 || showTitleRaw === 'true' || showTitleRaw === '1';
+    const showTitleRaw =
+      d.show_title ??
+      d.showTitle ??
+      a.floating_show_title ??
+      a.floating_showTitle ??
+      a.floating_title ??
+      a.show_title ??
+      true;
+    const showTitle =
+      showTitleRaw === true ||
+      showTitleRaw === 1 ||
+      showTitleRaw === 'true' ||
+      showTitleRaw === '1';
 
     return {
       shape,
       width: size,
-      height: h,
-      position: pos,
+      height: height,
+      position: p,
       show_play: showPlay,
       show_close: showClose,
       show_title: showTitle,
@@ -335,7 +422,7 @@ const StoryPreviewPage = () => {
       margin_side: marginSide,
       margin_top: marginTop,
     };
-  },[appearance, colors.primary]);
+  }, [appearance, colors.primary]);
 
   /* ═══════════════════ carouselCfg — CORRIGIDO ═══════════════════ */
 
