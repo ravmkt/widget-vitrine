@@ -78,7 +78,7 @@
     floating_allow_drag: false,
     floating_allow_close: true,
     carousel_shape: 'portrait',
-    carousel_size: '30',
+    carousel_size: '200',
     carousel_visible_items: '4',
     carousel_spacing: '16',
     carousel_border_color: '#0094EB',
