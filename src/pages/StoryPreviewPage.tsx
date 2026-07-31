@@ -424,8 +424,6 @@ const floatingCfg = useMemo(() => {
     };
   }, [appearance, colors.primary]);
 
-  /* ═══════════════════ carouselCfg — CORRIGIDO ═══════════════════ */
-
 /* ════════════════ carouselConfig ═══════════════════ */
 
 const carouselCfg = useMemo(() => {
@@ -433,74 +431,121 @@ const carouselCfg = useMemo(() => {
     const raw = parseJsonSafe(a.carousel_config);
     const d = raw?.desktop || raw || {};
 
+    // ── shape / formato
     const shape = (
       d.shape ||
       d.card_shape ||
+      d.card_shape_display ||
       d.format ||
       a.carousel_shape ||
       a.carousel_card_shape ||
+      a.carousel_card_shape_display ||
       'portrait'
     ).toLowerCase();
 
+    // ── itens visíveis
     const visibleItems = Number(
-      d.visible_items ??
-      d.visibleItems ??
-      d.items ??
-      d.card_size ??
-      a.carousel_visible_items ??
-      a.carousel_visibleItems ??
-      a.carousel_items ??
-      5,
+      d.visible_items ?? d.visibleItems ?? d.items ?? d.card_size ??
+      a.carousel_visible_items ?? a.carousel_visibleItems ?? a.carousel_items ?? 5,
     );
 
+    // ── espaçamento
     const gap = Number(
-      d.gap ??
-      d.spacing ??
-      a.carousel_gap ??
-      a.carousel_spacing ??
-      16,
+      d.gap ?? d.spacing ??
+      a.carousel_gap ?? a.carousel_spacing ?? 16,
     );
 
-    // 🔧 border_width: inclui border_style (nome real do backend)
+    // ── borda (border_width / border_style)
     const borderWidthRaw =
-      d.border_width ??
-      d.borderWidth ??
-      d.border_size ??
-      d.border_style ??
-      a.carousel_border_width ??
-      a.carousel_borderWidth ??
-      a.carousel_border ??
-      a.border_width ??
-      a.borderWidth ??
-      2;
+      d.border_width ?? d.borderWidth ?? d.border_size ?? d.border_style ??
+      a.carousel_border_width ?? a.carousel_borderWidth ?? a.carousel_border ??
+      a.border_width ?? a.borderWidth ?? 2;
     const borderW = Number(borderWidthRaw);
 
     const borderRadiusRaw =
-      d.border_radius ??
-      d.borderRadius ??
-      d.radius ??
-      a.carousel_border_radius ??
-      a.carousel_borderRadius ??
-      a.carousel_radius ??
-      a.border_radius ??
-      12;
+      d.border_radius ?? d.borderRadius ?? d.radius ??
+      a.carousel_border_radius ?? a.carousel_borderRadius ?? a.carousel_radius ??
+      a.border_radius ?? 12;
     const radius = Number(borderRadiusRaw);
 
     const border =
-      d.border_color ??
-      d.borderColor ??
-      a.carousel_border_color ??
-      a.carousel_borderColor ??
-      a.border_color ??
-      colors.primary;
+      d.border_color ?? d.borderColor ??
+      a.carousel_border_color ?? a.carousel_borderColor ??
+      a.border_color ?? colors.primary;
+
+    // ── object-fit
+    const objectFitRaw =
+      d.object_fit ?? d.objectFit ??
+      a.carousel_object_fit ?? a.carousel_objectFit ??
+      a.object_fit ?? a.objectFit ?? 'cover';
+    const objectFit = String(objectFitRaw).toLowerCase();
+
+    // ── show_play (inclui show_play_icon)
+    const showPlayRaw =
+      d.show_play_button ?? d.show_play ?? d.showPlayButton ?? d.showPlay ??
+      d.play_button ?? d.playButton ?? d.show_play_icon ??
+      a.carousel_show_play_button ?? a.carousel_show_play ??
+      a.carousel_showPlayButton ?? a.carousel_showPlay ??
+      a.carousel_play_button ?? a.show_play_button ?? true;
+    const showPlay =
+      showPlayRaw === true || showPlayRaw === 1 || showPlayRaw === 'true' || showPlayRaw === '1';
+
+    // ── show_title
+    const showTitleRaw =
+      d.show_title ?? d.showTitle ??
+      a.carousel_show_title ?? a.carousel_showTitle ??
+      a.carousel_title ?? a.show_title ?? true;
+    const showTitle =
+      showTitleRaw === true || showTitleRaw === 1 || showTitleRaw === 'true' || showTitleRaw === '1';
+
+    // ── show_product
+    const showProductRaw =
+      d.show_product ?? d.showProduct ??
+      a.carousel_show_product ?? a.carousel_showProduct ??
+      a.show_product ?? true;
+    const showProduct =
+      showProductRaw === true || showProductRaw === 1 || showProductRaw === 'true' || showProductRaw === '1';
+
+    // ── auto_center
+    const autoCenterRaw =
+      d.auto_center ?? d.autoCenter ??
+      a.carousel_auto_center ?? a.carousel_autoCenter ??
+      a.auto_center ?? a.autoCenter ?? false;
+    const autoCenter =
+      autoCenterRaw === true || autoCenterRaw === 1 || autoCenterRaw === 'true' || autoCenterRaw === '1';
+
+    // ── view_mode
+    const viewModeRaw =
+      d.view_mode ?? d.viewMode ??
+      a.carousel_view_mode ?? a.carousel_viewMode ?? 'preview';
+    const viewMode = String(viewModeRaw).toLowerCase();
+
+    // ── margins (margin_top / margin_bottom)
+    const marginTop = Number(
+      d.margin_top ?? d.marginTop ?? a.carousel_margin_top ?? a.carousel_marginTop ?? 0,
+    );
+    const marginBottom = Number(
+      d.margin_bottom ?? d.marginBottom ?? a.carousel_margin_bottom ?? a.carousel_marginBottom ?? 0,
+    );
 
     return {
+      // Usados atualmente pela renderização
       visible: visibleItems,
       gap,
       radius,
       border,
       borderW,
       aspectRatio: shapeToAspectRatio(shape),
+      // Novos (disponíveis para uso futuro)
+      shape,
+      objectFit,
+      showPlay,
+      showTitle,
+      showProduct,
+      autoCenter,
+      viewMode,
+      marginTop,
+      marginBottom,
     };
   }, [appearance, colors.primary]);
 
