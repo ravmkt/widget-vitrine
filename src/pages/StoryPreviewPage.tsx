@@ -378,293 +378,78 @@ const StoryPreviewPage = () => {
     };
   }, [appearance, colors.primary]);
 
-  /* ════════════════ carouselConfig ═══════════════════ */
-
-  /*
-    Campos do JSON carousel_config (desktop):
-      gap, shape, width, spacing, card_size, view_mode, card_shape,
-      margin_top, object_fit, show_title, auto_center, border_color,
-      border_style, border_width, show_product, border_radius,
-      margin_bottom, visible_items, show_play_icon
-  */
-
-  const carouselCfg = useMemo(() => {
+/* ════════════════ carouselConfig ═══════════════════ */
+const carouselCfg = useMemo(() => {
     const a = appearance || {};
     const raw = parseJsonSafe(a.carousel_config);
     const d = raw?.desktop || raw || {};
 
-    // ── shape: card_shape (JSON) → shape (JSON) → campo plano da tabela
+    // 🔥 Correção: Prioridade correta (card_shape > shape > campo da tabela)
     const shape = (
-      d.card_shape ||          // ← nome real do JSON: "card_shape"
-      d.shape ||               // ← fallback: "shape"
-      d.format ||              // ← fallback: "format"
-      a.carousel_card_shape || // ← campo plano: "carousel_card_shape"
+      d.card_shape ||          // 1º: card_shape do JSON
+      d.shape ||               // 2º: shape do JSON
+      a.carousel_card_shape || // 3º: campo plano da tabela
       'portrait'
     ).toString().toLowerCase().trim();
 
-    // ── visible: visible_items (JSON) → card_size (JSON) → campo plano
-    const visible = Number(
-      d.visible_items ??     // ← nome real do JSON: "visible_items"
-      d.visibleItems ??
-      d.items ??
-      d.card_size ??          // ← nome real do JSON: "card_size"
-      a.carousel_visible_items ??
-      5,
-    );
-
-    // ── gap: gap (JSON) → spacing (JSON) → campo plano
-    const gap = Number(
-      d.gap ??                 // ← nome real do JSON: "gap"
-      d.spacing ??             // ← nome real do JSON: "spacing"
-      a.carousel_gap ??
-      16,
-    );
-
-    // ── borderW: border_width → border_style → campo plano
-    const borderW = Number(
-      d.border_width ??        // ← nome real do JSON: "border_width"
-      d.borderWidth ??
-      d.border_size ??
-      d.border_style ??        // ← nome real do JSON: "border_style"
-      a.border_width ??
-      a.borderWidth ??
-      2,
-    );
-
-    // ── radius: border_radius → campo plano
-    const radius = Number(
-      d.border_radius ??       // ← nome real do JSON: "border_radius"
-      d.borderRadius ??
-      d.radius ??
-      a.border_radius ??
-      12,
-    );
-
-    // ── border: border_color → campo plano
-    const border =
-      d.border_color ??        // ← nome real do JSON: "border_color"
-      d.borderColor ??
-      a.border_color ??
-      colors.primary;
-
-    // ── objectFit: object_fit → campo plano
-    const objectFit = String(
-      d.object_fit ??          // ← nome real do JSON: "object_fit"
-      d.objectFit ??
-      a.object_fit ??
-      a.objectFit ??
-      'cover'
-    ).toLowerCase();
-
-    // ── showPlay: show_play_icon → show_play_button → campo plano
-    const showPlayRaw =
-      d.show_play_button ??
-      d.show_play ??
-      d.showPlayButton ??
-      d.showPlay ??
-      d.play_button ??
-      d.playButton ??
-      d.show_play_icon ??      // ← nome real do JSON: "show_play_icon"
-      a.show_play_button ??
-      true;
-    const showPlay =
-      showPlayRaw === true || showPlayRaw === 1 || showPlayRaw === 'true' || showPlayRaw === '1';
-
-    // ── showTitle: show_title → campo plano
-    const showTitleRaw =
-      d.show_title ??          // ← nome real do JSON: "show_title"
-      d.showTitle ??
-      a.show_title ??
-      true;
-    const showTitle =
-      showTitleRaw === true || showTitleRaw === 1 || showTitleRaw === 'true' || showTitleRaw === '1';
-
-    // ── showProduct: show_product → campo plano
-    const showProductRaw =
-      d.show_product ??        // ← nome real do JSON: "show_product"
-      d.showProduct ??
-      a.show_product ??
-      true;
-    const showProduct =
-      showProductRaw === true || showProductRaw === 1 || showProductRaw === 'true' || showProductRaw === '1';
-
-    // ── autoCenter: auto_center → campo plano
-    const autoCenterRaw =
-      d.auto_center ??         // ← nome real do JSON: "auto_center"
-      d.autoCenter ??
-      a.auto_center ??
-      a.autoCenter ??
-      false;
-    const autoCenter =
-      autoCenterRaw === true || autoCenterRaw === 1 || autoCenterRaw === 'true' || autoCenterRaw === '1';
-
-    // ── viewMode: view_mode
-    const viewMode = String(
-      d.view_mode ??           // ← nome real do JSON: "view_mode"
-      d.viewMode ??
-      'preview'
-    ).toLowerCase();
-
-    // ── margins: margin_top / margin_bottom
-    const marginTop = Number(
-      d.margin_top ??          // ← nome real do JSON: "margin_top"
-      d.marginTop ?? 0,
-    );
-    const marginBottom = Number(
-      d.margin_bottom ??       // ← nome real do JSON: "margin_bottom"
-      d.marginBottom ?? 0,
-    );
-
-    console.log('🎠 carouselCfg:', { shape, visible, gap, borderW, radius, border, objectFit, showPlay, showTitle, showProduct, autoCenter, viewMode, marginTop, marginBottom });
+    // 🔥 Novo: Verifica se é círculo
+    const isCircle = shape === 'circle';
+    
+    // 🔥 Correção: Aspect ratio fixo para círculos
+    const aspectRatio = isCircle ? '1/1' : shapeToAspectRatio(shape);
 
     return {
-      visible,
-      gap,
-      radius,
-      border,
-      borderW,
-      aspectRatio: shapeToAspectRatio(shape),
-      shape,
-      objectFit,
-      showPlay,
-      showTitle,
-      showProduct,
-      autoCenter,
-      viewMode,
-      marginTop,
-      marginBottom,
+      visible: Number(d.visible_items ?? a.carousel_visible_items ?? 5),
+      gap: Number(d.gap ?? a.carousel_gap ?? 16),
+      radius: isCircle ? '50%' : `${Number(d.border_radius ?? a.border_radius ?? 12)}px`,
+      border: d.border_color ?? a.border_color ?? colors.primary,
+      borderW: Number(d.border_width ?? a.border_width ?? 2),
+      aspectRatio,
+      isCircle, // 🔥 Novo: Flag para círculo
+      shape,    // 🔥 Novo: Formato final aplicado
     };
-  }, [appearance, colors.primary]);
+}, [appearance, colors.primary]);
 
-  /* ════════════════ gridConfig ═══════════════════ */
-
-  /*
-    Campos do JSON grid_config (desktop):
-      gap, rows, shape, width, columns, spacing, card_size, card_shape,
-      object_fit, show_title, border_color, border_style, border_width,
-      border_radius, visible_items
-  */
-
-  const gridCfg = useMemo(() => {
+/* ════════════════ gridConfig ═══════════════════ */
+const gridCfg = useMemo(() => {
     const a = appearance || {};
     const raw = parseJsonSafe(a.grid_config);
     const d = raw?.desktop || raw || {};
 
-    // ── shape: card_shape (JSON) → shape (JSON) → campo plano
+    // 🔥 Correção: Prioridade correta (card_shape > shape > campo da tabela)
     const shape = (
-      d.card_shape ||          // ← nome real do JSON: "card_shape"
-      d.shape ||               // ← fallback: "shape"
-      d.format ||
-      a.grid_card_shape ||
+      d.card_shape ||      // 1º: card_shape do JSON
+      d.shape ||           // 2º: shape do JSON
+      a.grid_card_shape || // 3º: campo plano da tabela
       'portrait'
     ).toString().toLowerCase().trim();
 
-    // ── cols: columns (JSON)
-    const cols = Number(
-      d.columns ??             // ← nome real do JSON: "columns"
-      d.cols ??
-      d.visible_items ??
-      d.visibleItems ??
-      a.grid_columns ??
-      a.grid_cols ??
-      3,
-    );
+    // 🔥 Novo: Verifica se é círculo
+    const isCircle = shape === 'circle';
 
-    // ── rows: rows (JSON)
-    const rows = Number(
-      d.rows ??                // ← nome real do JSON: "rows"
-      2,
-    );
-
-    // ── gap: gap → spacing
-    const gap = Number(
-      d.gap ??                 // ← nome real do JSON: "gap"
-      d.spacing ??             // ← nome real do JSON: "spacing"
-      a.grid_gap ??
-      a.grid_spacing ??
-      16,
-    );
-
-    // ── borderW: border_width → border_style → campo plano
-    const borderW = Number(
-      d.border_width ??        // ← nome real do JSON: "border_width"
-      d.borderWidth ??
-      d.border_size ??
-      d.border_style ??        // ← nome real do JSON: "border_style"
-      a.border_width ??
-      a.borderWidth ??
-      2,
-    );
-
-    // ── radius: border_radius → campo plano
-    const radius = Number(
-      d.border_radius ??       // ← nome real do JSON: "border_radius"
-      d.borderRadius ??
-      d.radius ??
-      a.border_radius ??
-      12,
-    );
-
-    // ── border: border_color → campo plano
-    const border =
-      d.border_color ??        // ← nome real do JSON: "border_color"
-      d.borderColor ??
-      a.border_color ??
-      colors.primary;
-
-    // ── objectFit: object_fit → campo plano
-    const objectFit = String(
-      d.object_fit ??          // ← nome real do JSON: "object_fit"
-      d.objectFit ??
-      a.object_fit ??
-      a.objectFit ??
-      'cover'
-    ).toLowerCase();
-
-    // ── showTitle: show_title → campo plano
-    const showTitleRaw =
-      d.show_title ??          // ← nome real do JSON: "show_title"
-      d.showTitle ??
-      a.show_title ??
-      true;
-    const showTitle =
-      showTitleRaw === true || showTitleRaw === 1 || showTitleRaw === 'true' || showTitleRaw === '1';
-
-    // ── showProduct: show_product → campo plano
-    const showProductRaw =
-      d.show_product ??        // ← nome real do JSON: "show_product"
-      d.showProduct ??
-      a.show_product ??
-      true;
-    const showProduct =
-      showProductRaw === true || showProductRaw === 1 || showProductRaw === 'true' || showProductRaw === '1';
-
-    // ── margins: margin_top / margin_bottom
-    const marginTop = Number(
-      d.margin_top ?? d.marginTop ?? 0,
-    );
-    const marginBottom = Number(
-      d.margin_bottom ?? d.marginBottom ?? 0,
-    );
-
-    console.log('📊 gridCfg:', { shape, cols, rows, gap, borderW, radius, border, objectFit, showTitle, showProduct, marginTop, marginBottom });
+    // 🔥 Correção: Aspect ratio fixo para círculos
+    const aspectRatio = isCircle ? '1/1' : shapeToAspectRatio(shape);
 
     return {
-      cols,
-      rows,
-      gap,
-      radius,
-      border,
-      borderW,
-      aspectRatio: shapeToAspectRatio(shape),
-      shape,
-      objectFit,
-      showTitle,
-      showProduct,
-      marginTop,
-      marginBottom,
+      cols: Number(d.columns ?? a.grid_columns ?? 3),
+      rows: Number(d.rows ?? 2),
+      gap: Number(d.gap ?? a.grid_gap ?? 16),
+      radius: isCircle ? '50%' : `${Number(d.border_radius ?? a.border_radius ?? 12)}px`,
+      border: d.border_color ?? a.border_color ?? colors.primary,
+      borderW: Number(d.border_width ?? a.border_width ?? 2),
+      aspectRatio,
+      isCircle, // 🔥 Novo: Flag para círculo
+      shape,    // 🔥 Novo: Formato final aplicado
     };
-  }, [appearance, colors.primary]);
+}, [appearance, colors.primary]);
+
+// 🔥 Adicione este useEffect para debug (remova depois)
+useEffect(() => {
+    console.log('🔍 Configs carregadas:', { 
+        carousel: carouselCfg, 
+        grid: gridCfg 
+    });
+}, [carouselCfg, gridCfg]);
 
   /* ════════════ LOAD ════════════ */
 
