@@ -368,3 +368,541 @@ const StoryPreviewPage: React.FC = () => {
       aspectRatio: shapeToAspectRatioWidget(shape),
     };
   }, [appearance, colors.primary]);
+  /* ════════════════ HELPERS DE POSIÇÃO/SHAPE ═══════════════════ */
+  function normalizeFloatingPosition(p: string) {
+    const v = String(p || 'bottom-right').toLowerCase().trim();
+    if (['bottom-right','bottom-left','top-right','top-left'].includes(v)) return v;
+    return 'bottom-right';
+  }
+  function normalizeFloatingShape(s: string) {
+    const v = String(s || 'portrait').toLowerCase().trim();
+    if (v.includes('circle')) return 'circle';
+    if (v.includes('square') || v.includes('1_1') || v.includes('1-1')) return 'square';
+    if (v.includes('landscape') || v.includes('16_9') || v.includes('16-9')) return 'landscape';
+    return 'portrait';
+  }
+  const FLOATING_POS_CLASS: Record<string, string> = {
+    'bottom-right': 'bottom-4 right-4',
+    'bottom-left': 'bottom-4 left-4',
+    'top-right': 'top-4 right-4',
+    'top-left': 'top-4 left-4',
+  };
+
+  /* ════════════════ CARREGAMENTO DE DADOS ═══════════════════ */
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      setLoading(true);
+      try {
+        const { data: st, error } = await supabase
+          .from('stories')
+          .select('*')
+          .eq('id', id)
+          .single();
+        if (error) throw error;
+        if (!active) return;
+        setStory(st);
+        setStoreId(st.store_id || routeStoreId);
+
+        const { data: sto } = await supabase
+          .from('stores')
+          .select('name')
+          .eq('id', st.store_id)
+          .single();
+        if (sto?.name) setStoreName(sto.name);
+
+        const { data: vids } = await supabase
+          .from('story_videos')
+          .select('*')
+          .eq('story_id', id)
+          .order('order_index', { ascending: true });
+        setVideos(vids || []);
+
+        const { data: settingsRow } = await supabase
+          .from('store_settings')
+          .select('*')
+          .eq('store_id', st.store_id)
+          .single();
+        setSettings(settingsRow);
+
+        const { data: appearanceRow } = await supabase
+          .from('story_appearance_config')
+          .select('*')
+          .eq('store_id', st.store_id)
+          .single();
+        setAppearance(appearanceRow);
+
+        if (queryVideoId) {
+          const idx = (vids || []).findIndex(v => v.id === queryVideoId);
+          if (idx >= 0) {
+            setActiveIdx(idx);
+            setPlayerOpen(true);
+          }
+        }
+
+        const { data: likeRow } = await supabase
+          .from('story_likes')
+          .select('count')
+          .eq('story_id', id)
+          .maybeSingle();
+        setLikeCount(likeRow?.count || 0);
+
+      } catch (e) {
+        console.error('Erro ao carregar preview:', e);
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [id]);
+
+  useEffect(() => {
+    if (!video?.id) return;
+    (async () => {
+      const { data } = await supabase
+        .from('story_comments')
+        .select('*')
+        .eq('video_id', video.id)
+        .order('created_at', { ascending: false });
+      setComments(data || []);
+
+      if (video.product_id) {
+        const { data: prod } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', video.product_id)
+          .single();
+        setProduct(prod);
+      } else {
+        setProduct(null);
+      }
+    })();
+  }, [video?.id]);
+
+  /* ════════════════ HANDLERS ═══════════════════ */
+  const close = () => {
+    if (playerOpen) {
+      setPlayerOpen(false);
+      setPlaying(false);
+    } else {
+      navigate(-1);
+    }
+  };
+
+  const openPlayer = (idx: number) => {
+    setActiveIdx(idx);
+    setPlayerOpen(true);
+    setPlaying(true);
+    setVideoError(false);
+  };
+
+  const nextVideo = () => {
+    if (activeIdx < videos.length - 1) {
+      setActiveIdx(activeIdx + 1);
+      setPlaying(true);
+      setVideoError(false);
+    } else {
+      setPlayerOpen(false);
+    }
+  };
+
+  const prevVideo = () => {
+    if (activeIdx > 0) {
+      setActiveIdx(activeIdx - 1);
+      setPlaying(true);
+      setVideoError(false);
+    }
+  };
+
+  const togglePlay = () => setPlaying(p => !p);
+  const toggleMute = () => setMuted(m => !m);
+
+  const handleLike = async () => {
+    if (liked) return;
+    setLiked(true);
+    setLikeCount(c => c + 1);
+    await supabase.rpc('increment_story_like', { p_story_id: id });
+  };
+
+  const submitComment = async () => {
+    if (!commentText.trim()) return;
+    const payload = {
+      video_id: video?.id,
+      story_id: id,
+      name: commentName.trim() || 'Anônimo',
+      text: commentText.trim(),
+    };
+    const { data } = await supabase.from('story_comments').insert(payload).select().single();
+    if (data) setComments(c => [data, ...c]);
+    setCommentText('');
+    setCommentSent(true);
+    setTimeout(() => setCommentSent(false), 2000);
+  };
+
+  const shareUrl = `${window.location.origin}/story/${id}?videoId=${video?.id || ''}`;
+
+  const copyShareLink = async () => {
+    await navigator.clipboard.writeText(shareUrl);
+    setShareCopied(true);
+    setTimeout(() => setShareCopied(false), 2000);
+  };
+
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareUrl)}`;
+
+  const openModel = () => setModelOpen(true);
+
+  const thumb0 = getVideoPoster(videos[0]);
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-black">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+      </div>
+    );
+  }
+
+  /* ════════════════ SUBCOMPONENTES ═══════════════════ */
+  const FloatingWidget = () => (
+    <div
+      className={`fixed z-40 cursor-pointer group transition-transform hover:scale-105 active:scale-95 ${floatingPos}`}
+      style={{
+        width: floatingCfg.width,
+        height: floatingCfg.height,
+        marginTop: floatingCfg.margin_top,
+        marginBottom: floatingCfg.margin_bottom,
+        marginLeft: floatingCfg.margin_side,
+        marginRight: floatingCfg.margin_side,
+      }}
+      onClick={() => openPlayer(0)}
+    >
+      <div
+        className="relative h-full w-full overflow-hidden shadow-xl"
+        style={{
+          borderRadius: `${floatingCfg.border_radius}px`,
+          border: `${floatingCfg.border_width}px solid ${floatingCfg.border_color}`,
+        }}
+      >
+        {thumb0 ? (
+          <img src={thumb0} alt="Story" className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-black text-white"><SvgPlay/></div>
+        )}
+        {floatingCfg.show_play && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+            <SvgPlay />
+          </div>
+        )}
+      </div>
+      {floatingCfg.show_title && (
+        <p className="mt-1.5 text-center text-[11px] font-semibold text-white line-clamp-1" style={{ textShadow: '0 1px 3px rgba(0,0,0,.5)' }}>
+          {videos[0]?.title || story?.title || storeName || 'Story'}
+        </p>
+      )}
+    </div>
+  );
+
+  const Carousel = () => (
+    <div className="w-full max-w-5xl px-4 relative">
+      <button onClick={close} className="absolute -top-2 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"><SvgClose/></button>
+      <h2 className="mb-6 text-center text-xl font-semibold text-white">{story?.title || 'Stories'}</h2>
+      {videos.length === 0 ? (
+        <p className="text-center text-white/50">Nenhum vídeo.</p>
+      ) : (
+        <div className="flex overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide" style={{ gap: `${carouselCfg.gap}px` }}>
+          {videos.map((v, i) => {
+            const thumb = getVideoPoster(v);
+            const w = Math.round(100 / carouselCfg.visible);
+            return (
+              <button
+                key={v.id || i}
+                onClick={() => openPlayer(i)}
+                className="relative flex-shrink-0 snap-center overflow-hidden transition-all hover:scale-[1.02]"
+                style={{
+                  width: `${w}%`,
+                  minWidth: '140px',
+                  aspectRatio: carouselCfg.aspectRatio,
+                  borderRadius: carouselCfg.isCircle ? '50%' : `${carouselCfg.radius}px`,
+                  border: `${carouselCfg.borderW}px solid ${carouselCfg.border}`,
+                }}
+              >
+                {thumb ? (
+                  <img src={thumb} alt={v.title || ''} className="h-full w-full" style={{ objectFit: carouselCfg.objectFit as any }} />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gray-800 text-white/40"><SvgPlay/></div>
+                )}
+                {carouselCfg.showPlayButton && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/30 transition">
+                    <div className="text-white opacity-0 hover:opacity-100 transition"><SvgPlay/></div>
+                  </div>
+                )}
+                {carouselCfg.showTitle && v.title && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-4">
+                    <p className="text-xs font-medium text-white line-clamp-2">{v.title}</p>
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
+  const Grid = () => (
+    <div className="w-full max-w-4xl px-4 relative">
+      <button onClick={close} className="absolute -top-2 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"><SvgClose/></button>
+      <h2 className="mb-6 text-center text-xl font-semibold text-white">{story?.title || 'Stories'}</h2>
+      {videos.length === 0 ? (
+        <p className="text-center text-white/50">Nenhum vídeo.</p>
+      ) : (
+        <div className="grid" style={{ gridTemplateColumns: `repeat(${gridCfg.cols}, 1fr)`, gap: `${gridCfg.gap}px` }}>
+          {videos.map((v, i) => {
+            const thumb = getVideoPoster(v);
+            return (
+              <button
+                key={v.id || i}
+                onClick={() => openPlayer(i)}
+                className="group relative overflow-hidden transition-all hover:scale-[1.02]"
+                style={{
+                  aspectRatio: gridCfg.aspectRatio,
+                  borderRadius: gridCfg.isCircle ? '50%' : `${gridCfg.radius}px`,
+                  border: `${gridCfg.borderW}px solid ${gridCfg.border}`,
+                }}
+              >
+                {thumb ? (
+                  <img src={thumb} alt={v.title || ''} className="h-full w-full" style={{ objectFit: gridCfg.objectFit as any }} />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gray-800 text-white/40"><SvgPlay/></div>
+                )}
+                {gridCfg.showTitle && v.title && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-4">
+                    <p className="text-xs font-medium text-white line-clamp-2">{v.title}</p>
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
+  const Player = () => (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black"
+      style={{ background: colors.modalBg }}
+    >
+      <div
+        className="relative h-full w-full max-w-md overflow-hidden sm:h-[92vh] sm:rounded-2xl"
+        style={{
+          border: modalCfg.border_width ? `${modalCfg.border_width}px solid ${modalCfg.border_color}` : undefined,
+          borderRadius: modalCfg.border_radius ? `${modalCfg.border_radius}px` : undefined,
+          boxShadow: modalCfg.shadow ? '0 20px 60px rgba(0,0,0,.5)' : undefined,
+        }}
+      >
+        {/* progress bars */}
+        <div className="absolute top-2 left-2 right-2 z-20 flex gap-1">
+          {videos.map((_, i) => (
+            <div key={i} className="h-1 flex-1 overflow-hidden rounded-full bg-white/30">
+              <div
+                className="h-full bg-white transition-all"
+                style={{ width: i < activeIdx ? '100%' : i === activeIdx ? `${progress}%` : '0%' }}
+              />
+            </div>
+          ))}
+        </div>
+
+        <button onClick={close} className="absolute top-6 right-3 z-20 text-white"><SvgClose/></button>
+
+        {modalCfg.show_title && (
+          <div className="absolute top-6 left-3 z-20 text-sm font-semibold text-white" style={{ color: colors.modalText }}>
+            {storeName}
+          </div>
+        )}
+
+        <div className="absolute inset-0" onClick={togglePlay}>
+          {currentUrl && !videoError ? (
+            <video
+              ref={videoRef}
+              src={currentUrl}
+              poster={posterUrl}
+              className="h-full w-full object-contain bg-black"
+              autoPlay
+              muted={muted}
+              playsInline
+              onTimeUpdate={(e) => {
+                const el = e.currentTarget;
+                setProgress((el.currentTime / (el.duration || 1)) * 100);
+              }}
+              onEnded={nextVideo}
+              onError={() => setVideoError(true)}
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-black text-white/50">
+              Erro ao carregar vídeo
+            </div>
+          )}
+        </div>
+
+        {/* nav areas */}
+        <div className="absolute inset-y-0 left-0 z-10 w-1/3" onClick={prevVideo} />
+        <div className="absolute inset-y-0 right-0 z-10 w-1/3" onClick={nextVideo} />
+
+        <button onClick={toggleMute} className="absolute bottom-24 right-3 z-20 text-white">
+          {muted ? <SvgMuted/> : <SvgUnmuted/>}
+        </button>
+
+        {/* right action bar */}
+        <div className="absolute bottom-4 right-3 z-20 flex flex-col items-center gap-4">
+          {modalCfg.show_like && (
+            <button onClick={handleLike} className="flex flex-col items-center text-white">
+              <SvgHeart filled={liked} />
+              <span className="text-xs">{likeCount}</span>
+            </button>
+          )}
+          {modalCfg.show_comment && (
+            <button onClick={() => setShowComments(true)} className="flex flex-col items-center text-white">
+              <SvgComment />
+              <span className="text-xs">{comments.length}</span>
+            </button>
+          )}
+          {modalCfg.show_share && (
+            <button onClick={() => setShowSharePanel(true)} className="flex flex-col items-center text-white">
+              <SvgShare />
+            </button>
+          )}
+          {modalCfg.show_whatsapp && (
+            <a href={whatsappUrl} target="_blank" rel="noreferrer" className="flex flex-col items-center text-white">
+              <SvgWhatsapp />
+            </a>
+          )}
+          {modalCfg.show_sizing && modelData && (
+            <button onClick={openModel} className="flex flex-col items-center text-white">
+              <SvgRuler />
+            </button>
+          )}
+        </div>
+
+        {/* product card */}
+        {modalCfg.show_product && product && (
+          <div className="absolute bottom-4 left-3 right-16 z-20 flex items-center gap-3 rounded-xl bg-white/95 p-2 shadow-lg">
+            {product.image_url && (
+              <img src={product.image_url} alt={product.name} className="h-12 w-12 rounded-lg object-cover" />
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="truncate text-xs font-semibold text-slate-800">{product.name}</p>
+              {product.price && <p className="text-xs text-slate-500">R$ {Number(product.price).toFixed(2)}</p>}
+            </div>
+            {modalCfg.show_product_btn && (
+              <a
+                href={product.url || '#'}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white"
+                style={{ background: colors.btn }}
+              >
+                Ver
+              </a>
+            )}
+          </div>
+        )}
+
+        {/* comments drawer */}
+        {showComments && (
+          <div className="absolute inset-0 z-30 flex flex-col justify-end bg-black/60" onClick={() => setShowComments(false)}>
+            <div
+              className="max-h-[70vh] rounded-t-2xl bg-white p-4"
+              style={{ animation: 'vlSlideUp .25s ease-out' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-slate-800">Comentários</h3>
+                <button onClick={() => setShowComments(false)}><SvgClose small/></button>
+              </div>
+              <div className="mb-3 max-h-64 space-y-3 overflow-y-auto">
+                {comments.length === 0 ? (
+                  <p className="text-xs text-slate-400">Seja o primeiro a comentar.</p>
+                ) : comments.map((c) => (
+                  <div key={c.id} className="text-sm">
+                    <span className="font-semibold text-slate-700">{c.name}: </span>
+                    <span className="text-slate-600">{c.text}</span>
+                  </div>
+                ))}
+              </div>
+              <input
+                value={commentName}
+                onChange={(e) => setCommentName(e.target.value)}
+                placeholder="Seu nome"
+                className="mb-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              />
+              <div className="flex items-center gap-2">
+                <textarea
+                  ref={textareaRef}
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder="Escreva um comentário..."
+                  className="flex-1 resize-none rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                  rows={1}
+                />
+                <button
+                  onClick={submitComment}
+                  className="rounded-lg px-4 py-2 text-sm font-semibold text-white"
+                  style={{ background: colors.btn }}
+                >
+                  Enviar
+                </button>
+              </div>
+              {commentSent && <p className="mt-1 text-xs text-green-600">Comentário enviado!</p>}
+            </div>
+          </div>
+        )}
+
+        {/* share panel */}
+        {showSharePanel && (
+          <div className="absolute inset-0 z-30 flex flex-col justify-end bg-black/60" onClick={() => setShowSharePanel(false)}>
+            <div ref={sharePanelRef} className="rounded-t-2xl bg-white p-4" onClick={(e) => e.stopPropagation()}>
+              <h3 className="mb-3 text-sm font-semibold text-slate-800">Compartilhar</h3>
+              <button
+                onClick={copyShareLink}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700"
+              >
+                {shareCopied ? 'Link copiado!' : 'Copiar link'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* model sizing modal */}
+        {modelOpen && modelData && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/70" onClick={() => setModelOpen(false)}>
+            <div className="max-w-xs rounded-2xl bg-white p-5" onClick={(e) => e.stopPropagation()}>
+              <h3 className="mb-3 text-sm font-semibold text-slate-800">Medidas da modelo</h3>
+              <ul className="space-y-1 text-sm text-slate-600">
+                {Object.entries(modelData).map(([k, v]) => (
+                  <li key={k}><span className="font-medium">{k}:</span> {String(v)}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  /* ════════════════ RETURN FINAL ═══════════════════ */
+  return (
+    <div className="fixed inset-0 flex items-center justify-center overflow-hidden bg-[#111]">
+      {!playerOpen && isFloating && !floatingDismissed && <FloatingWidget />}
+      {!playerOpen && isCarousel && <Carousel />}
+      {!playerOpen && isGrid && <Grid />}
+      {playerOpen && <Player />}
+      <style>{`
+        @keyframes vlSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+    </div>
+  );
+};
+
+export default StoryPreviewPage;
