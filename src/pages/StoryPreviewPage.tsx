@@ -556,73 +556,86 @@ const gridCfg = useMemo(() => {
     const raw = parseJsonSafe(a.grid_config);
     const d = raw?.desktop || raw || {};
 
+    // ── shape / formato
     const shape = (
       d.shape ||
       d.card_shape ||
+      d.card_shape_display ||
       d.format ||
       a.grid_shape ||
       a.grid_card_shape ||
+      a.grid_card_shape_display ||
       'portrait'
     ).toLowerCase();
 
+    // ── colunas
     const cols = Number(
-      d.columns ??
-      d.cols ??
-      d.visible_items ??
-      d.visibleItems ??
-      a.grid_columns ??
-      a.grid_cols ??
-      3,
+      d.columns ?? d.cols ?? d.visible_items ?? d.visibleItems ??
+      a.grid_columns ?? a.grid_cols ?? 3,
     );
 
+    // ── linhas
     const rows = Number(
-      d.rows ??
-      a.grid_rows ??
-      2,
+      d.rows ?? a.grid_rows ?? 2,
     );
 
+    // ── espaçamento
     const gap = Number(
-      d.gap ??
-      d.spacing ??
-      a.grid_gap ??
-      a.grid_spacing ??
-      16,
+      d.gap ?? d.spacing ??
+      a.grid_gap ?? a.grid_spacing ?? 16,
     );
 
-    // 🔧 border_width: inclui border_style (nome real do backend)
+    // ── borda (border_width / border_style)
     const borderWidthRaw =
-      d.border_width ??
-      d.borderWidth ??
-      d.border_size ??
-      d.border_style ??
-      a.grid_border_width ??
-      a.grid_borderWidth ??
-      a.grid_border ??
-      a.border_width ??
-      a.borderWidth ??
-      2;
+      d.border_width ?? d.borderWidth ?? d.border_size ?? d.border_style ??
+      a.grid_border_width ?? a.grid_borderWidth ?? a.grid_border ??
+      a.border_width ?? a.borderWidth ?? 2;
     const borderW = Number(borderWidthRaw);
 
     const borderRadiusRaw =
-      d.border_radius ??
-      d.borderRadius ??
-      d.radius ??
-      a.grid_border_radius ??
-      a.grid_borderRadius ??
-      a.grid_radius ??
-      a.border_radius ??
-      12;
+      d.border_radius ?? d.borderRadius ?? d.radius ??
+      a.grid_border_radius ?? a.grid_borderRadius ?? a.grid_radius ??
+      a.border_radius ?? 12;
     const radius = Number(borderRadiusRaw);
 
     const border =
-      d.border_color ??
-      d.borderColor ??
-      a.grid_border_color ??
-      a.grid_borderColor ??
-      a.border_color ??
-      colors.primary;
+      d.border_color ?? d.borderColor ??
+      a.grid_border_color ?? a.grid_borderColor ??
+      a.border_color ?? colors.primary;
+
+    // ── object-fit
+    const objectFitRaw =
+      d.object_fit ?? d.objectFit ??
+      a.grid_object_fit ?? a.grid_objectFit ??
+      a.object_fit ?? a.objectFit ?? 'cover';
+    const objectFit = String(objectFitRaw).toLowerCase();
+
+    // ── show_title
+    const showTitleRaw =
+      d.show_title ?? d.showTitle ??
+      a.grid_show_title ?? a.grid_showTitle ??
+      a.grid_title ?? a.show_title ?? true;
+    const showTitle =
+      showTitleRaw === true || showTitleRaw === 1 || showTitleRaw === 'true' || showTitleRaw === '1';
+
+    // ── show_product
+    const showProductRaw =
+      d.show_product ?? d.showProduct ??
+      a.grid_show_product ?? a.grid_showProduct ??
+      a.show_product ?? true;
+    const showProduct =
+      showProductRaw === true || showProductRaw === 1 || showProductRaw === 'true' || showProductRaw === '1';
+
+    // ── margins (margin_top / margin_bottom)
+    const marginTop = Number(
+      d.margin_top ?? d.marginTop ?? a.grid_margin_top ?? a.grid_marginTop ?? 0,
+    );
+    const marginBottom = Number(
+      d.margin_bottom ?? d.marginBottom ?? a.grid_margin_bottom ?? a.grid_marginBottom ?? 0,
+    );
 
     return {
+      // Usados atualmente pela renderização
       cols,
       rows,
       gap,
@@ -630,6 +643,13 @@ const gridCfg = useMemo(() => {
       border,
       borderW,
       aspectRatio: shapeToAspectRatio(shape),
+      // Novos (disponíveis para uso futuro)
+      shape,
+      objectFit,
+      showTitle,
+      showProduct,
+      marginTop,
+      marginBottom,
     };
   }, [appearance, colors.primary]);
 
