@@ -186,6 +186,13 @@ export default function StoryPreviewPage() {
   const floatCfg = useMemo(() => getFloatingConfig(appearance), [appearance]);
   const carouselCfg = useMemo(() => getCarouselConfig(appearance), [appearance]);
   const gridCfg = useMemo(() => getGridConfig(appearance), [appearance]);
+  console.log('=== DEBUG PREVIEW ===');
+console.log('appearance:', appearance);
+console.log('floatCfg:', floatCfg);
+console.log('carouselCfg:', carouselCfg);
+console.log('gridCfg:', gridCfg);
+console.log('storyFormat:', storyFormat);
+console.log('videos.length:', videos.length);
   const modalCfg = useMemo(() => normalizeModalAppearanceConfig(appearance), [appearance]);
 
   const primaryColor = getPrimaryColor(appearance);
