@@ -282,28 +282,110 @@ export default function StoryPreviewPage() {
   };
 
   // ═══════════════════════════════════════════════════════
-  // INLINE WIDGET (Carousel or Grid)
+  // INLINE WIDGET (Carousel or Grid) — replicates widget.js renderInlineWidget
   // ═══════════════════════════════════════════════════════
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const dragState = useRef({ isDown: false, startX: 0, scrollLeft: 0, moved: false });
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+    dragState.current = { isDown: true, startX: e.pageX - slider.offsetLeft, scrollLeft: slider.scrollLeft, moved: false };
+    slider.style.cursor = 'grabbing';
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!dragState.current.isDown) return;
+    const slider = sliderRef.current;
+    if (!slider) return;
+    e.preventDefault();
+    const x = e.pageX - slider.offsetLeft;
+    const walk = (x - dragState.current.startX) * 1.5;
+    slider.scrollLeft = dragState.current.scrollLeft - walk;
+    if (Math.abs(walk) > 3) dragState.current.moved = true;
+  };
+
+  const handleMouseUp = () => {
+    dragState.current.isDown = false;
+    const slider = sliderRef.current;
+    if (slider) slider.style.cursor = 'grab';
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+    dragState.current = { isDown: true, startX: e.touches[0].pageX - slider.offsetLeft, scrollLeft: slider.scrollLeft, moved: false };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!dragState.current.isDown) return;
+    const slider = sliderRef.current;
+    if (!slider) return;
+    const x = e.touches[0].pageX - slider.offsetLeft;
+    const walk = (x - dragState.current.startX) * 1.5;
+    slider.scrollLeft = dragState.current.scrollLeft - walk;
+    if (Math.abs(walk) > 3) dragState.current.moved = true;
+  };
+
   const renderInlineWidget = (isGrid: boolean) => {
     const cfg = isGrid ? gridCfg : carouselCfg;
     const cardWidth = `${cfg.size}vw`;
     const cardSizePx = Math.round((cfg.size * (typeof window !== 'undefined' ? window.innerWidth : 1200)) / 100);
     const minCardWidth = `${Math.min(30, cardSizePx)}px`;
     const itemsVisiveis = isGrid ? (cfg as any).columns : (cfg as any).visibleItems;
-    const effectiveItems = (cfg as any).autoCenter && videos.length < itemsVisiveis ? videos.length : itemsVisiveis;
+    const autoCenter = (cfg as any).autoCenter;
+    const effectiveItems = autoCenter && videos.length < itemsVisiveis ? videos.length : itemsVisiveis;
     const totalGap = cfg.spacing * (effectiveItems - 1);
-    const containerMaxWidth = `min(100%, calc((${cardWidth} * ${effectiveItems}) + ${totalGap}px + 8px))`;
+    const containerMaxWidth = `min(100vw, calc((${cardWidth} * ${effectiveItems}) + ${totalGap}px + 32px))`;
     const borderRadius = cfg.shape === 'circle' ? '50%' : `${cfg.borderRadius}px`;
 
     return (
-      <div style={{ maxWidth: containerMaxWidth, margin: '20px auto', padding: '0 4px', fontFamily, clear: 'both', overflow: 'visible' }} className="relative">
-        <button onClick={() => navigate(-1)} className="absolute -top-3 right-1 z-50 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow hover:bg-white"><X size={18} /></button>
-        <div className="flex" style={{ flexWrap: isGrid ? 'wrap' : 'nowrap', gap: `${cfg.spacing}px`, overflowX: isGrid ? 'hidden' : 'auto', overflowY: 'hidden', scrollSnapType: 'x mandatory', scrollbarWidth: 'none', padding: '0 4px', width: '100%', justifyContent: (cfg as any).autoCenter ? 'center' : 'flex-start' } as CSSProperties}>
+      <div style={{ maxWidth: containerMaxWidth, margin: '20px auto', padding: '0 4px', fontFamily, clear: 'both', overflow: 'visible' }}>
+        <div
+          ref={sliderRef}
+          onMouseDown={!isGrid ? handleMouseDown : undefined}
+          onMouseMove={!isGrid ? handleMouseMove : undefined}
+          onMouseUp={!isGrid ? handleMouseUp : undefined}
+          onMouseLeave={!isGrid ? handleMouseUp : undefined}
+          onTouchStart={!isGrid ? handleTouchStart : undefined}
+          onTouchMove={!isGrid ? handleTouchMove : undefined}
+          onTouchEnd={!isGrid ? handleMouseUp : undefined}
+          className="flex"
+          style={{
+            flexWrap: isGrid ? 'wrap' : 'nowrap',
+            gap: `${cfg.spacing}px`,
+            overflowX: isGrid ? 'hidden' : 'auto',
+            overflowY: 'hidden',
+            scrollSnapType: 'x mandatory',
+            scrollbarWidth: 'none',
+            padding: '0 4px',
+            width: '100%',
+            justifyContent: autoCenter ? 'center' : 'flex-start',
+            cursor: isGrid ? 'auto' : 'grab',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+          } as CSSProperties}
+        >
           {videos.map((video, idx) => {
             const thumb = getVideoThumb(video);
             const videoUrl = getVideoUrl(video);
             return (
-              <button key={video.id || idx} onClick={() => openPlayer(idx)} className="group relative flex flex-col" style={{ scrollSnapAlign: 'start', flex: `0 0 ${cardWidth}`, minWidth: minCardWidth, maxWidth: cardWidth, transition: 'transform 0.2s ease', cursor: 'pointer' }}>
+              <button
+                key={video.id || idx}
+                onClick={() => { if (!dragState.current.moved) openPlayer(idx); }}
+                className="group relative flex flex-col"
+                style={{
+                  scrollSnapAlign: 'start',
+                  flex: `0 0 ${cardWidth}`,
+                  minWidth: minCardWidth,
+                  maxWidth: cardWidth,
+                  transition: 'transform 0.2s ease',
+                  cursor: 'pointer',
+                  all: 'unset',
+                  display: 'flex',
+                  flexDirection: 'column',
+                } as CSSProperties}
+              >
                 <div className="relative w-full overflow-hidden" style={{ aspectRatio: cfg.aspectRatio, borderRadius, border: `${cfg.borderWidth}px solid ${cfg.borderColor}`, background: '#000' }}>
                   {isVideoFile(videoUrl) ? (
                     <video src={videoUrl} poster={thumb || undefined} className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} muted loop autoPlay playsInline />
@@ -341,6 +423,7 @@ export default function StoryPreviewPage() {
     const shadow = m.shadow_enabled !== false ? '0 24px 80px rgba(15,23,42,.24)' : 'none';
     const ytId = !isVideoPlayableNatively(currentVideo as any) ? extractYouTubeId(currentUrl) : '';
     const whatsappNumber = String(settings?.whatsapp_number || settings?.whatsappNumber || '').replace(/\D/g, '');
+    console.log('[StoryPreview] modalCfg:', m);
 
     const ctrlBtn: CSSProperties = {
       width: '32px', height: '32px', borderRadius: '999px', background: 'rgba(0,0,0,.4)',
@@ -417,11 +500,6 @@ export default function StoryPreviewPage() {
             )}
             {m.show_share_button && <button onClick={(e) => { e.stopPropagation(); handleShare(); }} style={socialBtn}><Share2 size={18} className="text-white" /></button>}
             {m.show_sizing_button && sizingModel && <button onClick={(e) => { e.stopPropagation(); setShowSizing(true); }} style={socialBtn}><Ruler size={18} className="text-white" /></button>}
-            {m.show_whatsapp_button && (
-              <a href={whatsappNumber ? `https://wa.me/${whatsappNumber}` : '#'} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ ...socialBtn, background: '#25d366', borderColor: '#25d366' }}>
-                <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z M12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0 0 20.53 4.04 11.815 11.815 0 0 0 12.05 0z" /></svg>
-              </a>
-            )}
           </div>
 
           {/* Product footer */}
