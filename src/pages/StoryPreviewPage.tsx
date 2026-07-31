@@ -176,3 +176,195 @@ const SvgRuler = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="no
 const SvgWhatsApp = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="#25d366"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z"/></svg>);
 const SvgChevronLeft = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>);
 const SvgChevronRight = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>);
+/* ═══════════════════ COMPONENTE PRINCIPAL ═══════════════════ */
+
+const StoryPreviewPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const routeStoreId = searchParams.get('storeId') || undefined;
+  const queryVideoId = searchParams.get('videoId') || undefined;
+
+  const [loading, setLoading] = useState(true);
+  const [story, setStory] = useState<Story | null>(null);
+  const [storeId, setStoreId] = useState<string | undefined>(undefined);
+  const [storeName, setStoreName] = useState('');
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [settings, setSettings] = useState<any>(null);
+  const [appearance, setAppearance] = useState<any>(null);
+
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [playerOpen, setPlayerOpen] = useState(false);
+  const [playing, setPlaying] = useState(true);
+  const [muted, setMuted] = useState(true);
+  const [videoError, setVideoError] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState<StoryComment[]>([]);
+  const [commentName, setCommentName] = useState('');
+  const [commentText, setCommentText] = useState('');
+  const [commentSent, setCommentSent] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
+
+  const [showSharePanel, setShowSharePanel] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
+
+  const [product, setProduct] = useState<any>(null);
+  const [model, setModel] = useState<any>(null);
+  const [modelOpen, setModelOpen] = useState(false);
+
+  const [floatingDismissed, setFloatingDismissed] = useState(false);
+
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const sharePanelRef = useRef<HTMLDivElement | null>(null);
+
+  const video = videos[activeIdx] || null;
+  const currentUrl = getVideoUrl(video);
+  const posterUrl = getVideoPoster(video);
+  const modelData = useMemo(() => parseMeasures(model), [model]);
+
+  /* ════════════════ COLORS ═══════════════════ */
+  const colors = useMemo(() => {
+    const a = appearance || {};
+    const primary = readConfigValue(a, 'colors_config', 'primary_color', 'primary_color', '#0094EB') || '#0094EB';
+    const secondary = readConfigValue(a, 'colors_config', 'secondary_color', 'secondary_color', '#111827') || '#111827';
+    const btn = readConfigValue(a, 'colors_config', 'button_color', 'button_color', primary) || primary;
+    const bg = readConfigValue(a, 'colors_config', 'background_color', 'background_color', '#ffffff') || '#ffffff';
+    const text = readConfigValue(a, 'colors_config', 'text_color', 'text_color', '#0f172a') || '#0f172a';
+    const modalBg = readConfigValue(a, 'colors_config', 'modal_background_color', 'modal_background_color', '#000000') || '#000000';
+    const modalText = readConfigValue(a, 'colors_config', 'modal_text_color', 'modal_text_color', '#ffffff') || '#ffffff';
+    const modalBorder = readConfigValue(a, 'colors_config', 'modal_border_color', 'modal_border_color', 'rgba(255,255,255,.15)') || 'rgba(255,255,255,.15)';
+    return { primary, secondary, btn, bg, text, modalBg, modalText, modalBorder };
+  }, [appearance]);
+
+  /* ════════════════ DISPLAY MODE ═══════════════════ */
+  const displayMode = useMemo(() => {
+    const a = appearance || {};
+    const mode = String(readConfigValue(a, 'display_config', 'display_mode', 'display_mode', 'floating') || 'floating').toLowerCase();
+    return mode;
+  }, [appearance]);
+
+  const isFloating = displayMode === 'floating' || displayMode === 'flutuante';
+  const isCarousel = displayMode === 'carousel' || displayMode === 'carrossel';
+  const isGrid = displayMode === 'grid' || displayMode === 'grade';
+
+  /* ════════════════ modalCfg ═══════════════════ */
+  const modalCfg = useMemo(() => {
+    const a = appearance || {};
+    return {
+      show_title: toBoolean(readConfigValue(a, 'modal_config', 'show_title', 'modal_show_title', true), true),
+      show_play: toBoolean(readConfigValue(a, 'modal_config', 'show_play_button', 'modal_show_play_button', true), true),
+      show_product: toBoolean(readConfigValue(a, 'modal_config', 'show_product', 'modal_show_product', true), true),
+      show_product_btn: toBoolean(readConfigValue(a, 'modal_config', 'show_product_button', 'modal_show_product_button', true), true),
+      show_like: toBoolean(readConfigValue(a, 'modal_config', 'show_like_button', 'modal_show_like_button', true), true),
+      show_comment: toBoolean(readConfigValue(a, 'modal_config', 'show_comment_button', 'modal_show_comment_button', true), true),
+      show_share: toBoolean(readConfigValue(a, 'modal_config', 'show_share_button', 'modal_show_share_button', true), true),
+      show_whatsapp: toBoolean(readConfigValue(a, 'modal_config', 'show_whatsapp_button', 'modal_show_whatsapp_button', true), true),
+      show_sizing: toBoolean(readConfigValue(a, 'modal_config', 'show_sizing_button', 'modal_show_sizing_button', true), true),
+      hide_stories: toBoolean(readConfigValue(a, 'modal_config', 'hide_stories', 'modal_hide_stories', false), false),
+      shadow: toBoolean(readConfigValue(a, 'modal_config', 'shadow_enabled', 'modal_shadow_enabled', true), true),
+      border_color: readConfigValue(a, 'modal_config', 'border_color', 'modal_border_color', '') || '',
+      border_width: String(readConfigValue(a, 'modal_config', 'border_width', 'modal_border_width', '') || ''),
+      border_radius: String(readConfigValue(a, 'modal_config', 'border_radius', 'modal_border_radius', '') || ''),
+    };
+  }, [appearance]);
+
+  /* ════════════════ floatingCfg ═══════════════════ */
+  const floatingCfg = useMemo(() => {
+    const a = appearance || {};
+    const raw = a.floating_config;
+    const pos = normalizeFloatingPosition(readJsonbConfigValue(raw, 'floating_position', 'bottom-right'));
+    const shape = normalizeFloatingShape(readJsonbConfigValue(raw, 'shape', 'portrait'));
+    const width = toNumber(readJsonbConfigValue(raw, 'width', '80'), 80);
+    const height = (shape === 'square' || shape === 'circle') ? width : Math.round(width * 16 / 9);
+
+    let radius = toNumber(readJsonbConfigValue(raw, 'border_radius', '12'), 12);
+    if (shape === 'circle') radius = 999;
+
+    const borderW = safeInt(readJsonbConfigValue(raw, 'border_style', '2'), 2);
+    const marginTop = toNumber(readJsonbConfigValue(raw, 'top_spacing', '20'), 20);
+    const marginBottom = toNumber(readJsonbConfigValue(raw, 'bottom_spacing', '20'), 20);
+    const marginSide = toNumber(readJsonbConfigValue(raw, 'left_spacing', '20'), 20);
+    const borderColor = readJsonbConfigValue(raw, 'border_color', colors.primary) || colors.primary;
+
+    return {
+      shape,
+      position: pos,
+      width,
+      height,
+      border_width: borderW,
+      border_radius: radius,
+      border_color: borderColor,
+      margin_top: marginTop,
+      margin_bottom: marginBottom,
+      margin_side: marginSide,
+      show_play: toBoolean(readJsonbConfigValue(raw, 'show_play_icon', 'true'), true),
+      show_close: toBoolean(readJsonbConfigValue(raw, 'allow_close', 'true'), true),
+      show_title: toBoolean(readJsonbConfigValue(raw, 'show_title', 'true'), true),
+    };
+  }, [appearance, colors.primary]);
+
+  const floatingPos = FLOATING_POS_CLASS[floatingCfg.position] || FLOATING_POS_CLASS['bottom-right'];
+
+  /* ════════════════ carouselCfg ═══════════════════ */
+  const carouselCfg = useMemo(() => {
+    const a = appearance || {};
+    const raw = a.carousel_config;
+    const shape = String(readJsonbConfigValue(raw, 'shape', 'portrait') || 'portrait').toLowerCase().trim();
+    const isCircle = shape === 'circle';
+
+    const visible = safeInt(readJsonbConfigValue(raw, 'visible_items', '4'), 4);
+    const gap = safeInt(readJsonbConfigValue(raw, 'spacing', '16'), 16);
+    const borderColor = readJsonbConfigValue(raw, 'border_color', colors.primary) || colors.primary;
+    const borderW = safeInt(readJsonbConfigValue(raw, 'border_style', '2'), 2);
+    const borderRadius = safeInt(readJsonbConfigValue(raw, 'border_radius', '12'), 12);
+    const objectFit = String(readJsonbConfigValue(raw, 'object_fit', 'cover') || 'cover').toLowerCase();
+    const showTitle = toBoolean(readJsonbConfigValue(raw, 'show_title', false), false);
+    const showProduct = toBoolean(readJsonbConfigValue(raw, 'show_product', true), true);
+    const showPlayButton = toBoolean(readJsonbConfigValue(raw, 'show_play_icon', true), true);
+    const autoCenter = toBoolean(readJsonbConfigValue(raw, 'auto_center', false), false);
+
+    return {
+      shape, isCircle,
+      visible, gap,
+      border: borderColor,
+      borderW,
+      radius: isCircle ? 999 : borderRadius,
+      objectFit,
+      showTitle, showProduct, showPlayButton, autoCenter,
+      aspectRatio: shapeToAspectRatioWidget(shape),
+    };
+  }, [appearance, colors.primary]);
+
+  /* ════════════════ gridCfg ═══════════════════ */
+  const gridCfg = useMemo(() => {
+    const a = appearance || {};
+    const raw = a.grid_config;
+    const shape = String(readJsonbConfigValue(raw, 'shape', 'portrait') || 'portrait').toLowerCase().trim();
+    const isCircle = shape === 'circle';
+
+    const cols = safeInt(readJsonbConfigValue(raw, 'columns', readJsonbConfigValue(raw, 'visible_items', '4')), 4);
+    const rows = safeInt(readJsonbConfigValue(raw, 'rows', '1'), 1);
+    const gap = safeInt(readJsonbConfigValue(raw, 'spacing', readJsonbConfigValue(raw, 'gap', '16')), 16);
+    const borderColor = readJsonbConfigValue(raw, 'border_color', colors.primary) || colors.primary;
+    const borderW = safeInt(readJsonbConfigValue(raw, 'border_style', '2'), 2);
+    const borderRadius = safeInt(readJsonbConfigValue(raw, 'border_radius', '12'), 12);
+    const objectFit = String(readJsonbConfigValue(raw, 'object_fit', 'cover') || 'cover').toLowerCase();
+    const showTitle = toBoolean(readJsonbConfigValue(raw, 'show_title', false), false);
+
+    return {
+      shape, isCircle,
+      cols, rows, gap,
+      border: borderColor,
+      borderW,
+      radius: isCircle ? 999 : borderRadius,
+      objectFit,
+      showTitle,
+      aspectRatio: shapeToAspectRatioWidget(shape),
+    };
+  }, [appearance, colors.primary]);
