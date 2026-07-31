@@ -677,14 +677,43 @@ const gridCfg = useMemo(() => {
           getAllSafe<any>((db as any).generalSettings,sid),
         ]);
         if(!m)return; setSettings(gs?.[0]||null);
-        try {
-          const apps=await getAllSafe<any>((db as any).appearances,sid);
-          const aid=(story as any)?.appearance_id||gs?.[0]?.default_appearance_id;
-          let fnd:any=null;
-          if(aid) fnd=apps.find((a:any)=>a.id===aid)||null;
-          if(!fnd) fnd=apps.find((a:any)=>a.is_default)||apps[0]||null;
-          if(m) setAppearance(fnd);
-        }catch{}
+try {
+  const apps = await getAllSafe<any>((db as any).appearances, sid);
+  const storyAppearanceId = (story as any)?.appearance_id;
+  const defaultAppearanceId = gs?.[0]?.default_appearance_id;
+
+  let fnd: any = null;
+
+  // 1) Tenta pela appearance_id do story
+  if (storyAppearanceId) {
+    fnd = apps.find((a: any) => a.id === storyAppearanceId) || null;
+  }
+
+  // 2) Tenta pela default_appearance_id das generalSettings
+  if (!fnd && defaultAppearanceId) {
+    fnd = apps.find((a: any) => a.id === defaultAppearanceId) || null;
+  }
+
+  // 3) Tenta pela is_default
+  if (!fnd) {
+    fnd = apps.find((a: any) => a.is_default) || null;
+  }
+
+  // 4) Último fallback: primeira da lista
+  if (!fnd && apps.length > 0) {
+    fnd = apps[0];
+  }
+
+  if (m) setAppearance(fnd);
+} catch (e) {
+  console.error('Erro ao carregar appearance:', e);
+  // Tenta buscar sem store_id específico
+  try {
+    const apps = await getAllSafe<any>((db as any).appearances);
+    const fnd = apps?.find((a: any) => a.is_default) || apps?.[0] || null;
+    if (m) setAppearance(fnd);
+  } catch {}
+}
         const rels=sv.filter((r:any)=>r.story_id===story.id&&(!r.store_id||r.store_id===sid))
           .sort((a:any,b:any)=>Number(a.position||0)-Number(b.position||0))
           .map((r:any)=>allVids.find((v:any)=>v.id===r.video_id)).filter(Boolean) as Video[];
