@@ -582,44 +582,138 @@ const carouselCfg = useMemo(() => {
     };
   }, [appearance, colors.primary]);
 
-  /* ═══════════════════ gridCfg — CORRIGIDO ═══════════════════ */
+/* ════════════════ gridConfig ═══════════════════ */
 
-  const gridCfg = useMemo(()=>{
+const gridCfg = useMemo(() => {
     const a = appearance || {};
     const raw = parseJsonSafe(a.grid_config);
     const d = raw?.desktop || raw || {};
 
-    // 🔧 CORREÇÃO 1: border_width tem prioridade sobre border_style
-    const borderW = Number(d.border_width || d.border_style || 2);
+    const shape = (
+      d.shape ||
+      d.card_shape ||
+      d.format ||
+      a.grid_shape ||
+      a.grid_card_shape ||
+      'portrait'
+    ).toLowerCase();
 
-    // 🔧 CORREÇÃO 3: columns como fallback de visible_items
-    const cols = Number(d.visible_items ?? d.columns ?? 4);
+    const columns = Number(
+      d.columns ??
+      d.cols ??
+      a.grid_columns ??
+      a.grid_cols ??
+      3,
+    );
 
-    // 🔧 CORREÇÃO 2: gap
-    const gap = Number(d.spacing ?? d.gap ?? 16);
+    const rows = Number(
+      d.rows ??
+      a.grid_rows ??
+      2,
+    );
 
-    const shape = (d.shape || 'portrait').toLowerCase();
+    const gap = Number(
+      d.gap ??
+      d.spacing ??
+      a.grid_gap ??
+      a.grid_spacing ??
+      16,
+    );
+
+    const visibleItems = Number(
+      d.visible_items ??
+      d.visibleItems ??
+      d.items ??
+      d.card_size ??
+      a.grid_visible_items ??
+      a.grid_visibleItems ??
+      a.grid_items ??
+      columns * rows,
+    );
+
+    // 🔧 border_width: inclui border_style (nome real do backend)
+    const borderWidthRaw =
+      d.border_width ??
+      d.borderWidth ??
+      d.border_size ??
+      d.border_style ??
+      a.grid_border_width ??
+      a.grid_borderWidth ??
+      a.grid_border ??
+      a.border_width ??
+      a.borderWidth ??
+      2;
+    const borderWidth = Number(borderWidthRaw);
+
+    const borderRadiusRaw =
+      d.border_radius ??
+      d.borderRadius ??
+      d.radius ??
+      a.grid_border_radius ??
+      a.grid_borderRadius ??
+      a.grid_radius ??
+      a.border_radius ??
+      12;
+    const borderRadius = Number(borderRadiusRaw);
+
+    const borderColor =
+      d.border_color ??
+      d.borderColor ??
+      a.grid_border_color ??
+      a.grid_borderColor ??
+      a.border_color ??
+      colors.primary;
+
+    // 🔧 margins: inclui margin_top e margin_bottom do backend
+    const marginTop = Number(
+      d.margin_top ?? d.marginTop ?? a.grid_margin_top ?? a.grid_marginTop ?? 0,
+    );
+    const marginBottom = Number(
+      d.margin_bottom ?? d.marginBottom ?? a.grid_margin_bottom ?? a.grid_marginBottom ?? 0,
+    );
+
+    const showTitleRaw =
+      d.show_title ??
+      d.showTitle ??
+      a.grid_show_title ??
+      a.grid_showTitle ??
+      a.grid_title ??
+      a.show_title ??
+      true;
+    const showTitle =
+      showTitleRaw === true ||
+      showTitleRaw === 1 ||
+      showTitleRaw === 'true' ||
+      showTitleRaw === '1';
+
+    const showProductRaw =
+      d.show_product ??
+      d.showProduct ??
+      a.grid_show_product ??
+      a.grid_showProduct ??
+      a.show_product ??
+      true;
+    const showProduct =
+      showProductRaw === true ||
+      showProductRaw === 1 ||
+      showProductRaw === 'true' ||
+      showProductRaw === '1';
 
     return {
-      cols,
-      rows: Number(d.rows) || 1,
-      gap,
-      radius: Number(d.border_radius) || 12,
-      border: d.border_color || '#0094EB',
-      borderW,
       shape,
-      aspectRatio: shapeToAspectRatio(shape),
+      columns,
+      rows,
+      gap,
+      visible_items: visibleItems,
+      border_width: borderWidth,
+      border_radius: borderRadius,
+      border_color: borderColor,
+      margin_top: marginTop,
+      margin_bottom: marginBottom,
+      show_title: showTitle,
+      show_product: showProduct,
     };
-  },[appearance]);
-
-  /* floating position */
-  const floatingPos = useMemo(()=>{
-    const p=floatingCfg.position;
-    if(p.includes('top-left')) return 'top-4 left-4';
-    if(p.includes('top-right')) return 'top-4 right-4';
-    if(p.includes('bottom-left')) return 'bottom-4 left-4';
-    return 'bottom-4 right-4';
-  },[floatingCfg]);
+  }, [appearance, colors.primary]);
 
   /* ════════════ LOAD ════════════ */
 
