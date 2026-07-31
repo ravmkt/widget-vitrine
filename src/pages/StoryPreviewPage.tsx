@@ -426,29 +426,161 @@ const floatingCfg = useMemo(() => {
 
   /* ═══════════════════ carouselCfg — CORRIGIDO ═══════════════════ */
 
-  const carouselCfg = useMemo(()=>{
+/* ════════════════ carouselConfig ═══════════════════ */
+
+const carouselCfg = useMemo(() => {
     const a = appearance || {};
     const raw = parseJsonSafe(a.carousel_config);
     const d = raw?.desktop || raw || {};
 
-    // 🔧 CORREÇÃO 1: border_width tem prioridade sobre border_style
-    const borderW = Number(d.border_width || d.border_style || 2);
+    const shape = (
+      d.shape ||
+      d.card_shape ||
+      d.format ||
+      a.carousel_shape ||
+      a.carousel_card_shape ||
+      'portrait'
+    ).toLowerCase();
 
-    // 🔧 CORREÇÃO 2: gap e card_size
-    const gap = Number(d.spacing ?? d.gap ?? 16);
-    const shape = (d.shape || 'portrait').toLowerCase();
+    const visibleItems = Number(
+      d.visible_items ??
+      d.visibleItems ??
+      d.items ??
+      d.card_size ??
+      a.carousel_visible_items ??
+      a.carousel_visibleItems ??
+      a.carousel_items ??
+      5,
+    );
+
+    const gap = Number(
+      d.gap ??
+      d.spacing ??
+      a.carousel_gap ??
+      a.carousel_spacing ??
+      16,
+    );
+
+    // 🔧 border_width: inclui border_style (nome real do backend)
+    const borderWidthRaw =
+      d.border_width ??
+      d.borderWidth ??
+      d.border_size ??
+      d.border_style ??
+      a.carousel_border_width ??
+      a.carousel_borderWidth ??
+      a.carousel_border ??
+      a.border_width ??
+      a.borderWidth ??
+      2;
+    const borderWidth = Number(borderWidthRaw);
+
+    const borderRadiusRaw =
+      d.border_radius ??
+      d.borderRadius ??
+      d.radius ??
+      a.carousel_border_radius ??
+      a.carousel_borderRadius ??
+      a.carousel_radius ??
+      a.border_radius ??
+      12;
+    const borderRadius = Number(borderRadiusRaw);
+
+    const borderColor =
+      d.border_color ??
+      d.borderColor ??
+      a.carousel_border_color ??
+      a.carousel_borderColor ??
+      a.border_color ??
+      colors.primary;
+
+    // 🔧 margins: inclui margin_top e margin_bottom do backend
+    const marginTop = Number(
+      d.margin_top ?? d.marginTop ?? a.carousel_margin_top ?? a.carousel_marginTop ?? 0,
+    );
+    const marginBottom = Number(
+      d.margin_bottom ?? d.marginBottom ?? a.carousel_margin_bottom ?? a.carousel_marginBottom ?? 0,
+    );
+
+    // 🔧 show_play: inclui show_play_icon
+    const showPlayRaw =
+      d.show_play_button ??
+      d.show_play ??
+      d.showPlayButton ??
+      d.showPlay ??
+      d.play_button ??
+      d.playButton ??
+      d.show_play_icon ??
+      a.carousel_show_play_button ??
+      a.carousel_show_play ??
+      a.carousel_showPlayButton ??
+      a.carousel_showPlay ??
+      a.carousel_play_button ??
+      a.show_play_button ??
+      true;
+    const showPlay =
+      showPlayRaw === true ||
+      showPlayRaw === 1 ||
+      showPlayRaw === 'true' ||
+      showPlayRaw === '1';
+
+    const showTitleRaw =
+      d.show_title ??
+      d.showTitle ??
+      a.carousel_show_title ??
+      a.carousel_showTitle ??
+      a.carousel_title ??
+      a.show_title ??
+      true;
+    const showTitle =
+      showTitleRaw === true ||
+      showTitleRaw === 1 ||
+      showTitleRaw === 'true' ||
+      showTitleRaw === '1';
+
+    const showProductRaw =
+      d.show_product ??
+      d.showProduct ??
+      a.carousel_show_product ??
+      a.carousel_showProduct ??
+      a.show_product ??
+      true;
+    const showProduct =
+      showProductRaw === true ||
+      showProductRaw === 1 ||
+      showProductRaw === 'true' ||
+      showProductRaw === '1';
+
+    // 🔧 auto_center: campo que existe no backend
+    const autoCenterRaw =
+      d.auto_center ??
+      d.autoCenter ??
+      a.carousel_auto_center ??
+      a.carousel_autoCenter ??
+      a.auto_center ??
+      a.autoCenter ??
+      false;
+    const autoCenter =
+      autoCenterRaw === true ||
+      autoCenterRaw === 1 ||
+      autoCenterRaw === 'true' ||
+      autoCenterRaw === '1';
 
     return {
-      visible: Number(d.visible_items) || 4,
-      gap,
-      radius: Number(d.border_radius) || 12,
-      border: d.border_color || '#0094EB',
-      borderW,
-      card_size: d.width ?? d.card_size ?? '80',
       shape,
-      aspectRatio: shapeToAspectRatio(shape),
+      visible_items: visibleItems,
+      gap,
+      border_width: borderWidth,
+      border_radius: borderRadius,
+      border_color: borderColor,
+      margin_top: marginTop,
+      margin_bottom: marginBottom,
+      show_play: showPlay,
+      show_title: showTitle,
+      show_product: showProduct,
+      auto_center: autoCenter,
     };
-  },[appearance]);
+  }, [appearance, colors.primary]);
 
   /* ═══════════════════ gridCfg — CORRIGIDO ═══════════════════ */
 
