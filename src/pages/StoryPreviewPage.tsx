@@ -653,39 +653,53 @@ const renderInlineWidget = (isGrid: boolean) => {
     );
   };
 
-  // ═══════════════════════════════════════════════════════
-  // RETURN
-  // ═══════════════════════════════════════════════════════
-  return (
-    <div className="fixed inset-0 overflow-y-auto" style={{ fontFamily, background: '#f1f5f9' }}>
-      <div className="mx-auto max-w-[1200px] p-4">
-        <div className="mb-4 flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-white" style={{ backgroundColor: primaryColor }}>{(storeName || 'L').charAt(0)}</div>
-            <div>
-              <p className="text-sm font-bold text-slate-800">{storeName || 'Loja'}</p>
-              <p className="text-[10px] text-slate-400">Preview do Story • {storyFormat === 'floating_widget' ? 'Flutuante' : storyFormat === 'carousel' ? 'Carrossel' : 'Grade'}</p>
-            </div>
-          </div>
-          <button onClick={() => navigate(-1)} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200">← Voltar</button>
+// ═══════════════════════════════════════════════════════
+// RETURN
+// ═══════════════════════════════════════════════════════
+return (
+  <div className="fixed inset-0 overflow-y-auto" style={{ fontFamily, background: '#f1f5f9' }}>
+    <div className="mx-auto max-w-[1200px] p-4">
+      <div className="mb-4 flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
+        {/* Logo da loja ou fallback com inicial */}
+        <div
+          className="flex h-9 w-9 items-center justify-center rounded-full overflow-hidden flex-shrink-0"
+          style={{ backgroundColor: primaryColor }}
+        >
+          {stores?.[0]?.logo_url ? (
+            <img
+              src={stores[0].logo_url}
+              alt={storeName}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <span className="text-sm font-bold text-white">
+              {(storeName || 'L').charAt(0).toUpperCase()}
+            </span>
+          )}
         </div>
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[1, 2, 3, 4].map(i => <div key={i} className="h-24 rounded-2xl bg-white/60" />)}
+        <div>
+          <p className="text-sm font-bold text-slate-800">
+            {storeName || 'Minha Loja'}
+          </p>
+          <p className="text-[10px] text-slate-400">
+            Preview do Story • {storyFormat === 'floating_widget' ? 'Flutuante' : storyFormat === 'carousel' ? 'Carrossel' : 'Grade'}
+          </p>
         </div>
       </div>
-
-      {storyFormat === 'floating_widget' && videos.length > 0 && renderFloating()}
-      {storyFormat === 'carousel' && videos.length > 0 && renderInlineWidget(false)}
-      {storyFormat === 'grid' && videos.length > 0 && renderInlineWidget(true)}
-
-      {videos.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-          <Play size={48} className="mb-4 opacity-30" />
-          <p className="font-bold">Nenhum vídeo vinculado a este story.</p>
-        </div>
-      )}
-
-      {renderPlayer()}
     </div>
-  );
+
+    {storyFormat === 'floating_widget' && videos.length > 0 && renderFloating()}
+    {storyFormat === 'carousel' && videos.length > 0 && renderInlineWidget(false)}
+    {storyFormat === 'grid' && videos.length > 0 && renderInlineWidget(true)}
+
+    {videos.length === 0 && (
+      <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+        <Play size={48} className="mb-4 opacity-30" />
+        <p className="font-bold">Nenhum vídeo vinculado a este story.</p>
+      </div>
+    )}
+
+    {renderPlayer()}
+  </div>
+);
 }
