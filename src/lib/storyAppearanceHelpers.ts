@@ -407,10 +407,8 @@ export function normalizeModalAppearanceConfig(appearanceRaw: Record<string, any
   const rawModalConfig = parseJsonIfNeeded<any>(appearance.modal_config || appearance.modalConfig) || {};
 
   const rcv = (jsonbField: string, flatField: string | null, fallback?: any) => {
-    // Tenta ler direto do JSONB (desktop/mobile ou raiz)
     const jsonbVal = readJsonbConfigValue(appearance, 'modal_config', jsonbField);
     if (jsonbVal !== undefined && jsonbVal !== null && jsonbVal !== '') return jsonbVal;
-    // Também tenta do rawModalConfig parseado
     if (rawModalConfig[jsonbField] !== undefined && rawModalConfig[jsonbField] !== null && rawModalConfig[jsonbField] !== '') {
       return rawModalConfig[jsonbField];
     }
