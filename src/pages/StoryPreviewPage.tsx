@@ -341,8 +341,7 @@ export default function StoryPreviewPage() {
 
     // ── Tamanho do card preenchendo 100% da largura dividido por columns ──
     const cardFlexBasis = `calc((100% - ${(columns - 1) * cfg.spacing}px) / ${columns})`;
-    const cardMaxWidth = isGrid ? cardFlexBasis : `min(${cardFlexBasis}, ${cfg.size}px)`;
-
+const cardMaxWidth = isGrid ? cardFlexBasis : 'none';
     const borderRadius = isCircle ? '50%' : `${cfg.borderRadius}px`;
 
     // ── Padding extra para círculos ──
