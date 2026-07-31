@@ -141,6 +141,7 @@ const StoryPreviewPage = () => {
       show_like: a.show_like_button ?? raw.show_like_button ?? true,
       show_comment: a.show_comment_button ?? raw.show_comment_button ?? true,
       show_share: a.show_share_button ?? raw.show_share_button ?? true,
+      show_whatsapp: a.show_whatsapp_button ?? raw.show_whatsapp_button ?? true,
       border_color: raw.border_color||'#000', border_width: String(raw.border_width||'0'), border_radius: String(raw.border_radius||'0'), shadow: raw.shadow_enabled??a.shadow_enabled??false,
     };
   },[appearance]);
@@ -337,79 +338,159 @@ const StoryPreviewPage = () => {
   const productPrice=Number(product?.price||product?.sale_price||0);
   const borderStyle: React.CSSProperties = { borderColor:mc.border_color, borderWidth:`${mc.border_width}px`, borderRadius:`${mc.border_radius}px`, borderStyle:'solid', boxShadow:mc.shadow?'0 25px 50px -12px rgba(0,0,0,.5)':undefined };
 
-  /* ═══════════════════ PLAYER ═══════════════════ */
+  /* ═══════════════════ PLAYER (layout corrigido) ═══════════════════ */
 
   const Player = () => (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95" onClick={close}>
       <div onClick={e=>e.stopPropagation()} className="relative flex w-full max-w-[420px] flex-col overflow-hidden bg-black" style={borderStyle}>
-        {/* close */}
-        <button onClick={close} className="absolute top-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"><X size={20}/></button>
+        {/* close button */}
+        <button onClick={close} className="absolute top-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md hover:bg-black/60"><X size={20}/></button>
 
         {/* video area */}
         <div className="relative aspect-[9/16] w-full bg-black">
-          {/* progress */}
-          <div className="absolute top-0 left-0 right-0 z-10 flex gap-1 px-1 pt-2">
+          {/* progress bars */}
+          <div className="absolute top-3 z-50 flex gap-1.5 left-[max(1rem,env(safe-area-inset-left))] right-[max(1rem,env(safe-area-inset-right))]">
             {videos.map((_,i)=>(
-              <div key={i} className="h-1 flex-1 overflow-hidden rounded-full bg-white/30">
-                <div className="h-full rounded-full transition-all duration-300" style={{width:i<activeIdx?'100%':i===activeIdx?`${progress}%`:'0%',backgroundColor:c.primary}}/>
+              <div key={i} className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/25">
+                <div className={cn('h-full rounded-full transition-all', i<activeIdx?'w-full':i===activeIdx?'':'w-0')} style={i===activeIdx?{width:`${progress}%`,backgroundColor:c.primary}:i<activeIdx?{backgroundColor:c.primary}:undefined}/>
               </div>
             ))}
           </div>
-          <button onClick={goPrev} className="absolute left-0 top-0 z-10 h-full w-1/3"/>
-          <button onClick={goNext} className="absolute right-0 top-0 z-10 h-full w-1/3"/>
-          {mc.show_title&&video?.title&&<div className="absolute top-10 left-3 right-3 z-10"><p className="text-sm font-semibold text-white drop-shadow-lg line-clamp-2">{video.title}</p></div>}
+
+          {/* header com título */}
+          <div className="absolute left-0 right-0 top-0 z-40 flex items-start justify-between bg-gradient-to-b from-black/70 to-transparent p-5" style={{paddingTop:'max(2rem,env(safe-area-inset-top))'}}>
+            {mc.show_title&&video?.title?(
+              <div className="min-w-0 pr-16">
+                <h3 className="truncate text-sm font-black text-white">{video.title}</h3>
+                <p className="text-[10px] font-bold uppercase text-white/65">{storeName}{videos.length>1?` • ${activeIdx+1}/${videos.length}`:''}</p>
+              </div>
+            ):<div/>}
+          </div>
+
+          {/* navegação */}
+          <button onClick={goPrev} className="absolute left-0 top-0 z-30 h-full w-[30%]"/>
+          <button onClick={goNext} className="absolute right-0 top-0 z-30 h-full w-[70%]"/>
+
+          {/* vídeo */}
           {currentUrl&&!videoError?(
             <video ref={videoRef} src={currentUrl} poster={posterUrl} className="h-full w-full object-cover" playsInline muted={muted} autoPlay onPlay={()=>setPlaying(true)} onPause={()=>setPlaying(false)} onError={()=>setVideoError(true)} onEnded={goNext}/>
           ):(
             <div className="flex h-full w-full items-center justify-center text-white/50 text-sm">{videoError?'Erro ao carregar vídeo':'Nenhum vídeo disponível'}</div>
           )}
-          {mc.show_play&&currentUrl&&!videoError&&(
-            <button onClick={togglePlay} className="absolute inset-0 z-10 flex items-center justify-center">
-              <div className={`flex h-16 w-16 items-center justify-center rounded-full bg-black/40 text-white transition-opacity ${playing?'opacity-0 hover:opacity-100':'opacity-100'}`}>{playing?<Pause size={32}/>:<Play size={32} className="ml-1"/>}</div>
+
+          {/* ─── Botões de ação NO LADO DIREITO (como no site) ─── */}
+          <div className="absolute top-24 z-[60] flex flex-col gap-3" style={{right:'max(0.75rem,env(safe-area-inset-right))'}}>
+            {/* Play / Pause */}
+            {mc.show_play&&currentUrl&&!videoError&&(
+              <button onClick={togglePlay} className="rounded-full p-3 text-white backdrop-blur-md hover:brightness-110" style={{backgroundColor:c.primary}}>
+                {playing?<Pause className="h-5 w-5"/>:<Play className="h-5 w-5"/>}
+              </button>
+            )}
+
+            {/* Mute */}
+            <button onClick={toggleMute} className="rounded-full p-3 text-white backdrop-blur-md hover:brightness-110" style={{backgroundColor:c.primary}}>
+              {muted?<VolumeX className="h-5 w-5"/>:<Volume2 className="h-5 w-5"/>}
             </button>
-          )}
-          <button onClick={toggleMute} className="absolute top-4 right-12 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white">{muted?<VolumeX size={16}/>:<Volume2 size={16}/>}</button>
-        </div>
 
-        {/* actions + product */}
-        <div className="flex items-start gap-3 bg-black px-3 py-2">
-          <div className="flex flex-col items-center gap-4 pt-1">
-            {mc.show_like&&<button onClick={doLike} className="flex flex-col items-center gap-0.5 text-white"><Heart size={24} fill={liked?'#ef4444':'none'} stroke={liked?'#ef4444':'white'}/><span className="text-[10px]">{likeCount}</span></button>}
-            {mc.show_comment&&<button onClick={()=>setShowComments(v=>!v)} className="flex flex-col items-center gap-0.5 text-white"><MessageCircle size={24}/><span className="text-[10px]">{comments.length}</span></button>}
-            {mc.show_share&&<button onClick={doShare} className="flex flex-col items-center gap-0.5 text-white"><Share2 size={24}/></button>}
-            {modelData.length>0&&<button onClick={()=>setModelOpen(true)} className="flex flex-col items-center gap-0.5 text-white"><Ruler size={24}/></button>}
+            {/* Like com contador */}
+            {mc.show_like&&(
+              <button onClick={doLike} className="relative rounded-full p-3 text-white backdrop-blur-md hover:brightness-110" style={{backgroundColor:c.primary}}>
+                <Heart className={cn('h-5 w-5',liked?'fill-rose-500 text-rose-500':'')}/>
+                <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-black text-white">{likeCount}</span>
+              </button>
+            )}
+
+            {/* Comentários com contador (ícone de bolha do StoriesWidgetPage) */}
+            {(mc.show_comment)&&(
+              <button onClick={()=>setShowComments(v=>!v)} className="flex flex-col items-center gap-1">
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 shadow-md hover:scale-105 transition">
+                  <svg viewBox="0 0 24 24" className="h-6 w-6 text-slate-900" fill="currentColor">
+                    <path d="M4.5 3.5h15A2.5 2.5 0 0 1 22 6v9a2.5 2.5 0 0 1-2.5 2.5h-4.2l-2.1 2.1a1.7 1.7 0 0 1-2.4 0l-2.1-2.1H4.5A2.5 2.5 0 0 1 2 15V6a2.5 2.5 0 0 1 2.5-2.5Z"/>
+                    <circle cx="8" cy="10.5" r="1" fill="white"/>
+                    <circle cx="12" cy="10.5" r="1" fill="white"/>
+                    <circle cx="16" cy="10.5" r="1" fill="white"/>
+                  </svg>
+                </span>
+                <span className="text-center text-xs font-bold leading-none text-white">{comments.length}</span>
+              </button>
+            )}
+
+            {/* Share */}
+            {mc.show_share&&(
+              <button onClick={doShare} className="rounded-full p-3 text-white backdrop-blur-md hover:brightness-110" style={{backgroundColor:c.primary}}>
+                <Share2 className="h-5 w-5"/>
+              </button>
+            )}
+
+            {/* Medidas */}
+            {modelData.length>0&&(
+              <button onClick={()=>setModelOpen(true)} className="rounded-full p-3 text-white backdrop-blur-md hover:brightness-110" style={{backgroundColor:c.primary}} title="Medidas">
+                <Ruler className="h-5 w-5"/>
+              </button>
+            )}
+
+            {/* WhatsApp (botão flutuante, fora do card) */}
+            {mc.show_whatsapp&&(
+              <button onClick={doWhatsApp} className="flex h-11 w-11 items-center justify-center rounded-full bg-[#25D366] text-white hover:brightness-110">
+                <svg viewBox="0 0 24 24" className="h-5 w-5 fill-white"><path d="M16.6 13.2c-.3-.2-1.7-.8-2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.8 0c-.4-.2-1.4-.5-2.6-1.6-.9-.8-1.6-1.8-1.8-2.2-.2-.4 0-.6.2-.8l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6s-.7-1.7-1-2.3c-.3-.6-.6-.5-.8-.5h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.8s1.3 3.2 1.5 3.4c.2.2 2.3 3.6 5.6 5.1.8.4 1.5.6 2.1.8.9.3 1.7.3 2.3.2.7-.1 1.7-.7 2-1.3.3-.6.3-1.1.2-1.3-.1-.2-.3-.3-.6-.5z"/><path d="M20 4A10 10 0 0 0 3.6 16.2L2 22l5.9-1.5A10 10 0 1 0 20 4zm-7.9 15.4c-1.6 0-3.2-.4-4.6-1.3l-.3-.2-3.5.9.9-3.4-.2-.3A8.1 8.1 0 1 1 12.1 19.4z"/></svg>
+              </button>
+            )}
           </div>
+
+          {/* ─── Card de produto NA PARTE INFERIOR (como no site) ─── */}
           {mc.show_product&&product&&(
-            <div className="flex-1">
-              <div className="flex items-center gap-3 rounded-xl bg-white/10 p-2" style={{borderRadius:`${mc.border_radius}px`}}>
-                {productImg&&<img src={productImg} alt={product.name||'Produto'} className="h-14 w-14 rounded-lg object-cover"/>}
-                <div className="min-w-0 flex-1"><p className="text-sm font-medium text-white line-clamp-1">{product.name||'Produto'}</p>{productPrice>0&&<p className="text-sm font-bold" style={{color:c.primary}}>R$ {productPrice.toFixed(2)}</p>}</div>
-              </div>
-              <div className="mt-2 flex gap-2">
-                {mc.show_product_btn&&productUrl&&<a href={productUrl} target="_blank" rel="noopener noreferrer" className="flex flex-1 items-center justify-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold text-white hover:opacity-90" style={{backgroundColor:c.btn}}><ExternalLink size={14}/>Ver produto</a>}
-                {mc.show_product_wpp&&<button onClick={doWhatsApp} className="flex flex-1 items-center justify-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold text-white hover:opacity-90" style={{backgroundColor:'#25D366'}}>WhatsApp</button>}
+            <div className="absolute bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-black/85 via-black/50 to-transparent p-4 pt-10" style={{paddingBottom:'max(1rem,env(safe-area-inset-bottom))'}}>
+              <div className="flex items-center gap-3 rounded-3xl border border-white/20 bg-white/95 p-3 shadow-2xl" style={{backgroundColor:c.bg}}>
+                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-slate-200">
+                  {productImg?<img src={productImg} alt={product.name||'Produto'} className="h-full w-full object-cover"/>:<div className="h-full w-full bg-slate-200"/>}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-black" style={{color:c.text}}>{product.name||'Produto'}</p>
+                  {productPrice>0&&<p className="mt-1 text-base font-black" style={{color:c.primary}}>R$ {productPrice.toFixed(2)}</p>}
+
+                  {/* Botões dentro do card */}
+                  {(mc.show_product_btn||mc.show_product_wpp)&&(
+                    <div className={cn('mt-2 flex gap-2', (mc.show_product_btn&&mc.show_product_wpp)?'flex-row':'flex-col')}>
+                      {mc.show_product_btn&&productUrl&&(
+                        <a href={productUrl} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-1 rounded-full px-3 py-2 text-[11px] font-black text-white hover:opacity-90" style={{backgroundColor:c.btn}}>
+                          <ExternalLink className="h-3.5 w-3.5"/>Ver produto
+                        </a>
+                      )}
+                      {mc.show_product_wpp&&(
+                        <button onClick={doWhatsApp} className="flex items-center justify-center gap-1 rounded-full px-3 py-2 text-[11px] font-black text-white hover:opacity-90" style={{backgroundColor:'#25D366'}}>
+                          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-white"><path d="M16.6 13.2c-.3-.2-1.7-.8-2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.8 0c-.4-.2-1.4-.5-2.6-1.6-.9-.8-1.6-1.8-1.8-2.2-.2-.4 0-.6.2-.8l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6s-.7-1.7-1-2.3c-.3-.6-.6-.5-.8-.5h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.8s1.3 3.2 1.5 3.4c.2.2 2.3 3.6 5.6 5.1.8.4 1.5.6 2.1.8.9.3 1.7.3 2.3.2.7-.1 1.7-.7 2-1.3.3-.6.3-1.1.2-1.3-.1-.2-.3-.3-.6-.5z"/><path d="M20 4A10 10 0 0 0 3.6 16.2L2 22l5.9-1.5A10 10 0 1 0 20 4zm-7.9 15.4c-1.6 0-3.2-.4-4.6-1.3l-.3-.2-3.5.9.9-3.4-.2-.3A8.1 8.1 0 1 1 12.1 19.4z"/></svg>
+                          Comprar pelo WhatsApp
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* comments */}
+        {/* comments panel (overlay) */}
         {showComments&&(
-          <div className="border-t border-white/10 bg-black px-3 py-3">
-            <div className="mb-3 max-h-40 overflow-y-auto space-y-2">
-              {comments.length===0&&<p className="text-center text-xs text-white/50">Nenhum comentário ainda.</p>}
-              {comments.map((cm,i)=><div key={cm.id||i} className="rounded-lg bg-white/5 p-2"><p className="text-xs font-semibold text-white/80">{getCommentName(cm)}</p><p className="text-sm text-white">{cm.text}</p></div>)}
-            </div>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <textarea ref={textareaRef} value={commentText} onChange={e=>setCommentText(e.target.value)} placeholder="Escreva um comentário..." rows={2} className="w-full resize-none rounded-lg bg-white/10 px-3 py-2 text-sm text-white placeholder-white/40 outline-none"/>
-                <button onClick={()=>setShowEmoji(v=>!v)} className="absolute right-2 bottom-2 text-white/60 hover:text-white"><Smile size={16}/></button>
-                {showEmoji&&<div className="absolute bottom-full right-0 mb-1 flex flex-wrap gap-1 rounded-lg bg-gray-800 p-2 shadow-lg max-w-[200px]">{EMOJIS.map(e=><button key={e} onClick={()=>insertEmoji(e)} className="text-lg hover:scale-125 transition">{e}</button>)}</div>}
+          <div className="absolute inset-0 z-[90] bg-black/85 p-4">
+            <div className="mx-auto flex h-full max-w-md flex-col rounded-[28px] bg-slate-950 p-4 text-white shadow-2xl">
+              <div className="mb-3 flex items-center justify-between">
+                <h4 className="text-lg font-black">Comentários</h4>
+                <button onClick={()=>setShowComments(false)} className="rounded-full bg-white/10 p-2 hover:bg-white/20"><X className="h-5 w-5"/></button>
               </div>
-            </div>
-            <div className="mt-2 flex items-center gap-2">
-              <input type="text" value={commentName} onChange={e=>setCommentName(e.target.value)} placeholder="Seu nome" className="flex-1 rounded-lg bg-white/10 px-3 py-2 text-sm text-white placeholder-white/40 outline-none"/>
-              <button onClick={submitComment} className="rounded-lg px-4 py-2 text-sm font-semibold text-white hover:opacity-90" style={{backgroundColor:c.primary}}>Enviar</button>
+              <div className="flex-1 space-y-3 overflow-auto">
+                {comments.length===0&&<p className="text-sm text-white/50">Nenhum comentário ainda.</p>}
+                {comments.map((cm,i)=><div key={cm.id||`${cm.created_at}-${i}`} className="rounded-2xl bg-white/5 p-3"><p className="text-xs font-black text-white/70">{getCommentName(cm)}</p><p className="whitespace-pre-wrap text-sm text-white">{cm.text}</p></div>)}
+              </div>
+              <div className="mt-4 space-y-2">
+                <input value={commentName} onChange={e=>setCommentName(e.target.value)} placeholder="Seu nome" className="w-full rounded-2xl bg-white/10 p-3 text-sm text-white outline-none placeholder:text-white/40"/>
+                <div className="relative">
+                  <textarea ref={textareaRef} value={commentText} onChange={e=>setCommentText(e.target.value)} placeholder="Escreva seu comentário..." className="min-h-24 w-full resize-none rounded-2xl bg-white/10 p-3 pr-12 text-sm text-white outline-none placeholder:text-white/40"/>
+                  <button onClick={()=>setShowEmoji(v=>!v)} className="absolute right-3 top-3 text-white"><Smile className="h-5 w-5"/></button>
+                </div>
+                {showEmoji&&<div className="grid grid-cols-6 gap-2 rounded-2xl bg-white/10 p-3 text-xl">{EMOJIS.map(e=><button key={e} onClick={()=>insertEmoji(e)} className="rounded-lg p-1 hover:bg-white/10">{e}</button>)}</div>}
+                <button onClick={submitComment} className="w-full rounded-2xl p-3 text-sm font-black text-white hover:opacity-90" style={{backgroundColor:c.btn}}>Enviar comentário</button>
+              </div>
             </div>
           </div>
         )}
@@ -490,15 +571,14 @@ const StoryPreviewPage = () => {
   const MeasuresModal = () => {
     if(!modelOpen) return null;
     return (
-      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80" onClick={()=>setModelOpen(false)}>
-        <div className="mx-4 w-full max-w-md rounded-2xl bg-gray-900 p-6 text-white shadow-2xl" onClick={e=>e.stopPropagation()}>
-          <div className="mb-4 flex items-center justify-between"><h3 className="text-lg font-bold">Tabela de Medidas</h3><button onClick={()=>setModelOpen(false)} className="text-white/60 hover:text-white"><X size={20}/></button></div>
-          {model?.name&&<p className="mb-3 text-sm text-white/70">{model.name}</p>}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead><tr className="border-b border-white/20"><th className="py-2 pr-4 font-medium">Tamanho</th>{modelData[0]&&Object.keys(modelData[0]).filter(k=>k!=='size'&&k!=='tamanho'&&k!=='label'&&k!=='name').map(k=><th key={k} className="py-2 pr-4 font-medium capitalize">{k}</th>)}</tr></thead>
-              <tbody>{modelData.map((row:any,i:number)=><tr key={i} className="border-b border-white/10"><td className="py-2 pr-4 font-medium">{row.size||row.tamanho||row.label||row.name||'-'}</td>{Object.keys(modelData[0]||{}).filter(k=>k!=='size'&&k!=='tamanho'&&k!=='label'&&k!=='name').map(k=><td key={k} className="py-2 pr-4">{row[k]??'-'}</td>)}</tr>)}</tbody>
-            </table>
+      <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/85 p-4" onClick={()=>setModelOpen(false)}>
+        <div className="mx-auto flex max-h-[75vh] w-full max-w-[380px] flex-col overflow-hidden rounded-[28px] bg-white p-5 text-slate-900 shadow-2xl" onClick={e=>e.stopPropagation()}>
+          <div className="mb-4 flex items-center justify-between">
+            <div><p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Medidas da modelo</p><h4 className="text-lg font-black">{model?.name||'Modelo'}</h4></div>
+            <button onClick={()=>setModelOpen(false)} className="rounded-full bg-slate-100 p-2 hover:bg-slate-200"><X className="h-5 w-5"/></button>
+          </div>
+          <div className="flex-1 space-y-3 overflow-auto">
+            {modelData.length>0?modelData.map((m:any,i:number)=><div key={`${m.name||m.label||i}-${i}`} className="flex items-center justify-between gap-4 rounded-2xl bg-slate-50 p-3"><span className="font-bold text-slate-700">{m.name||m.label||`Medida ${i+1}`}</span><span className="text-right font-black text-slate-950">{m.value||m.size||'-'}{m.unit||''}</span></div>):<p className="text-sm text-slate-500">Sem medidas cadastradas.</p>}
           </div>
         </div>
       </div>
@@ -509,7 +589,6 @@ const StoryPreviewPage = () => {
 
   return (
     <div className="fixed inset-0 bg-[#111] flex items-center justify-center overflow-hidden">
-      {/* NENHUM formato abre o player automaticamente */}
       {!playerOpen && isFloating && <FloatingWidget/>}
       {!playerOpen && isCarousel && <Carousel/>}
       {!playerOpen && isGrid && <Grid/>}
