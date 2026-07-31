@@ -65,7 +65,6 @@ const SvgHeart = ({ filled }: { filled: boolean }) => (
   </svg>
 );
 
-// 🔧 CORREÇÃO: Ícone de comentário preenchido (branco) quando há comentários — igual produção
 const SvgComment = ({ filled }: { filled?: boolean }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill={filled ? "#ffffff" : "none"} stroke={filled ? "#ffffff" : "currentColor"} strokeWidth={filled ? 1.5 : 2} strokeLinecap="round" strokeLinejoin="round">
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -114,7 +113,6 @@ const SvgWhatsApp = () => (
   </svg>
 );
 
-// 🔧 CORREÇÃO: Ícone de medidas — igual ao svgIcon('sizing') do widget.js
 const SvgRuler = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="2" y="4" width="20" height="16" rx="2"/>
@@ -125,7 +123,6 @@ const SvgRuler = () => (
   </svg>
 );
 
-// Chevron icons do widget.js
 const SvgChevronLeft = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="15 18 9 12 15 6"/>
@@ -185,6 +182,9 @@ const StoryPreviewPage = () => {
   const [showSharePanel, setShowSharePanel] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
 
+  /* 🔧 CORREÇÃO: estado para esconder o flutuante ao clicar no X */
+  const [floatingDismissed, setFloatingDismissed] = useState(false);
+
   const video = videos[activeIdx]||null;
   const currentUrl = getVideoUrl(video);
   const posterUrl = getVideoPoster(video);
@@ -218,13 +218,14 @@ const StoryPreviewPage = () => {
     const a=appearance||{};
     return {
       show_title: a.show_title ?? raw.show_title ?? true,
-      show_play: a.show_play_button ?? raw.show_play_button ?? true,
+      // 🔧 CORREÇÃO #1: múltiplos fallbacks para show_play (cobre diferentes nomes de prop do backend)
+      show_play: a.show_play_button ?? a.show_play ?? a.play_button ?? raw.show_play_button ?? raw.show_play ?? raw.play_button ?? true,
       show_product: a.show_product ?? raw.show_product ?? true,
       show_product_btn: a.show_product_button ?? raw.show_product_button ?? true,
       show_like: a.show_like_button ?? raw.show_like_button ?? true,
       show_comment: a.show_comment_button ?? raw.show_comment_button ?? true,
       show_share: a.show_share_button ?? raw.show_share_button ?? true,
-show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ?? raw.show_whatsapp_button ?? raw.show_whatsapp ?? raw.whatsapp_button ?? false,
+      show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ?? raw.show_whatsapp_button ?? raw.show_whatsapp ?? raw.whatsapp_button ?? false,
       show_sizing: a.show_sizing_button ?? raw.show_sizing_button ?? true,
       shadow: raw.shadow_enabled??a.shadow_enabled??true,
       border_color: raw.border_color||'',
@@ -233,6 +234,7 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
     };
   },[appearance]);
 
+  /* 🔧 CORREÇÃO #3, #4, #5: floatingCfg agora lê show_close, show_play e border_color */
   const floatingCfg = useMemo(()=>{
     const a=appearance||{}; const raw=parseJsonSafe(a.floating_config);
     const d=raw?.desktop||raw||{};
@@ -240,7 +242,18 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
     const size=Number(d.width||a.floating_size||80);
     const h=shape==='square'||shape==='circle'?size:Math.round(size*16/9);
     const pos=String(d.floating_position||d.position||a.floating_position||'bottom-right').toLowerCase();
-    return { shape, width:size, height:h, position:pos };
+    return {
+      shape,
+      width:size,
+      height:h,
+      position:pos,
+      // 🔧 CORREÇÃO #4: controle do botão X de fechar
+      show_close: d.show_close_button ?? d.show_close ?? a.floating_show_close ?? true,
+      // 🔧 CORREÇÃO #5: controle do botão play central
+      show_play: d.show_play_button ?? d.show_play ?? a.floating_show_play ?? true,
+      // 🔧 CORREÇÃO #3: cor da borda do flutuante
+      border_color: d.border_color || a.floating_border_color || '',
+    };
   },[appearance]);
 
   const carouselCfg = useMemo(()=>{
@@ -265,6 +278,9 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
   },[floatingCfg]);
 
   const widgetShape = floatingCfg.shape==='circle'?'rounded-full':'rounded-2xl';
+
+  // 🔧 CORREÇÃO #3: cor da borda do flutuante (usa config específica ou fallback para cor primária)
+  const floatingBorderColor = floatingCfg.border_color || colors.primary;
 
   /* ════════════ LOAD ════════════ */
 
@@ -337,6 +353,12 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
         setProduct(p); setModel(m);
       }catch{ setProduct(null); setModel(null); }
     })();
+    // 🔧 CORREÇÃO #2: inicializa muted via ref (sem prop controlada)
+    const el = videoRef.current;
+    if (el) {
+      el.muted = false;
+      setMuted(false);
+    }
   },[video?.id,story?.id,storeId]);
 
   useEffect(()=>{
@@ -368,7 +390,14 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
   const openPlayer = (idx: number) => { setActiveIdx(idx); setPlayerOpen(true); };
 
   const togglePlay = async () => { if(!videoRef.current)return; try { if(playing){ videoRef.current.pause(); setPlaying(false); } else { await videoRef.current.play(); setPlaying(true); } } catch { setPlaying(false); } };
-  const toggleMute = () => { const n=!muted; setMuted(n); if(videoRef.current) videoRef.current.muted=n; };
+
+  // 🔧 CORREÇÃO #2: mute/unmute SEM mexer em prop controlada — só via ref, sem reiniciar o vídeo
+  const toggleMute = () => {
+    const el = videoRef.current;
+    if (!el) return;
+    el.muted = !el.muted;
+    setMuted(el.muted);
+  };
 
   const doLike = () => {
     if(!video?.id)return;
@@ -380,7 +409,6 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
   const goNext = () => { if(!videos.length)return; if(activeIdx<videos.length-1) setActiveIdx(p=>p+1); else setPlayerOpen(false); };
   const goPrev = () => { if(!videos.length)return; setActiveIdx(p=>p>0?p-1:videos.length-1); };
 
-  // 🔧 CORREÇÃO: Share agora é dropdown customizado (igual widget.js), não navigator.share nativo
   const doShare = () => {
     setShowSharePanel(p=>!p);
   };
@@ -445,7 +473,6 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
   const productPrice=Number(product?.price||product?.sale_price||0);
   const modalShadow = mc.shadow ? '0 24px 80px rgba(15,23,42,.24)' : 'none';
 
-  // 🔧 CORREÇÃO: Borda do modal — igual ao widget.js (usa border_color/border_width do modal_config)
   const modalBorderWidthNum = parseInt(mc.border_width) || 0;
   const modalBorderColor = mc.border_color || 'transparent';
   const modalBorderRadiusNum = parseInt(mc.border_radius) || 0;
@@ -462,7 +489,6 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
           boxShadow:modalShadow,
           background:c.modalBg,
           color:c.modalText,
-          // 🔧 CORREÇÃO: Borda igual widget.js
           border: modalBorderWidthNum > 0 ? `${modalBorderWidthNum}px solid ${modalBorderColor}` : 'none',
           borderRadius: modalBorderRadiusNum > 0 ? `${modalBorderRadiusNum}px` : '36px',
         }}
@@ -479,7 +505,7 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
           </div>
         )}
 
-        {/* 🔧 CORREÇÃO: Header — ordem mute → play/pause → close (igual widget.js) */}
+        {/* Header — mute → play/pause → close */}
         <div className="absolute top-0 left-0 right-0 z-40 flex items-start justify-between pointer-events-none px-4 pt-5 pb-4"
           style={{background:'linear-gradient(to bottom, rgba(0,0,0,.7), transparent)'}}>
           <div className="flex flex-col gap-0.5 min-w-0 flex-1 pr-12 pointer-events-auto">
@@ -491,12 +517,12 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
             </p>
           </div>
 
-          {/* 🔧 CORREÇÃO: Ordem dos botões = mute, play/pause, close */}
           <div className="flex items-center gap-2 pointer-events-auto flex-shrink-0">
             <button onClick={toggleMute} className="flex h-8 w-8 items-center justify-center rounded-full border border-white/80 text-white backdrop-blur-xl hover:bg-black/60"
               style={{background:'rgba(0,0,0,.4)'}}>
               {muted ? <SvgVolumeOff/> : <SvgVolume/>}
             </button>
+            {/* 🔧 CORREÇÃO #1: mc.show_play agora com múltiplos fallbacks — botão aparece corretamente */}
             {mc.show_play && currentUrl && !videoError && (
               <button onClick={togglePlay} className="flex h-8 w-8 items-center justify-center rounded-full border border-white/80 text-white backdrop-blur-xl hover:bg-black/60"
                 style={{background:'rgba(0,0,0,.4)'}}>
@@ -518,7 +544,7 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
             <button onClick={goNext} className="h-full w-[70%]"/>
           </div>
 
-          {/* 🔧 CORREÇÃO: Setas de navegação (iguais widget.js) */}
+          {/* Setas de navegação */}
           {videos.length > 1 && (
             <>
               <button onClick={(e)=>{e.stopPropagation(); goPrev();}}
@@ -534,10 +560,10 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
             </>
           )}
 
-          {/* Vídeo */}
+          {/* 🔧 CORREÇÃO #2: Vídeo sem prop muted controlada — usa defaultMuted + ref */}
           {currentUrl && !videoError ? (
             <video ref={videoRef} src={currentUrl} poster={posterUrl}
-              className="absolute inset-0 h-full w-full object-cover" playsInline muted={muted} autoPlay loop
+              className="absolute inset-0 h-full w-full object-cover" playsInline defaultMuted={false} autoPlay loop
               onPlay={()=>setPlaying(true)} onPause={()=>setPlaying(false)}
               onError={()=>setVideoError(true)} onEnded={goNext}/>
           ) : (
@@ -546,7 +572,7 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
             </div>
           )}
 
-          {/* 🔧 CORREÇÃO: Botões Sociais — posição calc(42% + 180px) igual widget.js */}
+          {/* Botões Sociais */}
           <div className="absolute z-[45] flex flex-col items-center gap-3"
             style={{top:'calc(42% + 180px)', right:'12px', transform:'translateY(-50%)'}}>
 
@@ -562,7 +588,7 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
               </div>
             )}
 
-            {/* 🔧 CORREÇÃO: Comentários — ícone preenchido quando tem comentários (igual widget.js) */}
+            {/* Comentários */}
             {mc.show_comment && (
               <div className="flex flex-col items-center gap-0">
                 <button onClick={()=>setShowComments(true)}
@@ -574,7 +600,7 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
               </div>
             )}
 
-            {/* 🔧 CORREÇÃO: Share com dropdown customizado (igual widget.js) */}
+            {/* Share com dropdown */}
             {mc.show_share && (
               <div className="relative">
                 <button onClick={doShare}
@@ -607,11 +633,9 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
                 <SvgRuler/>
               </button>
             )}
-
-            {/* 🔧 CORREÇÃO: REMOVIDO — WhatsApp flutuante não existe no widget.js. O WhatsApp só aparece no card do produto. */}
           </div>
 
-          {/* ═══ Footer — Card de Produto (igual widget.js) ═══ */}
+          {/* ═══ Footer — Card de Produto ═══ */}
           {mc.show_product && product && (
             <div className="absolute bottom-0 left-0 right-0 z-40 pointer-events-none px-4 pb-4 pt-10"
               style={{background:'linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.5), transparent)'}}>
@@ -626,30 +650,29 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-extrabold" style={{color:c.text}}>{product.name||'Produto'}</p>
                   {productPrice>0 && <p className="mt-1 text-base font-extrabold" style={{color:c.secondary}}>R$ {productPrice.toFixed(2)}</p>}
-                  {/* 🔧 CORREÇÃO: Botões igual widget.js — "Ver no site" e "Comprar pelo WhatsApp" condicional */}
-<div className="mt-1.5 flex items-center gap-2 flex-wrap">
-  {/* 🔧 "Ver no site" é PADRÃO — sempre aparece */}
-  <a href={productUrl||'#'} target="_blank" rel="noreferrer"
-    className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90 no-underline"
-    style={{background:c.btn, opacity: productUrl ? 1 : 0.5, pointerEvents: productUrl ? 'auto' : 'none'}}>
-    Ver no site
-  </a>
-  {/* 🔧 WhatsApp só aparece se show_whatsapp estiver habilitado */}
-  {mc.show_whatsapp && (
-    <button onClick={doWhatsApp}
-      className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90"
-      style={{background:'#25d366'}}>
-      Comprar pelo WhatsApp
-    </button>
-  )}
-</div>
+                  <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                    {/* "Ver no site" sempre aparece */}
+                    <a href={productUrl||'#'} target="_blank" rel="noreferrer"
+                      className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90 no-underline"
+                      style={{background:c.btn, opacity: productUrl ? 1 : 0.5, pointerEvents: productUrl ? 'auto' : 'none'}}>
+                      Ver no site
+                    </a>
+                    {/* WhatsApp condicional */}
+                    {mc.show_whatsapp && (
+                      <button onClick={doWhatsApp}
+                        className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90"
+                        style={{background:'#25d366'}}>
+                        Comprar pelo WhatsApp
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* ═══ Painel de Comentários (full overlay — igual widget.js) ═══ */}
+        {/* ═══ Painel de Comentários ═══ */}
         {showComments && (
           <div className="absolute inset-2 z-[200] flex flex-col overflow-hidden rounded-[20px] border-2 bg-white shadow-2xl animate-[vlSlideUp_.25s_ease]"
             style={{borderColor:c.primary, boxShadow:'0 12px 30px rgba(0,0,0,.35)'}}>
@@ -754,7 +777,7 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
           </div>
         )}
 
-        {/* 🔧 CORREÇÃO: Painel de Medidas — igual widget.js (card branco, não overlay escuro) */}
+        {/* Painel de Medidas */}
         {modelOpen && (
           <div className="absolute inset-2 z-[200] flex flex-col overflow-hidden rounded-[20px] border-2 bg-white shadow-2xl animate-[vlSlideUp_.25s_ease]"
             style={{borderColor:c.primary, boxShadow:'0 12px 30px rgba(0,0,0,.35)'}}>
@@ -802,16 +825,35 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
 
   /* ═══════════════════ WIDGET FLUTUANTE ═══════════════════ */
 
+  // 🔧 CORREÇÕES #3, #4, #5 aplicadas:
+  // - Borda usa floatingBorderColor (config específica + fallback)
+  // - Bolinha verde substituída por botão X condicional (floatingCfg.show_close)
+  // - Botão play central condicional (floatingCfg.show_play)
   const FloatingWidget = () => (
     <div className={`fixed ${floatingPos} z-40 cursor-pointer group transition-transform hover:scale-105 active:scale-95`}
       style={{width:floatingCfg.width,height:floatingCfg.height}} onClick={()=>openPlayer(0)} title="Clique para abrir o story">
-      <div className={`h-full w-full overflow-hidden ${widgetShape} border-2 shadow-xl`} style={{borderColor:c.primary}}>
+      <div className={`h-full w-full overflow-hidden ${widgetShape} border-2 shadow-xl`} style={{borderColor:floatingBorderColor}}>
         {thumb0?<img src={thumb0} alt="Story" className="h-full w-full object-cover"/>:<div className="flex h-full w-full items-center justify-center bg-black text-white"><SvgPlay/></div>}
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-gray-900"><span className="ml-0.5"><SvgPlay/></span></div>
-        </div>
+        {/* 🔧 CORREÇÃO #5: botão play central agora respeita floatingCfg.show_play */}
+        {floatingCfg.show_play && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-gray-900"><span className="ml-0.5"><SvgPlay/></span></div>
+          </div>
+        )}
       </div>
-      <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-green-500 shadow-lg"/>
+      {/* 🔧 CORREÇÃO #4: X de fechar no lugar da bolinha verde */}
+      {floatingCfg.show_close && (
+        <button
+          onClick={(e) => { e.stopPropagation(); setFloatingDismissed(true); }}
+          className="absolute -top-2 -right-2 z-50 flex h-6 w-6 items-center justify-center rounded-full bg-white border-2 shadow-md hover:bg-gray-100 transition"
+          style={{ borderColor: floatingBorderColor }}
+          title="Fechar"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" style={{color:'#333'}}>
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      )}
     </div>
   );
 
@@ -872,7 +914,8 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
 
   return (
     <div className="fixed inset-0 bg-[#111] flex items-center justify-center overflow-hidden">
-      {!playerOpen && isFloating && <FloatingWidget/>}
+      {/* 🔧 CORREÇÃO #4: flutuante respeita o estado floatingDismissed */}
+      {!playerOpen && isFloating && !floatingDismissed && <FloatingWidget/>}
       {!playerOpen && isCarousel && <Carousel/>}
       {!playerOpen && isGrid && <Grid/>}
       {playerOpen && <Player/>}
