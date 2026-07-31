@@ -569,3 +569,453 @@ const StoryPreviewPage = () => {
     borderStyle: 'solid',
     boxShadow: mc.shadow_enabled ? '0 25px 50px -12px rgba(0,0,0,0.5)' : undefined,
   };
+  /* ─── Estado do player (aberto/fechado) ─── */
+  const [playerOpen, setPlayerOpen] = useState(false);
+
+  useEffect(() => {
+    // Carousel já abre direto no player
+    if (isCarouselLayout) setPlayerOpen(true);
+  }, [isCarouselLayout]);
+
+  const close = () => {
+    // Se o player estiver aberto num layout que não é carousel, volta pro widget/grid
+    if (playerOpen && !isCarouselLayout) {
+      setPlayerOpen(false);
+      return;
+    }
+    if (window.history.length > 1) window.history.back();
+    else navigate('/');
+  };
+
+  const openPlayerForVideo = (idx: number) => {
+    setActiveVideoIdx(idx);
+    setPlayerOpen(true);
+  };
+
+  /* ─── Renderização do player modal (compartilhado por todos os layouts) ─── */
+  const renderPlayer = () => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95">
+      {/* Botão fechar */}
+      <button
+        onClick={close}
+        className="absolute top-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition"
+        aria-label="Fechar"
+      >
+        <X size={20} />
+      </button>
+
+      {/* Container do player com borda da aparência */}
+      <div
+        className="relative flex w-full max-w-[420px] flex-col overflow-hidden bg-black"
+        style={playerBorderStyle}
+      >
+        {/* Área do vídeo */}
+        <div className="relative aspect-[9/16] w-full bg-black">
+          {/* Progress bar */}
+          <div className="absolute top-0 left-0 right-0 z-10 flex gap-1 px-1 pt-2">
+            {videos.map((_, i) => (
+              <div key={i} className="h-1 flex-1 overflow-hidden rounded-full bg-white/30">
+                <div
+                  className="h-full rounded-full transition-all duration-300"
+                  style={{
+                    width: i < activeVideoIdx ? '100%' : i === activeVideoIdx ? `${progress}%` : '0%',
+                    backgroundColor: c.primary,
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Navegação: toque nas bordas */}
+          <button onClick={goPrev} className="absolute left-0 top-0 z-10 h-full w-1/3" aria-label="Anterior" />
+          <button onClick={goNext} className="absolute right-0 top-0 z-10 h-full w-1/3" aria-label="Próximo" />
+
+          {/* Título (se habilitado) */}
+          {mc.show_title && currentVideo?.title && (
+            <div className="absolute top-10 left-3 right-3 z-10">
+              <p className="text-sm font-semibold text-white drop-shadow-lg line-clamp-2">
+                {currentVideo.title}
+              </p>
+            </div>
+          )}
+
+          {/* Vídeo */}
+          {currentUrl && !videoError ? (
+            <video
+              ref={videoRef}
+              src={currentUrl}
+              poster={posterUrl}
+              className="h-full w-full object-cover"
+              playsInline
+              muted={muted}
+              autoPlay
+              onPlay={() => setPlaying(true)}
+              onPause={() => setPlaying(false)}
+              onError={() => setVideoError(true)}
+              onEnded={goNext}
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-white/50 text-sm">
+              {videoError ? 'Erro ao carregar vídeo' : 'Nenhum vídeo disponível'}
+            </div>
+          )}
+
+          {/* Botão play/pause central (se habilitado) */}
+          {mc.show_play_button && currentUrl && !videoError && (
+            <button
+              onClick={handleTogglePlay}
+              className="absolute inset-0 z-10 flex items-center justify-center"
+              aria-label={playing ? 'Pausar' : 'Reproduzir'}
+            >
+              <div className={`flex h-16 w-16 items-center justify-center rounded-full bg-black/40 text-white transition-opacity ${playing ? 'opacity-0 hover:opacity-100' : 'opacity-100'}`}>
+                {playing ? <Pause size={32} /> : <Play size={32} className="ml-1" />}
+              </div>
+            </button>
+          )}
+
+          {/* Botão mudo */}
+          <button
+            onClick={handleToggleMute}
+            className="absolute top-4 right-12 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white"
+            aria-label={muted ? 'Ativar som' : 'Silenciar'}
+          >
+            {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+          </button>
+        </div>
+
+        {/* Barra de ações + card de produto */}
+        <div className="flex items-start gap-3 bg-black px-3 py-2">
+          {/* Ações à esquerda */}
+          <div className="flex flex-col items-center gap-4 pt-1">
+            {/* Like */}
+            {mc.show_like_button && (
+              <button onClick={handleLike} className="flex flex-col items-center gap-0.5 text-white">
+                <Heart size={24} fill={liked ? '#ef4444' : 'none'} stroke={liked ? '#ef4444' : 'white'} />
+                {showSocialCounts && <span className="text-[10px]">{likeCount}</span>}
+              </button>
+            )}
+
+            {/* Comentário */}
+            {mc.show_comment_button && (
+              <button onClick={() => setShowComments((v) => !v)} className="flex flex-col items-center gap-0.5 text-white">
+                <MessageCircle size={24} />
+                {showSocialCounts && <span className="text-[10px]">{commentCount}</span>}
+              </button>
+            )}
+
+            {/* Compartilhar */}
+            {mc.show_share_button && (
+              <button onClick={handleShare} className="flex flex-col items-center gap-0.5 text-white">
+                <Share2 size={24} />
+              </button>
+            )}
+
+            {/* Tabela de medidas */}
+            {modelData.length > 0 && (
+              <button
+                onClick={() => setModelModalOpen(true)}
+                className="flex flex-col items-center gap-0.5 text-white"
+                title="Tabela de medidas"
+              >
+                <Ruler size={24} />
+              </button>
+            )}
+          </div>
+
+          {/* Card de produto */}
+          {mc.show_product && product && (
+            <div className="flex-1">
+              <div
+                className="flex items-center gap-3 rounded-xl bg-white/10 p-2"
+                style={{ borderRadius: `${mc.border_radius}px` }}
+              >
+                {productImage && (
+                  <img
+                    src={productImage}
+                    alt={product.name || 'Produto'}
+                    className="h-14 w-14 rounded-lg object-cover"
+                  />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-white line-clamp-1">{product.name || 'Produto'}</p>
+                  {productPrice > 0 && (
+                    <p className="text-sm font-bold" style={{ color: c.primary }}>
+                      R$ {productPrice.toFixed(2)}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-2 flex gap-2">
+                {mc.show_product_button && productUrl && (
+                  <a
+                    href={productUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-1 items-center justify-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: c.button }}
+                  >
+                    <ExternalLink size={14} />
+                    Ver produto
+                  </a>
+                )}
+                {mc.show_product_whatsapp_button && (
+                  <button
+                    onClick={handleWhatsApp}
+                    className="flex flex-1 items-center justify-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: '#25D366' }}
+                  >
+                    WhatsApp
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Painel de comentários */}
+        {showComments && (
+          <div className="border-t border-white/10 bg-black px-3 py-3">
+            <div className="mb-3 max-h-40 overflow-y-auto space-y-2">
+              {comments.length === 0 && (
+                <p className="text-center text-xs text-white/50">Nenhum comentário ainda.</p>
+              )}
+              {comments.map((comment, i) => (
+                <div key={comment.id || i} className="rounded-lg bg-white/5 p-2">
+                  <p className="text-xs font-semibold text-white/80">{getCommentName(comment)}</p>
+                  <p className="text-sm text-white">{comment.text}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <textarea
+                  ref={textareaRef}
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder="Escreva um comentário..."
+                  rows={2}
+                  className="w-full resize-none rounded-lg bg-white/10 px-3 py-2 text-sm text-white placeholder-white/40 outline-none"
+                />
+                <button
+                  onClick={() => setShowEmoji((v) => !v)}
+                  className="absolute right-2 bottom-2 text-white/60 hover:text-white"
+                >
+                  <Smile size={16} />
+                </button>
+                {showEmoji && (
+                  <div className="absolute bottom-full right-0 mb-1 flex flex-wrap gap-1 rounded-lg bg-gray-800 p-2 shadow-lg max-w-[200px]">
+                    {EMOJIS.map((emoji) => (
+                      <button key={emoji} onClick={() => insertEmoji(emoji)} className="text-lg hover:scale-125 transition">
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="text"
+                value={commentName}
+                onChange={(e) => setCommentName(e.target.value)}
+                placeholder="Seu nome"
+                className="flex-1 rounded-lg bg-white/10 px-3 py-2 text-sm text-white placeholder-white/40 outline-none"
+              />
+              <button
+                onClick={handleCommentSubmit}
+                className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: c.primary }}
+              >
+                Enviar
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  /* ─── Renderização do widget flutuante ─── */
+  const renderFloatingWidget = () => (
+    <div
+      className={`fixed ${widgetPositionClass} z-40 cursor-pointer group transition-transform hover:scale-105 active:scale-95`}
+      style={{
+        width: widgetSize.width,
+        height: widgetSize.height,
+      }}
+      onClick={() => openPlayerForVideo(0)}
+      title="Clique para abrir o story"
+    >
+      {/* Borda da aparência */}
+      <div
+        className={`h-full w-full overflow-hidden ${widgetShapeClass} border-2 shadow-xl`}
+        style={{
+          borderColor: c.primary,
+          backgroundColor: c.primary,
+        }}
+      >
+        {widgetThumb ? (
+          <img
+            src={widgetThumb}
+            alt="Story preview"
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-white">
+            <Play size={32} />
+          </div>
+        )}
+
+        {/* Overlay com ícone de play */}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-gray-900">
+            <Play size={18} className="ml-0.5" />
+          </div>
+        </div>
+      </div>
+
+      {/* Indicador visual sutil */}
+      <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-green-500 shadow-lg" />
+    </div>
+  );
+
+  /* ─── Renderização do grid ─── */
+  const renderGrid = () => (
+    <div className="w-full max-w-4xl px-4">
+      {/* Botão fechar */}
+      <button
+        onClick={close}
+        className="absolute top-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition"
+        aria-label="Fechar"
+      >
+        <X size={20} />
+      </button>
+
+      {/* Título */}
+      <h2 className="mb-6 text-center text-xl font-semibold text-white">
+        {story?.title || 'Stories'}
+      </h2>
+
+      {/* Grid de thumbnails */}
+      {videos.length === 0 ? (
+        <p className="text-center text-white/50">Nenhum vídeo neste story.</p>
+      ) : (
+        <div
+          className="grid gap-4"
+          style={{
+            gridTemplateColumns: `repeat(${layoutConfig.grid?.columns || 3}, 1fr)`,
+            gap: `${layoutConfig.grid?.gap || 16}px`,
+          }}
+        >
+          {videos.map((video, idx) => {
+            const thumb = getVideoPosterUrl(video);
+            const isActive = idx === activeVideoIdx;
+            return (
+              <button
+                key={video.id || idx}
+                onClick={() => openPlayerForVideo(idx)}
+                className="group relative aspect-[9/16] overflow-hidden rounded-xl border-2 transition-all hover:scale-[1.02]"
+                style={{
+                  borderColor: isActive ? c.primary : 'transparent',
+                  borderRadius: `${layoutConfig.grid?.border_radius || 12}px`,
+                }}
+              >
+                {thumb ? (
+                  <img src={thumb} alt={video.title || ''} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gray-800 text-white/40">
+                    <Play size={32} />
+                  </div>
+                )}
+                <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition">
+                  <Play size={40} className="text-white opacity-0 group-hover:opacity-100 transition" />
+                </div>
+                {video.title && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-4">
+                    <p className="text-xs font-medium text-white line-clamp-2">{video.title}</p>
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Instrução */}
+      {videos.length > 0 && (
+        <p className="mt-4 text-center text-xs text-white/40">
+          Clique em um vídeo para abrir o player
+        </p>
+      )}
+    </div>
+  );
+
+  /* ─── Modal de tabela de medidas ─── */
+  const renderMeasureModal = () => {
+    if (!modelModalOpen) return null;
+    return (
+      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80" onClick={() => setModelModalOpen(false)}>
+        <div
+          className="mx-4 w-full max-w-md rounded-2xl bg-gray-900 p-6 text-white shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-lg font-bold">Tabela de Medidas</h3>
+            <button onClick={() => setModelModalOpen(false)} className="text-white/60 hover:text-white">
+              <X size={20} />
+            </button>
+          </div>
+          {model?.name && <p className="mb-3 text-sm text-white/70">{model.name}</p>}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-white/20">
+                  <th className="py-2 pr-4 font-medium">Tamanho</th>
+                  {modelData[0] && Object.keys(modelData[0])
+                    .filter((k) => k !== 'size' && k !== 'tamanho' && k !== 'label' && k !== 'name')
+                    .map((key) => (
+                      <th key={key} className="py-2 pr-4 font-medium capitalize">{key}</th>
+                    ))}
+                </tr>
+              </thead>
+              <tbody>
+                {modelData.map((row: any, i: number) => (
+                  <tr key={i} className="border-b border-white/10">
+                    <td className="py-2 pr-4 font-medium">{row.size || row.tamanho || row.label || row.name || '-'}</td>
+                    {Object.keys(modelData[0] || {})
+                      .filter((k) => k !== 'size' && k !== 'tamanho' && k !== 'label' && k !== 'name')
+                      .map((key) => (
+                        <td key={key} className="py-2 pr-4">{row[key] ?? '-'}</td>
+                      ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  /* ─── Layout final ─── */
+  return (
+    <div className="fixed inset-0 bg-[#111] flex items-center justify-center overflow-hidden">
+      {/* Floating: widget na tela preta */}
+      {isFloatingLayout && !playerOpen && renderFloatingWidget()}
+
+      {/* Grid: grade de thumbnails */}
+      {isGridLayout && !playerOpen && renderGrid()}
+
+      {/* Player modal: abre quando necessário */}
+      {(playerOpen || isCarouselLayout) && renderPlayer()}
+
+      {/* Modal de medidas (sempre acessível quando o player está aberto) */}
+      {renderMeasureModal()}
+    </div>
+  );
+};
+
+export default StoryPreviewPage;
