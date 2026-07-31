@@ -335,31 +335,78 @@ export default function StoryPreviewPage() {
     );
   };
 
-  // ═══════════════════════════════════════════════════════
-  // INLINE WIDGET (Carousel or Grid)
-  // ═══════════════════════════════════════════════════════
-  const renderInlineWidget = (isGrid: boolean) => {
-    const cfg = isGrid ? gridCfg : carouselCfg;
+// ═══════════════════════════════════════════════════════
+// INLINE WIDGET (Carousel or Grid)
+// ═══════════════════════════════════════════════════════
+const renderInlineWidget = (isGrid: boolean) => {
+  const cfg = isGrid ? gridCfg : carouselCfg;
 
-    const isCircle = cfg.shape === 'circle';
-    const columns = isGrid ? (cfg as any).columns : (cfg as any).visibleItems;
-    const size = cfg.size;
+  const isCircle = cfg.shape === 'circle';
+  const columns = isGrid ? (cfg as any).columns : (cfg as any).visibleItems;
+  const size = cfg.size;
+  const spacing = cfg.spacing;
 
-    const circlePad = isCircle && !isGrid ? Math.round(size * 0.15) : 0;
-    const padX = circlePad + 4;
+  const circlePad = isCircle && !isGrid ? Math.round(size * 0.15) : 0;
+  const padX = circlePad + 4;
 
-    const cardSize = `${size}px`;
-    const borderRadius = isCircle ? '50%' : `${cfg.borderRadius}px`;
+  const cardSize = `${size}px`;
+  const borderRadius = isCircle ? '50%' : `${cfg.borderRadius}px`;
 
-    // ── Viewport: centralizado, tamanho exato para N cards ──
-    const viewportW = isGrid
-      ? columns * size + (columns - 1) * cfg.spacing
-      : columns * size + (columns - 1) * cfg.spacing + 2 * padX;
+  // ─── CARD (compartilhado entre grid e carrossel) ───
+  const renderCard = (video: Video, idx: number) => {
+    const thumb = getVideoThumb(video);
+    const videoUrl = getVideoUrl(video);
+    return (
+      <button
+        key={video.id || idx}
+        onClick={() => { if (!dragCarousel.current.moved) openPlayer(idx); }}
+        className="group relative"
+        style={{
+          all: 'unset',
+          flex: `0 0 ${cardSize}`,
+          minWidth: 0,
+          maxWidth: cardSize,
+          cursor: 'pointer',
+          display: 'flex',
+          flexDirection: 'column',
+        } as CSSProperties}
+      >
+        <div className="relative w-full overflow-hidden" style={{
+          aspectRatio: cfg.aspectRatio,
+          borderRadius,
+          border: `${cfg.borderWidth}px solid ${cfg.borderColor}`,
+          background: '#000',
+        }}>
+          {isVideoFile(videoUrl) ? (
+            <video src={videoUrl} poster={thumb || undefined} className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} muted loop autoPlay playsInline />
+          ) : thumb ? (
+            <img src={thumb} alt="" className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} loading="lazy" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-slate-800 text-white/40"><Play size={18} /></div>
+          )}
+          {(cfg as any).showPlayButton && (
+            <div className="absolute inset-0 flex items-center justify-center transition group-hover:scale-110" style={{ pointerEvents: 'none' }}>
+              <div className="flex h-[38px] w-[38px] items-center justify-center rounded-full" style={{ background: 'rgba(0,0,0,.6)' }}><Play size={18} className="text-white ml-0.5" /></div>
+            </div>
+          )}
+        </div>
+        {cfg.showTitle && (
+          <span className="mt-2 w-full truncate px-1 text-center text-xs font-semibold" style={{ color: textColor }}>
+            {story.title || video.title || 'Ver vídeo'}
+          </span>
+        )}
+      </button>
+    );
+  };
 
+  // ═══════════════════════════════════════════════
+  // GRID
+  // ═══════════════════════════════════════════════
+  if (isGrid) {
+    const gridWidth = columns * size + (columns - 1) * spacing;
     return (
       <div style={{
         width: '100%',
-        maxWidth: '100%',
         margin: '20px auto',
         padding: '0 4px',
         fontFamily,
@@ -368,85 +415,74 @@ export default function StoryPreviewPage() {
         display: 'flex',
         justifyContent: 'center',
       }}>
-        <div style={{
-          width: `${viewportW}px`,
-          maxWidth: '100%',
-          overflow: isGrid ? 'visible' : 'hidden',
-          flexShrink: 0,
-        }}>
-          <div
-            ref={sliderRef}
-            onMouseDown={!isGrid ? (e) => handleCarouselDown(e) : undefined}
-            onMouseMove={!isGrid ? (e) => handleCarouselMove(e) : undefined}
-            onMouseUp={!isGrid ? handleCarouselUp : undefined}
-            onMouseLeave={!isGrid ? handleCarouselUp : undefined}
-            onTouchStart={!isGrid ? (e) => handleCarouselDown(e) : undefined}
-            onTouchMove={!isGrid ? (e) => handleCarouselMove(e) : undefined}
-            onTouchEnd={!isGrid ? handleCarouselUp : undefined}
-            className="flex"
-            style={{
-              flexWrap: isGrid ? 'wrap' : 'nowrap',
-              gap: `${cfg.spacing}px`,
-              padding: isGrid ? '0 4px' : `0 ${padX}px`,
-              width: isGrid ? '100%' : 'max-content',
-              justifyContent: 'center',
-              cursor: isGrid ? 'auto' : 'grab',
-              userSelect: 'none',
-              WebkitUserSelect: 'none',
-              transform: isGrid ? undefined : `translateX(-${carouselOffset}px)`,
-              transition: dragCarousel.current.isDown ? 'none' : 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-            } as CSSProperties}
-          >
-            {videos.map((video, idx) => {
-              const thumb = getVideoThumb(video);
-              const videoUrl = getVideoUrl(video);
-              return (
-                <button
-                  key={video.id || idx}
-                  onClick={() => { if (!dragCarousel.current.moved) openPlayer(idx); }}
-                  className="group relative"
-                  style={{
-                    all: 'unset',
-                    flex: `0 0 ${cardSize}`,
-                    minWidth: 0,
-                    maxWidth: cardSize,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                  } as CSSProperties}
-                >
-                  <div className="relative w-full overflow-hidden" style={{
-                    aspectRatio: cfg.aspectRatio,
-                    borderRadius,
-                    border: `${cfg.borderWidth}px solid ${cfg.borderColor}`,
-                    background: '#000',
-                  }}>
-                    {isVideoFile(videoUrl) ? (
-                      <video src={videoUrl} poster={thumb || undefined} className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} muted loop autoPlay playsInline />
-                    ) : thumb ? (
-                      <img src={thumb} alt="" className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} loading="lazy" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-slate-800 text-white/40"><Play size={18} /></div>
-                    )}
-                    {(cfg as any).showPlayButton && (
-                      <div className="absolute inset-0 flex items-center justify-center transition group-hover:scale-110" style={{ pointerEvents: 'none' }}>
-                        <div className="flex h-[38px] w-[38px] items-center justify-center rounded-full" style={{ background: 'rgba(0,0,0,.6)' }}><Play size={18} className="text-white ml-0.5" /></div>
-                      </div>
-                    )}
-                  </div>
-                  {cfg.showTitle && (
-                    <span className="mt-2 w-full truncate px-1 text-center text-xs font-semibold" style={{ color: textColor }}>
-                      {story.title || video.title || 'Ver vídeo'}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+        <div
+          className="flex"
+          style={{
+            flexWrap: 'wrap',
+            gap: `${spacing}px`,
+            width: `${gridWidth}px`,
+            maxWidth: '100%',
+            justifyContent: 'center',
+            padding: 0,
+          } as CSSProperties}
+        >
+          {videos.map((v, i) => renderCard(v, i))}
         </div>
       </div>
     );
-  };
+  }
+
+  // ═══════════════════════════════════════════════
+  // CARROSSEL (transform: translateX)
+  // ═══════════════════════════════════════════════
+  const viewportW = columns * size + (columns - 1) * spacing + 2 * padX;
+
+  return (
+    <div style={{
+      width: '100%',
+      margin: '20px auto',
+      padding: '0 4px',
+      fontFamily,
+      clear: 'both',
+      overflow: 'visible',
+      display: 'flex',
+      justifyContent: 'center',
+    }}>
+      <div style={{
+        width: `${viewportW}px`,
+        maxWidth: '100%',
+        overflow: 'hidden',
+        flexShrink: 0,
+      }}>
+        <div
+          ref={sliderRef}
+          onMouseDown={handleCarouselDown}
+          onMouseMove={handleCarouselMove}
+          onMouseUp={handleCarouselUp}
+          onMouseLeave={handleCarouselUp}
+          onTouchStart={handleCarouselDown}
+          onTouchMove={handleCarouselMove}
+          onTouchEnd={handleCarouselUp}
+          className="flex"
+          style={{
+            flexWrap: 'nowrap',
+            gap: `${spacing}px`,
+            padding: `0 ${padX}px`,
+            width: 'max-content',
+            justifyContent: 'flex-start',
+            cursor: 'grab',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            transform: `translateX(-${carouselOffset}px)`,
+            transition: dragCarousel.current.isDown ? 'none' : 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          } as CSSProperties}
+        >
+          {videos.map((v, i) => renderCard(v, i))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
   // ═══════════════════════════════════════════════════════
   // MODAL PLAYER
