@@ -882,11 +882,16 @@ const MeasuresModal: FC<{
 // COMPONENTE PRINCIPAL
 // ═══════════════════════════════════════════════════════════════
 
-export default function StoriesWidgetPage() {
+export default function StoriesWidgetPage({
+  storyId: storyIdProp,
+}: {
+  storyId?: string;
+}) {
   const { storeId } = useParams();
   const [searchParams] = useSearchParams();
 
-  const storyIdParam = searchParams.get('storyId') || searchParams.get('storyid');
+  const storyIdParam =
+    storyIdProp || searchParams.get('storyId') || searchParams.get('storyid');
   const videoIdParam = searchParams.get('videoId') || searchParams.get('videoid');
   const appearanceIdParam = searchParams.get('appearanceId') || searchParams.get('appearanceid');
 
@@ -971,6 +976,12 @@ export default function StoriesWidgetPage() {
   const fontSize = getFontSize(appearance);
   const accentColor = secondaryColor || primaryColor;
 
+  // ── Helper: safe number ──
+  const safeNumber = (value: any, fallback: number, min = 0): number => {
+    const n = Number(value);
+    return Number.isFinite(n) ? Math.max(min, n) : fallback;
+  };
+
   // ── Borda do player ──
   const borderColor = isValidHexColor(modalConfig.border_color) ? modalConfig.border_color : primaryColor;
   const borderWidthNum = safeNumber(modalConfig.border_width, 0, 0);
@@ -998,6 +1009,9 @@ export default function StoriesWidgetPage() {
       window.parent.postMessage({ type: 'CLOSE_STORY_WIDGET' }, '*');
       window.parent.postMessage('CLOSE_STORY_WIDGET', '*');
     } else {
+      // Preview context: try closing the tab (works when opened via window.open)
+      try { window.close(); } catch { /* ignore */ }
+      // Fallbacks
       if (window.history.length > 1) window.history.back();
       else window.location.href = '/';
     }
@@ -1171,12 +1185,6 @@ export default function StoriesWidgetPage() {
       setProduct(resolvedProduct || null);
       setModel(resolvedModel || null);
     } catch { setProduct(null); setModel(null); }
-  };
-
-  // ── Helper: safe number ──
-  const safeNumber = (value: any, fallback: number, min = 0): number => {
-    const n = Number(value);
-    return Number.isFinite(n) ? Math.max(min, n) : fallback;
   };
 
   // ── Effects ──
