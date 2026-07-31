@@ -224,7 +224,7 @@ const StoryPreviewPage = () => {
       show_like: a.show_like_button ?? raw.show_like_button ?? true,
       show_comment: a.show_comment_button ?? raw.show_comment_button ?? true,
       show_share: a.show_share_button ?? raw.show_share_button ?? true,
-      show_whatsapp: a.show_whatsapp_button ?? raw.show_whatsapp_button ?? true,
+show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ?? raw.show_whatsapp_button ?? raw.show_whatsapp ?? raw.whatsapp_button ?? false,
       show_sizing: a.show_sizing_button ?? raw.show_sizing_button ?? true,
       shadow: raw.shadow_enabled??a.shadow_enabled??true,
       border_color: raw.border_color||'',
