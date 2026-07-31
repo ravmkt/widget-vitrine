@@ -343,22 +343,19 @@ const renderInlineWidget = (isGrid: boolean) => {
   const circlePadding = isCircle && !isGrid ? Math.round(cfg.size * 0.15) : 0;
   const sliderPaddingX = circlePadding + 4;
 
-  // ── Carrossel: viewport fixo = visibleItems × size + gaps + padding ──
-  // ── Grid: ocupa 100%, cards com wrap ──
-  const viewportMaxWidth = isGrid
-    ? '100%'
-    : `${columns * cfg.size + (columns - 1) * cfg.spacing + 2 * sliderPaddingX}px`;
-
-  const cardSize = isGrid
-    ? `calc((100% - ${(columns - 1) * cfg.spacing}px) / ${columns})`
-    : `${cfg.size}px`;
-
+  // ── Tamanho fixo do card = size da config ──
+  const cardSize = `${cfg.size}px`;
   const borderRadius = isCircle ? '50%' : `${cfg.borderRadius}px`;
+
+  // ── Centraliza se há poucos cards; flex-start se há scroll ──
+  const justifyContent = (isGrid || videos.length <= columns)
+    ? 'center'
+    : 'flex-start';
 
   return (
     <div style={{
       width: '100%',
-      maxWidth: viewportMaxWidth,
+      maxWidth: '100%',
       margin: '20px auto',
       padding: '0 4px',
       fontFamily,
@@ -386,7 +383,7 @@ const renderInlineWidget = (isGrid: boolean) => {
           msOverflowStyle: 'none',
           padding: isGrid ? '0 4px' : `0 ${sliderPaddingX}px`,
           width: '100%',
-          justifyContent: isGrid ? 'center' : 'flex-start',
+          justifyContent,
           cursor: isGrid ? 'auto' : 'grab',
           userSelect: 'none',
           WebkitUserSelect: 'none',
