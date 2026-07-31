@@ -50,365 +50,120 @@ const parseMeasures = (m: any): any[] => {
   return [];
 };
 
-const parseJsonSafe = (v: unknown): Record<string,any> => {
+/* ═══════════════════ HELPERS DE CONFIG (idêntico ao widget.js) ═══════════════════ */
+
+const parseJsonSafe = (v: unknown): Record<string, any> => {
   if (!v) return {};
-  if (typeof v==='object' && v!==null) return v as Record<string,any>;
-  if (typeof v==='string') { try { return JSON.parse(v); } catch { return {}; } }
+  if (typeof v === 'object' && v !== null) return v as Record<string, any>;
+  if (typeof v === 'string') {
+    const t = v.trim();
+    if (!t || (t.charAt(0) !== '{' && t.charAt(0) !== '[')) return {};
+    try { const p = JSON.parse(t); return typeof p === 'object' && p !== null ? p : {}; } catch { return {}; }
+  }
   return {};
 };
 
-/** Converte shape em aspect-ratio CSS */
-const shapeToAspectRatio = (shape: string): string => {
-  const s = (shape || 'portrait').toLowerCase();
-  if (s === 'landscape' || s === 'horizontal') return '16/9';
-  if (s === 'square') return '1/1';
-  return '9/16'; // portrait (padrão)
+const getDevice = (): 'mobile' | 'desktop' => {
+  if (typeof window === 'undefined') return 'desktop';
+  return window.innerWidth < 768 ? 'mobile' : 'desktop';
 };
 
-/* ═══════════════════ SVG ICONS (igual widget.js produção) ═══════════════════ */
+/** Réplica exata de readJsonbConfigValue do widget.js */
+function readJsonbConfigValue(configObj: any, fieldName: string, fallback?: any): any {
+  if (configObj === undefined || configObj === null) return fallback;
+  if (typeof configObj === 'string') {
+    try { configObj = JSON.parse(configObj); } catch { return fallback; }
+  }
+  if (typeof configObj !== 'object' || Array.isArray(configObj)) return fallback;
 
-const SvgHeart = ({ filled }: { filled: boolean }) => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill={filled ? "#ef4444" : "none"} stroke={filled ? "#ef4444" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-  </svg>
-);
+  if (configObj[fieldName] !== undefined && configObj[fieldName] !== null && configObj[fieldName] !== '') {
+    return configObj[fieldName];
+  }
 
-const SvgComment = ({ filled }: { filled?: boolean }) => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill={filled ? "#ffffff" : "none"} stroke={filled ? "#ffffff" : "currentColor"} strokeWidth={filled ? 1.5 : 2} strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-  </svg>
-);
+  const device = getDevice();
+  const sameAll = configObj.same_for_all;
 
-const SvgShare = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-  </svg>
-);
+  if (sameAll === true || sameAll === undefined || sameAll === null) {
+    if (configObj.desktop && configObj.desktop[fieldName] !== undefined && configObj.desktop[fieldName] !== null && configObj.desktop[fieldName] !== '') {
+      return configObj.desktop[fieldName];
+    }
+    if (configObj.mobile && configObj.mobile[fieldName] !== undefined && configObj.mobile[fieldName] !== null && configObj.mobile[fieldName] !== '') {
+      return configObj.mobile[fieldName];
+    }
+    return fallback;
+  }
 
-const SvgPlay = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-);
+  const deviceConfig = configObj[device];
+  if (deviceConfig && deviceConfig[fieldName] !== undefined && deviceConfig[fieldName] !== null && deviceConfig[fieldName] !== '') {
+    return deviceConfig[fieldName];
+  }
+  const otherDevice = device === 'mobile' ? 'desktop' : 'mobile';
+  const otherConfig = configObj[otherDevice];
+  if (otherConfig && otherConfig[fieldName] !== undefined && otherConfig[fieldName] !== null && otherConfig[fieldName] !== '') {
+    return otherConfig[fieldName];
+  }
+  return fallback;
+}
 
-const SvgPause = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-);
+/** Réplica exata de readConfigValue do widget.js */
+function readConfigValue(appearance: any, configKey: string, jsonbField: string, flatField: string | null, fallback?: any): any {
+  const raw = appearance?.[configKey];
+  const jsonbVal = readJsonbConfigValue(raw, jsonbField, undefined);
+  if (jsonbVal !== undefined && jsonbVal !== null && jsonbVal !== '') return jsonbVal;
+  if (flatField) {
+    const flatVal = appearance?.[flatField];
+    if (flatVal !== undefined && flatVal !== null && flatVal !== '') return flatVal;
+  }
+  return fallback;
+}
 
-const SvgVolume = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-  </svg>
-);
+const toBoolean = (value: any, fallback: boolean): boolean => {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (value === true || value === 1 || value === '1') return true;
+  if (typeof value === 'string') {
+    const n = value.trim().toLowerCase();
+    if (n === 'true') return true;
+    if (n === 'false') return false;
+  }
+  if (value === false || value === 0 || value === '0') return false;
+  return fallback;
+};
 
-const SvgVolumeOff = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-    <line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
-  </svg>
-);
+const toNumber = (value: any, fallback: number): number => {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : fallback;
+  const parsed = Number(String(value).trim().replace('px', '').replace(',', '.'));
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
 
-const SvgClose = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-  </svg>
-);
+const safeInt = (value: any, fallback: number): number => {
+  const n = parseInt(value, 10);
+  return Number.isNaN(n) ? fallback : n;
+};
 
-const SvgWhatsApp = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="#25D366">
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/>
-    <path d="M20.52 3.449C18.28 1.21 15.27 0 12.05 0 5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
-  </svg>
-);
+/** Converte shape em aspect-ratio CSS — mesma lógica do widget.js */
+const shapeToAspectRatioWidget = (shape: string): string => {
+  const s = (shape || 'portrait').toLowerCase();
+  if (s.indexOf('landscape') !== -1 || s.indexOf('16_9') !== -1 || s.indexOf('16-9') !== -1) return '16 / 9';
+  if (s.indexOf('square') !== -1 || s.indexOf('1_1') !== -1 || s.indexOf('1-1') !== -1 || s === 'circle') return '1 / 1';
+  return '9 / 16';
+};
 
-const SvgRuler = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="4" width="20" height="16" rx="2"/>
-    <line x1="8" y1="8" x2="12" y2="8"/>
-    <line x1="8" y1="12" x2="16" y2="12"/>
-    <line x1="8" y1="16" x2="12" y2="16"/>
-    <line x1="12" y1="4" x2="12" y2="20" strokeWidth="1" opacity="0.4"/>
-  </svg>
-);
+const normalizeFloatingPosition = (value: any): string => {
+  const key = String(value || '').trim().toLowerCase().replace(/_/g, '-');
+  if (key === 'fixed-top-left' || key === 'top-left') return 'top-left';
+  if (key === 'fixed-top-right' || key === 'top-right') return 'top-right';
+  if (key === 'fixed-bottom-left' || key === 'bottom-left') return 'bottom-left';
+  if (key === 'fixed-bottom-right' || key === 'bottom-right') return 'bottom-right';
+  return 'bottom-right';
+};
 
-const SvgCloseSmall = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-  </svg>
-);
-
-const SvgChevronLeft = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="15 18 9 12 15 6"/>
-  </svg>
-);
-
-const SvgChevronRight = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="9 18 15 12 9 6"/>
-  </svg>
-);
-
-/* ═══════════════════ STORY PREVIEW PAGE ═══════════════════ */
-
-const StoryPreviewPage = () => {
-  const { id, storeId: routeStoreId } = useParams<{ id?: string; storeId?: string }>();
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const queryVideoId = searchParams.get('videoId')||searchParams.get('videoid')||'';
-
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const sharePanelRef = useRef<HTMLDivElement>(null);
-
-  const [storeId, setStoreId] = useState('');
-  const [storeName, setStoreName] = useState('');
-  const [story, setStory] = useState<Story|null>(null);
-  const [videos, setVideos] = useState<Video[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [appearance, setAppearance] = useState<any>(null);
-  const [settings, setSettings] = useState<any>(null);
-
-  /* player */
-  const [playerOpen, setPlayerOpen] = useState(false);
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [playing, setPlaying] = useState(true);
-  const [muted, setMuted] = useState(false);
-  const [videoError, setVideoError] = useState(false);
-  const [progress, setProgress] = useState(0);
-
-  /* social */
-  const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
-  const [comments, setComments] = useState<StoryComment[]>([]);
-  const [showComments, setShowComments] = useState(false);
-  const [commentName, setCommentName] = useState('');
-  const [commentText, setCommentText] = useState('');
-  const [showEmoji, setShowEmoji] = useState(false);
-  const [commentSent, setCommentSent] = useState(false);
-
-  /* product / model */
-  const [product, setProduct] = useState<any>(null);
-  const [model, setModel] = useState<any>(null);
-  const [modelOpen, setModelOpen] = useState(false);
-
-  /* share dropdown */
-  const [showSharePanel, setShowSharePanel] = useState(false);
-  const [shareCopied, setShareCopied] = useState(false);
-
-  /* floating dismiss */
-  const [floatingDismissed, setFloatingDismissed] = useState(false);
-
-  const video = videos[activeIdx]||null;
-  const currentUrl = getVideoUrl(video);
-  const posterUrl = getVideoPoster(video);
-  const modelData = useMemo(()=>parseMeasures(model),[model]);
-
-  /* formato */
-  const rawFmt = String((story as any)?.format||(story as any)?.display_format||'carousel').toLowerCase().trim();
-  const format = rawFmt==='carrossel'?'carousel':rawFmt==='floating'||rawFmt==='floating_widget'?'floating_widget':rawFmt==='grid'?'grid':'carousel';
-  const isFloating = format==='floating_widget';
-  const isCarousel = format==='carousel';
-  const isGrid = format==='grid';
-
-  /* cores — padrão produção */
-  const colors = useMemo(()=>{
-    const a=appearance||{};
-    return {
-      primary: a.primary_color||a.button_color||'#0094EB',
-      secondary: a.secondary_color||a.primary_color||'#0094EB',
-      text: a.text_color||'#0F172A',
-      bg: a.background_color||'#FFFFFF',
-      btn: a.button_color||a.primary_color||'#0094EB',
-      modalBg: a.background_color||'#FFFFFF',
-      modalText: a.text_color||'#0F172A',
-      modalBorder: 'rgba(15,23,42,.12)',
-      modalMuted: '#64748b',
-    };
-  },[appearance]);
-
-  /* ═══════════════════ modalCfg ═══════════════════ */
-
-  const modalCfg = useMemo(()=>{
-    const raw=parseJsonSafe((appearance as any)?.modal_config);
-    const a=appearance||{};
-
-    const showWhatsapp =
-      a.show_whatsapp_button ??
-      a.show_whatsapp ??
-      a.whatsapp_button ??
-      raw.show_whatsapp_button ??
-      raw.show_whatsapp ??
-      raw.whatsapp_button ??
-      false;
-
-    const showProductWhatsapp =
-      a.show_product_whatsapp_button ??
-      raw.show_product_whatsapp_button ??
-      false;
-
-    const finalShowWhatsapp = !!(showWhatsapp || showProductWhatsapp);
-
-    return {
-      show_title: a.show_title ?? raw.show_title ?? true,
-      show_play: a.show_play ?? a.show_play_button ?? a.play_button ?? a.player_play ?? raw.show_play ?? raw.show_play_button ?? raw.play_button ?? raw.player_play ?? true,
-      show_product: a.show_product ?? raw.show_product ?? true,
-      show_product_btn: a.show_product_button ?? raw.show_product_button ?? true,
-      show_like: a.show_like_button ?? raw.show_like_button ?? true,
-      show_comment: a.show_comment_button ?? raw.show_comment_button ?? true,
-      show_share: a.show_share_button ?? raw.show_share_button ?? true,
-      show_whatsapp: finalShowWhatsapp,
-      show_sizing: a.show_sizing_button ?? raw.show_sizing_button ?? true,
-      shadow: raw.shadow_enabled ?? a.shadow_enabled ?? true,
-      border_color: raw.border_color || '',
-      border_width: String(raw.border_width || ''),
-      border_radius: String(raw.border_radius || ''),
-      hide_stories: raw.hide_stories ?? a.hide_stories ?? false,
-    };
-  },[appearance]);
-
-  /* ════════════════ floatingConfig ═══════════════════ */
-
-  /*
-    Campos do JSON floating_config (desktop):
-      shape, width, height, z_index, position, draggable, object_fit,
-      show_title, allow_close, top_spacing, border_color, border_style,
-      left_spacing, border_radius, right_spacing, bottom_spacing,
-      show_play_icon, floating_position
-  */
-
-  const floatingCfg = useMemo(() => {
-    const a = appearance || {};
-    const raw = parseJsonSafe(a.floating_config);
-    const d = raw?.desktop || raw || {};
-
-    const shape = (
-      d.shape ||
-      a.floating_shape ||
-      d.format ||
-      a.floating_format ||
-      d.display ||
-      a.floating_display ||
-      'portrait'
-    ).toLowerCase();
-
-    const size = Number(
-      d.width ||
-        a.floating_size ||
-        a.floating_width ||
-        d.size ||
-        a.size ||
-        80,
-    );
-
-    const height =
-      shape === 'square' || shape === 'circle'
-        ? size
-        : Math.round(size * 16 / 9);
-
-    const p = String(
-      d.floating_position ||
-      d.position ||
-      a.floating_position ||
-      a.position ||
-      'bottom-right'
-    ).toLowerCase()
-     .replace(/_/g, '-')
-     .replace('fixed-', '');
-
-    const borderWidth = Number(
-      d.border_width ?? d.borderWidth ?? d.border_size ?? d.border_style ??
-      a.floating_border_width ?? a.floating_borderWidth ?? a.floating_border ??
-      a.border_width ?? a.borderWidth ?? 2,
-    );
-
-    const borderRadius = Number(
-      d.border_radius ?? d.borderRadius ?? d.radius ??
-      a.floating_border_radius ?? a.floating_borderRadius ?? a.floating_radius ??
-      a.border_radius ??
-      (shape === 'circle' ? 50 : 12),
-    );
-
-    const borderColor =
-      d.border_color ?? d.borderColor ?? a.floating_border_color ?? a.floating_borderColor ?? a.border_color ?? colors.primary;
-
-    const marginBottom =
-      Number(d.margin_bottom ?? d.marginBottom ?? d.bottom_spacing ?? a.floating_margin_bottom ?? a.floating_marginBottom ?? 16);
-    const marginSide =
-      Number(d.margin_side ?? d.marginSide ?? d.margin_x ?? d.left_spacing ?? d.right_spacing ?? a.floating_margin_side ?? a.floating_marginSide ?? a.floating_margin_x ?? 16);
-    const marginTop =
-      Number(d.margin_top ?? d.marginTop ?? d.top_spacing ?? a.floating_margin_top ?? a.floating_marginTop ?? 16);
-
-    const showPlayRaw =
-      d.show_play_button ?? d.show_play ?? d.showPlayButton ?? d.showPlay ??
-      d.play_button ?? d.playButton ?? d.show_play_icon ??
-      a.floating_show_play_button ?? a.floating_show_play ?? a.floating_showPlayButton ?? a.floating_showPlay ??
-      a.floating_play_button ?? a.show_play_button ?? true;
-    const showPlay =
-      showPlayRaw === true || showPlayRaw === 1 || showPlayRaw === 'true' || showPlayRaw === '1';
-
-    const showCloseRaw =
-      d.show_close_button ?? d.show_close ?? d.showCloseButton ?? d.showClose ??
-      d.close_button ?? d.closeButton ?? d.allow_close ??
-      a.floating_show_close_button ?? a.floating_show_close ?? a.floating_showCloseButton ?? a.floating_showClose ??
-      a.floating_close_button ?? a.show_close_button ?? true;
-    const showClose =
-      showCloseRaw === true || showCloseRaw === 1 || showCloseRaw === 'true' || showCloseRaw === '1';
-
-    const showTitleRaw =
-      d.show_title ?? d.showTitle ??
-      a.floating_show_title ?? a.floating_showTitle ?? a.floating_title ?? a.show_title ?? true;
-    const showTitle =
-      showTitleRaw === true || showTitleRaw === 1 || showTitleRaw === 'true' || showTitleRaw === '1';
-
-    return {
-      shape,
-      width: size,
-      height: height,
-      position: p,
-      show_play: showPlay,
-      show_close: showClose,
-      show_title: showTitle,
-      border_width: borderWidth,
-      border_radius: borderRadius,
-      border_color: borderColor,
-      margin_bottom: marginBottom,
-      margin_side: marginSide,
-      margin_top: marginTop,
-    };
-  }, [appearance, colors.primary]);
-
-/* ════════════════ carouselConfig ═══════════════════ */
-const carouselCfg = useMemo(() => {
-    const a = appearance || {};
-    const raw = parseJsonSafe(a.carousel_config);
-    const d = raw?.desktop || raw || {};
-
-    // 🔥 Correção: Prioridade correta (card_shape > shape > campo da tabela)
-    const shape = (
-      d.card_shape ||          // 1º: card_shape do JSON
-      d.shape ||               // 2º: shape do JSON
-      a.carousel_card_shape || // 3º: campo plano da tabela
-      'portrait'
-    ).toString().toLowerCase().trim();
-
-    // 🔥 Novo: Verifica se é círculo
-    const isCircle = shape === 'circle';
-    
-    // 🔥 Correção: Aspect ratio fixo para círculos
-    const aspectRatio = isCircle ? '1/1' : shapeToAspectRatio(shape);
-
-    return {
-      visible: Number(d.visible_items ?? a.carousel_visible_items ?? 5),
-      gap: Number(d.gap ?? a.carousel_gap ?? 16),
-      radius: isCircle ? '50%' : `${Number(d.border_radius ?? a.border_radius ?? 12)}px`,
-      border: d.border_color ?? a.border_color ?? colors.primary,
-      borderW: Number(d.border_width ?? a.border_width ?? 2),
-      aspectRatio,
-      isCircle, // 🔥 Novo: Flag para círculo
-      shape,    // 🔥 Novo: Formato final aplicado
-    };
-}, [appearance, colors.primary]);
+const normalizeFloatingShape = (value: any): string => {
+  const key = String(value || '').trim().toLowerCase();
+  if (key === 'square' || key === 'quadrado') return 'square';
+  if (key === 'circle' || key === 'circulo' || key === 'redondo') return 'circle';
+  return 'portrait';
+};
 
 /* ════════════════ gridConfig ═══════════════════ */
 const gridCfg = useMemo(() => {
