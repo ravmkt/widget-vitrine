@@ -339,21 +339,21 @@ const renderInlineWidget = (isGrid: boolean) => {
   const isCircle = cfg.shape === 'circle';
   const columns = isGrid ? (cfg as any).columns : (cfg as any).visibleItems;
 
-  // ── Carrossel: viewport fixo = visibleItems × size + gaps, centralizado ──
+  // ── Padding extra para círculos no carrossel ──
+  const circlePadding = isCircle && !isGrid ? Math.round(cfg.size * 0.15) : 0;
+  const sliderPaddingX = circlePadding + 4;
+
+  // ── Carrossel: viewport fixo = visibleItems × size + gaps + padding ──
   // ── Grid: ocupa 100%, cards com wrap ──
   const viewportMaxWidth = isGrid
     ? '100%'
-    : `${columns * cfg.size + (columns - 1) * cfg.spacing}px`;
+    : `${columns * cfg.size + (columns - 1) * cfg.spacing + 2 * sliderPaddingX}px`;
 
   const cardSize = isGrid
     ? `calc((100% - ${(columns - 1) * cfg.spacing}px) / ${columns})`
     : `${cfg.size}px`;
 
   const borderRadius = isCircle ? '50%' : `${cfg.borderRadius}px`;
-
-  // ── Padding extra para círculos no carrossel ──
-  const circlePadding = isCircle && !isGrid ? Math.round(cfg.size * 0.15) : 0;
-  const sliderPaddingX = circlePadding + 4;
 
   return (
     <div style={{
@@ -381,6 +381,7 @@ const renderInlineWidget = (isGrid: boolean) => {
           overflowX: isGrid ? 'hidden' : 'auto',
           overflowY: 'hidden',
           scrollSnapType: isGrid ? 'none' : 'x mandatory',
+          scrollPadding: isGrid ? undefined : `0 ${sliderPaddingX}px`,
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
           padding: isGrid ? '0 4px' : `0 ${sliderPaddingX}px`,
