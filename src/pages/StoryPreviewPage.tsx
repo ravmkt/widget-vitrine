@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { db, Story, Video, resolveStoreId, generateUuid } from '@/lib/db';
+import { supabase } from '@/lib/supabase'; // ajuste o caminho conforme seu projeto
 import { showError, showSuccess } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 
@@ -57,7 +58,6 @@ const getDevice = (): 'mobile' | 'desktop' => {
   return window.innerWidth < 768 ? 'mobile' : 'desktop';
 };
 
-/** Réplica exata de readJsonbConfigValue do widget.js */
 function readJsonbConfigValue(configObj: any, fieldName: string, fallback?: any): any {
   if (configObj === undefined || configObj === null) return fallback;
   if (typeof configObj === 'string') {
@@ -94,7 +94,6 @@ function readJsonbConfigValue(configObj: any, fieldName: string, fallback?: any)
   return fallback;
 }
 
-/** Réplica exata de readConfigValue do widget.js */
 function readConfigValue(appearance: any, configKey: string, jsonbField: string, flatField: string | null, fallback?: any): any {
   const raw = appearance?.[configKey];
   const jsonbVal = readJsonbConfigValue(raw, jsonbField, undefined);
@@ -130,7 +129,6 @@ const safeInt = (value: any, fallback: number): number => {
   return Number.isNaN(n) ? fallback : n;
 };
 
-/** Converte shape em aspect-ratio CSS — mesma lógica do widget.js */
 const shapeToAspectRatioWidget = (shape: string): string => {
   const s = (shape || 'portrait').toLowerCase();
   if (s.indexOf('landscape') !== -1 || s.indexOf('16_9') !== -1 || s.indexOf('16-9') !== -1) return '16 / 9';
@@ -176,6 +174,7 @@ const SvgRuler = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="no
 const SvgWhatsApp = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="#25d366"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z"/></svg>);
 const SvgChevronLeft = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>);
 const SvgChevronRight = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>);
+
 /* ═══════════════════ COMPONENTE PRINCIPAL ═══════════════════ */
 
 const StoryPreviewPage: React.FC = () => {
@@ -368,25 +367,6 @@ const StoryPreviewPage: React.FC = () => {
       aspectRatio: shapeToAspectRatioWidget(shape),
     };
   }, [appearance, colors.primary]);
-  /* ════════════════ HELPERS DE POSIÇÃO/SHAPE ═══════════════════ */
-  function normalizeFloatingPosition(p: string) {
-    const v = String(p || 'bottom-right').toLowerCase().trim();
-    if (['bottom-right','bottom-left','top-right','top-left'].includes(v)) return v;
-    return 'bottom-right';
-  }
-  function normalizeFloatingShape(s: string) {
-    const v = String(s || 'portrait').toLowerCase().trim();
-    if (v.includes('circle')) return 'circle';
-    if (v.includes('square') || v.includes('1_1') || v.includes('1-1')) return 'square';
-    if (v.includes('landscape') || v.includes('16_9') || v.includes('16-9')) return 'landscape';
-    return 'portrait';
-  }
-  const FLOATING_POS_CLASS: Record<string, string> = {
-    'bottom-right': 'bottom-4 right-4',
-    'bottom-left': 'bottom-4 left-4',
-    'top-right': 'top-4 right-4',
-    'top-left': 'top-4 left-4',
-  };
 
   /* ════════════════ CARREGAMENTO DE DADOS ═══════════════════ */
   useEffect(() => {
@@ -749,7 +729,7 @@ const StoryPreviewPage: React.FC = () => {
         <div className="absolute inset-y-0 right-0 z-10 w-1/3" onClick={nextVideo} />
 
         <button onClick={toggleMute} className="absolute bottom-24 right-3 z-20 text-white">
-          {muted ? <SvgMuted/> : <SvgUnmuted/>}
+          {muted ? <SvgVolumeOff/> : <SvgVolume/>}
         </button>
 
         {/* right action bar */}
@@ -762,7 +742,7 @@ const StoryPreviewPage: React.FC = () => {
           )}
           {modalCfg.show_comment && (
             <button onClick={() => setShowComments(true)} className="flex flex-col items-center text-white">
-              <SvgComment />
+              <SvgComment filled={showComments} />
               <span className="text-xs">{comments.length}</span>
             </button>
           )}
@@ -773,10 +753,10 @@ const StoryPreviewPage: React.FC = () => {
           )}
           {modalCfg.show_whatsapp && (
             <a href={whatsappUrl} target="_blank" rel="noreferrer" className="flex flex-col items-center text-white">
-              <SvgWhatsapp />
+              <SvgWhatsApp />
             </a>
           )}
-          {modalCfg.show_sizing && modelData && (
+          {modalCfg.show_sizing && modelData && modelData.length > 0 && (
             <button onClick={openModel} className="flex flex-col items-center text-white">
               <SvgRuler />
             </button>
@@ -817,14 +797,14 @@ const StoryPreviewPage: React.FC = () => {
             >
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-slate-800">Comentários</h3>
-                <button onClick={() => setShowComments(false)}><SvgClose small/></button>
+                <button onClick={() => setShowComments(false)}><SvgCloseSmall/></button>
               </div>
               <div className="mb-3 max-h-64 space-y-3 overflow-y-auto">
                 {comments.length === 0 ? (
                   <p className="text-xs text-slate-400">Seja o primeiro a comentar.</p>
                 ) : comments.map((c) => (
                   <div key={c.id} className="text-sm">
-                    <span className="font-semibold text-slate-700">{c.name}: </span>
+                    <span className="font-semibold text-slate-700">{getCommentName(c)}: </span>
                     <span className="text-slate-600">{c.text}</span>
                   </div>
                 ))}
@@ -873,13 +853,13 @@ const StoryPreviewPage: React.FC = () => {
         )}
 
         {/* model sizing modal */}
-        {modelOpen && modelData && (
+        {modelOpen && modelData && modelData.length > 0 && (
           <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/70" onClick={() => setModelOpen(false)}>
             <div className="max-w-xs rounded-2xl bg-white p-5" onClick={(e) => e.stopPropagation()}>
               <h3 className="mb-3 text-sm font-semibold text-slate-800">Medidas da modelo</h3>
               <ul className="space-y-1 text-sm text-slate-600">
-                {Object.entries(modelData).map(([k, v]) => (
-                  <li key={k}><span className="font-medium">{k}:</span> {String(v)}</li>
+                {modelData.map((item: any, idx: number) => (
+                  <li key={idx}>{typeof item === 'object' ? JSON.stringify(item) : String(item)}</li>
                 ))}
               </ul>
             </div>
