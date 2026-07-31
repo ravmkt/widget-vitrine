@@ -87,6 +87,17 @@ export default function StoryPreviewPage() {
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // ─── getAllSafe: tenta com storeId, em caso de erro tenta sem ───
+  const getAllSafe = async <T,>(collection: any, sid?: string): Promise<T[]> => {
+    if (!collection?.getAll) return [];
+    try {
+      if (sid) return await collection.getAll(sid);
+      return await collection.getAll();
+    } catch {
+      try { return await collection.getAll(); } catch { return []; }
+    }
+  };
+
   // ─── Carregar dados ───
   useEffect(() => {
     let active = true;
@@ -95,41 +106,55 @@ export default function StoryPreviewPage() {
       setLoading(true);
       try {
         const storeId = await resolveStoreId();
+        console.log('[StoryPreview] storeId:', storeId, 'storyId:', storyId);
 
-        // Carregar story
-        const allStories = await db.stories.getAll(storeId);
-        const found = allStories.find(s => s.id === storyId);
-        if (!active || !found) return;
+        // Carregar tudo em paralelo (cada query é resiliente)
+        const [allStories, stores, allSettings, allAppearances, storyRelations, allVideos] = await Promise.all([
+          getAllSafe<any>(db.stories, storeId),
+          getAllSafe<any>(db.stores, storeId),
+          getAllSafe<any>(db.generalSettings, storeId),
+          getAllSafe<any>(db.appearances, storeId),
+          getAllSafe<any>(db.storyVideos, storeId),
+          getAllSafe<Video>(db.videos, storeId),
+        ]);
+
+        console.log('[StoryPreview] stories:', allStories.length);
+        console.log('[StoryPreview] storyVideos relations:', storyRelations.length);
+        console.log('[StoryPreview] videos:', allVideos.length);
+
+        const found = allStories.find((s: any) => s.id === storyId);
+        console.log('[StoryPreview] story found:', !!found, found?.title);
+        if (!active || !found) {
+          if (active) setLoading(false);
+          return;
+        }
         setStory(found);
 
-        // Store name
-        const stores = await db.stores.getAll(storeId);
         if (stores[0]?.name) setStoreName(stores[0].name);
-
-        // Settings
-        const allSettings = await db.generalSettings.getAll(storeId);
         if (allSettings[0]) setSettings(allSettings[0]);
 
-        // Appearance (do story ou default)
-        const allAppearances = await db.appearances.getAll(storeId);
+        // Appearance
         const resolvedAppearance = found.appearance_id
-          ? allAppearances.find(a => a.id === found.appearance_id)
+          ? allAppearances.find((a: any) => a.id === found.appearance_id)
           : null;
         const finalAppearance = resolvedAppearance
-          || allAppearances.find(a => a.is_default)
+          || allAppearances.find((a: any) => a.is_default)
           || allAppearances[0]
           || {};
         if (active) setAppearance(finalAppearance as Record<string, any>);
 
-        // Videos do story
-        const allStoryVideos = await db.storyVideos.getAll(storeId);
-        const allVideos = await db.videos.getAll(storeId);
-        const relations = allStoryVideos
-          .filter(sv => sv.story_id === storyId)
-          .sort((a, b) => (a.position || 0) - (b.position || 0));
+        // Videos do story — filtra relações por story_id (sem exigir store_id)
+        const relations = (storyRelations || [])
+          .filter((sv: any) => sv.story_id === storyId && (!sv.store_id || sv.store_id === storeId))
+          .sort((a: any, b: any) => Number(a.position || 0) - Number(b.position || 0));
+
+        console.log('[StoryPreview] relations for this story:', relations.length);
+
         const storyVideos = relations
-          .map(r => allVideos.find(v => v.id === r.video_id))
+          .map((r: any) => allVideos.find((v: any) => v.id === r.video_id))
           .filter((v): v is Video => !!v);
+
+        console.log('[StoryPreview] resolved videos:', storyVideos.length);
         if (active) setVideos(storyVideos);
 
         // Likes
@@ -143,7 +168,7 @@ export default function StoryPreviewPage() {
           }
         } catch { /* ignore */ }
       } catch (e) {
-        console.error('Erro ao carregar preview:', e);
+        console.error('[StoryPreview] Erro ao carregar preview:', e);
       } finally {
         if (active) setLoading(false);
       }
