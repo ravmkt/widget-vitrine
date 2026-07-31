@@ -520,9 +520,11 @@ const gridCfg = useMemo(() => {
       'portrait'
     ).toLowerCase();
 
-    const columns = Number(
+    const cols = Number(
       d.columns ??
       d.cols ??
+      d.visible_items ??
+      d.visibleItems ??
       a.grid_columns ??
       a.grid_cols ??
       3,
@@ -542,17 +544,6 @@ const gridCfg = useMemo(() => {
       16,
     );
 
-    const visibleItems = Number(
-      d.visible_items ??
-      d.visibleItems ??
-      d.items ??
-      d.card_size ??
-      a.grid_visible_items ??
-      a.grid_visibleItems ??
-      a.grid_items ??
-      columns * rows,
-    );
-
     // 🔧 border_width: inclui border_style (nome real do backend)
     const borderWidthRaw =
       d.border_width ??
@@ -565,7 +556,7 @@ const gridCfg = useMemo(() => {
       a.border_width ??
       a.borderWidth ??
       2;
-    const borderWidth = Number(borderWidthRaw);
+    const borderW = Number(borderWidthRaw);
 
     const borderRadiusRaw =
       d.border_radius ??
@@ -576,9 +567,9 @@ const gridCfg = useMemo(() => {
       a.grid_radius ??
       a.border_radius ??
       12;
-    const borderRadius = Number(borderRadiusRaw);
+    const radius = Number(borderRadiusRaw);
 
-    const borderColor =
+    const border =
       d.border_color ??
       d.borderColor ??
       a.grid_border_color ??
@@ -586,54 +577,14 @@ const gridCfg = useMemo(() => {
       a.border_color ??
       colors.primary;
 
-    // 🔧 margins: inclui margin_top e margin_bottom do backend
-    const marginTop = Number(
-      d.margin_top ?? d.marginTop ?? a.grid_margin_top ?? a.grid_marginTop ?? 0,
-    );
-    const marginBottom = Number(
-      d.margin_bottom ?? d.marginBottom ?? a.grid_margin_bottom ?? a.grid_marginBottom ?? 0,
-    );
-
-    const showTitleRaw =
-      d.show_title ??
-      d.showTitle ??
-      a.grid_show_title ??
-      a.grid_showTitle ??
-      a.grid_title ??
-      a.show_title ??
-      true;
-    const showTitle =
-      showTitleRaw === true ||
-      showTitleRaw === 1 ||
-      showTitleRaw === 'true' ||
-      showTitleRaw === '1';
-
-    const showProductRaw =
-      d.show_product ??
-      d.showProduct ??
-      a.grid_show_product ??
-      a.grid_showProduct ??
-      a.show_product ??
-      true;
-    const showProduct =
-      showProductRaw === true ||
-      showProductRaw === 1 ||
-      showProductRaw === 'true' ||
-      showProductRaw === '1';
-
     return {
-      shape,
-      columns,
+      cols,
       rows,
       gap,
-      visible_items: visibleItems,
-      border_width: borderWidth,
-      border_radius: borderRadius,
-      border_color: borderColor,
-      margin_top: marginTop,
-      margin_bottom: marginBottom,
-      show_title: showTitle,
-      show_product: showProduct,
+      radius,
+      border,
+      borderW,
+      aspectRatio: shapeToAspectRatio(shape),
     };
   }, [appearance, colors.primary]);
 
