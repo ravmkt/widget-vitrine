@@ -57,6 +57,14 @@ const parseJsonSafe = (v: unknown): Record<string,any> => {
   return {};
 };
 
+/** Converte shape em aspect-ratio CSS */
+const shapeToAspectRatio = (shape: string): string => {
+  const s = (shape || 'portrait').toLowerCase();
+  if (s === 'landscape' || s === 'horizontal') return '16/9';
+  if (s === 'square') return '1/1';
+  return '9/16'; // portrait (padrão)
+};
+
 /* ═══════════════════ SVG ICONS (igual widget.js produção) ═══════════════════ */
 
 const SvgHeart = ({ filled }: { filled: boolean }) => (
@@ -219,9 +227,31 @@ const StoryPreviewPage = () => {
     };
   },[appearance]);
 
+  /* ═══════════════════ modalCfg — com hide_stories e show_product_whatsapp ═══════════════════ */
+
   const modalCfg = useMemo(()=>{
     const raw=parseJsonSafe((appearance as any)?.modal_config);
     const a=appearance||{};
+
+    // show_whatsapp: geral do CSV + fallback do appearance + fallback do modal_config
+    const showWhatsapp =
+      a.show_whatsapp_button ??
+      a.show_whatsapp ??
+      a.whatsapp_button ??
+      raw.show_whatsapp_button ??
+      raw.show_whatsapp ??
+      raw.whatsapp_button ??
+      false;
+
+    // show_product_whatsapp: botão específico de WhatsApp do produto
+    const showProductWhatsapp =
+      a.show_product_whatsapp_button ??
+      raw.show_product_whatsapp_button ??
+      false;
+
+    // Ambos podem ser true/false; se qualquer um for true, mostra o botão
+    const finalShowWhatsapp = !!(showWhatsapp || showProductWhatsapp);
+
     return {
       show_title: a.show_title ?? raw.show_title ?? true,
       show_play: a.show_play ?? a.show_play_button ?? a.play_button ?? a.player_play ?? raw.show_play ?? raw.show_play_button ?? raw.play_button ?? raw.player_play ?? true,
@@ -230,31 +260,23 @@ const StoryPreviewPage = () => {
       show_like: a.show_like_button ?? raw.show_like_button ?? true,
       show_comment: a.show_comment_button ?? raw.show_comment_button ?? true,
       show_share: a.show_share_button ?? raw.show_share_button ?? true,
-      show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ?? raw.show_whatsapp_button ?? raw.show_whatsapp ?? raw.whatsapp_button ?? false,
+      show_whatsapp: finalShowWhatsapp,
       show_sizing: a.show_sizing_button ?? raw.show_sizing_button ?? true,
-      shadow: raw.shadow_enabled??a.shadow_enabled??true,
-      border_color: raw.border_color||'',
-      border_width: String(raw.border_width||''),
-      border_radius: String(raw.border_radius||''),
+      shadow: raw.shadow_enabled ?? a.shadow_enabled ?? true,
+      border_color: raw.border_color || '',
+      border_width: String(raw.border_width || ''),
+      border_radius: String(raw.border_radius || ''),
+      // 🔧 CORREÇÃO 4: hide_stories controla a exibição das barras de progresso
+      hide_stories: raw.hide_stories ?? a.hide_stories ?? false,
     };
   },[appearance]);
 
-  /* ═══════════════════ floatingCfg — leitura agressiva ═══════════════════ */
+  /* ═══════════════════ floatingCfg ═══════════════════ */
 
   const floatingCfg = useMemo(()=>{
     const a = appearance || {};
     const raw = parseJsonSafe(a.floating_config);
     const d = raw?.desktop || raw || {};
-
-    // DEBUG — veja no console o que está chegando do backend
-    console.log('🔵 [FLOATING DEBUG] =========================');
-    console.log('🔵 appearance completo:', JSON.stringify(a, null, 2));
-    console.log('🔵 floating_config raw:', raw);
-    console.log('🔵 floating_config.desktop:', d);
-    console.log('🔵 Todas as chaves do appearance:', Object.keys(a));
-    console.log('🔵 Todas as chaves do floating_config:', Object.keys(raw));
-    console.log('🔵 Todas as chaves do desktop:', Object.keys(d));
-    console.log('🔵 ==========================================');
 
     const shape = (
       d.shape || a.floating_shape || d.format || a.floating_format || d.display || a.floating_display || 'portrait'
@@ -275,11 +297,9 @@ const StoryPreviewPage = () => {
     // BORDA
     const borderWidthRaw = d.border_width ?? d.borderWidth ?? d.border_size ?? a.floating_border_width ?? a.floating_borderWidth ?? a.floating_border ?? a.border_width ?? a.borderWidth ?? 2;
     const borderWidth = Number(borderWidthRaw);
-    console.log('🔵 border_width detectado:', borderWidthRaw, '→ número:', borderWidth);
 
     const borderRadiusRaw = d.border_radius ?? d.borderRadius ?? d.radius ?? a.floating_border_radius ?? a.floating_borderRadius ?? a.floating_radius ?? a.border_radius ?? (shape === 'circle' ? 50 : 12);
     const borderRadius = Number(borderRadiusRaw);
-    console.log('🔵 border_radius detectado:', borderRadiusRaw, '→ número:', borderRadius);
 
     const borderColor = d.border_color ?? d.borderColor ?? a.floating_border_color ?? a.floating_borderColor ?? a.border_color ?? colors.primary;
 
@@ -287,22 +307,18 @@ const StoryPreviewPage = () => {
     const marginBottom = Number(d.margin_bottom ?? d.marginBottom ?? a.floating_margin_bottom ?? a.floating_marginBottom ?? 16);
     const marginSide = Number(d.margin_side ?? d.marginSide ?? d.margin_x ?? a.floating_margin_side ?? a.floating_marginSide ?? a.floating_margin_x ?? 16);
     const marginTop = Number(d.margin_top ?? d.marginTop ?? a.floating_margin_top ?? a.floating_marginTop ?? 16);
-    console.log('🔵 Margens detectadas:', { marginBottom, marginSide, marginTop });
 
     // SHOW PLAY
     const showPlayRaw = d.show_play_button ?? d.show_play ?? d.showPlayButton ?? d.showPlay ?? d.play_button ?? d.playButton ?? a.floating_show_play_button ?? a.floating_show_play ?? a.floating_showPlayButton ?? a.floating_showPlay ?? a.floating_play_button ?? a.show_play_button ?? true;
     const showPlay = showPlayRaw === true || showPlayRaw === 1 || showPlayRaw === 'true' || showPlayRaw === '1';
-    console.log('🔵 show_play detectado:', showPlayRaw, '→ booleano:', showPlay);
 
     // SHOW CLOSE
     const showCloseRaw = d.show_close_button ?? d.show_close ?? d.showCloseButton ?? d.showClose ?? d.close_button ?? d.closeButton ?? a.floating_show_close_button ?? a.floating_show_close ?? a.floating_showCloseButton ?? a.floating_showClose ?? a.floating_close_button ?? a.show_close_button ?? true;
     const showClose = showCloseRaw === true || showCloseRaw === 1 || showCloseRaw === 'true' || showCloseRaw === '1';
-    console.log('🔵 show_close detectado:', showCloseRaw, '→ booleano:', showClose);
 
     // SHOW TITLE
     const showTitleRaw = d.show_title ?? d.showTitle ?? a.floating_show_title ?? a.floating_showTitle ?? a.floating_title ?? a.show_title ?? true;
     const showTitle = showTitleRaw === true || showTitleRaw === 1 || showTitleRaw === 'true' || showTitleRaw === '1';
-    console.log('🔵 show_title detectado:', showTitleRaw, '→ booleano:', showTitle);
 
     return {
       shape,
@@ -321,16 +337,60 @@ const StoryPreviewPage = () => {
     };
   },[appearance, colors.primary]);
 
+  /* ═══════════════════ carouselCfg — CORRIGIDO ═══════════════════ */
+
   const carouselCfg = useMemo(()=>{
-    const a=appearance||{}; const raw=parseJsonSafe(a.carousel_config);
-    const d=raw?.desktop||raw||{};
-    return { visible:Number(d.visible_items)||4, gap:Number(d.spacing)||16, radius:Number(d.border_radius)||12, border:d.border_color||'#0094EB', borderW:Number(d.border_style)||2 };
+    const a = appearance || {};
+    const raw = parseJsonSafe(a.carousel_config);
+    const d = raw?.desktop || raw || {};
+
+    // 🔧 CORREÇÃO 1: border_width tem prioridade sobre border_style
+    const borderW = Number(d.border_width || d.border_style || 2);
+
+    // 🔧 CORREÇÃO 2: gap e card_size
+    const gap = Number(d.spacing ?? d.gap ?? 16);
+    const shape = (d.shape || 'portrait').toLowerCase();
+
+    return {
+      visible: Number(d.visible_items) || 4,
+      gap,
+      radius: Number(d.border_radius) || 12,
+      border: d.border_color || '#0094EB',
+      borderW,
+      card_size: d.width ?? d.card_size ?? '80',
+      shape,
+      aspectRatio: shapeToAspectRatio(shape),
+    };
   },[appearance]);
 
+  /* ═══════════════════ gridCfg — CORRIGIDO ═══════════════════ */
+
   const gridCfg = useMemo(()=>{
-    const a=appearance||{}; const raw=parseJsonSafe(a.grid_config);
-    const d=raw?.desktop||raw||{};
-    return { cols:Number(d.visible_items)||4, rows:Number(d.rows)||1, gap:Number(d.spacing)||16, radius:Number(d.border_radius)||12, border:d.border_color||'#0094EB', borderW:Number(d.border_style)||2 };
+    const a = appearance || {};
+    const raw = parseJsonSafe(a.grid_config);
+    const d = raw?.desktop || raw || {};
+
+    // 🔧 CORREÇÃO 1: border_width tem prioridade sobre border_style
+    const borderW = Number(d.border_width || d.border_style || 2);
+
+    // 🔧 CORREÇÃO 3: columns como fallback de visible_items
+    const cols = Number(d.visible_items ?? d.columns ?? 4);
+
+    // 🔧 CORREÇÃO 2: gap
+    const gap = Number(d.spacing ?? d.gap ?? 16);
+
+    const shape = (d.shape || 'portrait').toLowerCase();
+
+    return {
+      cols,
+      rows: Number(d.rows) || 1,
+      gap,
+      radius: Number(d.border_radius) || 12,
+      border: d.border_color || '#0094EB',
+      borderW,
+      shape,
+      aspectRatio: shapeToAspectRatio(shape),
+    };
   },[appearance]);
 
   /* floating position */
@@ -539,8 +599,8 @@ const StoryPreviewPage = () => {
           borderRadius: modalBorderRadiusNum > 0 ? `${modalBorderRadiusNum}px` : '36px',
         }}
       >
-        {/* ═══ Progress Bars ═══ */}
-        {videos.length>1 && (
+        {/* 🔧 CORREÇÃO 4: hide_stories controla a exibição das barras de progresso */}
+        {!mc.hide_stories && videos.length>1 && (
           <div className="absolute top-3 left-0 right-0 z-50 flex gap-1.5 px-4">
             {videos.map((_,i)=>(
               <div key={i} className="h-0.5 flex-1 overflow-hidden rounded-full bg-white/25">
@@ -605,7 +665,7 @@ const StoryPreviewPage = () => {
             </>
           )}
 
-          {/* 🔧 Vídeo sem prop `muted` controlada — evita re-render/reinício */}
+          {/* Vídeo */}
           {currentUrl && !videoError ? (
             <video ref={videoRef} src={currentUrl} poster={posterUrl}
               className="absolute inset-0 h-full w-full object-cover" playsInline autoPlay loop
@@ -700,7 +760,7 @@ const StoryPreviewPage = () => {
                       style={{background:c.btn, opacity: productUrl ? 1 : 0.5, pointerEvents: productUrl ? 'auto' : 'none'}}>
                       Ver no site
                     </a>
-                    {/* WhatsApp condicional */}
+                    {/* 🔧 CORREÇÃO 5: WhatsApp condicional (show_whatsapp_button + show_product_whatsapp_button) */}
                     {mc.show_whatsapp && (
                       <button onClick={doWhatsApp}
                         className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90"
@@ -942,7 +1002,13 @@ const StoryPreviewPage = () => {
             return (
               <button key={v.id||i} onClick={()=>openPlayer(i)}
                 className="relative flex-shrink-0 snap-center overflow-hidden transition-all hover:scale-[1.02]"
-                style={{width:`${w}%`,minWidth:'140px',aspectRatio:'9/16',borderRadius:`${carouselCfg.radius}px`,border:`${carouselCfg.borderW}px solid ${carouselCfg.border}`}}>
+                style={{
+                  width:`${w}%`,
+                  minWidth:'140px',
+                  aspectRatio: carouselCfg.aspectRatio,
+                  borderRadius:`${carouselCfg.radius}px`,
+                  border:`${carouselCfg.borderW}px solid ${carouselCfg.border}`
+                }}>
                 {thumb?<img src={thumb} alt={v.title||''} className="h-full w-full object-cover"/>:<div className="flex h-full w-full items-center justify-center bg-gray-800 text-white/40"><SvgPlay/></div>}
                 <div className="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/30 transition"><div className="text-white opacity-0 hover:opacity-100 transition"><SvgPlay/></div></div>
                 {v.title&&<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-4"><p className="text-xs font-medium text-white line-clamp-2">{v.title}</p></div>}
@@ -967,8 +1033,12 @@ const StoryPreviewPage = () => {
             const thumb=getVideoPoster(v);
             return (
               <button key={v.id||i} onClick={()=>openPlayer(i)}
-                className="group relative aspect-[9/16] overflow-hidden transition-all hover:scale-[1.02]"
-                style={{borderRadius:`${gridCfg.radius}px`,border:`${gridCfg.borderW}px solid ${gridCfg.border}`}}>
+                className="group relative overflow-hidden transition-all hover:scale-[1.02]"
+                style={{
+                  aspectRatio: gridCfg.aspectRatio,
+                  borderRadius:`${gridCfg.radius}px`,
+                  border:`${gridCfg.borderW}px solid ${gridCfg.border}`
+                }}>
                 {thumb?<img src={thumb} alt={v.title||''} className="h-full w-full object-cover"/>:<div className="flex h-full w-full items-center justify-center bg-gray-800 text-white/40"><SvgPlay/></div>}
                 <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition"><div className="text-white opacity-0 group-hover:opacity-100 transition"><SvgPlay/></div></div>
                 {v.title&&<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-4"><p className="text-xs font-medium text-white line-clamp-2">{v.title}</p></div>}
