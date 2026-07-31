@@ -473,7 +473,7 @@ const carouselCfg = useMemo(() => {
       a.border_width ??
       a.borderWidth ??
       2;
-    const borderWidth = Number(borderWidthRaw);
+    const borderW = Number(borderWidthRaw);
 
     const borderRadiusRaw =
       d.border_radius ??
@@ -484,9 +484,9 @@ const carouselCfg = useMemo(() => {
       a.carousel_radius ??
       a.border_radius ??
       12;
-    const borderRadius = Number(borderRadiusRaw);
+    const radius = Number(borderRadiusRaw);
 
-    const borderColor =
+    const border =
       d.border_color ??
       d.borderColor ??
       a.carousel_border_color ??
@@ -494,91 +494,13 @@ const carouselCfg = useMemo(() => {
       a.border_color ??
       colors.primary;
 
-    // 🔧 margins: inclui margin_top e margin_bottom do backend
-    const marginTop = Number(
-      d.margin_top ?? d.marginTop ?? a.carousel_margin_top ?? a.carousel_marginTop ?? 0,
-    );
-    const marginBottom = Number(
-      d.margin_bottom ?? d.marginBottom ?? a.carousel_margin_bottom ?? a.carousel_marginBottom ?? 0,
-    );
-
-    // 🔧 show_play: inclui show_play_icon
-    const showPlayRaw =
-      d.show_play_button ??
-      d.show_play ??
-      d.showPlayButton ??
-      d.showPlay ??
-      d.play_button ??
-      d.playButton ??
-      d.show_play_icon ??
-      a.carousel_show_play_button ??
-      a.carousel_show_play ??
-      a.carousel_showPlayButton ??
-      a.carousel_showPlay ??
-      a.carousel_play_button ??
-      a.show_play_button ??
-      true;
-    const showPlay =
-      showPlayRaw === true ||
-      showPlayRaw === 1 ||
-      showPlayRaw === 'true' ||
-      showPlayRaw === '1';
-
-    const showTitleRaw =
-      d.show_title ??
-      d.showTitle ??
-      a.carousel_show_title ??
-      a.carousel_showTitle ??
-      a.carousel_title ??
-      a.show_title ??
-      true;
-    const showTitle =
-      showTitleRaw === true ||
-      showTitleRaw === 1 ||
-      showTitleRaw === 'true' ||
-      showTitleRaw === '1';
-
-    const showProductRaw =
-      d.show_product ??
-      d.showProduct ??
-      a.carousel_show_product ??
-      a.carousel_showProduct ??
-      a.show_product ??
-      true;
-    const showProduct =
-      showProductRaw === true ||
-      showProductRaw === 1 ||
-      showProductRaw === 'true' ||
-      showProductRaw === '1';
-
-    // 🔧 auto_center: campo que existe no backend
-    const autoCenterRaw =
-      d.auto_center ??
-      d.autoCenter ??
-      a.carousel_auto_center ??
-      a.carousel_autoCenter ??
-      a.auto_center ??
-      a.autoCenter ??
-      false;
-    const autoCenter =
-      autoCenterRaw === true ||
-      autoCenterRaw === 1 ||
-      autoCenterRaw === 'true' ||
-      autoCenterRaw === '1';
-
     return {
-      shape,
-      visible_items: visibleItems,
+      visible: visibleItems,
       gap,
-      border_width: borderWidth,
-      border_radius: borderRadius,
-      border_color: borderColor,
-      margin_top: marginTop,
-      margin_bottom: marginBottom,
-      show_play: showPlay,
-      show_title: showTitle,
-      show_product: showProduct,
-      auto_center: autoCenter,
+      radius,
+      border,
+      borderW,
+      aspectRatio: shapeToAspectRatio(shape),
     };
   }, [appearance, colors.primary]);
 
