@@ -2499,7 +2499,7 @@
     var fonte = appearance.font_family || 'Inter, sans-serif';
 
     var cardSizeVw = cfg.size;
-    var cardWidth = cardSizeVw + 'vw';
+    var cardWidth = cardSizeVw + 'px';
     var cardSizePx = Math.round(cardSizeVw * window.innerWidth / 100);
     var minCardWidth = Math.min(30, cardSizePx) + 'px';
     var boxBorderRadius = cfg.shape === 'circle' ? '50%' : cfg.borderRadius + 'px';
