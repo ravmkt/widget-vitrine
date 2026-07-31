@@ -342,7 +342,8 @@ export function getCarouselConfig(appearance: Record<string, any>) {
   const shape = String(rcv('shape', 'carousel_shape', 'portrait') || 'portrait').trim().toLowerCase();
   return {
     shape,
-    size: toNumber(rcv('width', 'carousel_size', '30'), 30),
+    // PADRONIZADO: size em px (não mais vw). Default 200px para ser visível.
+    size: toNumber(rcv('width', 'carousel_size', '200'), 200),
     visibleItems: safeInt(rcv('visible_items', 'carousel_visible_items', '4'), 4),
     spacing: safeInt(rcv('spacing', 'carousel_spacing', '16'), 16),
     borderColor: rcv('border_color', 'carousel_border_color', '#0094EB') || '#0094EB',
