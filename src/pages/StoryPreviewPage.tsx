@@ -123,7 +123,6 @@ const SvgRuler = () => (
   </svg>
 );
 
-// 🔧 Close icon pequeno (para flutuante) — igual widget.js
 const SvgCloseSmall = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -225,7 +224,6 @@ const StoryPreviewPage = () => {
     const a=appearance||{};
     return {
       show_title: a.show_title ?? raw.show_title ?? true,
-      // 🔧 CORREÇÃO #5: show_play com TODOS os nomes possíveis do backend
       show_play: a.show_play ?? a.show_play_button ?? a.play_button ?? a.player_play ?? raw.show_play ?? raw.show_play_button ?? raw.play_button ?? raw.player_play ?? true,
       show_product: a.show_product ?? raw.show_product ?? true,
       show_product_btn: a.show_product_button ?? raw.show_product_button ?? true,
@@ -241,35 +239,85 @@ const StoryPreviewPage = () => {
     };
   },[appearance]);
 
-  /* 🔧 CORREÇÕES #1, #2, #3, #4, #7: floatingCfg completo com todas as props */
-  const floatingCfg = useMemo(()=>{
-    const a=appearance||{};
-    const raw=parseJsonSafe(a.floating_config);
-    // floating_config.desktop tem prioridade (igual widget.js)
-    const d=raw?.desktop||raw||{};
+  /* ═══════════════════ floatingCfg — leitura agressiva ═══════════════════ */
 
-    const shape=(d.shape||a.floating_shape||d.format||'portrait').toLowerCase();
-    const size=Number(d.width||a.floating_size||d.size||80);
-    const h=shape==='square'||shape==='circle'?size:Math.round(size*16/9);
-    const pos=String(d.floating_position||d.position||a.floating_position||'bottom-right').toLowerCase();
+  const floatingCfg = useMemo(()=>{
+    const a = appearance || {};
+    const raw = parseJsonSafe(a.floating_config);
+    const d = raw?.desktop || raw || {};
+
+    // DEBUG — veja no console o que está chegando do backend
+    console.log('🔵 [FLOATING DEBUG] =========================');
+    console.log('🔵 appearance completo:', JSON.stringify(a, null, 2));
+    console.log('🔵 floating_config raw:', raw);
+    console.log('🔵 floating_config.desktop:', d);
+    console.log('🔵 Todas as chaves do appearance:', Object.keys(a));
+    console.log('🔵 Todas as chaves do floating_config:', Object.keys(raw));
+    console.log('🔵 Todas as chaves do desktop:', Object.keys(d));
+    console.log('🔵 ==========================================');
+
+    const shape = (
+      d.shape || a.floating_shape || d.format || a.floating_format || d.display || a.floating_display || 'portrait'
+    ).toLowerCase();
+
+    const size = Number(
+      d.width || a.floating_size || a.floating_width || d.size || a.size || 80
+    );
+
+    const h = (shape === 'square' || shape === 'circle')
+      ? size
+      : Math.round(size * 16 / 9);
+
+    const pos = String(
+      d.floating_position || d.position || a.floating_position || a.position || 'bottom-right'
+    ).toLowerCase();
+
+    // BORDA
+    const borderWidthRaw = d.border_width ?? d.borderWidth ?? d.border_size ?? a.floating_border_width ?? a.floating_borderWidth ?? a.floating_border ?? a.border_width ?? a.borderWidth ?? 2;
+    const borderWidth = Number(borderWidthRaw);
+    console.log('🔵 border_width detectado:', borderWidthRaw, '→ número:', borderWidth);
+
+    const borderRadiusRaw = d.border_radius ?? d.borderRadius ?? d.radius ?? a.floating_border_radius ?? a.floating_borderRadius ?? a.floating_radius ?? a.border_radius ?? (shape === 'circle' ? 50 : 12);
+    const borderRadius = Number(borderRadiusRaw);
+    console.log('🔵 border_radius detectado:', borderRadiusRaw, '→ número:', borderRadius);
+
+    const borderColor = d.border_color ?? d.borderColor ?? a.floating_border_color ?? a.floating_borderColor ?? a.border_color ?? colors.primary;
+
+    // MARGENS
+    const marginBottom = Number(d.margin_bottom ?? d.marginBottom ?? a.floating_margin_bottom ?? a.floating_marginBottom ?? 16);
+    const marginSide = Number(d.margin_side ?? d.marginSide ?? d.margin_x ?? a.floating_margin_side ?? a.floating_marginSide ?? a.floating_margin_x ?? 16);
+    const marginTop = Number(d.margin_top ?? d.marginTop ?? a.floating_margin_top ?? a.floating_marginTop ?? 16);
+    console.log('🔵 Margens detectadas:', { marginBottom, marginSide, marginTop });
+
+    // SHOW PLAY
+    const showPlayRaw = d.show_play_button ?? d.show_play ?? d.showPlayButton ?? d.showPlay ?? d.play_button ?? d.playButton ?? a.floating_show_play_button ?? a.floating_show_play ?? a.floating_showPlayButton ?? a.floating_showPlay ?? a.floating_play_button ?? a.show_play_button ?? true;
+    const showPlay = showPlayRaw === true || showPlayRaw === 1 || showPlayRaw === 'true' || showPlayRaw === '1';
+    console.log('🔵 show_play detectado:', showPlayRaw, '→ booleano:', showPlay);
+
+    // SHOW CLOSE
+    const showCloseRaw = d.show_close_button ?? d.show_close ?? d.showCloseButton ?? d.showClose ?? d.close_button ?? d.closeButton ?? a.floating_show_close_button ?? a.floating_show_close ?? a.floating_showCloseButton ?? a.floating_showClose ?? a.floating_close_button ?? a.show_close_button ?? true;
+    const showClose = showCloseRaw === true || showCloseRaw === 1 || showCloseRaw === 'true' || showCloseRaw === '1';
+    console.log('🔵 show_close detectado:', showCloseRaw, '→ booleano:', showClose);
+
+    // SHOW TITLE
+    const showTitleRaw = d.show_title ?? d.showTitle ?? a.floating_show_title ?? a.floating_showTitle ?? a.floating_title ?? a.show_title ?? true;
+    const showTitle = showTitleRaw === true || showTitleRaw === 1 || showTitleRaw === 'true' || showTitleRaw === '1';
+    console.log('🔵 show_title detectado:', showTitleRaw, '→ booleano:', showTitle);
 
     return {
       shape,
-      width:size,
-      height:h,
-      position:pos,
-      // 🔧 #3: close — lê de todos os nomes possíveis do backend
-      show_close: d.show_close ?? d.show_close_button ?? d.close_button ?? a.floating_show_close ?? a.floating_close_button ?? a.close_button ?? true,
-      // 🔧 #4: play central — lê de todos os nomes possíveis
-      show_play: d.show_play ?? d.show_play_button ?? d.play_button ?? a.floating_show_play ?? a.floating_play_button ?? a.play_button ?? true,
-      // 🔧 #7: título abaixo da miniatura
-      show_title: d.show_title ?? a.floating_show_title ?? a.floating_title ?? true,
-      // 🔧 #1: border_radius (0 = sem curva)
-      border_radius: Number(d.border_radius ?? a.floating_border_radius ?? d.radius ?? a.floating_radius ?? (shape==='circle'?50:12)),
-      // 🔧 #2: border_width (0 = sem borda)
-      border_width: Number(d.border_width ?? a.floating_border_width ?? d.border ?? 2),
-      // cor da borda
-      border_color: d.border_color ?? a.floating_border_color ?? d.color ?? a.floating_color ?? colors.primary,
+      width: size,
+      height: h,
+      position: pos,
+      show_play: showPlay,
+      show_close: showClose,
+      show_title: showTitle,
+      border_width: borderWidth,
+      border_radius: borderRadius,
+      border_color: borderColor,
+      margin_bottom: marginBottom,
+      margin_side: marginSide,
+      margin_top: marginTop,
     };
   },[appearance, colors.primary]);
 
@@ -293,16 +341,6 @@ const StoryPreviewPage = () => {
     if(p.includes('bottom-left')) return 'bottom-4 left-4';
     return 'bottom-4 right-4';
   },[floatingCfg]);
-
-  // 🔧 CORREÇÃO #1: widgetShape agora respeita border_radius do config
-  const floatingBorderRadius = floatingCfg.shape==='circle'
-    ? '50%'
-    : `${floatingCfg.border_radius}px`;
-
-  // 🔧 CORREÇÃO #2: border width dinâmico
-  const floatingBorderStyle = floatingCfg.border_width > 0
-    ? `${floatingCfg.border_width}px solid ${floatingCfg.border_color}`
-    : 'none';
 
   /* ════════════ LOAD ════════════ */
 
@@ -407,11 +445,10 @@ const StoryPreviewPage = () => {
 
   const togglePlay = async () => { if(!videoRef.current)return; try { if(playing){ videoRef.current.pause(); setPlaying(false); } else { await videoRef.current.play(); setPlaying(true); } } catch { setPlaying(false); } };
 
-  // 🔧 CORREÇÃO #6: toggleMute NUNCA reinicia o vídeo — opera direto no DOM
+  // 🔧 toggleMute NUNCA reinicia o vídeo — opera direto no DOM
   const toggleMute = () => {
     const el = videoRef.current;
     if (!el) return;
-    // Não usar setState aqui que causaria re-render — opera via ref
     el.muted = !el.muted;
     setMuted(el.muted);
   };
@@ -526,7 +563,6 @@ const StoryPreviewPage = () => {
             </p>
           </div>
 
-          {/* 🔧 CORREÇÃO #5: mc.show_play agora com fallbacks robustos */}
           <div className="flex items-center gap-2 pointer-events-auto flex-shrink-0">
             <button onClick={toggleMute} className="flex h-8 w-8 items-center justify-center rounded-full border border-white/80 text-white backdrop-blur-xl hover:bg-black/60"
               style={{background:'rgba(0,0,0,.4)'}}>
@@ -569,7 +605,7 @@ const StoryPreviewPage = () => {
             </>
           )}
 
-          {/* 🔧 CORREÇÃO #6: Vídeo sem prop `muted` controlada — evita re-render/reinício */}
+          {/* 🔧 Vídeo sem prop `muted` controlada — evita re-render/reinício */}
           {currentUrl && !videoError ? (
             <video ref={videoRef} src={currentUrl} poster={posterUrl}
               className="absolute inset-0 h-full w-full object-cover" playsInline autoPlay loop
@@ -658,11 +694,13 @@ const StoryPreviewPage = () => {
                   <p className="truncate text-[13px] font-extrabold" style={{color:c.text}}>{product.name||'Produto'}</p>
                   {productPrice>0 && <p className="mt-1 text-base font-extrabold" style={{color:c.secondary}}>R$ {productPrice.toFixed(2)}</p>}
                   <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                    {/* "Ver no site" sempre aparece */}
                     <a href={productUrl||'#'} target="_blank" rel="noreferrer"
                       className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90 no-underline"
                       style={{background:c.btn, opacity: productUrl ? 1 : 0.5, pointerEvents: productUrl ? 'auto' : 'none'}}>
                       Ver no site
                     </a>
+                    {/* WhatsApp condicional */}
                     {mc.show_whatsapp && (
                       <button onClick={doWhatsApp}
                         className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90"
@@ -815,48 +853,80 @@ const StoryPreviewPage = () => {
 
   /* ═══════════════════ WIDGET FLUTUANTE ═══════════════════ */
 
-  // 🔧 CORREÇÕES #1-2-3-4-7: Flutuante agora respeita TODAS as configs
-  const FloatingWidget = () => (
-    <div className={`fixed ${floatingPos} z-40 cursor-pointer group transition-transform hover:scale-105 active:scale-95`}
-      style={{width:fc.width,height:fc.height}} onClick={()=>openPlayer(0)} title="Clique para abrir o story">
+  const FloatingWidget = () => {
+    const borderRadius = fc.shape === 'circle'
+      ? '50%'
+      : `${fc.border_radius}px`;
 
-      {/* 🔧 #1-2: border_radius e border_width dinâmicos */}
-      <div className="h-full w-full overflow-hidden shadow-xl"
-        style={{ borderRadius: floatingBorderRadius, border: floatingBorderStyle, position:'relative' }}>
-        {thumb0
-          ? <img src={thumb0} alt="Story" className="h-full w-full object-cover"/>
-          : <div className="flex h-full w-full items-center justify-center bg-black text-white"><SvgPlay/></div>
-        }
+    const borderStyle = fc.border_width > 0
+      ? `${fc.border_width}px solid ${fc.border_color}`
+      : 'none';
 
-        {/* 🔧 #4: Play central condicional — respeita fc.show_play */}
-        {fc.show_play && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-gray-900">
-              <span className="ml-0.5"><SvgPlay/></span>
+    const widgetTitle = videos[0]?.title || story?.title || storeName || 'Story';
+
+    return (
+      <div
+        className={`fixed ${floatingPos} z-40 cursor-pointer group transition-transform hover:scale-105 active:scale-95`}
+        style={{
+          width: fc.width,
+          height: fc.height,
+          marginBottom: `${fc.margin_bottom}px`,
+          marginLeft: `${fc.margin_side}px`,
+          marginRight: `${fc.margin_side}px`,
+          marginTop: `${fc.margin_top}px`,
+        }}
+        onClick={() => openPlayer(0)}
+        title="Clique para abrir o story"
+      >
+        <div
+          className="h-full w-full overflow-hidden shadow-xl"
+          style={{
+            borderRadius,
+            border: borderStyle,
+            position: 'relative',
+          }}
+        >
+          {thumb0 ? (
+            <img src={thumb0} alt="Story" className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-black text-white">
+              <SvgPlay />
             </div>
-          </div>
+          )}
+
+          {/* Play central condicional */}
+          {fc.show_play && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-gray-900">
+                <span className="ml-0.5"><SvgPlay /></span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Botão X de fechar condicional */}
+        {fc.show_close && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setFloatingDismissed(true); }}
+            className="absolute -top-2.5 -right-2.5 z-50 flex h-6 w-6 items-center justify-center rounded-full bg-white border border-slate-300 shadow-md hover:bg-gray-100 transition"
+            title="Fechar"
+          >
+            <SvgCloseSmall />
+          </button>
+        )}
+
+        {/* Título abaixo da miniatura condicional */}
+        {fc.show_title && (
+          <p
+            className="mt-1.5 text-center text-[11px] font-semibold text-white line-clamp-1"
+            style={{ textShadow: '0 1px 3px rgba(0,0,0,.5)' }}
+          >
+            {widgetTitle}
+          </p>
         )}
       </div>
-
-      {/* 🔧 #3: Botão X de fechar — estilo limpo igual widget.js */}
-      {fc.show_close && (
-        <button
-          onClick={(e) => { e.stopPropagation(); setFloatingDismissed(true); }}
-          className="absolute -top-2.5 -right-2.5 z-50 flex h-6 w-6 items-center justify-center rounded-full bg-white border border-slate-300 shadow-md hover:bg-gray-100 transition"
-          title="Fechar">
-          <SvgCloseSmall/>
-        </button>
-      )}
-
-      {/* 🔧 #7: Título abaixo da miniatura */}
-      {fc.show_title && (
-        <p className="mt-1.5 text-center text-[11px] font-semibold text-white line-clamp-1"
-          style={{ textShadow: '0 1px 3px rgba(0,0,0,.5)' }}>
-          {(videos[0]?.title || story?.title || storeName || 'Story')}
-        </p>
-      )}
-    </div>
-  );
+    );
+  };
 
   /* ═══════════════════ CARROSSEL ═══════════════════ */
 
