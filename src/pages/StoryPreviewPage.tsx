@@ -123,6 +123,13 @@ const SvgRuler = () => (
   </svg>
 );
 
+// 🔧 Close icon pequeno (para flutuante) — igual widget.js
+const SvgCloseSmall = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+);
+
 const SvgChevronLeft = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="15 18 9 12 15 6"/>
@@ -182,7 +189,7 @@ const StoryPreviewPage = () => {
   const [showSharePanel, setShowSharePanel] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
 
-  /* 🔧 CORREÇÃO: estado para esconder o flutuante ao clicar no X */
+  /* floating dismiss */
   const [floatingDismissed, setFloatingDismissed] = useState(false);
 
   const video = videos[activeIdx]||null;
@@ -218,8 +225,8 @@ const StoryPreviewPage = () => {
     const a=appearance||{};
     return {
       show_title: a.show_title ?? raw.show_title ?? true,
-      // 🔧 CORREÇÃO #1: múltiplos fallbacks para show_play (cobre diferentes nomes de prop do backend)
-      show_play: a.show_play_button ?? a.show_play ?? a.play_button ?? raw.show_play_button ?? raw.show_play ?? raw.play_button ?? true,
+      // 🔧 CORREÇÃO #5: show_play com TODOS os nomes possíveis do backend
+      show_play: a.show_play ?? a.show_play_button ?? a.play_button ?? a.player_play ?? raw.show_play ?? raw.show_play_button ?? raw.play_button ?? raw.player_play ?? true,
       show_product: a.show_product ?? raw.show_product ?? true,
       show_product_btn: a.show_product_button ?? raw.show_product_button ?? true,
       show_like: a.show_like_button ?? raw.show_like_button ?? true,
@@ -234,27 +241,37 @@ const StoryPreviewPage = () => {
     };
   },[appearance]);
 
-  /* 🔧 CORREÇÃO #3, #4, #5: floatingCfg agora lê show_close, show_play e border_color */
+  /* 🔧 CORREÇÕES #1, #2, #3, #4, #7: floatingCfg completo com todas as props */
   const floatingCfg = useMemo(()=>{
-    const a=appearance||{}; const raw=parseJsonSafe(a.floating_config);
+    const a=appearance||{};
+    const raw=parseJsonSafe(a.floating_config);
+    // floating_config.desktop tem prioridade (igual widget.js)
     const d=raw?.desktop||raw||{};
-    const shape=(d.shape||a.floating_shape||'portrait').toLowerCase();
-    const size=Number(d.width||a.floating_size||80);
+
+    const shape=(d.shape||a.floating_shape||d.format||'portrait').toLowerCase();
+    const size=Number(d.width||a.floating_size||d.size||80);
     const h=shape==='square'||shape==='circle'?size:Math.round(size*16/9);
     const pos=String(d.floating_position||d.position||a.floating_position||'bottom-right').toLowerCase();
+
     return {
       shape,
       width:size,
       height:h,
       position:pos,
-      // 🔧 CORREÇÃO #4: controle do botão X de fechar
-      show_close: d.show_close_button ?? d.show_close ?? a.floating_show_close ?? true,
-      // 🔧 CORREÇÃO #5: controle do botão play central
-      show_play: d.show_play_button ?? d.show_play ?? a.floating_show_play ?? true,
-      // 🔧 CORREÇÃO #3: cor da borda do flutuante
-      border_color: d.border_color || a.floating_border_color || '',
+      // 🔧 #3: close — lê de todos os nomes possíveis do backend
+      show_close: d.show_close ?? d.show_close_button ?? d.close_button ?? a.floating_show_close ?? a.floating_close_button ?? a.close_button ?? true,
+      // 🔧 #4: play central — lê de todos os nomes possíveis
+      show_play: d.show_play ?? d.show_play_button ?? d.play_button ?? a.floating_show_play ?? a.floating_play_button ?? a.play_button ?? true,
+      // 🔧 #7: título abaixo da miniatura
+      show_title: d.show_title ?? a.floating_show_title ?? a.floating_title ?? true,
+      // 🔧 #1: border_radius (0 = sem curva)
+      border_radius: Number(d.border_radius ?? a.floating_border_radius ?? d.radius ?? a.floating_radius ?? (shape==='circle'?50:12)),
+      // 🔧 #2: border_width (0 = sem borda)
+      border_width: Number(d.border_width ?? a.floating_border_width ?? d.border ?? 2),
+      // cor da borda
+      border_color: d.border_color ?? a.floating_border_color ?? d.color ?? a.floating_color ?? colors.primary,
     };
-  },[appearance]);
+  },[appearance, colors.primary]);
 
   const carouselCfg = useMemo(()=>{
     const a=appearance||{}; const raw=parseJsonSafe(a.carousel_config);
@@ -277,10 +294,15 @@ const StoryPreviewPage = () => {
     return 'bottom-4 right-4';
   },[floatingCfg]);
 
-  const widgetShape = floatingCfg.shape==='circle'?'rounded-full':'rounded-2xl';
+  // 🔧 CORREÇÃO #1: widgetShape agora respeita border_radius do config
+  const floatingBorderRadius = floatingCfg.shape==='circle'
+    ? '50%'
+    : `${floatingCfg.border_radius}px`;
 
-  // 🔧 CORREÇÃO #3: cor da borda do flutuante (usa config específica ou fallback para cor primária)
-  const floatingBorderColor = floatingCfg.border_color || colors.primary;
+  // 🔧 CORREÇÃO #2: border width dinâmico
+  const floatingBorderStyle = floatingCfg.border_width > 0
+    ? `${floatingCfg.border_width}px solid ${floatingCfg.border_color}`
+    : 'none';
 
   /* ════════════ LOAD ════════════ */
 
@@ -353,12 +375,6 @@ const StoryPreviewPage = () => {
         setProduct(p); setModel(m);
       }catch{ setProduct(null); setModel(null); }
     })();
-    // 🔧 CORREÇÃO #2: inicializa muted via ref (sem prop controlada)
-    const el = videoRef.current;
-    if (el) {
-      el.muted = false;
-      setMuted(false);
-    }
   },[video?.id,story?.id,storeId]);
 
   useEffect(()=>{
@@ -391,10 +407,11 @@ const StoryPreviewPage = () => {
 
   const togglePlay = async () => { if(!videoRef.current)return; try { if(playing){ videoRef.current.pause(); setPlaying(false); } else { await videoRef.current.play(); setPlaying(true); } } catch { setPlaying(false); } };
 
-  // 🔧 CORREÇÃO #2: mute/unmute SEM mexer em prop controlada — só via ref, sem reiniciar o vídeo
+  // 🔧 CORREÇÃO #6: toggleMute NUNCA reinicia o vídeo — opera direto no DOM
   const toggleMute = () => {
     const el = videoRef.current;
     if (!el) return;
+    // Não usar setState aqui que causaria re-render — opera via ref
     el.muted = !el.muted;
     setMuted(el.muted);
   };
@@ -409,20 +426,12 @@ const StoryPreviewPage = () => {
   const goNext = () => { if(!videos.length)return; if(activeIdx<videos.length-1) setActiveIdx(p=>p+1); else setPlayerOpen(false); };
   const goPrev = () => { if(!videos.length)return; setActiveIdx(p=>p>0?p-1:videos.length-1); };
 
-  const doShare = () => {
-    setShowSharePanel(p=>!p);
-  };
+  const doShare = () => { setShowSharePanel(p=>!p); };
 
   const doCopyShareLink = async () => {
     const url=window.location.href;
-    try {
-      await navigator.clipboard.writeText(url);
-      setShareCopied(true);
-      setTimeout(()=>{ setShareCopied(false); setShowSharePanel(false); }, 1500);
-    } catch {
-      setShareCopied(true);
-      setTimeout(()=>{ setShareCopied(false); setShowSharePanel(false); }, 1500);
-    }
+    try { await navigator.clipboard.writeText(url); setShareCopied(true); setTimeout(()=>{ setShareCopied(false); setShowSharePanel(false); }, 1500); }
+    catch { setShareCopied(true); setTimeout(()=>{ setShareCopied(false); setShowSharePanel(false); }, 1500); }
   };
 
   const doShareWhatsApp = () => {
@@ -466,7 +475,7 @@ const StoryPreviewPage = () => {
   if(loading) return <div className="fixed inset-0 flex items-center justify-center bg-black text-white">Carregando...</div>;
   if(!story) return <div className="fixed inset-0 flex items-center justify-center bg-black text-white">Story não encontrado</div>;
 
-  const c=colors, mc=modalCfg;
+  const c=colors, mc=modalCfg, fc=floatingCfg;
   const thumb0=getVideoPoster(videos[0]||null);
   const productImg=product?.image_url||product?.imageUrl||product?.thumbnail_url||product?.thumbnailUrl||'';
   const productUrl=product?.product_url||product?.productUrl||product?.url||'';
@@ -517,12 +526,12 @@ const StoryPreviewPage = () => {
             </p>
           </div>
 
+          {/* 🔧 CORREÇÃO #5: mc.show_play agora com fallbacks robustos */}
           <div className="flex items-center gap-2 pointer-events-auto flex-shrink-0">
             <button onClick={toggleMute} className="flex h-8 w-8 items-center justify-center rounded-full border border-white/80 text-white backdrop-blur-xl hover:bg-black/60"
               style={{background:'rgba(0,0,0,.4)'}}>
               {muted ? <SvgVolumeOff/> : <SvgVolume/>}
             </button>
-            {/* 🔧 CORREÇÃO #1: mc.show_play agora com múltiplos fallbacks — botão aparece corretamente */}
             {mc.show_play && currentUrl && !videoError && (
               <button onClick={togglePlay} className="flex h-8 w-8 items-center justify-center rounded-full border border-white/80 text-white backdrop-blur-xl hover:bg-black/60"
                 style={{background:'rgba(0,0,0,.4)'}}>
@@ -560,10 +569,10 @@ const StoryPreviewPage = () => {
             </>
           )}
 
-          {/* 🔧 CORREÇÃO #2: Vídeo sem prop muted controlada — usa defaultMuted + ref */}
+          {/* 🔧 CORREÇÃO #6: Vídeo sem prop `muted` controlada — evita re-render/reinício */}
           {currentUrl && !videoError ? (
             <video ref={videoRef} src={currentUrl} poster={posterUrl}
-              className="absolute inset-0 h-full w-full object-cover" playsInline defaultMuted={false} autoPlay loop
+              className="absolute inset-0 h-full w-full object-cover" playsInline autoPlay loop
               onPlay={()=>setPlaying(true)} onPause={()=>setPlaying(false)}
               onError={()=>setVideoError(true)} onEnded={goNext}/>
           ) : (
@@ -641,23 +650,19 @@ const StoryPreviewPage = () => {
               style={{background:'linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.5), transparent)'}}>
               <div className="pointer-events-auto flex items-center gap-3 rounded-3xl border p-3"
                 style={{borderColor:c.modalBorder, background:c.bg, boxShadow:modalShadow}}>
-                {/* Imagem */}
                 <div className="h-[72px] w-[72px] shrink-0 overflow-hidden rounded-2xl bg-slate-200">
                   {productImg ? <img src={productImg} alt={product.name||'Produto'} className="h-full w-full object-cover"/> :
                     <div className="h-full w-full bg-slate-200"/>}
                 </div>
-                {/* Info */}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-extrabold" style={{color:c.text}}>{product.name||'Produto'}</p>
                   {productPrice>0 && <p className="mt-1 text-base font-extrabold" style={{color:c.secondary}}>R$ {productPrice.toFixed(2)}</p>}
                   <div className="mt-1.5 flex items-center gap-2 flex-wrap">
-                    {/* "Ver no site" sempre aparece */}
                     <a href={productUrl||'#'} target="_blank" rel="noreferrer"
                       className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90 no-underline"
                       style={{background:c.btn, opacity: productUrl ? 1 : 0.5, pointerEvents: productUrl ? 'auto' : 'none'}}>
                       Ver no site
                     </a>
-                    {/* WhatsApp condicional */}
                     {mc.show_whatsapp && (
                       <button onClick={doWhatsApp}
                         className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90"
@@ -676,7 +681,6 @@ const StoryPreviewPage = () => {
         {showComments && (
           <div className="absolute inset-2 z-[200] flex flex-col overflow-hidden rounded-[20px] border-2 bg-white shadow-2xl animate-[vlSlideUp_.25s_ease]"
             style={{borderColor:c.primary, boxShadow:'0 12px 30px rgba(0,0,0,.35)'}}>
-            {/* Cabeçalho */}
             <div className="flex h-12 min-h-[48px] items-center justify-between border-b border-slate-200 bg-white px-3.5">
               <h3 className="text-base font-bold text-[#111]">Comentários{commentCount>0?` (${commentCount})`:''}</h3>
               <button onClick={()=>{setShowComments(false); setShowEmoji(false);}}
@@ -684,8 +688,6 @@ const StoryPreviewPage = () => {
                 <SvgClose/>
               </button>
             </div>
-
-            {/* Corpo scrollável */}
             <div className="flex-1 overflow-y-auto" style={{WebkitOverflowScrolling:'touch'}}>
               {!commentSent ? (
                 comments.length===0 ? (
@@ -721,16 +723,12 @@ const StoryPreviewPage = () => {
                 </div>
               )}
             </div>
-
-            {/* Rodapé — formulário ou botão */}
             {!commentSent && (
               <div className="border-t border-slate-200 bg-white px-3.5 py-3">
                 {!showEmoji ? (
                   <button onClick={()=>setShowEmoji(true)}
                     className="w-full h-10 rounded-xl text-sm font-bold text-white hover:opacity-90"
-                    style={{background:c.btn}}>
-                    Deixe seu comentário
-                  </button>
+                    style={{background:c.btn}}>Deixe seu comentário</button>
                 ) : (
                   <div className="flex flex-col gap-0">
                     <label className="text-xs font-semibold text-slate-500 mb-1">Seu nome</label>
@@ -738,14 +736,11 @@ const StoryPreviewPage = () => {
                       placeholder="Digite seu nome..." maxLength={80}
                       className="w-full h-10 px-3 rounded-[10px] border-[1.5px] border-slate-200 text-sm text-slate-900 outline-none mb-3 bg-slate-50 focus:border-[#0094EB] focus:bg-white focus:shadow-[0_0_0_2px_rgba(0,148,235,.2)]"
                       style={{fontFamily:'inherit'}}/>
-
                     <label className="text-xs font-semibold text-slate-500 mb-1">Seu comentário</label>
                     <textarea ref={textareaRef} value={commentText} onChange={e=>setCommentText(e.target.value)}
                       placeholder="Escreva seu comentário..." maxLength={1000} rows={3}
                       className="w-full h-[70px] min-h-[70px] max-h-[70px] px-3 rounded-[10px] border-[1.5px] border-slate-200 text-sm text-slate-900 resize-none outline-none mb-2 bg-slate-50 focus:border-[#0094EB] focus:bg-white focus:shadow-[0_0_0_2px_rgba(0,148,235,.2)]"
                       style={{fontFamily:'inherit'}}/>
-
-                    {/* Emojis */}
                     <div className="flex items-center gap-1.5 mb-1.5 relative">
                       <button type="button" onClick={()=>setShowEmoji(false)}
                         className="w-8 h-8 rounded-full border border-slate-200 bg-white text-slate-500 text-base flex items-center justify-center">😊</button>
@@ -759,9 +754,7 @@ const StoryPreviewPage = () => {
                         ))}
                       </div>
                     </div>
-
                     <div className="text-right text-[11px] text-slate-400 mb-2">{commentText.length}/1000</div>
-
                     <div className="flex gap-2">
                       <button onClick={()=>setShowEmoji(false)}
                         className="flex-1 h-10 rounded-xl border-[1.5px] border-slate-200 bg-white text-sm font-semibold text-slate-500"
@@ -781,7 +774,6 @@ const StoryPreviewPage = () => {
         {modelOpen && (
           <div className="absolute inset-2 z-[200] flex flex-col overflow-hidden rounded-[20px] border-2 bg-white shadow-2xl animate-[vlSlideUp_.25s_ease]"
             style={{borderColor:c.primary, boxShadow:'0 12px 30px rgba(0,0,0,.35)'}}>
-            {/* Cabeçalho */}
             <div className="flex h-12 min-h-[48px] items-center justify-between border-b border-slate-200 bg-white px-3.5">
               <h3 className="text-base font-bold text-[#111]">Medidas</h3>
               <button onClick={()=>setModelOpen(false)}
@@ -789,8 +781,6 @@ const StoryPreviewPage = () => {
                 <SvgClose/>
               </button>
             </div>
-
-            {/* Corpo */}
             <div className="flex-1 overflow-y-auto px-[18px] py-4" style={{WebkitOverflowScrolling:'touch'}}>
               <p className="text-[15px] font-extrabold text-[#0f172a] mb-0.5">{model?.name||'Modelo'}</p>
               {model?.size_name && (
@@ -825,34 +815,45 @@ const StoryPreviewPage = () => {
 
   /* ═══════════════════ WIDGET FLUTUANTE ═══════════════════ */
 
-  // 🔧 CORREÇÕES #3, #4, #5 aplicadas:
-  // - Borda usa floatingBorderColor (config específica + fallback)
-  // - Bolinha verde substituída por botão X condicional (floatingCfg.show_close)
-  // - Botão play central condicional (floatingCfg.show_play)
+  // 🔧 CORREÇÕES #1-2-3-4-7: Flutuante agora respeita TODAS as configs
   const FloatingWidget = () => (
     <div className={`fixed ${floatingPos} z-40 cursor-pointer group transition-transform hover:scale-105 active:scale-95`}
-      style={{width:floatingCfg.width,height:floatingCfg.height}} onClick={()=>openPlayer(0)} title="Clique para abrir o story">
-      <div className={`h-full w-full overflow-hidden ${widgetShape} border-2 shadow-xl`} style={{borderColor:floatingBorderColor}}>
-        {thumb0?<img src={thumb0} alt="Story" className="h-full w-full object-cover"/>:<div className="flex h-full w-full items-center justify-center bg-black text-white"><SvgPlay/></div>}
-        {/* 🔧 CORREÇÃO #5: botão play central agora respeita floatingCfg.show_play */}
-        {floatingCfg.show_play && (
+      style={{width:fc.width,height:fc.height}} onClick={()=>openPlayer(0)} title="Clique para abrir o story">
+
+      {/* 🔧 #1-2: border_radius e border_width dinâmicos */}
+      <div className="h-full w-full overflow-hidden shadow-xl"
+        style={{ borderRadius: floatingBorderRadius, border: floatingBorderStyle, position:'relative' }}>
+        {thumb0
+          ? <img src={thumb0} alt="Story" className="h-full w-full object-cover"/>
+          : <div className="flex h-full w-full items-center justify-center bg-black text-white"><SvgPlay/></div>
+        }
+
+        {/* 🔧 #4: Play central condicional — respeita fc.show_play */}
+        {fc.show_play && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-gray-900"><span className="ml-0.5"><SvgPlay/></span></div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-gray-900">
+              <span className="ml-0.5"><SvgPlay/></span>
+            </div>
           </div>
         )}
       </div>
-      {/* 🔧 CORREÇÃO #4: X de fechar no lugar da bolinha verde */}
-      {floatingCfg.show_close && (
+
+      {/* 🔧 #3: Botão X de fechar — estilo limpo igual widget.js */}
+      {fc.show_close && (
         <button
           onClick={(e) => { e.stopPropagation(); setFloatingDismissed(true); }}
-          className="absolute -top-2 -right-2 z-50 flex h-6 w-6 items-center justify-center rounded-full bg-white border-2 shadow-md hover:bg-gray-100 transition"
-          style={{ borderColor: floatingBorderColor }}
-          title="Fechar"
-        >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" style={{color:'#333'}}>
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
+          className="absolute -top-2.5 -right-2.5 z-50 flex h-6 w-6 items-center justify-center rounded-full bg-white border border-slate-300 shadow-md hover:bg-gray-100 transition"
+          title="Fechar">
+          <SvgCloseSmall/>
         </button>
+      )}
+
+      {/* 🔧 #7: Título abaixo da miniatura */}
+      {fc.show_title && (
+        <p className="mt-1.5 text-center text-[11px] font-semibold text-white line-clamp-1"
+          style={{ textShadow: '0 1px 3px rgba(0,0,0,.5)' }}>
+          {(videos[0]?.title || story?.title || storeName || 'Story')}
+        </p>
       )}
     </div>
   );
@@ -914,7 +915,6 @@ const StoryPreviewPage = () => {
 
   return (
     <div className="fixed inset-0 bg-[#111] flex items-center justify-center overflow-hidden">
-      {/* 🔧 CORREÇÃO #4: flutuante respeita o estado floatingDismissed */}
       {!playerOpen && isFloating && !floatingDismissed && <FloatingWidget/>}
       {!playerOpen && isCarousel && <Carousel/>}
       {!playerOpen && isGrid && <Grid/>}
