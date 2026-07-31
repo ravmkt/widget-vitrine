@@ -368,7 +368,8 @@ export function getGridConfig(appearance: Record<string, any>) {
   const shape = String(rcv('shape', 'grid_shape', 'portrait') || 'portrait').trim().toLowerCase();
   return {
     shape,
-    size: toNumber(rcv('width', 'grid_size', '30'), 30),
+    // PADRONIZADO: size em px. Default 200px.
+    size: toNumber(rcv('width', 'grid_size', '200'), 200),
     columns: safeInt(rcv('visible_items', 'grid_columns', '4'), 4),
     rows: safeInt(rcv('rows', 'grid_rows', '1'), 1),
     spacing: safeInt(rcv('spacing', 'grid_spacing', '16'), 16),
