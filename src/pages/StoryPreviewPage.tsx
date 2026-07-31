@@ -238,7 +238,7 @@ export default function StoryPreviewPage() {
     setCommentText('');
   };
 
-  // ─── Drag handlers (CORRIGIDO: usando getBoundingClientRect) ───
+  // ─── Drag handlers (usando getBoundingClientRect) ───
   const handleMouseDown = (e: React.MouseEvent) => {
     const slider = sliderRef.current;
     if (!slider) return;
@@ -331,13 +331,12 @@ export default function StoryPreviewPage() {
   };
 
   // ═══════════════════════════════════════════════════════
-  // INLINE WIDGET (Carousel or Grid) — CORRIGIDO
+  // INLINE WIDGET (Carousel or Grid)
   // ═══════════════════════════════════════════════════════
   const renderInlineWidget = (isGrid: boolean) => {
     const cfg = isGrid ? gridCfg : carouselCfg;
-    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
 
-    // ── CORREÇÃO 1: Grid calcula cardWidth baseado em columns, não size fixo ──
+    // ── PADRONIZADO: size = px, igual ao flutuante ──
     const isCircle = cfg.shape === 'circle';
     const columns = isGrid ? (cfg as any).columns : (cfg as any).visibleItems;
     const autoCenter = (cfg as any).autoCenter;
@@ -348,16 +347,16 @@ export default function StoryPreviewPage() {
     if (isGrid) {
       // Grid: divide igualmente pelas colunas
       cardWidth = `calc((100% - ${(columns - 1) * cfg.spacing}px) / ${columns})`;
-      cardSizePx = Math.round((viewportWidth - (columns - 1) * cfg.spacing) / columns);
+      cardSizePx = cfg.size;
     } else {
-      // Carousel: tamanho fixo em vw
-      cardWidth = `${cfg.size}vw`;
-      cardSizePx = Math.round((cfg.size * viewportWidth) / 100);
+      // Carousel: tamanho fixo em px (padronizado)
+      cardWidth = `${cfg.size}px`;
+      cardSizePx = cfg.size;
     }
 
     const minCardWidth = `${Math.min(30, cardSizePx)}px`;
 
-    // ── CORREÇÃO 2: Padding extra para círculos não serem cortados ──
+    // ── Padding extra para círculos não serem cortados ──
     const circlePadding = isCircle && !isGrid ? Math.round(cardSizePx / 2) : 0;
     const sliderPaddingX = circlePadding + 4;
 
@@ -456,7 +455,6 @@ export default function StoryPreviewPage() {
     const ytId = !isVideoPlayableNatively(currentVideo as any) ? extractYouTubeId(currentUrl) : '';
     const whatsappNumber = String(settings?.whatsapp_number || settings?.whatsappNumber || '').replace(/\D/g, '');
 
-    // Debug — mantenha este log para verificar o valor real de show_play_button
     console.log('[StoryPreview] modalCfg:', m);
 
     const ctrlBtn: CSSProperties = {
@@ -496,7 +494,6 @@ export default function StoryPreviewPage() {
             ) : <div />}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', pointerEvents: 'auto', flexShrink: 0 }}>
               <button onClick={(e) => { e.stopPropagation(); toggleMute(); }} style={ctrlBtn}>{muted ? <VolumeX size={18} /> : <Volume2 size={18} />}</button>
-              {/* CORREÇÃO: Força o botão play a aparecer (o fallback do helper é true, mas garantimos aqui) */}
               <button onClick={(e) => { e.stopPropagation(); togglePlay(); }} style={ctrlBtn}>{playing ? <Pause size={18} /> : <Play size={18} />}</button>
               <button onClick={(e) => { e.stopPropagation(); closePlayer(); }} style={ctrlBtn}><X size={18} /></button>
             </div>
@@ -519,7 +516,7 @@ export default function StoryPreviewPage() {
             </>)}
           </div>
 
-          {/* Social buttons — SEM WhatsApp standalone (já removido) */}
+          {/* Social buttons */}
           <div style={{ position: 'absolute', top: 'calc(42% + 180px)', right: '12px', transform: 'translateY(-50%)', zIndex: 45, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
             {m.show_like_button && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -537,7 +534,7 @@ export default function StoryPreviewPage() {
             {m.show_sizing_button && sizingModel && <button onClick={(e) => { e.stopPropagation(); setShowSizing(true); }} style={socialBtn}><Ruler size={18} className="text-white" /></button>}
           </div>
 
-          {/* Product footer — COM botão Ver no site + WhatsApp */}
+          {/* Product footer */}
           {m.show_product && product && (
             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 40, background: 'linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.5), transparent)', padding: '40px 16px 16px', pointerEvents: 'none' }}>
               <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: '12px', borderRadius: '24px', border: `1px solid ${modalBorder}`, padding: '12px', background: bgColor, boxShadow: shadow }}>
