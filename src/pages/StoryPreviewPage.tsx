@@ -64,6 +64,8 @@ export default function StoryPreviewPage() {
   const [product, setProduct] = useState<any>(null);
   const [storeName, setStoreName] = useState('');
   const [settings, setSettings] = useState<any>(null);
+  const [carouselOffset, setCarouselOffset] = useState(0);
+
 
   // Player state
   const [playerOpen, setPlayerOpen] = useState(false);
