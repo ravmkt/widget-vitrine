@@ -227,13 +227,12 @@ const StoryPreviewPage = () => {
     };
   },[appearance]);
 
-  /* ═══════════════════ modalCfg — com hide_stories e show_product_whatsapp ═══════════════════ */
+  /* ═══════════════════ modalCfg ═══════════════════ */
 
   const modalCfg = useMemo(()=>{
     const raw=parseJsonSafe((appearance as any)?.modal_config);
     const a=appearance||{};
 
-    // show_whatsapp: geral do CSV + fallback do appearance + fallback do modal_config
     const showWhatsapp =
       a.show_whatsapp_button ??
       a.show_whatsapp ??
@@ -243,13 +242,11 @@ const StoryPreviewPage = () => {
       raw.whatsapp_button ??
       false;
 
-    // show_product_whatsapp: botão específico de WhatsApp do produto
     const showProductWhatsapp =
       a.show_product_whatsapp_button ??
       raw.show_product_whatsapp_button ??
       false;
 
-    // Ambos podem ser true/false; se qualquer um for true, mostra o botão
     const finalShowWhatsapp = !!(showWhatsapp || showProductWhatsapp);
 
     return {
@@ -266,14 +263,21 @@ const StoryPreviewPage = () => {
       border_color: raw.border_color || '',
       border_width: String(raw.border_width || ''),
       border_radius: String(raw.border_radius || ''),
-      // 🔧 CORREÇÃO 4: hide_stories controla a exibição das barras de progresso
       hide_stories: raw.hide_stories ?? a.hide_stories ?? false,
     };
   },[appearance]);
 
-/* ════════════════ floatingConfig ═══════════════════ */
+  /* ════════════════ floatingConfig ═══════════════════ */
 
-const floatingCfg = useMemo(() => {
+  /*
+    Campos do JSON floating_config (desktop):
+      shape, width, height, z_index, position, draggable, object_fit,
+      show_title, allow_close, top_spacing, border_color, border_style,
+      left_spacing, border_radius, right_spacing, bottom_spacing,
+      show_play_icon, floating_position
+  */
+
+  const floatingCfg = useMemo(() => {
     const a = appearance || {};
     const raw = parseJsonSafe(a.floating_config);
     const d = raw?.desktop || raw || {};
@@ -302,7 +306,6 @@ const floatingCfg = useMemo(() => {
         ? size
         : Math.round(size * 16 / 9);
 
-    // 🔧 Normaliza posição: fixed_top_right → top-right
     const p = String(
       d.floating_position ||
       d.position ||
@@ -313,35 +316,22 @@ const floatingCfg = useMemo(() => {
      .replace(/_/g, '-')
      .replace('fixed-', '');
 
-    // 🔧 border_width: inclui border_style (nome real do backend)
-    const borderWidthRaw =
-      d.border_width ??
-      d.borderWidth ??
-      d.border_size ??
-      d.border_style ??
-      a.floating_border_width ??
-      a.floating_borderWidth ??
-      a.floating_border ??
-      a.border_width ??
-      a.borderWidth ??
-      2;
-    const borderWidth = Number(borderWidthRaw);
+    const borderWidth = Number(
+      d.border_width ?? d.borderWidth ?? d.border_size ?? d.border_style ??
+      a.floating_border_width ?? a.floating_borderWidth ?? a.floating_border ??
+      a.border_width ?? a.borderWidth ?? 2,
+    );
 
-    const borderRadiusRaw =
-      d.border_radius ??
-      d.borderRadius ??
-      d.radius ??
-      a.floating_border_radius ??
-      a.floating_borderRadius ??
-      a.floating_radius ??
+    const borderRadius = Number(
+      d.border_radius ?? d.borderRadius ?? d.radius ??
+      a.floating_border_radius ?? a.floating_borderRadius ?? a.floating_radius ??
       a.border_radius ??
-      (shape === 'circle' ? 50 : 12);
-    const borderRadius = Number(borderRadiusRaw);
+      (shape === 'circle' ? 50 : 12),
+    );
 
     const borderColor =
       d.border_color ?? d.borderColor ?? a.floating_border_color ?? a.floating_borderColor ?? a.border_color ?? colors.primary;
 
-    // 🔧 margins: inclui top_spacing, left_spacing, right_spacing, bottom_spacing
     const marginBottom =
       Number(d.margin_bottom ?? d.marginBottom ?? d.bottom_spacing ?? a.floating_margin_bottom ?? a.floating_marginBottom ?? 16);
     const marginSide =
@@ -349,63 +339,27 @@ const floatingCfg = useMemo(() => {
     const marginTop =
       Number(d.margin_top ?? d.marginTop ?? d.top_spacing ?? a.floating_margin_top ?? a.floating_marginTop ?? 16);
 
-    // 🔧 show_play: inclui show_play_icon
     const showPlayRaw =
-      d.show_play_button ??
-      d.show_play ??
-      d.showPlayButton ??
-      d.showPlay ??
-      d.play_button ??
-      d.playButton ??
-      d.show_play_icon ??
-      a.floating_show_play_button ??
-      a.floating_show_play ??
-      a.floating_showPlayButton ??
-      a.floating_showPlay ??
-      a.floating_play_button ??
-      a.show_play_button ??
-      true;
+      d.show_play_button ?? d.show_play ?? d.showPlayButton ?? d.showPlay ??
+      d.play_button ?? d.playButton ?? d.show_play_icon ??
+      a.floating_show_play_button ?? a.floating_show_play ?? a.floating_showPlayButton ?? a.floating_showPlay ??
+      a.floating_play_button ?? a.show_play_button ?? true;
     const showPlay =
-      showPlayRaw === true ||
-      showPlayRaw === 1 ||
-      showPlayRaw === 'true' ||
-      showPlayRaw === '1';
+      showPlayRaw === true || showPlayRaw === 1 || showPlayRaw === 'true' || showPlayRaw === '1';
 
-    // 🔧 show_close: inclui allow_close
     const showCloseRaw =
-      d.show_close_button ??
-      d.show_close ??
-      d.showCloseButton ??
-      d.showClose ??
-      d.close_button ??
-      d.closeButton ??
-      d.allow_close ??
-      a.floating_show_close_button ??
-      a.floating_show_close ??
-      a.floating_showCloseButton ??
-      a.floating_showClose ??
-      a.floating_close_button ??
-      a.show_close_button ??
-      true;
+      d.show_close_button ?? d.show_close ?? d.showCloseButton ?? d.showClose ??
+      d.close_button ?? d.closeButton ?? d.allow_close ??
+      a.floating_show_close_button ?? a.floating_show_close ?? a.floating_showCloseButton ?? a.floating_showClose ??
+      a.floating_close_button ?? a.show_close_button ?? true;
     const showClose =
-      showCloseRaw === true ||
-      showCloseRaw === 1 ||
-      showCloseRaw === 'true' ||
-      showCloseRaw === '1';
+      showCloseRaw === true || showCloseRaw === 1 || showCloseRaw === 'true' || showCloseRaw === '1';
 
     const showTitleRaw =
-      d.show_title ??
-      d.showTitle ??
-      a.floating_show_title ??
-      a.floating_showTitle ??
-      a.floating_title ??
-      a.show_title ??
-      true;
+      d.show_title ?? d.showTitle ??
+      a.floating_show_title ?? a.floating_showTitle ?? a.floating_title ?? a.show_title ?? true;
     const showTitle =
-      showTitleRaw === true ||
-      showTitleRaw === 1 ||
-      showTitleRaw === 'true' ||
-      showTitleRaw === '1';
+      showTitleRaw === true || showTitleRaw === 1 || showTitleRaw === 'true' || showTitleRaw === '1';
 
     return {
       shape,
@@ -424,93 +378,147 @@ const floatingCfg = useMemo(() => {
     };
   }, [appearance, colors.primary]);
 
-/* ════════════════ carouselConfig ═══════════════════ */
+  /* ════════════════ carouselConfig ═══════════════════ */
 
-const carouselCfg = useMemo(() => {
+  /*
+    Campos do JSON carousel_config (desktop):
+      gap, shape, width, spacing, card_size, view_mode, card_shape,
+      margin_top, object_fit, show_title, auto_center, border_color,
+      border_style, border_width, show_product, border_radius,
+      margin_bottom, visible_items, show_play_icon
+  */
+
+  const carouselCfg = useMemo(() => {
     const a = appearance || {};
     const raw = parseJsonSafe(a.carousel_config);
     const d = raw?.desktop || raw || {};
 
-    // ── shape: card_shape do JSON → carousel_card_shape da tabela → padrão
+    // ── shape: card_shape (JSON) → shape (JSON) → campo plano da tabela
     const shape = (
-      d.shape || d.card_shape || d.card_shape_display || d.format ||
-      a.carousel_card_shape || a.carousel_shape ||
+      d.card_shape ||          // ← nome real do JSON: "card_shape"
+      d.shape ||               // ← fallback: "shape"
+      d.format ||              // ← fallback: "format"
+      a.carousel_card_shape || // ← campo plano: "carousel_card_shape"
       'portrait'
-    ).toLowerCase();
+    ).toString().toLowerCase().trim();
 
-    // ── visible: visible_items → card_size → carousel_visible_items da tabela
-    const visibleItems = Number(
-      d.visible_items ?? d.visibleItems ?? d.items ?? d.card_size ??
-      a.carousel_visible_items ?? 5,
+    // ── visible: visible_items (JSON) → card_size (JSON) → campo plano
+    const visible = Number(
+      d.visible_items ??     // ← nome real do JSON: "visible_items"
+      d.visibleItems ??
+      d.items ??
+      d.card_size ??          // ← nome real do JSON: "card_size"
+      a.carousel_visible_items ??
+      5,
     );
 
-    // ── gap: gap → spacing → carousel_gap da tabela
+    // ── gap: gap (JSON) → spacing (JSON) → campo plano
     const gap = Number(
-      d.gap ?? d.spacing ??
-      a.carousel_gap ?? 16,
+      d.gap ??                 // ← nome real do JSON: "gap"
+      d.spacing ??             // ← nome real do JSON: "spacing"
+      a.carousel_gap ??
+      16,
     );
 
-    // ── borda (border_width / border_style)
-    const borderWidthRaw =
-      d.border_width ?? d.borderWidth ?? d.border_size ?? d.border_style ??
-      a.border_width ?? a.borderWidth ?? 2;
-    const borderW = Number(borderWidthRaw);
+    // ── borderW: border_width → border_style → campo plano
+    const borderW = Number(
+      d.border_width ??        // ← nome real do JSON: "border_width"
+      d.borderWidth ??
+      d.border_size ??
+      d.border_style ??        // ← nome real do JSON: "border_style"
+      a.border_width ??
+      a.borderWidth ??
+      2,
+    );
 
-    const borderRadiusRaw =
-      d.border_radius ?? d.borderRadius ?? d.radius ??
-      a.border_radius ?? 12;
-    const radius = Number(borderRadiusRaw);
+    // ── radius: border_radius → campo plano
+    const radius = Number(
+      d.border_radius ??       // ← nome real do JSON: "border_radius"
+      d.borderRadius ??
+      d.radius ??
+      a.border_radius ??
+      12,
+    );
 
+    // ── border: border_color → campo plano
     const border =
-      d.border_color ?? d.borderColor ??
-      a.border_color ?? colors.primary;
+      d.border_color ??        // ← nome real do JSON: "border_color"
+      d.borderColor ??
+      a.border_color ??
+      colors.primary;
 
-    // ── object-fit
+    // ── objectFit: object_fit → campo plano
     const objectFit = String(
-      d.object_fit ?? d.objectFit ??
-      a.object_fit ?? a.objectFit ?? 'cover'
+      d.object_fit ??          // ← nome real do JSON: "object_fit"
+      d.objectFit ??
+      a.object_fit ??
+      a.objectFit ??
+      'cover'
     ).toLowerCase();
 
-    // ── show_play (show_play_icon)
+    // ── showPlay: show_play_icon → show_play_button → campo plano
     const showPlayRaw =
-      d.show_play_button ?? d.show_play ?? d.showPlayButton ?? d.showPlay ??
-      d.play_button ?? d.playButton ?? d.show_play_icon ??
-      a.show_play_button ?? true;
-    const showPlay = showPlayRaw === true || showPlayRaw === 1 || showPlayRaw === 'true' || showPlayRaw === '1';
+      d.show_play_button ??
+      d.show_play ??
+      d.showPlayButton ??
+      d.showPlay ??
+      d.play_button ??
+      d.playButton ??
+      d.show_play_icon ??      // ← nome real do JSON: "show_play_icon"
+      a.show_play_button ??
+      true;
+    const showPlay =
+      showPlayRaw === true || showPlayRaw === 1 || showPlayRaw === 'true' || showPlayRaw === '1';
 
-    // ── show_title
+    // ── showTitle: show_title → campo plano
     const showTitleRaw =
-      d.show_title ?? d.showTitle ??
-      a.show_title ?? true;
-    const showTitle = showTitleRaw === true || showTitleRaw === 1 || showTitleRaw === 'true' || showTitleRaw === '1';
+      d.show_title ??          // ← nome real do JSON: "show_title"
+      d.showTitle ??
+      a.show_title ??
+      true;
+    const showTitle =
+      showTitleRaw === true || showTitleRaw === 1 || showTitleRaw === 'true' || showTitleRaw === '1';
 
-    // ── show_product
+    // ── showProduct: show_product → campo plano
     const showProductRaw =
-      d.show_product ?? d.showProduct ??
-      a.show_product ?? true;
-    const showProduct = showProductRaw === true || showProductRaw === 1 || showProductRaw === 'true' || showProductRaw === '1';
+      d.show_product ??        // ← nome real do JSON: "show_product"
+      d.showProduct ??
+      a.show_product ??
+      true;
+    const showProduct =
+      showProductRaw === true || showProductRaw === 1 || showProductRaw === 'true' || showProductRaw === '1';
 
-    // ── auto_center
+    // ── autoCenter: auto_center → campo plano
     const autoCenterRaw =
-      d.auto_center ?? d.autoCenter ??
-      a.auto_center ?? a.autoCenter ?? false;
-    const autoCenter = autoCenterRaw === true || autoCenterRaw === 1 || autoCenterRaw === 'true' || autoCenterRaw === '1';
+      d.auto_center ??         // ← nome real do JSON: "auto_center"
+      d.autoCenter ??
+      a.auto_center ??
+      a.autoCenter ??
+      false;
+    const autoCenter =
+      autoCenterRaw === true || autoCenterRaw === 1 || autoCenterRaw === 'true' || autoCenterRaw === '1';
 
-    // ── view_mode
+    // ── viewMode: view_mode
     const viewMode = String(
-      d.view_mode ?? d.viewMode ?? 'preview'
+      d.view_mode ??           // ← nome real do JSON: "view_mode"
+      d.viewMode ??
+      'preview'
     ).toLowerCase();
 
-    // ── margins
+    // ── margins: margin_top / margin_bottom
     const marginTop = Number(
-      d.margin_top ?? d.marginTop ?? 0,
+      d.margin_top ??          // ← nome real do JSON: "margin_top"
+      d.marginTop ?? 0,
     );
     const marginBottom = Number(
-      d.margin_bottom ?? d.marginBottom ?? 0,
+      d.margin_bottom ??       // ← nome real do JSON: "margin_bottom"
+      d.marginBottom ?? 0,
     );
 
+    console.log('🎠 carouselCfg:', { shape, visible, gap, borderW, radius, border, objectFit, showPlay, showTitle, showProduct, autoCenter, viewMode, marginTop, marginBottom });
+
     return {
-      visible: visibleItems,
+      visible,
       gap,
       radius,
       border,
@@ -528,77 +536,118 @@ const carouselCfg = useMemo(() => {
     };
   }, [appearance, colors.primary]);
 
-/* ════════════════ gridConfig ═══════════════════ */
+  /* ════════════════ gridConfig ═══════════════════ */
 
-const gridCfg = useMemo(() => {
+  /*
+    Campos do JSON grid_config (desktop):
+      gap, rows, shape, width, columns, spacing, card_size, card_shape,
+      object_fit, show_title, border_color, border_style, border_width,
+      border_radius, visible_items
+  */
+
+  const gridCfg = useMemo(() => {
     const a = appearance || {};
     const raw = parseJsonSafe(a.grid_config);
     const d = raw?.desktop || raw || {};
 
-    // ── shape
+    // ── shape: card_shape (JSON) → shape (JSON) → campo plano
     const shape = (
-      d.shape || d.card_shape || d.card_shape_display || d.format ||
-      a.grid_card_shape || a.grid_shape ||
+      d.card_shape ||          // ← nome real do JSON: "card_shape"
+      d.shape ||               // ← fallback: "shape"
+      d.format ||
+      a.grid_card_shape ||
       'portrait'
-    ).toLowerCase();
+    ).toString().toLowerCase().trim();
 
-    // ── columns
+    // ── cols: columns (JSON)
     const cols = Number(
-      d.columns ?? d.cols ?? d.visible_items ?? d.visibleItems ??
-      a.grid_columns ?? a.grid_cols ?? 3,
+      d.columns ??             // ← nome real do JSON: "columns"
+      d.cols ??
+      d.visible_items ??
+      d.visibleItems ??
+      a.grid_columns ??
+      a.grid_cols ??
+      3,
     );
 
-    // ── rows
+    // ── rows: rows (JSON)
     const rows = Number(
-      d.rows ?? 2,
+      d.rows ??                // ← nome real do JSON: "rows"
+      2,
     );
 
-    // ── gap
+    // ── gap: gap → spacing
     const gap = Number(
-      d.gap ?? d.spacing ??
-      a.grid_gap ?? a.grid_spacing ?? 16,
+      d.gap ??                 // ← nome real do JSON: "gap"
+      d.spacing ??             // ← nome real do JSON: "spacing"
+      a.grid_gap ??
+      a.grid_spacing ??
+      16,
     );
 
-    // ── borda (border_width / border_style)
-    const borderWidthRaw =
-      d.border_width ?? d.borderWidth ?? d.border_size ?? d.border_style ??
-      a.border_width ?? a.borderWidth ?? 2;
-    const borderW = Number(borderWidthRaw);
+    // ── borderW: border_width → border_style → campo plano
+    const borderW = Number(
+      d.border_width ??        // ← nome real do JSON: "border_width"
+      d.borderWidth ??
+      d.border_size ??
+      d.border_style ??        // ← nome real do JSON: "border_style"
+      a.border_width ??
+      a.borderWidth ??
+      2,
+    );
 
-    const borderRadiusRaw =
-      d.border_radius ?? d.borderRadius ?? d.radius ??
-      a.border_radius ?? 12;
-    const radius = Number(borderRadiusRaw);
+    // ── radius: border_radius → campo plano
+    const radius = Number(
+      d.border_radius ??       // ← nome real do JSON: "border_radius"
+      d.borderRadius ??
+      d.radius ??
+      a.border_radius ??
+      12,
+    );
 
+    // ── border: border_color → campo plano
     const border =
-      d.border_color ?? d.borderColor ??
-      a.border_color ?? colors.primary;
+      d.border_color ??        // ← nome real do JSON: "border_color"
+      d.borderColor ??
+      a.border_color ??
+      colors.primary;
 
-    // ── object-fit
+    // ── objectFit: object_fit → campo plano
     const objectFit = String(
-      d.object_fit ?? d.objectFit ??
-      a.object_fit ?? a.objectFit ?? 'cover'
+      d.object_fit ??          // ← nome real do JSON: "object_fit"
+      d.objectFit ??
+      a.object_fit ??
+      a.objectFit ??
+      'cover'
     ).toLowerCase();
 
-    // ── show_title
+    // ── showTitle: show_title → campo plano
     const showTitleRaw =
-      d.show_title ?? d.showTitle ??
-      a.show_title ?? true;
-    const showTitle = showTitleRaw === true || showTitleRaw === 1 || showTitleRaw === 'true' || showTitleRaw === '1';
+      d.show_title ??          // ← nome real do JSON: "show_title"
+      d.showTitle ??
+      a.show_title ??
+      true;
+    const showTitle =
+      showTitleRaw === true || showTitleRaw === 1 || showTitleRaw === 'true' || showTitleRaw === '1';
 
-    // ── show_product
+    // ── showProduct: show_product → campo plano
     const showProductRaw =
-      d.show_product ?? d.showProduct ??
-      a.show_product ?? true;
-    const showProduct = showProductRaw === true || showProductRaw === 1 || showProductRaw === 'true' || showProductRaw === '1';
+      d.show_product ??        // ← nome real do JSON: "show_product"
+      d.showProduct ??
+      a.show_product ??
+      true;
+    const showProduct =
+      showProductRaw === true || showProductRaw === 1 || showProductRaw === 'true' || showProductRaw === '1';
 
-    // ── margins
+    // ── margins: margin_top / margin_bottom
     const marginTop = Number(
       d.margin_top ?? d.marginTop ?? 0,
     );
     const marginBottom = Number(
       d.margin_bottom ?? d.marginBottom ?? 0,
     );
+
+    console.log('📊 gridCfg:', { shape, cols, rows, gap, borderW, radius, border, objectFit, showTitle, showProduct, marginTop, marginBottom });
 
     return {
       cols,
@@ -641,43 +690,48 @@ const gridCfg = useMemo(() => {
           getAllSafe<any>((db as any).generalSettings,sid),
         ]);
         if(!m)return; setSettings(gs?.[0]||null);
-try {
-  const apps = await getAllSafe<any>((db as any).appearances, sid);
-  const storyAppearanceId = (story as any)?.appearance_id;
-  const defaultAppearanceId = gs?.[0]?.default_appearance_id;
 
-  let fnd: any = null;
+        // 🔧 CARREGAMENTO ROBUSTO DA APARÊNCIA
+        try {
+          const apps = await getAllSafe<any>((db as any).appearances, sid);
+          const storyAppId = (story as any)?.appearance_id;
+          const defaultAppId = gs?.[0]?.default_appearance_id;
 
-  // 1) Tenta pela appearance_id do story
-  if (storyAppearanceId) {
-    fnd = apps.find((a: any) => a.id === storyAppearanceId) || null;
-  }
+          let fnd: any = null;
+          let origem = '';
 
-  // 2) Tenta pela default_appearance_id das generalSettings
-  if (!fnd && defaultAppearanceId) {
-    fnd = apps.find((a: any) => a.id === defaultAppearanceId) || null;
-  }
+          // 1) Tenta pela appearance_id do story
+          if (storyAppId) {
+            fnd = apps.find((a: any) => a.id === storyAppId) || null;
+            if (fnd) origem = 'story.appearance_id';
+          }
 
-  // 3) Tenta pela is_default
-  if (!fnd) {
-    fnd = apps.find((a: any) => a.is_default) || null;
-  }
+          // 2) Tenta pela default_appearance_id das generalSettings
+          if (!fnd && defaultAppId) {
+            fnd = apps.find((a: any) => a.id === defaultAppId) || null;
+            if (fnd) origem = 'settings.default_appearance_id';
+          }
 
-  // 4) Último fallback: primeira da lista
-  if (!fnd && apps.length > 0) {
-    fnd = apps[0];
-  }
+          // 3) Tenta pela is_default
+          if (!fnd) {
+            fnd = apps.find((a: any) => a.is_default) || null;
+            if (fnd) origem = 'is_default';
+          }
 
-  if (m) setAppearance(fnd);
-} catch (e) {
-  console.error('Erro ao carregar appearance:', e);
-  // Tenta buscar sem store_id específico
-  try {
-    const apps = await getAllSafe<any>((db as any).appearances);
-    const fnd = apps?.find((a: any) => a.is_default) || apps?.[0] || null;
-    if (m) setAppearance(fnd);
-  } catch {}
-}
+          // 4) Último fallback: primeira da lista
+          if (!fnd && apps.length > 0) {
+            fnd = apps[0];
+            origem = 'primeira da lista';
+          }
+
+          if (m) {
+            console.log('📦 Aparência carregada:', fnd?.name || 'NENHUMA', '| origem:', origem, '| id:', fnd?.id);
+            setAppearance(fnd);
+          }
+        } catch (e) {
+          console.error('❌ Erro ao carregar appearance:', e);
+        }
+
         const rels=sv.filter((r:any)=>r.story_id===story.id&&(!r.store_id||r.store_id===sid))
           .sort((a:any,b:any)=>Number(a.position||0)-Number(b.position||0))
           .map((r:any)=>allVids.find((v:any)=>v.id===r.video_id)).filter(Boolean) as Video[];
@@ -726,7 +780,6 @@ try {
     return ()=>el.removeEventListener('timeupdate',f);
   },[video?.id]);
 
-  // Fechar share panel ao clicar fora
   useEffect(()=>{
     if(!showSharePanel)return;
     const handler=(e:MouseEvent)=>{
@@ -749,7 +802,6 @@ try {
 
   const togglePlay = async () => { if(!videoRef.current)return; try { if(playing){ videoRef.current.pause(); setPlaying(false); } else { await videoRef.current.play(); setPlaying(true); } } catch { setPlaying(false); } };
 
-  // 🔧 toggleMute NUNCA reinicia o vídeo — opera direto no DOM
   const toggleMute = () => {
     const el = videoRef.current;
     if (!el) return;
@@ -829,7 +881,7 @@ try {
 
   const commentCount = comments.length;
 
-  /* ═══════════════════ PLAYER (espelhando widget.js) ═══════════════════ */
+  /* ═══════════════════ PLAYER ═══════════════════ */
 
   const Player = () => (
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{background:'rgba(15,23,42,.62)'}} onClick={close}>
@@ -843,7 +895,6 @@ try {
           borderRadius: modalBorderRadiusNum > 0 ? `${modalBorderRadiusNum}px` : '36px',
         }}
       >
-        {/* 🔧 CORREÇÃO 4: hide_stories controla a exibição das barras de progresso */}
         {!mc.hide_stories && videos.length>1 && (
           <div className="absolute top-3 left-0 right-0 z-50 flex gap-1.5 px-4">
             {videos.map((_,i)=>(
@@ -855,7 +906,6 @@ try {
           </div>
         )}
 
-        {/* Header — mute → play/pause → close */}
         <div className="absolute top-0 left-0 right-0 z-40 flex items-start justify-between pointer-events-none px-4 pt-5 pb-4"
           style={{background:'linear-gradient(to bottom, rgba(0,0,0,.7), transparent)'}}>
           <div className="flex flex-col gap-0.5 min-w-0 flex-1 pr-12 pointer-events-auto">
@@ -885,15 +935,12 @@ try {
           </div>
         </div>
 
-        {/* ═══ Body (vídeo) ═══ */}
         <div className="relative flex-1 w-full min-h-0 overflow-hidden bg-black">
-          {/* Navegação tap */}
           <div className="absolute inset-0 z-30 flex">
             <button onClick={goPrev} className="h-full w-[30%]"/>
             <button onClick={goNext} className="h-full w-[70%]"/>
           </div>
 
-          {/* Setas de navegação */}
           {videos.length > 1 && (
             <>
               <button onClick={(e)=>{e.stopPropagation(); goPrev();}}
@@ -909,7 +956,6 @@ try {
             </>
           )}
 
-          {/* Vídeo */}
           {currentUrl && !videoError ? (
             <video ref={videoRef} src={currentUrl} poster={posterUrl}
               className="absolute inset-0 h-full w-full object-cover" playsInline autoPlay loop
@@ -921,11 +967,9 @@ try {
             </div>
           )}
 
-          {/* Botões Sociais */}
           <div className="absolute z-[45] flex flex-col items-center gap-3"
             style={{top:'calc(42% + 180px)', right:'12px', transform:'translateY(-50%)'}}>
 
-            {/* Like */}
             {mc.show_like && (
               <div className="flex flex-col items-center gap-0">
                 <button onClick={doLike}
@@ -937,7 +981,6 @@ try {
               </div>
             )}
 
-            {/* Comentários */}
             {mc.show_comment && (
               <div className="flex flex-col items-center gap-0">
                 <button onClick={()=>setShowComments(true)}
@@ -949,7 +992,6 @@ try {
               </div>
             )}
 
-            {/* Share com dropdown */}
             {mc.show_share && (
               <div className="relative">
                 <button onClick={doShare}
@@ -974,7 +1016,6 @@ try {
               </div>
             )}
 
-            {/* Medidas */}
             {mc.show_sizing && modelData.length>0 && (
               <button onClick={()=>setModelOpen(true)}
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-white/80 text-white backdrop-blur-sm hover:bg-black/25"
@@ -984,7 +1025,6 @@ try {
             )}
           </div>
 
-          {/* ═══ Footer — Card de Produto ═══ */}
           {mc.show_product && product && (
             <div className="absolute bottom-0 left-0 right-0 z-40 pointer-events-none px-4 pb-4 pt-10"
               style={{background:'linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.5), transparent)'}}>
@@ -998,13 +1038,11 @@ try {
                   <p className="truncate text-[13px] font-extrabold" style={{color:c.text}}>{product.name||'Produto'}</p>
                   {productPrice>0 && <p className="mt-1 text-base font-extrabold" style={{color:c.secondary}}>R$ {productPrice.toFixed(2)}</p>}
                   <div className="mt-1.5 flex items-center gap-2 flex-wrap">
-                    {/* "Ver no site" sempre aparece */}
                     <a href={productUrl||'#'} target="_blank" rel="noreferrer"
                       className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90 no-underline"
                       style={{background:c.btn, opacity: productUrl ? 1 : 0.5, pointerEvents: productUrl ? 'auto' : 'none'}}>
                       Ver no site
                     </a>
-                    {/* 🔧 CORREÇÃO 5: WhatsApp condicional (show_whatsapp_button + show_product_whatsapp_button) */}
                     {mc.show_whatsapp && (
                       <button onClick={doWhatsApp}
                         className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90"
@@ -1019,7 +1057,6 @@ try {
           )}
         </div>
 
-        {/* ═══ Painel de Comentários ═══ */}
         {showComments && (
           <div className="absolute inset-2 z-[200] flex flex-col overflow-hidden rounded-[20px] border-2 bg-white shadow-2xl animate-[vlSlideUp_.25s_ease]"
             style={{borderColor:c.primary, boxShadow:'0 12px 30px rgba(0,0,0,.35)'}}>
@@ -1112,7 +1149,6 @@ try {
           </div>
         )}
 
-        {/* Painel de Medidas */}
         {modelOpen && (
           <div className="absolute inset-2 z-[200] flex flex-col overflow-hidden rounded-[20px] border-2 bg-white shadow-2xl animate-[vlSlideUp_.25s_ease]"
             style={{borderColor:c.primary, boxShadow:'0 12px 30px rgba(0,0,0,.35)'}}>
@@ -1198,7 +1234,6 @@ try {
             </div>
           )}
 
-          {/* Play central condicional */}
           {fc.show_play && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-gray-900">
@@ -1208,7 +1243,6 @@ try {
           )}
         </div>
 
-        {/* Botão X de fechar condicional */}
         {fc.show_close && (
           <button
             onClick={(e) => { e.stopPropagation(); setFloatingDismissed(true); }}
@@ -1219,7 +1253,6 @@ try {
           </button>
         )}
 
-        {/* Título abaixo da miniatura condicional */}
         {fc.show_title && (
           <p
             className="mt-1.5 text-center text-[11px] font-semibold text-white line-clamp-1"
