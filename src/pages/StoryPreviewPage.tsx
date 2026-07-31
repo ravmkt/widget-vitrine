@@ -66,7 +66,6 @@ export default function StoryPreviewPage() {
   const [settings, setSettings] = useState<any>(null);
   const [carouselOffset, setCarouselOffset] = useState(0);
 
-
   // Player state
   const [playerOpen, setPlayerOpen] = useState(false);
   const [videoIdx, setVideoIdx] = useState(0);
@@ -89,9 +88,9 @@ export default function StoryPreviewPage() {
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // ─── Drag state (para o carrossel) ───
+  // ─── Drag state (carrossel com transform) ───
   const sliderRef = useRef<HTMLDivElement>(null);
-  const dragState = useRef({ isDown: false, startX: 0, scrollLeft: 0, moved: false });
+  const dragCarousel = useRef({ isDown: false, startX: 0, startOffset: 0, moved: false });
 
   // ─── getAllSafe ───
   const getAllSafe = async <T,>(collection: any, sid?: string): Promise<T[]> => {
@@ -140,7 +139,7 @@ export default function StoryPreviewPage() {
         const storyVideos = relations
           .map((r: any) => allVideos.find((v: any) => v.id === r.video_id))
           .filter((v): v is Video => !!v);
-        if (active) setVideos(storyVideos);
+        if (active) { setVideos(storyVideos); setCarouselOffset(0); }
       } catch (e) {
         console.error('[StoryPreview] Erro:', e);
       } finally {
@@ -240,49 +239,53 @@ export default function StoryPreviewPage() {
     setCommentText('');
   };
 
-  // ─── Drag handlers (usando getBoundingClientRect) ───
-  const handleMouseDown = (e: React.MouseEvent) => {
-    const slider = sliderRef.current;
-    if (!slider) return;
-    const rect = slider.getBoundingClientRect();
-    dragState.current = { isDown: true, startX: e.clientX - rect.left, scrollLeft: slider.scrollLeft, moved: false };
-    slider.style.cursor = 'grabbing';
+  // ═══════════════════════════════════════════════════════
+  // DRAG DO CARROSSEL (transform: translateX)
+  // ═══════════════════════════════════════════════════════
+
+  const getCarouselDragConfig = () => {
+    const { visibleItems, size, spacing } = carouselCfg;
+    const isCircle = carouselCfg.shape === 'circle';
+    const circlePad = isCircle ? Math.round(size * 0.15) : 0;
+    const padX = circlePad + 4;
+
+    const cardStep = size + spacing;
+    const viewportW = visibleItems * size + (visibleItems - 1) * spacing + 2 * padX;
+    const totalW = videos.length * size + (videos.length - 1) * spacing + 2 * padX;
+    const maxOffset = Math.max(0, totalW - viewportW);
+
+    return { padX, cardStep, viewportW, maxOffset };
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!dragState.current.isDown) return;
-    const slider = sliderRef.current;
-    if (!slider) return;
-    e.preventDefault();
-    const rect = slider.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const walk = (x - dragState.current.startX) * 1.5;
-    slider.scrollLeft = dragState.current.scrollLeft - walk;
-    if (Math.abs(walk) > 3) dragState.current.moved = true;
+  const snapToNearestCard = (offset: number) => {
+    const { padX, cardStep, maxOffset } = getCarouselDragConfig();
+    const rawIdx = (offset + padX) / cardStep;
+    const idx = Math.round(rawIdx);
+    return Math.max(0, Math.min(maxOffset, idx * cardStep - padX));
   };
 
-  const handleMouseUp = () => {
-    dragState.current.isDown = false;
-    const slider = sliderRef.current;
-    if (slider) slider.style.cursor = 'grab';
+  const handleCarouselDown = (e: React.MouseEvent | React.TouchEvent) => {
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    dragCarousel.current = { isDown: true, startX: clientX, startOffset: carouselOffset, moved: false };
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const slider = sliderRef.current;
-    if (!slider) return;
-    const rect = slider.getBoundingClientRect();
-    dragState.current = { isDown: true, startX: e.touches[0].clientX - rect.left, scrollLeft: slider.scrollLeft, moved: false };
+  const handleCarouselMove = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!dragCarousel.current.isDown) return;
+    const { maxOffset } = getCarouselDragConfig();
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const dx = dragCarousel.current.startX - clientX;
+    const newOffset = Math.max(0, Math.min(maxOffset, dragCarousel.current.startOffset + dx));
+    setCarouselOffset(newOffset);
+    if (Math.abs(dx) > 5) dragCarousel.current.moved = true;
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!dragState.current.isDown) return;
-    const slider = sliderRef.current;
-    if (!slider) return;
-    const rect = slider.getBoundingClientRect();
-    const x = e.touches[0].clientX - rect.left;
-    const walk = (x - dragState.current.startX) * 1.5;
-    slider.scrollLeft = dragState.current.scrollLeft - walk;
-    if (Math.abs(walk) > 3) dragState.current.moved = true;
+  const handleCarouselUp = () => {
+    if (!dragCarousel.current.isDown) return;
+    dragCarousel.current.isDown = false;
+    if (dragCarousel.current.moved) {
+      const snapped = snapToNearestCard(carouselOffset);
+      setCarouselOffset(snapped);
+    }
   };
 
   // ─── Loading ───
@@ -332,116 +335,118 @@ export default function StoryPreviewPage() {
     );
   };
 
-// ═══════════════════════════════════════════════════════
-// INLINE WIDGET (Carousel or Grid)
-// ═══════════════════════════════════════════════════════
-const renderInlineWidget = (isGrid: boolean) => {
-  const cfg = isGrid ? gridCfg : carouselCfg;
+  // ═══════════════════════════════════════════════════════
+  // INLINE WIDGET (Carousel or Grid)
+  // ═══════════════════════════════════════════════════════
+  const renderInlineWidget = (isGrid: boolean) => {
+    const cfg = isGrid ? gridCfg : carouselCfg;
 
-  const isCircle = cfg.shape === 'circle';
-  const columns = isGrid ? (cfg as any).columns : (cfg as any).visibleItems;
+    const isCircle = cfg.shape === 'circle';
+    const columns = isGrid ? (cfg as any).columns : (cfg as any).visibleItems;
+    const size = cfg.size;
 
-  // ── Padding extra para círculos no carrossel ──
-  const circlePadding = isCircle && !isGrid ? Math.round(cfg.size * 0.15) : 0;
-  const sliderPaddingX = circlePadding + 4;
+    const circlePad = isCircle && !isGrid ? Math.round(size * 0.15) : 0;
+    const padX = circlePad + 4;
 
-  // ── Tamanho fixo do card = size da config ──
-  const cardSize = `${cfg.size}px`;
-  const borderRadius = isCircle ? '50%' : `${cfg.borderRadius}px`;
+    const cardSize = `${size}px`;
+    const borderRadius = isCircle ? '50%' : `${cfg.borderRadius}px`;
 
-  // ── Centraliza se há poucos cards; flex-start se há scroll ──
-  const justifyContent = (isGrid || videos.length <= columns)
-    ? 'center'
-    : 'flex-start';
+    // ── Viewport: centralizado, tamanho exato para N cards ──
+    const viewportW = isGrid
+      ? columns * size + (columns - 1) * cfg.spacing
+      : columns * size + (columns - 1) * cfg.spacing + 2 * padX;
 
-  return (
-    <div style={{
-      width: '100%',
-      maxWidth: '100%',
-      margin: '20px auto',
-      padding: '0 4px',
-      fontFamily,
-      clear: 'both',
-      overflow: 'visible',
-    }}>
-      <div
-        ref={sliderRef}
-        onMouseDown={!isGrid ? handleMouseDown : undefined}
-        onMouseMove={!isGrid ? handleMouseMove : undefined}
-        onMouseUp={!isGrid ? handleMouseUp : undefined}
-        onMouseLeave={!isGrid ? handleMouseUp : undefined}
-        onTouchStart={!isGrid ? handleTouchStart : undefined}
-        onTouchMove={!isGrid ? handleTouchMove : undefined}
-        onTouchEnd={!isGrid ? handleMouseUp : undefined}
-        className="flex"
-        style={{
-          flexWrap: isGrid ? 'wrap' : 'nowrap',
-          gap: `${cfg.spacing}px`,
-          overflowX: isGrid ? 'hidden' : 'auto',
-          overflowY: 'hidden',
-          scrollSnapType: isGrid ? 'none' : 'x mandatory',
-          scrollPadding: isGrid ? undefined : `0 ${sliderPaddingX}px`,
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          padding: isGrid ? '0 4px' : `0 ${sliderPaddingX}px`,
-          width: '100%',
-          justifyContent,
-          cursor: isGrid ? 'auto' : 'grab',
-          userSelect: 'none',
-          WebkitUserSelect: 'none',
-        } as CSSProperties}
-      >
-        {videos.map((video, idx) => {
-          const thumb = getVideoThumb(video);
-          const videoUrl = getVideoUrl(video);
-          return (
-            <button
-              key={video.id || idx}
-              onClick={() => { if (!dragState.current.moved) openPlayer(idx); }}
-              className="group relative"
-              style={{
-                all: 'unset',
-                scrollSnapAlign: 'start',
-                flex: `0 0 ${cardSize}`,
-                minWidth: 0,
-                maxWidth: cardSize,
-                transition: 'transform 0.2s ease',
-                cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-              } as CSSProperties}
-            >
-              <div className="relative w-full overflow-hidden" style={{
-                aspectRatio: cfg.aspectRatio,
-                borderRadius,
-                border: `${cfg.borderWidth}px solid ${cfg.borderColor}`,
-                background: '#000',
-              }}>
-                {isVideoFile(videoUrl) ? (
-                  <video src={videoUrl} poster={thumb || undefined} className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} muted loop autoPlay playsInline />
-                ) : thumb ? (
-                  <img src={thumb} alt="" className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} loading="lazy" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-slate-800 text-white/40"><Play size={18} /></div>
-                )}
-                {(cfg as any).showPlayButton && (
-                  <div className="absolute inset-0 flex items-center justify-center transition group-hover:scale-110" style={{ pointerEvents: 'none' }}>
-                    <div className="flex h-[38px] w-[38px] items-center justify-center rounded-full" style={{ background: 'rgba(0,0,0,.6)' }}><Play size={18} className="text-white ml-0.5" /></div>
+    return (
+      <div style={{
+        width: '100%',
+        maxWidth: '100%',
+        margin: '20px auto',
+        padding: '0 4px',
+        fontFamily,
+        clear: 'both',
+        overflow: 'visible',
+        display: 'flex',
+        justifyContent: 'center',
+      }}>
+        <div style={{
+          width: `${viewportW}px`,
+          maxWidth: '100%',
+          overflow: isGrid ? 'visible' : 'hidden',
+          flexShrink: 0,
+        }}>
+          <div
+            ref={sliderRef}
+            onMouseDown={!isGrid ? (e) => handleCarouselDown(e) : undefined}
+            onMouseMove={!isGrid ? (e) => handleCarouselMove(e) : undefined}
+            onMouseUp={!isGrid ? handleCarouselUp : undefined}
+            onMouseLeave={!isGrid ? handleCarouselUp : undefined}
+            onTouchStart={!isGrid ? (e) => handleCarouselDown(e) : undefined}
+            onTouchMove={!isGrid ? (e) => handleCarouselMove(e) : undefined}
+            onTouchEnd={!isGrid ? handleCarouselUp : undefined}
+            className="flex"
+            style={{
+              flexWrap: isGrid ? 'wrap' : 'nowrap',
+              gap: `${cfg.spacing}px`,
+              padding: isGrid ? '0 4px' : `0 ${padX}px`,
+              width: isGrid ? '100%' : 'max-content',
+              justifyContent: 'center',
+              cursor: isGrid ? 'auto' : 'grab',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              transform: isGrid ? undefined : `translateX(-${carouselOffset}px)`,
+              transition: dragCarousel.current.isDown ? 'none' : 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            } as CSSProperties}
+          >
+            {videos.map((video, idx) => {
+              const thumb = getVideoThumb(video);
+              const videoUrl = getVideoUrl(video);
+              return (
+                <button
+                  key={video.id || idx}
+                  onClick={() => { if (!dragCarousel.current.moved) openPlayer(idx); }}
+                  className="group relative"
+                  style={{
+                    all: 'unset',
+                    flex: `0 0 ${cardSize}`,
+                    minWidth: 0,
+                    maxWidth: cardSize,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  } as CSSProperties}
+                >
+                  <div className="relative w-full overflow-hidden" style={{
+                    aspectRatio: cfg.aspectRatio,
+                    borderRadius,
+                    border: `${cfg.borderWidth}px solid ${cfg.borderColor}`,
+                    background: '#000',
+                  }}>
+                    {isVideoFile(videoUrl) ? (
+                      <video src={videoUrl} poster={thumb || undefined} className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} muted loop autoPlay playsInline />
+                    ) : thumb ? (
+                      <img src={thumb} alt="" className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} loading="lazy" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-slate-800 text-white/40"><Play size={18} /></div>
+                    )}
+                    {(cfg as any).showPlayButton && (
+                      <div className="absolute inset-0 flex items-center justify-center transition group-hover:scale-110" style={{ pointerEvents: 'none' }}>
+                        <div className="flex h-[38px] w-[38px] items-center justify-center rounded-full" style={{ background: 'rgba(0,0,0,.6)' }}><Play size={18} className="text-white ml-0.5" /></div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              {cfg.showTitle && (
-                <span className="mt-2 w-full truncate px-1 text-center text-xs font-semibold" style={{ color: textColor }}>
-                  {story.title || video.title || 'Ver vídeo'}
-                </span>
-              )}
-            </button>
-          );
-        })}
+                  {cfg.showTitle && (
+                    <span className="mt-2 w-full truncate px-1 text-center text-xs font-semibold" style={{ color: textColor }}>
+                      {story.title || video.title || 'Ver vídeo'}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
   // ═══════════════════════════════════════════════════════
   // MODAL PLAYER
@@ -457,8 +462,6 @@ const renderInlineWidget = (isGrid: boolean) => {
     const shadow = m.shadow_enabled !== false ? '0 24px 80px rgba(15,23,42,.24)' : 'none';
     const ytId = !isVideoPlayableNatively(currentVideo as any) ? extractYouTubeId(currentUrl) : '';
     const whatsappNumber = String(settings?.whatsapp_number || settings?.whatsappNumber || '').replace(/\D/g, '');
-
-    console.log('[StoryPreview] modalCfg:', m);
 
     const ctrlBtn: CSSProperties = {
       width: '32px', height: '32px', borderRadius: '999px', background: 'rgba(0,0,0,.4)',
