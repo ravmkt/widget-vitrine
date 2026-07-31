@@ -23,25 +23,8 @@ import { cn } from '@/lib/utils';
 import { getExternalVideoData } from '@/lib/videoEmbeds';
 
 const EMOJIS = [
-  '😎',
-  '👍',
-  '👏',
-  '😱',
-  '🙏',
-  '💪',
-  '🔥',
-  '❤️',
-  '💙',
-  '✨',
-  '🎉',
-  '✅',
-  '⭐',
-  '😢',
-  '😡',
-  '🤔',
-  '👀',
-  '😊',
-  '🥰',
+  '😎', '👍', '👏', '😱', '🙏', '💪', '🔥', '❤️', '💙',
+  '✨', '🎉', '✅', '⭐', '😢', '😡', '🤔', '👀', '😊', '🥰',
 ];
 
 type LikeMap = Record<string, { liked: boolean; count: number }>;
@@ -62,11 +45,8 @@ type StoryComment = {
 };
 
 const readLikes = (): LikeMap => {
-  try {
-    return JSON.parse(localStorage.getItem('story_video_likes') || '{}');
-  } catch {
-    return {};
-  }
+  try { return JSON.parse(localStorage.getItem('story_video_likes') || '{}'); }
+  catch { return {}; }
 };
 
 const saveLikes = (likes: LikeMap) => {
@@ -74,11 +54,8 @@ const saveLikes = (likes: LikeMap) => {
 };
 
 const readMemoryComments = (): StoryComment[] => {
-  try {
-    return JSON.parse(localStorage.getItem('story_video_comments') || '[]');
-  } catch {
-    return [];
-  }
+  try { return JSON.parse(localStorage.getItem('story_video_comments') || '[]'); }
+  catch { return []; }
 };
 
 const saveMemoryComments = (comments: StoryComment[]) => {
@@ -92,15 +69,8 @@ const getVideoUrl = (video?: Video | null) => {
 
 const getVideoPosterUrl = (video?: Video | null) => {
   const item = video as any;
-  return (
-    item?.thumbnail_url ||
-    item?.thumbnailUrl ||
-    item?.poster_url ||
-    item?.posterUrl ||
-    item?.image_url ||
-    item?.imageUrl ||
-    ''
-  );
+  return item?.thumbnail_url || item?.thumbnailUrl || item?.poster_url ||
+    item?.posterUrl || item?.image_url || item?.imageUrl || '';
 };
 
 const getVideoLikeCount = (videoId?: string) => {
@@ -108,104 +78,79 @@ const getVideoLikeCount = (videoId?: string) => {
   return readLikes()[videoId]?.count ?? 0;
 };
 
-const getCommentVideoId = (comment: StoryComment) => {
-  return comment.video_id || comment.videoId || '';
-};
+const getCommentVideoId = (comment: StoryComment) =>
+  comment.video_id || comment.videoId || '';
 
-const getCommentName = (comment: StoryComment) => {
-  return comment.user_name || comment.name || 'Cliente';
-};
+const getCommentName = (comment: StoryComment) =>
+  comment.user_name || comment.name || 'Cliente';
 
-const getCommentCreatedAt = (comment: StoryComment) => {
-  return comment.created_at || comment.createdAt || '';
-};
+const getCommentCreatedAt = (comment: StoryComment) =>
+  comment.created_at || comment.createdAt || '';
 
-const getAllSafe = async <T,>(
-  collection: any,
-  storeId?: string,
-): Promise<T[]> => {
+const getAllSafe = async <T,>(collection: any, storeId?: string): Promise<T[]> => {
   if (!collection?.getAll) return [];
-
   try {
-    if (storeId) {
-      return await collection.getAll(storeId);
-    }
-
+    if (storeId) return await collection.getAll(storeId);
     return await collection.getAll();
   } catch {
-    try {
-      return await collection.getAll();
-    } catch {
-      return [];
-    }
+    try { return await collection.getAll(); }
+    catch { return []; }
   }
 };
 
 const getByIdSafe = async <T,>(
-  collection: any,
-  id?: string | null,
-  storeId?: string,
+  collection: any, id?: string | null, storeId?: string,
 ): Promise<T | null> => {
   if (!collection?.getById || !id) return null;
-
   try {
-    if (storeId) {
-      return await collection.getById(id, storeId);
-    }
-
+    if (storeId) return await collection.getById(id, storeId);
     return await collection.getById(id);
   } catch {
-    try {
-      return await collection.getById(id);
-    } catch {
-      return null;
-    }
+    try { return await collection.getById(id); }
+    catch { return null; }
   }
 };
 
 const parseMeasures = (model: any): any[] => {
   if (!model) return [];
-
   if (Array.isArray(model.measures)) return model.measures;
   if (Array.isArray(model.measurements)) return model.measurements;
   if (Array.isArray(model.items)) return model.items;
-
   if (typeof model.measures === 'string') {
-    try {
-      const parsed = JSON.parse(model.measures);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
+    try { const p = JSON.parse(model.measures); return Array.isArray(p) ? p : []; }
+    catch { return []; }
   }
-
   return [];
 };
 
-/* ─── Helper para parsear JSON de configurações ─── */
 const parseJsonSafe = (value: unknown): Record<string, any> => {
   if (!value) return {};
   if (typeof value === 'object' && value !== null) return value as Record<string, any>;
   if (typeof value === 'string') {
-    try {
-      return JSON.parse(value);
-    } catch {
-      return {};
-    }
+    try { return JSON.parse(value); }
+    catch { return {}; }
   }
   return {};
 };
 
+/* ─── Mapeia posição do floating para classes Tailwind ─── */
+const getFloatingPositionClasses = (position?: string) => {
+  switch (position) {
+    case 'fixed_bottom_left':  return 'bottom-4 left-4';
+    case 'fixed_bottom_right': return 'bottom-4 right-4';
+    case 'fixed_top_left':     return 'top-4 left-4';
+    case 'fixed_top_right':    return 'top-4 right-4';
+    case 'fixed_center':       return 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2';
+    default:                   return 'bottom-4 right-4';
+  }
+};
+
 const StoryPreviewPage = () => {
-  const { id, storeId: routeStoreId } = useParams<{
-    id?: string;
-    storeId?: string;
-  }>();
+  const { id, storeId: routeStoreId } = useParams<{ id?: string; storeId?: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const queryVideoId =
-    searchParams.get('videoId') || searchParams.get('videoid') || '';
+  const queryVideoId = searchParams.get('videoId') || searchParams.get('videoid') || '';
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -237,7 +182,8 @@ const StoryPreviewPage = () => {
   const [settings, setSettings] = useState<any | null>(null);
   const [modelModalOpen, setModelModalOpen] = useState(false);
 
-  /* ─── Estado da aparência ─── */
+  /* ─── NOVO: controle do widget flutuante no preview ─── */
+  const [widgetOpen, setWidgetOpen] = useState(false);
   const [appearance, setAppearance] = useState<any>(null);
 
   const currentVideo = videos[activeVideoIdx] || null;
@@ -246,25 +192,19 @@ const StoryPreviewPage = () => {
 
   const rawStoryFormat = String(
     (story as any)?.format ||
-      (story as any)?.display_format ||
-      (story as any)?.displayFormat ||
-      (story as any)?.visual_style ||
-      (story as any)?.visualStyle ||
-      'carousel',
-  )
-    .toLowerCase()
-    .trim();
+    (story as any)?.display_format ||
+    (story as any)?.displayFormat ||
+    (story as any)?.visual_style ||
+    (story as any)?.visualStyle ||
+    'carousel',
+  ).toLowerCase().trim();
 
-  console.log('[StoryPreviewPage] story format', rawStoryFormat, story);
-
+  /* ─── CORRIGIDO: reconhece "floating_widget" ─── */
   const storyFormat =
-    rawStoryFormat === 'carrossel'
-      ? 'carousel'
-      : rawStoryFormat === 'floating'
-        ? 'floating_widget'
-        : rawStoryFormat === 'grid'
-          ? 'grid'
-          : 'carousel';
+    rawStoryFormat === 'carrossel' ? 'carousel'
+    : rawStoryFormat === 'floating' || rawStoryFormat === 'floating_widget' ? 'floating_widget'
+    : rawStoryFormat === 'grid' ? 'grid'
+    : 'carousel';
 
   const isGridLayout = storyFormat === 'grid';
   const isFloatingLayout = storyFormat === 'floating_widget';
@@ -273,7 +213,7 @@ const StoryPreviewPage = () => {
   const commentCount = useMemo(() => comments.length, [comments]);
   const modelData = useMemo(() => parseMeasures(model), [model]);
 
-  /* ─── Cores derivadas da aparência ─── */
+  /* ─── Cores ─── */
   const appearanceColors = useMemo(() => {
     const a = appearance || {};
     return {
@@ -285,320 +225,180 @@ const StoryPreviewPage = () => {
     };
   }, [appearance]);
 
-  /* ─── Configuração do modal (visibilidade dos botões) ─── */
+  /* ─── Config do modal (player) ─── */
   const modalConfig = useMemo(() => {
     const raw = parseJsonSafe((appearance as any)?.modal_config);
     const a = appearance || {};
     return {
       show_title: a.show_title ?? raw.show_title ?? true,
-      show_play_button:
-        a.show_play_button ?? raw.show_play_button ?? true,
-      show_product:
-        a.show_product ?? raw.show_product ?? true,
-      show_product_button:
-        a.show_product_button ?? raw.show_product_button ?? true,
-      show_product_whatsapp_button:
-        a.show_product_whatsapp_button ??
-        raw.show_product_whatsapp_button ??
-        true,
-      show_like_button:
-        a.show_like_button ?? raw.show_like_button ?? true,
-      show_comment_button:
-        a.show_comment_button ?? raw.show_comment_button ?? true,
-      show_share_button:
-        a.show_share_button ?? raw.show_share_button ?? true,
+      show_play_button: a.show_play_button ?? raw.show_play_button ?? true,
+      show_product: a.show_product ?? raw.show_product ?? true,
+      show_product_button: a.show_product_button ?? raw.show_product_button ?? true,
+      show_product_whatsapp_button: a.show_product_whatsapp_button ?? raw.show_product_whatsapp_button ?? raw.show_whatsapp_button ?? true,
+      show_like_button: a.show_like_button ?? raw.show_like_button ?? true,
+      show_comment_button: a.show_comment_button ?? raw.show_comment_button ?? true,
+      show_share_button: a.show_share_button ?? raw.show_share_button ?? true,
+      // visuais do player
+      border_color: raw.border_color || '#000000',
+      border_width: String(raw.border_width || '0'),
+      border_radius: String(raw.border_radius || '0'),
+      shadow_enabled: raw.shadow_enabled ?? a.shadow_enabled ?? false,
     };
   }, [appearance]);
 
-  /* ─── Configs de layout (usa desktop como referência) ─── */
+  /* ─── Config do floating widget ─── */
+  const floatingConfig = useMemo(() => {
+    const a = appearance || {};
+    const raw = parseJsonSafe(a.floating_config);
+    return raw?.desktop || raw?.mobile || raw || {};
+  }, [appearance]);
+
+  /* ─── Config do carousel/grid (mantido para referência) ─── */
   const layoutConfig = useMemo(() => {
     const a = appearance || {};
-    const floatingRaw = parseJsonSafe(a.floating_config);
     const carouselRaw = parseJsonSafe(a.carousel_config);
     const gridRaw = parseJsonSafe(a.grid_config);
-
     return {
-      floating: floatingRaw?.desktop || floatingRaw || {},
       carousel: carouselRaw?.desktop || carouselRaw || {},
       grid: gridRaw?.desktop || gridRaw || {},
     };
   }, [appearance]);
 
-  /* 🎨 DEBUG: log sempre que a aparência mudar */
-  useEffect(() => {
-    console.log('🎨 DEBUG [appearance carregada]:', {
-      name: appearance?.name,
-      id: appearance?.id,
-      is_default: appearance?.is_default,
-      primary_color: appearance?.primary_color,
-      show_like_button: appearance?.show_like_button,
-      show_product_whatsapp_button: appearance?.show_product_whatsapp_button,
-      show_title: appearance?.show_title,
-      modal_config: (appearance as any)?.modal_config,
-      appearance_completa: appearance,
-    });
-    console.log('🎨 DEBUG [cores derivadas]:', appearanceColors);
-    console.log('🎨 DEBUG [modalConfig derivado]:', modalConfig);
-  }, [appearance]);
+  /* ─── Widget: tamanho e forma ─── */
+  const widgetSize = useMemo(() => {
+    const w = Number(floatingConfig.width) || 150;
+    const h = Number(floatingConfig.height) || 150;
+    return { width: w, height: h };
+  }, [floatingConfig]);
+
+  const widgetShapeClass = useMemo(() => {
+    const shape = floatingConfig.shape || appearance?.widget_shape || 'square';
+    return shape === 'circle' ? 'rounded-full' : 'rounded-2xl';
+  }, [floatingConfig, appearance]);
+
+  const widgetPositionClass = useMemo(
+    () => getFloatingPositionClasses(floatingConfig.position),
+    [floatingConfig.position],
+  );
 
   /* ─── Comentários ─────────────────────────────────────── */
 
   const loadComments = async (videoId: string, storeId: string) => {
     try {
-      const allComments = await getAllSafe<StoryComment>(
-        (db as any).comments,
-        storeId,
-      );
-
+      const allComments = await getAllSafe<StoryComment>((db as any).comments, storeId);
       const filtered = allComments.filter((item) => {
         const sameVideo = getCommentVideoId(item) === videoId;
         const sameStore = !item.store_id || item.store_id === storeId;
         return sameVideo && sameStore;
       });
-
       setComments(filtered);
-
       const memory = readMemoryComments();
-      const memoryWithoutCurrent = memory.filter(
-        (item) => getCommentVideoId(item) !== videoId,
-      );
+      const memoryWithoutCurrent = memory.filter((item) => getCommentVideoId(item) !== videoId);
       saveMemoryComments([...memoryWithoutCurrent, ...filtered]);
     } catch {
-      const memory = readMemoryComments().filter(
-        (item) => getCommentVideoId(item) === videoId,
-      );
+      const memory = readMemoryComments().filter((item) => getCommentVideoId(item) === videoId);
       setComments(memory);
     }
   };
 
   const loadLinkedData = async (
-    currentStory: Story | null,
-    currentVideoItem: Video | null,
-    storeId: string,
+    currentStory: Story | null, currentVideoItem: Video | null, storeId: string,
   ) => {
     try {
-      if (!currentStory || !currentVideoItem) {
-        setProduct(null);
-        setModel(null);
-        return;
-      }
-
-      const relations = await getAllSafe<any>(
-        (db as any).storyProducts,
-        storeId,
-      );
-
+      if (!currentStory || !currentVideoItem) { setProduct(null); setModel(null); return; }
+      const relations = await getAllSafe<any>((db as any).storyProducts, storeId);
       const relation = Array.isArray(relations)
-        ? relations.find((item) => {
-            return (
-              item.story_id === currentStory.id &&
-              item.video_id === currentVideoItem.id &&
-              (!item.store_id || item.store_id === storeId)
-            );
-          })
+        ? relations.find((item: any) =>
+            item.story_id === currentStory.id &&
+            item.video_id === currentVideoItem.id &&
+            (!item.store_id || item.store_id === storeId))
         : null;
-
       const videoAny = currentVideoItem as any;
-
-      const productId =
-        videoAny.product_id ||
-        videoAny.productId ||
-        relation?.product_id ||
-        relation?.productId ||
-        null;
-
-      const modelId =
-        videoAny.model_id ||
-        videoAny.modelId ||
-        videoAny.measurement_id ||
-        videoAny.measurementId ||
-        relation?.model_id ||
-        relation?.modelId ||
-        relation?.measurement_id ||
-        relation?.measurementId ||
-        null;
-
+      const productId = videoAny.product_id || videoAny.productId ||
+        relation?.product_id || relation?.productId || null;
+      const modelId = videoAny.model_id || videoAny.modelId ||
+        videoAny.measurement_id || videoAny.measurementId ||
+        relation?.model_id || relation?.modelId ||
+        relation?.measurement_id || relation?.measurementId || null;
       const [resolvedProduct, resolvedModel] = await Promise.all([
         getByIdSafe<any>((db as any).products, productId, storeId),
         getByIdSafe<any>((db as any).sizingModels, modelId, storeId),
       ]);
-
       setProduct(resolvedProduct);
       setModel(resolvedModel);
-    } catch {
-      setProduct(null);
-      setModel(null);
-    }
+    } catch { setProduct(null); setModel(null); }
   };
 
   useEffect(() => {
     let mounted = true;
-
     const load = async () => {
       try {
         setLoading(true);
-
-        if (!id) {
-          setStory(null);
-          return;
-        }
-
+        if (!id) { setStory(null); return; }
         const stores = await getAllSafe<any>((db as any).stores);
         const selectedStore = routeStoreId
-          ? stores.find((store) => store.id === routeStoreId) || stores[0]
+          ? stores.find((s: any) => s.id === routeStoreId) || stores[0]
           : stores[0];
-
-        if (!selectedStore) {
-          setStory(null);
-          return;
-        }
-
+        if (!selectedStore) { setStory(null); return; }
         const finalStoreId = await resolveStoreId(selectedStore.id);
-
         if (!mounted) return;
-
         setResolvedStoreId(finalStoreId);
         setStoreName(selectedStore.name || '');
 
-        const allStories = await getAllSafe<Story>(
-          (db as any).stories,
-          finalStoreId,
-        );
-
+        const allStories = await getAllSafe<Story>((db as any).stories, finalStoreId);
         const currentStory =
-          allStories.find(
-            (item: any) =>
-              item.id === id &&
-              (!item.store_id || item.store_id === finalStoreId),
-          ) ||
-          allStories.find((item: any) => item.id === id) ||
-          null;
-
+          allStories.find((item: any) => item.id === id && (!item.store_id || item.store_id === finalStoreId)) ||
+          allStories.find((item: any) => item.id === id) || null;
         if (!mounted) return;
-
         setStory(currentStory);
+        if (!currentStory) { setVideos([]); return; }
 
-        if (!currentStory) {
-          setVideos([]);
-          return;
-        }
-
-        const storyVideos = await getAllSafe<any>(
-          (db as any).storyVideos,
-          finalStoreId,
-        );
-        const allVideos = await getAllSafe<Video>(
-          (db as any).videos,
-          finalStoreId,
-        );
-        const generalSettings = await getAllSafe<any>(
-          (db as any).generalSettings,
-          finalStoreId,
-        );
-
+        const storyVideos = await getAllSafe<any>((db as any).storyVideos, finalStoreId);
+        const allVideos = await getAllSafe<Video>((db as any).videos, finalStoreId);
+        const generalSettings = await getAllSafe<any>((db as any).generalSettings, finalStoreId);
         if (!mounted) return;
-
         setSettings(generalSettings?.[0] || null);
 
-        /* ─── Carrega a aparência ─── */
+        /* ─── Carrega aparência ─── */
         try {
-          const allAppearances = await getAllSafe<any>(
-            (db as any).appearances,
-            finalStoreId,
-          );
-
-          console.log('🎨 DEBUG [todas as aparências]:', allAppearances?.length, allAppearances?.map((a: any) => ({ id: a.id, name: a.name, is_default: a.is_default })));
-
+          const allAppearances = await getAllSafe<any>((db as any).appearances, finalStoreId);
           const storyAppearanceId = (currentStory as any)?.appearance_id;
-          const defaultAppearanceId =
-            generalSettings?.[0]?.default_appearance_id;
-
-          console.log('🎨 DEBUG [IDs]:', {
-            storyAppearanceId,
-            defaultAppearanceId,
-            generalSettings: generalSettings?.[0],
-          });
-
+          const defaultAppearanceId = generalSettings?.[0]?.default_appearance_id;
           const targetId = storyAppearanceId || defaultAppearanceId;
-
           let found: any = null;
-          if (targetId) {
-            found =
-              allAppearances.find((a: any) => a.id === targetId) || null;
-            console.log('🎨 DEBUG [buscou por targetId]:', targetId, found?.name || 'NÃO ENCONTRADA');
-          }
-          if (!found) {
-            found =
-              allAppearances.find((a: any) => a.is_default) ||
-              allAppearances[0] ||
-              null;
-            console.log('🎨 DEBUG [fallback is_default ou primeira]:', found?.name || 'NENHUMA');
-          }
-
-          if (mounted) {
-            setAppearance(found);
-          }
-        } catch (err) {
-          console.error('🎨 DEBUG [erro ao carregar aparência]:', err);
-        }
+          if (targetId) found = allAppearances.find((a: any) => a.id === targetId) || null;
+          if (!found) found = allAppearances.find((a: any) => a.is_default) || allAppearances[0] || null;
+          if (mounted) setAppearance(found);
+        } catch { /* sem aparência, usa fallback */ }
 
         const relationVideos = storyVideos
-          .filter((relation: any) => {
-            const sameStory = relation.story_id === currentStory.id;
-            const sameStore =
-              !relation.store_id || relation.store_id === finalStoreId;
-            return sameStory && sameStore;
-          })
-          .sort(
-            (a: any, b: any) =>
-              Number(a.position || 0) - Number(b.position || 0),
-          )
-          .map((relation: any) => {
-            return allVideos.find(
-              (video: any) => video.id === relation.video_id,
-            );
-          })
+          .filter((rel: any) => rel.story_id === currentStory.id && (!rel.store_id || rel.store_id === finalStoreId))
+          .sort((a: any, b: any) => Number(a.position || 0) - Number(b.position || 0))
+          .map((rel: any) => allVideos.find((v: any) => v.id === rel.video_id))
           .filter(Boolean) as Video[];
 
         if (!mounted) return;
-
         setVideos(relationVideos);
-
         if (queryVideoId) {
-          const idx = relationVideos.findIndex(
-            (video) => video.id === queryVideoId,
-          );
+          const idx = relationVideos.findIndex((v) => v.id === queryVideoId);
           setActiveVideoIdx(idx >= 0 ? idx : 0);
-        } else {
-          setActiveVideoIdx(0);
-        }
+        } else { setActiveVideoIdx(0); }
       } catch (error) {
         console.error(error);
         showError('Erro ao carregar preview do story.');
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
+      } finally { if (mounted) setLoading(false); }
     };
-
     load();
-
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [id, routeStoreId, queryVideoId]);
 
   useEffect(() => {
     if (!currentVideo?.id || !story || !resolvedStoreId) return;
-
     setVideoError(false);
     setProgress(0);
-
     const likes = readLikes();
     setLiked(Boolean(likes[currentVideo.id]?.liked));
     setLikeCount(getVideoLikeCount(currentVideo.id));
-
     loadComments(currentVideo.id, resolvedStoreId);
     loadLinkedData(story, currentVideo, resolvedStoreId);
   }, [currentVideo?.id, story?.id, resolvedStoreId]);
@@ -606,235 +406,126 @@ const StoryPreviewPage = () => {
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
-
-    const onTime = () => {
-      if (el.duration) {
-        setProgress((el.currentTime / el.duration) * 100);
-      }
-    };
-
+    const onTime = () => { if (el.duration) setProgress((el.currentTime / el.duration) * 100); };
     el.addEventListener('timeupdate', onTime);
-
-    return () => {
-      el.removeEventListener('timeupdate', onTime);
-    };
+    return () => el.removeEventListener('timeupdate', onTime);
   }, [currentVideo?.id]);
 
   const close = () => {
-    if (window.history.length > 1) {
-      window.history.back();
-    } else {
-      navigate('/');
+    // Se o widget estiver aberto, fecha o widget (volta pro floating)
+    if (isFloatingLayout && widgetOpen) {
+      setWidgetOpen(false);
+      return;
     }
+    if (window.history.length > 1) window.history.back();
+    else navigate('/');
   };
 
   const handleTogglePlay = async () => {
     if (!videoRef.current) return;
-
     try {
-      if (playing) {
-        videoRef.current.pause();
-        setPlaying(false);
-      } else {
-        await videoRef.current.play();
-        setPlaying(true);
-      }
-    } catch {
-      setPlaying(false);
-    }
+      if (playing) { videoRef.current.pause(); setPlaying(false); }
+      else { await videoRef.current.play(); setPlaying(true); }
+    } catch { setPlaying(false); }
   };
 
   const handleToggleMute = () => {
     const next = !muted;
     setMuted(next);
-
-    if (videoRef.current) {
-      videoRef.current.muted = next;
-    }
+    if (videoRef.current) videoRef.current.muted = next;
   };
 
   const handleLike = () => {
     if (!currentVideo?.id) return;
-
     const likes = readLikes();
     const current = likes[currentVideo.id] || { liked: false, count: 0 };
-
     const nextLiked = !current.liked;
-    const nextCount = Math.max(
-      0,
-      Number(current.count || 0) + (nextLiked ? 1 : -1),
-    );
-
-    likes[currentVideo.id] = {
-      liked: nextLiked,
-      count: nextCount,
-    };
-
+    const nextCount = Math.max(0, Number(current.count || 0) + (nextLiked ? 1 : -1));
+    likes[currentVideo.id] = { liked: nextLiked, count: nextCount };
     saveLikes(likes);
-
     setLiked(nextLiked);
     setLikeCount(nextCount);
   };
 
   const goNext = () => {
     if (!videos.length) return;
-
-    if (activeVideoIdx < videos.length - 1) {
-      setActiveVideoIdx((value) => value + 1);
-    } else {
-      setActiveVideoIdx(0);
-    }
+    if (activeVideoIdx < videos.length - 1) setActiveVideoIdx((v) => v + 1);
+    else setActiveVideoIdx(0);
   };
 
   const goPrev = () => {
     if (!videos.length) return;
-
-    if (activeVideoIdx > 0) {
-      setActiveVideoIdx((value) => value - 1);
-    } else {
-      setActiveVideoIdx(videos.length - 1);
-    }
+    if (activeVideoIdx > 0) setActiveVideoIdx((v) => v - 1);
+    else setActiveVideoIdx(videos.length - 1);
   };
 
   const handleShare = async () => {
     const shareUrl = window.location.href;
     const productName = product?.name || story?.title || 'Story';
     const message = `Olha esse produto: "${productName}"\n${shareUrl}`;
-
     if (navigator.share) {
-      try {
-        await navigator.share({
-          title: productName,
-          text: message,
-          url: shareUrl,
-        });
-        return;
-      } catch {
-        // fallback para WhatsApp
-      }
+      try { await navigator.share({ title: productName, text: message, url: shareUrl }); return; }
+      catch { /* fallback */ }
     }
-
-    const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleWhatsApp = () => {
-    const rawPhone = String(
-      settings?.whatsapp_number || settings?.whatsapp || settings?.phone || '',
-    );
+    const rawPhone = String(settings?.whatsapp_number || settings?.whatsapp || settings?.phone || '');
     const phone = rawPhone.replace(/\D/g, '');
-
-    const link =
-      product?.product_url ||
-      product?.url ||
-      `${window.location.origin}/stories/preview/${id}?storyId=${id}&videoId=${
-        currentVideo?.id || ''
-      }`;
-
-    const message = `Quero mais informações sobre esse produto${
-      product?.name ? `: ${product.name}` : ''
-    }\n${link}`;
-
+    const link = product?.product_url || product?.url ||
+      `${window.location.origin}/stories/preview/${id}?storyId=${id}&videoId=${currentVideo?.id || ''}`;
+    const message = `Quero mais informações sobre esse produto${product?.name ? `: ${product.name}` : ''}\n${link}`;
     const whatsappUrl = phone
       ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
       : `https://wa.me/?text=${encodeURIComponent(message)}`;
-
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleCommentSubmit = async () => {
     const name = commentName.trim();
     const text = commentText.trim();
-
-    if (!name) {
-      showError('Informe seu nome.');
-      return;
-    }
-
-    if (!text) {
-      showError('Escreva um comentário.');
-      return;
-    }
-
+    if (!name) { showError('Informe seu nome.'); return; }
+    if (!text) { showError('Escreva um comentário.'); return; }
     if (!currentVideo?.id || !story || !resolvedStoreId) {
-      showError('Não foi possível identificar o vídeo.');
-      return;
+      showError('Não foi possível identificar o vídeo.'); return;
     }
-
     const now = new Date().toISOString();
-
     const newComment: StoryComment = {
-      id: generateUuid(),
-      store_id: resolvedStoreId,
-      story_id: story.id,
-      video_id: currentVideo.id,
-      user_name: name,
-      text,
-      status: 'pending',
-      created_at: now,
-      updated_at: now,
+      id: generateUuid(), store_id: resolvedStoreId, story_id: story.id,
+      video_id: currentVideo.id, user_name: name, text, status: 'pending',
+      created_at: now, updated_at: now,
     };
-
     try {
       await (db as any).comments.save(newComment as any);
-
-      const allComments = await getAllSafe<StoryComment>(
-        (db as any).comments,
-        resolvedStoreId,
-      );
-
+      const allComments = await getAllSafe<StoryComment>((db as any).comments, resolvedStoreId);
       const filtered = allComments.filter((item) => {
         const sameVideo = getCommentVideoId(item) === currentVideo.id;
-        const sameStore =
-          !item.store_id || item.store_id === resolvedStoreId;
+        const sameStore = !item.store_id || item.store_id === resolvedStoreId;
         return sameVideo && sameStore;
       });
-
       setComments(filtered);
       saveMemoryComments(filtered);
-
-      setCommentText('');
-      setCommentName('');
-      setShowEmoji(false);
-
+      setCommentText(''); setCommentName(''); setShowEmoji(false);
       showSuccess('Comentário enviado com sucesso.');
     } catch (error) {
       console.error(error);
-
       const memory = readMemoryComments();
       const nextMemory = [...memory, newComment];
-
       saveMemoryComments(nextMemory);
-
-      setComments(
-        nextMemory.filter(
-          (item) => getCommentVideoId(item) === currentVideo.id,
-        ),
-      );
-
-      setCommentText('');
-      setCommentName('');
-      setShowEmoji(false);
-
+      setComments(nextMemory.filter((item) => getCommentVideoId(item) === currentVideo.id));
+      setCommentText(''); setCommentName(''); setShowEmoji(false);
       showSuccess('Comentário enviado com sucesso.');
     }
   };
 
   const insertEmoji = (emoji: string) => {
     const el = textareaRef.current;
-
-    if (!el) {
-      setCommentText((prev) => prev + emoji);
-      return;
-    }
-
+    if (!el) { setCommentText((prev) => prev + emoji); return; }
     const start = el.selectionStart;
     const end = el.selectionEnd;
-
     const next = commentText.slice(0, start) + emoji + commentText.slice(end);
-
     setCommentText(next);
-
     requestAnimationFrame(() => {
       el.focus();
       el.setSelectionRange(start + emoji.length, start + emoji.length);
@@ -842,19 +533,9 @@ const StoryPreviewPage = () => {
   };
 
   const productImage =
-    product?.image_url ||
-    product?.imageUrl ||
-    product?.thumbnail_url ||
-    product?.thumbnailUrl ||
-    '';
-
-  const productUrl =
-    product?.product_url || product?.productUrl || product?.url || '';
-
-  const productPrice = Number(
-    product?.price || product?.sale_price || product?.salePrice || 0,
-  );
-
+    product?.image_url || product?.imageUrl || product?.thumbnail_url || product?.thumbnailUrl || '';
+  const productUrl = product?.product_url || product?.productUrl || product?.url || '';
+  const productPrice = Number(product?.price || product?.sale_price || product?.salePrice || 0);
   const showSocialCounts = false;
 
   if (loading) {
@@ -873,519 +554,18 @@ const StoryPreviewPage = () => {
     );
   }
 
-  /* ─── Atalhos ─────────────────────── */
   const c = appearanceColors;
   const mc = modalConfig;
+  const fc = floatingConfig;
 
-  return (
-    <div
-      className={cn(
-        'fixed inset-0 overflow-hidden bg-neutral-950',
-        isFloatingLayout
-          ? 'flex items-end justify-end p-4'
-          : 'flex items-center justify-center',
-      )}
-    >
-      <div
-        className={cn(
-          'story-viewer story-modal-content relative overflow-hidden bg-black',
-          isGridLayout
-            ? 'h-full w-full max-w-[1100px]'
-            : isCarouselLayout
-              ? 'h-full w-full max-w-[420px] sm:aspect-[9/16] sm:max-h-[90vh] sm:rounded-[36px]'
-              : 'h-[320px] w-[320px] rounded-[28px]',
-        )}
-      >
-        {/* ─── Barras de progresso ─── */}
-        <div className="progress-bars story-progress absolute left-4 right-4 top-3 z-[80] flex gap-1.5">
-          {videos.length > 0 ? (
-            videos.map((video, idx) => (
-              <div
-                key={video.id}
-                className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/20"
-              >
-                <div
-                  className={cn(
-                    'h-full rounded-full transition-all',
-                    idx < activeVideoIdx
-                      ? 'w-full'
-                      : idx === activeVideoIdx
-                        ? ''
-                        : 'w-0',
-                  )}
-                  style={
-                    idx === activeVideoIdx
-                      ? { width: `${progress}%`, backgroundColor: c.primary }
-                      : idx < activeVideoIdx
-                        ? { backgroundColor: '#ffffff' }
-                        : undefined
-                  }
-                />
-              </div>
-            ))
-          ) : (
-            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/20" />
-          )}
-        </div>
+  /* ─── Thumbnail do widget (primeiro vídeo) ─── */
+  const widgetThumb = getVideoPosterUrl(videos[0] || null);
 
-        {/* ─── Header (condicionado) ─── */}
-        {mc.show_title && (
-          <div className="absolute left-0 right-0 top-0 z-[80] flex items-start justify-between bg-gradient-to-b from-black/80 to-transparent p-4 pt-4">
-            <div className="story-title min-w-0 pr-28">
-              <h3 className="truncate text-sm font-black text-white">
-                {story.title}
-              </h3>
-              <p className="mt-0.5 truncate text-[10px] font-bold uppercase tracking-wide text-white/60">
-                {storeName}
-                {videos.length > 1
-                  ? ` • ${activeVideoIdx + 1}/${videos.length}`
-                  : ''}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* ─── Layouts ─── */}
-        {isGridLayout ? (
-          <div className="grid h-full w-full grid-cols-1 gap-3 overflow-auto p-4 pt-20 sm:grid-cols-2">
-            {videos.map((video, idx) => {
-              const thumb = getVideoPosterUrl(video);
-              return (
-                <button
-                  key={video.id}
-                  type="button"
-                  onClick={() => setActiveVideoIdx(idx)}
-                  className="relative aspect-[9/16] overflow-hidden rounded-3xl bg-slate-900"
-                >
-                  {thumb ? (
-                    <img
-                      src={thumb}
-                      alt={video.title || 'Vídeo'}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-white/60">
-                      Vídeo
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/10" />
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 text-left">
-                    <p className="truncate text-xs font-black text-white">
-                      {video.title || 'Sem título'}
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        ) : isCarouselLayout ? (
-          <>
-            {/* ─── Botões superiores ─── */}
-            <div className="top-actions absolute right-3 top-4 z-[90] flex items-center gap-1.5">
-              <button
-                type="button"
-                className="top-action-button only-top-control flex h-[32px] w-[32px] min-h-[32px] min-w-[32px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm"
-                onClick={handleToggleMute}
-                aria-label={muted ? 'Ativar som' : 'Desativar som'}
-              >
-                {muted ? (
-                  <VolumeX className="h-4 w-4" />
-                ) : (
-                  <Volume2 className="h-4 w-4" />
-                )}
-              </button>
-
-              {mc.show_play_button && (
-                <button
-                  type="button"
-                  className="top-action-button only-top-control flex h-[32px] w-[32px] min-h-[32px] min-w-[32px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm"
-                  onClick={handleTogglePlay}
-                  aria-label={playing ? 'Pausar' : 'Reproduzir'}
-                >
-                  {playing ? (
-                    <Pause className="h-4 w-4" />
-                  ) : (
-                    <Play className="h-4 w-4" />
-                  )}
-                </button>
-              )}
-
-              <button
-                type="button"
-                className="top-action-button only-top-control flex h-[32px] w-[32px] min-h-[32px] min-w-[32px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/20 p-0 text-white backdrop-blur-sm"
-                onClick={close}
-                aria-label="Fechar"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* ─── Player ─── */}
-            {currentUrl && !videoError ? (
-              (() => {
-                const sharedProps = {
-                  key: currentVideo?.id,
-                  className: 'h-full w-full object-cover',
-                };
-                const externalData = getExternalVideoData(currentVideo as any);
-
-                if (externalData.embedUrl && externalData.platform) {
-                  let embedSrc: string;
-
-                  if (externalData.platform === 'youtube') {
-                    embedSrc = `${externalData.embedUrl}?autoplay=1&mute=${muted ? 1 : 0}&playsinline=1&rel=0`;
-                  } else {
-                    embedSrc = externalData.embedUrl;
-                  }
-
-                  return (
-                    <iframe
-                      {...sharedProps}
-                      src={embedSrc}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                      title={story.title || 'Story'}
-                    />
-                  );
-                }
-
-                return (
-                  <video
-                    {...sharedProps}
-                    ref={videoRef}
-                    src={currentUrl}
-                    poster={posterUrl || undefined}
-                    autoPlay
-                    playsInline
-                    muted={muted}
-                    onEnded={goNext}
-                    onPlay={() => setPlaying(true)}
-                    onPause={() => setPlaying(false)}
-                    onError={() => setVideoError(true)}
-                  />
-                );
-              })()
-            ) : (
-              <div className="flex h-full items-center justify-center px-8 text-center text-white/70">
-                Nenhum vídeo vinculado
-              </div>
-            )}
-
-            {/* ─── Navegação ─── */}
-            {videos.length > 1 && (
-              <>
-                <button
-                  type="button"
-                  onClick={goPrev}
-                  className="nav-left nav-button absolute left-3 top-1/2 z-[85] flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/80 bg-black/15 text-white backdrop-blur-sm"
-                  aria-label="Vídeo anterior"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={goNext}
-                  className="nav-right nav-button absolute right-3 top-1/2 z-[85] flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/80 bg-black/15 text-white backdrop-blur-sm"
-                  aria-label="Próximo vídeo"
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </button>
-              </>
-            )}
-          </>
-        ) : (
-          <div className="flex h-full items-center justify-center px-6 text-center text-white/80">
-            Visual flutuante
-          </div>
-        )}
-
-        {/* ─── Botões sociais ─── */}
-        <div className="social-actions absolute right-4 top-[61%] z-[90] flex -translate-y-1/2 flex-col items-center gap-2">
-          {mc.show_like_button && (
-            <>
-              <button
-                type="button"
-                onClick={handleLike}
-                className="social-button flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/10 p-0 text-white backdrop-blur-sm"
-                aria-label="Curtir"
-              >
-                <Heart
-                  className={cn(
-                    'h-[20px] w-[20px]',
-                    liked
-                      ? 'fill-rose-500 text-rose-500'
-                      : 'text-white',
-                  )}
-                />
-              </button>
-              {showSocialCounts && (
-                <span className="text-[10px] font-black text-white drop-shadow">
-                  {likeCount}
-                </span>
-              )}
-            </>
-          )}
-
-          {mc.show_comment_button && (
-            <>
-              <button
-                type="button"
-                onClick={() => setShowComments(true)}
-                className="social-button flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/10 p-0 text-white backdrop-blur-sm"
-                aria-label="Comentários"
-              >
-                <MessageCircle className="h-[20px] w-[20px]" />
-              </button>
-              {showSocialCounts && (
-                <span className="text-[10px] font-black text-white drop-shadow">
-                  {commentCount}
-                </span>
-              )}
-            </>
-          )}
-
-          {mc.show_share_button && (
-            <button
-              type="button"
-              onClick={handleShare}
-              className="social-button flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/10 p-0 text-white backdrop-blur-sm"
-              aria-label="Compartilhar"
-            >
-              <Share2 className="h-[20px] w-[20px]" />
-            </button>
-          )}
-
-          {model && (
-            <button
-              type="button"
-              onClick={() => setModelModalOpen(true)}
-              className="social-button flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/10 p-0 text-white backdrop-blur-sm"
-              title="Medidas"
-              aria-label="Medidas"
-            >
-              <Ruler className="h-[20px] w-[20px]" />
-            </button>
-          )}
-
-          {mc.show_product_whatsapp_button && (
-            <button
-              type="button"
-              onClick={handleWhatsApp}
-              className="whatsapp-button flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] flex-shrink-0 items-center justify-center rounded-full bg-[#25D366] p-0 text-white backdrop-blur-sm"
-              aria-label="WhatsApp"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                className="h-[20px] w-[20px] fill-white"
-                aria-hidden="true"
-              >
-                <path d="M16.6 13.2c-.3-.2-1.7-.8-2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.8 0c-.4-.2-1.4-.5-2.6-1.6-.9-.8-1.6-1.8-1.8-2.2-.2-.4 0-.6.2-.8l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6s-.7-1.7-1-2.3c-.3-.6-.6-.5-.8-.5h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.8s1.3 3.2 1.5 3.4c.2.2 2.3 3.6 5.6 5.1.8.4 1.5.6 2.1.8.9.3 1.7.3 2.3.2.7-.1 1.7-.7 2-1.3.3-.6.3-1.1.2-1.3-.1-.2-.3-.3-.6-.5z" />
-                <path d="M20 4A10 10 0 0 0 3.6 16.2L2 22l5.9-1.5A10 10 0 1 0 20 4zm-7.9 15.4c-1.6 0-3.2-.4-4.6-1.3l-.3-.2-3.5.9.9-3.4-.2-.3A8.1 8.1 0 1 1 12.1 19.4z" />
-              </svg>
-            </button>
-          )}
-        </div>
-
-        {/* ─── Card de produto ─── */}
-        {mc.show_product && product && (
-          <div className="product-card absolute bottom-[17px] left-[13px] z-[55] flex h-[72px] w-[238px] min-h-[72px] max-h-[72px] gap-[9px] rounded-[16px] bg-white/95 p-[10px_10px] shadow-lg backdrop-blur-sm">
-            <div className="product-image h-[55px] w-[55px] shrink-0 overflow-hidden rounded-[2px] bg-slate-200">
-              {productImage ? (
-                <img
-                  src={productImage}
-                  alt={product.name || 'Produto'}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="h-full w-full bg-slate-200" />
-              )}
-            </div>
-
-            <div className="product-info min-w-0 flex-1">
-              <p className="product-name truncate text-sm font-medium text-slate-900">
-                {product.name || 'Produto'}
-              </p>
-
-              <p className="product-price mt-[2px] text-sm font-medium text-slate-900">
-                {productPrice.toLocaleString('pt-BR', {
-                  style: 'currency',
-                  currency: 'BRL',
-                })}
-              </p>
-
-              {mc.show_product_button && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (productUrl) {
-                      window.open(productUrl, '_blank', 'noopener,noreferrer');
-                    }
-                  }}
-                  className="product-button mt-1 inline-flex h-[18px] items-center gap-1 rounded-full px-[9px] text-[9px] font-bold text-white"
-                  style={{ backgroundColor: c.button }}
-                >
-                  Ver produto <ExternalLink className="h-3 w-3" />
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ─── Modal de comentários ─── */}
-        {showComments && (
-          <div className="absolute inset-0 z-[95] flex items-center justify-center bg-black/70 p-4 backdrop-blur-[2px]">
-            <div className="mx-auto flex max-h-[70vh] w-[calc(100%-48px)] max-w-[380px] flex-col overflow-hidden rounded-[28px] bg-white p-5 text-slate-900 shadow-2xl">
-              <div className="mb-4 flex items-center justify-between">
-                <h4 className="text-lg font-black text-slate-900">
-                  Comentários
-                </h4>
-
-                <button
-                  type="button"
-                  onClick={() => setShowComments(false)}
-                  className="rounded-full bg-slate-100 p-2 text-slate-700"
-                  aria-label="Fechar comentários"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <div className="flex-1 space-y-3 overflow-y-auto pr-1">
-                {comments.length === 0 ? (
-                  <p className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
-                    Nenhum comentário ainda.
-                  </p>
-                ) : (
-                  comments.map((item, index) => (
-                    <div
-                      key={
-                        item.id ||
-                        `${getCommentCreatedAt(item)}-${index}`
-                      }
-                      className="rounded-2xl border border-slate-200 bg-slate-50 p-3"
-                    >
-                      <p className="text-xs font-black text-slate-500">
-                        {getCommentName(item)}
-                      </p>
-                      <p className="mt-1 whitespace-pre-wrap text-sm text-slate-800">
-                        {item.text}
-                      </p>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div className="mt-4 space-y-3 border-t border-slate-200 pt-4">
-                <input
-                  value={commentName}
-                  onChange={(event) => setCommentName(event.target.value)}
-                  placeholder="Seu nome"
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none placeholder:text-slate-400"
-                />
-
-                <div className="relative">
-                  <textarea
-                    ref={textareaRef}
-                    value={commentText}
-                    onChange={(event) =>
-                      setCommentText(event.target.value)
-                    }
-                    placeholder="Escreva seu comentário..."
-                    className="min-h-24 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 p-3 pr-12 text-sm text-slate-900 outline-none placeholder:text-slate-400"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => setShowEmoji((value) => !value)}
-                    className="absolute right-3 top-3 rounded-full bg-white p-1 text-slate-600 shadow-sm"
-                    aria-label="Emojis"
-                  >
-                    <Smile className="h-5 w-5" />
-                  </button>
-                </div>
-
-                {showEmoji && (
-                  <div className="grid grid-cols-6 gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-xl">
-                    {EMOJIS.map((emoji) => (
-                      <button
-                        key={emoji}
-                        type="button"
-                        onClick={() => insertEmoji(emoji)}
-                        className="rounded-lg bg-white p-1"
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  onClick={handleCommentSubmit}
-                  className="w-full rounded-2xl p-3 text-sm font-black text-white"
-                  style={{ backgroundColor: c.button }}
-                >
-                  Enviar comentário
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ─── Modal de medidas ─── */}
-        {model && modelModalOpen && (
-          <div className="absolute inset-0 z-[96] flex items-center justify-center bg-black/85 p-4">
-            <div className="mx-auto flex max-h-[70vh] w-[calc(100%-48px)] max-w-[380px] flex-col overflow-hidden rounded-[28px] bg-white p-5 text-slate-900 shadow-2xl">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    Medidas da modelo
-                  </p>
-                  <h4 className="text-lg font-black">
-                    {model.name || 'Modelo'}
-                  </h4>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setModelModalOpen(false)}
-                  className="rounded-full bg-slate-100 p-2"
-                  aria-label="Fechar medidas"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <div className="flex-1 space-y-3 overflow-auto">
-                {modelData.length > 0 ? (
-                  modelData.map((measure: any, idx: number) => (
-                    <div
-                      key={`${measure.name || measure.label || idx}-${idx}`}
-                      className="flex items-center justify-between rounded-2xl bg-slate-50 p-3"
-                    >
-                      <span className="font-bold text-slate-700">
-                        {measure.name ||
-                          measure.label ||
-                          `Medida ${idx + 1}`}
-                      </span>
-                      <span className="font-black text-slate-950">
-                        {measure.value || measure.size || '-'}
-                        {measure.unit || ''}
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-slate-500">
-                    Sem medidas cadastradas.
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default StoryPreviewPage;
+  /* ─── Estilo inline da borda do player (do modal_config) ─── */
+  const playerBorderStyle: React.CSSProperties = {
+    borderColor: mc.border_color,
+    borderWidth: `${mc.border_width}px`,
+    borderRadius: `${mc.border_radius}px`,
+    borderStyle: 'solid',
+    boxShadow: mc.shadow_enabled ? '0 25px 50px -12px rgba(0,0,0,0.5)' : undefined,
+  };
