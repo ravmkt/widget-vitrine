@@ -183,7 +183,7 @@ const StoryPreviewPage = () => {
   const [modelModalOpen, setModelModalOpen] = useState(false);
 
   /* ─── NOVO: controle do widget flutuante no preview ─── */
-  const [widgetOpen, setWidgetOpen] = useState(false);
+  const [playerOpen, setPlayerOpen] = useState(false);
   const [appearance, setAppearance] = useState<any>(null);
 
   const currentVideo = videos[activeVideoIdx] || null;
@@ -238,7 +238,6 @@ const StoryPreviewPage = () => {
       show_like_button: a.show_like_button ?? raw.show_like_button ?? true,
       show_comment_button: a.show_comment_button ?? raw.show_comment_button ?? true,
       show_share_button: a.show_share_button ?? raw.show_share_button ?? true,
-      // visuais do player
       border_color: raw.border_color || '#000000',
       border_width: String(raw.border_width || '0'),
       border_radius: String(raw.border_radius || '0'),
@@ -253,7 +252,7 @@ const StoryPreviewPage = () => {
     return raw?.desktop || raw?.mobile || raw || {};
   }, [appearance]);
 
-  /* ─── Config do carousel/grid (mantido para referência) ─── */
+  /* ─── Config do carousel/grid ─── */
   const layoutConfig = useMemo(() => {
     const a = appearance || {};
     const carouselRaw = parseJsonSafe(a.carousel_config);
@@ -393,6 +392,10 @@ const StoryPreviewPage = () => {
   }, [id, routeStoreId, queryVideoId]);
 
   useEffect(() => {
+    if (isCarouselLayout) setPlayerOpen(true);
+  }, [isCarouselLayout]);
+
+  useEffect(() => {
     if (!currentVideo?.id || !story || !resolvedStoreId) return;
     setVideoError(false);
     setProgress(0);
@@ -412,9 +415,8 @@ const StoryPreviewPage = () => {
   }, [currentVideo?.id]);
 
   const close = () => {
-    // Se o widget estiver aberto, fecha o widget (volta pro floating)
-    if (isFloatingLayout && widgetOpen) {
-      setWidgetOpen(false);
+    if (playerOpen && !isCarouselLayout) {
+      setPlayerOpen(false);
       return;
     }
     if (window.history.length > 1) window.history.back();
@@ -532,6 +534,11 @@ const StoryPreviewPage = () => {
     });
   };
 
+  const openPlayerForVideo = (idx: number) => {
+    setActiveVideoIdx(idx);
+    setPlayerOpen(true);
+  };
+
   const productImage =
     product?.image_url || product?.imageUrl || product?.thumbnail_url || product?.thumbnailUrl || '';
   const productUrl = product?.product_url || product?.productUrl || product?.url || '';
@@ -558,10 +565,8 @@ const StoryPreviewPage = () => {
   const mc = modalConfig;
   const fc = floatingConfig;
 
-  /* ─── Thumbnail do widget (primeiro vídeo) ─── */
   const widgetThumb = getVideoPosterUrl(videos[0] || null);
 
-  /* ─── Estilo inline da borda do player (do modal_config) ─── */
   const playerBorderStyle: React.CSSProperties = {
     borderColor: mc.border_color,
     borderWidth: `${mc.border_width}px`,
@@ -569,33 +574,10 @@ const StoryPreviewPage = () => {
     borderStyle: 'solid',
     boxShadow: mc.shadow_enabled ? '0 25px 50px -12px rgba(0,0,0,0.5)' : undefined,
   };
-  /* ─── Estado do player (aberto/fechado) ─── */
-  const [playerOpen, setPlayerOpen] = useState(false);
 
-  useEffect(() => {
-    // Carousel já abre direto no player
-    if (isCarouselLayout) setPlayerOpen(true);
-  }, [isCarouselLayout]);
-
-  const close = () => {
-    // Se o player estiver aberto num layout que não é carousel, volta pro widget/grid
-    if (playerOpen && !isCarouselLayout) {
-      setPlayerOpen(false);
-      return;
-    }
-    if (window.history.length > 1) window.history.back();
-    else navigate('/');
-  };
-
-  const openPlayerForVideo = (idx: number) => {
-    setActiveVideoIdx(idx);
-    setPlayerOpen(true);
-  };
-
-  /* ─── Renderização do player modal (compartilhado por todos os layouts) ─── */
+  /* ─── Renderização do player modal ─── */
   const renderPlayer = () => (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95">
-      {/* Botão fechar */}
       <button
         onClick={close}
         className="absolute top-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition"
@@ -604,14 +586,11 @@ const StoryPreviewPage = () => {
         <X size={20} />
       </button>
 
-      {/* Container do player com borda da aparência */}
       <div
         className="relative flex w-full max-w-[420px] flex-col overflow-hidden bg-black"
         style={playerBorderStyle}
       >
-        {/* Área do vídeo */}
         <div className="relative aspect-[9/16] w-full bg-black">
-          {/* Progress bar */}
           <div className="absolute top-0 left-0 right-0 z-10 flex gap-1 px-1 pt-2">
             {videos.map((_, i) => (
               <div key={i} className="h-1 flex-1 overflow-hidden rounded-full bg-white/30">
@@ -626,11 +605,9 @@ const StoryPreviewPage = () => {
             ))}
           </div>
 
-          {/* Navegação: toque nas bordas */}
           <button onClick={goPrev} className="absolute left-0 top-0 z-10 h-full w-1/3" aria-label="Anterior" />
           <button onClick={goNext} className="absolute right-0 top-0 z-10 h-full w-1/3" aria-label="Próximo" />
 
-          {/* Título (se habilitado) */}
           {mc.show_title && currentVideo?.title && (
             <div className="absolute top-10 left-3 right-3 z-10">
               <p className="text-sm font-semibold text-white drop-shadow-lg line-clamp-2">
@@ -639,7 +616,6 @@ const StoryPreviewPage = () => {
             </div>
           )}
 
-          {/* Vídeo */}
           {currentUrl && !videoError ? (
             <video
               ref={videoRef}
@@ -660,7 +636,6 @@ const StoryPreviewPage = () => {
             </div>
           )}
 
-          {/* Botão play/pause central (se habilitado) */}
           {mc.show_play_button && currentUrl && !videoError && (
             <button
               onClick={handleTogglePlay}
@@ -673,7 +648,6 @@ const StoryPreviewPage = () => {
             </button>
           )}
 
-          {/* Botão mudo */}
           <button
             onClick={handleToggleMute}
             className="absolute top-4 right-12 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white"
@@ -683,11 +657,8 @@ const StoryPreviewPage = () => {
           </button>
         </div>
 
-        {/* Barra de ações + card de produto */}
         <div className="flex items-start gap-3 bg-black px-3 py-2">
-          {/* Ações à esquerda */}
           <div className="flex flex-col items-center gap-4 pt-1">
-            {/* Like */}
             {mc.show_like_button && (
               <button onClick={handleLike} className="flex flex-col items-center gap-0.5 text-white">
                 <Heart size={24} fill={liked ? '#ef4444' : 'none'} stroke={liked ? '#ef4444' : 'white'} />
@@ -695,7 +666,6 @@ const StoryPreviewPage = () => {
               </button>
             )}
 
-            {/* Comentário */}
             {mc.show_comment_button && (
               <button onClick={() => setShowComments((v) => !v)} className="flex flex-col items-center gap-0.5 text-white">
                 <MessageCircle size={24} />
@@ -703,14 +673,12 @@ const StoryPreviewPage = () => {
               </button>
             )}
 
-            {/* Compartilhar */}
             {mc.show_share_button && (
               <button onClick={handleShare} className="flex flex-col items-center gap-0.5 text-white">
                 <Share2 size={24} />
               </button>
             )}
 
-            {/* Tabela de medidas */}
             {modelData.length > 0 && (
               <button
                 onClick={() => setModelModalOpen(true)}
@@ -722,7 +690,6 @@ const StoryPreviewPage = () => {
             )}
           </div>
 
-          {/* Card de produto */}
           {mc.show_product && product && (
             <div className="flex-1">
               <div
@@ -773,7 +740,6 @@ const StoryPreviewPage = () => {
           )}
         </div>
 
-        {/* Painel de comentários */}
         {showComments && (
           <div className="border-t border-white/10 bg-black px-3 py-3">
             <div className="mb-3 max-h-40 overflow-y-auto space-y-2">
@@ -849,7 +815,6 @@ const StoryPreviewPage = () => {
       onClick={() => openPlayerForVideo(0)}
       title="Clique para abrir o story"
     >
-      {/* Borda da aparência */}
       <div
         className={`h-full w-full overflow-hidden ${widgetShapeClass} border-2 shadow-xl`}
         style={{
@@ -869,7 +834,6 @@ const StoryPreviewPage = () => {
           </div>
         )}
 
-        {/* Overlay com ícone de play */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-gray-900">
             <Play size={18} className="ml-0.5" />
@@ -877,7 +841,6 @@ const StoryPreviewPage = () => {
         </div>
       </div>
 
-      {/* Indicador visual sutil */}
       <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-green-500 shadow-lg" />
     </div>
   );
@@ -885,7 +848,6 @@ const StoryPreviewPage = () => {
   /* ─── Renderização do grid ─── */
   const renderGrid = () => (
     <div className="w-full max-w-4xl px-4">
-      {/* Botão fechar */}
       <button
         onClick={close}
         className="absolute top-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition"
@@ -894,12 +856,10 @@ const StoryPreviewPage = () => {
         <X size={20} />
       </button>
 
-      {/* Título */}
       <h2 className="mb-6 text-center text-xl font-semibold text-white">
         {story?.title || 'Stories'}
       </h2>
 
-      {/* Grid de thumbnails */}
       {videos.length === 0 ? (
         <p className="text-center text-white/50">Nenhum vídeo neste story.</p>
       ) : (
@@ -944,7 +904,6 @@ const StoryPreviewPage = () => {
         </div>
       )}
 
-      {/* Instrução */}
       {videos.length > 0 && (
         <p className="mt-4 text-center text-xs text-white/40">
           Clique em um vídeo para abrir o player
@@ -1003,16 +962,9 @@ const StoryPreviewPage = () => {
   /* ─── Layout final ─── */
   return (
     <div className="fixed inset-0 bg-[#111] flex items-center justify-center overflow-hidden">
-      {/* Floating: widget na tela preta */}
       {isFloatingLayout && !playerOpen && renderFloatingWidget()}
-
-      {/* Grid: grade de thumbnails */}
       {isGridLayout && !playerOpen && renderGrid()}
-
-      {/* Player modal: abre quando necessário */}
       {(playerOpen || isCarouselLayout) && renderPlayer()}
-
-      {/* Modal de medidas (sempre acessível quando o player está aberto) */}
       {renderMeasureModal()}
     </div>
   );
