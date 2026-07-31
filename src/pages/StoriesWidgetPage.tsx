@@ -882,16 +882,11 @@ const MeasuresModal: FC<{
 // COMPONENTE PRINCIPAL
 // ═══════════════════════════════════════════════════════════════
 
-export default function StoriesWidgetPage({
-  storyId: storyIdProp,
-}: {
-  storyId?: string;
-}) {
+export default function StoriesWidgetPage() {
   const { storeId } = useParams();
   const [searchParams] = useSearchParams();
 
-  const storyIdParam =
-    storyIdProp || searchParams.get('storyId') || searchParams.get('storyid');
+  const storyIdParam = searchParams.get('storyId') || searchParams.get('storyid');
   const videoIdParam = searchParams.get('videoId') || searchParams.get('videoid');
   const appearanceIdParam = searchParams.get('appearanceId') || searchParams.get('appearanceid');
 
@@ -1009,9 +1004,6 @@ export default function StoriesWidgetPage({
       window.parent.postMessage({ type: 'CLOSE_STORY_WIDGET' }, '*');
       window.parent.postMessage('CLOSE_STORY_WIDGET', '*');
     } else {
-      // Preview context: try closing the tab (works when opened via window.open)
-      try { window.close(); } catch { /* ignore */ }
-      // Fallbacks
       if (window.history.length > 1) window.history.back();
       else window.location.href = '/';
     }
