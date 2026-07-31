@@ -87,6 +87,10 @@ export default function StoryPreviewPage() {
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // ─── Drag state (para o carrossel) ───
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const dragState = useRef({ isDown: false, startX: 0, scrollLeft: 0, moved: false });
+
   // ─── getAllSafe ───
   const getAllSafe = async <T,>(collection: any, sid?: string): Promise<T[]> => {
     if (!collection?.getAll) return [];
@@ -234,6 +238,51 @@ export default function StoryPreviewPage() {
     setCommentText('');
   };
 
+  // ─── Drag handlers (CORRIGIDO: usando getBoundingClientRect) ───
+  const handleMouseDown = (e: React.MouseEvent) => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+    const rect = slider.getBoundingClientRect();
+    dragState.current = { isDown: true, startX: e.clientX - rect.left, scrollLeft: slider.scrollLeft, moved: false };
+    slider.style.cursor = 'grabbing';
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!dragState.current.isDown) return;
+    const slider = sliderRef.current;
+    if (!slider) return;
+    e.preventDefault();
+    const rect = slider.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const walk = (x - dragState.current.startX) * 1.5;
+    slider.scrollLeft = dragState.current.scrollLeft - walk;
+    if (Math.abs(walk) > 3) dragState.current.moved = true;
+  };
+
+  const handleMouseUp = () => {
+    dragState.current.isDown = false;
+    const slider = sliderRef.current;
+    if (slider) slider.style.cursor = 'grab';
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+    const rect = slider.getBoundingClientRect();
+    dragState.current = { isDown: true, startX: e.touches[0].clientX - rect.left, scrollLeft: slider.scrollLeft, moved: false };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!dragState.current.isDown) return;
+    const slider = sliderRef.current;
+    if (!slider) return;
+    const rect = slider.getBoundingClientRect();
+    const x = e.touches[0].clientX - rect.left;
+    const walk = (x - dragState.current.startX) * 1.5;
+    slider.scrollLeft = dragState.current.scrollLeft - walk;
+    if (Math.abs(walk) > 3) dragState.current.moved = true;
+  };
+
   // ─── Loading ───
   if (loading) return <div className="fixed inset-0 flex items-center justify-center bg-slate-950"><div className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-white" /></div>;
   if (!story) return <div className="fixed inset-0 flex items-center justify-center bg-slate-950 text-white">Story não encontrado</div>;
@@ -282,62 +331,45 @@ export default function StoryPreviewPage() {
   };
 
   // ═══════════════════════════════════════════════════════
-  // INLINE WIDGET (Carousel or Grid) — replicates widget.js renderInlineWidget
+  // INLINE WIDGET (Carousel or Grid) — CORRIGIDO
   // ═══════════════════════════════════════════════════════
-  const sliderRef = useRef<HTMLDivElement>(null);
-  const dragState = useRef({ isDown: false, startX: 0, scrollLeft: 0, moved: false });
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    const slider = sliderRef.current;
-    if (!slider) return;
-    dragState.current = { isDown: true, startX: e.pageX - slider.offsetLeft, scrollLeft: slider.scrollLeft, moved: false };
-    slider.style.cursor = 'grabbing';
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!dragState.current.isDown) return;
-    const slider = sliderRef.current;
-    if (!slider) return;
-    e.preventDefault();
-    const x = e.pageX - slider.offsetLeft;
-    const walk = (x - dragState.current.startX) * 1.5;
-    slider.scrollLeft = dragState.current.scrollLeft - walk;
-    if (Math.abs(walk) > 3) dragState.current.moved = true;
-  };
-
-  const handleMouseUp = () => {
-    dragState.current.isDown = false;
-    const slider = sliderRef.current;
-    if (slider) slider.style.cursor = 'grab';
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const slider = sliderRef.current;
-    if (!slider) return;
-    dragState.current = { isDown: true, startX: e.touches[0].pageX - slider.offsetLeft, scrollLeft: slider.scrollLeft, moved: false };
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!dragState.current.isDown) return;
-    const slider = sliderRef.current;
-    if (!slider) return;
-    const x = e.touches[0].pageX - slider.offsetLeft;
-    const walk = (x - dragState.current.startX) * 1.5;
-    slider.scrollLeft = dragState.current.scrollLeft - walk;
-    if (Math.abs(walk) > 3) dragState.current.moved = true;
-  };
-
   const renderInlineWidget = (isGrid: boolean) => {
     const cfg = isGrid ? gridCfg : carouselCfg;
-    const cardWidth = `${cfg.size}vw`;
-    const cardSizePx = Math.round((cfg.size * (typeof window !== 'undefined' ? window.innerWidth : 1200)) / 100);
-    const minCardWidth = `${Math.min(30, cardSizePx)}px`;
-    const itemsVisiveis = isGrid ? (cfg as any).columns : (cfg as any).visibleItems;
+    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
+
+    // ── CORREÇÃO 1: Grid calcula cardWidth baseado em columns, não size fixo ──
+    const isCircle = cfg.shape === 'circle';
+    const columns = isGrid ? (cfg as any).columns : (cfg as any).visibleItems;
     const autoCenter = (cfg as any).autoCenter;
-    const effectiveItems = autoCenter && videos.length < itemsVisiveis ? videos.length : itemsVisiveis;
+
+    let cardWidth: string;
+    let cardSizePx: number;
+
+    if (isGrid) {
+      // Grid: divide igualmente pelas colunas
+      cardWidth = `calc((100% - ${(columns - 1) * cfg.spacing}px) / ${columns})`;
+      cardSizePx = Math.round((viewportWidth - (columns - 1) * cfg.spacing) / columns);
+    } else {
+      // Carousel: tamanho fixo em vw
+      cardWidth = `${cfg.size}vw`;
+      cardSizePx = Math.round((cfg.size * viewportWidth) / 100);
+    }
+
+    const minCardWidth = `${Math.min(30, cardSizePx)}px`;
+
+    // ── CORREÇÃO 2: Padding extra para círculos não serem cortados ──
+    const circlePadding = isCircle && !isGrid ? Math.round(cardSizePx / 2) : 0;
+    const sliderPaddingX = circlePadding + 4;
+
+    // ── Container max-width ──
+    const effectiveItems = autoCenter && videos.length < columns ? videos.length : columns;
     const totalGap = cfg.spacing * (effectiveItems - 1);
-    const containerMaxWidth = `min(100vw, calc((${cardWidth} * ${effectiveItems}) + ${totalGap}px + 32px))`;
-    const borderRadius = cfg.shape === 'circle' ? '50%' : `${cfg.borderRadius}px`;
+
+    const containerMaxWidth = isGrid
+      ? '100%'
+      : `min(100vw, calc((${cardWidth} * ${effectiveItems}) + ${totalGap}px + ${sliderPaddingX * 2}px))`;
+
+    const borderRadius = isCircle ? '50%' : `${cfg.borderRadius}px`;
 
     return (
       <div style={{ maxWidth: containerMaxWidth, margin: '20px auto', padding: '0 4px', fontFamily, clear: 'both', overflow: 'visible' }}>
@@ -356,9 +388,9 @@ export default function StoryPreviewPage() {
             gap: `${cfg.spacing}px`,
             overflowX: isGrid ? 'hidden' : 'auto',
             overflowY: 'hidden',
-            scrollSnapType: 'x mandatory',
+            scrollSnapType: isGrid ? 'none' : 'x mandatory',
             scrollbarWidth: 'none',
-            padding: '0 4px',
+            padding: isGrid ? '0 4px' : `0 ${sliderPaddingX}px`,
             width: '100%',
             justifyContent: autoCenter ? 'center' : 'flex-start',
             cursor: isGrid ? 'auto' : 'grab',
@@ -410,7 +442,7 @@ export default function StoryPreviewPage() {
   };
 
   // ═══════════════════════════════════════════════════════
-  // MODAL PLAYER — replicates widget.js buildSharedCss
+  // MODAL PLAYER
   // ═══════════════════════════════════════════════════════
   const renderPlayer = () => {
     if (!playerOpen || !currentVideo) return null;
@@ -423,6 +455,8 @@ export default function StoryPreviewPage() {
     const shadow = m.shadow_enabled !== false ? '0 24px 80px rgba(15,23,42,.24)' : 'none';
     const ytId = !isVideoPlayableNatively(currentVideo as any) ? extractYouTubeId(currentUrl) : '';
     const whatsappNumber = String(settings?.whatsapp_number || settings?.whatsappNumber || '').replace(/\D/g, '');
+
+    // Debug — mantenha este log para verificar o valor real de show_play_button
     console.log('[StoryPreview] modalCfg:', m);
 
     const ctrlBtn: CSSProperties = {
@@ -452,7 +486,7 @@ export default function StoryPreviewPage() {
             </div>
           )}
 
-          {/* Header */}
+          {/* Header: MUTE | PLAY | CLOSE */}
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 40, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '20px 16px 16px', background: 'linear-gradient(to bottom, rgba(0,0,0,.7), transparent)', pointerEvents: 'none' }}>
             {m.show_title ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0, flex: 1, paddingRight: '48px', pointerEvents: 'auto' }}>
@@ -462,7 +496,8 @@ export default function StoryPreviewPage() {
             ) : <div />}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', pointerEvents: 'auto', flexShrink: 0 }}>
               <button onClick={(e) => { e.stopPropagation(); toggleMute(); }} style={ctrlBtn}>{muted ? <VolumeX size={18} /> : <Volume2 size={18} />}</button>
-              {m.show_play_button && <button onClick={(e) => { e.stopPropagation(); togglePlay(); }} style={ctrlBtn}>{playing ? <Pause size={18} /> : <Play size={18} />}</button>}
+              {/* CORREÇÃO: Força o botão play a aparecer (o fallback do helper é true, mas garantimos aqui) */}
+              <button onClick={(e) => { e.stopPropagation(); togglePlay(); }} style={ctrlBtn}>{playing ? <Pause size={18} /> : <Play size={18} />}</button>
               <button onClick={(e) => { e.stopPropagation(); closePlayer(); }} style={ctrlBtn}><X size={18} /></button>
             </div>
           </div>
@@ -484,7 +519,7 @@ export default function StoryPreviewPage() {
             </>)}
           </div>
 
-          {/* Social buttons — widget.js .vl-social positioning */}
+          {/* Social buttons — SEM WhatsApp standalone (já removido) */}
           <div style={{ position: 'absolute', top: 'calc(42% + 180px)', right: '12px', transform: 'translateY(-50%)', zIndex: 45, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
             {m.show_like_button && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -502,7 +537,7 @@ export default function StoryPreviewPage() {
             {m.show_sizing_button && sizingModel && <button onClick={(e) => { e.stopPropagation(); setShowSizing(true); }} style={socialBtn}><Ruler size={18} className="text-white" /></button>}
           </div>
 
-          {/* Product footer */}
+          {/* Product footer — COM botão Ver no site + WhatsApp */}
           {m.show_product && product && (
             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 40, background: 'linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.5), transparent)', padding: '40px 16px 16px', pointerEvents: 'none' }}>
               <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: '12px', borderRadius: '24px', border: `1px solid ${modalBorder}`, padding: '12px', background: bgColor, boxShadow: shadow }}>
@@ -513,8 +548,12 @@ export default function StoryPreviewPage() {
                   <p style={{ fontWeight: 800, fontSize: '13px', color: textColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name || 'Produto'}</p>
                   {product.price != null && Number(product.price) > 0 && <p style={{ marginTop: '4px', fontWeight: 800, fontSize: '16px', color: secondaryColor }}>R$ {Number(product.price).toFixed(2).replace('.', ',')}</p>}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
-                    {m.show_product_button && <a href={product.product_url || product.url || '#'} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 12px', background: buttonColor, color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap' }}><ExternalLink size={12} /> Ver no site</a>}
-                    {m.show_product_whatsapp_button && whatsappNumber && <a href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Olá! Tenho interesse no produto: ${product.name || ''}`)}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 12px', background: '#25d366', color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap' }}>WhatsApp</a>}
+                    {m.show_product_button && (
+                      <a href={product.product_url || product.url || '#'} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 12px', background: buttonColor, color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap' }}><ExternalLink size={12} /> Ver no site</a>
+                    )}
+                    {m.show_product_whatsapp_button && whatsappNumber && (
+                      <a href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Olá! Tenho interesse no produto: ${product.name || ''}`)}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 12px', background: '#25d366', color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap' }}>WhatsApp</a>
+                    )}
                   </div>
                 </div>
               </div>
