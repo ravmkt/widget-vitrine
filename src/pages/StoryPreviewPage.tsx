@@ -339,26 +339,26 @@ const renderInlineWidget = (isGrid: boolean) => {
   const isCircle = cfg.shape === 'circle';
   const columns = isGrid ? (cfg as any).columns : (cfg as any).visibleItems;
 
-  // ── Tamanho do card preenchendo 100% da largura dividido por columns ──
-  const cardFlexBasis = `calc((100% - ${(columns - 1) * cfg.spacing}px) / ${columns})`;
-  // Grid: maxWidth = flex-basis. Carrossel: sem limite (visibleItems controla)
-  const cardMaxWidth = isGrid ? cardFlexBasis : 'none';
+  // ── Carrossel: viewport fixo = visibleItems × size + gaps, centralizado ──
+  // ── Grid: ocupa 100%, cards com wrap ──
+  const viewportMaxWidth = isGrid
+    ? '100%'
+    : `${columns * cfg.size + (columns - 1) * cfg.spacing}px`;
+
+  const cardSize = isGrid
+    ? `calc((100% - ${(columns - 1) * cfg.spacing}px) / ${columns})`
+    : `${cfg.size}px`;
 
   const borderRadius = isCircle ? '50%' : `${cfg.borderRadius}px`;
 
-  // ── Padding extra para círculos ──
+  // ── Padding extra para círculos no carrossel ──
   const circlePadding = isCircle && !isGrid ? Math.round(cfg.size * 0.15) : 0;
   const sliderPaddingX = circlePadding + 4;
-
-  // ── Centraliza se cards ≤ columns; senão flex-start para scroll ──
-  const justifyContent = isGrid
-    ? 'center'
-    : (videos.length <= columns ? 'center' : 'flex-start');
 
   return (
     <div style={{
       width: '100%',
-      maxWidth: '100%',
+      maxWidth: viewportMaxWidth,
       margin: '20px auto',
       padding: '0 4px',
       fontFamily,
@@ -385,7 +385,7 @@ const renderInlineWidget = (isGrid: boolean) => {
           msOverflowStyle: 'none',
           padding: isGrid ? '0 4px' : `0 ${sliderPaddingX}px`,
           width: '100%',
-          justifyContent,
+          justifyContent: isGrid ? 'center' : 'flex-start',
           cursor: isGrid ? 'auto' : 'grab',
           userSelect: 'none',
           WebkitUserSelect: 'none',
@@ -402,9 +402,9 @@ const renderInlineWidget = (isGrid: boolean) => {
               style={{
                 all: 'unset',
                 scrollSnapAlign: 'start',
-                flex: `0 0 ${cardFlexBasis}`,
+                flex: `0 0 ${cardSize}`,
                 minWidth: 0,
-                maxWidth: cardMaxWidth,
+                maxWidth: cardSize,
                 transition: 'transform 0.2s ease',
                 cursor: 'pointer',
                 display: 'flex',
