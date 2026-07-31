@@ -14,9 +14,8 @@ import {
   getFontFamily,
   getFontSize,
   normalizeStoryFormat,
+  readAppearanceValue,
   type StoryFormat,
-  type ModalAppearanceConfig,
-  px,
 } from '@/lib/storyAppearanceHelpers';
 import {
   X, ChevronLeft, ChevronRight, Heart, MessageCircle, Share2,
@@ -47,6 +46,8 @@ const getVideoThumb = (v?: Video | null): string => {
   const i = v as any;
   return i?.thumbnail_url || i?.thumbnailUrl || i?.poster_url || i?.posterUrl || i?.image_url || i?.imageUrl || '';
 };
+
+const isVideoFile = (url: string) => /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url);
 
 // ═══════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL
@@ -80,14 +81,13 @@ export default function StoryPreviewPage() {
   const [commentName, setCommentName] = useState('');
 
   // Panels
-  const [showShare, setShowShare] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
   const [sizingModel, setSizingModel] = useState<any>(null);
   const [showSizing, setShowSizing] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // ─── getAllSafe: tenta com storeId, em caso de erro tenta sem ───
+  // ─── getAllSafe ───
   const getAllSafe = async <T,>(collection: any, sid?: string): Promise<T[]> => {
     if (!collection?.getAll) return [];
     try {
@@ -106,9 +106,6 @@ export default function StoryPreviewPage() {
       setLoading(true);
       try {
         const storeId = await resolveStoreId();
-        console.log('[StoryPreview] storeId:', storeId, 'storyId:', storyId);
-
-        // Carregar tudo em paralelo (cada query é resiliente)
         const [allStories, stores, allSettings, allAppearances, storyRelations, allVideos] = await Promise.all([
           getAllSafe<any>(db.stories, storeId),
           getAllSafe<any>(db.stores, storeId),
@@ -118,57 +115,28 @@ export default function StoryPreviewPage() {
           getAllSafe<Video>(db.videos, storeId),
         ]);
 
-        console.log('[StoryPreview] stories:', allStories.length);
-        console.log('[StoryPreview] storyVideos relations:', storyRelations.length);
-        console.log('[StoryPreview] videos:', allVideos.length);
-
         const found = allStories.find((s: any) => s.id === storyId);
-        console.log('[StoryPreview] story found:', !!found, found?.title);
-        if (!active || !found) {
-          if (active) setLoading(false);
-          return;
-        }
+        if (!active || !found) { if (active) setLoading(false); return; }
         setStory(found);
-
         if (stores[0]?.name) setStoreName(stores[0].name);
         if (allSettings[0]) setSettings(allSettings[0]);
 
-        // Appearance
         const resolvedAppearance = found.appearance_id
-          ? allAppearances.find((a: any) => a.id === found.appearance_id)
-          : null;
+          ? allAppearances.find((a: any) => a.id === found.appearance_id) : null;
         const finalAppearance = resolvedAppearance
           || allAppearances.find((a: any) => a.is_default)
-          || allAppearances[0]
-          || {};
+          || allAppearances[0] || {};
         if (active) setAppearance(finalAppearance as Record<string, any>);
 
-        // Videos do story — filtra relações por story_id (sem exigir store_id)
         const relations = (storyRelations || [])
           .filter((sv: any) => sv.story_id === storyId && (!sv.store_id || sv.store_id === storeId))
           .sort((a: any, b: any) => Number(a.position || 0) - Number(b.position || 0));
-
-        console.log('[StoryPreview] relations for this story:', relations.length);
-
         const storyVideos = relations
           .map((r: any) => allVideos.find((v: any) => v.id === r.video_id))
           .filter((v): v is Video => !!v);
-
-        console.log('[StoryPreview] resolved videos:', storyVideos.length);
         if (active) setVideos(storyVideos);
-
-        // Likes
-        try {
-          const likesRaw = localStorage.getItem('story_video_likes');
-          const likes = likesRaw ? JSON.parse(likesRaw) : {};
-          const firstVideoId = storyVideos[0]?.id;
-          if (firstVideoId) {
-            setLiked(!!likes[firstVideoId]?.liked);
-            setLikeCount(likes[firstVideoId]?.count || 0);
-          }
-        } catch { /* ignore */ }
       } catch (e) {
-        console.error('[StoryPreview] Erro ao carregar preview:', e);
+        console.error('[StoryPreview] Erro:', e);
       } finally {
         if (active) setLoading(false);
       }
@@ -181,44 +149,28 @@ export default function StoryPreviewPage() {
     if (!playerOpen || !videos[videoIdx]) return;
     const currentVideo = videos[videoIdx] as any;
     (async () => {
-      // Product
       const productId = currentVideo.product_id || currentVideo.productId;
       if (productId) {
-        try {
-          const storeId = await resolveStoreId();
-          const products = await db.products.getAll(storeId);
-          setProduct(products.find(p => p.id === productId) || null);
-        } catch { setProduct(null); }
-      } else {
-        setProduct(null);
-      }
+        try { const storeId = await resolveStoreId(); const p = await db.products.getAll(storeId); setProduct(p.find(x => x.id === productId) || null); }
+        catch { setProduct(null); }
+      } else setProduct(null);
 
-      // Sizing model
       const modelId = currentVideo.model_id || currentVideo.modelId;
       if (modelId) {
-        try {
-          const storeId = await resolveStoreId();
-          const models = await db.sizingModels.getAll(storeId);
-          setSizingModel(models.find(m => m.id === modelId) || null);
-        } catch { setSizingModel(null); }
-      } else {
-        setSizingModel(null);
-      }
+        try { const storeId = await resolveStoreId(); const m = await db.sizingModels.getAll(storeId); setSizingModel(m.find(x => x.id === modelId) || null); }
+        catch { setSizingModel(null); }
+      } else setSizingModel(null);
 
-      // Comments
       try {
         const storeId = await resolveStoreId();
-        const allComments = await db.comments.getAll(storeId);
-        const filtered = allComments
-          .filter((c: any) => c.video_id === currentVideo.id && c.status !== 'rejected')
-          .sort((a: any, b: any) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
-        setComments(filtered as CommentItem[]);
+        const all = await db.comments.getAll(storeId);
+        setComments(all.filter((c: any) => c.video_id === currentVideo.id && c.status !== 'rejected')
+          .sort((a: any, b: any) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()) as CommentItem[]);
       } catch { setComments([]); }
 
-      // Likes
       try {
-        const likesRaw = localStorage.getItem('story_video_likes');
-        const likes = likesRaw ? JSON.parse(likesRaw) : {};
+        const raw = localStorage.getItem('story_video_likes');
+        const likes = raw ? JSON.parse(raw) : {};
         setLiked(!!likes[currentVideo.id]?.liked);
         setLikeCount(likes[currentVideo.id]?.count || 0);
       } catch { /* ignore */ }
@@ -226,11 +178,7 @@ export default function StoryPreviewPage() {
   }, [playerOpen, videoIdx, videos]);
 
   // ─── Derived config ───
-  const storyFormat: StoryFormat = useMemo(
-    () => normalizeStoryFormat(String(story?.format || 'floating_widget')),
-    [story],
-  );
-
+  const storyFormat: StoryFormat = useMemo(() => normalizeStoryFormat(String(story?.format || 'floating_widget')), [story]);
   const floatCfg = useMemo(() => getFloatingConfig(appearance), [appearance]);
   const carouselCfg = useMemo(() => getCarouselConfig(appearance), [appearance]);
   const gridCfg = useMemo(() => getGridConfig(appearance), [appearance]);
@@ -249,51 +197,12 @@ export default function StoryPreviewPage() {
   const currentThumb = getVideoThumb(currentVideo);
 
   // ─── Handlers ───
-  const openPlayer = (idx = 0) => {
-    setVideoIdx(idx);
-    setPlayerOpen(true);
-    setPlaying(true);
-    setMuted(true);
-    setProgress(0);
-  };
-
-  const closePlayer = () => {
-    setPlayerOpen(false);
-    setPlaying(false);
-    setShowComments(false);
-    setShowShare(false);
-    setShowSizing(false);
-  };
-
-  const goNext = () => {
-    if (videoIdx < videos.length - 1) {
-      setVideoIdx(v => v + 1);
-      setPlaying(true);
-      setProgress(0);
-    } else {
-      closePlayer();
-    }
-  };
-
-  const goPrev = () => {
-    if (videoIdx > 0) {
-      setVideoIdx(v => v - 1);
-      setPlaying(true);
-      setProgress(0);
-    }
-  };
-
-  const togglePlay = () => {
-    if (!videoRef.current) return;
-    if (playing) { videoRef.current.pause(); }
-    else { videoRef.current.play().catch(() => {}); }
-  };
-
-  const toggleMute = () => {
-    const next = !muted;
-    setMuted(next);
-    if (videoRef.current) videoRef.current.muted = next;
-  };
+  const openPlayer = (idx = 0) => { setVideoIdx(idx); setPlayerOpen(true); setPlaying(true); setMuted(true); setProgress(0); };
+  const closePlayer = () => { setPlayerOpen(false); setPlaying(false); setShowComments(false); setShowSizing(false); };
+  const goNext = () => { if (videoIdx < videos.length - 1) { setVideoIdx(v => v + 1); setPlaying(true); setProgress(0); } else closePlayer(); };
+  const goPrev = () => { if (videoIdx > 0) { setVideoIdx(v => v - 1); setPlaying(true); setProgress(0); } };
+  const togglePlay = () => { if (!videoRef.current) return; if (playing) videoRef.current.pause(); else videoRef.current.play().catch(() => {}); };
+  const toggleMute = () => { const n = !muted; setMuted(n); if (videoRef.current) videoRef.current.muted = n; };
 
   const handleLike = () => {
     if (!currentVideo?.id) return;
@@ -305,213 +214,111 @@ export default function StoryPreviewPage() {
       const nextCount = Math.max(0, cur.count + (nextLiked ? 1 : -1));
       likes[currentVideo.id] = { liked: nextLiked, count: nextCount };
       localStorage.setItem('story_video_likes', JSON.stringify(likes));
-      setLiked(nextLiked);
-      setLikeCount(nextCount);
+      setLiked(nextLiked); setLikeCount(nextCount);
     } catch { /* ignore */ }
   };
 
   const handleShare = async () => {
     const url = `${window.location.origin}/stories/preview/${storyId}?videoId=${currentVideo?.id || ''}`;
     try {
-      if (navigator.share) {
-        await navigator.share({ title: story?.title || 'Story', url });
-      } else {
-        await navigator.clipboard.writeText(url);
-        setShareCopied(true);
-        setTimeout(() => setShareCopied(false), 2000);
-      }
-    } catch { /* user cancelled */ }
+      if (navigator.share) await navigator.share({ title: story?.title || 'Story', url });
+      else { await navigator.clipboard.writeText(url); setShareCopied(true); setTimeout(() => setShareCopied(false), 2000); }
+    } catch { /* cancelled */ }
   };
 
-  const submitComment = async () => {
+  const submitComment = () => {
     const name = commentName.trim() || 'Anônimo';
     const text = commentText.trim();
     if (!text) return;
-    const newComment: CommentItem = {
-      id: `${Date.now()}`,
-      text, name, user_name: name,
-      created_at: new Date().toISOString(),
-    };
-    setComments(prev => [...prev, newComment]);
+    setComments(prev => [...prev, { id: `${Date.now()}`, text, name, user_name: name, created_at: new Date().toISOString() }]);
     setCommentText('');
   };
 
   // ─── Loading ───
-  if (loading) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-slate-950">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-      </div>
-    );
-  }
+  if (loading) return <div className="fixed inset-0 flex items-center justify-center bg-slate-950"><div className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-white" /></div>;
+  if (!story) return <div className="fixed inset-0 flex items-center justify-center bg-slate-950 text-white">Story não encontrado</div>;
 
-  if (!story) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-slate-950 text-white">
-        Story não encontrado
-      </div>
-    );
-  }
-
-  // ─── Floating Widget ───
+  // ═══════════════════════════════════════════════════════
+  // FLOATING WIDGET
+  // ═══════════════════════════════════════════════════════
   const renderFloating = () => {
     const f = floatCfg;
     const firstVideo = videos[0];
     const thumb = getVideoThumb(firstVideo);
     const videoUrl = getVideoUrl(firstVideo);
-    const isVideo = videoUrl && /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(videoUrl);
-
-    const posStyle: CSSProperties = {
-      position: 'fixed',
-      top: f.top, right: f.right, bottom: f.bottom, left: f.left,
-      zIndex: f.zIndex,
-    };
 
     return (
-      <div style={posStyle}>
-        <div
-          onClick={() => openPlayer(0)}
-          style={{
-            width: f.width,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '4px',
-            cursor: 'pointer',
-          }}
-        >
-          {/* Ring with border */}
+      <div style={{ position: 'fixed', top: f.top, right: f.right, bottom: f.bottom, left: f.left, zIndex: f.zIndex }}>
+        <div onClick={() => openPlayer(0)} style={{ width: f.width, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
           <div style={{ position: 'relative', width: f.width, height: f.height }}>
-            <div
-              style={{
-                width: f.width, height: f.height,
-                borderRadius: f.radius,
-                padding: f.borderWidth,
-                background: f.borderColor || `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
-                boxShadow: '0 12px 30px rgba(15,23,42,.18)',
-                overflow: 'hidden',
-              }}
-            >
-              <div
-                style={{
-                  position: 'relative', width: '100%', height: '100%',
-                  borderRadius: f.innerRadius, overflow: 'hidden', background: '#000',
-                }}
-              >
-                {isVideo ? (
-                  <video
-                    src={videoUrl} poster={thumb || undefined}
-                    className="absolute inset-0 h-full w-full"
-                    style={{ objectFit: f.objectFit as any }}
-                    muted loop autoPlay playsInline
-                  />
+            <div style={{ width: f.width, height: f.height, borderRadius: f.radius, padding: f.borderWidth, background: f.borderColor || `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`, boxShadow: '0 12px 30px rgba(15,23,42,.18)', overflow: 'hidden' }}>
+              <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: f.innerRadius, overflow: 'hidden', background: '#000' }}>
+                {isVideoFile(videoUrl) ? (
+                  <video src={videoUrl} poster={thumb || undefined} className="absolute inset-0 h-full w-full" style={{ objectFit: f.objectFit as any }} muted loop autoPlay playsInline />
                 ) : thumb ? (
                   <img src={thumb} alt={story.title || ''} className="absolute inset-0 h-full w-full" style={{ objectFit: f.objectFit as any }} />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-slate-800">
-                    <Play size={20} className="text-white/60" />
-                  </div>
+                  <div className="flex h-full w-full items-center justify-center bg-slate-800"><Play size={20} className="text-white/60" /></div>
                 )}
-
                 {f.showPlayButton && (
                   <div className="absolute inset-0 flex items-center justify-center" style={{ pointerEvents: 'none' }}>
-                    <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full" style={{ background: 'rgba(15,23,42,.62)' }}>
-                      <Play size={15} className="text-white ml-0.5" />
-                    </div>
+                    <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full" style={{ background: 'rgba(15,23,42,.62)' }}><Play size={15} className="text-white ml-0.5" /></div>
                   </div>
                 )}
               </div>
             </div>
-
             {f.allowClose && (
-              <button
-                onClick={(e) => { e.stopPropagation(); navigate(-1); }}
-                className="absolute -top-3.5 -right-3.5 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white shadow"
-                style={{ pointerEvents: 'auto' }}
-              >
+              <button onClick={(e) => { e.stopPropagation(); navigate(-1); }} className="absolute -top-3.5 -right-3.5 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white shadow" style={{ pointerEvents: 'auto' }}>
                 <X size={14} className="text-slate-800" />
               </button>
             )}
           </div>
-
           {f.showTitle && (
-            <span
-              className="block truncate text-center text-[11px] font-bold"
-              style={{ width: f.width, maxWidth: f.width, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,.8)' }}
-            >
-              {story.title || ''}
-            </span>
+            <span className="block truncate text-center text-[11px] font-bold" style={{ width: f.width, maxWidth: f.width, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,.8)' }}>{story.title || ''}</span>
           )}
         </div>
       </div>
     );
   };
 
-  // ─── Carousel ───
-  const renderCarousel = () => {
-    const c = carouselCfg;
-    const cardWidthVw = `${c.size}vw`;
-    const borderRadius = c.shape === 'circle' ? '50%' : `${c.borderRadius}px`;
+  // ═══════════════════════════════════════════════════════
+  // INLINE WIDGET (Carousel or Grid)
+  // ═══════════════════════════════════════════════════════
+  const renderInlineWidget = (isGrid: boolean) => {
+    const cfg = isGrid ? gridCfg : carouselCfg;
+    const cardWidth = `${cfg.size}vw`;
+    const cardSizePx = Math.round((cfg.size * (typeof window !== 'undefined' ? window.innerWidth : 1200)) / 100);
+    const minCardWidth = `${Math.min(30, cardSizePx)}px`;
+    const itemsVisiveis = isGrid ? (cfg as any).columns : (cfg as any).visibleItems;
+    const effectiveItems = (cfg as any).autoCenter && videos.length < itemsVisiveis ? videos.length : itemsVisiveis;
+    const totalGap = cfg.spacing * (effectiveItems - 1);
+    const containerMaxWidth = `min(100%, calc((${cardWidth} * ${effectiveItems}) + ${totalGap}px + 8px))`;
+    const borderRadius = cfg.shape === 'circle' ? '50%' : `${cfg.borderRadius}px`;
 
     return (
-      <div style={{ maxWidth: 'min(100vw, calc(100% - 32px))', margin: '20px auto', fontFamily }} className="relative">
-        <button onClick={() => navigate(-1)} className="absolute -top-3 right-0 z-50 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow hover:bg-white">
-          <X size={18} />
-        </button>
-
-        <div
-          className="flex gap-0 overflow-x-auto pb-2"
-          style={{ gap: `${c.spacing}px`, scrollSnapType: 'x mandatory', scrollbarWidth: 'none', padding: '0 4px' }}
-        >
+      <div style={{ maxWidth: containerMaxWidth, margin: '20px auto', padding: '0 4px', fontFamily, clear: 'both', overflow: 'visible' }} className="relative">
+        <button onClick={() => navigate(-1)} className="absolute -top-3 right-1 z-50 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow hover:bg-white"><X size={18} /></button>
+        <div className="flex" style={{ flexWrap: isGrid ? 'wrap' : 'nowrap', gap: `${cfg.spacing}px`, overflowX: isGrid ? 'hidden' : 'auto', overflowY: 'hidden', scrollSnapType: 'x mandatory', scrollbarWidth: 'none', padding: '0 4px', width: '100%', justifyContent: (cfg as any).autoCenter ? 'center' : 'flex-start' } as CSSProperties}>
           {videos.map((video, idx) => {
             const thumb = getVideoThumb(video);
             const videoUrl = getVideoUrl(video);
-            const isVideo = videoUrl && /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(videoUrl);
             return (
-              <button
-                key={video.id || idx}
-                onClick={() => openPlayer(idx)}
-                className="group relative flex flex-col items-center"
-                style={{
-                  flex: `0 0 ${cardWidthVw}`, minWidth: '40px',
-                  scrollSnapAlign: 'start',
-                }}
-              >
-                <div
-                  className="relative w-full overflow-hidden transition-transform group-hover:-translate-y-0.5"
-                  style={{
-                    aspectRatio: c.aspectRatio,
-                    borderRadius,
-                    border: `${c.borderWidth}px solid ${c.borderColor}`,
-                    background: '#000',
-                  }}
-                >
-                  {isVideo ? (
-                    <video src={videoUrl} poster={thumb || undefined}
-                      className="absolute inset-0 h-full w-full" style={{ objectFit: c.objectFit as any }}
-                      muted loop autoPlay playsInline />
+              <button key={video.id || idx} onClick={() => openPlayer(idx)} className="group relative flex flex-col" style={{ scrollSnapAlign: 'start', flex: `0 0 ${cardWidth}`, minWidth: minCardWidth, maxWidth: cardWidth, transition: 'transform 0.2s ease', cursor: 'pointer' }}>
+                <div className="relative w-full overflow-hidden" style={{ aspectRatio: cfg.aspectRatio, borderRadius, border: `${cfg.borderWidth}px solid ${cfg.borderColor}`, background: '#000' }}>
+                  {isVideoFile(videoUrl) ? (
+                    <video src={videoUrl} poster={thumb || undefined} className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} muted loop autoPlay playsInline />
                   ) : thumb ? (
-                    <img src={thumb} alt="" className="absolute inset-0 h-full w-full" style={{ objectFit: c.objectFit as any }} />
+                    <img src={thumb} alt="" className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} loading="lazy" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-slate-800 text-white/40">
-                      <Play size={18} />
-                    </div>
+                    <div className="flex h-full w-full items-center justify-center bg-slate-800 text-white/40"><Play size={18} /></div>
                   )}
-
-                  {c.showPlayButton && (
-                    <div className="absolute inset-0 flex items-center justify-center opacity-100 group-hover:scale-110 transition" style={{ pointerEvents: 'none' }}>
-                      <div className="flex h-[38px] w-[38px] items-center justify-center rounded-full" style={{ background: 'rgba(0,0,0,.6)' }}>
-                        <Play size={18} className="text-white ml-0.5" />
-                      </div>
+                  {(cfg as any).showPlayButton && (
+                    <div className="absolute inset-0 flex items-center justify-center transition group-hover:scale-110" style={{ pointerEvents: 'none' }}>
+                      <div className="flex h-[38px] w-[38px] items-center justify-center rounded-full" style={{ background: 'rgba(0,0,0,.6)' }}><Play size={18} className="text-white ml-0.5" /></div>
                     </div>
                   )}
                 </div>
-
-                {c.showTitle && (
-                  <span className="mt-2 w-full truncate px-1 text-center text-xs font-semibold" style={{ color: textColor }}>
-                    {story.title || video.title || 'Ver vídeo'}
-                  </span>
-                )}
+                {cfg.showTitle && <span className="mt-2 w-full truncate px-1 text-center text-xs font-semibold" style={{ color: textColor }}>{story.title || video.title || 'Ver vídeo'}</span>}
               </button>
             );
           })}
@@ -520,269 +327,116 @@ export default function StoryPreviewPage() {
     );
   };
 
-  // ─── Grid ───
-  const renderGrid = () => {
-    const g = gridCfg;
-    const borderRadius = g.shape === 'circle' ? '50%' : `${g.borderRadius}px`;
-
-    return (
-      <div style={{ maxWidth: '100%', margin: '20px auto', padding: '0 16px', fontFamily }} className="relative">
-        <button onClick={() => navigate(-1)} className="absolute -top-3 right-4 z-50 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow hover:bg-white">
-          <X size={18} />
-        </button>
-
-        <div className="grid" style={{ gridTemplateColumns: `repeat(${g.columns}, minmax(0, 1fr))`, gap: `${g.spacing}px` }}>
-          {videos.map((video, idx) => {
-            const thumb = getVideoThumb(video);
-            const videoUrl = getVideoUrl(video);
-            const isVideo = videoUrl && /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(videoUrl);
-            return (
-              <button
-                key={video.id || idx}
-                onClick={() => openPlayer(idx)}
-                className="group relative flex flex-col items-center"
-              >
-                <div
-                  className="relative w-full overflow-hidden transition-transform group-hover:-translate-y-0.5"
-                  style={{
-                    aspectRatio: g.aspectRatio,
-                    borderRadius,
-                    border: `${g.borderWidth}px solid ${g.borderColor}`,
-                    background: '#000',
-                  }}
-                >
-                  {isVideo ? (
-                    <video src={videoUrl} poster={thumb || undefined}
-                      className="absolute inset-0 h-full w-full" style={{ objectFit: g.objectFit as any }}
-                      muted loop autoPlay playsInline />
-                  ) : thumb ? (
-                    <img src={thumb} alt="" className="absolute inset-0 h-full w-full" style={{ objectFit: g.objectFit as any }} />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-slate-800 text-white/40">
-                      <Play size={16} />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-100 group-hover:scale-110 transition" style={{ pointerEvents: 'none' }}>
-                    <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full" style={{ background: 'rgba(0,0,0,.6)' }}>
-                      <Play size={16} className="text-white ml-0.5" />
-                    </div>
-                  </div>
-                </div>
-
-                {g.showTitle && (
-                  <span className="mt-2 w-full truncate px-1 text-center text-xs font-semibold" style={{ color: textColor }}>
-                    {video.title || story.title || ''}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
-  // ─── Modal Player ───
+  // ═══════════════════════════════════════════════════════
+  // MODAL PLAYER — replicates widget.js buildSharedCss
+  // ═══════════════════════════════════════════════════════
   const renderPlayer = () => {
     if (!playerOpen || !currentVideo) return null;
     const m = modalCfg;
-    const borderW = parseInt(m.border_width || '0', 10);
-    const borderRad = m.border_radius ? `${m.border_radius}px` : '0px';
+    const modalBorderWidth = parseInt(m.border_width || '0', 10);
+    const modalBorderRadius = parseInt(m.border_radius || '0', 10);
+    const modalBackground = readAppearanceValue(appearance, ['modal_background_color', 'modalBackgroundColor', 'background_color', 'backgroundColor']) || bgColor;
+    const modalText = readAppearanceValue(appearance, ['modal_text_color', 'modalTextColor', 'text_color', 'textColor']) || textColor;
+    const modalBorder = readAppearanceValue(appearance, ['modal_border_color', 'modalBorderColor']) || 'rgba(15,23,42,.12)';
+    const shadow = m.shadow_enabled !== false ? '0 24px 80px rgba(15,23,42,.24)' : 'none';
     const ytId = !isVideoPlayableNatively(currentVideo as any) ? extractYouTubeId(currentUrl) : '';
-
     const whatsappNumber = String(settings?.whatsapp_number || settings?.whatsappNumber || '').replace(/\D/g, '');
 
+    const ctrlBtn: CSSProperties = {
+      width: '32px', height: '32px', borderRadius: '999px', background: 'rgba(0,0,0,.4)',
+      backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      cursor: 'pointer', color: '#fff', border: '1px solid rgba(255,255,255,.8)', flexShrink: 0, padding: 0,
+    };
+    const socialBtn: CSSProperties = {
+      width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', borderRadius: '999px',
+      border: '1px solid rgba(255,255,255,.8)', background: 'rgba(0,0,0,.1)', backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer', flexShrink: 0, padding: 0,
+    };
+
     return (
-      <div
-        className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/95"
-        style={{ fontFamily }}
-        onClick={(e) => { if (e.target === e.currentTarget) closePlayer(); }}
-      >
-        <div
-          className="relative flex h-full w-full max-w-[440px] flex-col overflow-hidden bg-black sm:h-[94vh] sm:rounded-2xl"
-          style={{
-            borderColor: borderW > 0 ? (m.border_color || primaryColor) : 'transparent',
-            borderWidth: borderW > 0 ? `${borderW}px` : '0px',
-            borderStyle: borderW > 0 ? 'solid' : 'none',
-            borderRadius: borderRad,
-            boxShadow: m.shadow_enabled ? '0 20px 60px rgba(0,0,0,.5)' : undefined,
-          }}
-        >
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center" style={{ fontFamily, background: 'rgba(15,23,42,.62)', fontSize: `${fontSize}px` }} onClick={(e) => { if (e.target === e.currentTarget) closePlayer(); }}>
+        <div data-vl-modal className="relative flex flex-col overflow-hidden" style={{ width: '100%', maxWidth: '420px', height: '100%', maxHeight: '100vh', background: modalBackground, color: modalText, boxShadow: shadow, border: `${modalBorderWidth}px solid ${m.border_color || 'transparent'}`, borderRadius: `${modalBorderRadius}px` } as CSSProperties}>
+          <style>{`@media(min-width:640px){[data-vl-modal]{height:auto!important;aspect-ratio:9/16!important;max-height:90vh!important;border-radius:${modalBorderRadius > 0 ? modalBorderRadius : 36}px!important;}}`}</style>
+
           {/* Progress bars */}
           {videos.length > 1 && (
-            <div className="absolute left-3 right-3 top-3 z-50 flex gap-1.5">
+            <div style={{ position: 'absolute', top: '12px', left: 0, right: 0, zIndex: 50, display: 'flex', gap: '6px', padding: '0 16px' }}>
               {videos.map((_, idx) => (
-                <div key={idx} className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/25">
-                  <div
-                    className="h-full rounded-full transition-all"
-                    style={{
-                      width: idx < videoIdx ? '100%' : idx === videoIdx ? `${progress}%` : '0%',
-                      backgroundColor: primaryColor,
-                    }}
-                  />
+                <div key={idx} style={{ height: '2px', flex: 1, borderRadius: '999px', background: 'rgba(255,255,255,.25)', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', borderRadius: '999px', background: primaryColor, transition: 'width .3s ease', width: idx < videoIdx ? '100%' : idx === videoIdx ? `${progress}%` : '0%' }} />
                 </div>
               ))}
             </div>
           )}
 
           {/* Header */}
-          <div className="absolute left-0 right-0 top-0 z-40 flex items-start justify-between bg-gradient-to-b from-black/70 to-transparent p-4 pt-5">
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 40, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '20px 16px 16px', background: 'linear-gradient(to bottom, rgba(0,0,0,.7), transparent)', pointerEvents: 'none' }}>
             {m.show_title ? (
-              <div className="min-w-0 pr-12">
-                <h3 className="truncate text-sm font-bold text-white">{story.title || 'Story'}</h3>
-                <p className="text-[10px] font-bold uppercase text-white/60">
-                  {storeName}{videos.length > 1 ? ` • ${videoIdx + 1}/${videos.length}` : ''}
-                </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0, flex: 1, paddingRight: '48px', pointerEvents: 'auto' }}>
+                <span style={{ fontWeight: 800, color: '#fff', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textShadow: '0 1px 3px rgba(0,0,0,.5)' }}>{story.title || ''}</span>
+                <span style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,.65)', textTransform: 'uppercase' }}>{storeName}{videos.length > 1 ? ` • ${videoIdx + 1}/${videos.length}` : ''}</span>
               </div>
             ) : <div />}
-            <div className="flex items-center gap-2">
-              {/* Mute */}
-              <button onClick={(e) => { e.stopPropagation(); toggleMute(); }} className="rounded-full bg-black/40 p-2 text-white backdrop-blur transition hover:bg-black/60">
-                {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-              </button>
-              {/* Play/Pause */}
-              {m.show_play_button && (
-                <button onClick={(e) => { e.stopPropagation(); togglePlay(); }} className="rounded-full bg-black/40 p-2 text-white backdrop-blur transition hover:bg-black/60">
-                  {playing ? <Pause size={20} /> : <Play size={20} />}
-                </button>
-              )}
-              {/* Close */}
-              <button onClick={(e) => { e.stopPropagation(); closePlayer(); }} className="rounded-full bg-black/40 p-2 text-white backdrop-blur transition hover:bg-black/60">
-                <X size={20} />
-              </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', pointerEvents: 'auto', flexShrink: 0 }}>
+              <button onClick={(e) => { e.stopPropagation(); toggleMute(); }} style={ctrlBtn}>{muted ? <VolumeX size={18} /> : <Volume2 size={18} />}</button>
+              {m.show_play_button && <button onClick={(e) => { e.stopPropagation(); togglePlay(); }} style={ctrlBtn}>{playing ? <Pause size={18} /> : <Play size={18} />}</button>}
+              <button onClick={(e) => { e.stopPropagation(); closePlayer(); }} style={ctrlBtn}><X size={18} /></button>
             </div>
           </div>
 
-          {/* Video */}
-          <div className="relative flex-1 bg-black">
+          {/* Video body */}
+          <div style={{ position: 'relative', display: 'block', flex: '1 1 auto', width: '100%', height: '100%', minHeight: 0, overflow: 'hidden', background: '#000' }}>
             {ytId ? (
-              <iframe
-                key={currentVideo.id}
-                className="absolute inset-0 h-full w-full"
-                src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=${muted ? 1 : 0}&playsinline=1&rel=0`}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                title={story.title || 'Story'}
-              />
+              <iframe key={currentVideo.id} src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=${muted ? 1 : 0}&playsinline=1&rel=0`} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen title={story.title || 'Story'} />
             ) : currentUrl ? (
-              <video
-                key={currentVideo.id}
-                ref={videoRef}
-                src={currentUrl}
-                poster={currentThumb || undefined}
-                className="absolute inset-0 h-full w-full object-cover"
-                autoPlay
-                muted={muted}
-                playsInline
-                loop
-                onPlay={() => setPlaying(true)}
-                onPause={() => setPlaying(false)}
-                onTimeUpdate={(e) => {
-                  const el = e.currentTarget;
-                  if (el.duration) setProgress((el.currentTime / el.duration) * 100);
-                }}
-                onEnded={goNext}
-              />
+              <video key={currentVideo.id} ref={videoRef} src={currentUrl} poster={currentThumb || undefined} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} autoPlay muted={muted} playsInline loop onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onTimeUpdate={(e) => { const el = e.currentTarget; if (el.duration) setProgress((el.currentTime / el.duration) * 100); }} onEnded={goNext} />
             ) : currentThumb ? (
-              <img src={currentThumb} alt="" className="absolute inset-0 h-full w-full object-cover" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-white/50">Nenhum vídeo</div>
-            )}
+              <img src={currentThumb} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,.5)' }}>Nenhum vídeo</div>}
+
+            {/* Nav arrows */}
+            {videos.length > 1 && (<>
+              <button onClick={(e) => { e.stopPropagation(); goPrev(); }} style={{ position: 'absolute', left: '10px', top: '42%', transform: 'translateY(-50%)', width: '36px', height: '36px', borderRadius: '999px', background: 'rgba(255,255,255,.18)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 35, border: '1px solid rgba(255,255,255,.35)' }}><ChevronLeft size={18} className="text-white" /></button>
+              <button onClick={(e) => { e.stopPropagation(); goNext(); }} style={{ position: 'absolute', right: '10px', top: '42%', transform: 'translateY(-50%)', width: '36px', height: '36px', borderRadius: '999px', background: 'rgba(255,255,255,.18)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 35, border: '1px solid rgba(255,255,255,.35)' }}><ChevronRight size={18} className="text-white" /></button>
+            </>)}
           </div>
 
-          {/* Nav arrows */}
-          {videos.length > 1 && (
-            <>
-              <button onClick={(e) => { e.stopPropagation(); goPrev(); }} className="absolute left-2 top-1/2 z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition hover:bg-black/60">
-                <ChevronLeft size={24} />
-              </button>
-              <button onClick={(e) => { e.stopPropagation(); goNext(); }} className="absolute right-2 top-1/2 z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition hover:bg-black/60">
-                <ChevronRight size={24} />
-              </button>
-            </>
-          )}
-
-          {/* Social buttons */}
-          <div className="absolute right-3 z-30 flex flex-col gap-3" style={{ bottom: product && m.show_product ? '120px' : '16px' }}>
+          {/* Social buttons — widget.js .vl-social positioning */}
+          <div style={{ position: 'absolute', top: 'calc(42% + 180px)', right: '12px', transform: 'translateY(-50%)', zIndex: 45, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
             {m.show_like_button && (
-              <button onClick={(e) => { e.stopPropagation(); handleLike(); }} className="flex flex-col items-center gap-1">
-                <span className="flex h-11 w-11 items-center justify-center rounded-full backdrop-blur transition hover:brightness-110" style={{ backgroundColor: primaryColor }}>
-                  <Heart size={20} className={cn(liked ? 'fill-rose-500 text-rose-500' : 'text-white')} />
-                </span>
-                {likeCount > 0 && <span className="text-[10px] font-bold text-white">{likeCount}</span>}
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <button onClick={(e) => { e.stopPropagation(); handleLike(); }} style={socialBtn}><Heart size={18} className={cn(liked ? 'fill-rose-500 text-rose-500' : 'text-white')} /></button>
+                {likeCount > 0 && <span style={{ fontSize: '10px', fontWeight: 800, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,.5)', marginTop: '4px' }}>{likeCount}</span>}
+              </div>
             )}
             {m.show_comment_button && (
-              <button onClick={(e) => { e.stopPropagation(); setShowComments(true); }} className="flex flex-col items-center gap-1">
-                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 shadow transition hover:scale-105">
-                  <MessageCircle size={22} className="text-slate-900" />
-                </span>
-                {comments.length > 0 && <span className="text-[10px] font-bold text-white">{comments.length}</span>}
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <button onClick={(e) => { e.stopPropagation(); setShowComments(true); }} style={socialBtn}><MessageCircle size={18} className="text-white" /></button>
+                {comments.length > 0 && <span style={{ fontSize: '10px', fontWeight: 800, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,.5)', marginTop: '4px' }}>{comments.length}</span>}
+              </div>
             )}
-            {m.show_share_button && (
-              <button onClick={(e) => { e.stopPropagation(); handleShare(); }} className="flex h-11 w-11 items-center justify-center rounded-full text-white backdrop-blur transition hover:brightness-110" style={{ backgroundColor: primaryColor }}>
-                <Share2 size={20} />
-              </button>
-            )}
-            {m.show_sizing_button && sizingModel && (
-              <button onClick={(e) => { e.stopPropagation(); setShowSizing(true); }} className="flex h-11 w-11 items-center justify-center rounded-full text-white backdrop-blur transition hover:brightness-110" style={{ backgroundColor: primaryColor }}>
-                <Ruler size={20} />
-              </button>
-            )}
+            {m.show_share_button && <button onClick={(e) => { e.stopPropagation(); handleShare(); }} style={socialBtn}><Share2 size={18} className="text-white" /></button>}
+            {m.show_sizing_button && sizingModel && <button onClick={(e) => { e.stopPropagation(); setShowSizing(true); }} style={socialBtn}><Ruler size={18} className="text-white" /></button>}
             {m.show_whatsapp_button && (
-              <a
-                href={whatsappNumber ? `https://wa.me/${whatsappNumber}` : '#'}
-                target="_blank" rel="noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-[#25D366] text-white transition hover:brightness-110"
-              >
-                <svg viewBox="0 0 24 24" className="h-5 w-5 fill-white">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z M12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0 0 20.53 4.04 11.815 11.815 0 0 0 12.05 0z" />
-                </svg>
+              <a href={whatsappNumber ? `https://wa.me/${whatsappNumber}` : '#'} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ ...socialBtn, background: '#25d366', borderColor: '#25d366' }}>
+                <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z M12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0 0 20.53 4.04 11.815 11.815 0 0 0 12.05 0z" /></svg>
               </a>
             )}
           </div>
 
-          {/* Product card */}
+          {/* Product footer */}
           {m.show_product && product && (
-            <div className="absolute bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-black/85 via-black/50 to-transparent p-4 pt-10">
-              <div className="flex items-center gap-3 rounded-2xl border border-white/20 p-3 shadow-2xl" style={{ backgroundColor: bgColor }}>
-                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-200">
-                  {product.image_url ? (
-                    <img src={product.image_url} alt={product.name || 'Produto'} className="h-full w-full object-cover" />
-                  ) : <div className="h-full w-full bg-slate-200" />}
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 40, background: 'linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.5), transparent)', padding: '40px 16px 16px', pointerEvents: 'none' }}>
+              <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: '12px', borderRadius: '24px', border: `1px solid ${modalBorder}`, padding: '12px', background: bgColor, boxShadow: shadow }}>
+                <div style={{ width: '72px', height: '72px', borderRadius: '16px', background: '#e2e8f0', flex: '0 0 auto', overflow: 'hidden' }}>
+                  {product.image_url && <img src={product.image_url} alt={product.name || 'Produto'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold" style={{ color: textColor }}>{product.name || 'Produto'}</p>
-                  {product.price != null && Number(product.price) > 0 && (
-                    <p className="text-sm font-extrabold" style={{ color: primaryColor }}>
-                      R$ {Number(product.price).toFixed(2).replace('.', ',')}
-                    </p>
-                  )}
-                  <div className="mt-1.5 flex gap-2">
-                    {m.show_product_button && (
-                      <a
-                        href={product.product_url || product.url || '#'}
-                        target="_blank" rel="noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-bold text-white"
-                        style={{ backgroundColor: buttonColor }}
-                      >
-                        <ExternalLink size={12} /> Ver no site
-                      </a>
-                    )}
-                    {m.show_product_whatsapp_button && whatsappNumber && (
-                      <a
-                        href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Olá! Tenho interesse no produto: ${product.name || ''}`)}`}
-                        target="_blank" rel="noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-bold text-white"
-                        style={{ backgroundColor: '#25D366' }}
-                      >
-                        WhatsApp
-                      </a>
-                    )}
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <p style={{ fontWeight: 800, fontSize: '13px', color: textColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name || 'Produto'}</p>
+                  {product.price != null && Number(product.price) > 0 && <p style={{ marginTop: '4px', fontWeight: 800, fontSize: '16px', color: secondaryColor }}>R$ {Number(product.price).toFixed(2).replace('.', ',')}</p>}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
+                    {m.show_product_button && <a href={product.product_url || product.url || '#'} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 12px', background: buttonColor, color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap' }}><ExternalLink size={12} /> Ver no site</a>}
+                    {m.show_product_whatsapp_button && whatsappNumber && <a href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Olá! Tenho interesse no produto: ${product.name || ''}`)}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 12px', background: '#25d366', color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap' }}>WhatsApp</a>}
                   </div>
                 </div>
               </div>
@@ -791,121 +445,82 @@ export default function StoryPreviewPage() {
 
           {/* Comments panel */}
           {showComments && (
-            <div className="absolute inset-0 z-[60] flex flex-col bg-black/95 p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <h4 className="text-base font-bold text-white">Comentários</h4>
-                <button onClick={() => setShowComments(false)} className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20">
-                  <X size={18} />
-                </button>
+            <div style={{ position: 'absolute', inset: '8px', zIndex: 200, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#fff', border: `2px solid ${primaryColor}`, borderRadius: '20px', boxShadow: '0 12px 30px rgba(0,0,0,.35)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 14px', height: '48px', borderBottom: '1px solid #e2e8f0' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111' }}>Comentários</h3>
+                <button onClick={() => setShowComments(false)} style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: 'none' }}><X size={20} className="text-slate-600" /></button>
               </div>
-              <div className="flex-1 space-y-2 overflow-y-auto">
-                {comments.length === 0 && <p className="text-sm text-white/50">Nenhum comentário ainda.</p>}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px' }}>
+                {comments.length === 0 && <p style={{ fontSize: '14px', color: '#334155', textAlign: 'center', padding: '40px 10px' }}>Nenhum comentário ainda.</p>}
                 {comments.map((c, i) => (
-                  <div key={c.id || i} className="rounded-xl bg-white/5 p-3">
-                    <p className="text-xs font-bold text-white/70">{c.user_name || c.name || 'Anônimo'}</p>
-                    <p className="whitespace-pre-wrap text-sm text-white">{c.text}</p>
+                  <div key={c.id || i} style={{ display: 'flex', gap: '10px', padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
+                    <div style={{ width: '34px', height: '34px', minWidth: '34px', borderRadius: '50%', background: primaryColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 700 }}>{(c.user_name || c.name || 'A').charAt(0).toUpperCase()}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ fontWeight: 700, fontSize: '13px', color: '#0f172a' }}>{c.user_name || c.name || 'Anônimo'}</span>
+                      <p style={{ fontSize: '14px', color: '#334155', lineHeight: 1.5, margin: 0, wordBreak: 'break-word' }}>{c.text}</p>
+                    </div>
                   </div>
                 ))}
               </div>
-              <div className="mt-3 space-y-2">
-                <input
-                  value={commentName}
-                  onChange={e => setCommentName(e.target.value)}
-                  placeholder="Seu nome"
-                  className="w-full rounded-xl bg-white/10 p-2.5 text-sm text-white outline-none placeholder:text-white/40"
-                />
-                <div className="flex gap-2">
-                  <textarea
-                    value={commentText}
-                    onChange={e => setCommentText(e.target.value)}
-                    placeholder="Escreva um comentário..."
-                    rows={1}
-                    className="flex-1 resize-none rounded-xl bg-white/10 p-2.5 text-sm text-white outline-none placeholder:text-white/40"
-                  />
-                  <button
-                    onClick={submitComment}
-                    className="rounded-xl px-4 py-2 text-sm font-bold text-white"
-                    style={{ backgroundColor: buttonColor }}
-                  >
-                    Enviar
-                  </button>
-                </div>
+              <div style={{ padding: '16px 18px', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <input value={commentName} onChange={e => setCommentName(e.target.value)} placeholder="Seu nome" style={{ width: '100%', height: '40px', padding: '8px 12px', border: '1.5px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', color: '#0f172a', outline: 'none', background: '#f8fafc' }} />
+                <textarea value={commentText} onChange={e => setCommentText(e.target.value)} placeholder="Escreva seu comentário..." style={{ width: '100%', minHeight: '70px', maxHeight: '70px', padding: '8px 12px', border: '1.5px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', color: '#0f172a', outline: 'none', resize: 'none', background: '#f8fafc' }} />
+                <button onClick={submitComment} style={{ width: '100%', height: '40px', border: 'none', borderRadius: '12px', background: buttonColor, color: '#fff', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>Enviar comentário</button>
               </div>
             </div>
           )}
 
           {/* Sizing panel */}
           {showSizing && sizingModel && (
-            <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/85 p-4" onClick={() => setShowSizing(false)}>
-              <div className="w-full max-w-sm rounded-2xl bg-white p-5" onClick={e => e.stopPropagation()}>
-                <div className="mb-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Medidas</p>
-                    <h4 className="text-lg font-bold text-slate-900">{sizingModel.name || 'Modelo'}</h4>
-                  </div>
-                  <button onClick={() => setShowSizing(false)} className="rounded-full bg-slate-100 p-2 text-slate-500 hover:bg-slate-200">
-                    <X size={18} />
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {Array.isArray(sizingModel.measures) && sizingModel.measures.length > 0 ? (
-                    sizingModel.measures.map((m: any, i: number) => (
-                      <div key={i} className="flex items-center justify-between rounded-xl bg-slate-50 p-2.5">
-                        <span className="font-semibold text-slate-700">{m.name || m.label || `Medida ${i + 1}`}</span>
-                        <span className="font-bold text-slate-900">{m.value || m.size || '-'}{m.unit || ''}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-slate-500">Sem medidas cadastradas.</p>
-                  )}
-                </div>
+            <div style={{ position: 'absolute', zIndex: 70, display: 'flex', flexDirection: 'column', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'calc(100% - 40px)', maxWidth: '340px', maxHeight: '62%', overflow: 'hidden', background: '#fff', borderRadius: '24px', boxShadow: '0 18px 50px rgba(0,0,0,.32)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 18px 8px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 900, letterSpacing: '.08em', textTransform: 'uppercase', color: primaryColor }}>Medidas da modelo</span>
+                <button onClick={() => setShowSizing(false)} style={{ width: '36px', height: '36px', borderRadius: '999px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: 'none' }}><X size={20} className="text-slate-600" /></button>
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '0 18px 18px' }}>
+                {Array.isArray(sizingModel.measures) && sizingModel.measures.length > 0 ? (
+                  sizingModel.measures.map((item: any, i: number) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 12px', background: '#f6f8fb', borderRadius: '14px', marginBottom: '9px' }}>
+                      <span style={{ fontWeight: 800, color: '#475569' }}>{item.name || item.label || `Medida ${i + 1}`}</span>
+                      <span style={{ fontWeight: 800, color: '#0f172a', textAlign: 'right' }}>{item.value || item.size || '-'}{item.unit || ''}</span>
+                    </div>
+                  ))
+                ) : <p style={{ fontSize: '14px', color: '#64748b', textAlign: 'center', padding: '20px' }}>Sem medidas cadastradas.</p>}
               </div>
             </div>
           )}
 
           {/* Share toast */}
-          {shareCopied && (
-            <div className="absolute bottom-4 left-1/2 z-[70] -translate-x-1/2 rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-900 shadow-lg">
-              Link copiado!
-            </div>
-          )}
+          {shareCopied && <div style={{ position: 'absolute', bottom: '16px', left: '50%', transform: 'translateX(-50%)', zIndex: 70, borderRadius: '999px', background: '#fff', padding: '8px 16px', fontSize: '14px', fontWeight: 700, color: '#0f172a', boxShadow: '0 4px 12px rgba(0,0,0,.2)' }}>Link copiado!</div>}
         </div>
       </div>
     );
   };
 
-  // ─── Return ───
+  // ═══════════════════════════════════════════════════════
+  // RETURN
+  // ═══════════════════════════════════════════════════════
   return (
     <div className="fixed inset-0 overflow-y-auto" style={{ fontFamily, background: '#f1f5f9' }}>
-      {/* Simulated store page */}
       <div className="mx-auto max-w-[1200px] p-4">
         <div className="mb-4 flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-white" style={{ backgroundColor: primaryColor }}>
-              {(storeName || 'L').charAt(0)}
-            </div>
+            <div className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-white" style={{ backgroundColor: primaryColor }}>{(storeName || 'L').charAt(0)}</div>
             <div>
               <p className="text-sm font-bold text-slate-800">{storeName || 'Loja'}</p>
               <p className="text-[10px] text-slate-400">Preview do Story • {storyFormat === 'floating_widget' ? 'Flutuante' : storyFormat === 'carousel' ? 'Carrossel' : 'Grade'}</p>
             </div>
           </div>
-          <button onClick={() => navigate(-1)} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200">
-            ← Voltar
-          </button>
+          <button onClick={() => navigate(-1)} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200">← Voltar</button>
         </div>
-
-        {/* Placeholder store content */}
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className="h-24 rounded-2xl bg-white/60" />
-          ))}
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-24 rounded-2xl bg-white/60" />)}
         </div>
       </div>
 
-      {/* Display mode — only the one matching story.format */}
       {storyFormat === 'floating_widget' && videos.length > 0 && renderFloating()}
-      {storyFormat === 'carousel' && videos.length > 0 && renderCarousel()}
-      {storyFormat === 'grid' && videos.length > 0 && renderGrid()}
+      {storyFormat === 'carousel' && videos.length > 0 && renderInlineWidget(false)}
+      {storyFormat === 'grid' && videos.length > 0 && renderInlineWidget(true)}
 
       {videos.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-slate-400">
@@ -914,7 +529,6 @@ export default function StoryPreviewPage() {
         </div>
       )}
 
-      {/* Modal Player */}
       {renderPlayer()}
     </div>
   );
