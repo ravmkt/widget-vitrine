@@ -330,111 +330,118 @@ export default function StoryPreviewPage() {
     );
   };
 
-  // ═══════════════════════════════════════════════════════
-  // INLINE WIDGET (Carousel or Grid)
-  // ═══════════════════════════════════════════════════════
-  const renderInlineWidget = (isGrid: boolean) => {
-    const cfg = isGrid ? gridCfg : carouselCfg;
+// ═══════════════════════════════════════════════════════
+// INLINE WIDGET (Carousel or Grid)
+// ═══════════════════════════════════════════════════════
+const renderInlineWidget = (isGrid: boolean) => {
+  const cfg = isGrid ? gridCfg : carouselCfg;
 
-    const isCircle = cfg.shape === 'circle';
-    const columns = isGrid ? (cfg as any).columns : (cfg as any).visibleItems;
+  const isCircle = cfg.shape === 'circle';
+  const columns = isGrid ? (cfg as any).columns : (cfg as any).visibleItems;
 
-    // ── Tamanho do card preenchendo 100% da largura dividido por columns ──
-    const cardFlexBasis = `calc((100% - ${(columns - 1) * cfg.spacing}px) / ${columns})`;
-const cardMaxWidth = isGrid ? cardFlexBasis : 'none';
-    const borderRadius = isCircle ? '50%' : `${cfg.borderRadius}px`;
+  // ── Tamanho do card preenchendo 100% da largura dividido por columns ──
+  const cardFlexBasis = `calc((100% - ${(columns - 1) * cfg.spacing}px) / ${columns})`;
+  // Grid: maxWidth = flex-basis. Carrossel: sem limite (visibleItems controla)
+  const cardMaxWidth = isGrid ? cardFlexBasis : 'none';
 
-    // ── Padding extra para círculos ──
-    const circlePadding = isCircle && !isGrid ? Math.round(cfg.size * 0.15) : 0;
-    const sliderPaddingX = circlePadding + 4;
+  const borderRadius = isCircle ? '50%' : `${cfg.borderRadius}px`;
 
-    return (
-      <div style={{
-        width: '100%',
-        maxWidth: '100%',
-        margin: '20px auto',
-        padding: '0 4px',
-        fontFamily,
-        clear: 'both',
-        overflow: 'visible',
-      }}>
-        <div
-          ref={sliderRef}
-          onMouseDown={!isGrid ? handleMouseDown : undefined}
-          onMouseMove={!isGrid ? handleMouseMove : undefined}
-          onMouseUp={!isGrid ? handleMouseUp : undefined}
-          onMouseLeave={!isGrid ? handleMouseUp : undefined}
-          onTouchStart={!isGrid ? handleTouchStart : undefined}
-          onTouchMove={!isGrid ? handleTouchMove : undefined}
-          onTouchEnd={!isGrid ? handleMouseUp : undefined}
-          className="flex"
-          style={{
-            flexWrap: isGrid ? 'wrap' : 'nowrap',
-            gap: `${cfg.spacing}px`,
-            overflowX: isGrid ? 'hidden' : 'auto',
-            overflowY: 'hidden',
-            scrollSnapType: isGrid ? 'none' : 'x mandatory',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            padding: isGrid ? '0 4px' : `0 ${sliderPaddingX}px`,
-            width: '100%',
-justifyContent: isGrid ? 'center' : (videos.length <= columns ? 'center' : 'flex-start'),
-            cursor: isGrid ? 'auto' : 'grab',
-            userSelect: 'none',
-            WebkitUserSelect: 'none',
-          } as CSSProperties}
-        >
-          {videos.map((video, idx) => {
-            const thumb = getVideoThumb(video);
-            const videoUrl = getVideoUrl(video);
-            return (
-              <button
-                key={video.id || idx}
-                onClick={() => { if (!dragState.current.moved) openPlayer(idx); }}
-                className="group relative"
-                style={{
-                  all: 'unset',
-                  scrollSnapAlign: 'start',
-                  flex: `0 0 ${cardFlexBasis}`,
-                  minWidth: 0,
-                  maxWidth: cardMaxWidth,
-                  transition: 'transform 0.2s ease',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'column',
-                } as CSSProperties}
-              >
-                <div className="relative w-full overflow-hidden" style={{
-                  aspectRatio: cfg.aspectRatio,
-                  borderRadius,
-                  border: `${cfg.borderWidth}px solid ${cfg.borderColor}`,
-                  background: '#000',
-                }}>
-                  {isVideoFile(videoUrl) ? (
-                    <video src={videoUrl} poster={thumb || undefined} className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} muted loop autoPlay playsInline />
-                  ) : thumb ? (
-                    <img src={thumb} alt="" className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} loading="lazy" />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-slate-800 text-white/40"><Play size={18} /></div>
-                  )}
-                  {(cfg as any).showPlayButton && (
-                    <div className="absolute inset-0 flex items-center justify-center transition group-hover:scale-110" style={{ pointerEvents: 'none' }}>
-                      <div className="flex h-[38px] w-[38px] items-center justify-center rounded-full" style={{ background: 'rgba(0,0,0,.6)' }}><Play size={18} className="text-white ml-0.5" /></div>
-                    </div>
-                  )}
-                </div>
-                {cfg.showTitle && (
-                  <span className="mt-2 w-full truncate px-1 text-center text-xs font-semibold" style={{ color: textColor }}>
-                    {story.title || video.title || 'Ver vídeo'}
-                  </span>
+  // ── Padding extra para círculos ──
+  const circlePadding = isCircle && !isGrid ? Math.round(cfg.size * 0.15) : 0;
+  const sliderPaddingX = circlePadding + 4;
+
+  // ── Centraliza se cards ≤ columns; senão flex-start para scroll ──
+  const justifyContent = isGrid
+    ? 'center'
+    : (videos.length <= columns ? 'center' : 'flex-start');
+
+  return (
+    <div style={{
+      width: '100%',
+      maxWidth: '100%',
+      margin: '20px auto',
+      padding: '0 4px',
+      fontFamily,
+      clear: 'both',
+      overflow: 'visible',
+    }}>
+      <div
+        ref={sliderRef}
+        onMouseDown={!isGrid ? handleMouseDown : undefined}
+        onMouseMove={!isGrid ? handleMouseMove : undefined}
+        onMouseUp={!isGrid ? handleMouseUp : undefined}
+        onMouseLeave={!isGrid ? handleMouseUp : undefined}
+        onTouchStart={!isGrid ? handleTouchStart : undefined}
+        onTouchMove={!isGrid ? handleTouchMove : undefined}
+        onTouchEnd={!isGrid ? handleMouseUp : undefined}
+        className="flex"
+        style={{
+          flexWrap: isGrid ? 'wrap' : 'nowrap',
+          gap: `${cfg.spacing}px`,
+          overflowX: isGrid ? 'hidden' : 'auto',
+          overflowY: 'hidden',
+          scrollSnapType: isGrid ? 'none' : 'x mandatory',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          padding: isGrid ? '0 4px' : `0 ${sliderPaddingX}px`,
+          width: '100%',
+          justifyContent,
+          cursor: isGrid ? 'auto' : 'grab',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+        } as CSSProperties}
+      >
+        {videos.map((video, idx) => {
+          const thumb = getVideoThumb(video);
+          const videoUrl = getVideoUrl(video);
+          return (
+            <button
+              key={video.id || idx}
+              onClick={() => { if (!dragState.current.moved) openPlayer(idx); }}
+              className="group relative"
+              style={{
+                all: 'unset',
+                scrollSnapAlign: 'start',
+                flex: `0 0 ${cardFlexBasis}`,
+                minWidth: 0,
+                maxWidth: cardMaxWidth,
+                transition: 'transform 0.2s ease',
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+              } as CSSProperties}
+            >
+              <div className="relative w-full overflow-hidden" style={{
+                aspectRatio: cfg.aspectRatio,
+                borderRadius,
+                border: `${cfg.borderWidth}px solid ${cfg.borderColor}`,
+                background: '#000',
+              }}>
+                {isVideoFile(videoUrl) ? (
+                  <video src={videoUrl} poster={thumb || undefined} className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} muted loop autoPlay playsInline />
+                ) : thumb ? (
+                  <img src={thumb} alt="" className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} loading="lazy" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-slate-800 text-white/40"><Play size={18} /></div>
                 )}
-              </button>
-            );
-          })}
-        </div>
+                {(cfg as any).showPlayButton && (
+                  <div className="absolute inset-0 flex items-center justify-center transition group-hover:scale-110" style={{ pointerEvents: 'none' }}>
+                    <div className="flex h-[38px] w-[38px] items-center justify-center rounded-full" style={{ background: 'rgba(0,0,0,.6)' }}><Play size={18} className="text-white ml-0.5" /></div>
+                  </div>
+                )}
+              </div>
+              {cfg.showTitle && (
+                <span className="mt-2 w-full truncate px-1 text-center text-xs font-semibold" style={{ color: textColor }}>
+                  {story.title || video.title || 'Ver vídeo'}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
-    );
-  };
+    </div>
+  );
+};
 
   // ═══════════════════════════════════════════════════════
   // MODAL PLAYER
