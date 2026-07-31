@@ -627,23 +627,22 @@ show_whatsapp: a.show_whatsapp_button ?? a.show_whatsapp ?? a.whatsapp_button ??
                   <p className="truncate text-[13px] font-extrabold" style={{color:c.text}}>{product.name||'Produto'}</p>
                   {productPrice>0 && <p className="mt-1 text-base font-extrabold" style={{color:c.secondary}}>R$ {productPrice.toFixed(2)}</p>}
                   {/* 🔧 CORREÇÃO: Botões igual widget.js — "Ver no site" e "Comprar pelo WhatsApp" condicional */}
-                  <div className="mt-1.5 flex items-center gap-2 flex-wrap">
-                    {mc.show_product_btn && (
-                      <a href={productUrl||'#'} target="_blank" rel="noreferrer"
-                        className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90 no-underline"
-                        style={{background:c.btn, opacity: productUrl ? 1 : 0.5, pointerEvents: productUrl ? 'auto' : 'none'}}>
-                        Ver no site
-                      </a>
-                    )}
-                    {/* 🔧 CORREÇÃO: WhatsApp condicional (respeita show_whatsapp) e sem ícone (igual widget.js) */}
-                    {mc.show_whatsapp && (
-                      <button onClick={doWhatsApp}
-                        className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90"
-                        style={{background:'#25d366'}}>
-                        Comprar pelo WhatsApp
-                      </button>
-                    )}
-                  </div>
+<div className="mt-1.5 flex items-center gap-2 flex-wrap">
+  {/* 🔧 "Ver no site" é PADRÃO — sempre aparece */}
+  <a href={productUrl||'#'} target="_blank" rel="noreferrer"
+    className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90 no-underline"
+    style={{background:c.btn, opacity: productUrl ? 1 : 0.5, pointerEvents: productUrl ? 'auto' : 'none'}}>
+    Ver no site
+  </a>
+  {/* 🔧 WhatsApp só aparece se show_whatsapp estiver habilitado */}
+  {mc.show_whatsapp && (
+    <button onClick={doWhatsApp}
+      className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90"
+      style={{background:'#25d366'}}>
+      Comprar pelo WhatsApp
+    </button>
+  )}
+</div>
                 </div>
               </div>
             </div>
