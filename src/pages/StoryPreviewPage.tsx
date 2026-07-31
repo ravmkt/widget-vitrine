@@ -63,6 +63,7 @@ export default function StoryPreviewPage() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [product, setProduct] = useState<any>(null);
   const [storeName, setStoreName] = useState('');
+  const [storeLogo, setStoreLogo] = useState('');
   const [settings, setSettings] = useState<any>(null);
   const [carouselOffset, setCarouselOffset] = useState(0);
 
@@ -124,6 +125,7 @@ export default function StoryPreviewPage() {
         if (!active || !found) { if (active) setLoading(false); return; }
         setStory(found);
         if (stores[0]?.name) setStoreName(stores[0].name);
+        if (stores[0]?.logo_url) setStoreLogo(stores[0].logo_url);
         if (allSettings[0]) setSettings(allSettings[0]);
 
         const resolvedAppearance = found.appearance_id
@@ -335,75 +337,108 @@ export default function StoryPreviewPage() {
     );
   };
 
-// ═══════════════════════════════════════════════════════
-// INLINE WIDGET (Carousel or Grid)
-// ═══════════════════════════════════════════════════════
-const renderInlineWidget = (isGrid: boolean) => {
-  const cfg = isGrid ? gridCfg : carouselCfg;
+  // ═══════════════════════════════════════════════════════
+  // INLINE WIDGET (Carousel or Grid)
+  // ═══════════════════════════════════════════════════════
+  const renderInlineWidget = (isGrid: boolean) => {
+    const cfg = isGrid ? gridCfg : carouselCfg;
 
-  const isCircle = cfg.shape === 'circle';
-  const columns = isGrid ? (cfg as any).columns : (cfg as any).visibleItems;
-  const size = cfg.size;
-  const spacing = cfg.spacing;
+    const isCircle = cfg.shape === 'circle';
+    const columns = isGrid ? (cfg as any).columns : (cfg as any).visibleItems;
+    const size = cfg.size;
+    const spacing = cfg.spacing;
 
-  const circlePad = isCircle && !isGrid ? Math.round(size * 0.15) : 0;
-  const padX = circlePad + 4;
+    const circlePad = isCircle && !isGrid ? Math.round(size * 0.15) : 0;
+    const padX = circlePad + 4;
 
-  const cardSize = `${size}px`;
-  const borderRadius = isCircle ? '50%' : `${cfg.borderRadius}px`;
+    const cardSize = `${size}px`;
+    const borderRadius = isCircle ? '50%' : `${cfg.borderRadius}px`;
 
-  // ─── CARD (compartilhado entre grid e carrossel) ───
-  const renderCard = (video: Video, idx: number) => {
-    const thumb = getVideoThumb(video);
-    const videoUrl = getVideoUrl(video);
-    return (
-      <button
-        key={video.id || idx}
-        onClick={() => { if (!dragCarousel.current.moved) openPlayer(idx); }}
-        className="group relative"
-        style={{
-          all: 'unset',
-          flex: `0 0 ${cardSize}`,
-          minWidth: 0,
-          maxWidth: cardSize,
-          cursor: 'pointer',
+    // ─── CARD (compartilhado entre grid e carrossel) ───
+    const renderCard = (video: Video, idx: number) => {
+      const thumb = getVideoThumb(video);
+      const videoUrl = getVideoUrl(video);
+      return (
+        <button
+          key={video.id || idx}
+          onClick={() => { if (!dragCarousel.current.moved) openPlayer(idx); }}
+          className="group relative"
+          style={{
+            all: 'unset',
+            flex: `0 0 ${cardSize}`,
+            minWidth: 0,
+            maxWidth: cardSize,
+            cursor: 'pointer',
+            display: 'flex',
+            flexDirection: 'column',
+          } as CSSProperties}
+        >
+          <div className="relative w-full overflow-hidden" style={{
+            aspectRatio: cfg.aspectRatio,
+            borderRadius,
+            border: `${cfg.borderWidth}px solid ${cfg.borderColor}`,
+            background: '#000',
+          }}>
+            {isVideoFile(videoUrl) ? (
+              <video src={videoUrl} poster={thumb || undefined} className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} muted loop autoPlay playsInline />
+            ) : thumb ? (
+              <img src={thumb} alt="" className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} loading="lazy" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-slate-800 text-white/40"><Play size={18} /></div>
+            )}
+            {(cfg as any).showPlayButton && (
+              <div className="absolute inset-0 flex items-center justify-center transition group-hover:scale-110" style={{ pointerEvents: 'none' }}>
+                <div className="flex h-[38px] w-[38px] items-center justify-center rounded-full" style={{ background: 'rgba(0,0,0,.6)' }}><Play size={18} className="text-white ml-0.5" /></div>
+              </div>
+            )}
+          </div>
+          {cfg.showTitle && (
+            <span className="mt-2 w-full truncate px-1 text-center text-xs font-semibold" style={{ color: textColor }}>
+              {story.title || video.title || 'Ver vídeo'}
+            </span>
+          )}
+        </button>
+      );
+    };
+
+    // ═══════════════════════════════════════════════
+    // GRID
+    // ═══════════════════════════════════════════════
+    if (isGrid) {
+      const gridWidth = columns * size + (columns - 1) * spacing;
+      return (
+        <div style={{
+          width: '100%',
+          margin: '20px auto',
+          padding: '0 4px',
+          fontFamily,
+          clear: 'both',
+          overflow: 'visible',
           display: 'flex',
-          flexDirection: 'column',
-        } as CSSProperties}
-      >
-        <div className="relative w-full overflow-hidden" style={{
-          aspectRatio: cfg.aspectRatio,
-          borderRadius,
-          border: `${cfg.borderWidth}px solid ${cfg.borderColor}`,
-          background: '#000',
+          justifyContent: 'center',
         }}>
-          {isVideoFile(videoUrl) ? (
-            <video src={videoUrl} poster={thumb || undefined} className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} muted loop autoPlay playsInline />
-          ) : thumb ? (
-            <img src={thumb} alt="" className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} loading="lazy" />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-slate-800 text-white/40"><Play size={18} /></div>
-          )}
-          {(cfg as any).showPlayButton && (
-            <div className="absolute inset-0 flex items-center justify-center transition group-hover:scale-110" style={{ pointerEvents: 'none' }}>
-              <div className="flex h-[38px] w-[38px] items-center justify-center rounded-full" style={{ background: 'rgba(0,0,0,.6)' }}><Play size={18} className="text-white ml-0.5" /></div>
-            </div>
-          )}
+          <div
+            className="flex"
+            style={{
+              flexWrap: 'wrap',
+              gap: `${spacing}px`,
+              width: `${gridWidth}px`,
+              maxWidth: '100%',
+              justifyContent: 'center',
+              padding: 0,
+            } as CSSProperties}
+          >
+            {videos.map((v, i) => renderCard(v, i))}
+          </div>
         </div>
-        {cfg.showTitle && (
-          <span className="mt-2 w-full truncate px-1 text-center text-xs font-semibold" style={{ color: textColor }}>
-            {story.title || video.title || 'Ver vídeo'}
-          </span>
-        )}
-      </button>
-    );
-  };
+      );
+    }
 
-  // ═══════════════════════════════════════════════
-  // GRID
-  // ═══════════════════════════════════════════════
-  if (isGrid) {
-    const gridWidth = columns * size + (columns - 1) * spacing;
+    // ═══════════════════════════════════════════════
+    // CARROSSEL (transform: translateX)
+    // ═══════════════════════════════════════════════
+    const viewportW = columns * size + (columns - 1) * spacing + 2 * padX;
+
     return (
       <div style={{
         width: '100%',
@@ -415,74 +450,41 @@ const renderInlineWidget = (isGrid: boolean) => {
         display: 'flex',
         justifyContent: 'center',
       }}>
-        <div
-          className="flex"
-          style={{
-            flexWrap: 'wrap',
-            gap: `${spacing}px`,
-            width: `${gridWidth}px`,
-            maxWidth: '100%',
-            justifyContent: 'center',
-            padding: 0,
-          } as CSSProperties}
-        >
-          {videos.map((v, i) => renderCard(v, i))}
+        <div style={{
+          width: `${viewportW}px`,
+          maxWidth: '100%',
+          overflow: 'hidden',
+          flexShrink: 0,
+        }}>
+          <div
+            ref={sliderRef}
+            onMouseDown={handleCarouselDown}
+            onMouseMove={handleCarouselMove}
+            onMouseUp={handleCarouselUp}
+            onMouseLeave={handleCarouselUp}
+            onTouchStart={handleCarouselDown}
+            onTouchMove={handleCarouselMove}
+            onTouchEnd={handleCarouselUp}
+            className="flex"
+            style={{
+              flexWrap: 'nowrap',
+              gap: `${spacing}px`,
+              padding: `0 ${padX}px`,
+              width: 'max-content',
+              justifyContent: 'flex-start',
+              cursor: 'grab',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              transform: `translateX(-${carouselOffset}px)`,
+              transition: dragCarousel.current.isDown ? 'none' : 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            } as CSSProperties}
+          >
+            {videos.map((v, i) => renderCard(v, i))}
+          </div>
         </div>
       </div>
     );
-  }
-
-  // ═══════════════════════════════════════════════
-  // CARROSSEL (transform: translateX)
-  // ═══════════════════════════════════════════════
-  const viewportW = columns * size + (columns - 1) * spacing + 2 * padX;
-
-  return (
-    <div style={{
-      width: '100%',
-      margin: '20px auto',
-      padding: '0 4px',
-      fontFamily,
-      clear: 'both',
-      overflow: 'visible',
-      display: 'flex',
-      justifyContent: 'center',
-    }}>
-      <div style={{
-        width: `${viewportW}px`,
-        maxWidth: '100%',
-        overflow: 'hidden',
-        flexShrink: 0,
-      }}>
-        <div
-          ref={sliderRef}
-          onMouseDown={handleCarouselDown}
-          onMouseMove={handleCarouselMove}
-          onMouseUp={handleCarouselUp}
-          onMouseLeave={handleCarouselUp}
-          onTouchStart={handleCarouselDown}
-          onTouchMove={handleCarouselMove}
-          onTouchEnd={handleCarouselUp}
-          className="flex"
-          style={{
-            flexWrap: 'nowrap',
-            gap: `${spacing}px`,
-            padding: `0 ${padX}px`,
-            width: 'max-content',
-            justifyContent: 'flex-start',
-            cursor: 'grab',
-            userSelect: 'none',
-            WebkitUserSelect: 'none',
-            transform: `translateX(-${carouselOffset}px)`,
-            transition: dragCarousel.current.isDown ? 'none' : 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-          } as CSSProperties}
-        >
-          {videos.map((v, i) => renderCard(v, i))}
-        </div>
-      </div>
-    </div>
-  );
-};
+  };
 
   // ═══════════════════════════════════════════════════════
   // MODAL PLAYER
@@ -653,53 +655,53 @@ const renderInlineWidget = (isGrid: boolean) => {
     );
   };
 
-// ═══════════════════════════════════════════════════════
-// RETURN
-// ═══════════════════════════════════════════════════════
-return (
-  <div className="fixed inset-0 overflow-y-auto" style={{ fontFamily, background: '#f1f5f9' }}>
-    <div className="mx-auto max-w-[1200px] p-4">
-      <div className="mb-4 flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
-        {/* Logo da loja ou fallback com inicial */}
-        <div
-          className="flex h-9 w-9 items-center justify-center rounded-full overflow-hidden flex-shrink-0"
-          style={{ backgroundColor: primaryColor }}
-        >
-          {stores?.[0]?.logo_url ? (
-            <img
-              src={stores[0].logo_url}
-              alt={storeName}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <span className="text-sm font-bold text-white">
-              {(storeName || 'L').charAt(0).toUpperCase()}
-            </span>
-          )}
-        </div>
-        <div>
-          <p className="text-sm font-bold text-slate-800">
-            {storeName || 'Minha Loja'}
-          </p>
-          <p className="text-[10px] text-slate-400">
-            Preview do Story • {storyFormat === 'floating_widget' ? 'Flutuante' : storyFormat === 'carousel' ? 'Carrossel' : 'Grade'}
-          </p>
+  // ═══════════════════════════════════════════════════════
+  // RETURN
+  // ═══════════════════════════════════════════════════════
+  return (
+    <div className="fixed inset-0 overflow-y-auto" style={{ fontFamily, background: '#f1f5f9' }}>
+      <div className="mx-auto max-w-[1200px] p-4">
+        {/* ── Cabeçalho com logo e nome da loja ── */}
+        <div className="mb-4 flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
+          <div
+            className="flex h-9 w-9 items-center justify-center rounded-full overflow-hidden flex-shrink-0"
+            style={{ backgroundColor: storeLogo ? 'transparent' : primaryColor }}
+          >
+            {storeLogo ? (
+              <img
+                src={storeLogo}
+                alt={storeName}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span className="text-sm font-bold text-white">
+                {(storeName || 'L').charAt(0).toUpperCase()}
+              </span>
+            )}
+          </div>
+          <div>
+            <p className="text-sm font-bold text-slate-800">
+              {storeName || 'Minha Loja'}
+            </p>
+            <p className="text-[10px] text-slate-400">
+              Preview do Story • {storyFormat === 'floating_widget' ? 'Flutuante' : storyFormat === 'carousel' ? 'Carrossel' : 'Grade'}
+            </p>
+          </div>
         </div>
       </div>
+
+      {storyFormat === 'floating_widget' && videos.length > 0 && renderFloating()}
+      {storyFormat === 'carousel' && videos.length > 0 && renderInlineWidget(false)}
+      {storyFormat === 'grid' && videos.length > 0 && renderInlineWidget(true)}
+
+      {videos.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+          <Play size={48} className="mb-4 opacity-30" />
+          <p className="font-bold">Nenhum vídeo vinculado a este story.</p>
+        </div>
+      )}
+
+      {renderPlayer()}
     </div>
-
-    {storyFormat === 'floating_widget' && videos.length > 0 && renderFloating()}
-    {storyFormat === 'carousel' && videos.length > 0 && renderInlineWidget(false)}
-    {storyFormat === 'grid' && videos.length > 0 && renderInlineWidget(true)}
-
-    {videos.length === 0 && (
-      <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-        <Play size={48} className="mb-4 opacity-30" />
-        <p className="font-bold">Nenhum vídeo vinculado a este story.</p>
-      </div>
-    )}
-
-    {renderPlayer()}
-  </div>
-);
+  );
 }
