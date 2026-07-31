@@ -1,652 +1,454 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { db, Video, resolveStoreId } from '@/lib/db';
-import {
-  getFloatingConfig,
-  getCarouselConfig,
-  getGridConfig,
-  normalizeModalAppearanceConfig,
-  getPrimaryColor,
-  getSecondaryColor,
-  getTextColor,
-  getBackgroundColor,
-  getButtonColor,
-  getFontFamily,
-  getFontSize,
-  normalizeStoryFormat,
-  readAppearanceValue,
-  type StoryFormat,
-} from '@/lib/storyAppearanceHelpers';
-import {
-  X, ChevronLeft, ChevronRight, Heart, MessageCircle, Share2,
-  Volume2, VolumeX, Play, Pause, ExternalLink, Ruler,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { extractYouTubeId, isVideoPlayableNatively } from '@/lib/videoEmbeds';
+/**
+ * storyAppearanceHelpers.ts
+ *
+ * Funções de leitura de configuração de aparência PORTADAS do widget.js
+ * (production widget). Usadas tanto pelo StoryPreviewPage quanto pelo
+ * StoriesWidgetPage para garantir que o preview seja idêntico ao site final.
+ */
 
 // ═══════════════════════════════════════════════════════
-// TYPES
+// DEFAULTS (idênticos ao widget.js DEFAULT_APPEARANCE)
 // ═══════════════════════════════════════════════════════
 
-type CommentItem = {
-  id?: string; text: string; name?: string; user_name?: string;
-  created_at?: string;
+export const DEFAULT_APPEARANCE = {
+  primary_color: '#0094EB',
+  secondary_color: '#0094EB',
+  text_color: '#0F172A',
+  background_color: '#FFFFFF',
+  button_color: '#0094EB',
+  font_family: 'Inter, system-ui, sans-serif',
+  font_size: '14',
+  floating_shape: 'portrait',
+  floating_size: '80',
+  floating_border_radius: '12',
+  floating_position: 'bottom-right',
+  floating_margin_bottom: '20',
+  floating_margin_top: '20',
+  floating_margin_side: '20',
+  floating_border_color: '#0094EB',
+  floating_border_width: '2',
+  floating_object_fit: 'cover',
+  floating_z_index: '2147483647',
+  floating_show_title: true,
+  floating_show_play_button: true,
+  floating_allow_drag: false,
+  floating_allow_close: true,
+  carousel_shape: 'portrait',
+  carousel_size: '30',
+  carousel_visible_items: '4',
+  carousel_spacing: '16',
+  carousel_border_color: '#0094EB',
+  carousel_border_width: '2',
+  carousel_border_radius: '12',
+  carousel_object_fit: 'cover',
+  carousel_margin_top: '0',
+  carousel_margin_bottom: '0',
+  carousel_show_title: false,
+  carousel_show_product: true,
+  carousel_show_play_button: true,
+  carousel_auto_center: false,
+  grid_shape: 'portrait',
+  grid_size: '30',
+  grid_columns: '4',
+  grid_rows: '1',
+  grid_spacing: '16',
+  grid_border_color: '#0094EB',
+  grid_border_width: '2',
+  grid_border_radius: '12',
+  grid_object_fit: 'cover',
+  grid_show_title: false,
+  modal_show_title: true,
+  modal_show_play_button: true,
+  modal_show_product: true,
+  modal_show_product_button: true,
+  modal_show_like_button: true,
+  modal_show_comment_button: true,
+  modal_show_share_button: true,
+  modal_show_whatsapp_button: true,
+  modal_show_sizing_button: true,
+  modal_hide_stories: false,
+  modal_shadow_enabled: true,
+  modal_border_color: '',
+  modal_border_width: '',
+  modal_border_radius: '',
+} as const;
+
+// ═══════════════════════════════════════════════════════
+// HELPERS BÁSICOS
+// ═══════════════════════════════════════════════════════
+
+export const getDevice = (): 'desktop' | 'mobile' =>
+  typeof window !== 'undefined' && window.innerWidth < 768 ? 'mobile' : 'desktop';
+
+export const parseJsonIfNeeded = <T,>(value: unknown): T | null => {
+  if (!value) return null;
+  if (typeof value === 'object') return value as T;
+  if (typeof value === 'string') {
+    try { return JSON.parse(value) as T; } catch { return null; }
+  }
+  return null;
 };
 
-// ═══════════════════════════════════════════════════════
-// HELPERS DE VÍDEO
-// ═══════════════════════════════════════════════════════
+const isPlainObject = (v: unknown): v is Record<string, any> =>
+  typeof v === 'object' && v !== null && !Array.isArray(v);
 
-const getVideoUrl = (v?: Video | null): string => {
-  const i = v as any;
-  return i?.video_url || i?.videoUrl || i?.url || '';
+export const toBoolean = (value: any, fallback: boolean): boolean => {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (value === true || value === 1 || value === '1' || value === 'true') return true;
+  if (value === false || value === 0 || value === '0' || value === 'false') return false;
+  return fallback;
 };
 
-const getVideoThumb = (v?: Video | null): string => {
-  const i = v as any;
-  return i?.thumbnail_url || i?.thumbnailUrl || i?.poster_url || i?.posterUrl || i?.image_url || i?.imageUrl || '';
+export const toNumber = (value: any, fallback: number): number => {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : fallback;
+  const parsed = Number(String(value).trim().replace('px', '').replace(',', '.'));
+  return Number.isFinite(parsed) ? parsed : fallback;
 };
 
-const isVideoFile = (url: string) => /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url);
+export const safeInt = (value: any, fallback: number): number => {
+  const n = parseInt(value, 10);
+  return Number.isNaN(n) ? fallback : n;
+};
+
+export const px = (n: number | string): string => `${n}px`;
 
 // ═══════════════════════════════════════════════════════
-// COMPONENTE PRINCIPAL
+// LEITURA DE CONFIG (idêntica ao widget.js)
 // ═══════════════════════════════════════════════════════
 
-export default function StoryPreviewPage() {
-  const { id: storyId } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+const JSONB_KEYS = ['floating_config', 'carousel_config', 'grid_config', 'modal_config'];
 
-  const [loading, setLoading] = useState(true);
-  const [story, setStory] = useState<any>(null);
-  const [appearance, setAppearance] = useState<Record<string, any>>({});
-  const [videos, setVideos] = useState<Video[]>([]);
-  const [product, setProduct] = useState<any>(null);
-  const [storeName, setStoreName] = useState('');
-  const [settings, setSettings] = useState<any>(null);
+/** Flatten nested appearance objects, preserving JSONB keys intact */
+export function flattenAppearance(item: any): Record<string, any> {
+  const target: Record<string, any> = {};
+  flattenInto(target, item, 0);
+  return target;
+}
 
-  // Player state
-  const [playerOpen, setPlayerOpen] = useState(false);
-  const [videoIdx, setVideoIdx] = useState(0);
-  const [playing, setPlaying] = useState(true);
-  const [muted, setMuted] = useState(true);
-  const [progress, setProgress] = useState(0);
-
-  // Social state
-  const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
-  const [comments, setComments] = useState<CommentItem[]>([]);
-  const [showComments, setShowComments] = useState(false);
-  const [commentText, setCommentText] = useState('');
-  const [commentName, setCommentName] = useState('');
-
-  // Panels
-  const [shareCopied, setShareCopied] = useState(false);
-  const [sizingModel, setSizingModel] = useState<any>(null);
-  const [showSizing, setShowSizing] = useState(false);
-
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  // ─── Drag state (para o carrossel) ───
-  const sliderRef = useRef<HTMLDivElement>(null);
-  const dragState = useRef({ isDown: false, startX: 0, scrollLeft: 0, moved: false });
-
-  // ─── getAllSafe ───
-  const getAllSafe = async <T,>(collection: any, sid?: string): Promise<T[]> => {
-    if (!collection?.getAll) return [];
-    try {
-      if (sid) return await collection.getAll(sid);
-      return await collection.getAll();
-    } catch {
-      try { return await collection.getAll(); } catch { return []; }
-    }
-  };
-
-  // ─── Carregar dados ───
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      if (!storyId) return;
-      setLoading(true);
-      try {
-        const storeId = await resolveStoreId();
-        const [allStories, stores, allSettings, allAppearances, storyRelations, allVideos] = await Promise.all([
-          getAllSafe<any>(db.stories, storeId),
-          getAllSafe<any>(db.stores, storeId),
-          getAllSafe<any>(db.generalSettings, storeId),
-          getAllSafe<any>(db.appearances, storeId),
-          getAllSafe<any>(db.storyVideos, storeId),
-          getAllSafe<Video>(db.videos, storeId),
-        ]);
-
-        const found = allStories.find((s: any) => s.id === storyId);
-        if (!active || !found) { if (active) setLoading(false); return; }
-        setStory(found);
-        if (stores[0]?.name) setStoreName(stores[0].name);
-        if (allSettings[0]) setSettings(allSettings[0]);
-
-        const resolvedAppearance = found.appearance_id
-          ? allAppearances.find((a: any) => a.id === found.appearance_id) : null;
-        const finalAppearance = resolvedAppearance
-          || allAppearances.find((a: any) => a.is_default)
-          || allAppearances[0] || {};
-        if (active) setAppearance(finalAppearance as Record<string, any>);
-
-        const relations = (storyRelations || [])
-          .filter((sv: any) => sv.story_id === storyId && (!sv.store_id || sv.store_id === storeId))
-          .sort((a: any, b: any) => Number(a.position || 0) - Number(b.position || 0));
-        const storyVideos = relations
-          .map((r: any) => allVideos.find((v: any) => v.id === r.video_id))
-          .filter((v): v is Video => !!v);
-        if (active) setVideos(storyVideos);
-      } catch (e) {
-        console.error('[StoryPreview] Erro:', e);
-      } finally {
-        if (active) setLoading(false);
+function flattenInto(target: Record<string, any>, source: any, depth: number): Record<string, any> {
+  if (depth > 12 || !source) return target;
+  if (typeof source === 'string') source = parseJsonIfNeeded(source);
+  if (!isPlainObject(source)) return target;
+  Object.keys(source).forEach(key => {
+    const value = source[key];
+    if (value === undefined || value === null || value === '') return;
+    if (JSONB_KEYS.includes(key)) { target[key] = value; return; }
+    if (isPlainObject(value)) { flattenInto(target, value, depth + 1); return; }
+    if (typeof value === 'string') {
+      const parsed = parseJsonIfNeeded(value);
+      if (isPlainObject(parsed) && Object.keys(parsed).length) {
+        flattenInto(target, parsed, depth + 1);
+        return;
       }
-    })();
-    return () => { active = false; };
-  }, [storyId]);
-
-  // ─── Load linked data when video changes ───
-  useEffect(() => {
-    if (!playerOpen || !videos[videoIdx]) return;
-    const currentVideo = videos[videoIdx] as any;
-    (async () => {
-      const productId = currentVideo.product_id || currentVideo.productId;
-      if (productId) {
-        try { const storeId = await resolveStoreId(); const p = await db.products.getAll(storeId); setProduct(p.find(x => x.id === productId) || null); }
-        catch { setProduct(null); }
-      } else setProduct(null);
-
-      const modelId = currentVideo.model_id || currentVideo.modelId;
-      if (modelId) {
-        try { const storeId = await resolveStoreId(); const m = await db.sizingModels.getAll(storeId); setSizingModel(m.find(x => x.id === modelId) || null); }
-        catch { setSizingModel(null); }
-      } else setSizingModel(null);
-
-      try {
-        const storeId = await resolveStoreId();
-        const all = await db.comments.getAll(storeId);
-        setComments(all.filter((c: any) => c.video_id === currentVideo.id && c.status !== 'rejected')
-          .sort((a: any, b: any) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()) as CommentItem[]);
-      } catch { setComments([]); }
-
-      try {
-        const raw = localStorage.getItem('story_video_likes');
-        const likes = raw ? JSON.parse(raw) : {};
-        setLiked(!!likes[currentVideo.id]?.liked);
-        setLikeCount(likes[currentVideo.id]?.count || 0);
-      } catch { /* ignore */ }
-    })();
-  }, [playerOpen, videoIdx, videos]);
-
-  // ─── Derived config ───
-  const storyFormat: StoryFormat = useMemo(() => normalizeStoryFormat(String(story?.format || 'floating_widget')), [story]);
-  const floatCfg = useMemo(() => getFloatingConfig(appearance), [appearance]);
-  const carouselCfg = useMemo(() => getCarouselConfig(appearance), [appearance]);
-  const gridCfg = useMemo(() => getGridConfig(appearance), [appearance]);
-  const modalCfg = useMemo(() => normalizeModalAppearanceConfig(appearance), [appearance]);
-
-  const primaryColor = getPrimaryColor(appearance);
-  const secondaryColor = getSecondaryColor(appearance);
-  const textColor = getTextColor(appearance);
-  const bgColor = getBackgroundColor(appearance);
-  const buttonColor = getButtonColor(appearance);
-  const fontFamily = getFontFamily(appearance);
-  const fontSize = getFontSize(appearance);
-
-  const currentVideo = videos[videoIdx] || null;
-  const currentUrl = getVideoUrl(currentVideo);
-  const currentThumb = getVideoThumb(currentVideo);
-
-  // ─── Handlers ───
-  const openPlayer = (idx = 0) => { setVideoIdx(idx); setPlayerOpen(true); setPlaying(true); setMuted(true); setProgress(0); };
-  const closePlayer = () => { setPlayerOpen(false); setPlaying(false); setShowComments(false); setShowSizing(false); };
-  const goNext = () => { if (videoIdx < videos.length - 1) { setVideoIdx(v => v + 1); setPlaying(true); setProgress(0); } else closePlayer(); };
-  const goPrev = () => { if (videoIdx > 0) { setVideoIdx(v => v - 1); setPlaying(true); setProgress(0); } };
-  const togglePlay = () => { if (!videoRef.current) return; if (playing) videoRef.current.pause(); else videoRef.current.play().catch(() => {}); };
-  const toggleMute = () => { const n = !muted; setMuted(n); if (videoRef.current) videoRef.current.muted = n; };
-
-  const handleLike = () => {
-    if (!currentVideo?.id) return;
-    try {
-      const raw = localStorage.getItem('story_video_likes');
-      const likes = raw ? JSON.parse(raw) : {};
-      const cur = likes[currentVideo.id] || { liked: false, count: 0 };
-      const nextLiked = !cur.liked;
-      const nextCount = Math.max(0, cur.count + (nextLiked ? 1 : -1));
-      likes[currentVideo.id] = { liked: nextLiked, count: nextCount };
-      localStorage.setItem('story_video_likes', JSON.stringify(likes));
-      setLiked(nextLiked); setLikeCount(nextCount);
-    } catch { /* ignore */ }
-  };
-
-  const handleShare = async () => {
-    const url = `${window.location.origin}/stories/preview/${storyId}?videoId=${currentVideo?.id || ''}`;
-    try {
-      if (navigator.share) await navigator.share({ title: story?.title || 'Story', url });
-      else { await navigator.clipboard.writeText(url); setShareCopied(true); setTimeout(() => setShareCopied(false), 2000); }
-    } catch { /* cancelled */ }
-  };
-
-  const submitComment = () => {
-    const name = commentName.trim() || 'Anônimo';
-    const text = commentText.trim();
-    if (!text) return;
-    setComments(prev => [...prev, { id: `${Date.now()}`, text, name, user_name: name, created_at: new Date().toISOString() }]);
-    setCommentText('');
-  };
-
-  // ─── Drag handlers (CORRIGIDO: usando getBoundingClientRect) ───
-  const handleMouseDown = (e: React.MouseEvent) => {
-    const slider = sliderRef.current;
-    if (!slider) return;
-    const rect = slider.getBoundingClientRect();
-    dragState.current = { isDown: true, startX: e.clientX - rect.left, scrollLeft: slider.scrollLeft, moved: false };
-    slider.style.cursor = 'grabbing';
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!dragState.current.isDown) return;
-    const slider = sliderRef.current;
-    if (!slider) return;
-    e.preventDefault();
-    const rect = slider.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const walk = (x - dragState.current.startX) * 1.5;
-    slider.scrollLeft = dragState.current.scrollLeft - walk;
-    if (Math.abs(walk) > 3) dragState.current.moved = true;
-  };
-
-  const handleMouseUp = () => {
-    dragState.current.isDown = false;
-    const slider = sliderRef.current;
-    if (slider) slider.style.cursor = 'grab';
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const slider = sliderRef.current;
-    if (!slider) return;
-    const rect = slider.getBoundingClientRect();
-    dragState.current = { isDown: true, startX: e.touches[0].clientX - rect.left, scrollLeft: slider.scrollLeft, moved: false };
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!dragState.current.isDown) return;
-    const slider = sliderRef.current;
-    if (!slider) return;
-    const rect = slider.getBoundingClientRect();
-    const x = e.touches[0].clientX - rect.left;
-    const walk = (x - dragState.current.startX) * 1.5;
-    slider.scrollLeft = dragState.current.scrollLeft - walk;
-    if (Math.abs(walk) > 3) dragState.current.moved = true;
-  };
-
-  // ─── Loading ───
-  if (loading) return <div className="fixed inset-0 flex items-center justify-center bg-slate-950"><div className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-white" /></div>;
-  if (!story) return <div className="fixed inset-0 flex items-center justify-center bg-slate-950 text-white">Story não encontrado</div>;
-
-  // ═══════════════════════════════════════════════════════
-  // FLOATING WIDGET
-  // ═══════════════════════════════════════════════════════
-  const renderFloating = () => {
-    const f = floatCfg;
-    const firstVideo = videos[0];
-    const thumb = getVideoThumb(firstVideo);
-    const videoUrl = getVideoUrl(firstVideo);
-
-    return (
-      <div style={{ position: 'fixed', top: f.top, right: f.right, bottom: f.bottom, left: f.left, zIndex: f.zIndex }}>
-        <div onClick={() => openPlayer(0)} style={{ width: f.width, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-          <div style={{ position: 'relative', width: f.width, height: f.height }}>
-            <div style={{ width: f.width, height: f.height, borderRadius: f.radius, padding: f.borderWidth, background: f.borderColor || `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`, boxShadow: '0 12px 30px rgba(15,23,42,.18)', overflow: 'hidden' }}>
-              <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: f.innerRadius, overflow: 'hidden', background: '#000' }}>
-                {isVideoFile(videoUrl) ? (
-                  <video src={videoUrl} poster={thumb || undefined} className="absolute inset-0 h-full w-full" style={{ objectFit: f.objectFit as any }} muted loop autoPlay playsInline />
-                ) : thumb ? (
-                  <img src={thumb} alt={story.title || ''} className="absolute inset-0 h-full w-full" style={{ objectFit: f.objectFit as any }} />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-slate-800"><Play size={20} className="text-white/60" /></div>
-                )}
-                {f.showPlayButton && (
-                  <div className="absolute inset-0 flex items-center justify-center" style={{ pointerEvents: 'none' }}>
-                    <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full" style={{ background: 'rgba(15,23,42,.62)' }}><Play size={15} className="text-white ml-0.5" /></div>
-                  </div>
-                )}
-              </div>
-            </div>
-            {f.allowClose && (
-              <button onClick={(e) => { e.stopPropagation(); navigate(-1); }} className="absolute -top-3.5 -right-3.5 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white shadow" style={{ pointerEvents: 'auto' }}>
-                <X size={14} className="text-slate-800" />
-              </button>
-            )}
-          </div>
-          {f.showTitle && (
-            <span className="block truncate text-center text-[11px] font-bold" style={{ width: f.width, maxWidth: f.width, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,.8)' }}>{story.title || ''}</span>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  // ═══════════════════════════════════════════════════════
-  // INLINE WIDGET (Carousel or Grid) — CORRIGIDO
-  // ═══════════════════════════════════════════════════════
-  const renderInlineWidget = (isGrid: boolean) => {
-    const cfg = isGrid ? gridCfg : carouselCfg;
-    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
-
-    // ── CORREÇÃO 1: Grid calcula cardWidth baseado em columns, não size fixo ──
-    const isCircle = cfg.shape === 'circle';
-    const columns = isGrid ? (cfg as any).columns : (cfg as any).visibleItems;
-    const autoCenter = (cfg as any).autoCenter;
-
-    let cardWidth: string;
-    let cardSizePx: number;
-
-    if (isGrid) {
-      // Grid: divide igualmente pelas colunas
-      cardWidth = `calc((100% - ${(columns - 1) * cfg.spacing}px) / ${columns})`;
-      cardSizePx = Math.round((viewportWidth - (columns - 1) * cfg.spacing) / columns);
-    } else {
-      // Carousel: tamanho fixo em vw
-      cardWidth = `${cfg.size}vw`;
-      cardSizePx = Math.round((cfg.size * viewportWidth) / 100);
     }
+    target[key] = value;
+  });
+  return target;
+}
 
-    const minCardWidth = `${Math.min(30, cardSizePx)}px`;
+export function readDeviceValue(
+  appearance: Record<string, any>,
+  baseName: string,
+  fallback?: any,
+): any {
+  const sameAll = appearance.same_appearance_all_devices;
+  if (sameAll === undefined || sameAll === null || sameAll === true || sameAll === 'true') {
+    const v = appearance[baseName];
+    return v !== undefined && v !== null && v !== '' ? v : fallback;
+  }
+  const device = getDevice();
+  const deviceKey = `${baseName}_${device}`;
+  const deviceVal = appearance[deviceKey];
+  if (deviceVal !== undefined && deviceVal !== null && deviceVal !== '') return deviceVal;
+  const baseVal = appearance[baseName];
+  return baseVal !== undefined && baseVal !== null && baseVal !== '' ? baseVal : fallback;
+}
 
-    // ── CORREÇÃO 2: Padding extra para círculos não serem cortados ──
-    const circlePadding = isCircle && !isGrid ? Math.round(cardSizePx / 2) : 0;
-    const sliderPaddingX = circlePadding + 4;
+export function readJsonbConfigValue(
+  appearance: Record<string, any>,
+  configKey: string,
+  fieldName: string,
+  fallback?: any,
+): any {
+  let configObj = appearance[configKey];
+  if (configObj === undefined || configObj === null) return fallback;
+  if (typeof configObj === 'string') {
+    configObj = parseJsonIfNeeded(configObj);
+    if (!configObj) return fallback;
+  }
+  if (!isPlainObject(configObj)) return fallback;
 
-    // ── Container max-width ──
-    const effectiveItems = autoCenter && videos.length < columns ? videos.length : columns;
-    const totalGap = cfg.spacing * (effectiveItems - 1);
+  if (configObj[fieldName] !== undefined && configObj[fieldName] !== null && configObj[fieldName] !== '') {
+    return configObj[fieldName];
+  }
 
-    const containerMaxWidth = isGrid
-      ? '100%'
-      : `min(100vw, calc((${cardWidth} * ${effectiveItems}) + ${totalGap}px + ${sliderPaddingX * 2}px))`;
+  const device = getDevice();
+  const sameAll = configObj.same_for_all;
 
-    const borderRadius = isCircle ? '50%' : `${cfg.borderRadius}px`;
+  if (sameAll === true || sameAll === undefined || sameAll === null) {
+    if (configObj.desktop?.[fieldName] !== undefined && configObj.desktop?.[fieldName] !== null && configObj.desktop?.[fieldName] !== '') {
+      return configObj.desktop[fieldName];
+    }
+    if (configObj.mobile?.[fieldName] !== undefined && configObj.mobile?.[fieldName] !== null && configObj.mobile?.[fieldName] !== '') {
+      return configObj.mobile[fieldName];
+    }
+    return fallback;
+  }
 
-    return (
-      <div style={{ maxWidth: containerMaxWidth, margin: '20px auto', padding: '0 4px', fontFamily, clear: 'both', overflow: 'visible' }}>
-        <div
-          ref={sliderRef}
-          onMouseDown={!isGrid ? handleMouseDown : undefined}
-          onMouseMove={!isGrid ? handleMouseMove : undefined}
-          onMouseUp={!isGrid ? handleMouseUp : undefined}
-          onMouseLeave={!isGrid ? handleMouseUp : undefined}
-          onTouchStart={!isGrid ? handleTouchStart : undefined}
-          onTouchMove={!isGrid ? handleTouchMove : undefined}
-          onTouchEnd={!isGrid ? handleMouseUp : undefined}
-          className="flex"
-          style={{
-            flexWrap: isGrid ? 'wrap' : 'nowrap',
-            gap: `${cfg.spacing}px`,
-            overflowX: isGrid ? 'hidden' : 'auto',
-            overflowY: 'hidden',
-            scrollSnapType: isGrid ? 'none' : 'x mandatory',
-            scrollbarWidth: 'none',
-            padding: isGrid ? '0 4px' : `0 ${sliderPaddingX}px`,
-            width: '100%',
-            justifyContent: autoCenter ? 'center' : 'flex-start',
-            cursor: isGrid ? 'auto' : 'grab',
-            userSelect: 'none',
-            WebkitUserSelect: 'none',
-          } as CSSProperties}
-        >
-          {videos.map((video, idx) => {
-            const thumb = getVideoThumb(video);
-            const videoUrl = getVideoUrl(video);
-            return (
-              <button
-                key={video.id || idx}
-                onClick={() => { if (!dragState.current.moved) openPlayer(idx); }}
-                className="group relative flex flex-col"
-                style={{
-                  scrollSnapAlign: 'start',
-                  flex: `0 0 ${cardWidth}`,
-                  minWidth: minCardWidth,
-                  maxWidth: cardWidth,
-                  transition: 'transform 0.2s ease',
-                  cursor: 'pointer',
-                  all: 'unset',
-                  display: 'flex',
-                  flexDirection: 'column',
-                } as CSSProperties}
-              >
-                <div className="relative w-full overflow-hidden" style={{ aspectRatio: cfg.aspectRatio, borderRadius, border: `${cfg.borderWidth}px solid ${cfg.borderColor}`, background: '#000' }}>
-                  {isVideoFile(videoUrl) ? (
-                    <video src={videoUrl} poster={thumb || undefined} className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} muted loop autoPlay playsInline />
-                  ) : thumb ? (
-                    <img src={thumb} alt="" className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: cfg.objectFit as any }} loading="lazy" />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-slate-800 text-white/40"><Play size={18} /></div>
-                  )}
-                  {(cfg as any).showPlayButton && (
-                    <div className="absolute inset-0 flex items-center justify-center transition group-hover:scale-110" style={{ pointerEvents: 'none' }}>
-                      <div className="flex h-[38px] w-[38px] items-center justify-center rounded-full" style={{ background: 'rgba(0,0,0,.6)' }}><Play size={18} className="text-white ml-0.5" /></div>
-                    </div>
-                  )}
-                </div>
-                {cfg.showTitle && <span className="mt-2 w-full truncate px-1 text-center text-xs font-semibold" style={{ color: textColor }}>{story.title || video.title || 'Ver vídeo'}</span>}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    );
+  const deviceConfig = configObj[device];
+  if (deviceConfig?.[fieldName] !== undefined && deviceConfig?.[fieldName] !== null && deviceConfig?.[fieldName] !== '') {
+    return deviceConfig[fieldName];
+  }
+  const otherDevice = device === 'mobile' ? 'desktop' : 'mobile';
+  const otherConfig = configObj[otherDevice];
+  if (otherConfig?.[fieldName] !== undefined && otherConfig?.[fieldName] !== null && otherConfig?.[fieldName] !== '') {
+    return otherConfig[fieldName];
+  }
+  return fallback;
+}
+
+export function readConfigValue(
+  appearance: Record<string, any>,
+  configKey: string,
+  jsonbField: string,
+  flatField: string | null,
+  fallback?: any,
+): any {
+  const jsonbVal = readJsonbConfigValue(appearance, configKey, jsonbField);
+  if (jsonbVal !== undefined && jsonbVal !== null && jsonbVal !== '') return jsonbVal;
+  if (flatField) {
+    const flatVal = readDeviceValue(appearance, flatField);
+    if (flatVal !== undefined && flatVal !== null && flatVal !== '') return flatVal;
+  }
+  return fallback;
+}
+
+// ═══════════════════════════════════════════════════════
+// NORMALIZAÇÕES
+// ═══════════════════════════════════════════════════════
+
+export function normalizeFloatingPosition(value: any): string {
+  const key = String(value || '').trim().toLowerCase().replace(/_/g, '-');
+  if (['fixed-top-left', 'top-left', 'superior-esquerda'].includes(key)) return 'top-left';
+  if (['fixed-top-right', 'top-right', 'superior-direita'].includes(key)) return 'top-right';
+  if (['fixed-bottom-left', 'bottom-left', 'inferior-esquerda'].includes(key)) return 'bottom-left';
+  return 'bottom-right';
+}
+
+export function normalizeFloatingShape(value: any): string {
+  const key = String(value || '').trim().toLowerCase();
+  if (key === 'square' || key === 'quadrado') return 'square';
+  if (key === 'circle' || key === 'circulo' || key === 'redondo') return 'circle';
+  return 'portrait';
+}
+
+function shapeToAspectRatio(shape: string): string {
+  const s = (shape || 'portrait').toLowerCase();
+  if (s.includes('landscape') || s.includes('16_9') || s.includes('16-9')) return '16 / 9';
+  if (s.includes('square') || s.includes('1_1') || s.includes('1-1') || s === 'circle') return '1 / 1';
+  return '9 / 16';
+}
+
+// ═══════════════════════════════════════════════════════
+// COLORS
+// ═══════════════════════════════════════════════════════
+
+export function readAppearanceValue(appearance: Record<string, any>, names: string[]): any {
+  const flat = flattenAppearance(appearance);
+  for (const name of names) {
+    if (flat[name] !== undefined && flat[name] !== null && flat[name] !== '') return flat[name];
+  }
+  return undefined;
+}
+
+export const getPrimaryColor = (a: Record<string, any>) =>
+  readAppearanceValue(a, ['primary_color', 'primaryColor', 'cor_primaria']) || DEFAULT_APPEARANCE.primary_color;
+
+export const getSecondaryColor = (a: Record<string, any>) =>
+  readAppearanceValue(a, ['secondary_color', 'secondaryColor', 'cor_secundaria']) || getPrimaryColor(a);
+
+export const getTextColor = (a: Record<string, any>) =>
+  readAppearanceValue(a, ['text_color', 'textColor', 'cor_texto']) || DEFAULT_APPEARANCE.text_color;
+
+export const getBackgroundColor = (a: Record<string, any>) =>
+  readAppearanceValue(a, ['background_color', 'backgroundColor', 'cor_fundo']) || DEFAULT_APPEARANCE.background_color;
+
+export const getButtonColor = (a: Record<string, any>) =>
+  readAppearanceValue(a, ['button_color', 'buttonColor', 'btn_color', 'cor_botao']) || getPrimaryColor(a);
+
+export const getFontFamily = (a: Record<string, any>) =>
+  readAppearanceValue(a, ['font_family', 'fontFamily']) || DEFAULT_APPEARANCE.font_family;
+
+export const getFontSize = (a: Record<string, any>) =>
+  toNumber(readAppearanceValue(a, ['font_size', 'fontSize']), 14);
+
+export const getFloatingBorderColor = (a: Record<string, any>) => {
+  const jsonbVal = readJsonbConfigValue(a, 'floating_config', 'border_color');
+  if (jsonbVal && String(jsonbVal).trim() !== '') return jsonbVal;
+  const flatVal = readDeviceValue(a, 'floating_border_color');
+  if (flatVal && String(flatVal).trim() !== '') return flatVal;
+  return getPrimaryColor(a);
+};
+
+// ═══════════════════════════════════════════════════════
+// CONFIG OBJETOS (idêntico ao widget.js)
+// ═══════════════════════════════════════════════════════
+
+export function getFloatingConfig(appearance: Record<string, any>) {
+  const a = flattenAppearance(appearance);
+  const rcv = (jsonbField: string, flatField: string, fallback?: any) =>
+    readConfigValue(a, 'floating_config', jsonbField, flatField, fallback);
+
+  const position = normalizeFloatingPosition(rcv('floating_position', 'floating_position', DEFAULT_APPEARANCE.floating_position));
+  const shape = normalizeFloatingShape(rcv('shape', 'floating_shape', DEFAULT_APPEARANCE.floating_shape));
+  const widthNumber = toNumber(rcv('width', 'floating_size', '80'), 80);
+  const heightNumber = shape === 'square' || shape === 'circle' ? widthNumber : Math.round(widthNumber * 16 / 9);
+  const borderWidthNumber = toNumber(rcv('border_style', 'floating_border_width', '2'), 2);
+  const radiusNumber = toNumber(rcv('border_radius', 'floating_border_radius', '12'), 12);
+  const marginTopNumber = toNumber(rcv('top_spacing', 'floating_margin_top', '20'), 20);
+  const marginBottomNumber = toNumber(rcv('bottom_spacing', 'floating_margin_bottom', '20'), 20);
+  const marginSideNumber = toNumber(rcv('left_spacing', 'floating_margin_side', '20'), 20);
+  const zIndexNumber = toNumber(rcv('z_index', 'floating_z_index', '2147483647'), 2147483647);
+  const objectFit = String(rcv('object_fit', 'floating_object_fit', 'cover') || 'cover').trim().toLowerCase();
+
+  let top = 'auto', right = 'auto', bottom = 'auto', left = 'auto', alignItems = 'flex-end';
+  if (position === 'top-left') { top = px(marginTopNumber); left = px(marginSideNumber); alignItems = 'flex-start'; }
+  if (position === 'top-right') { top = px(marginTopNumber); right = px(marginSideNumber); alignItems = 'flex-end'; }
+  if (position === 'bottom-left') { bottom = px(marginBottomNumber); left = px(marginSideNumber); alignItems = 'flex-start'; }
+  if (position === 'bottom-right') { bottom = px(marginBottomNumber); right = px(marginSideNumber); alignItems = 'flex-end'; }
+
+  return {
+    position, shape,
+    top, right, bottom, left,
+    width: px(widthNumber), height: px(heightNumber),
+    borderWidth: px(borderWidthNumber),
+    radius: shape === 'circle' ? '999px' : px(radiusNumber),
+    innerRadius: shape === 'circle' ? '999px' : px(Math.max(0, radiusNumber - borderWidthNumber)),
+    zIndex: zIndexNumber, alignItems, objectFit,
+    borderColor: getFloatingBorderColor(a),
+    showPlayButton: toBoolean(rcv('show_play_icon', 'floating_show_play_button', true), true),
+    allowDrag: toBoolean(rcv('draggable', 'floating_allow_drag', false), false),
+    allowClose: toBoolean(rcv('allow_close', 'floating_allow_close', true), true),
+    showTitle: toBoolean(rcv('show_title', 'floating_show_title', true), true),
+  };
+}
+
+export function getCarouselConfig(appearance: Record<string, any>) {
+  const a = flattenAppearance(appearance);
+  const rcv = (jsonbField: string, flatField: string, fallback?: any) =>
+    readConfigValue(a, 'carousel_config', jsonbField, flatField, fallback);
+
+  const shape = String(rcv('shape', 'carousel_shape', 'portrait') || 'portrait').trim().toLowerCase();
+  return {
+    shape,
+    size: toNumber(rcv('width', 'carousel_size', '30'), 30),
+    visibleItems: safeInt(rcv('visible_items', 'carousel_visible_items', '4'), 4),
+    spacing: safeInt(rcv('spacing', 'carousel_spacing', '16'), 16),
+    borderColor: rcv('border_color', 'carousel_border_color', '#0094EB') || '#0094EB',
+    borderWidth: safeInt(rcv('border_style', 'carousel_border_width', '2'), 2),
+    borderRadius: safeInt(rcv('border_radius', 'carousel_border_radius', '12'), 12),
+    objectFit: String(rcv('object_fit', 'carousel_object_fit', 'cover') || 'cover').trim().toLowerCase(),
+    marginTop: safeInt(rcv('margin_top', 'carousel_margin_top', '0'), 0),
+    marginBottom: safeInt(rcv('margin_bottom', 'carousel_margin_bottom', '0'), 0),
+    showTitle: toBoolean(rcv('show_title', 'carousel_show_title', false), false),
+    showProduct: toBoolean(rcv('show_product', 'carousel_show_product', true), true),
+    showPlayButton: toBoolean(rcv('show_play_icon', 'carousel_show_play_button', true), true),
+    autoCenter: toBoolean(rcv('auto_center', 'carousel_auto_center', false), false),
+    aspectRatio: shapeToAspectRatio(shape),
+  };
+}
+
+export function getGridConfig(appearance: Record<string, any>) {
+  const a = flattenAppearance(appearance);
+  const rcv = (jsonbField: string, flatField: string, fallback?: any) =>
+    readConfigValue(a, 'grid_config', jsonbField, flatField, fallback);
+
+  const shape = String(rcv('shape', 'grid_shape', 'portrait') || 'portrait').trim().toLowerCase();
+  return {
+    shape,
+    size: toNumber(rcv('width', 'grid_size', '30'), 30),
+    columns: safeInt(rcv('visible_items', 'grid_columns', '4'), 4),
+    rows: safeInt(rcv('rows', 'grid_rows', '1'), 1),
+    spacing: safeInt(rcv('spacing', 'grid_spacing', '16'), 16),
+    borderColor: rcv('border_color', 'grid_border_color', '#0094EB') || '#0094EB',
+    borderWidth: safeInt(rcv('border_style', 'grid_border_width', '2'), 2),
+    borderRadius: safeInt(rcv('border_radius', 'grid_border_radius', '12'), 12),
+    objectFit: String(rcv('object_fit', 'grid_object_fit', 'cover') || 'cover').trim().toLowerCase(),
+    showTitle: toBoolean(rcv('show_title', 'grid_show_title', false), false),
+    aspectRatio: shapeToAspectRatio(shape),
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+// MODAL CONFIG
+// ═══════════════════════════════════════════════════════
+
+export type ModalAppearanceConfig = {
+  show_title: boolean;
+  show_play_button: boolean;
+  show_product: boolean;
+  show_product_button: boolean;
+  show_product_whatsapp_button: boolean;
+  show_like_button: boolean;
+  show_comment_button: boolean;
+  show_share_button: boolean;
+  show_whatsapp_button: boolean;
+  show_sizing_button: boolean;
+  hide_stories: boolean;
+  shadow_enabled: boolean;
+  border_color: string;
+  border_width: string;
+  border_radius: string;
+};
+
+export function normalizeModalAppearanceConfig(appearanceRaw: Record<string, any>): ModalAppearanceConfig {
+  const appearance = flattenAppearance(appearanceRaw);
+  const rawModalConfig = parseJsonIfNeeded<any>(appearance.modal_config || appearance.modalConfig) || {};
+
+  const rcv = (jsonbField: string, flatField: string | null, fallback?: any) => {
+    // Tenta ler direto do JSONB (desktop/mobile ou raiz)
+    const jsonbVal = readJsonbConfigValue(appearance, 'modal_config', jsonbField);
+    if (jsonbVal !== undefined && jsonbVal !== null && jsonbVal !== '') return jsonbVal;
+    // Também tenta do rawModalConfig parseado
+    if (rawModalConfig[jsonbField] !== undefined && rawModalConfig[jsonbField] !== null && rawModalConfig[jsonbField] !== '') {
+      return rawModalConfig[jsonbField];
+    }
+    if (flatField) {
+      const flatVal = readDeviceValue(appearance, flatField);
+      if (flatVal !== undefined && flatVal !== null && flatVal !== '') return flatVal;
+    }
+    return fallback;
   };
 
-  // ═══════════════════════════════════════════════════════
-  // MODAL PLAYER
-  // ═══════════════════════════════════════════════════════
-  const renderPlayer = () => {
-    if (!playerOpen || !currentVideo) return null;
-    const m = modalCfg;
-    const modalBorderWidth = parseInt(m.border_width || '0', 10);
-    const modalBorderRadius = parseInt(m.border_radius || '0', 10);
-    const modalBackground = readAppearanceValue(appearance, ['modal_background_color', 'modalBackgroundColor', 'background_color', 'backgroundColor']) || bgColor;
-    const modalText = readAppearanceValue(appearance, ['modal_text_color', 'modalTextColor', 'text_color', 'textColor']) || textColor;
-    const modalBorder = readAppearanceValue(appearance, ['modal_border_color', 'modalBorderColor']) || 'rgba(15,23,42,.12)';
-    const shadow = m.shadow_enabled !== false ? '0 24px 80px rgba(15,23,42,.24)' : 'none';
-    const ytId = !isVideoPlayableNatively(currentVideo as any) ? extractYouTubeId(currentUrl) : '';
-    const whatsappNumber = String(settings?.whatsapp_number || settings?.whatsappNumber || '').replace(/\D/g, '');
-
-    // Debug — mantenha este log para verificar o valor real de show_play_button
-    console.log('[StoryPreview] modalCfg:', m);
-
-    const ctrlBtn: CSSProperties = {
-      width: '32px', height: '32px', borderRadius: '999px', background: 'rgba(0,0,0,.4)',
-      backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      cursor: 'pointer', color: '#fff', border: '1px solid rgba(255,255,255,.8)', flexShrink: 0, padding: 0,
-    };
-    const socialBtn: CSSProperties = {
-      width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', borderRadius: '999px',
-      border: '1px solid rgba(255,255,255,.8)', background: 'rgba(0,0,0,.1)', backdropFilter: 'blur(4px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer', flexShrink: 0, padding: 0,
-    };
-
-    return (
-      <div className="fixed inset-0 z-[99999] flex items-center justify-center" style={{ fontFamily, background: 'rgba(15,23,42,.62)', fontSize: `${fontSize}px` }} onClick={(e) => { if (e.target === e.currentTarget) closePlayer(); }}>
-        <div data-vl-modal className="relative flex flex-col overflow-hidden" style={{ width: '100%', maxWidth: '420px', height: '100%', maxHeight: '100vh', background: modalBackground, color: modalText, boxShadow: shadow, border: `${modalBorderWidth}px solid ${m.border_color || 'transparent'}`, borderRadius: `${modalBorderRadius}px` } as CSSProperties}>
-          <style>{`@media(min-width:640px){[data-vl-modal]{height:auto!important;aspect-ratio:9/16!important;max-height:90vh!important;border-radius:${modalBorderRadius > 0 ? modalBorderRadius : 36}px!important;}}`}</style>
-
-          {/* Progress bars */}
-          {videos.length > 1 && (
-            <div style={{ position: 'absolute', top: '12px', left: 0, right: 0, zIndex: 50, display: 'flex', gap: '6px', padding: '0 16px' }}>
-              {videos.map((_, idx) => (
-                <div key={idx} style={{ height: '2px', flex: 1, borderRadius: '999px', background: 'rgba(255,255,255,.25)', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', borderRadius: '999px', background: primaryColor, transition: 'width .3s ease', width: idx < videoIdx ? '100%' : idx === videoIdx ? `${progress}%` : '0%' }} />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Header: MUTE | PLAY | CLOSE */}
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 40, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '20px 16px 16px', background: 'linear-gradient(to bottom, rgba(0,0,0,.7), transparent)', pointerEvents: 'none' }}>
-            {m.show_title ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0, flex: 1, paddingRight: '48px', pointerEvents: 'auto' }}>
-                <span style={{ fontWeight: 800, color: '#fff', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textShadow: '0 1px 3px rgba(0,0,0,.5)' }}>{story.title || ''}</span>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,.65)', textTransform: 'uppercase' }}>{storeName}{videos.length > 1 ? ` • ${videoIdx + 1}/${videos.length}` : ''}</span>
-              </div>
-            ) : <div />}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', pointerEvents: 'auto', flexShrink: 0 }}>
-              <button onClick={(e) => { e.stopPropagation(); toggleMute(); }} style={ctrlBtn}>{muted ? <VolumeX size={18} /> : <Volume2 size={18} />}</button>
-              {/* CORREÇÃO: Força o botão play a aparecer (o fallback do helper é true, mas garantimos aqui) */}
-              <button onClick={(e) => { e.stopPropagation(); togglePlay(); }} style={ctrlBtn}>{playing ? <Pause size={18} /> : <Play size={18} />}</button>
-              <button onClick={(e) => { e.stopPropagation(); closePlayer(); }} style={ctrlBtn}><X size={18} /></button>
-            </div>
-          </div>
-
-          {/* Video body */}
-          <div style={{ position: 'relative', display: 'block', flex: '1 1 auto', width: '100%', height: '100%', minHeight: 0, overflow: 'hidden', background: '#000' }}>
-            {ytId ? (
-              <iframe key={currentVideo.id} src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=${muted ? 1 : 0}&playsinline=1&rel=0`} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen title={story.title || 'Story'} />
-            ) : currentUrl ? (
-              <video key={currentVideo.id} ref={videoRef} src={currentUrl} poster={currentThumb || undefined} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} autoPlay muted={muted} playsInline loop onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onTimeUpdate={(e) => { const el = e.currentTarget; if (el.duration) setProgress((el.currentTime / el.duration) * 100); }} onEnded={goNext} />
-            ) : currentThumb ? (
-              <img src={currentThumb} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,.5)' }}>Nenhum vídeo</div>}
-
-            {/* Nav arrows */}
-            {videos.length > 1 && (<>
-              <button onClick={(e) => { e.stopPropagation(); goPrev(); }} style={{ position: 'absolute', left: '10px', top: '42%', transform: 'translateY(-50%)', width: '36px', height: '36px', borderRadius: '999px', background: 'rgba(255,255,255,.18)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 35, border: '1px solid rgba(255,255,255,.35)' }}><ChevronLeft size={18} className="text-white" /></button>
-              <button onClick={(e) => { e.stopPropagation(); goNext(); }} style={{ position: 'absolute', right: '10px', top: '42%', transform: 'translateY(-50%)', width: '36px', height: '36px', borderRadius: '999px', background: 'rgba(255,255,255,.18)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 35, border: '1px solid rgba(255,255,255,.35)' }}><ChevronRight size={18} className="text-white" /></button>
-            </>)}
-          </div>
-
-          {/* Social buttons — SEM WhatsApp standalone (já removido) */}
-          <div style={{ position: 'absolute', top: 'calc(42% + 180px)', right: '12px', transform: 'translateY(-50%)', zIndex: 45, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-            {m.show_like_button && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <button onClick={(e) => { e.stopPropagation(); handleLike(); }} style={socialBtn}><Heart size={18} className={cn(liked ? 'fill-rose-500 text-rose-500' : 'text-white')} /></button>
-                {likeCount > 0 && <span style={{ fontSize: '10px', fontWeight: 800, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,.5)', marginTop: '4px' }}>{likeCount}</span>}
-              </div>
-            )}
-            {m.show_comment_button && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <button onClick={(e) => { e.stopPropagation(); setShowComments(true); }} style={socialBtn}><MessageCircle size={18} className="text-white" /></button>
-                {comments.length > 0 && <span style={{ fontSize: '10px', fontWeight: 800, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,.5)', marginTop: '4px' }}>{comments.length}</span>}
-              </div>
-            )}
-            {m.show_share_button && <button onClick={(e) => { e.stopPropagation(); handleShare(); }} style={socialBtn}><Share2 size={18} className="text-white" /></button>}
-            {m.show_sizing_button && sizingModel && <button onClick={(e) => { e.stopPropagation(); setShowSizing(true); }} style={socialBtn}><Ruler size={18} className="text-white" /></button>}
-          </div>
-
-          {/* Product footer — COM botão Ver no site + WhatsApp */}
-          {m.show_product && product && (
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 40, background: 'linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.5), transparent)', padding: '40px 16px 16px', pointerEvents: 'none' }}>
-              <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: '12px', borderRadius: '24px', border: `1px solid ${modalBorder}`, padding: '12px', background: bgColor, boxShadow: shadow }}>
-                <div style={{ width: '72px', height: '72px', borderRadius: '16px', background: '#e2e8f0', flex: '0 0 auto', overflow: 'hidden' }}>
-                  {product.image_url && <img src={product.image_url} alt={product.name || 'Produto'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
-                </div>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <p style={{ fontWeight: 800, fontSize: '13px', color: textColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name || 'Produto'}</p>
-                  {product.price != null && Number(product.price) > 0 && <p style={{ marginTop: '4px', fontWeight: 800, fontSize: '16px', color: secondaryColor }}>R$ {Number(product.price).toFixed(2).replace('.', ',')}</p>}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
-                    {m.show_product_button && (
-                      <a href={product.product_url || product.url || '#'} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 12px', background: buttonColor, color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap' }}><ExternalLink size={12} /> Ver no site</a>
-                    )}
-                    {m.show_product_whatsapp_button && whatsappNumber && (
-                      <a href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Olá! Tenho interesse no produto: ${product.name || ''}`)}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 12px', background: '#25d366', color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap' }}>WhatsApp</a>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Comments panel */}
-          {showComments && (
-            <div style={{ position: 'absolute', inset: '8px', zIndex: 200, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#fff', border: `2px solid ${primaryColor}`, borderRadius: '20px', boxShadow: '0 12px 30px rgba(0,0,0,.35)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 14px', height: '48px', borderBottom: '1px solid #e2e8f0' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111' }}>Comentários</h3>
-                <button onClick={() => setShowComments(false)} style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: 'none' }}><X size={20} className="text-slate-600" /></button>
-              </div>
-              <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px' }}>
-                {comments.length === 0 && <p style={{ fontSize: '14px', color: '#334155', textAlign: 'center', padding: '40px 10px' }}>Nenhum comentário ainda.</p>}
-                {comments.map((c, i) => (
-                  <div key={c.id || i} style={{ display: 'flex', gap: '10px', padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
-                    <div style={{ width: '34px', height: '34px', minWidth: '34px', borderRadius: '50%', background: primaryColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 700 }}>{(c.user_name || c.name || 'A').charAt(0).toUpperCase()}</div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ fontWeight: 700, fontSize: '13px', color: '#0f172a' }}>{c.user_name || c.name || 'Anônimo'}</span>
-                      <p style={{ fontSize: '14px', color: '#334155', lineHeight: 1.5, margin: 0, wordBreak: 'break-word' }}>{c.text}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ padding: '16px 18px', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <input value={commentName} onChange={e => setCommentName(e.target.value)} placeholder="Seu nome" style={{ width: '100%', height: '40px', padding: '8px 12px', border: '1.5px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', color: '#0f172a', outline: 'none', background: '#f8fafc' }} />
-                <textarea value={commentText} onChange={e => setCommentText(e.target.value)} placeholder="Escreva seu comentário..." style={{ width: '100%', minHeight: '70px', maxHeight: '70px', padding: '8px 12px', border: '1.5px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', color: '#0f172a', outline: 'none', resize: 'none', background: '#f8fafc' }} />
-                <button onClick={submitComment} style={{ width: '100%', height: '40px', border: 'none', borderRadius: '12px', background: buttonColor, color: '#fff', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>Enviar comentário</button>
-              </div>
-            </div>
-          )}
-
-          {/* Sizing panel */}
-          {showSizing && sizingModel && (
-            <div style={{ position: 'absolute', zIndex: 70, display: 'flex', flexDirection: 'column', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'calc(100% - 40px)', maxWidth: '340px', maxHeight: '62%', overflow: 'hidden', background: '#fff', borderRadius: '24px', boxShadow: '0 18px 50px rgba(0,0,0,.32)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 18px 8px' }}>
-                <span style={{ fontSize: '11px', fontWeight: 900, letterSpacing: '.08em', textTransform: 'uppercase', color: primaryColor }}>Medidas da modelo</span>
-                <button onClick={() => setShowSizing(false)} style={{ width: '36px', height: '36px', borderRadius: '999px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: 'none' }}><X size={20} className="text-slate-600" /></button>
-              </div>
-              <div style={{ flex: 1, overflowY: 'auto', padding: '0 18px 18px' }}>
-                {Array.isArray(sizingModel.measures) && sizingModel.measures.length > 0 ? (
-                  sizingModel.measures.map((item: any, i: number) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 12px', background: '#f6f8fb', borderRadius: '14px', marginBottom: '9px' }}>
-                      <span style={{ fontWeight: 800, color: '#475569' }}>{item.name || item.label || `Medida ${i + 1}`}</span>
-                      <span style={{ fontWeight: 800, color: '#0f172a', textAlign: 'right' }}>{item.value || item.size || '-'}{item.unit || ''}</span>
-                    </div>
-                  ))
-                ) : <p style={{ fontSize: '14px', color: '#64748b', textAlign: 'center', padding: '20px' }}>Sem medidas cadastradas.</p>}
-              </div>
-            </div>
-          )}
-
-          {/* Share toast */}
-          {shareCopied && <div style={{ position: 'absolute', bottom: '16px', left: '50%', transform: 'translateX(-50%)', zIndex: 70, borderRadius: '999px', background: '#fff', padding: '8px 16px', fontSize: '14px', fontWeight: 700, color: '#0f172a', boxShadow: '0 4px 12px rgba(0,0,0,.2)' }}>Link copiado!</div>}
-        </div>
-      </div>
-    );
+  return {
+    show_title: toBoolean(rcv('show_title', 'modal_show_title', true), true),
+    show_play_button: toBoolean(rcv('show_play_button', 'modal_show_play_button', true), true),
+    show_product: toBoolean(rcv('show_product', 'modal_show_product', true), true),
+    show_product_button: toBoolean(rcv('show_product_button', 'modal_show_product_button', true), true),
+    show_product_whatsapp_button: toBoolean(rcv('show_product_whatsapp_button', null, true), true),
+    show_like_button: toBoolean(rcv('show_like_button', 'modal_show_like_button', true), true),
+    show_comment_button: toBoolean(rcv('show_comment_button', 'modal_show_comment_button', true), true),
+    show_share_button: toBoolean(rcv('show_share_button', 'modal_show_share_button', true), true),
+    show_whatsapp_button: toBoolean(rcv('show_whatsapp_button', 'modal_show_whatsapp_button', true), true),
+    show_sizing_button: toBoolean(rcv('show_sizing_button', 'modal_show_sizing_button', true), true),
+    hide_stories: toBoolean(rcv('hide_stories', 'modal_hide_stories', false), false),
+    shadow_enabled: toBoolean(rcv('shadow_enabled', 'modal_shadow_enabled', true), true),
+    border_color: rcv('border_color', 'modal_border_color', '') || '',
+    border_width: String(rcv('border_width', 'modal_border_width', '') || ''),
+    border_radius: String(rcv('border_radius', 'modal_border_radius', '') || ''),
   };
+}
 
-  // ═══════════════════════════════════════════════════════
-  // RETURN
-  // ═══════════════════════════════════════════════════════
-  return (
-    <div className="fixed inset-0 overflow-y-auto" style={{ fontFamily, background: '#f1f5f9' }}>
-      <div className="mx-auto max-w-[1200px] p-4">
-        <div className="mb-4 flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-white" style={{ backgroundColor: primaryColor }}>{(storeName || 'L').charAt(0)}</div>
-            <div>
-              <p className="text-sm font-bold text-slate-800">{storeName || 'Loja'}</p>
-              <p className="text-[10px] text-slate-400">Preview do Story • {storyFormat === 'floating_widget' ? 'Flutuante' : storyFormat === 'carousel' ? 'Carrossel' : 'Grade'}</p>
-            </div>
-          </div>
-          <button onClick={() => navigate(-1)} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200">← Voltar</button>
-        </div>
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[1, 2, 3, 4].map(i => <div key={i} className="h-24 rounded-2xl bg-white/60" />)}
-        </div>
-      </div>
+// ═══════════════════════════════════════════════════════
+// FORMATO DO STORY
+// ═══════════════════════════════════════════════════════
 
-      {storyFormat === 'floating_widget' && videos.length > 0 && renderFloating()}
-      {storyFormat === 'carousel' && videos.length > 0 && renderInlineWidget(false)}
-      {storyFormat === 'grid' && videos.length > 0 && renderInlineWidget(true)}
+export type StoryFormat = 'floating_widget' | 'carousel' | 'grid';
 
-      {videos.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-          <Play size={48} className="mb-4 opacity-30" />
-          <p className="font-bold">Nenhum vídeo vinculado a este story.</p>
-        </div>
-      )}
-
-      {renderPlayer()}
-    </div>
-  );
+export function normalizeStoryFormat(raw: string): StoryFormat {
+  const n = (raw || 'floating_widget').toLowerCase().trim();
+  if (n === 'carrossel' || n === 'carousel') return 'carousel';
+  if (n === 'grid' || n === 'grade') return 'grid';
+  return 'floating_widget';
 }
