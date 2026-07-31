@@ -1174,6 +1174,14 @@ var modalBorderRadiusNum = parseInt(modalConfig.border_radius) || 0;
 
   function buildVideoPlayer(video, storyId, onEnded) {
     var url = getVideoUrl(video);
+    console.log('🔍 VIDLYTICS DEBUG:', {
+    video_id: video.id,
+    source_type: video.source_type || video.sourceType,
+    url: url,
+    isUpload: video.source_type === 'upload' || video.sourceType === 'upload',
+    isDirectVideo: isDirectVideoUrl(url),
+    isYouTube: !!extractYouTubeId(url)
+});
     var ytId = extractYouTubeId(url);
     var isUpload = video.source_type === 'upload' || video.sourceType === 'upload';
     var isDirect = isDirectVideoUrl(url);
