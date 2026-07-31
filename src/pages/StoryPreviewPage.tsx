@@ -57,7 +57,7 @@ const parseJsonSafe = (v: unknown): Record<string,any> => {
   return {};
 };
 
-/* ═══════════════════ SVG ICONS (igual produção) ═══════════════════ */
+/* ═══════════════════ SVG ICONS (igual widget.js produção) ═══════════════════ */
 
 const SvgHeart = ({ filled }: { filled: boolean }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill={filled ? "#ef4444" : "none"} stroke={filled ? "#ef4444" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -65,8 +65,9 @@ const SvgHeart = ({ filled }: { filled: boolean }) => (
   </svg>
 );
 
-const SvgComment = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+// 🔧 CORREÇÃO: Ícone de comentário preenchido (branco) quando há comentários — igual produção
+const SvgComment = ({ filled }: { filled?: boolean }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill={filled ? "#ffffff" : "none"} stroke={filled ? "#ffffff" : "currentColor"} strokeWidth={filled ? 1.5 : 2} strokeLinecap="round" strokeLinejoin="round">
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
   </svg>
 );
@@ -113,11 +114,27 @@ const SvgWhatsApp = () => (
   </svg>
 );
 
+// 🔧 CORREÇÃO: Ícone de medidas — igual ao svgIcon('sizing') do widget.js
 const SvgRuler = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="2" y1="22" x2="22" y2="2"/><circle cx="5" cy="5" r="1.5" fill="currentColor" stroke="none"/>
-    <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="19" r="1.5" fill="currentColor" stroke="none"/>
-    <line x1="7" y1="20" x2="10" y2="17"/><line x1="17" y1="7" x2="14" y2="10"/>
+    <rect x="2" y="4" width="20" height="16" rx="2"/>
+    <line x1="8" y1="8" x2="12" y2="8"/>
+    <line x1="8" y1="12" x2="16" y2="12"/>
+    <line x1="8" y1="16" x2="12" y2="16"/>
+    <line x1="12" y1="4" x2="12" y2="20" strokeWidth="1" opacity="0.4"/>
+  </svg>
+);
+
+// Chevron icons do widget.js
+const SvgChevronLeft = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="15 18 9 12 15 6"/>
+  </svg>
+);
+
+const SvgChevronRight = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="9 18 15 12 9 6"/>
   </svg>
 );
 
@@ -131,6 +148,7 @@ const StoryPreviewPage = () => {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const sharePanelRef = useRef<HTMLDivElement>(null);
 
   const [storeId, setStoreId] = useState('');
   const [storeName, setStoreName] = useState('');
@@ -162,6 +180,10 @@ const StoryPreviewPage = () => {
   const [product, setProduct] = useState<any>(null);
   const [model, setModel] = useState<any>(null);
   const [modelOpen, setModelOpen] = useState(false);
+
+  /* share dropdown */
+  const [showSharePanel, setShowSharePanel] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   const video = videos[activeIdx]||null;
   const currentUrl = getVideoUrl(video);
@@ -293,6 +315,7 @@ const StoryPreviewPage = () => {
   useEffect(()=>{
     if(!video?.id||!story||!storeId)return;
     setVideoError(false); setProgress(0); setShowComments(false); setShowEmoji(false); setCommentSent(false);
+    setShowSharePanel(false); setShareCopied(false);
     const likes=readLikes();
     setLiked(Boolean(likes[video.id]?.liked));
     setLikeCount(likes[video.id]?.count??0);
@@ -323,6 +346,18 @@ const StoryPreviewPage = () => {
     return ()=>el.removeEventListener('timeupdate',f);
   },[video?.id]);
 
+  // Fechar share panel ao clicar fora
+  useEffect(()=>{
+    if(!showSharePanel)return;
+    const handler=(e:MouseEvent)=>{
+      if(sharePanelRef.current&&!sharePanelRef.current.contains(e.target as Node)){
+        setShowSharePanel(false);
+      }
+    };
+    setTimeout(()=>document.addEventListener('click',handler),0);
+    return ()=>document.removeEventListener('click',handler);
+  },[showSharePanel]);
+
   /* ════════════ HANDLERS ════════════ */
 
   const close = () => {
@@ -345,11 +380,28 @@ const StoryPreviewPage = () => {
   const goNext = () => { if(!videos.length)return; if(activeIdx<videos.length-1) setActiveIdx(p=>p+1); else setPlayerOpen(false); };
   const goPrev = () => { if(!videos.length)return; setActiveIdx(p=>p>0?p-1:videos.length-1); };
 
-  const doShare = async () => {
+  // 🔧 CORREÇÃO: Share agora é dropdown customizado (igual widget.js), não navigator.share nativo
+  const doShare = () => {
+    setShowSharePanel(p=>!p);
+  };
+
+  const doCopyShareLink = async () => {
     const url=window.location.href;
-    const msg=`Olha esse produto: "${product?.name||story?.title||'Story'}"\n${url}`;
-    if(navigator.share){ try { await navigator.share({title:product?.name||story?.title||'Story',text:msg,url}); return; } catch{} }
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareCopied(true);
+      setTimeout(()=>{ setShareCopied(false); setShowSharePanel(false); }, 1500);
+    } catch {
+      setShareCopied(true);
+      setTimeout(()=>{ setShareCopied(false); setShowSharePanel(false); }, 1500);
+    }
+  };
+
+  const doShareWhatsApp = () => {
+    const url=window.location.href;
+    const msg=`Confira este vídeo! ${url}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank','noopener,noreferrer');
+    setShowSharePanel(false);
   };
 
   const doWhatsApp = () => {
@@ -392,16 +444,28 @@ const StoryPreviewPage = () => {
   const productUrl=product?.product_url||product?.productUrl||product?.url||'';
   const productPrice=Number(product?.price||product?.sale_price||0);
   const modalShadow = mc.shadow ? '0 24px 80px rgba(15,23,42,.24)' : 'none';
-  const modalBorderStyle: React.CSSProperties = mc.border_color ? { border:`${mc.border_width||'2'}px solid ${mc.border_color}`, borderRadius:mc.border_radius||'36px' } : {};
+
+  // 🔧 CORREÇÃO: Borda do modal — igual ao widget.js (usa border_color/border_width do modal_config)
+  const modalBorderWidthNum = parseInt(mc.border_width) || 0;
+  const modalBorderColor = mc.border_color || 'transparent';
+  const modalBorderRadiusNum = parseInt(mc.border_radius) || 0;
+
   const commentCount = comments.length;
 
-  /* ═══════════════════ PLAYER (layout produção) ═══════════════════ */
+  /* ═══════════════════ PLAYER (espelhando widget.js) ═══════════════════ */
 
   const Player = () => (
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{background:'rgba(15,23,42,.62)'}} onClick={close}>
       <div onClick={e=>e.stopPropagation()}
-        className="relative flex w-full flex-col overflow-hidden bg-black sm:aspect-[9/16] sm:h-auto sm:max-h-[90vh] sm:rounded-[36px] sm:max-w-[420px]"
-        style={{...modalBorderStyle, boxShadow:modalShadow, background:c.modalBg, color:c.modalText}}
+        className="relative flex w-full flex-col overflow-hidden bg-black sm:aspect-[9/16] sm:h-auto sm:max-h-[90vh] sm:max-w-[420px]"
+        style={{
+          boxShadow:modalShadow,
+          background:c.modalBg,
+          color:c.modalText,
+          // 🔧 CORREÇÃO: Borda igual widget.js
+          border: modalBorderWidthNum > 0 ? `${modalBorderWidthNum}px solid ${modalBorderColor}` : 'none',
+          borderRadius: modalBorderRadiusNum > 0 ? `${modalBorderRadiusNum}px` : '36px',
+        }}
       >
         {/* ═══ Progress Bars ═══ */}
         {videos.length>1 && (
@@ -415,7 +479,7 @@ const StoryPreviewPage = () => {
           </div>
         )}
 
-        {/* ═══ Header ═══ */}
+        {/* 🔧 CORREÇÃO: Header — ordem mute → play/pause → close (igual widget.js) */}
         <div className="absolute top-0 left-0 right-0 z-40 flex items-start justify-between pointer-events-none px-4 pt-5 pb-4"
           style={{background:'linear-gradient(to bottom, rgba(0,0,0,.7), transparent)'}}>
           <div className="flex flex-col gap-0.5 min-w-0 flex-1 pr-12 pointer-events-auto">
@@ -427,18 +491,18 @@ const StoryPreviewPage = () => {
             </p>
           </div>
 
-          {/* Botões de controle no header (mute, play/pause, close) */}
+          {/* 🔧 CORREÇÃO: Ordem dos botões = mute, play/pause, close */}
           <div className="flex items-center gap-2 pointer-events-auto flex-shrink-0">
+            <button onClick={toggleMute} className="flex h-8 w-8 items-center justify-center rounded-full border border-white/80 text-white backdrop-blur-xl hover:bg-black/60"
+              style={{background:'rgba(0,0,0,.4)'}}>
+              {muted ? <SvgVolumeOff/> : <SvgVolume/>}
+            </button>
             {mc.show_play && currentUrl && !videoError && (
               <button onClick={togglePlay} className="flex h-8 w-8 items-center justify-center rounded-full border border-white/80 text-white backdrop-blur-xl hover:bg-black/60"
                 style={{background:'rgba(0,0,0,.4)'}}>
                 {playing ? <SvgPause/> : <SvgPlay/>}
               </button>
             )}
-            <button onClick={toggleMute} className="flex h-8 w-8 items-center justify-center rounded-full border border-white/80 text-white backdrop-blur-xl hover:bg-black/60"
-              style={{background:'rgba(0,0,0,.4)'}}>
-              {muted ? <SvgVolumeOff/> : <SvgVolume/>}
-            </button>
             <button onClick={close} className="flex h-8 w-8 items-center justify-center rounded-full border border-white/80 text-white backdrop-blur-xl hover:bg-black/60"
               style={{background:'rgba(0,0,0,.4)'}}>
               <SvgClose/>
@@ -454,6 +518,22 @@ const StoryPreviewPage = () => {
             <button onClick={goNext} className="h-full w-[70%]"/>
           </div>
 
+          {/* 🔧 CORREÇÃO: Setas de navegação (iguais widget.js) */}
+          {videos.length > 1 && (
+            <>
+              <button onClick={(e)=>{e.stopPropagation(); goPrev();}}
+                className="absolute left-2.5 z-35 flex h-9 w-9 items-center justify-center rounded-full border border-white/35"
+                style={{top:'42%', transform:'translateY(-50%)', background:'rgba(255,255,255,.18)', backdropFilter:'blur(6px)'}}>
+                <SvgChevronLeft/>
+              </button>
+              <button onClick={(e)=>{e.stopPropagation(); goNext();}}
+                className="absolute right-2.5 z-35 flex h-9 w-9 items-center justify-center rounded-full border border-white/35"
+                style={{top:'42%', transform:'translateY(-50%)', background:'rgba(255,255,255,.18)', backdropFilter:'blur(6px)'}}>
+                <SvgChevronRight/>
+              </button>
+            </>
+          )}
+
           {/* Vídeo */}
           {currentUrl && !videoError ? (
             <video ref={videoRef} src={currentUrl} poster={posterUrl}
@@ -466,37 +546,57 @@ const StoryPreviewPage = () => {
             </div>
           )}
 
-          {/* ═══ Botões Sociais — lado direito, top:61% ═══ */}
+          {/* 🔧 CORREÇÃO: Botões Sociais — posição calc(42% + 180px) igual widget.js */}
           <div className="absolute z-[45] flex flex-col items-center gap-3"
-            style={{top:'61%', right:'12px', transform:'translateY(-50%)'}}>
+            style={{top:'calc(42% + 180px)', right:'12px', transform:'translateY(-50%)'}}>
 
             {/* Like */}
             {mc.show_like && (
-              <button onClick={doLike}
-                className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/80 text-white backdrop-blur-sm hover:bg-black/25"
-                style={{background:'rgba(0,0,0,.1)'}}>
-                <SvgHeart filled={liked}/>
-                {likeCount>0 && <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-extrabold text-white" style={{textShadow:'0 1px 2px rgba(0,0,0,.5)'}}>{likeCount}</span>}
-              </button>
+              <div className="flex flex-col items-center gap-0">
+                <button onClick={doLike}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/80 text-white backdrop-blur-sm hover:bg-black/25"
+                  style={{background:'rgba(0,0,0,.1)'}}>
+                  <SvgHeart filled={liked}/>
+                </button>
+                {likeCount>0 && <span className="text-[10px] font-extrabold text-white mt-1" style={{textShadow:'0 1px 2px rgba(0,0,0,.5)'}}>{likeCount}</span>}
+              </div>
             )}
 
-            {/* Comentários */}
+            {/* 🔧 CORREÇÃO: Comentários — ícone preenchido quando tem comentários (igual widget.js) */}
             {mc.show_comment && (
-              <button onClick={()=>setShowComments(true)}
-                className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/80 text-white backdrop-blur-sm hover:bg-black/25"
-                style={{background:'rgba(0,0,0,.1)'}}>
-                <SvgComment/>
-                {commentCount>0 && <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-extrabold text-white" style={{textShadow:'0 1px 2px rgba(0,0,0,.5)'}}>{commentCount}</span>}
-              </button>
+              <div className="flex flex-col items-center gap-0">
+                <button onClick={()=>setShowComments(true)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/80 text-white backdrop-blur-sm hover:bg-black/25"
+                  style={{background:'rgba(0,0,0,.1)'}}>
+                  <SvgComment filled={commentCount > 0}/>
+                </button>
+                {commentCount>0 && <span className="text-[10px] font-extrabold text-white mt-1" style={{textShadow:'0 1px 2px rgba(0,0,0,.5)'}}>{commentCount}</span>}
+              </div>
             )}
 
-            {/* Share */}
+            {/* 🔧 CORREÇÃO: Share com dropdown customizado (igual widget.js) */}
             {mc.show_share && (
-              <button onClick={doShare}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/80 text-white backdrop-blur-sm hover:bg-black/25"
-                style={{background:'rgba(0,0,0,.1)'}}>
-                <SvgShare/>
-              </button>
+              <div className="relative">
+                <button onClick={doShare}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/80 text-white backdrop-blur-sm hover:bg-black/25"
+                  style={{background:'rgba(0,0,0,.1)'}}>
+                  <SvgShare/>
+                </button>
+                {showSharePanel && (
+                  <div ref={sharePanelRef}
+                    className="absolute bottom-full right-0 mb-2 rounded-xl p-2 min-w-[180px] shadow-xl z-[200]"
+                    style={{background:'#1e293b', boxShadow:'0 10px 25px rgba(0,0,0,.5)'}}>
+                    <button onClick={doCopyShareLink}
+                      className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-white rounded-lg hover:bg-white/10">
+                      {shareCopied ? '✅ Copiado!' : '📋 Copiar link'}
+                    </button>
+                    <button onClick={doShareWhatsApp}
+                      className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-white rounded-lg hover:bg-white/10">
+                      <SvgWhatsApp/> WhatsApp
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
 
             {/* Medidas */}
@@ -518,7 +618,7 @@ const StoryPreviewPage = () => {
             )}
           </div>
 
-          {/* ═══ Footer — Card de Produto ═══ */}
+          {/* ═══ Footer — Card de Produto (igual widget.js) ═══ */}
           {mc.show_product && product && (
             <div className="absolute bottom-0 left-0 right-0 z-40 pointer-events-none px-4 pb-4 pt-10"
               style={{background:'linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.5), transparent)'}}>
@@ -533,33 +633,31 @@ const StoryPreviewPage = () => {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-extrabold" style={{color:c.text}}>{product.name||'Produto'}</p>
                   {productPrice>0 && <p className="mt-1 text-base font-extrabold" style={{color:c.secondary}}>R$ {productPrice.toFixed(2)}</p>}
-                  {/* Botões dentro do card */}
-                  {(mc.show_product_btn) && (
-                    <div className="mt-1.5 flex items-center gap-2 flex-wrap">
-                      {mc.show_product_btn && productUrl && (
-                        <a href={productUrl} target="_blank" rel="noreferrer"
-                          className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90 no-underline"
-                          style={{background:c.btn}}>
-                          Ver Produto
-                        </a>
-                      )}
-                      <button onClick={doWhatsApp}
-                        className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90"
-                        style={{background:'#25d366'}}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
-                          <path d="M16.6 13.2c-.3-.2-1.7-.8-2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.8 0c-.4-.2-1.4-.5-2.6-1.6-.9-.8-1.6-1.8-1.8-2.2-.2-.4 0-.6.2-.8l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6s-.7-1.7-1-2.3c-.3-.6-.6-.5-.8-.5h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.8s1.3 3.2 1.5 3.4c.2.2 2.3 3.6 5.6 5.1.8.4 1.5.6 2.1.8.9.3 1.7.3 2.3.2.7-.1 1.7-.7 2-1.3.3-.6.3-1.1.2-1.3-.1-.2-.3-.3-.6-.5z"/>
-                        </svg>
-                        Comprar pelo WhatsApp
-                      </button>
-                    </div>
-                  )}
+                  {/* 🔧 CORREÇÃO: Botões igual widget.js — "Ver no site" + "Comprar pelo WhatsApp" */}
+                  <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                    {mc.show_product_btn && (
+                      <a href={productUrl||'#'} target="_blank" rel="noreferrer"
+                        className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90 no-underline"
+                        style={{background:c.btn, opacity: productUrl ? 1 : 0.5, pointerEvents: productUrl ? 'auto' : 'none'}}>
+                        Ver no site
+                      </a>
+                    )}
+                    <button onClick={doWhatsApp}
+                      className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90"
+                      style={{background:'#25d366'}}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+                        <path d="M16.6 13.2c-.3-.2-1.7-.8-2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.8 0c-.4-.2-1.4-.5-2.6-1.6-.9-.8-1.6-1.8-1.8-2.2-.2-.4 0-.6.2-.8l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6s-.7-1.7-1-2.3c-.3-.6-.6-.5-.8-.5h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.8s1.3 3.2 1.5 3.4c.2.2 2.3 3.6 5.6 5.1.8.4 1.5.6 2.1.8.9.3 1.7.3 2.3.2.7-.1 1.7-.7 2-1.3.3-.6.3-1.1.2-1.3-.1-.2-.3-.3-.6-.5z"/>
+                      </svg>
+                      Comprar pelo WhatsApp
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* ═══ Painel de Comentários (full overlay) ═══ */}
+        {/* ═══ Painel de Comentários (full overlay — igual widget.js) ═══ */}
         {showComments && (
           <div className="absolute inset-2 z-[200] flex flex-col overflow-hidden rounded-[20px] border-2 bg-white shadow-2xl animate-[vlSlideUp_.25s_ease]"
             style={{borderColor:c.primary, boxShadow:'0 12px 30px rgba(0,0,0,.35)'}}>
@@ -575,10 +673,9 @@ const StoryPreviewPage = () => {
             {/* Corpo scrollável */}
             <div className="flex-1 overflow-y-auto" style={{WebkitOverflowScrolling:'touch'}}>
               {!commentSent ? (
-                /* Lista de comentários */
                 comments.length===0 ? (
                   <div className="flex flex-col items-center justify-center px-5 py-10 text-center min-h-[180px]">
-                    <div className="opacity-15 mb-3"><SvgComment/></div>
+                    <div className="opacity-15 mb-3"><SvgComment filled={false}/></div>
                     <p className="text-[15px] font-bold text-slate-700">Seja o primeiro a comentar</p>
                   </div>
                 ) : (
@@ -601,7 +698,6 @@ const StoryPreviewPage = () => {
                   </div>
                 )
               ) : (
-                /* Feedback pós-envio */
                 <div className="flex flex-col items-center justify-center px-5 py-10 text-center min-h-[180px]">
                   <p className="text-[15px] font-bold text-green-600">Obrigado pelo seu comentário! ❤️</p>
                   <button onClick={()=>{setCommentSent(false); setShowComments(false);}}
@@ -615,14 +711,12 @@ const StoryPreviewPage = () => {
             {!commentSent && (
               <div className="border-t border-slate-200 bg-white px-3.5 py-3">
                 {!showEmoji ? (
-                  /* Botão "Deixe seu comentário" */
                   <button onClick={()=>setShowEmoji(true)}
                     className="w-full h-10 rounded-xl text-sm font-bold text-white hover:opacity-90"
                     style={{background:c.btn}}>
                     Deixe seu comentário
                   </button>
                 ) : (
-                  /* Formulário */
                   <div className="flex flex-col gap-0">
                     <label className="text-xs font-semibold text-slate-500 mb-1">Seu nome</label>
                     <input value={commentName} onChange={e=>setCommentName(e.target.value)}
@@ -668,29 +762,46 @@ const StoryPreviewPage = () => {
           </div>
         )}
 
-        {/* ═══ Painel de Medidas ═══ */}
+        {/* 🔧 CORREÇÃO: Painel de Medidas — igual widget.js (card branco, não overlay escuro) */}
         {modelOpen && (
-          <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center p-5"
-            style={{background:'rgba(15,23,42,.97)', color:'#fff'}}>
-            <button onClick={()=>setModelOpen(false)}
-              className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white">
-              <SvgClose/>
-            </button>
-            <div className="mb-3"><SvgRuler/></div>
-            <h3 className="text-lg font-extrabold mb-5">{model?.name||'Modelo'}</h3>
-            {model?.size_name && <p className="text-[13px] text-slate-400 mb-4">Veste tamanho: {model.size_name}</p>}
-            {modelData.length>0 ? (
-              <table className="w-full max-w-[280px]" style={{borderCollapse:'collapse'}}>
-                <tbody>
-                  {modelData.map((m:any,i:number)=>(
-                    <tr key={`${m.name||m.label||i}-${i}`}>
-                      <td className="py-2.5 px-3 border-b border-white/10 font-semibold text-slate-300">{m.name||m.label||`Medida ${i+1}`}</td>
-                      <td className="py-2.5 px-3 border-b border-white/10 text-right font-extrabold">{m.value||m.size||'-'}{m.unit?` ${m.unit}`:''}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : <p className="text-sm text-slate-400 mt-2">Nenhuma medida cadastrada.</p>}
+          <div className="absolute inset-2 z-[200] flex flex-col overflow-hidden rounded-[20px] border-2 bg-white shadow-2xl animate-[vlSlideUp_.25s_ease]"
+            style={{borderColor:c.primary, boxShadow:'0 12px 30px rgba(0,0,0,.35)'}}>
+            {/* Cabeçalho */}
+            <div className="flex h-12 min-h-[48px] items-center justify-between border-b border-slate-200 bg-white px-3.5">
+              <h3 className="text-base font-bold text-[#111]">Medidas</h3>
+              <button onClick={()=>setModelOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200">
+                <SvgClose/>
+              </button>
+            </div>
+
+            {/* Corpo */}
+            <div className="flex-1 overflow-y-auto px-[18px] py-4" style={{WebkitOverflowScrolling:'touch'}}>
+              <p className="text-[15px] font-extrabold text-[#0f172a] mb-0.5">{model?.name||'Modelo'}</p>
+              {model?.size_name && (
+                <span className="inline-block rounded-full px-3 py-1 text-xs font-bold mb-4"
+                  style={{background:'#f1f5f9', color:c.primary}}>
+                  Veste: {model.size_name}
+                </span>
+              )}
+              {modelData.length>0 ? (
+                <table className="w-full" style={{borderCollapse:'separate', borderSpacing:'0 6px'}}>
+                  <tbody>
+                    {modelData.map((m:any,i:number)=>(
+                      <tr key={`${m.name||m.label||i}-${i}`}>
+                        <td className="py-3.5 px-4 text-sm font-semibold text-[#475569] rounded-l-xl" style={{background:'#f8fafc'}}>{m.name||m.label||`Medida ${i+1}`}</td>
+                        <td className="py-3.5 px-4 text-sm font-bold text-[#0f172a] text-right rounded-r-xl" style={{background:'#f8fafc'}}>{m.value||m.size||'-'}{m.unit?` ${m.unit}`:''}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-10 text-center min-h-[160px]">
+                  <div className="opacity-12 mb-3"><SvgRuler/></div>
+                  <p className="text-[15px] font-bold text-slate-700">Nenhuma medida cadastrada</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -774,7 +885,6 @@ const StoryPreviewPage = () => {
       {!playerOpen && isGrid && <Grid/>}
       {playerOpen && <Player/>}
 
-      {/* Animação slideUp dos comentários */}
       <style>{`
         @keyframes vlSlideUp {
           from { transform: translateY(100%); }
