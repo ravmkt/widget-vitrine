@@ -608,14 +608,7 @@ const StoryPreviewPage = () => {
               </button>
             )}
 
-            {/* WhatsApp flutuante */}
-            {mc.show_whatsapp && (
-              <button onClick={doWhatsApp}
-                className="flex h-9 w-9 items-center justify-center rounded-full border-[#25d366] text-white"
-                style={{background:'#25d366'}}>
-                <SvgWhatsApp/>
-              </button>
-            )}
+            {/* 🔧 CORREÇÃO: REMOVIDO — WhatsApp flutuante não existe no widget.js. O WhatsApp só aparece no card do produto. */}
           </div>
 
           {/* ═══ Footer — Card de Produto (igual widget.js) ═══ */}
@@ -633,7 +626,7 @@ const StoryPreviewPage = () => {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-extrabold" style={{color:c.text}}>{product.name||'Produto'}</p>
                   {productPrice>0 && <p className="mt-1 text-base font-extrabold" style={{color:c.secondary}}>R$ {productPrice.toFixed(2)}</p>}
-                  {/* 🔧 CORREÇÃO: Botões igual widget.js — "Ver no site" + "Comprar pelo WhatsApp" */}
+                  {/* 🔧 CORREÇÃO: Botões igual widget.js — "Ver no site" e "Comprar pelo WhatsApp" condicional */}
                   <div className="mt-1.5 flex items-center gap-2 flex-wrap">
                     {mc.show_product_btn && (
                       <a href={productUrl||'#'} target="_blank" rel="noreferrer"
@@ -642,14 +635,14 @@ const StoryPreviewPage = () => {
                         Ver no site
                       </a>
                     )}
-                    <button onClick={doWhatsApp}
-                      className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90"
-                      style={{background:'#25d366'}}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
-                        <path d="M16.6 13.2c-.3-.2-1.7-.8-2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.8 0c-.4-.2-1.4-.5-2.6-1.6-.9-.8-1.6-1.8-1.8-2.2-.2-.4 0-.6.2-.8l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6s-.7-1.7-1-2.3c-.3-.6-.6-.5-.8-.5h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.8s1.3 3.2 1.5 3.4c.2.2 2.3 3.6 5.6 5.1.8.4 1.5.6 2.1.8.9.3 1.7.3 2.3.2.7-.1 1.7-.7 2-1.3.3-.6.3-1.1.2-1.3-.1-.2-.3-.3-.6-.5z"/>
-                      </svg>
-                      Comprar pelo WhatsApp
-                    </button>
+                    {/* 🔧 CORREÇÃO: WhatsApp condicional (respeita show_whatsapp) e sem ícone (igual widget.js) */}
+                    {mc.show_whatsapp && (
+                      <button onClick={doWhatsApp}
+                        className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-extrabold text-white hover:opacity-90"
+                        style={{background:'#25d366'}}>
+                        Comprar pelo WhatsApp
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
