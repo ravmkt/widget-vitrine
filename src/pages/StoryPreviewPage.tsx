@@ -661,6 +661,31 @@ export default function StoryPreviewPage() {
   return (
     <div className="fixed inset-0 overflow-y-auto" style={{ fontFamily, background: '#f1f5f9' }}>
       <div className="mx-auto max-w-[1200px] p-4">
+        {/* ── Cabeçalho simplificado ── */}
+        <div className="mb-4 flex items-center justify-center rounded-2xl bg-white p-4 shadow-sm">
+          <p className="text-sm font-bold text-slate-800">Preview</p>
+        </div>
+      </div>
+
+      {storyFormat === 'floating_widget' && videos.length > 0 && renderFloating()}
+      {storyFormat === 'carousel' && videos.length > 0 && renderInlineWidget(false)}
+      {storyFormat === 'grid' && videos.length > 0 && renderInlineWidget(true)}
+
+      {videos.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+          <Play size={48} className="mb-4 opacity-30" />
+          <p className="font-bold">Nenhum vídeo vinculado a este story.</p>
+        </div>
+      )}
+
+      {renderPlayer()}
+    </div>
+  );
+  // RETURN
+  // ═══════════════════════════════════════════════════════
+  return (
+    <div className="fixed inset-0 overflow-y-auto" style={{ fontFamily, background: '#f1f5f9' }}>
+      <div className="mx-auto max-w-[1200px] p-4">
         {/* ── Cabeçalho com logo e nome da loja ── */}
         <div className="mb-4 flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
           <div
