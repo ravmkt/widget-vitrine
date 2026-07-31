@@ -378,7 +378,7 @@ const cardMaxWidth = isGrid ? cardFlexBasis : 'none';
             msOverflowStyle: 'none',
             padding: isGrid ? '0 4px' : `0 ${sliderPaddingX}px`,
             width: '100%',
-            justifyContent: isGrid ? 'center' : 'flex-start',
+justifyContent: isGrid ? 'center' : (videos.length <= columns ? 'center' : 'flex-start'),
             cursor: isGrid ? 'auto' : 'grab',
             userSelect: 'none',
             WebkitUserSelect: 'none',
