@@ -182,7 +182,7 @@ const parseMeasures = (model: any): any[] => {
   return [];
 };
 
-/* ─── NOVO: helper para parsear JSON de configurações ─── */
+/* ─── Helper para parsear JSON de configurações ─── */
 const parseJsonSafe = (value: unknown): Record<string, any> => {
   if (!value) return {};
   if (typeof value === 'object' && value !== null) return value as Record<string, any>;
@@ -237,9 +237,7 @@ const StoryPreviewPage = () => {
   const [settings, setSettings] = useState<any | null>(null);
   const [modelModalOpen, setModelModalOpen] = useState(false);
 
-  /* ═══════════════════════════════════════════════════════════
-     NOVO: estado da aparência carregada
-     ═══════════════════════════════════════════════════════════ */
+  /* ─── Estado da aparência ─── */
   const [appearance, setAppearance] = useState<any>(null);
 
   const currentVideo = videos[activeVideoIdx] || null;
@@ -275,9 +273,7 @@ const StoryPreviewPage = () => {
   const commentCount = useMemo(() => comments.length, [comments]);
   const modelData = useMemo(() => parseMeasures(model), [model]);
 
-  /* ═══════════════════════════════════════════════════════════
-     NOVO: derivados da aparência
-     ═══════════════════════════════════════════════════════════ */
+  /* ─── Cores derivadas da aparência ─── */
   const appearanceColors = useMemo(() => {
     const a = appearance || {};
     return {
@@ -289,6 +285,7 @@ const StoryPreviewPage = () => {
     };
   }, [appearance]);
 
+  /* ─── Configuração do modal (visibilidade dos botões) ─── */
   const modalConfig = useMemo(() => {
     const raw = parseJsonSafe((appearance as any)?.modal_config);
     const a = appearance || {};
@@ -313,6 +310,7 @@ const StoryPreviewPage = () => {
     };
   }, [appearance]);
 
+  /* ─── Configs de layout (usa desktop como referência) ─── */
   const layoutConfig = useMemo(() => {
     const a = appearance || {};
     const floatingRaw = parseJsonSafe(a.floating_config);
@@ -324,6 +322,23 @@ const StoryPreviewPage = () => {
       carousel: carouselRaw?.desktop || carouselRaw || {},
       grid: gridRaw?.desktop || gridRaw || {},
     };
+  }, [appearance]);
+
+  /* 🎨 DEBUG: log sempre que a aparência mudar */
+  useEffect(() => {
+    console.log('🎨 DEBUG [appearance carregada]:', {
+      name: appearance?.name,
+      id: appearance?.id,
+      is_default: appearance?.is_default,
+      primary_color: appearance?.primary_color,
+      show_like_button: appearance?.show_like_button,
+      show_product_whatsapp_button: appearance?.show_product_whatsapp_button,
+      show_title: appearance?.show_title,
+      modal_config: (appearance as any)?.modal_config,
+      appearance_completa: appearance,
+    });
+    console.log('🎨 DEBUG [cores derivadas]:', appearanceColors);
+    console.log('🎨 DEBUG [modalConfig derivado]:', modalConfig);
   }, [appearance]);
 
   /* ─── Comentários ─────────────────────────────────────── */
@@ -485,37 +500,46 @@ const StoryPreviewPage = () => {
 
         setSettings(generalSettings?.[0] || null);
 
-        /* ═════════════════════════════════════════════════════
-           NOVO: carrega a aparência
-           ═════════════════════════════════════════════════════ */
+        /* ─── Carrega a aparência ─── */
         try {
           const allAppearances = await getAllSafe<any>(
             (db as any).appearances,
             finalStoreId,
           );
 
+          console.log('🎨 DEBUG [todas as aparências]:', allAppearances?.length, allAppearances?.map((a: any) => ({ id: a.id, name: a.name, is_default: a.is_default })));
+
           const storyAppearanceId = (currentStory as any)?.appearance_id;
           const defaultAppearanceId =
             generalSettings?.[0]?.default_appearance_id;
+
+          console.log('🎨 DEBUG [IDs]:', {
+            storyAppearanceId,
+            defaultAppearanceId,
+            generalSettings: generalSettings?.[0],
+          });
+
           const targetId = storyAppearanceId || defaultAppearanceId;
 
           let found: any = null;
           if (targetId) {
             found =
               allAppearances.find((a: any) => a.id === targetId) || null;
+            console.log('🎨 DEBUG [buscou por targetId]:', targetId, found?.name || 'NÃO ENCONTRADA');
           }
           if (!found) {
             found =
               allAppearances.find((a: any) => a.is_default) ||
               allAppearances[0] ||
               null;
+            console.log('🎨 DEBUG [fallback is_default ou primeira]:', found?.name || 'NENHUMA');
           }
 
           if (mounted) {
             setAppearance(found);
           }
-        } catch {
-          // sem aparência, usa fallback
+        } catch (err) {
+          console.error('🎨 DEBUG [erro ao carregar aparência]:', err);
         }
 
         const relationVideos = storyVideos
@@ -849,7 +873,7 @@ const StoryPreviewPage = () => {
     );
   }
 
-  /* ─── Atalhos para cores e config ─────────────────────── */
+  /* ─── Atalhos ─────────────────────── */
   const c = appearanceColors;
   const mc = modalConfig;
 
@@ -872,6 +896,7 @@ const StoryPreviewPage = () => {
               : 'h-[320px] w-[320px] rounded-[28px]',
         )}
       >
+        {/* ─── Barras de progresso ─── */}
         <div className="progress-bars story-progress absolute left-4 right-4 top-3 z-[80] flex gap-1.5">
           {videos.length > 0 ? (
             videos.map((video, idx) => (
@@ -903,7 +928,7 @@ const StoryPreviewPage = () => {
           )}
         </div>
 
-        {/* ══════════ Header (condicionado ao show_title) ══════════ */}
+        {/* ─── Header (condicionado) ─── */}
         {mc.show_title && (
           <div className="absolute left-0 right-0 top-0 z-[80] flex items-start justify-between bg-gradient-to-b from-black/80 to-transparent p-4 pt-4">
             <div className="story-title min-w-0 pr-28">
@@ -920,6 +945,7 @@ const StoryPreviewPage = () => {
           </div>
         )}
 
+        {/* ─── Layouts ─── */}
         {isGridLayout ? (
           <div className="grid h-full w-full grid-cols-1 gap-3 overflow-auto p-4 pt-20 sm:grid-cols-2">
             {videos.map((video, idx) => {
@@ -954,6 +980,7 @@ const StoryPreviewPage = () => {
           </div>
         ) : isCarouselLayout ? (
           <>
+            {/* ─── Botões superiores ─── */}
             <div className="top-actions absolute right-3 top-4 z-[90] flex items-center gap-1.5">
               <button
                 type="button"
@@ -993,6 +1020,7 @@ const StoryPreviewPage = () => {
               </button>
             </div>
 
+            {/* ─── Player ─── */}
             {currentUrl && !videoError ? (
               (() => {
                 const sharedProps = {
@@ -1043,6 +1071,7 @@ const StoryPreviewPage = () => {
               </div>
             )}
 
+            {/* ─── Navegação ─── */}
             {videos.length > 1 && (
               <>
                 <button
@@ -1070,47 +1099,49 @@ const StoryPreviewPage = () => {
           </div>
         )}
 
-        {/* ══════════ Botões sociais (condicionados à aparência) ══════════ */}
+        {/* ─── Botões sociais ─── */}
         <div className="social-actions absolute right-4 top-[61%] z-[90] flex -translate-y-1/2 flex-col items-center gap-2">
           {mc.show_like_button && (
-            <button
-              type="button"
-              onClick={handleLike}
-              className="social-button flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/10 p-0 text-white backdrop-blur-sm"
-              aria-label="Curtir"
-            >
-              <Heart
-                className={cn(
-                  'h-[20px] w-[20px]',
-                  liked
-                    ? 'fill-rose-500 text-rose-500'
-                    : 'text-white',
-                )}
-              />
-            </button>
-          )}
-
-          {showSocialCounts && mc.show_like_button && (
-            <span className="text-[10px] font-black text-white drop-shadow">
-              {likeCount}
-            </span>
+            <>
+              <button
+                type="button"
+                onClick={handleLike}
+                className="social-button flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/10 p-0 text-white backdrop-blur-sm"
+                aria-label="Curtir"
+              >
+                <Heart
+                  className={cn(
+                    'h-[20px] w-[20px]',
+                    liked
+                      ? 'fill-rose-500 text-rose-500'
+                      : 'text-white',
+                  )}
+                />
+              </button>
+              {showSocialCounts && (
+                <span className="text-[10px] font-black text-white drop-shadow">
+                  {likeCount}
+                </span>
+              )}
+            </>
           )}
 
           {mc.show_comment_button && (
-            <button
-              type="button"
-              onClick={() => setShowComments(true)}
-              className="social-button flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/10 p-0 text-white backdrop-blur-sm"
-              aria-label="Comentários"
-            >
-              <MessageCircle className="h-[20px] w-[20px]" />
-            </button>
-          )}
-
-          {showSocialCounts && mc.show_comment_button && (
-            <span className="text-[10px] font-black text-white drop-shadow">
-              {commentCount}
-            </span>
+            <>
+              <button
+                type="button"
+                onClick={() => setShowComments(true)}
+                className="social-button flex h-[36px] w-[36px] min-h-[36px] min-w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-white/80 bg-black/10 p-0 text-white backdrop-blur-sm"
+                aria-label="Comentários"
+              >
+                <MessageCircle className="h-[20px] w-[20px]" />
+              </button>
+              {showSocialCounts && (
+                <span className="text-[10px] font-black text-white drop-shadow">
+                  {commentCount}
+                </span>
+              )}
+            </>
           )}
 
           {mc.show_share_button && (
@@ -1155,7 +1186,7 @@ const StoryPreviewPage = () => {
           )}
         </div>
 
-        {/* ══════════ Card de produto (condicionado) ══════════ */}
+        {/* ─── Card de produto ─── */}
         {mc.show_product && product && (
           <div className="product-card absolute bottom-[17px] left-[13px] z-[55] flex h-[72px] w-[238px] min-h-[72px] max-h-[72px] gap-[9px] rounded-[16px] bg-white/95 p-[10px_10px] shadow-lg backdrop-blur-sm">
             <div className="product-image h-[55px] w-[55px] shrink-0 overflow-hidden rounded-[2px] bg-slate-200">
@@ -1200,7 +1231,7 @@ const StoryPreviewPage = () => {
           </div>
         )}
 
-        {/* ══════════ Modal de comentários ══════════ */}
+        {/* ─── Modal de comentários ─── */}
         {showComments && (
           <div className="absolute inset-0 z-[95] flex items-center justify-center bg-black/70 p-4 backdrop-blur-[2px]">
             <div className="mx-auto flex max-h-[70vh] w-[calc(100%-48px)] max-w-[380px] flex-col overflow-hidden rounded-[28px] bg-white p-5 text-slate-900 shadow-2xl">
@@ -1301,7 +1332,7 @@ const StoryPreviewPage = () => {
           </div>
         )}
 
-        {/* ══════════ Modal de medidas ══════════ */}
+        {/* ─── Modal de medidas ─── */}
         {model && modelModalOpen && (
           <div className="absolute inset-0 z-[96] flex items-center justify-center bg-black/85 p-4">
             <div className="mx-auto flex max-h-[70vh] w-[calc(100%-48px)] max-w-[380px] flex-col overflow-hidden rounded-[28px] bg-white p-5 text-slate-900 shadow-2xl">
