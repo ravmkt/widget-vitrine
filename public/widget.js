@@ -655,53 +655,85 @@
     return fetchJson(query);
   }
 
-  function readPageRules() {
-    if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_page_rules', []));
-    return fetchJson('page_rules?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&active=is.true');
-  }
+function readPageRules() {
+  if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_page_rules', []));
 
-  function readDisplayLocations() {
-    if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_display_locations', []));
-    return fetchJson('display_locations?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&active=is.true');
-  }
+  return fetchJson('page_rules?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&order=created_at.desc')
+    .then(function (rules) {
+      if (!Array.isArray(rules)) return [];
 
-  function readLikesFromDb() {
-    return Promise.resolve([]);
-  }
-
-  function readSizingModels() {
-    if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_sizing_models', []));
-    return fetchJson('sizing_models?select=*&store_id=eq.' + encodeURIComponent(storeId));
-  }
-
-  function readStoreSettings() {
-    if (!storeId || !hasSupabase) return Promise.resolve({});
-
-    return Promise.all([
-      supabaseFetch(
-        'store_settings?select=auto_approve_comments,whatsapp_number,whatsapp_message,whatsapp_message_template&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
-        { method: 'GET' }
-      ).then(function (response) { if (!response.ok) return []; return response.json(); })
-       .then(function (data) { return Array.isArray(data) && data.length > 0 ? data[0] : {}; })
-       .catch(function () { return {}; }),
-
-      supabaseFetch(
-        'general_settings?select=auto_approve_comments,whatsapp_number,whatsapp_message,whatsapp_message_template&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
-        { method: 'GET' }
-      ).then(function (response) { if (!response.ok) return []; return response.json(); })
-       .then(function (data) { return Array.isArray(data) && data.length > 0 ? data[0] : {}; })
-       .catch(function () { return {}; })
-    ]).then(function (results) {
-      var store = results[0] || {};
-      var general = results[1] || {};
-      return {
-        auto_approve_comments: general.auto_approve_comments !== undefined ? general.auto_approve_comments : store.auto_approve_comments,
-        whatsapp_number: general.whatsapp_number || store.whatsapp_number || '',
-        whatsapp_message: general.whatsapp_message || store.whatsapp_message || '',
-        whatsapp_message_template: general.whatsapp_message_template || store.whatsapp_message_template || ''
-      };
+      return rules.filter(function (rule) {
+        if (
+          rule.active === false ||
+          rule.active === 'false' ||
+          rule.active === 0 ||
+          rule.active === '0'
+        ) {
+          return false;
+        }
+        return true;
+      });
     });
-  }
+}
+
+function readDisplayLocations() {
+  if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_display_locations', []));
+
+  return fetchJson('display_locations?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&order=created_at.desc')
+    .then(function (locations) {
+      if (!Array.isArray(locations)) return [];
+
+      return locations.filter(function (location) {
+        if (
+          location.active === false ||
+          location.active === 'false' ||
+          location.active === 0 ||
+          location.active === '0'
+        ) {
+          return false;
+        }
+        return true;
+      });
+    });
+}
+
+function readLikesFromDb() {
+  return Promise.resolve([]);
+}
+
+function readSizingModels() {
+  if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_sizing_models', []));
+  return fetchJson('sizing_models?select=*&store_id=eq.' + encodeURIComponent(storeId));
+}
+
+function readStoreSettings() {
+  if (!storeId || !hasSupabase) return Promise.resolve({});
+
+  return Promise.all([
+    supabaseFetch(
+      'store_settings?select=auto_approve_comments,whatsapp_number,whatsapp_message,whatsapp_message_template&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
+      { method: 'GET' }
+    ).then(function (response) { if (!response.ok) return []; return response.json(); })
+     .then(function (data) { return Array.isArray(data) && data.length > 0 ? data[0] : {}; })
+     .catch(function () { return {}; }),
+
+    supabaseFetch(
+      'general_settings?select=auto_approve_comments,whatsapp_number,whatsapp_message,whatsapp_message_template&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
+      { method: 'GET' }
+    ).then(function (response) { if (!response.ok) return []; return response.json(); })
+     .then(function (data) { return Array.isArray(data) && data.length > 0 ? data[0] : {}; })
+     .catch(function () { return {}; })
+  ]).then(function (results) {
+    var store = results[0] || {};
+    var general = results[1] || {};
+    return {
+      auto_approve_comments: general.auto_approve_comments !== undefined ? general.auto_approve_comments : store.auto_approve_comments,
+      whatsapp_number: general.whatsapp_number || store.whatsapp_number || '',
+      whatsapp_message: general.whatsapp_message || store.whatsapp_message || '',
+      whatsapp_message_template: general.whatsapp_message_template || store.whatsapp_message_template || ''
+    };
+  });
+}
 
 function matchesRule(rule) {
   if (!rule) return false;
