@@ -2943,31 +2943,23 @@ storeWhatsappMessage = storeSettings.whatsapp_message_template || storeSettings.
 function storyMatchesCurrentPage(story) {
   if (!story) return false;
 
-  // 1. Regras específicas do story via page_rules
+  // 1. Regras específicas via page_rules
   var rules = pageRules.filter(function (r) { return idsEqual(r.story_id, story.id); });
   if (rules.length > 0) return rules.some(matchesRule);
 
-  // 2. Regras globais (sem story_id vinculado)
+  // 2. Regras globais (sem story_id)
   var globalRules = pageRules.filter(function (r) { return !r.story_id; });
   if (globalRules.length > 0) return globalRules.some(matchesRule);
 
-  // 3. URL configurada diretamente no story
+  // 3. URL no story
   var storyUrl = firstDefined(story.url, story.page_url, story.pageUrl);
   if (storyUrl && String(storyUrl).trim() !== '') {
     return matchesUrl({ url: String(storyUrl).trim() });
   }
 
-  // 4. Fallback final: URL do appearance
+  // 4. Fallback: appearance
   return matchesUrl(appearance);
 }
-
-  // 5. Fallback final: URL do appearance
-  return matchesUrl(appearance);
-}
-console.log('🔍 [DEBUG] Total stories:', stories.length);
-console.log('🔍 [DEBUG] Total pageRules:', pageRules.length, pageRules);
-console.log('🔍 [DEBUG] Total locations:', locations.length, locations);
-console.log('🔍 [DEBUG] URL atual:', window.location.href);
 
       var validStories = stories.filter(storyMatchesCurrentPage);
       if (!validStories || validStories.length === 0) return;
