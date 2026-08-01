@@ -208,7 +208,7 @@ export default function StoryPreviewPage() {
 
   // ─── Handlers ───
   const openPlayer = (idx = 0) => { setVideoIdx(idx); setPlayerOpen(true); setPlaying(true); setMuted(true); setProgress(0); };
-  const closePlayer = () => { setPlayerOpen(false); setPlaying(false); setShowComments(false); setShowCommentForm(false); setShowSizing(false); };
+const closePlayer = () => { setPlayerOpen(false); setPlaying(false); setShowComments(false); setShowCommentForm(false); setShowEmojiPicker(false); setShowSizing(false); };
   const goNext = () => { if (videoIdx < videos.length - 1) { setVideoIdx(v => v + 1); setPlaying(true); setProgress(0); } else closePlayer(); };
   const goPrev = () => { if (videoIdx > 0) { setVideoIdx(v => v - 1); setPlaying(true); setProgress(0); } };
   const togglePlay = () => { if (!videoRef.current) return; if (playing) videoRef.current.pause(); else videoRef.current.play().catch(() => {}); };
