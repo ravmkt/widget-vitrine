@@ -2920,6 +2920,26 @@ function openSizingPanel(modelId) {
       var pageRules = results[10];
       var locations = results[11];
 
+      // 🔧 Extrair seletor CSS das display_locations
+var inlineSelector = '';
+if (locations && locations.length > 0) {
+  for (var i = 0; i < locations.length; i++) {
+    var s = locations[i].css_selector || locations[i].selector || locations[i].display_selector || '';
+    if (s) { inlineSelector = s; break; }
+  }
+}
+// 🔧 Fallback: pegar do campo display_selector da primeira story inline
+if (!inlineSelector) {
+  for (var j = 0; j < validStories.length; j++) {
+    var storySelector = validStories[j].display_selector || '';
+    if (storySelector) { inlineSelector = storySelector; break; }
+  }
+}
+if (inlineSelector) {
+  appearance.css_selector = inlineSelector;
+}
+
+
       if (storeSettings && storeSettings.auto_approve_comments !== undefined) {
         autoApproveComments = !!storeSettings.auto_approve_comments;
       }
