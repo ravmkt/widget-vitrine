@@ -2030,7 +2030,9 @@
       };
 
       btnRow.appendChild(sendBtn);
-      panelFooter.appendChild(btnRow);
+      formWrap.appendChild(btnRow);   // ✅ agora os botões ficam dentro do form
+      // panelFooter fica vazio/oculto
+      panelFooter.style.display = 'none';
 
       document.addEventListener('mousedown', function closeEmoji(ev) {
         if (emojiGrid.style.display === 'grid' && !emojiRow.contains(ev.target)) {
