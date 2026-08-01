@@ -584,3 +584,515 @@
       return finalAppearance;
     });
   }
+
+  function normalizeFloatingPosition(value) {
+    var key = normalizeKey(value);
+    if (key === 'fixed-top-left' || key === 'top-left' || key === 'superior-esquerda') return 'top-left';
+    if (key === 'fixed-top-right' || key === 'top-right' || key === 'superior-direita') return 'top-right';
+    if (key === 'fixed-bottom-left' || key === 'bottom-left' || key === 'inferior-esquerda') return 'bottom-left';
+    if (key === 'fixed-bottom-right' || key === 'bottom-right' || key === 'inferior-direita') return 'bottom-right';
+    return DEFAULT_APPEARANCE.floating_position;
+  }
+
+  function normalizeFloatingShape(value) {
+    var key = normalizeKey(value);
+    if (key === 'square' || key === 'quadrado') return 'square';
+    if (key === 'portrait' || key === 'retrato' || key === '9-16') return 'portrait';
+    if (key === 'circle' || key === 'circulo' || key === 'redondo') return 'circle';
+    return DEFAULT_APPEARANCE.floating_shape;
+  }
+
+  function getFloatingConfig(appearance) {
+    appearance = normalizeAppearanceItem(appearance || {});
+    function rcv(jsonbField, flatField, fallback) {
+      return readConfigValue(appearance, 'floating_config', jsonbField, flatField, fallback);
+    }
+    var position = normalizeFloatingPosition(rcv('floating_position', 'floating_position', DEFAULT_APPEARANCE.floating_position));
+    var shape = normalizeFloatingShape(rcv('shape', 'floating_shape', DEFAULT_APPEARANCE.floating_shape));
+    var sizeNumber = toNumber(rcv('width', 'floating_size', '80'), 80);
+    var widthNumber = sizeNumber;
+    var heightNumber;
+    if (shape === 'square' || shape === 'circle') { heightNumber = widthNumber; }
+    else { heightNumber = Math.round(widthNumber * 16 / 9); }
+    var borderWidthNumber = toNumber(rcv('border_style', 'floating_border_width', '2'), 2);
+    var radiusNumber = toNumber(rcv('border_radius', 'floating_border_radius', '12'), 12);
+    if (shape === 'circle') radiusNumber = 999;
+    var marginTopNumber = toNumber(rcv('top_spacing', 'floating_margin_top', '20'), 20);
+    var marginBottomNumber = toNumber(rcv('bottom_spacing', 'floating_margin_bottom', '20'), 20);
+    var marginSideNumber = toNumber(rcv('left_spacing', 'floating_margin_side', '20'), 20);
+    var zIndexNumber = toNumber(rcv('z_index', 'floating_z_index', '2147483647'), 2147483647);
+    var objectFit = String(rcv('object_fit', 'floating_object_fit', 'cover') || 'cover').trim().toLowerCase();
+    var top = 'auto', right = 'auto', bottom = 'auto', left = 'auto', alignItems = 'flex-end';
+    if (position === 'top-left') { top = px(marginTopNumber); left = px(marginSideNumber); alignItems = 'flex-start'; }
+    if (position === 'top-right') { top = px(marginTopNumber); right = px(marginSideNumber); alignItems = 'flex-end'; }
+    if (position === 'bottom-left') { bottom = px(marginBottomNumber); left = px(marginSideNumber); alignItems = 'flex-start'; }
+    if (position === 'bottom-right') { bottom = px(marginBottomNumber); right = px(marginSideNumber); alignItems = 'flex-end'; }
+    return {
+      position: position, shape: shape,
+      top: top, right: right, bottom: bottom, left: left,
+      width: px(widthNumber), height: px(heightNumber),
+      borderWidth: px(borderWidthNumber),
+      radius: shape === 'circle' ? '999px' : px(radiusNumber),
+      innerRadius: shape === 'circle' ? '999px' : px(Math.max(0, radiusNumber - borderWidthNumber)),
+      zIndex: zIndexNumber, alignItems: alignItems, objectFit: objectFit
+    };
+  }
+
+  function getFloatingBehaviorConfig(appearance) {
+    appearance = appearance || {};
+    function rcv(jsonbField, flatField, fallback) {
+      return readConfigValue(appearance, 'floating_config', jsonbField, flatField, fallback);
+    }
+    return {
+      objectFit: rcv('object_fit', 'floating_object_fit', DEFAULT_APPEARANCE.floating_object_fit),
+      showPlayButton: toBoolean(rcv('show_play_icon', 'floating_show_play_button', true), true),
+      allowDrag: toBoolean(rcv('draggable', 'floating_allow_drag', false), false),
+      allowClose: toBoolean(rcv('allow_close', 'floating_allow_close', true), true)
+    };
+  }
+
+  function getCarouselConfig(appearance) {
+    appearance = normalizeAppearanceItem(appearance || {});
+    function rcv(jsonbField, flatField, fallback) {
+      return readConfigValue(appearance, 'carousel_config', jsonbField, flatField, fallback);
+    }
+    var shape = String(rcv('shape', 'carousel_shape', 'portrait') || 'portrait').trim().toLowerCase();
+    var sizeNumber = toNumber(rcv('width', 'carousel_size', '30'), 30);
+    var visibleItems = safeInt(rcv('visible_items', 'carousel_visible_items', '4'), 4);
+    var spacing = safeInt(rcv('spacing', 'carousel_spacing', '16'), 16);
+    var borderColor = rcv('border_color', 'carousel_border_color', '#0094EB') || '#0094EB';
+    var borderWidth = safeInt(rcv('border_style', 'carousel_border_width', '2'), 2);
+    var borderRadius = safeInt(rcv('border_radius', 'carousel_border_radius', '12'), 12);
+    var objectFit = String(rcv('object_fit', 'carousel_object_fit', 'cover') || 'cover').trim().toLowerCase();
+    var marginTop = safeInt(rcv('margin_top', 'carousel_margin_top', '0'), 0);
+    var marginBottom = safeInt(rcv('margin_bottom', 'carousel_margin_bottom', '0'), 0);
+    var showTitle = toBoolean(rcv('show_title', 'carousel_show_title', false), false);
+    var showProduct = toBoolean(rcv('show_product', 'carousel_show_product', true), true);
+    var showPlayButton = toBoolean(rcv('show_play_icon', 'carousel_show_play_button', true), true);
+    var autoCenter = toBoolean(rcv('auto_center', 'carousel_auto_center', false), false);
+    var aspectRatio = '9 / 16';
+    if (shape.indexOf('landscape') !== -1 || shape.indexOf('16_9') !== -1 || shape.indexOf('16-9') !== -1) {
+      aspectRatio = '16 / 9';
+    } else if (shape.indexOf('square') !== -1 || shape.indexOf('1_1') !== -1 || shape.indexOf('1-1') !== -1 || shape === 'circle') {
+      aspectRatio = '1 / 1';
+    }
+    return {
+      shape: shape, size: sizeNumber,
+      visibleItems: visibleItems, spacing: spacing,
+      borderColor: borderColor, borderWidth: borderWidth,
+      borderRadius: borderRadius, objectFit: objectFit,
+      marginTop: marginTop, marginBottom: marginBottom,
+      showTitle: showTitle, showProduct: showProduct,
+      showPlayButton: showPlayButton, autoCenter: autoCenter,
+      aspectRatio: aspectRatio
+    };
+  }
+
+  function getGridConfig(appearance) {
+    appearance = normalizeAppearanceItem(appearance || {});
+    function rcv(jsonbField, flatField, fallback) {
+      return readConfigValue(appearance, 'grid_config', jsonbField, flatField, fallback);
+    }
+    var shape = String(rcv('shape', 'grid_shape', 'portrait') || 'portrait').trim().toLowerCase();
+    var sizeNumber = toNumber(rcv('width', 'grid_size', '30'), 30);
+    var columns = safeInt(rcv('visible_items', 'grid_columns', '4'), 4);
+    var rows = safeInt(rcv('rows', 'grid_rows', '1'), 1);
+    var spacing = safeInt(rcv('spacing', 'grid_spacing', '16'), 16);
+    var borderColor = rcv('border_color', 'grid_border_color', '#0094EB') || '#0094EB';
+    var borderWidth = safeInt(rcv('border_style', 'grid_border_width', '2'), 2);
+    var borderRadius = safeInt(rcv('border_radius', 'grid_border_radius', '12'), 12);
+    var objectFit = String(rcv('object_fit', 'grid_object_fit', 'cover') || 'cover').trim().toLowerCase();
+    var showTitle = toBoolean(rcv('show_title', 'grid_show_title', false), false);
+    var aspectRatio = '9 / 16';
+    if (shape.indexOf('landscape') !== -1 || shape.indexOf('16_9') !== -1 || shape.indexOf('16-9') !== -1) {
+      aspectRatio = '16 / 9';
+    } else if (shape.indexOf('square') !== -1 || shape.indexOf('1_1') !== -1 || shape.indexOf('1-1') !== -1 || shape === 'circle') {
+      aspectRatio = '1 / 1';
+    }
+    return {
+      shape: shape, size: sizeNumber,
+      columns: columns, rows: rows, spacing: spacing,
+      borderColor: borderColor, borderWidth: borderWidth,
+      borderRadius: borderRadius, objectFit: objectFit,
+      showTitle: showTitle, aspectRatio: aspectRatio
+    };
+  }
+
+  function getPrimaryColor(appearance) {
+    return readAppearanceValue(appearance, ['primary_color', 'primaryColor', 'cor_primaria']) || DEFAULT_APPEARANCE.primary_color;
+  }
+
+  function getSecondaryColor(appearance) {
+    return readAppearanceValue(appearance, ['secondary_color', 'secondaryColor', 'cor_secundaria']) || DEFAULT_APPEARANCE.secondary_color;
+  }
+
+  function getBorderColor(appearance) {
+    var jsonbVal = readJsonbConfigValue(appearance, 'floating_config', 'border_color');
+    if (jsonbVal && String(jsonbVal).trim() !== '') return jsonbVal;
+    var flatVal = readDeviceValue(appearance, 'floating_border_color');
+    if (flatVal && String(flatVal).trim() !== '') return flatVal;
+    return getPrimaryColor(appearance);
+  }
+
+  function getButtonColor(appearance) {
+    return readAppearanceValue(appearance, ['button_color', 'buttonColor', 'btn_color', 'cor_botao']) || getPrimaryColor(appearance);
+  }
+
+  function getFontFamily(appearance) {
+    return readAppearanceValue(appearance, ['font_family', 'fontFamily', 'fonte']) || DEFAULT_APPEARANCE.font_family;
+  }
+
+  function normalizeModalAppearanceConfig(appearance) {
+    appearance = appearance || {};
+    var rawModalConfig = parseJsonIfNeeded(appearance.modal_config || appearance.modalConfig) || {};
+    function rcv(jsonbField, flatField, fallback) {
+      var jsonbVal = rawModalConfig[jsonbField];
+      if (jsonbVal !== undefined && jsonbVal !== null && jsonbVal !== '') return jsonbVal;
+      if (flatField) {
+        var flatVal = readDeviceValue(appearance, flatField);
+        if (flatVal !== undefined && flatVal !== null && flatVal !== '') return flatVal;
+      }
+      return fallback;
+    }
+    return {
+      show_title: rcv('show_title', 'modal_show_title', true),
+      show_play_button: rcv('show_play_button', 'modal_show_play_button', true),
+      show_product: rcv('show_product', 'modal_show_product', true),
+      show_product_button: rcv('show_product_button', 'modal_show_product_button', true),
+      show_product_whatsapp_button: rcv('show_product_whatsapp_button', null, true),
+      show_like_button: rcv('show_like_button', 'modal_show_like_button', true),
+      show_comment_button: rcv('show_comment_button', 'modal_show_comment_button', true),
+      show_share_button: rcv('show_share_button', 'modal_show_share_button', true),
+      show_whatsapp_button: rcv('show_whatsapp_button', 'modal_show_whatsapp_button', true),
+      show_sizing_button: rcv('show_sizing_button', 'modal_show_sizing_button', true),
+      hide_stories: rcv('hide_stories', 'modal_hide_stories', false),
+      shadow_enabled: rcv('shadow_enabled', 'modal_shadow_enabled', true),
+      border_color: rcv('border_color', 'modal_border_color', ''),
+      border_width: rcv('border_width', 'modal_border_width', ''),
+      border_radius: rcv('border_radius', 'modal_border_radius', '')
+    };
+  }
+
+  function readStories() {
+    if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_stories', []));
+    return fetchJson('stories?select=*&store_id=eq.' + encodeURIComponent(storeId))
+      .then(function (items) {
+        return items.filter(function (story) {
+          return ('status' in story ? story.status === 'active' : true) &&
+                 ('active' in story ? story.active !== false : true);
+        });
+      });
+  }
+
+  function readStoryVideos() {
+    return (!storeId || !hasSupabase)
+      ? Promise.resolve(getStorageItem('vidlytics_story_videos', []))
+      : fetchJson('story_videos?select=*&store_id=eq.' + encodeURIComponent(storeId));
+  }
+
+  function readVideos() {
+    return (!storeId || !hasSupabase)
+      ? Promise.resolve(getStorageItem('vidlytics_videos', []))
+      : fetchJson('videos?select=*&store_id=eq.' + encodeURIComponent(storeId));
+  }
+
+  function readStoryProducts() {
+    return (!storeId || !hasSupabase)
+      ? Promise.resolve(getStorageItem('vidlytics_story_products', []))
+      : fetchJson('story_products?select=*&store_id=eq.' + encodeURIComponent(storeId));
+  }
+
+  function readProducts() {
+    return (!storeId || !hasSupabase)
+      ? Promise.resolve(getStorageItem('vidlytics_products', []))
+      : fetchJson('products?select=*&store_id=eq.' + encodeURIComponent(storeId));
+  }
+
+  function readComments() {
+    if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_comments', []));
+    var query = 'comments?select=id,store_id,video_id,user_name,user_email,content,status,created_at,reply_content,reply_status&store_id=eq.' +
+      encodeURIComponent(storeId) + '&status=eq.approved&order=created_at.asc';
+    return fetchJson(query);
+  }
+
+  function readPageRules() {
+    if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_page_rules', []));
+    return fetchJson('page_rules?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&order=created_at.desc')
+      .then(function (rules) {
+        if (!Array.isArray(rules)) return [];
+        return rules.filter(function (rule) {
+          if (rule.active === false || rule.active === 'false' || rule.active === 0 || rule.active === '0') return false;
+          return true;
+        });
+      });
+  }
+
+  function readDisplayLocations() {
+    if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_display_locations', []));
+    return fetchJson('display_locations?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&order=created_at.desc')
+      .then(function (locations) {
+        if (!Array.isArray(locations)) return [];
+        return locations.filter(function (location) {
+          if (location.active === false || location.active === 'false' || location.active === 0 || location.active === '0') return false;
+          return true;
+        });
+      });
+  }
+
+  function readLikesFromDb() {
+    return Promise.resolve([]);
+  }
+
+  function readSizingModels() {
+    if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_sizing_models', []));
+    return fetchJson('sizing_models?select=*&store_id=eq.' + encodeURIComponent(storeId));
+  }
+
+  function readStoreSettings() {
+    if (!storeId || !hasSupabase) return Promise.resolve({});
+    return supabaseFetch(
+      'store_settings?select=auto_approve_comments,whatsapp_number,whatsapp_message,whatsapp_message_template&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
+      { method: 'GET' }
+    )
+      .then(function (response) { if (!response.ok) return {}; return response.json(); })
+      .then(function (data) {
+        if (Array.isArray(data) && data.length > 0) return data[0];
+        return {};
+      })
+      .catch(function () { return {}; })
+      .then(function (store) {
+        return {
+          auto_approve_comments: store.auto_approve_comments,
+          whatsapp_number: store.whatsapp_number || '',
+          whatsapp_message: store.whatsapp_message || '',
+          whatsapp_message_template: store.whatsapp_message_template || ''
+        };
+      });
+  }
+
+  function matchesRule(rule) {
+    if (!rule) return false;
+    if (rule.active === false || rule.active === 'false' || rule.active === 0 || rule.active === '0') return false;
+
+    var href = window.location.href;
+    var path = window.location.pathname || '/';
+
+    var rawCondition = String(
+      firstDefined(rule.condition_type, rule.rule_type, rule.match_type) || ''
+    ).trim().toLowerCase();
+
+    var conditionType = rawCondition
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+    var value = String(
+      firstDefined(rule.url_pattern, rule.page_url, rule.value, rule.url) || ''
+    ).trim();
+
+    // Se condition_type está vazio mas existe url_pattern, assume "contains"
+    if (!conditionType && value) {
+      conditionType = 'contains';
+    }
+
+    // Normalização
+    if (
+      conditionType.indexOf('contem') !== -1 ||
+      conditionType === 'url_contains' ||
+      conditionType === 'contains'
+    ) {
+      conditionType = 'contains';
+    } else if (
+      conditionType.indexOf('exata') !== -1 ||
+      conditionType === 'url_equals' ||
+      conditionType === 'exact' ||
+      conditionType === 'equals'
+    ) {
+      conditionType = 'equals';
+    } else if (
+      conditionType.indexOf('todas') !== -1 ||
+      conditionType === 'all' ||
+      conditionType === 'all_pages'
+    ) {
+      conditionType = 'all_pages';
+    } else if (
+      conditionType.indexOf('inicial') !== -1 ||
+      conditionType === 'home' ||
+      conditionType === 'home_only'
+    ) {
+      conditionType = 'home_only';
+    } else if (
+      conditionType.indexOf('produto') !== -1 ||
+      conditionType === 'product_pages' ||
+      conditionType === 'product'
+    ) {
+      conditionType = 'product_pages';
+    } else if (
+      conditionType.indexOf('categoria') !== -1 ||
+      conditionType.indexOf('colecao') !== -1 ||
+      conditionType.indexOf('collection') !== -1 ||
+      conditionType === 'category_pages' ||
+      conditionType === 'category'
+    ) {
+      conditionType = 'category_pages';
+    } else if (conditionType) {
+      // Se tem algum valor mas não foi reconhecido, tenta como "contains"
+      conditionType = 'contains';
+    }
+
+    // Sem condition_type e sem value = não aparece
+    if (!conditionType) return false;
+
+    switch (conditionType) {
+      case 'all_pages':
+        return true;
+
+      case 'home_only':
+        return (
+          path === '/' ||
+          path === '/home' ||
+          path === '/index.html' ||
+          path === ''
+        );
+
+      case 'product_pages':
+        return (
+          path.indexOf('/product') !== -1 ||
+          path.indexOf('/produto') !== -1
+        );
+
+      case 'category_pages':
+        return (
+          path.indexOf('/category') !== -1 ||
+          path.indexOf('/categoria') !== -1 ||
+          path.indexOf('/colecao') !== -1 ||
+          path.indexOf('/collection') !== -1
+        );
+
+      case 'contains':
+        return (
+          href.indexOf(value) !== -1 ||
+          path.indexOf(value) !== -1
+        );
+
+      case 'equals':
+        return (
+          href === value ||
+          path === value
+        );
+
+      case 'not_equals':
+        return (
+          href !== value &&
+          path !== value
+        );
+
+      case 'starts_with':
+        return (
+          href.indexOf(value) === 0 ||
+          path.indexOf(value) === 0
+        );
+
+      case 'ends_with':
+        return (
+          href.endsWith(value) ||
+          path.endsWith(value)
+        );
+
+      case 'regex':
+        try {
+          return new RegExp(value).test(href);
+        } catch (error) {
+          return false;
+        }
+
+      default:
+        return false;
+    }
+  }
+
+  function matchesUrl(appearance) {
+    if (!appearance) return true;
+    var rawUrl = firstDefined(appearance.url, appearance.pageUrl, appearance.page_url);
+    if (!rawUrl || String(rawUrl).trim() === '') return true;
+    var pattern = String(rawUrl).trim().toLowerCase();
+    var href = window.location.href.toLowerCase();
+    var path = (window.location.pathname || '/').toLowerCase();
+    var search = (window.location.search || '').toLowerCase();
+    var fullPath = (path + search).replace(/\/+$/, '');
+    var patterns = pattern.split(',').map(function (p) { return p.trim(); }).filter(Boolean);
+    return patterns.some(function (p) {
+      var normalizedPattern = p.replace(/\/+$/, '').replace(/^https?:\/\/[^/]+/i, '');
+      if (p === '/') normalizedPattern = '/';
+      if (!normalizedPattern) return false;
+      if (normalizedPattern === 'all' || normalizedPattern === 'todas' || normalizedPattern === 'all_pages') return true;
+      if (normalizedPattern === '/') return path === '/' || path === '';
+      return (
+        href.indexOf(normalizedPattern) !== -1 ||
+        fullPath.indexOf(normalizedPattern) !== -1 ||
+        path.indexOf(normalizedPattern) !== -1
+      );
+    });
+  }
+
+  function getVideoUrl(video) {
+    if (!video) return '';
+    return normalizeMediaUrl(firstDefined(
+      video.video_url, video.videoUrl, video.url, video.source_url,
+      video.sourceUrl, video.file_url, video.fileUrl, video.video, video.src, ''
+    ));
+  }
+
+  // 🔧 CORREÇÃO 1: Aceita URLs do storage do Supabase mesmo sem extensão
+  function isDirectVideoUrl(url) {
+    if (!url) return false;
+    return VIDEO_FILE_REGEX.test(url) || url.indexOf('/storage/v1/object/') !== -1;
+  }
+
+  function extractYouTubeId(url) {
+    if (!url) return '';
+    try {
+      var parsed = new URL(String(url).trim());
+      var host = parsed.hostname.replace(/^www\./, '').toLowerCase();
+      if (host === 'youtu.be') return parsed.pathname.replace(/^\//, '').split('/')[0] || '';
+      if (host === 'youtube.com' || host === 'm.youtube.com') {
+        if (parsed.pathname.indexOf('/shorts/') === 0) return parsed.pathname.split('/')[2] || '';
+        if (parsed.pathname.indexOf('/embed/') === 0) return parsed.pathname.replace(/^\/embed\//, '').split('/')[0] || '';
+        if (parsed.pathname === '/watch') return parsed.searchParams.get('v') || '';
+      }
+    } catch (e) { return ''; }
+    return '';
+  }
+
+  function getYouTubeThumbnail(url) {
+    var id = extractYouTubeId(url);
+    return id ? 'https://img.youtube.com/vi/' + id + '/hqdefault.jpg' : '';
+  }
+
+  function getThumbnailFromObject(obj) {
+    if (!obj) return '';
+    var meta = parseJsonIfNeeded(firstDefined(obj.metadata, obj.meta, obj.extra, obj.data, {}));
+    return normalizeMediaUrl(firstDefined(
+      obj.thumbnail_url, obj.thumbnailUrl, obj.thumbnail,
+      obj.cover_url, obj.coverUrl, obj.cover,
+      obj.poster_url, obj.posterUrl, obj.poster,
+      obj.image_url, obj.imageUrl, obj.image,
+      obj.url, obj.src,
+      meta.thumbnail_url, meta.thumbnailUrl, meta.thumbnail,
+      meta.cover_url, meta.coverUrl, meta.cover,
+      meta.poster_url, meta.posterUrl, meta.poster,
+      meta.image_url, meta.imageUrl, meta.image,
+      meta.url, meta.src, ''
+    ) || '');
+  }
+
+  function getVideoThumbnail(video) {
+    if (!video) return '';
+    var direct = getThumbnailFromObject(video);
+    if (direct) return direct;
+    if (video.source_type !== 'upload' && video.sourceType !== 'upload') return getYouTubeThumbnail(getVideoUrl(video));
+    return '';
+  }
+
+  function getStoryThumbnail(story, coverVideo, coverRelation) {
+    return getThumbnailFromObject(coverRelation) || getThumbnailFromObject(story) || getVideoThumbnail(coverVideo) || getThumbnailFromObject(coverVideo) || '';
+  }
