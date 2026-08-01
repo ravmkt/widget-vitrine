@@ -2964,6 +2964,10 @@ function storyMatchesCurrentPage(story) {
   // 5. Fallback final: URL do appearance
   return matchesUrl(appearance);
 }
+console.log('🔍 [DEBUG] Total stories:', stories.length);
+console.log('🔍 [DEBUG] Total pageRules:', pageRules.length, pageRules);
+console.log('🔍 [DEBUG] Total locations:', locations.length, locations);
+console.log('🔍 [DEBUG] URL atual:', window.location.href);
 
       var validStories = stories.filter(storyMatchesCurrentPage);
       if (!validStories || validStories.length === 0) return;
