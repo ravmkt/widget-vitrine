@@ -2975,3 +2975,440 @@
   }
 
   var globalModalData = null;
+
+  // ─── HELPERS ──────────────────────────────────
+
+  function getThumbnailUrl(story) {
+    if (!story) return '';
+    return normalizeMediaUrl(firstDefined(
+      story.thumbnail_url, story.thumbnailUrl, story.thumbnail,
+      story.cover_url, story.coverUrl, story.cover,
+      story.poster_url, story.posterUrl, story.poster,
+      story.image_url, story.imageUrl, story.image,
+      story.thumb_url, story.thumbUrl, story.thumb,
+      (story.video ? (story.video.thumbnail_url || story.video.thumbnailUrl || story.video.thumbnail) : ''),
+      ''
+    ));
+  }
+
+  function isVideoStory(story) {
+    if (!story) return false;
+    var videoObj = story.video || story;
+    var url = getVideoUrl(videoObj);
+    return !!url;
+  }
+
+  function isVideoUrl(url) {
+    if (!url) return false;
+    return /\.(mp4|webm|mov|m4v|mkv|avi|ogv|ogg)($|\?)/i.test(url);
+  }
+
+  function isYouTubeUrl(url) {
+    return !!extractYouTubeId(url);
+  }
+
+  function showEmptyState(container, type) {
+    if (!container) return;
+    container.innerHTML = '';
+    var empty = document.createElement('div');
+    empty.className = 'vl-error';
+    empty.textContent = type === 'floating' ? 'Nenhum story disponível.' : 'Nenhum vídeo encontrado.';
+    container.appendChild(empty);
+  }
+
+  function showEmptyStateInline(anchorEl, type) {
+    if (!anchorEl) return;
+    var placeholder = document.createElement('div');
+    placeholder.style.cssText = 'padding:16px;text-align:center;color:#94a3b8;font-size:13px;';
+    placeholder.textContent = 'Nenhum conteúdo disponível.';
+    anchorEl.parentNode && anchorEl.parentNode.insertBefore(placeholder, anchorEl.nextSibling);
+  }
+
+  function getInlineConfig(appearance) {
+    appearance = appearance || {};
+    return {
+      maxWidth: firstDefined(appearance.inline_max_width, appearance.max_width, '800'),
+      marginTop: firstDefined(appearance.inline_margin_top, appearance.margin_top, '0'),
+      marginBottom: firstDefined(appearance.inline_margin_bottom, appearance.margin_bottom, '0'),
+      borderRadius: firstDefined(appearance.inline_border_radius, appearance.border_radius, '12'),
+      aspectRatio: firstDefined(appearance.inline_aspect_ratio, appearance.aspect_ratio, '16 / 9')
+    };
+  }
+
+  // ─── TRACKING & FINGERPRINT ───────────────────
+
+  function trackMetric(data) {
+    if (!hasSupabase) return;
+    data = data || {};
+    supabaseFetch('metrics', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
+        store_id: storeId,
+        event_type: data.event_type || 'unknown',
+        story_id: data.story_id || null,
+        video_id: data.video_id || null,
+        product_id: data.product_id || null,
+        page_url: data.page_url || window.location.href,
+        user_fingerprint: getFingerprint(),
+        created_at: new Date().toISOString()
+      })
+    }).catch(function () {
+      // Silently fail — metrics should never break the widget
+    });
+  }
+
+  function getFingerprint() {
+    var key = '__vidlytics_fp';
+    try {
+      var stored = localStorage.getItem(key);
+      if (stored) return stored;
+    } catch (e) {}
+    var fp = 'fp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    try { localStorage.setItem(key, fp); } catch (e) {}
+    return fp;
+  }
+
+  // ─── STORY DETECTION & MATCHING ───────────────
+
+  function detectStories(stories, storyVideos, videos, pageRules, locations) {
+    if (!stories || !stories.length) return [];
+
+    // Merge videos into stories
+    var enriched = stories.map(function (story) {
+      var rels = storyVideos.filter(function (sv) {
+        return idsEqual(sv.story_id, story.id);
+      });
+      var storyVidList = rels.map(function (r) {
+        return videos.find(function (v) { return idsEqual(v.id, r.video_id); }) || {};
+      }).filter(function (v) { return v && Object.keys(v).length > 0; });
+
+      // Find product for first video
+      var firstVideo = storyVidList[0];
+      var product = null;
+      if (firstVideo && firstVideo.product_id) {
+        product = readProductsData.find(function (p) {
+          return idsEqual(p.id, firstVideo.product_id);
+        }) || null;
+      }
+
+      return {
+        id: story.id,
+        name: story.title || story.name || '',
+        title: story.title || story.name || '',
+        video: firstVideo || null,
+        videos: storyVidList,
+        product: product,
+        product_id: firstVideo ? (firstVideo.product_id || firstVideo.productId) : null,
+        display_selector: story.display_selector || story.css_selector || '',
+        display_position: story.display_position || story.position || 'afterend',
+        format: story.format || story.display_format || story.displayFormat || '',
+        visual_style: story.visual_style || story.visualStyle || '',
+        url: story.url || story.page_url || story.pageUrl || '',
+        comments: [],
+        actions: [],
+        metadata: story.metadata || {}
+      };
+    });
+
+    // Filter by page rules
+    var matched = enriched.filter(function (story) {
+      return storyMatchesCurrentPage(story, pageRules);
+    });
+
+    // Apply display locations
+    if (locations && locations.length) {
+      for (var i = 0; i < locations.length; i++) {
+        var loc = locations[i];
+        if (loc.css_selector || loc.selector) {
+          var targetStories = loc.story_id
+            ? matched.filter(function (s) { return idsEqual(s.id, loc.story_id); })
+            : matched;
+
+          for (var j = 0; j < targetStories.length; j++) {
+            targetStories[j].display_selector = loc.css_selector || loc.selector || loc.display_selector || '';
+            targetStories[j].display_position = loc.position || loc.display_position || 'afterend';
+            targetStories[j].format = loc.format || loc.display_format || targetStories[j].format;
+          }
+        }
+      }
+    }
+
+    return matched;
+  }
+
+  function storyMatchesCurrentPage(story, pageRules) {
+    if (!story) return false;
+
+    // 1. Regras específicas via page_rules
+    var rules = pageRules.filter(function (r) {
+      return idsEqual(r.story_id, story.id);
+    });
+    if (rules.length > 0) {
+      return rules.some(matchesRule);
+    }
+
+    // 2. Regras globais (sem story_id)
+    var globalRules = pageRules.filter(function (r) {
+      return !r.story_id;
+    });
+    if (globalRules.length > 0) {
+      return globalRules.some(matchesRule);
+    }
+
+    // 3. URL no story
+    var storyUrl = firstDefined(story.url, story.page_url, story.pageUrl);
+    if (storyUrl && String(storyUrl).trim() !== '') {
+      return matchesUrl({ url: String(storyUrl).trim() });
+    }
+
+    // 4. Fallback: aparece em todas as páginas
+    return true;
+  }
+
+  // ─── SHOPIFY DOM OBSERVER ─────────────────────
+
+  var domObserver = null;
+  var domObserverRetries = 0;
+  var MAX_DOM_RETRIES = 30;
+
+  function handleShopifyDOM(stories, appearance, behavior) {
+    // Look for existing selector targets
+    var foundTargets = [];
+    for (var i = 0; i < stories.length; i++) {
+      var selector = stories[i].display_selector;
+      if (selector) {
+        try {
+          var el = document.querySelector(selector);
+          if (el) {
+            foundTargets.push({ story: stories[i], element: el, index: i });
+          }
+        } catch (e) {}
+      }
+    }
+
+    // If selectors found, render immediately
+    if (foundTargets.length > 0) {
+      renderStoriesAtTargets(foundTargets, stories, appearance, behavior);
+      return;
+    }
+
+    // If no selectors or targets not found, start observing
+    if (domObserver) {
+      domObserver.disconnect();
+    }
+
+    domObserver = new MutationObserver(function () {
+      domObserverRetries++;
+      if (domObserverRetries > MAX_DOM_RETRIES) {
+        domObserver.disconnect();
+        domObserver = null;
+        return;
+      }
+
+      for (var i = 0; i < stories.length; i++) {
+        var selector = stories[i].display_selector;
+        if (!selector) continue;
+        try {
+          var el = document.querySelector(selector);
+          if (el && el.offsetParent !== null) {
+            var alreadyRendered = el.hasAttribute('data-vidlytics-rendered');
+            if (!alreadyRendered) {
+              el.setAttribute('data-vidlytics-rendered', 'true');
+              renderStoryAtElement(stories[i], el, stories, appearance, behavior, i);
+            }
+          }
+        } catch (e) {}
+      }
+    });
+
+    domObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: false
+    });
+  }
+
+  function renderStoriesAtTargets(targets, allStories, appearance, behavior) {
+    for (var i = 0; i < targets.length; i++) {
+      var t = targets[i];
+      if (t.element.hasAttribute('data-vidlytics-rendered')) continue;
+      t.element.setAttribute('data-vidlytics-rendered', 'true');
+      renderStoryAtElement(t.story, t.element, allStories, appearance, behavior, t.index);
+    }
+  }
+
+  function renderStoryAtElement(story, anchorEl, allStories, appearance, behavior, index) {
+    var format = String(
+      firstDefined(story.format, story.display_format, story.displayFormat,
+                   story.visual_style, story.visualStyle, 'floating')
+    ).toLowerCase();
+
+    var position = story.display_position || behavior.position || 'afterend';
+
+    var renderBehavior = {
+      position: position,
+      startIndex: index || 0,
+      showTitles: behavior.showTitles !== false,
+      showProduct: behavior.showProduct !== false,
+      showComments: behavior.showComments !== false,
+      showClose: format !== 'inline',
+      showLabel: format === 'floating',
+      showProgress: format !== 'carousel' && format !== 'grid',
+      autoRotate: format === 'floating',
+      rotationDelay: behavior.rotationDelay || 8000,
+      storyDuration: behavior.storyDuration || 5000,
+      loop: behavior.loop !== false
+    };
+
+    // For inline/carousel/grid with a single story selected by selector,
+    // we pass that single story to the renderer
+    var renderStories = allStories;
+
+    if (format.indexOf('float') !== -1 || format.indexOf('flutuante') !== -1 || format.indexOf('widget') !== -1) {
+      renderFloatingWidget(renderStories, anchorEl, appearance, renderBehavior);
+    } else if (format.indexOf('carousel') !== -1 || format.indexOf('carrossel') !== -1) {
+      renderCarousel(renderStories, anchorEl, appearance, renderBehavior);
+    } else if (format.indexOf('grid') !== -1 || format.indexOf('grade') !== -1) {
+      renderGrid(renderStories, anchorEl, appearance, renderBehavior);
+    } else {
+      // Default: inline
+      renderInlineWidget(renderStories, anchorEl, appearance, renderBehavior);
+    }
+  }
+
+  // ─── GLOBAL WIDGET STATE ──────────────────────
+
+  var globalActiveWidget = null;
+  var globalWidgetConfig = null;
+
+  // ─── INIT ─────────────────────────────────────
+
+  function initVidlytics() {
+    if (!hasSupabase && !storeId) {
+      console.warn('Vidlytics: Configuração incompleta — verifique supabaseUrl, anonKey e storeId.');
+      return;
+    }
+
+    // Load configuration
+    var configPromise = readAppearance();
+
+    // Load data
+    var dataPromise = Promise.all([
+      readStories(),
+      readStoryVideos(),
+      readVideos(),
+      readStoryProducts(),
+      readProducts(),
+      readComments(),
+      readSizingModels(),
+      readLikesFromDb(),
+      readStoreSettings(),
+      readPageRules(),
+      readDisplayLocations()
+    ]);
+
+    Promise.all([configPromise, dataPromise])
+      .then(function (results) {
+        var appearance = results[0];
+        var dataResults = results[1];
+
+        var stories = dataResults[0];
+        var storyVideos = dataResults[1];
+        var videos = dataResults[2];
+        readStoryProductsData = dataResults[3];
+        readProductsData = dataResults[4];
+        readCommentsData = dataResults[5];
+        readSizingModelsData = dataResults[6];
+        var likeData = dataResults[7];
+        var storeSettings = dataResults[8];
+        var pageRules = dataResults[9];
+        var locations = dataResults[10];
+
+        // Extract store settings
+        if (storeSettings && storeSettings.auto_approve_comments !== undefined) {
+          autoApproveComments = !!storeSettings.auto_approve_comments;
+        }
+        storeWhatsappNumber = firstDefined(
+          storeSettings.whatsapp_number, storeSettings.whatsappNumber, ''
+        );
+        storeWhatsappMessage = firstDefined(
+          storeSettings.whatsapp_message_template,
+          storeSettings.whatsapp_message,
+          storeSettings.whatsappMessage,
+          ''
+        );
+
+        // Initialize like data
+        if (likeData && typeof likeData === 'object') {
+          readLikeCounts = likeData.likeCounts || {};
+          likedVideos = likeData.likedVideos || {};
+        }
+
+        // Set current appearance
+        currentAppearance = appearance;
+
+        // Detect and filter stories
+        var matchedStories = detectStories(stories, storyVideos, videos, pageRules, locations);
+
+        if (!matchedStories || !matchedStories.length) {
+          console.info('Vidlytics: Nenhum story corresponde à página atual.');
+          return;
+        }
+
+        // Determine global behavior
+        var behavior = {
+          showTitles: toBoolean(firstDefined(appearance.show_titles, appearance.showTitles, true), true),
+          showProduct: toBoolean(firstDefined(appearance.show_product, appearance.showProduct, true), true),
+          showComments: toBoolean(firstDefined(appearance.show_comments, appearance.showComments, true), true),
+          rotationDelay: safeInt(appearance.rotation_delay || appearance.rotationDelay, 8000),
+          storyDuration: safeInt(appearance.story_duration || appearance.storyDuration, 5000),
+          loop: toBoolean(firstDefined(appearance.loop, appearance.loop_stories, appearance.loopStories, true), true),
+          position: firstDefined(appearance.position, appearance.display_position, 'afterend')
+        };
+
+        globalWidgetConfig = {
+          appearance: appearance,
+          behavior: behavior,
+          stories: matchedStories
+        };
+
+        // Check for selector-based rendering
+        var hasSelectors = matchedStories.some(function (s) {
+          return !!(s.display_selector);
+        });
+
+        if (hasSelectors) {
+          handleShopifyDOM(matchedStories, appearance, behavior);
+        } else {
+          // No selectors — render as floating by default (attach to body)
+          renderFloatingWidget(matchedStories, document.body, appearance, behavior);
+        }
+
+        // Debug
+        window.__vidlytics_debug = {
+          matchedStories: matchedStories,
+          appearance: appearance,
+          behavior: behavior,
+          readProductsData: readProductsData
+        };
+
+        console.info(
+          '%cVidlytics Widget inicializado — ' + matchedStories.length + ' stories',
+          'color: #22c55e; font-weight: bold;'
+        );
+      })
+      .catch(function (err) {
+        console.error('Vidlytics: Erro ao inicializar:', err);
+      });
+  }
+
+  // ─── BOOT ─────────────────────────────────────
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initVidlytics);
+  } else {
+    initVidlytics();
+  }
+
+})();
