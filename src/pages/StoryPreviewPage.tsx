@@ -79,6 +79,7 @@ export default function StoryPreviewPage() {
   const [likeCount, setLikeCount] = useState(0);
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [showComments, setShowComments] = useState(false);
+  const [showCommentForm, setShowCommentForm] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [commentName, setCommentName] = useState('');
 
@@ -205,7 +206,7 @@ export default function StoryPreviewPage() {
 
   // ─── Handlers ───
   const openPlayer = (idx = 0) => { setVideoIdx(idx); setPlayerOpen(true); setPlaying(true); setMuted(true); setProgress(0); };
-  const closePlayer = () => { setPlayerOpen(false); setPlaying(false); setShowComments(false); setShowSizing(false); };
+  const closePlayer = () => { setPlayerOpen(false); setPlaying(false); setShowComments(false); setShowCommentForm(false); setShowSizing(false); };
   const goNext = () => { if (videoIdx < videos.length - 1) { setVideoIdx(v => v + 1); setPlaying(true); setProgress(0); } else closePlayer(); };
   const goPrev = () => { if (videoIdx > 0) { setVideoIdx(v => v - 1); setPlaying(true); setProgress(0); } };
   const togglePlay = () => { if (!videoRef.current) return; if (playing) videoRef.current.pause(); else videoRef.current.play().catch(() => {}); };
@@ -570,7 +571,7 @@ export default function StoryPreviewPage() {
             )}
             {m.show_comment_button && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <button onClick={(e) => { e.stopPropagation(); setShowComments(true); }} style={socialBtn}><MessageCircle size={18} className="text-white" /></button>
+                <button onClick={(e) => { e.stopPropagation(); setShowComments(true); setShowCommentForm(false); }} style={socialBtn}><MessageCircle size={18} className="text-white" /></button>
                 {comments.length > 0 && <span style={{ fontSize: '10px', fontWeight: 800, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,.5)', marginTop: '4px' }}>{comments.length}</span>}
               </div>
             )}
@@ -593,7 +594,7 @@ export default function StoryPreviewPage() {
                     <a href={product.product_url || product.url || '#'} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 10px', background: buttonColor, color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}><ExternalLink size={12} /> Ver no site</a>
                     {/* Botão WhatsApp — só aparece se configurado no appearance */}
                     {m.show_product_whatsapp_button && whatsappNumber && (
-href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Olá! Tenho interesse nesse produto que vi no vídeo. ${product.product_url || product.url || ''}`)}`}
+                      <a href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Olá! Tenho interesse nesse produto que vi no vídeo. ${product.product_url || product.url || ''}`)}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 10px', background: '#25d366', color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>Comprar pelo WhatsApp</a>
                     )}
                   </div>
                 </div>
@@ -604,27 +605,78 @@ href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Olá! Tenho in
           {/* Comments panel */}
           {showComments && (
             <div style={{ position: 'absolute', inset: '8px', zIndex: 200, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#fff', border: `2px solid ${primaryColor}`, borderRadius: '20px', boxShadow: '0 12px 30px rgba(0,0,0,.35)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 14px', height: '48px', borderBottom: '1px solid #e2e8f0' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111' }}>Comentários</h3>
-                <button onClick={() => setShowComments(false)} style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: 'none' }}><X size={20} className="text-slate-600" /></button>
+              {/* Cabeçalho */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 14px', height: '48px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111', margin: 0 }}>Comentários{comments.length > 0 ? ` (${comments.length})` : ''}</h3>
+                <button onClick={() => { setShowComments(false); setShowCommentForm(false); }} style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: 'none' }}><X size={20} className="text-slate-600" /></button>
               </div>
-              <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px' }}>
-                {comments.length === 0 && <p style={{ fontSize: '14px', color: '#334155', textAlign: 'center', padding: '40px 10px' }}>Nenhum comentário ainda.</p>}
-                {comments.map((c, i) => (
-                  <div key={c.id || i} style={{ display: 'flex', gap: '10px', padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
-                    <div style={{ width: '34px', height: '34px', minWidth: '34px', borderRadius: '50%', background: primaryColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 700 }}>{(c.user_name || c.name || 'A').charAt(0).toUpperCase()}</div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ fontWeight: 700, fontSize: '13px', color: '#0f172a' }}>{c.user_name || c.name || 'Anônimo'}</span>
-                      <p style={{ fontSize: '14px', color: '#334155', lineHeight: 1.5, margin: 0, wordBreak: 'break-word' }}>{c.text}</p>
-                    </div>
+
+              {/* Corpo: lista de comentários ou estado vazio */}
+              {!showCommentForm ? (
+                <>
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px' }}>
+                    {comments.length === 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: '180px', padding: '20px', textAlign: 'center' }}>
+                        <MessageCircle size={40} style={{ opacity: 0.15, marginBottom: '12px', color: '#334155' }} />
+                        <p style={{ fontSize: '15px', fontWeight: 700, color: '#334155', margin: '0 0 16px 0' }}>Seja o primeiro a comentar</p>
+                      </div>
+                    ) : (
+                      comments.map((c, i) => (
+                        <div key={c.id || i} style={{ display: 'flex', gap: '10px', padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
+                          <div style={{ width: '34px', height: '34px', minWidth: '34px', borderRadius: '50%', background: primaryColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 700 }}>{(c.user_name || c.name || 'A').charAt(0).toUpperCase()}</div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <span style={{ fontWeight: 700, fontSize: '13px', color: '#0f172a' }}>{c.user_name || c.name || 'Anônimo'}</span>
+                            <p style={{ fontSize: '14px', color: '#334155', lineHeight: 1.5, margin: 0, wordBreak: 'break-word' }}>{c.text}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
-                ))}
-              </div>
-              <div style={{ padding: '16px 18px', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <input value={commentName} onChange={e => setCommentName(e.target.value)} placeholder="Seu nome" style={{ width: '100%', height: '40px', padding: '8px 12px', border: '1.5px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', color: '#0f172a', outline: 'none', background: '#f8fafc' }} />
-                <textarea value={commentText} onChange={e => setCommentText(e.target.value)} placeholder="Escreva seu comentário..." style={{ width: '100%', minHeight: '70px', maxHeight: '70px', padding: '8px 12px', border: '1.5px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', color: '#0f172a', outline: 'none', resize: 'none', background: '#f8fafc' }} />
-                <button onClick={submitComment} style={{ width: '100%', height: '40px', border: 'none', borderRadius: '12px', background: buttonColor, color: '#fff', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>Enviar comentário</button>
-              </div>
+                  {/* Rodapé: botão "Deixe seu comentário" */}
+                  <div style={{ flexShrink: 0, borderTop: '1px solid #e2e8f0', padding: '12px 14px 10px', background: '#fff', display: 'flex', justifyContent: 'center' }}>
+                    <button
+                      onClick={() => setShowCommentForm(true)}
+                      style={{ width: '100%', height: '40px', border: 'none', borderRadius: '12px', background: buttonColor, color: '#fff', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      Deixe seu comentário
+                    </button>
+                  </div>
+                </>
+              ) : (
+                /* Formulário de comentário */
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px 18px', gap: '8px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Seu nome</label>
+                  <input
+                    value={commentName}
+                    onChange={e => setCommentName(e.target.value)}
+                    placeholder="Digite seu nome..."
+                    maxLength={80}
+                    style={{ width: '100%', height: '40px', padding: '8px 12px', border: '1.5px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', color: '#0f172a', outline: 'none', background: '#f8fafc' }}
+                  />
+                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', marginTop: '4px' }}>Seu comentário</label>
+                  <textarea
+                    value={commentText}
+                    onChange={e => setCommentText(e.target.value)}
+                    placeholder="Escreva seu comentário..."
+                    maxLength={1000}
+                    style={{ width: '100%', minHeight: '70px', maxHeight: '70px', padding: '8px 12px', border: '1.5px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', color: '#0f172a', outline: 'none', resize: 'none', background: '#f8fafc' }}
+                  />
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                    <button
+                      onClick={() => setShowCommentForm(false)}
+                      style={{ flex: 1, height: '40px', border: '1.5px solid #e2e8f0', borderRadius: '12px', background: '#fff', color: '#64748b', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      Voltar
+                    </button>
+                    <button
+                      onClick={() => { submitComment(); setShowCommentForm(false); }}
+                      style={{ flex: 1, height: '40px', border: 'none', borderRadius: '12px', background: buttonColor, color: '#fff', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      Enviar
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -655,6 +707,7 @@ href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Olá! Tenho in
     );
   };
 
+  // ═══════════════════════════════════════════════════════
   // RETURN
   // ═══════════════════════════════════════════════════════
   return (
