@@ -656,13 +656,37 @@ const closePlayer = () => { setPlayerOpen(false); setPlaying(false); setShowComm
                     style={{ width: '100%', height: '40px', padding: '8px 12px', border: '1.5px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', color: '#0f172a', outline: 'none', background: '#f8fafc' }}
                   />
                   <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', marginTop: '4px' }}>Seu comentário</label>
-                  <textarea
-                    value={commentText}
-                    onChange={e => setCommentText(e.target.value)}
-                    placeholder="Escreva seu comentário..."
-                    maxLength={1000}
-                    style={{ width: '100%', minHeight: '70px', maxHeight: '70px', padding: '8px 12px', border: '1.5px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', color: '#0f172a', outline: 'none', resize: 'none', background: '#f8fafc' }}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <textarea
+                      value={commentText}
+                      onChange={e => setCommentText(e.target.value)}
+                      placeholder="Escreva seu comentário..."
+                      maxLength={1000}
+                      style={{ width: '100%', minHeight: '70px', maxHeight: '70px', padding: '8px 48px 8px 12px', border: '1.5px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', color: '#0f172a', outline: 'none', resize: 'none', background: '#f8fafc' }}
+                    />
+                    <button
+                      onClick={(e) => { e.preventDefault(); setShowEmojiPicker(!showEmojiPicker); }}
+                      style={{ position: 'absolute', right: '10px', bottom: '10px', width: '32px', height: '32px', border: '2px solid #0f172a', borderRadius: '50%', background: '#fff', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, lineHeight: 1 }}
+                    >
+                      😊
+                    </button>
+                    {showEmojiPicker && (
+                      <div
+                        style={{ position: 'absolute', right: '0', bottom: '48px', display: 'grid', gridTemplateColumns: 'repeat(6, 34px)', gap: '4px', padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 8px 30px rgba(0,0,0,.18)', zIndex: 30, maxHeight: '150px', overflowY: 'auto' }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {['😍','🔥','👏','❤️','😂','😱','🙌','💯','✨','😢','🤔','👍','💪','🎉','😊','🥰','😎','🙏','💙','⭐','✅','😡','👀','🤩'].map(emoji => (
+                          <button
+                            key={emoji}
+                            onClick={() => { setCommentText(prev => (prev || '') + emoji); setShowEmojiPicker(false); }}
+                            style={{ width: '34px', height: '34px', border: 'none', background: 'transparent', borderRadius: '8px', fontSize: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                     <button
                       onClick={() => setShowCommentForm(false)}
