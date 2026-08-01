@@ -2947,12 +2947,27 @@ storeWhatsappMessage = storeSettings.whatsapp_message_template || storeSettings.
       if (!stories || stories.length === 0) return;
 
       function storyMatchesCurrentPage(story) {
+        if (!story) return false;
+
+        // 1. Regras específicas do story via display_locations
         var locs = locations.filter(function (l) { return idsEqual(l.story_id, story.id); });
-        var rules = pageRules.filter(function (r) { return idsEqual(r.story_id, story.id); });
         if (locs.length > 0) return locs.some(matchesRule);
+
+        // 2. Regras específicas do story via page_rules
+        var rules = pageRules.filter(function (r) { return idsEqual(r.story_id, story.id); });
         if (rules.length > 0) return rules.some(matchesRule);
+
+        // 3. Regras globais (sem story_id vinculado)
         var globalRules = pageRules.filter(function (r) { return !r.story_id; });
         if (globalRules.length > 0) return globalRules.some(matchesRule);
+
+        // 4. URL configurada diretamente no story
+        var storyUrl = firstDefined(story.url, story.page_url, story.pageUrl);
+        if (storyUrl && String(storyUrl).trim() !== '') {
+          return matchesUrl({ url: String(storyUrl).trim() });
+        }
+
+        // 5. Fallback final: URL do appearance
         return matchesUrl(appearance);
       }
 
