@@ -1801,11 +1801,11 @@ const ModalPreview = ({
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-black">Blusa vermelha</p>
                   <p className="text-xs font-black text-[#0094EB]">R$ 259,90</p>
-                  <div className="mt-1.5 flex gap-1.5">
+                  <div className="mt-1.5 flex flex-nowrap items-center gap-1.5">
                     {m.show_product_button && (
                       <button
                         type="button"
-                        className="flex-1 rounded-lg px-2 py-1.5 text-[10px] font-black text-white"
+                        className="flex-1 shrink-0 whitespace-nowrap rounded-lg px-2 py-1.5 text-[10px] font-black text-white"
                         style={{ backgroundColor: colors.button }}
                       >
                         Ver produto
@@ -1814,7 +1814,7 @@ const ModalPreview = ({
                     {m.show_product_whatsapp_button && (
                       <button
                         type="button"
-                        className="flex-1 rounded-lg px-2 py-1.5 text-[10px] font-black text-white"
+                        className="flex-1 shrink-0 whitespace-nowrap rounded-lg px-2 py-1.5 text-[10px] font-black text-white"
                         style={{ backgroundColor: '#25D366' }}
                       >
                         Comprar pelo WhatsApp
