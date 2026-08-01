@@ -709,30 +709,24 @@ function readSizingModels() {
 function readStoreSettings() {
   if (!storeId || !hasSupabase) return Promise.resolve({});
 
-  return Promise.all([
-    supabaseFetch(
-      'store_settings?select=auto_approve_comments,whatsapp_number,whatsapp_message,whatsapp_message_template&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
-      { method: 'GET' }
-    ).then(function (response) { if (!response.ok) return []; return response.json(); })
-     .then(function (data) { return Array.isArray(data) && data.length > 0 ? data[0] : {}; })
-     .catch(function () { return {}; }),
-
-    supabaseFetch(
-      'general_settings?select=auto_approve_comments,whatsapp_number,whatsapp_message,whatsapp_message_template&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
-      { method: 'GET' }
-    ).then(function (response) { if (!response.ok) return []; return response.json(); })
-     .then(function (data) { return Array.isArray(data) && data.length > 0 ? data[0] : {}; })
-     .catch(function () { return {}; })
-  ]).then(function (results) {
-    var store = results[0] || {};
-    var general = results[1] || {};
-    return {
-      auto_approve_comments: general.auto_approve_comments !== undefined ? general.auto_approve_comments : store.auto_approve_comments,
-      whatsapp_number: general.whatsapp_number || store.whatsapp_number || '',
-      whatsapp_message: general.whatsapp_message || store.whatsapp_message || '',
-      whatsapp_message_template: general.whatsapp_message_template || store.whatsapp_message_template || ''
-    };
-  });
+  return supabaseFetch(
+    'store_settings?select=auto_approve_comments,whatsapp_number,whatsapp_message,whatsapp_message_template&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
+    { method: 'GET' }
+  )
+    .then(function (response) { if (!response.ok) return {}; return response.json(); })
+    .then(function (data) {
+      if (Array.isArray(data) && data.length > 0) return data[0];
+      return {};
+    })
+    .catch(function () { return {}; })
+    .then(function (store) {
+      return {
+        auto_approve_comments: store.auto_approve_comments,
+        whatsapp_number: store.whatsapp_number || '',
+        whatsapp_message: store.whatsapp_message || '',
+        whatsapp_message_template: store.whatsapp_message_template || ''
+      };
+    });
 }
 
 function matchesRule(rule) {
