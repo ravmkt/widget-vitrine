@@ -2947,6 +2947,25 @@ storeWhatsappMessage = storeSettings.whatsapp_message_template || storeSettings.
         var locs = locations.filter(function (l) { return idsEqual(l.story_id, story.id); });
         if (locs.length > 0) return locs.some(matchesRule);
 
+        // 🔍 DIAGNÓSTICO TEMPORÁRIO
+  console.log('🔍 [VIDLYTICS] Story:', story.id, story.title);
+  console.log('🔍 [VIDLYTICS] Página atual:', href);
+  console.log('🔍 [VIDLYTICS] Locations encontradas:', locs.length, locs);
+  console.log('🔍 [VIDLYTICS] PageRules encontradas:', pageRules.length, pageRules);
+
+  if (locs.length > 0) {
+    for (var i = 0; i < locs.length; i++) {
+      var result = matchesRule(locs[i]);
+      console.log('🔍 [VIDLYTICS] Location #' + i + ' match?', result, locs[i]);
+      if (result) {
+        console.log('✅ [VIDLYTICS] Story APROVADO por location');
+        return true;
+      }
+    }
+    console.log('❌ [VIDLYTICS] Nenhuma location deu match');
+    return false;
+  }
+
         // 2. Regras específicas do story via page_rules
         var rules = pageRules.filter(function (r) { return idsEqual(r.story_id, story.id); });
         if (rules.length > 0) return rules.some(matchesRule);
