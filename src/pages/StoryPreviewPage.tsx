@@ -82,6 +82,8 @@ export default function StoryPreviewPage() {
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [commentName, setCommentName] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
 
   // Panels
   const [shareCopied, setShareCopied] = useState(false);
