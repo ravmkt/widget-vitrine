@@ -2694,9 +2694,8 @@ function openSizingPanel(modelId) {
           wrapperCss = 'display:flex;justify-content:center;max-width:' + containerMaxWidth + ';margin:20px auto;clear:both;overflow:visible;';
         }
         widgetContainer.style.cssText = wrapperCss;
-        if (usedSelector.indexOf('.flex-.between') !== -1 && targetDiv.parentNode) {
-          targetDiv.parentNode.insertBefore(widgetContainer, targetDiv.nextSibling);
-        } else { targetDiv.appendChild(widgetContainer); }
+        var insertPos = appearance.position || 'afterend';
+        targetDiv.insertAdjacentElement(insertPos, widgetContainer);
       }
 
       widgetContainer.innerHTML = '';
