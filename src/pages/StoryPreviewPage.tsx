@@ -588,7 +588,7 @@ export default function StoryPreviewPage() {
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <p style={{ fontWeight: 800, fontSize: '13px', color: textColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name || 'Produto'}</p>
                   {product.price != null && Number(product.price) > 0 && <p style={{ marginTop: '4px', fontWeight: 800, fontSize: '16px', color: secondaryColor }}>R$ {Number(product.price).toFixed(2).replace('.', ',')}</p>}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
+<div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'nowrap', marginTop: '6px' }}>
                     {/* Botão "Ver no site" — sempre visível quando há produto */}
                     <a href={product.product_url || product.url || '#'} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 12px', background: buttonColor, color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap' }}><ExternalLink size={12} /> Ver no site</a>
                     {/* Botão WhatsApp — só aparece se configurado no appearance */}
