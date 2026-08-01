@@ -1873,24 +1873,32 @@
       });
       formWrap.appendChild(commentTextarea);
 
-      var emojiRow = createEl('div');
-      emojiRow.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:6px;position:relative;';
+      // ─── wrapper posicional para textarea + emoji ───
+      var textareaWrapper = createEl('div');
+      textareaWrapper.style.cssText = 'position:relative!important;';
 
+      // remove a textarea do formWrap e coloca dentro do wrapper
+      formWrap.removeChild(commentTextarea);
+      commentTextarea.style.paddingRight = '48px';
+      textareaWrapper.appendChild(commentTextarea);
+
+      // botão emoji (posicionado absolutamente sobre a textarea)
       var emojiToggle = createEl('button');
-      emojiToggle.type = 'button'; emojiToggle.textContent = '😊';
-      emojiToggle.style.cssText = 'width:32px;height:32px;padding:0;border:1px solid #e2e8f0;border-radius:50%;background:#fff;color:#64748b;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;';
+      emojiToggle.type = 'button';
+      emojiToggle.textContent = '\uD83D\uDE0A'; // 😊
+      emojiToggle.style.cssText = 'position:absolute!important;right:10px!important;bottom:10px!important;width:32px!important;height:32px!important;border:2px solid #0f172a!important;border-radius:50%!important;background:#fff!important;font-size:18px!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:0!important;line-height:1!important;z-index:5!important;';
 
+      // grid de emojis
       var emojiGrid = createEl('div');
-      emojiGrid.style.cssText = 'display:none;position:absolute;left:0;bottom:36px;grid-template-columns:repeat(6,34px);gap:4px;width:max-content;max-width:230px;padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.18);z-index:30;';
+      emojiGrid.style.cssText = 'display:none!important;position:absolute!important;right:0!important;bottom:48px!important;grid-template-columns:repeat(6,34px)!important;gap:4px!important;padding:8px!important;background:#fff!important;border:1px solid #e2e8f0!important;border-radius:12px!important;box-shadow:0 8px 30px rgba(0,0,0,.18)!important;z-index:30!important;max-height:150px!important;overflow-y:auto!important;';
 
-      var emojiList = ['😍','🔥','👏','❤️','😂','😱','🙌','💯','✨','😢','🤔','👍','💪','🎉','😊','🥰','😎','🙏','💙','⭐','✅','😡','👀','🤩'];
+      var emojiList = ['\uD83D\uDE0D','\uD83D\uDD25','\uD83D\uDC4F','\u2764\uFE0F','\uD83D\uDE02','\uD83D\uDE31','\uD83D\uDE4C','\uD83D\uDCAF','\u2728','\uD83D\uDE22','\uD83E\uDD14','\uD83D\uDC4D','\uD83D\uDCAA','\uD83C\uDF89','\uD83D\uDE0A','\uD83E\uDD70','\uD83D\uDE0E','\uD83D\uDE4F','\uD83D\uDC99','\u2B50','\u2705','\uD83D\uDE21','\uD83D\uDC40','\uD83E\uDD29'];
 
       emojiList.forEach(function (emoji) {
         var emojiBtn = createEl('button');
-        emojiBtn.type = 'button'; emojiBtn.textContent = emoji;
-        emojiBtn.style.cssText = 'width:34px;height:34px;border:none;background:transparent;border-radius:8px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;';
-        emojiBtn.onmouseenter = function () { emojiBtn.style.background = '#f1f5f9'; emojiBtn.style.transform = 'scale(1.12)'; };
-        emojiBtn.onmouseleave = function () { emojiBtn.style.background = 'transparent'; emojiBtn.style.transform = 'scale(1)'; };
+        emojiBtn.type = 'button';
+        emojiBtn.textContent = emoji;
+        emojiBtn.style.cssText = 'width:34px!important;height:34px!important;border:none!important;background:transparent!important;border-radius:8px!important;font-size:20px!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:0!important;';
         emojiBtn.onmousedown = function (ev) {
           ev.preventDefault();
           var start = commentTextarea.selectionStart || commentTextarea.value.length;
@@ -1910,9 +1918,16 @@
         emojiGrid.style.display = emojiGrid.style.display === 'grid' ? 'none' : 'grid';
       };
 
-      emojiRow.appendChild(emojiToggle);
-      emojiRow.appendChild(emojiGrid);
-      formWrap.appendChild(emojiRow);
+      textareaWrapper.appendChild(emojiToggle);
+      textareaWrapper.appendChild(emojiGrid);
+      formWrap.appendChild(textareaWrapper);
+
+      // fecha emoji ao clicar fora
+      document.addEventListener('mousedown', function closeEmoji(ev) {
+        if (emojiGrid.style.display === 'grid' && !textareaWrapper.contains(ev.target)) {
+          emojiGrid.style.display = 'none';
+        }
+      });
 
       var charCounter = createEl('div', 'vl-form-charcount');
       charCounter.textContent = '0/1000';
