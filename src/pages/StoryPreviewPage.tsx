@@ -590,7 +590,7 @@ export default function StoryPreviewPage() {
                   {product.price != null && Number(product.price) > 0 && <p style={{ marginTop: '4px', fontWeight: 800, fontSize: '16px', color: secondaryColor }}>R$ {Number(product.price).toFixed(2).replace('.', ',')}</p>}
 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'nowrap', marginTop: '6px' }}>
                     {/* Botão "Ver no site" — sempre visível quando há produto */}
-                    <a href={product.product_url || product.url || '#'} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 12px', background: buttonColor, color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap' }}><ExternalLink size={12} /> Ver no site</a>
+style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 10px', background: buttonColor, color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}
                     {/* Botão WhatsApp — só aparece se configurado no appearance */}
                     {m.show_product_whatsapp_button && whatsappNumber && (
                       <a href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Olá! Tenho interesse no produto: ${product.name || ''}`)}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 12px', background: '#25d366', color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap' }}>Comprar pelo WhatsApp</a>
