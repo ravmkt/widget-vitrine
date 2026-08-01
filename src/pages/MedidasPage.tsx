@@ -2,14 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { db, SizingModel } from "@/lib/db";
-import {
-  Ruler,
-  Plus,
-  Trash2,
-  Edit3,
-  Image,
-  AlertCircle,
-} from "lucide-react";
+import { Ruler, Plus, Trash2, Edit3 } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import CustomDialog from "@/components/CustomDialog";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
@@ -47,9 +40,6 @@ const MedidasPage = () => {
 
   const [formData, setFormData] = useState({
     name: "",
-    image_url: "",
-    image_file: null as File | null,
-    image_error: "",
     height: "",
     measures: [] as Array<{ id: string; name: string; value: string }>,
   });
@@ -78,9 +68,6 @@ const MedidasPage = () => {
   const resetForm = () => {
     setFormData({
       name: "",
-      image_url: "",
-      image_file: null,
-      image_error: "",
       height: "",
       measures: [],
     });
@@ -97,9 +84,6 @@ const MedidasPage = () => {
 
     setFormData({
       name: model.name || "",
-      image_url: model.image_url || "",
-      image_file: null,
-      image_error: "",
       height:
         model.measures
           ?.find((measure) => measure.name.toLowerCase() === "altura")
@@ -115,49 +99,6 @@ const MedidasPage = () => {
     });
 
     setIsModalOpen(true);
-  };
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-
-    if (!file) return;
-
-    if (file.size > 350 * 1024) {
-      setFormData((prev) => ({
-        ...prev,
-        image_error: "A imagem deve ter no máximo 350 KB.",
-        image_file: null,
-        image_url: "",
-      }));
-
-      return;
-    }
-
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-
-    if (!allowedTypes.includes(file.type)) {
-      setFormData((prev) => ({
-        ...prev,
-        image_error: "Formato inválido. Use JPG, PNG ou WEBP.",
-        image_file: null,
-        image_url: "",
-      }));
-
-      return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      setFormData((prev) => ({
-        ...prev,
-        image_file: file,
-        image_url: reader.result as string,
-        image_error: "",
-      }));
-    };
-
-    reader.readAsDataURL(file);
   };
 
   const addMeasure = () => {
@@ -216,10 +157,6 @@ const MedidasPage = () => {
 
     if (Number(formData.height) <= 0) {
       errors.push("Altura deve ser maior que zero.");
-    }
-
-    if (formData.image_error) {
-      errors.push(formData.image_error);
     }
 
     formData.measures.forEach((measure, index) => {
@@ -287,7 +224,6 @@ const MedidasPage = () => {
         id: editingModel?.id || generateUUID(),
         store_id: storeId,
         name: formData.name.trim(),
-        image_url: formData.image_url || undefined,
         measures,
         created_at: editingModel?.created_at || now,
         updated_at: now,
@@ -398,16 +334,6 @@ const MedidasPage = () => {
                 </div>
               </div>
 
-              {model.image_url && (
-                <div className="mb-6">
-                  <img
-                    src={model.image_url}
-                    alt={model.name}
-                    className="w-full h-40 object-cover rounded-xl border border-slate-200"
-                  />
-                </div>
-              )}
-
               <div className="space-y-3">
                 {heightMeasure && (
                   <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
@@ -476,49 +402,6 @@ const MedidasPage = () => {
         confirmText={isSaving ? "Salvando..." : "Salvar"}
       >
         <div className="space-y-6">
-          <div className="space-y-3">
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              Foto do Modelo, máx. 350 KB
-            </label>
-
-            <div className="flex items-center gap-4">
-              <div className="h-24 w-24 rounded-xl overflow-hidden bg-slate-200 border border-slate-300 shrink-0 flex items-center justify-center">
-                {formData.image_url ? (
-                  <img
-                    src={formData.image_url}
-                    className="w-full h-full object-cover"
-                    alt="Preview"
-                  />
-                ) : (
-                  <Image className="w-8 h-8 text-slate-400" />
-                )}
-              </div>
-
-              <div className="flex-1 space-y-2">
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={handleImageUpload}
-                  className="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-[#EAF6FF] file:text-[#0094EB] file:font-black file:cursor-pointer hover:file:bg-[#0094EB] hover:file:text-white transition-all"
-                />
-
-                {formData.image_error && (
-                  <div className="flex items-center gap-1.5 text-xs text-rose-500">
-                    <AlertCircle size={12} />
-                    {formData.image_error}
-                  </div>
-                )}
-
-                {formData.image_file && !formData.image_error && (
-                  <p className="text-xs text-slate-500">
-                    {formData.image_file.name}{" "}
-                    {(formData.image_file.size / 1024).toFixed(1)} KB
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-
           <div className="space-y-3">
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">
               Nome do Modelo <span className="text-rose-500">*</span>
