@@ -704,55 +704,148 @@
   }
 
 function matchesRule(rule) {
-  if (!rule || rule.active === false || rule.active === 'false' || rule.active === 0 || rule.active === '0') return false;
+  if (!rule) return false;
+  if (rule.active === false || rule.active === 'false' || rule.active === 0 || rule.active === '0') return false;
 
   var href = window.location.href;
   var path = window.location.pathname || '/';
-  var rawCondition = String(firstDefined(rule.condition_type, rule.rule_type, rule.match_type) || '').trim().toLowerCase();
-  var conditionType = rawCondition.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-  // ⬇️ CORRIGIDO: normalização mais abrangente
-  if (conditionType.indexOf('contem') !== -1 || conditionType === 'url_contains' || conditionType === 'contains') {
+  var rawCondition = String(
+    firstDefined(rule.condition_type, rule.rule_type, rule.match_type) || ''
+  ).trim().toLowerCase();
+
+  var conditionType = rawCondition
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  // Normalização mais abrangente de condition_type
+  if (
+    conditionType.indexOf('contem') !== -1 ||
+    conditionType === 'url_contains' ||
+    conditionType === 'contains'
+  ) {
     conditionType = 'contains';
   }
-  if (conditionType.indexOf('exata') !== -1 || conditionType === 'url_equals' || conditionType === 'exact' || conditionType === 'equals') {
+
+  if (
+    conditionType.indexOf('exata') !== -1 ||
+    conditionType === 'url_equals' ||
+    conditionType === 'exact' ||
+    conditionType === 'equals'
+  ) {
     conditionType = 'equals';
   }
-  if (conditionType.indexOf('todas') !== -1 || conditionType === 'all' || conditionType === 'all_pages') {
+
+  if (
+    conditionType.indexOf('todas') !== -1 ||
+    conditionType === 'all' ||
+    conditionType === 'all_pages'
+  ) {
     conditionType = 'all_pages';
   }
-  if (conditionType.indexOf('inicial') !== -1 || conditionType === 'home' || conditionType === 'home_only') {
+
+  if (
+    conditionType.indexOf('inicial') !== -1 ||
+    conditionType === 'home' ||
+    conditionType === 'home_only'
+  ) {
     conditionType = 'home_only';
   }
-  if (conditionType.indexOf('produto') !== -1 || conditionType === 'product_pages' || conditionType === 'product') {
+
+  if (
+    conditionType.indexOf('produto') !== -1 ||
+    conditionType === 'product_pages' ||
+    conditionType === 'product'
+  ) {
     conditionType = 'product_pages';
   }
-  if (conditionType.indexOf('categoria') !== -1 || conditionType.indexOf('colecao') !== -1 || conditionType === 'category_pages' || conditionType === 'category') {
+
+  if (
+    conditionType.indexOf('categoria') !== -1 ||
+    conditionType.indexOf('colecao') !== -1 ||
+    conditionType.indexOf('collection') !== -1 ||
+    conditionType === 'category_pages' ||
+    conditionType === 'category'
+  ) {
     conditionType = 'category_pages';
   }
 
-  var value = String(firstDefined(rule.url_pattern, rule.page_url, rule.value, rule.url) || '').trim();
+  var value = String(
+    firstDefined(rule.url_pattern, rule.page_url, rule.value, rule.url) || ''
+  ).trim();
 
-  // ⬇️ CORRIGIDO: sem condition_type reconhecido = NÃO aparece (segurança)
+  // Sem condition_type reconhecido = NÃO aparece (segurança)
   if (!conditionType) return false;
 
-  // ⬇️ CORRIGIDO: sem value e não é all_pages nem home_only = NÃO aparece
+  // Sem value e não é all_pages nem home_only = NÃO aparece
   if (!value && conditionType !== 'all_pages' && conditionType !== 'home_only') return false;
 
   switch (conditionType) {
-    case 'all_pages': return true;
-    case 'home_only': return path === '/' || path === '/home' || path === '/index.html' || path === '';
-    case 'product_pages': return path.indexOf('/product') !== -1 || path.indexOf('/produto') !== -1;
-    case 'category_pages': return path.indexOf('/category') !== -1 || path.indexOf('/categoria') !== -1 || path.indexOf('/colecao') !== -1 || path.indexOf('/collection') !== -1;
-    case 'contains': return href.indexOf(value) !== -1 || path.indexOf(value) !== -1;
-    case 'equals': return href === value || path === value;
-    case 'not_equals': return href !== value && path !== value;
-    case 'starts_with': return href.indexOf(value) === 0 || path.indexOf(value) === 0;
-    case 'ends_with': return href.endsWith(value) || path.endsWith(value);
+    case 'all_pages':
+      return true;
+
+    case 'home_only':
+      return (
+        path === '/' ||
+        path === '/home' ||
+        path === '/index.html' ||
+        path === ''
+      );
+
+    case 'product_pages':
+      return (
+        path.indexOf('/product') !== -1 ||
+        path.indexOf('/produto') !== -1
+      );
+
+    case 'category_pages':
+      return (
+        path.indexOf('/category') !== -1 ||
+        path.indexOf('/categoria') !== -1 ||
+        path.indexOf('/colecao') !== -1 ||
+        path.indexOf('/collection') !== -1
+      );
+
+    case 'contains':
+      return (
+        href.indexOf(value) !== -1 ||
+        path.indexOf(value) !== -1
+      );
+
+    case 'equals':
+      return (
+        href === value ||
+        path === value
+      );
+
+    case 'not_equals':
+      return (
+        href !== value &&
+        path !== value
+      );
+
+    case 'starts_with':
+      return (
+        href.indexOf(value) === 0 ||
+        path.indexOf(value) === 0
+      );
+
+    case 'ends_with':
+      return (
+        href.endsWith(value) ||
+        path.endsWith(value)
+      );
+
     case 'regex':
-      try { return new RegExp(value).test(href); } catch (e) { return false; }
-    // ⬇️ CORRIGIDO: tipo não reconhecido = NÃO aparece
-    default: return false;
+      try {
+        return new RegExp(value).test(href);
+      } catch (error) {
+        return false;
+      }
+
+    // Tipo não reconhecido = NÃO aparece
+    default:
+      return false;
   }
 }
 
