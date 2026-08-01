@@ -1096,3 +1096,963 @@
   function getStoryThumbnail(story, coverVideo, coverRelation) {
     return getThumbnailFromObject(coverRelation) || getThumbnailFromObject(story) || getVideoThumbnail(coverVideo) || getThumbnailFromObject(coverVideo) || '';
   }
+
+  function applyHostPosition(hostElement, anchorElement, position) {
+    if (!hostElement || !anchorElement) return;
+    var rect = anchorElement.getBoundingClientRect();
+    var hostRect = hostElement.getBoundingClientRect();
+
+    position = (position || 'after').toLowerCase();
+
+    var top = rect.bottom + window.scrollY;
+    var left = rect.left + window.scrollX;
+
+    switch (position) {
+      case 'before':
+      case 'above':
+        top = rect.top + window.scrollY - hostRect.height;
+        break;
+
+      case 'after':
+      case 'below':
+        top = rect.bottom + window.scrollY;
+        break;
+
+      case 'left':
+        top = rect.top + window.scrollY + (rect.height / 2) - (hostRect.height / 2);
+        left = rect.left + window.scrollX - hostRect.width;
+        break;
+
+      case 'right':
+        top = rect.top + window.scrollY + (rect.height / 2) - (hostRect.height / 2);
+        left = rect.right + window.scrollX;
+        break;
+
+      case 'replace':
+        top = rect.top + window.scrollY;
+        left = rect.left + window.scrollX;
+        break;
+
+      case 'prepend':
+        top = rect.top + window.scrollY;
+        left = rect.left + window.scrollX;
+        break;
+
+      case 'append':
+        top = rect.top + window.scrollY + rect.height - hostRect.height;
+        left = rect.left + window.scrollX;
+        break;
+
+      default:
+        break;
+    }
+
+    hostElement.style.position = 'absolute';
+    hostElement.style.top = px(top);
+    hostElement.style.left = px(left);
+    hostElement.style.zIndex = '2147483646';
+  }
+
+  function getOrCreateShadowRoot(containerId, cssText, defaultStyles) {
+    if (!containerId) {
+      containerId = 'vidlytics-shadow-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+    }
+
+    var existing = document.getElementById(containerId);
+    if (existing && existing.shadowRoot) {
+      return { root: existing.shadowRoot, container: existing, containerId: containerId };
+    }
+
+    var container = document.createElement('div');
+    container.id = containerId;
+    container.style.cssText = defaultStyles || 'position:relative;display:block;width:100%;';
+    document.body.appendChild(container);
+
+    if (container.shadowRoot) {
+      return { root: container.shadowRoot, container: container, containerId: containerId };
+    }
+
+    var shadowRoot;
+    try {
+      shadowRoot = container.attachShadow({ mode: 'open' });
+    } catch (e) {
+      shadowRoot = container;
+    }
+
+    var styleEl = document.createElement('style');
+    styleEl.textContent = cssText || '';
+    shadowRoot.appendChild(styleEl);
+
+    return { root: shadowRoot, container: container, containerId: containerId };
+  }
+
+  var SHARED_CSS_CACHE = null;
+
+  function buildSharedCss(appearance) {
+    if (SHARED_CSS_CACHE) return SHARED_CSS_CACHE;
+
+    var primaryColor = getPrimaryColor(appearance);
+    var secondaryColor = getSecondaryColor(appearance);
+    var buttonColor = getButtonColor(appearance);
+    var fontFamily = getFontFamily(appearance);
+    var borderColor = getBorderColor(appearance);
+
+    SHARED_CSS_CACHE = [
+      '@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");',
+      '',
+      ':host {',
+      '  all: initial;',
+      '  font-family: ' + (fontFamily || "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif") + ';',
+      '  font-size: 14px;',
+      '  line-height: 1.5;',
+      '  color: #1e293b;',
+      '  box-sizing: border-box;',
+      '}',
+      '',
+      '*, *::before, *::after {',
+      '  box-sizing: inherit;',
+      '  margin: 0;',
+      '  padding: 0;',
+      '}',
+      '',
+      '.vl-btn {',
+      '  display: inline-flex;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '  gap: 6px;',
+      '  padding: 8px 16px;',
+      '  border: none;',
+      '  border-radius: 8px;',
+      '  font-family: inherit;',
+      '  font-size: 13px;',
+      '  font-weight: 600;',
+      '  cursor: pointer;',
+      '  transition: all 0.2s ease;',
+      '  user-select: none;',
+      '  outline: none;',
+      '}',
+      '',
+      '.vl-btn:hover { opacity: 0.9; transform: translateY(-1px); }',
+      '.vl-btn:active { transform: translateY(0); opacity: 0.8; }',
+      '',
+      '.vl-btn-primary {',
+      '  background: ' + (buttonColor || primaryColor || '#0094EB') + ';',
+      '  color: #ffffff;',
+      '}',
+      '',
+      '.vl-btn-secondary {',
+      '  background: #f1f5f9;',
+      '  color: #334155;',
+      '  border: 1px solid #e2e8f0;',
+      '}',
+      '',
+      '.vl-btn-whatsapp {',
+      '  background: #25D366;',
+      '  color: #ffffff;',
+      '}',
+      '',
+      '.vl-btn-icon {',
+      '  width: 36px;',
+      '  height: 36px;',
+      '  padding: 0;',
+      '  border-radius: 50%;',
+      '  background: rgba(255,255,255,0.15);',
+      '  color: #ffffff;',
+      '  font-size: 18px;',
+      '}',
+      '',
+      '.vl-btn-icon:hover { background: rgba(255,255,255,0.25); }',
+      '',
+      '.vl-modal-overlay {',
+      '  position: fixed;',
+      '  inset: 0;',
+      '  z-index: 2147483646;',
+      '  display: flex;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '  background: rgba(0,0,0,0.85);',
+      '  backdrop-filter: blur(8px);',
+      '  -webkit-backdrop-filter: blur(8px);',
+      '  animation: vlFadeIn 0.25s ease;',
+      '}',
+      '',
+      '@keyframes vlFadeIn {',
+      '  from { opacity: 0; }',
+      '  to { opacity: 1; }',
+      '}',
+      '',
+      '@keyframes vlSlideUp {',
+      '  from { opacity: 0; transform: translateY(20px) scale(0.98); }',
+      '  to { opacity: 1; transform: translateY(0) scale(1); }',
+      '}',
+      '',
+      '@keyframes vlPulse {',
+      '  0%, 100% { transform: scale(1); }',
+      '  50% { transform: scale(1.05); }',
+      '}',
+      '',
+      '.vl-video-container {',
+      '  position: relative;',
+      '  width: 100%;',
+      '  overflow: hidden;',
+      '  background: #000;',
+      '  border-radius: inherit;',
+      '}',
+      '',
+      '.vl-video-container video,',
+      '.vl-video-container iframe {',
+      '  display: block;',
+      '  width: 100%;',
+      '  height: 100%;',
+      '  object-fit: cover;',
+      '  border: none;',
+      '  border-radius: inherit;',
+      '}',
+      '',
+      '.vl-play-overlay {',
+      '  position: absolute;',
+      '  inset: 0;',
+      '  display: flex;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '  background: rgba(0,0,0,0.3);',
+      '  cursor: pointer;',
+      '  transition: background 0.2s ease;',
+      '}',
+      '',
+      '.vl-play-overlay:hover { background: rgba(0,0,0,0.45); }',
+      '',
+      '.vl-play-icon {',
+      '  width: 48px;',
+      '  height: 48px;',
+      '  display: flex;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '  background: rgba(255,255,255,0.9);',
+      '  border-radius: 50%;',
+      '  color: #1e293b;',
+      '  font-size: 24px;',
+      '  box-shadow: 0 4px 16px rgba(0,0,0,0.3);',
+      '  transition: transform 0.2s ease;',
+      '}',
+      '',
+      '.vl-play-overlay:hover .vl-play-icon { transform: scale(1.1); }',
+      '',
+      '.vl-loader {',
+      '  display: flex;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '  padding: 24px;',
+      '}',
+      '',
+      '.vl-spinner {',
+      '  width: 32px;',
+      '  height: 32px;',
+      '  border: 3px solid #e2e8f0;',
+      '  border-top-color: ' + (primaryColor || '#0094EB') + ';',
+      '  border-radius: 50%;',
+      '  animation: vlSpin 0.7s linear infinite;',
+      '}',
+      '',
+      '@keyframes vlSpin {',
+      '  to { transform: rotate(360deg); }',
+      '}',
+      '',
+      '.vl-error {',
+      '  text-align: center;',
+      '  padding: 24px;',
+      '  color: #94a3b8;',
+      '  font-size: 13px;',
+      '}',
+      '',
+      '.vl-sr-only {',
+      '  position: absolute;',
+      '  width: 1px;',
+      '  height: 1px;',
+      '  padding: 0;',
+      '  margin: -1px;',
+      '  overflow: hidden;',
+      '  clip: rect(0,0,0,0);',
+      '  white-space: nowrap;',
+      '  border: 0;',
+      '}',
+      '',
+      '.vl-badge {',
+      '  display: inline-flex;',
+      '  align-items: center;',
+      '  gap: 4px;',
+      '  padding: 4px 10px;',
+      '  border-radius: 99px;',
+      '  font-size: 11px;',
+      '  font-weight: 600;',
+      '  background: ' + (primaryColor || '#0094EB') + ';',
+      '  color: #ffffff;',
+      '}',
+      '',
+      '.vl-badge--live {',
+      '  animation: vlPulse 1.5s ease-in-out infinite;',
+      '}'
+    ].join('\n');
+
+    return SHARED_CSS_CACHE;
+  }
+
+  function buildFloatingCss(appearance) {
+    var floatingConfig = getFloatingConfig(appearance);
+    var primaryColor = getPrimaryColor(appearance);
+
+    return [
+      buildSharedCss(appearance),
+      '',
+      '.vl-floating-wrapper {',
+      '  position: fixed;',
+      '  z-index: ' + floatingConfig.zIndex + ';',
+      '  display: flex;',
+      '  flex-direction: column;',
+      '  align-items: ' + floatingConfig.alignItems + ';',
+      '  top: ' + floatingConfig.top + ';',
+      '  right: ' + floatingConfig.right + ';',
+      '  bottom: ' + floatingConfig.bottom + ';',
+      '  left: ' + floatingConfig.left + ';',
+      '  pointer-events: none;',
+      '}',
+      '',
+      '.vl-floating-wrapper > * {',
+      '  pointer-events: auto;',
+      '}',
+      '',
+      '.vl-floating-container {',
+      '  position: relative;',
+      '  width: ' + floatingConfig.width + ';',
+      '  height: ' + floatingConfig.height + ';',
+      '  border-radius: ' + floatingConfig.radius + ';',
+      '  overflow: hidden;',
+      '  cursor: pointer;',
+      '  box-shadow: 0 8px 32px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.15);',
+      '  transition: transform 0.3s ease, box-shadow 0.3s ease;',
+      '}',
+      '',
+      '.vl-floating-container:hover {',
+      '  transform: scale(1.03);',
+      '  box-shadow: 0 12px 40px rgba(0,0,0,0.35), 0 4px 12px rgba(0,0,0,0.2);',
+      '}',
+      '',
+      '.vl-floating-close {',
+      '  position: absolute;',
+      '  top: 8px;',
+      '  right: 8px;',
+      '  z-index: 10;',
+      '  width: 28px;',
+      '  height: 28px;',
+      '  display: flex;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '  background: rgba(0,0,0,0.5);',
+      '  color: #ffffff;',
+      '  border: none;',
+      '  border-radius: 50%;',
+      '  font-size: 14px;',
+      '  cursor: pointer;',
+      '  transition: background 0.2s ease;',
+      '  opacity: 0;',
+      '}',
+      '',
+      '.vl-floating-container:hover .vl-floating-close {',
+      '  opacity: 1;',
+      '}',
+      '',
+      '.vl-floating-close:hover {',
+      '  background: rgba(239,68,68,0.8);',
+      '}',
+      '',
+      '.vl-floating-border {',
+      '  position: absolute;',
+      '  inset: 0;',
+      '  border: ' + floatingConfig.borderWidth + ' solid ' + primaryColor + ';',
+      '  border-radius: ' + floatingConfig.radius + ';',
+      '  pointer-events: none;',
+      '  z-index: 2;',
+      '}',
+      '',
+      '.vl-floating-label {',
+      '  margin-top: 8px;',
+      '  padding: 4px 12px;',
+      '  background: ' + primaryColor + ';',
+      '  color: #ffffff;',
+      '  font-size: 11px;',
+      '  font-weight: 600;',
+      '  border-radius: 99px;',
+      '  white-space: nowrap;',
+      '}'
+    ].join('\n');
+  }
+
+  function buildCarouselCss(appearance) {
+    var carouselConfig = getCarouselConfig(appearance);
+    var primaryColor = getPrimaryColor(appearance);
+
+    return [
+      buildSharedCss(appearance),
+      '',
+      '.vl-carousel-wrapper {',
+      '  width: 100%;',
+      '  margin: ' + px(carouselConfig.marginTop) + ' 0 ' + px(carouselConfig.marginBottom) + ' 0;',
+      '  position: relative;',
+      '}',
+      '',
+      '.vl-carousel-track {',
+      '  display: flex;',
+      '  gap: ' + px(carouselConfig.spacing) + ';',
+      '  overflow-x: auto;',
+      '  scroll-behavior: smooth;',
+      '  scrollbar-width: none;',
+      '  -ms-overflow-style: none;',
+      '  padding: 4px 0;',
+      '}',
+      '',
+      '.vl-carousel-track::-webkit-scrollbar { display: none; }',
+      '',
+      '.vl-carousel-item {',
+      '  flex-shrink: 0;',
+      '  cursor: pointer;',
+      '  transition: transform 0.25s ease, box-shadow 0.25s ease;',
+      '  border-radius: ' + px(carouselConfig.borderRadius) + ';',
+      '  overflow: hidden;',
+      '  position: relative;',
+      '}',
+      '',
+      '.vl-carousel-item:hover {',
+      '  transform: translateY(-4px);',
+      '  box-shadow: 0 8px 24px rgba(0,0,0,0.2);',
+      '}',
+      '',
+      '.vl-carousel-item--active {',
+      '  outline: ' + px(carouselConfig.borderWidth) + ' solid ' + carouselConfig.borderColor + ';',
+      '  outline-offset: -' + px(carouselConfig.borderWidth) + ';',
+      '}',
+      '',
+      '.vl-carousel-thumb {',
+      '  width: 100%;',
+      '  display: block;',
+      '  background: #0f172a;',
+      '  position: relative;',
+      '  overflow: hidden;',
+      '}',
+      '',
+      '.vl-carousel-thumb img,',
+      '.vl-carousel-thumb video {',
+      '  width: 100%;',
+      '  height: 100%;',
+      '  object-fit: ' + carouselConfig.objectFit + ';',
+      '  display: block;',
+      '}',
+      '',
+      '.vl-carousel-play-icon {',
+      '  position: absolute;',
+      '  inset: 0;',
+      '  display: flex;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '  background: rgba(0,0,0,0.15);',
+      '}',
+      '',
+      '.vl-carousel-play-icon::after {',
+      '  content: "▶";',
+      '  font-size: 18px;',
+      '  color: #ffffff;',
+      '  text-shadow: 0 2px 8px rgba(0,0,0,0.4);',
+      '}',
+      '',
+      '.vl-carousel-title {',
+      '  padding: 8px 4px 0;',
+      '  font-size: 12px;',
+      '  font-weight: 500;',
+      '  color: #475569;',
+      '  white-space: nowrap;',
+      '  overflow: hidden;',
+      '  text-overflow: ellipsis;',
+      '}',
+      '',
+      '.vl-carousel-nav {',
+      '  position: absolute;',
+      '  top: 50%;',
+      '  transform: translateY(-50%);',
+      '  z-index: 5;',
+      '  width: 36px;',
+      '  height: 36px;',
+      '  display: flex;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '  background: rgba(255,255,255,0.9);',
+      '  border: 1px solid #e2e8f0;',
+      '  border-radius: 50%;',
+      '  cursor: pointer;',
+      '  box-shadow: 0 2px 8px rgba(0,0,0,0.1);',
+      '  transition: all 0.2s ease;',
+      '  font-size: 16px;',
+      '  color: #334155;',
+      '}',
+      '',
+      '.vl-carousel-nav:hover {',
+      '  background: #ffffff;',
+      '  box-shadow: 0 4px 16px rgba(0,0,0,0.15);',
+      '}',
+      '',
+      '.vl-carousel-nav--prev { left: -16px; }',
+      '.vl-carousel-nav--next { right: -16px; }',
+      '.vl-carousel-nav:disabled {',
+      '  opacity: 0.4;',
+      '  cursor: default;',
+      '}'
+    ].join('\n');
+  }
+
+  function buildGridCss(appearance) {
+    var gridConfig = getGridConfig(appearance);
+
+    return [
+      buildSharedCss(appearance),
+      '',
+      '.vl-grid-wrapper {',
+      '  width: 100%;',
+      '}',
+      '',
+      '.vl-grid-container {',
+      '  display: grid;',
+      '  grid-template-columns: repeat(' + gridConfig.columns + ', 1fr);',
+      '  gap: ' + px(gridConfig.spacing) + ';',
+      '}',
+      '',
+      '.vl-grid-item {',
+      '  cursor: pointer;',
+      '  transition: transform 0.25s ease;',
+      '  border-radius: ' + px(gridConfig.borderRadius) + ';',
+      '  overflow: hidden;',
+      '  position: relative;',
+      '}',
+      '',
+      '.vl-grid-item:hover {',
+      '  transform: translateY(-2px);',
+      '}',
+      '',
+      '.vl-grid-item--active {',
+      '  outline: ' + px(gridConfig.borderWidth) + ' solid ' + gridConfig.borderColor + ';',
+      '  outline-offset: -' + px(gridConfig.borderWidth) + ';',
+      '}',
+      '',
+      '.vl-grid-thumb {',
+      '  width: 100%;',
+      '  background: #0f172a;',
+      '  position: relative;',
+      '  overflow: hidden;',
+      '}',
+      '',
+      '.vl-grid-thumb img,',
+      '.vl-grid-thumb video {',
+      '  width: 100%;',
+      '  height: 100%;',
+      '  object-fit: ' + gridConfig.objectFit + ';',
+      '  display: block;',
+      '}',
+      '',
+      '.vl-grid-play-icon {',
+      '  position: absolute;',
+      '  inset: 0;',
+      '  display: flex;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '  background: rgba(0,0,0,0.15);',
+      '}',
+      '',
+      '.vl-grid-play-icon::after {',
+      '  content: "▶";',
+      '  font-size: 18px;',
+      '  color: #ffffff;',
+      '  text-shadow: 0 2px 8px rgba(0,0,0,0.4);',
+      '}',
+      '',
+      '.vl-grid-title {',
+      '  padding: 6px 4px 0;',
+      '  font-size: 11px;',
+      '  font-weight: 500;',
+      '  color: #64748b;',
+      '  white-space: nowrap;',
+      '  overflow: hidden;',
+      '  text-overflow: ellipsis;',
+      '}'
+    ].join('\n');
+  }
+
+  function buildModalCss(appearance) {
+    var primaryColor = getPrimaryColor(appearance);
+    var modalConfig = normalizeModalAppearanceConfig(appearance);
+
+    var cssParts = [
+      buildSharedCss(appearance),
+      '',
+      '.vl-modal-overlay {',
+      '  position: fixed;',
+      '  inset: 0;',
+      '  z-index: 2147483646;',
+      '  display: flex;',
+      '  flex-direction: column;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '  background: rgba(0,0,0,0.88);',
+      '  backdrop-filter: blur(12px);',
+      '  -webkit-backdrop-filter: blur(12px);',
+      '  animation: vlFadeIn 0.2s ease;',
+      '}',
+      '',
+      '.vl-modal-container {',
+      '  position: relative;',
+      '  width: 90vw;',
+      '  max-width: 450px;',
+      '  max-height: 90vh;',
+      '  display: flex;',
+      '  flex-direction: column;',
+      '  background: #ffffff;',
+      '  border-radius: 20px;',
+      '  overflow: hidden;',
+      '  animation: vlSlideUp 0.3s ease;',
+    ];
+
+    if (modalConfig.shadow_enabled) {
+      cssParts.push(
+        '  box-shadow: 0 24px 80px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.25);'
+      );
+    }
+
+    if (modalConfig.border_color && modalConfig.border_width) {
+      cssParts.push(
+        '  border: ' + px(modalConfig.border_width) + ' solid ' + modalConfig.border_color + ';'
+      );
+    }
+
+    if (modalConfig.border_radius) {
+      cssParts.push(
+        '  border-radius: ' + px(modalConfig.border_radius) + ';'
+      );
+    }
+
+    cssParts.push(
+      '}',
+      '',
+      '.vl-modal-close {',
+      '  position: absolute;',
+      '  top: 12px;',
+      '  right: 12px;',
+      '  z-index: 10;',
+      '  width: 32px;',
+      '  height: 32px;',
+      '  display: flex;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '  background: rgba(0,0,0,0.4);',
+      '  color: #ffffff;',
+      '  border: none;',
+      '  border-radius: 50%;',
+      '  font-size: 18px;',
+      '  cursor: pointer;',
+      '  transition: background 0.2s ease;',
+      '}',
+      '',
+      '.vl-modal-close:hover {',
+      '  background: rgba(239,68,68,0.8);',
+      '}',
+      '',
+      '.vl-modal-media {',
+      '  position: relative;',
+      '  width: 100%;',
+      '  background: #000;',
+      '  overflow: hidden;',
+      '  flex-shrink: 0;',
+      '}',
+      '',
+      '.vl-modal-media video,',
+      '.vl-modal-media iframe {',
+      '  display: block;',
+      '  width: 100%;',
+      '  height: 100%;',
+      '  border: none;',
+      '}',
+      '',
+      '.vl-modal-info {',
+      '  padding: 16px;',
+      '  display: flex;',
+      '  flex-direction: column;',
+      '  gap: 12px;',
+      '  max-height: 40vh;',
+      '  overflow-y: auto;',
+      '}',
+      '',
+      '.vl-modal-title {',
+      '  font-size: 16px;',
+      '  font-weight: 700;',
+      '  color: #0f172a;',
+      '  line-height: 1.3;',
+      '}',
+      '',
+      '.vl-modal-product {',
+      '  display: flex;',
+      '  align-items: center;',
+      '  gap: 12px;',
+      '  padding: 12px;',
+      '  background: #f8fafc;',
+      '  border-radius: 12px;',
+      '  border: 1px solid #e2e8f0;',
+      '}',
+      '',
+      '.vl-modal-product-img {',
+      '  width: 56px;',
+      '  height: 56px;',
+      '  border-radius: 8px;',
+      '  object-fit: cover;',
+      '  flex-shrink: 0;',
+      '  background: #e2e8f0;',
+      '}',
+      '',
+      '.vl-modal-product-info {',
+      '  flex: 1;',
+      '  min-width: 0;',
+      '}',
+      '',
+      '.vl-modal-product-name {',
+      '  font-size: 13px;',
+      '  font-weight: 600;',
+      '  color: #1e293b;',
+      '  white-space: nowrap;',
+      '  overflow: hidden;',
+      '  text-overflow: ellipsis;',
+      '}',
+      '',
+      '.vl-modal-product-price {',
+      '  font-size: 15px;',
+      '  font-weight: 700;',
+      '  color: ' + primaryColor + ';',
+      '  margin-top: 2px;',
+      '}',
+      '',
+      '.vl-modal-actions {',
+      '  display: flex;',
+      '  flex-wrap: wrap;',
+      '  gap: 8px;',
+      '}',
+      '',
+      '.vl-modal-actions .vl-btn {',
+      '  flex: 1;',
+      '  min-width: 60px;',
+      '}',
+      '',
+      '.vl-modal-comments {',
+      '  border-top: 1px solid #e2e8f0;',
+      '  padding: 16px;',
+      '  max-height: 200px;',
+      '  overflow-y: auto;',
+      '}',
+      '',
+      '.vl-comment {',
+      '  display: flex;',
+      '  gap: 10px;',
+      '  padding: 8px 0;',
+      '  border-bottom: 1px solid #f1f5f9;',
+      '}',
+      '',
+      '.vl-comment:last-child { border-bottom: none; }',
+      '',
+      '.vl-comment-avatar {',
+      '  width: 32px;',
+      '  height: 32px;',
+      '  border-radius: 50%;',
+      '  background: ' + primaryColor + ';',
+      '  color: #ffffff;',
+      '  display: flex;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '  font-size: 13px;',
+      '  font-weight: 600;',
+      '  flex-shrink: 0;',
+      '}',
+      '',
+      '.vl-comment-body { flex: 1; min-width: 0; }',
+      '',
+      '.vl-comment-author {',
+      '  font-size: 12px;',
+      '  font-weight: 600;',
+      '  color: #334155;',
+      '}',
+      '',
+      '.vl-comment-text {',
+      '  font-size: 12px;',
+      '  color: #64748b;',
+      '  margin-top: 2px;',
+      '  word-break: break-word;',
+      '}'
+    );
+
+    return cssParts.join('\n');
+  }
+
+  // ─── MEDIA CONTROLS ────────────────────────────
+
+  var globalActiveVideo = null;
+  var globalActiveVideoPaused = false;
+
+  function pauseAllOtherVideos(exceptElement) {
+    var allVideos = document.querySelectorAll('video');
+    for (var i = 0; i < allVideos.length; i++) {
+      if (allVideos[i] !== exceptElement && !allVideos[i].paused) {
+        allVideos[i].pause();
+      }
+    }
+    var allIframes = document.querySelectorAll('iframe');
+    for (var j = 0; j < allIframes.length; j++) {
+      try {
+        allIframes[j].contentWindow && allIframes[j].contentWindow.postMessage(
+          JSON.stringify({ event: 'command', func: 'pauseVideo', args: '' }),
+          '*'
+        );
+      } catch (e) {}
+    }
+  }
+
+  function createVideoElement(src, options) {
+    options = options || {};
+    var video = document.createElement('video');
+    video.src = src;
+    video.loop = Boolean(options.loop);
+    video.muted = Boolean(options.muted || options.autoplay);
+    video.playsInline = Boolean(options.playsInline !== false);
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    video.preload = options.preload || 'metadata';
+
+    if (options.autoplay) {
+      video.autoplay = true;
+    }
+    if (options.controls !== false) {
+      video.controls = true;
+    }
+
+    video.style.cssText = 'display:block;width:100%;height:100%;object-fit:' + (options.objectFit || 'cover') + ';';
+
+    return video;
+  }
+
+  function createYouTubeEmbed(videoId, options) {
+    options = options || {};
+
+    var wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position:relative;width:100%;height:100%;background:#000;';
+
+    var iframe = document.createElement('iframe');
+    var src = 'https://www.youtube.com/embed/' + encodeURIComponent(videoId) +
+      '?autoplay=' + (options.autoplay ? '1' : '0') +
+      '&mute=' + (options.muted ? '1' : '0') +
+      '&loop=' + (options.loop ? '1' : '0') +
+      '&playsinline=1' +
+      '&rel=0' +
+      '&modestbranding=1' +
+      '&controls=' + (options.controls !== false ? '1' : '0');
+
+    if (options.loop && videoId) {
+      src += '&playlist=' + videoId;
+    }
+
+    iframe.src = src;
+    iframe.setAttribute('frameborder', '0');
+    iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
+    iframe.setAttribute('allowfullscreen', '');
+    iframe.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:none;';
+
+    wrapper.appendChild(iframe);
+    return wrapper;
+  }
+
+  function playMedia(container, videoObj, appearance) {
+    if (!container || !videoObj) return;
+
+    var videoUrl = getVideoUrl(videoObj);
+    if (!videoUrl) return;
+
+    container.innerHTML = '';
+    container.style.background = '#000';
+
+    var youtubeId = extractYouTubeId(videoUrl);
+    var floatingConfig = getFloatingConfig(appearance);
+
+    if (youtubeId) {
+      var embed = createYouTubeEmbed(youtubeId, {
+        autoplay: true,
+        muted: false,
+        loop: false,
+        controls: false
+      });
+      container.appendChild(embed);
+    } else {
+      var videoEl = createVideoElement(videoUrl, {
+        autoplay: true,
+        muted: false,
+        loop: false,
+        controls: false,
+        objectFit: floatingConfig.objectFit || 'cover',
+        playsInline: true
+      });
+
+      videoEl.addEventListener('play', function () {
+        globalActiveVideo = videoEl;
+        globalActiveVideoPaused = false;
+        pauseAllOtherVideos(videoEl);
+      });
+
+      videoEl.addEventListener('pause', function () {
+        globalActiveVideoPaused = true;
+      });
+
+      videoEl.addEventListener('ended', function () {
+        globalActiveVideo = null;
+      });
+
+      container.appendChild(videoEl);
+
+      // Try autoplay with unmute
+      var playPromise = videoEl.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(function () {
+          videoEl.muted = true;
+          videoEl.play().catch(function () {
+            // Show play button fallback
+            var overlay = document.createElement('div');
+            overlay.className = 'vl-play-overlay';
+            var icon = document.createElement('div');
+            icon.className = 'vl-play-icon';
+            icon.innerHTML = '▶';
+            overlay.appendChild(icon);
+            overlay.addEventListener('click', function () {
+              videoEl.muted = false;
+              videoEl.play().catch(function () {
+                videoEl.muted = true;
+                videoEl.play();
+              });
+              overlay.remove();
+            });
+            container.appendChild(overlay);
+          });
+        });
+      }
+    }
+  }
+
+  function stopMedia(container) {
+    if (!container) return;
+    var videos = container.querySelectorAll('video');
+    for (var i = 0; i < videos.length; i++) {
+      videos[i].pause();
+      videos[i].removeAttribute('src');
+      videos[i].load();
+    }
+    container.innerHTML = '';
+    container.style.background = '';
+    globalActiveVideo = null;
+    globalActiveVideoPaused = false;
+  }
