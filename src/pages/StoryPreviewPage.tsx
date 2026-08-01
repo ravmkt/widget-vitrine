@@ -588,12 +588,12 @@ export default function StoryPreviewPage() {
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <p style={{ fontWeight: 800, fontSize: '13px', color: textColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name || 'Produto'}</p>
                   {product.price != null && Number(product.price) > 0 && <p style={{ marginTop: '4px', fontWeight: 800, fontSize: '16px', color: secondaryColor }}>R$ {Number(product.price).toFixed(2).replace('.', ',')}</p>}
-<div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'nowrap', marginTop: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'nowrap', marginTop: '6px' }}>
                     {/* Botão "Ver no site" — sempre visível quando há produto */}
-style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 10px', background: buttonColor, color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}
+                    <a href={product.product_url || product.url || '#'} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 10px', background: buttonColor, color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}><ExternalLink size={12} /> Ver no site</a>
                     {/* Botão WhatsApp — só aparece se configurado no appearance */}
                     {m.show_product_whatsapp_button && whatsappNumber && (
-                      <a href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Olá! Tenho interesse no produto: ${product.name || ''}`)}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 12px', background: '#25d366', color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap' }}>Comprar pelo WhatsApp</a>
+                      <a href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Olá! Tenho interesse no produto: ${product.name || ''}`)}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 10px', background: '#25d366', color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>Comprar pelo WhatsApp</a>
                     )}
                   </div>
                 </div>
