@@ -2920,24 +2920,35 @@ function openSizingPanel(modelId) {
       var pageRules = results[10];
       var locations = results[11];
 
-      // 🔧 Extrair seletor CSS das display_locations
-var inlineSelector = '';
-if (locations && locations.length > 0) {
-  for (var i = 0; i < locations.length; i++) {
-    var s = locations[i].css_selector || locations[i].selector || locations[i].display_selector || '';
-    if (s) { inlineSelector = s; break; }
-  }
-}
-// 🔧 Fallback: pegar do campo display_selector da primeira story inline
-if (!inlineSelector) {
-  for (var j = 0; j < validStories.length; j++) {
-    var storySelector = validStories[j].display_selector || '';
-    if (storySelector) { inlineSelector = storySelector; break; }
-  }
-}
-if (inlineSelector) {
-  appearance.css_selector = inlineSelector;
-}
+      // 🔧 Extrair seletor CSS e posição das display_locations
+      var inlineSelector = '';
+      var inlinePosition = 'afterend';  // ← padrão seguro
+      if (locations && locations.length > 0) {
+        for (var i = 0; i < locations.length; i++) {
+          var locSelector = locations[i].css_selector || locations[i].selector || locations[i].display_selector || '';
+          if (locSelector) {
+            inlineSelector = locSelector;
+            // 🔧 AQUI: lê a posição do banco (afterend, beforebegin, etc.)
+            inlinePosition = locations[i].position || locations[i].display_position || 'afterend';
+            break;
+          }
+        }
+      }
+      // 🔧 Fallback: pegar da primeira story inline
+      if (!inlineSelector) {
+        for (var j = 0; j < validStories.length; j++) {
+          var storySelector = validStories[j].display_selector || '';
+          if (storySelector) {
+            inlineSelector = storySelector;
+            inlinePosition = validStories[j].display_position || 'afterend';
+            break;
+          }
+        }
+      }
+      if (inlineSelector) {
+        appearance.css_selector = inlineSelector;
+        appearance.position = inlinePosition;  // ← NOVO: salva posição no appearance
+      }
 
 
       if (storeSettings && storeSettings.auto_approve_comments !== undefined) {
