@@ -2056,3 +2056,922 @@
     globalActiveVideo = null;
     globalActiveVideoPaused = false;
   }
+
+  // ─── RENDER: FLOATING WIDGET ──────────────────
+
+  function renderFloatingWidget(stories, container, appearance, behavior) {
+    if (!stories || !stories.length) {
+      showEmptyState(container, 'floating');
+      return;
+    }
+
+    var activeIndex = 0;
+    var cssText = buildFloatingCss(appearance);
+    var floatingConfig = getFloatingConfig(appearance);
+
+    // Refresh container with fresh shadow DOM
+    var shadowData = getOrCreateShadowRoot(null, cssText);
+    var root = shadowData.root;
+
+    var wrapper = document.createElement('div');
+    wrapper.className = 'vl-floating-wrapper';
+
+    // Floating container
+    var floatContainer = document.createElement('div');
+    floatContainer.className = 'vl-floating-container';
+    floatContainer.style.aspectRatio = floatingConfig.aspectRatio || '9 / 16';
+
+    // Close button
+    if (behavior.showClose !== false) {
+      var closeBtn = document.createElement('button');
+      closeBtn.className = 'vl-floating-close';
+      closeBtn.innerHTML = '✕';
+      closeBtn.setAttribute('aria-label', 'Fechar');
+      closeBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        dismissFloatingWidget(shadowData);
+      });
+      floatContainer.appendChild(closeBtn);
+    }
+
+    // Border highlight
+    if (floatingConfig.borderWidth > 0) {
+      var borderEl = document.createElement('div');
+      borderEl.className = 'vl-floating-border';
+      floatContainer.appendChild(borderEl);
+    }
+
+    // Media container
+    var mediaContainer = document.createElement('div');
+    mediaContainer.className = 'vl-video-container';
+    mediaContainer.style.width = '100%';
+    mediaContainer.style.height = '100%';
+    floatContainer.appendChild(mediaContainer);
+
+    // Label
+    if (behavior.showLabel !== false && stories[activeIndex].name) {
+      var label = document.createElement('div');
+      label.className = 'vl-floating-label';
+      label.textContent = stories[activeIndex].name;
+      wrapper.appendChild(floatContainer);
+      wrapper.appendChild(label);
+    } else {
+      wrapper.appendChild(floatContainer);
+    }
+
+    root.appendChild(wrapper);
+
+    // Click → open modal
+    floatContainer.addEventListener('click', function () {
+      trackMetric({
+        event_type: 'floating_click',
+        story_id: stories[activeIndex].id,
+        video_id: stories[activeIndex].video_id || null
+      });
+      openModal(stories, activeIndex, appearance, behavior);
+    });
+
+    // Play initial story
+    playStory(stories[activeIndex], mediaContainer, appearance);
+
+    // Auto-rotate stories
+    var rotationInterval = null;
+    if (behavior.autoRotate !== false) {
+      rotationInterval = setInterval(function () {
+        if (globalActiveVideoPaused) return;
+        activeIndex = (activeIndex + 1) % stories.length;
+        playStory(stories[activeIndex], mediaContainer, appearance);
+        if (label) {
+          label.textContent = stories[activeIndex].name || '';
+        }
+      }, behavior.rotationDelay || 8000);
+    }
+
+    // Store cleanup reference
+    shadowData._cleanup = function () {
+      if (rotationInterval) clearInterval(rotationInterval);
+      stopMedia(mediaContainer);
+    };
+
+    return shadowData;
+  }
+
+  function dismissFloatingWidget(shadowData) {
+    if (shadowData && shadowData._cleanup) {
+      shadowData._cleanup();
+    }
+    if (shadowData && shadowData.container && shadowData.container.parentNode) {
+      shadowData.container.parentNode.removeChild(shadowData.container);
+    }
+    globalActiveWidget = null;
+  }
+
+  function playStory(story, container, appearance) {
+    if (!story || !container) return;
+    stopMedia(container);
+
+    var videoObj = story.video || story;
+    playMedia(container, videoObj, appearance);
+  }
+
+  // ─── RENDER: CAROUSEL ─────────────────────────
+
+  function renderCarousel(stories, anchorEl, appearance, behavior) {
+    if (!stories || !stories.length) {
+      showEmptyStateInline(anchorEl, 'carousel');
+      return;
+    }
+
+    var activeIndex = behavior.startIndex || 0;
+    var cssText = buildCarouselCss(appearance);
+    var carouselConfig = getCarouselConfig(appearance);
+
+    var shadowData = getOrCreateShadowRoot(null, cssText);
+    var root = shadowData.root;
+
+    var wrapper = document.createElement('div');
+    wrapper.className = 'vl-carousel-wrapper';
+
+    // Navigation buttons
+    if (stories.length > carouselConfig.columns) {
+      var prevBtn = document.createElement('button');
+      prevBtn.className = 'vl-carousel-nav vl-carousel-nav--prev';
+      prevBtn.innerHTML = '‹';
+      prevBtn.setAttribute('aria-label', 'Anterior');
+      wrapper.appendChild(prevBtn);
+
+      var nextBtn = document.createElement('button');
+      nextBtn.className = 'vl-carousel-nav vl-carousel-nav--next';
+      nextBtn.innerHTML = '›';
+      nextBtn.setAttribute('aria-label', 'Próximo');
+      wrapper.appendChild(nextBtn);
+    }
+
+    // Track
+    var track = document.createElement('div');
+    track.className = 'vl-carousel-track';
+    wrapper.appendChild(track);
+
+    root.appendChild(wrapper);
+
+    // Render items
+    function renderItems() {
+      track.innerHTML = '';
+
+      for (var i = 0; i < stories.length; i++) {
+        var story = stories[i];
+        var item = document.createElement('div');
+        item.className = 'vl-carousel-item';
+        item.style.width = px(carouselConfig.thumbWidth);
+        item.setAttribute('data-index', i);
+
+        if (i === activeIndex) {
+          item.classList.add('vl-carousel-item--active');
+        }
+
+        var thumb = document.createElement('div');
+        thumb.className = 'vl-carousel-thumb';
+        thumb.style.height = px(carouselConfig.thumbHeight);
+
+        var thumbUrl = getThumbnailUrl(story);
+        if (thumbUrl) {
+          if (isVideoUrl(thumbUrl) || /\.(mp4|webm|mov)($|\?)/i.test(thumbUrl)) {
+            var vid = createVideoElement(thumbUrl, {
+              autoplay: i === activeIndex,
+              muted: true,
+              loop: true,
+              controls: false,
+              objectFit: carouselConfig.objectFit || 'cover',
+              preload: 'metadata'
+            });
+            thumb.appendChild(vid);
+          } else {
+            var img = document.createElement('img');
+            img.src = thumbUrl;
+            img.alt = story.name || '';
+            img.loading = 'lazy';
+            img.style.cssText = 'display:block;width:100%;height:100%;object-fit:' + (carouselConfig.objectFit || 'cover') + ';';
+            thumb.appendChild(img);
+          }
+        } else {
+          thumb.style.background = '#1e293b';
+        }
+
+        // Play icon for videos
+        if (isVideoStory(story)) {
+          var playIcon = document.createElement('div');
+          playIcon.className = 'vl-carousel-play-icon';
+          thumb.appendChild(playIcon);
+        }
+
+        item.appendChild(thumb);
+
+        // Title
+        if (behavior.showTitles !== false && story.name) {
+          var title = document.createElement('div');
+          title.className = 'vl-carousel-title';
+          title.textContent = story.name;
+          item.appendChild(title);
+        }
+
+        // Click handler
+        (function (idx) {
+          item.addEventListener('click', function () {
+            activeIndex = idx;
+            renderItems();
+            scrollToItem(track, idx);
+            trackMetric({
+              event_type: 'carousel_click',
+              story_id: story.id,
+              video_id: story.video_id || null
+            });
+            openModal(stories, idx, appearance, behavior);
+          });
+        })(i);
+
+        track.appendChild(item);
+      }
+
+      // Scroll to active
+      requestAnimationFrame(function () {
+        scrollToItem(track, activeIndex);
+      });
+    }
+
+    function scrollToItem(trk, idx) {
+      var items = trk.querySelectorAll('.vl-carousel-item');
+      if (items[idx]) {
+        items[idx].scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center'
+        });
+      }
+    }
+
+    renderItems();
+
+    // Navigation buttons
+    if (prevBtn) {
+      prevBtn.addEventListener('click', function () {
+        activeIndex = Math.max(0, activeIndex - carouselConfig.columns);
+        renderItems();
+      });
+    }
+    if (nextBtn) {
+      nextBtn.addEventListener('click', function () {
+        activeIndex = Math.min(stories.length - 1, activeIndex + carouselConfig.columns);
+        renderItems();
+      });
+    }
+
+    // Insert at anchor position
+    applyHostPosition(shadowData.container, anchorEl, behavior.position || 'after');
+
+    return shadowData;
+  }
+
+  // ─── RENDER: GRID ─────────────────────────────
+
+  function renderGrid(stories, anchorEl, appearance, behavior) {
+    if (!stories || !stories.length) {
+      showEmptyStateInline(anchorEl, 'grid');
+      return;
+    }
+
+    var cssText = buildGridCss(appearance);
+    var gridConfig = getGridConfig(appearance);
+
+    var shadowData = getOrCreateShadowRoot(null, cssText);
+    var root = shadowData.root;
+
+    var wrapper = document.createElement('div');
+    wrapper.className = 'vl-grid-wrapper';
+
+    var grid = document.createElement('div');
+    grid.className = 'vl-grid-container';
+    wrapper.appendChild(grid);
+    root.appendChild(wrapper);
+
+    for (var i = 0; i < stories.length; i++) {
+      var story = stories[i];
+      var item = document.createElement('div');
+      item.className = 'vl-grid-item';
+      item.setAttribute('data-index', i);
+
+      if (i === (behavior.startIndex || 0)) {
+        item.classList.add('vl-grid-item--active');
+      }
+
+      var thumb = document.createElement('div');
+      thumb.className = 'vl-grid-thumb';
+      thumb.style.aspectRatio = gridConfig.aspectRatio || '1 / 1';
+
+      var thumbUrl = getThumbnailUrl(story);
+      if (thumbUrl) {
+        if (isVideoUrl(thumbUrl) || /\.(mp4|webm|mov)($|\?)/i.test(thumbUrl)) {
+          var vid = createVideoElement(thumbUrl, {
+            autoplay: false,
+            muted: true,
+            loop: true,
+            controls: false,
+            objectFit: gridConfig.objectFit || 'cover',
+            preload: 'metadata'
+          });
+          thumb.appendChild(vid);
+        } else {
+          var img = document.createElement('img');
+          img.src = thumbUrl;
+          img.alt = story.name || '';
+          img.loading = 'lazy';
+          img.style.cssText = 'display:block;width:100%;height:100%;object-fit:' + (gridConfig.objectFit || 'cover') + ';';
+          thumb.appendChild(img);
+        }
+      } else {
+        thumb.style.background = '#1e293b';
+      }
+
+      if (isVideoStory(story)) {
+        var playIcon = document.createElement('div');
+        playIcon.className = 'vl-grid-play-icon';
+        thumb.appendChild(playIcon);
+      }
+
+      item.appendChild(thumb);
+
+      if (behavior.showTitles !== false && story.name) {
+        var title = document.createElement('div');
+        title.className = 'vl-grid-title';
+        title.textContent = story.name;
+        item.appendChild(title);
+      }
+
+      // Hover → play preview
+      var hoverVideo = null;
+      item.addEventListener('mouseenter', function () {
+        var vidUrl = getVideoUrl(story.video || story);
+        if (vidUrl && !isYouTubeUrl(vidUrl)) {
+          var previewContainer = document.createElement('div');
+          previewContainer.style.cssText = 'position:absolute;inset:0;z-index:5;';
+          thumb.style.position = 'relative';
+          hoverVideo = createVideoElement(vidUrl, {
+            autoplay: true,
+            muted: true,
+            loop: true,
+            controls: false,
+            objectFit: gridConfig.objectFit || 'cover'
+          });
+          previewContainer.appendChild(hoverVideo);
+          thumb.appendChild(previewContainer);
+        }
+      });
+
+      item.addEventListener('mouseleave', function () {
+        if (hoverVideo) {
+          hoverVideo.pause();
+          hoverVideo.removeAttribute('src');
+          hoverVideo.parentNode && hoverVideo.parentNode.remove();
+          hoverVideo = null;
+        }
+      });
+
+      (function (idx) {
+        item.addEventListener('click', function () {
+          trackMetric({
+            event_type: 'grid_click',
+            story_id: story.id,
+            video_id: story.video_id || null
+          });
+          openModal(stories, idx, appearance, behavior);
+        });
+      })(i);
+
+      grid.appendChild(item);
+    }
+
+    applyHostPosition(shadowData.container, anchorEl, behavior.position || 'replace');
+
+    return shadowData;
+  }
+
+  // ─── RENDER: INLINE WIDGET ────────────────────
+
+  function renderInlineWidget(stories, anchorEl, appearance, behavior) {
+    if (!stories || !stories.length) {
+      showEmptyStateInline(anchorEl, 'inline');
+      return;
+    }
+
+    var inlineConfig = getInlineConfig(appearance);
+    var cssText = [
+      buildSharedCss(appearance),
+      '',
+      '.vl-inline-wrapper {',
+      '  width: 100%;',
+      '  max-width: ' + px(inlineConfig.maxWidth) + ';',
+      '  margin: ' + px(inlineConfig.marginTop) + ' auto ' + px(inlineConfig.marginBottom) + ' auto;',
+      '  border-radius: ' + px(inlineConfig.borderRadius) + ';',
+      '  overflow: hidden;',
+      '  box-shadow: 0 4px 24px rgba(0,0,0,0.12);',
+      '  background: #000;',
+      '}',
+      '',
+      '.vl-inline-media {',
+      '  position: relative;',
+      '  width: 100%;',
+      '  background: #000;',
+      '}',
+      '',
+      '.vl-inline-media video,',
+      '.vl-inline-media iframe {',
+      '  display: block;',
+      '  width: 100%;',
+      '  height: 100%;',
+      '  border: none;',
+      '}',
+      '',
+      '.vl-inline-controls {',
+      '  display: flex;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '  gap: 12px;',
+      '  padding: 12px 16px;',
+      '  background: #ffffff;',
+      '  border-top: 1px solid #e2e8f0;',
+      '}',
+      '',
+      '.vl-inline-dot {',
+      '  width: 8px;',
+      '  height: 8px;',
+      '  border-radius: 50%;',
+      '  background: #cbd5e1;',
+      '  border: none;',
+      '  cursor: pointer;',
+      '  padding: 0;',
+      '  transition: all 0.2s ease;',
+      '}',
+      '',
+      '.vl-inline-dot--active {',
+      '  background: ' + getPrimaryColor(appearance) + ';',
+      '  transform: scale(1.4);',
+      '}',
+      '',
+      '.vl-inline-title {',
+      '  text-align: center;',
+      '  font-size: 13px;',
+      '  font-weight: 600;',
+      '  color: #334155;',
+      '  padding: 8px;',
+      '  flex: 1;',
+      '  white-space: nowrap;',
+      '  overflow: hidden;',
+      '  text-overflow: ellipsis;',
+      '}',
+      '',
+      '.vl-inline-nav {',
+      '  width: 32px;',
+      '  height: 32px;',
+      '  display: flex;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '  border: none;',
+      '  background: #f1f5f9;',
+      '  border-radius: 50%;',
+      '  cursor: pointer;',
+      '  font-size: 16px;',
+      '  color: #475569;',
+      '  transition: all 0.2s ease;',
+      '}',
+      '',
+      '.vl-inline-nav:hover {',
+      '  background: #e2e8f0;',
+      '}'
+    ].join('\n');
+
+    var shadowData = getOrCreateShadowRoot(null, cssText);
+    var root = shadowData.root;
+
+    var activeIndex = behavior.startIndex || 0;
+
+    var wrapper = document.createElement('div');
+    wrapper.className = 'vl-inline-wrapper';
+
+    var mediaContainer = document.createElement('div');
+    mediaContainer.className = 'vl-inline-media';
+    mediaContainer.style.aspectRatio = inlineConfig.aspectRatio || '16 / 9';
+    wrapper.appendChild(mediaContainer);
+
+    // Controls bar
+    var controls = document.createElement('div');
+    controls.className = 'vl-inline-controls';
+
+    var prevBtn = document.createElement('button');
+    prevBtn.className = 'vl-inline-nav';
+    prevBtn.innerHTML = '‹';
+    prevBtn.setAttribute('aria-label', 'Anterior');
+
+    var dotsContainer = document.createElement('div');
+    dotsContainer.style.cssText = 'display:flex;align-items:center;gap:8px;flex:1;justify-content:center;';
+
+    var nextBtn = document.createElement('button');
+    nextBtn.className = 'vl-inline-nav';
+    nextBtn.innerHTML = '›';
+    nextBtn.setAttribute('aria-label', 'Próximo');
+
+    controls.appendChild(prevBtn);
+    controls.appendChild(dotsContainer);
+    controls.appendChild(nextBtn);
+    wrapper.appendChild(controls);
+
+    root.appendChild(wrapper);
+
+    // Render dots
+    function renderDots() {
+      dotsContainer.innerHTML = '';
+      for (var i = 0; i < stories.length; i++) {
+        var dot = document.createElement('button');
+        dot.className = 'vl-inline-dot';
+        if (i === activeIndex) dot.classList.add('vl-inline-dot--active');
+        dot.setAttribute('aria-label', stories[i].name || ('Vídeo ' + (i + 1)));
+        (function (idx) {
+          dot.addEventListener('click', function () {
+            activeIndex = idx;
+            renderDots();
+            playStory(stories[idx], mediaContainer, appearance);
+          });
+        })(i);
+        dotsContainer.appendChild(dot);
+      }
+    }
+
+    function goTo(idx) {
+      if (idx < 0 || idx >= stories.length) return;
+      activeIndex = idx;
+      renderDots();
+      playStory(stories[idx], mediaContainer, appearance);
+      trackMetric({
+        event_type: 'inline_navigate',
+        story_id: stories[idx].id,
+        video_id: stories[idx].video_id || null
+      });
+    }
+
+    prevBtn.addEventListener('click', function () {
+      goTo(activeIndex - 1 < 0 ? stories.length - 1 : activeIndex - 1);
+    });
+
+    nextBtn.addEventListener('click', function () {
+      goTo((activeIndex + 1) % stories.length);
+    });
+
+    // Click on video → open modal
+    mediaContainer.addEventListener('click', function () {
+      openModal(stories, activeIndex, appearance, behavior);
+    });
+
+    // Initialize
+    renderDots();
+    playStory(stories[activeIndex], mediaContainer, appearance);
+
+    applyHostPosition(shadowData.container, anchorEl, behavior.position || 'replace');
+
+    return shadowData;
+  }
+
+  // ─── MODAL ────────────────────────────────────
+
+  function openModal(stories, startIndex, appearance, behavior) {
+    if (!stories || !stories.length) return;
+
+    startIndex = startIndex || 0;
+    var currentIndex = startIndex;
+    var cssText = buildModalCss(appearance);
+    var modalConfig = normalizeModalAppearanceConfig(appearance);
+    var primaryColor = getPrimaryColor(appearance);
+
+    // Remove existing modal
+    closeModal();
+
+    var shadowData = getOrCreateShadowRoot('vidlytics-modal-root', cssText, 'position:fixed;inset:0;z-index:2147483646;pointer-events:none;');
+    var root = shadowData.root;
+    shadowData.container.style.pointerEvents = 'auto';
+
+    // Overlay
+    var overlay = document.createElement('div');
+    overlay.className = 'vl-modal-overlay';
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) closeModal();
+    });
+
+    // Container
+    var modal = document.createElement('div');
+    modal.className = 'vl-modal-container';
+
+    // Close button
+    var closeBtn = document.createElement('button');
+    closeBtn.className = 'vl-modal-close';
+    closeBtn.innerHTML = '✕';
+    closeBtn.setAttribute('aria-label', 'Fechar');
+    closeBtn.addEventListener('click', closeModal);
+    modal.appendChild(closeBtn);
+
+    // Progress bar (stories-style)
+    var progressBar = null;
+    if (behavior.showProgress !== false && stories.length > 1) {
+      progressBar = document.createElement('div');
+      progressBar.style.cssText = 'position:absolute;top:0;left:0;right:0;z-index:20;display:flex;gap:4px;padding:12px 16px 0;';
+      for (var p = 0; p < stories.length; p++) {
+        var seg = document.createElement('div');
+        seg.style.cssText = 'flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,0.3);overflow:hidden;';
+        var fill = document.createElement('div');
+        fill.style.cssText = 'height:100%;width:0;background:#ffffff;border-radius:2px;transition:width 0.1s linear;';
+        fill.setAttribute('data-progress-fill', p);
+        seg.appendChild(fill);
+        progressBar.appendChild(seg);
+      }
+      modal.appendChild(progressBar);
+    }
+
+    // Media container
+    var mediaContainer = document.createElement('div');
+    mediaContainer.className = 'vl-modal-media';
+    mediaContainer.style.aspectRatio = modalConfig.aspect_ratio || '9 / 16';
+    modal.appendChild(mediaContainer);
+
+    // Info section
+    var infoSection = document.createElement('div');
+    infoSection.className = 'vl-modal-info';
+
+    // Title
+    if (behavior.showTitle !== false) {
+      var titleEl = document.createElement('div');
+      titleEl.className = 'vl-modal-title';
+      infoSection.appendChild(titleEl);
+    }
+
+    // Product info
+    var productSection = null;
+    if (behavior.showProduct !== false) {
+      productSection = document.createElement('div');
+      productSection.className = 'vl-modal-product';
+      productSection.style.display = 'none';
+
+      var productImg = document.createElement('img');
+      productImg.className = 'vl-modal-product-img';
+      productImg.alt = 'Produto';
+
+      var productInfoDiv = document.createElement('div');
+      productInfoDiv.className = 'vl-modal-product-info';
+
+      var productName = document.createElement('div');
+      productName.className = 'vl-modal-product-name';
+      productInfoDiv.appendChild(productName);
+
+      var productPrice = document.createElement('div');
+      productPrice.className = 'vl-modal-product-price';
+      productInfoDiv.appendChild(productPrice);
+
+      productSection.appendChild(productImg);
+      productSection.appendChild(productInfoDiv);
+      infoSection.appendChild(productSection);
+    }
+
+    // Actions
+    var actionsSection = document.createElement('div');
+    actionsSection.className = 'vl-modal-actions';
+    infoSection.appendChild(actionsSection);
+
+    modal.appendChild(infoSection);
+
+    // Comments section
+    var commentsSection = null;
+    if (behavior.showComments !== false) {
+      commentsSection = document.createElement('div');
+      commentsSection.className = 'vl-modal-comments';
+      commentsSection.style.display = 'none';
+      modal.appendChild(commentsSection);
+    }
+
+    overlay.appendChild(modal);
+    root.appendChild(overlay);
+
+    // Prevent body scroll
+    var originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    // Track functions
+    var progressTimer = null;
+    var progressDuration = behavior.storyDuration || 5000;
+
+    function updateContent(idx) {
+      var story = stories[idx];
+      if (!story) return;
+
+      // Title
+      if (titleEl) {
+        titleEl.textContent = story.name || story.title || '';
+      }
+
+      // Product
+      if (productSection) {
+        var product = story.product;
+        if (product && (product.name || product.price)) {
+          productSection.style.display = 'flex';
+          if (productImg) {
+            productImg.src = product.image_url || product.image || '';
+            productImg.style.display = productImg.src ? 'block' : 'none';
+          }
+          if (productName) productName.textContent = product.name || '';
+          if (productPrice) productPrice.textContent = product.price || '';
+        } else {
+          productSection.style.display = 'none';
+        }
+      }
+
+      // Actions
+      actionsSection.innerHTML = '';
+      if (story.actions && story.actions.length) {
+        for (var a = 0; a < story.actions.length; a++) {
+          var action = story.actions[a];
+          var btn = document.createElement('button');
+          btn.className = 'vl-btn';
+          if (action.type === 'whatsapp') {
+            btn.classList.add('vl-btn-whatsapp');
+          } else if (action.variant === 'secondary') {
+            btn.classList.add('vl-btn-secondary');
+          } else {
+            btn.classList.add('vl-btn-primary');
+          }
+          btn.textContent = action.label || action.text || 'Saiba mais';
+          btn.addEventListener('click', function (act) {
+            return function (e) {
+              e.stopPropagation();
+              trackMetric({
+                event_type: 'modal_action_click',
+                story_id: story.id,
+                product_id: story.product_id || null
+              });
+              if (act.url) {
+                window.open(act.url, act.target || '_blank');
+              }
+            };
+          }(action));
+          actionsSection.appendChild(btn);
+        }
+      }
+
+      // Comments
+      if (commentsSection) {
+        commentsSection.innerHTML = '';
+        if (story.comments && story.comments.length) {
+          commentsSection.style.display = 'block';
+          for (var c = 0; c < story.comments.length; c++) {
+            var comment = story.comments[c];
+            var commentEl = document.createElement('div');
+            commentEl.className = 'vl-comment';
+
+            var avatar = document.createElement('div');
+            avatar.className = 'vl-comment-avatar';
+            avatar.textContent = (comment.author || 'U').charAt(0).toUpperCase();
+
+            var body = document.createElement('div');
+            body.className = 'vl-comment-body';
+
+            var author = document.createElement('div');
+            author.className = 'vl-comment-author';
+            author.textContent = comment.author || 'Usuário';
+
+            var text = document.createElement('div');
+            text.className = 'vl-comment-text';
+            text.textContent = comment.text || comment.body || '';
+
+            body.appendChild(author);
+            body.appendChild(text);
+            commentEl.appendChild(avatar);
+            commentEl.appendChild(body);
+            commentsSection.appendChild(commentEl);
+          }
+        } else {
+          commentsSection.style.display = 'none';
+        }
+      }
+
+      // Play media
+      playStory(story, mediaContainer, appearance);
+
+      // Update progress
+      currentIndex = idx;
+      updateProgress();
+    }
+
+    function updateProgress() {
+      if (!progressBar) return;
+      var fills = progressBar.querySelectorAll('[data-progress-fill]');
+      for (var f = 0; f < fills.length; f++) {
+        fills[f].style.width = f < currentIndex ? '100%' : '0%';
+        fills[f].style.transition = 'none';
+      }
+
+      // Animate current
+      if (fills[currentIndex]) {
+        requestAnimationFrame(function () {
+          fills[currentIndex].style.transition = 'width ' + progressDuration + 'ms linear';
+          fills[currentIndex].style.width = '100%';
+        });
+      }
+
+      // Auto-advance
+      if (progressTimer) clearTimeout(progressTimer);
+      progressTimer = setTimeout(function () {
+        if (currentIndex < stories.length - 1) {
+          updateContent(currentIndex + 1);
+        } else if (behavior.loop !== false) {
+          updateContent(0);
+        } else {
+          closeModal();
+        }
+      }, progressDuration);
+    }
+
+    // Navigation: click left/right halves
+    mediaContainer.addEventListener('click', function (e) {
+      var rect = mediaContainer.getBoundingClientRect();
+      var clickX = e.clientX - rect.left;
+      var isRightHalf = clickX > rect.width / 2;
+
+      if (isRightHalf) {
+        if (currentIndex < stories.length - 1) {
+          updateContent(currentIndex + 1);
+        } else if (behavior.loop !== false) {
+          updateContent(0);
+        }
+      } else {
+        if (currentIndex > 0) {
+          updateContent(currentIndex - 1);
+        } else if (behavior.loop !== false) {
+          updateContent(stories.length - 1);
+        }
+      }
+    });
+
+    // Keyboard navigation
+    function onKeyDown(e) {
+      if (e.key === 'Escape') {
+        closeModal();
+      } else if (e.key === 'ArrowRight') {
+        if (currentIndex < stories.length - 1) updateContent(currentIndex + 1);
+        else if (behavior.loop !== false) updateContent(0);
+      } else if (e.key === 'ArrowLeft') {
+        if (currentIndex > 0) updateContent(currentIndex - 1);
+        else if (behavior.loop !== false) updateContent(stories.length - 1);
+      }
+    }
+    document.addEventListener('keydown', onKeyDown);
+
+    // Store for cleanup
+    globalModalData = {
+      shadowData: shadowData,
+      originalOverflow: originalOverflow,
+      onKeyDown: onKeyDown,
+      progressTimer: progressTimer
+    };
+
+    // Initial render
+    updateContent(startIndex);
+
+    trackMetric({
+      event_type: 'modal_open',
+      story_id: stories[startIndex].id,
+      video_id: stories[startIndex].video_id || null
+    });
+
+    return shadowData;
+  }
+
+  function closeModal() {
+    if (!globalModalData) return;
+
+    if (globalModalData.progressTimer) {
+      clearTimeout(globalModalData.progressTimer);
+    }
+
+    if (globalModalData.shadowData) {
+      stopMedia(globalModalData.shadowData.root);
+      if (globalModalData.shadowData.container && globalModalData.shadowData.container.parentNode) {
+        globalModalData.shadowData.container.parentNode.removeChild(
+          globalModalData.shadowData.container
+        );
+      }
+    }
+
+    document.body.style.overflow = globalModalData.originalOverflow || '';
+    if (globalModalData.onKeyDown) {
+      document.removeEventListener('keydown', globalModalData.onKeyDown);
+    }
+
+    globalModalData = null;
+    globalActiveVideo = null;
+    globalActiveVideoPaused = false;
+  }
+
+  var globalModalData = null;
