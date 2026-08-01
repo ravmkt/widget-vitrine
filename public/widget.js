@@ -1929,8 +1929,8 @@
         }
       });
 
-      var charCounter = createEl('div', 'vl-form-charcount');
-      charCounter.textContent = '0/1000';
+      var charCounter = createEl('div');
+      charCounter.style.cssText = 'display:none!important;';
       commentTextarea.addEventListener('input', function () {
         charCounter.textContent = commentTextarea.value.length + '/1000';
       });
