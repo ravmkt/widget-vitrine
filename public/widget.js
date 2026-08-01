@@ -750,49 +750,48 @@ function matchesRule(rule) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
 
-  // Normalização mais abrangente de condition_type
+  var value = String(
+    firstDefined(rule.url_pattern, rule.page_url, rule.value, rule.url) || ''
+  ).trim();
+
+  // Se condition_type está vazio mas existe url_pattern, assume "contains"
+  if (!conditionType && value) {
+    conditionType = 'contains';
+  }
+
+  // Normalização
   if (
     conditionType.indexOf('contem') !== -1 ||
     conditionType === 'url_contains' ||
     conditionType === 'contains'
   ) {
     conditionType = 'contains';
-  }
-
-  if (
+  } else if (
     conditionType.indexOf('exata') !== -1 ||
     conditionType === 'url_equals' ||
     conditionType === 'exact' ||
     conditionType === 'equals'
   ) {
     conditionType = 'equals';
-  }
-
-  if (
+  } else if (
     conditionType.indexOf('todas') !== -1 ||
     conditionType === 'all' ||
     conditionType === 'all_pages'
   ) {
     conditionType = 'all_pages';
-  }
-
-  if (
+  } else if (
     conditionType.indexOf('inicial') !== -1 ||
     conditionType === 'home' ||
     conditionType === 'home_only'
   ) {
     conditionType = 'home_only';
-  }
-
-  if (
+  } else if (
     conditionType.indexOf('produto') !== -1 ||
     conditionType === 'product_pages' ||
     conditionType === 'product'
   ) {
     conditionType = 'product_pages';
-  }
-
-  if (
+  } else if (
     conditionType.indexOf('categoria') !== -1 ||
     conditionType.indexOf('colecao') !== -1 ||
     conditionType.indexOf('collection') !== -1 ||
@@ -800,17 +799,13 @@ function matchesRule(rule) {
     conditionType === 'category'
   ) {
     conditionType = 'category_pages';
+  } else if (conditionType) {
+    // Se tem algum valor mas não foi reconhecido, tenta como "contains"
+    conditionType = 'contains';
   }
 
-  var value = String(
-    firstDefined(rule.url_pattern, rule.page_url, rule.value, rule.url) || ''
-  ).trim();
-
-  // Sem condition_type reconhecido = NÃO aparece (segurança)
+  // Sem condition_type e sem value = não aparece
   if (!conditionType) return false;
-
-  // Sem value e não é all_pages nem home_only = NÃO aparece
-  if (!value && conditionType !== 'all_pages' && conditionType !== 'home_only') return false;
 
   switch (conditionType) {
     case 'all_pages':
@@ -875,7 +870,6 @@ function matchesRule(rule) {
         return false;
       }
 
-    // Tipo não reconhecido = NÃO aparece
     default:
       return false;
   }
