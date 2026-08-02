@@ -3354,10 +3354,10 @@ if (isDirectVideoUrl(thumbUrl)) {
   }
 
   function renderStoryAtElement(story, anchorEl, allStories, appearance, behavior, index) {
-    var format = String(
-      firstDefined(story.format, story.display_format, story.displayFormat,
-                   story.visual_style, story.visualStyle, 'floating')
-    ).toLowerCase();
+var format = String(
+    firstDefined(story.format, story.display_format, story.displayFormat,
+                 story.visual_style, story.visualStyle, 'carousel')  // ← padrão: carrossel
+).toLowerCase();
 
     var position = story.display_position || behavior.position || 'afterend';
 
