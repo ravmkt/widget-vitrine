@@ -472,26 +472,49 @@
     return undefined;
   }
 
-  function supabaseFetch(path, options) {
-    if (!hasSupabase) return Promise.reject(new Error('Supabase não configurado.'));
-    options = options || {};
-    var headers = {
-      'apikey': supabaseAnonKey,
-      'Authorization': 'Bearer ' + supabaseAnonKey,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Cache-Control': 'no-cache'
-    };
-    if (options.headers) {
-      Object.keys(options.headers).forEach(function (key) { headers[key] = options.headers[key]; });
-    }
-    return fetch(supabaseUrl + '/rest/v1/' + path, {
-      method: options.method || 'GET',
-      headers: headers,
-      body: options.body || undefined,
-      cache: 'no-store'
+function supabaseFetch(path, options) {
+  if (!hasSupabase) {
+    return Promise.reject(new Error('Supabase não configurado.'));
+  }
+
+  options = options || {};
+
+  var headers = {
+    'apikey': supabaseAnonKey,
+    'Authorization': 'Bearer ' + supabaseAnonKey,
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Cache-Control': 'no-cache'
+  };
+
+  if (options.headers) {
+    Object.keys(options.headers).forEach(function (key) {
+      headers[key] = options.headers[key];
     });
   }
+
+  return fetch(supabaseUrl + '/rest/v1/' + path, {
+    method: options.method || 'GET',
+    headers: headers,
+    body: options.body || undefined,
+    cache: 'no-store'
+  }).then(function (response) {
+    if (response.ok) {
+      return response;
+    }
+
+    return response.text().then(function (body) {
+      var message = body || ('Erro HTTP ' + response.status);
+
+      try {
+        var parsed = JSON.parse(body);
+        message = parsed.message || parsed.error || parsed.hint || message;
+      } catch (e) {}
+
+      throw new Error(message);
+    });
+  });
+}
 
   function fetchJson(path) {
     return supabaseFetch(path, { method: 'GET' })
