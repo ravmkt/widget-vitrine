@@ -403,6 +403,58 @@ console.log('typeof is_cover[0]:', typeof newRelations[0]?.is_cover);
     setDragIndex(null);
   };
 
+// 🆕 Função do seletor visual
+const handleOpenSelector = () => {
+  const url = selectorUrl.trim();
+  if (!url) return;
+
+  const token = "sel_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+  const sep = url.includes("?") ? "&" : "?";
+  const finalUrl = url + sep + "widgetSelectToken=" + token;
+
+  window.open(finalUrl, "_blank");
+  setSelectorLoading(true);
+  setSelectorModalOpen(false);
+
+  const supabase = (await import('@/lib/supabase')).supabase;
+
+  let tentativas = 0;
+  const polling = setInterval(async () => {
+    tentativas++;
+
+    const { data } = await supabase
+      .from("selector_sessions")
+      .select("*")
+      .eq("session_token", token)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (data && data.length > 0) {
+      clearInterval(polling);
+      setLocations((prev) => [
+        {
+          ...(prev[0] || {
+            id: generateUuid(),
+            store_id: resolvedStoreId || "",
+            story_id: story?.id || "",
+            position: "beforeend",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }),
+          selector: data[0].selector,
+        },
+      ]);
+      setSelectorLoading(false);
+      setSelectorUrl("");
+    }
+
+    if (tentativas > 150) {
+      clearInterval(polling);
+      setSelectorLoading(false);
+    }
+  }, 2000);
+};
+
   // ──────────────── GALLERY MODAL ────────────────
   const GalleryModal = () => (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
@@ -437,6 +489,7 @@ console.log('typeof is_cover[0]:', typeof newRelations[0]?.is_cover);
       </div>
     </div>
   );
+
 
   if (loading || tenantLoading) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-[#0094EB]" /></div>;
 
