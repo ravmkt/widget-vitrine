@@ -240,15 +240,19 @@ const handleOpenSelector = async () => {
   parsedUrl.searchParams.set('widgetSelectToken', token);
 
   // Abre imediatamente para evitar bloqueio de popup pelo navegador.
-const popup = window.open(
-  parsedUrl.toString(),
-  '_blank',
-  'noopener,noreferrer',
-);
+const popup = window.open(parsedUrl.toString(), '_blank');
 
 if (!popup) {
-  showError('O navegador bloqueou a abertura da nova aba. Permita pop-ups e tente novamente.');
+  showError(
+    'O navegador bloqueou a abertura da nova aba. Permita pop-ups e tente novamente.',
+  );
   return;
+}
+
+try {
+  popup.opener = null;
+} catch (error) {
+  console.warn('Não foi possível remover o opener da nova janela:', error);
 }
 
   setSelectorLoading(true);
