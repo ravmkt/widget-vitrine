@@ -2236,7 +2236,7 @@ function supabaseFetch(path, options) {
         var story = stories[i];
         var item = document.createElement('div');
         item.className = 'vl-carousel-item';
-        item.style.width = px(carouselConfig.thumbWidth);
+item.style.width = px(carouselConfig.size || 200);
         item.setAttribute('data-index', i);
 
         if (i === activeIndex) {
