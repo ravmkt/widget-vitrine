@@ -404,7 +404,7 @@ console.log('typeof is_cover[0]:', typeof newRelations[0]?.is_cover);
 
 // 🆕 Função do seletor visual
 const handleOpenSelector = async () => {
-    const url = selectorUrl.trim();
+  const url = selectorUrl.trim();
   if (!url) return;
 
   const token = "sel_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
@@ -415,35 +415,47 @@ const handleOpenSelector = async () => {
   setSelectorLoading(true);
   setSelectorModalOpen(false);
 
-const supabase = (await import('@/lib/supabase')).supabase;
+  const { supabase } = await import('@/lib/supabase');
 
   let tentativas = 0;
-const polling = setInterval(async () => {
-  tentativas++;
+  const polling = setInterval(async () => {
+    tentativas++;
 
-  try {
-    const { data } = await supabase
-      .from("selector_sessions")
-      .select("*")
-      .eq("session_token", token)
-      .order("created_at", { ascending: false })
-      .limit(1);
+    try {
+      const { data } = await supabase
+        .from("selector_sessions")
+        .select("*")
+        .eq("session_token", token)
+        .order("created_at", { ascending: false })
+        .limit(1);
 
-    if (data && data.length > 0) {
-      clearInterval(polling);
-      setLocations((prev) => [...]);
-      setSelectorLoading(false);
-      setSelectorUrl("");
+      if (data && data.length > 0) {
+        clearInterval(polling);
+        setLocations((prev) => [
+          {
+            ...(prev[0] || {
+              id: generateUuid(),
+              store_id: resolvedStoreId || '',
+              story_id: story?.id || '',
+              position: 'beforeend',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            }),
+            selector: data[0].selector,
+          },
+        ]);
+        setSelectorLoading(false);
+        setSelectorUrl("");
+      }
+    } catch (err) {
+      // ignora falhas de rede no polling
     }
-  } catch (err) {
-    // ignora falhas de rede no polling
-  }
 
-  if (tentativas > 150) {
-    clearInterval(polling);
-    setSelectorLoading(false);
-  }
-}, 2000);
+    if (tentativas > 150) {
+      clearInterval(polling);
+      setSelectorLoading(false);
+    }
+  }, 2000);
 };
 
   // ──────────────── GALLERY MODAL ────────────────
