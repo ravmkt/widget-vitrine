@@ -47,7 +47,7 @@ const StoryNewPage = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
 
-  const isEditing = Boolean(id);
+const isEditing = Boolean(id && id !== 'new');
 
   // ── Campos do Story ──────────────────────────────────
   const [title, setTitle] = useState('');
