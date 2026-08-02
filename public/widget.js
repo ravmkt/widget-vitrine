@@ -665,60 +665,123 @@ function supabaseFetch(path, options) {
     };
   }
 
-  function getCarouselConfig(appearance) {
-    appearance = normalizeAppearanceItem(appearance || {});
-    function rcv(jsonbField, flatField, fallback) {
-      return readConfigValue(appearance, 'carousel_config', jsonbField, flatField, fallback);
-    }
-    var shape = String(rcv('shape', 'carousel_shape', 'portrait') || 'portrait').trim().toLowerCase();
-    var sizeNumber = toNumber(rcv('width', 'carousel_size', '30'), 30);
-    var visibleItems = safeInt(rcv('visible_items', 'carousel_visible_items', '4'), 4);
-    var spacing = safeInt(rcv('spacing', 'carousel_spacing', '16'), 16);
-    var borderColor = rcv('border_color', 'carousel_border_color', '#0094EB') || '#0094EB';
-    var borderWidth = safeInt(rcv('border_style', 'carousel_border_width', '2'), 2);
-    var borderRadius = safeInt(rcv('border_radius', 'carousel_border_radius', '12'), 12);
-    var objectFit = String(rcv('object_fit', 'carousel_object_fit', 'cover') || 'cover').trim().toLowerCase();
-    var marginTop = safeInt(rcv('margin_top', 'carousel_margin_top', '0'), 0);
-    var marginBottom = safeInt(rcv('margin_bottom', 'carousel_margin_bottom', '0'), 0);
-    var showTitle = toBoolean(rcv('show_title', 'carousel_show_title', false), false);
-    var showProduct = toBoolean(rcv('show_product', 'carousel_show_product', true), true);
-    var showPlayButton = toBoolean(rcv('show_play_icon', 'carousel_show_play_button', true), true);
-    var autoCenter = toBoolean(rcv('auto_center', 'carousel_auto_center', false), false);
-    var aspectRatio = '9 / 16';
-    if (shape.indexOf('landscape') !== -1 || shape.indexOf('16_9') !== -1 || shape.indexOf('16-9') !== -1) {
-      aspectRatio = '16 / 9';
-    } else if (shape.indexOf('square') !== -1 || shape.indexOf('1_1') !== -1 || shape.indexOf('1-1') !== -1 || shape === 'circle') {
-      aspectRatio = '1 / 1';
-    }
-var thumbWidth = Math.max(1, sizeNumber);
-var thumbHeight = Math.round(thumbWidth * 16 / 9);
+function getCarouselConfig(appearance) {
+  appearance = normalizeAppearanceItem(appearance || {});
 
-if (aspectRatio === '16 / 9') {
-  thumbHeight = Math.round(thumbWidth * 9 / 16);
-} else if (aspectRatio === '1 / 1') {
-  thumbHeight = thumbWidth;
-}
-
-return {
-  shape: shape,
-  size: sizeNumber,
-  thumbWidth: thumbWidth,
-  thumbHeight: thumbHeight,
-  visibleItems: visibleItems,
-  spacing: spacing,
-  borderColor: borderColor,
-  borderWidth: borderWidth,
-  borderRadius: borderRadius,
-  objectFit: objectFit,
-  marginTop: marginTop,
-  marginBottom: marginBottom,
-  showTitle: showTitle,
-  showProduct: showProduct,
-  showPlayButton: showPlayButton,
-  autoCenter: autoCenter,
-  aspectRatio: aspectRatio
-};
+  function rcv(jsonbField, flatField, fallback) {
+    return readConfigValue(
+      appearance,
+      'carousel_config',
+      jsonbField,
+      flatField,
+      fallback
+    );
   }
+
+  var shape = String(
+    rcv('shape', 'carousel_shape', 'portrait') || 'portrait'
+  ).trim().toLowerCase();
+
+  var sizeNumber = Math.max(
+    1,
+    toNumber(rcv('width', 'carousel_size', '200'), 200)
+  );
+
+  var visibleItems = Math.max(
+    1,
+    safeInt(rcv('visible_items', 'carousel_visible_items', '4'), 4)
+  );
+
+  var spacing = Math.max(
+    0,
+    safeInt(rcv('spacing', 'carousel_spacing', '16'), 16)
+  );
+
+  var borderColor = rcv(
+    'border_color',
+    'carousel_border_color',
+    '#0094EB'
+  ) || '#0094EB';
+
+  var borderWidth = Math.max(
+    0,
+    safeInt(rcv('border_style', 'carousel_border_width', '2'), 2)
+  );
+
+  var borderRadius = Math.max(
+    0,
+    safeInt(rcv('border_radius', 'carousel_border_radius', '12'), 12)
+  );
+
+  var objectFit = String(
+    rcv('object_fit', 'carousel_object_fit', 'cover') || 'cover'
+  ).trim().toLowerCase();
+
+  var marginTop = Math.max(
+    0,
+    safeInt(rcv('margin_top', 'carousel_margin_top', '16'), 16)
+  );
+
+  var marginBottom = Math.max(
+    0,
+    safeInt(rcv('margin_bottom', 'carousel_margin_bottom', '16'), 16)
+  );
+
+  var showTitle = toBoolean(
+    rcv('show_title', 'carousel_show_title', false),
+    false
+  );
+
+  var showProduct = toBoolean(
+    rcv('show_product', 'carousel_show_product', true),
+    true
+  );
+
+  var showPlayButton = toBoolean(
+    rcv('show_play_icon', 'carousel_show_play_button', true),
+    true
+  );
+
+  var autoCenter = toBoolean(
+    rcv('auto_center', 'carousel_auto_center', false),
+    false
+  );
+
+  var aspectRatio = '9 / 16';
+
+  if (
+    shape.indexOf('landscape') !== -1 ||
+    shape.indexOf('16_9') !== -1 ||
+    shape.indexOf('16-9') !== -1
+  ) {
+    aspectRatio = '16 / 9';
+  } else if (
+    shape.indexOf('square') !== -1 ||
+    shape.indexOf('1_1') !== -1 ||
+    shape.indexOf('1-1') !== -1 ||
+    shape === 'circle'
+  ) {
+    aspectRatio = '1 / 1';
+  }
+
+  return {
+    shape: shape,
+    size: sizeNumber,
+    visibleItems: visibleItems,
+    spacing: spacing,
+    borderColor: borderColor,
+    borderWidth: borderWidth,
+    borderRadius: borderRadius,
+    objectFit: objectFit,
+    marginTop: marginTop,
+    marginBottom: marginBottom,
+    showTitle: showTitle,
+    showProduct: showProduct,
+    showPlayButton: showPlayButton,
+    autoCenter: autoCenter,
+    aspectRatio: aspectRatio
+  };
+}
 
   function getGridConfig(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
