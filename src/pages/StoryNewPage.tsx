@@ -105,7 +105,7 @@ const selectorPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ── Carregar dados do Story se estiver editando ──────
   useEffect(() => {
-    if (!id) {
+if (!isEditing || !id) {
       setLoadingStory(false);
       return;
     }
