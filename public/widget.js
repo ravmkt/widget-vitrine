@@ -3019,6 +3019,12 @@ function initElementPicker(token) {
 
 
   function initWidget() {
+    var _urlParams = new URLSearchParams(window.location.search);
+    var _selectorToken = _urlParams.get('widgetSelectToken');
+    if (_selectorToken) { initElementPicker(_selectorToken); return; }
+
+    if (!hasSupabase && !storeId) return;
+
     if (!hasSupabase && !storeId) return;
 
     Promise.all([
