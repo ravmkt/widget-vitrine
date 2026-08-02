@@ -1295,7 +1295,6 @@ function getCarouselConfig(appearance) {
   var SHARED_CSS_CACHE = null;
 
   function buildSharedCss(appearance) {
-    if (SHARED_CSS_CACHE) return SHARED_CSS_CACHE;
 
     var primaryColor = getPrimaryColor(appearance);
     var secondaryColor = getSecondaryColor(appearance);
