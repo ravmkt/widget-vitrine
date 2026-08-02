@@ -166,7 +166,7 @@ if (!isEditing || !id) {
     };
 
     loadStory();
-  }, [id, navigate]);
+}, [id, isEditing, navigate]);
 
 useEffect(() => {
   return () => {
