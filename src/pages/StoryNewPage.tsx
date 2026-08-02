@@ -409,7 +409,7 @@ await db.storyVideos.save({
   story_id: storyId,
   video_id: selectedVideoIds[i],
   position: i,
-  is_cover: i === 0,
+is_cover: i === 0 ? 1 : 0,
 });
       }
 
