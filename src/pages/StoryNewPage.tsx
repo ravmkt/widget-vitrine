@@ -605,13 +605,24 @@ await db.storyVideos.save({
             <label className="block text-xs font-black uppercase text-slate-500 tracking-widest mb-2">
               Local de Exibição (seletor CSS)
             </label>
-            <input
-              type="text"
-              value={selector}
-              onChange={e => setSelector(e.target.value)}
-              placeholder="body"
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
-            />
+<div className="flex gap-2">
+  <input
+    type="text"
+    value={selector}
+    onChange={e => setSelector(e.target.value)}
+    placeholder="body"
+    className="min-w-0 flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
+  />
+
+  <button
+    type="button"
+    onClick={() => setSelectorModalOpen(true)}
+    disabled={selectorLoading}
+    className="shrink-0 whitespace-nowrap rounded-xl border border-[#0094EB] bg-white px-4 py-3 text-xs font-black text-[#0094EB] transition-colors hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    {selectorLoading ? 'Aguardando...' : '🎯 Selecionar'}
+  </button>
+</div>
             <p className="text-xs text-slate-400 mt-1">
               Use <code className="bg-slate-100 px-1 rounded">body</code> para exibir em todas as páginas.
             </p>
