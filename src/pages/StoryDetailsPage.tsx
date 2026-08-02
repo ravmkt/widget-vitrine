@@ -758,6 +758,8 @@ const SelectorModal = () => {
       </form>
 
       {isGalleryOpen && <GalleryModal />}
+      {selectorModalOpen && <SelectorModal />}
+
       <ConfirmDeleteDialog isOpen={deleteModal.isOpen} title="Confirmar Exclusão" itemName={deleteModal.name} onConfirm={() => { if (deleteModal.type === 'location') handleDeleteLocation(deleteModal.id); else handleDeletePageRule(deleteModal.id); setDeleteModal((prev) => ({ ...prev, isOpen: false })); }} onCancel={() => setDeleteModal((prev) => ({ ...prev, isOpen: false }))} />
       <SuccessDialog isOpen={successOpen} description={isCreate ? 'Story criado com sucesso.' : 'Story atualizado com sucesso.'} onClose={handleSuccessClose} />
     </div>
