@@ -562,6 +562,73 @@ setTimeout(() => navigate('/dashboard'), 2200);
           </CardContent>
         </Card>
 
+        {/* ═══════════════════════════════════════════
+            4. Tema (Claro / Escuro)
+            ═══════════════════════════════════════════ */}
+        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900 transition-colors">
+          <CardHeader className="p-6">
+            <CardTitle className="text-xl font-black text-slate-800 dark:text-white">
+              4. Aparência
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            {/* Rótulo + Switch lado a lado */}
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                {/* Ícone Sol ☀️ */}
+                <span
+                  className={`text-xl transition-opacity ${isDark ? 'opacity-40' : 'opacity-100'}`}
+                >
+                  ☀️
+                </span>
+
+                {/* Switch customizado */}
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={isDark}
+                  aria-label="Alternar tema claro/escuro"
+                  onClick={() => setIsDark(prev => !prev)}
+                  className={`
+                    relative inline-flex h-7 w-14 shrink-0 cursor-pointer
+                    items-center rounded-full border-2 border-transparent
+                    transition-colors duration-300 ease-in-out
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0094EB]
+                    focus-visible:ring-offset-2
+                    ${isDark ? 'bg-[#3b82f6]' : 'bg-slate-300'}
+                  `}
+                >
+                  {/* Bolinha que desliza */}
+                  <span
+                    className={`
+                      pointer-events-none inline-block h-5 w-5
+                      transform rounded-full bg-white shadow-md
+                      ring-0 transition-transform duration-300 ease-in-out
+                      ${isDark ? 'translate-x-7' : 'translate-x-1'}
+                    `}
+                  />
+                </button>
+
+                {/* Ícone Lua 🌙 */}
+                <span
+                  className={`text-xl transition-opacity ${isDark ? 'opacity-100' : 'opacity-40'}`}
+                >
+                  🌙
+                </span>
+              </div>
+
+              {/* Texto descritivo */}
+              <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                {isDark ? 'Tema Escuro' : 'Tema Claro'}
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-4">
+              Sua preferência é salva automaticamente e será aplicada na próxima visita.
+            </p>
+          </CardContent>
+        </Card>
+
         {/* 5. Segurança */}
         <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
           <CardHeader className="p-6">
