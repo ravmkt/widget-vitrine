@@ -3007,11 +3007,15 @@ document.body.appendChild(highlight);
 function onClick(e) {
   e.preventDefault();
   e.stopPropagation();
-  
-  overlay.style.display = 'none';                    // ← ESCONDE temporariamente
-  var el = document.elementFromPoint(e.clientX, e.clientY);
-  overlay.style.display = '';                        // ← MOSTRA de volta
-  
+
+  var el = currentEl;                                   // ← REAPROVEITA do hover
+
+  if (!el) {                                            // fallback se não tiver hover
+    overlay.style.display = 'none';
+    el = document.elementFromPoint(e.clientX, e.clientY);
+    overlay.style.display = '';
+  }
+
   if (!el || el === banner || el === highlight) return;
   sendSelector(buildSelector(el));
 }
