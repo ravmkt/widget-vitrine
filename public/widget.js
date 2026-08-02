@@ -1193,60 +1193,71 @@ function getCarouselConfig(appearance) {
   }
 
   function applyHostPosition(hostElement, anchorElement, position) {
-    if (!hostElement || !anchorElement) return;
-    var rect = anchorElement.getBoundingClientRect();
-    var hostRect = hostElement.getBoundingClientRect();
-
-    position = (position || 'after').toLowerCase();
-
-    var top = rect.bottom + window.scrollY;
-    var left = rect.left + window.scrollX;
-
-    switch (position) {
-      case 'before':
-      case 'above':
-        top = rect.top + window.scrollY - hostRect.height;
-        break;
-
-      case 'after':
-      case 'below':
-        top = rect.bottom + window.scrollY;
-        break;
-
-      case 'left':
-        top = rect.top + window.scrollY + (rect.height / 2) - (hostRect.height / 2);
-        left = rect.left + window.scrollX - hostRect.width;
-        break;
-
-      case 'right':
-        top = rect.top + window.scrollY + (rect.height / 2) - (hostRect.height / 2);
-        left = rect.right + window.scrollX;
-        break;
-
-      case 'replace':
-        top = rect.top + window.scrollY;
-        left = rect.left + window.scrollX;
-        break;
-
-      case 'prepend':
-        top = rect.top + window.scrollY;
-        left = rect.left + window.scrollX;
-        break;
-
-      case 'append':
-        top = rect.top + window.scrollY + rect.height - hostRect.height;
-        left = rect.left + window.scrollX;
-        break;
-
-      default:
-        break;
-    }
-
-    hostElement.style.position = 'absolute';
-    hostElement.style.top = px(top);
-    hostElement.style.left = px(left);
-    hostElement.style.zIndex = '2147483646';
+  if (!hostElement || !anchorElement || !anchorElement.parentNode) {
+    console.warn('Vidlytics: host ou âncora não encontrados.');
+    return;
   }
+
+  position = String(position || 'afterend')
+    .trim()
+    .toLowerCase();
+
+  // Remove qualquer posicionamento que faça o widget flutuar/sobrepor a página.
+  hostElement.style.setProperty('position', 'relative', 'important');
+  hostElement.style.setProperty('top', 'auto', 'important');
+  hostElement.style.setProperty('right', 'auto', 'important');
+  hostElement.style.setProperty('bottom', 'auto', 'important');
+  hostElement.style.setProperty('left', 'auto', 'important');
+  hostElement.style.setProperty('transform', 'none', 'important');
+
+  // Faz o host participar do fluxo normal da página.
+  hostElement.style.setProperty('display', 'block', 'important');
+  hostElement.style.setProperty('width', '100%', 'important');
+  hostElement.style.setProperty('height', 'auto', 'important');
+  hostElement.style.setProperty('z-index', 'auto', 'important');
+  hostElement.style.setProperty('clear', 'both', 'important');
+  hostElement.style.setProperty('margin-top', '20px', 'important');
+  hostElement.style.setProperty('margin-bottom', '20px', 'important');
+
+  var parent = anchorElement.parentNode;
+
+  // Insere logo ABAIXO da âncora.
+  if (
+    position === 'after' ||
+    position === 'below' ||
+    position === 'afterend' ||
+    position === 'depois'
+  ) {
+    parent.insertBefore(hostElement, anchorElement.nextSibling);
+    return;
+  }
+
+  // Insere logo ACIMA da âncora.
+  if (
+    position === 'before' ||
+    position === 'above' ||
+    position === 'beforebegin' ||
+    position === 'antes'
+  ) {
+    parent.insertBefore(hostElement, anchorElement);
+    return;
+  }
+
+  // Insere dentro da âncora, no começo.
+  if (position === 'prepend' || position === 'afterbegin') {
+    anchorElement.insertBefore(hostElement, anchorElement.firstChild);
+    return;
+  }
+
+  // Insere dentro da âncora, no fim.
+  if (position === 'append' || position === 'beforeend') {
+    anchorElement.appendChild(hostElement);
+    return;
+  }
+
+  // Padrão: abaixo da âncora.
+  parent.insertBefore(hostElement, anchorElement.nextSibling);
+}
 
   function getOrCreateShadowRoot(containerId, cssText, defaultStyles) {
     if (!containerId) {
