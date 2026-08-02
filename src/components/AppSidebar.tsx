@@ -94,13 +94,7 @@ export function AppSidebar() {
                   <SidebarMenuButton 
                     asChild 
                     isActive={location.pathname === item.url}
-                    className={cn(
-                      "h-11 rounded-xl px-4 transition-all duration-200 font-bold",
-                      location.pathname === item.url 
-                        ? "bg-[#EAF6FF] text-[#0094EB] hover:bg-[#EAF6FF] hover:text-[#0094EB]" 
-                        : "text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0F172A]"
-                    )}
-                  >
+className={cn(                  >
                     <Link to={item.url}>
                       <item.icon className={cn("h-4.5 w-4.5", location.pathname === item.url ? "text-[#0094EB]" : "text-[#94A3B8]")} />
                       <span className="text-sm">{item.title}</span>
