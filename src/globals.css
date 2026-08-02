@@ -1,1 +1,81 @@
-globals.css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;    /* #F7FAFC */
+    --foreground: 222 47% 11%;    /* #0F172A */
+
+    --card: 0 0% 100%;            /* #FFFFFF */
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 202 100% 46%;      /* #0094EB */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 212 81% 29%;    /* #0E4787 */
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 214 32% 91%;         /* #E2E8F0 */
+    --muted-foreground: 215 16% 47%; /* #64748B */
+
+    --accent: 210 40% 96%;        /* #F1F5F9 */
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84% 60%;     /* #EF4444 */
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214 32% 91%;        /* #E2E8F0 */
+    --input: 214 32% 91%;
+    --ring: 202 100% 46%;
+
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+/* 
+   Ajuste Crítico: Removido 'transform' da animação de entrada da página.
+   Propriedades de transform criam um novo 'stacking context' que quebra
+   o alinhamento de elementos fixed (modais) em relação à viewport.
+*/
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #E2E8F0;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #CBD5E1;
+}
