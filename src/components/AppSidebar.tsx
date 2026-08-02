@@ -79,8 +79,7 @@ export function AppSidebar() {
   }, [loadStoreData]);
 
   return (
-    <Sidebar className="border-r border-[#E2E8F0] bg-white shadow-none">
-      <SidebarHeader className="p-6">
+<Sidebar className="border-r border-[#E2E8F0] dark:border-slate-800 bg-white dark:bg-slate-950 shadow-none">      <SidebarHeader className="p-6">
         <div className="flex items-center gap-3">
           <img src="/assets/vidlytics-logo-wide.png" alt="Vidlytics" className="h-[58px] w-auto max-w-[260px]" />
         </div>
