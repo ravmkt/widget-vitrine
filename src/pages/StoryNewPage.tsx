@@ -168,6 +168,14 @@ const selectorPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
     loadStory();
   }, [id, navigate]);
 
+useEffect(() => {
+  return () => {
+    if (selectorPollingRef.current) {
+      clearInterval(selectorPollingRef.current);
+    }
+  };
+}, []);
+
   // ── Vídeos filtrados pela busca ──────────────────────
   const filteredVideos = videos.filter(v =>
     v.title.toLowerCase().includes(videoSearch.toLowerCase()),
