@@ -145,14 +145,16 @@
         banner.querySelector('span').innerHTML = '⏳ Enviando seletor...';
 
 // Salva no Supabase diretamente
-    supabaseClient
-      .from('selector_sessions')
-      .insert({
+    supabaseFetch('selector_sessions', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
         session_token: token,
         selector: selector,
         url: window.location.href,
         store_id: storeId
       })
+    })
       .then(function () {
         banner.style.background = '#22c55e';
         banner.querySelector('span').innerHTML = '✅ <b>Seletor capturado:</b> <code style="background:rgba(255,255,255,.2);padding:2px 6px;border-radius:4px;">' + selector + '</code>';
