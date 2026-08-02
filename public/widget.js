@@ -145,46 +145,29 @@
         banner.querySelector('span').innerHTML = '⏳ Enviando seletor...';
 
 // Salva no Supabase diretamente
-supabaseClient
-  .from('selector_sessions')
-  .insert({
-    session_token: token,
-    selector: selector,
-    url: window.location.href,
-    store_id: storeId
-  })
-  .then(function () {
-    alert('✅ Seletor enviado! Pode fechar esta aba.');
-  })
-  .catch(function (err) {
-    alert('❌ Erro ao enviar: ' + (err.message || 'tente novamente'));
-  });
-        }).then(function (r) { return r.json(); })
-          .then(function () {
-            banner.style.background = '#22c55e';
-            banner.querySelector('span').innerHTML = '✅ <b>Seletor capturado:</b> <code style="background:rgba(255,255,255,.2);padding:2px 6px;border-radius:4px;">' + selector + '</code>';
-            setTimeout(function () { cleanup(); }, 4000);
-          })
-          .catch(function () {
-            // Fallback: postMessage para a janela que abriu
-            if (window.opener) {
-              window.opener.postMessage({
-                type: 'WIDGET_SELECTOR_RESULT',
-                session_token: token,
-                selector: selector,
-                url: window.location.href
-              }, '*');
-            }
-            banner.style.background = '#22c55e';
-            banner.querySelector('span').innerHTML = '✅ <b>Seletor:</b> <code style="background:rgba(255,255,255,.2);padding:2px 6px;border-radius:4px;">' + selector + '</code> — Pode fechar esta aba.';
-            setTimeout(function () { cleanup(); }, 6000);
-          });
-      }
-      if (e.key === 'Escape') {
-        cleanup();
-      }
-    }
-
+    supabaseClient
+      .from('selector_sessions')
+      .insert({
+        session_token: token,
+        selector: selector,
+        url: window.location.href,
+        store_id: storeId
+      })
+      .then(function () {
+        banner.style.background = '#22c55e';
+        banner.querySelector('span').innerHTML = '✅ <b>Seletor capturado:</b> <code style="background:rgba(255,255,255,.2);padding:2px 6px;border-radius:4px;">' + selector + '</code>';
+        setTimeout(function () { cleanup(); }, 4000);
+      })
+      .catch(function (err) {
+        banner.style.background = '#ef4444';
+        banner.querySelector('span').innerHTML = '❌ <b>Erro ao enviar:</b> ' + (err.message || 'tente novamente');
+        setTimeout(function () { cleanup(); }, 4000);
+      });
+  }
+  if (e.key === 'Escape') {
+    cleanup();
+  }
+}
     document.addEventListener('mouseover', onMouseOver, true);
     document.addEventListener('mouseout', onMouseOut, true);
     document.addEventListener('click', onClick, true);
