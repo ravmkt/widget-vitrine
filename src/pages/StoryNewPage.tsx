@@ -229,6 +229,12 @@ const handleOpenSelector = async () => {
     return;
   }
 
+  if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
+  showError('Use uma URL iniciada com http:// ou https://');
+  return;
+}
+
+
   const token = `sel_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
 
   parsedUrl.searchParams.set('widgetSelectToken', token);
