@@ -2906,16 +2906,13 @@ function initElementPicker(token) {
     'max-width:90vw;line-height:1.5;';
   banner.textContent = '🎯 Clique no elemento onde o Story deve aparecer... (ESC para cancelar)';
 
-  // Highlight box
-  var highlight = document.createElement('div');
-  highlight.style.cssText =
-    'position:fixed;z-index:9999997;border:3px solid #0094EB;' +
-    'background:rgba(0,148,235,.1);pointer-events:none;display:none;' +
-    'transition:all .06s ease-out;border-radius:4px;';
-
-  document.body.appendChild(overlay);
-  document.body.appendChild(banner);
-  document.body.appendChild(highlight);
+var highlight = document.createElement('div');
+highlight.id = 'anny-picker-highlight';
+highlight.style.cssText =
+  'position:fixed;pointer-events:none;z-index:2147483646;' +
+  'border:2px solid #3B82F6;background:rgba(59,130,246,0.1);' +
+  'transition:all 0.08s ease;border-radius:2px;display:none;';
+document.body.appendChild(highlight);
 
   var currentEl = null;
 
