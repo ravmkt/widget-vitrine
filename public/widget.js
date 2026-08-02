@@ -2399,7 +2399,7 @@ var thumbUrl = getThumbnailUrl(story) || getVideoUrl(story.video || story);
       thumb.className = 'vl-grid-thumb';
       thumb.style.aspectRatio = gridConfig.aspectRatio || '1 / 1';
 
-      var thumbUrl = getThumbnailUrl(story);
+var thumbUrl = getThumbnailUrl(story) || getVideoUrl(story.video || story);
       if (thumbUrl) {
         if (isVideoUrl(thumbUrl) || /\.(mp4|webm|mov)($|\?)/i.test(thumbUrl)) {
           var vid = createVideoElement(thumbUrl, {
