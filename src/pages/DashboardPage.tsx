@@ -57,12 +57,12 @@ const DashboardPage = () => {
     <div className="space-y-8 animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <p className="text-slate-500 font-medium mt-3">
+          <p className="text-slate-500 dark:text-slate-400 font-medium mt-3">
             Métricas de <span className="text-[#0094EB] font-bold">{format(new Date(), "dd/MM")}</span> com dados reais do Supabase
           </p>
         </div>
 
-        <div className="flex bg-white border border-slate-200 rounded-2xl p-1.5 gap-1 shadow-sm">
+        <div className="flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-1.5 gap-1 shadow-sm">
           {[
             { id: 'today', label: 'Hoje' },
             { id: '7', label: '7 dias' },
@@ -74,7 +74,9 @@ const DashboardPage = () => {
               onClick={() => p.id === 'custom' ? setIsCalendarOpen(true) : setSelectedPeriod(p.id as AnalyticsInterval)}
               className={cn(
                 'px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2',
-                selectedPeriod === p.id ? 'bg-[#0094EB] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+                selectedPeriod === p.id
+                  ? 'bg-[#0094EB] text-white shadow-lg'
+                  : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
               )}
             >
               {p.icon && <p.icon size={14} />}
@@ -93,8 +95,8 @@ const DashboardPage = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
-        <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm">
-          <h3 className="text-lg font-black text-slate-800 mb-8">Fluxo de Performance de Vídeos</h3>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-[2.5rem] p-8 shadow-sm">
+          <h3 className="text-lg font-black text-slate-800 dark:text-white mb-8">Fluxo de Performance de Vídeos</h3>
           <div className="h-[340px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={flow}>
@@ -103,7 +105,7 @@ const DashboardPage = () => {
                     <stop offset="5%" stopColor="#0094EB" stopOpacity={0.15}/><stop offset="95%" stopColor="#0094EB" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" className="dark:opacity-20" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 11, fontWeight: 700}} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 11, fontWeight: 700}} dx={-10} />
                 <Tooltip contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', padding: '12px'}} />
@@ -113,29 +115,29 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm flex flex-col">
-          <h3 className="text-lg font-black text-slate-800 mb-8">Performance de Vídeos</h3>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-[2.5rem] p-8 shadow-sm flex flex-col">
+          <h3 className="text-lg font-black text-slate-800 dark:text-white mb-8">Performance de Vídeos</h3>
           <div className="space-y-6 flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
             {topVideos.map((item, i) => (
-              <div key={item.id} className="flex flex-col gap-3 p-4 rounded-3xl bg-slate-50 border border-slate-100 hover:border-[#0094EB]/30 transition-all">
+              <div key={item.id} className="flex flex-col gap-3 p-4 rounded-3xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:border-[#0094EB]/30 transition-all">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-2xl bg-slate-200 overflow-hidden shrink-0">
+                  <div className="h-10 w-10 rounded-2xl bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
                     {item.thumbnail_url ? <img src={item.thumbnail_url} alt={item.title} className="h-full w-full object-cover" /> : null}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-black text-slate-800 truncate">{item.title}</p>
-                    <span className="text-[10px] font-black text-slate-400">RANK #{i+1}</span>
+                    <p className="text-sm font-black text-slate-800 dark:text-white truncate">{item.title}</p>
+                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">RANK #{i+1}</span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Visualizações</p>
-                    <p className="text-sm font-black text-slate-900">{item.metrics.views.toLocaleString()}</p>
+                    <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Visualizações</p>
+                    <p className="text-sm font-black text-slate-900 dark:text-white">{item.metrics.views.toLocaleString()}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">CTR</p>
-                    <p className="text-sm font-black text-slate-900">{item.metrics.ctr.toFixed(1).replace('.', ',')}%</p>
+                    <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">CTR</p>
+                    <p className="text-sm font-black text-slate-900 dark:text-white">{item.metrics.ctr.toFixed(1).replace('.', ',')}%</p>
                   </div>
                 </div>
               </div>
@@ -144,7 +146,7 @@ const DashboardPage = () => {
 
           <button
             onClick={() => navigate('/videos/performance')}
-            className="w-full mt-8 py-4 bg-[#0094EB] hover:bg-[#0077c2] text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-slate-200"
+            className="w-full mt-8 py-4 bg-[#0094EB] hover:bg-[#0077c2] text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl dark:shadow-none"
           >
             Ver relatório completo
           </button>
@@ -165,14 +167,14 @@ const DashboardPage = () => {
 };
 
 const MetricCard = ({ title, value, icon: Icon, isConversion = false, isRevenue = false }: any) => (
-  <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
+  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
     <div className="flex items-start justify-between mb-6">
-      <div className={cn('p-4 rounded-2xl transition-all group-hover:scale-110', isConversion ? 'bg-emerald-50 text-emerald-500' : isRevenue ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-[#0094EB]')}>
+      <div className={cn('p-4 rounded-2xl transition-all group-hover:scale-110', isConversion ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500 dark:text-emerald-400' : isRevenue ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' : 'bg-blue-50 dark:bg-blue-900/30 text-[#0094EB]')}>
         <Icon size={24} />
       </div>
     </div>
-    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">{title}</p>
-    <h2 className="text-2xl font-black text-slate-900">{value}</h2>
+    <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{title}</p>
+    <h2 className="text-2xl font-black text-slate-900 dark:text-white">{value}</h2>
   </div>
 );
 
