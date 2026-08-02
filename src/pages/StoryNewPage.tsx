@@ -60,6 +60,11 @@ const StoryNewPage = () => {
   const [selector, setSelector] = useState('body');
   const [displayPosition, setDisplayPosition] = useState<DisplayPosition>('afterend');
   const [displayLocationId, setDisplayLocationId] = useState<string | null>(null);
+// ── Seletor visual ─────────────────────────────────────
+const [selectorModalOpen, setSelectorModalOpen] = useState(false);
+const [selectorUrl, setSelectorUrl] = useState('');
+const [selectorLoading, setSelectorLoading] = useState(false);
+const selectorPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ── Page Rules ───────────────────────────────────────
   const [pageRules, setPageRules] = useState<
