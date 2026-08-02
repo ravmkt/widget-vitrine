@@ -240,7 +240,16 @@ const handleOpenSelector = async () => {
   parsedUrl.searchParams.set('widgetSelectToken', token);
 
   // Abre imediatamente para evitar bloqueio de popup pelo navegador.
-  window.open(parsedUrl.toString(), '_blank', 'noopener,noreferrer');
+const popup = window.open(
+  parsedUrl.toString(),
+  '_blank',
+  'noopener,noreferrer',
+);
+
+if (!popup) {
+  showError('O navegador bloqueou a abertura da nova aba. Permita pop-ups e tente novamente.');
+  return;
+}
 
   setSelectorLoading(true);
   setSelectorModalOpen(false);
