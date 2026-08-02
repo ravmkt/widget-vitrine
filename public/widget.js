@@ -2267,7 +2267,7 @@ thumb.style.aspectRatio = carouselConfig.aspectRatio || '9 / 16';
 
 var thumbUrl = getThumbnailUrl(story) || getVideoUrl(story.video || story);
         if (thumbUrl) {
-          if (isVideoUrl(thumbUrl) || /\.(mp4|webm|mov)($|\?)/i.test(thumbUrl)) {
+if (isDirectVideoUrl(thumbUrl)) {
             var vid = createVideoElement(thumbUrl, {
               autoplay: i === activeIndex,
               muted: true,
