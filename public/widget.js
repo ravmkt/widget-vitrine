@@ -2265,7 +2265,7 @@ item.style.width = px(carouselConfig.size || 200);
         thumb.className = 'vl-carousel-thumb';
 thumb.style.aspectRatio = carouselConfig.aspectRatio || '9 / 16';
 
-        var thumbUrl = getThumbnailUrl(story);
+var thumbUrl = getThumbnailUrl(story) || getVideoUrl(story.video || story);
         if (thumbUrl) {
           if (isVideoUrl(thumbUrl) || /\.(mp4|webm|mov)($|\?)/i.test(thumbUrl)) {
             var vid = createVideoElement(thumbUrl, {
