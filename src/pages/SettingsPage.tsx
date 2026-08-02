@@ -161,6 +161,31 @@ const SettingsPage = () => {
   const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>("");
 
+// ═══════════════════════════════════════════════
+// 🌗 TEMA CLARO / ESCURO
+// ═══════════════════════════════════════════════
+const [isDark, setIsDark] = useState<boolean>(() => {
+  // Tenta carregar do localStorage ao iniciar
+  try {
+    const saved = localStorage.getItem('app-theme');
+    if (saved === 'dark') return true;
+    if (saved === 'light') return false;
+  } catch {}
+  // Se não houver preferência salva, usa o tema do sistema
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+});
+
+// Sincroniza a classe 'dark' no <html> sempre que o estado muda
+useEffect(() => {
+  const root = document.documentElement;
+  if (isDark) {
+    root.classList.add('dark');
+  } else {
+    root.classList.remove('dark');
+  }
+  localStorage.setItem('app-theme', isDark ? 'dark' : 'light');
+}, [isDark]);
+
   useEffect(() => {
     const fetchSettings = async () => {
       try {
