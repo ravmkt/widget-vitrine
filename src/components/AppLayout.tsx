@@ -1,3 +1,20 @@
+<!-- ═══════════════════════════════════════════
+     EVITA FLASH DE TEMA AO CARREGAR
+     ═══════════════════════════════════════════ -->
+<script>
+  (function () {
+    try {
+      var theme = localStorage.getItem('app-theme');
+      if (
+        theme === 'dark' ||
+        (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)
+      ) {
+        document.documentElement.classList.add('dark');
+      }
+    } catch (e) {}
+  })();
+</script>
+
 import React from 'react';
 import { AppSidebar } from './AppSidebar';
 import FloatingSupportButton from './FloatingSupportButton';
