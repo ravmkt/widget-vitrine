@@ -15,7 +15,6 @@ export function AppLayout({ children }: AppLayoutProps) {
   useEffect(() => {
     try {
       const theme = localStorage.getItem('app-theme');
-      console.log('🔍 AppLayout montado — tema salvo:', theme);
       if (theme === 'dark') {
         document.documentElement.classList.add('dark');
       } else if (theme === 'light') {
@@ -28,7 +27,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-[#F7FAFC] dark:bg-slate-950">
+      <div className="flex min-h-screen w-full bg-background">
         <AppSidebar />
         <SidebarInset className="flex flex-col flex-1">
           <main className="flex-1 p-4 md:p-8 animate-fade-in relative">
