@@ -416,7 +416,7 @@ const handleOpenSelector = async () => {
   setSelectorLoading(true);
   setSelectorModalOpen(false);
 
-  const supabase = (await import('@/lib/supabase')).supabase;
+const supabase = (await import('@/lib/supabase')).supabase;
 
   let tentativas = 0;
   const polling = setInterval(async () => {
