@@ -15,6 +15,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   useEffect(() => {
     try {
       const theme = localStorage.getItem('app-theme');
+      console.log('🔍 AppLayout montado — tema salvo:', theme);
       if (theme === 'dark') {
         document.documentElement.classList.add('dark');
       } else if (theme === 'light') {
