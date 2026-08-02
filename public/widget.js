@@ -2906,6 +2906,9 @@ function initElementPicker(token) {
     'max-width:90vw;line-height:1.5;';
   banner.textContent = '🎯 Clique no elemento onde o Story deve aparecer... (ESC para cancelar)';
 
+document.body.appendChild(overlay);
+document.body.appendChild(banner);
+
 var highlight = document.createElement('div');
 highlight.id = 'anny-picker-highlight';
 highlight.style.cssText =
