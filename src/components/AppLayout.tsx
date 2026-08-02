@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AppSidebar } from './AppSidebar';
 import FloatingSupportButton from './FloatingSupportButton';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
@@ -9,9 +9,25 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
+  // ═══════════════════════════════════════════════
+  // 🌗 APLICA O TEMA AO CARREGAR QUALQUER PÁGINA
+  // ═══════════════════════════════════════════════
+  useEffect(() => {
+    try {
+      const theme = localStorage.getItem('app-theme');
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else if (theme === 'light') {
+        document.documentElement.classList.remove('dark');
+      } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.classList.add('dark');
+      }
+    } catch {}
+  }, []);
+
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-[#F7FAFC]">
+      <div className="flex min-h-screen w-full bg-[#F7FAFC] dark:bg-slate-950">
         <AppSidebar />
         <SidebarInset className="flex flex-col flex-1">
           <main className="flex-1 p-4 md:p-8 animate-fade-in relative">
