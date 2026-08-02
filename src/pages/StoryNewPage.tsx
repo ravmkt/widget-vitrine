@@ -211,6 +211,86 @@ useEffect(() => {
     );
   };
 
+// ── Seletor visual ─────────────────────────────────────
+const handleOpenSelector = async () => {
+  const url = selectorUrl.trim();
+
+  if (!url) {
+    showError('Informe a URL da página da loja.');
+    return;
+  }
+
+  let parsedUrl: URL;
+
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    showError('Informe uma URL válida, incluindo https://');
+    return;
+  }
+
+  const token = `sel_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+
+  parsedUrl.searchParams.set('widgetSelectToken', token);
+
+  // Abre imediatamente para evitar bloqueio de popup pelo navegador.
+  window.open(parsedUrl.toString(), '_blank', 'noopener,noreferrer');
+
+  setSelectorLoading(true);
+  setSelectorModalOpen(false);
+
+  const { supabase } = await import('@/lib/supabase');
+
+  let attempts = 0;
+  const maxAttempts = 150; // 5 minutos, verificando a cada 2 segundos.
+
+  if (selectorPollingRef.current) {
+    clearInterval(selectorPollingRef.current);
+  }
+
+  selectorPollingRef.current = setInterval(async () => {
+    attempts += 1;
+
+    try {
+      const { data, error } = await supabase
+        .from('selector_sessions')
+        .select('selector')
+        .eq('session_token', token)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      const selectedSelector = data?.[0]?.selector?.trim();
+
+      if (selectedSelector) {
+        if (selectorPollingRef.current) {
+          clearInterval(selectorPollingRef.current);
+          selectorPollingRef.current = null;
+        }
+
+        setSelector(selectedSelector);
+        setSelectorUrl('');
+        setSelectorLoading(false);
+        showSuccess('Elemento selecionado com sucesso.');
+        return;
+      }
+    } catch (error) {
+      console.error('Erro ao consultar seletor visual:', error);
+    }
+
+    if (attempts >= maxAttempts) {
+      if (selectorPollingRef.current) {
+        clearInterval(selectorPollingRef.current);
+        selectorPollingRef.current = null;
+      }
+
+      setSelectorLoading(false);
+      showError('O tempo para selecionar o elemento expirou.');
+    }
+  }, 2000);
+};
+
   // ── Salvar ───────────────────────────────────────────
   const handleSave = async () => {
     if (!title.trim()) {
