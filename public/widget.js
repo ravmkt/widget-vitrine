@@ -1295,9 +1295,10 @@ function getCarouselConfig(appearance) {
   var SHARED_CSS_CACHE = null;
 
   function buildSharedCss(appearance) {
+var cacheKey = JSON.stringify(appearance);
+    if (SHARED_CSS_CACHE && SHARED_CSS_CACHE._key === cacheKey) return SHARED_CSS_CACHE._css;
 
-    var primaryColor = getPrimaryColor(appearance);
-    var secondaryColor = getSecondaryColor(appearance);
+    var primaryColor = getPrimaryColor(appearance);    var secondaryColor = getSecondaryColor(appearance);
     var buttonColor = getButtonColor(appearance);
     var fontFamily = getFontFamily(appearance);
     var borderColor = getBorderColor(appearance);
