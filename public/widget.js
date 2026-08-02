@@ -144,15 +144,21 @@
         var selector = generateSelector(elementoSelecionado);
         banner.querySelector('span').innerHTML = '⏳ Enviando seletor...';
 
-        fetch('https://api.myhub.ia/v1/widget/select-element', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            session_token: token,
-            selector: selector,
-            url: window.location.href,
-            store_id: storeId || ''
-          })
+// Salva no Supabase diretamente
+supabaseClient
+  .from('selector_sessions')
+  .insert({
+    session_token: token,
+    selector: selector,
+    url: window.location.href,
+    store_id: storeId
+  })
+  .then(function () {
+    alert('✅ Seletor enviado! Pode fechar esta aba.');
+  })
+  .catch(function (err) {
+    alert('❌ Erro ao enviar: ' + (err.message || 'tente novamente'));
+  });
         }).then(function (r) { return r.json(); })
           .then(function () {
             banner.style.background = '#22c55e';
