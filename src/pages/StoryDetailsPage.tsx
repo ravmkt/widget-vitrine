@@ -372,7 +372,7 @@ console.log('typeof is_cover[0]:', typeof newRelations[0]?.is_cover);
 
   const handleSuccessClose = () => navigate('/stories');
 
-  // ──────────────── DRAG-AND-DROP ────────────────
+  // ──────────────── DRAG-AND-DROP ──────────────
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDragIndex(index);
     e.dataTransfer.setData('text/plain', String(index));
