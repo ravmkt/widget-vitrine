@@ -136,7 +136,7 @@ function App() {
           <Route path="/gallery" element={<ProtectedRoute><AppLayout><VideoGalleryPage /></AppLayout></ProtectedRoute>} />
           <Route path="/videos/new" element={<ProtectedRoute><AppLayout><VideoEditPage /></AppLayout></ProtectedRoute>} />
           <Route path="/videos/:id/edit" element={<ProtectedRoute><AppLayout><VideoEditPage /></AppLayout></ProtectedRoute>} />
-          <Route path="/videos/performance" element={<ProtectedRoute><AppLayout><VideoPerformancePage /></AppLayout></ProtectedRoute>} />
+<Route path="/videos/performance" element={<ProtectedRoute><AppLayout><PerformancePage /></AppLayout></ProtectedRoute>} />
 
           {/* Produtos, Medidas, Aparência, Comentários */}
           <Route path="/produtos" element={<ProtectedRoute><AppLayout><ProductsPage /></AppLayout></ProtectedRoute>} />
