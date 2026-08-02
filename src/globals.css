@@ -125,3 +125,231 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #CBD5E1;
 }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 202 100% 46%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 212 81% 29%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 214 32% 91%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 202 100% 46%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 202 100% 46%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 202 100% 46%;
+  }
+
+  /* ═══════════════════════════════════════════════
+     🌙 DARK MODE
+     ═══════════════════════════════════════════════ */
+  .dark {
+    --background: 222 47% 5%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 202 100% 46%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 212 81% 29%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 202 100% 46%;
+
+    --sidebar-background: 222 47% 5%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 202 100% 46%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 17%;
+    --sidebar-ring: 202 100% 46%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #E2E8F0;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #CBD5E1;
+}
+
+/* ═══════════════════════════════════════════════
+   COMPATIBILIDADE: CORES FIXAS → TEMA ESCURO
+   Remove cards/fundos brancos remanescentes
+   ═══════════════════════════════════════════════ */
+.dark .bg-white,
+.dark [class*="bg-[#FFFFFF]"],
+.dark [class*="bg-[#ffffff]"] {
+  background-color: hsl(var(--card)) !important;
+}
+
+.dark .bg-slate-50,
+.dark [class*="bg-[#F8FAFC]"] {
+  background-color: hsl(var(--accent)) !important;
+}
+
+.dark .bg-\[\#F7FAFC\],
+.dark [class*="bg-[#F7FAFC]"] {
+  background-color: hsl(var(--background)) !important;
+}
+
+.dark .bg-\[\#F1F5F9\],
+.dark [class*="bg-[#F1F5F9]"] {
+  background-color: hsl(var(--accent)) !important;
+}
+
+.dark .bg-\[\#EAF6FF\],
+.dark [class*="bg-[#EAF6FF]"] {
+  background-color: rgba(0, 148, 235, 0.14) !important;
+}
+
+/* Bordas */
+.dark .border-slate-200,
+.dark .border-slate-100,
+.dark .border-\[\#E2E8F0\],
+.dark [class*="border-[#E2E8F0]"],
+.dark .border-\[\#F1F5F9\],
+.dark [class*="border-[#F1F5F9]"] {
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Textos escuros → claros */
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-slate-700,
+.dark .text-\[\#0F172A\],
+.dark [class*="text-[#0F172A]"] {
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark .text-slate-600,
+.dark .text-slate-500,
+.dark .text-\[\#64748B\],
+.dark [class*="text-[#64748B]"] {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.dark .text-slate-400,
+.dark .text-\[\#94A3B8\],
+.dark [class*="text-[#94A3B8]"] {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Scrollbar */
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+.dark .shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark .shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ── Paliativo para o logo com fundo branco ── */
+.dark img[alt="Vidlytics"] {
+  filter: brightness(0) invert(1);
+}
+
+/* Inputs e selects no dark */
+.dark input,
+.dark textarea,
+.dark select,
+.dark .bg-slate-50 input,
+.dark .bg-slate-50 textarea {
+  background-color: hsl(var(--accent)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: hsl(var(--muted-foreground)) !important;
+  opacity: 0.6;
+}
