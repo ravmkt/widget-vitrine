@@ -690,16 +690,34 @@ function supabaseFetch(path, options) {
     } else if (shape.indexOf('square') !== -1 || shape.indexOf('1_1') !== -1 || shape.indexOf('1-1') !== -1 || shape === 'circle') {
       aspectRatio = '1 / 1';
     }
-    return {
-      shape: shape, size: sizeNumber,
-      visibleItems: visibleItems, spacing: spacing,
-      borderColor: borderColor, borderWidth: borderWidth,
-      borderRadius: borderRadius, objectFit: objectFit,
-      marginTop: marginTop, marginBottom: marginBottom,
-      showTitle: showTitle, showProduct: showProduct,
-      showPlayButton: showPlayButton, autoCenter: autoCenter,
-      aspectRatio: aspectRatio
-    };
+var thumbWidth = Math.max(1, sizeNumber);
+var thumbHeight = Math.round(thumbWidth * 16 / 9);
+
+if (aspectRatio === '16 / 9') {
+  thumbHeight = Math.round(thumbWidth * 9 / 16);
+} else if (aspectRatio === '1 / 1') {
+  thumbHeight = thumbWidth;
+}
+
+return {
+  shape: shape,
+  size: sizeNumber,
+  thumbWidth: thumbWidth,
+  thumbHeight: thumbHeight,
+  visibleItems: visibleItems,
+  spacing: spacing,
+  borderColor: borderColor,
+  borderWidth: borderWidth,
+  borderRadius: borderRadius,
+  objectFit: objectFit,
+  marginTop: marginTop,
+  marginBottom: marginBottom,
+  showTitle: showTitle,
+  showProduct: showProduct,
+  showPlayButton: showPlayButton,
+  autoCenter: autoCenter,
+  aspectRatio: aspectRatio
+};
   }
 
   function getGridConfig(appearance) {
