@@ -418,9 +418,10 @@ const handleOpenSelector = async () => {
 const supabase = (await import('@/lib/supabase')).supabase;
 
   let tentativas = 0;
-  const polling = setInterval(async () => {
-    tentativas++;
+const polling = setInterval(async () => {
+  tentativas++;
 
+  try {
     const { data } = await supabase
       .from("selector_sessions")
       .select("*")
@@ -430,28 +431,19 @@ const supabase = (await import('@/lib/supabase')).supabase;
 
     if (data && data.length > 0) {
       clearInterval(polling);
-      setLocations((prev) => [
-        {
-          ...(prev[0] || {
-            id: generateUuid(),
-            store_id: resolvedStoreId || "",
-            story_id: story?.id || "",
-            position: "beforeend",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }),
-          selector: data[0].selector,
-        },
-      ]);
+      setLocations((prev) => [...]);
       setSelectorLoading(false);
       setSelectorUrl("");
     }
+  } catch (err) {
+    // ignora falhas de rede no polling
+  }
 
-    if (tentativas > 150) {
-      clearInterval(polling);
-      setSelectorLoading(false);
-    }
-  }, 2000);
+  if (tentativas > 150) {
+    clearInterval(polling);
+    setSelectorLoading(false);
+  }
+}, 2000);
 };
 
   // ──────────────── GALLERY MODAL ────────────────
