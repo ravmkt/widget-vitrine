@@ -2917,8 +2917,15 @@ document.body.appendChild(highlight);
   var currentEl = null;
 
   function updateHighlight(e) {
+    overlay.style.display = 'none';                     // ← ESCONDE o overlay
     var el = document.elementFromPoint(e.clientX, e.clientY);
-    if (!el || el === overlay || el === banner || el === highlight) return;
+    overlay.style.display = '';                         // ← MOSTRA de volta
+
+    if (!el || el === banner || el === highlight || el === document.body || el === document.documentElement) {
+      highlight.style.display = 'none';
+      currentEl = null;
+      return;
+    }
     if (el === currentEl) return;
     currentEl = el;
     var r = el.getBoundingClientRect();
