@@ -3000,13 +3000,17 @@ function initElementPicker(token) {
     }
   }
 
-  function onClick(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    var el = document.elementFromPoint(e.clientX, e.clientY);
-    if (!el || el === overlay || el === banner || el === highlight) return;
-    sendSelector(buildSelector(el));
-  }
+function onClick(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  
+  overlay.style.display = 'none';                    // ← ESCONDE temporariamente
+  var el = document.elementFromPoint(e.clientX, e.clientY);
+  overlay.style.display = '';                        // ← MOSTRA de volta
+  
+  if (!el || el === banner || el === highlight) return;
+  sendSelector(buildSelector(el));
+}
 
   function onKey(e) {
     if (e.key === 'Escape') cleanup();
