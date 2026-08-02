@@ -2886,6 +2886,138 @@ function openSizingPanel(modelId) {
     shadow.appendChild(container);
   }
 
+  // ─── SELETOR VISUAL DE ELEMENTOS ──────────────────────
+function initElementPicker(token) {
+  if (!token) return;
+
+  // Overlay transparente
+  var overlay = document.createElement('div');
+  overlay.id = 'vidlytics-selector-overlay';
+  overlay.style.cssText =
+    'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999998;cursor:crosshair;';
+
+  // Banner de instrução
+  var banner = document.createElement('div');
+  banner.style.cssText =
+    'position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:9999999;' +
+    'background:#0094EB;color:#fff;padding:14px 28px;border-radius:20px;' +
+    'font-family:Inter,system-ui,sans-serif;font-size:15px;font-weight:700;' +
+    'box-shadow:0 12px 40px rgba(0,0,0,.3);text-align:center;pointer-events:none;' +
+    'max-width:90vw;line-height:1.5;';
+  banner.textContent = '🎯 Clique no elemento onde o Story deve aparecer... (ESC para cancelar)';
+
+  // Highlight box
+  var highlight = document.createElement('div');
+  highlight.style.cssText =
+    'position:fixed;z-index:9999997;border:3px solid #0094EB;' +
+    'background:rgba(0,148,235,.1);pointer-events:none;display:none;' +
+    'transition:all .06s ease-out;border-radius:4px;';
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(banner);
+  document.body.appendChild(highlight);
+
+  var currentEl = null;
+
+  function updateHighlight(e) {
+    var el = document.elementFromPoint(e.clientX, e.clientY);
+    if (!el || el === overlay || el === banner || el === highlight) return;
+    if (el === currentEl) return;
+    currentEl = el;
+    var r = el.getBoundingClientRect();
+    highlight.style.display = 'block';
+    highlight.style.top = r.top + 'px';
+    highlight.style.left = r.left + 'px';
+    highlight.style.width = r.width + 'px';
+    highlight.style.height = r.height + 'px';
+  }
+
+  function buildSelector(el) {
+    if (!el || el === document.body || el === document.documentElement) return 'body';
+    if (el.id) return '#' + CSS.escape(el.id);
+    var path = [];
+    while (el && el !== document.body && el !== document.documentElement) {
+      var seg = el.tagName.toLowerCase();
+      if (el.id) { path.unshift('#' + CSS.escape(el.id)); break; }
+      if (el.classList && el.classList.length) {
+        seg += '.' + Array.from(el.classList).map(function(c) {
+          return CSS.escape(c);
+        }).join('.');
+      }
+      var parent = el.parentElement;
+      if (parent) {
+        var siblings = Array.from(parent.children).filter(function(c) {
+          return c.tagName === el.tagName;
+        });
+        if (siblings.length > 1) {
+          seg += ':nth-of-type(' + (siblings.indexOf(el) + 1) + ')';
+        }
+      }
+      path.unshift(seg);
+      el = parent;
+    }
+    return path.join(' > ');
+  }
+
+  function cleanup() {
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    if (banner.parentNode) banner.parentNode.removeChild(banner);
+    if (highlight.parentNode) highlight.parentNode.removeChild(highlight);
+    document.removeEventListener('mousemove', updateHighlight, true);
+    document.removeEventListener('click', onClick, true);
+    document.removeEventListener('keydown', onKey, true);
+  }
+
+  function sendSelector(selector) {
+    cleanup();
+    var msg = document.createElement('div');
+    msg.style.cssText =
+      'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999999;' +
+      'background:#fff;color:#0f172a;padding:28px 36px;border-radius:20px;' +
+      'font-family:Inter,system-ui,sans-serif;text-align:center;' +
+      'box-shadow:0 20px 60px rgba(0,0,0,.3);';
+    msg.innerHTML =
+      '<div style="font-size:40px;margin-bottom:12px;">✅</div>' +
+      '<div style="font-size:16px;font-weight:800;margin-bottom:8px;">Elemento selecionado!</div>' +
+      '<div style="font-size:12px;color:#64748b;word-break:break-all;margin-bottom:12px;font-family:monospace;">' +
+        selector +
+      '</div>' +
+      '<div style="font-size:11px;color:#94a3b8;">Esta janela já pode ser fechada.</div>';
+    document.body.appendChild(msg);
+
+    if (hasSupabase) {
+      supabaseFetch('selector_sessions', {
+        method: 'POST',
+        headers: { 'Prefer': 'return=minimal' },
+        body: JSON.stringify({
+          session_token: token,
+          selector: selector,
+          created_at: new Date().toISOString()
+        })
+      }).catch(function(err) {
+        console.error('VIDLYTICS: Erro ao salvar seletor visual:', err);
+      });
+    }
+  }
+
+  function onClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    var el = document.elementFromPoint(e.clientX, e.clientY);
+    if (!el || el === overlay || el === banner || el === highlight) return;
+    sendSelector(buildSelector(el));
+  }
+
+  function onKey(e) {
+    if (e.key === 'Escape') cleanup();
+  }
+
+  document.addEventListener('mousemove', updateHighlight, true);
+  document.addEventListener('click', onClick, true);
+  document.addEventListener('keydown', onKey, true);
+}
+
+
   function initWidget() {
     if (!hasSupabase && !storeId) return;
 
