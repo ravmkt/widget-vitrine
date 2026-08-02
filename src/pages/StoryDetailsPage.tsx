@@ -490,6 +490,64 @@ const handleOpenSelector = () => {
     </div>
   );
 
+// 🆕 Modal do seletor visual
+const SelectorModal = () => {
+  if (!selectorModalOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
+      <div className="w-full max-w-md rounded-[28px] bg-white p-6 shadow-2xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-black text-slate-900">
+            Selecionar elemento na loja
+          </h3>
+          <button
+            type="button"
+            onClick={() => setSelectorModalOpen(false)}
+            className="rounded-full p-2 text-slate-500 hover:bg-slate-100"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+            URL da página da loja
+          </label>
+          <input
+            type="url"
+            value={selectorUrl}
+            onChange={(e) => setSelectorUrl(e.target.value)}
+            placeholder="https://www.sualoja.com.br/pagina-exemplo"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]"
+          />
+          <p className="text-xs text-slate-500">
+            Uma nova aba abrirá. Clique no elemento onde o widget deve aparecer
+            e pressione <b>Enter</b>.
+          </p>
+        </div>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => setSelectorModalOpen(false)}
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={handleOpenSelector}
+            disabled={!selectorUrl.trim()}
+            className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787] disabled:opacity-50"
+          >
+            Abrir seletor
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
   if (loading || tenantLoading) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-[#0094EB]" /></div>;
 
