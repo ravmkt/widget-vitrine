@@ -2407,18 +2407,27 @@ if (isDirectVideoUrl(thumbUrl)) {
     renderItems();
 
     // Navigation buttons
-    if (prevBtn) {
-      prevBtn.addEventListener('click', function () {
-        activeIndex = Math.max(0, activeIndex - carouselConfig.columns);
-        renderItems();
-      });
-    }
-    if (nextBtn) {
-      nextBtn.addEventListener('click', function () {
-        activeIndex = Math.min(stories.length - 1, activeIndex + carouselConfig.columns);
-        renderItems();
-      });
-    }
+if (prevBtn) {
+  prevBtn.addEventListener('click', function () {
+    activeIndex = Math.max(
+      0,
+      activeIndex - carouselConfig.visibleItems
+    );
+
+    renderItems();
+  });
+}
+
+if (nextBtn) {
+  nextBtn.addEventListener('click', function () {
+    activeIndex = Math.min(
+      stories.length - 1,
+      activeIndex + carouselConfig.visibleItems
+    );
+
+    renderItems();
+  });
+}
 
     // Insert at anchor position
     applyHostPosition(shadowData.container, anchorEl, behavior.position || 'after');
