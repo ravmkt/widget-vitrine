@@ -2245,7 +2245,7 @@ item.style.width = px(carouselConfig.size || 200);
 
         var thumb = document.createElement('div');
         thumb.className = 'vl-carousel-thumb';
-        thumb.style.height = px(carouselConfig.thumbHeight);
+thumb.style.aspectRatio = carouselConfig.aspectRatio || '9 / 16';
 
         var thumbUrl = getThumbnailUrl(story);
         if (thumbUrl) {
