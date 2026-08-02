@@ -404,8 +404,8 @@ console.log('typeof is_cover[0]:', typeof newRelations[0]?.is_cover);
   };
 
 // 🆕 Função do seletor visual
-const handleOpenSelector = () => {
-  const url = selectorUrl.trim();
+const handleOpenSelector = async () => {
+    const url = selectorUrl.trim();
   if (!url) return;
 
   const token = "sel_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
