@@ -332,11 +332,6 @@
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4) !important;
 }
 
-/* ── Paliativo para o logo com fundo branco ── */
-.dark img[alt="Vidlytics"] {
-  filter: brightness(0) invert(1);
-}
-
 /* Inputs e selects no dark */
 .dark input,
 .dark textarea,
