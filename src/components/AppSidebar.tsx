@@ -35,10 +35,10 @@ const menuItems = [
   { title: "Stories", url: "/stories", icon: PlayCircle },
   { title: "Galeria", url: "/gallery", icon: Library },
   { title: "Performance", url: "/videos/performance", icon: BarChart3 },
-{ title: "Produtos", url: "/produtos", icon: ShoppingCart },
+  { title: "Produtos", url: "/produtos", icon: ShoppingCart },
   { title: "Medidas", url: "/medidas", icon: Ruler },
-{ title: "Aparência", url: "/aparencia", icon: Palette },
-{ title: "Comentários", url: "/comentarios", icon: MessageSquare },
+  { title: "Aparência", url: "/aparencia", icon: Palette },
+  { title: "Comentários", url: "/comentarios", icon: MessageSquare },
   { title: "Instalação", url: "/integration", icon: Code },
   { title: "Configurações", url: "/settings", icon: Settings },
 ];
@@ -54,7 +54,6 @@ export function AppSidebar() {
       const settings = await db.getSettings();
       if (settings) {
         setStoreName(settings.store_name || '');
-        // ✅ CORRIGIDO: era store_logo_url, o campo certo é logo_url
         setStoreLogoUrl(settings.logo_url || '');
       }
     } catch (err) {
@@ -65,7 +64,6 @@ export function AppSidebar() {
   useEffect(() => {
     loadStoreData();
 
-    // ✅ CORRIGIDO: escuta eventos de atualização disparados pelo SettingsPage
     const handleStorageChange = () => loadStoreData();
     const handleFocus = () => loadStoreData();
 
@@ -79,7 +77,8 @@ export function AppSidebar() {
   }, [loadStoreData]);
 
   return (
-<Sidebar className="border-r border-[#E2E8F0] dark:border-slate-800 bg-white dark:bg-slate-950 shadow-none">      <SidebarHeader className="p-6">
+    <Sidebar className="border-r border-[#E2E8F0] dark:border-slate-800 bg-white dark:bg-slate-950 shadow-none">
+      <SidebarHeader className="p-6">
         <div className="flex items-center gap-3">
           <img src="/assets/vidlytics-logo-wide.png" alt="Vidlytics" className="h-[58px] w-auto max-w-[260px]" />
         </div>
@@ -94,9 +93,20 @@ export function AppSidebar() {
                   <SidebarMenuButton 
                     asChild 
                     isActive={location.pathname === item.url}
-className={cn(                  >
+                    className={cn(
+                      "h-11 rounded-xl px-4 transition-all duration-200 font-bold",
+                      location.pathname === item.url 
+                        ? "bg-[#EAF6FF] dark:bg-[#0094EB]/20 text-[#0094EB] hover:bg-[#EAF6FF] dark:hover:bg-[#0094EB]/20 hover:text-[#0094EB]" 
+                        : "text-[#64748B] dark:text-slate-400 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 hover:text-[#0F172A] dark:hover:text-white"
+                    )}
+                  >
                     <Link to={item.url}>
-                      <item.icon className={cn("h-4.5 w-4.5", location.pathname === item.url ? "text-[#0094EB]" : "text-[#94A3B8]")} />
+                      <item.icon className={cn(
+                        "h-4.5 w-4.5",
+                        location.pathname === item.url 
+                          ? "text-[#0094EB]" 
+                          : "text-[#94A3B8] dark:text-slate-500"
+                      )} />
                       <span className="text-sm">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
@@ -107,9 +117,9 @@ className={cn(                  >
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-6 border-t border-[#F1F5F9]">
+      <SidebarFooter className="p-6 border-t border-[#F1F5F9] dark:border-slate-800">
         <div className="flex items-center gap-3 mb-4">
-          <div className="h-9 w-9 rounded-full bg-[#F1F5F9] border border-[#E2E8F0] flex items-center justify-center text-[#64748B] overflow-hidden shrink-0">
+          <div className="h-9 w-9 rounded-full bg-[#F1F5F9] dark:bg-slate-800 border border-[#E2E8F0] dark:border-slate-700 flex items-center justify-center text-[#64748B] dark:text-slate-400 overflow-hidden shrink-0">
             {storeLogoUrl ? (
               <img src={storeLogoUrl} alt={storeName || 'Loja'} className="h-full w-full object-cover" />
             ) : (
@@ -117,7 +127,7 @@ className={cn(                  >
             )}
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="text-xs font-bold text-[#0F172A] truncate">{storeName || 'Admin'}</span>
+            <span className="text-xs font-bold text-[#0F172A] dark:text-white truncate">{storeName || 'Admin'}</span>
             <span className="text-[10px] font-bold text-[#0094EB] uppercase">Plano Pro</span>
           </div>
         </div>
@@ -134,7 +144,7 @@ className={cn(                  >
             keysToRemove.forEach(key => localStorage.removeItem(key));
             navigate('/login');
           }}
-          className="flex w-full items-center gap-2 px-3 py-2 rounded-xl text-[#64748B] hover:bg-red-50 hover:text-red-500 transition-colors text-sm font-bold"
+          className="flex w-full items-center gap-2 px-3 py-2 rounded-xl text-[#64748B] dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-500 transition-colors text-sm font-bold"
         >
           <LogOut size={16} />
           Sair do Painel
