@@ -2207,7 +2207,7 @@ function supabaseFetch(path, options) {
     wrapper.className = 'vl-carousel-wrapper';
 
     // Navigation buttons
-    if (stories.length > carouselConfig.columns) {
+if (stories.length > carouselConfig.visibleItems) {
       var prevBtn = document.createElement('button');
       prevBtn.className = 'vl-carousel-nav vl-carousel-nav--prev';
       prevBtn.innerHTML = '‹';
