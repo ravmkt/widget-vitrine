@@ -420,11 +420,11 @@ if (!popup) {
       // Inserir novos vínculos
       for (let i = 0; i < selectedVideoIds.length; i++) {
 await db.storyVideos.save({
-  store_id: storeId,  // ← ✅ adicionar
+  store_id: storeId,
   story_id: storyId,
   video_id: selectedVideoIds[i],
   position: i,
-is_cover: i === 0 ? 1 : 0,
+  is_cover: i === 0,
 });
       }
 
