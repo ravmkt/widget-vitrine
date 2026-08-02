@@ -24,7 +24,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { RefreshCw, Loader2, Copy, X, Image } from 'lucide-react';
-import { useNavigate } from 'react-router-dom'; // ✅ CORREÇÃO: import adicionado
+import { useNavigate } from 'react-router-dom';
 
 const LOGO_BUCKET = "store-assets";
 
@@ -153,7 +153,7 @@ const appSettingsToGeneralSettings = (
 // ── Componente ──
 
 const SettingsPage = () => {
-  const navigate = useNavigate(); // ✅ CORREÇÃO: hook adicionado
+  const navigate = useNavigate();
 
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
@@ -161,30 +161,27 @@ const SettingsPage = () => {
   const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>("");
 
-// ═══════════════════════════════════════════════
-// 🌗 TEMA CLARO / ESCURO
-// ═══════════════════════════════════════════════
-const [isDark, setIsDark] = useState<boolean>(() => {
-  // Tenta carregar do localStorage ao iniciar
-  try {
-    const saved = localStorage.getItem('app-theme');
-    if (saved === 'dark') return true;
-    if (saved === 'light') return false;
-  } catch {}
-  // Se não houver preferência salva, usa o tema do sistema
-  return window.matchMedia('(prefers-color-scheme: dark)').matches;
-});
+  // ═══════════════════════════════════════════════
+  // 🌗 TEMA CLARO / ESCURO
+  // ═══════════════════════════════════════════════
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('app-theme');
+      if (saved === 'dark') return true;
+      if (saved === 'light') return false;
+    } catch {}
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
 
-// Sincroniza a classe 'dark' no <html> sempre que o estado muda
-useEffect(() => {
-  const root = document.documentElement;
-  if (isDark) {
-    root.classList.add('dark');
-  } else {
-    root.classList.remove('dark');
-  }
-  localStorage.setItem('app-theme', isDark ? 'dark' : 'light');
-}, [isDark]);
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isDark) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    localStorage.setItem('app-theme', isDark ? 'dark' : 'light');
+  }, [isDark]);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -213,10 +210,10 @@ useEffect(() => {
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-if (file.size > 150 * 1024) {
-  toast.error('A imagem deve ter no máximo 150 KB.');
-  return;
-}
+    if (file.size > 150 * 1024) {
+      toast.error('A imagem deve ter no máximo 150 KB.');
+      return;
+    }
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
       toast.error('Formato inválido. Use JPG, PNG ou WEBP.');
@@ -287,16 +284,16 @@ if (file.size > 150 * 1024) {
       const payload = appSettingsToGeneralSettings(updatedSettings);
       await db.generalSettings.save(payload as GeneralSettings);
 
-setSelectedLogoFile(null);
+      setSelectedLogoFile(null);
 
-window.dispatchEvent(new Event('storage'));
-window.dispatchEvent(new Event('focus'));
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new Event('focus'));
 
-toast.success('Configurações salvas com sucesso!', {
-  duration: 2000,
-  onDismiss: () => navigate('/dashboard'),
-});
-setTimeout(() => navigate('/dashboard'), 2200);
+      toast.success('Configurações salvas com sucesso!', {
+        duration: 2000,
+        onDismiss: () => navigate('/dashboard'),
+      });
+      setTimeout(() => navigate('/dashboard'), 2200);
 
     } catch (err) {
       console.error("Erro completo ao salvar configurações:", err);
@@ -317,10 +314,10 @@ setTimeout(() => navigate('/dashboard'), 2200);
     <div className="space-y-8 animate-fade-in pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             Configurações do Sistema
           </h1>
-          <p className="text-slate-500 font-medium mt-1">
+          <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">
             Configure dados da loja, módulos, integrações e comportamento dos vídeos.
           </p>
         </div>
@@ -334,16 +331,16 @@ setTimeout(() => navigate('/dashboard'), 2200);
         }}
       >
         {/* 1. Dados da Loja */}
-        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
+        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900">
           <CardHeader className="p-6">
-            <CardTitle className="text-xl font-black text-slate-800">
+            <CardTitle className="text-xl font-black text-slate-800 dark:text-white">
               1. Dados da Loja
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <Label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                   Nome da Loja *
                 </Label>
                 <Input
@@ -353,12 +350,12 @@ setTimeout(() => navigate('/dashboard'), 2200);
                   onChange={e =>
                     setSettings(prev => ({ ...prev, store_name: e.target.value }))
                   }
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB] dark:text-white"
                   required
                 />
               </div>
               <div className="space-y-4">
-                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <Label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                   URL da Loja *
                 </Label>
                 <Input
@@ -368,13 +365,12 @@ setTimeout(() => navigate('/dashboard'), 2200);
                   onChange={e =>
                     setSettings(prev => ({ ...prev, store_url: e.target.value }))
                   }
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB] dark:text-white"
                   required
                 />
               </div>
-              {/* 🆕 Campo de Plataforma */}
               <div className="space-y-4">
-                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <Label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                   Plataforma de E-commerce
                 </Label>
                 <Select
@@ -383,7 +379,7 @@ setTimeout(() => navigate('/dashboard'), 2200);
                     setSettings(prev => ({ ...prev, platform: value || null }))
                   }
                 >
-                  <SelectTrigger className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]">
+                  <SelectTrigger className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB] dark:text-white">
                     <SelectValue placeholder="Selecione uma plataforma..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -395,53 +391,53 @@ setTimeout(() => navigate('/dashboard'), 2200);
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Isso nos ajuda a gerar o script de instalação correto para sua loja.
                 </p>
               </div>
               <div className="space-y-4">
-                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <Label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                   Logo da Loja
                 </Label>
-<div className="space-y-3">
-  <div className="flex items-center gap-4">
-    <div className="h-20 w-20 rounded-2xl overflow-hidden bg-slate-200 border border-slate-300 flex items-center justify-center">
-      {logoPreview ? (
-        <img
-          src={logoPreview}
-          className="w-full h-full object-cover"
-          alt="Logo"
-        />
-      ) : (
-        <Image className="w-8 h-8 text-slate-400" />
-      )}
-    </div>
-    <div className="flex-1 space-y-2">
-      <div className="flex gap-2">
-        <Input
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={handleLogoChange}
-          className="flex-1 text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-[#EAF6FF] file:text-[#0094EB] file:font-bold file:cursor-pointer hover:file:bg-[#0094EB] hover:file:text-white transition-all"
-        />
-        <Button variant="outline" size="icon" onClick={handleRemoveLogo}>
-          <X size={20} className="text-rose-600" />
-        </Button>
-      </div>
-      <p className="text-[10px] text-slate-400">
-        JPG, PNG ou WEBP. Máx. 150 KB.
-      </p>
-      {logoPreview && (
-        <p className="text-xs text-slate-500 mt-1">
-          {new URL(logoPreview).pathname.split('/').pop()}
-        </p>
-      )}
-    </div>
-  </div>
-</div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-4">
+                    <div className="h-20 w-20 rounded-2xl overflow-hidden bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 flex items-center justify-center">
+                      {logoPreview ? (
+                        <img
+                          src={logoPreview}
+                          className="w-full h-full object-cover"
+                          alt="Logo"
+                        />
+                      ) : (
+                        <Image className="w-8 h-8 text-slate-400 dark:text-slate-500" />
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <div className="flex gap-2">
+                        <Input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={handleLogoChange}
+                          className="flex-1 text-xs text-slate-500 dark:text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-[#EAF6FF] dark:file:bg-blue-900/40 file:text-[#0094EB] dark:file:text-blue-400 file:font-bold file:cursor-pointer hover:file:bg-[#0094EB] hover:file:text-white transition-all"
+                        />
+                        <Button variant="outline" size="icon" onClick={handleRemoveLogo}>
+                          <X size={20} className="text-rose-600" />
+                        </Button>
+                      </div>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                        JPG, PNG ou WEBP. Máx. 150 KB.
+                      </p>
+                      {logoPreview && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          {new URL(logoPreview).pathname.split('/').pop()}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
               <div className="space-y-4">
-                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <Label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                   E-mail de Contato
                 </Label>
                 <Input
@@ -451,7 +447,7 @@ setTimeout(() => navigate('/dashboard'), 2200);
                   onChange={e =>
                     setSettings(prev => ({ ...prev, contact_email: e.target.value }))
                   }
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB] dark:text-white"
                 />
               </div>
             </div>
@@ -459,9 +455,9 @@ setTimeout(() => navigate('/dashboard'), 2200);
         </Card>
 
         {/* 2. Módulos */}
-        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
+        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900">
           <CardHeader className="p-6">
-            <CardTitle className="text-xl font-black text-slate-800">
+            <CardTitle className="text-xl font-black text-slate-800 dark:text-white">
               2. Módulos
             </CardTitle>
           </CardHeader>
@@ -474,10 +470,10 @@ setTimeout(() => navigate('/dashboard'), 2200);
                 }
               />
               <div className="pt-0.5">
-                <Label className="text-sm font-bold text-slate-700">
+                <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">
                   Ativar Vitrine de Vídeos
                 </Label>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Controla a renderização pública do carrossel/grade na loja.
                 </p>
               </div>
@@ -490,10 +486,10 @@ setTimeout(() => navigate('/dashboard'), 2200);
                 }
               />
               <div className="pt-0.5">
-                <Label className="text-sm font-bold text-slate-700">
+                <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">
                   Ativar WhatsApp
                 </Label>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Exibe botão de WhatsApp nos vídeos.
                 </p>
               </div>
@@ -506,10 +502,10 @@ setTimeout(() => navigate('/dashboard'), 2200);
                 }
               />
               <div className="pt-0.5">
-                <Label className="text-sm font-bold text-slate-700">
+                <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">
                   Ativar Analytics
                 </Label>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Coleta métricas de visualização e engajamento.
                 </p>
               </div>
@@ -518,15 +514,15 @@ setTimeout(() => navigate('/dashboard'), 2200);
         </Card>
 
         {/* 3. Integração WhatsApp */}
-        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
+        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900">
           <CardHeader className="p-6">
-            <CardTitle className="text-xl font-black text-slate-800">
+            <CardTitle className="text-xl font-black text-slate-800 dark:text-white">
               3. Integração WhatsApp
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
             <div className="space-y-4">
-              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <Label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                 Número do WhatsApp
               </Label>
               <Input
@@ -537,14 +533,14 @@ setTimeout(() => navigate('/dashboard'), 2200);
                   const v = e.target.value.replace(/[^\d+\-\(\) ]/g, '');
                   setSettings(prev => ({ ...prev, whatsapp_number: v }));
                 }}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
+                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB] dark:text-white"
               />
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 Informe o WhatsApp com código do país e DDD. Ex: 5545998888888
               </p>
             </div>
             <div className="space-y-4">
-              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <Label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                 Mensagem Padrão de Contato
               </Label>
               <Textarea
@@ -556,15 +552,13 @@ setTimeout(() => navigate('/dashboard'), 2200);
                   }))
                 }
                 rows={4}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
+                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB] dark:text-white"
               />
             </div>
           </CardContent>
         </Card>
 
-        {/* ═══════════════════════════════════════════
-            4. Tema (Claro / Escuro)
-            ═══════════════════════════════════════════ */}
+        {/* 4. Aparência (Tema) */}
         <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900 transition-colors">
           <CardHeader className="p-6">
             <CardTitle className="text-xl font-black text-slate-800 dark:text-white">
@@ -572,17 +566,14 @@ setTimeout(() => navigate('/dashboard'), 2200);
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            {/* Rótulo + Switch lado a lado */}
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                {/* Ícone Sol ☀️ */}
                 <span
                   className={`text-xl transition-opacity ${isDark ? 'opacity-40' : 'opacity-100'}`}
                 >
                   ☀️
                 </span>
 
-                {/* Switch customizado */}
                 <button
                   type="button"
                   role="switch"
@@ -598,7 +589,6 @@ setTimeout(() => navigate('/dashboard'), 2200);
                     ${isDark ? 'bg-[#3b82f6]' : 'bg-slate-300'}
                   `}
                 >
-                  {/* Bolinha que desliza */}
                   <span
                     className={`
                       pointer-events-none inline-block h-5 w-5
@@ -609,7 +599,6 @@ setTimeout(() => navigate('/dashboard'), 2200);
                   />
                 </button>
 
-                {/* Ícone Lua 🌙 */}
                 <span
                   className={`text-xl transition-opacity ${isDark ? 'opacity-100' : 'opacity-40'}`}
                 >
@@ -617,7 +606,6 @@ setTimeout(() => navigate('/dashboard'), 2200);
                 </span>
               </div>
 
-              {/* Texto descritivo */}
               <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
                 {isDark ? 'Tema Escuro' : 'Tema Claro'}
               </span>
@@ -630,15 +618,15 @@ setTimeout(() => navigate('/dashboard'), 2200);
         </Card>
 
         {/* 5. Segurança */}
-        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
+        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900">
           <CardHeader className="p-6">
-            <CardTitle className="text-xl font-black text-slate-800">
+            <CardTitle className="text-xl font-black text-slate-800 dark:text-white">
               5. Segurança
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
             <div className="space-y-4">
-              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <Label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                 Token Público / API Keys
               </Label>
               <div className="flex items-center gap-3">
@@ -646,7 +634,7 @@ setTimeout(() => navigate('/dashboard'), 2200);
                   type="text"
                   value={settings?.public_live_key ?? ''}
                   readOnly
-                  className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-600 break-all"
+                  className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-600 dark:text-slate-300 break-all"
                 />
                 <Button
                   variant="outline"
@@ -679,7 +667,7 @@ setTimeout(() => navigate('/dashboard'), 2200);
           <Button
             type="submit"
             disabled={saving}
-            className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-8 py-3.5 rounded-2xl font-black text-sm shadow-xl shadow-blue-100 transition-all flex items-center gap-2"
+            className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-8 py-3.5 rounded-2xl font-black text-sm shadow-xl shadow-blue-100 dark:shadow-none transition-all flex items-center gap-2"
           >
             {saving ? (
               <>
