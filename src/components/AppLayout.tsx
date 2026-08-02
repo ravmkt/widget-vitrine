@@ -10,7 +10,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   // ═══════════════════════════════════════════════
-  // 🌗 APLICA O TEMA AO CARREGAR QUALQUER PÁGINA
+  // 🌗 APLICA O TEMA SALVO AO CARREGAR QUALQUER PÁGINA
   // ═══════════════════════════════════════════════
   useEffect(() => {
     try {
