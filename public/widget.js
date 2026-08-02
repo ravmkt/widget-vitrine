@@ -2401,7 +2401,7 @@ if (isDirectVideoUrl(thumbUrl)) {
 
 var thumbUrl = getThumbnailUrl(story) || getVideoUrl(story.video || story);
       if (thumbUrl) {
-        if (isVideoUrl(thumbUrl) || /\.(mp4|webm|mov)($|\?)/i.test(thumbUrl)) {
+if (isDirectVideoUrl(thumbUrl)) {
           var vid = createVideoElement(thumbUrl, {
             autoplay: false,
             muted: true,
