@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';b
+import React, { useEffect, useState } from 'react';
 import {
   AreaChart,
   Area,
