@@ -7,12 +7,10 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  LineChart,
-  Line,
-  Legend,
 } from 'recharts';
 import { useTenant } from '@/context/TenantContext';
 import { db } from '@/lib/db';
+import { cn } from '@/lib/utils';
 import {
   Select,
   SelectContent,
@@ -42,12 +40,18 @@ interface VideoRetention {
   taxaConclusao: number;
 }
 
+type Props = {
+  timeRange?: string;
+  customFrom?: string;
+  customTo?: string;
+};
+
 // ─── Mock ───────────────────────────────────────────────────
 
 function generateMockRetention(videos: any[]): VideoRetention[] {
-  return videos.map((v, i) => {
+  return videos.map((v) => {
     const baseViewers = 50 + Math.floor(Math.random() * 200);
-    const decay = 0.6 + Math.random() * 0.3; // fator de retenção
+    const decay = 0.6 + Math.random() * 0.3;
 
     return {
       video_id: v.id,
@@ -70,7 +74,7 @@ function generateMockRetention(videos: any[]): VideoRetention[] {
 
 // ─── Componente ─────────────────────────────────────────────
 
-export function RetentionTab() {
+export function RetentionTab(_props: Props) {
   const { storeId } = useTenant();
   const [loading, setLoading] = useState(true);
   const [retentions, setRetentions] = useState<VideoRetention[]>([]);
@@ -107,11 +111,11 @@ export function RetentionTab() {
     ? (() => {
         const total = retentions.reduce((acc, r) => {
           r.retention.forEach((p, i) => {
-            if (!acc[i]) acc[i] = { percentual: p.percentual, espectadores: 0 };
+            if (!acc[i]) acc[i] = { percentual: p.percentual, espectadores: 0, taxa: 0 };
             acc[i].espectadores += p.espectadores;
           });
           return acc;
-        }, [] as { percentual: string; espectadores: number }[]);
+        }, [] as { percentual: string; espectadores: number; taxa: number }[]);
 
         const max = total[0]?.espectadores || 1;
         return total.map(p => ({
@@ -340,6 +344,3 @@ const RetentionCard = ({
     </div>
   );
 };
-
-// preciso do cn
-import { cn } from '@/lib/utils';
