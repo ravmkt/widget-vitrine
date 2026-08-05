@@ -96,14 +96,13 @@ export default function PerformancePage() {
           <VideosTab timeRange={timeRange} customFrom={customRange.from?.toISOString()} customTo={customRange.to?.toISOString()} />
         </TabsContent>
 
-        <TabsContent value="insights">
-          <InsightsTab />
-        </TabsContent>
+<TabsContent value="insights">
+  <InsightsTab timeRange={timeRange} customFrom={customRange.from?.toISOString()} customTo={customRange.to?.toISOString()} />
+</TabsContent>
 
-        <TabsContent value="retention">
-          <RetentionTab />
-        </TabsContent>
-      </Tabs>
+<TabsContent value="retention">
+  <RetentionTab timeRange={timeRange} customFrom={customRange.from?.toISOString()} customTo={customRange.to?.toISOString()} />
+</TabsContent>      </Tabs>
 
       {/* ── Modal calendário ── */}
       <CustomDialog
