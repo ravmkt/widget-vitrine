@@ -161,6 +161,11 @@ const SettingsPage = () => {
   const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>("");
 
+  // ── NOVO: Setor da loja ──
+  const [sectors, setSectors] = useState<any[]>([]);
+  const [selectedSectorId, setSelectedSectorId] = useState<string>('');
+  const [loadingSectors, setLoadingSectors] = useState(true);
+
   // ═══════════════════════════════════════════════
   // 🌗 TEMA CLARO / ESCURO
   // ═══════════════════════════════════════════════
@@ -206,6 +211,39 @@ const SettingsPage = () => {
     };
     fetchSettings();
   }, []);
+
+  // ── NOVO: Buscar setores e setor atual da loja ──
+  useEffect(() => {
+    const fetchSectors = async () => {
+      if (!supabase) {
+        setLoadingSectors(false);
+        return;
+      }
+      try {
+        const { data: sectorList } = await supabase
+          .from('sectors')
+          .select('id, name, slug, icon')
+          .order('display_order');
+
+        if (sectorList) setSectors(sectorList);
+
+        const storeId = settings?.store_id;
+        if (storeId) {
+          const { data: store } = await supabase
+            .from('stores')
+            .select('sector_id')
+            .eq('id', storeId)
+            .single();
+          if (store?.sector_id) setSelectedSectorId(store.sector_id);
+        }
+      } catch (e) {
+        console.error('Erro ao carregar setores:', e);
+      } finally {
+        setLoadingSectors(false);
+      }
+    };
+    fetchSectors();
+  }, [settings?.store_id]);
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -284,6 +322,16 @@ const SettingsPage = () => {
       const payload = appSettingsToGeneralSettings(updatedSettings);
       await db.generalSettings.save(payload as GeneralSettings);
 
+      // ── NOVO: Salvar setor na tabela stores ──
+      if (supabase && settings.store_id) {
+        const sectorValue =
+          selectedSectorId === 'none' ? null : selectedSectorId || null;
+        await supabase
+          .from('stores')
+          .update({ sector_id: sectorValue })
+          .eq('id', settings.store_id);
+      }
+
       setSelectedLogoFile(null);
 
       window.dispatchEvent(new Event('storage'));
@@ -294,7 +342,6 @@ const SettingsPage = () => {
         onDismiss: () => navigate('/dashboard'),
       });
       setTimeout(() => navigate('/dashboard'), 2200);
-
     } catch (err) {
       console.error("Erro completo ao salvar configurações:", err);
       toast.error('Falha ao salvar configurações');
@@ -395,6 +442,34 @@ const SettingsPage = () => {
                   Isso nos ajuda a gerar o script de instalação correto para sua loja.
                 </p>
               </div>
+
+              {/* ── NOVO: Seletor de Setor ── */}
+              <div className="space-y-4">
+                <Label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                  Setor da Loja
+                </Label>
+                <Select
+                  value={selectedSectorId || 'none'}
+                  onValueChange={setSelectedSectorId}
+                  disabled={loadingSectors}
+                >
+                  <SelectTrigger className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB] dark:text-white">
+                    <SelectValue placeholder="Selecione um setor..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum setor selecionado</SelectItem>
+                    {sectors.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.icon} {s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Usado para comparar sua performance com a média do mercado.
+                </p>
+              </div>
+
               <div className="space-y-4">
                 <Label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                   Logo da Loja
