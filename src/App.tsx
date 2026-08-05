@@ -16,7 +16,7 @@ import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import StoriesPage from "@/pages/StoriesPage";
 import VideoGalleryPage from "@/pages/VideoGalleryPage";
-import VideoPerformancePage from "@/pages/VideoPerformancePage";
+import PerformancePage from "@/pages/PerformancePage";
 import VideoEditPage from "@/pages/VideoEditPage";
 import ProductsPage from "@/pages/ProductsPage";
 import MedidasPage from "@/pages/MedidasPage";
