@@ -66,6 +66,23 @@ function timeAgo(dateStr: string): string {
   return `há ${Math.floor(hours / 24)}d`;
 }
 
+// ── 🆕 SANITIZA URL do backend ──
+// O backend gera /dashboard/videos/{uuid} mas a rota real é /videos/{uuid}/edit
+function sanitizeActionUrl(raw: string | null): string | null {
+  if (!raw) return null;
+
+  // Remove prefixo /dashboard se existir
+  let url = raw.replace(/^\/dashboard/, "");
+
+  // Se for /videos/{uuid} sem /edit, adiciona
+  const videoMatch = url.match(/^\/videos\/([a-f0-9-]+)$/);
+  if (videoMatch) {
+    url = `/videos/${videoMatch[1]}/edit`;
+  }
+
+  return url;
+}
+
 // ── Modal de confirmação ──
 function ConfirmModal({
   open,
@@ -73,12 +90,14 @@ function ConfirmModal({
   message,
   onConfirm,
   onCancel,
+  loading,
 }: {
   open: boolean;
   title: string;
   message: string;
   onConfirm: () => void;
   onCancel: () => void;
+  loading?: boolean;
 }) {
   if (!open) return null;
 
@@ -86,7 +105,7 @@ function ConfirmModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onCancel}
+        onClick={loading ? undefined : onCancel}
       />
       <div className="relative bg-white dark:bg-slate-800 rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 border border-slate-200 dark:border-slate-700">
         <div className="flex items-start gap-3 mb-4">
@@ -105,15 +124,18 @@ function ConfirmModal({
         <div className="flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors"
+            disabled={loading}
+            className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors disabled:opacity-50"
           >
             Cancelar
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+            disabled={loading}
+            className="px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
           >
-            Sim, excluir
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            {loading ? "Excluindo..." : "Sim, excluir"}
           </button>
         </div>
       </div>
@@ -140,9 +162,9 @@ function InsightCard({
     queryClient.invalidateQueries({ queryKey: ["insights"] });
   };
 
-  // Fallback de URL
+  // 🆕 Sanitiza o action_url do backend + fallback
   const resolvedUrl =
-    insight.action_url ||
+    sanitizeActionUrl(insight.action_url) ||
     (insight.related_video_id
       ? `/videos/${insight.related_video_id}/edit`
       : insight.related_placement_id
@@ -150,15 +172,6 @@ function InsightCard({
         : null);
 
   const handleAction = () => {
-    // 🐛 DEBUG: mostra o que está sendo resolvido
-    alert(
-      `🔗 DEBUG CTA:\n\n` +
-      `action_url: ${insight.action_url || "(vazio)"}\n` +
-      `related_video_id: ${insight.related_video_id || "(vazio)"}\n` +
-      `related_placement_id: ${insight.related_placement_id || "(vazio)"}\n` +
-      `resolvedUrl: ${resolvedUrl || "(null - botão desabilitado)"}`
-    );
-
     if (resolvedUrl) {
       window.location.href = resolvedUrl;
     }
@@ -290,6 +303,7 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [filterType, setFilterType] = useState<FilterType>("all");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const handleDeleteRequest = (id: string) => {
     setDeleteTarget(id);
@@ -297,9 +311,9 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
+    setDeleting(true);
 
     const id = deleteTarget;
-    setDeleteTarget(null);
 
     // Remove otimista
     queryClient.setQueryData(["insights"], (old: Insight[] | undefined) => {
@@ -307,22 +321,19 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
       return old.filter((i) => i.id !== id);
     });
 
-    // 🐛 DEBUG: tenta deletar e mostra o resultado
-    const { error } = await supabase.from("insights").delete().eq("id", id);
+    const { error: deleteError } = await supabase
+      .from("insights")
+      .delete()
+      .eq("id", id);
 
-    if (error) {
+    setDeleting(false);
+    setDeleteTarget(null);
+
+    if (deleteError) {
       // Rollback
       queryClient.invalidateQueries({ queryKey: ["insights"] });
-      alert(
-        `❌ ERRO AO EXCLUIR:\n\n` +
-        `Mensagem: ${error.message}\n` +
-        `Código: ${error.code}\n` +
-        `Detalhes: ${error.details || "(nenhum)"}\n\n` +
-        `Provavelmente é RLS bloqueando o DELETE.`
-      );
-    } else {
-      alert("✅ Insight excluído com sucesso!");
     }
+    // Se sucesso, já foi removido otimistamente
   };
 
   const handleToggleCompleted = async (id: string, current: boolean) => {
@@ -486,7 +497,8 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
         title="Excluir insight"
         message="Tem certeza que deseja excluir este insight? Essa ação é irreversível."
         onConfirm={handleDeleteConfirm}
-        onCancel={() => setDeleteTarget(null)}
+        onCancel={() => !deleting && setDeleteTarget(null)}
+        loading={deleting}
       />
     </>
   );
