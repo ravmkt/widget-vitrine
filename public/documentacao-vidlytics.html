@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vidlytics — Documentação Técnica Completa</title>
+<style>
+  :root {
+    --primary: #0094EB;
+    --dark: #0F172A;
+    --gray: #64748B;
+    --light-gray: #F1F5F9;
+    --green: #16A34A;
+    --red: #DC2626;
+    --yellow: #EAB308;
+    --border: #E2E8F0;
+    --bg: #FFFFFF;
+    --bg-alt: #F8FAFC;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    line-height: 1.7;
+    color: var(--dark);
+    background: var(--bg);
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  h1 {
+    font-size: 2.4rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary), #6366F1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-top: 48px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--primary);
+    color: var(--dark);
+  }
+  h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-top: 28px;
+    margin-bottom: 10px;
+    color: var(--dark);
+  }
+  h4 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    color: #334155;
+  }
+  p { margin-bottom: 12px; color: #334155; }
+  ul, ol { margin-left: 24px; margin-bottom: 12px; color: #334155; }
+  li { margin-bottom: 4px; }
+  code {
+    background: var(--light-gray);
+    color: var(--primary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-family: 'Fira Code', 'Courier New', monospace;
+  }
+  pre {
+    background: #0F172A;
+    color: #E2E8F0;
+    padding: 16px 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 12px 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 0.9rem;
+  }
+  th {
+    background: var(--primary);
+    color: white;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: #334155;
+  }
+  tr:nth-child(even) { background: var(--bg-alt); }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .badge-green { background: #DCFCE7; color: var(--green); }
+  .badge-red { background: #FEE2E2; color: var(--red); }
+  .badge-yellow { background: #FEF3C7; color: var(--yellow); }
+  .badge-blue { background: #DBEAFE; color: var(--primary); }
+  .card {
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 12px 0;
+  }
+  .toc {
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 28px;
+    margin: 24px 0;
+  }
+  .toc ol { margin-left: 20px; }
+  .toc a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .toc a:hover { text-decoration: underline; }
+  .meta {
+    color: var(--gray);
+    font-size: 0.9rem;
+    margin-bottom: 32px;
+  }
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 32px 0;
+  }
+  .download-hint {
+    background: linear-gradient(135deg, #EFF6FF, #F0F9FF);
+    border: 1px solid var(--primary);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 24px 0;
+    text-align: center;
+  }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .stat-card {
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-card .num {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--primary);
+  }
+  .stat-card .label {
+    font-size: 0.85rem;
+    color: var(--gray);
+  }
+  @media print {
+    body { padding: 0; max-width: none; }
+    .download-hint { display: none; }
+    h2 { page-break-before: auto; page-break-after: avoid; }
+    table, pre { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Vidlytics — Documentação Técnica Completa</h1>
+<p class="meta">
+  Plataforma SaaS de Video Commerce para E-commerce ·
+  Gerado em: <strong id="date"></strong> ·
+  Versão do documento: 1.0
+</p>
+
+<div class="download-hint">
+  💡 <strong>Para salvar como PDF:</strong> Pressione <code>Ctrl+P</code> (ou <code>Cmd+P</code> no Mac) e selecione "Salvar como PDF".
+</div>
+
+<script>document.getElementById('date').textContent = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });</script>
+
+<div class="toc">
+  <h3 style="margin-top:0">📑 Sumário</h3>
+  <ol>
+    <li><a href="#visao-geral">Visão Geral do Produto</a></li>
+    <li><a href="#arquitetura">Arquitetura e Stack Tecnológico</a></li>
+    <li><a href="#estrutura">Estrutura de Diretórios</a></li>
+    <li><a href="#banco">Banco de Dados — Schema Completo</a></li>
+    <li><a href="#autenticacao">Autenticação e Multi-tenant</a></li>
+    <li><a href="#funcionalidades">Funcionalidades Detalhadas</a></li>
+    <li><a href="#edge">Edge Functions</a></li>
+    <li><a href="#rotas">Sistema de Rotas</a></li>
+    <li><a href="#planos">Planos e Limites</a></li>
+    <li><a href="#status">Status: O que Funciona vs. O que Falta</a></li>
+    <li><a href="#seguranca">Segurança e RLS</a></li>
+    <li><a href="#integracoes">Integrações Externas</a></li>
+    <li><a href="#consideracoes">Considerações Técnicas</a></li>
+  </ol>
+</div>
+
+<!-- ════════════════ 1. VISÃO GERAL ════════════════ -->
+<h2 id="visao-geral">1. Visão Geral do Produto</h2>
+
+<p><strong>Vidlytics</strong> é uma plataforma SaaS (Software as a Service) que permite a lojas virtuais de e-commerce adicionarem <strong>widgets de vídeo interativos</strong> diretamente em seus sites. O objetivo é aumentar engajamento, taxas de conversão e vendas através de conteúdo em vídeo — vídeos curtos estilo "stories", carrosséis de produtos em vídeo e grades de vídeos.</p>
+
+<h3>Problema que Resolve</h3>
+<p>Lojas de e-commerce tradicionais usam apenas imagens estáticas. Vídeos aumentam drasticamente a confiança do consumidor e a taxa de conversão. O Vidlytics permite que qualquer loja — especialmente na plataforma <strong>Yampi</strong> — adicione vídeos de produtos de forma simples, sem necessidade de conhecimento técnico avançado.</p>
+
+<h3>Principais Capacidades</h3>
+<div class="stat-grid">
+  <div class="stat-card"><div class="num">3</div><div class="label">Formatos de Widget (Stories, Carrossel, Grade)</div></div>
+  <div class="stat-card"><div class="num">4</div><div class="label">Fontes de Vídeo (YouTube, Instagram, TikTok, Upload)</div></div>
+  <div class="stat-card"><div class="num">27</div><div class="label">Tabelas no Banco de Dados</div></div>
+  <div class="stat-card"><div class="num">4</div><div class="label">Edge Functions</div></div>
+</div>
+
+<h3>Tipos de Widget Suportados</h3>
+<table>
+  <tr><th>Widget</th><th>Descrição</th><th>Dispositivos</th></tr>
+  <tr><td><strong>Floating Widget</strong></td><td>Botão flutuante fixo na tela que abre player modal. Customizável (forma, tamanho, posição, cor, borda, etc.)</td><td>Desktop + Mobile</td></tr>
+  <tr><td><strong>Carrossel</strong></td><td>Faixa horizontal de cards de vídeo com rolagem, similar a Stories do Instagram</td><td>Desktop + Mobile</td></tr>
+  <tr><td><strong>Grade (Grid)</strong></td><td>Layout em colunas e linhas de vídeos, configurável</td><td>Desktop + Mobile</td></tr>
+</table>
+
+<h3>Plataformas de Vídeo Compatíveis</h3>
+<ul>
+  <li><strong>YouTube</strong> — watch, shorts, embed, youtu.be</li>
+  <li><strong>Instagram</strong> — Reels e Posts</li>
+  <li><strong>TikTok</strong> — vídeos e links curtos (vm.tiktok.com)</li>
+  <li><strong>Upload Direto</strong> — MP4, WebM, OGG, MOV, M4V, M3U8 (via Supabase Storage)</li>
+</ul>
+
+<!-- ════════════════ 2. ARQUITETURA ════════════════ -->
+<h2 id="arquitetura">2. Arquitetura e Stack Tecnológico</h2>
+
+<h3>Stack Frontend</h3>
+<table>
+  <tr><th>Categoria</th><th>Tecnologia</th><th>Versão</th></tr>
+  <tr><td>Framework UI</td><td>React</td><td>19.2</td></tr>
+  <tr><td>Linguagem</td><td>TypeScript</td><td>5.5+</td></tr>
+  <tr><td>Bundler / Dev Server</td><td>Vite (SWC)</td><td>8.0</td></tr>
+  <tr><td>Roteamento</td><td>React Router DOM</td><td>6.30</td></tr>
+  <tr><td>Estilização</td><td>Tailwind CSS + tailwindcss-animate</td><td>3.4</td></tr>
+  <tr><td>Componentes UI</td><td>shadcn/ui (Radix UI)</td><td>—</td></tr>
+  <tr><td>Ícones</td><td>lucide-react</td><td>0.462</td></tr>
+  <tr><td>Data Fetching</td><td>TanStack React Query</td><td>5.56</td></tr>
+  <tr><td>Formulários</td><td>React Hook Form</td><td>7.53</td></tr>
+  <tr><td>Validação</td><td>Zod</td><td>3.25</td></tr>
+  <tr><td>Gráficos</td><td>Recharts</td><td>2.12</td></tr>
+  <tr><td>Notificações (Toast)</td><td>Sonner</td><td>1.5</td></tr>
+  <tr><td>Carrossel</td><td>Embla Carousel React</td><td>8.3</td></tr>
+  <tr><td>Temas (dark/light)</td><td>next-themes</td><td>0.3</td></tr>
+  <tr><td>Drawer / Bottom Sheet</td><td>Vaul</td><td>0.9</td></tr>
+  <tr><td>Manipulação de Datas</td><td>date-fns</td><td>3.6</td></tr>
+</table>
+
+<h3>Stack Backend</h3>
+<table>
+  <tr><th>Categoria</th><th>Tecnologia</th><th>Detalhes</th></tr>
+  <tr><td>BaaS / Backend</td><td>Supabase</td><td>Auth, PostgreSQL, Storage, Edge Functions, Realtime</td></tr>
+  <tr><td>Banco de Dados</td><td>PostgreSQL (via Supabase)</td><td>27 tabelas com Row Level Security (RLS)</td></tr>
+  <tr><td>Autenticação</td><td>Supabase Auth</td><td>Email/senha, tokens JWT, listener de estado</td></tr>
+  <tr><td>Storage</td><td>Supabase Storage</td><td>Upload de vídeos e imagens</td></tr>
+  <tr><td>Serverless</td><td>Supabase Edge Functions (Deno)</td><td>4 funções para integrações externas</td></tr>
+  <tr><td>Cliente JS</td><td>@supabase/supabase-js</td><td>2.45</td></tr>
+</table>
+
+<h3>Padrões Arquiteturais</h3>
+<ul>
+  <li><strong>Multi-tenant SaaS:</strong> Cada loja é um "tenant" isolado com seus próprios dados, membros e configurações.</li>
+  <li><strong>Context API:</strong> <code>AuthContext</code> para sessão, <code>TenantContext</code> para loja ativa.</li>
+  <li><strong>Data Layer Abstraction:</strong> Camada <code>db.ts</code> abstrai operações de banco com fallback para localStorage.</li>
+  <li><strong>RLS (Row Level Security):</strong> Segurança no nível do banco — usuários só acessam dados de suas próprias lojas.</li>
+  <li><strong>Server-side Functions:</strong> Operações sensíveis (conversões, importação XML) em Edge Functions.</li>
+</ul>
+
+<!-- ════════════════ 3. ESTRUTURA ════════════════ -->
+<h2 id="estrutura">3. Estrutura de Diretórios</h2>
+
+<pre><code>src/
+├── App.tsx                      # Roteamento principal + guards (Protected/Guest)
+├── main.tsx                     # Entry point
+├── globals.css                  # Estilos globais Tailwind
+├── App.css                      # Estilos auxiliares
+├── api/                         # Endpoints de API internos (proxy)
+│   ├── proxy-xml.ts             # Proxy para feeds XML (Google Shopping)
+│   └── vidlytics/
+│       └── save-rules.ts        # Salvamento de regras de exibição
+├── components/                  # Componentes React reutilizáveis
+│   ├── AppLayout.tsx            # Layout principal (sidebar + content)
+│   ├── AppSidebar.tsx           # Navegação lateral
+│   ├── Navbar.tsx               # Barra superior
+│   ├── ProtectedRoute.tsx       # Guard de rota autenticada
+│   ├── SessionGate.tsx          # Gate de sessão
+│   ├── ConfirmDeleteDialog.tsx  # Dialog de confirmação de exclusão
+│   ├── CustomDialog.tsx         # Dialog genérico reutilizável
+│   ├── SuccessDialog.tsx        # Dialog de sucesso
+│   ├── FloatingSupportButton.tsx# Botão flutuante de suporte
+│   ├── made-with-dyad.tsx       # Badge Dyad
+│   ├── performance/             # Subcomponentes da aba Performance
+│   │   ├── insights-tab.tsx
+│   │   ├── overview-tab.tsx
+│   │   ├── retention-tab.tsx
+│   │   └── videos-tab.tsx
+│   └── ui/                      # Componentes shadcn/ui (40+ componentes)
+├── context/                     # Context Providers React
+│   ├── AuthContext.tsx          # Estado de autenticação
+│   └── TenantContext.tsx        # Estado da loja ativa (tenant)
+├── lib/                         # Lógica de negócio e utilitários
+│   ├── analytics.ts             # Sistema de analytics e métricas
+│   ├── auth.ts                  # Funções de auth (signUp, signIn, signOut)
+│   ├── db.ts                    # Data layer abstrato (Supabase + fallback)
+│   ├── plans.ts                 # Definição de planos e limites
+│   ├── platforms.ts             # Configuração de plataformas (placeholder)
+│   ├── storyAppearanceHelpers.ts# Helpers de aparência de stories
+│   ├── supabase.ts              # Cliente Supabase + verificação
+│   ├── utils.ts                 # Utilitários gerais (cn, formatadores)
+│   ├── video.ts                 # Utilitários de vídeo
+│   ├── videoEmbeds.ts           # Parser de embeds (YouTube, IG, TikTok)
+│   └── videoMetrics.ts          # Cálculo de métricas de vídeo
+└── pages/                       # Páginas/Rotas da aplicação
+    ├── Index.tsx                # Home (redirect inteligente)
+    ├── LoginPage.tsx            # Login
+    ├── RegisterPage.tsx         # Cadastro
+    ├── DashboardPage.tsx        # Dashboard principal
+    ├── StoriesPage.tsx          # Lista de Stories
+    ├── StoryNewPage.tsx         # Criar/editar Story
+    ├── StoryPreviewPage.tsx     # Preview de Story
+    ├── StoriesWidgetPage.tsx    # Configuração de widget de stories
+    ├── StoryDetailsPage.tsx     # Detalhes de Story
+    ├── VideoGalleryPage.tsx     # Galeria de vídeos
+    ├── VideoEditPage.tsx        # Criar/editar vídeo
+    ├── VideoPerformancePage.tsx # Performance individual de vídeo
+    ├── PerformancePage.tsx      # Analytics geral
+    ├── ProductsPage.tsx         # Gestão de produtos
+    ├── MedidasPage.tsx          # Modelos de medidas/tamanhos
+    ├── AppearancePage.tsx       # Customização visual (aparência)
+    ├── CommentsPage.tsx         # Moderação de comentários
+    ├── SettingsPage.tsx         # Configurações da loja
+    ├── IntegrationPage.tsx      # Integração (código de embed)
+    └── NotFound.tsx             # 404
+
+supabase/
+├── config.toml                  # Config do Supabase local
+├── functions/                   # Edge Functions (Deno)
+│   ├── yampi-conversion/        # Webhook de conversões Yampi
+│   ├── import-products-xml/     # Importação de produtos via XML
+│   ├── proxy-xml/               # Proxy CORS para feeds XML
+│   └── fetch-thumbnail/         # Geração de thumbnails
+└── migrations/                  # Migrações SQL (geradas automaticamente)
+    ├── 0001_saas_multi_tenant_base.sql
+    ├── 0002_saas_auth_support.sql
+    ├── 0003_pre_rls_tenant_integrity.sql
+    ├── 0004_metrics_analytics_rls.sql
+    ├── 0005-0007_widget_public_and_dashboard_rls*.sql
+    └── 0008_widget_appearances_columns.sql
+</code></pre>
+
+<!-- ════════════════ 4. BANCO DE DADOS ════════════════ -->
+<h2 id="banco">4. Banco de Dados — Schema Completo</h2>
+
+<p>O banco de dados contém <strong>27 tabelas</strong> em PostgreSQL, todas com Row Level Security (RLS) habilitado (exceto <code>insights</code>). Abaixo o detalhamento agrupado por domínio:</p>
+
+<h3>4.1. Tenant &amp; Usuários</h3>
+<table>
+  <tr><th>Tabela</th><th>Propósito</th><th>Colunas-chave</th></tr>
+  <tr><td><code>stores</code></td><td>Lojas/tenants do sistema</td><td>id, name, url, platform, logo_url, owner_user_id, sector_id, settings (jsonb)</td></tr>
+  <tr><td><code>profiles</code></td><td>Perfis de usuário</td><td>id, user_id, name, email, avatar_url, role</td></tr>
+  <tr><td><code>store_members</code></td><td>Relação usuário↔loja com role</td><td>store_id, user_id, role (owner/admin/member)</td></tr>
+  <tr><td><code>store_settings</code></td><td>Configurações detalhadas da loja</td><td>store_id, whatsapp_number, modules (jsonb), 30+ flags booleanas de comportamento</td></tr>
+  <tr><td><code>subscriptions</code></td><td>Assinaturas/planos</td><td>store_id, plan, status, start_date, end_date, payment_method</td></tr>
+  <tr><td><code>usage_counters</code></td><td>Controle de uso mensal</td><td>store_id, month, videos_count, views_count, users_count</td></tr>
+  <tr><td><code>sectors</code></td><td>Setores/ramos de atuação</td><td>id, name, slug, icon, display_order</td></tr>
+  <tr><td><code>benchmarks</code></td><td>Benchmarks de métricas por setor</td><td>sector_id, metric_key, value_low/mid/high, unit</td></tr>
+</table>
+
+<h3>4.2. Conteúdo (Vídeos, Stories, Produtos)</h3>
+<table>
+  <tr><th>Tabela</th><th>Propósito</th><th>Colunas-chave</th></tr>
+  <tr><td><code>videos</code></td><td>Vídeos da loja</td><td>store_id, title, video_url, video_source_type, thumbnail_url, product_id, sizing_model_id, status, model_id, qr_code_url</td></tr>
+  <tr><td><code>stories</code></td><td>Contêineres de stories (agrupam vídeos)</td><td>store_id, title, format, scroll_direction, appearance_id, active, page_rule_type/value</td></tr>
+  <tr><td><code>story_videos</code></td><td>Associação story↔vídeo (N:N)</td><td>story_id, video_id, position, is_cover</td></tr>
+  <tr><td><code>products</code></td><td>Catálogo de produtos</td><td>store_id, external_id, name, category, price, sale_price, images (jsonb), product_url, sku, origin, import_source</td></tr>
+  <tr><td><code>story_products</code></td><td>Associação story↔produto</td><td>story_id, product_id, store_id</td></tr>
+  <tr><td><code>sizing_models</code></td><td>Modelos de tamanho/medida</td><td>store_id, name, measures (jsonb), size_name</td></tr>
+</table>
+
+<h3>4.3. Customização Visual</h3>
+<table>
+  <tr><th>Tabela</th><th>Propósito</th><th>Colunas-chave</th></tr>
+  <tr><td><code>appearances</code></td><td>Temas visuais (cores, fontes, formatos)</td><td>store_id, name, primary/secondary/text/background/button colors, widget_shape, carousel_card_shape, font_family, 20+ flags de exibição, floating/carousel/grid/modal config (jsonb)</td></tr>
+  <tr><td><code>appearances_backup</code></td><td>Backup de temas (schema legado)</td><td>Estrutura similar com colunas separadas por dispositivo (mobile/desktop)</td></tr>
+  <tr><td><code>app_settings</code></td><td>Configurações adicionais da app</td><td>store_id, settings (jsonb), platform</td></tr>
+</table>
+
+<h3>4.4. Engajamento (Likes, Comentários)</h3>
+<table>
+  <tr><th>Tabela</th><th>Propósito</th><th>Colunas-chave</th></tr>
+  <tr><td><code>video_likes</code></td><td>Curtidas em vídeos</td><td>video_id, store_id, visitor_id, user_identifier</td></tr>
+  <tr><td><code>comments</code></td><td>Comentários em vídeos</td><td>video_id, store_id, user_name, user_email, content, status (pending/approved), parent_id, reply_content</td></tr>
+</table>
+
+<h3>4.5. Analytics &amp; Métricas</h3>
+<table>
+  <tr><th>Tabela</th><th>Propósito</th><th>Colunas-chave</th></tr>
+  <tr><td><code>metrics</code></td><td>Eventos de tracking (views, clicks, etc.)</td><td>store_id, story_id, video_id, event_type, page_url, device_type, browser, visitor_id, session_id, metadata (jsonb)</td></tr>
+  <tr><td><code>conversions</code></td><td>Vendas/conversões rastreadas</td><td>store_id, video_id, product_id, visitor_id, order_id, order_value, status, source</td></tr>
+  <tr><td><code>events</code></td><td>Eventos detalhados de vídeo</td><td>store_id, video_id, placement_id, event_type, duration_watched_seconds</td></tr>
+  <tr><td><code>insights</code></td><td>Insights automáticos gerados</td><td>store_id, insight_type, title, description, metric_key/value, read, dismissed, completed <strong>(RLS DESABILITADO ⚠️)</strong></td></tr>
+  <tr><td><code>video_placements</code></td><td>Posicionamento de vídeos em páginas</td><td>store_id, video_id, page, position, content_type, active</td></tr>
+</table>
+
+<h3>4.6. Integração &amp; Widget</h3>
+<table>
+  <tr><th>Tabela</th><th>Propósito</th><th>Colunas-chave</th></tr>
+  <tr><td><code>display_locations</code></td><td>Onde o widget aparece no site</td><td>store_id, story_id, location, selector, position, active</td></tr>
+  <tr><td><code>page_rules</code></td><td>Regras de exibição por página</td><td>store_id, story_id, condition_type, value, active</td></tr>
+  <tr><td><code>selector_sessions</code></td><td>Sessões do seletor visual (point-and-click)</td><td>session_token, selector, url, store_id</td></tr>
+</table>
+
+<h3>4.7. Funções SQL (PostgreSQL)</h3>
+<table>
+  <tr><th>Função</th><th>Tipo</th><th>Propósito</th></tr>
+  <tr><td><code>toggle_video_like(p_store_id, p_video_id, p_visitor_id)</code></td><td>SECURITY DEFINER</td><td>Adiciona/remove curtida e retorna contagem atualizada</td></tr>
+  <tr><td><code>get_video_real_metrics(p_store_id, p_video_id, p_visitor_id)</code></td><td>SECURITY DEFINER</td><td>Retorna likes, comments, views e se o visitor curtiu</td></tr>
+  <tr><td><code>is_store_owner(target_store_id)</code></td><td>SECURITY DEFINER</td><td>Verifica se o usuário é dono da loja</td></tr>
+  <tr><td><code>is_store_admin(target_store_id)</code></td><td>SECURITY DEFINER</td><td>Verifica se o usuário é admin/owner da loja</td></tr>
+  <tr><td><code>is_store_member(p_store_id)</code></td><td>SECURITY DEFINER</td><td>Verifica se o usuário é membro da loja</td></tr>
+  <tr><td><code>user_has_store_access(p_store_id)</code></td><td>SECURITY DEFINER</td><td>Verifica acesso via ownership OU membership</td></tr>
+  <tr><td><code>store_exists(target_store_id)</code></td><td>SECURITY DEFINER</td><td>Verifica se uma loja existe</td></tr>
+  <tr><td><code>set_updated_at()</code> / <code>trigger_set_updated_at()</code></td><td>Trigger</td><td>Auto-atualiza <code>updated_at</code> em UPDATE</td></tr>
+</table>
+
+<!-- ════════════════ 5. AUTENTICAÇÃO ════════════════ -->
+<h2 id="autenticacao">5. Autenticação e Multi-tenant</h2>
+
+<h3>Fluxo de Autenticação</h3>
+<ol>
+  <li><strong>SignUp:</strong> Usuário se cadastra com nome, email, senha e nome da loja</li>
+  <li>Criação automática do tenant:
+    <ul>
+      <li>Registro em <code>auth.users</code> (Supabase Auth)</li>
+      <li>Criação de <code>profiles</code></li>
+      <li>Criação de <code>stores</code> (a loja/tenant)</li>
+      <li>Criação de <code>store_members</code> (role: <code>owner</code>)</li>
+      <li>Criação de <code>subscriptions</code> (plano: Essencial, status: trialing)</li>
+      <li>Criação de <code>usage_counters</code> (mês atual, contadores zerados)</li>
+    </ul>
+  </li>
+  <li><strong>SignIn:</strong> Login com email/senha via <code>supabase.auth.signInWithPassword()</code></li>
+  <li><strong>Session Monitoring:</strong> <code>AuthContext</code> monitora <code>onAuthStateChange</code> (INITIAL_SESSION, SIGNED_IN, SIGNED_OUT, etc.)</li>
+  <li><strong>Route Guards:</strong>
+    <ul>
+      <li><code>ProtectedRoute</code> — Redireciona para /login se não autenticado</li>
+      <li><code>GuestRoute</code> — Redireciona para /dashboard se já autenticado</li>
+      <li><code>HomeGuard</code> — Verifica estado (logado? tem settings?) e redireciona</li>
+    </ul>
+  </li>
+</ol>
+
+<h3>Multi-tenant (Isolamento de Dados)</h3>
+<p>Cada loja tem seus próprios vídeos, stories, produtos, configurações e métricas. O isolamento é garantido por:</p>
+<ul>
+  <li><strong>RLS Policies:</strong> Usuários só veem/editam dados onde <code>store_id</code> corresponde a uma loja onde são <code>owner</code> ou <code>member</code></li>
+  <li><code>TenantContext</code> — Resolve e mantém a loja ativa no contexto React</li>
+  <li>Funções SQL auxiliares (<code>is_store_owner</code>, <code>is_store_member</code>, <code>user_has_store_access</code>)</li>
+</ul>
+
+<h3>Roles de Usuário</h3>
+<table>
+  <tr><th>Role</th><th>Permissões</th></tr>
+  <tr><td><code>owner</code></td><td>Controle total da loja, pode gerenciar membros</td></tr>
+  <tr><td><code>admin</code></td><td>Gerencia conteúdo e configurações</td></tr>
+  <tr><td><code>member</code></td><td>Acesso básico de visualização e operação</td></tr>
+</table>
+
+<!-- ════════════════ 6. FUNCIONALIDADES ════════════════ -->
+<h2 id="funcionalidades">6. Funcionalidades Detalhadas</h2>
+
+<h3>6.1. Dashboard</h3>
+<ul>
+  <li>Visão geral com métricas-chave (views, plays, clicks, conversões, receita, CTR)</li>
+  <li>Filtro por período (hoje, 7 dias, 30 dias, custom)</li>
+  <li>Gráficos de tendência ao longo do tempo (Recharts)</li>
+  <li>Resumo de uso vs. limites do plano (vídeos, views, usuários)</li>
+</ul>
+
+<h3>6.2. Stories</h3>
+<ul>
+  <li>Criação de stories que agrupam múltiplos vídeos</li>
+  <li>Formatos: Carrossel (horizontal), Grade</li>
+  <li>Cover image selecionável (is_cover em story_videos)</li>
+  <li>Posicionamento customizável (display_selector, display_position)</li>
+  <li>Regras de página (all_pages, specific_url, etc.)</li>
+  <li>Aparência individual por story (appearance_id)</li>
+  <li>Preview em tempo real</li>
+  <li>Ativação/desativação</li>
+</ul>
+
+<h3>6.3. Galeria de Vídeos</h3>
+<ul>
+  <li>CRUD completo de vídeos</li>
+  <li>Múltiplas fontes: URL externa (YouTube, Instagram, TikTok) ou upload direto</li>
+  <li>Thumbnail automática (YouTube) ou customizada</li>
+  <li>Associação com produto e modelo de medidas</li>
+  <li>Status ativo/inativo</li>
+  <li>QR Code gerado por vídeo</li>
+</ul>
+
+<h3>6.4. Produtos</h3>
+<ul>
+  <li>Catálogo de produtos da loja</li>
+  <li>Importação automática via XML (Google Shopping feed)</li>
+  <li>Importação via integração Yampi</li>
+  <li>Campos: nome, categoria, preço, preço promocional, imagens, URL, SKU</li>
+  <li>Associação com vídeos e stories</li>
+</ul>
+
+<h3>6.5. Modelos de Medidas</h3>
+<ul>
+  <li>Criação de tabelas de medidas/tamanhos por produto</li>
+  <li>Configuração flexível via JSONB (measures)</li>
+  <li>Exibição no widget de vídeo (guia de tamanhos)</li>
+</ul>
+
+<h3>6.6. Aparência (Customização Visual)</h3>
+<p>Sistema completo de white-label com dezenas de opções:</p>
+<ul>
+  <li><strong>Cores:</strong> Primária, secundária, texto, fundo, botão</li>
+  <li><strong>Tipografia:</strong> Font family, tamanho</li>
+  <li><strong>Widget:</strong> Forma (portrait, landscape, square, circle), tamanho, animação</li>
+  <li><strong>Carrossel:</strong> Forma do card, itens visíveis, gap</li>
+  <li><strong>Elementos:</strong> Mostrar/ocultar título, play button, produto, like, comentário, share, WhatsApp, botão de produto</li>
+  <li><strong>Configurações JSONB:</strong> floating_config, carousel_config, grid_config, modal_config</li>
+  <li><strong>Borda e sombra:</strong> Border radius, shadow enabled</li>
+  <li>Múltiplas aparências por loja, com default selecionável</li>
+</ul>
+
+<h3>6.7. Comentários (Moderação)</h3>
+<ul>
+  <li>Sistema de comentários nos vídeos do widget</li>
+  <li>Fluxo de moderação: pending → approved/rejected</li>
+  <li>Respostas a comentários (reply_content, reply_status)</li>
+  <li>Auto-aprovação configurável (auto_approve_comments em store_settings)</li>
+  <li>Comentários aninhados (parent_id)</li>
+</ul>
+
+<h3>6.8. Performance / Analytics</h3>
+<ul>
+  <li><strong>Overview:</strong> Métricas agregadas com gráficos</li>
+  <li><strong>Por Vídeo:</strong> Performance individual de cada vídeo</li>
+  <li><strong>Retenção:</strong> Análise de retenção de audiência</li>
+  <li><strong>Insights:</strong> Recomendações automáticas geradas pelo sistema</li>
+  <li>Métricas rastreadas: views, plays, pauses, clicks, CTA clicks, product clicks, WhatsApp clicks, likes, shares, comments, closes, conversions</li>
+  <li>Cálculo de CTR (Click-Through Rate)</li>
+  <li>Rastreamento de conversões e receita</li>
+  <li>Filtros por período (hoje, 7d, 30d, custom)</li>
+  <li>Dados por dispositivo e browser</li>
+</ul>
+
+<h3>6.9. Configurações</h3>
+<ul>
+  <li>Dados da loja (nome, URL, logo, email de contato)</li>
+  <li>Número do WhatsApp e mensagem padrão</li>
+  <li>Comportamento do vídeo: autoplay, muted, mostrar controles, pausar ao sair, pausar ao invisível</li>
+  <li>Abrir produto em nova aba</li>
+  <li>Timezone e idioma</li>
+  <li>Toggle de módulos: analytics, video showcase, WhatsApp button</li>
+  <li>Toggle de features: stories, carrossel, floating widget, widget geral</li>
+  <li>Chaves de instalação pública (public_installation_key, public_live_key)</li>
+</ul>
+
+<h3>6.10. Integração (Embed)</h3>
+<ul>
+  <li>Geração de código de embed (script tag) para inserir no site</li>
+  <li>Chave de instalação única por loja</li>
+  <li>Modo de instalação visual (selector_sessions) — point-and-click no site</li>
+  <li>Configuração de display locations (onde o widget aparece)</li>
+  <li>Regras de exibição por página (page_rules)</li>
+</ul>
+
+<!-- ════════════════ 7. EDGE FUNCTIONS ════════════════ -->
+<h2 id="edge">7. Edge Functions (Serverless)</h2>
+
+<p>As Edge Functions rodam em Deno Deploy (via Supabase) e operam server-side com a <code>SUPABASE_SERVICE_ROLE_KEY</code>.</p>
+
+<h3>7.1. yampi-conversion</h3>
+<div class="card">
+<p><strong>Propósito:</strong> Webhook que recebe eventos de conversão/venda da plataforma Yampi.</p>
+<p><strong>Fluxo:</strong></p>
+<ul>
+  <li>Recebe <code>store_id, video_id, product_id, visitor_id, order_id, order_value, status</code></li>
+  <li>Verifica se a conversão já existe (dedup por <code>order_id</code>)</li>
+  <li>Se existe: atualiza status e valor</li>
+  <li>Se não existe: cria novo registro em <code>conversions</code></li>
+</ul>
+<p><strong>Endpoint:</strong> <code>https://wznvecurmisgoaijykbt.supabase.co/functions/v1/yampi-conversion</code></p>
+</div>
+
+<h3>7.2. import-products-xml</h3>
+<div class="card">
+<p><strong>Propósito:</strong> Importa produtos de um feed XML (formato Google Shopping) para o catálogo da loja.</p>
+<p><strong>Fluxo:</strong></p>
+<ul>
+  <li>Recebe URL do XML + store_id</li>
+  <li>Faz parse do XML</li>
+  <li>Cria/atualiza produtos em <code>products</code> com origem <code>xml</code></li>
+</ul>
+</div>
+
+<h3>7.3. proxy-xml</h3>
+<div class="card">
+<p><strong>Propósito:</strong> Proxy CORS para permitir que o frontend acesse feeds XML de terceiros (contorna restrições de same-origin policy).</p>
+</div>
+
+<h3>7.4. fetch-thumbnail</h3>
+<div class="card">
+<p><strong>Propósito:</strong> Gera ou recupera thumbnails de vídeos a partir de URLs externas.</p>
+</div>
+
+<!-- ════════════════ 8. ROTAS ════════════════ -->
+<h2 id="rotas">8. Sistema de Rotas</h2>
+
+<table>
+  <tr><th>Rota</th><th>Página</th><th>Proteção</th><th>Descrição</th></tr>
+  <tr><td><code>/</code></td><td>Index → HomeGuard</td><td>Pública</td><td>Redirect inteligente conforme estado</td></tr>
+  <tr><td><code>/login</code></td><td>LoginPage</td><td>Guest</td><td>Tela de login (só não-logados)</td></tr>
+  <tr><td><code>/register</code></td><td>RegisterPage</td><td>Guest</td><td>Tela de cadastro (só não-logados)</td></tr>
+  <tr><td><code>/dashboard</code></td><td>DashboardPage</td><td>Auth</td><td>Dashboard com métricas</td></tr>
+  <tr><td><code>/stories</code></td><td>StoriesPage</td><td>Auth</td><td>Lista de stories</td></tr>
+  <tr><td><code>/stories/new</code></td><td>StoryNewPage</td><td>Auth</td><td>Criar novo story</td></tr>
+  <tr><td><code>/stories/:id</code></td><td>StoryNewPage</td><td>Auth</td><td>Editar story existente</td></tr>
+  <tr><td><code>/stories/preview/:id</code></td><td>StoryPreviewPage</td><td>Auth</td><td>Preview do story</td></tr>
+  <tr><td><code>/gallery</code></td><td>VideoGalleryPage</td><td>Auth</td><td>Galeria de vídeos</td></tr>
+  <tr><td><code>/videos/new</code></td><td>VideoEditPage</td><td>Auth</td><td>Criar novo vídeo</td></tr>
+  <tr><td><code>/videos/:id/edit</code></td><td>VideoEditPage</td><td>Auth</td><td>Editar vídeo</td></tr>
+  <tr><td><code>/videos/performance</code></td><td>PerformancePage</td><td>Auth</td><td>Analytics geral de performance</td></tr>
+  <tr><td><code>/produtos</code></td><td>ProductsPage</td><td>Auth</td><td>Gestão de produtos</td></tr>
+  <tr><td><code>/medidas</code></td><td>MedidasPage</td><td>Auth</td><td>Modelos de medida</td></tr>
+  <tr><td><code>/aparencia</code></td><td>AppearancePage</td><td>Auth</td><td>Customização visual</td></tr>
+  <tr><td><code>/comentarios</code></td><td>CommentsPage</td><td>Auth</td><td>Moderação de comentários</td></tr>
+  <tr><td><code>/settings</code></td><td>SettingsPage</td><td>Auth</td><td>Configurações da loja</td></tr>
+  <tr><td><code>/integration</code></td><td>IntegrationPage</td><td>Auth</td><td>Código de embed/integração</td></tr>
+  <tr><td><code>*</code></td><td>→ /</td><td>—</td><td>Fallback (qualquer rota inválida)</td></tr>
+</table>
+
+<!-- ════════════════ 9. PLANOS ════════════════ -->
+<h2 id="planos">9. Planos e Limites</h2>
+
+<table>
+  <tr>
+    <th>Recurso</th>
+    <th>Essencial<br><small>R$ 97/mês</small></th>
+    <th>Profissional<br><small>R$ 197/mês</small></th>
+    <th>Premium<br><small>R$ 497/mês</small></th>
+  </tr>
+  <tr><td>Vídeos</td><td>20</td><td>60</td><td>150</td></tr>
+  <tr><td>Visualizações/mês</td><td>1.000</td><td>5.000</td><td>20.000</td></tr>
+  <tr><td>Usuários</td><td>1</td><td>3</td><td>5</td></tr>
+  <tr><td>Trial inicial</td><td colspan="3" style="text-align:center">Plano Essencial em status "trialing" no cadastro</td></tr>
+</table>
+
+<p>Controle de uso é feito pela tabela <code>usage_counters</code> que rastreia <code>videos_count</code>, <code>views_count</code> e <code>users_count</code> por mês (<code>month</code> no formato <code>YYYY-MM</code>).</p>
+
+<!-- ════════════════ 10. STATUS ════════════════ -->
+<h2 id="status">10. Status: O que Funciona vs. O que Falta</h2>
+
+<h3>✅ Funcionando</h3>
+<table>
+  <tr><th>Funcionalidade</th><th>Status</th><th>Observações</th></tr>
+  <tr><td>Autenticação (login/cadastro)</td><td><span class="badge badge-green">✅ Funcional</span></td><td>Email/senha, criação automática de tenant</td></tr>
+  <tr><td>Multi-tenant (lojas isoladas)</td><td><span class="badge badge-green">✅ Funcional</span></td><td>RLS ativo, roles implementadas</td></tr>
+  <tr><td>CRUD de Vídeos</td><td><span class="badge badge-green">✅ Funcional</span></td><td>YouTube, Instagram, TikTok, upload</td></tr>
+  <tr><td>CRUD de Stories</td><td><span class="badge badge-green">✅ Funcional</span></td><td>Com preview e regras de página</td></tr>
+  <tr><td>CRUD de Produtos</td><td><span class="badge badge-green">✅ Funcional</span></td><td>Import XML e manual</td></tr>
+  <tr><td>Modelos de Medidas</td><td><span class="badge badge-green">✅ Funcional</span></td><td>Configuração via JSONB</td></tr>
+  <tr><td>Customização Visual (Aparência)</td><td><span class="badge badge-green">✅ Funcional</span></td><td>Dezenas de opções, white-label</td></tr>
+  <tr><td>Sistema de Comentários</td><td><span class="badge badge-green">✅ Funcional</span></td><td>Moderação pending/approved</td></tr>
+  <tr><td>Curtidas (Likes)</td><td><span class="badge badge-green">✅ Funcional</span></td><td>Toggle via função SQL</td></tr>
+  <tr><td>Dashboard / Analytics</td><td><span class="badge badge-green">✅ Funcional</span></td><td>Filtros por período, gráficos</td></tr>
+  <tr><td>Rastreamento de Métricas</td><td><span class="badge badge-green">✅ Funcional</span></td><td>12 tipos de eventos</td></tr>
+  <tr><td>Rastreamento de Conversões</td><td><span class="badge badge-green">✅ Funcional</span></td><td>Via webhook Yampi</td></tr>
+  <tr><td>Importação XML de Produtos</td><td><span class="badge badge-green">✅ Funcional</span></td><td>Edge function dedicada</td></tr>
+  <tr><td>Integração Yampi</td><td><span class="badge badge-green">✅ Funcional</span></td><td>Conversões via webhook</td></tr>
+  <tr><td>Geração de Código Embed</td><td><span class="badge badge-green">✅ Funcional</span></td><td>Script tag com chave pública</td></tr>
+  <tr><td>Configurações da Loja</td><td><span class="badge badge-green">✅ Funcional</span></td><td>30+ flags de comportamento</td></tr>
+  <tr><td>Planos e Limites</td><td><span class="badge badge-green">✅ Funcional</span></td><td>3 planos, controle de uso</td></tr>
+  <tr><td>Parsing de Embeds</td><td><span class="badge badge-green">✅ Funcional</span></td><td>YouTube, Instagram, TikTok</td></tr>
+  <tr><td>Insights Automáticos</td><td><span class="badge badge-green">✅ Funcional</span></td><td>⚠️ Mas sem RLS na tabela insights</td></tr>
+</table>
+
+<h3>⚠️ Pontos de Atenção / Melhorias Necessárias</h3>
+<table>
+  <tr><th>Item</th><th>Severidade</th><th>Descrição</th></tr>
+  <tr><td>RLS desabilitado em <code>insights</code></td><td><span class="badge badge-red">🔴 Crítico</span></td><td>Tabela <code>insights</code> não tem RLS — qualquer usuário autenticado pode ler insights de todas as lojas</td></tr>
+  <tr><td>Policies muito permissivas</td><td><span class="badge badge-yellow">⚠️ Médio</span></td><td>Várias tabelas têm policies <code>auth.role() = 'authenticated'</code> que dão acesso total a qualquer usuário logado (stores, profiles, store_members, etc.)</td></tr>
+  <tr><td>Widget cliente (embed)</td><td><span class="badge badge-yellow">⚠️ Parcial</span></td><td>O código de embed é gerado, mas o script do widget que roda no site do cliente não está neste repositório</td></tr>
+  <tr><td>Página <code>StoriesWidgetPage</code></td><td><span class="badge badge-yellow">⚠️ Não roteada</span></td><td>Página existe mas não está nas rotas do App.tsx</td></tr>
+  <tr><td>Página <code>StoryDetailsPage</code></td><td><span class="badge badge-yellow">⚠️ Não roteada</span></td><td>Página existe mas não está nas rotas do App.tsx</td></tr>
+  <tr><td>Página <code>VideoPerformancePage</code></td><td><span class="badge badge-yellow">⚠️ Não roteada</span></td><td>Página existe mas não está nas rotas do App.tsx</td></tr>
+  <tr><td>Paginação de pagamento</td><td><span class="badge badge-yellow">⚠️ Pendente</span></td><td>Planos definidos mas sem integração com gateway de pagamento</td></tr>
+  <tr><td>Notificações push/email</td><td><span class="badge badge-yellow">⚠️ Pendente</span></td><td>Não implementado</td></tr>
+  <tr><td>Testes automatizados</td><td><span class="badge badge-yellow">⚠️ Pendente</span></td><td>Não há testes unitários ou E2E no projeto</td></tr>
+  <tr><td>Internacionalização (i18n)</td><td><span class="badge badge-blue">ℹ️ Futuro</span></td><td>Hardcoded em pt-BR</td></tr>
+  <tr><td>App mobile nativo</td><td><span class="badge badge-blue">ℹ️ Futuro</span></td><td>Não planejado (web responsivo)</td></tr>
+  <tr><td>platforms.ts</td><td><span class="badge badge-yellow">⚠️ Vazio</span></td><td>Arquivo placeholder sem implementação</td></tr>
+</table>
+
+<!-- ════════════════ 11. SEGURANÇA ════════════════ -->
+<h2 id="seguranca">11. Segurança e RLS</h2>
+
+<h3>Visão Geral de RLS</h3>
+<p>Quase todas as 27 tabelas têm Row Level Security habilitado. As policies seguem estes padrões:</p>
+
+<h4>Leitura Pública (Widget no site do cliente)</h4>
+<p>Estas tabelas têm policies que permitem leitura pública (<code>USING (true)</code>) porque o widget precisa funcionar sem login no site do e-commerce:</p>
+<ul>
+  <li><code>videos</code> — vídeos ativos</li>
+  <li><code>stories</code> — stories ativos</li>
+  <li><code>products</code></li>
+  <li><code>story_videos</code>, <code>story_products</code></li>
+  <li><code>comments</code> — aprovados</li>
+  <li><code>video_likes</code></li>
+  <li><code>display_locations</code>, <code>page_rules</code> — ativos</li>
+  <li><code>store_settings</code> — leitura pública</li>
+  <li><code>sizing_models</code></li>
+</ul>
+
+<h4>Escrita Autenticada (Dashboard)</h4>
+<p>Tabelas como <code>videos</code>, <code>stories</code>, <code>products</code> exigem que o usuário seja <code>owner</code> ou <code>member</code> da loja para INSERT/UPDATE/DELETE.</p>
+
+<h4>Inserção Pública (Widget)</h4>
+<p>O widget no site do cliente precisa gravar dados sem login:</p>
+<ul>
+  <li><code>comments</code> — INSERT público</li>
+  <li><code>video_likes</code> — INSERT público</li>
+  <li><code>metrics</code> — INSERT público (com validação de event_type)</li>
+  <li><code>selector_sessions</code> — INSERT/SELECT públicos</li>
+</ul>
+
+<h4>⚠️ Problemas de Segurança Identificados</h4>
+<div class="card" style="border-color: var(--red); background: #FEF2F2;">
+  <ol>
+    <li><strong>insights sem RLS:</strong> A tabela <code>insights</code> tem <code>rls_enabled: false</code>. Qualquer usuário com a chave anônima pode ler/modificar insights de TODAS as lojas.</li>
+    <li><strong>Policies <code>auth.role() = 'authenticated'</code> muito amplas:</strong> Tabelas como <code>stores</code>, <code>profiles</code>, <code>store_members</code>, <code>subscriptions</code>, <code>store_settings</code>, <code>app_settings</code>, <code>conversions</code> têm policies que dão acesso total a qualquer usuário autenticado, sem verificar se o usuário pertence à loja específica. <em>Isto é parcialmente mitigado pelas funções SQL como <code>user_has_store_access</code>, mas as policies em si são amplas.</em></li>
+    <li><strong>products com policy de escrita muito aberta:</strong> <code>"Usuários autenticados gerenciam products"</code> permite que qualquer usuário logado faça CRUD em qualquer produto.</li>
+  </ol>
+</div>
+
+<!-- ════════════════ 12. INTEGRAÇÕES ════════════════ -->
+<h2 id="integracoes">12. Integrações Externas</h2>
+
+<h3>Yampi (E-commerce)</h3>
+<ul>
+  <li>Plataforma de e-commerce principal suportada</li>
+  <li>Webhook de conversões: registra vendas automaticamente</li>
+  <li>Campo <code>platform</code> em <code>stores</code> default para <code>'yampi'</code></li>
+</ul>
+
+<h3>Google Shopping (XML Feed)</h3>
+<ul>
+  <li>Importação de catálogo de produtos via XML no padrão Google Shopping</li>
+  <li>Edge function <code>import-products-xml</code> faz o parse</li>
+  <li>Proxy CORS <code>proxy-xml</code> para acessar feeds de terceiros</li>
+  <li>Produtos importados com <code>origin: 'xml'</code></li>
+</ul>
+
+<h3>YouTube</h3>
+<ul>
+  <li>Embed via iframe (<code>youtube.com/embed/ID</code>)</li>
+  <li>Thumbnail automática (<code>img.youtube.com/vi/ID/hqdefault.jpg</code>)</li>
+  <li>Suporte a watch, shorts, embed e youtu.be</li>
+</ul>
+
+<h3>Instagram</h3>
+<ul>
+  <li>Embed de Reels e Posts (<code>instagram.com/reel/ID/embed</code>)</li>
+</ul>
+
+<h3>TikTok</h3>
+<ul>
+  <li>Embed de vídeos (<code>tiktok.com/embed/v2/ID</code>)</li>
+  <li>Suporte a links curtos (vm.tiktok.com)</li>
+</ul>
+
+<h3>WhatsApp</h3>
+<ul>
+  <li>Botão de WhatsApp configurável por loja</li>
+  <li>Número e mensagem padrão customizáveis</li>
+  <li>Tracking de cliques como métrica <code>whatsapp_click</code></li>
+</ul>
+
+<!-- ════════════════ 13. CONSIDERAÇÕES ════════════════ -->
+<h2 id="consideracoes">13. Considerações Técnicas</h2>
+
+<h3>Camada de Dados (db.ts)</h3>
+<p>O arquivo <code>src/lib/db.ts</code> implementa uma camada de abstração que funciona como uma espécie de ORM simplificado. Cada entidade (videos, stories, products, etc.) tem métodos <code>getAll(storeId)</code>, <code>save()</code>, <code>remove()</code> que tentam usar Supabase primeiro e fazem fallback para IndexedDB/localStorage quando o Supabase não está disponível. Isto permite desenvolvimento offline e resiliência.</p>
+
+<h3>Analytics (analytics.ts)</h3>
+<p>O sistema de analytics rastreia 12 tipos de eventos: <code>view</code>, <code>play</code>, <code>pause</code>, <code>click</code>, <code>cta_click</code>, <code>product_click</code>, <code>whatsapp_click</code>, <code>like</code>, <code>share</code>, <code>comment</code>, <code>close</code>, <code>conversion</code>. Os dados são enriquecidos com device_type, browser, referrer, page_url e session_id. As métricas de likes, comentários e conversões usam queries diretas às tabelas reais (não a tabela <code>metrics</code>) para máxima precisão.</p>
+
+<h3>Parser de Vídeo (videoEmbeds.ts)</h3>
+<p>O módulo <code>videoEmbeds.ts</code> implementa parsing robusto de URLs de vídeo, detectando automaticamente a plataforma e extraindo o ID para embed. Suporta YouTube (4 formatos de URL), Instagram (reels, posts, TV) e TikTok (vídeos e links curtos). A função <code>isVideoPlayableNatively()</code> determina se um vídeo deve usar <code>&lt;video&gt;</code> HTML5 (uploads) ou <code>&lt;iframe&gt;</code> (plataformas externas).</p>
+
+<h3>Performance</h3>
+<ul>
+  <li>Build via Vite SWC para compilação rápida</li>
+  <li>React 19 com recursos mais recentes</li>
+  <li>React Query para cache de dados client-side</li>
+  <li>Code splitting natural via React Router (lazy loading implícito)</li>
+</ul>
+
+<h3>Estrutura de Migrações</h3>
+<p>O projeto possui 8 migrações SQL versionadas (0001-0008) cobrindo: base multi-tenant, suporte a auth, integridade pre-RLS, RLS de analytics, RLS de widget público, e colunas de appearances. <strong>Importante:</strong> Migrações são geradas automaticamente pelo sistema e não devem ser editadas manualmente.</p>
+
+<hr>
+
+<div style="text-align: center; margin-top: 48px; color: var(--gray); font-size: 0.85rem;">
+  <p><strong>Vidlytics</strong> — Documentação Técnica Completa · v1.0</p>
+  <p>Gerado automaticamente a partir da análise do código-fonte e schema de banco de dados.</p>
+</div>
+
+</body>
+</html>
