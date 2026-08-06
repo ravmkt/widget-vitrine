@@ -18,16 +18,22 @@ const iconMap: Record<InsightType, React.ElementType> = {
   suggestion: Lightbulb,
 };
 
-const colorMap: Record<InsightType, string> = {
-  warning: "border-l-amber-500 bg-amber-50/60",
-  positive: "border-l-emerald-500 bg-emerald-50/60",
-  suggestion: "border-l-blue-500 bg-blue-50/60",
+// 🆕 Fundo do card: branco (claro) / escuro (dark)
+//    Borda lateral colorida mantida com ajuste para dark mode
+const cardStyleMap: Record<InsightType, string> = {
+  warning:
+    "bg-white dark:bg-slate-800/90 border-slate-200 dark:border-slate-700 border-l-amber-500 dark:border-l-amber-400",
+  positive:
+    "bg-white dark:bg-slate-800/90 border-slate-200 dark:border-slate-700 border-l-emerald-500 dark:border-l-emerald-400",
+  suggestion:
+    "bg-white dark:bg-slate-800/90 border-slate-200 dark:border-slate-700 border-l-blue-500 dark:border-l-blue-400",
 };
 
-const iconColorMap: Record<InsightType, string> = {
-  warning: "text-amber-600",
-  positive: "text-emerald-600",
-  suggestion: "text-blue-600",
+// 🆕 Cores do ícone + label — mantém a cor temática, mais clara no dark
+const accentColorMap: Record<InsightType, string> = {
+  warning: "text-amber-600 dark:text-amber-400",
+  positive: "text-emerald-600 dark:text-emerald-400",
+  suggestion: "text-blue-600 dark:text-blue-400",
 };
 
 const labelMap: Record<InsightType, string> = {
@@ -61,46 +67,66 @@ function InsightCard({ insight }: { insight: Insight }) {
     <div
       className={cn(
         "rounded-xl border border-l-4 p-4 transition-all hover:shadow-md",
-        colorMap[insight.insight_type]
+        cardStyleMap[insight.insight_type]
       )}
     >
       <div className="flex items-start gap-3">
-        <div className={cn("mt-0.5 shrink-0", iconColorMap[insight.insight_type])}>
+        {/* Ícone colorido */}
+        <div className={cn("mt-0.5 shrink-0", accentColorMap[insight.insight_type])}>
           <Icon className="h-5 w-5" />
         </div>
 
         <div className="flex-1 min-w-0">
+          {/* Label + tempo */}
           <div className="flex items-center gap-2 mb-1">
-            <span className={cn("text-xs font-bold uppercase tracking-wide", iconColorMap[insight.insight_type])}>
+            <span
+              className={cn(
+                "text-xs font-bold uppercase tracking-wide",
+                accentColorMap[insight.insight_type]
+              )}
+            >
               {labelMap[insight.insight_type]}
             </span>
-            <span className="text-xs text-slate-400">{timeAgo(insight.created_at)}</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">
+              {timeAgo(insight.created_at)}
+            </span>
           </div>
 
-          <h4 className="font-bold text-sm text-slate-900 mb-1">{insight.title}</h4>
-          <p className="text-sm text-slate-500 leading-relaxed">{insight.description}</p>
+          {/* Título */}
+          <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-1">
+            {insight.title}
+          </h4>
 
+          {/* Descrição */}
+          <p className="text-sm text-slate-500 dark:text-slate-300 leading-relaxed">
+            {insight.description}
+          </p>
+
+          {/* Métrica */}
           {insight.metric_value !== null && insight.metric_key && (
-            <p className="mt-2 text-xs text-slate-400">
+            <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
               Métrica:{" "}
-              <span className="font-mono font-semibold text-slate-600">
+              <span className="font-mono font-semibold text-slate-600 dark:text-slate-300">
                 {insight.metric_key} = {insight.metric_value}
-                {insight.metric_comparison_value !== null && ` (média: ${insight.metric_comparison_value})`}
+                {insight.metric_comparison_value !== null &&
+                  ` (média: ${insight.metric_comparison_value})`}
               </span>
             </p>
           )}
 
+          {/* Ação */}
           {insight.action_label && (
-            <button className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[#0094EB] hover:underline">
+            <button className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[#0094EB] dark:text-[#38b2f8] hover:underline">
               {insight.action_label}
               <ExternalLink className="h-3 w-3" />
             </button>
           )}
         </div>
 
+        {/* Botão dispensar */}
         <button
           onClick={handleDismiss}
-          className="shrink-0 text-slate-300 hover:text-slate-500 transition-colors"
+          className="shrink-0 text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 transition-colors"
           title="Dispensar"
         >
           <X className="h-4 w-4" />
@@ -114,14 +140,11 @@ function InsightCard({ insight }: { insight: Insight }) {
 export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProps) {
   const { data: insights, isLoading, isError, error } = useInsights();
 
-   // 🐞 DEBUG — adiciona essa linha:
-  console.log("🔍 InsightsTab debug:", { insights, isLoading, isError, error });
-
   // Estado de loading
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-300" />
+        <Loader2 className="h-8 w-8 animate-spin text-slate-300 dark:text-slate-600" />
       </div>
     );
   }
@@ -131,7 +154,9 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <AlertTriangle className="h-10 w-10 text-red-400 mb-3" />
-        <p className="text-sm text-slate-500">Erro ao carregar insights: {(error as Error).message}</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          Erro ao carregar insights: {(error as Error).message}
+        </p>
       </div>
     );
   }
@@ -140,10 +165,13 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
   if (!insights || insights.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <Lightbulb className="h-12 w-12 text-slate-200 mb-4" />
-        <h3 className="text-lg font-bold text-slate-700 mb-1">Nenhum insight ainda</h3>
-        <p className="text-sm text-slate-400 max-w-sm">
-          Assim que tivermos dados suficientes de visualizações e cliques nos seus vídeos, os insights aparecerão aqui automaticamente.
+        <Lightbulb className="h-12 w-12 text-slate-200 dark:text-slate-700 mb-4" />
+        <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200 mb-1">
+          Nenhum insight ainda
+        </h3>
+        <p className="text-sm text-slate-400 dark:text-slate-500 max-w-sm">
+          Assim que tivermos dados suficientes de visualizações e cliques nos seus vídeos, os
+          insights aparecerão aqui automaticamente.
         </p>
       </div>
     );
