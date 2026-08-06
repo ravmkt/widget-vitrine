@@ -1,6 +1,7 @@
 // src/components/performance/insights-tab.tsx
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useInsights, type Insight, type InsightType } from "@/hooks/useInsights";
 import { supabase } from "@/lib/supabase";
 import {
@@ -12,6 +13,7 @@ import {
   Loader2,
   Check,
   Filter,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -69,10 +71,13 @@ function timeAgo(dateStr: string): string {
 function InsightCard({
   insight,
   onToggleCompleted,
+  onDelete,
 }: {
   insight: Insight;
   onToggleCompleted: (id: string, current: boolean) => void;
+  onDelete: (id: string) => void;
 }) {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const Icon = iconMap[insight.insight_type];
   const isCompleted = insight.completed ?? false;
@@ -82,7 +87,7 @@ function InsightCard({
     queryClient.invalidateQueries({ queryKey: ["insights"] });
   };
 
-  // 🆕 Fallback: action_url → related_video_id → related_placement_id → null
+  // Fallback: action_url → related_video_id → related_placement_id → null
   const resolvedUrl =
     insight.action_url ||
     (insight.related_video_id
@@ -93,7 +98,7 @@ function InsightCard({
 
   const handleAction = () => {
     if (resolvedUrl) {
-      window.open(resolvedUrl, "_blank", "noopener");
+      router.push(resolvedUrl);
     }
   };
 
@@ -174,7 +179,7 @@ function InsightCard({
             </p>
           )}
 
-          {/* 🆕 Ação com fallback */}
+          {/* Ação com router.push */}
           {insight.action_label && (
             <button
               onClick={handleAction}
@@ -193,14 +198,26 @@ function InsightCard({
           )}
         </div>
 
-        {/* Botão dispensar */}
-        <button
-          onClick={handleDismiss}
-          className="shrink-0 text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 transition-colors"
-          title="Dispensar"
-        >
-          <X className="h-4 w-4" />
-        </button>
+        {/* Botões de ação do card */}
+        <div className="flex flex-col items-center gap-1 shrink-0">
+          {/* Excluir permanentemente */}
+          <button
+            onClick={() => onDelete(insight.id)}
+            className="text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+            title="Excluir insight"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+
+          {/* Dispensar (esconder) */}
+          <button
+            onClick={handleDismiss}
+            className="text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 transition-colors"
+            title="Dispensar"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -222,6 +239,21 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
 
     await supabase.from("insights").update({ completed: !current }).eq("id", id);
     queryClient.invalidateQueries({ queryKey: ["insights"] });
+  };
+
+  // 🆕 Excluir permanentemente
+  const handleDelete = async (id: string) => {
+    // Remove otimista
+    queryClient.setQueryData(["insights"], (old: Insight[] | undefined) => {
+      if (!old) return old;
+      return old.filter((i) => i.id !== id);
+    });
+
+    const { error } = await supabase.from("insights").delete().eq("id", id);
+    if (error) {
+      // Rollback em caso de erro
+      queryClient.invalidateQueries({ queryKey: ["insights"] });
+    }
   };
 
   // ── Loading ──
@@ -367,6 +399,7 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
               key={insight.id}
               insight={insight}
               onToggleCompleted={handleToggleCompleted}
+              onDelete={handleDelete}
             />
           ))}
         </div>
