@@ -81,11 +81,31 @@ export default function PerformancePage() {
         onValueChange={(v) => setActiveTab(v as TabKey)}
         className="flex flex-col gap-6"
       >
-        <TabsList className="w-fit bg-white border border-slate-200 rounded-xl p-1">
-<TabsTrigger value="overview">📊 Visão Geral</TabsTrigger>
-<TabsTrigger value="videos">🎬 Vídeos</TabsTrigger>
-<TabsTrigger value="retention">📈 Retenção</TabsTrigger>
-<TabsTrigger value="insights">🧠 Insights</TabsTrigger>
+        <TabsList className="w-fit bg-white border border-slate-200 rounded-xl p-1.5">
+          <TabsTrigger
+            value="overview"
+            className="px-5 py-2.5 text-sm font-bold data-[state=active]:shadow-sm"
+          >
+            📊 Visão Geral
+          </TabsTrigger>
+          <TabsTrigger
+            value="videos"
+            className="px-5 py-2.5 text-sm font-bold data-[state=active]:shadow-sm"
+          >
+            🎬 Vídeos
+          </TabsTrigger>
+          <TabsTrigger
+            value="retention"
+            className="px-5 py-2.5 text-sm font-bold data-[state=active]:shadow-sm"
+          >
+            📈 Retenção
+          </TabsTrigger>
+          <TabsTrigger
+            value="insights"
+            className="px-5 py-2.5 text-sm font-bold data-[state=active]:shadow-sm"
+          >
+            🧠 Insights
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -96,13 +116,14 @@ export default function PerformancePage() {
           <VideosTab timeRange={timeRange} customFrom={customRange.from?.toISOString()} customTo={customRange.to?.toISOString()} />
         </TabsContent>
 
-<TabsContent value="insights">
-  <InsightsTab timeRange={timeRange} customFrom={customRange.from?.toISOString()} customTo={customRange.to?.toISOString()} />
-</TabsContent>
+        <TabsContent value="retention">
+          <RetentionTab timeRange={timeRange} customFrom={customRange.from?.toISOString()} customTo={customRange.to?.toISOString()} />
+        </TabsContent>
 
-<TabsContent value="retention">
-  <RetentionTab timeRange={timeRange} customFrom={customRange.from?.toISOString()} customTo={customRange.to?.toISOString()} />
-</TabsContent>      </Tabs>
+        <TabsContent value="insights">
+          <InsightsTab timeRange={timeRange} customFrom={customRange.from?.toISOString()} customTo={customRange.to?.toISOString()} />
+        </TabsContent>
+      </Tabs>
 
       {/* ── Modal calendário ── */}
       <CustomDialog
