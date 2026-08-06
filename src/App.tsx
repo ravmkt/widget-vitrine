@@ -126,8 +126,6 @@ function App() {
           {/* Rotas protegidas (só acessa se estiver logado) */}
           <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
 
-          {/* ========== NOVA ROTA: Insights ========== */}
-          <Route path="/insights" element={<ProtectedRoute><AppLayout><InsightsTab /></AppLayout></ProtectedRoute>} />
 
           {/* Stories */}
           <Route path="/stories" element={<ProtectedRoute><AppLayout><StoriesPage /></AppLayout></ProtectedRoute>} />
