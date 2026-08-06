@@ -24,6 +24,7 @@ import AppearancePage from "@/pages/AppearancePage";
 import CommentsPage from "@/pages/CommentsPage";
 import StoryNewPage from "@/pages/StoryNewPage";
 import StoryPreviewPage from "@/pages/StoryPreviewPage";
+import InsightsTab from "@/components/InsightsTab";
 
 // ── Protege rotas que exigem login ──
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -125,6 +126,9 @@ function App() {
 
           {/* Rotas protegidas (só acessa se estiver logado) */}
           <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
+
+          {/* ========== NOVA ROTA: Insights ========== */}
+          <Route path="/insights" element={<ProtectedRoute><AppLayout><InsightsTab /></AppLayout></ProtectedRoute>} />
 
           {/* Stories */}
           <Route path="/stories" element={<ProtectedRoute><AppLayout><StoriesPage /></AppLayout></ProtectedRoute>} />
