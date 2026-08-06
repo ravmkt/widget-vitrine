@@ -82,10 +82,10 @@ export default function PerformancePage() {
         className="flex flex-col gap-6"
       >
         <TabsList className="w-fit bg-white border border-slate-200 rounded-xl p-1">
-          <TabsTrigger value="overview">📊 Visão Geral</TabsTrigger>
-          <TabsTrigger value="videos">🎬 Vídeos</TabsTrigger>
-          <TabsTrigger value="insights">🧠 Insights</TabsTrigger>
-          <TabsTrigger value="retention">📈 Retenção</TabsTrigger>
+<TabsTrigger value="overview">📊 Visão Geral</TabsTrigger>
+<TabsTrigger value="videos">🎬 Vídeos</TabsTrigger>
+<TabsTrigger value="retention">📈 Retenção</TabsTrigger>
+<TabsTrigger value="insights">🧠 Insights</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
