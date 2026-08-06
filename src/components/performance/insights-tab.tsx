@@ -1,3 +1,5 @@
+// src/components/performance/insights-tab.tsx
+
 import { useState } from "react";
 import { useInsights, type Insight, type InsightType } from "@/hooks/useInsights";
 import { supabase } from "@/lib/supabase";
@@ -14,14 +16,15 @@ import {
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 
-// ── Props que vêm da PerformancePage ──
+// ── Props ──
 interface InsightsTabProps {
   timeRange: string;
   customFrom?: string;
   customTo?: string;
 }
 
-type FilterMode = "all" | "pending" | "completed";
+type FilterStatus = "all" | "pending" | "completed";
+type FilterType = "all" | InsightType;
 
 // ── Mapas visuais ──
 const iconMap: Record<InsightType, React.ElementType> = {
@@ -80,7 +83,6 @@ function InsightCard({
   };
 
   const handleAction = () => {
-    // 🆕 Só abre se tiver action_url
     if (insight.action_url) {
       window.open(insight.action_url, "_blank", "noopener");
     }
@@ -174,7 +176,7 @@ function InsightCard({
                   ? "text-[#0094EB] dark:text-[#38b2f8] hover:underline cursor-pointer"
                   : "text-slate-300 dark:text-slate-600 cursor-not-allowed"
               )}
-              title={!insight.action_url ? "Em breve" : undefined}
+              title={!insight.action_url ? "Em breve" : insight.action_label}
             >
               {insight.action_label}
               <ExternalLink className="h-3 w-3" />
@@ -199,19 +201,17 @@ function InsightCard({
 export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProps) {
   const { data: insights, isLoading, isError, error } = useInsights();
   const queryClient = useQueryClient();
-  const [filter, setFilter] = useState<FilterMode>("all");
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
+  const [filterType, setFilterType] = useState<FilterType>("all");
 
   // Toggle completed
   const handleToggleCompleted = async (id: string, current: boolean) => {
-    // Otimista: atualiza antes do banco
     queryClient.setQueryData(["insights"], (old: Insight[] | undefined) => {
       if (!old) return old;
       return old.map((i) => (i.id === id ? { ...i, completed: !current } : i));
     });
 
     await supabase.from("insights").update({ completed: !current }).eq("id", id);
-
-    // Refetch pra garantir
     queryClient.invalidateQueries({ queryKey: ["insights"] });
   };
 
@@ -242,15 +242,30 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
     return order[a.insight_type] - order[b.insight_type];
   });
 
-  const filtered =
-    filter === "all"
-      ? sorted
-      : filter === "pending"
-        ? sorted.filter((i) => !i.completed)
-        : sorted.filter((i) => i.completed);
+  const filtered = sorted.filter((i) => {
+    const matchStatus =
+      filterStatus === "all" ||
+      (filterStatus === "pending" && !i.completed) ||
+      (filterStatus === "completed" && i.completed);
 
-  const pendingCount = sorted.filter((i) => !i.completed).length;
-  const completedCount = sorted.filter((i) => i.completed).length;
+    const matchType = filterType === "all" || i.insight_type === filterType;
+
+    return matchStatus && matchType;
+  });
+
+  // Contadores
+  const statusCounts = {
+    all: sorted.length,
+    pending: sorted.filter((i) => !i.completed).length,
+    completed: sorted.filter((i) => i.completed).length,
+  };
+
+  const typeCounts = {
+    all: sorted.length,
+    warning: sorted.filter((i) => i.insight_type === "warning").length,
+    suggestion: sorted.filter((i) => i.insight_type === "suggestion").length,
+    positive: sorted.filter((i) => i.insight_type === "positive").length,
+  };
 
   // ── Vazio ──
   if (!insights || insights.length === 0) {
@@ -270,28 +285,58 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
 
   return (
     <div className="space-y-4">
-      {/* 🆕 Filtro */}
-      <div className="flex items-center gap-2">
-        <Filter className="h-4 w-4 text-slate-400" />
+      {/* 🆕 Barra de filtros: Status + Tipo */}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Filtro por status */}
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-slate-400" />
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+            {([
+              { key: "all", label: "Todos", count: statusCounts.all },
+              { key: "pending", label: "Pendentes", count: statusCounts.pending },
+              { key: "completed", label: "Concluídos", count: statusCounts.completed },
+            ] as const).map(({ key, label, count }) => (
+              <button
+                key={key}
+                onClick={() => setFilterStatus(key)}
+                className={cn(
+                  "px-3 py-1.5 text-xs font-bold rounded-md transition-all",
+                  filterStatus === key
+                    ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                )}
+              >
+                {label}
+                <span className="ml-1.5 text-slate-400 dark:text-slate-500 font-normal">
+                  {count}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 🆕 Filtro por tipo */}
         <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
           {([
-            { key: "all", label: "Todos", count: sorted.length },
-            { key: "pending", label: "Pendentes", count: pendingCount },
-            { key: "completed", label: "Concluídos", count: completedCount },
-          ] as const).map(({ key, label, count }) => (
+            { key: "all", label: "Todos", color: "" },
+            { key: "warning", label: "Atenção", color: "bg-amber-500" },
+            { key: "suggestion", label: "Sugestão", color: "bg-blue-500" },
+            { key: "positive", label: "Destaque", color: "bg-emerald-500" },
+          ] as const).map(({ key, label, color }) => (
             <button
               key={key}
-              onClick={() => setFilter(key)}
+              onClick={() => setFilterType(key as FilterType)}
               className={cn(
-                "px-3 py-1.5 text-xs font-bold rounded-md transition-all",
-                filter === key
+                "px-3 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-1.5",
+                filterType === key
                   ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
               )}
             >
+              {color && <span className={cn("w-2 h-2 rounded-full", color)} />}
               {label}
-              <span className="ml-1.5 text-slate-400 dark:text-slate-500 font-normal">
-                {count}
+              <span className="ml-1 text-slate-400 dark:text-slate-500 font-normal">
+                {typeCounts[key]}
               </span>
             </button>
           ))}
@@ -303,9 +348,7 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <CheckCircle className="h-10 w-10 text-emerald-300 dark:text-emerald-700 mb-3" />
           <p className="text-sm text-slate-400 dark:text-slate-500">
-            {filter === "completed"
-              ? "Nenhum insight concluído ainda."
-              : "Todos os insights foram concluídos! 🎉"}
+            Nenhum insight encontrado com esses filtros.
           </p>
         </div>
       ) : (
