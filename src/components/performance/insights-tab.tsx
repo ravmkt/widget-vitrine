@@ -84,12 +84,10 @@ function ConfirmModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onCancel}
       />
-      {/* Modal */}
       <div className="relative bg-white dark:bg-slate-800 rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 border border-slate-200 dark:border-slate-700">
         <div className="flex items-start gap-3 mb-4">
           <div className="shrink-0 w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
@@ -142,9 +140,7 @@ function InsightCard({
     queryClient.invalidateQueries({ queryKey: ["insights"] });
   };
 
-  // 🆕 Rotas corrigidas:
-  // related_video_id → /videos/{uuid}/edit
-  // related_placement_id → /produtos
+  // Fallback de URL
   const resolvedUrl =
     insight.action_url ||
     (insight.related_video_id
@@ -154,6 +150,15 @@ function InsightCard({
         : null);
 
   const handleAction = () => {
+    // 🐛 DEBUG: mostra o que está sendo resolvido
+    alert(
+      `🔗 DEBUG CTA:\n\n` +
+      `action_url: ${insight.action_url || "(vazio)"}\n` +
+      `related_video_id: ${insight.related_video_id || "(vazio)"}\n` +
+      `related_placement_id: ${insight.related_placement_id || "(vazio)"}\n` +
+      `resolvedUrl: ${resolvedUrl || "(null - botão desabilitado)"}`
+    );
+
     if (resolvedUrl) {
       window.location.href = resolvedUrl;
     }
@@ -257,7 +262,6 @@ function InsightCard({
 
         {/* Botões de ação do card */}
         <div className="flex flex-col items-center gap-1 shrink-0">
-          {/* Excluir permanentemente */}
           <button
             onClick={() => onDelete(insight.id)}
             className="text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 transition-colors"
@@ -266,7 +270,6 @@ function InsightCard({
             <Trash2 className="h-4 w-4" />
           </button>
 
-          {/* Dispensar (esconder) */}
           <button
             onClick={handleDismiss}
             className="text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 transition-colors"
@@ -286,16 +289,12 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
   const queryClient = useQueryClient();
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [filterType, setFilterType] = useState<FilterType>("all");
-
-  // 🆕 Estado do modal de confirmação
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
-  // Solicita confirmação antes de excluir
   const handleDeleteRequest = (id: string) => {
     setDeleteTarget(id);
   };
 
-  // Confirma exclusão
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
 
@@ -308,14 +307,24 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
       return old.filter((i) => i.id !== id);
     });
 
+    // 🐛 DEBUG: tenta deletar e mostra o resultado
     const { error } = await supabase.from("insights").delete().eq("id", id);
 
     if (error) {
+      // Rollback
       queryClient.invalidateQueries({ queryKey: ["insights"] });
+      alert(
+        `❌ ERRO AO EXCLUIR:\n\n` +
+        `Mensagem: ${error.message}\n` +
+        `Código: ${error.code}\n` +
+        `Detalhes: ${error.details || "(nenhum)"}\n\n` +
+        `Provavelmente é RLS bloqueando o DELETE.`
+      );
+    } else {
+      alert("✅ Insight excluído com sucesso!");
     }
   };
 
-  // Toggle completed
   const handleToggleCompleted = async (id: string, current: boolean) => {
     queryClient.setQueryData(["insights"], (old: Insight[] | undefined) => {
       if (!old) return old;
@@ -364,7 +373,6 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
     return matchStatus && matchType;
   });
 
-  // Contadores
   const statusCounts = {
     all: sorted.length,
     pending: sorted.filter((i) => !i.completed).length,
@@ -378,7 +386,6 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
     positive: sorted.filter((i) => i.insight_type === "positive").length,
   };
 
-  // ── Vazio ──
   if (!insights || insights.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -397,9 +404,8 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
   return (
     <>
       <div className="space-y-4">
-        {/* Barra de filtros: Status + Tipo */}
+        {/* Barra de filtros */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* Filtro por status */}
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-slate-400" />
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
@@ -427,7 +433,6 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
             </div>
           </div>
 
-          {/* Filtro por tipo */}
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
             {([
               { key: "all", label: "Todos", color: "" },
@@ -455,7 +460,6 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
           </div>
         </div>
 
-        {/* Lista filtrada */}
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <CheckCircle className="h-10 w-10 text-emerald-300 dark:text-emerald-700 mb-3" />
@@ -477,7 +481,6 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
         )}
       </div>
 
-      {/* 🆕 Modal de confirmação de exclusão */}
       <ConfirmModal
         open={deleteTarget !== null}
         title="Excluir insight"
