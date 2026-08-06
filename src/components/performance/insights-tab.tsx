@@ -94,11 +94,18 @@ function InsightCard({
         ? `/dashboard/placements/${insight.related_placement_id}`
         : null);
 
-  const handleAction = () => {
-    if (resolvedUrl) {
-      window.location.href = resolvedUrl;
-    }
-  };
+const handleAction = () => {
+  console.log("🔗 resolvedUrl:", resolvedUrl);
+  console.log("📦 insight:", {
+    action_url: insight.action_url,
+    related_video_id: insight.related_video_id,
+    related_placement_id: insight.related_placement_id,
+  });
+
+  if (resolvedUrl) {
+    window.location.href = resolvedUrl;
+  }
+};
 
   return (
     <div
