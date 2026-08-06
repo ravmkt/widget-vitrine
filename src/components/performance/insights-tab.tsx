@@ -66,6 +66,63 @@ function timeAgo(dateStr: string): string {
   return `há ${Math.floor(hours / 24)}d`;
 }
 
+// ── Modal de confirmação ──
+function ConfirmModal({
+  open,
+  title,
+  message,
+  onConfirm,
+  onCancel,
+}: {
+  open: boolean;
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Overlay */}
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onCancel}
+      />
+      {/* Modal */}
+      <div className="relative bg-white dark:bg-slate-800 rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 border border-slate-200 dark:border-slate-700">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="shrink-0 w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+              {title}
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              {message}
+            </p>
+          </div>
+        </div>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+          >
+            Sim, excluir
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Card individual ──
 function InsightCard({
   insight,
@@ -85,27 +142,22 @@ function InsightCard({
     queryClient.invalidateQueries({ queryKey: ["insights"] });
   };
 
-  // Fallback: action_url → related_video_id → related_placement_id → null
+  // 🆕 Rotas corrigidas:
+  // related_video_id → /videos/{uuid}/edit
+  // related_placement_id → /produtos
   const resolvedUrl =
     insight.action_url ||
     (insight.related_video_id
-      ? `/dashboard/videos/${insight.related_video_id}`
+      ? `/videos/${insight.related_video_id}/edit`
       : insight.related_placement_id
-        ? `/dashboard/placements/${insight.related_placement_id}`
+        ? "/produtos"
         : null);
 
-const handleAction = () => {
-  console.log("🔗 resolvedUrl:", resolvedUrl);
-  console.log("📦 insight:", {
-    action_url: insight.action_url,
-    related_video_id: insight.related_video_id,
-    related_placement_id: insight.related_placement_id,
-  });
-
-  if (resolvedUrl) {
-    window.location.href = resolvedUrl;
-  }
-};
+  const handleAction = () => {
+    if (resolvedUrl) {
+      window.location.href = resolvedUrl;
+    }
+  };
 
   return (
     <div
@@ -235,6 +287,34 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [filterType, setFilterType] = useState<FilterType>("all");
 
+  // 🆕 Estado do modal de confirmação
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
+  // Solicita confirmação antes de excluir
+  const handleDeleteRequest = (id: string) => {
+    setDeleteTarget(id);
+  };
+
+  // Confirma exclusão
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+
+    const id = deleteTarget;
+    setDeleteTarget(null);
+
+    // Remove otimista
+    queryClient.setQueryData(["insights"], (old: Insight[] | undefined) => {
+      if (!old) return old;
+      return old.filter((i) => i.id !== id);
+    });
+
+    const { error } = await supabase.from("insights").delete().eq("id", id);
+
+    if (error) {
+      queryClient.invalidateQueries({ queryKey: ["insights"] });
+    }
+  };
+
   // Toggle completed
   const handleToggleCompleted = async (id: string, current: boolean) => {
     queryClient.setQueryData(["insights"], (old: Insight[] | undefined) => {
@@ -245,22 +325,6 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
     await supabase.from("insights").update({ completed: !current }).eq("id", id);
     queryClient.invalidateQueries({ queryKey: ["insights"] });
   };
-
-const handleDelete = async (id: string) => {
-  queryClient.setQueryData(["insights"], (old: Insight[] | undefined) => {
-    if (!old) return old;
-    return old.filter((i) => i.id !== id);
-  });
-
-  const { error } = await supabase.from("insights").delete().eq("id", id);
-
-  console.log("🗑️ Delete result:", { id, error });
-
-  if (error) {
-    console.error("❌ Erro ao excluir:", error.message);
-    queryClient.invalidateQueries({ queryKey: ["insights"] });
-  }
-};
 
   // ── Loading ──
   if (isLoading) {
@@ -331,85 +395,96 @@ const handleDelete = async (id: string) => {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Barra de filtros: Status + Tipo */}
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Filtro por status */}
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-slate-400" />
+    <>
+      <div className="space-y-4">
+        {/* Barra de filtros: Status + Tipo */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Filtro por status */}
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-slate-400" />
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+              {([
+                { key: "all", label: "Todos", count: statusCounts.all },
+                { key: "pending", label: "Pendentes", count: statusCounts.pending },
+                { key: "completed", label: "Concluídos", count: statusCounts.completed },
+              ] as const).map(({ key, label, count }) => (
+                <button
+                  key={key}
+                  onClick={() => setFilterStatus(key)}
+                  className={cn(
+                    "px-3 py-1.5 text-xs font-bold rounded-md transition-all",
+                    filterStatus === key
+                      ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                  )}
+                >
+                  {label}
+                  <span className="ml-1.5 text-slate-400 dark:text-slate-500 font-normal">
+                    {count}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Filtro por tipo */}
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
             {([
-              { key: "all", label: "Todos", count: statusCounts.all },
-              { key: "pending", label: "Pendentes", count: statusCounts.pending },
-              { key: "completed", label: "Concluídos", count: statusCounts.completed },
-            ] as const).map(({ key, label, count }) => (
+              { key: "all", label: "Todos", color: "" },
+              { key: "warning", label: "Atenção", color: "bg-amber-500" },
+              { key: "suggestion", label: "Sugestão", color: "bg-blue-500" },
+              { key: "positive", label: "Destaque", color: "bg-emerald-500" },
+            ] as const).map(({ key, label, color }) => (
               <button
                 key={key}
-                onClick={() => setFilterStatus(key)}
+                onClick={() => setFilterType(key as FilterType)}
                 className={cn(
-                  "px-3 py-1.5 text-xs font-bold rounded-md transition-all",
-                  filterStatus === key
+                  "px-3 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-1.5",
+                  filterType === key
                     ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                 )}
               >
+                {color && <span className={cn("w-2 h-2 rounded-full", color)} />}
                 {label}
-                <span className="ml-1.5 text-slate-400 dark:text-slate-500 font-normal">
-                  {count}
+                <span className="ml-1 text-slate-400 dark:text-slate-500 font-normal">
+                  {typeCounts[key]}
                 </span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Filtro por tipo */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
-          {([
-            { key: "all", label: "Todos", color: "" },
-            { key: "warning", label: "Atenção", color: "bg-amber-500" },
-            { key: "suggestion", label: "Sugestão", color: "bg-blue-500" },
-            { key: "positive", label: "Destaque", color: "bg-emerald-500" },
-          ] as const).map(({ key, label, color }) => (
-            <button
-              key={key}
-              onClick={() => setFilterType(key as FilterType)}
-              className={cn(
-                "px-3 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-1.5",
-                filterType === key
-                  ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-              )}
-            >
-              {color && <span className={cn("w-2 h-2 rounded-full", color)} />}
-              {label}
-              <span className="ml-1 text-slate-400 dark:text-slate-500 font-normal">
-                {typeCounts[key]}
-              </span>
-            </button>
-          ))}
-        </div>
+        {/* Lista filtrada */}
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <CheckCircle className="h-10 w-10 text-emerald-300 dark:text-emerald-700 mb-3" />
+            <p className="text-sm text-slate-400 dark:text-slate-500">
+              Nenhum insight encontrado com esses filtros.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map((insight) => (
+              <InsightCard
+                key={insight.id}
+                insight={insight}
+                onToggleCompleted={handleToggleCompleted}
+                onDelete={handleDeleteRequest}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Lista filtrada */}
-      {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <CheckCircle className="h-10 w-10 text-emerald-300 dark:text-emerald-700 mb-3" />
-          <p className="text-sm text-slate-400 dark:text-slate-500">
-            Nenhum insight encontrado com esses filtros.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filtered.map((insight) => (
-            <InsightCard
-              key={insight.id}
-              insight={insight}
-              onToggleCompleted={handleToggleCompleted}
-              onDelete={handleDelete}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+      {/* 🆕 Modal de confirmação de exclusão */}
+      <ConfirmModal
+        open={deleteTarget !== null}
+        title="Excluir insight"
+        message="Tem certeza que deseja excluir este insight? Essa ação é irreversível."
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteTarget(null)}
+      />
+    </>
   );
 }
