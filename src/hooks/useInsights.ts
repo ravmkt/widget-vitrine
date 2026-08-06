@@ -1,3 +1,5 @@
+// src/hooks/useInsights.ts
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 
@@ -12,12 +14,14 @@ export interface Insight {
   title: string;
   description: string;
   action_label: string | null;
+  action_url: string | null;           // 🆕 URL da ação
   related_video_id: string | null;
   related_placement_id: string | null;
   metric_key: string | null;
   metric_value: number | null;
   metric_comparison_value: number | null;
   read: boolean;
+  completed: boolean;                  // 🆕 Check de concluído
   dismissed: boolean;
   created_at: string;
 }
