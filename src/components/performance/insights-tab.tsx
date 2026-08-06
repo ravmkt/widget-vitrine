@@ -1,7 +1,6 @@
 // src/components/performance/insights-tab.tsx
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useInsights, type Insight, type InsightType } from "@/hooks/useInsights";
 import { supabase } from "@/lib/supabase";
 import {
@@ -77,7 +76,6 @@ function InsightCard({
   onToggleCompleted: (id: string, current: boolean) => void;
   onDelete: (id: string) => void;
 }) {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const Icon = iconMap[insight.insight_type];
   const isCompleted = insight.completed ?? false;
@@ -98,7 +96,7 @@ function InsightCard({
 
   const handleAction = () => {
     if (resolvedUrl) {
-      router.push(resolvedUrl);
+      window.location.href = resolvedUrl;
     }
   };
 
@@ -179,7 +177,7 @@ function InsightCard({
             </p>
           )}
 
-          {/* Ação com router.push */}
+          {/* Ação */}
           {insight.action_label && (
             <button
               onClick={handleAction}
@@ -241,9 +239,8 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
     queryClient.invalidateQueries({ queryKey: ["insights"] });
   };
 
-  // 🆕 Excluir permanentemente
+  // Excluir permanentemente
   const handleDelete = async (id: string) => {
-    // Remove otimista
     queryClient.setQueryData(["insights"], (old: Insight[] | undefined) => {
       if (!old) return old;
       return old.filter((i) => i.id !== id);
@@ -251,7 +248,6 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
 
     const { error } = await supabase.from("insights").delete().eq("id", id);
     if (error) {
-      // Rollback em caso de erro
       queryClient.invalidateQueries({ queryKey: ["insights"] });
     }
   };
