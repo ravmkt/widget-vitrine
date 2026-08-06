@@ -98,8 +98,8 @@ function resolveActionUrl(insight: Insight): string | null {
   const label = (insight.action_label || "").toLowerCase();
   if (label.includes("produto")) return "/produtos";
   if (label.includes("vídeo")) return "/videos";
-  if (label.includes("página")) return "/dashboard";
-  if (label.includes("posi")) return "/dashboard";
+if (label.includes("página")) return "/stories";
+if (label.includes("posi")) return "/stories";
 
   // 5. Último recurso — vai pro dashboard (nunca retorna null)
   return "/dashboard";
