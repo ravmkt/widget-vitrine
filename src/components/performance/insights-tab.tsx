@@ -82,9 +82,18 @@ function InsightCard({
     queryClient.invalidateQueries({ queryKey: ["insights"] });
   };
 
+  // 🆕 Fallback: action_url → related_video_id → related_placement_id → null
+  const resolvedUrl =
+    insight.action_url ||
+    (insight.related_video_id
+      ? `/dashboard/videos/${insight.related_video_id}`
+      : insight.related_placement_id
+        ? `/dashboard/placements/${insight.related_placement_id}`
+        : null);
+
   const handleAction = () => {
-    if (insight.action_url) {
-      window.open(insight.action_url, "_blank", "noopener");
+    if (resolvedUrl) {
+      window.open(resolvedUrl, "_blank", "noopener");
     }
   };
 
@@ -165,18 +174,18 @@ function InsightCard({
             </p>
           )}
 
-          {/* Ação */}
+          {/* 🆕 Ação com fallback */}
           {insight.action_label && (
             <button
               onClick={handleAction}
-              disabled={!insight.action_url}
+              disabled={!resolvedUrl}
               className={cn(
                 "mt-3 inline-flex items-center gap-1 text-xs font-bold transition-colors",
-                insight.action_url
+                resolvedUrl
                   ? "text-[#0094EB] dark:text-[#38b2f8] hover:underline cursor-pointer"
                   : "text-slate-300 dark:text-slate-600 cursor-not-allowed"
               )}
-              title={!insight.action_url ? "Em breve" : insight.action_label}
+              title={!resolvedUrl ? "Em breve" : insight.action_label}
             >
               {insight.action_label}
               <ExternalLink className="h-3 w-3" />
@@ -285,7 +294,7 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
 
   return (
     <div className="space-y-4">
-      {/* 🆕 Barra de filtros: Status + Tipo */}
+      {/* Barra de filtros: Status + Tipo */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Filtro por status */}
         <div className="flex items-center gap-2">
@@ -315,7 +324,7 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
           </div>
         </div>
 
-        {/* 🆕 Filtro por tipo */}
+        {/* Filtro por tipo */}
         <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
           {([
             { key: "all", label: "Todos", color: "" },
@@ -343,7 +352,7 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
         </div>
       </div>
 
-      {/* 🆕 Lista filtrada */}
+      {/* Lista filtrada */}
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <CheckCircle className="h-10 w-10 text-emerald-300 dark:text-emerald-700 mb-3" />
