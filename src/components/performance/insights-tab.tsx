@@ -114,6 +114,9 @@ function InsightCard({ insight }: { insight: Insight }) {
 export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProps) {
   const { data: insights, isLoading, isError, error } = useInsights();
 
+   // 🐞 DEBUG — adiciona essa linha:
+  console.log("🔍 InsightsTab debug:", { insights, isLoading, isError, error });
+
   // Estado de loading
   if (isLoading) {
     return (
