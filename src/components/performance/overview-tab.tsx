@@ -386,27 +386,25 @@ export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
         </div>
       )}
 
-      {/* ── Cards de métricas principais ── */}
-      {/* 🟢 correção #4: grid padronizado com lg:grid-cols-4 em todas as linhas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {cardData.slice(0, 5).map((card, idx) => {
+      {/* ── Cards de métricas principais (5 colunas) ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+        {cardData.slice(0, 5).map(card => {
           const bench = computeBenchmarkDiff(card.key, card.value, card.isRate);
           return (
-            <div key={card.key} className={cn(idx === 4 && 'lg:col-span-2 lg:max-w-[50%] lg:mx-auto')}>
-              <MetricCard
-                title={card.label}
-                value={card.unit === 'R$'
-                  ? `R$ ${card.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
-                  : card.unit === '%'
-                    ? `${card.value.toFixed(1).replace('.', ',')}%`
-                    : card.value.toLocaleString()
-                }
-                icon={card.icon}
-                color={card.color}
-                benchmarkDiff={bench?.diff ?? undefined}
-                benchmarkLabel={bench ? `${bench.bench}%` : undefined}
-              />
-            </div>
+            <MetricCard
+              key={card.key}
+              title={card.label}
+              value={card.unit === 'R$'
+                ? `R$ ${card.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                : card.unit === '%'
+                  ? `${card.value.toFixed(1).replace('.', ',')}%`
+                  : card.value.toLocaleString()
+              }
+              icon={card.icon}
+              color={card.color}
+              benchmarkDiff={bench?.diff ?? undefined}
+              benchmarkLabel={bench ? `${bench.bench}%` : undefined}
+            />
           );
         })}
       </div>
