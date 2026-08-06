@@ -3,11 +3,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-serve(async (req) => {
+const STORAGE_BUCKET = "store-assets";
+
+serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -22,44 +23,117 @@ serve(async (req) => {
       );
     }
 
-    // 1. Tenta extrair a thumbnail (oEmbed → og:image)
-    const thumbnailUrl = await extractThumbnailUrl(videoUrl);
+    const url = new URL(videoUrl);
 
-    if (!thumbnailUrl) {
-      return new Response(
-        JSON.stringify({ error: "Could not extract thumbnail from URL" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // 2. Baixa a imagem
-    const imageResponse = await fetch(thumbnailUrl, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; ThumbnailBot/1.0)" },
-    });
-
-    if (!imageResponse.ok) {
-      return new Response(
-        JSON.stringify({ error: "Failed to download thumbnail image" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const imageBuffer = await imageResponse.arrayBuffer();
-
-    // 3. Upload pro bucket store-assets
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    // ── Instância do Supabase com service_role ──
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      { auth: { persistSession: false } }
     );
 
-    const timestamp = Date.now();
-    const fileId = crypto.randomUUID();
-    const filePath = `${storeId}/thumbnails/${timestamp}-${fileId}.jpg`;
+    let imageUrl: string | null = null;
 
-    const { error: uploadError } = await supabaseClient.storage
-      .from("store-assets")
-      .upload(filePath, new Uint8Array(imageBuffer), {
-        contentType: "image/jpeg",
+    // ──────────────────────────────────────────
+    // Instagram: usa oEmbed
+    // ──────────────────────────────────────────
+    if (url.hostname.includes("instagram.com")) {
+      const oembedUrl = `https://api.instagram.com/oembed?url=${encodeURIComponent(videoUrl)}`;
+      const res = await fetch(oembedUrl);
+      if (res.ok) {
+        const json = await res.json();
+        imageUrl = json.thumbnail_url || null;
+      }
+    }
+
+    // ──────────────────────────────────────────
+    // TikTok: usa oEmbed
+    // ──────────────────────────────────────────
+    if (!imageUrl && url.hostname.includes("tiktok.com")) {
+      const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(videoUrl)}`;
+      const res = await fetch(oembedUrl);
+      if (res.ok) {
+        const json = await res.json();
+        imageUrl = json.thumbnail_url || null;
+      }
+    }
+
+    // ──────────────────────────────────────────
+    // YouTube Shorts / YouTube: og:image
+    // ──────────────────────────────────────────
+    if (!imageUrl && (url.hostname.includes("youtube.com") || url.hostname.includes("youtu.be"))) {
+      const pageRes = await fetch(videoUrl);
+      const html = await pageRes.text();
+
+      // Tenta og:image ou thumbnail_url do schema
+      const ogMatch = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i);
+      if (ogMatch) {
+        imageUrl = ogMatch[1].replace(/&amp;/g, "&");
+      }
+
+      // Fallback: thumbnail do YouTube via ID
+      if (!imageUrl) {
+        let videoId = "";
+        if (url.hostname.includes("youtu.be")) {
+          videoId = url.pathname.slice(1);
+        } else {
+          const searchParams = new URLSearchParams(url.search);
+          videoId = searchParams.get("v") || "";
+          if (!videoId) {
+            // YouTube Shorts
+            const match = url.pathname.match(/\/shorts\/([^/?]+)/);
+            videoId = match?.[1] || "";
+          }
+        }
+        if (videoId) {
+          imageUrl = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+        }
+      }
+    }
+
+    // ──────────────────────────────────────────
+    // Fallback genérico: og:image da página
+    // ──────────────────────────────────────────
+    if (!imageUrl) {
+      try {
+        const pageRes = await fetch(videoUrl);
+        const html = await pageRes.text();
+        const ogMatch = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i);
+        if (ogMatch) {
+          imageUrl = ogMatch[1].replace(/&amp;/g, "&");
+        }
+      } catch {
+        // sem fallback disponível
+      }
+    }
+
+    if (!imageUrl) {
+      return new Response(
+        JSON.stringify({ thumbnailUrl: null }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ──────────────────────────────────────────
+    // Download da imagem e upload pro Storage
+    // ──────────────────────────────────────────
+    const imageRes = await fetch(imageUrl);
+    if (!imageRes.ok) {
+      return new Response(
+        JSON.stringify({ thumbnailUrl: null }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const blob = await imageRes.blob();
+    const contentType = blob.type || "image/jpeg";
+    const ext = contentType.includes("png") ? "png" : contentType.includes("webp") ? "webp" : "jpg";
+    const filePath = `${storeId}/thumbnails/ef-${Date.now()}-${crypto.randomUUID()}.${ext}`;
+
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from(STORAGE_BUCKET)
+      .upload(filePath, blob, {
+        contentType,
         cacheControl: "31536000",
         upsert: false,
       });
@@ -67,90 +141,24 @@ serve(async (req) => {
     if (uploadError) {
       console.error("Upload error:", uploadError);
       return new Response(
-        JSON.stringify({ error: uploadError.message }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ thumbnailUrl: null }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 4. Retorna URL pública (nunca expira)
-    const { data } = supabaseClient.storage
-      .from("store-assets")
+    const { data: publicUrlData } = supabaseAdmin.storage
+      .from(STORAGE_BUCKET)
       .getPublicUrl(filePath);
 
     return new Response(
-      JSON.stringify({
-        thumbnailUrl: data.publicUrl,
-        filePath,
-      }),
+      JSON.stringify({ thumbnailUrl: publicUrlData.publicUrl }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (error) {
-    console.error("Unexpected error:", error);
+  } catch (err) {
+    console.error("Unexpected error:", err);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ thumbnailUrl: null }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
-
-// --- Helpers ---
-
-async function extractThumbnailUrl(videoUrl: string): Promise<string | null> {
-  const isInstagram = /instagram\.com\/(reel|p)\//i.test(videoUrl);
-  const isTikTok = /tiktok\.com\/@/i.test(videoUrl);
-
-  // ── TikTok: oEmbed funciona bem server-side ──
-  if (isTikTok) {
-    const url = await tryOEmbed(`https://www.tiktok.com/oembed?url=${encodeURIComponent(videoUrl)}`);
-    if (url) return url;
-  }
-
-  // ── Instagram: tenta oEmbed, fallback pra og:image ──
-  if (isInstagram) {
-    const url = await tryOEmbed(`https://api.instagram.com/oembed?url=${encodeURIComponent(videoUrl)}`);
-    if (url) return url;
-  }
-
-  // ── Fallback universal: extrai og:image da página ──
-  return tryOgImage(videoUrl);
-}
-
-async function tryOEmbed(oembedUrl: string): Promise<string | null> {
-  try {
-    const res = await fetch(oembedUrl, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; ThumbnailBot/1.0)" },
-    });
-
-    if (!res.ok) return null;
-
-    const data = await res.json();
-    return data?.thumbnail_url || null;
-  } catch {
-    return null;
-  }
-}
-
-async function tryOgImage(pageUrl: string): Promise<string | null> {
-  try {
-    const res = await fetch(pageUrl, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html",
-      },
-    });
-
-    if (!res.ok) return null;
-
-    const html = await res.text();
-
-    // Procura og:image nos dois formatos possíveis
-    const match =
-      html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ??
-      html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
-
-    return match?.[1] ?? null;
-  } catch {
-    return null;
-  }
-}
