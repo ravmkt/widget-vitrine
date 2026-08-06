@@ -953,3 +953,1036 @@ const ProductsPage = () => {
   const activeCategories = categories.map(c => c.name);
 
   if (loading) return null;
+  // ──────────────────────────────────────────────────────────────────
+  //  RENDER
+  // ──────────────────────────────────────────────────────────────────
+
+  return (
+    <div className="space-y-6 animate-fade-in pb-20">
+      {/* Cabeçalho */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Produtos</h1>
+          <p className="text-slate-500 font-medium mt-1">
+            Gerencie o catálogo de produtos da sua loja.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={openNewProduct}
+            className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-xl font-black text-sm shadow-md transition-all flex items-center gap-2"
+          >
+            <Plus size={18} /> Novo produto
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowCategoriesModal(true)}
+            className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-xl font-black text-sm shadow-md transition-all flex items-center gap-2"
+          >
+            <Tag size={18} /> Categorias
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowImportModal(true)}
+            className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-xl font-black text-sm shadow-md transition-all flex items-center gap-2"
+          >
+            <Upload size={18} /> Importar produtos
+          </button>
+        </div>
+      </div>
+
+      {/* Filtros */}
+      <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 shadow-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="relative lg:col-span-2">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input
+              type="text"
+              placeholder="Buscar por nome..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
+            />
+          </div>
+
+          <select
+            value={filterCategory}
+            onChange={e => setFilterCategory(e.target.value)}
+            className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:border-[#0094EB]"
+          >
+            <option value="all">Todas Categorias</option>
+            {activeCategories.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+
+          <select
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value)}
+            className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:border-[#0094EB]"
+          >
+            <option value="all">Todos Status</option>
+            <option value="active">Ativos</option>
+            <option value="inactive">Desativados</option>
+          </select>
+
+          <select
+            value={filterOrigin}
+            onChange={e => setFilterOrigin(e.target.value)}
+            className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:border-[#0094EB]"
+          >
+            <option value="all">Todas Origens</option>
+            <option value="manual">Manual</option>
+            <option value="xml">XML</option>
+            <option value="planilha">Planilha</option>
+          </select>
+        </div>
+
+        {/* 🆕 Badge de filtro ativo: Sem vídeo */}
+        {filterVideo === 'without' && (
+          <div className="mt-3 flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-3 py-1.5 text-xs font-black text-amber-700">
+              Filtrando: produtos sem vídeo
+              <button
+                type="button"
+                onClick={() => setFilterVideo('all')}
+                className="text-amber-400 hover:text-amber-600 ml-1"
+              >
+                <X size={12} />
+              </button>
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Barra de seleção e paginação */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <p className="text-sm font-bold text-slate-500">
+            {filteredProducts.length} {filteredProducts.length === 1 ? 'produto' : 'produtos'}
+          </p>
+          {selectedIds.size > 0 && (
+            <span className="rounded-full bg-[#EAF6FF] px-3 py-1 text-xs font-black text-[#0094EB]">
+              {selectedIds.size} selecionados
+            </span>
+          )}
+          {!allFilteredSelected && selectedIds.size > 0 && selectedIds.size < filteredProducts.length && (
+            <button
+              type="button"
+              onClick={selectAllFiltered}
+              className="text-xs font-black text-[#0094EB] underline hover:text-[#0E4787]"
+            >
+              Selecionar todos os {filteredProducts.length}
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-4">
+          {selectedIds.size > 0 && (
+            <button
+              type="button"
+              onClick={handleBulkDeleteClick}
+              className="inline-flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-black text-rose-600 transition-all hover:bg-rose-100"
+            >
+              <Trash2 size={16} />
+              Excluir {selectedIds.size} {selectedIds.size === 1 ? 'selecionado' : 'selecionados'}
+            </button>
+          )}
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-400">Itens por página</span>
+            <select
+              value={pageSize}
+              onChange={e => {
+                setPageSize(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-xs font-black text-slate-600 outline-none focus:border-[#0094EB]"
+            >
+              <option value={10}>10</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabela */}
+      <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full table-fixed text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="px-4 py-4 text-center w-[48px]">
+                  <input
+                    type="checkbox"
+                    checked={allOnPageSelected}
+                    onChange={toggleSelectAll}
+                    className="h-4 w-4 cursor-pointer rounded border-slate-300 text-[#0094EB] focus:ring-[#0094EB]"
+                  />
+                </th>
+
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-[80px]">
+                  Foto
+                </th>
+
+                <th
+                  onClick={() => handleSort('produto')}
+                  className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest"
+                >
+                  Produto{' '}
+                  {sortColumn === 'produto' &&
+                    (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                </th>
+
+                <th
+                  onClick={() => handleSort('preco')}
+                  className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center w-32"
+                >
+                  Preço{' '}
+                  {sortColumn === 'preco' &&
+                    (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                </th>
+
+                <th
+                  onClick={() => handleSort('categoria')}
+                  className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center w-36"
+                >
+                  Categoria{' '}
+                  {sortColumn === 'categoria' &&
+                    (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                </th>
+
+                <th
+                  onClick={() => handleSort('video')}
+                  className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center w-48"
+                >
+                  Vídeo Vinculado{' '}
+                  {sortColumn === 'video' &&
+                    (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                </th>
+
+                <th
+                  onClick={() => handleSort('origem')}
+                  className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-28 text-center"
+                >
+                  <div className="flex items-center justify-center text-center gap-1.5 w-full">
+                    <span>Origem</span>
+                    {sortColumn === 'origem' &&
+                      (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                  </div>
+                </th>
+
+                <th
+                  onClick={() => handleSort('status')}
+                  className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-28 text-center"
+                >
+                  <div className="flex items-center justify-center text-center gap-1.5 w-full">
+                    <span>Status</span>
+                    {sortColumn === 'status' &&
+                      (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                  </div>
+                </th>
+
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-48 text-center">
+                  Ações
+                </th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-slate-100">
+              {pagedProducts.map(product => (
+                <tr
+                  key={product.id}
+                  className={cn(
+                    'transition-colors',
+                    selectedIds.has(product.id) ? 'bg-[#EAF6FF]/60' : 'hover:bg-slate-50/50'
+                  )}
+                >
+                  <td className="px-4 py-4 text-center align-middle">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(product.id)}
+                      onChange={() => toggleSelectOne(product.id)}
+                      className="h-4 w-4 cursor-pointer rounded border-slate-300 text-[#0094EB] focus:ring-[#0094EB]"
+                    />
+                  </td>
+
+                  <td className="px-6 py-4 align-middle">
+                    <div className="h-14 w-14 min-h-[56px] min-w-[56px] rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
+                      {product.image_url ? (
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          className="h-full w-full object-cover"
+                          onError={e => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <Package size={18} className="text-slate-400" />
+                      )}
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <p className="font-bold text-slate-800 truncate max-w-xs">{product.name}</p>
+                  </td>
+
+                  <td className="px-6 py-4 text-center font-black text-slate-800">
+                    {Number(product.price || 0).toLocaleString('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                    })}
+                  </td>
+
+                  <td className="px-6 py-4 text-center">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-xs font-bold border border-slate-100 max-w-full truncate">
+                      <Tag size={12} className="shrink-0" />
+                      <span className="truncate">{(product as any).category || 'Sem categoria'}</span>
+                    </span>
+                  </td>
+
+                  <td className="px-6 py-4 text-center">
+                    {(product as any).video ? (
+                      <span className="inline-flex max-w-full items-center gap-1.5 text-[#0094EB] text-sm font-bold truncate">
+                        {(product as any).video}
+                      </span>
+                    ) : (
+                      <span className="text-slate-400 text-sm italic">Nenhum</span>
+                    )}
+                  </td>
+
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex items-center justify-center text-center w-full">
+                      <span
+                        className={cn(
+                          'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border',
+                          (product as any).origin === 'manual'
+                            ? 'bg-blue-50 text-blue-600 border-blue-100'
+                            : (product as any).origin === 'planilha'
+                            ? 'bg-violet-50 text-violet-700 border-violet-100'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                        )}
+                      >
+                        {(product as any).origin === 'manual' ? (
+                          <Tag size={10} />
+                        ) : (
+                          <Globe size={10} />
+                        )}
+                        {(product as any).origin === 'manual'
+                          ? 'Manual'
+                          : (product as any).origin === 'planilha'
+                          ? 'Planilha'
+                          : 'XML'}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex items-center justify-center text-center w-full">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStatus(product)}
+                        className={cn(
+                          'inline-flex h-8 w-[112px] min-w-[112px] items-center justify-center rounded-lg px-4 text-[10px] font-black uppercase tracking-wider border cursor-pointer transition-all',
+                          product.active
+                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100'
+                            : 'bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100'
+                        )}
+                      >
+                        {product.active ? 'ATIVO' : 'DESATIVADO'}
+                      </button>
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openEditProduct(product)}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-3 py-2 text-xs font-black text-slate-600 transition hover:bg-slate-100"
+                      >
+                        <Edit3 size={14} />
+                        Editar
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteClick(product)}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-rose-50 px-3 py-2 text-xs font-black text-rose-600 transition hover:bg-rose-100"
+                      >
+                        <Trash2 size={14} />
+                        Excluir
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+
+              {pagedProducts.length === 0 && (
+                <tr>
+                  <td colSpan={9} className="px-6 py-20 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <Package size={48} className="text-slate-300" />
+                      <p className="text-sm font-bold text-slate-500">Nenhum produto encontrado</p>
+                      <p className="text-xs text-slate-400">
+                        {searchTerm || filterCategory !== 'all' || filterStatus !== 'all' || filterOrigin !== 'all' || filterVideo !== 'all'
+                          ? 'Tente ajustar os filtros.'
+                          : 'Clique em "Novo produto" para começar.'}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Paginação */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between border-t border-slate-200 px-6 py-4">
+            <p className="text-xs font-bold text-slate-400">
+              Página {safePage} de {totalPages}
+            </p>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={safePage <= 1}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-600 transition hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Anterior
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  type="button"
+                  onClick={() => setCurrentPage(page)}
+                  className={cn(
+                    'rounded-lg px-3 py-1.5 text-xs font-black transition',
+                    page === safePage
+                      ? 'bg-[#0094EB] text-white'
+                      : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                  )}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                type="button"
+                disabled={safePage >= totalPages}
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-600 transition hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Próximo
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Modal de Produto (Novo/Editar) */}
+      {showProductModal && (
+        <div className="fixed inset-0 z-[99998] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-[2rem] bg-white shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-200 p-6">
+              <h2 className="text-xl font-black text-slate-900">
+                {editingProduct ? 'Editar produto' : 'Novo produto'}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowProductModal(false)}
+                className="rounded-xl bg-slate-100 p-2 text-slate-500 transition hover:bg-slate-200"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProduct} className="p-6 space-y-5">
+              {/* Imagem */}
+              <div>
+                <label className="text-sm font-black text-slate-700">Imagem do produto</label>
+                <div className="mt-2 flex items-center gap-4">
+                  <div className="h-20 w-20 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
+                    {formData.image_url ? (
+                      <img src={formData.image_url} alt="Preview" className="h-full w-full object-cover" />
+                    ) : (
+                      <Image size={24} className="text-slate-400" />
+                    )}
+                  </div>
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleImageUpload}
+                      className="text-xs font-medium text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-[#0094EB] file:px-3 file:py-1.5 file:text-xs file:font-black file:text-white file:transition file:hover:bg-[#0E4787]"
+                    />
+                    <p className="mt-1 text-[10px] text-slate-400">JPG, PNG ou WEBP. Máx. 350 KB.</p>
+                    {formData.image_error && (
+                      <p className="mt-1 text-xs font-bold text-red-500">{formData.image_error}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Nome */}
+              <div>
+                <label className="text-sm font-black text-slate-700">Nome do produto *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold outline-none focus:border-[#0094EB]"
+                  placeholder="Ex: Vestido Floral"
+                />
+              </div>
+
+              {/* Categoria */}
+              <div>
+                <label className="text-sm font-black text-slate-700">Categoria *</label>
+                <select
+                  value={formData.category}
+                  onChange={e => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                  className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold outline-none focus:border-[#0094EB]"
+                >
+                  <option value="">Selecione uma categoria</option>
+                  {activeCategories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Preço */}
+              <div>
+                <label className="text-sm font-black text-slate-700">Preço (R$) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.price}
+                  onChange={e => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                  className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold outline-none focus:border-[#0094EB]"
+                  placeholder="0,00"
+                />
+              </div>
+
+              {/* URL do produto */}
+              <div>
+                <label className="text-sm font-black text-slate-700">Link do produto</label>
+                <input
+                  type="url"
+                  value={formData.product_url}
+                  onChange={e => setFormData(prev => ({ ...prev, product_url: e.target.value }))}
+                  className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold outline-none focus:border-[#0094EB]"
+                  placeholder="https://sualoja.com/produto"
+                />
+              </div>
+
+              {/* Status */}
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-black text-slate-700">Produto ativo?</label>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, active: !prev.active }))}
+                  className={cn(
+                    'relative inline-flex h-7 w-12 items-center rounded-full transition-colors',
+                    formData.active ? 'bg-emerald-500' : 'bg-slate-300'
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'inline-block h-5 w-5 rounded-full bg-white shadow transition-transform',
+                      formData.active ? 'translate-x-6' : 'translate-x-1'
+                    )}
+                  />
+                </button>
+                <span className="text-xs font-bold text-slate-500">
+                  {formData.active ? 'Ativo' : 'Desativado'}
+                </span>
+              </div>
+
+              {/* Botões */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowProductModal(false)}
+                  className="rounded-xl bg-slate-100 px-5 py-2.5 text-sm font-black text-slate-600 transition hover:bg-slate-200"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#0094EB] px-5 py-2.5 text-sm font-black text-white transition hover:bg-[#0E4787] disabled:opacity-60"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={16} />
+                      {editingProduct ? 'Atualizar' : 'Criar produto'}
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Categorias */}
+      {showCategoriesModal && (
+        <div className="fixed inset-0 z-[99998] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-[2rem] bg-white shadow-2xl max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-200 p-6">
+              <h2 className="text-xl font-black text-slate-900">Categorias</h2>
+              <button
+                type="button"
+                onClick={() => setShowCategoriesModal(false)}
+                className="rounded-xl bg-slate-100 p-2 text-slate-500 transition hover:bg-slate-200"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Adicionar nova */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={catNewName}
+                  onChange={e => setCatNewName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleCatAdd()}
+                  placeholder="Nova categoria..."
+                  className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold outline-none focus:border-[#0094EB]"
+                />
+                <button
+                  type="button"
+                  onClick={handleCatAdd}
+                  className="rounded-xl bg-[#0094EB] px-4 py-2.5 text-sm font-black text-white transition hover:bg-[#0E4787]"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+
+              {/* Lista */}
+              <div className="space-y-2">
+                {categories.map(cat => (
+                  <div
+                    key={cat.id}
+                    className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3"
+                  >
+                    {catEditingId === cat.id ? (
+                      <input
+                        type="text"
+                        value={catEditName}
+                        onChange={e => setCatEditName(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') handleCatEditSave(cat.id);
+                          if (e.key === 'Escape') setCatEditingId(null);
+                        }}
+                        className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-bold outline-none focus:border-[#0094EB]"
+                        autoFocus
+                      />
+                    ) : (
+                      <span className="text-sm font-bold text-slate-700">{cat.name}</span>
+                    )}
+
+                    <div className="flex items-center gap-1">
+                      {catEditingId === cat.id ? (
+                        <button
+                          type="button"
+                          onClick={() => handleCatEditSave(cat.id)}
+                          className="rounded-lg p-1.5 text-emerald-600 transition hover:bg-emerald-50"
+                        >
+                          <Save size={14} />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleCatEditStart(cat)}
+                          className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100"
+                        >
+                          <Edit3 size={14} />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleCatDelete(cat.id)}
+                        className="rounded-lg p-1.5 text-rose-400 transition hover:bg-rose-50"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {categories.length === 0 && (
+                  <p className="text-center text-sm text-slate-400 py-4">Nenhuma categoria cadastrada.</p>
+                )}
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={handleCatSaveAll}
+                  className="rounded-xl bg-[#0094EB] px-5 py-2.5 text-sm font-black text-white transition hover:bg-[#0E4787]"
+                >
+                  Concluído
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Importação */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-[99998] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-5xl rounded-[2rem] bg-white shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-200 p-6">
+              <h2 className="text-xl font-black text-slate-900">Importar produtos</h2>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowImportModal(false);
+                  setImportedXmlProducts([]);
+                  setSelectedXmlKeys(new Set());
+                }}
+                className="rounded-xl bg-slate-100 p-2 text-slate-500 transition hover:bg-slate-200"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex border-b border-slate-200">
+              <button
+                type="button"
+                onClick={() => setImportTab('xml')}
+                className={cn(
+                  'flex-1 py-3 text-sm font-black transition',
+                  importTab === 'xml'
+                    ? 'border-b-2 border-[#0094EB] text-[#0094EB]'
+                    : 'text-slate-400 hover:text-slate-600'
+                )}
+              >
+                <FileText size={14} className="inline mr-1.5" />
+                XML
+              </button>
+              <button
+                type="button"
+                onClick={() => setImportTab('sheet')}
+                className={cn(
+                  'flex-1 py-3 text-sm font-black transition',
+                  importTab === 'sheet'
+                    ? 'border-b-2 border-[#0094EB] text-[#0094EB]'
+                    : 'text-slate-400 hover:text-slate-600'
+                )}
+              >
+                <Upload size={14} className="inline mr-1.5" />
+                Planilha
+              </button>
+            </div>
+
+            {/* Conteúdo da tab XML */}
+            {importTab === 'xml' && (
+              <div className="p-6 space-y-6">
+                {importedXmlProducts.length === 0 ? (
+                  <>
+                    {/* Input: URL */}
+                    <div>
+                      <label className="text-sm font-black text-slate-700">URL do feed XML</label>
+                      <div className="mt-2 flex gap-2">
+                        <div className="relative flex-1">
+                          <Link size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                          <input
+                            type="url"
+                            value={xmlUrl}
+                            onChange={e => setXmlUrl(e.target.value)}
+                            placeholder="https://sualoja.com/feed.xml"
+                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Ou arquivo */}
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1 border-t border-slate-200" />
+                      <span className="text-xs font-black text-slate-400 uppercase">ou</span>
+                      <div className="flex-1 border-t border-slate-200" />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-black text-slate-700">Arquivo XML</label>
+                      <input
+                        type="file"
+                        accept=".xml"
+                        onChange={e => setXmlFile(e.target.files?.[0] || null)}
+                        className="mt-2 w-full text-xs font-medium text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-[#0094EB] file:px-3 file:py-1.5 file:text-xs file:font-black file:text-white file:transition file:hover:bg-[#0E4787]"
+                      />
+                    </div>
+
+                    {/* Botão de leitura */}
+                    <button
+                      type="button"
+                      onClick={readXmlFeed}
+                      disabled={isImportingXml}
+                      className="w-full rounded-xl bg-[#0094EB] py-3 text-sm font-black text-white transition hover:bg-[#0E4787] disabled:opacity-60 flex items-center justify-center gap-2"
+                    >
+                      {isImportingXml ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          {importProgressMessage}
+                        </>
+                      ) : (
+                        'Ler feed XML'
+                      )}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {/* Preview com seleção */}
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-black text-slate-900">
+                            {totalXmlProducts} produtos encontrados
+                          </p>
+                          {selectedXmlCount > 0 && (
+                            <p className="text-xs font-bold text-[#0094EB] mt-0.5">
+                              {selectedXmlCount} selecionados
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="text"
+                            placeholder="Buscar..."
+                            value={xmlPreviewSearch}
+                            onChange={e => {
+                              setXmlPreviewSearch(e.target.value);
+                              setXmlPreviewPage(1);
+                            }}
+                            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold outline-none focus:border-[#0094EB] w-40"
+                          />
+                          <select
+                            value={xmlPreviewCategory}
+                            onChange={e => {
+                              setXmlPreviewCategory(e.target.value);
+                              setXmlPreviewPage(1);
+                            }}
+                            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold outline-none focus:border-[#0094EB]"
+                          >
+                            <option value="all">Todas categorias</option>
+                            {xmlPreviewCategories.map(cat => (
+                              <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Selecionar todos */}
+                      <div className="flex items-center gap-3">
+                        <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={allVisibleSelected}
+                            onChange={e => toggleSelectAllVisibleXml(e.target.checked)}
+                            className="h-3.5 w-3.5 rounded border-slate-300 text-[#0094EB] focus:ring-[#0094EB]"
+                          />
+                          Selecionar visíveis
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => toggleSelectAllXml(true)}
+                          className="text-xs font-bold text-[#0094EB] underline hover:text-[#0E4787]"
+                        >
+                          Selecionar todos ({totalXmlProducts})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => toggleSelectAllXml(false)}
+                          className="text-xs font-bold text-slate-400 underline hover:text-slate-600"
+                        >
+                          Limpar seleção
+                        </button>
+                      </div>
+
+                      {/* Tabela preview */}
+                      <div className="border border-slate-200 rounded-xl overflow-hidden max-h-64 overflow-y-auto">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-slate-50 sticky top-0">
+                            <tr>
+                              <th className="px-3 py-2 w-8"></th>
+                              <th className="px-3 py-2 font-black text-slate-500">Produto</th>
+                              <th className="px-3 py-2 font-black text-slate-500">SKU</th>
+                              <th className="px-3 py-2 font-black text-slate-500">Preço</th>
+                              <th className="px-3 py-2 font-black text-slate-500">Categoria</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {xmlPreviewPageItems.map((product, idx) => {
+                              const key = getXmlProductKey(product);
+                              return (
+                                <tr key={key} className="hover:bg-slate-50/50">
+                                  <td className="px-3 py-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedXmlKeys.has(key)}
+                                      onChange={e => setSelectedXmlProduct(product, e.target.checked)}
+                                      className="h-3.5 w-3.5 rounded border-slate-300 text-[#0094EB] focus:ring-[#0094EB]"
+                                    />
+                                  </td>
+                                  <td className="px-3 py-2 font-bold text-slate-700 truncate max-w-[200px]">
+                                    {product.name}
+                                  </td>
+                                  <td className="px-3 py-2 text-slate-500 font-medium">
+                                    {product.sku || '-'}
+                                  </td>
+                                  <td className="px-3 py-2 font-bold text-slate-700">
+                                    {Number(product.price || 0).toLocaleString('pt-BR', {
+                                      style: 'currency',
+                                      currency: 'BRL',
+                                    })}
+                                  </td>
+                                  <td className="px-3 py-2 text-slate-500">
+                                    {formatXmlCategory(product.category || 'Sem categoria')}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Paginação do preview */}
+                      {totalXmlPages > 1 && (
+                        <div className="flex items-center justify-between">
+                          <button
+                            type="button"
+                            disabled={xmlPreviewPage <= 1}
+                            onClick={() => setXmlPreviewPage(p => p - 1)}
+                            className="text-xs font-bold text-[#0094EB] disabled:opacity-30"
+                          >
+                            ← Anterior
+                          </button>
+                          <span className="text-xs text-slate-400">
+                            {safeXmlPreviewPage} / {totalXmlPages}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={xmlPreviewPage >= totalXmlPages}
+                            onClick={() => setXmlPreviewPage(p => p + 1)}
+                            className="text-xs font-bold text-[#0094EB] disabled:opacity-30"
+                          >
+                            Próximo →
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Botões de ação */}
+                      <div className="flex gap-3 pt-4 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setImportedXmlProducts([]);
+                            setSelectedXmlKeys(new Set());
+                          }}
+                          className="flex-1 rounded-xl bg-slate-100 py-2.5 text-sm font-black text-slate-600 transition hover:bg-slate-200"
+                        >
+                          Voltar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleXmlImportSelected}
+                          disabled={isImportingXml || selectedXmlCount === 0}
+                          className="flex-1 rounded-xl bg-[#0094EB] py-2.5 text-sm font-black text-white transition hover:bg-[#0E4787] disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          {isImportingXml ? (
+                            <>
+                              <Loader2 size={14} className="animate-spin" />
+                              {importProgressMessage}
+                            </>
+                          ) : (
+                            `Importar ${selectedXmlCount > 0 ? `(${selectedXmlCount})` : ''}`
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Conteúdo da tab Planilha */}
+            {importTab === 'sheet' && (
+              <div className="p-6 space-y-6">
+                <div>
+                  <label className="text-sm font-black text-slate-700">Arquivo CSV/Planilha</label>
+                  <input
+                    type="file"
+                    accept=".csv,.xlsx,.xls"
+                    onChange={e => setSpreadsheetFile(e.target.files?.[0] || null)}
+                    className="mt-2 w-full text-xs font-medium text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-[#0094EB] file:px-3 file:py-1.5 file:text-xs file:font-black file:text-white file:transition file:hover:bg-[#0E4787]"
+                  />
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-black text-slate-700">Baixar modelo</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Use o modelo para preencher os dados corretamente.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={downloadTemplate}
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-black text-[#0094EB] border border-slate-200 transition hover:bg-slate-100"
+                  >
+                    <Upload size={12} />
+                    Baixar modelo CSV
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSpreadsheetImport}
+                  disabled={!spreadsheetFile}
+                  className="w-full rounded-xl bg-[#0094EB] py-3 text-sm font-black text-white transition hover:bg-[#0E4787] disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  Importar planilha
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmação de exclusão */}
+      <ConfirmDeleteDialog
+        isOpen={deleteModal.isOpen}
+        title={deleteModal.bulkMode ? 'Excluir produtos' : 'Excluir produto'}
+        message={
+          deleteModal.bulkMode
+            ? `Tem certeza que deseja excluir ${deleteModal.productTitle}? Esta ação não pode ser desfeita.`
+            : `Tem certeza que deseja excluir "${deleteModal.productTitle}"? Esta ação não pode ser desfeita.`
+        }
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))}
+      />
+    </div>
+  );
+};
+
+export default ProductsPage;
