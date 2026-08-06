@@ -215,8 +215,6 @@ const ProductsPage = () => {
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterOrigin, setFilterOrigin] = useState('all');
-  // 🆕 Filtro de vídeo (ativado via query param ?sem-video=true)
-  const [filterVideo, setFilterVideo] = useState<'all' | 'with' | 'without'>('all');
 
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -254,19 +252,12 @@ const ProductsPage = () => {
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // 🆕 useEffect com leitura do query param ?sem-video=true
   useEffect(() => {
     const load = async () => {
       try {
         const resolvedStoreId = await resolveStoreId(storeId);
         const allProducts = await db.products.getAll(resolvedStoreId);
         setProducts(allProducts);
-
-        // 🆕 Lê query param ?sem-video=true
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('sem-video') === 'true') {
-          setFilterVideo('without');
-        }
       } catch (e) {
         console.error('Erro ao carregar produtos:', e);
         showError('Erro ao carregar produtos.');
@@ -283,7 +274,6 @@ const ProductsPage = () => {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
-  // 🆕 filteredProducts com filtro de vídeo
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
       const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -291,16 +281,10 @@ const ProductsPage = () => {
       const matchesStatus = filterStatus === 'all' || (filterStatus === 'active' ? (p as any).active : !(p as any).active);
       const matchesOrigin = filterOrigin === 'all' || (p as any).origin === filterOrigin;
 
-      // 🆕 Filtro de vídeo
-      const hasVideo = !!(p as any).video;
-      const matchesVideo =
-        filterVideo === 'all' ||
-        (filterVideo === 'with' && hasVideo) ||
-        (filterVideo === 'without' && !hasVideo);
-
-      return matchesSearch && matchesCategory && matchesStatus && matchesOrigin && matchesVideo;
+      return matchesSearch && matchesCategory && matchesStatus && matchesOrigin;
     });
-  }, [products, searchTerm, filterCategory, filterStatus, filterOrigin, filterVideo]);
+  }, [products, searchTerm, filterCategory, filterStatus, filterOrigin]);
+
   const handleSort = (column: string) => {
     if (sortColumn === column) {
       setSortDirection(dir => dir === 'asc' ? 'desc' : 'asc');
@@ -364,10 +348,9 @@ const ProductsPage = () => {
     [sortedProducts, startIdx, endIdx]
   );
 
-  // 🆕 reset de página também quando filterVideo muda
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterCategory, filterStatus, filterOrigin, filterVideo]);
+  }, [searchTerm, filterCategory, filterStatus, filterOrigin]);
 
   const allFilteredIds = useMemo(() => sortedProducts.map(p => p.id), [sortedProducts]);
   const pageIds = useMemo(() => pagedProducts.map(p => p.id), [pagedProducts]);
@@ -956,6 +939,7 @@ const ProductsPage = () => {
   const activeCategories = categories.map(c => c.name);
 
   if (loading) return null;
+
   // ──────────────────────────────────────────────────────────────────
   //  RENDER
   // ──────────────────────────────────────────────────────────────────
@@ -996,8 +980,7 @@ const ProductsPage = () => {
           </button>
         </div>
       </div>
-
-      {/* Filtros */}
+            {/* Filtros */}
       <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 shadow-sm">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="relative lg:col-span-2">
@@ -1043,22 +1026,6 @@ const ProductsPage = () => {
             <option value="planilha">Planilha</option>
           </select>
         </div>
-
-        {/* 🆕 Badge de filtro "sem vídeo" ativo */}
-        {filterVideo === 'without' && (
-          <div className="mt-3 flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-3 py-1.5 text-xs font-black text-amber-700">
-              Sem vídeo vinculado
-              <button
-                type="button"
-                onClick={() => setFilterVideo('all')}
-                className="text-amber-400 hover:text-amber-600"
-              >
-                <X size={12} />
-              </button>
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Barra de seleção e paginação */}
@@ -1333,7 +1300,7 @@ const ProductsPage = () => {
                       <Package size={48} className="text-slate-300" />
                       <p className="text-sm font-bold text-slate-500">Nenhum produto encontrado</p>
                       <p className="text-xs text-slate-400">
-                        {searchTerm || filterCategory !== 'all' || filterStatus !== 'all' || filterOrigin !== 'all' || filterVideo !== 'all'
+                        {searchTerm || filterCategory !== 'all' || filterStatus !== 'all' || filterOrigin !== 'all'
                           ? 'Tente ajustar os filtros.'
                           : 'Clique em "Novo produto" para começar.'}
                       </p>
@@ -1832,4 +1799,161 @@ const ProductsPage = () => {
                               <th className="px-3 py-2 w-8"></th>
                               <th className="px-3 py-2 font-black text-slate-500">Produto</th>
                               <th className="px-3 py-2 font-black text-slate-500">SKU</th>
-                              <th className="px-3 py-2
+                              <th className="px-3 py-2 font-black text-slate-500">Preço</th>
+                              <th className="px-3 py-2 font-black text-slate-500">Categoria</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {xmlPreviewPageItems.map((product, idx) => {
+                              const key = getXmlProductKey(product);
+                              return (
+                                <tr key={key} className="hover:bg-slate-50/50">
+                                  <td className="px-3 py-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedXmlKeys.has(key)}
+                                      onChange={e => setSelectedXmlProduct(product, e.target.checked)}
+                                      className="h-3.5 w-3.5 rounded border-slate-300 text-[#0094EB] focus:ring-[#0094EB]"
+                                    />
+                                  </td>
+                                  <td className="px-3 py-2 font-bold text-slate-700 truncate max-w-[200px]">
+                                    {product.name}
+                                  </td>
+                                  <td className="px-3 py-2 text-slate-500 font-medium">
+                                    {product.sku || '-'}
+                                  </td>
+                                  <td className="px-3 py-2 font-bold text-slate-700">
+                                    {Number(product.price || 0).toLocaleString('pt-BR', {
+                                      style: 'currency',
+                                      currency: 'BRL',
+                                    })}
+                                  </td>
+                                  <td className="px-3 py-2 text-slate-500">
+                                    {formatXmlCategory(product.category || 'Sem categoria')}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Paginação do preview */}
+                      {totalXmlPages > 1 && (
+                        <div className="flex items-center justify-between">
+                          <button
+                            type="button"
+                            disabled={xmlPreviewPage <= 1}
+                            onClick={() => setXmlPreviewPage(p => p - 1)}
+                            className="text-xs font-bold text-[#0094EB] disabled:opacity-30"
+                          >
+                            ← Anterior
+                          </button>
+                          <span className="text-xs text-slate-400">
+                            {safeXmlPreviewPage} / {totalXmlPages}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={xmlPreviewPage >= totalXmlPages}
+                            onClick={() => setXmlPreviewPage(p => p + 1)}
+                            className="text-xs font-bold text-[#0094EB] disabled:opacity-30"
+                          >
+                            Próximo →
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Botões de ação */}
+                      <div className="flex gap-3 pt-4 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setImportedXmlProducts([]);
+                            setSelectedXmlKeys(new Set());
+                          }}
+                          className="flex-1 rounded-xl bg-slate-100 py-2.5 text-sm font-black text-slate-600 transition hover:bg-slate-200"
+                        >
+                          Voltar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleXmlImportSelected}
+                          disabled={isImportingXml || selectedXmlCount === 0}
+                          className="flex-1 rounded-xl bg-[#0094EB] py-2.5 text-sm font-black text-white transition hover:bg-[#0E4787] disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          {isImportingXml ? (
+                            <>
+                              <Loader2 size={14} className="animate-spin" />
+                              {importProgressMessage}
+                            </>
+                          ) : (
+                            `Importar ${selectedXmlCount > 0 ? `(${selectedXmlCount})` : ''}`
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Conteúdo da tab Planilha */}
+            {importTab === 'sheet' && (
+              <div className="p-6 space-y-6">
+                <div>
+                  <label className="text-sm font-black text-slate-700">Arquivo CSV/Planilha</label>
+                  <input
+                    type="file"
+                    accept=".csv,.xlsx,.xls"
+                    onChange={e => setSpreadsheetFile(e.target.files?.[0] || null)}
+                    className="mt-2 w-full text-xs font-medium text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-[#0094EB] file:px-3 file:py-1.5 file:text-xs file:font-black file:text-white file:transition file:hover:bg-[#0E4787]"
+                  />
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-black text-slate-700">Baixar modelo</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Use o modelo para preencher os dados corretamente.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={downloadTemplate}
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-black text-[#0094EB] border border-slate-200 transition hover:bg-slate-100"
+                  >
+                    <Upload size={12} />
+                    Baixar modelo CSV
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSpreadsheetImport}
+                  disabled={!spreadsheetFile}
+                  className="w-full rounded-xl bg-[#0094EB] py-3 text-sm font-black text-white transition hover:bg-[#0E4787] disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  Importar planilha
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmação de exclusão */}
+      <ConfirmDeleteDialog
+        isOpen={deleteModal.isOpen}
+        title={deleteModal.bulkMode ? 'Excluir produtos' : 'Excluir produto'}
+        message={
+          deleteModal.bulkMode
+            ? `Tem certeza que deseja excluir ${deleteModal.productTitle}? Esta ação não pode ser desfeita.`
+            : `Tem certeza que deseja excluir "${deleteModal.productTitle}"? Esta ação não pode ser desfeita.`
+        }
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))}
+      />
+    </div>
+  );
+};
+
+export default ProductsPage;
+
