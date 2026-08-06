@@ -22,11 +22,11 @@ const iconMap: Record<InsightType, React.ElementType> = {
 //    Borda lateral colorida mantida com ajuste para dark mode
 const cardStyleMap: Record<InsightType, string> = {
   warning:
-    "bg-white dark:bg-slate-800/90 border-slate-200 dark:border-slate-700 border-l-amber-500 dark:border-l-amber-400",
+    "bg-white dark:bg-slate-800/90 border-2 border-amber-500 dark:border-amber-400 border-l-[8px]",
   positive:
-    "bg-white dark:bg-slate-800/90 border-slate-200 dark:border-slate-700 border-l-emerald-500 dark:border-l-emerald-400",
+    "bg-white dark:bg-slate-800/90 border-2 border-emerald-500 dark:border-emerald-400 border-l-[8px]",
   suggestion:
-    "bg-white dark:bg-slate-800/90 border-slate-200 dark:border-slate-700 border-l-blue-500 dark:border-l-blue-400",
+    "bg-white dark:bg-slate-800/90 border-2 border-blue-500 dark:border-blue-400 border-l-[8px]",
 };
 
 // 🆕 Cores do ícone + label — mantém a cor temática, mais clara no dark
