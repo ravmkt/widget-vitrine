@@ -246,18 +246,21 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
     queryClient.invalidateQueries({ queryKey: ["insights"] });
   };
 
-  // Excluir permanentemente
-  const handleDelete = async (id: string) => {
-    queryClient.setQueryData(["insights"], (old: Insight[] | undefined) => {
-      if (!old) return old;
-      return old.filter((i) => i.id !== id);
-    });
+const handleDelete = async (id: string) => {
+  queryClient.setQueryData(["insights"], (old: Insight[] | undefined) => {
+    if (!old) return old;
+    return old.filter((i) => i.id !== id);
+  });
 
-    const { error } = await supabase.from("insights").delete().eq("id", id);
-    if (error) {
-      queryClient.invalidateQueries({ queryKey: ["insights"] });
-    }
-  };
+  const { error } = await supabase.from("insights").delete().eq("id", id);
+
+  console.log("🗑️ Delete result:", { id, error });
+
+  if (error) {
+    console.error("❌ Erro ao excluir:", error.message);
+    queryClient.invalidateQueries({ queryKey: ["insights"] });
+  }
+};
 
   // ── Loading ──
   if (isLoading) {
