@@ -64,12 +64,12 @@ function InsightCard({ insight }: { insight: Insight }) {
   };
 
   return (
-    <div
-      className={cn(
-        "rounded-xl border border-l-4 p-4 transition-all hover:shadow-md",
-        cardStyleMap[insight.insight_type]
-      )}
-    >
+<div
+  className={cn(
+    "rounded-xl p-4 transition-all hover:shadow-md",
+    cardStyleMap[insight.insight_type]
+  )}
+>
       <div className="flex items-start gap-3">
         {/* Ícone colorido */}
         <div className={cn("mt-0.5 shrink-0", accentColorMap[insight.insight_type])}>
