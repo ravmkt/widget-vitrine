@@ -1,7 +1,11 @@
 import { createRoot } from "react-dom/client";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App.tsx";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+
+const queryClient = new QueryClient();
+
 const rootElement = document.getElementById("root");
 
 if (!rootElement) {
@@ -23,9 +27,11 @@ if (!rootElement) {
   try {
     const root = createRoot(rootElement);
     root.render(
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </QueryClientProvider>
     );
     console.log("React montado com sucesso no elemento #root.");
   } catch (error) {
