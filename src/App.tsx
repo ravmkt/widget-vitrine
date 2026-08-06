@@ -24,7 +24,6 @@ import AppearancePage from "@/pages/AppearancePage";
 import CommentsPage from "@/pages/CommentsPage";
 import StoryNewPage from "@/pages/StoryNewPage";
 import StoryPreviewPage from "@/pages/StoryPreviewPage";
-import InsightsTab from "@/components/InsightsTab";
 
 // ── Protege rotas que exigem login ──
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
