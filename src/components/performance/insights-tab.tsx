@@ -66,21 +66,43 @@ function timeAgo(dateStr: string): string {
   return `há ${Math.floor(hours / 24)}d`;
 }
 
-// ── 🆕 SANITIZA URL do backend ──
-// O backend gera /dashboard/videos/{uuid} mas a rota real é /videos/{uuid}/edit
+// ── Sanitiza URL do backend ──
 function sanitizeActionUrl(raw: string | null): string | null {
   if (!raw) return null;
-
-  // Remove prefixo /dashboard se existir
   let url = raw.replace(/^\/dashboard/, "");
-
-  // Se for /videos/{uuid} sem /edit, adiciona
   const videoMatch = url.match(/^\/videos\/([a-f0-9-]+)$/);
   if (videoMatch) {
     url = `/videos/${videoMatch[1]}/edit`;
   }
-
   return url;
+}
+
+// ── 🆕 Fallback inteligente de URL baseado no label ──
+function resolveActionUrl(insight: Insight): string | null {
+  // 1. action_url do backend (sanitizado)
+  if (insight.action_url) {
+    return sanitizeActionUrl(insight.action_url);
+  }
+
+  // 2. related_video_id
+  if (insight.related_video_id) {
+    return `/videos/${insight.related_video_id}/edit`;
+  }
+
+  // 3. related_placement_id
+  if (insight.related_placement_id) {
+    return "/produtos";
+  }
+
+  // 4. Fallback pelo texto do action_label
+  const label = (insight.action_label || "").toLowerCase();
+  if (label.includes("produto")) return "/produtos";
+  if (label.includes("vídeo")) return "/videos";
+  if (label.includes("página")) return "/dashboard";
+  if (label.includes("posi")) return "/dashboard";
+
+  // 5. Último recurso — vai pro dashboard (nunca retorna null)
+  return "/dashboard";
 }
 
 // ── Modal de confirmação ──
@@ -162,14 +184,7 @@ function InsightCard({
     queryClient.invalidateQueries({ queryKey: ["insights"] });
   };
 
-  // 🆕 Sanitiza o action_url do backend + fallback
-  const resolvedUrl =
-    sanitizeActionUrl(insight.action_url) ||
-    (insight.related_video_id
-      ? `/videos/${insight.related_video_id}/edit`
-      : insight.related_placement_id
-        ? "/produtos"
-        : null);
+  const resolvedUrl = resolveActionUrl(insight);
 
   const handleAction = () => {
     if (resolvedUrl) {
@@ -254,18 +269,11 @@ function InsightCard({
             </p>
           )}
 
-          {/* Ação */}
+          {/* Ação — 🆕 nunca fica desabilitado */}
           {insight.action_label && (
             <button
               onClick={handleAction}
-              disabled={!resolvedUrl}
-              className={cn(
-                "mt-3 inline-flex items-center gap-1 text-xs font-bold transition-colors",
-                resolvedUrl
-                  ? "text-[#0094EB] dark:text-[#38b2f8] hover:underline cursor-pointer"
-                  : "text-slate-300 dark:text-slate-600 cursor-not-allowed"
-              )}
-              title={!resolvedUrl ? "Em breve" : insight.action_label}
+              className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[#0094EB] dark:text-[#38b2f8] hover:underline cursor-pointer transition-colors"
             >
               {insight.action_label}
               <ExternalLink className="h-3 w-3" />
@@ -309,17 +317,12 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
     setDeleteTarget(id);
   };
 
+  // 🆕 Delete corrigido — usa só invalidate (chave correta), sem remoção otimista quebrada
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
 
     const id = deleteTarget;
-
-    // Remove otimista
-    queryClient.setQueryData(["insights"], (old: Insight[] | undefined) => {
-      if (!old) return old;
-      return old.filter((i) => i.id !== id);
-    });
 
     const { error: deleteError } = await supabase
       .from("insights")
@@ -329,11 +332,10 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
     setDeleting(false);
     setDeleteTarget(null);
 
-    if (deleteError) {
-      // Rollback
+    // Pequeno delay para o Supabase processar o delete, depois recarrega
+    setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: ["insights"] });
-    }
-    // Se sucesso, já foi removido otimistamente
+    }, 400);
   };
 
   const handleToggleCompleted = async (id: string, current: boolean) => {
