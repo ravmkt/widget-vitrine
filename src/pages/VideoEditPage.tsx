@@ -151,6 +151,45 @@ const isTemporaryUrl = (url: string) => {
   return url.startsWith('blob:') || url.startsWith('data:');
 };
 
+// ──────────────────────────────────────────────
+// 🆕 NOVAS FUNÇÕES — Cache de thumbnail externa
+// ──────────────────────────────────────────────
+
+/**
+ * Verifica se a URL de thumbnail é de CDN externo com token que expira
+ * (Instagram, TikTok, Facebook). Essas URLs precisam ser cacheadas no Storage.
+ */
+const isExternalCdnUrl = (url: string) => {
+  if (!url) return false;
+  return !url.includes('supabase.co/storage') &&
+    (url.includes('cdninstagram.com') ||
+      url.includes('tiktokcdn') ||
+      url.includes('fbcdn.net'));
+};
+
+/**
+ * Baixa uma thumbnail de CDN externo e faz upload para o Supabase Storage,
+ * retornando a URL permanente que nunca expira.
+ */
+const cacheThumbnailFromExternalUrl = async (imageUrl: string, storeId: string) => {
+  try {
+    const response = await fetch(imageUrl);
+    if (!response.ok) return null;
+
+    const blob = await response.blob();
+    const ext = blob.type === 'image/png' ? 'png' :
+      blob.type === 'image/webp' ? 'webp' : 'jpg';
+
+    const file = new File([blob], `thumb-${Date.now()}.${ext}`, { type: blob.type });
+    return await uploadFileToSupabase(file, storeId, 'thumbnails');
+  } catch (e) {
+    console.warn('Falha ao cachear thumbnail externa:', e);
+    return null;
+  }
+};
+
+// ──────────────────────────────────────────────
+
 const VideoEditPage = () => {
   const { storeId: tenantStoreId, loading: tenantLoading } = useTenant();
   const { id, storeId: paramStoreId } = useParams<{ id?: string; storeId?: string }>();
@@ -544,16 +583,22 @@ const VideoEditPage = () => {
         }
       }
 
-      const sourceType: Video['source_type'] =
-        formData.origin === 'upload' ? 'upload' : 'external_url';
+      // ──────────────────────────────────────────────────────────
+      // 🆕 PASSO 1: Cacheia thumbnail de CDN externo no Storage
+      // ──────────────────────────────────────────────────────────
+      if (finalThumbnailUrl && isExternalCdnUrl(finalThumbnailUrl)) {
+        const cached = await cacheThumbnailFromExternalUrl(finalThumbnailUrl, safeStoreId);
+        if (cached) {
+          finalThumbnailUrl = cached;
+        }
+      }
 
-      const now = new Date().toISOString();
-
-      // ── Thumbnail: tenta gerar do vídeo → fallback Edge Function ──
+      // ──────────────────────────────────────────────────────────
+      // PASSO 2: Thumbnail — gera do vídeo ou usa Edge Function
+      // ──────────────────────────────────────────────────────────
       if (!finalThumbnailUrl && finalVideoUrl) {
         finalThumbnailUrl = await generateAndUploadThumbnailFromUrl(finalVideoUrl, safeStoreId);
 
-        // Fallback para Instagram/TikTok via Edge Function
         if (!finalThumbnailUrl) {
           const fallbackUrl = await fetchThumbnailViaEdgeFunction(finalVideoUrl, safeStoreId);
           if (fallbackUrl) {
@@ -569,6 +614,11 @@ const VideoEditPage = () => {
           'thumbnails',
         );
       }
+
+      const sourceType: Video['source_type'] =
+        formData.origin === 'upload' ? 'upload' : 'external_url';
+
+      const now = new Date().toISOString();
 
       const videoData: Partial<Video> = {
         title: formData.title.trim(),
