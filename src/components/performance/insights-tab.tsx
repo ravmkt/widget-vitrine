@@ -1,6 +1,16 @@
+import { useState } from "react";
 import { useInsights, type Insight, type InsightType } from "@/hooks/useInsights";
 import { supabase } from "@/lib/supabase";
-import { AlertTriangle, CheckCircle, Lightbulb, X, ExternalLink, Loader2 } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle,
+  Lightbulb,
+  X,
+  ExternalLink,
+  Loader2,
+  Check,
+  Filter,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -11,6 +21,8 @@ interface InsightsTabProps {
   customTo?: string;
 }
 
+type FilterMode = "all" | "pending" | "completed";
+
 // ── Mapas visuais ──
 const iconMap: Record<InsightType, React.ElementType> = {
   warning: AlertTriangle,
@@ -18,8 +30,6 @@ const iconMap: Record<InsightType, React.ElementType> = {
   suggestion: Lightbulb,
 };
 
-// 🆕 Fundo do card: branco (claro) / escuro (dark)
-//    Borda lateral colorida mantida com ajuste para dark mode
 const cardStyleMap: Record<InsightType, string> = {
   warning:
     "bg-white dark:bg-slate-800/90 border-2 border-amber-500 dark:border-amber-400 border-l-[8px]",
@@ -29,7 +39,6 @@ const cardStyleMap: Record<InsightType, string> = {
     "bg-white dark:bg-slate-800/90 border-2 border-blue-500 dark:border-blue-400 border-l-[8px]",
 };
 
-// 🆕 Cores do ícone + label — mantém a cor temática, mais clara no dark
 const accentColorMap: Record<InsightType, string> = {
   warning: "text-amber-600 dark:text-amber-400",
   positive: "text-emerald-600 dark:text-emerald-400",
@@ -54,23 +63,52 @@ function timeAgo(dateStr: string): string {
 }
 
 // ── Card individual ──
-function InsightCard({ insight }: { insight: Insight }) {
+function InsightCard({
+  insight,
+  onToggleCompleted,
+}: {
+  insight: Insight;
+  onToggleCompleted: (id: string, current: boolean) => void;
+}) {
   const queryClient = useQueryClient();
   const Icon = iconMap[insight.insight_type];
+  const isCompleted = insight.completed ?? false;
 
   const handleDismiss = async () => {
     await supabase.from("insights").update({ dismissed: true }).eq("id", insight.id);
     queryClient.invalidateQueries({ queryKey: ["insights"] });
   };
 
+  const handleAction = () => {
+    // 🆕 Só abre se tiver action_url
+    if (insight.action_url) {
+      window.open(insight.action_url, "_blank", "noopener");
+    }
+  };
+
   return (
-<div
-  className={cn(
-    "rounded-xl p-4 transition-all hover:shadow-md",
-    cardStyleMap[insight.insight_type]
-  )}
->
+    <div
+      className={cn(
+        "rounded-xl p-4 transition-all hover:shadow-md",
+        isCompleted && "opacity-60",
+        cardStyleMap[insight.insight_type]
+      )}
+    >
       <div className="flex items-start gap-3">
+        {/* Check de concluído */}
+        <button
+          onClick={() => onToggleCompleted(insight.id, isCompleted)}
+          className={cn(
+            "mt-0.5 shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
+            isCompleted
+              ? "bg-emerald-500 border-emerald-500 text-white"
+              : "border-slate-300 dark:border-slate-600 hover:border-emerald-400 text-transparent hover:text-slate-400"
+          )}
+          title={isCompleted ? "Marcar como pendente" : "Marcar como concluído"}
+        >
+          {isCompleted && <Check className="h-3 w-3" />}
+        </button>
+
         {/* Ícone colorido */}
         <div className={cn("mt-0.5 shrink-0", accentColorMap[insight.insight_type])}>
           <Icon className="h-5 w-5" />
@@ -90,10 +128,21 @@ function InsightCard({ insight }: { insight: Insight }) {
             <span className="text-xs text-slate-400 dark:text-slate-500">
               {timeAgo(insight.created_at)}
             </span>
+            {isCompleted && (
+              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
+                Concluído
+              </span>
+            )}
           </div>
 
           {/* Título */}
-          <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-1">
+          <h4
+            className={cn(
+              "font-bold text-sm mb-1",
+              "text-slate-900 dark:text-white",
+              isCompleted && "line-through text-slate-400 dark:text-slate-500"
+            )}
+          >
             {insight.title}
           </h4>
 
@@ -116,7 +165,17 @@ function InsightCard({ insight }: { insight: Insight }) {
 
           {/* Ação */}
           {insight.action_label && (
-            <button className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[#0094EB] dark:text-[#38b2f8] hover:underline">
+            <button
+              onClick={handleAction}
+              disabled={!insight.action_url}
+              className={cn(
+                "mt-3 inline-flex items-center gap-1 text-xs font-bold transition-colors",
+                insight.action_url
+                  ? "text-[#0094EB] dark:text-[#38b2f8] hover:underline cursor-pointer"
+                  : "text-slate-300 dark:text-slate-600 cursor-not-allowed"
+              )}
+              title={!insight.action_url ? "Em breve" : undefined}
+            >
               {insight.action_label}
               <ExternalLink className="h-3 w-3" />
             </button>
@@ -139,8 +198,24 @@ function InsightCard({ insight }: { insight: Insight }) {
 // ── Componente principal ──
 export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProps) {
   const { data: insights, isLoading, isError, error } = useInsights();
+  const queryClient = useQueryClient();
+  const [filter, setFilter] = useState<FilterMode>("all");
 
-  // Estado de loading
+  // Toggle completed
+  const handleToggleCompleted = async (id: string, current: boolean) => {
+    // Otimista: atualiza antes do banco
+    queryClient.setQueryData(["insights"], (old: Insight[] | undefined) => {
+      if (!old) return old;
+      return old.map((i) => (i.id === id ? { ...i, completed: !current } : i));
+    });
+
+    await supabase.from("insights").update({ completed: !current }).eq("id", id);
+
+    // Refetch pra garantir
+    queryClient.invalidateQueries({ queryKey: ["insights"] });
+  };
+
+  // ── Loading ──
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -149,7 +224,7 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
     );
   }
 
-  // Estado de erro
+  // ── Erro ──
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -161,7 +236,23 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
     );
   }
 
-  // Estado vazio
+  // ── Ordena + filtra ──
+  const sorted = [...(insights || [])].sort((a, b) => {
+    const order: Record<InsightType, number> = { warning: 0, suggestion: 1, positive: 2 };
+    return order[a.insight_type] - order[b.insight_type];
+  });
+
+  const filtered =
+    filter === "all"
+      ? sorted
+      : filter === "pending"
+        ? sorted.filter((i) => !i.completed)
+        : sorted.filter((i) => i.completed);
+
+  const pendingCount = sorted.filter((i) => !i.completed).length;
+  const completedCount = sorted.filter((i) => i.completed).length;
+
+  // ── Vazio ──
   if (!insights || insights.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -177,17 +268,57 @@ export function InsightsTab({ timeRange, customFrom, customTo }: InsightsTabProp
     );
   }
 
-  // Ordena: warning → suggestion → positive
-  const sorted = [...insights].sort((a, b) => {
-    const order: Record<InsightType, number> = { warning: 0, suggestion: 1, positive: 2 };
-    return order[a.insight_type] - order[b.insight_type];
-  });
-
   return (
-    <div className="space-y-3">
-      {sorted.map((insight) => (
-        <InsightCard key={insight.id} insight={insight} />
-      ))}
+    <div className="space-y-4">
+      {/* 🆕 Filtro */}
+      <div className="flex items-center gap-2">
+        <Filter className="h-4 w-4 text-slate-400" />
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+          {([
+            { key: "all", label: "Todos", count: sorted.length },
+            { key: "pending", label: "Pendentes", count: pendingCount },
+            { key: "completed", label: "Concluídos", count: completedCount },
+          ] as const).map(({ key, label, count }) => (
+            <button
+              key={key}
+              onClick={() => setFilter(key)}
+              className={cn(
+                "px-3 py-1.5 text-xs font-bold rounded-md transition-all",
+                filter === key
+                  ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              )}
+            >
+              {label}
+              <span className="ml-1.5 text-slate-400 dark:text-slate-500 font-normal">
+                {count}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 🆕 Lista filtrada */}
+      {filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <CheckCircle className="h-10 w-10 text-emerald-300 dark:text-emerald-700 mb-3" />
+          <p className="text-sm text-slate-400 dark:text-slate-500">
+            {filter === "completed"
+              ? "Nenhum insight concluído ainda."
+              : "Todos os insights foram concluídos! 🎉"}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((insight) => (
+            <InsightCard
+              key={insight.id}
+              insight={insight}
+              onToggleCompleted={handleToggleCompleted}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
