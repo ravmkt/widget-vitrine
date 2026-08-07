@@ -12,7 +12,7 @@ import {
   Share2,
   Volume2,
   VolumeX,
-  Play,
+  Play,from("selector_sessions")
   Pause,
   ExternalLink,
   Smile,
