@@ -2556,3 +2556,786 @@
 
     modalContent.appendChild(container);
   }
+
+  /* ================================================================
+     NAVEGAÇÃO ENTRE STORIES E VÍDEOS
+     ================================================================ */
+
+  function nextStoryOrVideo() {
+    if (!currentStories || currentStories.length === 0) return;
+    var story = currentStories[currentStoryIndex];
+    var videos = story ? (story.videos || []) : [];
+
+    if (currentVideoIndex < videos.length - 1) {
+      // Próximo vídeo no mesmo story
+      currentVideoIndex++;
+    } else if (currentStoryIndex < currentStories.length - 1) {
+      // Próximo story
+      currentStoryIndex++;
+      currentVideoIndex = 0;
+    } else {
+      // Fim — fecha o modal
+      closeOverlay();
+      return;
+    }
+
+    renderStoryModal();
+    trackMetric({
+      event_type: 'next_video',
+      story_id: currentStories[currentStoryIndex].id,
+      video_id: (currentStories[currentStoryIndex].videos || [])[currentVideoIndex]
+        ? (currentStories[currentStoryIndex].videos || [])[currentVideoIndex].id
+        : null,
+      page_url: window.location.href
+    });
+  }
+
+  function prevStoryOrVideo() {
+    if (!currentStories || currentStories.length === 0) return;
+
+    if (currentVideoIndex > 0) {
+      currentVideoIndex--;
+    } else if (currentStoryIndex > 0) {
+      currentStoryIndex--;
+      var prevStory = currentStories[currentStoryIndex];
+      currentVideoIndex = Math.max(0, (prevStory.videos || []).length - 1);
+    } else {
+      // Já está no primeiro vídeo do primeiro story
+      return;
+    }
+
+    renderStoryModal();
+  }
+
+  /* ================================================================
+     GESTOS DE TOQUE (SWIPE) NO MODAL
+     ================================================================ */
+
+  var touchStartX = 0;
+  var touchStartY = 0;
+  var touchStartTime = 0;
+  var SWIPE_THRESHOLD = 50;
+  var SWIPE_TIME_LIMIT = 300;
+
+  function attachTouchListeners() {
+    if (!modalContent) return;
+
+    modalContent.addEventListener('touchstart', function (e) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
+    }, { passive: true });
+
+    modalContent.addEventListener('touchend', function (e) {
+      var touchEndX = e.changedTouches[0].clientX;
+      var touchEndY = e.changedTouches[0].clientY;
+      var deltaX = touchEndX - touchStartX;
+      var deltaY = touchEndY - touchStartY;
+      var elapsed = Date.now() - touchStartTime;
+
+      // Ignora se for um swipe vertical muito forte (scroll)
+      if (Math.abs(deltaY) > Math.abs(deltaX) * 1.5) return;
+      // Ignora se o tempo foi muito longo (não é swipe)
+      if (elapsed > SWIPE_TIME_LIMIT) return;
+
+      var absDeltaX = Math.abs(deltaX);
+      if (absDeltaX < SWIPE_THRESHOLD) return;
+
+      if (deltaX > 0) {
+        // Swipe para direita → anterior
+        prevStoryOrVideo();
+      } else {
+        // Swipe para esquerda → próximo
+        nextStoryOrVideo();
+      }
+    }, { passive: true });
+  }
+
+  /* ================================================================
+     TECLAS DO TECLADO (SETAS)
+     ================================================================ */
+
+  function attachKeyboardListeners() {
+    document.addEventListener('keydown', function (e) {
+      if (!overlay || !overlay.classList.contains('vl-active')) return;
+
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        nextStoryOrVideo();
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        prevStoryOrVideo();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closeOverlay();
+      }
+    });
+  }
+
+  /* ================================================================
+     ABERTURA DO MODAL
+     ================================================================ */
+
+  function openStoryModal(storyIndex) {
+    if (!currentStories || currentStories.length === 0) return;
+    if (storyIndex === undefined || storyIndex === null) storyIndex = 0;
+
+    currentStoryIndex = Math.max(0, Math.min(storyIndex, currentStories.length - 1));
+    currentVideoIndex = 0;
+
+    pausePreviews();
+
+    if (!overlay) {
+      overlay = createEl('div', 'vl-overlay');
+      overlay.id = 'vl-overlay';
+      modalContent = createEl('div', 'vl-modal');
+      overlay.appendChild(modalContent);
+      document.body.appendChild(overlay);
+    }
+
+    overlay.className = 'vl-overlay vl-active';
+    renderStoryModal();
+    attachTouchListeners();
+
+    trackMetric({
+      event_type: 'story_open',
+      story_id: currentStories[currentStoryIndex].id,
+      page_url: window.location.href
+    });
+  }
+
+  /* ================================================================
+     RENDERIZAÇÃO DAS BOLHAS (STORY BUBBLES)
+     ================================================================ */
+
+  function renderBubbles(container) {
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (!currentStories || currentStories.length === 0) {
+      var emptyMsg = createEl('div');
+      emptyMsg.textContent = 'Nenhum story disponível.';
+      emptyMsg.style.cssText = 'font-size:14px;color:#94a3b8;text-align:center;padding:20px;';
+      container.appendChild(emptyMsg);
+      return;
+    }
+
+    var bubbleList = createEl('div', 'vl-bubble-list');
+    bubbleList.style.cssText = 'display:flex;gap:' + bubbleGap + 'px;overflow-x:auto;overflow-y:hidden;padding:4px 4px 10px 4px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;';
+
+    var primaryColor = getPrimaryColor(currentAppearance);
+    var fontFamily = getFontFamily(currentAppearance);
+
+    currentStories.forEach(function (story, index) {
+      var bubbleWrapper = createEl('div', 'vl-bubble-wrapper');
+      bubbleWrapper.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;cursor:pointer;min-width:0;';
+
+      var bubble = createEl('div', 'vl-bubble');
+      var bubbleSizePx = bubbleSize + 'px';
+      bubble.style.cssText = 'width:' + bubbleSizePx + ';height:' + bubbleSizePx + ';border-radius:50%;padding:3px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.12);transition:transform .2s ease,box-shadow .2s ease;background:linear-gradient(135deg,' + primaryColor + ',' + adjustColor(primaryColor, -20) + ');';
+
+      var inner = createEl('div', 'vl-bubble-inner');
+      inner.style.cssText = 'width:100%;height:100%;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#fff;border:2px solid #fff;';
+
+      var thumbUrl = story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
+      if (!thumbUrl && story.videos && story.videos.length > 0) {
+        var firstVideo = story.videos[0];
+        thumbUrl = getVideoThumbnail(firstVideo);
+      }
+
+      if (thumbUrl) {
+        var img = createEl('img', 'vl-img');
+        img.src = thumbUrl;
+        img.alt = story.title || 'Story';
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
+        img.loading = 'lazy';
+        img.onerror = function () {
+          img.style.display = 'none';
+          var fallback = createEl('span');
+          fallback.textContent = (story.title || 'S').charAt(0).toUpperCase();
+          fallback.style.cssText = 'font-size:' + Math.max(14, bubbleSize * 0.35) + 'px;font-weight:700;color:' + primaryColor + ';';
+          inner.appendChild(fallback);
+        };
+        inner.appendChild(img);
+      } else {
+        var fallback = createEl('span');
+        fallback.textContent = (story.title || 'S').charAt(0).toUpperCase();
+        fallback.style.cssText = 'font-size:' + Math.max(14, bubbleSize * 0.35) + 'px;font-weight:700;color:' + primaryColor + ';';
+        inner.appendChild(fallback);
+      }
+
+      bubble.appendChild(inner);
+      bubbleWrapper.appendChild(bubble);
+
+      if (bubbleShowName !== false) {
+        var label = createEl('span', 'vl-bubble-label');
+        label.textContent = story.title || '';
+        label.style.cssText = 'font-size:11px;font-weight:600;color:#334155;max-width:' + (bubbleSize + 20) + 'px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;font-family:' + fontFamily + ';';
+        bubbleWrapper.appendChild(label);
+      }
+
+      bubbleWrapper.addEventListener('click', function (e) {
+        e.preventDefault();
+        openStoryModal(index);
+      });
+
+      bubbleWrapper.addEventListener('mouseenter', function () {
+        bubble.style.transform = 'scale(1.05)';
+        bubble.style.boxShadow = '0 4px 14px rgba(0,0,0,.18)';
+      });
+      bubbleWrapper.addEventListener('mouseleave', function () {
+        bubble.style.transform = 'scale(1)';
+        bubble.style.boxShadow = '0 2px 8px rgba(0,0,0,.12)';
+      });
+
+      bubbleList.appendChild(bubbleWrapper);
+    });
+
+    container.appendChild(bubbleList);
+  }
+
+  /* ================================================================
+     FUNÇÕES AUXILIARES DE COR
+     ================================================================ */
+
+  function adjustColor(hex, amount) {
+    hex = hex.replace('#', '');
+    if (hex.length === 3) {
+      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+    var r = Math.max(0, Math.min(255, parseInt(hex.substr(0, 2), 16) + amount));
+    var g = Math.max(0, Math.min(255, parseInt(hex.substr(2, 2), 16) + amount));
+    var b = Math.max(0, Math.min(255, parseInt(hex.substr(4, 2), 16) + amount));
+    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  }
+
+  function hexToRgba(hex, alpha) {
+    hex = hex.replace('#', '');
+    if (hex.length === 3) {
+      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+    var r = parseInt(hex.substr(0, 2), 16);
+    var g = parseInt(hex.substr(2, 2), 16);
+    var b = parseInt(hex.substr(4, 2), 16);
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + (alpha || 1) + ')';
+  }
+
+  /* ================================================================
+     INJEÇÃO DE ESTILOS (CSS) NO SHADOW DOM
+     ================================================================ */
+
+  function injectStyles(shadowRoot) {
+    if (!shadowRoot) return;
+
+    var styleEl = document.createElement('style');
+    styleEl.textContent = getFullCSS();
+    shadowRoot.appendChild(styleEl);
+  }
+
+  function getFullCSS() {
+    var primary = getPrimaryColor(currentAppearance);
+    var bgColor = getBackgroundColor(currentAppearance);
+    var textColor = getTextColor(currentAppearance);
+    var fontFamily = getFontFamily(currentAppearance);
+
+    return [
+      /* Reset */
+      '* { margin: 0; padding: 0; box-sizing: border-box; }',
+
+      /* Container principal */
+      '.vl-container {',
+      '  font-family: ' + fontFamily + ';',
+      '  direction: ltr;',
+      '  text-align: left;',
+      '}',
+
+      /* Lista de bolhas */
+      '.vl-bubble-list::-webkit-scrollbar { display: none; }',
+
+      /* Overlay */
+      '.vl-overlay {',
+      '  position: fixed;',
+      '  top: 0;',
+      '  left: 0;',
+      '  width: 100%;',
+      '  height: 100%;',
+      '  background: rgba(0,0,0,0.92);',
+      '  z-index: 999999;',
+      '  display: none;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '  overflow: hidden;',
+      '  opacity: 0;',
+      '  transition: opacity 0.3s ease;',
+      '}',
+      '.vl-overlay.vl-active {',
+      '  display: flex;',
+      '  opacity: 1;',
+      '}',
+
+      /* Modal */
+      '.vl-modal {',
+      '  position: relative;',
+      '  width: 100%;',
+      '  max-width: 420px;',
+      '  height: 100%;',
+      '  max-height: 100dvh;',
+      '  background: #000;',
+      '  overflow: hidden;',
+      '  display: flex;',
+      '  flex-direction: column;',
+      '}',
+
+      '@media (min-width: 768px) {',
+      '  .vl-modal {',
+      '    height: 90dvh;',
+      '    max-height: 800px;',
+      '    border-radius: 20px;',
+      '  }',
+      '}',
+
+      /* Progresso */
+      '.vl-progress {',
+      '  position: absolute;',
+      '  top: 8px;',
+      '  left: 8px;',
+      '  right: 8px;',
+      '  display: flex;',
+      '  gap: 4px;',
+      '  z-index: 100;',
+      '}',
+      '.vl-progress-bar {',
+      '  flex: 1;',
+      '  height: 3px;',
+      '  background: rgba(255,255,255,0.3);',
+      '  border-radius: 3px;',
+      '  overflow: hidden;',
+      '}',
+      '.vl-progress-fill {',
+      '  height: 100%;',
+      '  background: #fff;',
+      '  border-radius: 3px;',
+      '  transition: width 0.3s linear;',
+      '  width: 0%;',
+      '}',
+
+      /* Header */
+      '.vl-header {',
+      '  position: absolute;',
+      '  top: 20px;',
+      '  left: 16px;',
+      '  right: 16px;',
+      '  z-index: 50;',
+      '  display: flex;',
+      '  align-items: center;',
+      '  justify-content: space-between;',
+      '}',
+      '.vl-header-left { flex: 1; min-width: 0; }',
+      '.vl-title {',
+      '  font-size: 14px;',
+      '  font-weight: 700;',
+      '  color: #fff;',
+      '  white-space: nowrap;',
+      '  overflow: hidden;',
+      '  text-overflow: ellipsis;',
+      '}',
+      '.vl-header-actions {',
+      '  display: flex;',
+      '  align-items: center;',
+      '  gap: 8px;',
+      '  flex-shrink: 0;',
+      '}',
+      '.vl-control {',
+      '  width: 36px;',
+      '  height: 36px;',
+      '  border: none;',
+      '  background: rgba(0,0,0,0.4);',
+      '  border-radius: 50%;',
+      '  cursor: pointer;',
+      '  display: flex;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '  color: #fff;',
+      '  padding: 0;',
+      '  backdrop-filter: blur(4px);',
+      '  -webkit-backdrop-filter: blur(4px);',
+      '}',
+      '.vl-close {',
+      '  width: 36px;',
+      '  height: 36px;',
+      '  border: none;',
+      '  background: rgba(0,0,0,0.4);',
+      '  border-radius: 50%;',
+      '  cursor: pointer;',
+      '  display: flex;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '  color: #fff;',
+      '  padding: 0;',
+      '  backdrop-filter: blur(4px);',
+      '  -webkit-backdrop-filter: blur(4px);',
+      '}',
+
+      /* Body */
+      '.vl-body {',
+      '  flex: 1;',
+      '  position: relative;',
+      '  overflow: hidden;',
+      '  display: flex;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '}',
+
+      /* Player */
+      '.vl-player {',
+      '  width: 100%;',
+      '  height: 100%;',
+      '  display: flex;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '}',
+      '.vl-player video {',
+      '  width: 100%;',
+      '  height: 100%;',
+      '  object-fit: contain;',
+      '}',
+      '.vl-player iframe {',
+      '  width: 100%;',
+      '  height: 100%;',
+      '  border: none;',
+      '}',
+      '.vl-cta {',
+      '  color: #fff;',
+      '  font-size: 16px;',
+      '  font-weight: 700;',
+      '  text-decoration: underline;',
+      '  text-underline-offset: 4px;',
+      '}',
+
+      /* Navegação */
+      '.vl-nav {',
+      '  position: absolute;',
+      '  top: 0;',
+      '  left: 0;',
+      '  right: 0;',
+      '  bottom: 0;',
+      '  z-index: 40;',
+      '  pointer-events: none;',
+      '}',
+      '.vl-nav-btn {',
+      '  position: absolute;',
+      '  top: 0;',
+      '  width: 40%;',
+      '  height: 100%;',
+      '  background: transparent;',
+      '  border: none;',
+      '  cursor: pointer;',
+      '  pointer-events: auto;',
+      '  outline: none;',
+      '  -webkit-tap-highlight-color: transparent;',
+      '}',
+      '.vl-nav-prev { left: 0; }',
+      '.vl-nav-next { right: 0; }',
+      '.vl-nav-arrow {',
+      '  position: absolute;',
+      '  top: 50%;',
+      '  transform: translateY(-50%);',
+      '  width: 36px;',
+      '  height: 36px;',
+      '  background: rgba(255,255,255,0.15);',
+      '  border-radius: 50%;',
+      '  display: flex;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '  color: #fff;',
+      '  cursor: pointer;',
+      '  z-index: 45;',
+      '  pointer-events: auto;',
+      '  backdrop-filter: blur(4px);',
+      '  -webkit-backdrop-filter: blur(4px);',
+      '  opacity: 0;',
+      '  transition: opacity 0.2s ease;',
+      '}',
+      '.vl-nav-arrow-left { left: 8px; }',
+      '.vl-nav-arrow-right { right: 8px; }',
+      '.vl-modal:hover .vl-nav-arrow { opacity: 1; }',
+      '@media (hover: none) { .vl-nav-arrow { display: none; } }',
+
+      /* Social */
+      '.vl-social {',
+      '  position: absolute;',
+      '  right: 8px;',
+      '  bottom: 100px;',
+      '  z-index: 50;',
+      '  display: flex;',
+      '  flex-direction: column;',
+      '  gap: 16px;',
+      '  align-items: center;',
+      '}',
+      '.vl-social-wrapper {',
+      '  display: flex;',
+      '  flex-direction: column;',
+      '  align-items: center;',
+      '  gap: 2px;',
+      '}',
+      '.vl-social-btn {',
+      '  width: 44px;',
+      '  height: 44px;',
+      '  border: none;',
+      '  background: rgba(0,0,0,0.35);',
+      '  border-radius: 50%;',
+      '  cursor: pointer;',
+      '  display: flex;',
+      '  align-items: center;',
+      '  justify-content: center;',
+      '  color: #fff;',
+      '  padding: 0;',
+      '  backdrop-filter: blur(4px);',
+      '  -webkit-backdrop-filter: blur(4px);',
+      '  transition: transform 0.15s ease;',
+      '  position: relative;',
+      '}',
+      '.vl-social-btn:active { transform: scale(0.9); }',
+      '.vl-social-count {',
+      '  font-size: 11px;',
+      '  font-weight: 700;',
+      '  color: #fff;',
+      '  text-align: center;',
+      '}',
+
+      /* Footer */
+      '.vl-footer {',
+      '  position: absolute;',
+      '  bottom: 0;',
+      '  left: 0;',
+      '  right: 0;',
+      '  padding: 12px;',
+      '  z-index: 50;',
+      '}',
+      '.vl-footer-inner {',
+      '  width: 100%;',
+      '}',
+
+      /* Animações */
+      '@keyframes vlFadeIn {',
+      '  from { opacity: 0; transform: translateY(4px); }',
+      '  to { opacity: 1; transform: translateY(0); }',
+      '}',
+
+      /* Painel de comentários */
+      '.vl-comments-panel-full {',
+      '  animation: vlFadeIn 0.2s ease;',
+      '}',
+      '.vl-comment-card:last-child { border-bottom: none; }',
+
+      /* Painel de medidas */
+      '.vl-sizing-panel-full {',
+      '  animation: vlFadeIn 0.2s ease;',
+      '}',
+
+      /* Formulário */
+      '.vl-form-btn-row {',
+      '  display: flex;',
+      '  gap: 8px;',
+      '  width: 100%;',
+      '  margin-top: 8px;',
+      '}',
+      '.vl-form-btn-back {',
+      '  flex: 1;',
+      '  height: 42px;',
+      '  border: 1.5px solid #e2e8f0;',
+      '  border-radius: 12px;',
+      '  background: #fff;',
+      '  color: #64748b;',
+      '  font-size: 14px;',
+      '  font-weight: 700;',
+      '  cursor: pointer;',
+      '}',
+      '.vl-form-btn-send {',
+      '  flex: 2;',
+      '  height: 42px;',
+      '  border: none;',
+      '  border-radius: 12px;',
+      '  color: #fff;',
+      '  font-size: 14px;',
+      '  font-weight: 700;',
+      '  cursor: pointer;',
+      '}',
+
+      /* Responsivo */
+      '@media (max-width: 480px) {',
+      '  .vl-modal {',
+      '    max-width: 100%;',
+      '    border-radius: 0;',
+      '  }',
+      '  .vl-social {',
+      '    right: 4px;',
+      '    bottom: 90px;',
+      '    gap: 12px;',
+      '  }',
+      '  .vl-social-btn {',
+      '    width: 40px;',
+      '    height: 40px;',
+      '  }',
+      '}'
+    ].join('\n');
+  }
+
+  /* ================================================================
+     INICIALIZAÇÃO PRINCIPAL
+     ================================================================ */
+
+  function init(options) {
+    // Merge das opções com defaults
+    storeId = options.store_id || options.storeId || storeId;
+    supabaseUrl = options.supabase_url || options.supabaseUrl || supabaseUrl;
+    supabaseKey = options.supabase_key || options.supabaseKey || supabaseKey;
+    hasSupabase = !!(supabaseUrl && supabaseKey);
+
+    bubbleSize = options.bubble_size || options.bubbleSize || bubbleSize;
+    bubbleGap = options.bubble_gap || options.bubbleGap || bubbleGap;
+    bubbleShowName = options.bubble_show_name !== undefined
+      ? options.bubble_show_name
+      : (options.bubbleShowName !== undefined ? options.bubbleShowName : true);
+
+    storeWhatsappNumber = options.whatsapp_number || options.whatsappNumber || storeWhatsappNumber;
+    storeWhatsappMessage = options.whatsapp_message || options.whatsappMessage || storeWhatsappMessage;
+    autoApproveComments = options.auto_approve_comments !== undefined
+      ? options.auto_approve_comments
+      : (options.autoApproveComments !== undefined ? options.autoApproveComments : false);
+
+    // Dados iniciais
+    if (options.stories) { currentStories = options.stories; }
+    if (options.products) { readProductsData = options.products; }
+    if (options.sizing_models || options.sizingModels) {
+      readSizingModelsData = options.sizing_models || options.sizingModels;
+    }
+    if (options.comments) { readCommentsData = options.comments; }
+    if (options.appearance) { currentAppearance = options.appearance; }
+
+    // Container alvo
+    var targetSelector = options.target || '#vidlytics-stories';
+    var targetEl = document.querySelector(targetSelector);
+
+    if (!targetEl) {
+      console.warn('[Vidlytics] Container alvo "' + targetSelector + '" não encontrado.');
+      return;
+    }
+
+    // Cria Shadow DOM
+    var shadowHost = targetEl;
+    if (shadowHost.shadowRoot) {
+      globalShadowRoot = shadowHost.shadowRoot;
+    } else {
+      globalShadowRoot = shadowHost.attachShadow({ mode: 'open' });
+    }
+
+    // Container interno
+    var container = createEl('div', 'vl-container');
+    globalShadowRoot.appendChild(container);
+
+    // Injeta estilos
+    injectStyles(globalShadowRoot);
+
+    // Busca dados do Supabase se configurado
+    var fetchPromises = [];
+
+    if (hasSupabase && storeId) {
+      fetchPromises.push(
+        supabaseFetch('stories?store_id=eq.' + encodeURIComponent(storeId) + '&status=eq.published&order=position.asc')
+          .then(function (res) { return res.json(); })
+          .then(function (data) {
+            if (data && data.length > 0) {
+              currentStories = data;
+            }
+          })
+          .catch(function () {})
+      );
+
+      fetchPromises.push(
+        supabaseFetch('products?store_id=eq.' + encodeURIComponent(storeId))
+          .then(function (res) { return res.json(); })
+          .then(function (data) {
+            if (data && data.length > 0) {
+              readProductsData = data;
+            }
+          })
+          .catch(function () {})
+      );
+
+      fetchPromises.push(
+        supabaseFetch('sizing_models?store_id=eq.' + encodeURIComponent(storeId))
+          .then(function (res) { return res.json(); })
+          .then(function (data) {
+            if (data && data.length > 0) {
+              readSizingModelsData = data;
+            }
+          })
+          .catch(function () {})
+      );
+
+      fetchPromises.push(
+        supabaseFetch('comments?store_id=eq.' + encodeURIComponent(storeId) + '&order=created_at.desc')
+          .then(function (res) { return res.json(); })
+          .then(function (data) {
+            if (data && data.length > 0) {
+              readCommentsData = data;
+            }
+          })
+          .catch(function () {})
+      );
+    }
+
+    // Após buscar dados (ou não), renderiza
+    Promise.all(fetchPromises).then(function () {
+      renderBubbles(container);
+      attachKeyboardListeners();
+    }).catch(function () {
+      renderBubbles(container);
+      attachKeyboardListeners();
+    });
+
+    // Expor API pública
+    if (options.api) {
+      window[options.api] = {
+        open: openStoryModal,
+        close: closeOverlay,
+        next: nextStoryOrVideo,
+        prev: prevStoryOrVideo,
+        refresh: function () { renderBubbles(container); },
+        setStories: function (stories) {
+          currentStories = stories;
+          renderBubbles(container);
+        }
+      };
+    }
+
+    trackMetric({
+      event_type: 'widget_init',
+      page_url: window.location.href
+    });
+  }
+
+  /* ================================================================
+     AUTO-INICIALIZAÇÃO VIA ATRIBUTO DATA
+     ================================================================ */
+
+  function autoInit() {
+    var scripts = document.querySelectorAll('script[data-vidlytics-init]');
+    scripts.forEach(function (script) {
+      try {
+        var config = JSON.parse(script.getAttribute('data-vidlytics-init') || '{}');
+        init(config);
+      } catch (e) {
+        console.error('[Vidlytics] Erro ao parsear configuração:', e);
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', autoInit);
+  } else {
+    autoInit();
+  }
+
+})();
