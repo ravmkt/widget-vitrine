@@ -1308,6 +1308,20 @@ useEffect(() => {
   loadLikes();
 }, [currentVideo?.id, resolvedStoreId]);
 
+// Configurar sincronização offline
+useEffect(() => {
+  const handlers = {
+    toggleLike: async (payload: { videoId: string; liked: boolean; storeId?: string }) => {
+      await toggleLike(payload.videoId, payload.liked, payload.storeId);
+    },
+    saveComment: async (payload: any) => {
+      await (db as any).comments.save(payload);
+    },
+  };
+
+  setupOfflineSync(handlers);
+}, []);
+
   // Reset ao trocar de vídeo/story
   useEffect(() => {
     if (!story || !currentVideo?.id || !resolvedStoreId) return;
