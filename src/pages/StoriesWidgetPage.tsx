@@ -1,3 +1,5 @@
+import { enqueue, setupOfflineSync } from '@/lib/offlineQueue';
+import { fetchLikes, toggleLike, type LikeRecord } from '@/lib/likesService';
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type FC } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { db, Video, resolveStoreId, generateUuid } from '@/lib/db';
