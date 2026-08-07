@@ -2179,11 +2179,6 @@ function openSizingPanel(modelId) {
       panelFooter.style.display = 'none';
 
       // fecha emoji ao clicar fora
-      document.addEventListener('mousedown', function closeEmoji(ev) {
-        if (emojiGrid.style.display === 'grid' && !textareaWrapper.contains(ev.target)) {
-          emojiGrid.style.display = 'none';
-          document.removeEventListener('mousedown', closeEmoji);
-        }
       });
 
       setTimeout(function () { nameInput.focus(); }, 200);
