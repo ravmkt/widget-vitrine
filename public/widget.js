@@ -3303,28 +3303,42 @@ function initInlineWidget(options) {
     overlayEl.focus();
   }
 
-  function sendSelector(selector, storyId) {
-    var payload = { selector: selector, token: widgetSelectToken };
-    if (storyId) { payload.story_id = storyId; }
+function sendSelector(selector, storyId) {
+  var payload = { selector: selector, token: widgetSelectToken };
+  if (storyId) { payload.story_id = storyId; }
 
-    var endpoint = supabaseUrl
-      ? supabaseUrl.replace(/\/rest\/v1.*/, '') + '/functions/v1/widget-selector'
-      : 'https://api.vidlytics.com/widget-selector';
+  var endpoint = supabaseUrl
+    ? supabaseUrl.replace(/\/rest\/v1.*/, '') + '/functions/v1/widget-selector'
+    : 'https://api.vidlytics.com/widget-selector';
 
-    fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).then(function (res) {
-      if (res.ok) {
-        alert('✅ Seletor vinculado com sucesso!' + (storyId ? ' Story vinculado.' : ''));
-      } else {
-        alert('❌ Erro ao vincular seletor.');
-      }
-    }).catch(function () {
-      alert('❌ Erro de conexão ao vincular seletor.');
+  console.log('📤 [Vidlytics] Enviando seletor:', {
+    endpoint: endpoint,
+    payload: payload
+  });
+
+  fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+    .then(function (res) {
+      console.log('📥 [Vidlytics] Status da resposta:', res.status);
+      return res.json().then(function (data) {
+        console.log('📦 [Vidlytics] Corpo da resposta:', data);
+        if (res.ok) {
+          alert('✅ Seletor vinculado com sucesso!' + (storyId ? ' Story vinculado.' : ''));
+          console.log('✅ Sucesso! Dados retornados:', JSON.stringify(data));
+        } else {
+          alert('❌ Erro ao vincular seletor: ' + (data.message || data.error || 'Desconhecido'));
+          console.error('❌ Resposta de erro:', data);
+        }
+      });
+    })
+    .catch(function (err) {
+      console.error('❌ [Vidlytics] Erro de rede:', err);
+      alert('❌ Erro de conexão ao vincular seletor. Veja o console.');
     });
-  }
+}
 
   function cleanupPicker(overlayEl, bannerEl, highlightEl) {
     if (overlayEl && overlayEl.parentNode) overlayEl.parentNode.removeChild(overlayEl);
