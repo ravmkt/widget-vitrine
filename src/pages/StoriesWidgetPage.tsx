@@ -1056,18 +1056,36 @@ export default function StoriesWidgetPage() {
     if (videoRef.current) videoRef.current.muted = next;
   };
 
-  const handleLike = () => {
-    if (!currentVideo?.id) return;
-    const likes = readLikes();
-    const current = likes[currentVideo.id] || { liked: false, count: 0 };
-    const nextLiked = !current.liked;
-    const nextCount = Math.max(0, current.count + (nextLiked ? 1 : -1));
-    likes[currentVideo.id] = { liked: nextLiked, count: nextCount };
-    saveLikes(likes);
-    setLiked(nextLiked);
-    setLikeCount(nextCount);
-  };
+const handleLike = async () => {
+  if (!currentVideo?.id) return;
 
+  const videoId = currentVideo.id;
+
+  // Atualização otimista no state + localStorage
+  setLiked(prev => {
+    const newLiked = !prev;
+    setLikeCount(c => Math.max(0, c + (newLiked ? 1 : -1)));
+
+    const local = (() => {
+      try { return JSON.parse(localStorage.getItem('story_video_likes') || '{}'); } catch { return {}; }
+    })();
+    const current = local[videoId] || { liked: false, count: 0 };
+    local[videoId] = {
+      liked: newLiked,
+      count: Math.max(0, current.count + (newLiked ? 1 : -1)),
+    };
+    localStorage.setItem('story_video_likes', JSON.stringify(local));
+
+    return newLiked;
+  });
+
+  // Tenta enviar ao backend; se falhar, enfileira
+  try {
+    await toggleLike(videoId, !liked, resolvedStoreId);
+  } catch {
+    enqueue('toggleLike', { videoId, liked: !liked, storeId: resolvedStoreId });
+  }
+};
   /** 🆕 Clique em vídeo do grid: seta o índice e ativa o player */
   const handleGridVideoClick = (video: any) => {
     const idx = currentVideos.findIndex((item: any) => item.id === video.id);
