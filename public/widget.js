@@ -3044,37 +3044,75 @@
       document.removeEventListener('keydown', onKey, true);
     }
 
-    function sendSelector(selector) {
-      cleanup();
-      var msg = document.createElement('div');
-      msg.style.cssText =
-        'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999999;' +
-        'background:#fff;color:#0f172a;padding:28px 36px;border-radius:20px;' +
-        'font-family:Inter,system-ui,sans-serif;text-align:center;' +
-        'box-shadow:0 20px 60px rgba(0,0,0,.3);';
-      msg.innerHTML =
-        '<div style="font-size:40px;margin-bottom:12px;">✅</div>' +
-        '<div style="font-size:16px;font-weight:800;margin-bottom:8px;">Elemento selecionado!</div>' +
-        '<div style="font-size:12px;color:#64748b;word-break:break-all;margin-bottom:12px;font-family:monospace;">' +
-          selector +
-        '</div>' +
-        '<div style="font-size:11px;color:#94a3b8;">Esta janela já pode ser fechada.</div>';
-      document.body.appendChild(msg);
+function sendSelector(selector, storyId) {
+  cleanup();
+  var msg = document.createElement('div');
+  msg.style.cssText =
+    'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999999;' +
+    'background:#fff;color:#0f172a;padding:28px 36px;border-radius:20px;' +
+    'font-family:Inter,system-ui,sans-serif;text-align:center;' +
+    'box-shadow:0 20px 60px rgba(0,0,0,.3);';
+  msg.innerHTML =
+    '<div style="font-size:40px;margin-bottom:12px;">✅</div>' +
+    '<div style="font-size:16px;font-weight:800;margin-bottom:8px;">Elemento selecionado!</div>' +
+    '<div style="font-size:12px;color:#64748b;word-break:break-all;margin-bottom:12px;font-family:monospace;">' +
+      selector +
+    '</div>' +
+    '<div style="font-size:11px;color:#94a3b8;">Esta janela já pode ser fechada.</div>';
+  document.body.appendChild(msg);
 
-      if (hasSupabase) {
-        supabaseFetch('selector_sessions', {
-          method: 'POST',
-          headers: { 'Prefer': 'return=minimal' },
-          body: JSON.stringify({
-            session_token: token,
-            selector: selector,
-            created_at: new Date().toISOString()
-          })
-        }).catch(function(err) {
-          console.error('VIDLYTICS: Erro ao salvar seletor visual:', err);
+  // 🔧 Salva na selector_sessions (compatibilidade com backend)
+  if (hasSupabase) {
+    supabaseFetch('selector_sessions', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
+        session_token: token,
+        selector: selector,
+        created_at: new Date().toISOString()
+      })
+    }).catch(function(err) {
+      console.error('VIDLYTICS: Erro ao salvar seletor visual:', err);
+    });
+
+    // 🔧 NOVO: Atualiza diretamente a display_locations pelo story_id
+    if (storyId) {
+      // Busca o registro existente para este story_id
+      supabaseFetch('display_locations?story_id=eq.' + encodeURIComponent(storyId) + '&select=id', {
+        method: 'GET'
+      })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data && data.length > 0) {
+            // UPDATE no registro existente
+            return supabaseFetch('display_locations?id=eq.' + encodeURIComponent(data[0].id), {
+              method: 'PATCH',
+              headers: { 'Prefer': 'return=minimal' },
+              body: JSON.stringify({ selector: selector, updated_at: new Date().toISOString() })
+            });
+          } else {
+            // INSERT se não existir
+            return supabaseFetch('display_locations', {
+              method: 'POST',
+              headers: { 'Prefer': 'return=minimal' },
+              body: JSON.stringify({
+                store_id: storeId,
+                story_id: storyId,
+                selector: selector,
+                position: 'beforebegin',
+                active: true,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              })
+            });
+          }
+        })
+        .catch(function(err) {
+          console.error('VIDLYTICS: Erro ao atualizar display_locations:', err);
         });
-      }
     }
+  }
+}
 
     function onClick(e) {
       e.preventDefault();
