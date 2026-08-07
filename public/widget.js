@@ -616,8 +616,9 @@
     return sanitizeCssValue(raw, getPrimaryColor(appearance), 'color');
   }
 
-  function getFontFamily(appearance) {
-    return readAppearanceValue(appearance, ['font_family', 'fontFamily', 'fonte']) || DEFAULT_APPEARANCE.font_family;
+    function getFontFamily(appearance) {
+    var raw = readAppearanceValue(appearance, ['font_family', 'fontFamily', 'fonte']);
+    return sanitizeCssValue(raw, DEFAULT_APPEARANCE.font_family, 'font');
   }
 
   function normalizeModalAppearanceConfig(appearance) {
