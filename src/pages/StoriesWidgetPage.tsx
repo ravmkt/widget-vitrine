@@ -56,8 +56,6 @@ type CommentItem = {
   updated_at?: string;
 };
 
-type LikeRecord = Record<string, { liked: boolean; count: number }>;
-
 type ModalAppearanceConfig = {
   show_title: boolean;
   show_play_button: boolean;
