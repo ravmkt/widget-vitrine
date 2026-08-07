@@ -3040,8 +3040,6 @@ function onClick(e) {
 
     if (!hasSupabase && !storeId) return;
 
-    if (!hasSupabase && !storeId) return;
-
     Promise.all([
       readAppearance(),
       readStories(),
