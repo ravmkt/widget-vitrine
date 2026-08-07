@@ -25,7 +25,6 @@ import ProductsPage from "@/pages/ProductsPage";
 import MedidasPage from "@/pages/MedidasPage";
 import AppearancePage from "@/pages/AppearancePage";
 import CommentsPage from "@/pages/CommentsPage";
-import StoryNewPage from "@/pages/StoryNewPage";
 import StoryPreviewPage from "@/pages/StoryPreviewPage";
 
 // ── Protege rotas que exigem login ──
@@ -128,7 +127,6 @@ function App() {
 
           {/* ── Stories (rotas específicas ANTES da genérica) ── */}
           <Route path="/stories/widget" element={<ProtectedRoute><AppLayout><StoriesWidgetPage /></AppLayout></ProtectedRoute>} />
-          <Route path="/stories/new" element={<ProtectedRoute><AppLayout><StoryNewPage /></AppLayout></ProtectedRoute>} />
           <Route path="/stories/preview/:id" element={<ProtectedRoute><StoryPreviewPage /></ProtectedRoute>} />
 <Route path="/stories/:id" element={<ProtectedRoute><AppLayout><StoryDetailsPage /></AppLayout></ProtectedRoute>} /> 
           <Route path="/stories" element={<ProtectedRoute><AppLayout><StoriesPage /></AppLayout></ProtectedRoute>} />
