@@ -594,7 +594,8 @@
   }
 
   function getPrimaryColor(appearance) {
-    return readAppearanceValue(appearance, ['primary_color', 'primaryColor', 'cor_primaria']) || DEFAULT_APPEARANCE.primary_color;
+    var raw = readAppearanceValue(appearance, ['primary_color', 'primaryColor', 'cor_primaria']);
+    return sanitizeCssValue(raw, DEFAULT_APPEARANCE.primary_color, 'color');
   }
 
   function getSecondaryColor(appearance) {
