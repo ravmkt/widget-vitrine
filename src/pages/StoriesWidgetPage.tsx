@@ -270,7 +270,6 @@ const idsEqual = (a?: any, b?: any) => {
 // HELPERS DE LOCALSTORAGE (LIKES / COMENTÁRIOS)
 // ═══════════════════════════════════════════════════════════════
 
-};
 
 const readLocalComments = (): CommentItem[] => {
   try { return JSON.parse(localStorage.getItem('story_video_comments') || '[]'); } catch { return []; }
