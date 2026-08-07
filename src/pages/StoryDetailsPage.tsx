@@ -422,10 +422,10 @@ const handleOpenSelector = async () => {
     tentativas++;
 
     try {
-      const { data } = await supabase
-        .from("selector_sessions")
-        .select("*")
-        .eq("session_token", token)
+const { data } = await supabase
+  .from("widget_selectors")
+  .select("*")
+  .eq("token", token)
         .order("created_at", { ascending: false })
         .limit(1);
 
