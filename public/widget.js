@@ -604,10 +604,10 @@
   }
 
   function getBorderColor(appearance) {
-    var jsonbVal = readJsonbConfigValue(appearance, 'floating_config', 'border_color');
-    if (jsonbVal && String(jsonbVal).trim() !== '') return jsonbVal;
-    var flatVal = readDeviceValue(appearance, 'floating_border_color');
-    if (flatVal && String(flatVal).trim() !== '') return flatVal;
+    var jsonbVal = sanitizeCssValue(readJsonbConfigValue(appearance, 'floating_config', 'border_color'), '', 'color');
+    if (jsonbVal) return jsonbVal;
+    var flatVal = sanitizeCssValue(readDeviceValue(appearance, 'floating_border_color'), '', 'color');
+    if (flatVal) return flatVal;
     return getPrimaryColor(appearance);
   }
 
