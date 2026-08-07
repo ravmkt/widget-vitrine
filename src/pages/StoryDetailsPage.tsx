@@ -403,33 +403,33 @@ console.log('typeof is_cover[0]:', typeof newRelations[0]?.is_cover);
   };
 
 // 🆕 Função do seletor visual
+// 🆕 Função do seletor visual
 const handleOpenSelector = async () => {
   const url = selectorUrl.trim();
   if (!url) return;
 
   const token = "sel_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+  
+  // Inclui o story_id na URL para a Edge Function salvar
+  const storyIdParam = story?.id ? "&widgetSelectStoryId=" + story.id : "";
   const sep = url.includes("?") ? "&" : "?";
-  const finalUrl = url + sep + "widgetSelectToken=" + token;
+  const finalUrl = url + sep + "widgetSelectToken=" + token + storyIdParam;
 
   window.open(finalUrl, "_blank");
   setSelectorLoading(true);
   setSelectorModalOpen(false);
-
-  const { supabase } = await import('@/lib/supabase');
 
   let tentativas = 0;
   const polling = setInterval(async () => {
     tentativas++;
 
     try {
-const { data } = await supabase
-  .from("widget_selectors")
-  .select("*")
-  .eq("token", token)
-        .order("created_at", { ascending: false })
-        .limit(1);
+      const response = await fetch(
+        `https://SEU_PROJETO.supabase.co/functions/v1/get-selector?token=${token}`
+      );
+      const result = await response.json();
 
-      if (data && data.length > 0) {
+      if (result.success && result.data) {
         clearInterval(polling);
         setLocations((prev) => [
           {
@@ -441,7 +441,7 @@ const { data } = await supabase
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             }),
-            selector: data[0].selector,
+            selector: result.data.selector,
           },
         ]);
         setSelectorLoading(false);
