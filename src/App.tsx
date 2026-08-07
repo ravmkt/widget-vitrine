@@ -130,7 +130,7 @@ function App() {
           <Route path="/stories/widget" element={<ProtectedRoute><AppLayout><StoriesWidgetPage /></AppLayout></ProtectedRoute>} />
           <Route path="/stories/new" element={<ProtectedRoute><AppLayout><StoryNewPage /></AppLayout></ProtectedRoute>} />
           <Route path="/stories/preview/:id" element={<ProtectedRoute><StoryPreviewPage /></ProtectedRoute>} />
-<Route path="/stories/:id" element={<ProtectedRoute><AppLayout><StoryDetailsPage /></AppLayout></ProtectedRoute>} />          <Route path="/stories/:id" element={<ProtectedRoute><AppLayout><StoryNewPage /></AppLayout></ProtectedRoute>} />
+<Route path="/stories/:id" element={<ProtectedRoute><AppLayout><StoryDetailsPage /></AppLayout></ProtectedRoute>} /> 
           <Route path="/stories" element={<ProtectedRoute><AppLayout><StoriesPage /></AppLayout></ProtectedRoute>} />
 
           {/* ── Vídeos (rotas específicas ANTES das genéricas) ── */}
