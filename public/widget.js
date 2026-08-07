@@ -611,8 +611,9 @@
     return getPrimaryColor(appearance);
   }
 
-  function getButtonColor(appearance) {
-    return readAppearanceValue(appearance, ['button_color', 'buttonColor', 'btn_color', 'cor_botao']) || getPrimaryColor(appearance);
+   function getButtonColor(appearance) {
+    var raw = readAppearanceValue(appearance, ['button_color', 'buttonColor', 'btn_color', 'cor_botao']);
+    return sanitizeCssValue(raw, getPrimaryColor(appearance), 'color');
   }
 
   function getFontFamily(appearance) {
