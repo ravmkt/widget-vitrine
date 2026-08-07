@@ -270,6 +270,20 @@ const idsEqual = (a?: any, b?: any) => {
 // HELPERS DE LOCALSTORAGE (LIKES / COMENTÁRIOS)
 // ═══════════════════════════════════════════════════════════════
 
+const saveLocalLikes = (likes: LikeRecord) => {
+  localStorage.setItem('story_video_likes', JSON.stringify(likes));
+};
+
+const mergeLike = (prev: LikeRecord, videoId: string, patch: Partial<{ liked: boolean; count: number }>): LikeRecord => {
+  const current = prev[videoId] || { liked: false, count: 0 };
+  return {
+    ...prev,
+    [videoId]: {
+      liked: patch.liked ?? current.liked,
+      count: Math.max(0, patch.count ?? current.count),
+    },
+  };
+};
 
 const readLocalComments = (): CommentItem[] => {
   try { return JSON.parse(localStorage.getItem('story_video_comments') || '[]'); } catch { return []; }
