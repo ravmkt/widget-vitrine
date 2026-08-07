@@ -1341,9 +1341,14 @@ useEffect(() => {
     setPlaying(true);
     setForcePlayerView(false);
 
-    const likes = readLikes();
-    setLikeCount(getVideoLikeCount(currentVideo.id));
-    setLiked(Boolean(likes[currentVideo.id]?.liked));
+    try {
+      const likes = JSON.parse(localStorage.getItem('story_video_likes') || '{}');
+      setLikeCount(likes[currentVideo.id]?.count ?? 0);
+      setLiked(Boolean(likes[currentVideo.id]?.liked));
+    } catch {
+      setLikeCount(0);
+      setLiked(false);
+    }
 
     loadComments(currentVideo.id, resolvedStoreId);
     loadLinkedData(story, currentVideo, resolvedStoreId);
