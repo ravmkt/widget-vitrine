@@ -3339,3 +3339,507 @@
   }
 
 })();
+
+  /* ================================================================
+     ÍCONES SVG
+     ================================================================ */
+
+  function svgIcon(name) {
+    var icons = {
+      'volume': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>',
+
+      'volumeOff': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>',
+
+      'play': '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"></polygon></svg>',
+
+      'pause': '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg>',
+
+      'close': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
+
+      'heart': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>',
+
+      'heartFilled': '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>',
+
+      'comment': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
+
+      'commentFilled': '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
+
+      'share': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>',
+
+      'sizing': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"></path></svg>',
+
+      'whatsapp': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.498 14.382c-.301-.15-1.767-.867-2.04-.966-.273-.101-.473-.15-.673.15-.2.3-.773.966-.947 1.164-.173.198-.347.223-.648.074-.301-.15-1.27-.466-2.418-1.488-.894-.795-1.497-1.776-1.673-2.076-.176-.3-.019-.462.131-.612.135-.135.3-.347.45-.521.15-.174.2-.3.3-.5.1-.2.05-.374-.025-.524-.075-.15-.673-1.617-.923-2.214-.243-.579-.49-.5-.673-.51-.173-.008-.373-.01-.573-.01-.2 0-.524.074-.798.373-.274.3-1.047 1.02-1.047 2.49 0 1.47 1.073 2.893 1.223 3.092.15.2 2.115 3.222 5.124 4.518.715.309 1.274.493 1.71.631.718.228 1.37.196 1.887.119.57-.086 1.767-.722 2.016-1.42.249-.697.249-1.295.174-1.42-.075-.124-.274-.199-.575-.348z"></path><path d="M1.5 1.5h21L12 21z" fill="currentColor" opacity="0"></path></svg>',
+
+      'copy': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>',
+
+      'check': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+
+      'chevronLeft': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>',
+
+      'chevronRight': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>',
+
+      'loader': '<svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="20" cy="20" r="17" opacity="0.2"></circle><path d="M20 3a17 17 0 0 1 17 17" stroke="currentColor"><animateTransform attributeName="transform" type="rotate" from="0 20 20" to="360 20 20" dur="0.8s" repeatCount="indefinite"/></path></svg>'
+    };
+
+    return icons[name] || '';
+  }
+
+  /* ================================================================
+     ARRASTAR (DRAG) DO WIDGET FLUTUANTE
+     ================================================================ */
+
+  var floatingWasDragged = false;
+
+  function applyDraggable(el, appearance) {
+    var behaviorConfig = getFloatingBehaviorConfig(appearance);
+    if (!behaviorConfig.allowDrag) return;
+
+    var isDragging = false;
+    var startX, startY, initialRight, initialBottom;
+
+    el.addEventListener('mousedown', function (e) {
+      // Não arrasta se clicar no botão de fechar
+      if (e.target.closest('.vl-dismiss')) return;
+      isDragging = true;
+      floatingWasDragged = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      var rect = el.getBoundingClientRect();
+      initialRight = window.innerWidth - rect.right;
+      initialBottom = window.innerHeight - rect.bottom;
+      el.style.transition = 'none';
+    });
+
+    document.addEventListener('mousemove', function (e) {
+      if (!isDragging) return;
+      var dx = startX - e.clientX;
+      var dy = startY - e.clientY;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        floatingWasDragged = true;
+        // Mantém ancorado à direita e embaixo
+        el.style.right = (initialRight + dx) + 'px';
+        el.style.bottom = (initialBottom + dy) + 'px';
+        el.style.left = 'auto';
+        el.style.top = 'auto';
+      }
+    });
+
+    document.addEventListener('mouseup', function () {
+      if (isDragging) {
+        isDragging = false;
+        el.style.transition = 'all 0.3s ease';
+      }
+    });
+
+    // Touch events para mobile
+    el.addEventListener('touchstart', function (e) {
+      if (e.target.closest('.vl-dismiss')) return;
+      if (e.touches.length !== 1) return;
+      isDragging = true;
+      floatingWasDragged = false;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      var rect = el.getBoundingClientRect();
+      initialRight = window.innerWidth - rect.right;
+      initialBottom = window.innerHeight - rect.bottom;
+      el.style.transition = 'none';
+    }, { passive: true });
+
+    document.addEventListener('touchmove', function (e) {
+      if (!isDragging || e.touches.length !== 1) return;
+      var dx = startX - e.touches[0].clientX;
+      var dy = startY - e.touches[0].clientY;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        floatingWasDragged = true;
+        el.style.right = (initialRight + dx) + 'px';
+        el.style.bottom = (initialBottom + dy) + 'px';
+        el.style.left = 'auto';
+        el.style.top = 'auto';
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchend', function () {
+      if (isDragging) {
+        isDragging = false;
+        el.style.transition = 'all 0.3s ease';
+      }
+    });
+  }
+
+  /* ================================================================
+     TOGGLE DE EXPANSÃO DO WIDGET FLUTUANTE
+     ================================================================ */
+
+  function toggleFloatingExpand() {
+    floatingExpanded = !floatingExpanded;
+    var widget = globalShadowRoot
+      ? globalShadowRoot.querySelector('.vidlytics-floating-widget')
+      : document.querySelector('.vidlytics-floating-widget');
+
+    if (!widget) return;
+
+    if (floatingExpanded) {
+      widget.classList.add('vl-floating-expanded');
+      // Se houver bolhas ainda não renderizadas dentro do floating widget,
+      // renderiza agora
+      var bubbleContainer = widget.querySelector('.vl-floating-bubbles');
+      if (bubbleContainer && currentStories && currentStories.length > 0) {
+        renderBubbles(bubbleContainer);
+      }
+    } else {
+      widget.classList.remove('vl-floating-expanded');
+    }
+
+    trackMetric({
+      event_type: floatingExpanded ? 'floating_expand' : 'floating_collapse',
+      page_url: window.location.href
+    });
+  }
+
+  /* ================================================================
+     RENDERIZAÇÃO DO WIDGET FLUTUANTE
+     ================================================================ */
+
+  function renderFloatingWidget() {
+    if (!currentAppearance) return;
+
+    var mode = (currentAppearance.floating_mode || currentAppearance.floatingMode || 'inline').toLowerCase();
+    if (mode === 'inline') return; // Não é modo flutuante
+
+    if (!globalShadowRoot) {
+      var shadowHost = document.createElement('div');
+      shadowHost.id = 'vidlytics-floating-host';
+      document.body.appendChild(shadowHost);
+      globalShadowRoot = shadowHost.attachShadow({ mode: 'open' });
+      injectStyles(globalShadowRoot);
+    }
+
+    // Remove widget existente se houver
+    var existing = globalShadowRoot.querySelector('.vidlytics-floating-widget');
+    if (existing) existing.remove();
+
+    var widget = createEl('div', 'vidlytics-floating-widget');
+    var primaryColor = getPrimaryColor(currentAppearance);
+    var behaviorConfig = getFloatingBehaviorConfig(currentAppearance);
+
+    // Posicionamento
+    var posRight = behaviorConfig.position === 'left' ? 'auto' : (behaviorConfig.rightOffset || 16) + 'px';
+    var posLeft = behaviorConfig.position === 'left' ? (behaviorConfig.leftOffset || 16) + 'px' : 'auto';
+    var posBottom = behaviorConfig.bottomOffset || 16;
+
+    widget.style.cssText =
+      'position:fixed;' +
+      'z-index:999998;' +
+      'right:' + posRight + ';' +
+      'left:' + posLeft + ';' +
+      'bottom:' + posBottom + 'px;' +
+      'width:auto;' +
+      'transition:all 0.3s ease;' +
+      'display:flex;' +
+      'flex-direction:column;' +
+      'align-items:flex-end;' +
+      'gap:8px;';
+
+    // Modo bolha (bubble)
+    if (mode === 'bubble') {
+      if (!currentStories || currentStories.length === 0) return;
+
+      var story = currentStories[0];
+      var thumbUrl = story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
+      if (!thumbUrl && story.videos && story.videos.length > 0) {
+        thumbUrl = getVideoThumbnail(story.videos[0]);
+      }
+
+      var bubbleBtn = createEl('div', 'vl-floating-bubble-btn');
+      var bubbleSizePx = (bubbleSize || 64) + 'px';
+      bubbleBtn.style.cssText =
+        'width:' + bubbleSizePx + ';' +
+        'height:' + bubbleSizePx + ';' +
+        'border-radius:50%;' +
+        'padding:3px;' +
+        'cursor:pointer;' +
+        'background:linear-gradient(135deg,' + primaryColor + ',' + adjustColor(primaryColor, -20) + ');' +
+        'box-shadow:0 4px 14px rgba(0,0,0,.2);' +
+        'transition:transform 0.2s ease,box-shadow 0.2s ease;';
+
+      var inner = createEl('div');
+      inner.style.cssText =
+        'width:100%;height:100%;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#fff;border:2.5px solid #fff;';
+
+      if (thumbUrl) {
+        var img = createEl('img');
+        img.src = thumbUrl;
+        img.alt = story.title || 'Story';
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
+        img.loading = 'lazy';
+        img.onerror = function () {
+          img.style.display = 'none';
+          var fallback = createEl('span');
+          fallback.textContent = (story.title || 'S').charAt(0).toUpperCase();
+          fallback.style.cssText = 'font-size:22px;font-weight:700;color:' + primaryColor + ';';
+          inner.appendChild(fallback);
+        };
+        inner.appendChild(img);
+      } else {
+        var fallback = createEl('span');
+        fallback.textContent = (story.title || 'S').charAt(0).toUpperCase();
+        fallback.style.cssText = 'font-size:22px;font-weight:700;color:' + primaryColor + ';';
+        inner.appendChild(fallback);
+      }
+
+      // Badge com contagem
+      if (currentStories.length > 1) {
+        var badge = createEl('span', 'vl-floating-badge');
+        badge.textContent = currentStories.length;
+        badge.style.cssText =
+          'position:absolute;top:-4px;right:-4px;' +
+          'background:' + primaryColor + ';' +
+          'color:#fff;font-size:11px;font-weight:700;' +
+          'width:22px;height:22px;border-radius:50%;' +
+          'display:flex;align-items:center;justify-content:center;' +
+          'box-shadow:0 2px 6px rgba(0,0,0,.2);';
+        bubbleBtn.appendChild(badge);
+      }
+
+      bubbleBtn.appendChild(inner);
+      bubbleBtn.addEventListener('click', function () {
+        if (floatingWasDragged) { floatingWasDragged = false; return; }
+        openStoryModal(0);
+      });
+
+      // Hover effects
+      bubbleBtn.addEventListener('mouseenter', function () {
+        bubbleBtn.style.transform = 'scale(1.08)';
+        bubbleBtn.style.boxShadow = '0 6px 20px rgba(0,0,0,.25)';
+      });
+      bubbleBtn.addEventListener('mouseleave', function () {
+        bubbleBtn.style.transform = 'scale(1)';
+        bubbleBtn.style.boxShadow = '0 4px 14px rgba(0,0,0,.2)';
+      });
+
+      widget.appendChild(bubbleBtn);
+
+      // Botão dismiss se configurado
+      if (behaviorConfig.showDismiss !== false) {
+        var dismiss = createEl('button', 'vl-dismiss');
+        dismiss.innerHTML = svgIcon('close');
+        dismiss.style.cssText =
+          'position:absolute;top:-8px;left:-8px;' +
+          'width:24px;height:24px;border:none;' +
+          'background:rgba(0,0,0,.6);border-radius:50%;' +
+          'cursor:pointer;display:flex;align-items:center;justify-content:center;' +
+          'color:#fff;padding:0;backdrop-filter:blur(4px);' +
+          '-webkit-backdrop-filter:blur(4px);';
+        dismiss.querySelector('svg').setAttribute('width', '14');
+        dismiss.querySelector('svg').setAttribute('height', '14');
+        dismiss.addEventListener('click', function (e) {
+          e.stopPropagation();
+          widget.style.display = 'none';
+        });
+        bubbleBtn.appendChild(dismiss);
+      }
+
+      applyDraggable(bubbleBtn, currentAppearance);
+    }
+
+    // Modo expandido (lista de bolhas no floating)
+    if (mode === 'expanded' || mode === 'list') {
+      var header = createEl('div', 'vl-floating-header');
+      header.style.cssText =
+        'display:flex;align-items:center;justify-content:space-between;' +
+        'width:100%;padding:8px 12px;background:rgba(255,255,255,.95);' +
+        'border-radius:16px 16px 0 0;box-shadow:0 -2px 12px rgba(0,0,0,.08);';
+
+      var titleEl = createEl('span');
+      titleEl.textContent = currentAppearance.floating_title || currentAppearance.floatingTitle || 'Stories';
+      titleEl.style.cssText = 'font-size:14px;font-weight:700;color:#1e293b;';
+      header.appendChild(titleEl);
+
+      var closeBtn = createEl('button', 'vl-dismiss');
+      closeBtn.innerHTML = svgIcon('close');
+      closeBtn.querySelector('svg').setAttribute('width', '18');
+      closeBtn.querySelector('svg').setAttribute('height', '18');
+      closeBtn.style.cssText =
+        'width:28px;height:28px;border:none;background:transparent;' +
+        'cursor:pointer;display:flex;align-items:center;justify-content:center;' +
+        'color:#64748b;padding:0;border-radius:50%;';
+      closeBtn.addEventListener('click', function () {
+        widget.style.display = 'none';
+      });
+      header.appendChild(closeBtn);
+
+      var bubbleContainer = createEl('div', 'vl-floating-bubbles');
+      bubbleContainer.style.cssText =
+        'background:rgba(255,255,255,.95);padding:8px 12px 12px;' +
+        'border-radius:0 0 16px 16px;max-width:340px;overflow-x:auto;';
+
+      widget.appendChild(header);
+      widget.appendChild(bubbleContainer);
+    }
+
+    globalShadowRoot.appendChild(widget);
+    applyDraggable(widget, currentAppearance);
+  }
+
+  /* ================================================================
+     INICIALIZAÇÃO DO WIDGET (COM story_id DA URL)
+     ================================================================ */
+
+  function initWidget() {
+    var _urlParams = new URLSearchParams(window.location.search);
+    var _selectorToken = _urlParams.get('widgetSelectToken') || null;
+    var storyIdFromUrl = _urlParams.get('widgetSelectStoryId') || null;
+
+    if (_selectorToken) {
+      initElementPicker(_selectorToken, storyIdFromUrl);
+      return;
+    }
+
+    // ... resto da lógica de inicialização normal (buscar do banco, etc.) ...
+  }
+
+  /* ================================================================
+     ELEMENT PICKER COM storyId
+     ================================================================ */
+
+  function initElementPicker(token, storyId) {
+    if (!token) return;
+    widgetSelectToken = token;
+
+    var overlayEl = document.createElement('div');
+    overlayEl.id = 'vl-picker-overlay';
+    overlayEl.style.cssText =
+      'position:fixed;top:0;left:0;width:100%;height:100%;' +
+      'z-index:9999997;background:rgba(0,0,0,.05);cursor:crosshair;';
+    document.body.appendChild(overlayEl);
+
+    var bannerEl = document.createElement('div');
+    bannerEl.id = 'vl-picker-banner';
+    bannerEl.style.cssText =
+      'position:fixed;top:0;left:0;right:0;z-index:9999998;' +
+      'background:#1e293b;color:#fff;padding:12px 20px;' +
+      'font-family:sans-serif;font-size:14px;font-weight:600;' +
+      'text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.2);';
+    bannerEl.textContent = '🎯 Clique no elemento onde o widget de stories será exibido';
+    document.body.appendChild(bannerEl);
+
+    var highlightEl = document.createElement('div');
+    highlightEl.id = 'vl-picker-highlight';
+    highlightEl.style.cssText =
+      'position:fixed;z-index:9999996;pointer-events:none;' +
+      'border:3px solid #3b82f6;border-radius:4px;' +
+      'background:rgba(59,130,246,.08);display:none;transition:all .1s ease;';
+    document.body.appendChild(highlightEl);
+
+    var currentEl = null;
+
+    overlayEl.addEventListener('mousemove', function (e) {
+      overlayEl.style.display = 'none';
+      var el = document.elementFromPoint(e.clientX, e.clientY);
+      overlayEl.style.display = '';
+
+      if (!el || el === overlayEl || el === bannerEl || el === highlightEl) return;
+
+      if (el !== currentEl) {
+        currentEl = el;
+        highlightEl.style.display = '';
+        var rect = el.getBoundingClientRect();
+        highlightEl.style.top = rect.top + 'px';
+        highlightEl.style.left = rect.left + 'px';
+        highlightEl.style.width = rect.width + 'px';
+        highlightEl.style.height = rect.height + 'px';
+      }
+    });
+
+    overlayEl.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var el = currentEl;
+
+      if (!el) {
+        overlayEl.style.display = 'none';
+        el = document.elementFromPoint(e.clientX, e.clientY);
+        overlayEl.style.display = '';
+      }
+
+      if (!el || el === bannerEl || el === highlightEl || el === overlayEl) return;
+
+      sendSelector(buildSelector(el), storyId);
+      cleanupPicker(overlayEl, bannerEl, highlightEl);
+    });
+
+    overlayEl.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        cleanupPicker(overlayEl, bannerEl, highlightEl);
+      }
+    });
+
+    // Foco para capturar ESC
+    overlayEl.setAttribute('tabindex', '0');
+    overlayEl.focus();
+  }
+
+  function sendSelector(selector, storyId) {
+    var payload = { selector: selector, token: widgetSelectToken };
+    if (storyId) { payload.story_id = storyId; }
+
+    var endpoint = supabaseUrl
+      ? supabaseUrl.replace(/\/rest\/v1.*/, '') + '/functions/v1/widget-selector'
+      : 'https://api.vidlytics.com/widget-selector';
+
+    fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function (res) {
+      if (res.ok) {
+        alert('✅ Seletor vinculado com sucesso!' + (storyId ? ' Story vinculado.' : ''));
+      } else {
+        alert('❌ Erro ao vincular seletor.');
+      }
+    }).catch(function () {
+      alert('❌ Erro de conexão ao vincular seletor.');
+    });
+  }
+
+  function cleanupPicker(overlayEl, bannerEl, highlightEl) {
+    if (overlayEl && overlayEl.parentNode) overlayEl.parentNode.removeChild(overlayEl);
+    if (bannerEl && bannerEl.parentNode) bannerEl.parentNode.removeChild(bannerEl);
+    if (highlightEl && highlightEl.parentNode) highlightEl.parentNode.removeChild(highlightEl);
+    widgetSelectToken = null;
+    document.body.style.cursor = '';
+  }
+
+  function buildSelector(el) {
+    if (!el) return '';
+    var path = [];
+    while (el && el !== document.body && el !== document.documentElement) {
+      var selector = el.tagName ? el.tagName.toLowerCase() : '';
+      if (el.id) {
+        selector += '#' + el.id;
+        path.unshift(selector);
+        break;
+      }
+      if (el.className && typeof el.className === 'string') {
+        var classes = el.className.trim().split(/\s+/).filter(function (c) { return c && !c.startsWith('vl-'); });
+        if (classes.length > 0) {
+          selector += '.' + classes.slice(0, 2).join('.');
+        }
+      }
+      var parent = el.parentElement;
+      if (parent) {
+        var siblings = Array.from(parent.children).filter(function (s) {
+          return s.tagName === el.tagName;
+        });
+        if (siblings.length > 1) {
+          var index = siblings.indexOf(el) + 1;
+          selector += ':nth-child(' + index + ')';
+        }
+      }
+      path.unshift(selector);
+      el = el.parentElement;
+    }
+    return path.join(' > ');
+  }
+
+})(); // Fim da IIFE principal
