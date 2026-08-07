@@ -265,6 +265,41 @@
     try { var item = localStorage.getItem(key); if (!item) return fallback; try { return JSON.parse(item); } catch (e) { return item; } } catch (e2) { return fallback; }
   }
 
+    // 🔧 Sanitização de valores CSS — previne XSS via cores, fontes, etc.
+  function sanitizeCssValue(value, fallback, type) {
+    type = type || 'color'; // 'color' | 'font' | 'number' | 'generic'
+    if (value === undefined || value === null || value === '') return fallback || '';
+
+    var sanitized = String(value).trim();
+
+    if (type === 'color') {
+      // Remove caracteres que podem quebrar contexto CSS
+      sanitized = sanitized.replace(/[<>"'`&;{}()\\]/g, '');
+      // Só permite padrões válidos de cor CSS
+      if (/^(#[0-9a-fA-F]{3,8}|rgb\(|rgba\(|hsl\(|hsla\(|transparent|inherit|initial|currentColor|var\(--|[a-z]+$)/.test(sanitized)) {
+        return sanitized;
+      }
+      return fallback || '';
+    }
+
+    if (type === 'font') {
+      // Remove caracteres perigosos, mantém vírgulas, espaços, aspas simples (para nomes de fonte)
+      sanitized = sanitized.replace(/[<>`&;{}()\\]/g, '');
+      // Remove múltiplos pontos e vírgulas suspeitas
+      sanitized = sanitized.replace(/;+/g, '').replace(/\{+/g, '').replace(/\}+/g, '');
+      return sanitized || fallback || 'Inter, system-ui, sans-serif';
+    }
+
+    if (type === 'number') {
+      var num = parseFloat(sanitized);
+      return isNaN(num) ? (fallback || '0') : String(num);
+    }
+
+    // generic: remove HTML/CSS breakout chars
+    sanitized = sanitized.replace(/[<>"'`&;{}()]/g, '');
+    return sanitized || fallback || '';
+  }
+
   function setStorageItem(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
 
   function normalizeAppearanceItem(item) {
