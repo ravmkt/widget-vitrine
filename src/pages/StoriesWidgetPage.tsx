@@ -1144,15 +1144,17 @@ const handleLike = async () => {
       mergeLocalCommentsByVideo(currentVideo.id, filtered);
       setCommentText(''); setCommentName(''); setShowEmoji(false);
       showSuccess('Comentário enviado com sucesso.');
-    } catch {
-      const previousComments = readLocalComments();
-      const nextComments = [...previousComments, newComment];
-      saveLocalComments(nextComments);
-      setComments(nextComments.filter(item => getCommentVideoId(item) === currentVideo.id));
-      setCommentText(''); setCommentName(''); setShowEmoji(false);
-      showSuccess('Comentário enviado com sucesso.');
-    }
-  };
+} catch {
+  const previousComments = readLocalComments();
+  const nextComments = [...previousComments, newComment];
+  saveLocalComments(nextComments);
+  setComments(nextComments.filter(item => getCommentVideoId(item) === currentVideo.id));
+  setCommentText(''); setCommentName(''); setShowEmoji(false);
+  showSuccess('Comentário salvo localmente. Será enviado quando houver conexão.');
+
+  // 🆕 Enfileira para retry
+  enqueue('saveComment', newComment);
+}
 
   const insertEmoji = (emoji: string) => {
     const el = textareaRef.current;
