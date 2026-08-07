@@ -3102,6 +3102,19 @@ function onClick(e) {
       readCommentsData = results[6];
       readSizingModelsData = results[7];
       readLikeCounts = results[8];
+            // 🔧 Merge dos likes do banco no estado local
+      var dbLikes = results[8] || {};
+      if (dbLikes.likedVideos) {
+        Object.keys(dbLikes.likedVideos).forEach(function (videoId) {
+          likedVideos[videoId] = true;
+        });
+      }
+      if (dbLikes.likeCounts) {
+        Object.keys(dbLikes.likeCounts).forEach(function (videoId) {
+          videoLikeCounts[videoId] = dbLikes.likeCounts[videoId];
+        });
+      }
+
       var storeSettings = results[9];
       var pageRules = results[10];
       var locations = results[11];
