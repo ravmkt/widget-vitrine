@@ -2730,7 +2730,7 @@ function openSizingPanel(modelId) {
 
     var itemsVisiveis = cfg.isGrid ? cfg.columns : cfg.visibleItems;
     var espacamento = cfg.spacing;
-    var corPrimaria = appearance.primary_color || appearance.button_color || '#0094EB';
+    var corPrimaria = sanitizeCssValue(appearance.primary_color || appearance.button_color, '#0094EB', 'color');
     var corTexto = appearance.text_color || '#0F172A';
     var fonte = appearance.font_family || 'Inter, sans-serif';
 
