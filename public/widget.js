@@ -2949,64 +2949,93 @@
     }
   }
 
-  function initInlineWidget(options) {
-    var targetSelector = options.target || options.anchor || '#vidlytics-stories';
-    var placement = String(options.placement || 'below').toLowerCase();
-    var targetEl = document.querySelector(targetSelector);
+function initInlineWidget(options) {
+  var targetSelector = options.target || options.anchor || '#vidlytics-stories';
+  var placement = String(options.placement || 'below').toLowerCase(); // 'below' | 'above'
+  var targetEl = document.querySelector(targetSelector);
 
-    if (!targetEl) {
-      console.warn('[Vidlytics] Container alvo "' + targetSelector + '" não encontrado.');
-      return;
-    }
+  if (!targetEl) {
+    console.warn('[Vidlytics] Container alvo "' + targetSelector + '" não encontrado.');
+    return;
+  }
 
-    var shadowHost = targetEl;
-    if (shadowHost.shadowRoot) {
-      globalShadowRoot = shadowHost.shadowRoot;
-    } else {
-      globalShadowRoot = shadowHost.attachShadow({ mode: 'open' });
-    }
+  // === CRIA O WRAPPER RELATIVO ===
+  // Este wrapper mantém o fluxo natural do DOM e serve como shadow host
+  var wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position:relative;width:100%;';
 
-    var container = createEl('div', 'vl-container');
-    globalShadowRoot.appendChild(container);
+  // === SHADOW DOM NO WRAPPER (não mais no targetEl) ===
+  if (wrapper.shadowRoot) {
+    globalShadowRoot = wrapper.shadowRoot;
+  } else {
+    globalShadowRoot = wrapper.attachShadow({ mode: 'open' });
+  }
 
-    injectStyles(globalShadowRoot);
+  var container = createEl('div', 'vl-container');
+  globalShadowRoot.appendChild(container);
 
-    var fetchPromises = [];
+  injectStyles(globalShadowRoot);
 
-    if (hasSupabase && storeId) {
-      fetchPromises.push(
-        supabaseFetch('stories?store_id=eq.' + encodeURIComponent(storeId) + '&status=eq.published&order=position.asc')
-          .then(function (res) { return res.json(); })
-          .then(function (data) { if (data && data.length > 0) currentStories = data; })
-          .catch(function () {})
-      );
-      fetchPromises.push(
-        supabaseFetch('products?store_id=eq.' + encodeURIComponent(storeId))
-          .then(function (res) { return res.json(); })
-          .then(function (data) { if (data && data.length > 0) readProductsData = data; })
-          .catch(function () {})
-      );
-      fetchPromises.push(
-        supabaseFetch('sizing_models?store_id=eq.' + encodeURIComponent(storeId))
-          .then(function (res) { return res.json(); })
-          .then(function (data) { if (data && data.length > 0) readSizingModelsData = data; })
-          .catch(function () {})
-      );
-      fetchPromises.push(
-        supabaseFetch('comments?store_id=eq.' + encodeURIComponent(storeId) + '&order=created_at.desc')
-          .then(function (res) { return res.json(); })
-          .then(function (data) { if (data && data.length > 0) readCommentsData = data; })
-          .catch(function () {})
-      );
-    }
+  // === POSICIONAMENTO: ACIMA OU ABAIXO DO targetEl ===
+  if (placement === 'above') {
+    // wrapper fica ANTES do targetEl (acima visualmente)
+    targetEl.parentNode.insertBefore(wrapper, targetEl);
+  } else {
+    // 'below' (padrão): wrapper fica DEPOIS do targetEl
+    targetEl.parentNode.insertBefore(wrapper, targetEl.nextSibling);
+  }
 
-    Promise.all(fetchPromises).then(function () {
-      renderBubbles(container);
-      attachKeyboardListeners();
-    }).catch(function () {
-      renderBubbles(container);
-      attachKeyboardListeners();
-    });
+  // ... resto da lógica de fetch e render (igual ao que já existe) ...
+  var fetchPromises = [];
+
+  if (hasSupabase && storeId) {
+    fetchPromises.push(
+      supabaseFetch('stories?store_id=eq.' + encodeURIComponent(storeId) + '&status=eq.published&order=position.asc')
+        .then(function (res) { return res.json(); })
+        .then(function (data) { if (data && data.length > 0) currentStories = data; })
+        .catch(function () {})
+    );
+    fetchPromises.push(
+      supabaseFetch('products?store_id=eq.' + encodeURIComponent(storeId))
+        .then(function (res) { return res.json(); })
+        .then(function (data) { if (data && data.length > 0) readProductsData = data; })
+        .catch(function () {})
+    );
+    fetchPromises.push(
+      supabaseFetch('sizing_models?store_id=eq.' + encodeURIComponent(storeId))
+        .then(function (res) { return res.json(); })
+        .then(function (data) { if (data && data.length > 0) readSizingModelsData = data; })
+        .catch(function () {})
+    );
+    fetchPromises.push(
+      supabaseFetch('comments?store_id=eq.' + encodeURIComponent(storeId) + '&order=created_at.desc')
+        .then(function (res) { return res.json(); })
+        .then(function (data) { if (data && data.length > 0) readCommentsData = data; })
+        .catch(function () {})
+    );
+  }
+
+  Promise.all(fetchPromises).then(function () {
+    renderBubbles(container);
+    attachKeyboardListeners();
+  }).catch(function () {
+    renderBubbles(container);
+    attachKeyboardListeners();
+  });
+
+  if (options.api) {
+    window[options.api] = {
+      open: openStoryModal,
+      close: closeOverlay,
+      next: nextStoryOrVideo,
+      prev: prevStoryOrVideo,
+      refresh: function () { renderBubbles(container); },
+      setStories: function (stories) { currentStories = stories; renderBubbles(container); }
+    };
+  }
+
+  trackMetric({ event_type: 'widget_init', page_url: window.location.href });
+}
 
     if (options.api) {
       window[options.api] = {
