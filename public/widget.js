@@ -3155,18 +3155,30 @@
       console.log('🔍 DEBUG locations:', JSON.stringify(locations));
 
       // 🔧 Extrair seletor CSS e posição das display_locations
-      var inlineSelector = '';
-      var inlinePosition = 'afterend';
-      if (locations && locations.length > 0) {
-        for (var i = 0; i < locations.length; i++) {
-          var locSelector = locations[i].css_selector || locations[i].selector || locations[i].display_selector || '';
-          if (locSelector) {
-            inlineSelector = locSelector;
-            inlinePosition = locations[i].position || locations[i].display_position || 'afterend';
-            break;
-          }
-        }
+var inlineSelector = '';
+var inlinePosition = 'afterend';
+if (locations && locations.length > 0) {
+  // 🔧 PRIORIDADE 1: Seletores específicos (NÃO "body")
+  for (var i = 0; i < locations.length; i++) {
+    var locSelector = locations[i].css_selector || locations[i].selector || locations[i].display_selector || '';
+    if (locSelector && locSelector !== 'body') {
+      inlineSelector = locSelector;
+      inlinePosition = locations[i].position || locations[i].display_position || 'afterend';
+      break;
+    }
+  }
+  // 🔧 PRIORIDADE 2: Fallback para "body" só se não achou nada específico
+  if (!inlineSelector) {
+    for (var i = 0; i < locations.length; i++) {
+      var locSelector = locations[i].css_selector || locations[i].selector || locations[i].display_selector || '';
+      if (locSelector) {
+        inlineSelector = locSelector;
+        inlinePosition = locations[i].position || locations[i].display_position || 'afterend';
+        break;
       }
+    }
+  }
+}
       if (!inlineSelector) {
         for (var j = 0; j < validStories.length; j++) {
           var storySelector = validStories[j].display_selector || '';
