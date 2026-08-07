@@ -3010,20 +3010,6 @@ function initInlineWidget(options) {
   trackMetric({ event_type: 'widget_init', page_url: window.location.href });
 }
 
-    if (options.api) {
-      window[options.api] = {
-        open: openStoryModal,
-        close: closeOverlay,
-        next: nextStoryOrVideo,
-        prev: prevStoryOrVideo,
-        refresh: function () { renderBubbles(container); },
-        setStories: function (stories) { currentStories = stories; renderBubbles(container); }
-      };
-    }
-
-    trackMetric({ event_type: 'widget_init', page_url: window.location.href });
-  }
-
   /* ================================================================
      INICIALIZAÇÃO PRINCIPAL
      ================================================================ */
