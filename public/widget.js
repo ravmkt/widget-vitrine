@@ -2175,11 +2175,7 @@ function openSizingPanel(modelId) {
 
       btnRow.appendChild(sendBtn);
       formWrap.appendChild(btnRow);   // ✅ agora os botões ficam dentro do form
-      // panelFooter fica vazio/oculto
       panelFooter.style.display = 'none';
-
-      // fecha emoji ao clicar fora
-      });
 
       setTimeout(function () { nameInput.focus(); }, 200);
     }
