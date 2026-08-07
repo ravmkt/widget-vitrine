@@ -1,3 +1,6 @@
+import StoriesWidgetPage from '@/pages/StoriesWidgetPage';
+import StoryDetailsPage from '@/pages/StoryDetailsPage';
+import VideoPerformancePage from '@/pages/VideoPerformancePage';
 import React, { useEffect, useState } from "react";
 import {
   BrowserRouter,
