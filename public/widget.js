@@ -1353,7 +1353,7 @@ function matchesRule(rule) {
     var primary = getPrimaryColor(appearance);
     var secondary = getSecondaryColor(appearance);
     var borderColor = getBorderColor(appearance);
-    var borderBackground = borderColor ? borderColor : 'linear-gradient(135deg,' + primary + ',' + secondary + ')';
+    var borderBackground = sanitizeCssValue(borderColor, '', 'color') || 'linear-gradient(135deg,' + primary + ',' + secondary + ')';
     var font = getFontFamily(appearance);
     return ':host{all:initial!important;position:fixed!important;top:' + cfg.top + '!important;right:' + cfg.right + '!important;bottom:' + cfg.bottom + '!important;left:' + cfg.left + '!important;z-index:' + cfg.zIndex + '!important;width:' + cfg.width + '!important;min-width:' + cfg.width + '!important;max-width:' + cfg.width + '!important;height:auto!important;overflow:visible!important;background:transparent!important;pointer-events:auto!important;font-family:' + font + '!important;}'
       + buildSharedCss(appearance)
