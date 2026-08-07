@@ -99,17 +99,14 @@ const HomeGuard = () => {
     );
   }
 
-  // Não logado → login
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  // Logado mas sem settings → setup
   if (!hasSettings) {
     return <Navigate to="/settings" replace />;
   }
 
-  // Logado e com settings → dashboard
   return <Navigate to="/dashboard" replace />;
 };
 
@@ -119,55 +116,30 @@ function App() {
     <TenantProvider>
       <BrowserRouter>
         <Routes>
-          {/* Rotas públicas (só acessa se NÃO estiver logado) */}
+          {/* Rotas públicas */}
           <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
           <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
 
           {/* Raiz → verifica estado */}
           <Route path="/" element={<HomeGuard />} />
 
-          {/* Rotas protegidas (só acessa se estiver logado) */}
+          {/* Dashboard */}
           <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
 
-{/* 🆕 Stories Widget */}
-  <Route
-    path="/stories/widget"
-    element={
-      <ProtectedRoute>
-        <StoriesWidgetPage />
-      </ProtectedRoute>
-    }
-  />
-  <Route
-    path="/stories/:storyId"
-    element={
-      <ProtectedRoute>
-        <StoryDetailsPage />
-      </ProtectedRoute>
-    }
-  />
-
-  {/* 🆕 Performance do vídeo individual */}
-  <Route
-    path="/videos/:videoId/performance"
-    element={
-      <ProtectedRoute>
-        <VideoPerformancePage />
-      </ProtectedRoute>
-    }
-  />
-
-          {/* Stories */}
-          <Route path="/stories" element={<ProtectedRoute><AppLayout><StoriesPage /></AppLayout></ProtectedRoute>} />
+          {/* ── Stories (rotas específicas ANTES da genérica) ── */}
+          <Route path="/stories/widget" element={<ProtectedRoute><AppLayout><StoriesWidgetPage /></AppLayout></ProtectedRoute>} />
           <Route path="/stories/new" element={<ProtectedRoute><AppLayout><StoryNewPage /></AppLayout></ProtectedRoute>} />
-          <Route path="/stories/:id" element={<ProtectedRoute><AppLayout><StoryNewPage /></AppLayout></ProtectedRoute>} />
           <Route path="/stories/preview/:id" element={<ProtectedRoute><StoryPreviewPage /></ProtectedRoute>} />
+          <Route path="/stories/:storyId" element={<ProtectedRoute><AppLayout><StoryDetailsPage /></AppLayout></ProtectedRoute>} />
+          <Route path="/stories/:id" element={<ProtectedRoute><AppLayout><StoryNewPage /></AppLayout></ProtectedRoute>} />
+          <Route path="/stories" element={<ProtectedRoute><AppLayout><StoriesPage /></AppLayout></ProtectedRoute>} />
 
-          {/* Vídeos */}
-          <Route path="/gallery" element={<ProtectedRoute><AppLayout><VideoGalleryPage /></AppLayout></ProtectedRoute>} />
+          {/* ── Vídeos (rotas específicas ANTES das genéricas) ── */}
+          <Route path="/videos/performance" element={<ProtectedRoute><AppLayout><PerformancePage /></AppLayout></ProtectedRoute>} />
+          <Route path="/videos/:videoId/performance" element={<ProtectedRoute><AppLayout><VideoPerformancePage /></AppLayout></ProtectedRoute>} />
           <Route path="/videos/new" element={<ProtectedRoute><AppLayout><VideoEditPage /></AppLayout></ProtectedRoute>} />
           <Route path="/videos/:id/edit" element={<ProtectedRoute><AppLayout><VideoEditPage /></AppLayout></ProtectedRoute>} />
-          <Route path="/videos/performance" element={<ProtectedRoute><AppLayout><PerformancePage /></AppLayout></ProtectedRoute>} />
+          <Route path="/gallery" element={<ProtectedRoute><AppLayout><VideoGalleryPage /></AppLayout></ProtectedRoute>} />
 
           {/* Produtos, Medidas, Aparência, Comentários */}
           <Route path="/produtos" element={<ProtectedRoute><AppLayout><ProductsPage /></AppLayout></ProtectedRoute>} />
