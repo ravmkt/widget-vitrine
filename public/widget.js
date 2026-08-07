@@ -2922,33 +2922,6 @@
      POSICIONAMENTO INLINE (ABOVE / BELOW)
      ================================================================ */
 
-  function positionInlineWidget(widgetEl, anchorEl, placement) {
-    if (!widgetEl || !anchorEl) return;
-
-    var anchorRect = anchorEl.getBoundingClientRect();
-    var scrollY = window.pageYOffset || document.documentElement.scrollTop;
-    var scrollX = window.pageXOffset || document.documentElement.scrollLeft;
-
-    // Remove posicionamentos anteriores
-    widgetEl.style.position = 'absolute';
-    widgetEl.style.top = 'auto';
-    widgetEl.style.bottom = 'auto';
-    widgetEl.style.left = scrollX + anchorRect.left + 'px';
-    widgetEl.style.width = anchorRect.width + 'px';
-
-    // placement: 'below' (padrão) → widget fica ABAIXO do elemento
-    // placement: 'above' → widget fica ACIMA do elemento
-    if (placement === 'above') {
-      // ACIMA: bottom do widget encosta no top do anchor
-      widgetEl.style.bottom = (document.documentElement.scrollHeight - (anchorRect.top + scrollY)) + 'px';
-      widgetEl.style.top = 'auto';
-    } else {
-      // ABAIXO (padrão): top do widget encosta no bottom do anchor
-      widgetEl.style.top = (anchorRect.bottom + scrollY) + 'px';
-      widgetEl.style.bottom = 'auto';
-    }
-  }
-
 function initInlineWidget(options) {
   var targetSelector = options.target || options.anchor || '#vidlytics-stories';
   var placement = String(options.placement || 'below').toLowerCase(); // 'below' | 'above'
