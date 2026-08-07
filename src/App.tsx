@@ -129,6 +129,33 @@ function App() {
           {/* Rotas protegidas (só acessa se estiver logado) */}
           <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
 
+{/* 🆕 Stories Widget */}
+  <Route
+    path="/stories/widget"
+    element={
+      <ProtectedRoute>
+        <StoriesWidgetPage />
+      </ProtectedRoute>
+    }
+  />
+  <Route
+    path="/stories/:storyId"
+    element={
+      <ProtectedRoute>
+        <StoryDetailsPage />
+      </ProtectedRoute>
+    }
+  />
+
+  {/* 🆕 Performance do vídeo individual */}
+  <Route
+    path="/videos/:videoId/performance"
+    element={
+      <ProtectedRoute>
+        <VideoPerformancePage />
+      </ProtectedRoute>
+    }
+  />
 
           {/* Stories */}
           <Route path="/stories" element={<ProtectedRoute><AppLayout><StoriesPage /></AppLayout></ProtectedRoute>} />
