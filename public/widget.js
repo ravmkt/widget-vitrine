@@ -599,7 +599,8 @@
   }
 
   function getSecondaryColor(appearance) {
-    return readAppearanceValue(appearance, ['secondary_color', 'secondaryColor', 'cor_secundaria']) || DEFAULT_APPEARANCE.secondary_color;
+    var raw = readAppearanceValue(appearance, ['secondary_color', 'secondaryColor', 'cor_secundaria']);
+    return sanitizeCssValue(raw, DEFAULT_APPEARANCE.secondary_color, 'color');
   }
 
   function getBorderColor(appearance) {
