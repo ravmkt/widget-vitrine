@@ -1155,6 +1155,7 @@ const handleLike = async () => {
   // 🆕 Enfileira para retry
   enqueue('saveComment', newComment);
 }
+};
 
   const insertEmoji = (emoji: string) => {
     const el = textareaRef.current;
