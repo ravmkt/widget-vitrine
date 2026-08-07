@@ -698,7 +698,51 @@ function readDisplayLocations() {
 }
 
 function readLikesFromDb() {
-  return Promise.resolve([]);
+  if (!hasSupabase) return Promise.resolve({ likedVideos: {}, likeCounts: {} });
+
+  var fingerprint = getFingerprint();
+
+  // Busca likes deste usuário
+  var userLikesPromise = supabaseFetch(
+    'video_likes?select=video_id&store_id=eq.' + encodeURIComponent(storeId) +
+    '&user_fingerprint=eq.' + encodeURIComponent(fingerprint),
+    { method: 'GET' }
+  ).then(function (response) {
+    if (!response.ok) return [];
+    return response.json();
+  }).then(function (data) {
+    return Array.isArray(data) ? data : [];
+  }).catch(function () { return []; });
+
+  // Busca TODOS os likes da loja (pra contar)
+  var allLikesPromise = supabaseFetch(
+    'video_likes?select=video_id&store_id=eq.' + encodeURIComponent(storeId),
+    { method: 'GET' }
+  ).then(function (response) {
+    if (!response.ok) return [];
+    return response.json();
+  }).then(function (data) {
+    return Array.isArray(data) ? data : [];
+  }).catch(function () { return []; });
+
+  return Promise.all([userLikesPromise, allLikesPromise]).then(function (results) {
+    var userLikes = results[0];
+    var allLikes = results[1];
+
+    var likedVideosMap = {};
+    userLikes.forEach(function (like) {
+      if (like.video_id) likedVideosMap[like.video_id] = true;
+    });
+
+    var likeCountsMap = {};
+    allLikes.forEach(function (like) {
+      if (like.video_id) {
+        likeCountsMap[like.video_id] = (likeCountsMap[like.video_id] || 0) + 1;
+      }
+    });
+
+    return { likedVideos: likedVideosMap, likeCounts: likeCountsMap };
+  });
 }
 
 function readSizingModels() {
