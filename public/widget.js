@@ -3348,19 +3348,7 @@ function sendSelector(selector, storyId) {
     });
 }
 
-    .catch(function (err) {
-      console.error('❌ Erro de rede:', err);
-      alert('❌ Erro de conexão. Tente novamente.');
-    });
-}
-
-    .catch(function (err) {
-      console.error('❌ Erro de rede:', err);
-      alert('❌ Erro de conexão. Tente novamente.');
-    });
-}
-
-  function cleanupPicker(overlayEl, bannerEl, highlightEl) {
+function cleanupPicker(overlayEl, bannerEl, highlightEl) {
     if (overlayEl && overlayEl.parentNode) overlayEl.parentNode.removeChild(overlayEl);
     if (bannerEl && bannerEl.parentNode) bannerEl.parentNode.removeChild(bannerEl);
     if (highlightEl && highlightEl.parentNode) highlightEl.parentNode.removeChild(highlightEl);
