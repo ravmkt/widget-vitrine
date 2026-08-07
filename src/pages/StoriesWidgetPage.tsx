@@ -1288,6 +1288,26 @@ const handleLike = async () => {
     return () => { mounted = false; };
   }, [storeId, storyIdParam, videoIdParam]);
 
+// Carregar likes do backend quando trocar de vídeo
+useEffect(() => {
+  if (!currentVideo?.id || !resolvedStoreId) return;
+
+  const loadLikes = async () => {
+    const videoIds = currentVideos.map(v => v.id);
+    const serverLikes = await fetchLikes(videoIds, resolvedStoreId);
+
+    // Atualiza localStorage com dados do backend
+    saveLocalLikes(serverLikes);
+
+    // Atualiza state do vídeo atual
+    const current = serverLikes[currentVideo.id] || { liked: false, count: 0 };
+    setLiked(current.liked);
+    setLikeCount(current.count);
+  };
+
+  loadLikes();
+}, [currentVideo?.id, resolvedStoreId]);
+
   // Reset ao trocar de vídeo/story
   useEffect(() => {
     if (!story || !currentVideo?.id || !resolvedStoreId) return;
