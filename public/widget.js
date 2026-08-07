@@ -3319,32 +3319,34 @@ function sendSelector(selector, storyId) {
     body: JSON.stringify(payload)
   })
     .then(function (res) {
-      console.log('📥 Status:', res.status);
       return res.json().then(function (data) {
         console.log('📦 Resposta:', data);
-        if (res.ok && data.success) {
-          // ✅ Sucesso — fecha a página e avisa
-          alert('✅ Seletor vinculado com sucesso!\n\nVolte para o painel do Vidlytics para continuar.');
+
+        if (data.success) {
+          alert('✅ Seletor vinculado com sucesso!\n\nVolte para o painel do Vidlytics.');
           
-          // Tenta fechar a janela (funciona se foi aberta via window.open)
           if (window.opener) {
             window.close();
           } else {
-            // Se não conseguir fechar, mostra uma mensagem final
-            document.body.innerHTML = 
+            document.body.innerHTML =
               '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#f8fafc;">' +
               '<div style="text-align:center;padding:40px;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.1);max-width:420px;">' +
               '<div style="font-size:48px;margin-bottom:16px;">✅</div>' +
               '<h2 style="margin:0 0 8px;color:#0f172a;">Seletor vinculado!</h2>' +
-              '<p style="color:#64748b;margin:0;">Volte para o painel do <strong>Vidlytics</strong> para continuar a configuração.</p>' +
+              '<p style="color:#64748b;margin:0;">Volte para o painel do <strong>Vidlytics</strong> para continuar.</p>' +
               '</div></div>';
           }
         } else {
-          alert('❌ Erro: ' + (data.message || data.error || 'Falha ao salvar.'));
-          console.error('❌ Resposta de erro:', data);
+          alert('❌ Erro: ' + (data.message || 'Falha ao salvar.'));
         }
       });
     })
+    .catch(function (err) {
+      console.error('❌ Erro de rede:', err);
+      alert('❌ Erro de conexão. Tente novamente.');
+    });
+}
+
     .catch(function (err) {
       console.error('❌ Erro de rede:', err);
       alert('❌ Erro de conexão. Tente novamente.');
