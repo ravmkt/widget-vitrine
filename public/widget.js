@@ -2918,8 +2918,11 @@
   }
 
   // ─── SELETOR VISUAL DE ELEMENTOS ──────────────────────
-  function initElementPicker(token) {
-    if (!token) return;
+function initElementPicker(token) {
+  if (!token) return;
+
+  var _urlParams = new URLSearchParams(window.location.search);
+  var _storyId = _urlParams.get('widgetSelectStoryId') || '';
 
     var overlay = document.createElement('div');
     overlay.id = 'vidlytics-selector-overlay';
