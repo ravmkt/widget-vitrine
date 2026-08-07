@@ -331,7 +331,12 @@ const getProductPrice = (product?: any): number => {
 
 const getVideoLikeCount = (videoId?: string): number => {
   if (!videoId) return 0;
-  return readLikes()[videoId]?.count ?? 0;
+  try {
+    const likes = JSON.parse(localStorage.getItem('story_video_likes') || '{}');
+    return likes[videoId]?.count ?? 0;
+  } catch {
+    return 0;
+  }
 };
 
 const getCommentName = (comment: CommentItem): string =>
