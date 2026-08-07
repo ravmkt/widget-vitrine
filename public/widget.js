@@ -3014,32 +3014,78 @@ document.body.appendChild(highlight);
     highlight.style.height = r.height + 'px';
   }
 
-  function buildSelector(el) {
-    if (!el || el === document.body || el === document.documentElement) return 'body';
-    if (el.id) return '#' + CSS.escape(el.id);
-    var path = [];
-    while (el && el !== document.body && el !== document.documentElement) {
-      var seg = el.tagName.toLowerCase();
-      if (el.id) { path.unshift('#' + CSS.escape(el.id)); break; }
-      if (el.classList && el.classList.length) {
-        seg += '.' + Array.from(el.classList).map(function(c) {
+function buildSelector(el) {
+  if (!el || el === document.body || el === document.documentElement) return 'body';
+
+  // Palavras-chave que indicam um container onde o widget deve ser inserido
+  var CONTAINER_PATTERNS = [
+    'holder', 'container', 'content', 'wrapper', 'grid', 'list',
+    'products', 'category', 'results', 'main', 'section', 'row',
+    'collection', 'catalog', 'vitrine', 'prateleira', 'produtos',
+    'categoria', 'resultados', 'conteudo', 'grade', 'area', 'flex-holder'
+  ];
+
+  function matchesContainer(cls) {
+    var lower = cls.toLowerCase();
+    for (var i = 0; i < CONTAINER_PATTERNS.length; i++) {
+      if (lower.indexOf(CONTAINER_PATTERNS[i]) !== -1) return true;
+    }
+    return false;
+  }
+
+  // Sobe no máximo 8 níveis procurando um container
+  var current = el;
+  for (var level = 0; level < 8; level++) {
+    if (!current || current === document.body || current === document.documentElement) break;
+
+    // 1) ID semântico (não gerado automaticamente)
+    if (current.id && current.id.length > 2 && !/^[a-z]{2,5}-/.test(current.id)) {
+      return '#' + CSS.escape(current.id);
+    }
+
+    // 2) Classe que parece container
+    if (current.classList && current.classList.length) {
+      for (var c = 0; c < current.classList.length; c++) {
+        var cls = current.classList[c];
+        if (matchesContainer(cls)) {
+          return '.' + CSS.escape(cls);
+        }
+      }
+    }
+
+    // 3) Tag semântica com classe
+    var tag = current.tagName.toLowerCase();
+    if (tag === 'main' || tag === 'section' || tag === 'article') {
+      if (current.classList && current.classList.length > 0) {
+        return tag + '.' + Array.from(current.classList).slice(0, 2).map(function(c) {
           return CSS.escape(c);
         }).join('.');
       }
-      var parent = el.parentElement;
-      if (parent) {
-        var siblings = Array.from(parent.children).filter(function(c) {
-          return c.tagName === el.tagName;
-        });
-        if (siblings.length > 1) {
-          seg += ':nth-of-type(' + (siblings.indexOf(el) + 1) + ')';
-        }
-      }
-      path.unshift(seg);
-      el = parent;
+      return tag;
     }
-    return path.join(' > ');
+
+    current = current.parentElement;
   }
+
+  // Fallback: caminho curto de 2 níveis
+  var path = [];
+  current = el;
+  for (var i = 0; i < 2 && current && current !== document.body && current !== document.documentElement; i++) {
+    var seg = current.tagName.toLowerCase();
+    if (current.id) { path.unshift('#' + CSS.escape(current.id)); break; }
+    if (current.classList && current.classList.length > 0) {
+      var chosen = current.classList[0];
+      for (var j = 0; j < current.classList.length; j++) {
+        if (matchesContainer(current.classList[j])) { chosen = current.classList[j]; break; }
+      }
+      seg += '.' + CSS.escape(chosen);
+    }
+    path.unshift(seg);
+    current = current.parentElement;
+  }
+
+  return path.join(' > ') || 'body';
+}
 
   function cleanup() {
     if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
