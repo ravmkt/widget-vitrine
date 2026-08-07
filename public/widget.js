@@ -1802,3 +1802,865 @@
     modalContent.appendChild(panel);
     modalContent.classList.add('has-comments-open');
   }
+
+  function openCommentsPanel(videoId, storyId) {
+    if (!modalContent) return;
+
+    var existing = modalContent.querySelector('.vl-comments-panel-full');
+
+    function restoreVideoView() {
+      var currentPanel = modalContent.querySelector('.vl-comments-panel-full');
+      if (currentPanel && currentPanel.parentNode) {
+        currentPanel.parentNode.removeChild(currentPanel);
+      }
+      modalContent.classList.remove('has-comments-open');
+
+      var header = modalContent.querySelector('.vl-header');
+      var footer = modalContent.querySelector('.vl-footer');
+      var social = modalContent.querySelector('.vl-social');
+      if (header) { header.style.display = ''; header.style.visibility = ''; header.style.pointerEvents = ''; }
+      if (footer) { footer.style.display = ''; footer.style.visibility = ''; footer.style.pointerEvents = ''; }
+      if (social) { social.style.display = ''; social.style.visibility = ''; social.style.pointerEvents = ''; }
+
+      var videoElement = modalContent.querySelector('video');
+      if (videoElement) { videoElement.play().catch(function () {}); }
+    }
+
+    if (existing) {
+      restoreVideoView();
+      return;
+    }
+
+    var videoElement = modalContent.querySelector('video');
+    if (videoElement) { videoElement.pause(); }
+
+    var header = modalContent.querySelector('.vl-header');
+    var footer = modalContent.querySelector('.vl-footer');
+    var social = modalContent.querySelector('.vl-social');
+    if (header) header.style.display = 'none';
+    if (footer) footer.style.display = 'none';
+    if (social) social.style.display = 'none';
+
+    var primaryColor = getPrimaryColor(currentAppearance);
+    var buttonColor = getButtonColor(currentAppearance);
+    var fontFamily = getFontFamily(currentAppearance);
+    var commentsCount = getCommentCountForVideo(videoId);
+    var hasComments = commentsCount > 0;
+
+    var panel = createEl('div', 'vl-comments-panel-full');
+    panel.style.cssText = [
+      'position:absolute;','top:8px;','right:8px;','bottom:8px;','left:8px;',
+      'width:auto;','height:auto;','max-height:none;','z-index:200;',
+      'display:flex;','flex-direction:column;','overflow:hidden;',
+      'box-sizing:border-box;','background:#fff;',
+      'border:2px solid ' + primaryColor + ';','border-radius:20px;',
+      'box-shadow:0 12px 30px rgba(0,0,0,.35);','font-family:' + fontFamily + ';'
+    ].join('');
+
+    var panelHeader = createEl('div', 'vl-panel-header');
+    panelHeader.style.cssText = [
+      'display:flex;','align-items:center;','justify-content:space-between;',
+      'height:48px;','min-height:48px;','padding:0 14px;',
+      'border-bottom:1px solid #e2e8f0;','background:#fff;',
+      'box-sizing:border-box;','flex-shrink:0;'
+    ].join('');
+
+    var panelTitle = createEl('h3');
+    panelTitle.textContent = 'Comentários' + (hasComments ? ' (' + commentsCount + ')' : '');
+    panelTitle.style.cssText = 'margin:0;font-size:16px;font-weight:700;color:#111;';
+    panelHeader.appendChild(panelTitle);
+
+    var closeBtn = createEl('button');
+    closeBtn.type = 'button';
+    closeBtn.innerHTML = svgIcon('close');
+    closeBtn.style.cssText = [
+      'background:#f1f5f9;','border:none;','color:#475569;','cursor:pointer;',
+      'width:32px;','height:32px;','border-radius:50%;','display:flex;',
+      'align-items:center;','justify-content:center;','font-size:18px;',
+      'transition:all .15s;','flex-shrink:0;'
+    ].join('');
+    closeBtn.onmouseenter = function () { closeBtn.style.background = '#e2e8f0'; };
+    closeBtn.onmouseleave = function () { closeBtn.style.background = '#f1f5f9'; };
+    closeBtn.addEventListener('click', function (event) {
+      event.preventDefault(); event.stopPropagation(); restoreVideoView();
+    });
+    panelHeader.appendChild(closeBtn);
+    panel.appendChild(panelHeader);
+
+    var panelBody = createEl('div', 'vl-panel-body');
+    panelBody.style.cssText = [
+      'flex:1 1 auto;','min-height:0;','overflow-y:auto;','overflow-x:hidden;',
+      'padding:0;','display:flex;','flex-direction:column;',
+      'box-sizing:border-box;','-webkit-overflow-scrolling:touch;'
+    ].join('');
+
+    var panelFooter = createEl('div', 'vl-panel-footer');
+    panelFooter.style.cssText = [
+      'flex:0 0 auto;','width:100%;','border-top:1px solid #e2e8f0;',
+      'padding:12px 14px 10px;','background:#fff;','box-sizing:border-box;',
+      'position:relative;','z-index:6;','display:flex;','justify-content:center;'
+    ].join('');
+
+    function renderEmptyState() {
+      while (panelBody.firstChild) { panelBody.removeChild(panelBody.firstChild); }
+
+      var emptyWrap = createEl('div', 'vl-empty-state');
+      emptyWrap.style.cssText = [
+        'display:flex;','flex-direction:column;','align-items:center;',
+        'justify-content:center;','flex:1;','min-height:180px;',
+        'padding:20px;','text-align:center;'
+      ].join('');
+
+      var emptyIcon = createEl('div');
+      emptyIcon.innerHTML = svgIcon('comment');
+      emptyIcon.style.cssText = 'opacity:.15;margin-bottom:12px;';
+
+      var emptyTitle = createEl('p');
+      emptyTitle.textContent = 'Seja o primeiro a comentar';
+      emptyTitle.style.cssText = 'font-size:15px;font-weight:700;color:#334155;margin:0 0 16px 0;';
+
+      emptyWrap.appendChild(emptyIcon);
+      emptyWrap.appendChild(emptyTitle);
+      panelBody.appendChild(emptyWrap);
+    }
+
+    function renderCommentList() {
+      while (panelBody.firstChild) { panelBody.removeChild(panelBody.firstChild); }
+
+      var videoComments = readCommentsData.filter(function (c) {
+        return idsEqual(c.video_id, videoId);
+      });
+
+      if (videoComments.length === 0) { renderEmptyState(); return; }
+
+      var listWrap = createEl('div');
+      listWrap.style.cssText = 'padding:10px 18px;display:flex;flex-direction:column;gap:10px;flex:1;';
+
+      videoComments.forEach(function (comment) {
+        var commentCard = createEl('div', 'vl-comment-card');
+        commentCard.style.cssText = 'display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9;';
+
+        var avatar = createEl('div', 'vl-comment-avatar');
+        avatar.textContent = (comment.user_name || 'V').charAt(0).toUpperCase();
+        avatar.style.cssText = 'width:34px;height:34px;border-radius:50%;background:' + primaryColor + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;';
+
+        var commentBody = createEl('div', 'vl-comment-body');
+        commentBody.style.cssText = 'flex:1;min-width:0;';
+
+        var commentMeta = createEl('div', 'vl-comment-meta');
+        commentMeta.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:2px;';
+
+        var authorName = createEl('span', 'vl-comment-author');
+        authorName.textContent = comment.user_name || 'Visitante';
+        authorName.style.cssText = 'font-weight:700;font-size:13px;color:#0f172a;';
+        commentMeta.appendChild(authorName);
+
+        if (comment.created_at) {
+          var commentDate = createEl('span', 'vl-comment-date');
+          commentDate.textContent = formatRelativeTime(comment.created_at);
+          commentDate.style.cssText = 'font-size:11px;color:#94a3b8;';
+          commentMeta.appendChild(commentDate);
+        }
+
+        var commentText = createEl('p', 'vl-comment-text');
+        commentText.textContent = comment.content || comment.text || '';
+        commentText.style.cssText = 'margin:0;font-size:14px;color:#334155;line-height:1.5;word-break:break-word;';
+
+        commentBody.appendChild(commentMeta);
+        commentBody.appendChild(commentText);
+
+        var replyContent = String(comment.reply_content || comment.replyContent || '').trim();
+        var replyStatus = String(comment.reply_status || comment.replyStatus || '').trim().toLowerCase();
+        var replyIsVisible = replyContent && (!replyStatus || replyStatus === 'replied' || replyStatus === 'respondido' || replyStatus === 'published' || replyStatus === 'publicado');
+
+        if (replyIsVisible) {
+          var replyBox = createEl('div');
+          replyBox.style.cssText = 'margin-top:8px;padding:8px 12px;background:#f0f9ff;border-left:3px solid ' + primaryColor + ';border-radius:6px;';
+          var replyLabel = createEl('div');
+          replyLabel.textContent = 'Resposta da loja';
+          replyLabel.style.cssText = 'font-size:10px;font-weight:700;color:' + primaryColor + ';margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px;';
+          var replyText = createEl('p');
+          replyText.textContent = replyContent;
+          replyText.style.cssText = 'margin:0;font-size:13px;color:#334155;line-height:1.4;word-break:break-word;';
+          replyBox.appendChild(replyLabel);
+          replyBox.appendChild(replyText);
+          commentBody.appendChild(replyBox);
+        }
+
+        commentCard.appendChild(avatar);
+        commentCard.appendChild(commentBody);
+        listWrap.appendChild(commentCard);
+      });
+
+      panelBody.appendChild(listWrap);
+    }
+
+    function renderCommentButton() {
+      while (panelFooter.firstChild) { panelFooter.removeChild(panelFooter.firstChild); }
+
+      var ctaBtn = createEl('button');
+      ctaBtn.type = 'button';
+      ctaBtn.textContent = 'Deixe seu comentário';
+      ctaBtn.style.cssText = 'width:100%;height:40px;border:none;border-radius:12px;background:' + buttonColor + ';color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:' + fontFamily + ';';
+      ctaBtn.onmouseenter = function () { ctaBtn.style.opacity = '.9'; };
+      ctaBtn.onmouseleave = function () { ctaBtn.style.opacity = '1'; };
+      ctaBtn.onclick = function (e) {
+        e.preventDefault(); e.stopPropagation(); renderCommentForm();
+      };
+      panelFooter.appendChild(ctaBtn);
+    }
+
+    function renderCommentForm() {
+      while (panelBody.firstChild) { panelBody.removeChild(panelBody.firstChild); }
+      while (panelFooter.firstChild) { panelFooter.removeChild(panelFooter.firstChild); }
+
+      var formWrap = createEl('div', 'vl-comment-form');
+      formWrap.style.cssText = 'padding:16px 18px;display:flex;flex-direction:column;gap:0;flex:1;';
+
+      var nameLabel = createEl('label');
+      nameLabel.textContent = 'Seu nome';
+      nameLabel.style.cssText = 'display:block;font-size:12px;font-weight:600;color:#64748b;margin-bottom:4px;';
+      formWrap.appendChild(nameLabel);
+
+      var nameInput = createEl('input');
+      nameInput.type = 'text'; nameInput.placeholder = 'Digite seu nome...'; nameInput.maxLength = 80;
+      nameInput.style.cssText = 'width:100%;height:40px;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#0f172a;outline:none;transition:border-color .2s;margin-bottom:12px;box-sizing:border-box;background:#f8fafc;font-family:' + fontFamily + ';';
+      nameInput.addEventListener('focus', function () {
+        nameInput.style.borderColor = primaryColor;
+        nameInput.style.boxShadow = '0 0 0 2px ' + primaryColor + '33';
+        nameInput.style.background = '#fff';
+      });
+      nameInput.addEventListener('blur', function () {
+        nameInput.style.borderColor = '#e2e8f0';
+        nameInput.style.boxShadow = 'none';
+        nameInput.style.background = '#f8fafc';
+      });
+      formWrap.appendChild(nameInput);
+
+      var commentLabel = createEl('label');
+      commentLabel.textContent = 'Seu comentário';
+      commentLabel.style.cssText = 'display:block;font-size:12px;font-weight:600;color:#64748b;margin-bottom:4px;';
+      formWrap.appendChild(commentLabel);
+
+      var commentTextarea = createEl('textarea');
+      commentTextarea.placeholder = 'Escreva seu comentário...';
+      commentTextarea.maxLength = 1000; commentTextarea.rows = 3;
+      commentTextarea.style.cssText = 'width:100%;height:70px;min-height:70px;max-height:70px;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#0f172a;resize:none;outline:none;transition:border-color .2s;margin-bottom:8px;box-sizing:border-box;background:#f8fafc;font-family:' + fontFamily + ';';
+      commentTextarea.addEventListener('focus', function () {
+        commentTextarea.style.borderColor = primaryColor;
+        commentTextarea.style.boxShadow = '0 0 0 2px ' + primaryColor + '33';
+        commentTextarea.style.background = '#fff';
+      });
+      commentTextarea.addEventListener('blur', function () {
+        commentTextarea.style.borderColor = '#e2e8f0';
+        commentTextarea.style.boxShadow = 'none';
+        commentTextarea.style.background = '#f8fafc';
+      });
+      formWrap.appendChild(commentTextarea);
+
+      var textareaWrapper = createEl('div');
+      textareaWrapper.style.cssText = 'position:relative!important;';
+
+      formWrap.removeChild(commentTextarea);
+      commentTextarea.style.paddingRight = '48px';
+      textareaWrapper.appendChild(commentTextarea);
+
+      var emojiToggle = createEl('button');
+      emojiToggle.type = 'button';
+      emojiToggle.textContent = '\uD83D\uDE0A';
+      emojiToggle.style.cssText = 'position:absolute!important;right:10px!important;bottom:10px!important;width:32px!important;height:32px!important;border:2px solid #0f172a!important;border-radius:50%!important;background:#fff!important;font-size:18px!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:0!important;line-height:1!important;z-index:5!important;';
+
+      var emojiGrid = createEl('div');
+      emojiGrid.style.cssText = 'display:none!important;position:absolute!important;right:0!important;bottom:48px!important;grid-template-columns:repeat(6,34px)!important;gap:4px!important;padding:8px!important;background:#fff!important;border:1px solid #e2e8f0!important;border-radius:12px!important;box-shadow:0 8px 30px rgba(0,0,0,.18)!important;z-index:30!important;max-height:150px!important;overflow-y:auto!important;';
+
+      var emojiList = ['\uD83D\uDE0D','\uD83D\uDD25','\uD83D\uDC4F','\u2764\uFE0F','\uD83D\uDE02','\uD83D\uDE31','\uD83D\uDE4C','\uD83D\uDCAF','\u2728','\uD83D\uDE22','\uD83E\uDD14','\uD83D\uDC4D','\uD83D\uDCAA','\uD83C\uDF89','\uD83D\uDE0A','\uD83E\uDD70','\uD83D\uDE0E','\uD83D\uDE4F','\uD83D\uDC99','\u2B50','\u2705','\uD83D\uDE21','\uD83D\uDC40','\uD83E\uDD29'];
+
+      emojiList.forEach(function (emoji) {
+        var emojiBtn = createEl('button');
+        emojiBtn.type = 'button';
+        emojiBtn.textContent = emoji;
+        emojiBtn.style.cssText = 'width:34px!important;height:34px!important;border:none!important;background:transparent!important;border-radius:8px!important;font-size:20px!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:0!important;';
+        emojiBtn.onmousedown = function (ev) {
+          ev.preventDefault();
+          var start = commentTextarea.selectionStart || commentTextarea.value.length;
+          var end = commentTextarea.selectionEnd || commentTextarea.value.length;
+          commentTextarea.value = commentTextarea.value.substring(0, start) + emoji + commentTextarea.value.substring(end);
+          var newPos = start + emoji.length;
+          commentTextarea.focus();
+          commentTextarea.setSelectionRange(newPos, newPos);
+          charCounter.textContent = commentTextarea.value.length + '/1000';
+          emojiGrid.style.display = 'none';
+        };
+        emojiGrid.appendChild(emojiBtn);
+      });
+
+      emojiToggle.onclick = function (ev) {
+        ev.preventDefault(); ev.stopPropagation();
+        emojiGrid.style.display = emojiGrid.style.display === 'grid' ? 'none' : 'grid';
+      };
+
+      textareaWrapper.appendChild(emojiToggle);
+      textareaWrapper.appendChild(emojiGrid);
+      formWrap.appendChild(textareaWrapper);
+
+      document.addEventListener('mousedown', function closeEmoji(ev) {
+        if (emojiGrid.style.display === 'grid' && !textareaWrapper.contains(ev.target)) {
+          emojiGrid.style.display = 'none';
+        }
+      });
+
+      var charCounter = createEl('div');
+      charCounter.style.cssText = 'display:none!important;';
+      commentTextarea.addEventListener('input', function () {
+        charCounter.textContent = commentTextarea.value.length + '/1000';
+      });
+      formWrap.appendChild(charCounter);
+
+      var statusMsg = createEl('div', 'vl-form-status');
+      formWrap.appendChild(statusMsg);
+
+      panelBody.appendChild(formWrap);
+
+      var btnRow = createEl('div', 'vl-form-btn-row');
+
+      var backBtn = createEl('button', 'vl-form-btn-back');
+      backBtn.type = 'button';
+      backBtn.textContent = 'Voltar';
+      backBtn.style.fontFamily = fontFamily;
+      backBtn.onclick = function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        renderInitialState();
+      };
+      btnRow.appendChild(backBtn);
+
+      var sendBtn = createEl('button', 'vl-form-btn-send');
+      sendBtn.type = 'button';
+      sendBtn.textContent = 'Enviar';
+      sendBtn.style.background = buttonColor;
+      sendBtn.style.fontFamily = fontFamily;
+      sendBtn.onmouseenter = function () { sendBtn.style.opacity = '.9'; };
+      sendBtn.onmouseleave = function () { sendBtn.style.opacity = '1'; };
+
+      sendBtn.onclick = function (ev) {
+        ev.preventDefault(); ev.stopPropagation();
+
+        var name = nameInput.value.trim();
+        var text = commentTextarea.value.trim();
+
+        if (!text) {
+          statusMsg.textContent = 'Digite um comentário para enviar.';
+          statusMsg.style.color = '#ef4444';
+          return;
+        }
+
+        sendBtn.disabled = true;
+        sendBtn.textContent = 'Enviando...';
+        sendBtn.style.opacity = '.6';
+        statusMsg.textContent = '';
+
+        userCommentedVideos[videoId] = true;
+        var commentStatus = autoApproveComments ? 'approved' : 'pending';
+
+        if (hasSupabase) {
+          createComment({
+            story_id: storyId,
+            video_id: videoId,
+            author_name: name || 'Visitante',
+            content: text,
+            status: commentStatus
+          })
+            .then(function () {
+              if (autoApproveComments) {
+                readCommentsData.push({
+                  video_id: videoId, user_name: name || 'Visitante',
+                  content: text, text: text,
+                  created_at: new Date().toISOString(), status: 'approved'
+                });
+                statusMsg.textContent = 'Obrigado pelo seu comentário! ❤️';
+                statusMsg.style.color = '#22c55e';
+              } else {
+                statusMsg.textContent = 'Obrigado pelo seu comentário! Sua mensagem será publicada em breve. 📝';
+                statusMsg.style.color = '#f59e0b';
+              }
+              commentsCount = getCommentCountForVideo(videoId);
+              panelTitle.textContent = 'Comentários' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
+              setTimeout(function () { renderInitialState(); }, 2000);
+              trackMetric({ event_type: 'comment', story_id: storyId, video_id: videoId, page_url: window.location.href });
+            })
+            .catch(function (error) {
+              statusMsg.textContent = error && error.message ? error.message : 'Erro ao enviar. Tente novamente.';
+              statusMsg.style.color = '#ef4444';
+              sendBtn.textContent = 'Enviar';
+              sendBtn.disabled = false;
+              sendBtn.style.opacity = '1';
+            });
+          return;
+        }
+
+        readCommentsData.push({
+          video_id: videoId, user_name: name || 'Visitante',
+          content: text, text: text, created_at: new Date().toISOString()
+        });
+        statusMsg.textContent = 'Obrigado pelo seu comentário!';
+        statusMsg.style.color = '#22c55e';
+        commentsCount = getCommentCountForVideo(videoId);
+        panelTitle.textContent = 'Comentários' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
+        setTimeout(function () { renderInitialState(); }, 2000);
+      };
+
+      btnRow.appendChild(sendBtn);
+      formWrap.appendChild(btnRow);
+      panelFooter.style.display = 'none';
+
+      setTimeout(function () { nameInput.focus(); }, 200);
+    }
+
+    function renderInitialState() {
+      commentsCount = getCommentCountForVideo(videoId);
+      panelTitle.textContent = 'Comentários' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
+      if (commentsCount > 0) { renderCommentList(); } else { renderEmptyState(); }
+      renderCommentButton();
+    }
+
+    renderInitialState();
+    panel.appendChild(panelBody);
+    panel.appendChild(panelFooter);
+    modalContent.appendChild(panel);
+    modalContent.classList.add('has-comments-open');
+  }
+
+  function closeOverlay() {
+    if (overlay) overlay.className = 'vl-overlay';
+    if (modalContent) {
+      var oldVid = modalContent.querySelector('video');
+      if (oldVid) { oldVid.pause(); oldVid.removeAttribute('src'); oldVid.load(); }
+      modalContent.innerHTML = '';
+    }
+    resumePreviews();
+  }
+
+  function renderStoryModal() {
+    if (!modalContent) return;
+    modalContent.innerHTML = '';
+    var story = currentStories[currentStoryIndex];
+    if (!story) { closeOverlay(); return; }
+    var videos = story.videos || [];
+    var video = videos[currentVideoIndex];
+    var appearanceConfig = normalizeModalAppearanceConfig(currentAppearance);
+    var container = createEl('div');
+
+    if (videos.length > 1) {
+      var progress = createEl('div', 'vl-progress');
+      videos.forEach(function (_, idx) {
+        var bar = createEl('div', 'vl-progress-bar');
+        var fill = createEl('div', 'vl-progress-fill');
+        if (idx < currentVideoIndex) fill.style.width = '100%';
+        else fill.style.width = '0%';
+        bar.appendChild(fill);
+        progress.appendChild(bar);
+      });
+      container.appendChild(progress);
+    }
+
+    var header = createEl('div', 'vl-header');
+    var headerLeft = createEl('div', 'vl-header-left');
+    if (appearanceConfig.show_title) {
+      var title = createEl('div', 'vl-title');
+      title.textContent = story.title || '';
+      headerLeft.appendChild(title);
+    }
+    header.appendChild(headerLeft);
+
+    var headerActions = createEl('div', 'vl-header-actions');
+
+    var muteBtn = createEl('button', 'vl-control');
+    muteBtn.id = 'vl-mute-btn';
+    muteBtn.innerHTML = svgIcon('volume');
+    muteBtn.title = 'Mudo';
+    muteBtn.onclick = function (e) {
+      e.stopPropagation();
+      var vid = modalContent.querySelector('video');
+      if (!vid) return;
+      vid.muted = !vid.muted;
+      muteBtn.innerHTML = vid.muted ? svgIcon('volumeOff') : svgIcon('volume');
+      muteBtn.title = vid.muted ? 'Ativar som' : 'Mudo';
+    };
+    headerActions.appendChild(muteBtn);
+
+    var playBtn = createEl('button', 'vl-control');
+    playBtn.id = 'vl-play-btn';
+    playBtn.innerHTML = svgIcon('pause');
+    playBtn.title = 'Pausar';
+    playBtn.onclick = function (e) {
+      e.stopPropagation();
+      var vid = modalContent.querySelector('video');
+      if (!vid) return;
+      if (vid.paused) {
+        vid.play().catch(function () {});
+        playBtn.innerHTML = svgIcon('pause');
+        playBtn.title = 'Pausar';
+      } else {
+        vid.pause();
+        playBtn.innerHTML = svgIcon('play');
+        playBtn.title = 'Reproduzir';
+      }
+    };
+    headerActions.appendChild(playBtn);
+
+    var closeBtn = createEl('button', 'vl-close');
+    closeBtn.innerHTML = svgIcon('close');
+    closeBtn.title = 'Fechar';
+    closeBtn.onclick = function (e) { e.stopPropagation(); closeOverlay(); };
+    headerActions.appendChild(closeBtn);
+
+    header.appendChild(headerActions);
+    container.appendChild(header);
+
+    var body = createEl('div', 'vl-body');
+
+    if (video) {
+      var player = buildVideoPlayer(video, story.id, function () {
+        nextStoryOrVideo();
+      });
+      body.appendChild(player);
+
+      setTimeout(function () {
+        var vidEl = player.querySelector('video');
+        if (vidEl) {
+          vidEl.muted = false;
+          vidEl.play().catch(function () {});
+
+          vidEl.addEventListener('play', function () {
+            var pb = modalContent.querySelector('#vl-play-btn');
+            if (pb) { pb.innerHTML = svgIcon('pause'); pb.title = 'Pausar'; }
+          });
+          vidEl.addEventListener('pause', function () {
+            var pb = modalContent.querySelector('#vl-play-btn');
+            if (pb) { pb.innerHTML = svgIcon('play'); pb.title = 'Reproduzir'; }
+          });
+          vidEl.addEventListener('volumechange', function () {
+            var mb = modalContent.querySelector('#vl-mute-btn');
+            if (mb) {
+              mb.innerHTML = vidEl.muted ? svgIcon('volumeOff') : svgIcon('volume');
+              mb.title = vidEl.muted ? 'Ativar som' : 'Mudo';
+            }
+          });
+        }
+      }, 200);
+    } else {
+      var emptyBody = createEl('div');
+      emptyBody.style.cssText = 'padding:40px;text-align:center;color:#fff;';
+      emptyBody.textContent = 'Nenhum vídeo encontrado.';
+      body.appendChild(emptyBody);
+    }
+
+    var nav = createEl('div', 'vl-nav');
+
+    var prevArrow = createEl('div', 'vl-nav-arrow vl-nav-arrow-left');
+    prevArrow.innerHTML = svgIcon('chevronLeft');
+    prevArrow.onclick = function (e) { e.stopPropagation(); prevStoryOrVideo(); };
+    nav.appendChild(prevArrow);
+
+    var nextArrow = createEl('div', 'vl-nav-arrow vl-nav-arrow-right');
+    nextArrow.innerHTML = svgIcon('chevronRight');
+    nextArrow.onclick = function (e) { e.stopPropagation(); nextStoryOrVideo(); };
+    nav.appendChild(nextArrow);
+
+    var prevBtn = createEl('button', 'vl-nav-btn vl-nav-prev');
+    prevBtn.onclick = function (e) { e.stopPropagation(); prevStoryOrVideo(); };
+    var nextBtn = createEl('button', 'vl-nav-btn vl-nav-next');
+    nextBtn.onclick = function (e) { e.stopPropagation(); nextStoryOrVideo(); };
+    nav.appendChild(prevBtn);
+    nav.appendChild(nextBtn);
+
+    body.appendChild(nav);
+
+    var social = createEl('div', 'vl-social');
+
+    if (appearanceConfig.show_like_button && video) {
+      var vidId = video.id;
+      var isLiked = !!likedVideos[vidId];
+      var likeCount = videoLikeCounts[vidId] || 0;
+      var hasLikes = likeCount > 0;
+
+      var likeWrapper = createEl('div', 'vl-social-wrapper');
+
+      var likeBtn = createEl('button', 'vl-social-btn');
+      likeBtn.id = 'vl-like-btn';
+      likeBtn.innerHTML = svgIcon(hasLikes ? 'heartFilled' : 'heart');
+      likeBtn.title = isLiked ? 'Descurtir' : 'Curtir';
+
+      likeBtn.onclick = function (e) {
+        e.stopPropagation();
+        toggleLike(video, likeBtn);
+      };
+
+      likeWrapper.appendChild(likeBtn);
+
+      var likeCountEl = createEl('span', 'vl-social-count');
+      likeCountEl.textContent = likeCount > 0 ? likeCount : '';
+
+      likeWrapper.appendChild(likeCountEl);
+      social.appendChild(likeWrapper);
+    }
+
+    if (appearanceConfig.show_comment_button && video) {
+      var commentCountVal = getCommentCountForVideo(video.id);
+
+      var wrapper = createEl('div', 'vl-social-wrapper');
+
+      var commentBtn = createEl('button', 'vl-social-btn');
+      commentBtn.id = 'vl-comment-btn';
+      commentBtn.innerHTML = svgIcon(
+        commentCountVal > 0 ? 'commentFilled' : 'comment'
+      );
+      commentBtn.title = 'Comentários';
+
+      commentBtn.onclick = function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openCommentsPanel(video.id, story.id);
+      };
+
+      wrapper.appendChild(commentBtn);
+
+      var commentCountEl = createEl('span', 'vl-social-count');
+      commentCountEl.textContent =
+        commentCountVal > 0 ? commentCountVal : '';
+
+      wrapper.appendChild(commentCountEl);
+      social.appendChild(wrapper);
+    }
+
+    if (appearanceConfig.show_share_button) {
+      var shareBtn = createEl('button', 'vl-social-btn');
+      shareBtn.innerHTML = svgIcon('share');
+      shareBtn.title = 'Compartilhar';
+      shareBtn.onclick = function (e) {
+        e.stopPropagation();
+        openSharePanel(shareBtn);
+      };
+      social.appendChild(shareBtn);
+    }
+
+    if (appearanceConfig.show_sizing_button && video) {
+      var sModelId = getSizingModelId(video);
+      if (sModelId) {
+        var sizeBtn = createEl('button', 'vl-social-btn');
+        sizeBtn.innerHTML = svgIcon('sizing');
+        sizeBtn.title = 'Medidas';
+        sizeBtn.onclick = function (e) { e.stopPropagation(); openSizingPanel(sModelId); };
+        social.appendChild(sizeBtn);
+      }
+    }
+
+    body.appendChild(social);
+    container.appendChild(body);
+
+    var showVerProduto = appearanceConfig.show_product !== false;
+    var showWhatsAppProduto = appearanceConfig.show_product_whatsapp_button !== false;
+
+    if (showVerProduto || showWhatsAppProduto) {
+      var videoProductId = video.product_id || (video.productId) || null;
+      var productData = videoProductId ? readProductsData.find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
+
+      if (productData) {
+        var priColor = getPrimaryColor(currentAppearance);
+        var productUrl = productData.product_url || productData.url || '';
+
+        var footer = createEl('div', 'vl-footer');
+        var footerInner = createEl('div', 'vl-footer-inner');
+
+        var prodCard = createEl('div', 'vl-product');
+        prodCard.style.cssText = 'display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border-radius:14px;background:#fff;';
+
+        var prodImg = createEl('img', 'vl-product-img');
+        prodImg.src = getThumbnailFromObject(productData) || '';
+        prodImg.alt = productData.name || 'Produto';
+        prodImg.style.cssText = 'width:52px;height:52px;border-radius:10px;object-fit:cover;flex-shrink:0;';
+        prodCard.appendChild(prodImg);
+
+        var prodInfo = createEl('div', 'vl-product-info');
+        prodInfo.style.cssText = 'flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;';
+
+        var pName = createEl('div', 'vl-product-name');
+        pName.textContent = productData.name || 'Produto';
+        pName.style.cssText = 'font-size:13px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+        prodInfo.appendChild(pName);
+
+        if (productData.price) {
+          var pPrice = createEl('div', 'vl-product-price');
+          pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
+          pPrice.style.cssText = 'font-size:15px;font-weight:800;color:' + priColor + ';';
+          prodInfo.appendChild(pPrice);
+        }
+
+        var pActions = createEl('div', 'vl-product-actions');
+        pActions.style.cssText = 'display:flex;gap:8px;flex-shrink:0;margin-top:4px;';
+
+        if (showVerProduto) {
+          var buyBtn = createEl('a', 'vl-product-btn');
+          buyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Ver no site';
+          buyBtn.href = productUrl || '#';
+          buyBtn.target = '_blank';
+          buyBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:8px 14px;background:' + priColor + ';color:#fff;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;';
+          if (!productUrl) {
+            buyBtn.style.opacity = '0.5';
+            buyBtn.style.pointerEvents = 'none';
+            buyBtn.title = 'URL do produto não cadastrada';
+          }
+          buyBtn.onclick = function (e) {
+            e.stopPropagation();
+            trackMetric({ event_type: 'product_click', story_id: story.id, video_id: video ? video.id : null, product_id: productData.id, page_url: window.location.href });
+          };
+          pActions.appendChild(buyBtn);
+        }
+
+        if (showWhatsAppProduto) {
+          var waNumber = storeWhatsappNumber || productData.whatsapp_number || productData.whatsappNumber || '';
+          if (waNumber) {
+            var waNumberClean = waNumber.replace(/\D/g, '');
+            var productName = productData.name || 'Produto';
+
+            var waMsgRaw = storeWhatsappMessage || 'Olá! Tenho interesse no produto: {{product_name}}';
+            waMsgRaw = waMsgRaw
+              .replace(/\{\{story_title\}\}/g, productName)
+              .replace(/\{\{product_name\}\}/g, productName)
+              .replace(/\{\{product_url\}\}/g, productUrl);
+
+            if (productUrl && waMsgRaw.indexOf(productUrl) === -1) {
+              waMsgRaw += '\n\n' + productUrl;
+            }
+
+            var waBtn = createEl('a', 'vl-product-whatsapp-btn');
+            waBtn.textContent = 'Comprar pelo WhatsApp';
+            waBtn.href = 'https://wa.me/' + waNumberClean + '?text=' + encodeURIComponent(waMsgRaw);
+            waBtn.target = '_blank';
+            waBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;background:#25D366;color:#fff;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;';
+            waBtn.onclick = function (e) {
+              e.stopPropagation();
+              trackMetric({ event_type: 'whatsapp_click', story_id: story.id, video_id: video ? video.id : null, product_id: productData.id, page_url: window.location.href });
+            };
+            pActions.appendChild(waBtn);
+          }
+        }
+
+        prodInfo.appendChild(pActions);
+        prodCard.appendChild(prodInfo);
+        footerInner.appendChild(prodCard);
+        footer.appendChild(footerInner);
+        container.appendChild(footer);
+      }
+    }
+
+    modalContent.appendChild(container);
+  }
+
+  function nextStoryOrVideo() {
+    var story = currentStories[currentStoryIndex];
+    if (story && story.videos && currentVideoIndex < story.videos.length - 1) {
+      currentVideoIndex++; renderStoryModal();
+    } else if (currentStoryIndex < currentStories.length - 1) {
+      currentStoryIndex++; currentVideoIndex = 0; renderStoryModal();
+    } else {
+      closeOverlay();
+    }
+  }
+
+  function prevStoryOrVideo() {
+    if (currentVideoIndex > 0) {
+      currentVideoIndex--; renderStoryModal();
+    } else if (currentStoryIndex > 0) {
+      currentStoryIndex--;
+      var prevStory = currentStories[currentStoryIndex];
+      currentVideoIndex = prevStory && prevStory.videos ? Math.max(0, prevStory.videos.length - 1) : 0;
+      renderStoryModal();
+    }
+  }
+
+  function openStoryViewer(stories, storyIndex, videoIndex) {
+    currentStories = stories;
+    currentStoryIndex = storyIndex || 0;
+    currentVideoIndex = (videoIndex !== undefined && videoIndex !== null) ? videoIndex : 0;
+
+    if (!globalShadowRoot) {
+      var shadowData = getOrCreateShadowRoot(currentAppearance || {});
+      globalShadowRoot = shadowData.shadow;
+      var style = createEl('style');
+      style.textContent = buildFloatingCss(currentAppearance || {});
+      globalShadowRoot.appendChild(style);
+    }
+
+    if (!overlay) {
+      overlay = createEl('div', 'vl-overlay');
+      modalContent = createEl('div', 'vl-modal');
+      overlay.appendChild(modalContent);
+      globalShadowRoot.appendChild(overlay);
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeOverlay();
+      });
+    }
+
+    pausePreviews();
+    overlay.className = 'vl-overlay is-open';
+    renderStoryModal();
+  }
+
+  function svgIcon(name) {
+    var icons = {
+      'volume': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>',
+      'volumeOff': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>',
+      'play': '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>',
+      'pause': '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>',
+      'close': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
+      'heart': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>',
+      'heartFilled': '<svg width="24" height="24" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>',
+      'comment': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
+      'commentFilled': '<svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
+      'share': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>',
+      'sizing': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="8" y1="8" x2="12" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/><line x1="12" y1="4" x2="12" y2="20" stroke-width="1" opacity="0.4"/></svg>',
+      'whatsapp': '<svg width="24" height="24" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"></path></svg>',
+      'copy': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>',
+      'check': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+      'chevronLeft': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>',
+      'chevronRight': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>'
+    };
+    return icons[name] || '';
+  }
+
+  function applyDraggable(el, appearance) {
+    var behaviorConfig = getFloatingBehaviorConfig(appearance);
+    if (!behaviorConfig.allowDrag) return;
+    var isDragging = false;
+    var startX, startY, initialRight, initialBottom;
+    el.addEventListener('mousedown', function (e) {
+      if (e.target.closest('.vl-dismiss')) return;
+      isDragging = true;
+      floatingWasDragged = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      var rect = el.getBoundingClientRect();
+      initialRight = window.innerWidth - rect.right;
+      initialBottom = window.innerHeight - rect.bottom;
+      el.style.transition = 'none';
+    });
+    document.addEventListener('mousemove', function (e) {
+      if (!isDragging) return;
+      var dx = startX - e.clientX;
+      var dy = startY - e.clientY;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        floatingWasDragged = true;
+        el.style.right = (initialRight + dx) + 'px';
+        el.style.bottom = (initialBottom + dy) + 'px';
+        el.style.left = 'auto';
+        el.style.top = 'auto';
+      }
+    });
+    document.addEventListener('mouseup', function () {
+      if (isDragging) {
+        isDragging = false;
+        el.style.transition = 'all 0.3s ease';
+      }
+    });
+  }
