@@ -669,6 +669,45 @@
       : fetchJson('videos?select=*&store_id=eq.' + encodeURIComponent(storeId));
   }
 
+  // 🔧 NOVA FUNÇÃO — Junta vídeos aos stories via tabela story_videos
+  function joinStoriesWithVideos(stories, storyVideos, videos) {
+    if (!stories || !stories.length) return stories;
+
+    // Cria um mapa rápido de vídeos por ID
+    var videoMap = {};
+    (videos || []).forEach(function (v) {
+      if (v && v.id) videoMap[v.id] = v;
+    });
+
+    // Para cada story, monta o array de vídeos ordenado por position
+    (stories || []).forEach(function (story) {
+      var svRows = (storyVideos || []).filter(function (sv) {
+        return sv.story_id === story.id;
+      });
+
+      // Ordena por position (campo que define a ordem dos vídeos no story)
+      svRows.sort(function (a, b) {
+        return (a.position || 0) - (b.position || 0);
+      });
+
+      // Mapeia para os objetos completos de vídeo
+      story.videos = svRows.map(function (sv) {
+        return videoMap[sv.video_id];
+      }).filter(Boolean);
+
+      // Log para debug
+      if (story.videos.length === 0) {
+        console.warn('[Vidlytics] Story "' + (story.title || story.id) + '" sem videos vinculados.');
+      } else {
+        console.log('[Vidlytics] Story "' + (story.title || story.id) + '" com ' + story.videos.length + ' video(s).');
+      }
+    });
+
+    return stories;
+  }
+
+  function readStoryProducts() {
+
   function readStoryProducts() {
     return (!storeId || !hasSupabase)
       ? Promise.resolve(getStorageItem('vidlytics_story_products', []))
