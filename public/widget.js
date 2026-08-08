@@ -3151,15 +3151,15 @@ track.style.cssText = [
     var videoIdx = item.videoIndex;
 
 var cardItem = createEl('div', 'vl-carousel-item');
-cardItem.style.scrollSnapAlign = 'start';
 cardItem.style.cssText = [
   'flex-shrink:0;',
   'width:' + sizePx + ';',
-      'display:flex;',
-      'flex-direction:column;',
-      'gap:6px;',
-      'transition:transform .2s ease;'
-    ].join('');
+  'scroll-snap-align:start;',
+  'display:flex;',
+  'flex-direction:column;',
+  'gap:6px;',
+  'transition:transform .2s ease;'
+].join('');
 
     // Card com thumbnail do VÍDEO
     var card = createEl('div', 'vl-carousel-card');
