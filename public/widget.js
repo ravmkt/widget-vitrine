@@ -2923,15 +2923,19 @@
      ================================================================ */
 
 function initInlineWidget(options) {
+  console.log('🔵 [Vidlytics] initInlineWidget chamado com:', options);
+
   var targetSelector = options.target || options.anchor || '#vidlytics-stories';
   var placement = String(options.placement || 'below').toLowerCase();
   var targetEl = document.querySelector(targetSelector);
+
+  console.log('🔵 [Vidlytics] Seletor:', targetSelector);
+  console.log('🔵 [Vidlytics] Elemento encontrado:', targetEl);
 
   if (!targetEl) {
     console.warn('[Vidlytics] Container alvo "' + targetSelector + '" não encontrado.');
     return;
   }
-
   var wrapper = document.createElement('div');
   wrapper.style.cssText = 'position:relative;width:100%;';
 
