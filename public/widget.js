@@ -3022,24 +3022,17 @@ function enableDragScroll(el) {
     velX = 0;
   }
 
-  function startMomentum() {
-    cancelMomentum();
-    if (Math.abs(velX) < 2) {
-      // Sem inércia suficiente → snap direto
-      snapToNearest();
-      return;
+function startMomentum() {
+  cancelMomentum();
+  if (Math.abs(velX) < 2) return; // deixa o scroll-snap nativo alinhar, sem forçar via JS
+  momentumId = requestAnimationFrame(function animate() {
+    velX *= 0.92;
+    el.scrollLeft -= velX;
+    if (Math.abs(velX) > 0.5) {
+      momentumId = requestAnimationFrame(animate);
     }
-    momentumId = requestAnimationFrame(function animate() {
-      velX *= 0.92;
-      el.scrollLeft -= velX;
-      if (Math.abs(velX) > 0.5) {
-        momentumId = requestAnimationFrame(animate);
-      } else {
-        // Inércia acabou → snap no item mais próximo
-        snapToNearest();
-      }
-    });
-  }
+  });
+}
 
   function snapToNearest() {
     var firstItem = el.querySelector('.vl-carousel-item');
