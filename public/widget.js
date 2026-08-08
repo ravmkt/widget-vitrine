@@ -34,7 +34,6 @@
   var globalShadowRoot = null;
   var floatingWasDragged = false;
   var floatingWasClosed = false;
-  var widgetSelectToken = null;
   var readStoryProductsData = [];
   var readProductsData = [];
   var readCommentsData = [];
@@ -266,14 +265,17 @@
     try { var item = localStorage.getItem(key); if (!item) return fallback; try { return JSON.parse(item); } catch (e) { return item; } } catch (e2) { return fallback; }
   }
 
+    // 🔧 Sanitização de valores CSS — previne XSS via cores, fontes, etc.
   function sanitizeCssValue(value, fallback, type) {
-    type = type || 'color';
+    type = type || 'color'; // 'color' | 'font' | 'number' | 'generic'
     if (value === undefined || value === null || value === '') return fallback || '';
 
     var sanitized = String(value).trim();
 
     if (type === 'color') {
+      // Remove caracteres que podem quebrar contexto CSS
       sanitized = sanitized.replace(/[<>"'`&;{}()\\]/g, '');
+      // Só permite padrões válidos de cor CSS
       if (/^(#[0-9a-fA-F]{3,8}|rgb\(|rgba\(|hsl\(|hsla\(|transparent|inherit|initial|currentColor|var\(--|[a-z]+$)/.test(sanitized)) {
         return sanitized;
       }
@@ -281,7 +283,9 @@
     }
 
     if (type === 'font') {
+      // Remove caracteres perigosos, mantém vírgulas, espaços, aspas simples (para nomes de fonte)
       sanitized = sanitized.replace(/[<>`&;{}()\\]/g, '');
+      // Remove múltiplos pontos e vírgulas suspeitas
       sanitized = sanitized.replace(/;+/g, '').replace(/\{+/g, '').replace(/\}+/g, '');
       return sanitized || fallback || 'Inter, system-ui, sans-serif';
     }
@@ -291,6 +295,7 @@
       return isNaN(num) ? (fallback || '0') : String(num);
     }
 
+    // generic: remove HTML/CSS breakout chars
     sanitized = sanitized.replace(/[<>"'`&;{}()]/g, '');
     return sanitized || fallback || '';
   }
@@ -606,12 +611,12 @@
     return getPrimaryColor(appearance);
   }
 
-  function getButtonColor(appearance) {
+   function getButtonColor(appearance) {
     var raw = readAppearanceValue(appearance, ['button_color', 'buttonColor', 'btn_color', 'cor_botao']);
     return sanitizeCssValue(raw, getPrimaryColor(appearance), 'color');
   }
 
-  function getFontFamily(appearance) {
+    function getFontFamily(appearance) {
     var raw = readAppearanceValue(appearance, ['font_family', 'fontFamily', 'fonte']);
     return sanitizeCssValue(raw, DEFAULT_APPEARANCE.font_family, 'font');
   }
@@ -646,6 +651,7 @@
       border_radius: rcv('border_radius', 'modal_border_radius', '')
     };
   }
+
   function readStories() {
     if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_stories', []));
     return fetchJson('stories?select=*&store_id=eq.' + encodeURIComponent(storeId))
@@ -669,43 +675,6 @@
       : fetchJson('videos?select=*&store_id=eq.' + encodeURIComponent(storeId));
   }
 
-  // 🔧 NOVA FUNÇÃO — Junta vídeos aos stories via tabela story_videos
-  function joinStoriesWithVideos(stories, storyVideos, videos) {
-    if (!stories || !stories.length) return stories;
-
-    // Cria um mapa rápido de vídeos por ID
-    var videoMap = {};
-    (videos || []).forEach(function (v) {
-      if (v && v.id) videoMap[v.id] = v;
-    });
-
-    // Para cada story, monta o array de vídeos ordenado por position
-    (stories || []).forEach(function (story) {
-      var svRows = (storyVideos || []).filter(function (sv) {
-        return sv.story_id === story.id;
-      });
-
-      // Ordena por position (campo que define a ordem dos vídeos no story)
-      svRows.sort(function (a, b) {
-        return (a.position || 0) - (b.position || 0);
-      });
-
-      // Mapeia para os objetos completos de vídeo
-      story.videos = svRows.map(function (sv) {
-        return videoMap[sv.video_id];
-      }).filter(Boolean);
-
-      // Log para debug
-      if (story.videos.length === 0) {
-        console.warn('[Vidlytics] Story "' + (story.title || story.id) + '" sem videos vinculados.');
-      } else {
-        console.log('[Vidlytics] Story "' + (story.title || story.id) + '" com ' + story.videos.length + ' video(s).');
-      }
-    });
-
-    return stories;
-  }
-
   function readStoryProducts() {
     return (!storeId || !hasSupabase)
       ? Promise.resolve(getStorageItem('vidlytics_story_products', []))
@@ -725,237 +694,263 @@
     return fetchJson(query);
   }
 
-  function readPageRules() {
-    if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_page_rules', []));
-    return fetchJson('page_rules?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&order=created_at.desc')
-      .then(function (rules) {
-        if (!Array.isArray(rules)) return [];
-        return rules.filter(function (rule) {
-          if (rule.active === false || rule.active === 'false' || rule.active === 0 || rule.active === '0') {
-            return false;
-          }
-          return true;
-        });
-      });
-  }
+function readPageRules() {
+  if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_page_rules', []));
 
-  function readDisplayLocations() {
-    if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_display_locations', []));
-    return fetchJson('display_locations?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&order=created_at.desc')
-      .then(function (locations) {
-        if (!Array.isArray(locations)) return [];
-        return locations.filter(function (location) {
-          if (location.active === false || location.active === 'false' || location.active === 0 || location.active === '0') {
-            return false;
-          }
-          return true;
-        });
-      });
-  }
+  return fetchJson('page_rules?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&order=created_at.desc')
+    .then(function (rules) {
+      if (!Array.isArray(rules)) return [];
 
-  function readLikesFromDb() {
-    if (!hasSupabase) return Promise.resolve({ likedVideos: {}, likeCounts: {} });
-    var fingerprint = getFingerprint();
-    var userLikesPromise = supabaseFetch(
-      'video_likes?select=video_id&store_id=eq.' + encodeURIComponent(storeId) +
-      '&user_fingerprint=eq.' + encodeURIComponent(fingerprint),
-      { method: 'GET' }
-    ).then(function (response) {
-      if (!response.ok) return [];
-      return response.json();
-    }).then(function (data) {
-      return Array.isArray(data) ? data : [];
-    }).catch(function () { return []; });
-
-    var allLikesPromise = supabaseFetch(
-      'video_likes?select=video_id&store_id=eq.' + encodeURIComponent(storeId),
-      { method: 'GET' }
-    ).then(function (response) {
-      if (!response.ok) return [];
-      return response.json();
-    }).then(function (data) {
-      return Array.isArray(data) ? data : [];
-    }).catch(function () { return []; });
-
-    return Promise.all([userLikesPromise, allLikesPromise]).then(function (results) {
-      var userLikes = results[0];
-      var allLikes = results[1];
-      var likedVideosMap = {};
-      userLikes.forEach(function (like) {
-        if (like.video_id) likedVideosMap[like.video_id] = true;
-      });
-      var likeCountsMap = {};
-      allLikes.forEach(function (like) {
-        if (like.video_id) {
-          likeCountsMap[like.video_id] = (likeCountsMap[like.video_id] || 0) + 1;
-        }
-      });
-      return { likedVideos: likedVideosMap, likeCounts: likeCountsMap };
-    });
-  }
-
-  function readSizingModels() {
-    if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_sizing_models', []));
-    return fetchJson('sizing_models?select=*&store_id=eq.' + encodeURIComponent(storeId));
-  }
-
-  function readStoreSettings() {
-    if (!storeId || !hasSupabase) return Promise.resolve({});
-    return supabaseFetch(
-      'store_settings?select=auto_approve_comments,whatsapp_number,whatsapp_message,whatsapp_message_template&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
-      { method: 'GET' }
-    )
-      .then(function (response) { if (!response.ok) return {}; return response.json(); })
-      .then(function (data) {
-        if (Array.isArray(data) && data.length > 0) return data[0];
-        return {};
-      })
-      .catch(function () { return {}; })
-      .then(function (store) {
-        return {
-          auto_approve_comments: store.auto_approve_comments,
-          whatsapp_number: store.whatsapp_number || '',
-          whatsapp_message: store.whatsapp_message || '',
-          whatsapp_message_template: store.whatsapp_message_template || ''
-        };
-      });
-  }
-
-  function matchesRule(rule) {
-    if (!rule) return false;
-    if (rule.active === false || rule.active === 'false' || rule.active === 0 || rule.active === '0') return false;
-
-    var href = window.location.href;
-    var path = window.location.pathname || '/';
-
-    var rawCondition = String(
-      firstDefined(rule.condition_type, rule.rule_type, rule.match_type) || ''
-    ).trim().toLowerCase();
-
-    var conditionType = rawCondition
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
-
-    var value = String(
-      firstDefined(rule.url_pattern, rule.page_url, rule.value, rule.url) || ''
-    ).trim();
-
-    if (!conditionType && value) {
-      conditionType = 'contains';
-    }
-
-    if (
-      conditionType.indexOf('contem') !== -1 ||
-      conditionType === 'url_contains' ||
-      conditionType === 'contains'
-    ) {
-      conditionType = 'contains';
-    } else if (
-      conditionType.indexOf('exata') !== -1 ||
-      conditionType === 'url_equals' ||
-      conditionType === 'exact' ||
-      conditionType === 'equals'
-    ) {
-      conditionType = 'equals';
-    } else if (
-      conditionType.indexOf('todas') !== -1 ||
-      conditionType === 'all' ||
-      conditionType === 'all_pages'
-    ) {
-      conditionType = 'all_pages';
-    } else if (
-      conditionType.indexOf('inicial') !== -1 ||
-      conditionType === 'home' ||
-      conditionType === 'home_only'
-    ) {
-      conditionType = 'home_only';
-    } else if (
-      conditionType.indexOf('produto') !== -1 ||
-      conditionType === 'product_pages' ||
-      conditionType === 'product'
-    ) {
-      conditionType = 'product_pages';
-    } else if (
-      conditionType.indexOf('categoria') !== -1 ||
-      conditionType.indexOf('colecao') !== -1 ||
-      conditionType.indexOf('collection') !== -1 ||
-      conditionType === 'category_pages' ||
-      conditionType === 'category'
-    ) {
-      conditionType = 'category_pages';
-    } else if (conditionType) {
-      conditionType = 'contains';
-    }
-
-    if (!conditionType) return false;
-
-    switch (conditionType) {
-      case 'all_pages':
-        return true;
-
-      case 'home_only':
-        return (
-          path === '/' ||
-          path === '/home' ||
-          path === '/index.html' ||
-          path === ''
-        );
-
-      case 'product_pages':
-        return (
-          path.indexOf('/product') !== -1 ||
-          path.indexOf('/produto') !== -1
-        );
-
-      case 'category_pages':
-        return (
-          path.indexOf('/category') !== -1 ||
-          path.indexOf('/categoria') !== -1 ||
-          path.indexOf('/colecao') !== -1 ||
-          path.indexOf('/collection') !== -1
-        );
-
-      case 'contains':
-        return (
-          href.indexOf(value) !== -1 ||
-          path.indexOf(value) !== -1
-        );
-
-      case 'equals':
-        return (
-          href === value ||
-          path === value
-        );
-
-      case 'not_equals':
-        return (
-          href !== value &&
-          path !== value
-        );
-
-      case 'starts_with':
-        return (
-          href.indexOf(value) === 0 ||
-          path.indexOf(value) === 0
-        );
-
-      case 'ends_with':
-        return (
-          href.endsWith(value) ||
-          path.endsWith(value)
-        );
-
-      case 'regex':
-        try {
-          return new RegExp(value).test(href);
-        } catch (error) {
+      return rules.filter(function (rule) {
+        if (
+          rule.active === false ||
+          rule.active === 'false' ||
+          rule.active === 0 ||
+          rule.active === '0'
+        ) {
           return false;
         }
+        return true;
+      });
+    });
+}
 
-      default:
-        return false;
-    }
+function readDisplayLocations() {
+  if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_display_locations', []));
+
+  return fetchJson('display_locations?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&order=created_at.desc')
+    .then(function (locations) {
+      if (!Array.isArray(locations)) return [];
+
+      return locations.filter(function (location) {
+        if (
+          location.active === false ||
+          location.active === 'false' ||
+          location.active === 0 ||
+          location.active === '0'
+        ) {
+          return false;
+        }
+        return true;
+      });
+    });
+}
+
+function readLikesFromDb() {
+  if (!hasSupabase) return Promise.resolve({ likedVideos: {}, likeCounts: {} });
+
+  var fingerprint = getFingerprint();
+
+  // Busca likes deste usuário
+  var userLikesPromise = supabaseFetch(
+    'video_likes?select=video_id&store_id=eq.' + encodeURIComponent(storeId) +
+    '&user_fingerprint=eq.' + encodeURIComponent(fingerprint),
+    { method: 'GET' }
+  ).then(function (response) {
+    if (!response.ok) return [];
+    return response.json();
+  }).then(function (data) {
+    return Array.isArray(data) ? data : [];
+  }).catch(function () { return []; });
+
+  // Busca TODOS os likes da loja (pra contar)
+  var allLikesPromise = supabaseFetch(
+    'video_likes?select=video_id&store_id=eq.' + encodeURIComponent(storeId),
+    { method: 'GET' }
+  ).then(function (response) {
+    if (!response.ok) return [];
+    return response.json();
+  }).then(function (data) {
+    return Array.isArray(data) ? data : [];
+  }).catch(function () { return []; });
+
+  return Promise.all([userLikesPromise, allLikesPromise]).then(function (results) {
+    var userLikes = results[0];
+    var allLikes = results[1];
+
+    var likedVideosMap = {};
+    userLikes.forEach(function (like) {
+      if (like.video_id) likedVideosMap[like.video_id] = true;
+    });
+
+    var likeCountsMap = {};
+    allLikes.forEach(function (like) {
+      if (like.video_id) {
+        likeCountsMap[like.video_id] = (likeCountsMap[like.video_id] || 0) + 1;
+      }
+    });
+
+    return { likedVideos: likedVideosMap, likeCounts: likeCountsMap };
+  });
+}
+
+function readSizingModels() {
+  if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_sizing_models', []));
+  return fetchJson('sizing_models?select=*&store_id=eq.' + encodeURIComponent(storeId));
+}
+
+function readStoreSettings() {
+  if (!storeId || !hasSupabase) return Promise.resolve({});
+
+  return supabaseFetch(
+    'store_settings?select=auto_approve_comments,whatsapp_number,whatsapp_message,whatsapp_message_template&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
+    { method: 'GET' }
+  )
+    .then(function (response) { if (!response.ok) return {}; return response.json(); })
+    .then(function (data) {
+      if (Array.isArray(data) && data.length > 0) return data[0];
+      return {};
+    })
+    .catch(function () { return {}; })
+    .then(function (store) {
+      return {
+        auto_approve_comments: store.auto_approve_comments,
+        whatsapp_number: store.whatsapp_number || '',
+        whatsapp_message: store.whatsapp_message || '',
+        whatsapp_message_template: store.whatsapp_message_template || ''
+      };
+    });
+}
+
+function matchesRule(rule) {
+  if (!rule) return false;
+  if (rule.active === false || rule.active === 'false' || rule.active === 0 || rule.active === '0') return false;
+
+  var href = window.location.href;
+  var path = window.location.pathname || '/';
+
+  var rawCondition = String(
+    firstDefined(rule.condition_type, rule.rule_type, rule.match_type) || ''
+  ).trim().toLowerCase();
+
+  var conditionType = rawCondition
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  var value = String(
+    firstDefined(rule.url_pattern, rule.page_url, rule.value, rule.url) || ''
+  ).trim();
+
+  // Se condition_type está vazio mas existe url_pattern, assume "contains"
+  if (!conditionType && value) {
+    conditionType = 'contains';
   }
+
+  // Normalização
+  if (
+    conditionType.indexOf('contem') !== -1 ||
+    conditionType === 'url_contains' ||
+    conditionType === 'contains'
+  ) {
+    conditionType = 'contains';
+  } else if (
+    conditionType.indexOf('exata') !== -1 ||
+    conditionType === 'url_equals' ||
+    conditionType === 'exact' ||
+    conditionType === 'equals'
+  ) {
+    conditionType = 'equals';
+  } else if (
+    conditionType.indexOf('todas') !== -1 ||
+    conditionType === 'all' ||
+    conditionType === 'all_pages'
+  ) {
+    conditionType = 'all_pages';
+  } else if (
+    conditionType.indexOf('inicial') !== -1 ||
+    conditionType === 'home' ||
+    conditionType === 'home_only'
+  ) {
+    conditionType = 'home_only';
+  } else if (
+    conditionType.indexOf('produto') !== -1 ||
+    conditionType === 'product_pages' ||
+    conditionType === 'product'
+  ) {
+    conditionType = 'product_pages';
+  } else if (
+    conditionType.indexOf('categoria') !== -1 ||
+    conditionType.indexOf('colecao') !== -1 ||
+    conditionType.indexOf('collection') !== -1 ||
+    conditionType === 'category_pages' ||
+    conditionType === 'category'
+  ) {
+    conditionType = 'category_pages';
+  } else if (conditionType) {
+    // Se tem algum valor mas não foi reconhecido, tenta como "contains"
+    conditionType = 'contains';
+  }
+
+  // Sem condition_type e sem value = não aparece
+  if (!conditionType) return false;
+
+  switch (conditionType) {
+    case 'all_pages':
+      return true;
+
+    case 'home_only':
+      return (
+        path === '/' ||
+        path === '/home' ||
+        path === '/index.html' ||
+        path === ''
+      );
+
+    case 'product_pages':
+      return (
+        path.indexOf('/product') !== -1 ||
+        path.indexOf('/produto') !== -1
+      );
+
+    case 'category_pages':
+      return (
+        path.indexOf('/category') !== -1 ||
+        path.indexOf('/categoria') !== -1 ||
+        path.indexOf('/colecao') !== -1 ||
+        path.indexOf('/collection') !== -1
+      );
+
+    case 'contains':
+      return (
+        href.indexOf(value) !== -1 ||
+        path.indexOf(value) !== -1
+      );
+
+    case 'equals':
+      return (
+        href === value ||
+        path === value
+      );
+
+    case 'not_equals':
+      return (
+        href !== value &&
+        path !== value
+      );
+
+    case 'starts_with':
+      return (
+        href.indexOf(value) === 0 ||
+        path.indexOf(value) === 0
+      );
+
+    case 'ends_with':
+      return (
+        href.endsWith(value) ||
+        path.endsWith(value)
+      );
+
+    case 'regex':
+      try {
+        return new RegExp(value).test(href);
+      } catch (error) {
+        return false;
+      }
+
+    default:
+      return false;
+  }
+}
 
   function matchesUrl(appearance) {
     if (!appearance) return true;
@@ -989,6 +984,7 @@
     ));
   }
 
+  // 🔧 CORREÇÃO 1: Aceita URLs do storage do Supabase mesmo sem extensão
   function isDirectVideoUrl(url) {
     if (!url) return false;
     return VIDEO_FILE_REGEX.test(url) || url.indexOf('/storage/v1/object/') !== -1;
@@ -1193,8 +1189,6 @@
       + '.vl-comments-panel-full ::-webkit-scrollbar{width:4px!important;}'
       + '.vl-comments-panel-full ::-webkit-scrollbar-track{background:transparent!important;}'
       + '.vl-comments-panel-full ::-webkit-scrollbar-thumb{background:#cbd5e1!important;border-radius:4px!important;}'
-      + '.vl-carousel-wrapper{scroll-snap-type:x mandatory!important;}'
-      + '.vl-carousel-wrapper.is-dragging{scroll-snap-type:none!important;}'
       + '.vl-comments-panel-full{'
       + 'position:absolute!important;'
       + 'top:8px!important;'
@@ -1349,6 +1343,7 @@
       + 'max-height:90vh!important;'
       + 'border-radius:36px!important;'
       + '}'
+      + '}'
     );
   }
 
@@ -1387,6 +1382,7 @@
     }
   }
 
+  // 🔧 CORREÇÃO 2: Função trackMetric adicionada (antes era chamada mas não existia)
   function trackMetric(data) {
     if (!hasSupabase) return;
     data = data || {};
@@ -1676,7 +1672,7 @@
     });
   }
 
-  function openSizingPanel(modelId) {
+function openSizingPanel(modelId) {
     if (!modalContent) return;
 
     var existing = modalContent.querySelector('.vl-sizing-panel-full');
@@ -1722,6 +1718,9 @@
     var primaryColor = getPrimaryColor(currentAppearance);
     var fontFamily = getFontFamily(currentAppearance);
 
+    // ═══════════════════════════════════════════
+    // PANEL — centralizado flutuante (igual preview)
+    // ═══════════════════════════════════════════
     var panel = createEl('div', 'vl-sizing-panel-full');
     panel.style.cssText = [
       'position:absolute;',
@@ -1742,6 +1741,9 @@
       'box-sizing:border-box;'
     ].join('');
 
+    // ═══════════════════════════════════════════
+    // HEADER
+    // ═══════════════════════════════════════════
     var panelHeader = createEl('div');
     panelHeader.style.cssText = [
       'display:flex;',
@@ -1785,6 +1787,9 @@
     panelHeader.appendChild(closeBtn);
     panel.appendChild(panelHeader);
 
+    // ═══════════════════════════════════════════
+    // BODY
+    // ═══════════════════════════════════════════
     var panelBody = createEl('div');
     panelBody.style.cssText = [
       'flex:1;',
@@ -1839,6 +1844,7 @@
     modalContent.appendChild(panel);
     modalContent.classList.add('has-comments-open');
   }
+
   function openCommentsPanel(videoId, storyId) {
     if (!modalContent) return;
 
@@ -2094,18 +2100,22 @@
       });
       formWrap.appendChild(commentTextarea);
 
+      // ─── wrapper posicional para textarea + emoji ───
       var textareaWrapper = createEl('div');
       textareaWrapper.style.cssText = 'position:relative!important;';
 
+      // remove a textarea do formWrap e coloca dentro do wrapper
       formWrap.removeChild(commentTextarea);
       commentTextarea.style.paddingRight = '48px';
       textareaWrapper.appendChild(commentTextarea);
 
+      // botão emoji (posicionado absolutamente sobre a textarea)
       var emojiToggle = createEl('button');
       emojiToggle.type = 'button';
-      emojiToggle.textContent = '\uD83D\uDE0A';
+      emojiToggle.textContent = '\uD83D\uDE0A'; // 😊
       emojiToggle.style.cssText = 'position:absolute!important;right:10px!important;bottom:10px!important;width:32px!important;height:32px!important;border:2px solid #0f172a!important;border-radius:50%!important;background:#fff!important;font-size:18px!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:0!important;line-height:1!important;z-index:5!important;';
 
+      // grid de emojis
       var emojiGrid = createEl('div');
       emojiGrid.style.cssText = 'display:none!important;position:absolute!important;right:0!important;bottom:48px!important;grid-template-columns:repeat(6,34px)!important;gap:4px!important;padding:8px!important;background:#fff!important;border:1px solid #e2e8f0!important;border-radius:12px!important;box-shadow:0 8px 30px rgba(0,0,0,.18)!important;z-index:30!important;max-height:150px!important;overflow-y:auto!important;';
 
@@ -2139,6 +2149,7 @@
       textareaWrapper.appendChild(emojiGrid);
       formWrap.appendChild(textareaWrapper);
 
+      // fecha emoji ao clicar fora
       document.addEventListener('mousedown', function closeEmoji(ev) {
         if (emojiGrid.style.display === 'grid' && !textareaWrapper.contains(ev.target)) {
           emojiGrid.style.display = 'none';
@@ -2246,7 +2257,7 @@
       };
 
       btnRow.appendChild(sendBtn);
-      formWrap.appendChild(btnRow);
+      formWrap.appendChild(btnRow);   // ✅ agora os botões ficam dentro do form
       panelFooter.style.display = 'none';
 
       setTimeout(function () { nameInput.focus(); }, 200);
@@ -2593,866 +2604,85 @@
     modalContent.appendChild(container);
   }
 
-  /* ================================================================
-     NAVEGAÇÃO ENTRE STORIES E VÍDEOS
-     ================================================================ */
-
   function nextStoryOrVideo() {
-    if (!currentStories || currentStories.length === 0) return;
     var story = currentStories[currentStoryIndex];
-    var videos = story ? (story.videos || []) : [];
-
-    if (currentVideoIndex < videos.length - 1) {
-      currentVideoIndex++;
+    if (story && story.videos && currentVideoIndex < story.videos.length - 1) {
+      currentVideoIndex++; renderStoryModal();
     } else if (currentStoryIndex < currentStories.length - 1) {
-      currentStoryIndex++;
-      currentVideoIndex = 0;
+      currentStoryIndex++; currentVideoIndex = 0; renderStoryModal();
     } else {
       closeOverlay();
-      return;
     }
-
-    renderStoryModal();
-    trackMetric({
-      event_type: 'next_video',
-      story_id: currentStories[currentStoryIndex].id,
-      video_id: (currentStories[currentStoryIndex].videos || [])[currentVideoIndex]
-        ? (currentStories[currentStoryIndex].videos || [])[currentVideoIndex].id
-        : null,
-      page_url: window.location.href
-    });
   }
 
   function prevStoryOrVideo() {
-    if (!currentStories || currentStories.length === 0) return;
-
     if (currentVideoIndex > 0) {
-      currentVideoIndex--;
+      currentVideoIndex--; renderStoryModal();
     } else if (currentStoryIndex > 0) {
       currentStoryIndex--;
       var prevStory = currentStories[currentStoryIndex];
-      currentVideoIndex = Math.max(0, (prevStory.videos || []).length - 1);
-    } else {
-      return;
+      currentVideoIndex = prevStory && prevStory.videos ? Math.max(0, prevStory.videos.length - 1) : 0;
+      renderStoryModal();
     }
-
-    renderStoryModal();
   }
 
-  /* ================================================================
-     GESTOS DE TOQUE (SWIPE) NO MODAL
-     ================================================================ */
+  function openStoryViewer(stories, storyIndex, videoIndex) {
+    currentStories = stories;
+    currentStoryIndex = storyIndex || 0;
+    currentVideoIndex = (videoIndex !== undefined && videoIndex !== null) ? videoIndex : 0;
 
-  var touchStartX = 0;
-  var touchStartY = 0;
-  var touchStartTime = 0;
-  var SWIPE_THRESHOLD = 50;
-  var SWIPE_TIME_LIMIT = 300;
-
-  function attachTouchListeners() {
-    if (!modalContent) return;
-
-    modalContent.addEventListener('touchstart', function (e) {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      touchStartTime = Date.now();
-    }, { passive: true });
-
-    modalContent.addEventListener('touchend', function (e) {
-      var touchEndX = e.changedTouches[0].clientX;
-      var touchEndY = e.changedTouches[0].clientY;
-      var deltaX = touchEndX - touchStartX;
-      var deltaY = touchEndY - touchStartY;
-      var elapsed = Date.now() - touchStartTime;
-
-      if (Math.abs(deltaY) > Math.abs(deltaX) * 1.5) return;
-      if (elapsed > SWIPE_TIME_LIMIT) return;
-
-      var absDeltaX = Math.abs(deltaX);
-      if (absDeltaX < SWIPE_THRESHOLD) return;
-
-      if (deltaX > 0) {
-        prevStoryOrVideo();
-      } else {
-        nextStoryOrVideo();
-      }
-    }, { passive: true });
-  }
-
-  /* ================================================================
-     TECLAS DO TECLADO (SETAS)
-     ================================================================ */
-
-  function attachKeyboardListeners() {
-    document.addEventListener('keydown', function (e) {
-      if (!overlay || !overlay.classList.contains('vl-active')) return;
-
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-        e.preventDefault();
-        nextStoryOrVideo();
-      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        prevStoryOrVideo();
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        closeOverlay();
-      }
-    });
-  }
-
-  /* ================================================================
-     ABERTURA DO MODAL
-     ================================================================ */
-
-  function openStoryModal(storyIndex) {
-    if (!currentStories || currentStories.length === 0) return;
-    if (storyIndex === undefined || storyIndex === null) storyIndex = 0;
-
-    currentStoryIndex = Math.max(0, Math.min(storyIndex, currentStories.length - 1));
-    currentVideoIndex = 0;
-
-    pausePreviews();
+    if (!globalShadowRoot) {
+      var shadowData = getOrCreateShadowRoot(currentAppearance || {});
+      globalShadowRoot = shadowData.shadow;
+      var style = createEl('style');
+      style.textContent = buildFloatingCss(currentAppearance || {});
+      globalShadowRoot.appendChild(style);
+    }
 
     if (!overlay) {
       overlay = createEl('div', 'vl-overlay');
-      overlay.id = 'vl-overlay';
       modalContent = createEl('div', 'vl-modal');
       overlay.appendChild(modalContent);
-      document.body.appendChild(overlay);
+      globalShadowRoot.appendChild(overlay);
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeOverlay();
+      });
     }
 
-    overlay.className = 'vl-overlay vl-active';
+    pausePreviews();
+    overlay.className = 'vl-overlay is-open';
     renderStoryModal();
-    attachTouchListeners();
-
-    trackMetric({
-      event_type: 'story_open',
-      story_id: currentStories[currentStoryIndex].id,
-      page_url: window.location.href
-    });
   }
-
-  /* ================================================================
-     FUNÇÕES AUXILIARES DE COR
-     ================================================================ */
-
-  function adjustColor(hex, amount) {
-    hex = hex.replace('#', '');
-    if (hex.length === 3) {
-      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-    }
-    var r = Math.max(0, Math.min(255, parseInt(hex.substr(0, 2), 16) + amount));
-    var g = Math.max(0, Math.min(255, parseInt(hex.substr(2, 2), 16) + amount));
-    var b = Math.max(0, Math.min(255, parseInt(hex.substr(4, 2), 16) + amount));
-    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-  }
-
-  function hexToRgba(hex, alpha) {
-    hex = hex.replace('#', '');
-    if (hex.length === 3) {
-      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-    }
-    var r = parseInt(hex.substr(0, 2), 16);
-    var g = parseInt(hex.substr(2, 2), 16);
-    var b = parseInt(hex.substr(4, 2), 16);
-    return 'rgba(' + r + ',' + g + ',' + b + ',' + (alpha || 1) + ')';
-  }
-
-  function getBackgroundColor(appearance) {
-    var raw = readAppearanceValue(appearance, ['background_color', 'backgroundColor', 'cor_fundo']);
-    return sanitizeCssValue(raw, DEFAULT_APPEARANCE.background_color, 'color') || DEFAULT_APPEARANCE.background_color;
-  }
-
-  function getTextColor(appearance) {
-    var raw = readAppearanceValue(appearance, ['text_color', 'textColor', 'cor_texto']);
-    return sanitizeCssValue(raw, DEFAULT_APPEARANCE.text_color, 'color') || DEFAULT_APPEARANCE.text_color;
-  }
-
-  /* ================================================================
-     INJEÇÃO DE ESTILOS (CSS) NO SHADOW DOM
-     ================================================================ */
-
-  function injectStyles(shadowRoot) {
-    if (!shadowRoot) return;
-
-    var styleEl = document.createElement('style');
-    styleEl.textContent = getFullCSS();
-    shadowRoot.appendChild(styleEl);
-  }
-
-  function getFullCSS() {
-    var primary = getPrimaryColor(currentAppearance);
-    var bgColor = getBackgroundColor(currentAppearance);
-    var textColor = getTextColor(currentAppearance);
-    var fontFamily = getFontFamily(currentAppearance);
-
-    return [
-      '* { margin: 0; padding: 0; box-sizing: border-box; }',
-'.vl-container { font-family: ' + fontFamily + '; direction: ltr; text-align: left; width:100%; max-width:100%; overflow:hidden; }',
-      '.vl-bubble-list::-webkit-scrollbar { display: none; }',
-      '.vl-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 999999; display: none; align-items: center; justify-content: center; overflow: hidden; opacity: 0; transition: opacity 0.3s ease; }',
-      '.vl-overlay.vl-active { display: flex; opacity: 1; }',
-'.vl-modal { position: relative; width: 100%; max-width: 420px; height: 100%; max-height: 100dvh; background: #000; overflow: hidden; display: flex; flex-direction: column; }',
-'.vl-progress { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; gap: 4px; z-index: 100; }',
-      '.vl-progress-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.3); border-radius: 3px; overflow: hidden; }',
-      '.vl-progress-fill { height: 100%; background: #fff; border-radius: 3px; transition: width 0.3s linear; width: 0%; }',
-      '.vl-header { position: absolute; top: 20px; left: 16px; right: 16px; z-index: 50; display: flex; align-items: center; justify-content: space-between; }',
-      '.vl-header-left { flex: 1; min-width: 0; }',
-      '.vl-title { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }',
-      '.vl-header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }',
-      '.vl-control { width: 36px; height: 36px; border: none; background: rgba(0,0,0,0.4); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #fff; padding: 0; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }',
-      '.vl-close { width: 36px; height: 36px; border: none; background: rgba(0,0,0,0.4); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #fff; padding: 0; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }',
-      '.vl-body { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }',
-      '.vl-player { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }',
-      '.vl-player video { width: 100%; height: 100%; object-fit: contain; }',
-      '.vl-player iframe { width: 100%; height: 100%; border: none; }',
-      '.vl-cta { color: #fff; font-size: 16px; font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }',
-      '.vl-nav { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 40; pointer-events: none; }',
-      '.vl-nav-btn { position: absolute; top: 0; width: 40%; height: 100%; background: transparent; border: none; cursor: pointer; pointer-events: auto; outline: none; -webkit-tap-highlight-color: transparent; }',
-      '.vl-nav-prev { left: 0; }',
-      '.vl-nav-next { right: 0; }',
-      '.vl-nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; background: rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; z-index: 45; pointer-events: auto; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.2s ease; }',
-      '.vl-nav-arrow-left { left: 8px; }',
-      '.vl-nav-arrow-right { right: 8px; }',
-      '.vl-modal:hover .vl-nav-arrow { opacity: 1; }',
-      '@media (hover: none) { .vl-nav-arrow { display: none; } }',
-      '.vl-social { position: absolute; right: 8px; bottom: 100px; z-index: 50; display: flex; flex-direction: column; gap: 16px; align-items: center; }',
-      '.vl-social-wrapper { display: flex; flex-direction: column; align-items: center; gap: 2px; }',
-      '.vl-social-btn { width: 44px; height: 44px; border: none; background: rgba(0,0,0,0.35); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #fff; padding: 0; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); transition: transform 0.15s ease; position: relative; }',
-      '.vl-social-btn:active { transform: scale(0.9); }',
-      '.vl-social-count { font-size: 11px; font-weight: 700; color: #fff; text-align: center; }',
-      '.vl-footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 12px; z-index: 50; }',
-      '.vl-footer-inner { width: 100%; }',
-      '@keyframes vlFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }',
-      '.vl-comments-panel-full { animation: vlFadeIn 0.2s ease; }',
-      '.vl-comment-card:last-child { border-bottom: none; }',
-      '.vl-sizing-panel-full { animation: vlFadeIn 0.2s ease; }',
-      '.vl-form-btn-row { display: flex; gap: 8px; width: 100%; margin-top: 8px; }',
-      '.vl-form-btn-back { flex: 1; height: 42px; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; color: #64748b; font-size: 14px; font-weight: 700; cursor: pointer; }',
-      '.vl-form-btn-send { flex: 2; height: 42px; border: none; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }',
-'.vl-carousel-wrapper { scroll-snap-type: x mandatory; }',
-'.vl-carousel-wrapper.is-dragging { scroll-snap-type: none !important; }',
-'.vl-carousel-item { scroll-snap-align: start; }',
-'@media (max-width: 480px) { .vl-modal { max-width: 100%; border-radius: 0; } .vl-social { right: 4px; bottom: 90px; gap: 12px; } .vl-social-btn { width: 40px; height: 40px; } }'
-    ].join('\n');
-  }
-
-  /* ================================================================
-     ÍCONES SVG
-     ================================================================ */
 
   function svgIcon(name) {
     var icons = {
-      'volume': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>',
+      'volume': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>',
       'volumeOff': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>',
-      'play': '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"></polygon></svg>',
-      'pause': '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg>',
-      'close': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
+      'play': '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>',
+      'pause': '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>',
+      'close': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
       'heart': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>',
-      'heartFilled': '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>',
+      'heartFilled': '<svg width="24" height="24" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>',
       'comment': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
-      'commentFilled': '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
+      'commentFilled': '<svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
       'share': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>',
-      'sizing': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"></path></svg>',
-      'whatsapp': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.498 14.382c-.301-.15-1.767-.867-2.04-.966-.273-.101-.473-.15-.673.15-.2.3-.773.966-.947 1.164-.173.198-.347.223-.648.074-.301-.15-1.27-.466-2.418-1.488-.894-.795-1.497-1.776-1.673-2.076-.176-.3-.019-.462.131-.612.135-.135.3-.347.45-.521.15-.174.2-.3.3-.5.1-.2.05-.374-.025-.524-.075-.15-.673-1.617-.923-2.214-.243-.579-.49-.5-.673-.51-.173-.008-.373-.01-.573-.01-.2 0-.524.074-.798.373-.274.3-1.047 1.02-1.047 2.49 0 1.47 1.073 2.893 1.223 3.092.15.2 2.115 3.222 5.124 4.518.715.309 1.274.493 1.71.631.718.228 1.37.196 1.887.119.57-.086 1.767-.722 2.016-1.42.249-.697.249-1.295.174-1.42-.075-.124-.274-.199-.575-.348z"></path></svg>',
-      'copy': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>',
-      'check': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>',
-      'chevronLeft': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>',
-      'chevronRight': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>',
-      'loader': '<svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="20" cy="20" r="17" opacity="0.2"></circle><path d="M20 3a17 17 0 0 1 17 17" stroke="currentColor"><animateTransform attributeName="transform" type="rotate" from="0 20 20" to="360 20 20" dur="0.8s" repeatCount="indefinite"/></path></svg>'
+      'sizing': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="8" y1="8" x2="12" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/><line x1="12" y1="4" x2="12" y2="20" stroke-width="1" opacity="0.4"/></svg>',
+      'whatsapp': '<svg width="24" height="24" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"></path></svg>',
+      'copy': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>',
+      'check': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+      'chevronLeft': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>',
+      'chevronRight': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>'
     };
     return icons[name] || '';
   }
 
-  /* ================================================================
-     RENDERIZAÇÃO DAS BOLHAS (STORY BUBBLES)
-     ================================================================ */
-
-  function renderBubbles(container) {
-    if (!container) return;
-    container.innerHTML = '';
-
-    if (!currentStories || currentStories.length === 0) {
-      var emptyMsg = createEl('div');
-      emptyMsg.textContent = 'Nenhum story disponível.';
-      emptyMsg.style.cssText = 'font-size:14px;color:#94a3b8;text-align:center;padding:20px;';
-      container.appendChild(emptyMsg);
-      return;
-    }
-
-    var bubbleSize = 72;
-    var bubbleGap = 12;
-    var bubbleShowName = true;
-
-    var bubbleList = createEl('div', 'vl-bubble-list');
-    bubbleList.style.cssText = 'display:flex;gap:' + bubbleGap + 'px;overflow-x:auto;overflow-y:hidden;padding:4px 4px 10px 4px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;';
-
-    var primaryColor = getPrimaryColor(currentAppearance);
-    var fontFamily = getFontFamily(currentAppearance);
-
-    currentStories.forEach(function (story, index) {
-      var bubbleWrapper = createEl('div', 'vl-bubble-wrapper');
-      bubbleWrapper.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;cursor:pointer;min-width:0;';
-
-      var bubble = createEl('div', 'vl-bubble');
-      var bubbleSizePx = bubbleSize + 'px';
-      bubble.style.cssText = 'width:' + bubbleSizePx + ';height:' + bubbleSizePx + ';border-radius:50%;padding:3px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.12);transition:transform .2s ease,box-shadow .2s ease;background:linear-gradient(135deg,' + primaryColor + ',' + adjustColor(primaryColor, -20) + ');';
-
-      var inner = createEl('div', 'vl-bubble-inner');
-      inner.style.cssText = 'width:100%;height:100%;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#fff;border:2px solid #fff;';
-
-      var thumbUrl = story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
-      if (!thumbUrl && story.videos && story.videos.length > 0) {
-        var firstVideo = story.videos[0];
-        thumbUrl = getVideoThumbnail(firstVideo);
-      }
-
-      if (thumbUrl) {
-        var img = createEl('img', 'vl-img');
-        img.src = thumbUrl;
-        img.alt = story.title || 'Story';
-        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
-        img.loading = 'lazy';
-        img.onerror = function () {
-          img.style.display = 'none';
-          var fallback = createEl('span');
-          fallback.textContent = (story.title || 'S').charAt(0).toUpperCase();
-          fallback.style.cssText = 'font-size:' + Math.max(14, bubbleSize * 0.35) + 'px;font-weight:700;color:' + primaryColor + ';';
-          inner.appendChild(fallback);
-        };
-        inner.appendChild(img);
-      } else {
-        var fallback = createEl('span');
-        fallback.textContent = (story.title || 'S').charAt(0).toUpperCase();
-        fallback.style.cssText = 'font-size:' + Math.max(14, bubbleSize * 0.35) + 'px;font-weight:700;color:' + primaryColor + ';';
-        inner.appendChild(fallback);
-      }
-
-      bubble.appendChild(inner);
-      bubbleWrapper.appendChild(bubble);
-
-      if (bubbleShowName !== false) {
-        var label = createEl('span', 'vl-bubble-label');
-        label.textContent = story.title || '';
-        label.style.cssText = 'font-size:11px;font-weight:600;color:#334155;max-width:' + (bubbleSize + 20) + 'px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;font-family:' + fontFamily + ';';
-        bubbleWrapper.appendChild(label);
-      }
-
-      bubbleWrapper.addEventListener('click', function (e) {
-        e.preventDefault();
-        openStoryModal(index);
-      });
-
-      bubbleWrapper.addEventListener('mouseenter', function () {
-        bubble.style.transform = 'scale(1.05)';
-        bubble.style.boxShadow = '0 4px 14px rgba(0,0,0,.18)';
-      });
-      bubbleWrapper.addEventListener('mouseleave', function () {
-        bubble.style.transform = 'scale(1)';
-        bubble.style.boxShadow = '0 2px 8px rgba(0,0,0,.12)';
-      });
-
-      bubbleList.appendChild(bubbleWrapper);
-    });
-
-    container.appendChild(bubbleList);
-  }
-
-function getWidgetDisplayMode(appearance) {
-  var mode = readAppearanceValue(appearance, [
-    'display_mode', 'displayMode', 'widget_type', 'widgetType', 'mode',
-    'tipo_exibicao', 'tipoExibicao'
-  ]);
-  if (mode) {
-    mode = String(mode).trim().toLowerCase();
-    if (mode === 'carousel' || mode === 'carrossel') return 'carousel';
-    if (mode === 'grid' || mode === 'grade') return 'grid';
-    if (mode === 'floating' || mode === 'flutuante') return 'floating';
-    if (mode === 'stories' || mode === 'bubbles' || mode === 'bolhas') return 'stories';
-  }
-  // Fallback: detecta pelo jsonb preenchido
-  var carouselCfg = appearance.carousel_config;
-  if (carouselCfg) {
-    if (typeof carouselCfg === 'string') { try { carouselCfg = JSON.parse(carouselCfg); } catch(e) {} }
-    if (carouselCfg && typeof carouselCfg === 'object' && Object.keys(carouselCfg).length > 0) {
-      return 'carousel';
-    }
-  }
-  var gridCfg = appearance.grid_config;
-  if (gridCfg) {
-    if (typeof gridCfg === 'string') { try { gridCfg = JSON.parse(gridCfg); } catch(e) {} }
-    if (gridCfg && typeof gridCfg === 'object' && Object.keys(gridCfg).length > 0) {
-      return 'grid';
-    }
-  }
-  return 'stories';
-}
-
-function enableDragScroll(el) {
-  var isDown = false;
-  var startX, scrollStart;
-  var moved = false;
-  var DRAG_THRESHOLD = 2;
-  var SPEED = 2.0;
-  var currentX = 0;
-  var velX = 0;
-  var lastX = 0;
-  var momentumId = null;
-  var cards = el.querySelectorAll('.vl-carousel-item');
-
-  function getX(e) {
-    return e.touches ? e.touches[0].pageX : e.pageX;
-  }
-
-  function cancelMomentum() {
-    if (momentumId) {
-      cancelAnimationFrame(momentumId);
-      momentumId = null;
-    }
-    velX = 0;
-  }
-
-  function startMomentum() {
-    cancelMomentum();
-    if (Math.abs(velX) < 2) {
-      // Sem inércia suficiente → snap direto
-      snapToNearest();
-      return;
-    }
-    momentumId = requestAnimationFrame(function animate() {
-      velX *= 0.92;
-      el.scrollLeft -= velX;
-      if (Math.abs(velX) > 0.5) {
-        momentumId = requestAnimationFrame(animate);
-      } else {
-        // Inércia acabou → snap no item mais próximo
-        snapToNearest();
-      }
-    });
-  }
-
-  function snapToNearest() {
-    var firstItem = el.querySelector('.vl-carousel-item');
-    if (!firstItem) return;
-    var itemWidth = firstItem.offsetWidth;
-    var track = el.querySelector('.vl-carousel-track');
-    var gap = track ? parseFloat(getComputedStyle(track).gap) || 0 : 0;
-    var step = itemWidth + gap;
-    var targetScroll = Math.round(el.scrollLeft / step) * step;
-    el.scrollTo({ left: targetScroll, behavior: 'smooth' });
-  }
-
-  function onStart(e) {
-    cancelMomentum();
-    isDown = true;
-    moved = false;
-    el.classList.add('is-dragging');
-    el.style.cursor = 'grabbing';
-    startX = getX(e);
-    lastX = startX;
-    scrollStart = el.scrollLeft;
-    currentX = startX;
-  }
-
-  function onMove(e) {
-    if (!isDown) return;
-    var x = getX(e);
-    var dx = x - startX;
-
-    if (Math.abs(dx) > DRAG_THRESHOLD) {
-      moved = true;
-    }
-
-    if (moved) {
-      e.preventDefault();
-      velX = x - lastX;
-      lastX = x;
-      currentX = x;
-      var walk = (startX - x) * SPEED;
-      el.scrollLeft = scrollStart + walk;
-    }
-  }
-
-  function onEnd() {
-    if (!isDown) return;
-    isDown = false;
-    el.classList.remove('is-dragging');
-    el.style.cursor = 'grab';
-
-    if (!moved) return;
-    startMomentum();
-  }
-
-  el.addEventListener('mousedown', onStart);
-  el.addEventListener('mousemove', onMove);
-  el.addEventListener('mouseup', onEnd);
-  el.addEventListener('mouseleave', onEnd);
-  el.addEventListener('touchstart', onStart, { passive: false });
-  el.addEventListener('touchmove', onMove, { passive: false });
-  el.addEventListener('touchend', onEnd);
-}
-
-function renderCarouselWidget(container, stories, appearance) {
-  // Achata todos os vídeos de todas as stories em um array plano,
-  // guardando referência ao story e índice do vídeo
-  var allVideos = [];
-  (stories || []).forEach(function (story, storyIdx) {
-    var videos = story.videos || [];
-    videos.forEach(function (video, videoIdx) {
-      allVideos.push({
-        story: story,
-        storyIndex: storyIdx,
-        video: video,
-        videoIndex: videoIdx
-      });
-    });
-  });
-
-  if (allVideos.length === 0) {
-    var emptyMsg = createEl('div');
-    emptyMsg.textContent = 'Nenhum vídeo disponível.';
-    emptyMsg.style.cssText = 'font-size:14px;color:#94a3b8;text-align:center;padding:20px;';
-    container.appendChild(emptyMsg);
-    return;
-  }
-
-var cfg = getCarouselConfig(appearance);
-  var primaryColor = getPrimaryColor(appearance);
-  var fontFamily = getFontFamily(appearance);
-  var sizePx = cfg.size + 'px';
-  var gapPx = cfg.spacing + 'px';
-
-  // 🆕 CALCULA LARGURA MÁXIMA BASEADA NOS ITENS VISÍVEIS
-  var visibleItems = cfg.visibleItems || 4;
-  var totalItemWidth = cfg.size + cfg.spacing;
-  var wrapperMaxWidth = Math.min(
-    (visibleItems * totalItemWidth) - cfg.spacing,
-    window.innerWidth - 32
-  );
-
-  // Wrapper com scroll horizontal
-  var wrapper = createEl('div', 'vl-carousel-wrapper');
-  wrapper.style.cssText = [
-    'max-width:' + wrapperMaxWidth + 'px;',
-    'margin:0 auto;',
-    'overflow-x:auto;',
-    'overflow-y:hidden;',
-    'padding:4px 4px 10px 4px;',
-    '-webkit-overflow-scrolling:touch;',
-    'scrollbar-width:none;',
-    '-ms-overflow-style:none;',
-    'cursor:grab;',
-    'margin-top:' + cfg.marginTop + 'px;',
-    'margin-bottom:' + cfg.marginBottom + 'px;'
-  ].join('');
-
-  var track = createEl('div', 'vl-carousel-track');
-track.style.cssText = [
-  'display:flex;',
-  'gap:' + gapPx + ';',
-  'width:max-content;',
-  'min-width:100%;'
-].join('');
-
-  allVideos.forEach(function (item) {
-    var story = item.story;
-    var video = item.video;
-    var storyIdx = item.storyIndex;
-    var videoIdx = item.videoIndex;
-
-var cardItem = createEl('div', 'vl-carousel-item');
-cardItem.style.scrollSnapAlign = 'start';
-cardItem.style.cssText = [
-  'flex-shrink:0;',
-  'width:' + sizePx + ';',
-      'display:flex;',
-      'flex-direction:column;',
-      'gap:6px;',
-      'transition:transform .2s ease;'
-    ].join('');
-
-    // Card com thumbnail do VÍDEO
-    var card = createEl('div', 'vl-carousel-card');
-    card.style.cssText = [
-      'width:100%;',
-      'aspect-ratio:' + cfg.aspectRatio + ';',
-      'border-radius:' + cfg.borderRadius + 'px;',
-      'overflow:hidden;',
-      'position:relative;',
-      'background:#000;',
-      'border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';',
-      'box-shadow:0 2px 10px rgba(0,0,0,.1);'
-    ].join('');
-
-    // Thumbnail do vídeo (fallback: story cover)
-    var thumbUrl = getVideoThumbnail(video) ||
-                   story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
-
-    if (thumbUrl) {
-      var img = createEl('img');
-      img.src = thumbUrl;
-      img.alt = video.title || story.title || '';
-      img.style.cssText = [
-        'width:100%;',
-        'height:100%;',
-        'object-fit:' + cfg.objectFit + ';',
-        'display:block;'
-      ].join('');
-      img.loading = 'lazy';
-      card.appendChild(img);
-    }
-
-    // Play button overlay
-    if (cfg.showPlayButton) {
-      var playBadge = createEl('div', 'vl-carousel-play');
-      playBadge.style.cssText = [
-        'position:absolute;',
-        'inset:0;',
-        'display:flex;',
-        'align-items:center;',
-        'justify-content:center;',
-        'pointer-events:none;'
-      ].join('');
-      var playIcon = createEl('div');
-      playIcon.style.cssText = [
-        'width:36px;',
-        'height:36px;',
-        'border-radius:50%;',
-        'background:rgba(0,0,0,.5);',
-        'display:flex;',
-        'align-items:center;',
-        'justify-content:center;'
-      ].join('');
-      playIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"></polygon></svg>';
-      playBadge.appendChild(playIcon);
-      card.appendChild(playBadge);
-    }
-
-    cardItem.appendChild(card);
-
-    // Título do story
-    if (cfg.showTitle && story.title) {
-      var title = createEl('span', 'vl-carousel-title');
-      title.textContent = story.title;
-      title.style.cssText = [
-        'font-size:12px;',
-        'font-weight:700;',
-        'color:#334155;',
-        'white-space:nowrap;',
-        'overflow:hidden;',
-        'text-overflow:ellipsis;',
-        'text-align:center;',
-        'font-family:' + fontFamily + ';',
-        'max-width:' + sizePx + ';'
-      ].join('');
-      cardItem.appendChild(title);
-    }
-
-    // Produto vinculado ao VÍDEO
-    if (cfg.showProduct) {
-      var productId = video.product_id || video.productId || null;
-      var productData = productId ? readProductsData.find(function (p) { return idsEqual(p.id, productId); }) : null;
-
-      if (productData && productData.name) {
-        var prodInfo = createEl('div', 'vl-carousel-product');
-        prodInfo.style.cssText = [
-          'text-align:center;',
-          'font-family:' + fontFamily + ';',
-          'max-width:' + sizePx + ';'
-        ].join('');
-
-        var pName = createEl('div');
-        pName.textContent = productData.name;
-        pName.style.cssText = 'font-size:11px;font-weight:600;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-        prodInfo.appendChild(pName);
-
-        if (productData.price) {
-          var pPrice = createEl('div');
-          pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
-          pPrice.style.cssText = 'font-size:13px;font-weight:800;color:' + primaryColor + ';';
-          prodInfo.appendChild(pPrice);
-        }
-
-        cardItem.appendChild(prodInfo);
-      }
-    }
-
-    // Clique: abre o modal NA story e NO vídeo corretos
-    cardItem.addEventListener('click', function (e) {
-      e.preventDefault();
-      currentStoryIndex = storyIdx;
-      currentVideoIndex = videoIdx;
-      openStoryModal(storyIdx);
-      // Força o vídeo correto após abrir
-      setTimeout(function () {
-        currentVideoIndex = videoIdx;
-        renderStoryModal();
-      }, 50);
-    });
-
-    // Hover
-    cardItem.addEventListener('mouseenter', function () {
-      cardItem.style.transform = 'translateY(-2px)';
-    });
-    cardItem.addEventListener('mouseleave', function () {
-      cardItem.style.transform = 'translateY(0)';
-    });
-
-    track.appendChild(cardItem);
-  });
-
-  wrapper.appendChild(track);
-  container.appendChild(wrapper);
-
-  enableDragScroll(wrapper);
-
-  console.log('[Vidlytics] Carrossel renderizado com ' + allVideos.length + ' video(s).');
-}
-
-function initInlineWidget(options) {
-  var targetSelector = options.target || options.anchor || '#vidlytics-stories';
-  var placement = String(options.placement || 'beforeend').toLowerCase();
-  var targetEl = document.querySelector(targetSelector);
-
-  console.log('[Vidlytics] Seletor:', targetSelector);
-  console.log('[Vidlytics] Posicao:', placement);
-  console.log('[Vidlytics] Elemento encontrado:', targetEl);
-
-  if (!targetEl) {
-    console.warn('[Vidlytics] Container alvo "' + targetSelector + '" nao encontrado.');
-    return;
-  }
-
-  var wrapper = document.createElement('div');
-  wrapper.style.cssText = 'position:relative;width:100%;';
-
-  if (wrapper.shadowRoot) {
-    globalShadowRoot = wrapper.shadowRoot;
-  } else {
-    globalShadowRoot = wrapper.attachShadow({ mode: 'open' });
-  }
-
-  var container = createEl('div', 'vl-container');
-  globalShadowRoot.appendChild(container);
-
-  injectStyles(globalShadowRoot);
-
-  if (options.stories && options.stories.length > 0) {
-    currentStories = options.stories;
-  }
-  if (options.products && options.products.length > 0) {
-    readProductsData = options.products;
-  }
-  if (options.sizing_models && options.sizing_models.length > 0) {
-    readSizingModelsData = options.sizing_models;
-  }
-  if (options.comments && options.comments.length > 0) {
-    readCommentsData = options.comments;
-  }
-  if (options.appearance) {
-    currentAppearance = options.appearance;
-  }
-
-  // Posiciona com insertAdjacentElement
-  if (placement === 'beforebegin' || placement === 'afterbegin' || placement === 'beforeend' || placement === 'afterend') {
-    targetEl.insertAdjacentElement(placement, wrapper);
-  } else if (placement === 'above') {
-    targetEl.parentNode.insertBefore(wrapper, targetEl);
-  } else {
-    targetEl.parentNode.insertBefore(wrapper, targetEl.nextSibling);
-  }
-
-  var displayMode = getWidgetDisplayMode(currentAppearance);
-  console.log('[Vidlytics] Modo de exibição detectado:', displayMode);
-
-  if (displayMode === 'carousel') {
-    renderCarouselWidget(container, currentStories, currentAppearance);
-  } else if (displayMode === 'grid') {
-    // Por enquanto, fallback para carrossel (grid pode ser adicionado depois)
-    renderCarouselWidget(container, currentStories, currentAppearance);
-  } else {
-    renderBubbles(container);
-  }
-  attachKeyboardListeners();
-
-  if (options.api) {
-    window[options.api] = {
-      open: openStoryModal,
-      close: closeOverlay,
-      next: nextStoryOrVideo,
-      prev: prevStoryOrVideo,
-      refresh: function () { renderBubbles(container); },
-      setStories: function (stories) { currentStories = stories; renderBubbles(container); }
-    };
-  }
-
-  trackMetric({ event_type: 'widget_init', page_url: window.location.href });
-
-  console.log('[Vidlytics] Bubbles:', container.querySelectorAll('.vl-bubble-wrapper').length);
-}
-
-  /* ================================================================
-     INICIALIZAÇÃO PRINCIPAL
-     ================================================================ */
-
-  function init(options) {
-    options = options || {};
-    storeId = options.store_id || options.storeId || storeId;
-    supabaseUrl = options.supabase_url || options.supabaseUrl || supabaseUrl;
-    supabaseAnonKey = options.supabase_key || options.supabaseKey || options.supabaseAnonKey || supabaseAnonKey;
-    hasSupabase = !!(supabaseUrl && supabaseAnonKey && storeId);
-
-    storeWhatsappNumber = options.whatsapp_number || options.whatsappNumber || storeWhatsappNumber;
-    storeWhatsappMessage = options.whatsapp_message || options.whatsappMessage || storeWhatsappMessage;
-    autoApproveComments = options.auto_approve_comments !== undefined
-      ? options.auto_approve_comments
-      : (options.autoApproveComments !== undefined ? options.autoApproveComments : false);
-
-    if (options.stories) { currentStories = options.stories; }
-    if (options.products) { readProductsData = options.products; }
-    if (options.sizing_models || options.sizingModels) {
-      readSizingModelsData = options.sizing_models || options.sizingModels;
-    }
-    if (options.comments) { readCommentsData = options.comments; }
-    if (options.appearance) { currentAppearance = options.appearance; }
-
-    var mode = String(options.mode || 'inline').toLowerCase();
-    if (mode === 'floating') {
-      renderFloatingWidget();
-    } else {
-      initInlineWidget(options);
-    }
-  }
-
-  /* ================================================================
-     AUTO-INICIALIZAÇÃO VIA ATRIBUTO DATA
-     ================================================================ */
-
-  function autoInit() {
-    var scripts = document.querySelectorAll('script[data-vidlytics-init]');
-    scripts.forEach(function (script) {
-      try {
-        var cfg = JSON.parse(script.getAttribute('data-vidlytics-init') || '{}');
-        init(cfg);
-      } catch (e) {
-        console.error('[Vidlytics] Erro ao parsear configuração:', e);
-      }
-    });
-  }
-
-  /* ================================================================
-     ARRASTAR (DRAG) DO WIDGET FLUTUANTE
-     ================================================================ */
-
   function applyDraggable(el, appearance) {
     var behaviorConfig = getFloatingBehaviorConfig(appearance);
     if (!behaviorConfig.allowDrag) return;
-
     var isDragging = false;
     var startX, startY, initialRight, initialBottom;
-
     el.addEventListener('mousedown', function (e) {
-      if (e.target.closest && e.target.closest('.vl-dismiss')) return;
+      if (e.target.closest('.vl-dismiss')) return;
       isDragging = true;
       floatingWasDragged = false;
       startX = e.clientX;
@@ -3462,7 +2692,6 @@ function initInlineWidget(options) {
       initialBottom = window.innerHeight - rect.bottom;
       el.style.transition = 'none';
     });
-
     document.addEventListener('mousemove', function (e) {
       if (!isDragging) return;
       var dx = startX - e.clientX;
@@ -3475,422 +2704,607 @@ function initInlineWidget(options) {
         el.style.top = 'auto';
       }
     });
-
     document.addEventListener('mouseup', function () {
       if (isDragging) {
         isDragging = false;
         el.style.transition = 'all 0.3s ease';
       }
     });
-
-    el.addEventListener('touchstart', function (e) {
-      if (e.target.closest && e.target.closest('.vl-dismiss')) return;
-      if (e.touches.length !== 1) return;
-      isDragging = true;
-      floatingWasDragged = false;
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-      var rect = el.getBoundingClientRect();
-      initialRight = window.innerWidth - rect.right;
-      initialBottom = window.innerHeight - rect.bottom;
-      el.style.transition = 'none';
-    }, { passive: true });
-
-    document.addEventListener('touchmove', function (e) {
-      if (!isDragging || e.touches.length !== 1) return;
-      var dx = startX - e.touches[0].clientX;
-      var dy = startY - e.touches[0].clientY;
-      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-        floatingWasDragged = true;
-        el.style.right = (initialRight + dx) + 'px';
-        el.style.bottom = (initialBottom + dy) + 'px';
-        el.style.left = 'auto';
-        el.style.top = 'auto';
-      }
-    }, { passive: true });
-
-    document.addEventListener('touchend', function () {
-      if (isDragging) {
-        isDragging = false;
-        el.style.transition = 'all 0.3s ease';
-      }
-    });
   }
 
-  /* ================================================================
-     RENDERIZAÇÃO DO WIDGET FLUTUANTE
-     ================================================================ */
+  function renderInlineWidget(stories, appearance, format) {
+    if (!stories || !stories.length) return;
 
-  function renderFloatingWidget() {
-    if (!currentAppearance) return;
-
-    var mode = (currentAppearance.floating_mode || currentAppearance.floatingMode || 'inline').toLowerCase();
-    if (mode === 'inline') return;
-
-    if (!globalShadowRoot) {
-      var shadowHost = document.createElement('div');
-      shadowHost.id = 'vidlytics-floating-host';
-      document.body.appendChild(shadowHost);
-      globalShadowRoot = shadowHost.attachShadow({ mode: 'open' });
-      injectStyles(globalShadowRoot);
-    }
-
-    var existing = globalShadowRoot.querySelector('.vidlytics-floating-widget');
-    if (existing) existing.remove();
-
-    var widget = createEl('div', 'vidlytics-floating-widget');
-    var primaryColor = getPrimaryColor(currentAppearance);
-    var behaviorConfig = getFloatingBehaviorConfig(currentAppearance);
-
-    var posRight = behaviorConfig.position === 'left' ? 'auto' : '16px';
-    var posLeft = behaviorConfig.position === 'left' ? '16px' : 'auto';
-
-    widget.style.cssText =
-      'position:fixed;' +
-      'z-index:999998;' +
-      'right:' + posRight + ';' +
-      'left:' + posLeft + ';' +
-      'bottom:16px;' +
-      'width:auto;' +
-      'transition:all 0.3s ease;' +
-      'display:flex;' +
-      'flex-direction:column;' +
-      'align-items:flex-end;' +
-      'gap:8px;';
-
-    if (mode === 'bubble') {
-      if (!currentStories || currentStories.length === 0) return;
-      var story = currentStories[0];
-      var thumbUrl = story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
-      if (!thumbUrl && story.videos && story.videos.length > 0) {
-        thumbUrl = getVideoThumbnail(story.videos[0]);
-      }
-
-      var bubbleBtn = createEl('div', 'vl-floating-bubble-btn');
-      var bubbleSizePx = '64px';
-      bubbleBtn.style.cssText =
-        'width:' + bubbleSizePx + ';' +
-        'height:' + bubbleSizePx + ';' +
-        'border-radius:50%;' +
-        'padding:3px;' +
-        'cursor:pointer;' +
-        'background:linear-gradient(135deg,' + primaryColor + ',' + adjustColor(primaryColor, -20) + ');' +
-        'box-shadow:0 4px 14px rgba(0,0,0,.2);' +
-        'transition:transform 0.2s ease,box-shadow 0.2s ease;';
-
-      var inner = createEl('div');
-      inner.style.cssText = 'width:100%;height:100%;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#fff;border:2.5px solid #fff;';
-
-      if (thumbUrl) {
-        var img = createEl('img');
-        img.src = thumbUrl;
-        img.alt = story.title || 'Story';
-        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
-        img.loading = 'lazy';
-        inner.appendChild(img);
-      }
-
-      bubbleBtn.appendChild(inner);
-      bubbleBtn.addEventListener('click', function () {
-        if (floatingWasDragged) { floatingWasDragged = false; return; }
-        openStoryModal(0);
+    var allVideoItems = [];
+    stories.forEach(function (story, sIdx) {
+      var videos = story.videos || [];
+      videos.forEach(function (video, vIdx) {
+        allVideoItems.push({ story: story, storyIndex: sIdx, video: video, videoIndex: vIdx });
       });
-
-      widget.appendChild(bubbleBtn);
-      applyDraggable(bubbleBtn, currentAppearance);
-    }
-
-    globalShadowRoot.appendChild(widget);
-    applyDraggable(widget, currentAppearance);
-  }
-
-  /* ================================================================
-     ELEMENT PICKER COM storyId
-     ================================================================ */
-
-  function initElementPicker(token, storyId) {
-    if (!token) return;
-    widgetSelectToken = token;
-
-    var overlayEl = document.createElement('div');
-    overlayEl.id = 'vl-picker-overlay';
-    overlayEl.style.cssText =
-      'position:fixed;top:0;left:0;width:100%;height:100%;' +
-      'z-index:9999997;background:rgba(0,0,0,.05);cursor:crosshair;';
-    document.body.appendChild(overlayEl);
-
-    var bannerEl = document.createElement('div');
-    bannerEl.id = 'vl-picker-banner';
-    bannerEl.style.cssText =
-      'position:fixed;top:0;left:0;right:0;z-index:9999998;' +
-      'background:#1e293b;color:#fff;padding:12px 20px;' +
-      'font-family:sans-serif;font-size:14px;font-weight:600;' +
-      'text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.2);';
-    bannerEl.textContent = '🎯 Clique no elemento onde o widget de stories será exibido';
-    document.body.appendChild(bannerEl);
-
-    var highlightEl = document.createElement('div');
-    highlightEl.id = 'vl-picker-highlight';
-    highlightEl.style.cssText =
-      'position:fixed;z-index:9999996;pointer-events:none;' +
-      'border:3px solid #3b82f6;border-radius:4px;' +
-      'background:rgba(59,130,246,.08);display:none;transition:all .1s ease;';
-    document.body.appendChild(highlightEl);
-
-    var currentEl = null;
-
-    overlayEl.addEventListener('mousemove', function (e) {
-      overlayEl.style.display = 'none';
-      var el = document.elementFromPoint(e.clientX, e.clientY);
-      overlayEl.style.display = '';
-
-      if (!el || el === overlayEl || el === bannerEl || el === highlightEl) return;
-
-      if (el !== currentEl) {
-        currentEl = el;
-        highlightEl.style.display = '';
-        var rect = el.getBoundingClientRect();
-        highlightEl.style.top = rect.top + 'px';
-        highlightEl.style.left = rect.left + 'px';
-        highlightEl.style.width = rect.width + 'px';
-        highlightEl.style.height = rect.height + 'px';
-      }
     });
+    if (!allVideoItems.length) return;
 
-    overlayEl.addEventListener('click', function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      var el = currentEl;
+    var cfg;
+    if (format === 'grid' || format === 'grade') { cfg = getGridConfig(appearance); cfg.isGrid = true; }
+    else { cfg = getCarouselConfig(appearance); cfg.isGrid = false; }
 
-      if (!el) {
-        overlayEl.style.display = 'none';
-        el = document.elementFromPoint(e.clientX, e.clientY);
-        overlayEl.style.display = '';
-      }
+    var itemsVisiveis = cfg.isGrid ? cfg.columns : cfg.visibleItems;
+    var espacamento = cfg.spacing;
+    var corPrimaria = sanitizeCssValue(appearance.primary_color || appearance.button_color, '#0094EB', 'color');
+    var corTexto = appearance.text_color || '#0F172A';
+    var fonte = appearance.font_family || 'Inter, sans-serif';
 
-      if (!el || el === bannerEl || el === highlightEl || el === overlayEl) return;
+    var cardSizeVw = cfg.size;
+    var cardWidth = cardSizeVw + 'px';
+    var cardSizePx = Math.round(cardSizeVw * window.innerWidth / 100);
+    var minCardWidth = Math.min(30, cardSizePx) + 'px';
+    var boxBorderRadius = cfg.shape === 'circle' ? '50%' : cfg.borderRadius + 'px';
 
-      sendSelector(buildSelector(el), storyId);
-      cleanupPicker(overlayEl, bannerEl, highlightEl);
-    });
+    var effectiveItems = (cfg.autoCenter && allVideoItems.length < itemsVisiveis) ? allVideoItems.length : itemsVisiveis;
+    var totalGap = espacamento * (effectiveItems - 1);
+    var containerMaxWidth = 'min(100vw, calc((' + cardWidth + ' * ' + effectiveItems + ') + ' + totalGap + 'px + 8px))';
 
-    overlayEl.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') {
-        cleanupPicker(overlayEl, bannerEl, highlightEl);
-      }
-    });
+    var dbSelector = appearance.css_selector || appearance.inline_selector || appearance.display_selector || appearance.selector || '';
+    var selectorsToTry = [];
+    if (dbSelector) selectorsToTry.push(dbSelector);
+    selectorsToTry.push('#vidlytics-carousel-root'); selectorsToTry.push('#instory-root');
+    selectorsToTry.push('.category-content'); selectorsToTry.push('#main');
+    selectorsToTry.push('main'); selectorsToTry.push('[role="main"]'); selectorsToTry.push('body');
 
-    overlayEl.setAttribute('tabindex', '0');
-    overlayEl.focus();
-  }
+    var maxRetries = 25, currentRetries = 0;
 
-function sendSelector(selector, storyId) {
-  var payload = { selector: selector, token: widgetSelectToken };
-  if (storyId) { payload.story_id = storyId; }
-  if (storeId) { payload.store_id = storeId; }
+    var renderInterval = setInterval(function () {
+      var targetDiv = null; var usedSelector = ''; currentRetries++;
+      for (var i = 0; i < selectorsToTry.length; i++) { try { targetDiv = document.querySelector(selectorsToTry[i]); if (targetDiv) { usedSelector = selectorsToTry[i]; break; } } catch (e) {} }
+      if (!targetDiv) { if (currentRetries >= maxRetries) { clearInterval(renderInterval); } return; }
+      clearInterval(renderInterval);
 
-  var endpoint = 'https://api.vidlytics.com/widget-selector';
-  if (supabaseUrl) {
-    endpoint = supabaseUrl.replace(/\/rest\/v1.*/, '') + '/functions/v1/widget-selector';
-  }
-
-  console.log('[Vidlytics] Enviando seletor:', payload);
-
-  fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  })
-    .then(function (res) {
-      return res.json().then(function (data) {
-        console.log('[Vidlytics] Resposta:', data);
-
-        if (data.success) {
-          alert('✅ Seletor vinculado com sucesso!\n\nVolte para o painel do Vidlytics para continuar.');
-
-          if (window.opener) {
-            window.close();
-          } else {
-            document.body.innerHTML =
-              '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#f8fafc;">' +
-              '<div style="text-align:center;padding:40px;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.1);max-width:420px;">' +
-              '<div style="font-size:48px;margin-bottom:16px;">✅</div>' +
-              '<h2 style="margin:0 0 8px;color:#0f172a;">Seletor vinculado!</h2>' +
-              '<p style="color:#64748b;margin:0;">Volte para o painel do <strong>Vidlytics</strong> para continuar.</p>' +
-              '</div></div>';
-          }
-        } else {
-          alert('❌ Erro: ' + (data.message || data.error || 'Falha ao salvar.'));
+      var wrapperId = 'vl-carousel-wrapper-final';
+      var widgetContainer = document.getElementById(wrapperId);
+      if (!widgetContainer) {
+        widgetContainer = document.createElement('div');
+        widgetContainer.id = wrapperId;
+        var wrapperCss = 'max-width:' + containerMaxWidth + ';margin:20px auto;display:block;clear:both;overflow:visible;';
+        if (cfg.autoCenter && allVideoItems.length < itemsVisiveis) {
+          wrapperCss = 'display:flex;justify-content:center;max-width:' + containerMaxWidth + ';margin:20px auto;clear:both;overflow:visible;';
         }
+        widgetContainer.style.cssText = wrapperCss;
+        var insertPos = appearance.position || 'afterend';
+        targetDiv.insertAdjacentElement(insertPos, widgetContainer);
+      }
+
+      widgetContainer.innerHTML = '';
+      var gapPx = espacamento;
+      var overflowX = cfg.isGrid ? 'hidden' : 'auto';
+
+      var estilo = document.createElement('style');
+      estilo.textContent = [
+        '#' + wrapperId + ' { font-family: ' + fonte + ', sans-serif; overflow: visible !important; }',
+        '#' + wrapperId + ' * { box-sizing: border-box !important; }',
+        '.vl-slider-container {',
+        '  display: flex !important; flex-wrap: ' + (cfg.isGrid ? 'wrap' : 'nowrap') + ' !important;',
+        '  gap: ' + gapPx + 'px;',
+        '  overflow-x: ' + overflowX + ' !important; overflow-y: hidden !important;',
+        '  scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;',
+        '  scrollbar-width: none !important; -ms-overflow-style: none !important;',
+        '  padding: 0 4px; width: 100%; max-width: 100%;',
+        '  cursor: ' + (cfg.isGrid ? 'auto' : 'grab') + '; user-select: none; -webkit-user-select: none;',
+        (cfg.autoCenter && allVideoItems.length < itemsVisiveis ? 'justify-content: center;' : ''),
+        '}',
+        '.vl-slider-container::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }',
+        '.vl-slider-container:active { cursor: grabbing; }',
+        '.vl-slider-container.dragging { cursor: grabbing !important; scroll-snap-type: none !important; }',
+        '.vl-card-item {',
+        '  all: unset; display: flex !important; flex-direction: column; cursor: pointer;',
+        '  scroll-snap-align: start; flex: 0 0 ' + cardWidth + ' !important;',
+        '  min-width: ' + minCardWidth + '; max-width: ' + cardWidth + ';',
+        '  position: relative; transition: transform 0.2s ease; user-select: none; -webkit-user-select: none;',
+        '  pointer-events: auto;',
+        '}',
+        '.vl-card-item:hover { transform: translateY(-2px); }',
+        '@media (max-width: 768px) { .vl-card-item { flex: 0 0 min(45vw, ' + cardWidth + ') !important; min-width: 40px; max-width: 48vw; } }',
+        '.vl-media-box {',
+        '  position: relative; width: 100%; aspect-ratio: ' + cfg.aspectRatio + ';',
+        '  border-radius: ' + boxBorderRadius + '; overflow: hidden; background: #000;',
+        '  border: ' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';',
+        '}',
+        '.vl-card-item:hover .vl-media-box { box-shadow: 0 4px 20px rgba(0,0,0,0.15); }',
+        '.vl-media-box img, .vl-media-box video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: ' + cfg.objectFit + '; pointer-events: none; }',
+        '.vl-title-text {',
+        '  margin-top: 8px; font-size: 12px; font-weight: 600; color: ' + corTexto + '; text-align: center;',
+        '  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
+        '  display: ' + (cfg.showTitle ? 'block' : 'none') + '; width: 100%; padding: 0 4px;',
+        '}',
+        '.vl-play-btn-overlay {',
+        '  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);',
+        '  width: 38px; height: 38px; background: rgba(0,0,0,0.6); border-radius: 50%;',
+        '  display: ' + (cfg.showPlayButton ? 'flex' : 'none') + '; align-items: center; justify-content: center;',
+        '  pointer-events: none; color: #fff;',
+        '}',
+        '.vl-card-item:hover .vl-play-btn-overlay { background: ' + corPrimaria + '; transform: translate(-50%, -50%) scale(1.1); }',
+        '.vl-play-btn-overlay svg { width: 18px; height: 18px; fill: white; margin-left: 2px; }'
+      ].join('\n');
+      widgetContainer.appendChild(estilo);
+
+      var slider = document.createElement('div');
+      slider.className = 'vl-slider-container';
+
+      allVideoItems.forEach(function (item) {
+        var story = item.story; var video = item.video;
+        var storyIndex = item.storyIndex; var videoIndex = item.videoIndex;
+        var videoUrl = video ? (video.video_url || video.videoUrl || video.url || video.file_url || '') : '';
+        var cover = video ? (video.thumbnail_url || video.cover_url || video.thumbnailUrl || video.coverUrl || '') : '';
+        var card = document.createElement('button'); card.className = 'vl-card-item';
+        var mediaWrap = document.createElement('div'); mediaWrap.className = 'vl-media-box';
+        var isVideo = videoUrl && (videoUrl.indexOf('.mp4') !== -1 || videoUrl.indexOf('.webm') !== -1 || videoUrl.indexOf('.mov') !== -1 || videoUrl.indexOf('.m3u8') !== -1);
+        var mediaEl;
+        if (isVideo) { mediaEl = document.createElement('video'); mediaEl.src = videoUrl; if (cover) mediaEl.poster = cover; mediaEl.muted = true; mediaEl.loop = true; mediaEl.autoplay = true; mediaEl.setAttribute('playsinline', ''); }
+        else { mediaEl = document.createElement('img'); mediaEl.src = cover || videoUrl; mediaEl.loading = 'lazy'; }
+        mediaWrap.appendChild(mediaEl);
+        var playIcon = document.createElement('div'); playIcon.className = 'vl-play-btn-overlay'; playIcon.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>'; mediaWrap.appendChild(playIcon);
+        card.appendChild(mediaWrap);
+        if (cfg.showTitle) { var titulo = document.createElement('span'); titulo.className = 'vl-title-text'; titulo.textContent = story.title || story.name || 'Ver Vídeo'; card.appendChild(titulo); }
+        card.addEventListener('click', function (e) {
+          e.preventDefault(); e.stopPropagation();
+          openStoryViewer(stories, storyIndex, videoIndex);
+        });
+        slider.appendChild(card);
       });
-    })
-    .catch(function (err) {
-      console.error('[Vidlytics] Erro de rede:', err);
-      alert('❌ Erro de conexão. Tente novamente.');
+
+      widgetContainer.appendChild(slider);
+
+      if (!cfg.isGrid) {
+        (function () {
+          var isDown = false, startX = 0, scrollLeft = 0, moved = false, velX = 0, momentumID;
+          slider.addEventListener('mousedown', function (e) { isDown = true; moved = false; slider.classList.add('dragging'); startX = e.pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft; cancelMomentum(); e.preventDefault(); });
+          slider.addEventListener('mouseleave', function () { if (isDown) { isDown = false; slider.classList.remove('dragging'); startMomentum(); } });
+          slider.addEventListener('mouseup', function () { if (isDown) { isDown = false; slider.classList.remove('dragging'); startMomentum(); } });
+          slider.addEventListener('mousemove', function (e) { if (!isDown) return; e.preventDefault(); var x = e.pageX - slider.offsetLeft; var walk = (x - startX) * 1.5; velX = walk; slider.scrollLeft = scrollLeft - walk; if (Math.abs(walk) > 3) moved = true; });
+          slider.addEventListener('click', function (e) { if (moved) { e.stopPropagation(); e.preventDefault(); } }, true);
+          slider.addEventListener('touchstart', function (e) { isDown = true; moved = false; startX = e.touches[0].pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft; cancelMomentum(); }, { passive: false });
+          slider.addEventListener('touchend', function () { isDown = false; startMomentum(); });
+          slider.addEventListener('touchmove', function (e) { if (!isDown) return; var x = e.touches[0].pageX - slider.offsetLeft; var walk = (x - startX) * 1.5; slider.scrollLeft = scrollLeft - walk; if (Math.abs(walk) > 3) moved = true; }, { passive: false });
+          function startMomentum() { cancelMomentum(); if (Math.abs(velX) < 2) return; momentumID = requestAnimationFrame(function animate() { velX *= 0.92; slider.scrollLeft -= velX; if (Math.abs(velX) > 0.5) { momentumID = requestAnimationFrame(animate); } }); }
+          function cancelMomentum() { if (momentumID) { cancelAnimationFrame(momentumID); momentumID = null; } velX = 0; }
+        })();
+      }
+    }, 300);
+  }
+
+  function renderFloating(stories, appearance) {
+    if (!stories || !stories.length || floatingWasClosed) return;
+    if (!enableFloating) return;
+
+    var shadowData = getOrCreateShadowRoot(appearance);
+    var shadow = shadowData.shadow;
+    var host = shadowData.host;
+
+    var style = createEl('style');
+    style.textContent = buildFloatingCss(appearance);
+    shadow.appendChild(style);
+
+    var container = createEl('div', 'vl-bubbles');
+    var behavior = getFloatingBehaviorConfig(appearance);
+
+    stories.forEach(function (story, index) {
+      var bubbleVideo = null;
+      if (story.videos && story.videos.length > 0) { bubbleVideo = story.videos[0]; }
+
+      var videoUrl = bubbleVideo ? getVideoUrl(bubbleVideo) : '';
+      var cover = getStoryThumbnail(story, bubbleVideo, null);
+
+      var bubble = createEl('button', 'vl-bubble');
+      var ring = createEl('div', 'vl-ring');
+      var inner = createEl('div', 'vl-inner');
+
+      var mediaEl;
+      if (videoUrl && isDirectVideoUrl(videoUrl)) {
+        mediaEl = createEl('video', 'vl-img');
+        mediaEl.src = videoUrl;
+        if (cover) mediaEl.poster = cover;
+        mediaEl.muted = true;
+        mediaEl.defaultMuted = true;
+        mediaEl.loop = true;
+        mediaEl.autoplay = true;
+        mediaEl.setAttribute('playsinline', '');
+        mediaEl.setAttribute('webkit-playsinline', '');
+        mediaEl.style.pointerEvents = 'none';
+      } else {
+        mediaEl = createEl('img', 'vl-img');
+        if (cover) mediaEl.src = cover;
+        mediaEl.style.pointerEvents = 'none';
+      }
+
+      mediaEl.loading = 'lazy';
+      inner.appendChild(mediaEl);
+
+      if (behavior.showPlayButton) {
+        var badge = createEl('span', 'vl-play-badge');
+        inner.appendChild(badge);
+      }
+
+      ring.appendChild(inner);
+
+      if (behavior.allowClose) {
+        var dismiss = createEl('button', 'vl-dismiss');
+        dismiss.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        dismiss.addEventListener('click', function (e) {
+          e.stopPropagation();
+          host.remove();
+          floatingWasClosed = true;
+        });
+        bubble.appendChild(dismiss);
+      }
+
+      bubble.appendChild(ring);
+
+      var showFloatingTitle = toBoolean(
+        readConfigValue(appearance, 'floating_config', 'show_title', 'floating_show_title', true),
+        true
+      );
+      if (showFloatingTitle) {
+        var label = createEl('span', 'vl-label');
+        label.textContent = story.title || '';
+        bubble.appendChild(label);
+      }
+
+      bubble.addEventListener('click', function (e) {
+        if (e.target.closest('.vl-dismiss')) return;
+        if (floatingWasDragged) { floatingWasDragged = false; return; }
+        openStoryViewer(stories, index, 0);
+      });
+
+      container.appendChild(bubble);
     });
+
+    applyDraggable(host, appearance);
+    shadow.appendChild(container);
+  }
+
+  // ─── SELETOR VISUAL DE ELEMENTOS ──────────────────────
+function initElementPicker(token) {
+  if (!token) return;
+
+  // Overlay transparente
+  var overlay = document.createElement('div');
+  overlay.id = 'vidlytics-selector-overlay';
+  overlay.style.cssText =
+    'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999998;cursor:crosshair;';
+
+  // Banner de instrução
+  var banner = document.createElement('div');
+  banner.style.cssText =
+    'position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:9999999;' +
+    'background:#0094EB;color:#fff;padding:14px 28px;border-radius:20px;' +
+    'font-family:Inter,system-ui,sans-serif;font-size:15px;font-weight:700;' +
+    'box-shadow:0 12px 40px rgba(0,0,0,.3);text-align:center;pointer-events:none;' +
+    'max-width:90vw;line-height:1.5;';
+  banner.textContent = '🎯 Clique no elemento onde o Story deve aparecer... (ESC para cancelar)';
+
+document.body.appendChild(overlay);
+document.body.appendChild(banner);
+
+var highlight = document.createElement('div');
+highlight.id = 'anny-picker-highlight';
+highlight.style.cssText =
+  'position:fixed;pointer-events:none;z-index:2147483646;' +
+  'border:2px solid #3B82F6;background:rgba(59,130,246,0.1);' +
+  'transition:all 0.08s ease;border-radius:2px;display:none;';
+document.body.appendChild(highlight);
+
+  var currentEl = null;
+
+  function updateHighlight(e) {
+    overlay.style.display = 'none';                     // ← ESCONDE o overlay
+    var el = document.elementFromPoint(e.clientX, e.clientY);
+    overlay.style.display = '';                         // ← MOSTRA de volta
+
+    if (!el || el === banner || el === highlight || el === document.body || el === document.documentElement) {
+      highlight.style.display = 'none';
+      currentEl = null;
+      return;
+    }
+    if (el === currentEl) return;
+    currentEl = el;
+    var r = el.getBoundingClientRect();
+    highlight.style.display = 'block';
+    highlight.style.top = r.top + 'px';
+    highlight.style.left = r.left + 'px';
+    highlight.style.width = r.width + 'px';
+    highlight.style.height = r.height + 'px';
+  }
+
+function buildSelector(el) {
+  if (!el || el === document.body || el === document.documentElement) return 'body';
+
+  // Palavras-chave que indicam um container onde o widget deve ser inserido
+  var CONTAINER_PATTERNS = [
+    'holder', 'container', 'content', 'wrapper', 'grid', 'list',
+    'products', 'category', 'results', 'main', 'section', 'row',
+    'collection', 'catalog', 'vitrine', 'prateleira', 'produtos',
+    'categoria', 'resultados', 'conteudo', 'grade', 'area', 'flex-holder'
+  ];
+
+  function matchesContainer(cls) {
+    var lower = cls.toLowerCase();
+    for (var i = 0; i < CONTAINER_PATTERNS.length; i++) {
+      if (lower.indexOf(CONTAINER_PATTERNS[i]) !== -1) return true;
+    }
+    return false;
+  }
+
+  // Sobe no máximo 8 níveis procurando um container
+  var current = el;
+  for (var level = 0; level < 8; level++) {
+    if (!current || current === document.body || current === document.documentElement) break;
+
+    // 1) ID semântico (não gerado automaticamente)
+    if (current.id && current.id.length > 2 && !/^[a-z]{2,5}-/.test(current.id)) {
+      return '#' + CSS.escape(current.id);
+    }
+
+    // 2) Classe que parece container
+    if (current.classList && current.classList.length) {
+      for (var c = 0; c < current.classList.length; c++) {
+        var cls = current.classList[c];
+        if (matchesContainer(cls)) {
+          return '.' + CSS.escape(cls);
+        }
+      }
+    }
+
+    // 3) Tag semântica com classe
+    var tag = current.tagName.toLowerCase();
+    if (tag === 'main' || tag === 'section' || tag === 'article') {
+      if (current.classList && current.classList.length > 0) {
+        return tag + '.' + Array.from(current.classList).slice(0, 2).map(function(c) {
+          return CSS.escape(c);
+        }).join('.');
+      }
+      return tag;
+    }
+
+    current = current.parentElement;
+  }
+
+  // Fallback: caminho curto de 2 níveis
+  var path = [];
+  current = el;
+  for (var i = 0; i < 2 && current && current !== document.body && current !== document.documentElement; i++) {
+    var seg = current.tagName.toLowerCase();
+    if (current.id) { path.unshift('#' + CSS.escape(current.id)); break; }
+    if (current.classList && current.classList.length > 0) {
+      var chosen = current.classList[0];
+      for (var j = 0; j < current.classList.length; j++) {
+        if (matchesContainer(current.classList[j])) { chosen = current.classList[j]; break; }
+      }
+      seg += '.' + CSS.escape(chosen);
+    }
+    path.unshift(seg);
+    current = current.parentElement;
+  }
+
+  return path.join(' > ') || 'body';
 }
 
-function cleanupPicker(overlayEl, bannerEl, highlightEl) {
-    if (overlayEl && overlayEl.parentNode) overlayEl.parentNode.removeChild(overlayEl);
-    if (bannerEl && bannerEl.parentNode) bannerEl.parentNode.removeChild(bannerEl);
-    if (highlightEl && highlightEl.parentNode) highlightEl.parentNode.removeChild(highlightEl);
-    widgetSelectToken = null;
-    document.body.style.cursor = '';
+  function cleanup() {
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    if (banner.parentNode) banner.parentNode.removeChild(banner);
+    if (highlight.parentNode) highlight.parentNode.removeChild(highlight);
+    document.removeEventListener('mousemove', updateHighlight, true);
+    document.removeEventListener('click', onClick, true);
+    document.removeEventListener('keydown', onKey, true);
   }
 
-  function buildSelector(el) {
-    if (!el) return '';
-    var path = [];
-    while (el && el !== document.body && el !== document.documentElement) {
-      var selector = el.tagName ? el.tagName.toLowerCase() : '';
-      if (el.id) {
-        selector += '#' + el.id;
-        path.unshift(selector);
-        break;
-      }
-      if (el.className && typeof el.className === 'string') {
-        var classes = el.className.trim().split(/\s+/).filter(function (c) { return c && !c.startsWith('vl-'); });
-        if (classes.length > 0) {
-          selector += '.' + classes.slice(0, 2).join('.');
-        }
-      }
-      var parent = el.parentElement;
-      if (parent) {
-        var siblings = Array.from(parent.children).filter(function (s) {
-          return s.tagName === el.tagName;
-        });
-        if (siblings.length > 1) {
-          var index = siblings.indexOf(el) + 1;
-          selector += ':nth-child(' + index + ')';
-        }
-      }
-      path.unshift(selector);
-      el = el.parentElement;
+  function sendSelector(selector) {
+    cleanup();
+    var msg = document.createElement('div');
+    msg.style.cssText =
+      'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999999;' +
+      'background:#fff;color:#0f172a;padding:28px 36px;border-radius:20px;' +
+      'font-family:Inter,system-ui,sans-serif;text-align:center;' +
+      'box-shadow:0 20px 60px rgba(0,0,0,.3);';
+    msg.innerHTML =
+      '<div style="font-size:40px;margin-bottom:12px;">✅</div>' +
+      '<div style="font-size:16px;font-weight:800;margin-bottom:8px;">Elemento selecionado!</div>' +
+      '<div style="font-size:12px;color:#64748b;word-break:break-all;margin-bottom:12px;font-family:monospace;">' +
+        selector +
+      '</div>' +
+      '<div style="font-size:11px;color:#94a3b8;">Esta janela já pode ser fechada.</div>';
+    document.body.appendChild(msg);
+
+    if (hasSupabase) {
+      supabaseFetch('selector_sessions', {
+        method: 'POST',
+        headers: { 'Prefer': 'return=minimal' },
+        body: JSON.stringify({
+          session_token: token,
+          selector: selector,
+          created_at: new Date().toISOString()
+        })
+      }).catch(function(err) {
+        console.error('VIDLYTICS: Erro ao salvar seletor visual:', err);
+      });
     }
-    return path.join(' > ');
   }
 
-  /* ================================================================
-     INICIALIZAÇÃO DO WIDGET (COM story_id DA URL)
-     ================================================================ */
+function onClick(e) {
+  e.preventDefault();
+  e.stopPropagation();
 
-function initWidget() {
-  var _urlParams = new URLSearchParams(window.location.search);
-  var _selectorToken = _urlParams.get('widgetSelectToken') || null;
-  var storyIdFromUrl = _urlParams.get('widgetSelectStoryId') || null;
+  var el = currentEl;                                   // ← REAPROVEITA do hover
 
-  if (_selectorToken) {
-    initElementPicker(_selectorToken, storyIdFromUrl);
-    return;
+  if (!el) {                                            // fallback se não tiver hover
+    overlay.style.display = 'none';
+    el = document.elementFromPoint(e.clientX, e.clientY);
+    overlay.style.display = '';
   }
 
-  readAppearance().then(function (appearance) {
-    currentAppearance = appearance;
+  if (!el || el === banner || el === highlight) return;
+  sendSelector(buildSelector(el));
+}
 
-    return readStoreSettings().then(function (settings) {
-      autoApproveComments = settings.auto_approve_comments === true || settings.auto_approve_comments === 'true';
-      storeWhatsappNumber = settings.whatsapp_number || '';
-      storeWhatsappMessage = settings.whatsapp_message || '';
-    }).catch(function () {}).then(function () {
-      return readStories();
-    }).then(function (stories) {
-      currentStories = stories || [];
+  function onKey(e) {
+    if (e.key === 'Escape') cleanup();
+  }
 
-      // 🔧 Buscar story_videos e videos, depois juntar tudo
-      console.log('[Vidlytics] Buscando videos vinculados aos stories...');
-      return Promise.all([
-        readStoryVideos(),
-        readVideos()
-      ]).then(function (results) {
-        var storyVideosData = results[0] || [];
-        var videosData = results[1] || [];
+  document.addEventListener('mousemove', updateHighlight, true);
+  document.addEventListener('click', onClick, true);
+  document.addEventListener('keydown', onKey, true);
+}
 
-        console.log('[Vidlytics] story_videos encontrados:', storyVideosData.length);
-        console.log('[Vidlytics] videos encontrados:', videosData.length);
 
-        currentStories = joinStoriesWithVideos(currentStories, storyVideosData, videosData);
+  function initWidget() {
+    var _urlParams = new URLSearchParams(window.location.search);
+    var _selectorToken = _urlParams.get('widgetSelectToken');
+    if (_selectorToken) { initElementPicker(_selectorToken); return; }
 
-        console.log('[Vidlytics] Total de stories com videos:', currentStories.filter(function(s) {
-          return s.videos && s.videos.length > 0;
-        }).length);
+    if (!hasSupabase && !storeId) return;
 
-        return readProducts();
-      });
-    }).then(function (products) {
-      readProductsData = products || [];
-      return readSizingModels();
-    }).then(function (models) {
-      readSizingModelsData = models || [];
-      return readComments();
-    }).then(function (comments) {
-      readCommentsData = comments || [];
-      return readLikesFromDb();
-    }).then(function (likes) {
-      likedVideos = likes.likedVideos || {};
-      videoLikeCounts = likes.likeCounts || {};
+    Promise.all([
+      readAppearance(),
+      readStories(),
+      readStoryVideos(),
+      readVideos(),
+      readStoryProducts(),
+      readProducts(),
+      readComments(),
+      readSizingModels(),
+      readLikesFromDb(),
+      readStoreSettings(),
+      readPageRules(),
+      readDisplayLocations()
+    ]).then(function (results) {
+      var appearance = results[0];
+      var stories = results[1];
+      var storyVideos = results[2];
+      var videos = results[3];
+      readStoryProductsData = results[4];
+      readProductsData = results[5];
+      window.__vidlytics_debug_story_products = readStoryProductsData;
+      window.__vidlytics_debug_products = readProductsData;
 
-      // 🆕 LER DISPLAY LOCATIONS E INJETAR CARROSSEL NOS SELETORES
-      if (!storeId || !hasSupabase) return Promise.resolve();
-
-      return readDisplayLocations().then(function (locations) {
-        return readPageRules().then(function (rules) {
-          var activeLocations = locations.filter(function (loc) {
-            return loc.active !== false && loc.active !== 'false' && loc.active !== 0 && loc.active !== '0';
-          });
-
-          activeLocations.forEach(function (location) {
-            var locStoryId = location.story_id;
-            if (!locStoryId) return;
-
-            var story = currentStories.find(function (s) { return idsEqual(s.id, locStoryId); });
-            if (!story) {
-              console.warn('[Vidlytics] Story nao encontrada para location:', locStoryId);
-              return;
-            }
-
-            var storyRules = rules.filter(function (r) {
-              return idsEqual(r.story_id, locStoryId);
-            });
-
-            if (storyRules.length > 0) {
-              var hasMatch = storyRules.some(function (rule) { return matchesRule(rule); });
-              if (!hasMatch) {
-                console.log('[Vidlytics] Nenhuma regra bateu para location, pulando.');
-                return;
-              }
-            }
-
-            var selector = location.selector;
-            var position = location.position || 'beforeend';
-
-            if (selector) {
-              console.log('[Vidlytics] Injetando carrossel no seletor:', selector, 'posicao:', position);
-              initInlineWidget({
-                target: selector,
-                placement: position,
-                stories: [story],
-                products: readProductsData,
-                sizing_models: readSizingModelsData,
-                comments: readCommentsData,
-                appearance: currentAppearance
-              });
-            }
-          });
+      readCommentsData = results[6];
+      readSizingModelsData = results[7];
+      readLikeCounts = results[8];
+            // 🔧 Merge dos likes do banco no estado local
+      var dbLikes = results[8] || {};
+      if (dbLikes.likedVideos) {
+        Object.keys(dbLikes.likedVideos).forEach(function (videoId) {
+          likedVideos[videoId] = true;
         });
+      }
+      if (dbLikes.likeCounts) {
+        Object.keys(dbLikes.likeCounts).forEach(function (videoId) {
+          videoLikeCounts[videoId] = dbLikes.likeCounts[videoId];
+        });
+      }
+
+      var storeSettings = results[9];
+      var pageRules = results[10];
+      var locations = results[11];
+
+      // 🔧 Extrair seletor CSS e posição das display_locations
+      var inlineSelector = '';
+      var inlinePosition = 'afterend';  // ← padrão seguro
+      if (locations && locations.length > 0) {
+        for (var i = 0; i < locations.length; i++) {
+          var locSelector = locations[i].css_selector || locations[i].selector || locations[i].display_selector || '';
+          if (locSelector) {
+            inlineSelector = locSelector;
+            // 🔧 AQUI: lê a posição do banco (afterend, beforebegin, etc.)
+            inlinePosition = locations[i].position || locations[i].display_position || 'afterend';
+            break;
+          }
+        }
+      }
+      // 🔧 Fallback: pegar da primeira story inline
+      if (!inlineSelector) {
+        for (var j = 0; j < validStories.length; j++) {
+          var storySelector = validStories[j].display_selector || '';
+          if (storySelector) {
+            inlineSelector = storySelector;
+            inlinePosition = validStories[j].display_position || 'afterend';
+            break;
+          }
+        }
+      }
+      if (inlineSelector) {
+        appearance.css_selector = inlineSelector;
+        appearance.position = inlinePosition;  // ← NOVO: salva posição no appearance
+      }
+
+
+      if (storeSettings && storeSettings.auto_approve_comments !== undefined) {
+        autoApproveComments = !!storeSettings.auto_approve_comments;
+      }
+
+storeWhatsappNumber = storeSettings.whatsapp_number || storeSettings.whatsappNumber || '';
+storeWhatsappMessage = storeSettings.whatsapp_message_template || storeSettings.whatsapp_message || storeSettings.whatsappMessage || '';
+
+      currentAppearance = appearance;
+
+      window.__vidlytics_debug_show_product = appearance.show_product;
+
+
+      if (!stories || stories.length === 0) return;
+
+function storyMatchesCurrentPage(story) {
+  if (!story) return false;
+
+  // 1. Regras específicas via page_rules
+  var rules = pageRules.filter(function (r) { return idsEqual(r.story_id, story.id); });
+  if (rules.length > 0) return rules.some(matchesRule);
+
+  // 2. Regras globais (sem story_id)
+  var globalRules = pageRules.filter(function (r) { return !r.story_id; });
+  if (globalRules.length > 0) return globalRules.some(matchesRule);
+
+  // 3. URL no story
+  var storyUrl = firstDefined(story.url, story.page_url, story.pageUrl);
+  if (storyUrl && String(storyUrl).trim() !== '') {
+    return matchesUrl({ url: String(storyUrl).trim() });
+  }
+
+  // 4. Fallback: appearance
+  return matchesUrl(appearance);
+}
+
+      var validStories = stories.filter(storyMatchesCurrentPage);
+      if (!validStories || validStories.length === 0) return;
+
+      validStories.forEach(function (story) {
+        var rels = storyVideos.filter(function (sv) { return idsEqual(sv.story_id, story.id); });
+        story.videos = rels.map(function (r) {
+          return videos.find(function (v) { return idsEqual(v.id, r.video_id); }) || {};
+        }).filter(function (video) { return video && Object.keys(video).length > 0; });
       });
-    }).then(function () {
-      // Renderiza widget flutuante se habilitado
-      if (enableFloating) {
-        renderFloatingWidget();
+
+      var widgetFormat = 'floating_widget';
+      for (var i = 0; i < validStories.length; i += 1) {
+        var storyFormat = String(firstDefined(
+          validStories[i].format, validStories[i].display_format, validStories[i].displayFormat,
+          validStories[i].visual_style, validStories[i].visualStyle, 'floating_widget'
+        )).toLowerCase();
+        if (storyFormat.indexOf('carousel') !== -1 || storyFormat.indexOf('carrossel') !== -1) { widgetFormat = 'carousel'; break; }
+        if (storyFormat.indexOf('grid') !== -1 || storyFormat.indexOf('grade') !== -1) { widgetFormat = 'grid'; break; }
+        if (storyFormat.indexOf('floating') !== -1 || storyFormat.indexOf('flutuante') !== -1 || storyFormat.indexOf('widget') !== -1) { widgetFormat = 'floating_widget'; }
+      }
+
+      if (widgetFormat === 'carousel' || widgetFormat === 'grid') {
+        renderInlineWidget(validStories, appearance, widgetFormat);
+      } else {
+        renderFloating(validStories, appearance);
       }
     }).catch(function (err) {
-      console.warn('[Vidlytics] Erro na inicialização:', err);
+      console.error('VIDLYTICS: Erro ao inicializar widget:', err);
     });
-  }).catch(function (err) {
-    console.warn('[Vidlytics] Erro ao carregar aparência:', err);
-  });
   }
 
-initWidget();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initWidget);
+  } else {
+    initWidget();
+  }
 
 })();
