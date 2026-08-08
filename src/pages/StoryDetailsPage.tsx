@@ -425,7 +425,7 @@ const handleOpenSelector = async () => {
 
     try {
 const response = await fetch(
-  `https://wznvecurmisgoaijykbt.supabase.co/functions/v1/widget-selector?token=${token}`
+  `https://wznvecurmisgoaijykbt.supabase.co/functions/v1/widget-selector?story_id=${story?.id}`
 );
       const result = await response.json();
 
