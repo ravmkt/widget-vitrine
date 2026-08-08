@@ -3282,13 +3282,14 @@ cardItem.style.cssText = [
     });
 
     // Hover
-    cardItem.addEventListener('mouseenter', function () {
-      cardItem.style.transform = 'translateY(-2px)';
-    });
-    cardItem.addEventListener('mouseleave', function () {
-      cardItem.style.transform = 'translateY(0)';
-    });
-
+cardItem.addEventListener('mouseenter', function () {
+  cardItem.style.transform = 'translateY(-6px)';
+  card.style.boxShadow = '0 12px 28px rgba(0,0,0,.18)';
+});
+cardItem.addEventListener('mouseleave', function () {
+  cardItem.style.transform = 'translateY(0)';
+  card.style.boxShadow = '0 2px 10px rgba(0,0,0,.1)';
+});
     track.appendChild(cardItem);
   });
 
