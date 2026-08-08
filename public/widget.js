@@ -2923,19 +2923,19 @@
      ================================================================ */
 
 function initInlineWidget(options) {
-  console.log('🔵 [Vidlytics] initInlineWidget chamado com:', options);
-
   var targetSelector = options.target || options.anchor || '#vidlytics-stories';
-  var placement = String(options.placement || 'below').toLowerCase();
+  var placement = String(options.placement || 'beforeend').toLowerCase(); // 🆕 padrão: dentro do elemento
   var targetEl = document.querySelector(targetSelector);
 
   console.log('🔵 [Vidlytics] Seletor:', targetSelector);
+  console.log('🔵 [Vidlytics] Posição:', placement);
   console.log('🔵 [Vidlytics] Elemento encontrado:', targetEl);
 
   if (!targetEl) {
     console.warn('[Vidlytics] Container alvo "' + targetSelector + '" não encontrado.');
     return;
   }
+
   var wrapper = document.createElement('div');
   wrapper.style.cssText = 'position:relative;width:100%;';
 
@@ -2950,7 +2950,6 @@ function initInlineWidget(options) {
 
   injectStyles(globalShadowRoot);
 
-  // 🆕 Usa dados passados via options ou globais — SEM refetch!
   if (options.stories && options.stories.length > 0) {
     currentStories = options.stories;
   }
@@ -2967,19 +2966,17 @@ function initInlineWidget(options) {
     currentAppearance = options.appearance;
   }
 
-  // Posiciona acima ou abaixo do targetEl
-  if (placement === 'above') {
+  // 🆕 Posiciona com insertAdjacentElement para todas as 4 posições
+  if (placement === 'beforebegin' || placement === 'afterbegin' || placement === 'beforeend' || placement === 'afterend') {
+    targetEl.insertAdjacentElement(placement, wrapper);
+  } else if (placement === 'above') {
     targetEl.parentNode.insertBefore(wrapper, targetEl);
   } else {
+    // 'below' ou fallback
     targetEl.parentNode.insertBefore(wrapper, targetEl.nextSibling);
   }
 
-  // Render direto, sem esperar fetch
   renderBubbles(container);
-  console.log('🟢 [Vidlytics] Carrossel renderizado. Container:', container);
-console.log('🟢 [Vidlytics] Shadow DOM:', globalShadowRoot);
-console.log('🟢 [Vidlytics] Bubbles:', container.querySelectorAll('.vl-bubble-wrapper').length);
-
   attachKeyboardListeners();
 
   if (options.api) {
@@ -2994,6 +2991,8 @@ console.log('🟢 [Vidlytics] Bubbles:', container.querySelectorAll('.vl-bubble-
   }
 
   trackMetric({ event_type: 'widget_init', page_url: window.location.href });
+
+  console.log('🟢 [Vidlytics] Bubbles:', container.querySelectorAll('.vl-bubble-wrapper').length);
 }
 
   /* ================================================================
