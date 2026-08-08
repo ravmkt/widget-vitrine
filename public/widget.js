@@ -3115,7 +3115,7 @@ var cfg = getCarouselConfig(appearance);
   // 🆕 CALCULA LARGURA MÁXIMA BASEADA NOS ITENS VISÍVEIS
   var visibleItems = cfg.visibleItems || 4;
   var totalItemWidth = cfg.size + cfg.spacing;      // 1 item + gap
-var wrapperMaxWidth = (visibleItems * totalItemWidth) - cfg.spacing + 12;
+// max-width fixo removido — agora usa 100%
 
   // Wrapper com scroll horizontal
   var wrapper = createEl('div', 'vl-carousel-wrapper');
