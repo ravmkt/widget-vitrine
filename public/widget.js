@@ -2987,19 +2987,18 @@ function getWidgetDisplayMode(appearance) {
 
 function enableDragScroll(el) {
   var isDown = false;
-  var startX, scrollLeft;
-  var moved = false;                 // 🆕 detecta se houve arraste
-  var DRAG_THRESHOLD = 6;            // 🆕 pixels mínimos para considerar arraste
+  var lastX, scrollLeft;
+  var moved = false;
+  var DRAG_THRESHOLD = 6;
 
   el.addEventListener('mousedown', function (e) {
     isDown = true;
     moved = false;
     el.style.cursor = 'grabbing';
     el.style.userSelect = 'none';
-    startX = e.pageX - el.offsetLeft;
-    scrollLeft = el.scrollLeft;
+    lastX = e.pageX;                        // 🆕 posição inicial do mouse
+    scrollLeft = el.scrollLeft;             // 🆕 posição inicial do scroll
 
-    // 🆕 Impede temporariamente cliques nos filhos durante o arraste
     var cards = el.querySelectorAll('.vl-carousel-item');
     cards.forEach(function (card) {
       card.style.pointerEvents = 'none';
@@ -3012,7 +3011,6 @@ function enableDragScroll(el) {
     el.style.cursor = 'grab';
     el.style.userSelect = '';
 
-    // 🆕 Restaura pointer-events após pequeno delay (evita click acidental)
     setTimeout(function () {
       var cards = el.querySelectorAll('.vl-carousel-item');
       cards.forEach(function (card) {
@@ -3020,6 +3018,26 @@ function enableDragScroll(el) {
       });
     }, 50);
   };
+
+  el.addEventListener('mouseleave', stopDrag);
+  el.addEventListener('mouseup', stopDrag);
+
+  el.addEventListener('mousemove', function (e) {
+    if (!isDown) return;
+    e.preventDefault();
+
+    var dx = e.pageX - lastX;               // 🆕 movimento relativo do mouse
+
+    if (Math.abs(dx) > DRAG_THRESHOLD) {
+      moved = true;
+    }
+
+    if (moved) {
+      el.scrollLeft = el.scrollLeft - dx;   // 🆕 aplica movimento direto
+      lastX = e.pageX;                      // 🆕 atualiza referência
+    }
+  });
+}
 
   el.addEventListener('mouseleave', stopDrag);
   el.addEventListener('mouseup', stopDrag);
