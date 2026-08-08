@@ -3019,10 +3019,6 @@ function enableDragScroll(el) {
     }, 50);
   };
 
-  el.addEventListener('mouseleave', stopDrag);
-  el.addEventListener('mouseup', stopDrag);
-
-  el.addEventListener('mousemove', function (e) {
     if (!isDown) return;
     e.preventDefault();
 
@@ -3037,7 +3033,6 @@ function enableDragScroll(el) {
       lastX = e.pageX;                      // 🆕 atualiza referência
     }
   });
-}
 
   el.addEventListener('mouseleave', stopDrag);
   el.addEventListener('mouseup', stopDrag);
