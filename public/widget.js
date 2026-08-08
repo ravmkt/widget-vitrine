@@ -2788,12 +2788,12 @@
 
     return [
       '* { margin: 0; padding: 0; box-sizing: border-box; }',
-'.vl-container { font-family: ' + fontFamily + '; direction: ltr; text-align: left; width:100%; max-width:100%; overflow:hidden; }',
+      '.vl-container { font-family: ' + fontFamily + '; direction: ltr; text-align: left; width:100%; max-width:100%; overflow:hidden; }',
       '.vl-bubble-list::-webkit-scrollbar { display: none; }',
       '.vl-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 999999; display: none; align-items: center; justify-content: center; overflow: hidden; opacity: 0; transition: opacity 0.3s ease; }',
       '.vl-overlay.vl-active { display: flex; opacity: 1; }',
-'.vl-modal { position: relative; width: 100%; max-width: 420px; height: 100%; max-height: 100dvh; background: #000; overflow: hidden; display: flex; flex-direction: column; }',
-'.vl-progress { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; gap: 4px; z-index: 100; }',
+      '.vl-modal { position: relative; width: 100%; max-width: 420px; height: 100%; max-height: 100dvh; background: #000; overflow: hidden; display: flex; flex-direction: column; }',
+      '.vl-progress { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; gap: 4px; z-index: 100; }',
       '.vl-progress-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.3); border-radius: 3px; overflow: hidden; }',
       '.vl-progress-fill { height: 100%; background: #fff; border-radius: 3px; transition: width 0.3s linear; width: 0%; }',
       '.vl-header { position: absolute; top: 20px; left: 16px; right: 16px; z-index: 50; display: flex; align-items: center; justify-content: space-between; }',
@@ -2830,20 +2830,11 @@
       '.vl-form-btn-row { display: flex; gap: 8px; width: 100%; margin-top: 8px; }',
       '.vl-form-btn-back { flex: 1; height: 42px; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; color: #64748b; font-size: 14px; font-weight: 700; cursor: pointer; }',
       '.vl-form-btn-send { flex: 2; height: 42px; border: none; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }',
-.vl-carousel-wrapper {
-  scroll-snap-type: x mandatory;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-user-drag: none;
-}
-.vl-carousel-wrapper img {
-  -webkit-user-drag: none;
-  user-drag: none;
-  pointer-events: none; /* opcional, já que o clique é no card, não na img */
-}
-'.vl-carousel-wrapper.is-dragging { scroll-snap-type: none !important; }',
-'.vl-carousel-item { scroll-snap-align: start; }',
-'@media (max-width: 480px) { .vl-modal { max-width: 100%; border-radius: 0; } .vl-social { right: 4px; bottom: 90px; gap: 12px; } .vl-social-btn { width: 40px; height: 40px; } }'
+      '.vl-carousel-wrapper { scroll-snap-type: x mandatory; user-select: none; -webkit-user-select: none; -webkit-user-drag: none; }',
+      '.vl-carousel-wrapper img { -webkit-user-drag: none; user-drag: none; pointer-events: none; }',
+      '.vl-carousel-wrapper.is-dragging { scroll-snap-type: none !important; }',
+      '.vl-carousel-item { scroll-snap-align: start; }',
+      '@media (max-width: 480px) { .vl-modal { max-width: 100%; border-radius: 0; } .vl-social { right: 4px; bottom: 90px; gap: 12px; } .vl-social-btn { width: 40px; height: 40px; } }'
     ].join('\n');
   }
 
