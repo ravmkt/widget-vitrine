@@ -3493,3 +3493,6 @@ function readDisplayLocationsAndPageRules() {
     });
   });
 }
+  initWidget();
+
+})();
