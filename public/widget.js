@@ -3393,55 +3393,103 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
      INICIALIZAÇÃO DO WIDGET (COM story_id DA URL)
      ================================================================ */
 
-  function initWidget() {
-    var _urlParams = new URLSearchParams(window.location.search);
-    var _selectorToken = _urlParams.get('widgetSelectToken') || null;
-    var storyIdFromUrl = _urlParams.get('widgetSelectStoryId') || null;
+function initWidget() {
+  var _urlParams = new URLSearchParams(window.location.search);
+  var _selectorToken = _urlParams.get('widgetSelectToken') || null;
+  var storyIdFromUrl = _urlParams.get('widgetSelectStoryId') || null;
 
-    if (_selectorToken) {
-      initElementPicker(_selectorToken, storyIdFromUrl);
-      return;
-    }
-
-    // Lógica padrão de inicialização
-    readAppearance().then(function (appearance) {
-      currentAppearance = appearance;
-
-      return readStoreSettings().then(function (settings) {
-        autoApproveComments = settings.auto_approve_comments === true || settings.auto_approve_comments === 'true';
-        storeWhatsappNumber = settings.whatsapp_number || '';
-        storeWhatsappMessage = settings.whatsapp_message || '';
-      }).catch(function () {}).then(function () {
-        return readStories();
-      }).then(function (stories) {
-        currentStories = stories || [];
-        return readProducts();
-      }).then(function (products) {
-        readProductsData = products || [];
-        return readSizingModels();
-      }).then(function (models) {
-        readSizingModelsData = models || [];
-        return readComments();
-      }).then(function (comments) {
-        readCommentsData = comments || [];
-        return readLikesFromDb();
-      }).then(function (likes) {
-        likedVideos = likes.likedVideos || {};
-        videoLikeCounts = likes.likeCounts || {};
-
-        // Renderiza widget flutuante se habilitado
-        if (enableFloating) {
-          renderFloatingWidget();
-        }
-      }).catch(function (err) {
-        console.warn('[Vidlytics] Erro na inicialização:', err);
-      });
-    }).catch(function (err) {
-      console.warn('[Vidlytics] Erro ao carregar aparência:', err);
-    });
+  if (_selectorToken) {
+    initElementPicker(_selectorToken, storyIdFromUrl);
+    return;
   }
 
-  // Inicia o widget
-  initWidget();
+  readAppearance().then(function (appearance) {
+    currentAppearance = appearance;
 
-})(); // Fim da IIFE principal
+    return readStoreSettings().then(function (settings) {
+      autoApproveComments = settings.auto_approve_comments === true || settings.auto_approve_comments === 'true';
+      storeWhatsappNumber = settings.whatsapp_number || '';
+      storeWhatsappMessage = settings.whatsapp_message || '';
+    }).catch(function () {}).then(function () {
+      return readStories();
+    }).then(function (stories) {
+      currentStories = stories || [];
+      return readProducts();
+    }).then(function (products) {
+      readProductsData = products || [];
+      return readSizingModels();
+    }).then(function (models) {
+      readSizingModelsData = models || [];
+      return readComments();
+    }).then(function (comments) {
+      readCommentsData = comments || [];
+      return readLikesFromDb();
+    }).then(function (likes) {
+      likedVideos = likes.likedVideos || {};
+      videoLikeCounts = likes.likeCounts || {};
+
+      // 🆕 LER DISPLAY LOCATIONS E INJETAR CARROSSEL NOS SELETORES
+      return readDisplayLocationsAndPageRules();
+    }).then(function () {
+      // Renderiza widget flutuante se habilitado
+      if (enableFloating) {
+        renderFloatingWidget();
+      }
+    }).catch(function (err) {
+      console.warn('[Vidlytics] Erro na inicialização:', err);
+    });
+  }).catch(function (err) {
+    console.warn('[Vidlytics] Erro ao carregar aparência:', err);
+  });
+}
+
+// 🆕 NOVA FUNÇÃO
+function readDisplayLocationsAndPageRules() {
+  if (!storeId || !hasSupabase) return Promise.resolve();
+
+  return readDisplayLocations().then(function (locations) {
+    return readPageRules().then(function (rules) {
+      // Filtra locations ativas
+      var activeLocations = locations.filter(function (loc) {
+        return loc.active !== false && loc.active !== 'false' && loc.active !== 0 && loc.active !== '0';
+      });
+
+      activeLocations.forEach(function (location) {
+        var storyId = location.story_id;
+        if (!storyId) return;
+
+        // Verifica se existe story correspondente
+        var story = currentStories.find(function (s) { return idsEqual(s.id, storyId); });
+        if (!story) return;
+
+        // Verifica regras de página (se existirem)
+        var storyRules = rules.filter(function (r) {
+          return idsEqual(r.story_id, storyId);
+        });
+
+        // Se tem regras, verifica se pelo menos uma dá match
+        if (storyRules.length > 0) {
+          var hasMatch = storyRules.some(function (rule) { return matchesRule(rule); });
+          if (!hasMatch) return;
+        }
+
+        // Injeta o carrossel inline no seletor
+        var selector = location.selector;
+        var position = location.position || 'beforeend';
+
+        if (selector) {
+          var storiesForThisLocation = [story];
+          initInlineWidget({
+            target: selector,
+            placement: position === 'beforebegin' ? 'above' : 'below',
+            stories: storiesForThisLocation,
+            products: readProductsData,
+            sizing_models: readSizingModelsData,
+            comments: readCommentsData,
+            appearance: currentAppearance
+          });
+        }
+      });
+    });
+  });
+}
