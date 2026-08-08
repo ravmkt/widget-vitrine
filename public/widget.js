@@ -2831,13 +2831,13 @@ function openStoryModal(storyIndex, videoIndex) {
     renderStoryModal();
     attachTouchListeners();
 
-    trackMetric({
+trackMetric({
       event_type: 'story_open',
       story_id: currentStories[currentStoryIndex].id,
       page_url: window.location.href
     });
   }
-
+} 
   /* ================================================================
      FUNÇÕES AUXILIARES DE COR
      ================================================================ */
