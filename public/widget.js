@@ -2996,8 +2996,8 @@ function enableDragScroll(el) {
     moved = false;
     el.style.cursor = 'grabbing';
     el.style.userSelect = 'none';
-    lastX = e.pageX;                        // 🆕 posição inicial do mouse
-    scrollLeft = el.scrollLeft;             // 🆕 posição inicial do scroll
+    lastX = e.pageX;
+    scrollLeft = el.scrollLeft;
 
     var cards = el.querySelectorAll('.vl-carousel-item');
     cards.forEach(function (card) {
@@ -3019,36 +3019,22 @@ function enableDragScroll(el) {
     }, 50);
   };
 
-    if (!isDown) return;
-    e.preventDefault();
-
-    var dx = e.pageX - lastX;               // 🆕 movimento relativo do mouse
-
-    if (Math.abs(dx) > DRAG_THRESHOLD) {
-      moved = true;
-    }
-
-    if (moved) {
-      el.scrollLeft = el.scrollLeft - dx;   // 🆕 aplica movimento direto
-      lastX = e.pageX;                      // 🆕 atualiza referência
-    }
-  });
-
   el.addEventListener('mouseleave', stopDrag);
   el.addEventListener('mouseup', stopDrag);
 
   el.addEventListener('mousemove', function (e) {
     if (!isDown) return;
     e.preventDefault();
-    var x = e.pageX - el.offsetLeft;
-    var walk = (x - startX) * 1.5;
 
-    if (Math.abs(x - startX) > DRAG_THRESHOLD) {
+    var dx = e.pageX - lastX;
+
+    if (Math.abs(dx) > DRAG_THRESHOLD) {
       moved = true;
     }
 
     if (moved) {
-      el.scrollLeft = scrollLeft - walk;
+      el.scrollLeft = el.scrollLeft - dx;
+      lastX = e.pageX;
     }
   });
 }
