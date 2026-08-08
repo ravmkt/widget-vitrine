@@ -3485,7 +3485,7 @@ activeLocations.forEach(function (location) {
     console.log('[Vidlytics] Injetando carrossel no seletor:', selector, 'posicao:', position);
     initInlineWidget({
       target: selector,
-      placement: position,  // 🆕 Passa a posição original: beforebegin, afterbegin, beforeend, afterend
+      placement: position,
       stories: [story],
       products: readProductsData,
       sizing_models: readSizingModelsData,
