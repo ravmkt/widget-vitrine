@@ -3167,6 +3167,8 @@ cardItem.style.cssText = [
   'transition:transform .2s ease;'
 ].join('');
 
+cardItem.style.cursor = 'pointer';
+
     // Card com thumbnail do VÍDEO
     var card = createEl('div', 'vl-carousel-card');
     card.style.cssText = [
