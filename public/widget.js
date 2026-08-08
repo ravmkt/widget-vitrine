@@ -2788,6 +2788,7 @@ function trackMetric(data) {
       '* { margin: 0; padding: 0; box-sizing: border-box; }',
       '.vl-container { font-family: ' + fontFamily + '; direction: ltr; text-align: left; width:100%; max-width:100%; overflow:hidden; }',
       '.vl-bubble-list::-webkit-scrollbar { display: none; }',
+      .vl-carousel-item { cursor: pointer; }',
       '.vl-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 999999; display: none; align-items: center; justify-content: center; overflow: hidden; opacity: 0; transition: opacity 0.3s ease; }',
       '.vl-overlay.vl-active { display: flex; opacity: 1; }',
       '.vl-modal { position: relative; width: 100%; max-width: 420px; height: 100%; max-height: 100dvh; background: #000; overflow: hidden; display: flex; flex-direction: column; }',
