@@ -3191,27 +3191,6 @@ function renderCarouselWidget(container, stories, appearance) {
   console.log('[Vidlytics] Carrossel renderizado com ' + allVideos.length + ' video(s).');
 }
 
-    // Clique abre o modal
-    item.addEventListener('click', function (e) {
-      e.preventDefault();
-      openStoryModal(index);
-    });
-
-    // Hover
-    item.addEventListener('mouseenter', function () {
-      item.style.transform = 'translateY(-2px)';
-    });
-    item.addEventListener('mouseleave', function () {
-      item.style.transform = 'translateY(0)';
-    });
-
-    track.appendChild(item);
-  });
-
-  wrapper.appendChild(track);
-  container.appendChild(wrapper);
-}
-
 function initInlineWidget(options) {
   var targetSelector = options.target || options.anchor || '#vidlytics-stories';
   var placement = String(options.placement || 'beforeend').toLowerCase();
