@@ -2828,7 +2828,6 @@ function trackMetric(data) {
       '.vl-form-btn-row { display: flex; gap: 8px; width: 100%; margin-top: 8px; }',
       '.vl-form-btn-back { flex: 1; height: 42px; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; color: #64748b; font-size: 14px; font-weight: 700; cursor: pointer; }',
       '.vl-form-btn-send { flex: 2; height: 42px; border: none; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }',
-'.vl-carousel-wrapper { scroll-snap-type: none; user-select: none; -webkit-user-select: none; -webkit-user-drag: none; }',
 '.vl-carousel-wrapper img { -webkit-user-drag: none; user-drag: none; pointer-events: none; }',
       '@media (max-width: 480px) { .vl-modal { max-width: 100%; border-radius: 0; } .vl-social { right: 4px; bottom: 90px; gap: 12px; } .vl-social-btn { width: 40px; height: 40px; } }'
     ].join('\n');
