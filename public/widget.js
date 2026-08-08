@@ -1009,6 +1009,26 @@
     return '';
   }
 
+    // 🆕 EXTRAIR ID DO INSTAGRAM REEL
+  function extractInstagramId(url) {
+    if (!url) return '';
+    try {
+      var u = String(url).trim();
+      var match = u.match(/instagram\.com\/reel\/([^/?&]+)/);
+      return match ? match[1] : u;
+    } catch (e) { return url; }
+  }
+
+  // 🆕 EXTRAIR ID DO TIKTOK
+  function extractTikTokId(url) {
+    if (!url) return '';
+    try {
+      var u = String(url).trim();
+      var match = u.match(/tiktok\.com\/.*\/video\/(\d+)/);
+      return match ? match[1] : u;
+    } catch (e) { return url; }
+  }
+
   function getYouTubeThumbnail(url) {
     var id = extractYouTubeId(url);
     return id ? 'https://img.youtube.com/vi/' + id + '/hqdefault.jpg' : '';
