@@ -3440,6 +3440,9 @@ function readDisplayLocationsAndPageRules() {
       });
 
       activeLocations.forEach(function (location) {
+        console.log('🟡 [Vidlytics] Procurando story_id:', locStoryId);
+console.log('🟡 [Vidlytics] IDs disponíveis:', currentStories.map(function(s) { return s.id; }));
+
         var locStoryId = location.story_id;
         if (!locStoryId) return;
 console.log('🟡 [Vidlytics] currentStories:', currentStories.length, currentStories.map(function(s) { return { id: s.id, title: s.title }; }));
