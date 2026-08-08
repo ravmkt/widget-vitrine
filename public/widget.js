@@ -3389,12 +3389,10 @@ cardItem.style.cursor = 'pointer';
       }
     }
 
-    // 🆕 Clique no card: abre player fullscreen (todas as fontes)
+// 🆕 Clique no card: abre o modal completo do StoriesWidget
 cardItem.addEventListener('click', function (e) {
   e.preventDefault();
-  var vUrl = getVideoUrl(video);
-  var vSource = video.source_type || video.sourceType || 'upload';
-  openFullscreenPlayer(vUrl, vSource);
+  openStoryModal(item.storyIndex, item.videoIndex);
 
   trackMetric({
     event_type: 'play',
@@ -3407,8 +3405,7 @@ cardItem.addEventListener('click', function (e) {
 cardItem.addEventListener('mouseenter', function () {
   cardItem.style.transform = 'translateY(-6px)';
   card.style.boxShadow = '0 12px 28px rgba(0,0,0,.18)';
-});
-cardItem.addEventListener('mouseleave', function () {
+});cardItem.addEventListener('mouseleave', function () {
   cardItem.style.transform = 'translateY(0)';
   card.style.boxShadow = '0 2px 10px rgba(0,0,0,.1)';
 });
