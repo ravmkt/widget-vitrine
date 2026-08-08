@@ -2993,7 +2993,7 @@ function enableDragScroll(el) {
   var startX, scrollStart;
   var moved = false;
   var DRAG_THRESHOLD = 3;   // mais sensível — evita a sensação de "grudar" no início
-  var SPEED = 1.5;          // aumente pra 2.0 se ainda parecer lento
+  var SPEED = 2.0;          // aumente pra 2.0 se ainda parecer lento
   var rafId = null;
   var currentX = 0;
 
