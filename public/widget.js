@@ -2924,7 +2924,7 @@
 
 function initInlineWidget(options) {
   var targetSelector = options.target || options.anchor || '#vidlytics-stories';
-  var placement = String(options.placement || 'below').toLowerCase(); // 'below' | 'above'
+  var placement = String(options.placement || 'below').toLowerCase();
   var targetEl = document.querySelector(targetSelector);
 
   if (!targetEl) {
@@ -2932,12 +2932,9 @@ function initInlineWidget(options) {
     return;
   }
 
-  // === CRIA O WRAPPER RELATIVO ===
-  // Este wrapper mantém o fluxo natural do DOM e serve como shadow host
   var wrapper = document.createElement('div');
   wrapper.style.cssText = 'position:relative;width:100%;';
 
-  // === SHADOW DOM NO WRAPPER (não mais no targetEl) ===
   if (wrapper.shadowRoot) {
     globalShadowRoot = wrapper.shadowRoot;
   } else {
@@ -2949,52 +2946,33 @@ function initInlineWidget(options) {
 
   injectStyles(globalShadowRoot);
 
-  // === POSICIONAMENTO: ACIMA OU ABAIXO DO targetEl ===
+  // 🆕 Usa dados passados via options ou globais — SEM refetch!
+  if (options.stories && options.stories.length > 0) {
+    currentStories = options.stories;
+  }
+  if (options.products && options.products.length > 0) {
+    readProductsData = options.products;
+  }
+  if (options.sizing_models && options.sizing_models.length > 0) {
+    readSizingModelsData = options.sizing_models;
+  }
+  if (options.comments && options.comments.length > 0) {
+    readCommentsData = options.comments;
+  }
+  if (options.appearance) {
+    currentAppearance = options.appearance;
+  }
+
+  // Posiciona acima ou abaixo do targetEl
   if (placement === 'above') {
-    // wrapper fica ANTES do targetEl (acima visualmente)
     targetEl.parentNode.insertBefore(wrapper, targetEl);
   } else {
-    // 'below' (padrão): wrapper fica DEPOIS do targetEl
     targetEl.parentNode.insertBefore(wrapper, targetEl.nextSibling);
   }
 
-  // ... resto da lógica de fetch e render (igual ao que já existe) ...
-  var fetchPromises = [];
-
-  if (hasSupabase && storeId) {
-    fetchPromises.push(
-      supabaseFetch('stories?store_id=eq.' + encodeURIComponent(storeId) + '&status=eq.published&order=position.asc')
-        .then(function (res) { return res.json(); })
-        .then(function (data) { if (data && data.length > 0) currentStories = data; })
-        .catch(function () {})
-    );
-    fetchPromises.push(
-      supabaseFetch('products?store_id=eq.' + encodeURIComponent(storeId))
-        .then(function (res) { return res.json(); })
-        .then(function (data) { if (data && data.length > 0) readProductsData = data; })
-        .catch(function () {})
-    );
-    fetchPromises.push(
-      supabaseFetch('sizing_models?store_id=eq.' + encodeURIComponent(storeId))
-        .then(function (res) { return res.json(); })
-        .then(function (data) { if (data && data.length > 0) readSizingModelsData = data; })
-        .catch(function () {})
-    );
-    fetchPromises.push(
-      supabaseFetch('comments?store_id=eq.' + encodeURIComponent(storeId) + '&order=created_at.desc')
-        .then(function (res) { return res.json(); })
-        .then(function (data) { if (data && data.length > 0) readCommentsData = data; })
-        .catch(function () {})
-    );
-  }
-
-  Promise.all(fetchPromises).then(function () {
-    renderBubbles(container);
-    attachKeyboardListeners();
-  }).catch(function () {
-    renderBubbles(container);
-    attachKeyboardListeners();
-  });
+  // Render direto, sem esperar fetch
+  renderBubbles(container);
+  attachKeyboardListeners();
 
   if (options.api) {
     window[options.api] = {
