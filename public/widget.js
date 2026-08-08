@@ -2985,6 +2985,185 @@ function getWidgetDisplayMode(appearance) {
   return 'stories';
 }
 
+function renderCarouselWidget(container, stories, appearance) {
+  if (!stories || stories.length === 0) {
+    var emptyMsg = createEl('div');
+    emptyMsg.textContent = 'Nenhum vídeo disponível.';
+    emptyMsg.style.cssText = 'font-size:14px;color:#94a3b8;text-align:center;padding:20px;';
+    container.appendChild(emptyMsg);
+    return;
+  }
+
+  var cfg = getCarouselConfig(appearance);
+  var primaryColor = getPrimaryColor(appearance);
+  var fontFamily = getFontFamily(appearance);
+  var sizePx = cfg.size + 'px';
+  var gapPx = cfg.spacing + 'px';
+
+  // Wrapper com scroll horizontal
+  var wrapper = createEl('div', 'vl-carousel-wrapper');
+  wrapper.style.cssText = [
+    'width:100%;',
+    'overflow-x:auto;',
+    'overflow-y:hidden;',
+    'padding:4px 4px 10px 4px;',
+    'scroll-behavior:smooth;',
+    '-webkit-overflow-scrolling:touch;',
+    'scrollbar-width:thin;',
+    'margin-top:' + cfg.marginTop + 'px;',
+    'margin-bottom:' + cfg.marginBottom + 'px;'
+  ].join('');
+
+  var track = createEl('div', 'vl-carousel-track');
+  track.style.cssText = [
+    'display:flex;',
+    'gap:' + gapPx + ';',
+    'width:max-content;',
+    'min-width:100%;',
+    cfg.autoCenter ? 'justify-content:center;' : ''
+  ].join('');
+
+  stories.forEach(function (story, index) {
+    var item = createEl('div', 'vl-carousel-item');
+    item.style.cssText = [
+      'flex-shrink:0;',
+      'width:' + sizePx + ';',
+      'display:flex;',
+      'flex-direction:column;',
+      'gap:6px;',
+      'cursor:pointer;',
+      'transition:transform .2s ease;'
+    ].join('');
+
+    // Card com thumbnail
+    var card = createEl('div', 'vl-carousel-card');
+    card.style.cssText = [
+      'width:100%;',
+      'aspect-ratio:' + cfg.aspectRatio + ';',
+      'border-radius:' + cfg.borderRadius + 'px;',
+      'overflow:hidden;',
+      'position:relative;',
+      'background:#000;',
+      'border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';',
+      'box-shadow:0 2px 10px rgba(0,0,0,.1);'
+    ].join('');
+
+    // Thumbnail
+    var thumbUrl = story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
+    if (!thumbUrl && story.videos && story.videos.length > 0) {
+      thumbUrl = getVideoThumbnail(story.videos[0]);
+    }
+
+    if (thumbUrl) {
+      var img = createEl('img');
+      img.src = thumbUrl;
+      img.alt = story.title || '';
+      img.style.cssText = [
+        'width:100%;',
+        'height:100%;',
+        'object-fit:' + cfg.objectFit + ';',
+        'display:block;'
+      ].join('');
+      card.appendChild(img);
+    }
+
+    // Play button overlay
+    if (cfg.showPlayButton) {
+      var playBadge = createEl('div', 'vl-carousel-play');
+      playBadge.style.cssText = [
+        'position:absolute;',
+        'inset:0;',
+        'display:flex;',
+        'align-items:center;',
+        'justify-content:center;',
+        'pointer-events:none;'
+      ].join('');
+      var playIcon = createEl('div');
+      playIcon.style.cssText = [
+        'width:36px;',
+        'height:36px;',
+        'border-radius:50%;',
+        'background:rgba(0,0,0,.5);',
+        'display:flex;',
+        'align-items:center;',
+        'justify-content:center;'
+      ].join('');
+      playIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"></polygon></svg>';
+      playBadge.appendChild(playIcon);
+      card.appendChild(playBadge);
+    }
+
+    item.appendChild(card);
+
+    // Título
+    if (cfg.showTitle && story.title) {
+      var title = createEl('span', 'vl-carousel-title');
+      title.textContent = story.title;
+      title.style.cssText = [
+        'font-size:12px;',
+        'font-weight:700;',
+        'color:#334155;',
+        'white-space:nowrap;',
+        'overflow:hidden;',
+        'text-overflow:ellipsis;',
+        'text-align:center;',
+        'font-family:' + fontFamily + ';',
+        'max-width:' + sizePx + ';'
+      ].join('');
+      item.appendChild(title);
+    }
+
+    // Produto (nome + preço)
+    if (cfg.showProduct) {
+      var firstVideo = (story.videos && story.videos.length > 0) ? story.videos[0] : null;
+      var productId = firstVideo ? (firstVideo.product_id || firstVideo.productId) : null;
+      var productData = productId ? readProductsData.find(function (p) { return idsEqual(p.id, productId); }) : null;
+
+      if (productData && productData.name) {
+        var prodInfo = createEl('div', 'vl-carousel-product');
+        prodInfo.style.cssText = [
+          'text-align:center;',
+          'font-family:' + fontFamily + ';',
+          'max-width:' + sizePx + ';'
+        ].join('');
+
+        var pName = createEl('div');
+        pName.textContent = productData.name;
+        pName.style.cssText = 'font-size:11px;font-weight:600;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+        prodInfo.appendChild(pName);
+
+        if (productData.price) {
+          var pPrice = createEl('div');
+          pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
+          pPrice.style.cssText = 'font-size:13px;font-weight:800;color:' + primaryColor + ';';
+          prodInfo.appendChild(pPrice);
+        }
+
+        item.appendChild(prodInfo);
+      }
+    }
+
+    // Clique abre o modal
+    item.addEventListener('click', function (e) {
+      e.preventDefault();
+      openStoryModal(index);
+    });
+
+    // Hover
+    item.addEventListener('mouseenter', function () {
+      item.style.transform = 'translateY(-2px)';
+    });
+    item.addEventListener('mouseleave', function () {
+      item.style.transform = 'translateY(0)';
+    });
+
+    track.appendChild(item);
+  });
+
+  wrapper.appendChild(track);
+  container.appendChild(wrapper);
+}
+
 function initInlineWidget(options) {
   var targetSelector = options.target || options.anchor || '#vidlytics-stories';
   var placement = String(options.placement || 'beforeend').toLowerCase();
