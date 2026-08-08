@@ -3042,17 +3042,18 @@ function enableDragScroll(el) {
     el.scrollTo({ left: targetScroll, behavior: 'smooth' });
   }
 
-  function onStart(e) {
-    cancelMomentum();
-    isDown = true;
-    moved = false;
-    el.classList.add('is-dragging');
-    el.style.cursor = 'grabbing';
-    startX = getX(e);
-    lastX = startX;
-    scrollStart = el.scrollLeft;
-    currentX = startX;
-  }
+function onStart(e) {
+  cancelMomentum();
+  isDown = true;
+  moved = false;
+  el.classList.add('is-dragging');
+  el.style.cursor = 'grabbing';
+  startX = getX(e);
+  lastX = startX;
+  scrollStart = el.scrollLeft;
+  currentX = startX;
+  if (e.type === 'mousedown') e.preventDefault(); // 👈 adicionar isso
+}
 
   function onMove(e) {
     if (!isDown) return;
