@@ -2825,6 +2825,9 @@ function openStoryModal(storyIndex, videoIndex) {
             }
 
     overlay.className = 'vl-overlay vl-active';
+    overlay.onclick = function(e) {
+      if (e.target === overlay) closeOverlay();
+    };
     renderStoryModal();
     attachTouchListeners();
 
