@@ -2992,93 +2992,71 @@ function enableDragScroll(el) {
   var isDown = false;
   var startX, scrollStart;
   var moved = false;
-var DRAG_THRESHOLD = 2;   // resposta instantânea ao toque
-var SPEED = 2.0;          // fluidez máxima
-  var rafId = null;
+  var DRAG_THRESHOLD = 2;
+  var SPEED = 2.0;
   var currentX = 0;
-
-  // Cache dos cards pra não ficar fazendo querySelectorAll no mousemove
   var cards = el.querySelectorAll('.vl-carousel-item');
 
-  function disableCards() {
-    for (var i = 0; i < cards.length; i++) {
-      cards[i].style.pointerEvents = 'none';
-    }
+  function getX(e) {
+    return e.touches ? e.touches[0].pageX : e.pageX;
   }
 
-  function enableCards() {
-    for (var i = 0; i < cards.length; i++) {
-      cards[i].style.pointerEvents = '';
-    }
-  }
-
-  function onDown(e) {
+  function onStart(e) {
     isDown = true;
     moved = false;
+    el.classList.add('is-dragging');
     el.style.cursor = 'grabbing';
-    el.style.userSelect = 'none';
-    el.classList.add('is-dragging');      // ← classe CSS pra matar snap
-
-    var clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    startX = clientX;
-    currentX = clientX;
+    startX = getX(e);
     scrollStart = el.scrollLeft;
-
-    disableCards();
-  }
-
-  function stopDrag() {
-    if (!isDown) return;
-    isDown = false;
-    el.style.cursor = 'grab';
-    el.style.userSelect = '';
-    el.classList.remove('is-dragging');   // ← restaura snap quando solta
-
-    if (rafId) {
-      cancelAnimationFrame(rafId);
-      rafId = null;
-    }
-
-    enableCards();
+    currentX = startX;
   }
 
   function onMove(e) {
     if (!isDown) return;
-    e.preventDefault();
+    var x = getX(e);
+    var dx = x - startX;
 
-    currentX = e.touches ? e.touches[0].clientX : e.clientX;
-
-    if (Math.abs(currentX - startX) > DRAG_THRESHOLD) {
+    if (Math.abs(dx) > DRAG_THRESHOLD) {
       moved = true;
     }
 
-    if (moved && !rafId) {
-      rafId = requestAnimationFrame(updateScroll);
+    if (moved) {
+      e.preventDefault();
+      currentX = x;
+      var walk = (startX - x) * SPEED;
+      el.scrollLeft = scrollStart + walk;
     }
   }
 
-  function updateScroll() {
-    rafId = null;
-    if (!isDown || !moved) return;
+  function onEnd(e) {
+    if (!isDown) return;
+    isDown = false;
+    el.classList.remove('is-dragging');
+    el.style.cursor = 'grab';
+
+    if (!moved) return;
 
     var dx = currentX - startX;
-    el.scrollLeft = scrollStart - (dx * SPEED);
+    var firstItem = el.querySelector('.vl-carousel-item');
+    if (!firstItem) return;
 
-    if (isDown && moved) {
-      rafId = requestAnimationFrame(updateScroll);
-    }
+    var itemWidth = firstItem.offsetWidth;
+    var track = el.querySelector('.vl-carousel-track');
+    var gap = track ? parseFloat(getComputedStyle(track).gap) || 0 : 0;
+    var step = itemWidth + gap;
+
+    // Snap para o item mais próximo
+    var targetScroll = Math.round(el.scrollLeft / step) * step;
+    el.scrollTo({ left: targetScroll, behavior: 'smooth' });
   }
 
-  // Mouse
-  el.addEventListener('mousedown', onDown);
-  el.addEventListener('mouseleave', stopDrag);
-  el.addEventListener('mouseup', stopDrag);
+  el.addEventListener('mousedown', onStart);
   el.addEventListener('mousemove', onMove);
-
-  // Touch (mobile)
-  el.addEventListener('touchstart', onDown, { passive: false });
-  el.addEventListener('touchend', stopDrag);
+  el.addEventListener('mouseup', onEnd);
+  el.addEventListener('mouseleave', onEnd);
+  el.addEventListener('touchstart', onStart, { passive: false });
   el.addEventListener('touchmove', onMove, { passive: false });
+  el.addEventListener('touchend', onEnd);
 }
 
 function renderCarouselWidget(container, stories, appearance) {
