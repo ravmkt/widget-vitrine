@@ -32,6 +32,15 @@
   var fsPlayerOverlay = null;
   var fsPlayerContainer = null;
 
+function ensureModalStylesInLightDOM(appearance) {
+  if (document.getElementById('vl-modal-light-styles')) return;
+  
+  var style = document.createElement('style');
+  style.id = 'vl-modal-light-styles';
+  style.textContent = buildSharedCss(appearance);
+  document.head.appendChild(style);
+}
+
   function createFullscreenPlayer() {
     if (fsPlayerOverlay) return;
 
