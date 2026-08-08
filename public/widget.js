@@ -1386,26 +1386,26 @@
     }
   }
 
-  function trackMetric(data) {
-    if (!hasSupabase) return;
-    data = data || {};
-    supabaseFetch('metrics', {
-      method: 'POST',
-      headers: { 'Prefer': 'return=minimal' },
-      body: JSON.stringify({
-        store_id: storeId,
-        event_type: data.event_type || 'unknown',
-        story_id: data.story_id || null,
-        video_id: data.video_id || null,
-        product_id: data.product_id || null,
-        page_url: data.page_url || window.location.href,
-        user_fingerprint: getFingerprint(),
-        created_at: new Date().toISOString()
-      })
-    }).catch(function () {
-      // Falha silenciosa — métricas não devem quebrar o widget
-    });
-  }
+function trackMetric(data) {
+  if (!hasSupabase) return;
+  data = data || {};
+  supabaseFetch('metrics', {
+    method: 'POST',
+    headers: { 'Prefer': 'return=minimal' },
+    body: JSON.stringify({
+      store_id: storeId,
+      event_type: data.event_type || 'unknown',
+      story_id: data.story_id || null,
+      video_id: data.video_id || null,
+      product_id: data.product_id || null,
+      page_url: data.page_url || window.location.href,
+      visitor_id: getFingerprint(),
+      device_type: getDevice(),
+      browser: navigator.userAgent,
+      created_at: new Date().toISOString()
+    })
+  }).catch(function () {});
+}
 
   function buildVideoPlayer(video, storyId, onEnded) {
     var url = getVideoUrl(video);
