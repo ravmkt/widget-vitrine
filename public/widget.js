@@ -3430,16 +3430,19 @@ function readDisplayLocationsAndPageRules() {
   if (!storeId || !hasSupabase) return Promise.resolve();
 
   return readDisplayLocations().then(function (locations) {
+    console.log('🟡 [Vidlytics] Display locations recebidas:', locations);
+    
     return readPageRules().then(function (rules) {
-      // Filtra locations ativas
+      console.log('🟡 [Vidlytics] Page rules recebidas:', rules);
+
       var activeLocations = locations.filter(function (loc) {
         return loc.active !== false && loc.active !== 'false' && loc.active !== 0 && loc.active !== '0';
       });
 
-      activeLocations.forEach(function (location) {
-        var storyId = location.story_id;
-        if (!storyId) return;
+      console.log('🟡 [Vidlytics] Locations ativas:', activeLocations.length);
 
+      activeLocations.forEach(function (location) {
+        console.log('🟡 [Vidlytics] Processando location:', location);
         // Verifica se existe story correspondente
         var story = currentStories.find(function (s) { return idsEqual(s.id, storyId); });
         if (!story) return;
