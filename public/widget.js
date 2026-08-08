@@ -3121,8 +3121,8 @@ var cfg = getCarouselConfig(appearance);
   var wrapper = createEl('div', 'vl-carousel-wrapper');
 wrapper.style.cssText = [
   'width:100%;',
-  'max-width:' + wrapperMaxWidth + 'px;',
-  'margin:0 auto;',
+'max-width:100%;',
+'margin:0 auto;',
   'overflow-x:auto;',
 'overflow-y:hidden;',
 'padding:4px 4px 10px 4px;',
