@@ -3447,8 +3447,8 @@ function initWidget() {
 }
 
 // 🆕 NOVA FUNÇÃO
-function readDisplayLocationsAndPageRules() {
-  if (!storeId || !hasSupabase) return Promise.resolve();
+var readDisplayLocationsAndPageRules = function () {
+    if (!storeId || !hasSupabase) return Promise.resolve();
 
   return readDisplayLocations().then(function (locations) {
     return readPageRules().then(function (rules) {
