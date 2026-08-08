@@ -3072,13 +3072,13 @@ wrapper.style.cssText = [
 ].join('');
 
   var track = createEl('div', 'vl-carousel-track');
-  track.style.cssText = [
-    'display:flex;',
-    'gap:' + gapPx + ';',
-    'width:max-content;',       // 🆕 track sempre excede o wrapper se houver scroll
-    'min-width:100%;',
-    cfg.autoCenter ? 'justify-content:center;' : ''
-  ].join('');
+track.style.cssText = [
+  'display:flex;',
+  'gap:' + gapPx + ';',
+  'width:max-content;',
+  'min-width:100%;'
+].join('');
+
   allVideos.forEach(function (item) {
     var story = item.story;
     var video = item.video;
