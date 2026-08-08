@@ -3009,16 +3009,22 @@ function renderCarouselWidget(container, stories, appearance) {
     return;
   }
 
-  var cfg = getCarouselConfig(appearance);
+var cfg = getCarouselConfig(appearance);
   var primaryColor = getPrimaryColor(appearance);
   var fontFamily = getFontFamily(appearance);
   var sizePx = cfg.size + 'px';
   var gapPx = cfg.spacing + 'px';
 
+  // 🆕 CALCULA LARGURA MÁXIMA BASEADA NOS ITENS VISÍVEIS
+  var visibleItems = cfg.visibleItems || 4;
+  var totalItemWidth = cfg.size + cfg.spacing;      // 1 item + gap
+  var wrapperMaxWidth = (visibleItems * totalItemWidth) - cfg.spacing; // subtrai o gap do último
+
   // Wrapper com scroll horizontal
   var wrapper = createEl('div', 'vl-carousel-wrapper');
   wrapper.style.cssText = [
     'width:100%;',
+    'max-width:' + wrapperMaxWidth + 'px;',  // 🆕 limita a largura visível
     'overflow-x:auto;',
     'overflow-y:hidden;',
     'padding:4px 4px 10px 4px;',
@@ -3033,11 +3039,10 @@ function renderCarouselWidget(container, stories, appearance) {
   track.style.cssText = [
     'display:flex;',
     'gap:' + gapPx + ';',
-    'width:max-content;',
+    'width:max-content;',       // 🆕 track sempre excede o wrapper se houver scroll
     'min-width:100%;',
     cfg.autoCenter ? 'justify-content:center;' : ''
   ].join('');
-
   allVideos.forEach(function (item) {
     var story = item.story;
     var video = item.video;
