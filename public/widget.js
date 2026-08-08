@@ -3392,6 +3392,7 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
     return path.join(' > ');
   }
 
+
   /* ================================================================
      INICIALIZAÇÃO DO WIDGET (COM story_id DA URL)
      ================================================================ */
