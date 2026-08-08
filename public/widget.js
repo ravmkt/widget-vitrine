@@ -3448,7 +3448,7 @@ function initWidget() {
 
 // 🆕 NOVA FUNÇÃO
 var readDisplayLocationsAndPageRules = function () {
-    if (!storeId || !hasSupabase) return Promise.resolve();
+  if (!storeId || !hasSupabase) return Promise.resolve();
 
   return readDisplayLocations().then(function (locations) {
     return readPageRules().then(function (rules) {
@@ -3496,7 +3496,7 @@ var readDisplayLocationsAndPageRules = function () {
       });
     });
   });
-}
+};
 
   initWidget();
 
