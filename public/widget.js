@@ -3430,44 +3430,42 @@ function readDisplayLocationsAndPageRules() {
   if (!storeId || !hasSupabase) return Promise.resolve();
 
   return readDisplayLocations().then(function (locations) {
-    console.log('🟡 [Vidlytics] Display locations recebidas:', locations);
-    
     return readPageRules().then(function (rules) {
-      console.log('🟡 [Vidlytics] Page rules recebidas:', rules);
-
       var activeLocations = locations.filter(function (loc) {
         return loc.active !== false && loc.active !== 'false' && loc.active !== 0 && loc.active !== '0';
       });
 
-      console.log('🟡 [Vidlytics] Locations ativas:', activeLocations.length);
-
       activeLocations.forEach(function (location) {
-        console.log('🟡 [Vidlytics] Processando location:', location);
-        // Verifica se existe story correspondente
-        var story = currentStories.find(function (s) { return idsEqual(s.id, storyId); });
-        if (!story) return;
+        var locStoryId = location.story_id;
+        if (!locStoryId) return;
 
-        // Verifica regras de página (se existirem)
-        var storyRules = rules.filter(function (r) {
-          return idsEqual(r.story_id, storyId);
-        });
-
-        // Se tem regras, verifica se pelo menos uma dá match
-        if (storyRules.length > 0) {
-          var hasMatch = storyRules.some(function (rule) { return matchesRule(rule); });
-          if (!hasMatch) return;
+        var story = currentStories.find(function (s) { return idsEqual(s.id, locStoryId); });
+        if (!story) {
+          console.warn('[Vidlytics] Story nao encontrada para location:', locStoryId);
+          return;
         }
 
-        // Injeta o carrossel inline no seletor
+        var storyRules = rules.filter(function (r) {
+          return idsEqual(r.story_id, locStoryId);
+        });
+
+        if (storyRules.length > 0) {
+          var hasMatch = storyRules.some(function (rule) { return matchesRule(rule); });
+          if (!hasMatch) {
+            console.log('[Vidlytics] Nenhuma regra bateu para location, pulando.');
+            return;
+          }
+        }
+
         var selector = location.selector;
         var position = location.position || 'beforeend';
 
         if (selector) {
-          var storiesForThisLocation = [story];
+          console.log('[Vidlytics] Injetando carrossel no seletor:', selector, 'posicao:', position);
           initInlineWidget({
             target: selector,
             placement: position === 'beforebegin' ? 'above' : 'below',
-            stories: storiesForThisLocation,
+            stories: [story],
             products: readProductsData,
             sizing_models: readSizingModelsData,
             comments: readCommentsData,
