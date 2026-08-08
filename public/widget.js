@@ -707,8 +707,6 @@
   }
 
   function readStoryProducts() {
-
-  function readStoryProducts() {
     return (!storeId || !hasSupabase)
       ? Promise.resolve(getStorageItem('vidlytics_story_products', []))
       : fetchJson('story_products?select=*&store_id=eq.' + encodeURIComponent(storeId));
