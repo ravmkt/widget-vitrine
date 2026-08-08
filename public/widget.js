@@ -2839,6 +2839,8 @@ function openStoryModal(storyIndex, videoIndex) {
   }
     pausePreviews();
 
+    ensureModalStylesInLightDOM(currentAppearance);
+
     if (!overlay) {
       overlay = createEl('div', 'vl-overlay');
       overlay.id = 'vl-overlay';
