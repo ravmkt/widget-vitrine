@@ -28,6 +28,84 @@
 
   var enableFloating = widgetsCfg.floatingVideo !== undefined ? widgetsCfg.floatingVideo : config.floatingVideo !== false;
 
+  // 🆕 PLAYER FULLSCREEN (independente do modal de stories)
+  var fsPlayerOverlay = null;
+  var fsPlayerContainer = null;
+
+  function createFullscreenPlayer() {
+    if (fsPlayerOverlay) return;
+    fsPlayerOverlay = document.createElement('div');
+    fsPlayerOverlay.className = 'vl-fullscreen-player';
+    fsPlayerOverlay.innerHTML =
+      '<button class="vl-fs-close">&times;</button>' +
+      '<div class="vl-fs-container"></div>';
+    document.body.appendChild(fsPlayerOverlay);
+
+    fsPlayerContainer = fsPlayerOverlay.querySelector('.vl-fs-container');
+
+    // Fechar pelo botão X
+    fsPlayerOverlay.querySelector('.vl-fs-close').addEventListener('click', function(e) {
+      e.stopPropagation();
+      closeFullscreenPlayer();
+    });
+
+    // Fechar clicando fora do vídeo
+    fsPlayerOverlay.addEventListener('click', function(e) {
+      if (e.target === fsPlayerOverlay) closeFullscreenPlayer();
+    });
+
+    // Fechar com tecla ESC
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && fsPlayerOverlay && fsPlayerOverlay.classList.contains('vl-active')) {
+        closeFullscreenPlayer();
+      }
+    });
+  }
+
+  function closeFullscreenPlayer() {
+    if (!fsPlayerOverlay || !fsPlayerContainer) return;
+    fsPlayerOverlay.classList.remove('vl-active');
+    var vid = fsPlayerContainer.querySelector('video');
+    if (vid) { vid.pause(); vid.removeAttribute('src'); vid.load(); }
+    fsPlayerContainer.innerHTML = '';
+  }
+
+  function openFullscreenPlayer(videoUrl, sourceType) {
+    createFullscreenPlayer();
+    if (!fsPlayerContainer) return;
+
+    fsPlayerContainer.innerHTML = '';
+    sourceType = String(sourceType || '').trim().toLowerCase();
+
+    // YouTube
+    if (sourceType === 'youtube' || sourceType === 'yt') {
+      var ytId = extractYouTubeId(videoUrl);
+      if (ytId) {
+        fsPlayerContainer.innerHTML = '<iframe src="https://www.youtube.com/embed/' + ytId + '?autoplay=1&rel=0" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
+      }
+    }
+    // Instagram Reel
+    else if (sourceType === 'instagram' || sourceType === 'ig') {
+      var igId = extractInstagramId(videoUrl);
+      fsPlayerContainer.innerHTML = '<iframe src="https://www.instagram.com/reel/' + igId + '/embed/" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>';
+    }
+    // TikTok
+    else if (sourceType === 'tiktok' || sourceType === 'tt') {
+      var tkId = extractTikTokId(videoUrl);
+      fsPlayerContainer.innerHTML = '<iframe src="https://www.tiktok.com/embed/v2/' + tkId + '" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>';
+    }
+    // Upload direto (MP4, WebM, etc.)
+    else if (sourceType === 'upload' || isDirectVideoUrl(videoUrl)) {
+      fsPlayerContainer.innerHTML = '<video src="' + videoUrl + '" controls autoplay playsinline></video>';
+    }
+    // Fallback genérico: tenta como vídeo direto
+    else {
+      fsPlayerContainer.innerHTML = '<video src="' + videoUrl + '" controls autoplay playsinline></video>';
+    }
+
+    fsPlayerOverlay.classList.add('vl-active');
+  }
+
   var currentAppearance = {};
   var overlay = null;
   var modalContent = null;
