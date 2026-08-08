@@ -3113,25 +3113,27 @@ var cfg = getCarouselConfig(appearance);
 
   // 🆕 CALCULA LARGURA MÁXIMA BASEADA NOS ITENS VISÍVEIS
   var visibleItems = cfg.visibleItems || 4;
-  var totalItemWidth = cfg.size + cfg.spacing;      // 1 item + gap
-// max-width fixo removido — agora usa 100%
+  var totalItemWidth = cfg.size + cfg.spacing;
+  var wrapperMaxWidth = Math.min(
+    (visibleItems * totalItemWidth) - cfg.spacing,
+    window.innerWidth - 32
+  );
 
   // Wrapper com scroll horizontal
   var wrapper = createEl('div', 'vl-carousel-wrapper');
-wrapper.style.cssText = [
-  'width:100%;',
-'max-width:100%;',
-'margin:0 auto;',
-  'overflow-x:auto;',
-'overflow-y:hidden;',
-'padding:4px 4px 10px 4px;',
-'-webkit-overflow-scrolling:touch;',
-  'scrollbar-width:none;',                   // ✅ Firefox
-  '-ms-overflow-style:none;',                // ✅ IE/Edge
-  'cursor:grab;',                            // ✅ cursor de "arrastável"
-  'margin-top:' + cfg.marginTop + 'px;',
-  'margin-bottom:' + cfg.marginBottom + 'px;'
-].join('');
+  wrapper.style.cssText = [
+    'max-width:' + wrapperMaxWidth + 'px;',
+    'margin:0 auto;',
+    'overflow-x:auto;',
+    'overflow-y:hidden;',
+    'padding:4px 4px 10px 4px;',
+    '-webkit-overflow-scrolling:touch;',
+    'scrollbar-width:none;',
+    '-ms-overflow-style:none;',
+    'cursor:grab;',
+    'margin-top:' + cfg.marginTop + 'px;',
+    'margin-bottom:' + cfg.marginBottom + 'px;'
+  ].join('');
 
   var track = createEl('div', 'vl-carousel-track');
 track.style.cssText = [
