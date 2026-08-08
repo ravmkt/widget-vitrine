@@ -3439,50 +3439,44 @@ function readDisplayLocationsAndPageRules() {
         return loc.active !== false && loc.active !== 'false' && loc.active !== 0 && loc.active !== '0';
       });
 
-      activeLocations.forEach(function (location) {
-        console.log('🟡 [Vidlytics] Procurando story_id:', locStoryId);
-console.log('🟡 [Vidlytics] IDs disponíveis:', currentStories.map(function(s) { return s.id; }));
+activeLocations.forEach(function (location) {
+  var locStoryId = location.story_id;
+  if (!locStoryId) return;
 
-        var locStoryId = location.story_id;
-        if (!locStoryId) return;
-console.log('🟡 [Vidlytics] currentStories:', currentStories.length, currentStories.map(function(s) { return { id: s.id, title: s.title }; }));
+  var story = currentStories.find(function (s) { return idsEqual(s.id, locStoryId); });
+  if (!story) {
+    console.warn('[Vidlytics] Story nao encontrada para location:', locStoryId);
+    return;
+  }
 
-        var story = currentStories.find(function (s) { return idsEqual(s.id, locStoryId); });
-        if (!story) {
-          console.warn('[Vidlytics] Story nao encontrada para location:', locStoryId);
-          return;
-        }
-
-        var storyRules = rules.filter(function (r) {
-          return idsEqual(r.story_id, locStoryId);
-        });
-
-        if (storyRules.length > 0) {
-          var hasMatch = storyRules.some(function (rule) { return matchesRule(rule); });
-          if (!hasMatch) {
-            console.log('[Vidlytics] Nenhuma regra bateu para location, pulando.');
-            return;
-          }
-        }
-
-        var selector = location.selector;
-        var position = location.position || 'beforeend';
-
-        if (selector) {
-          console.log('[Vidlytics] Injetando carrossel no seletor:', selector, 'posicao:', position);
-          initInlineWidget({
-            target: selector,
-            placement: position === 'beforebegin' ? 'above' : 'below',
-            stories: [story],
-            products: readProductsData,
-            sizing_models: readSizingModelsData,
-            comments: readCommentsData,
-            appearance: currentAppearance
-          });
-        }
-      });
-    });
+  var storyRules = rules.filter(function (r) {
+    return idsEqual(r.story_id, locStoryId);
   });
+
+  if (storyRules.length > 0) {
+    var hasMatch = storyRules.some(function (rule) { return matchesRule(rule); });
+    if (!hasMatch) {
+      console.log('[Vidlytics] Nenhuma regra bateu para location, pulando.');
+      return;
+    }
+  }
+
+  var selector = location.selector;
+  var position = location.position || 'beforeend';
+
+  if (selector) {
+    console.log('[Vidlytics] Injetando carrossel no seletor:', selector, 'posicao:', position);
+    initInlineWidget({
+      target: selector,
+      placement: position,  // 🆕 Passa a posição original: beforebegin, afterbegin, beforeend, afterend
+      stories: [story],
+      products: readProductsData,
+      sizing_models: readSizingModelsData,
+      comments: readCommentsData,
+      appearance: currentAppearance
+    });
+  }
+});
 }
   initWidget();
 
