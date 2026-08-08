@@ -3114,11 +3114,11 @@ var cfg = getCarouselConfig(appearance);
 
   // 🆕 CALCULA LARGURA MÁXIMA BASEADA NOS ITENS VISÍVEIS
   var visibleItems = cfg.visibleItems || 4;
-  var totalItemWidth = cfg.size + cfg.spacing;
-  var wrapperMaxWidth = Math.min(
-    (visibleItems * totalItemWidth) - cfg.spacing,
-    window.innerWidth - 32
-  );
+var wrapperPadding = 8; // 4px left + 4px right
+var wrapperMaxWidth = Math.min(
+  (visibleItems * cfg.size) + ((visibleItems - 1) * cfg.spacing) + wrapperPadding,
+  window.innerWidth - 32
+);
 
   // Wrapper com scroll horizontal
   var wrapper = createEl('div', 'vl-carousel-wrapper');
