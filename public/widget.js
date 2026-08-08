@@ -2702,13 +2702,17 @@ function trackMetric(data) {
      ABERTURA DO MODAL
      ================================================================ */
 
-  function openStoryModal(storyIndex) {
-    if (!currentStories || currentStories.length === 0) return;
-    if (storyIndex === undefined || storyIndex === null) storyIndex = 0;
-
-    currentStoryIndex = Math.max(0, Math.min(storyIndex, currentStories.length - 1));
+function openStoryModal(storyIndex, videoIndex) {
+  if (!currentStories || currentStories.length === 0) return;
+  if (storyIndex === undefined || storyIndex === null) storyIndex = 0;
+  currentStoryIndex = Math.max(0, Math.min(storyIndex, currentStories.length - 1));
+  // Usa o videoIndex se fornecido, senão começa do 0
+  if (videoIndex !== undefined && videoIndex !== null) {
+    var maxVid = (currentStories[currentStoryIndex].videos || []).length - 1;
+    currentVideoIndex = Math.max(0, Math.min(videoIndex, maxVid));
+  } else {
     currentVideoIndex = 0;
-
+  }
     pausePreviews();
 
     if (!overlay) {
