@@ -3229,6 +3229,8 @@ wrapper.style.cssText = [
   wrapper.appendChild(track);
   container.appendChild(wrapper);
 
+  
+
   console.log('[Vidlytics] Carrossel renderizado com ' + allVideos.length + ' video(s).');
 }
 
