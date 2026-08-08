@@ -3124,10 +3124,9 @@ wrapper.style.cssText = [
   'max-width:' + wrapperMaxWidth + 'px;',
   'margin:0 auto;',
   'overflow-x:auto;',
-  'overflow-y:hidden;',
-  'padding:4px 4px 10px 4px;',
-  'scroll-behavior:smooth;',
-  '-webkit-overflow-scrolling:touch;',
+'overflow-y:hidden;',
+'padding:4px 4px 10px 4px;',
+'-webkit-overflow-scrolling:touch;',
   'scrollbar-width:none;',                   // ✅ Firefox
   '-ms-overflow-style:none;',                // ✅ IE/Edge
   'cursor:grab;',                            // ✅ cursor de "arrastável"
