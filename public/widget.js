@@ -2834,6 +2834,15 @@ function openStoryModal(storyIndex, videoIndex) {
       '.vl-form-btn-send { flex: 2; height: 42px; border: none; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }',
 '.vl-carousel-wrapper img { -webkit-user-drag: none; user-drag: none; pointer-events: none; }',
  '.vl-carousel-item { cursor: pointer; }', 
+/* 🆕 PLAYER FULLSCREEN (clique no card do carrossel) */
+'.vl-fullscreen-player { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,.96); z-index: 9999999; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .3s ease; }',
+'.vl-fullscreen-player.vl-active { opacity: 1; pointer-events: all; }',
+'.vl-fs-close { position: absolute; top: 18px; right: 28px; width: 42px; height: 42px; border: none; background: rgba(255,255,255,.12); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 28px; z-index: 20; line-height: 1; transition: background .2s; }',
+'.vl-fs-close:hover { background: rgba(255,255,255,.22); }',
+'.vl-fs-container { width: 92vw; max-width: 1200px; aspect-ratio: 16/9; position: relative; }',
+'.vl-fs-container iframe, .vl-fs-container video { width: 100%; height: 100%; border: none; border-radius: 8px; }',
+'.vl-fs-container video { object-fit: contain; background: #000; }',
+
       '@media (max-width: 480px) { .vl-modal { max-width: 100%; border-radius: 0; } .vl-social { right: 4px; bottom: 90px; gap: 12px; } .vl-social-btn { width: 40px; height: 40px; } }'
     ].join('\n');
   }
