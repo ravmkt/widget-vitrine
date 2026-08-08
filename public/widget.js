@@ -2995,18 +2995,61 @@ function enableDragScroll(el) {
   var DRAG_THRESHOLD = 2;
   var SPEED = 2.0;
   var currentX = 0;
+  var velX = 0;
+  var lastX = 0;
+  var momentumId = null;
   var cards = el.querySelectorAll('.vl-carousel-item');
 
   function getX(e) {
     return e.touches ? e.touches[0].pageX : e.pageX;
   }
 
+  function cancelMomentum() {
+    if (momentumId) {
+      cancelAnimationFrame(momentumId);
+      momentumId = null;
+    }
+    velX = 0;
+  }
+
+  function startMomentum() {
+    cancelMomentum();
+    if (Math.abs(velX) < 2) {
+      // Sem inércia suficiente → snap direto
+      snapToNearest();
+      return;
+    }
+    momentumId = requestAnimationFrame(function animate() {
+      velX *= 0.92;
+      el.scrollLeft -= velX;
+      if (Math.abs(velX) > 0.5) {
+        momentumId = requestAnimationFrame(animate);
+      } else {
+        // Inércia acabou → snap no item mais próximo
+        snapToNearest();
+      }
+    });
+  }
+
+  function snapToNearest() {
+    var firstItem = el.querySelector('.vl-carousel-item');
+    if (!firstItem) return;
+    var itemWidth = firstItem.offsetWidth;
+    var track = el.querySelector('.vl-carousel-track');
+    var gap = track ? parseFloat(getComputedStyle(track).gap) || 0 : 0;
+    var step = itemWidth + gap;
+    var targetScroll = Math.round(el.scrollLeft / step) * step;
+    el.scrollTo({ left: targetScroll, behavior: 'smooth' });
+  }
+
   function onStart(e) {
+    cancelMomentum();
     isDown = true;
     moved = false;
     el.classList.add('is-dragging');
     el.style.cursor = 'grabbing';
     startX = getX(e);
+    lastX = startX;
     scrollStart = el.scrollLeft;
     currentX = startX;
   }
@@ -3022,32 +3065,22 @@ function enableDragScroll(el) {
 
     if (moved) {
       e.preventDefault();
+      velX = x - lastX;
+      lastX = x;
       currentX = x;
       var walk = (startX - x) * SPEED;
       el.scrollLeft = scrollStart + walk;
     }
   }
 
-  function onEnd(e) {
+  function onEnd() {
     if (!isDown) return;
     isDown = false;
     el.classList.remove('is-dragging');
     el.style.cursor = 'grab';
 
     if (!moved) return;
-
-    var dx = currentX - startX;
-    var firstItem = el.querySelector('.vl-carousel-item');
-    if (!firstItem) return;
-
-    var itemWidth = firstItem.offsetWidth;
-    var track = el.querySelector('.vl-carousel-track');
-    var gap = track ? parseFloat(getComputedStyle(track).gap) || 0 : 0;
-    var step = itemWidth + gap;
-
-    // Snap para o item mais próximo
-    var targetScroll = Math.round(el.scrollLeft / step) * step;
-    el.scrollTo({ left: targetScroll, behavior: 'smooth' });
+    startMomentum();
   }
 
   el.addEventListener('mousedown', onStart);
