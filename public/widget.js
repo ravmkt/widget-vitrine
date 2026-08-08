@@ -2985,6 +2985,7 @@ function getWidgetDisplayMode(appearance) {
   return 'stories';
 }
 
+
 function renderCarouselWidget(container, stories, appearance) {
   // Achata todos os vídeos de todas as stories em um array plano,
   // guardando referência ao story e índice do vídeo
