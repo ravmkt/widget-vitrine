@@ -1193,14 +1193,6 @@
       + '.vl-comments-panel-full ::-webkit-scrollbar{width:4px!important;}'
       + '.vl-comments-panel-full ::-webkit-scrollbar-track{background:transparent!important;}'
       + '.vl-comments-panel-full ::-webkit-scrollbar-thumb{background:#cbd5e1!important;border-radius:4px!important;}'
-.vl-carousel-container {
-  /* garante que o snap NÃO tenha !important */
-  scroll-snap-type: x mandatory;
-}
-
-.vl-carousel-container.is-dragging {
-  scroll-snap-type: none !important;  /* agora sim, mata o snap de vez */
-}
       + 'position:absolute!important;'
       + 'top:8px!important;'
       + 'right:8px!important;'
