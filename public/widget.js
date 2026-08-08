@@ -2994,25 +2994,6 @@ function initInlineWidget(options) {
   console.log('[Vidlytics] Bubbles:', container.querySelectorAll('.vl-bubble-wrapper').length);
 }
 
-  renderBubbles(container);
-  attachKeyboardListeners();
-
-  if (options.api) {
-    window[options.api] = {
-      open: openStoryModal,
-      close: closeOverlay,
-      next: nextStoryOrVideo,
-      prev: prevStoryOrVideo,
-      refresh: function () { renderBubbles(container); },
-      setStories: function (stories) { currentStories = stories; renderBubbles(container); }
-    };
-  }
-
-  trackMetric({ event_type: 'widget_init', page_url: window.location.href });
-
-  console.log('🟢 [Vidlytics] Bubbles:', container.querySelectorAll('.vl-bubble-wrapper').length);
-}
-
   /* ================================================================
      INICIALIZAÇÃO PRINCIPAL
      ================================================================ */
