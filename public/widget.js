@@ -3438,7 +3438,7 @@ function initWidget() {
     }).then(function (stories) {
       currentStories = stories || [];
 
-      // 🔧 CORREÇÃO: Buscar story_videos e videos, depois juntar tudo
+      // 🔧 Buscar story_videos e videos, depois juntar tudo
       console.log('[Vidlytics] Buscando videos vinculados aos stories...');
       return Promise.all([
         readStoryVideos(),
