@@ -2832,7 +2832,8 @@
       '.vl-form-btn-send { flex: 2; height: 42px; border: none; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }',
 '.vl-carousel-wrapper { scroll-snap-type: x mandatory; }',
 '.vl-carousel-wrapper.is-dragging { scroll-snap-type: none !important; }',
-      '@media (max-width: 480px) { .vl-modal { max-width: 100%; border-radius: 0; } .vl-social { right: 4px; bottom: 90px; gap: 12px; } .vl-social-btn { width: 40px; height: 40px; } }'
+'.vl-carousel-item { scroll-snap-align: start; }',
+'@media (max-width: 480px) { .vl-modal { max-width: 100%; border-radius: 0; } .vl-social { right: 4px; bottom: 90px; gap: 12px; } .vl-social-btn { width: 40px; height: 40px; } }'
     ].join('\n');
   }
 
