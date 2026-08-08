@@ -2976,6 +2976,10 @@ function initInlineWidget(options) {
 
   // Render direto, sem esperar fetch
   renderBubbles(container);
+  console.log('🟢 [Vidlytics] Carrossel renderizado. Container:', container);
+console.log('🟢 [Vidlytics] Shadow DOM:', globalShadowRoot);
+console.log('🟢 [Vidlytics] Bubbles:', container.querySelectorAll('.vl-bubble-wrapper').length);
+
   attachKeyboardListeners();
 
   if (options.api) {
