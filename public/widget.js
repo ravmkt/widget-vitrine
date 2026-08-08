@@ -2986,7 +2986,22 @@ function getWidgetDisplayMode(appearance) {
 }
 
 function renderCarouselWidget(container, stories, appearance) {
-  if (!stories || stories.length === 0) {
+  // Achata todos os vídeos de todas as stories em um array plano,
+  // guardando referência ao story e índice do vídeo
+  var allVideos = [];
+  (stories || []).forEach(function (story, storyIdx) {
+    var videos = story.videos || [];
+    videos.forEach(function (video, videoIdx) {
+      allVideos.push({
+        story: story,
+        storyIndex: storyIdx,
+        video: video,
+        videoIndex: videoIdx
+      });
+    });
+  });
+
+  if (allVideos.length === 0) {
     var emptyMsg = createEl('div');
     emptyMsg.textContent = 'Nenhum vídeo disponível.';
     emptyMsg.style.cssText = 'font-size:14px;color:#94a3b8;text-align:center;padding:20px;';
@@ -3023,9 +3038,14 @@ function renderCarouselWidget(container, stories, appearance) {
     cfg.autoCenter ? 'justify-content:center;' : ''
   ].join('');
 
-  stories.forEach(function (story, index) {
-    var item = createEl('div', 'vl-carousel-item');
-    item.style.cssText = [
+  allVideos.forEach(function (item) {
+    var story = item.story;
+    var video = item.video;
+    var storyIdx = item.storyIndex;
+    var videoIdx = item.videoIndex;
+
+    var cardItem = createEl('div', 'vl-carousel-item');
+    cardItem.style.cssText = [
       'flex-shrink:0;',
       'width:' + sizePx + ';',
       'display:flex;',
@@ -3035,7 +3055,7 @@ function renderCarouselWidget(container, stories, appearance) {
       'transition:transform .2s ease;'
     ].join('');
 
-    // Card com thumbnail
+    // Card com thumbnail do VÍDEO
     var card = createEl('div', 'vl-carousel-card');
     card.style.cssText = [
       'width:100%;',
@@ -3048,22 +3068,21 @@ function renderCarouselWidget(container, stories, appearance) {
       'box-shadow:0 2px 10px rgba(0,0,0,.1);'
     ].join('');
 
-    // Thumbnail
-    var thumbUrl = story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
-    if (!thumbUrl && story.videos && story.videos.length > 0) {
-      thumbUrl = getVideoThumbnail(story.videos[0]);
-    }
+    // Thumbnail do vídeo (fallback: story cover)
+    var thumbUrl = getVideoThumbnail(video) ||
+                   story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
 
     if (thumbUrl) {
       var img = createEl('img');
       img.src = thumbUrl;
-      img.alt = story.title || '';
+      img.alt = video.title || story.title || '';
       img.style.cssText = [
         'width:100%;',
         'height:100%;',
         'object-fit:' + cfg.objectFit + ';',
         'display:block;'
       ].join('');
+      img.loading = 'lazy';
       card.appendChild(img);
     }
 
@@ -3093,9 +3112,9 @@ function renderCarouselWidget(container, stories, appearance) {
       card.appendChild(playBadge);
     }
 
-    item.appendChild(card);
+    cardItem.appendChild(card);
 
-    // Título
+    // Título do story
     if (cfg.showTitle && story.title) {
       var title = createEl('span', 'vl-carousel-title');
       title.textContent = story.title;
@@ -3110,13 +3129,12 @@ function renderCarouselWidget(container, stories, appearance) {
         'font-family:' + fontFamily + ';',
         'max-width:' + sizePx + ';'
       ].join('');
-      item.appendChild(title);
+      cardItem.appendChild(title);
     }
 
-    // Produto (nome + preço)
+    // Produto vinculado ao VÍDEO
     if (cfg.showProduct) {
-      var firstVideo = (story.videos && story.videos.length > 0) ? story.videos[0] : null;
-      var productId = firstVideo ? (firstVideo.product_id || firstVideo.productId) : null;
+      var productId = video.product_id || video.productId || null;
       var productData = productId ? readProductsData.find(function (p) { return idsEqual(p.id, productId); }) : null;
 
       if (productData && productData.name) {
@@ -3139,9 +3157,39 @@ function renderCarouselWidget(container, stories, appearance) {
           prodInfo.appendChild(pPrice);
         }
 
-        item.appendChild(prodInfo);
+        cardItem.appendChild(prodInfo);
       }
     }
+
+    // Clique: abre o modal NA story e NO vídeo corretos
+    cardItem.addEventListener('click', function (e) {
+      e.preventDefault();
+      currentStoryIndex = storyIdx;
+      currentVideoIndex = videoIdx;
+      openStoryModal(storyIdx);
+      // Força o vídeo correto após abrir
+      setTimeout(function () {
+        currentVideoIndex = videoIdx;
+        renderStoryModal();
+      }, 50);
+    });
+
+    // Hover
+    cardItem.addEventListener('mouseenter', function () {
+      cardItem.style.transform = 'translateY(-2px)';
+    });
+    cardItem.addEventListener('mouseleave', function () {
+      cardItem.style.transform = 'translateY(0)';
+    });
+
+    track.appendChild(cardItem);
+  });
+
+  wrapper.appendChild(track);
+  container.appendChild(wrapper);
+
+  console.log('[Vidlytics] Carrossel renderizado com ' + allVideos.length + ' video(s).');
+}
 
     // Clique abre o modal
     item.addEventListener('click', function (e) {
