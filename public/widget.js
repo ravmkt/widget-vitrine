@@ -2924,15 +2924,15 @@
 
 function initInlineWidget(options) {
   var targetSelector = options.target || options.anchor || '#vidlytics-stories';
-  var placement = String(options.placement || 'beforeend').toLowerCase(); // 🆕 padrão: dentro do elemento
+  var placement = String(options.placement || 'beforeend').toLowerCase();
   var targetEl = document.querySelector(targetSelector);
 
-  console.log('🔵 [Vidlytics] Seletor:', targetSelector);
-  console.log('🔵 [Vidlytics] Posição:', placement);
-  console.log('🔵 [Vidlytics] Elemento encontrado:', targetEl);
+  console.log('[Vidlytics] Seletor:', targetSelector);
+  console.log('[Vidlytics] Posicao:', placement);
+  console.log('[Vidlytics] Elemento encontrado:', targetEl);
 
   if (!targetEl) {
-    console.warn('[Vidlytics] Container alvo "' + targetSelector + '" não encontrado.');
+    console.warn('[Vidlytics] Container alvo "' + targetSelector + '" nao encontrado.');
     return;
   }
 
@@ -2966,15 +2966,33 @@ function initInlineWidget(options) {
     currentAppearance = options.appearance;
   }
 
-  // 🆕 Posiciona com insertAdjacentElement para todas as 4 posições
+  // Posiciona com insertAdjacentElement
   if (placement === 'beforebegin' || placement === 'afterbegin' || placement === 'beforeend' || placement === 'afterend') {
     targetEl.insertAdjacentElement(placement, wrapper);
   } else if (placement === 'above') {
     targetEl.parentNode.insertBefore(wrapper, targetEl);
   } else {
-    // 'below' ou fallback
     targetEl.parentNode.insertBefore(wrapper, targetEl.nextSibling);
   }
+
+  renderBubbles(container);
+  attachKeyboardListeners();
+
+  if (options.api) {
+    window[options.api] = {
+      open: openStoryModal,
+      close: closeOverlay,
+      next: nextStoryOrVideo,
+      prev: prevStoryOrVideo,
+      refresh: function () { renderBubbles(container); },
+      setStories: function (stories) { currentStories = stories; renderBubbles(container); }
+    };
+  }
+
+  trackMetric({ event_type: 'widget_init', page_url: window.location.href });
+
+  console.log('[Vidlytics] Bubbles:', container.querySelectorAll('.vl-bubble-wrapper').length);
+}
 
   renderBubbles(container);
   attachKeyboardListeners();
