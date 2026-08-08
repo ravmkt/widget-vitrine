@@ -3114,7 +3114,6 @@ track.style.cssText = [
       'display:flex;',
       'flex-direction:column;',
       'gap:6px;',
-      'cursor:pointer;',
       'transition:transform .2s ease;'
     ].join('');
 
