@@ -2988,6 +2988,8 @@ function getWidgetDisplayMode(appearance) {
 function enableDragScroll(el) {
   var isDown = false;
   var startX, scrollLeft;
+  var moved = false;                 // 🆕 detecta se houve arraste
+  var DRAG_THRESHOLD = 6; 
 
   el.addEventListener('mousedown', function (e) {
     isDown = true;
