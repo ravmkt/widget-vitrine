@@ -3531,6 +3531,7 @@ function initWidget() {
   }).catch(function (err) {
     console.warn('[Vidlytics] Erro ao carregar aparência:', err);
   });
+  }
 
 initWidget();
 
