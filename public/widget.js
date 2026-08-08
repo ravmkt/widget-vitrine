@@ -3381,10 +3381,19 @@ cardItem.style.cursor = 'pointer';
       }
     }
 
-    // Clique: abre o modal NA story e NO vídeo corretos
+    // 🆕 Clique no card: abre player fullscreen (todas as fontes)
 cardItem.addEventListener('click', function (e) {
   e.preventDefault();
-  openStoryModal(storyIdx, videoIdx);
+  var vUrl = getVideoUrl(video);
+  var vSource = video.source_type || video.sourceType || 'upload';
+  openFullscreenPlayer(vUrl, vSource);
+
+  trackMetric({
+    event_type: 'play',
+    story_id: story.id,
+    video_id: video.id,
+    page_url: window.location.href
+  });
 });
     // Hover
 cardItem.addEventListener('mouseenter', function () {
