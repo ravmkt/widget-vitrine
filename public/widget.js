@@ -3132,7 +3132,7 @@ var wrapperMaxWidth = Math.min(
     'margin:0 auto;',
     'overflow-x:auto;',
     'overflow-y:hidden;',
-    'padding:4px 4px 10px 4px;',
+    'padding:12px 4px 10px 4px;',
     '-webkit-overflow-scrolling:touch;',
     'scrollbar-width:none;',
     '-ms-overflow-style:none;',
