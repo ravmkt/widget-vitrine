@@ -3217,7 +3217,17 @@ function initInlineWidget(options) {
     targetEl.parentNode.insertBefore(wrapper, targetEl.nextSibling);
   }
 
-  renderBubbles(container);
+  var displayMode = getWidgetDisplayMode(currentAppearance);
+  console.log('[Vidlytics] Modo de exibição detectado:', displayMode);
+
+  if (displayMode === 'carousel') {
+    renderCarouselWidget(container, currentStories, currentAppearance);
+  } else if (displayMode === 'grid') {
+    // Por enquanto, fallback para carrossel (grid pode ser adicionado depois)
+    renderCarouselWidget(container, currentStories, currentAppearance);
+  } else {
+    renderBubbles(container);
+  }
   attachKeyboardListeners();
 
   if (options.api) {
