@@ -3442,6 +3442,7 @@ function readDisplayLocationsAndPageRules() {
       activeLocations.forEach(function (location) {
         var locStoryId = location.story_id;
         if (!locStoryId) return;
+console.log('🟡 [Vidlytics] currentStories:', currentStories.length, currentStories.map(function(s) { return { id: s.id, title: s.title }; }));
 
         var story = currentStories.find(function (s) { return idsEqual(s.id, locStoryId); });
         if (!story) {
