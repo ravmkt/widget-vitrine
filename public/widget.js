@@ -3437,7 +3437,27 @@ function initWidget() {
       return readStories();
     }).then(function (stories) {
       currentStories = stories || [];
-      return readProducts();
+
+      // 🔧 CORREÇÃO: Buscar story_videos e videos, depois juntar tudo
+      console.log('[Vidlytics] Buscando videos vinculados aos stories...');
+      return Promise.all([
+        readStoryVideos(),
+        readVideos()
+      ]).then(function (results) {
+        var storyVideosData = results[0] || [];
+        var videosData = results[1] || [];
+
+        console.log('[Vidlytics] story_videos encontrados:', storyVideosData.length);
+        console.log('[Vidlytics] videos encontrados:', videosData.length);
+
+        currentStories = joinStoriesWithVideos(currentStories, storyVideosData, videosData);
+
+        console.log('[Vidlytics] Total de stories com videos:', currentStories.filter(function(s) {
+          return s.videos && s.videos.length > 0;
+        }).length);
+
+        return readProducts();
+      });
     }).then(function (products) {
       readProductsData = products || [];
       return readSizingModels();
@@ -3450,6 +3470,67 @@ function initWidget() {
     }).then(function (likes) {
       likedVideos = likes.likedVideos || {};
       videoLikeCounts = likes.likeCounts || {};
+
+      // 🆕 LER DISPLAY LOCATIONS E INJETAR CARROSSEL NOS SELETORES
+      if (!storeId || !hasSupabase) return Promise.resolve();
+
+      return readDisplayLocations().then(function (locations) {
+        return readPageRules().then(function (rules) {
+          var activeLocations = locations.filter(function (loc) {
+            return loc.active !== false && loc.active !== 'false' && loc.active !== 0 && loc.active !== '0';
+          });
+
+          activeLocations.forEach(function (location) {
+            var locStoryId = location.story_id;
+            if (!locStoryId) return;
+
+            var story = currentStories.find(function (s) { return idsEqual(s.id, locStoryId); });
+            if (!story) {
+              console.warn('[Vidlytics] Story nao encontrada para location:', locStoryId);
+              return;
+            }
+
+            var storyRules = rules.filter(function (r) {
+              return idsEqual(r.story_id, locStoryId);
+            });
+
+            if (storyRules.length > 0) {
+              var hasMatch = storyRules.some(function (rule) { return matchesRule(rule); });
+              if (!hasMatch) {
+                console.log('[Vidlytics] Nenhuma regra bateu para location, pulando.');
+                return;
+              }
+            }
+
+            var selector = location.selector;
+            var position = location.position || 'beforeend';
+
+            if (selector) {
+              console.log('[Vidlytics] Injetando carrossel no seletor:', selector, 'posicao:', position);
+              initInlineWidget({
+                target: selector,
+                placement: position,
+                stories: [story],
+                products: readProductsData,
+                sizing_models: readSizingModelsData,
+                comments: readCommentsData,
+                appearance: currentAppearance
+              });
+            }
+          });
+        });
+      });
+    }).then(function () {
+      // Renderiza widget flutuante se habilitado
+      if (enableFloating) {
+        renderFloatingWidget();
+      }
+    }).catch(function (err) {
+      console.warn('[Vidlytics] Erro na inicialização:', err);
+    });
+  }).catch(function (err) {
+    console.warn('[Vidlytics] Erro ao carregar aparência:', err);
+  });
 
       // 🆕 LER DISPLAY LOCATIONS E INJETAR CARROSSEL NOS SELETORES
 if (!storeId || !hasSupabase) return Promise.resolve();
