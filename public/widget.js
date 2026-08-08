@@ -3497,6 +3497,7 @@ function readDisplayLocationsAndPageRules() {
     });
   });
 }
+
   initWidget();
 
 })();
