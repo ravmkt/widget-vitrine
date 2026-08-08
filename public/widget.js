@@ -3273,18 +3273,10 @@ cardItem.style.cssText = [
     }
 
     // Clique: abre o modal NA story e NO vídeo corretos
-    cardItem.addEventListener('click', function (e) {
-      e.preventDefault();
-      currentStoryIndex = storyIdx;
-      currentVideoIndex = videoIdx;
-      openStoryModal(storyIdx);
-      // Força o vídeo correto após abrir
-      setTimeout(function () {
-        currentVideoIndex = videoIdx;
-        renderStoryModal();
-      }, 50);
-    });
-
+cardItem.addEventListener('click', function (e) {
+  e.preventDefault();
+  openStoryModal(storyIdx, videoIdx);
+});
     // Hover
 cardItem.addEventListener('mouseenter', function () {
   cardItem.style.transform = 'translateY(-6px)';
