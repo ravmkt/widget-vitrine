@@ -2989,34 +2989,54 @@ function enableDragScroll(el) {
   var isDown = false;
   var startX, scrollLeft;
   var moved = false;                 // 🆕 detecta se houve arraste
-  var DRAG_THRESHOLD = 6; 
+  var DRAG_THRESHOLD = 6;            // 🆕 pixels mínimos para considerar arraste
 
   el.addEventListener('mousedown', function (e) {
     isDown = true;
+    moved = false;
     el.style.cursor = 'grabbing';
     el.style.userSelect = 'none';
     startX = e.pageX - el.offsetLeft;
     scrollLeft = el.scrollLeft;
+
+    // 🆕 Impede temporariamente cliques nos filhos durante o arraste
+    var cards = el.querySelectorAll('.vl-carousel-item');
+    cards.forEach(function (card) {
+      card.style.pointerEvents = 'none';
+    });
   });
 
-  el.addEventListener('mouseleave', function () {
+  var stopDrag = function () {
+    if (!isDown) return;
     isDown = false;
     el.style.cursor = 'grab';
     el.style.userSelect = '';
-  });
 
-  el.addEventListener('mouseup', function () {
-    isDown = false;
-    el.style.cursor = 'grab';
-    el.style.userSelect = '';
-  });
+    // 🆕 Restaura pointer-events após pequeno delay (evita click acidental)
+    setTimeout(function () {
+      var cards = el.querySelectorAll('.vl-carousel-item');
+      cards.forEach(function (card) {
+        card.style.pointerEvents = '';
+      });
+    }, 50);
+  };
+
+  el.addEventListener('mouseleave', stopDrag);
+  el.addEventListener('mouseup', stopDrag);
 
   el.addEventListener('mousemove', function (e) {
     if (!isDown) return;
     e.preventDefault();
     var x = e.pageX - el.offsetLeft;
-    var walk = (x - startX) * 1.5; // sensibilidade do arraste
-    el.scrollLeft = scrollLeft - walk;
+    var walk = (x - startX) * 1.5;
+
+    if (Math.abs(x - startX) > DRAG_THRESHOLD) {
+      moved = true;
+    }
+
+    if (moved) {
+      el.scrollLeft = scrollLeft - walk;
+    }
   });
 }
 
