@@ -2818,26 +2818,20 @@ function openStoryModal(storyIndex, videoIndex) {
       overlay.id = 'vl-overlay';
       modalContent = createEl('div', 'vl-modal');
       overlay.appendChild(modalContent);
- if (globalShadowRoot) {
-        globalShadowRoot.appendChild(overlay);
-      } else {
-        document.body.appendChild(overlay);
-            }
+      document.body.appendChild(overlay);
+    }
 
     overlay.className = 'vl-overlay vl-active';
-    overlay.onclick = function(e) {
-      if (e.target === overlay) closeOverlay();
-    };
     renderStoryModal();
     attachTouchListeners();
 
-trackMetric({
+    trackMetric({
       event_type: 'story_open',
       story_id: currentStories[currentStoryIndex].id,
       page_url: window.location.href
     });
   }
-} 
+
   /* ================================================================
      FUNÇÕES AUXILIARES DE COR
      ================================================================ */
@@ -2896,8 +2890,8 @@ trackMetric({
       '* { margin: 0; padding: 0; box-sizing: border-box; }',
       '.vl-container { font-family: ' + fontFamily + '; direction: ltr; text-align: left; width:100%; max-width:100%; overflow:hidden; }',
       '.vl-bubble-list::-webkit-scrollbar { display: none; }',
-'.vl-overlay { position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background: rgba(0,0,0,0.92) !important; z-index: 999999 !important; display: none !important; align-items: center !important; justify-content: center !important; overflow: hidden !important; opacity: 0 !important; transition: opacity 0.3s ease !important; }',
-'.vl-overlay.vl-active { display: flex !important; opacity: 1 !important; }',
+      '.vl-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 999999; display: none; align-items: center; justify-content: center; overflow: hidden; opacity: 0; transition: opacity 0.3s ease; }',
+      '.vl-overlay.vl-active { display: flex; opacity: 1; }',
       '.vl-modal { position: relative; width: 100%; max-width: 420px; height: 100%; max-height: 100dvh; background: #000; overflow: hidden; display: flex; flex-direction: column; }',
       '.vl-progress { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; gap: 4px; z-index: 100; }',
       '.vl-progress-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.3); border-radius: 3px; overflow: hidden; }',
