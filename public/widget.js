@@ -2955,9 +2955,35 @@
     container.appendChild(bubbleList);
   }
 
-  /* ================================================================
-     POSICIONAMENTO INLINE (ABOVE / BELOW)
-     ================================================================ */
+function getWidgetDisplayMode(appearance) {
+  var mode = readAppearanceValue(appearance, [
+    'display_mode', 'displayMode', 'widget_type', 'widgetType', 'mode',
+    'tipo_exibicao', 'tipoExibicao'
+  ]);
+  if (mode) {
+    mode = String(mode).trim().toLowerCase();
+    if (mode === 'carousel' || mode === 'carrossel') return 'carousel';
+    if (mode === 'grid' || mode === 'grade') return 'grid';
+    if (mode === 'floating' || mode === 'flutuante') return 'floating';
+    if (mode === 'stories' || mode === 'bubbles' || mode === 'bolhas') return 'stories';
+  }
+  // Fallback: detecta pelo jsonb preenchido
+  var carouselCfg = appearance.carousel_config;
+  if (carouselCfg) {
+    if (typeof carouselCfg === 'string') { try { carouselCfg = JSON.parse(carouselCfg); } catch(e) {} }
+    if (carouselCfg && typeof carouselCfg === 'object' && Object.keys(carouselCfg).length > 0) {
+      return 'carousel';
+    }
+  }
+  var gridCfg = appearance.grid_config;
+  if (gridCfg) {
+    if (typeof gridCfg === 'string') { try { gridCfg = JSON.parse(gridCfg); } catch(e) {} }
+    if (gridCfg && typeof gridCfg === 'object' && Object.keys(gridCfg).length > 0) {
+      return 'grid';
+    }
+  }
+  return 'stories';
+}
 
 function initInlineWidget(options) {
   var targetSelector = options.target || options.anchor || '#vidlytics-stories';
