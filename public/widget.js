@@ -3025,7 +3025,7 @@ var cfg = getCarouselConfig(appearance);
   wrapper.style.cssText = [
     'width:100%;',
     'max-width:' + wrapperMaxWidth + 'px;',  // 🆕 limita a largura visível
-    'overflow-x:auto;',
+'margin:0 auto;', 
     'overflow-y:hidden;',
     'padding:4px 4px 10px 4px;',
     'scroll-behavior:smooth;',
