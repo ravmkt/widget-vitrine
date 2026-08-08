@@ -2987,29 +2987,34 @@ function getWidgetDisplayMode(appearance) {
 
 function enableDragScroll(el) {
   var isDown = false;
-  var lastX, scrollLeft;
+  var startX, scrollStart;
   var moved = false;
   var DRAG_THRESHOLD = 6;
+  var SPEED = 1.5; // 🆕 multiplicador de velocidade — aumente para deixar mais rápido
 
-  el.addEventListener('mousedown', function (e) {
+  function onDown(e) {
     isDown = true;
     moved = false;
     el.style.cursor = 'grabbing';
     el.style.userSelect = 'none';
-    lastX = e.pageX;
-    scrollLeft = el.scrollLeft;
+    el.style.scrollSnapType = 'none'; // 🆕 evita "grudar" nos cards durante arraste
+
+    var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    startX = clientX;
+    scrollStart = el.scrollLeft;
 
     var cards = el.querySelectorAll('.vl-carousel-item');
     cards.forEach(function (card) {
       card.style.pointerEvents = 'none';
     });
-  });
+  }
 
-  var stopDrag = function () {
+  function stopDrag() {
     if (!isDown) return;
     isDown = false;
     el.style.cursor = 'grab';
     el.style.userSelect = '';
+    el.style.scrollSnapType = ''; // 🆕 restaura snap se houver
 
     setTimeout(function () {
       var cards = el.querySelectorAll('.vl-carousel-item');
@@ -3017,26 +3022,35 @@ function enableDragScroll(el) {
         card.style.pointerEvents = '';
       });
     }, 50);
-  };
+  }
 
-  el.addEventListener('mouseleave', stopDrag);
-  el.addEventListener('mouseup', stopDrag);
-
-  el.addEventListener('mousemove', function (e) {
+  function onMove(e) {
     if (!isDown) return;
     e.preventDefault();
 
-    var dx = e.pageX - lastX;
+    var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    var dx = clientX - startX;
 
     if (Math.abs(dx) > DRAG_THRESHOLD) {
       moved = true;
     }
 
     if (moved) {
-      el.scrollLeft = el.scrollLeft - dx;
-      lastX = e.pageX;
+      // 🆕 cálculo direto: posição inicial do scroll MENOS delta * velocidade
+      el.scrollLeft = scrollStart - (dx * SPEED);
     }
-  });
+  }
+
+  // Mouse
+  el.addEventListener('mousedown', onDown);
+  el.addEventListener('mouseleave', stopDrag);
+  el.addEventListener('mouseup', stopDrag);
+  el.addEventListener('mousemove', onMove);
+
+  // 🆕 Touch (mobile)
+  el.addEventListener('touchstart', onDown, { passive: false });
+  el.addEventListener('touchend', stopDrag);
+  el.addEventListener('touchmove', onMove, { passive: false });
 }
 
 function renderCarouselWidget(container, stories, appearance) {
