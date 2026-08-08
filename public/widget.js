@@ -1349,7 +1349,6 @@
       + 'max-height:90vh!important;'
       + 'border-radius:36px!important;'
       + '}'
-      + '}'
     );
   }
 
