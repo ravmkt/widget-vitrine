@@ -3306,6 +3306,7 @@ function initInlineWidget(options) {
 function sendSelector(selector, storyId) {
   var payload = { selector: selector, token: widgetSelectToken };
   if (storyId) { payload.story_id = storyId; }
+  if (storeId) { payload.store_id = storeId; }
 
   var endpoint = 'https://api.vidlytics.com/widget-selector';
   if (supabaseUrl) {
