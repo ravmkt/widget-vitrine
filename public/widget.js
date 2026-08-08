@@ -2818,8 +2818,11 @@ function openStoryModal(storyIndex, videoIndex) {
       overlay.id = 'vl-overlay';
       modalContent = createEl('div', 'vl-modal');
       overlay.appendChild(modalContent);
-      document.body.appendChild(overlay);
-    }
+ if (globalShadowRoot) {
+        globalShadowRoot.appendChild(overlay);
+      } else {
+        document.body.appendChild(overlay);
+            }
 
     overlay.className = 'vl-overlay vl-active';
     renderStoryModal();
