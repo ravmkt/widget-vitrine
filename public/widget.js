@@ -2989,24 +2989,39 @@ function enableDragScroll(el) {
   var isDown = false;
   var startX, scrollStart;
   var moved = false;
-  var DRAG_THRESHOLD = 6;
-  var SPEED = 1.5; // 🆕 multiplicador de velocidade — aumente para deixar mais rápido
+  var DRAG_THRESHOLD = 3;   // mais sensível — evita a sensação de "grudar" no início
+  var SPEED = 1.5;          // aumente pra 2.0 se ainda parecer lento
+  var rafId = null;
+  var currentX = 0;
+
+  // Cache dos cards pra não ficar fazendo querySelectorAll no mousemove
+  var cards = el.querySelectorAll('.vl-carousel-item');
+
+  function disableCards() {
+    for (var i = 0; i < cards.length; i++) {
+      cards[i].style.pointerEvents = 'none';
+    }
+  }
+
+  function enableCards() {
+    for (var i = 0; i < cards.length; i++) {
+      cards[i].style.pointerEvents = '';
+    }
+  }
 
   function onDown(e) {
     isDown = true;
     moved = false;
     el.style.cursor = 'grabbing';
     el.style.userSelect = 'none';
-    el.style.scrollSnapType = 'none'; // 🆕 evita "grudar" nos cards durante arraste
+    el.classList.add('is-dragging');      // ← classe CSS pra matar snap
 
     var clientX = e.touches ? e.touches[0].clientX : e.clientX;
     startX = clientX;
+    currentX = clientX;
     scrollStart = el.scrollLeft;
 
-    var cards = el.querySelectorAll('.vl-carousel-item');
-    cards.forEach(function (card) {
-      card.style.pointerEvents = 'none';
-    });
+    disableCards();
   }
 
   function stopDrag() {
@@ -3014,30 +3029,40 @@ function enableDragScroll(el) {
     isDown = false;
     el.style.cursor = 'grab';
     el.style.userSelect = '';
-    el.style.scrollSnapType = ''; // 🆕 restaura snap se houver
+    el.classList.remove('is-dragging');   // ← restaura snap quando solta
 
-    setTimeout(function () {
-      var cards = el.querySelectorAll('.vl-carousel-item');
-      cards.forEach(function (card) {
-        card.style.pointerEvents = '';
-      });
-    }, 50);
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+
+    enableCards();
   }
 
   function onMove(e) {
     if (!isDown) return;
     e.preventDefault();
 
-    var clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    var dx = clientX - startX;
+    currentX = e.touches ? e.touches[0].clientX : e.clientX;
 
-    if (Math.abs(dx) > DRAG_THRESHOLD) {
+    if (Math.abs(currentX - startX) > DRAG_THRESHOLD) {
       moved = true;
     }
 
-    if (moved) {
-      // 🆕 cálculo direto: posição inicial do scroll MENOS delta * velocidade
-      el.scrollLeft = scrollStart - (dx * SPEED);
+    if (moved && !rafId) {
+      rafId = requestAnimationFrame(updateScroll);
+    }
+  }
+
+  function updateScroll() {
+    rafId = null;
+    if (!isDown || !moved) return;
+
+    var dx = currentX - startX;
+    el.scrollLeft = scrollStart - (dx * SPEED);
+
+    if (isDown && moved) {
+      rafId = requestAnimationFrame(updateScroll);
     }
   }
 
@@ -3047,7 +3072,7 @@ function enableDragScroll(el) {
   el.addEventListener('mouseup', stopDrag);
   el.addEventListener('mousemove', onMove);
 
-  // 🆕 Touch (mobile)
+  // Touch (mobile)
   el.addEventListener('touchstart', onDown, { passive: false });
   el.addEventListener('touchend', stopDrag);
   el.addEventListener('touchmove', onMove, { passive: false });
