@@ -3148,10 +3148,11 @@ track.style.cssText = [
     var storyIdx = item.storyIndex;
     var videoIdx = item.videoIndex;
 
-    var cardItem = createEl('div', 'vl-carousel-item');
-    cardItem.style.cssText = [
-      'flex-shrink:0;',
-      'width:' + sizePx + ';',
+var cardItem = createEl('div', 'vl-carousel-item');
+cardItem.style.scrollSnapAlign = 'start';
+cardItem.style.cssText = [
+  'flex-shrink:0;',
+  'width:' + sizePx + ';',
       'display:flex;',
       'flex-direction:column;',
       'gap:6px;',
