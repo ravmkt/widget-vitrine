@@ -2985,6 +2985,38 @@ function getWidgetDisplayMode(appearance) {
   return 'stories';
 }
 
+function enableDragScroll(el) {
+  var isDown = false;
+  var startX, scrollLeft;
+
+  el.addEventListener('mousedown', function (e) {
+    isDown = true;
+    el.style.cursor = 'grabbing';
+    el.style.userSelect = 'none';
+    startX = e.pageX - el.offsetLeft;
+    scrollLeft = el.scrollLeft;
+  });
+
+  el.addEventListener('mouseleave', function () {
+    isDown = false;
+    el.style.cursor = 'grab';
+    el.style.userSelect = '';
+  });
+
+  el.addEventListener('mouseup', function () {
+    isDown = false;
+    el.style.cursor = 'grab';
+    el.style.userSelect = '';
+  });
+
+  el.addEventListener('mousemove', function (e) {
+    if (!isDown) return;
+    e.preventDefault();
+    var x = e.pageX - el.offsetLeft;
+    var walk = (x - startX) * 1.5; // sensibilidade do arraste
+    el.scrollLeft = scrollLeft - walk;
+  });
+}
 
 function renderCarouselWidget(container, stories, appearance) {
   // Achata todos os vídeos de todas as stories em um array plano,
