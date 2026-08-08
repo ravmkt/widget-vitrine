@@ -34,6 +34,23 @@
 
   function createFullscreenPlayer() {
     if (fsPlayerOverlay) return;
+
+    // Injeta CSS do player fullscreen no DOM global (light DOM),
+    // pois o overlay é anexado em document.body, fora do Shadow DOM
+    if (!document.getElementById('vl-fs-player-styles')) {
+      var fsStyle = document.createElement('style');
+      fsStyle.id = 'vl-fs-player-styles';
+      fsStyle.textContent =
+        '.vl-fullscreen-player{position:fixed!important;top:0!important;left:0!important;width:100vw!important;height:100vh!important;background:rgba(0,0,0,.96)!important;z-index:2147483647!important;display:flex!important;align-items:center!important;justify-content:center!important;opacity:0!important;pointer-events:none!important;transition:opacity .3s ease!important;}' +
+        '.vl-fullscreen-player.vl-active{opacity:1!important;pointer-events:all!important;}' +
+        '.vl-fs-close{position:absolute!important;top:18px!important;right:28px!important;width:42px!important;height:42px!important;border:none!important;background:rgba(255,255,255,.12)!important;border-radius:50%!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;color:#fff!important;font-size:28px!important;z-index:20!important;line-height:1!important;transition:background .2s!important;}' +
+        '.vl-fs-close:hover{background:rgba(255,255,255,.22)!important;}' +
+        '.vl-fs-container{width:92vw!important;max-width:1200px!important;aspect-ratio:16/9!important;position:relative!important;}' +
+        '.vl-fs-container iframe,.vl-fs-container video{width:100%!important;height:100%!important;border:none!important;border-radius:8px!important;}' +
+        '.vl-fs-container video{object-fit:contain!important;background:#000!important;}';
+      document.head.appendChild(fsStyle);
+    }
+
     fsPlayerOverlay = document.createElement('div');
     fsPlayerOverlay.className = 'vl-fullscreen-player';
     fsPlayerOverlay.innerHTML =
