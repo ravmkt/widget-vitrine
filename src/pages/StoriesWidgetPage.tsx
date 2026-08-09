@@ -652,6 +652,7 @@ const SocialActionButtons: FC<{
   );
 };
 
+{console.log('DEBUG product:', product, 'show_product:', modalConfig.show_product)}
 /** Card de produto na parte inferior */
 const ProductInfoCard: FC<{
   product: any;
