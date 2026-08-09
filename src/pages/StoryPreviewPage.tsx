@@ -595,6 +595,7 @@ const closePlayer = () => { setPlayerOpen(false); setPlaying(false); setShowComm
                     {/* Botão "Ver no site" — sempre visível quando há produto */}
                     <a href={product.product_url || product.url || '#'} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 10px', background: buttonColor, color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}><ExternalLink size={12} /> Ver no site</a>
                     {/* Botão WhatsApp — só aparece se configurado no appearance */}
+{/* DEBUG: wn={whatsappNumber} hasSettings={!!settings} swn={String(settings?.whatsapp_number ?? 'NULL')} */}
 {whatsappNumber && (
                         <a href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Olá! Tenho interesse nesse produto que vi no vídeo. ${product.product_url || product.url || ''}`)}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 10px', background: '#25d366', color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>Comprar pelo WhatsApp</a>
                     )}

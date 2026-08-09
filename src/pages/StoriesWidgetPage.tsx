@@ -711,7 +711,6 @@ const ProductInfoCard: FC<{
           </p>
 
           <div className="mt-2 flex gap-2">
-            <span style={{ fontSize: 9, color: 'red' }}>DBG: wn="{String(whatsappNumber)}" rp="{String(resolvedPhone)}" sw="{String(settings?.whatsapp_number ?? 'UNDEF')}"</span>
             <a
               href={productUrl}
               target="_blank"
