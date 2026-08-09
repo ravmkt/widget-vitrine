@@ -707,21 +707,6 @@ const ProductInfoCard: FC<{
           <p className="mt-1 text-base font-black" style={{ color: accentColor }}>
             {productPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           </p>
-
-{product && modalConfig.show_product && (
-  <ProductInfoCard
-    product={product}
-    productImageUrl={productImageUrl}
-    productUrl={productUrl}
-    productPrice={productPrice}
-    backgroundColor={backgroundColor}
-    textColor={textColor}
-    accentColor={accentColor}
-    buttonColor={buttonColor}
-    whatsappNumber={whatsappNumber}
-    settings={settings}
-  />
-)}
         </div>
       </div>
     </div>
