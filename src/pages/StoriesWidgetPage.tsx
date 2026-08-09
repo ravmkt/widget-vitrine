@@ -1235,6 +1235,14 @@ const handleLike = async () => {
 
         const genSettings = settingsList[0] || null;
         setSettings(genSettings);
+        console.log('[Vidlytics] settings carregado:', genSettings);
+console.log('[Vidlytics] whatsapp fields:', {
+  whatsapp_number: genSettings?.whatsapp_number,
+  whatsappNumber: genSettings?.whatsappNumber,
+  whatsapp: genSettings?.whatsapp,
+  phone: genSettings?.phone,
+});
+
         setAppearances(appearancesList || []);
         setMuted(genSettings?.muted_by_default ?? genSettings?.mutedByDefault ?? true);
 
