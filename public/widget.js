@@ -3112,22 +3112,25 @@ function getWidgetDisplayMode(appearance) {
     if (mode === 'floating' || mode === 'flutuante') return 'floating';
     if (mode === 'stories' || mode === 'bubbles' || mode === 'bolhas') return 'stories';
   }
-  // Fallback: detecta pelo jsonb preenchido
-  var carouselCfg = appearance.carousel_config;
-  if (carouselCfg) {
-    if (typeof carouselCfg === 'string') { try { carouselCfg = JSON.parse(carouselCfg); } catch(e) {} }
-    if (carouselCfg && typeof carouselCfg === 'object' && Object.keys(carouselCfg).length > 0) {
-      return 'carousel';
-    }
-  }
-  var gridCfg = appearance.grid_config;
-  if (gridCfg) {
-    if (typeof gridCfg === 'string') { try { gridCfg = JSON.parse(gridCfg); } catch(e) {} }
-    if (gridCfg && typeof gridCfg === 'object' && Object.keys(gridCfg).length > 0) {
-      return 'grid';
-    }
-  }
-  return 'stories';
+// Fallback: detecta pelo jsonb preenchido (grid tem prioridade sobre carousel)
+var gridCfg = appearance.grid_config;
+var carouselCfg = appearance.carousel_config;
+
+// Parseia ambos se necessário
+if (typeof gridCfg === 'string') { try { gridCfg = JSON.parse(gridCfg); } catch(e) { gridCfg = null; } }
+if (typeof carouselCfg === 'string') { try { carouselCfg = JSON.parse(carouselCfg); } catch(e) { carouselCfg = null; } }
+
+var gridPopulated = gridCfg && typeof gridCfg === 'object' && Object.keys(gridCfg).length > 0;
+var carouselPopulated = carouselCfg && typeof carouselCfg === 'object' && Object.keys(carouselCfg).length > 0;
+
+// Se AMBOS existem, grid vence (usuário configurou grade explicitamente)
+if (gridPopulated && carouselPopulated) return 'grid';
+// Se só grid existe
+if (gridPopulated) return 'grid';
+// Se só carousel existe
+if (carouselPopulated) return 'carousel';
+// Nenhum config preenchido
+return 'stories';
 }
 
 function enableDragScroll(el) {
