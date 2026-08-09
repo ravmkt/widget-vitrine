@@ -432,6 +432,7 @@ export function normalizeModalAppearanceConfig(appearanceRaw: Record<string, any
     show_share_button: toBoolean(rcv('show_share_button', 'modal_show_share_button', true), true),
     show_whatsapp_button: toBoolean(rcv('show_whatsapp_button', 'modal_show_whatsapp_button', true), true),
     show_sizing_button: toBoolean(rcv('show_sizing_button', 'modal_show_sizing_button', true), true),
+    show_product_whatsapp_button: true,
     hide_stories: toBoolean(rcv('hide_stories', 'modal_hide_stories', false), false),
     shadow_enabled: toBoolean(rcv('shadow_enabled', 'modal_shadow_enabled', true), true),
     border_color: rcv('border_color', 'modal_border_color', '') || '',
