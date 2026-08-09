@@ -3336,8 +3336,7 @@ cardItem.style.cursor = 'pointer';
       img.loading = 'lazy';
       card.appendChild(img);
     }
-    }
-
+    
     // Play button overlay
     if (cfg.showPlayButton) {
       var playBadge = createEl('div', 'vl-carousel-play');
