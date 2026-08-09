@@ -3306,8 +3306,8 @@ cardItem.style.cursor = 'pointer';
       'position:relative;',
       'background:#000;',
       'outline:none;',
-      'backface-visibility:hidden;',
-      '-webkit-backface-visibility:hidden;',
+      '-webkit-mask-image:-webkit-radial-gradient(white,black);',
+      'mask-image:radial-gradient(white,black);',
       (hasBorder
         ? 'border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';'
         : 'border:0;'),
