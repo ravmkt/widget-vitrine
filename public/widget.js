@@ -2616,8 +2616,9 @@ function trackMetric(data) {
     body.appendChild(social);
     container.appendChild(body);
 
-    var showVerProduto = appearanceConfig.show_product !== false;
-    var showWhatsAppProduto = appearanceConfig.show_product_whatsapp_button !== false;
+var showVerProduto = appearanceConfig.show_product !== false;
+// WhatsApp segue o mesmo critério do card de produto — sem flag separada
+var showWhatsAppProduto = showVerProduto;
 
     // 🔍 DEBUG — colar AQUI (depois das declarações)
     var videoProductId = video ? (video.product_id || video.productId) : null;
