@@ -3049,11 +3049,7 @@ const AppearancePage = () => {
                       <ToggleSwitch label="Mostrar card de produto no player" checked={formData.modal_config.show_product} onChange={e => updateModalConfig({ show_product: e.target.checked })} />
                     </FormField>
 
-                    <FormField label="Mostrar botão Ver produto">
-                      <ToggleSwitch label="Mostrar botão 'Ver produto' no card" checked={formData.modal_config.show_product_button} onChange={e => updateModalConfig({ show_product_button: e.target.checked })} />
-                    </FormField>
-
-                    <FormField label="Mostrar botão Comprar pelo WhatsApp">
+                    <FormField label="Mostrar botão like">
                           <ToggleSwitch
                             label="Exibe o botão Comprar pelo WhatsApp dentro do card de produto"
                             checked={formData.modal_config.show_product_whatsapp_button}
