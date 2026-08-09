@@ -3626,9 +3626,8 @@ function initInlineWidget(options) {
 
   if (displayMode === 'carousel') {
     renderCarouselWidget(container, currentStories, currentAppearance);
-  } else if (displayMode === 'grid') {
-    // Por enquanto, fallback para carrossel (grid pode ser adicionado depois)
-    renderCarouselWidget(container, currentStories, currentAppearance);
+} else if (displayMode === 'grid') {
+    renderGridWidget(container, currentStories, currentAppearance);
   } else {
     renderBubbles(container);
   }
