@@ -3037,11 +3037,23 @@ const AppearancePage = () => {
                   {activeTab === 'modal' && (
                     <SectionCard title="Player / Modal" description="Controle quais elementos são exibidos dentro do player de vídeo.">
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <FormField label="Mostrar título">
-                          <ToggleSwitch label="Mostrar título" checked={formData.modal_config.show_title} onChange={e => updateModalConfig({ show_title: e.target.checked })} />
-                        </FormField>
+                    <FormField label="Mostrar título">
+                      <ToggleSwitch label="Mostrar título" checked={formData.modal_config.show_title} onChange={e => updateModalConfig({ show_title: e.target.checked })} />
+                    </FormField>
 
-                        <FormField label="Mostrar botão Comprar pelo WhatsApp">
+                    <FormField label="Mostrar botão play">
+                      <ToggleSwitch label="Mostrar botão play/pause no player" checked={formData.modal_config.show_play_button} onChange={e => updateModalConfig({ show_play_button: e.target.checked })} />
+                    </FormField>
+
+                    <FormField label="Mostrar produto">
+                      <ToggleSwitch label="Mostrar card de produto no player" checked={formData.modal_config.show_product} onChange={e => updateModalConfig({ show_product: e.target.checked })} />
+                    </FormField>
+
+                    <FormField label="Mostrar botão Ver produto">
+                      <ToggleSwitch label="Mostrar botão 'Ver produto' no card" checked={formData.modal_config.show_product_button} onChange={e => updateModalConfig({ show_product_button: e.target.checked })} />
+                    </FormField>
+
+                    <FormField label="Mostrar botão Comprar pelo WhatsApp">
                           <ToggleSwitch
                             label="Exibe o botão Comprar pelo WhatsApp dentro do card de produto"
                             checked={formData.modal_config.show_product_whatsapp_button}
