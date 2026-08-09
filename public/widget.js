@@ -3325,10 +3325,14 @@ cardItem.style.cursor = 'pointer';
         'width:100%;',
         'height:100%;',
         'object-fit:' + cfg.objectFit + ';',
-        'display:block;'
+        'display:block;',
+        'border-radius:' + cfg.borderRadius + 'px;',
+        'transform:translateZ(0);',
+        '-webkit-transform:translateZ(0);'
       ].join('');
       img.loading = 'lazy';
       card.appendChild(img);
+    }
     }
 
     // Play button overlay
