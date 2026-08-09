@@ -662,14 +662,11 @@ const ProductInfoCard: FC<{
   textColor: string;
   accentColor: string;
   buttonColor: string;
-  showProductButton: boolean;
-  showProductWhatsappButton: boolean;
   whatsappNumber?: string;
   settings?: any;
 }> = ({
   product, productImageUrl, productUrl, productPrice,
   backgroundColor, textColor, accentColor, buttonColor,
-  showProductButton, showProductWhatsappButton,
   whatsappNumber, settings,
 }) => {
   const hasBothButtons = showProductButton && showProductWhatsappButton;
