@@ -737,7 +737,6 @@ function ensureModalStylesInLightDOM(appearance) {
       show_play_button: rcv('show_play_button', 'modal_show_play_button', true),
       show_product: rcv('show_product', 'modal_show_product', true),
       show_product_button: rcv('show_product_button', 'modal_show_product_button', true),
-      show_product_whatsapp_button: rcv('show_product_whatsapp_button', null, true),
       show_like_button: rcv('show_like_button', 'modal_show_like_button', true),
       show_comment_button: rcv('show_comment_button', 'modal_show_comment_button', true),
       show_share_button: rcv('show_share_button', 'modal_show_share_button', true),
