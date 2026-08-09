@@ -706,7 +706,9 @@ const ProductInfoCard: FC<{
           </p>
           <p className="mt-1 text-base font-black" style={{ color: accentColor }}>
             {productPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                      <div className="mt-2 flex gap-2">
+          </p>
+
+          <div className="mt-2 flex gap-2">
             <a
               href={productUrl}
               target="_blank"
@@ -730,7 +732,6 @@ const ProductInfoCard: FC<{
               WhatsApp
             </button>
           </div>
-          </p>
         </div>
       </div>
     </div>
