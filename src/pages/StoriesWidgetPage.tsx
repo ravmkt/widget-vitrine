@@ -692,7 +692,7 @@ const ProductInfoCard: FC<{
       className="absolute bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-black/85 via-black/50 to-transparent p-4 pt-10"
       style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
     >
-      <div className="flex items-center gap-3 rounded-3xl border border-white/20 bg-white/95 p-3 shadow-2xl" style={{ backgroundColor }}>
+      <div className="flex items-start gap-3 rounded-3xl overflow-visible border border-white/20 bg-white/95 p-3 shadow-2xl" style={{ backgroundColor }}>
         <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-slate-200">
           {productImageUrl ? (
             <img src={productImageUrl} alt={product.name || 'Produto'} className="h-full w-full object-cover" />
