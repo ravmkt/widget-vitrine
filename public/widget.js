@@ -3308,9 +3308,10 @@ cardItem.style.cursor = 'pointer';
       'outline:none;',
       '-webkit-mask-image:-webkit-radial-gradient(white,black);',
       'mask-image:radial-gradient(white,black);',
+      'border:0;',
       (hasBorder
-        ? 'border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';'
-        : 'border:0;'),
+        ? 'box-shadow:inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ';'
+        : 'box-shadow:none;'),
       (hasBorder ? 'box-shadow:0 2px 10px rgba(0,0,0,.1);' : 'box-shadow:none;')
     ].join('');
 
