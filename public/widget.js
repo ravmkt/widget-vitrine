@@ -3487,7 +3487,6 @@ function renderGridWidget(container, stories, appearance) {
   var fontFamily = getFontFamily(appearance);
   var columns = cfg.columns || 4;
   var rows = cfg.rows || 1;
-  var maxVisible = columns * rows;
   var gapPx = cfg.spacing + 'px';
 
   var gridWrapper = createEl('div', 'vl-grid-wrapper');
