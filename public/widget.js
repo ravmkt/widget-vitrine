@@ -3486,8 +3486,8 @@ function renderGridWidget(container, stories, appearance) {
   var cfg = getGridConfig(appearance);
   var fontFamily = getFontFamily(appearance);
   var columns = cfg.columns || 4;
-  var rows = cfg.rows || 1;
   var gapPx = cfg.spacing + 'px';
+  var cardMaxWidth = (cfg.size || 200) + 'px';
 
   var gridWrapper = createEl('div', 'vl-grid-wrapper');
   gridWrapper.style.cssText = [
