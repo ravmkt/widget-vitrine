@@ -3310,9 +3310,8 @@ cardItem.style.cursor = 'pointer';
       'mask-image:radial-gradient(white,black);',
       'border:0;',
       (hasBorder
-        ? 'box-shadow:inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ';'
-        : 'box-shadow:none;'),
-      (hasBorder ? 'box-shadow:0 2px 10px rgba(0,0,0,.1);' : 'box-shadow:none;')
+        ? 'box-shadow:inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ', 0 2px 10px rgba(0,0,0,.1);'
+        : 'box-shadow:none;')
     ].join('');
 
     // Thumbnail do vídeo (fallback: story cover)
