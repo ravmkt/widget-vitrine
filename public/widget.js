@@ -3326,9 +3326,7 @@ cardItem.style.cursor = 'pointer';
         'width:100%;',
         'height:100%;',
         'object-fit:' + cfg.objectFit + ';',
-        'display:block;',
-        'transform:translateZ(0);',
-        '-webkit-transform:translateZ(0);'
+        'display:block;'
       ].join('');
       img.loading = 'lazy';
       card.appendChild(img);
