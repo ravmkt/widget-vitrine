@@ -2616,6 +2616,12 @@ function trackMetric(data) {
     body.appendChild(social);
     container.appendChild(body);
 
+    console.log('🐛 DEBUG WHATSAPP:', {
+      storeWhatsappNumber: storeWhatsappNumber,
+      showWhatsAppProduto: showWhatsAppProduto,
+      videoProductId: video ? (video.product_id || video.productId) : null
+    });
+
     var showVerProduto = appearanceConfig.show_product !== false;
     var showWhatsAppProduto = appearanceConfig.show_product_whatsapp_button !== false;
 
