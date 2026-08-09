@@ -3495,7 +3495,8 @@ function renderGridWidget(container, stories, appearance) {
 'grid-template-columns:repeat(' + columns + ', 1fr);',
     'gap:' + gapPx + ';',
     'width:100%;',
-    'max-width:100%;',
+    'max-width:' + (columns * ((cfg.size || 200) + cfg.spacing)) + 'px;',
+    'margin:0 auto;',
     'padding:4px;',
     'justify-items:center;'
   ].join('');
