@@ -1811,15 +1811,13 @@ const ModalPreview = ({
                         Ver produto
                       </button>
                     )}
-                    {m.show_product_whatsapp_button && (
-                      <button
-                        type="button"
-                        className="flex-1 shrink-0 whitespace-nowrap rounded-lg px-2 py-1.5 text-[10px] font-black text-white"
-                        style={{ backgroundColor: '#25D366' }}
-                      >
-                        Comprar pelo WhatsApp
-                      </button>
-                    )}
+<button
+  type="button"
+  className="flex-1 shrink-0 whitespace-nowrap rounded-lg px-2 py-1.5 text-[10px] font-black text-white"
+  style={{ backgroundColor: '#25D366' }}
+>
+  Comprar pelo WhatsApp
+</button>
                   </div>
                 </div>
               </div>
