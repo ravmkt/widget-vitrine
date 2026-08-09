@@ -3498,7 +3498,6 @@ function renderGridWidget(container, stories, appearance) {
     'max-width:' + (columns * ((cfg.size || 200) + cfg.spacing)) + 'px;',
     'margin:0 auto;',
     'padding:4px;',
-    'justify-items:center;'
   ].join('');
 
   allVideos.forEach(function (item) {
