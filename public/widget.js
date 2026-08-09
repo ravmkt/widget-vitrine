@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.08.08-18';
+  var WIDGET_VERSION = '2026.08.09-10';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -3419,13 +3419,20 @@ cardItem.addEventListener('click', function (e) {
   });
 });
     // Hover
-cardItem.addEventListener('mouseenter', function () {
-  cardItem.style.transform = 'translateY(-6px)';
-  card.style.boxShadow = '0 12px 28px rgba(0,0,0,.18)';
-});cardItem.addEventListener('mouseleave', function () {
-  cardItem.style.transform = 'translateY(0)';
-  card.style.boxShadow = '0 2px 10px rgba(0,0,0,.1)';
-});
+    cardItem.addEventListener('mouseenter', function () {
+      cardItem.style.transform = 'translateY(-6px)';
+      if (cfg.borderWidth > 0) {
+        card.style.boxShadow = '0 12px 28px rgba(0,0,0,.18)';
+      }
+    });
+    cardItem.addEventListener('mouseleave', function () {
+      cardItem.style.transform = 'translateY(0)';
+      if (cfg.borderWidth > 0) {
+        card.style.boxShadow = '0 2px 10px rgba(0,0,0,.1)';
+      } else {
+        card.style.boxShadow = 'none';
+      }
+    });
     track.appendChild(cardItem);
   });
 
