@@ -3298,6 +3298,7 @@ cardItem.style.cursor = 'pointer';
 
     // Card com thumbnail do VÍDEO
     var card = createEl('div', 'vl-carousel-card');
+    var hasBorder = cfg.borderWidth > 0;
     card.style.cssText = [
       'width:100%;',
       'aspect-ratio:' + cfg.aspectRatio + ';',
@@ -3305,8 +3306,11 @@ cardItem.style.cursor = 'pointer';
       'overflow:hidden;',
       'position:relative;',
       'background:#000;',
-      'border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';',
-      'box-shadow:0 2px 10px rgba(0,0,0,.1);'
+      'outline:none;',
+      hasBorder
+        ? 'border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';'
+        : 'border:0;',
+      hasBorder ? 'box-shadow:0 2px 10px rgba(0,0,0,.1);' : 'box-shadow:none;'
     ].join('');
 
     // Thumbnail do vídeo (fallback: story cover)
