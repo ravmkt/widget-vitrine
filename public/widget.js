@@ -3329,7 +3329,6 @@ cardItem.style.cursor = 'pointer';
         'height:100%;',
         'object-fit:' + cfg.objectFit + ';',
         'display:block;',
-        'border-radius:' + cfg.borderRadius + 'px;',
         'transform:translateZ(0);',
         '-webkit-transform:translateZ(0);'
       ].join('');
