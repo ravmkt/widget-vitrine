@@ -3499,7 +3499,7 @@ function renderGridWidget(container, stories, appearance) {
     'padding:4px;'
   ].join('');
 
-  visibleVideos.forEach(function (item) {
+  allVideos.forEach(function (item) {
     var story = item.story;
     var video = item.video;
 
