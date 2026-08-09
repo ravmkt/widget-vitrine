@@ -3310,10 +3310,10 @@ cardItem.style.cursor = 'pointer';
       '-webkit-transform:translateZ(0);',
       'will-change:transform;',
       'isolation:isolate;',
-      hasBorder
+      (hasBorder
         ? 'border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';'
-        : 'border:0;',
-      hasBorder ? 'box-shadow:0 2px 10px rgba(0,0,0,.1);' : 'box-shadow:none;'
+        : 'border:0;'),
+      (hasBorder ? 'box-shadow:0 2px 10px rgba(0,0,0,.1);' : 'box-shadow:none;')
     ].join('');
 
     // Thumbnail do vídeo (fallback: story cover)
