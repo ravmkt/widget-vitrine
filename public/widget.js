@@ -3458,6 +3458,116 @@ cardItem.addEventListener('click', function (e) {
   console.log('[Vidlytics] Carrossel renderizado com ' + allVideos.length + ' video(s).');
 }
 
+function renderGridWidget(container, stories, appearance) {
+  var allVideos = [];
+  (stories || []).forEach(function (story, storyIdx) {
+    var videos = story.videos || [];
+    videos.forEach(function (video, videoIdx) {
+      allVideos.push({
+        story: story,
+        storyIndex: storyIdx,
+        video: video,
+        videoIndex: videoIdx
+      });
+    });
+  });
+
+  if (allVideos.length === 0) {
+    var emptyMsg = createEl('div');
+    emptyMsg.textContent = 'Nenhum vídeo disponível.';
+    emptyMsg.style.cssText = 'font-size:14px;color:#94a3b8;text-align:center;padding:20px;';
+    container.appendChild(emptyMsg);
+    return;
+  }
+
+  var cfg = getGridConfig(appearance);
+  var fontFamily = getFontFamily(appearance);
+  var columns = cfg.columns || 4;
+  var rows = cfg.rows || 1;
+  var maxVisible = columns * rows;
+  var gapPx = cfg.spacing + 'px';
+
+  var gridWrapper = createEl('div', 'vl-grid-wrapper');
+  gridWrapper.style.cssText = [
+    'display:grid;',
+    'grid-template-columns:repeat(' + columns + ', 1fr);',
+    'gap:' + gapPx + ';',
+    'width:100%;',
+    'max-width:100%;',
+    'padding:4px;'
+  ].join('');
+
+  var visibleVideos = allVideos.slice(0, maxVisible);
+
+  visibleVideos.forEach(function (item) {
+    var story = item.story;
+    var video = item.video;
+
+    var card = createEl('div', 'vl-grid-card');
+    var hasBorder = cfg.borderWidth > 0;
+    card.style.cssText = [
+      'aspect-ratio:' + cfg.aspectRatio + ';',
+      'border-radius:' + cfg.borderRadius + 'px;',
+      'overflow:hidden;',
+      'position:relative;',
+      'background:#000;',
+      'cursor:pointer;',
+      'transition:transform .2s ease, box-shadow .2s ease;',
+      (hasBorder ? 'box-shadow:inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ';' : '')
+    ].join('');
+
+    var thumbUrl = getVideoThumbnail(video) ||
+                   story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
+
+    if (thumbUrl) {
+      var img = createEl('img');
+      img.src = thumbUrl;
+      img.alt = video.title || story.title || '';
+      img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;';
+      img.loading = 'lazy';
+      card.appendChild(img);
+    }
+
+    // Play button overlay
+    var playBadge = createEl('div');
+    playBadge.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;';
+    var playIcon = createEl('div');
+    playIcon.style.cssText = 'width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;';
+    playIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"></polygon></svg>';
+    playBadge.appendChild(playIcon);
+    card.appendChild(playBadge);
+
+    card.addEventListener('click', function (e) {
+      e.preventDefault();
+      openStoryModal(item.storyIndex, item.videoIndex);
+      trackMetric({
+        event_type: 'play',
+        story_id: story.id,
+        video_id: video.id,
+        page_url: window.location.href
+      });
+    });
+
+    card.addEventListener('mouseenter', function () {
+      card.style.transform = 'translateY(-4px)';
+      card.style.boxShadow = '0 8px 24px rgba(0,0,0,.15)' +
+        (hasBorder ? ', inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor : '');
+    });
+    card.addEventListener('mouseleave', function () {
+      card.style.transform = 'translateY(0)';
+      card.style.boxShadow = hasBorder
+        ? 'inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor
+        : 'none';
+    });
+
+    gridWrapper.appendChild(card);
+  });
+
+  container.appendChild(gridWrapper);
+  console.log('[Vidlytics] Grade renderizada com ' + visibleVideos.length + ' video(s) em ' + columns + ' colunas.');
+}
+
+
 function initInlineWidget(options) {
   var targetSelector = options.target || options.anchor || '#vidlytics-stories';
   var placement = String(options.placement || 'beforeend').toLowerCase();
