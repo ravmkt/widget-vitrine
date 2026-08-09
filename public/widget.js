@@ -2616,14 +2616,21 @@ function trackMetric(data) {
     body.appendChild(social);
     container.appendChild(body);
 
-    console.log('🐛 DEBUG WHATSAPP:', {
-      storeWhatsappNumber: storeWhatsappNumber,
-      showWhatsAppProduto: showWhatsAppProduto,
-      videoProductId: video ? (video.product_id || video.productId) : null
-    });
-
     var showVerProduto = appearanceConfig.show_product !== false;
     var showWhatsAppProduto = appearanceConfig.show_product_whatsapp_button !== false;
+
+    // 🔍 DEBUG — colar AQUI (depois das declarações)
+    var videoProductId = video ? (video.product_id || video.productId) : null;
+    var productData = videoProductId ? readProductsData.find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
+    console.log('🐛 DEBUG WHATSAPP V2:', {
+      showWhatsAppProduto: showWhatsAppProduto,
+      storeWhatsappNumber: storeWhatsappNumber,
+      videoProductId: videoProductId,
+      productDataFound: !!productData,
+      productWhatsapp: productData ? (productData.whatsapp_number || productData.whatsappNumber) : null,
+      modalConfigRaw: currentAppearance.modal_config
+    });
+    // FIM DEBUG
 
     if (showVerProduto || showWhatsAppProduto) {
       var videoProductId = video.product_id || (video.productId) || null;
