@@ -3296,7 +3296,6 @@ cardItem.style.cssText = [
 
 cardItem.style.cursor = 'pointer';
 
-    // Card com thumbnail do VÍDEO
     var card = createEl('div', 'vl-carousel-card');
     var hasBorder = cfg.borderWidth > 0;
     card.style.cssText = [
