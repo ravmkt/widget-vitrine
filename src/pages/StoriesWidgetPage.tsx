@@ -669,7 +669,6 @@ const ProductInfoCard: FC<{
   backgroundColor, textColor, accentColor, buttonColor,
   whatsappNumber, settings,
 }) => {
-  const hasBothButtons = showProductButton && showProductWhatsappButton;
 
   const handleWhatsAppClick = () => {
     const phone = String(
