@@ -1482,8 +1482,6 @@ useEffect(() => {
             textColor={textColor}
             accentColor={accentColor}
             buttonColor={buttonColor}
-            showProductButton={modalConfig.show_product_button}
-            showProductWhatsappButton={modalConfig.show_product_whatsapp_button}
             whatsappNumber={whatsappNumber}
             settings={settings}
           />
