@@ -3306,10 +3306,8 @@ cardItem.style.cursor = 'pointer';
       'position:relative;',
       'background:#000;',
       'outline:none;',
-      'transform:translateZ(0);',
-      '-webkit-transform:translateZ(0);',
-      'will-change:transform;',
-      'isolation:isolate;',
+      'backface-visibility:hidden;',
+      '-webkit-backface-visibility:hidden;',
       (hasBorder
         ? 'border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';'
         : 'border:0;'),
