@@ -3492,11 +3492,12 @@ function renderGridWidget(container, stories, appearance) {
   var gridWrapper = createEl('div', 'vl-grid-wrapper');
   gridWrapper.style.cssText = [
     'display:grid;',
-    'grid-template-columns:repeat(' + columns + ', 1fr);',
+    'grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));',
     'gap:' + gapPx + ';',
     'width:100%;',
     'max-width:100%;',
-    'padding:4px;'
+    'padding:4px;',
+    'justify-items:center;'
   ].join('');
 
   allVideos.forEach(function (item) {
