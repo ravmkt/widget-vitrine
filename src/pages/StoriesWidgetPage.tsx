@@ -706,6 +706,30 @@ const ProductInfoCard: FC<{
           </p>
           <p className="mt-1 text-base font-black" style={{ color: accentColor }}>
             {productPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      <div className="mt-2 flex gap-2">
+            <a
+              href={productUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center gap-1 rounded-full px-3 py-2 text-[11px] font-black text-white transition hover:opacity-90"
+              style={{ backgroundColor: buttonColor }}
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Ver produto
+            </a>
+            <button
+              type="button"
+              onClick={handleWhatsAppClick}
+              className="flex items-center justify-center gap-1 rounded-full px-3 py-2 text-[11px] font-black text-white transition hover:opacity-90"
+              style={{ backgroundColor: '#25D366' }}
+            >
+              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-white">
+                <path d="M16.6 13.2c-.3-.2-1.7-.8-2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.8 0c-.4-.2-1.4-.5-2.6-1.6-.9-.8-1.6-1.8-1.8-2.2-.2-.4 0-.6.2-.8l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6s-.7-1.7-1-2.3c-.3-.6-.6-.5-.8-.5h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.8s1.3 3.2 1.5 3.4c.2.2 2.3 3.6 5.6 5.1.8.4 1.5.6 2.1.8.9.3 1.7.3 2.3.2.7-.1 1.7-.7 2-1.3.3-.6.3-1.1.2-1.3-.1-.2-.3-.3-.6-.5z" />
+                <path d="M20 4A10 10 0 0 0 3.6 16.2L2 22l5.9-1.5A10 10 0 1 0 20 4zm-7.9 15.4c-1.6 0-3.2-.4-4.6-1.3l-.3-.2-3.5.9.9-3.4-.2-.3A8.1 8.1 0 1 1 12.1 19.4z" />
+              </svg>
+              WhatsApp
+            </button>
+          </div>
           </p>
         </div>
       </div>
