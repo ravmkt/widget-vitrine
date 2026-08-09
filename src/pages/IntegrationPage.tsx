@@ -47,7 +47,7 @@ const IntegrationPage = () => {
   const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey);
   const canInstall = hasStoreId && hasSupabaseConfig && Boolean(publicUrl);
 
-  const widgetVersion = '2026.07.20-04';
+const widgetVersion = '2026.08.09-01';
 
   const scriptCode = useMemo(() => {
     return `<script>
