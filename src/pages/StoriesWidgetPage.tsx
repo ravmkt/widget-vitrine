@@ -709,22 +709,20 @@ const ProductInfoCard: FC<{
             {productPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           </p>
 
-        {product && modalConfig.show_product && (
-          <ProductInfoCard
-            product={product}
-            productImageUrl={productImageUrl}
-            productUrl={productUrl}
-            productPrice={productPrice}
-            backgroundColor={backgroundColor}
-            textColor={textColor}
-            accentColor={accentColor}
-            buttonColor={buttonColor}
-            showProductButton={modalConfig.show_product_button}
-            showProductWhatsappButton={modalConfig.show_product_whatsapp_button}
-            whatsappNumber={whatsappNumber}
-            settings={settings}
-          />
-        )}
+{product && modalConfig.show_product && (
+  <ProductInfoCard
+    product={product}
+    productImageUrl={productImageUrl}
+    productUrl={productUrl}
+    productPrice={productPrice}
+    backgroundColor={backgroundColor}
+    textColor={textColor}
+    accentColor={accentColor}
+    buttonColor={buttonColor}
+    whatsappNumber={whatsappNumber}
+    settings={settings}
+  />
+)}
         </div>
       </div>
     </div>
