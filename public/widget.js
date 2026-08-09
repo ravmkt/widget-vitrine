@@ -3500,8 +3500,6 @@ function renderGridWidget(container, stories, appearance) {
     'padding:4px;'
   ].join('');
 
-  var visibleVideos = allVideos.slice(0, maxVisible);
-
   visibleVideos.forEach(function (item) {
     var story = item.story;
     var video = item.video;
