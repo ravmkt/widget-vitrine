@@ -3384,12 +3384,19 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
   // Track container
   var trackContainer = document.createElement('div');
   trackContainer.className = 'vidlytics-carousel-track-container';
+
+  var itemWidthPx = parseFloat(cfg.itemWidth) || 120;
+  var gapPx = parseFloat(cfg.itemSpacing) || 8;
+  var visibleItems = cfg.visibleItems || 4;
+
+  var containerWidthPx = (itemWidthPx * visibleItems) + (gapPx * (visibleItems - 1));
+
   trackContainer.style.cssText =
-    'display:flex !important;' +
-    'justify-content:center !important;' +
     'overflow:hidden !important;' +
     'position:relative !important;' +
-    'width:100% !important;';
+    'width:' + containerWidthPx + 'px !important;' +
+    'max-width:100% !important;' +
+    'margin:0 auto !important;'; // Opcional: Garante que o trackContainer fique centralizado se o wrapper for maior que ele
   
   var track = document.createElement('div');
   track.className = 'vidlytics-carousel-track';
@@ -3400,15 +3407,10 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
     'will-change:transform !important;';
   track.style.transform = 'translateX(0px)';
   
-  // Items
-  var renderedCount = 0;
-  var maxItems = cfg.visibleItems || 4;
-
+  // Items renderizam completamente
   stories.forEach(function(story, storyIndex) {
-    if (renderedCount >= maxItems) return;
     var videos = (story.videos || []).filter(Boolean);
     videos.forEach(function(video, videoIndex) {
-      if (renderedCount >= maxItems) return;
       var thumbUrl = getVideoThumbnail(video) || story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
       var item = document.createElement('div');
       item.className = 'vidlytics-carousel-item';
@@ -3481,7 +3483,6 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
       });
       
       track.appendChild(item);
-      renderedCount++;
     });
   });
   
