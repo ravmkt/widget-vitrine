@@ -2362,7 +2362,6 @@ const AppearancePage = () => {
         button_color: formData.button_color,
         font_family: formData.font_family,
         font_size: String(formData.font_size || '14'),
-        border_radius: safeNumber(floatingDesktop.border_radius, 12),
 
         widget_shape: floatingDesktop.shape,
         widget_size: formData.widget_size || 'medium',
