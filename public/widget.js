@@ -805,7 +805,7 @@ return {
     shape: shape,
     itemAspect: aspect
   };
-        }
+          }
 
 function getGridConfig(appearance) {
   appearance = normalizeAppearanceItem(appearance || {});
