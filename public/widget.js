@@ -3366,10 +3366,10 @@ if (thumbUrl) {
       card.appendChild(playBadge);
     }
 
-    // Overlay de borda com outline (evita vazamento nos cantos)
+    // Overlay de borda com box-shadow: inset (respeita border-radius)
     var borderOverlay = createEl('div');
     borderOverlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:2;border-radius:' + cfg.borderRadius + 'px;' +
-      (hasBorder ? 'outline:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';outline-offset:-' + cfg.borderWidth + 'px;' : '');
+      (hasBorder ? 'box-shadow:inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ';' : '');
     card.appendChild(borderOverlay);
 
     // Título do story
