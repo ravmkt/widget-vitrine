@@ -144,7 +144,6 @@ type ModalConfig = {
   show_play_button: boolean;
   show_product: boolean;
   show_product_button: boolean;
-  show_product_whatsapp_button: boolean;
   show_like_button: boolean;
   show_comment_button: boolean;
   show_share_button: boolean;
