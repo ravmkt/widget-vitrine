@@ -3334,19 +3334,14 @@ cardItem.style.cursor = 'pointer';
     var thumbUrl = getVideoThumbnail(video) ||
                    story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
 
-    if (thumbUrl) {
-      var img = createEl('img');
-      img.src = thumbUrl;
-      img.alt = video.title || story.title || '';
-      img.style.cssText = [
-        'width:100%;',
-        'height:100%;',
-        'object-fit:' + cfg.objectFit + ';',
-        'display:block;'
-      ].join('');
-      img.loading = 'lazy';
-      card.appendChild(img);
-    }
+if (thumbUrl) {
+  var img = createEl('img');
+  img.src = thumbUrl;
+  img.alt = video.title || story.title || '';
+  img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + cfg.borderRadius + 'px;';
+  img.loading = 'lazy';
+  card.appendChild(img);
+}
     
     // Play button overlay
     if (cfg.showPlayButton) {
