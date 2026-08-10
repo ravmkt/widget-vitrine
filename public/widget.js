@@ -784,7 +784,6 @@ function getCarouselConfig(appearance) {
   else if (shape === 'circle') aspect = '1/1';
   else if (shape === 'landscape' || shape === '16:9') aspect = '16/9';
 
-// trecho novo
   return {
     itemWidth: px(itemWidth),
     itemSpacing: px(itemSpacing),
@@ -802,7 +801,7 @@ function getCarouselConfig(appearance) {
     shape: shape,
     itemAspect: aspect
   };
-  }
+    }
 
 function getGridConfig(appearance) {
   appearance = normalizeAppearanceItem(appearance || {});
