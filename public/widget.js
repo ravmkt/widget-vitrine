@@ -686,42 +686,48 @@ function getFloatingConfig(appearance) {
     };
   }
 
-  function getCarouselConfig(appearance) {
-    appearance = normalizeAppearanceItem(appearance || {});
-    function rcv(jsonbField, flatField, fallback) {
-      return readConfigValue(appearance, 'carousel_config', jsonbField, flatField, fallback);
-    }
-    var shape = String(rcv('shape', 'carousel_shape', 'portrait') || 'portrait').trim().toLowerCase();
-    var sizeNumber = toNumber(rcv('width', 'carousel_size', '30'), 30);
-    var visibleItems = safeInt(rcv('visible_items', 'carousel_visible_items', '4'), 4);
-    var spacing = safeInt(rcv('spacing', 'carousel_spacing', '16'), 16);
-    var borderColor = rcv('border_color', 'carousel_border_color', '#0094EB') || '#0094EB';
-    var borderWidth = safeInt(rcv('border_style', 'carousel_border_width', '2'), 2);
-    var borderRadius = safeInt(rcv('border_radius', 'carousel_border_radius', '12'), 12);
-    var objectFit = String(rcv('object_fit', 'carousel_object_fit', 'cover') || 'cover').trim().toLowerCase();
-    var marginTop = safeInt(rcv('margin_top', 'carousel_margin_top', '0'), 0);
-    var marginBottom = safeInt(rcv('margin_bottom', 'carousel_margin_bottom', '0'), 0);
-    var showTitle = toBoolean(rcv('show_title', 'carousel_show_title', false), false);
-    var showProduct = toBoolean(rcv('show_product', 'carousel_show_product', true), true);
-    var showPlayButton = toBoolean(rcv('show_play_icon', 'carousel_show_play_button', true), true);
-    var autoCenter = toBoolean(rcv('auto_center', 'carousel_auto_center', false), false);
-    var aspectRatio = '9 / 16';
-    if (shape.indexOf('landscape') !== -1 || shape.indexOf('16_9') !== -1 || shape.indexOf('16-9') !== -1) {
-      aspectRatio = '16 / 9';
-    } else if (shape.indexOf('square') !== -1 || shape.indexOf('1_1') !== -1 || shape.indexOf('1-1') !== -1 || shape === 'circle') {
-      aspectRatio = '1 / 1';
-    }
-    return {
-      shape: shape, size: sizeNumber,
-      visibleItems: visibleItems, spacing: spacing,
-      borderColor: borderColor, borderWidth: borderWidth,
-      borderRadius: borderRadius, objectFit: objectFit,
-      marginTop: marginTop, marginBottom: marginBottom,
-      showTitle: showTitle, showProduct: showProduct,
-      showPlayButton: showPlayButton, autoCenter: autoCenter,
-      aspectRatio: aspectRatio
-    };
+function getCarouselConfig(appearance) {
+  appearance = normalizeAppearanceItem(appearance || {});
+  
+  function rcv(jsonbField, flatField, fallback) {
+    return readConfigValue(appearance, 'carousel_config', jsonbField, flatField, fallback);
   }
+  
+  var itemWidth = toNumber(rcv('item_width', 'carousel_item_width', '120'), 120);
+  var itemSpacing = toNumber(rcv('item_spacing', 'carousel_item_spacing', '8'), 8);
+  var itemRadius = toNumber(rcv('item_radius', 'carousel_item_radius', '12'), 12);
+  var padding = toNumber(rcv('padding', 'carousel_padding', '16'), 16);
+  var marginTop = toNumber(rcv('margin_top', 'carousel_margin_top', '0'), 0);
+  var marginBottom = toNumber(rcv('margin_bottom', 'carousel_margin_bottom', '0'), 0);
+  
+  var showTitle = rcv('show_title', 'carousel_show_title', false);
+  if (typeof showTitle === 'string') showTitle = showTitle === 'true';
+  var showPlayIcon = rcv('show_play_icon', 'carousel_show_play_icon', true);
+  if (typeof showPlayIcon === 'string') showPlayIcon = showPlayIcon === 'true';
+  var showItemTitle = rcv('show_item_title', 'carousel_show_item_title', false);
+  if (typeof showItemTitle === 'string') showItemTitle = showItemTitle === 'true';
+  var showArrows = rcv('show_arrows', 'carousel_show_arrows', true);
+  if (typeof showArrows === 'string') showArrows = showArrows === 'true';
+  
+  var aspect = String(rcv('aspect_ratio', 'carousel_aspect_ratio', '9/16')).trim().toLowerCase();
+  if (aspect === 'square' || aspect === '1:1') aspect = '1/1';
+  if (aspect === 'portrait' || aspect === '9:16') aspect = '9/16';
+  if (aspect === 'landscape' || aspect === '16:9') aspect = '16/9';
+  
+  return {
+    itemWidth: px(itemWidth),
+    itemSpacing: px(itemSpacing),
+    itemRadius: px(itemRadius),
+    padding: px(padding),
+    marginTop: px(marginTop),
+    marginBottom: px(marginBottom),
+    showTitle: showTitle,
+    showPlayIcon: showPlayIcon,
+    showItemTitle: showItemTitle,
+    showArrows: showArrows,
+    itemAspect: aspect
+  };
+}
 
   function getGridConfig(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
