@@ -4125,54 +4125,82 @@ function initWidget() {
             return loc.active !== false && loc.active !== 'false' && loc.active !== 0 && loc.active !== '0';
           });
 
-          var displayMode = getWidgetDisplayMode(currentAppearance);
+                    var displayMode = getWidgetDisplayMode(currentAppearance);
+          console.log('[Vidlytics] 🎯 Display mode detectado:', displayMode);
+          console.log('[Vidlytics] 📍 Active locations:', activeLocations.length);
+          
           var hasActiveLocations = false;
 
-          activeLocations.forEach(function (location) {
+          activeLocations.forEach(function (location, idx) {
+            console.log('[Vidlytics] 🔄 Processando location', idx + 1, ':', location);
             hasActiveLocations = true;
             var locStoryId = location.story_id;
-            if (!locStoryId) return;
+            console.log('[Vidlytics] 📌 Story ID da location:', locStoryId);
+            
+            if (!locStoryId) {
+              console.log('[Vidlytics] ⚠️ Location sem story_id, pulando.');
+              return;
+            }
 
             var story = currentStories.find(function (s) { return idsEqual(s.id, locStoryId); });
             if (!story) {
-              console.warn('[Vidlytics] Story nao encontrada para location:', locStoryId);
+              console.warn('[Vidlytics] ❌ Story nao encontrada para location:', locStoryId);
+              console.log('[Vidlytics] 📚 Stories disponíveis:', currentStories.map(function(s) { return s.id; }));
               return;
             }
+            console.log('[Vidlytics] ✅ Story encontrada:', story.title || story.id);
 
             var storyRules = rules.filter(function (r) {
               return idsEqual(r.story_id, locStoryId);
             });
+            console.log('[Vidlytics] 📏 Rules para este story:', storyRules.length);
 
             if (storyRules.length > 0) {
-              var hasMatch = storyRules.some(function (rule) { return matchesRule(rule); });
+              var hasMatch = storyRules.some(function (rule) { 
+                console.log('[Vidlytics] 🔍 Verificando rule:', rule);
+                var result = matchesRule(rule);
+                console.log('[Vidlytics] 🎯 matchesRule resultado:', result);
+                return result;
+              });
               if (!hasMatch) {
-                console.log('[Vidlytics] Nenhuma regra bateu para location, pulando.');
+                console.log('[Vidlytics] ❌ Nenhuma regra bateu para location, pulando.');
                 return;
               }
+              console.log('[Vidlytics] ✅ Regra bateu!');
             }
 
             // Se display_mode for floating, ignora seletor CSS (floating sempre vai no body)
             if (displayMode === 'floating') {
-              console.log('[Vidlytics] Modo floating — ignorando seletor CSS da location.');
+              console.log('[Vidlytics] 🎈 Modo floating — ignorando seletor CSS da location.');
               return;
             }
 
             var selector = location.selector;
             var position = location.position || 'beforeend';
+            console.log('[Vidlytics] 🎯 Selector:', selector, 'Position:', position);
 
             if (selector) {
-              console.log('[Vidlytics] Injetando carrossel no seletor:', selector, 'posicao:', position);
-              initInlineWidget({
-                target: selector,
-                placement: position,
-                stories: [story],
-                products: readProductsData,
-                sizing_models: readSizingModelsData,
-                comments: readCommentsData,
-                appearance: currentAppearance
-              });
+              console.log('[Vidlytics] 🚀 Injetando carrossel no seletor:', selector, 'posicao:', position);
+              try {
+                initInlineWidget({
+                  target: selector,
+                  placement: position,
+                  stories: [story],
+                  products: readProductsData,
+                  sizing_models: readSizingModelsData,
+                  comments: readCommentsData,
+                  appearance: currentAppearance
+                });
+                console.log('[Vidlytics] ✅ initInlineWidget executado com sucesso!');
+              } catch (err) {
+                console.error('[Vidlytics] ❌ Erro no initInlineWidget:', err);
+              }
+            } else {
+              console.log('[Vidlytics] ⚠️ Location sem selector, pulando.');
             }
           });
+
+          console.log('[Vidlytics] 🏁 forEach finalizado. hasActiveLocations:', hasActiveLocations);
 
           // 🔧 FALLBACK: se não há display_locations ativas, renderiza baseado no display_mode
           if (!hasActiveLocations && (displayMode === 'carousel' || displayMode === 'grid')) {
