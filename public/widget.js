@@ -1209,25 +1209,29 @@ function getFloatingConfig(appearance) {
     return getThumbnailFromObject(coverRelation) || getThumbnailFromObject(story) || getVideoThumbnail(coverVideo) || getThumbnailFromObject(coverVideo) || '';
   }
 
-  function applyHostPosition(host, appearance) {
-    var cfg = getFloatingConfig(appearance || currentAppearance);
-    setImportant(host, 'position', 'fixed');
-    setImportant(host, 'top', cfg.top);
-    setImportant(host, 'right', cfg.right);
-    setImportant(host, 'bottom', cfg.bottom);
-    setImportant(host, 'left', cfg.left);
-    setImportant(host, 'z-index', cfg.zIndex);
-    setImportant(host, 'width', cfg.width);
-    setImportant(host, 'min-width', cfg.width);
-    setImportant(host, 'max-width', cfg.width);
-    setImportant(host, 'height', 'auto');
-    setImportant(host, 'overflow', 'visible');
-    setImportant(host, 'background', 'transparent');
-    setImportant(host, 'border', '0');
-    setImportant(host, 'box-shadow', 'none');
-    setImportant(host, 'pointer-events', 'auto');
-    setImportant(host, 'transform', 'none');
-  }
+function applyHostPosition(host, appearance) {
+  var cfg = getFloatingConfig(appearance || currentAppearance);
+  
+  setImportant(host, 'position', 'fixed');
+  setImportant(host, 'top', cfg.top);
+  setImportant(host, 'right', cfg.right);
+  setImportant(host, 'bottom', cfg.bottom);
+  setImportant(host, 'left', cfg.left);
+  setImportant(host, 'z-index', cfg.zIndex);
+  setImportant(host, 'width', cfg.width);
+  setImportant(host, 'min-width', cfg.width);
+  setImportant(host, 'max-width', cfg.width);
+  setImportant(host, 'height', 'auto');
+  setImportant(host, 'min-height', '0');
+  setImportant(host, 'overflow', 'visible');
+  setImportant(host, 'background', 'transparent');
+  setImportant(host, 'border', '0');
+  setImportant(host, 'box-shadow', 'none');
+  setImportant(host, 'pointer-events', 'auto');
+  setImportant(host, 'transform', 'none');
+  setImportant(host, 'margin', '0');
+  setImportant(host, 'padding', '0');
+}
 
   function getOrCreateShadowRoot(appearance) {
     var existingRoot = document.getElementById('vidlytics-widget-root');
