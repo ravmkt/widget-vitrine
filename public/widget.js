@@ -3665,36 +3665,37 @@ function initInlineWidget(options) {
   console.log('[Vidlytics] Modo de exibição detectado:', displayMode);
   
   if (displayMode === 'carousel') {
-    // 🔧 FIX: Cria um wrapper próprio para o carrossel
+    // 🔧 Cria um wrapper LIMPO após o target
     var wrapper = document.createElement('div');
-    wrapper.className = 'vidlytics-wrapper';
+    wrapper.id = 'vidlytics-wrapper-' + Date.now();
     Object.assign(wrapper.style, {
-      position: 'relative',
       width: '100%',
       margin: '20px 0',
-      overflow: 'hidden', // mantém o carrossel contido
-      zIndex: '10'
+      overflow: 'hidden'
     });
     
-    // Injeta o wrapper no local do target
     target.insertAdjacentElement('afterend', wrapper);
     
-    // Renderiza o carrossel DENTRO do wrapper
-    renderCarouselWidget({ target: wrapper, position: 'beforeend' }, stories, appearance);
+    // Usa o ID como seletor (renderCarouselWidget espera um seletor CSS)
+    renderCarouselWidget({ 
+      target: '#' + wrapper.id, 
+      position: 'beforeend' 
+    }, stories, appearance);
 
-    // Ajusta o carrossel dentro do wrapper
+    // Ajustes após o carrossel ser montado
     setTimeout(function () {
       var carousel = wrapper.querySelector('.vidlytics-carousel-container');
-      if (!carousel) return;
+      if (!carousel) {
+        console.warn('[Vidlytics] Carrossel nao encontrado!');
+        return;
+      }
 
       Object.assign(carousel.style, {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         width: '100%',
-        maxWidth: '100%',
         margin: '0 auto',
-        overflow: 'visible',
         padding: '0',
         minHeight: '280px'
       });
@@ -3703,13 +3704,12 @@ function initInlineWidget(options) {
       items.forEach(function (item) {
         Object.assign(item.style, {
           minHeight: '250px',
-          overflow: 'visible',
           flexShrink: '0'
         });
       });
 
-      console.log('[Vidlytics] 🔧 Fix aplicado com wrapper!');
-    }, 100);
+      console.log('[Vidlytics] ✅ Wrapper fix aplicado!');
+    }, 200);
 
   } else {
     var container = document.createElement('div');
