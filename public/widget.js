@@ -3800,6 +3800,7 @@ function initInlineWidget(options) {
     if (!globalShadowRoot) {
       var shadowHost = document.createElement('div');
       shadowHost.id = 'vidlytics-floating-host';
+      applyHostPosition(shadowHost, currentAppearance); // ← USA A POSIÇÃO CORRETA DA APARÊNCIA
       document.body.appendChild(shadowHost);
       globalShadowRoot = shadowHost.attachShadow({ mode: 'open' });
       injectStyles(globalShadowRoot);
