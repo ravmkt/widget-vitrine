@@ -580,16 +580,16 @@ function normalizeFloatingPosition(pos) {
 function getFloatingConfig(appearance) {
   appearance = normalizeAppearanceItem(appearance || {});
   
-  function rcv(jsonbField, flatField, fallback) {
-    return readConfigValue(appearance, 'floating_config', jsonbField, flatField, fallback);
+  function rcv(jsonbField, fallback) {
+    return readConfigValue(appearance, 'floating_config', jsonbField, fallback);
   }
   
-  var rawPosition = rcv('floating_position', 'floating_position', DEFAULT_APPEARANCE.floating_position);
+  var rawPosition = rcv('floating_position', DEFAULT_APPEARANCE.floating_position);
   var position = normalizeFloatingPosition(rawPosition);
   
-  var shape = normalizeFloatingShape(rcv('shape', 'floating_shape', DEFAULT_APPEARANCE.floating_shape));
+  var shape = normalizeFloatingShape(rcv('shape', DEFAULT_APPEARANCE.floating_shape));
   
-  var sizeNumber = toNumber(rcv('width', 'floating_size', '80'), 80);
+  var sizeNumber = toNumber(rcv('width', '80'), 80);
   var widthNumber = sizeNumber;
   var heightNumber;
   
@@ -601,92 +601,74 @@ function getFloatingConfig(appearance) {
     heightNumber = Math.round(widthNumber * 9 / 16);
   }
   
-  var borderWidthNumber = toNumber(rcv('border_style', 'floating_border_width', '2'), 2);
-  // Cor da borda — lê do config, fallback para primaryColor
-  var borderColor = rcv('border_color', 'floating_border_color', null) || getPrimaryColor(appearance);
-  var radiusNumber = toNumber(rcv('border_radius', 'floating_border_radius', '12'), 12);
+  // 🔧 Corrigido: lia 'border_style', agora lê 'border_width'
+  var borderWidthNumber = toNumber(rcv('border_width', '2'), 2); 
+  
+  // 🔧 Adicionado: mapeamento do estilo da borda
+  var borderStyleRaw = String(rcv('border_style', '1')).trim();
+  var borderStyle = BORDER_STYLE_MAP[borderStyleRaw] || 'solid';
+
+  var borderColor = rcv('border_color', null) || getPrimaryColor(appearance);
+  var radiusNumber = toNumber(rcv('border_radius', '12'), 12);
   if (shape === 'circle') radiusNumber = 999;
   
-  var marginTopNumber = toNumber(rcv('top_spacing', 'floating_margin_top', '20'), 20);
-  var marginBottomNumber = toNumber(rcv('bottom_spacing', 'floating_margin_bottom', '20'), 20);
-  var marginSideNumber = toNumber(rcv('left_spacing', 'floating_margin_side', '20'), 20);
-  var rightSpacingNumber = toNumber(rcv('right_spacing', 'floating_margin_side', '20'), 20);
+  var marginTopNumber = toNumber(rcv('top_spacing', '20'), 20);
+  var marginBottomNumber = toNumber(rcv('bottom_spacing', '20'), 20);
+  var marginSideNumber = toNumber(rcv('left_spacing', '20'), 20);
+  var rightSpacingNumber = toNumber(rcv('right_spacing', '20'), 20);
   
-  var zIndexNumber = toNumber(rcv('z_index', 'floating_z_index', '2147483647'), 2147483647);
-  var objectFit = String(rcv('object_fit', 'floating_object_fit', 'cover') || 'cover').trim().toLowerCase();
+  var zIndexNumber = toNumber(rcv('z_index', '2147483647'), 2147483647);
+  var objectFit = String(rcv('object_fit', 'cover') || 'cover').trim().toLowerCase();
   
-  // Opções visuais
-  var showTitle = rcv('show_title', 'floating_show_title', false);
+  var showTitle = rcv('show_title', false);
   if (typeof showTitle === 'string') showTitle = showTitle === 'true';
-  var showPlayIcon = rcv('show_play_icon', 'floating_show_play_icon', false);
+  var showPlayIcon = rcv('show_play_icon', false);
   if (typeof showPlayIcon === 'string') showPlayIcon = showPlayIcon === 'true';
-  var allowClose = rcv('allow_close', 'floating_allow_close', false);
+  var allowClose = rcv('allow_close', false);
   if (typeof allowClose === 'string') allowClose = allowClose === 'true';
   
   var top = 'auto', right = 'auto', bottom = 'auto', left = 'auto', alignItems = 'flex-end';
   
   if (position === 'top-left') {
-    top = px(marginTopNumber);
-    left = px(marginSideNumber);
-    alignItems = 'flex-start';
+    top = px(marginTopNumber); left = px(marginSideNumber); alignItems = 'flex-start';
   }
   if (position === 'top-right') {
-    top = px(marginTopNumber);
-    right = px(rightSpacingNumber);
-    alignItems = 'flex-end';
+    top = px(marginTopNumber); right = px(rightSpacingNumber); alignItems = 'flex-end';
   }
   if (position === 'bottom-left') {
-    bottom = px(marginBottomNumber);
-    left = px(marginSideNumber);
-    alignItems = 'flex-start';
+    bottom = px(marginBottomNumber); left = px(marginSideNumber); alignItems = 'flex-start';
   }
   if (position === 'bottom-right') {
-    bottom = px(marginBottomNumber);
-    right = px(rightSpacingNumber);
-    alignItems = 'flex-end';
+    bottom = px(marginBottomNumber); right = px(rightSpacingNumber); alignItems = 'flex-end';
   }
   
   var displayRadius = shape === 'circle' ? '999px' : px(radiusNumber);
   
   return {
-    position: position,
-    shape: shape,
-    top: top,
-    right: right,
-    bottom: bottom,
-    left: left,
-    width: px(widthNumber),
-    height: px(heightNumber),
-    borderWidth: px(borderWidthNumber),
-    borderColor: borderColor,
+    position: position, shape: shape, top: top, right: right, bottom: bottom, left: left,
+    width: px(widthNumber), height: px(heightNumber),
+    borderWidth: px(borderWidthNumber), borderColor: borderColor, borderStyle: borderStyle,
     radius: displayRadius,
     innerRadius: shape === 'circle' ? '999px' : px(Math.max(0, radiusNumber - borderWidthNumber)),
-    zIndex: zIndexNumber,
-    alignItems: alignItems,
-    objectFit: objectFit,
-    showTitle: showTitle,
-    showPlayIcon: showPlayIcon,
-    allowClose: allowClose,
-    marginTop: px(marginTopNumber),
-    marginBottom: px(marginBottomNumber),
-    marginLeft: px(marginSideNumber),
-    marginRight: px(rightSpacingNumber)
+    zIndex: zIndexNumber, alignItems: alignItems, objectFit: objectFit,
+    showTitle: showTitle, showPlayIcon: showPlayIcon, allowClose: allowClose,
+    marginTop: px(marginTopNumber), marginBottom: px(marginBottomNumber),
+    marginLeft: px(marginSideNumber), marginRight: px(rightSpacingNumber)
   };
 }
 
-  function getFloatingBehaviorConfig(appearance) {
-    appearance = appearance || {};
-    function rcv(jsonbField, flatField, fallback) {
-      return readConfigValue(appearance, 'floating_config', jsonbField, flatField, fallback);
-    }
-    return {
-      objectFit: rcv('object_fit', 'floating_object_fit', DEFAULT_APPEARANCE.floating_object_fit),
-      showPlayButton: toBoolean(rcv('show_play_icon', 'floating_show_play_button', true), true),
-      allowDrag: toBoolean(rcv('draggable', 'floating_allow_drag', false), false),
-      allowClose: toBoolean(rcv('allow_close', 'floating_allow_close', true), true)
-    };
+function getFloatingBehaviorConfig(appearance) {
+  appearance = appearance || {};
+  function rcv(jsonbField, fallback) {
+    return readConfigValue(appearance, 'floating_config', jsonbField, fallback);
   }
-
+  return {
+    objectFit: rcv('object_fit', DEFAULT_APPEARANCE.floating_object_fit),
+    showPlayButton: toBoolean(rcv('show_play_icon', true), true),
+    allowDrag: toBoolean(rcv('draggable', false), false),
+    allowClose: toBoolean(rcv('allow_close', true), true)
+  };
+}
 function getCarouselConfig(appearance) {
   appearance = normalizeAppearanceItem(appearance || {});
   
