@@ -692,7 +692,10 @@ function getCarouselConfig(appearance) {
   function rcv(jsonbField, flatField, fallback) {
     return readConfigValue(appearance, 'carousel_config', jsonbField, flatField, fallback);
   }
-  
+  var visibleItems = safeInt(rcv('visible_items', 'carousel_visible_items', '4'), 4);
+var borderColor = String(rcv('border_color', 'carousel_border_color', 'transparent') || 'transparent');
+var borderWidth = toNumber(rcv('border_width', 'carousel_border_width', '0'), 0);
+
   var itemWidth = toNumber(rcv('item_width', 'carousel_item_width', '120'), 120);
   var itemSpacing = toNumber(rcv('item_spacing', 'carousel_item_spacing', '8'), 8);
   var itemRadius = toNumber(rcv('item_radius', 'carousel_item_radius', '12'), 12);
