@@ -3808,6 +3808,7 @@ function initInlineWidget(options) {
         return;
       }
 
+// trecho novo
       Object.assign(carousel.style, {
         display: 'flex',
         justifyContent: 'center',
@@ -3815,9 +3816,9 @@ function initInlineWidget(options) {
         width: '100%',
         margin: '0 auto',
         padding: '0',
-        minHeight: '280px'
+        minHeight: 'auto'
       });
-
+      
       // 🔧 Remove overflow:hidden de TODOS os pais
       var el = wrapper.parentElement;
       while (el && el !== document.body) {
@@ -3835,7 +3836,7 @@ function initInlineWidget(options) {
           flexShrink: '0'
         });
       });
-      
+
       console.log('[Vidlytics] ✅ Wrapper fix aplicado!');
     }, 200);
 
