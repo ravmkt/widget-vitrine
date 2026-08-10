@@ -4085,20 +4085,29 @@ function initWidget() {
           return s.videos && s.videos.length > 0;
         }).length);
 
+        console.log('[Vidlytics] 🔍 Indo buscar products...');
         return readProducts();
       });
     }).then(function (products) {
       readProductsData = products || [];
+      console.log('[Vidlytics] ✅ Products carregados:', readProductsData.length);
+      console.log('[Vidlytics] 🔍 Indo buscar sizing_models...');
       return readSizingModels();
     }).then(function (models) {
       readSizingModelsData = models || [];
+      console.log('[Vidlytics] ✅ Sizing models carregados:', readSizingModelsData.length);
+      console.log('[Vidlytics] 🔍 Indo buscar comments...');
       return readComments();
     }).then(function (comments) {
       readCommentsData = comments || [];
+      console.log('[Vidlytics] ✅ Comments carregados:', readCommentsData.length);
+      console.log('[Vidlytics] 🔍 Indo buscar likes...');
       return readLikesFromDb();
     }).then(function (likes) {
       likedVideos = likes.likedVideos || {};
       videoLikeCounts = likes.likeCounts || {};
+      console.log('[Vidlytics] ✅ Likes carregados. storeId:', storeId, 'hasSupabase:', hasSupabase);
+      console.log('[Vidlytics] 🔍 Indo buscar display_locations...');
 
       // 🆕 LER DISPLAY LOCATIONS E INJETAR CARROSSEL NOS SELETORES
       if (!storeId || !hasSupabase) return Promise.resolve();
