@@ -3851,51 +3851,47 @@ function renderFloatingWidget() {
 
   var displayMode = getWidgetDisplayMode(currentAppearance);
 
-  // Só renderiza se display_mode for floating ou stories
-  if (displayMode !== 'floating' && displayMode !== 'stories') {
-    console.log('[Vidlytics] Display mode não é floating/stories, pulando flutuante.');
+  // ✅ SÓ renderiza se display_mode for EXPLICITAMENTE 'floating'
+  if (displayMode !== 'floating') {
+    console.log('[Vidlytics] Display mode não é floating, pulando flutuante.');
     return;
   }
 
-  // floating_mode controla o FORMATO do flutuante (bubble, etc.)
-  // Se não definido, usa 'bubble' como padrão quando display_mode é floating
-  var mode = (currentAppearance.floating_mode || currentAppearance.floatingMode || 'bubble').toLowerCase();
-  console.log('[Vidlytics] 🎈 Renderizando flutuante. floating_mode:', mode);
+  // ✅ Não existe floating_mode na tabela — usa 'bubble' como padrão
+  var mode = 'bubble';
+  console.log('[Vidlytics] 🎈 Renderizando flutuante. Modo:', mode);
 
-  if (mode === 'inline') {
-    console.log('[Vidlytics] floating_mode=inline, flutuante desativado.');
-    return;
+  // Remove host antigo se existir (evita duplicados)
+  var oldHost = document.getElementById('vidlytics-floating-host');
+  if (oldHost) {
+    oldHost.remove();
+    globalShadowRoot = null;
   }
 
-  if (!globalShadowRoot) {
-    var shadowHost = document.createElement('div');
-    shadowHost.id = 'vidlytics-floating-host';
-    applyHostPosition(shadowHost, currentAppearance);
-    document.body.appendChild(shadowHost);
-    globalShadowRoot = shadowHost.attachShadow({ mode: 'open' });
-    injectStyles(globalShadowRoot);
-  }
-
-  var existing = globalShadowRoot.querySelector('.vidlytics-floating-widget');
-  if (existing) existing.remove();
+  var shadowHost = document.createElement('div');
+  shadowHost.id = 'vidlytics-floating-host';
+  applyHostPosition(shadowHost, currentAppearance);
+  document.body.appendChild(shadowHost);
+  globalShadowRoot = shadowHost.attachShadow({ mode: 'open' });
+  injectStyles(globalShadowRoot);
 
   var widget = createEl('div', 'vidlytics-floating-widget');
   var primaryColor = getPrimaryColor(currentAppearance);
-  var behaviorConfig = getFloatingBehaviorConfig(currentAppearance);
   var floatingCfg = getFloatingConfig(currentAppearance);
 
   widget.style.cssText =
-    'position:fixed;' +
-    'z-index:' + floatingCfg.zIndex + ';' +
-    'top:' + floatingCfg.top + ';' +
-    'right:' + floatingCfg.right + ';' +
-    'bottom:' + floatingCfg.bottom + ';' +
-    'left:' + floatingCfg.left + ';' +
-    'width:auto;' +
+    'position:fixed !important;' +
+    'z-index:' + floatingCfg.zIndex + ' !important;' +
+    'top:' + floatingCfg.top + ' !important;' +
+    'right:' + floatingCfg.right + ' !important;' +
+    'bottom:' + floatingCfg.bottom + ' !important;' +
+    'left:' + floatingCfg.left + ' !important;' +
+    'width:auto !important;' +
+    'height:auto !important;' +
     'transition:all 0.3s ease;' +
-    'display:flex;' +
-    'flex-direction:column;' +
-    'align-items:flex-end;' +
+    'display:flex !important;' +
+    'flex-direction:column !important;' +
+    'align-items:' + floatingCfg.alignItems + ' !important;' +
     'gap:8px;';
 
   if (mode === 'bubble') {
@@ -3903,32 +3899,49 @@ function renderFloatingWidget() {
       console.log('[Vidlytics] ⚠️ Nenhum story para flutuante.');
       return;
     }
+    
     var story = currentStories[0];
     var thumbUrl = story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
     if (!thumbUrl && story.videos && story.videos.length > 0) {
       thumbUrl = getVideoThumbnail(story.videos[0]);
     }
 
+    var bubbleSize = floatingCfg.width || '80px';
     var bubbleBtn = createEl('div', 'vl-floating-bubble-btn');
-    var bubbleSizePx = '64px';
+    
     bubbleBtn.style.cssText =
-      'width:' + bubbleSizePx + ';' +
-      'height:' + bubbleSizePx + ';' +
-      'border-radius:50%;' +
-      'padding:3px;' +
-      'cursor:pointer;' +
-      'background:linear-gradient(135deg,' + primaryColor + ',' + adjustColor(primaryColor, -20) + ');' +
-      'box-shadow:0 4px 14px rgba(0,0,0,.2);' +
-      'transition:transform 0.2s ease,box-shadow 0.2s ease;';
+      'width:' + bubbleSize + ' !important;' +
+      'height:' + bubbleSize + ' !important;' +
+      'border-radius:50% !important;' +
+      'padding:3px !important;' +
+      'cursor:pointer !important;' +
+      'background:linear-gradient(135deg,' + primaryColor + ',' + adjustColor(primaryColor, -20) + ') !important;' +
+      'box-shadow:0 4px 14px rgba(0,0,0,.2) !important;' +
+      'transition:transform 0.2s ease,box-shadow 0.2s ease !important;' +
+      'flex-shrink:0 !important;' +
+      'overflow:visible !important;';
 
     var inner = createEl('div');
-    inner.style.cssText = 'width:100%;height:100%;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#fff;border:2.5px solid #fff;';
+    inner.style.cssText =
+      'width:100% !important;' +
+      'height:100% !important;' +
+      'border-radius:50% !important;' +
+      'overflow:hidden !important;' +
+      'display:flex !important;' +
+      'align-items:center !important;' +
+      'justify-content:center !important;' +
+      'background:#fff !important;' +
+      'border:2.5px solid #fff !important;';
 
     if (thumbUrl) {
       var img = createEl('img');
       img.src = thumbUrl;
       img.alt = story.title || 'Story';
-      img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
+      img.style.cssText =
+        'width:100% !important;' +
+        'height:100% !important;' +
+        'object-fit:cover !important;' +
+        'border-radius:50% !important;';
       img.loading = 'lazy';
       inner.appendChild(img);
     }
@@ -3940,12 +3953,10 @@ function renderFloatingWidget() {
     });
 
     widget.appendChild(bubbleBtn);
-    applyDraggable(bubbleBtn, currentAppearance);
   }
 
   globalShadowRoot.appendChild(widget);
-  applyDraggable(widget, currentAppearance);
-  console.log('[Vidlytics] ✅ Flutuante renderizado com sucesso!');
+  console.log('[Vidlytics] ✅ Flutuante renderizado em:', floatingCfg.position);
 }
 
   /* ================================================================
