@@ -3113,22 +3113,30 @@ function getWidgetDisplayMode(appearance) {
     if (mode === 'floating' || mode === 'flutuante') return 'floating';
     if (mode === 'stories' || mode === 'bubbles' || mode === 'bolhas') return 'stories';
   }
-// Fallback: detecta pelo jsonb preenchido (grid tem prioridade sobre carousel)
-var gridCfg = appearance.grid_config;
-var carouselCfg = appearance.carousel_config;
 
-// Parseia ambos se necessário
-if (typeof gridCfg === 'string') { try { gridCfg = JSON.parse(gridCfg); } catch(e) { gridCfg = null; } }
-if (typeof carouselCfg === 'string') { try { carouselCfg = JSON.parse(carouselCfg); } catch(e) { carouselCfg = null; } }
+  // Fallback: detecta pelo jsonb preenchido
+  var gridCfg = appearance.grid_config;
+  var carouselCfg = appearance.carousel_config;
+  var floatingCfg = appearance.floating_config;
 
-var gridPopulated = gridCfg && typeof gridCfg === 'object' && Object.keys(gridCfg).length > 0;
-var carouselPopulated = carouselCfg && typeof carouselCfg === 'object' && Object.keys(carouselCfg).length > 0;
+  if (typeof gridCfg === 'string') { try { gridCfg = JSON.parse(gridCfg); } catch(e) { gridCfg = null; } }
+  if (typeof carouselCfg === 'string') { try { carouselCfg = JSON.parse(carouselCfg); } catch(e) { carouselCfg = null; } }
+  if (typeof floatingCfg === 'string') { try { floatingCfg = JSON.parse(floatingCfg); } catch(e) { floatingCfg = null; } }
 
-// Se AMBOS existem, grid vence (usuário configurou grade explicitamente)
-if (gridPopulated && carouselPopulated) return 'stories';
+  var gridPopulated = gridCfg && typeof gridCfg === 'object' && Object.keys(gridCfg).length > 0;
+  var carouselPopulated = carouselCfg && typeof carouselCfg === 'object' && Object.keys(carouselCfg).length > 0;
+  var floatingPopulated = floatingCfg && typeof floatingCfg === 'object' && Object.keys(floatingCfg).length > 0;
+
+  // Se AMBOS grid e carousel existem, stories (bolhas) vence
+  if (gridPopulated && carouselPopulated) return 'stories';
+  
+  // Prioridade: floating > grid > carousel > stories
+  if (floatingPopulated) return 'floating';
   if (gridPopulated) return 'grid';
   if (carouselPopulated) return 'carousel';
-  return 'stories';}
+  
+  return 'stories';
+}
 
 function enableDragScroll(el) {
   var isDown = false;
