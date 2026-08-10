@@ -3473,6 +3473,7 @@ stories.forEach(function(story, storyIndex) {
       });
       
       track.appendChild(item);
+      renderedCount++;
     });
   });
   
