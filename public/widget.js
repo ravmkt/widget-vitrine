@@ -3318,11 +3318,12 @@ cardItem.style.cursor = 'pointer';
       'position:relative;',
       'background:#000;',
       'outline:none;',
-      '-webkit-mask-image:-webkit-radial-gradient(white,black);',
-      'mask-image:radial-gradient(white,black);',
       'border:0;',
+      'transform:translateZ(0);',
+      '-webkit-transform:translateZ(0);',
+      'backface-visibility:hidden;',
       (hasBorder
-        ? 'box-shadow:inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ', 0 2px 10px rgba(0,0,0,.1);'
+        ? 'box-shadow:0 2px 10px rgba(0,0,0,.1);'
         : 'box-shadow:none;')
     ].join('');
 
