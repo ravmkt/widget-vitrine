@@ -3697,6 +3697,7 @@ function renderGridWidget(container, stories, appearance) {
     var story = item.story;
     var video = item.video;
 
+// trecho novo
 var card = createEl('div', 'vl-grid-card');
 var hasBorder = cfg.borderWidth > 0;
 card.style.cssText = [
@@ -3721,6 +3722,29 @@ card.style.cssText = [
 
 if (thumbUrl) {
   var innerMask = createEl('div', 'vl-grid-img-mask');
+  
+  var innerRadiusCss = cfg.borderRadius;
+
+  innerMask.style.cssText = [
+    'position:absolute;',
+    'inset:0;',
+    'overflow:hidden;',
+    'border-radius:' + innerRadiusCss + ';',
+    'z-index:1;',
+    'pointer-events:none;',
+    'transform:translateZ(0);',
+    '-webkit-transform:translateZ(0);'
+  ].join('');
+
+  var img = createEl('img');
+  img.src = thumbUrl;
+  img.alt = video.title || story.title || '';
+  img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;';
+  img.loading = 'lazy';
+  
+  innerMask.appendChild(img);
+  card.appendChild(innerMask);
+}
   
   // Usa exatamente o mesmo border-radius do card pai para garantir encaixe perfeito
   var innerRadiusCss = cfg.borderRadius;
