@@ -3666,6 +3666,47 @@ function initInlineWidget(options) {
   
   if (displayMode === 'carousel') {
     renderCarouselWidget({ target: target, position: position }, stories, appearance);
+
+    // 🔧 FIX: corrige corte e centralização
+    setTimeout(function () {
+      var carousel = document.querySelector('.vidlytics-carousel-container');
+      if (!carousel) return;
+
+      // 1️⃣ Força altura e centralização no carrossel
+      Object.assign(carousel.style, {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+        maxWidth: '100%',
+        margin: '0 auto',
+        overflow: 'visible',
+        padding: '0',
+        minHeight: '280px'
+      });
+
+      // 2️⃣ Força altura mínima nos itens
+      var items = carousel.querySelectorAll('.vidlytics-carousel-item');
+      items.forEach(function (item) {
+        Object.assign(item.style, {
+          minHeight: '250px',
+          overflow: 'visible',
+          flexShrink: '0'
+        });
+      });
+
+      // 3️⃣ Remove overflow:hidden de TODOS os pais até o body
+      var el = carousel.parentElement;
+      while (el && el !== document.body) {
+        if (getComputedStyle(el).overflow === 'hidden') {
+          el.style.overflow = 'visible';
+        }
+        el = el.parentElement;
+      }
+
+      console.log('[Vidlytics] 🔧 Fix aplicado!');
+    }, 100);
+
   } else {
     var container = document.createElement('div');
     container.className = 'vl-container';
@@ -3675,6 +3716,7 @@ function initInlineWidget(options) {
   
   console.log('[Vidlytics] ✅ Inline injetado!');
 }
+
 
   /* ================================================================
      INICIALIZAÇÃO PRINCIPAL
