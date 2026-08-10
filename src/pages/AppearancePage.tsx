@@ -554,21 +554,25 @@ const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
 });
 
 const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
-  spacing: 12,
+  spacing: 16,
   shape: 'portrait',
   view_mode: 'preview',
   margin_top: '0',
   margin_bottom: '0',
-  visible_items: 2,
+  visible_items: 4,
   show_product: true,
   show_play_icon: true,
   auto_center: true,
-  width: '64',
+  width: '80',
   border_color: '#0094EB',
   border_style: '2',
-  border_radius: '10',
+  border_radius: '12',
   object_fit: 'cover',
   show_title: false,
+  product_card_bg: '#FFFFFF',
+  product_card_border_color: '#E2E8F0',
+  product_card_border_width: '1',
+  product_card_border_radius: '12',
 });
 
 const createDefaultGridDesktopConfig = (): GridConfig => ({
