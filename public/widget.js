@@ -3409,15 +3409,20 @@ stories.forEach(function(story, storyIndex) {
       var thumbUrl = getVideoThumbnail(video) || story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
       var item = document.createElement('div');
       item.className = 'vidlytics-carousel-item';
-      item.style.cssText =
-        'flex:0 0 ' + cfg.itemWidth + ' !important;' +
-        'width:' + cfg.itemWidth + ' !important;' +
-        'aspect-ratio:' + cfg.itemAspect + ' !important;' +
-        'border-radius:' + cfg.itemRadius + ' !important;' +
-        'overflow:hidden !important;' +
-        'cursor:pointer !important;' +
-        'position:relative !important;' +
-        'background:#f0f0f0 !important;';
+var carouselBorderCss = (cfg.borderWidth > 0)
+  ? ('border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ' !important;')
+  : '';
+
+item.style.cssText =
+  'flex:0 0 ' + cfg.itemWidth + ' !important;' +
+  'width:' + cfg.itemWidth + ' !important;' +
+  'aspect-ratio:' + cfg.itemAspect + ' !important;' +
+  'border-radius:' + cfg.itemRadius + ' !important;' +
+  'overflow:hidden !important;' +
+  'cursor:pointer !important;' +
+  'position:relative !important;' +
+  'background:#f0f0f0 !important;' +
+  carouselBorderCss;
       
       if (thumbUrl) {
         var img = document.createElement('img');
