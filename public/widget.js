@@ -3368,16 +3368,8 @@ if (thumbUrl) {
 
     // Overlay de borda com outline (evita vazamento nos cantos)
     var borderOverlay = createEl('div');
-    borderOverlay.style.cssText = [
-      'position:absolute;',
-      'inset:0;',
-      'pointer-events:none;',
-      'z-index:2;',
-      'border-radius:' + cfg.borderRadius + 'px;',
-      (hasBorder
-        ? 'outline:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';outline-offset:-' + cfg.borderWidth + 'px;'
-        : '')
-    ].join('');
+    borderOverlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:2;border-radius:' + cfg.borderRadius + 'px;' +
+      (hasBorder ? 'outline:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';outline-offset:-' + cfg.borderWidth + 'px;' : '');
     card.appendChild(borderOverlay);
 
     }
