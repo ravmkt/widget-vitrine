@@ -4153,8 +4153,9 @@ function initWidget() {
         });
       });
     }).then(function () {
-      // Renderiza widget flutuante se habilitado
-      if (enableFloating) {
+      // Renderiza widget flutuante apenas se display_mode for floating ou stories
+      var displayMode = getWidgetDisplayMode(currentAppearance);
+      if (enableFloating && (displayMode === 'floating' || displayMode === 'stories')) {
         renderFloatingWidget();
       }
     }).catch(function (err) {
