@@ -3537,8 +3537,6 @@ function renderGridWidget(container, stories, appearance) {
     playBadge.appendChild(playIcon);
     card.appendChild(playBadge);
 
-    card.appendChild(playBadge);
-
     // 🔥 NOVO: overlay de borda por cima de tudo
     var borderOverlay = createEl('div');
     borderOverlay.style.cssText = [
