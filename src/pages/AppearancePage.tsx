@@ -547,6 +547,10 @@ const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
   border_radius: '12',
   object_fit: 'cover',
   show_title: false,
+  product_card_bg: '#FFFFFF',
+  product_card_border_color: '#E2E8F0',
+  product_card_border_width: '1',
+  product_card_border_radius: '12',
 });
 
 const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
