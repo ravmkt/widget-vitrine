@@ -3697,7 +3697,6 @@ function renderGridWidget(container, stories, appearance) {
     var story = item.story;
     var video = item.video;
 
-// trecho novo
 var card = createEl('div', 'vl-grid-card');
 var hasBorder = cfg.borderWidth > 0;
 card.style.cssText = [
@@ -3714,22 +3713,17 @@ card.style.cssText = [
   '-webkit-transform:translateZ(0);',
   'backface-visibility:hidden;',
   '-webkit-backface-visibility:hidden;',
-  '-webkit-mask-image: -webkit-radial-gradient(white, black);', // Força anti-aliasing geométrico perfeito nas bordas
-  hasBorder ? ('border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';') : '',
+  hasBorder ? ('box-shadow: inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ';') : '',
 ].join('');
 
     var thumbUrl = getVideoThumbnail(video) ||
                    story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
 
 if (thumbUrl) {
-  // Cria um container interno exclusivo para mascarar a imagem perfeitamente dentro da borda
   var innerMask = createEl('div', 'vl-grid-img-mask');
   
+  // Usa exatamente o mesmo border-radius do card pai para garantir encaixe perfeito
   var innerRadiusCss = cfg.borderRadius;
-  if (cfg.borderWidth > 0 && cfg.borderRadius !== '50%') {
-    var rawRadiusNum = parseFloat(cfg.borderRadius) || 0;
-    innerRadiusCss = Math.max(0, rawRadiusNum - cfg.borderWidth) + 'px';
-  }
 
   innerMask.style.cssText = [
     'position:absolute;',
@@ -3745,7 +3739,7 @@ if (thumbUrl) {
   var img = createEl('img');
   img.src = thumbUrl;
   img.alt = video.title || story.title || '';
-  img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';';
+  img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;';
   img.loading = 'lazy';
   
   innerMask.appendChild(img);
