@@ -3848,12 +3848,10 @@ function renderFloatingWidget(floatingStories) {
   if (!currentAppearance) return;
 
   var stories = floatingStories || currentStories;
-
-  // ✅ Não existe floating_mode na tabela — usa 'bubble' como padrão
   var mode = 'bubble';
   console.log('[Vidlytics] 🎈 Renderizando flutuante. Modo:', mode, '| stories:', stories.length);
 
-  // Remove host antigo se existir (evita duplicados)
+  // Remove host antigo se existir
   var oldHost = document.getElementById('vidlytics-floating-host');
   if (oldHost) {
     oldHost.remove();
@@ -3910,8 +3908,7 @@ function renderFloatingWidget(floatingStories) {
       'background:linear-gradient(135deg,' + primaryColor + ',' + adjustColor(primaryColor, -20) + ') !important;' +
       'box-shadow:0 4px 14px rgba(0,0,0,.2) !important;' +
       'transition:transform 0.2s ease,box-shadow 0.2s ease !important;' +
-      'flex-shrink:0 !important;' +
-      'overflow:visible !important;';
+      'flex-shrink:0 !important;';
 
     var inner = createEl('div');
     inner.style.cssText =
@@ -3945,6 +3942,7 @@ function renderFloatingWidget(floatingStories) {
     });
 
     widget.appendChild(bubbleBtn);
+    applyDraggable(bubbleBtn, currentAppearance);
   }
 
   globalShadowRoot.appendChild(widget);
