@@ -3665,24 +3665,25 @@ function initInlineWidget(options) {
   console.log('[Vidlytics] Modo de exibição detectado:', displayMode);
   
   if (displayMode === 'carousel') {
-    // 🔧 Cria um wrapper LIMPO após o target
     var wrapper = document.createElement('div');
     wrapper.id = 'vidlytics-wrapper-' + Date.now();
+    
+    // 🔧 CRÍTICO: altura mínima + overflow visible
     Object.assign(wrapper.style, {
       width: '100%',
+      minHeight: '300px',
       margin: '20px 0',
-      overflow: 'hidden'
+      overflow: 'visible',
+      display: 'block'
     });
     
     target.insertAdjacentElement('afterend', wrapper);
     
-    // Usa o ID como seletor (renderCarouselWidget espera um seletor CSS)
     renderCarouselWidget({ 
       target: '#' + wrapper.id, 
       position: 'beforeend' 
     }, stories, appearance);
 
-    // Ajustes após o carrossel ser montado
     setTimeout(function () {
       var carousel = wrapper.querySelector('.vidlytics-carousel-container');
       if (!carousel) {
@@ -3699,6 +3700,15 @@ function initInlineWidget(options) {
         padding: '0',
         minHeight: '280px'
       });
+
+      // 🔧 Remove overflow:hidden de TODOS os pais
+      var el = wrapper.parentElement;
+      while (el && el !== document.body) {
+        if (getComputedStyle(el).overflow === 'hidden') {
+          el.style.setProperty('overflow', 'visible', 'important');
+        }
+        el = el.parentElement;
+      }
 
       var items = carousel.querySelectorAll('.vidlytics-carousel-item');
       items.forEach(function (item) {
