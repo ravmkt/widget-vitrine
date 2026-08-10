@@ -3500,6 +3500,7 @@ function renderGridWidget(container, stories, appearance) {
     var card = createEl('div', 'vl-grid-card');
     var hasBorder = cfg.borderWidth > 0;
     card.style.cssText = [
+      'width:100%;',
       'aspect-ratio:' + cfg.aspectRatio + ';',
       'border-radius:' + cfg.borderRadius + 'px;',
       'overflow:hidden;',
@@ -3507,8 +3508,10 @@ function renderGridWidget(container, stories, appearance) {
       'background:#000;',
       'cursor:pointer;',
       'transition:transform .2s ease, box-shadow .2s ease;',
-      'width:100%;',
       'max-width:' + cardMaxWidth + ';',
+      'transform:translateZ(0);',
+      '-webkit-transform:translateZ(0);',
+      'backface-visibility:hidden;',
     ].join('');
 
     var thumbUrl = getVideoThumbnail(video) ||
