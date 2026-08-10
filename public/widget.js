@@ -577,7 +577,6 @@ function normalizeFloatingPosition(pos) {
     return DEFAULT_APPEARANCE.floating_shape;
   }
 
-// trecho antigo
 function getFloatingConfig(appearance) {
   appearance = normalizeAppearanceItem(appearance || {});
   
@@ -602,12 +601,9 @@ function getFloatingConfig(appearance) {
     heightNumber = Math.round(widthNumber * 9 / 16);
   }
   
-  // 🔧 Corrigido: lia 'border_style', agora lê 'border_width'
-  var borderWidthNumber = toNumber(rcv('border_width', '2'), 2); 
-  
-  // 🔧 Adicionado: mapeamento do estilo da borda
-  var borderStyleRaw = String(rcv('border_style', '1')).trim();
-  var borderStyle = BORDER_STYLE_MAP[borderStyleRaw] || 'solid';
+  // border_style armazena a LARGURA da borda em px (sempre sólida)
+  var borderWidthNumber = toNumber(rcv('border_style', '2'), 2);
+  var borderStyle = 'solid';
 
   var borderColor = rcv('border_color', null) || getPrimaryColor(appearance);
   var radiusNumber = toNumber(rcv('border_radius', '12'), 12);
@@ -657,8 +653,7 @@ function getFloatingConfig(appearance) {
     marginLeft: px(marginSideNumber), marginRight: px(rightSpacingNumber)
   };
 }
-E substitua por este:
-javascript
+
 function getFloatingConfig(appearance) {
   appearance = normalizeAppearanceItem(appearance || {});
   
