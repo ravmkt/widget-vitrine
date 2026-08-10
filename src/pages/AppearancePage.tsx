@@ -2349,43 +2349,31 @@ const AppearancePage = () => {
       const modalConfig = formData.modal_config;
       const shouldBeDefault = formData.is_default || appearances.length === 0;
 
-      const stylePayload = {
-        id,
-        store_id: finalStoreId,
-        name: formData.name.trim(),
-        is_default: shouldBeDefault,
+const stylePayload = {
+  id,
+  store_id: finalStoreId,
+  name: formData.name.trim(),
+  is_default: shouldBeDefault,
 
-        primary_color: formData.primary_color,
-        secondary_color: formData.secondary_color,
-        text_color: formData.text_color,
-        background_color: formData.background_color,
-        button_color: formData.button_color,
-        font_family: formData.font_family,
-        font_size: String(formData.font_size || '14'),
+  primary_color: formData.primary_color,
+  secondary_color: formData.secondary_color,
+  text_color: formData.text_color,
+  background_color: formData.background_color,
+  button_color: formData.button_color,
+  font_family: formData.font_family,
+  font_size: String(formData.font_size || '14'),
 
-        widget_shape: floatingDesktop.shape,
-        widget_size: formData.widget_size || 'medium',
-        widget_animation: formData.widget_animation || 'none',
+  floating_config: floatingConfig,
+  carousel_config: carouselConfig,
+  grid_config: gridConfig,
+  modal_config: modalConfig,
 
-        floating_config: floatingConfig,
-        carousel_config: carouselConfig,
-        grid_config: gridConfig,
-        modal_config: modalConfig,
+  use_global_appearance: formData.useGlobalAppearance,
+  url: formData.url || null,
 
-        show_title: modalConfig.show_title,
-        show_play_button: modalConfig.show_play_button,
-        show_product: modalConfig.show_product,
-        show_like_button: modalConfig.show_like_button,
-        show_comment_button: modalConfig.show_comment_button,
-        show_share_button: modalConfig.show_share_button,
-        show_product_button: modalConfig.show_product_button,
-
-        use_global_appearance: formData.useGlobalAppearance,
-        url: formData.url || null,
-
-        created_at: formData.created_at || editingStyle?.created_at || now,
-        updated_at: now,
-      };
+  created_at: formData.created_at || editingStyle?.created_at || now,
+  updated_at: now,
+};
 
       if (stylePayload.is_default) {
         await Promise.all(
