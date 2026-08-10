@@ -3812,16 +3812,15 @@ function initInlineWidget(options) {
     var widget = createEl('div', 'vidlytics-floating-widget');
     var primaryColor = getPrimaryColor(currentAppearance);
     var behaviorConfig = getFloatingBehaviorConfig(currentAppearance);
-
-    var posRight = behaviorConfig.position === 'left' ? 'auto' : '16px';
-    var posLeft = behaviorConfig.position === 'left' ? '16px' : 'auto';
+    var floatingCfg = getFloatingConfig(currentAppearance);
 
     widget.style.cssText =
       'position:fixed;' +
-      'z-index:999998;' +
-      'right:' + posRight + ';' +
-      'left:' + posLeft + ';' +
-      'bottom:16px;' +
+      'z-index:' + floatingCfg.zIndex + ';' +
+      'top:' + floatingCfg.top + ';' +
+      'right:' + floatingCfg.right + ';' +
+      'bottom:' + floatingCfg.bottom + ';' +
+      'left:' + floatingCfg.left + ';' +
       'width:auto;' +
       'transition:all 0.3s ease;' +
       'display:flex;' +
