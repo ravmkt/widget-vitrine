@@ -3595,6 +3595,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
 
       item.appendChild(videoCard);
 
+// trecho novo
       if (cfg.showProduct) {
         var videoProductId = video.product_id || video.productId || null;
         var productData = videoProductId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
@@ -3603,7 +3604,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
           var priColor = getPrimaryColor(appearance);
           var productUrl = productData.product_url || productData.url || '';
 
-          // Container estilo card unificado para o produto
+          // Container estilo card unificado para o produto com suporte a config dinâmica
           var prodCard = document.createElement('div');
           prodCard.className = 'vidlytics-carousel-product-card';
           prodCard.style.cssText =
@@ -3612,9 +3613,9 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             'gap:6px !important;' +
             'padding:8px !important;' +
             'width:100% !important;' +
-            'background:#fff !important;' +
-            'border-radius:12px !important;' +
-            'border:1px solid rgba(15,23,42,0.08) !important;' +
+            'background:' + (cfg.productCardBg || '#fff') + ' !important;' +
+            'border-radius:' + (cfg.productCardRadius || 12) + 'px !important;' +
+            'border:' + (cfg.productCardBorderWidth || 1) + 'px solid ' + (cfg.productCardBorderColor || '#e2e8f0') + ' !important;' +
             'box-shadow:0 2px 8px rgba(0,0,0,0.04) !important;' +
             'box-sizing:border-box !important;' +
             'cursor:pointer !important;' +
@@ -3664,6 +3665,72 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             'width:100% !important;';
           pInfo.appendChild(pName);
 
+          if (productData.price) {
+            var pPrice = document.createElement('div');
+            pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
+            pPrice.style.cssText =
+              'font-size:12px !important;' +
+              'font-weight:800 !important;' +
+              'color:' + priColor + ' !important;';
+            pInfo.appendChild(pPrice);
+          }
+
+          prodTop.appendChild(pInfo);
+          prodCard.appendChild(prodTop);
+
+          // Botão de ação "Ver no site"
+          var buyBtn = document.createElement('button');
+          buyBtn.type = 'button';
+          buyBtn.innerHTML = 'Ver no site &rarr;';
+          buyBtn.style.cssText =
+            'all:unset !important;' +
+            'display:block !important;' +
+            'width:100% !important;' +
+            'text-align:center !important;' +
+            'padding:6px 0 !important;' +
+            'background:' + priColor + ' !important;' +
+            'color:#fff !important;' +
+            'font-size:11px !important;' +
+            'font-weight:700 !important;' +
+            'border-radius:8px !important;' +
+            'cursor:pointer !important;' +
+            'box-sizing:border-box !important;';
+
+          buyBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (productUrl) {
+              window.open(productUrl, '_blank');
+            }
+            trackMetric({
+              event_type: 'product_click',
+              story_id: story.id,
+              video_id: video.id,
+              product_id: productData.id,
+              page_url: window.location.href
+            });
+          });
+
+          prodCard.appendChild(buyBtn);
+
+          // Clique geral no card do produto
+          prodCard.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (productUrl) {
+              window.open(productUrl, '_blank');
+            }
+            trackMetric({
+              event_type: 'product_click',
+              story_id: story.id,
+              video_id: video.id,
+              product_id: productData.id,
+              page_url: window.location.href
+            });
+          });
+
+          item.appendChild(prodCard);
+        }
+      }
+      
           if (productData.price) {
             var pPrice = document.createElement('div');
             pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
