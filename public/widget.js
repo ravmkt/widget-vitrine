@@ -4235,10 +4235,15 @@ function initWidget() {
         });
       });
     }).then(function () {
-      // Renderiza widget flutuante apenas se display_mode for floating ou stories
+      // ✅ Flutuante só renderiza quando display_mode é EXPLICITAMENTE 'floating'
       var displayMode = getWidgetDisplayMode(currentAppearance);
-      if (enableFloating && (displayMode === 'floating' || displayMode === 'stories')) {
+      console.log('[Vidlytics] 🎯 Display mode final:', displayMode);
+      
+      if (displayMode === 'floating') {
+        console.log('[Vidlytics] 🎈 Renderizando widget flutuante...');
         renderFloatingWidget();
+      } else {
+        console.log('[Vidlytics] ⏭️ Modo não é floating, pulando flutuante.');
       }
     }).catch(function (err) {
       console.warn('[Vidlytics] Erro na inicialização:', err);
