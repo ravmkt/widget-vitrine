@@ -3711,6 +3711,7 @@ card.style.cssText = [
   hasBorder ? ('border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';') : '',
 ].join('');
 
+// trecho novo
     var thumbUrl = getVideoThumbnail(video) ||
                    story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
 
@@ -3718,7 +3719,15 @@ if (thumbUrl) {
   var img = createEl('img');
   img.src = thumbUrl;
   img.alt = video.title || story.title || '';
-  img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + cfg.borderRadius + ';transform:scale(1.02);-webkit-backface-visibility:hidden;';
+  
+  // Calcula o raio interno para a imagem acompanhar perfeitamente o arredondamento da borda
+  var innerRadiusCss = cfg.borderRadius;
+  if (cfg.borderWidth > 0 && cfg.borderRadius !== '50%') {
+    var rawRadiusNum = parseFloat(cfg.borderRadius) || 0;
+    innerRadiusCss = Math.max(0, rawRadiusNum - cfg.borderWidth) + 'px';
+  }
+
+  img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';transform:scale(1.02);-webkit-backface-visibility:hidden;';
   img.loading = 'lazy';
   card.appendChild(img);
 }
