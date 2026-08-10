@@ -704,14 +704,13 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
     grid_object_fit: gridDesktop.object_fit,
     grid_show_title: gridDesktop.show_title,
 
-show_title: modalConfig.show_title,
-show_play_button: true,
-show_product: true,
-show_like_button: modalConfig.show_like_button,
-show_comment_button: modalConfig.show_comment_button,
-show_share_button: modalConfig.show_share_button,
-show_product_button: true,
-show_product_whatsapp_button: modalConfig.show_product_whatsapp_button,
+    show_title: modalConfig.show_title,
+    show_play_button: true,
+    show_product: true,
+    show_like_button: modalConfig.show_like_button,
+    show_comment_button: modalConfig.show_comment_button,
+    show_share_button: modalConfig.show_share_button,
+    show_product_button: true,
 
     modal_show_title: modalConfig.show_title,
     modal_show_play_button: modalConfig.show_play_button,
@@ -720,7 +719,6 @@ show_product_whatsapp_button: modalConfig.show_product_whatsapp_button,
     modal_show_comment_button: modalConfig.show_comment_button,
     modal_show_share_button: modalConfig.show_share_button,
     modal_show_product_button: modalConfig.show_product_button,
-    modal_show_product_whatsapp_button: modalConfig.show_product_whatsapp_button,
     modal_border_color: modalConfig.border_color,
     modal_border_width: modalConfig.border_width,
     modal_border_radius: modalConfig.border_radius,
@@ -939,8 +937,6 @@ const normalizeAppearance = (
       item.show_share_button ?? modalRaw?.show_share_button ?? defaults.show_share_button,
     show_product_button:
       item.show_product_button ?? modalRaw?.show_product_button ?? defaults.show_product_button,
-    show_product_whatsapp_button:
-      item.show_product_whatsapp_button ?? modalRaw?.show_product_whatsapp_button ?? defaults.show_product_whatsapp_button,
   };
 
   const floatingDesktop = floatingConfig.desktop;
@@ -1001,7 +997,6 @@ const normalizeAppearance = (
     show_comment_button: modalConfig.show_comment_button,
     show_share_button: modalConfig.show_share_button,
     show_product_button: modalConfig.show_product_button,
-    show_product_whatsapp_button: modalConfig.show_product_whatsapp_button,
 
     created_at: item.created_at || defaults.created_at,
     updated_at: item.updated_at || defaults.updated_at,
@@ -2207,7 +2202,6 @@ const AppearancePage = () => {
         show_comment_button: modalConfig.show_comment_button,
         show_share_button: modalConfig.show_share_button,
         show_product_button: modalConfig.show_product_button,
-        show_product_whatsapp_button: modalConfig.show_product_whatsapp_button,
       } as ExtendedAppearance;
     });
   };
@@ -2386,7 +2380,6 @@ const AppearancePage = () => {
         show_comment_button: modalConfig.show_comment_button,
         show_share_button: modalConfig.show_share_button,
         show_product_button: modalConfig.show_product_button,
-        show_product_whatsapp_button: modalConfig.show_product_whatsapp_button,
 
         use_global_appearance: formData.useGlobalAppearance,
         url: formData.url || null,
