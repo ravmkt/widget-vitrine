@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.08.10-00';
+  var WIDGET_VERSION = '2026.08.11-00';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -3688,13 +3688,16 @@ function initInlineWidget(options) {
     targetEl.parentNode.insertBefore(wrapper, targetEl.nextSibling);
   }
 
-  var displayMode = getWidgetDisplayMode(currentAppearance);
+  var displayMode = options.storyFormat || getWidgetDisplayMode(currentAppearance);
   console.log('[Vidlytics] Modo de exibição detectado:', displayMode);
 
   if (displayMode === 'carousel') {
     renderCarouselWidget(container, currentStories, currentAppearance);
 } else if (displayMode === 'grid') {
     renderGridWidget(container, currentStories, currentAppearance);
+  } else if (displayMode === 'floating_widget') {
+    // Stories flutuantes não devem ser renderizados inline — usa bubbles como fallback visual
+    renderBubbles(container);
   } else {
     renderBubbles(container);
   }
@@ -3846,20 +3849,14 @@ function initInlineWidget(options) {
      RENDERIZAÇÃO DO WIDGET FLUTUANTE
      ================================================================ */
 
-function renderFloatingWidget() {
+function renderFloatingWidget(floatingStories) {
   if (!currentAppearance) return;
 
-  var displayMode = getWidgetDisplayMode(currentAppearance);
-
-  // ✅ SÓ renderiza se display_mode for EXPLICITAMENTE 'floating'
-  if (displayMode !== 'floating') {
-    console.log('[Vidlytics] Display mode não é floating, pulando flutuante.');
-    return;
-  }
+  var stories = floatingStories || currentStories;
 
   // ✅ Não existe floating_mode na tabela — usa 'bubble' como padrão
   var mode = 'bubble';
-  console.log('[Vidlytics] 🎈 Renderizando flutuante. Modo:', mode);
+  console.log('[Vidlytics] 🎈 Renderizando flutuante. Modo:', mode, '| stories:', stories.length);
 
   // Remove host antigo se existir (evita duplicados)
   var oldHost = document.getElementById('vidlytics-floating-host');
@@ -3895,12 +3892,12 @@ function renderFloatingWidget() {
     'gap:8px;';
 
   if (mode === 'bubble') {
-    if (!currentStories || currentStories.length === 0) {
+    if (!stories || stories.length === 0) {
       console.log('[Vidlytics] ⚠️ Nenhum story para flutuante.');
       return;
     }
     
-    var story = currentStories[0];
+    var story = stories[0];
     var thumbUrl = story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
     if (!thumbUrl && story.videos && story.videos.length > 0) {
       thumbUrl = getVideoThumbnail(story.videos[0]);
@@ -4210,20 +4207,32 @@ function initWidget() {
             return loc.active !== false && loc.active !== 'false' && loc.active !== 0 && loc.active !== '0';
           });
 
-          var displayMode = getWidgetDisplayMode(currentAppearance);
-          console.log('[Vidlytics] 🎯 Display mode detectado:', displayMode);
+          // ────────────────────────────────────────────
+          // 📋 CLASSIFICAR STORIES POR FORMATO
+          // ────────────────────────────────────────────
+          function getStoryFormat(story) {
+            var fmt = String(story.format || story.display_format || story.displayFormat || story.visual_style || story.visualStyle || '').trim().toLowerCase();
+            if (fmt === 'carrossel' || fmt === 'carousel') return 'carousel';
+            if (fmt === 'grade' || fmt === 'grid') return 'grid';
+            if (fmt === 'floating' || fmt === 'flutuante' || fmt === 'floating_widget' || fmt === 'widget') return 'floating_widget';
+            return 'floating_widget';
+          }
+
+          var floatingStories = currentStories.filter(function (s) { return getStoryFormat(s) === 'floating_widget'; });
+          var inlineStories = currentStories.filter(function (s) { return getStoryFormat(s) !== 'floating_widget'; });
+
+          console.log('[Vidlytics] 📋 Stories por formato — floating:', floatingStories.length, '| inline:', inlineStories.length);
 
           // ────────────────────────────────────────────
-          // 🎈 MODO FLUTUANTE
+          // 🎈 MODO FLUTUANTE — renderiza independente de seletor CSS
           // ────────────────────────────────────────────
-          if (displayMode === 'floating') {
-            console.log('[Vidlytics] 🎈 Modo flutuante detectado — ignorando locations.');
-            renderFloatingWidget();
-            return;
+          if (floatingStories.length > 0) {
+            console.log('[Vidlytics] 🎈 Renderizando widget flutuante para', floatingStories.length, 'story(ies).');
+            renderFloatingWidget(floatingStories);
           }
 
           // ────────────────────────────────────────────
-          // 📍 MODOS INLINE (carousel, grid, stories)
+          // 📍 MODOS INLINE (carousel, grid) — exige seletor CSS
           // ────────────────────────────────────────────
           console.log('[Vidlytics] 📍 Active locations:', activeLocations.length);
 
@@ -4241,7 +4250,13 @@ function initWidget() {
               console.warn('[Vidlytics] ❌ Story não encontrada para location:', locStoryId);
               return;
             }
-            console.log('[Vidlytics] ✅ Story encontrada:', story.title || story.id);
+            console.log('[Vidlytics] ✅ Story encontrada:', story.title || story.id, '| formato:', getStoryFormat(story));
+
+            // Stories flutuantes já foram renderizados acima — pular aqui
+            if (getStoryFormat(story) === 'floating_widget') {
+              console.log('[Vidlytics] ⏭️ Story flutuante já renderizado, pulando inline.');
+              return;
+            }
 
             var storyRules = rules.filter(function (r) {
               return idsEqual(r.story_id, locStoryId);
@@ -4261,7 +4276,7 @@ function initWidget() {
             console.log('[Vidlytics] 🎯 Selector:', selector || '(vazio)', '| Position:', position);
 
             if (!selector) {
-              console.log('[Vidlytics] ⚠️ Location sem selector, pulando.');
+              console.log('[Vidlytics] ⚠️ Location sem selector, pulando inline.');
               return;
             }
 
@@ -4274,7 +4289,8 @@ function initWidget() {
                 products: readProductsData,
                 sizing_models: readSizingModelsData,
                 comments: readCommentsData,
-                appearance: currentAppearance
+                appearance: currentAppearance,
+                storyFormat: getStoryFormat(story)
               });
               injected = true;
               console.log('[Vidlytics] ✅ Widget inline injetado!');
@@ -4284,10 +4300,10 @@ function initWidget() {
           });
 
           // ────────────────────────────────────────────
-          // 🔧 FALLBACK (carousel, grid, stories)
+          // 🔧 FALLBACK — apenas para stories inline (carousel/grid) sem seletor
           // ────────────────────────────────────────────
-          if (!injected) {
-            console.log('[Vidlytics] 🔧 Nenhum seletor válido — usando fallback.');
+          if (!injected && inlineStories.length > 0 && floatingStories.length === 0) {
+            console.log('[Vidlytics] 🔧 Nenhum seletor válido — usando fallback para stories inline.');
             var fb = document.querySelector('#vidlytics-stories');
             if (!fb) {
               fb = document.createElement('div');
@@ -4298,11 +4314,12 @@ function initWidget() {
               initInlineWidget({
                 target: '#vidlytics-stories',
                 placement: 'beforeend',
-                stories: currentStories,
+                stories: inlineStories,
                 products: readProductsData,
                 sizing_models: readSizingModelsData,
                 comments: readCommentsData,
-                appearance: currentAppearance
+                appearance: currentAppearance,
+                storyFormat: getStoryFormat(inlineStories[0])
               });
               console.log('[Vidlytics] ✅ Fallback injetado!');
             } catch (err) {
