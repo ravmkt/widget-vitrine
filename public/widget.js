@@ -851,8 +851,7 @@ function ensureModalStylesInLightDOM(appearance) {
           if (location.active === false || location.active === 'false' || location.active === 0 || location.active === '0') {
             return false;
           }
-          console.log('[Vidlytics] storeId:', storeId, 'hasSupabase:', hasSupabase);
-
+          
           return true;
         });
       });
