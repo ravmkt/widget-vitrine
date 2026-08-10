@@ -4126,6 +4126,8 @@ function initWidget() {
               return idsEqual(r.story_id, locStoryId);
             });
 
+            
+
             if (storyRules.length > 0) {
               var hasMatch = storyRules.some(function (rule) { return matchesRule(rule); });
               if (!hasMatch) {
