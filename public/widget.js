@@ -737,39 +737,38 @@ return {
 }
 
 function getGridConfig(appearance) {
-    appearance = normalizeAppearanceItem(appearance || {});
-    function rcv(jsonbField, flatField, fallback) {
-      return readConfigValue(appearance, 'grid_config', jsonbField, flatField, fallback);
-    }
-    console.log('[DEBUG getGridConfig] grid_config recebido:', appearance.grid_config);
-    console.log('[DEBUG getGridConfig] border_color lido:', rcv('border_color', 'grid_border_color', '#0094EB'));
-    console.log('[DEBUG getGridConfig] columns lido:', rcv('visible_items', 'grid_columns', '4'));
-    console.log('[DEBUG getGridConfig] shape lido:', rcv('shape', 'grid_shape', 'portrait'));
-
-    var shape = String(rcv('shape', 'grid_shape', 'portrait') || 'portrait').trim().toLowerCase();
-    var sizeNumber = toNumber(rcv('width', 'grid_size', '30'), 30);
-    var columns = safeInt(rcv('visible_items', 'grid_columns', '4'), 4);
-    var rows = safeInt(rcv('rows', 'grid_rows', '1'), 1);
-    var spacing = safeInt(rcv('spacing', 'grid_spacing', '16'), 16);
-    var borderColor = rcv('border_color', 'grid_border_color', '#0094EB') || '#0094EB';
-    var borderWidth = safeInt(rcv('border_style', 'grid_border_width', '2'), 2);
-    var borderRadius = safeInt(rcv('border_radius', 'grid_border_radius', '12'), 12);
-    var objectFit = String(rcv('object_fit', 'grid_object_fit', 'cover') || 'cover').trim().toLowerCase();
-    var showTitle = toBoolean(rcv('show_title', 'grid_show_title', false), false);
-    var aspectRatio = '9 / 16';
-    if (shape.indexOf('landscape') !== -1 || shape.indexOf('16_9') !== -1 || shape.indexOf('16-9') !== -1) {
-      aspectRatio = '16 / 9';
-    } else if (shape.indexOf('square') !== -1 || shape.indexOf('1_1') !== -1 || shape.indexOf('1-1') !== -1 || shape === 'circle') {
-      aspectRatio = '1 / 1';
-    }
-    return {
-      shape: shape, size: sizeNumber,
-      columns: columns, rows: rows, spacing: spacing,
-      borderColor: borderColor, borderWidth: borderWidth,
-      borderRadius: borderRadius, objectFit: objectFit,
-      showTitle: showTitle, aspectRatio: aspectRatio
-    };
+  appearance = normalizeAppearanceItem(appearance || {});
+  function rcv(jsonbField, flatField, fallback) {
+    return readConfigValue(appearance, 'grid_config', jsonbField, flatField, fallback);
   }
+  var shape = String(rcv('shape', 'grid_shape', 'portrait') || 'portrait').trim().toLowerCase();
+  var sizeNumber = toNumber(rcv('width', 'grid_size', '30'), 30);
+  var columns = safeInt(rcv('visible_items', 'grid_columns', '4'), 4);
+  var rows = safeInt(rcv('rows', 'grid_rows', '1'), 1);
+  var spacing = safeInt(rcv('spacing', 'grid_spacing', '16'), 16);
+  var borderColor = rcv('border_color', 'grid_border_color', '#0094EB') || '#0094EB';
+  var borderWidth = safeInt(rcv('border_style', 'grid_border_width', '2'), 2);
+  var borderRadius = safeInt(rcv('border_radius', 'grid_border_radius', '12'), 12);
+  var objectFit = String(rcv('object_fit', 'grid_object_fit', 'cover') || 'cover').trim().toLowerCase();
+  var showTitle = toBoolean(rcv('show_title', 'grid_show_title', false), false);
+  var aspectRatio = '9 / 16';
+  if (shape.indexOf('landscape') !== -1 || shape.indexOf('16_9') !== -1 || shape.indexOf('16-9') !== -1) {
+    aspectRatio = '16 / 9';
+  } else if (shape.indexOf('square') !== -1 || shape.indexOf('1_1') !== -1 || shape.indexOf('1-1') !== -1 || shape === 'circle') {
+    aspectRatio = '1 / 1';
+  }
+
+  console.log('[DEBUG getGridConfig] RAW grid_config:', JSON.stringify(appearance.grid_config));
+  console.log('[DEBUG getGridConfig] shape=', shape, 'columns=', columns, 'rows=', rows, 'spacing=', spacing, 'borderColor=', borderColor, 'borderWidth=', borderWidth, 'borderRadius=', borderRadius, 'aspectRatio=', aspectRatio);
+
+  return {
+    shape: shape, size: sizeNumber,
+    columns: columns, rows: rows, spacing: spacing,
+    borderColor: borderColor, borderWidth: borderWidth,
+    borderRadius: borderRadius, objectFit: objectFit,
+    showTitle: showTitle, aspectRatio: aspectRatio
+  };
+}
   function getPrimaryColor(appearance) {
     var raw = readAppearanceValue(appearance, ['primary_color', 'primaryColor', 'cor_primaria']);
     return sanitizeCssValue(raw, DEFAULT_APPEARANCE.primary_color, 'color');
