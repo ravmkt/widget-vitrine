@@ -3566,9 +3566,7 @@ function renderGridWidget(container, stories, appearance) {
     });
     card.addEventListener('mouseleave', function () {
       card.style.transform = 'translateY(0)';
-      card.style.boxShadow = hasBorder
-        ? 'inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor
-        : 'none';
+      card.style.boxShadow = 'none';
     });
 
     gridWrapper.appendChild(card);
