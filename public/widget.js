@@ -747,38 +747,38 @@ function getFloatingBehaviorConfig(appearance) {
 function getCarouselConfig(appearance) {
   appearance = normalizeAppearanceItem(appearance || {});
   
-  function rcv(jsonbField, fallback) {
-    return readConfigValue(appearance, 'carousel_config', jsonbField, fallback);
+  function rcv(jsonbField, flatField, fallback) {
+    return readConfigValue(appearance, 'carousel_config', jsonbField, flatField, fallback);
   }
   
-  var visibleItems = safeInt(rcv('visible_items', '4'), 4);
-  var borderColor = String(rcv('border_color', 'transparent') || 'transparent');
+  var visibleItems = safeInt(rcv('visible_items', 'carousel_visible_items', '4'), 4);
+  var borderColor = String(rcv('border_color', 'carousel_border_color', 'transparent') || 'transparent');
   
   // border_style define a espessura da borda em px
-  var borderWidth = toNumber(rcv('border_style', '0'), 0);
+  var borderWidth = toNumber(rcv('border_style', 'border_width', '0'), 0);
 
-  var itemWidth = toNumber(rcv('width', '120'), 120);
-  var itemSpacing = toNumber(rcv('spacing', '8'), 8);
-  var itemRadius = toNumber(rcv('border_radius', '12'), 12);
+  // Lê explicitamente o width novo e o card_size legado como fallback
+  var itemWidth = toNumber(rcv('width', 'card_size', '120'), 120);
+  var itemSpacing = toNumber(rcv('spacing', 'carousel_item_spacing', '8'), 8);
+  var itemRadius = toNumber(rcv('border_radius', 'carousel_item_radius', '12'), 12);
   
-  var marginTop = toNumber(rcv('margin_top', '0'), 0);
-  var marginBottom = toNumber(rcv('margin_bottom', '0'), 0);
+  var marginTop = toNumber(rcv('margin_top', 'carousel_margin_top', '0'), 0);
+  var marginBottom = toNumber(rcv('margin_bottom', 'carousel_margin_bottom', '0'), 0);
   
-  var showTitle = rcv('show_title', false);
+  var showTitle = rcv('show_title', 'carousel_show_title', false);
   if (typeof showTitle === 'string') showTitle = showTitle === 'true';
-  var showPlayIcon = rcv('show_play_icon', true);
+  var showPlayIcon = rcv('show_play_icon', 'carousel_show_play_icon', true);
   if (typeof showPlayIcon === 'string') showPlayIcon = showPlayIcon === 'true';
-  var showItemTitle = rcv('show_item_title', false);
+  var showItemTitle = rcv('show_item_title', 'carousel_show_item_title', false);
   if (typeof showItemTitle === 'string') showItemTitle = showItemTitle === 'true';
-  var showArrows = rcv('show_arrows', true);
+  var showArrows = rcv('show_arrows', 'carousel_show_arrows', true);
   if (typeof showArrows === 'string') showArrows = showArrows === 'true';
 
-  // Adicionada a leitura correta do parâmetro de produto do carrossel
-  var showProduct = rcv('show_product', true);
+  var showProduct = rcv('show_product', 'carousel_show_product', true);
   if (typeof showProduct === 'string') showProduct = showProduct === 'true';
 
-  // shape define o aspect-ratio
-  var shape = String(rcv('shape', 'portrait')).trim().toLowerCase();
+  // Lê explicitamente o shape novo e o card_shape legado como fallback
+  var shape = String(rcv('shape', 'card_shape', 'portrait')).trim().toLowerCase();
   var aspect = '9/16';
   if (shape === 'square' || shape === '1:1') aspect = '1/1';
   else if (shape === 'circle') aspect = '1/1';
