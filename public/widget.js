@@ -3502,20 +3502,30 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         '-webkit-mask-image: -webkit-radial-gradient(white, black) !important;' +
         carouselBorderCss;
       
+// trecho novo
       if (thumbUrl) {
         var img = document.createElement('img');
         img.src = thumbUrl;
         img.alt = story.title || 'Story';
+
+        // Calcula o raio interno dinamicamente para o carrossel
+        var innerRadiusCarousel = cfg.itemRadius;
+        if (cfg.borderWidth > 0 && cfg.itemRadius !== '999px') {
+          var radiusNum = parseFloat(cfg.itemRadius) || 0;
+          innerRadiusCarousel = Math.max(0, radiusNum - cfg.borderWidth) + 'px';
+        }
+
         img.style.cssText =
           'width:100% !important;' +
           'height:100% !important;' +
           'object-fit:cover !important;' +
           'display:block !important;' +
+          'border-radius:' + innerRadiusCarousel + ' !important;' +
           'transform:scale(1.02) !important;' +
           '-webkit-backface-visibility:hidden !important;';
         item.appendChild(img);
       }
-            
+                  
       if (cfg.showPlayIcon) {
         var play = document.createElement('div');
         play.className = 'vidlytics-carousel-play';
