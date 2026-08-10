@@ -594,7 +594,6 @@ const createDefaultModalConfig = (): ModalConfig => ({
   show_play_button: true,
   show_product: true,
   show_product_button: true,
-  show_product_whatsapp_button: true,
   show_like_button: true,
   show_comment_button: true,
   show_share_button: true,
