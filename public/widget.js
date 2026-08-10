@@ -3705,7 +3705,8 @@ function initInlineWidget(options) {
     targetEl.parentNode.insertBefore(wrapper, targetEl.nextSibling);
   }
 
-  var displayMode = options.storyFormat || getWidgetDisplayMode(currentAppearance);
+var displayMode = options.storyFormat || getWidgetDisplayMode(currentAppearance);
+console.log('[Vidlytics] Modo de exibição detectado:', displayMode);
 
   if (displayMode === 'carousel') {
     renderCarouselWidget(container, currentStories, currentAppearance);
