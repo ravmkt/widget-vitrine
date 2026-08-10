@@ -3682,21 +3682,24 @@ function renderGridWidget(container, stories, appearance) {
     var story = item.story;
     var video = item.video;
 
+// trecho novo
 var card = createEl('div', 'vl-grid-card');
 var hasBorder = cfg.borderWidth > 0;
 card.style.cssText = [
   'width:100%;',
   'aspect-ratio:' + cfg.aspectRatio + ';',
-  'border-radius:' + cfg.borderRadius + ';', // Usa diretamente o valor retornado pelo config
+  'border-radius:' + cfg.borderRadius + ';',
   'overflow:hidden;',
   'position:relative;',
-  'background:#000;',
+  'background:transparent;',
   'cursor:pointer;',
   'transition:transform .2s ease, box-shadow .2s ease;',
   'max-width:' + cardMaxWidth + ';',
   'transform:translateZ(0);',
   '-webkit-transform:translateZ(0);',
   'backface-visibility:hidden;',
+  '-webkit-backface-visibility:hidden;',
+  '-webkit-mask-image: -webkit-radial-gradient(white, black);', // Força anti-aliasing geométrico perfeito nas bordas
   hasBorder ? ('border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';') : '',
 ].join('');
 
@@ -3707,10 +3710,11 @@ if (thumbUrl) {
   var img = createEl('img');
   img.src = thumbUrl;
   img.alt = video.title || story.title || '';
-  img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + cfg.borderRadius + ';'; // Usa diretamente o valor retornado
+  img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + cfg.borderRadius + ';transform:scale(1.02);-webkit-backface-visibility:hidden;';
   img.loading = 'lazy';
   card.appendChild(img);
 }
+
     // Play button overlay
     var playBadge = createEl('div');
     playBadge.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;';
