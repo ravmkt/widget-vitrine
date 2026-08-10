@@ -3348,7 +3348,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
   wrapper.style.cssText =
     'width:100% !important;' +
     'max-width:100% !important;' +
-    'margin:' + cfg.marginTop + ' 0 ' + cfg.marginBottom + ' !important;' +
+    'margin:' + cfg.marginTop + ' auto ' + cfg.marginBottom + ' !important;' +
     'padding:' + cfg.padding + ' !important;' +
     'box-sizing:border-box !important;' +
     'font-family:' + (appearance.font_family || 'inherit') + ' !important;' +
@@ -3385,6 +3385,8 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
   var trackContainer = document.createElement('div');
   trackContainer.className = 'vidlytics-carousel-track-container';
   trackContainer.style.cssText =
+    'display:flex !important;' +
+    'justify-content:center !important;' +
     'overflow:hidden !important;' +
     'position:relative !important;' +
     'width:100% !important;';
@@ -3397,32 +3399,32 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
     'transition:transform 0.3s ease !important;' +
     'will-change:transform !important;';
   
-// Items
-var renderedCount = 0;
-var maxItems = cfg.visibleItems || 4;
+  // Items
+  var renderedCount = 0;
+  var maxItems = cfg.visibleItems || 4;
 
-stories.forEach(function(story, storyIndex) {
-  if (renderedCount >= maxItems) return;
-  var videos = (story.videos || []).filter(Boolean);
-  videos.forEach(function(video, videoIndex) {
+  stories.forEach(function(story, storyIndex) {
     if (renderedCount >= maxItems) return;
+    var videos = (story.videos || []).filter(Boolean);
+    videos.forEach(function(video, videoIndex) {
+      if (renderedCount >= maxItems) return;
       var thumbUrl = getVideoThumbnail(video) || story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
       var item = document.createElement('div');
       item.className = 'vidlytics-carousel-item';
-var carouselBorderCss = (cfg.borderWidth > 0)
-  ? ('border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ' !important;')
-  : '';
+      var carouselBorderCss = (cfg.borderWidth > 0)
+        ? ('border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ' !important;')
+        : '';
 
-item.style.cssText =
-  'flex:0 0 ' + cfg.itemWidth + ' !important;' +
-  'width:' + cfg.itemWidth + ' !important;' +
-  'aspect-ratio:' + cfg.itemAspect + ' !important;' +
-  'border-radius:' + cfg.itemRadius + ' !important;' +
-  'overflow:hidden !important;' +
-  'cursor:pointer !important;' +
-  'position:relative !important;' +
-  'background:#f0f0f0 !important;' +
-  carouselBorderCss;
+      item.style.cssText =
+        'flex:0 0 ' + cfg.itemWidth + ' !important;' +
+        'width:' + cfg.itemWidth + ' !important;' +
+        'aspect-ratio:' + cfg.itemAspect + ' !important;' +
+        'border-radius:' + cfg.itemRadius + ' !important;' +
+        'overflow:hidden !important;' +
+        'cursor:pointer !important;' +
+        'position:relative !important;' +
+        'background:#f0f0f0 !important;' +
+        carouselBorderCss;
       
       if (thumbUrl) {
         var img = document.createElement('img');
@@ -3484,55 +3486,83 @@ item.style.cssText =
   
   trackContainer.appendChild(track);
   wrapper.appendChild(trackContainer);
-  
-  // Navigation arrows
-  if (cfg.showArrows) {
-    var prevBtn = document.createElement('button');
-    prevBtn.className = 'vidlytics-carousel-prev';
-    prevBtn.innerHTML = '&#10094;';
-    prevBtn.style.cssText =
-      'position:absolute !important;' +
-      'left:0 !important;' +
-      'top:50% !important;' +
-      'transform:translateY(-50%) !important;' +
-      'width:36px !important;' +
-      'height:36px !important;' +
-      'border-radius:50% !important;' +
-      'background:' + primaryColor + ' !important;' +
-      'color:#fff !important;' +
-      'border:none !important;' +
-      'cursor:pointer !important;' +
-      'z-index:2 !important;' +
-      'display:flex !important;' +
-      'align-items:center !important;' +
-      'justify-content:center !important;' +
-      'font-size:14px !important;';
-    
-    var nextBtn = document.createElement('button');
-    nextBtn.className = 'vidlytics-carousel-next';
-    nextBtn.innerHTML = '&#10095;';
-    nextBtn.style.cssText = prevBtn.style.cssText.replace('left:0', 'right:0');
-    
-    var currentIndex = 0;
-    var itemWidthPx = parseFloat(cfg.itemWidth) || 120;
-    var gapPx = parseFloat(cfg.itemSpacing) || 8;
-    var step = itemWidthPx + gapPx;
-    
-    prevBtn.addEventListener('click', function() {
-      currentIndex = Math.max(0, currentIndex - 1);
-      track.style.transform = 'translateX(-' + (currentIndex * step) + 'px)';
-    });
-    
-    nextBtn.addEventListener('click', function() {
-      var visibleCount = Math.max(1, Math.floor(trackContainer.offsetWidth / step));
-      var maxIndex = Math.max(0, track.children.length - visibleCount);
-      currentIndex = Math.min(maxIndex, currentIndex + 1);
-      track.style.transform = 'translateX(-' + (currentIndex * step) + 'px)';
-    });
-    
-    wrapper.appendChild(prevBtn);
-    wrapper.appendChild(nextBtn);
+
+  // --- DRAG TO SCROLL ---
+  var isDragging = false;
+  var startX = 0;
+  var currentTranslate = 0;
+  var dragStartTranslate = 0;
+
+  function getTranslateX(el) {
+    var style = window.getComputedStyle(el);
+    var matrix = new DOMMatrixReadOnly(style.transform);
+    return matrix.m41;
   }
+
+  function getMaxScroll() {
+    var trackWidth = track.scrollWidth;
+    var containerWidth = trackContainer.offsetWidth;
+    return Math.max(0, trackWidth - containerWidth);
+  }
+
+  function clamp(val, min, max) {
+    return Math.min(max, Math.max(min, val));
+  }
+
+  function onDragStart(clientX) {
+    isDragging = true;
+    startX = clientX;
+    dragStartTranslate = getTranslateX(track);
+    track.style.transition = 'none';
+    track.style.cursor = 'grabbing';
+  }
+
+  function onDragMove(clientX) {
+    if (!isDragging) return;
+    var delta = clientX - startX;
+    var maxScroll = getMaxScroll();
+    var newTranslate = clamp(dragStartTranslate + delta, -maxScroll, 0);
+    track.style.transform = 'translateX(' + newTranslate + 'px)';
+  }
+
+  function onDragEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+    track.style.transition = 'transform 0.3s ease';
+    track.style.cursor = 'grab';
+  }
+
+  track.style.cursor = 'grab';
+
+  // Mouse events
+  track.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    onDragStart(e.clientX);
+  });
+  window.addEventListener('mousemove', function(e) {
+    onDragMove(e.clientX);
+  });
+  window.addEventListener('mouseup', onDragEnd);
+
+  // Touch events
+  track.addEventListener('touchstart', function(e) {
+    onDragStart(e.touches[0].clientX);
+  }, { passive: true });
+  track.addEventListener('touchmove', function(e) {
+    onDragMove(e.touches[0].clientX);
+  }, { passive: true });
+  track.addEventListener('touchend', onDragEnd);
+
+  // Previne clique acidental durante drag
+  track.querySelectorAll('.vidlytics-carousel-item').forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      var moved = Math.abs(getTranslateX(track) - dragStartTranslate);
+      if (moved > 5) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    }, true);
+  });
   
   target.insertAdjacentElement(position, wrapper);
   console.log('[Vidlytics] ✅ Carrossel injetado no DOM via', position, '| itens:', track.children.length);
