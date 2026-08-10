@@ -815,7 +815,11 @@ function getGridConfig(appearance) {
   var spacing = safeInt(rcv('spacing', 'grid_spacing', '16'), 16);
   var borderColor = rcv('border_color', 'grid_border_color', '#0094EB') || '#0094EB';
   var borderWidth = safeInt(rcv('border_style', 'grid_border_width', '2'), 2);
-  var borderRadius = safeInt(rcv('border_radius', 'grid_border_radius', '12'), 12);
+  
+  var rawBorderRadius = safeInt(rcv('border_radius', 'grid_border_radius', '12'), 12);
+  // Se o formato for círculo, força o border-radius para 50%
+  var borderRadius = (shape === 'circle') ? '50%' : (rawBorderRadius + 'px');
+
   var objectFit = String(rcv('object_fit', 'grid_object_fit', 'cover') || 'cover').trim().toLowerCase();
   var showTitle = toBoolean(rcv('show_title', 'grid_show_title', false), false);
   var aspectRatio = '9 / 16';
@@ -825,9 +829,6 @@ function getGridConfig(appearance) {
     aspectRatio = '1 / 1';
   }
 
-  console.log('[DEBUG getGridConfig] RAW grid_config:', JSON.stringify(appearance.grid_config));
-  console.log('[DEBUG getGridConfig] shape=', shape, 'columns=', columns, 'rows=', rows, 'spacing=', spacing, 'borderColor=', borderColor, 'borderWidth=', borderWidth, 'borderRadius=', borderRadius, 'aspectRatio=', aspectRatio);
-
   return {
     shape: shape, size: sizeNumber,
     columns: columns, rows: rows, spacing: spacing,
@@ -836,6 +837,7 @@ function getGridConfig(appearance) {
     showTitle: showTitle, aspectRatio: aspectRatio
   };
 }
+
   function getPrimaryColor(appearance) {
     var raw = readAppearanceValue(appearance, ['primary_color', 'primaryColor', 'cor_primaria']);
     return sanitizeCssValue(raw, DEFAULT_APPEARANCE.primary_color, 'color');
