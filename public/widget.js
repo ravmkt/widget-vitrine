@@ -784,7 +784,7 @@ function getCarouselConfig(appearance) {
   else if (shape === 'circle') aspect = '1/1';
   else if (shape === 'landscape' || shape === '16:9') aspect = '16/9';
 
-  return {
+return {
     itemWidth: px(itemWidth),
     itemSpacing: px(itemSpacing),
     itemRadius: shape === 'circle' ? '999px' : px(itemRadius),
@@ -798,10 +798,14 @@ function getCarouselConfig(appearance) {
     showItemTitle: showItemTitle,
     showArrows: showArrows,
     showProduct: showProduct,
+    productCardBg: sanitizeCssValue(rcv('product_card_bg', 'carousel_product_card_bg', '#FFFFFF'), '#FFFFFF', 'color'),
+    productCardBorderColor: sanitizeCssValue(rcv('product_card_border_color', 'carousel_product_card_border_color', '#E2E8F0'), '#E2E8F0', 'color'),
+    productCardBorderWidth: toNumber(rcv('product_card_border_width', 'carousel_product_card_border_width', '1'), 1),
+    productCardRadius: toNumber(rcv('product_card_border_radius', 'carousel_product_card_border_radius', '12'), 12),
     shape: shape,
     itemAspect: aspect
   };
-    }
+      }
 
 function getGridConfig(appearance) {
   appearance = normalizeAppearanceItem(appearance || {});
