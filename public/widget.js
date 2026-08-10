@@ -736,11 +736,16 @@ return {
 };
 }
 
-  function getGridConfig(appearance) {
+function getGridConfig(appearance) {
     appearance = normalizeAppearanceItem(appearance || {});
     function rcv(jsonbField, flatField, fallback) {
       return readConfigValue(appearance, 'grid_config', jsonbField, flatField, fallback);
     }
+    console.log('[DEBUG getGridConfig] grid_config recebido:', appearance.grid_config);
+    console.log('[DEBUG getGridConfig] border_color lido:', rcv('border_color', 'grid_border_color', '#0094EB'));
+    console.log('[DEBUG getGridConfig] columns lido:', rcv('visible_items', 'grid_columns', '4'));
+    console.log('[DEBUG getGridConfig] shape lido:', rcv('shape', 'grid_shape', 'portrait'));
+
     var shape = String(rcv('shape', 'grid_shape', 'portrait') || 'portrait').trim().toLowerCase();
     var sizeNumber = toNumber(rcv('width', 'grid_size', '30'), 30);
     var columns = safeInt(rcv('visible_items', 'grid_columns', '4'), 4);
@@ -765,7 +770,6 @@ return {
       showTitle: showTitle, aspectRatio: aspectRatio
     };
   }
-
   function getPrimaryColor(appearance) {
     var raw = readAppearanceValue(appearance, ['primary_color', 'primaryColor', 'cor_primaria']);
     return sanitizeCssValue(raw, DEFAULT_APPEARANCE.primary_color, 'color');
