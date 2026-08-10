@@ -401,14 +401,15 @@ function ensureModalStylesInLightDOM(appearance) {
 
   function setStorageItem(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
 
-  function normalizeAppearanceItem(item) {
+function normalizeAppearanceItem(item) {
+    console.log('[DEBUG] Item ANTES do flatten:', JSON.parse(JSON.stringify(item || {})));
     var merged = {};
     flattenAppearanceInto(merged, item || {}, 0);
     delete merged.storageAppearance; delete merged.configAppearance; delete merged.dbAppearance;
     delete merged.widgetsAppearance; delete merged.widgetsAparencia;
+    console.log('[DEBUG] Resultado APÓS flatten - grid_config:', merged.grid_config);
     return merged;
   }
-
   var JSONB_KEYS = ['floating_config', 'carousel_config', 'grid_config', 'modal_config'];
 
   function flattenAppearanceInto(target, source, depth) {
