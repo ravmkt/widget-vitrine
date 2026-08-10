@@ -4110,10 +4110,17 @@ function initWidget() {
       console.log('[Vidlytics] 🔍 Indo buscar display_locations...');
 
       // 🆕 LER DISPLAY LOCATIONS E INJETAR CARROSSEL NOS SELETORES
-      if (!storeId || !hasSupabase) return Promise.resolve();
+      if (!storeId || !hasSupabase) {
+        console.log('[Vidlytics] ⚠️ storeId ou hasSupabase inválido, pulando display_locations.');
+        return Promise.resolve();
+      }
 
+      console.log('[Vidlytics] 🔍 Chamando readDisplayLocations()...');
       return readDisplayLocations().then(function (locations) {
+        console.log('[Vidlytics] ✅ readDisplayLocations retornou:', locations ? locations.length : 0, 'locations');
+        console.log('[Vidlytics] 🔍 Chamando readPageRules()...');
         return readPageRules().then(function (rules) {
+          console.log('[Vidlytics] ✅ readPageRules retornou:', rules ? rules.length : 0, 'rules');
           var activeLocations = locations.filter(function (loc) {
             return loc.active !== false && loc.active !== 'false' && loc.active !== 0 && loc.active !== '0';
           });
