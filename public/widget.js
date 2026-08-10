@@ -3170,11 +3170,9 @@ function getWidgetDisplayMode(appearance) {
   var carouselPopulated = carouselCfg && typeof carouselCfg === 'object' && Object.keys(carouselCfg).length > 0;
   var floatingPopulated = floatingCfg && typeof floatingCfg === 'object' && Object.keys(floatingCfg).length > 0;
 
-  // Se AMBOS grid e carousel existem, stories (bolhas) vence
-  if (gridPopulated && carouselPopulated) return 'stories';
-  
-  // Prioridade: floating > grid > carousel > stories
+  // ✅ floating tem prioridade máxima (sempre que configurado)
   if (floatingPopulated) return 'floating';
+  if (gridPopulated && carouselPopulated) return 'stories';
   if (gridPopulated) return 'grid';
   if (carouselPopulated) return 'carousel';
   
