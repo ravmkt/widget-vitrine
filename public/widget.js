@@ -3827,14 +3827,15 @@ function initInlineWidget(options) {
         el = el.parentElement;
       }
 
+// trecho novo
       var items = carousel.querySelectorAll('.vidlytics-carousel-item');
       items.forEach(function (item) {
         Object.assign(item.style, {
-          minHeight: '250px',
+          minHeight: 'auto',
           flexShrink: '0'
         });
       });
-
+      
       console.log('[Vidlytics] ✅ Wrapper fix aplicado!');
     }, 200);
 
