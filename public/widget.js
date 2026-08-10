@@ -4140,20 +4140,40 @@ function initWidget() {
         console.log('[Vidlytics] 🔍 Chamando readPageRules()...');
         return readPageRules().then(function (rules) {
           console.log('[Vidlytics] ✅ readPageRules retornou:', rules ? rules.length : 0, 'rules');
+
           var activeLocations = locations.filter(function (loc) {
             return loc.active !== false && loc.active !== 'false' && loc.active !== 0 && loc.active !== '0';
           });
 
           var displayMode = getWidgetDisplayMode(currentAppearance);
           console.log('[Vidlytics] 🎯 Display mode detectado:', displayMode);
+
+          // ────────────────────────────────────────────
+          // 🎈 MODO FLUTUANTE
+          //    Detecta por:
+          //    1. display_mode === 'floating' (modo correto)
+          //    2. OU floating_mode/floatingMode definido
+          //       e diferente de 'inline' (fallback para
+          //       quando display_mode não foi salvo)
+          // ────────────────────────────────────────────
+          var floatingMode = currentAppearance.floating_mode || currentAppearance.floatingMode;
+          var isFloating = displayMode === 'floating' || (floatingMode && floatingMode !== 'inline');
+
+          if (isFloating) {
+            console.log('[Vidlytics] 🎈 Modo flutuante detectado — ignorando locations.');
+            renderFloatingWidget();
+            return;
+          }
+
+          // ────────────────────────────────────────────
+          // 📍 MODOS INLINE (carousel, grid, stories)
+          // ────────────────────────────────────────────
           console.log('[Vidlytics] 📍 Active locations:', activeLocations.length);
 
-          var hasActiveLocations = false;
+          var injected = false;
 
-          activeLocations.forEach(function (location, idx) {
-            console.log('[Vidlytics] 🔄 Processando location', idx + 1);
+          activeLocations.forEach(function (location) {
             var locStoryId = location.story_id;
-
             if (!locStoryId) {
               console.log('[Vidlytics] ⚠️ Location sem story_id, pulando.');
               return;
@@ -4183,17 +4203,13 @@ function initWidget() {
             var position = location.position || 'beforeend';
             console.log('[Vidlytics] 🎯 Selector:', selector || '(vazio)', '| Position:', position);
 
-            // Se não tem seletor, pula (flutuante não precisa de seletor, mas já é tratado separadamente)
             if (!selector) {
               console.log('[Vidlytics] ⚠️ Location sem selector, pulando.');
               return;
             }
 
-            // ✅ Só marca como ativa DEPOIS de confirmar que tem seletor válido
-            hasActiveLocations = true;
-
+            console.log('[Vidlytics] 🚀 Injetando widget em:', selector);
             try {
-              console.log('[Vidlytics] 🚀 Injetando widget no seletor:', selector);
               initInlineWidget({
                 target: selector,
                 placement: position,
@@ -4203,48 +4219,43 @@ function initWidget() {
                 comments: readCommentsData,
                 appearance: currentAppearance
               });
-              console.log('[Vidlytics] ✅ Widget injetado com sucesso!');
+              injected = true;
+              console.log('[Vidlytics] ✅ Widget inline injetado!');
             } catch (err) {
               console.error('[Vidlytics] ❌ Erro no initInlineWidget:', err);
             }
           });
 
-          console.log('[Vidlytics] 🏁 forEach finalizado. hasActiveLocations:', hasActiveLocations);
-
-          // 🔧 FALLBACK: se não há display_locations com seletor válido, renderiza baseado no display_mode
-          // ✅ Agora cobre carousel, grid E stories
-          if (!hasActiveLocations && (displayMode === 'carousel' || displayMode === 'grid' || displayMode === 'stories')) {
-            console.log('[Vidlytics] Nenhuma display_location com seletor válido — renderizando fallback inline.');
-            var fallbackTarget = document.querySelector('#vidlytics-stories');
-            if (!fallbackTarget) {
-              fallbackTarget = document.createElement('div');
-              fallbackTarget.id = 'vidlytics-stories';
-              document.body.appendChild(fallbackTarget);
+          // ────────────────────────────────────────────
+          // 🔧 FALLBACK (carousel, grid, stories)
+          // ────────────────────────────────────────────
+          if (!injected) {
+            console.log('[Vidlytics] 🔧 Nenhum seletor válido — usando fallback.');
+            var fb = document.querySelector('#vidlytics-stories');
+            if (!fb) {
+              fb = document.createElement('div');
+              fb.id = 'vidlytics-stories';
+              document.body.appendChild(fb);
             }
-            initInlineWidget({
-              target: '#vidlytics-stories',
-              placement: 'beforeend',
-              stories: currentStories,
-              products: readProductsData,
-              sizing_models: readSizingModelsData,
-              comments: readCommentsData,
-              appearance: currentAppearance
-            });
+            try {
+              initInlineWidget({
+                target: '#vidlytics-stories',
+                placement: 'beforeend',
+                stories: currentStories,
+                products: readProductsData,
+                sizing_models: readSizingModelsData,
+                comments: readCommentsData,
+                appearance: currentAppearance
+              });
+              console.log('[Vidlytics] ✅ Fallback injetado!');
+            } catch (err) {
+              console.error('[Vidlytics] ❌ Erro no fallback:', err);
+            }
           }
-
         });
       });
     }).then(function () {
-      // ✅ Flutuante só renderiza quando display_mode é EXPLICITAMENTE 'floating'
-      var displayMode = getWidgetDisplayMode(currentAppearance);
-      console.log('[Vidlytics] 🎯 Display mode final:', displayMode);
-      
-      if (displayMode === 'floating') {
-        console.log('[Vidlytics] 🎈 Renderizando widget flutuante...');
-        renderFloatingWidget();
-      } else {
-        console.log('[Vidlytics] ⏭️ Modo não é floating, pulando flutuante.');
-      }
+      console.log('[Vidlytics] ✅ Widget inicializado com sucesso.');
     }).catch(function (err) {
       console.warn('[Vidlytics] Erro na inicialização:', err);
     });
