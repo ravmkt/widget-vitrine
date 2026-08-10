@@ -2928,20 +2928,20 @@ const stylePayload = {
                         </FormField>
                         <FormField label="Mostrar produto">
                           <ToggleSwitch label="Mostrar produto no carrossel" checked={activeCarouselConfig.show_product} onChange={e => updateCarouselConfig({ show_product: e.target.checked })} />
-                        {/* Novos campos para personalização do card de produto no carrossel */}
-<FormField label="Fundo do card de produto">
-  <ColorInput label="Fundo do card" value={activeCarouselConfig.product_card_bg || '#FFFFFF'} onChange={e => updateCarouselConfig({ product_card_bg: e.target.value })} />
-</FormField>
-<FormField label="Cor da borda do produto">
-  <ColorInput label="Cor da borda" value={activeCarouselConfig.product_card_border_color || '#E2E8F0'} onChange={e => updateCarouselConfig({ product_card_border_color: e.target.value })} />
-</FormField>
-<FormField label="Largura da borda do produto">
-  <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_border_width)} onChange={e => updateCarouselConfig({ product_card_border_width: e.target.value })} placeholder="Ex: 1" className={inputClass} />
-</FormField>
-<FormField label="Raio da borda do produto">
-  <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_border_radius)} onChange={e => updateCarouselConfig({ product_card_border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
                         </FormField>
-                        <FormField label="Mostrar botão play">
+                        <FormField label="Fundo do card de produto">
+                          <ColorInput label="Fundo do card" value={activeCarouselConfig.product_card_bg || '#FFFFFF'} onChange={e => updateCarouselConfig({ product_card_bg: e.target.value })} />
+                        </FormField>
+                        <FormField label="Cor da borda do produto">
+                          <ColorInput label="Cor da borda" value={activeCarouselConfig.product_card_border_color || '#E2E8F0'} onChange={e => updateCarouselConfig({ product_card_border_color: e.target.value })} />
+                        </FormField>
+                        <FormField label="Largura da borda do produto">
+                          <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_border_width)} onChange={e => updateCarouselConfig({ product_card_border_width: e.target.value })} placeholder="Ex: 1" className={inputClass} />
+                        </FormField>
+                        <FormField label="Raio da borda do produto">
+                          <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_border_radius)} onChange={e => updateCarouselConfig({ product_card_border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
+                        </FormField>
+                                                <FormField label="Mostrar botão play">
                           <ToggleSwitch label="Mostrar botão play no carrossel" checked={activeCarouselConfig.show_play_icon} onChange={e => updateCarouselConfig({ show_play_icon: e.target.checked })} />
                         </FormField>
                       </div>
