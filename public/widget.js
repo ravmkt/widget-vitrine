@@ -3485,15 +3485,21 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         ? ('border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ' !important;')
         : '';
 
+// trecho novo
       item.style.cssText =
         'flex:0 0 ' + cfg.itemWidth + ' !important;' +
         'width:' + cfg.itemWidth + ' !important;' +
+        'min-width:' + cfg.itemWidth + ' !important;' +
+        'max-width:' + cfg.itemWidth + ' !important;' +
         'aspect-ratio:' + cfg.itemAspect + ' !important;' +
         'border-radius:' + cfg.itemRadius + ' !important;' +
         'overflow:hidden !important;' +
         'cursor:pointer !important;' +
         'position:relative !important;' +
-        'background:#f0f0f0 !important;' +
+        'background:transparent !important;' +
+        'transform:translateZ(0) !important;' +
+        '-webkit-backface-visibility:hidden !important;' +
+        '-webkit-mask-image: -webkit-radial-gradient(white, black) !important;' +
         carouselBorderCss;
       
       if (thumbUrl) {
@@ -3504,10 +3510,12 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
           'width:100% !important;' +
           'height:100% !important;' +
           'object-fit:cover !important;' +
-          'display:block !important;';
+          'display:block !important;' +
+          'transform:scale(1.02) !important;' +
+          '-webkit-backface-visibility:hidden !important;';
         item.appendChild(img);
       }
-      
+            
       if (cfg.showPlayIcon) {
         var play = document.createElement('div');
         play.className = 'vidlytics-carousel-play';
