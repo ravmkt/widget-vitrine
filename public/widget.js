@@ -3124,14 +3124,10 @@ var gridPopulated = gridCfg && typeof gridCfg === 'object' && Object.keys(gridCf
 var carouselPopulated = carouselCfg && typeof carouselCfg === 'object' && Object.keys(carouselCfg).length > 0;
 
 // Se AMBOS existem, grid vence (usuário configurou grade explicitamente)
-if (gridPopulated && carouselPopulated) return 'grid';
-// Se só grid existe
-if (gridPopulated) return 'grid';
-// Se só carousel existe
-if (carouselPopulated) return 'carousel';
-// Nenhum config preenchido
-return 'stories';
-}
+if (gridPopulated && carouselPopulated) return 'stories';
+  if (gridPopulated) return 'grid';
+  if (carouselPopulated) return 'carousel';
+  return 'stories';}
 
 function enableDragScroll(el) {
   var isDown = false;
