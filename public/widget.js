@@ -3372,8 +3372,6 @@ if (thumbUrl) {
       (hasBorder ? 'outline:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';outline-offset:-' + cfg.borderWidth + 'px;' : '');
     card.appendChild(borderOverlay);
 
-    }
-
     // Título do story
     if (cfg.showTitle && story.title) {
       var title = createEl('span', 'vl-carousel-title');
