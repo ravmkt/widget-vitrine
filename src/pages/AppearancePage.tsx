@@ -124,6 +124,10 @@ type CarouselConfig = {
   border_radius: string;
   object_fit: string;
   show_title: boolean;
+  product_card_bg: string;
+  product_card_border_color: string;
+  product_card_border_width: string;
+  product_card_border_radius: string;
 };
 
 type GridConfig = {
