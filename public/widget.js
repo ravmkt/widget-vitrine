@@ -4207,25 +4207,24 @@ function initWidget() {
             var fmt = String(story.format || story.display_format || story.displayFormat || story.visual_style || story.visualStyle || '').trim().toLowerCase();
             if (fmt === 'carrossel' || fmt === 'carousel') return 'carousel';
             if (fmt === 'grade' || fmt === 'grid') return 'grid';
-            if (fmt === 'floating' || fmt === 'flutuante' || fmt === 'floating_widget' || fmt === 'widget') return 'floating_widget';
             return 'floating_widget';
           }
 
           var floatingStories = currentStories.filter(function (s) { return getStoryFormat(s) === 'floating_widget'; });
           var inlineStories = currentStories.filter(function (s) { return getStoryFormat(s) !== 'floating_widget'; });
 
-          console.log('[Vidlytics] 📋 Stories por formato — floating:', floatingStories.length, '| inline:', inlineStories.length);
+          console.log('[Vidlytics] 📋 Stories — floating:', floatingStories.length, '| inline:', inlineStories.length);
 
           // ────────────────────────────────────────────
-          // 🎈 MODO FLUTUANTE — renderiza independente de seletor CSS
+          // 🎈 FLUTUANTE — SEMPRE renderiza, ignora seletor
           // ────────────────────────────────────────────
           if (floatingStories.length > 0) {
-            console.log('[Vidlytics] 🎈 Renderizando widget flutuante para', floatingStories.length, 'story(ies).');
+            console.log('[Vidlytics] 🎈 Renderizando flutuante para', floatingStories.length, 'story(ies).');
             renderFloatingWidget(floatingStories);
           }
 
           // ────────────────────────────────────────────
-          // 📍 MODOS INLINE (carousel, grid) — exige seletor CSS
+          // 📍 INLINE (carrossel/grade) — precisa de seletor
           // ────────────────────────────────────────────
           console.log('[Vidlytics] 📍 Active locations:', activeLocations.length);
 
@@ -4240,25 +4239,24 @@ function initWidget() {
 
             var story = currentStories.find(function (s) { return idsEqual(s.id, locStoryId); });
             if (!story) {
-              console.warn('[Vidlytics] ❌ Story não encontrada para location:', locStoryId);
+              console.warn('[Vidlytics] ❌ Story não encontrada:', locStoryId);
               return;
             }
-            console.log('[Vidlytics] ✅ Story encontrada:', story.title || story.id, '| formato:', getStoryFormat(story));
 
-            // Stories flutuantes já foram renderizados acima — pular aqui
-            if (getStoryFormat(story) === 'floating_widget') {
+            var storyFormat = getStoryFormat(story);
+            console.log('[Vidlytics] ✅ Story:', story.title || story.id, '| formato:', storyFormat);
+
+            // Flutuante já foi renderizado
+            if (storyFormat === 'floating_widget') {
               console.log('[Vidlytics] ⏭️ Story flutuante já renderizado, pulando inline.');
               return;
             }
 
-            var storyRules = rules.filter(function (r) {
-              return idsEqual(r.story_id, locStoryId);
-            });
-
+            var storyRules = rules.filter(function (r) { return idsEqual(r.story_id, locStoryId); });
             if (storyRules.length > 0) {
               var hasMatch = storyRules.some(function (rule) { return matchesRule(rule); });
               if (!hasMatch) {
-                console.log('[Vidlytics] ❌ Nenhuma regra bateu para location, pulando.');
+                console.log('[Vidlytics] ❌ Regra não bateu, pulando.');
                 return;
               }
               console.log('[Vidlytics] ✅ Regra bateu!');
@@ -4269,7 +4267,7 @@ function initWidget() {
             console.log('[Vidlytics] 🎯 Selector:', selector || '(vazio)', '| Position:', position);
 
             if (!selector) {
-              console.log('[Vidlytics] ⚠️ Location sem selector, pulando inline.');
+              console.log('[Vidlytics] ⚠️ Location sem selector, pulando.');
               return;
             }
 
@@ -4283,20 +4281,20 @@ function initWidget() {
                 sizing_models: readSizingModelsData,
                 comments: readCommentsData,
                 appearance: currentAppearance,
-                storyFormat: getStoryFormat(story)
+                storyFormat: storyFormat
               });
               injected = true;
-              console.log('[Vidlytics] ✅ Widget inline injetado!');
+              console.log('[Vidlytics] ✅ Inline injetado!');
             } catch (err) {
-              console.error('[Vidlytics] ❌ Erro no initInlineWidget:', err);
+              console.error('[Vidlytics] ❌ Erro:', err);
             }
           });
 
           // ────────────────────────────────────────────
-          // 🔧 FALLBACK — apenas para stories inline (carousel/grid) sem seletor
+          // 🔧 FALLBACK — só para stories inline sem seletor
           // ────────────────────────────────────────────
           if (!injected && inlineStories.length > 0 && floatingStories.length === 0) {
-            console.log('[Vidlytics] 🔧 Nenhum seletor válido — usando fallback para stories inline.');
+            console.log('[Vidlytics] 🔧 Fallback inline.');
             var fb = document.querySelector('#vidlytics-stories');
             if (!fb) {
               fb = document.createElement('div');
