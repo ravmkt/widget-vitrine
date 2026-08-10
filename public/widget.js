@@ -4126,8 +4126,6 @@ function initWidget() {
               return idsEqual(r.story_id, locStoryId);
             });
 
-            
-
             if (storyRules.length > 0) {
               var hasMatch = storyRules.some(function (rule) { return matchesRule(rule); });
               if (!hasMatch) {
@@ -4158,6 +4156,27 @@ function initWidget() {
               });
             }
           });
+
+          // 🔧 FALLBACK: se não há display_locations ativas, renderiza baseado no display_mode
+          if (!hasActiveLocations && (displayMode === 'carousel' || displayMode === 'grid')) {
+            console.log('[Vidlytics] Nenhuma display_location ativa — renderizando fallback inline.');
+            var fallbackTarget = document.querySelector('#vidlytics-stories');
+            if (!fallbackTarget) {
+              fallbackTarget = document.createElement('div');
+              fallbackTarget.id = 'vidlytics-stories';
+              document.body.appendChild(fallbackTarget);
+            }
+            initInlineWidget({
+              target: '#vidlytics-stories',
+              placement: 'beforeend',
+              stories: currentStories,
+              products: readProductsData,
+              sizing_models: readSizingModelsData,
+              comments: readCommentsData,
+              appearance: currentAppearance
+            });
+          }
+
         });
       });
     }).then(function () {
