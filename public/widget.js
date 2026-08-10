@@ -605,8 +605,6 @@ function getFloatingConfig(appearance) {
   var marginTopNumber = toNumber(rcv('top_spacing', 'floating_margin_top', '20'), 20);
   var marginBottomNumber = toNumber(rcv('bottom_spacing', 'floating_margin_bottom', '20'), 20);
   var marginSideNumber = toNumber(rcv('left_spacing', 'floating_margin_side', '20'), 20);
-  
-  // fallback para right_spacing se left_spacing não existir
   var rightSpacingNumber = toNumber(rcv('right_spacing', 'floating_margin_side', '20'), 20);
   
   var zIndexNumber = toNumber(rcv('z_index', 'floating_z_index', '2147483647'), 2147483647);
