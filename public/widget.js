@@ -3665,14 +3665,28 @@ function initInlineWidget(options) {
   console.log('[Vidlytics] Modo de exibição detectado:', displayMode);
   
   if (displayMode === 'carousel') {
-    renderCarouselWidget({ target: target, position: position }, stories, appearance);
+    // 🔧 FIX: Cria um wrapper próprio para o carrossel
+    var wrapper = document.createElement('div');
+    wrapper.className = 'vidlytics-wrapper';
+    Object.assign(wrapper.style, {
+      position: 'relative',
+      width: '100%',
+      margin: '20px 0',
+      overflow: 'hidden', // mantém o carrossel contido
+      zIndex: '10'
+    });
+    
+    // Injeta o wrapper no local do target
+    target.insertAdjacentElement('afterend', wrapper);
+    
+    // Renderiza o carrossel DENTRO do wrapper
+    renderCarouselWidget({ target: wrapper, position: 'beforeend' }, stories, appearance);
 
-    // 🔧 FIX: corrige corte e centralização
+    // Ajusta o carrossel dentro do wrapper
     setTimeout(function () {
-      var carousel = document.querySelector('.vidlytics-carousel-container');
+      var carousel = wrapper.querySelector('.vidlytics-carousel-container');
       if (!carousel) return;
 
-      // 1️⃣ Força altura e centralização no carrossel
       Object.assign(carousel.style, {
         display: 'flex',
         justifyContent: 'center',
@@ -3685,7 +3699,6 @@ function initInlineWidget(options) {
         minHeight: '280px'
       });
 
-      // 2️⃣ Força altura mínima nos itens
       var items = carousel.querySelectorAll('.vidlytics-carousel-item');
       items.forEach(function (item) {
         Object.assign(item.style, {
@@ -3695,16 +3708,7 @@ function initInlineWidget(options) {
         });
       });
 
-      // 3️⃣ Remove overflow:hidden de TODOS os pais até o body
-      var el = carousel.parentElement;
-      while (el && el !== document.body) {
-        if (getComputedStyle(el).overflow === 'hidden') {
-          el.style.overflow = 'visible';
-        }
-        el = el.parentElement;
-      }
-
-      console.log('[Vidlytics] 🔧 Fix aplicado!');
+      console.log('[Vidlytics] 🔧 Fix aplicado com wrapper!');
     }, 100);
 
   } else {
