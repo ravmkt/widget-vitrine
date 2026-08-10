@@ -561,11 +561,10 @@ function ensureModalStylesInLightDOM(appearance) {
 
 function normalizeFloatingPosition(pos) {
   if (!pos) return 'bottom-right';
-  var p = String(pos).trim().toLowerCase();
-  if (p === 'top-left' || p === 'topleft' || p === 'tl' || p === 'fixed_top_left') return 'top-left';
-  if (p === 'top-right' || p === 'topright' || p === 'tr' || p === 'fixed_top_right') return 'top-right';
-  if (p === 'bottom-left' || p === 'bottomleft' || p === 'bl' || p === 'fixed_bottom_left') return 'bottom-left';
-  if (p === 'bottom-right' || p === 'bottomright' || p === 'br' || p === 'fixed_bottom_right') return 'bottom-right';
+  var p = String(pos).trim().toLowerCase().replace(/_/g, '-');
+  if (p === 'fixed-top-left' || p === 'top-left' || p === 'superior-esquerda') return 'top-left';
+  if (p === 'fixed-top-right' || p === 'top-right' || p === 'superior-direita') return 'top-right';
+  if (p === 'fixed-bottom-left' || p === 'bottom-left' || p === 'inferior-esquerda') return 'bottom-left';
   return 'bottom-right';
 }
 
