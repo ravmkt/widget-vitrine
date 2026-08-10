@@ -3687,7 +3687,7 @@ var hasBorder = cfg.borderWidth > 0;
 card.style.cssText = [
   'width:100%;',
   'aspect-ratio:' + cfg.aspectRatio + ';',
-  'border-radius:' + cfg.borderRadius,
+  'border-radius:' + cfg.borderRadius + ';', // Usa diretamente o valor retornado pelo config
   'overflow:hidden;',
   'position:relative;',
   'background:#000;',
@@ -3707,11 +3707,10 @@ if (thumbUrl) {
   var img = createEl('img');
   img.src = thumbUrl;
   img.alt = video.title || story.title || '';
-  img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + cfg.borderRadius;
+  img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + cfg.borderRadius + ';'; // Usa diretamente o valor retornado
   img.loading = 'lazy';
   card.appendChild(img);
 }
-
     // Play button overlay
     var playBadge = createEl('div');
     playBadge.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;';
