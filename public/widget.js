@@ -717,19 +717,22 @@ var borderWidth = toNumber(rcv('border_width', 'carousel_border_width', '0'), 0)
   if (aspect === 'portrait' || aspect === '9:16') aspect = '9/16';
   if (aspect === 'landscape' || aspect === '16:9') aspect = '16/9';
   
-  return {
-    itemWidth: px(itemWidth),
-    itemSpacing: px(itemSpacing),
-    itemRadius: px(itemRadius),
-    padding: px(padding),
-    marginTop: px(marginTop),
-    marginBottom: px(marginBottom),
-    showTitle: showTitle,
-    showPlayIcon: showPlayIcon,
-    showItemTitle: showItemTitle,
-    showArrows: showArrows,
-    itemAspect: aspect
-  };
+return {
+  itemWidth: px(itemWidth),
+  itemSpacing: px(itemSpacing),
+  itemRadius: px(itemRadius),
+  padding: px(padding),
+  marginTop: px(marginTop),
+  marginBottom: px(marginBottom),
+  visibleItems: visibleItems,
+  borderColor: borderColor,
+  borderWidth: borderWidth,
+  showTitle: showTitle,
+  showPlayIcon: showPlayIcon,
+  showItemTitle: showItemTitle,
+  showArrows: showArrows,
+  itemAspect: aspect
+};
 }
 
   function getGridConfig(appearance) {
