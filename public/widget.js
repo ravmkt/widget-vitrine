@@ -3871,6 +3871,15 @@ function renderFloatingWidget(floatingStories) {
   var mode = 'bubble';
   console.log('[Vidlytics] 🎈 Renderizando flutuante. Modo:', mode, '| stories:', stories.length);
 
+  if (!stories || stories.length === 0) {
+    console.log('[Vidlytics] ⚠️ Nenhum story para flutuante.');
+    return;
+  }
+
+  var story = stories[0];
+  var cfg = getFloatingConfig(currentAppearance);
+  var primaryColor = getPrimaryColor(currentAppearance);
+
   // Remove host antigo se existir
   var oldHost = document.getElementById('vidlytics-floating-host');
   if (oldHost) {
@@ -3885,88 +3894,160 @@ function renderFloatingWidget(floatingStories) {
   globalShadowRoot = shadowHost.attachShadow({ mode: 'open' });
   injectStyles(globalShadowRoot);
 
+  // ── CONTAINER PRINCIPAL ──
   var widget = createEl('div', 'vidlytics-floating-widget');
-  var primaryColor = getPrimaryColor(currentAppearance);
-  var floatingCfg = getFloatingConfig(currentAppearance);
-
   widget.style.cssText =
-    'position:fixed !important;' +
-    'z-index:' + floatingCfg.zIndex + ' !important;' +
-    'top:' + floatingCfg.top + ' !important;' +
-    'right:' + floatingCfg.right + ' !important;' +
-    'bottom:' + floatingCfg.bottom + ' !important;' +
-    'left:' + floatingCfg.left + ' !important;' +
-    'width:auto !important;' +
-    'height:auto !important;' +
-    'transition:all 0.3s ease;' +
     'display:flex !important;' +
     'flex-direction:column !important;' +
-    'align-items:' + floatingCfg.alignItems + ' !important;' +
-    'gap:8px;';
+    'align-items:' + cfg.alignItems + ' !important;' +
+    'gap:8px !important;' +
+    'position:relative !important;';
 
-  if (mode === 'bubble') {
-    if (!stories || stories.length === 0) {
-      console.log('[Vidlytics] ⚠️ Nenhum story para flutuante.');
-      return;
-    }
-    
-    var story = stories[0];
-    var thumbUrl = story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
-    if (!thumbUrl && story.videos && story.videos.length > 0) {
-      thumbUrl = getVideoThumbnail(story.videos[0]);
-    }
-
-    var bubbleSize = floatingCfg.width || '80px';
-    var bubbleBtn = createEl('div', 'vl-floating-bubble-btn');
-    
-    bubbleBtn.style.cssText =
-      'width:' + bubbleSize + ' !important;' +
-      'height:' + bubbleSize + ' !important;' +
+  // ── BOTÃO FECHAR (X) ──
+  var closeBtn = null;
+  if (cfg.allowClose) {
+    closeBtn = createEl('div', 'vl-floating-close-btn');
+    closeBtn.innerHTML = '&times;';
+    closeBtn.style.cssText =
+      'position:absolute !important;' +
+      'top:-10px !important;' +
+      'right:-10px !important;' +
+      'width:24px !important;' +
+      'height:24px !important;' +
       'border-radius:50% !important;' +
-      'padding:3px !important;' +
+      'background:rgba(0,0,0,0.7) !important;' +
+      'color:#fff !important;' +
+      'font-size:16px !important;' +
+      'line-height:22px !important;' +
+      'text-align:center !important;' +
       'cursor:pointer !important;' +
-      'background:linear-gradient(135deg,' + primaryColor + ',' + adjustColor(primaryColor, -20) + ') !important;' +
-      'box-shadow:0 4px 14px rgba(0,0,0,.2) !important;' +
-      'transition:transform 0.2s ease,box-shadow 0.2s ease !important;' +
-      'flex-shrink:0 !important;';
-
-    var inner = createEl('div');
-    inner.style.cssText =
-      'width:100% !important;' +
-      'height:100% !important;' +
-      'border-radius:50% !important;' +
-      'overflow:hidden !important;' +
+      'z-index:9999999 !important;' +
       'display:flex !important;' +
       'align-items:center !important;' +
       'justify-content:center !important;' +
-      'background:#fff !important;' +
-      'border:2.5px solid #fff !important;';
-
-    if (thumbUrl) {
-      var img = createEl('img');
-      img.src = thumbUrl;
-      img.alt = story.title || 'Story';
-      img.style.cssText =
-        'width:100% !important;' +
-        'height:100% !important;' +
-        'object-fit:cover !important;' +
-        'border-radius:50% !important;';
-      img.loading = 'lazy';
-      inner.appendChild(img);
-    }
-
-    bubbleBtn.appendChild(inner);
-    bubbleBtn.addEventListener('click', function () {
-      if (floatingWasDragged) { floatingWasDragged = false; return; }
-      openStoryModal(0);
+      'border:none !important;' +
+      'transition:background 0.2s !important;';
+    closeBtn.addEventListener('mouseenter', function () {
+      closeBtn.style.background = 'rgba(255,0,0,0.8)';
     });
+    closeBtn.addEventListener('mouseleave', function () {
+      closeBtn.style.background = 'rgba(0,0,0,0.7)';
+    });
+    closeBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var host = document.getElementById('vidlytics-floating-host');
+      if (host) host.remove();
+      globalShadowRoot = null;
+    });
+  }
 
-    widget.appendChild(bubbleBtn);
-    applyDraggable(bubbleBtn, currentAppearance);
+  // ── BOLHA / CARD ──
+  var thumbUrl = story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
+  if (!thumbUrl && story.videos && story.videos.length > 0) {
+    thumbUrl = getVideoThumbnail(story.videos[0]);
+  }
+
+  var cardOuter = createEl('div', 'vl-floating-card-outer');
+  var isCircle = cfg.shape === 'circle';
+
+  cardOuter.style.cssText =
+    'position:relative !important;' +
+    'width:' + cfg.width + ' !important;' +
+    'height:' + cfg.height + ' !important;' +
+    'min-width:' + cfg.width + ' !important;' +
+    'min-height:' + cfg.height + ' !important;' +
+    'border-radius:' + cfg.radius + ' !important;' +
+    'padding:' + cfg.borderWidth + ' !important;' +
+    'cursor:pointer !important;' +
+    'background:' + cfg.borderColor + ' !important;' +
+    'box-shadow:0 4px 14px rgba(0,0,0,.2) !important;' +
+    'transition:transform 0.2s ease,box-shadow 0.2s ease !important;' +
+    'flex-shrink:0 !important;' +
+    'overflow:hidden !important;' +
+    'box-sizing:content-box !important;';
+
+  var cardInner = createEl('div', 'vl-floating-card-inner');
+  cardInner.style.cssText =
+    'width:100% !important;' +
+    'height:100% !important;' +
+    'border-radius:' + cfg.innerRadius + ' !important;' +
+    'overflow:hidden !important;' +
+    'display:flex !important;' +
+    'align-items:center !important;' +
+    'justify-content:center !important;' +
+    'background:#fff !important;' +
+    'position:relative !important;';
+
+  if (thumbUrl) {
+    var img = createEl('img');
+    img.src = thumbUrl;
+    img.alt = story.title || 'Story';
+    img.style.cssText =
+      'width:100% !important;' +
+      'height:100% !important;' +
+      'object-fit:' + cfg.objectFit + ' !important;' +
+      'border-radius:' + cfg.innerRadius + ' !important;';
+    img.loading = 'lazy';
+    cardInner.appendChild(img);
+  }
+
+  // Ícone de play centralizado
+  if (cfg.showPlayIcon && thumbUrl) {
+    var playOverlay = createEl('div', 'vl-floating-play-icon');
+    playOverlay.style.cssText =
+      'position:absolute !important;' +
+      'top:50% !important;' +
+      'left:50% !important;' +
+      'transform:translate(-50%,-50%) !important;' +
+      'width:36px !important;' +
+      'height:36px !important;' +
+      'border-radius:50% !important;' +
+      'background:rgba(0,0,0,0.5) !important;' +
+      'display:flex !important;' +
+      'align-items:center !important;' +
+      'justify-content:center !important;' +
+      'pointer-events:none !important;';
+    playOverlay.innerHTML = '<svg width="14" height="16" viewBox="0 0 14 16" fill="white"><path d="M0 0l14 8-14 8z"/></svg>';
+    cardInner.appendChild(playOverlay);
+  }
+
+  cardOuter.appendChild(cardInner);
+
+  cardOuter.addEventListener('click', function () {
+    if (floatingWasDragged) { floatingWasDragged = false; return; }
+    openStoryModal(0);
+  });
+
+  // ── MONTAR WIDGET ──
+  var wrapper = createEl('div', 'vl-floating-wrapper');
+  wrapper.style.cssText =
+    'position:relative !important;' +
+    'display:inline-block !important;';
+
+  wrapper.appendChild(cardOuter);
+  if (closeBtn) wrapper.appendChild(closeBtn);
+  widget.appendChild(wrapper);
+
+  // ── TÍTULO ──
+  if (cfg.showTitle && story.title) {
+    var titleEl = createEl('div', 'vl-floating-title');
+    titleEl.textContent = story.title;
+    titleEl.style.cssText =
+      'color:' + (getTextColor ? getTextColor(currentAppearance) : '#333') + ' !important;' +
+      'font-size:12px !important;' +
+      'font-weight:600 !important;' +
+      'text-align:' + (cfg.alignItems === 'flex-start' ? 'left' : cfg.alignItems === 'flex-end' ? 'right' : 'center') + ' !important;' +
+      'max-width:' + cfg.width + ' !important;' +
+      'overflow:hidden !important;' +
+      'text-overflow:ellipsis !important;' +
+      'white-space:nowrap !important;' +
+      'font-family:inherit !important;';
+    widget.appendChild(titleEl);
   }
 
   globalShadowRoot.appendChild(widget);
-  console.log('[Vidlytics] ✅ Flutuante renderizado em:', floatingCfg.position);
+  applyDraggable(cardOuter, currentAppearance);
+  console.log('[Vidlytics] ✅ Flutuante renderizado em:', cfg.position, '| shape:', cfg.shape, '| size:', cfg.width, 'x', cfg.height);
 }
 
   /* ================================================================
