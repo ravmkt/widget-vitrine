@@ -3770,13 +3770,15 @@ function renderGridWidget(container, stories, appearance) {
       });
     });
 
+    var borderBoxShadow = hasBorder ? ('inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor) : '';
+
     card.addEventListener('mouseenter', function () {
       card.style.transform = 'translateY(-4px)';
-      card.style.boxShadow = '0 8px 24px rgba(0,0,0,.15)';
+      card.style.boxShadow = borderBoxShadow ? ('0 8px 24px rgba(0,0,0,.15), ' + borderBoxShadow) : '0 8px 24px rgba(0,0,0,.15)';
     });
     card.addEventListener('mouseleave', function () {
       card.style.transform = 'translateY(0)';
-      card.style.boxShadow = 'none';
+      card.style.boxShadow = borderBoxShadow ? borderBoxShadow : 'none';
     });
 
     gridWrapper.appendChild(card);
