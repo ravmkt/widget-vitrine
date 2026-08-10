@@ -4158,16 +4158,8 @@ function initWidget() {
 
           // ────────────────────────────────────────────
           // 🎈 MODO FLUTUANTE
-          //    Detecta por:
-          //    1. display_mode === 'floating' (modo correto)
-          //    2. OU floating_mode/floatingMode definido
-          //       e diferente de 'inline' (fallback para
-          //       quando display_mode não foi salvo)
           // ────────────────────────────────────────────
-          var floatingMode = currentAppearance.floating_mode || currentAppearance.floatingMode;
-          var isFloating = displayMode === 'floating' || (floatingMode && floatingMode !== 'inline');
-
-          if (isFloating) {
+          if (displayMode === 'floating') {
             console.log('[Vidlytics] 🎈 Modo flutuante detectado — ignorando locations.');
             renderFloatingWidget();
             return;
