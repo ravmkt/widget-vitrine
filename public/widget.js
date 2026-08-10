@@ -3646,8 +3646,8 @@ console.log('[Vidlytics] Grade renderizada com ' + allVideos.length + ' video(s)
 
 function initInlineWidget(options) {
   options = options || {};
-  var selector = options.selector;
-  var position = options.position || 'afterend';
+  var selector = options.selector || options.target;
+  var position = options.position || options.placement || 'afterend';
   var stories = options.stories || currentStories;
   var appearance = options.appearance || currentAppearance;
   
@@ -3665,10 +3665,8 @@ function initInlineWidget(options) {
   console.log('[Vidlytics] Modo de exibição detectado:', displayMode);
   
   if (displayMode === 'carousel') {
-    // Carrossel é injetado diretamente no target, sem container intermediário
     renderCarouselWidget({ target: target, position: position }, stories, appearance);
   } else {
-    // Bubbles usam container temporário
     var container = document.createElement('div');
     container.className = 'vl-container';
     renderBubbles(container, stories, appearance);
