@@ -3549,7 +3549,8 @@ borderOverlay.style.cssText = [
       (hasBorder
         ? 'outline:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';outline-offset:-' + cfg.borderWidth + 'px;'
         : '')
-    ].join('');    card.appendChild(borderOverlay);
+    ].join('');
+    card.appendChild(borderOverlay);
 
     card.addEventListener('click', function (e) {
       e.preventDefault();
