@@ -3398,6 +3398,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
     'gap:' + cfg.itemSpacing + ' !important;' +
     'transition:transform 0.3s ease !important;' +
     'will-change:transform !important;';
+  track.style.transform = 'translateX(0px)';
   
   // Items
   var renderedCount = 0;
@@ -3495,7 +3496,9 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
 
   function getTranslateX(el) {
     var style = window.getComputedStyle(el);
-    var matrix = new DOMMatrixReadOnly(style.transform);
+    var transform = style.transform;
+    if (!transform || transform === 'none') return 0;
+    var matrix = new DOMMatrixReadOnly(transform);
     return matrix.m41;
   }
 
