@@ -3792,88 +3792,107 @@ function initInlineWidget(options) {
      RENDERIZAÇÃO DO WIDGET FLUTUANTE
      ================================================================ */
 
-  function renderFloatingWidget() {
-    if (!currentAppearance) return;
+function renderFloatingWidget() {
+  if (!currentAppearance) return;
 
-    var mode = (currentAppearance.floating_mode || currentAppearance.floatingMode || 'inline').toLowerCase();
-    if (mode === 'inline') return;
+  var displayMode = getWidgetDisplayMode(currentAppearance);
 
-    if (!globalShadowRoot) {
-      var shadowHost = document.createElement('div');
-      shadowHost.id = 'vidlytics-floating-host';
-      applyHostPosition(shadowHost, currentAppearance); // ← USA A POSIÇÃO CORRETA DA APARÊNCIA
-      document.body.appendChild(shadowHost);
-      globalShadowRoot = shadowHost.attachShadow({ mode: 'open' });
-      injectStyles(globalShadowRoot);
-    }
-
-    var existing = globalShadowRoot.querySelector('.vidlytics-floating-widget');
-    if (existing) existing.remove();
-
-    var widget = createEl('div', 'vidlytics-floating-widget');
-    var primaryColor = getPrimaryColor(currentAppearance);
-    var behaviorConfig = getFloatingBehaviorConfig(currentAppearance);
-    var floatingCfg = getFloatingConfig(currentAppearance);
-
-    widget.style.cssText =
-      'position:fixed;' +
-      'z-index:' + floatingCfg.zIndex + ';' +
-      'top:' + floatingCfg.top + ';' +
-      'right:' + floatingCfg.right + ';' +
-      'bottom:' + floatingCfg.bottom + ';' +
-      'left:' + floatingCfg.left + ';' +
-      'width:auto;' +
-      'transition:all 0.3s ease;' +
-      'display:flex;' +
-      'flex-direction:column;' +
-      'align-items:flex-end;' +
-      'gap:8px;';
-
-    if (mode === 'bubble') {
-      if (!currentStories || currentStories.length === 0) return;
-      var story = currentStories[0];
-      var thumbUrl = story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
-      if (!thumbUrl && story.videos && story.videos.length > 0) {
-        thumbUrl = getVideoThumbnail(story.videos[0]);
-      }
-
-      var bubbleBtn = createEl('div', 'vl-floating-bubble-btn');
-      var bubbleSizePx = '64px';
-      bubbleBtn.style.cssText =
-        'width:' + bubbleSizePx + ';' +
-        'height:' + bubbleSizePx + ';' +
-        'border-radius:50%;' +
-        'padding:3px;' +
-        'cursor:pointer;' +
-        'background:linear-gradient(135deg,' + primaryColor + ',' + adjustColor(primaryColor, -20) + ');' +
-        'box-shadow:0 4px 14px rgba(0,0,0,.2);' +
-        'transition:transform 0.2s ease,box-shadow 0.2s ease;';
-
-      var inner = createEl('div');
-      inner.style.cssText = 'width:100%;height:100%;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#fff;border:2.5px solid #fff;';
-
-      if (thumbUrl) {
-        var img = createEl('img');
-        img.src = thumbUrl;
-        img.alt = story.title || 'Story';
-        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
-        img.loading = 'lazy';
-        inner.appendChild(img);
-      }
-
-      bubbleBtn.appendChild(inner);
-      bubbleBtn.addEventListener('click', function () {
-        if (floatingWasDragged) { floatingWasDragged = false; return; }
-        openStoryModal(0);
-      });
-
-      widget.appendChild(bubbleBtn);
-      applyDraggable(bubbleBtn, currentAppearance);
-    }
-
-    globalShadowRoot.appendChild(widget);
-    applyDraggable(widget, currentAppearance);
+  // Só renderiza se display_mode for floating ou stories
+  if (displayMode !== 'floating' && displayMode !== 'stories') {
+    console.log('[Vidlytics] Display mode não é floating/stories, pulando flutuante.');
+    return;
   }
+
+  // floating_mode controla o FORMATO do flutuante (bubble, etc.)
+  // Se não definido, usa 'bubble' como padrão quando display_mode é floating
+  var mode = (currentAppearance.floating_mode || currentAppearance.floatingMode || 'bubble').toLowerCase();
+  console.log('[Vidlytics] 🎈 Renderizando flutuante. floating_mode:', mode);
+
+  if (mode === 'inline') {
+    console.log('[Vidlytics] floating_mode=inline, flutuante desativado.');
+    return;
+  }
+
+  if (!globalShadowRoot) {
+    var shadowHost = document.createElement('div');
+    shadowHost.id = 'vidlytics-floating-host';
+    applyHostPosition(shadowHost, currentAppearance);
+    document.body.appendChild(shadowHost);
+    globalShadowRoot = shadowHost.attachShadow({ mode: 'open' });
+    injectStyles(globalShadowRoot);
+  }
+
+  var existing = globalShadowRoot.querySelector('.vidlytics-floating-widget');
+  if (existing) existing.remove();
+
+  var widget = createEl('div', 'vidlytics-floating-widget');
+  var primaryColor = getPrimaryColor(currentAppearance);
+  var behaviorConfig = getFloatingBehaviorConfig(currentAppearance);
+  var floatingCfg = getFloatingConfig(currentAppearance);
+
+  widget.style.cssText =
+    'position:fixed;' +
+    'z-index:' + floatingCfg.zIndex + ';' +
+    'top:' + floatingCfg.top + ';' +
+    'right:' + floatingCfg.right + ';' +
+    'bottom:' + floatingCfg.bottom + ';' +
+    'left:' + floatingCfg.left + ';' +
+    'width:auto;' +
+    'transition:all 0.3s ease;' +
+    'display:flex;' +
+    'flex-direction:column;' +
+    'align-items:flex-end;' +
+    'gap:8px;';
+
+  if (mode === 'bubble') {
+    if (!currentStories || currentStories.length === 0) {
+      console.log('[Vidlytics] ⚠️ Nenhum story para flutuante.');
+      return;
+    }
+    var story = currentStories[0];
+    var thumbUrl = story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
+    if (!thumbUrl && story.videos && story.videos.length > 0) {
+      thumbUrl = getVideoThumbnail(story.videos[0]);
+    }
+
+    var bubbleBtn = createEl('div', 'vl-floating-bubble-btn');
+    var bubbleSizePx = '64px';
+    bubbleBtn.style.cssText =
+      'width:' + bubbleSizePx + ';' +
+      'height:' + bubbleSizePx + ';' +
+      'border-radius:50%;' +
+      'padding:3px;' +
+      'cursor:pointer;' +
+      'background:linear-gradient(135deg,' + primaryColor + ',' + adjustColor(primaryColor, -20) + ');' +
+      'box-shadow:0 4px 14px rgba(0,0,0,.2);' +
+      'transition:transform 0.2s ease,box-shadow 0.2s ease;';
+
+    var inner = createEl('div');
+    inner.style.cssText = 'width:100%;height:100%;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#fff;border:2.5px solid #fff;';
+
+    if (thumbUrl) {
+      var img = createEl('img');
+      img.src = thumbUrl;
+      img.alt = story.title || 'Story';
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
+      img.loading = 'lazy';
+      inner.appendChild(img);
+    }
+
+    bubbleBtn.appendChild(inner);
+    bubbleBtn.addEventListener('click', function () {
+      if (floatingWasDragged) { floatingWasDragged = false; return; }
+      openStoryModal(0);
+    });
+
+    widget.appendChild(bubbleBtn);
+    applyDraggable(bubbleBtn, currentAppearance);
+  }
+
+  globalShadowRoot.appendChild(widget);
+  applyDraggable(widget, currentAppearance);
+  console.log('[Vidlytics] ✅ Flutuante renderizado com sucesso!');
+}
 
   /* ================================================================
      ELEMENT PICKER COM storyId
