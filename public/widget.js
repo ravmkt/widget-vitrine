@@ -3591,23 +3591,64 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
 
       item.appendChild(videoCard);
 
-      // Renderização do Produto Vinculado Abaixo do Card (respeitando showProduct)
+// trecho novo
+      // Renderização do Produto Vinculado Abaixo do Card (Estilo Card Profissional)
       if (cfg.showProduct) {
         var videoProductId = video.product_id || video.productId || null;
         var productData = videoProductId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
 
         if (productData) {
           var priColor = getPrimaryColor(appearance);
-          var prodContainer = document.createElement('div');
-          prodContainer.className = 'vidlytics-carousel-product';
-          prodContainer.style.cssText =
+          var productUrl = productData.product_url || productData.url || '';
+
+          // Container estilo card unificado para o produto
+          var prodCard = document.createElement('div');
+          prodCard.className = 'vidlytics-carousel-product-card';
+          prodCard.style.cssText =
             'display:flex !important;' +
             'flex-direction:column !important;' +
-            'gap:2px !important;' +
-            'padding:4px 2px !important;' +
+            'gap:6px !important;' +
+            'padding:8px !important;' +
             'width:100% !important;' +
+            'background:#fff !important;' +
+            'border-radius:12px !important;' +
+            'border:1px solid rgba(15,23,42,0.08) !important;' +
+            'box-shadow:0 2px 8px rgba(0,0,0,0.04) !important;' +
+            'box-sizing:border-box !important;' +
             'cursor:pointer !important;' +
             'text-align:left !important;';
+
+          // Linha superior: Miniatura + Info (Nome e Preço)
+          var prodTop = document.createElement('div');
+          prodTop.style.cssText =
+            'display:flex !important;' +
+            'align-items:center !important;' +
+            'gap:8px !important;' +
+            'width:100% !important;';
+
+          var prodImgUrl = getThumbnailFromObject(productData) || '';
+          if (prodImgUrl) {
+            var pImg = document.createElement('img');
+            pImg.src = prodImgUrl;
+            pImg.alt = productData.name || 'Produto';
+            pImg.style.cssText =
+              'width:36px !important;' +
+              'height:36px !important;' +
+              'min-width:36px !important;' +
+              'border-radius:8px !important;' +
+              'object-fit:cover !important;' +
+              'background:#f1f5f9 !important;' +
+              'display:block !important;';
+            prodTop.appendChild(pImg);
+          }
+
+          var pInfo = document.createElement('div');
+          pInfo.style.cssText =
+            'flex:1 !important;' +
+            'min-width:0 !important;' +
+            'display:flex !important;' +
+            'flex-direction:column !important;' +
+            'gap:2px !important;';
 
           var pName = document.createElement('div');
           pName.textContent = productData.name || 'Produto';
@@ -3619,7 +3660,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             'overflow:hidden !important;' +
             'text-overflow:ellipsis !important;' +
             'width:100% !important;';
-          prodContainer.appendChild(pName);
+          pInfo.appendChild(pName);
 
           if (productData.price) {
             var pPrice = document.createElement('div');
@@ -3628,14 +3669,34 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
               'font-size:12px !important;' +
               'font-weight:800 !important;' +
               'color:' + priColor + ' !important;';
-            prodContainer.appendChild(pPrice);
+            pInfo.appendChild(pPrice);
           }
 
-          prodContainer.addEventListener('click', function(e) {
+          prodTop.appendChild(pInfo);
+          prodCard.appendChild(prodTop);
+
+          // Botão "Ver no site"
+          var buyBtn = document.createElement('button');
+          buyBtn.type = 'button';
+          buyBtn.innerHTML = 'Ver no site &rarr;';
+          buyBtn.style.cssText =
+            'all:unset !important;' +
+            'display:block !important;' +
+            'width:100% !important;' +
+            'text-align:center !important;' +
+            'padding:6px 0 !important;' +
+            'background:' + priColor + ' !important;' +
+            'color:#fff !important;' +
+            'font-size:11px !important;' +
+            'font-weight:700 !important;' +
+            'border-radius:8px !important;' +
+            'cursor:pointer !important;' +
+            'box-sizing:border-box !important;';
+
+          buyBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            var pUrl = productData.product_url || productData.url || '';
-            if (pUrl) {
-              window.open(pUrl, '_blank');
+            if (productUrl) {
+              window.open(productUrl, '_blank');
             }
             trackMetric({
               event_type: 'product_click',
@@ -3646,10 +3707,27 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             });
           });
 
-          item.appendChild(prodContainer);
+          prodCard.appendChild(buyBtn);
+
+          // Clique geral no card do produto também redireciona
+          prodCard.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (productUrl) {
+              window.open(productUrl, '_blank');
+            }
+            trackMetric({
+              event_type: 'product_click',
+              story_id: story.id,
+              video_id: video.id,
+              product_id: productData.id,
+              page_url: window.location.href
+            });
+          });
+
+          item.appendChild(prodCard);
         }
       }
-
+      
       item.addEventListener('click', function() {
         openStoryModal(storyIndex, videoIndex);
       });
