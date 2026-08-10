@@ -3576,7 +3576,7 @@ function renderGridWidget(container, stories, appearance) {
   });
 
   container.appendChild(gridWrapper);
-  console.log('[Vidlytics] Grade renderizada com ' + visibleVideos.length + ' video(s) em ' + columns + ' colunas.');
+console.log('[Vidlytics] Grade renderizada com ' + allVideos.length + ' video(s) em ' + columns + ' colunas.');
 }
 
 
