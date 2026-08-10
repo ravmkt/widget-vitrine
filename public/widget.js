@@ -594,11 +594,15 @@ function getFloatingConfig(appearance) {
   
   if (shape === 'square' || shape === 'circle') {
     heightNumber = widthNumber;
-  } else {
+  } else if (shape === 'portrait') {
     heightNumber = Math.round(widthNumber * 16 / 9);
+  } else {
+    heightNumber = Math.round(widthNumber * 9 / 16);
   }
   
   var borderWidthNumber = toNumber(rcv('border_style', 'floating_border_width', '2'), 2);
+  // Cor da borda — lê do config, fallback para primaryColor
+  var borderColor = rcv('border_color', 'floating_border_color', null) || getPrimaryColor(appearance);
   var radiusNumber = toNumber(rcv('border_radius', 'floating_border_radius', '12'), 12);
   if (shape === 'circle') radiusNumber = 999;
   
@@ -609,6 +613,14 @@ function getFloatingConfig(appearance) {
   
   var zIndexNumber = toNumber(rcv('z_index', 'floating_z_index', '2147483647'), 2147483647);
   var objectFit = String(rcv('object_fit', 'floating_object_fit', 'cover') || 'cover').trim().toLowerCase();
+  
+  // Opções visuais
+  var showTitle = rcv('show_title', 'floating_show_title', false);
+  if (typeof showTitle === 'string') showTitle = showTitle === 'true';
+  var showPlayIcon = rcv('show_play_icon', 'floating_show_play_icon', false);
+  if (typeof showPlayIcon === 'string') showPlayIcon = showPlayIcon === 'true';
+  var allowClose = rcv('allow_close', 'floating_allow_close', false);
+  if (typeof allowClose === 'string') allowClose = allowClose === 'true';
   
   var top = 'auto', right = 'auto', bottom = 'auto', left = 'auto', alignItems = 'flex-end';
   
@@ -633,6 +645,8 @@ function getFloatingConfig(appearance) {
     alignItems = 'flex-end';
   }
   
+  var displayRadius = shape === 'circle' ? '999px' : px(radiusNumber);
+  
   return {
     position: position,
     shape: shape,
@@ -643,11 +657,19 @@ function getFloatingConfig(appearance) {
     width: px(widthNumber),
     height: px(heightNumber),
     borderWidth: px(borderWidthNumber),
-    radius: shape === 'circle' ? '999px' : px(radiusNumber),
+    borderColor: borderColor,
+    radius: displayRadius,
     innerRadius: shape === 'circle' ? '999px' : px(Math.max(0, radiusNumber - borderWidthNumber)),
     zIndex: zIndexNumber,
     alignItems: alignItems,
-    objectFit: objectFit
+    objectFit: objectFit,
+    showTitle: showTitle,
+    showPlayIcon: showPlayIcon,
+    allowClose: allowClose,
+    marginTop: px(marginTopNumber),
+    marginBottom: px(marginBottomNumber),
+    marginLeft: px(marginSideNumber),
+    marginRight: px(rightSpacingNumber)
   };
 }
 
