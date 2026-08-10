@@ -3299,234 +3299,198 @@ function onStart(e) {
   el.addEventListener('touchend', onEnd);
 }
 
-function renderCarouselWidget(container, stories, appearance) {
-  // Achata todos os vídeos de todas as stories em um array plano,
-  // guardando referência ao story e índice do vídeo
-  var allVideos = [];
-  (stories || []).forEach(function (story, storyIdx) {
-    var videos = story.videos || [];
-    videos.forEach(function (video, videoIdx) {
-      allVideos.push({
-        story: story,
-        storyIndex: storyIdx,
-        video: video,
-        videoIndex: videoIdx
-      });
-    });
-  });
-
-  if (allVideos.length === 0) {
-    var emptyMsg = createEl('div');
-    emptyMsg.textContent = 'Nenhum vídeo disponível.';
-    emptyMsg.style.cssText = 'font-size:14px;color:#94a3b8;text-align:center;padding:20px;';
-    container.appendChild(emptyMsg);
+function renderCarouselWidget(targetOrContainer, stories, appearance) {
+  console.log('[Vidlytics] Iniciando renderCarouselWidget com', stories.length, 'stories');
+  
+  var container;
+  if (typeof targetOrContainer === 'string') {
+    container = document.querySelector(targetOrContainer);
+  } else if (targetOrContainer && targetOrContainer.nodeType === 1) {
+    container = targetOrContainer;
+  }
+  
+  if (!container) {
+    console.warn('[Vidlytics] Container não encontrado para carrossel:', targetOrContainer);
     return;
   }
-
-var cfg = getCarouselConfig(appearance);
+  
+  var cfg = getCarouselConfig(appearance);
   var primaryColor = getPrimaryColor(appearance);
-  var fontFamily = getFontFamily(appearance);
-  var sizePx = cfg.size + 'px';
-  var gapPx = cfg.spacing + 'px';
-
-  // 🆕 CALCULA LARGURA MÁXIMA BASEADA NOS ITENS VISÍVEIS
-  var visibleItems = cfg.visibleItems || 4;
-var wrapperPadding = 8; // 4px left + 4px right
-var wrapperMaxWidth = Math.min(
-  (visibleItems * cfg.size) + ((visibleItems - 1) * cfg.spacing) + wrapperPadding,
-  window.innerWidth - 32
-);
-
-  // Wrapper com scroll horizontal
-  var wrapper = createEl('div', 'vl-carousel-wrapper');
-  wrapper.style.cssText = [
-    'max-width:' + wrapperMaxWidth + 'px;',
-    'margin:0 auto;',
-    'overflow-x:auto;',
-    'overflow-y:hidden;',
-    'padding:12px 4px 10px 4px;',
-    '-webkit-overflow-scrolling:touch;',
-    'scrollbar-width:none;',
-    '-ms-overflow-style:none;',
-    'cursor:grab;',
-    'margin-top:' + cfg.marginTop + 'px;',
-    'margin-bottom:' + cfg.marginBottom + 'px;'
-  ].join('');
-
-  var track = createEl('div', 'vl-carousel-track');
-track.style.cssText = [
-  'display:flex;',
-  'gap:' + gapPx + ';',
-  'width:max-content;',
-  'min-width:100%;'
-].join('');
-
-  allVideos.forEach(function (item) {
-    var story = item.story;
-    var video = item.video;
-    var storyIdx = item.storyIndex;
-    var videoIdx = item.videoIndex;
-
-var cardItem = createEl('div', 'vl-carousel-item');
-cardItem.style.cssText = [
-  'flex-shrink:0;',
-  'width:' + sizePx + ';',
-  'scroll-snap-align:start;',
-  'display:flex;',
-  'flex-direction:column;',
-  'gap:6px;',
-  'transition:transform .2s ease;'
-].join('');
-
-cardItem.style.cursor = 'pointer';
-
-    var card = createEl('div', 'vl-carousel-card');
-    var hasBorder = cfg.borderWidth > 0;
-    card.style.cssText = [
-      'width:100%;',
-      'aspect-ratio:' + cfg.aspectRatio + ';',
-      'border-radius:' + cfg.borderRadius + 'px;',
-      'overflow:hidden;',
-      'position:relative;',
-      'background:#000;',
-      'outline:none;',
-      'border:0;',
-      'transform:translateZ(0);',
-      '-webkit-transform:translateZ(0);',
-      'backface-visibility:hidden;',
-      (hasBorder
-        ? 'box-shadow:0 2px 10px rgba(0,0,0,.1);'
-        : 'box-shadow:none;')
-    ].join('');
-
-    // Thumbnail do vídeo (fallback: story cover)
-    var thumbUrl = getVideoThumbnail(video) ||
-                   story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
-
-if (thumbUrl) {
-  var img = createEl('img');
-  img.src = thumbUrl;
-  img.alt = video.title || story.title || '';
-  img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + cfg.borderRadius + 'px;';
-  img.loading = 'lazy';
-  card.appendChild(img);
-}
+  var textColor = getTextColor ? getTextColor(appearance) : '#333';
+  
+  var wrapper = createEl('div', 'vidlytics-carousel-container');
+  wrapper.setAttribute('data-vidlytics-widget', 'carousel');
+  wrapper.style.cssText =
+    'width:100% !important;' +
+    'max-width:100% !important;' +
+    'margin:' + cfg.marginTop + ' 0 ' + cfg.marginBottom + ' !important;' +
+    'padding:' + cfg.padding + ' !important;' +
+    'box-sizing:border-box !important;' +
+    'font-family:' + (appearance.font_family || 'inherit') + ' !important;' +
+    'display:block !important;' +
+    'visibility:visible !important;' +
+    'opacity:1 !important;' +
+    'position:relative !important;' +
+    'z-index:1 !important;';
+  
+  // Header
+  if (cfg.showTitle && stories[0] && stories[0].title) {
+    var header = createEl('div', 'vidlytics-carousel-header');
+    header.style.cssText =
+      'display:flex !important;' +
+      'justify-content:space-between !important;' +
+      'align-items:center !important;' +
+      'margin-bottom:12px !important;';
     
-    // Play button overlay
-    if (cfg.showPlayButton) {
-      var playBadge = createEl('div', 'vl-carousel-play');
-      playBadge.style.cssText = [
-        'position:absolute;',
-        'inset:0;',
-        'display:flex;',
-        'align-items:center;',
-        'justify-content:center;',
-        'pointer-events:none;'
-      ].join('');
-      var playIcon = createEl('div');
-      playIcon.style.cssText = [
-        'width:36px;',
-        'height:36px;',
-        'border-radius:50%;',
-        'background:rgba(0,0,0,.5);',
-        'display:flex;',
-        'align-items:center;',
-        'justify-content:center;'
-      ].join('');
-      playIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"></polygon></svg>';
-      playBadge.appendChild(playIcon);
-      card.appendChild(playBadge);
-    }
-
-    // Overlay de borda com box-shadow: inset (respeita border-radius)
-    var borderOverlay = createEl('div');
-    borderOverlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:2;border-radius:' + cfg.borderRadius + 'px;' +
-      (hasBorder ? 'box-shadow:inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ';' : '');
-    card.appendChild(borderOverlay);
-
-    // Título do story
-    if (cfg.showTitle && story.title) {
-      var title = createEl('span', 'vl-carousel-title');
-      title.textContent = story.title;
-      title.style.cssText = [
-        'font-size:12px;',
-        'font-weight:700;',
-        'color:#334155;',
-        'white-space:nowrap;',
-        'overflow:hidden;',
-        'text-overflow:ellipsis;',
-        'text-align:center;',
-        'font-family:' + fontFamily + ';',
-        'max-width:' + sizePx + ';'
-      ].join('');
-      cardItem.appendChild(title);
-    }
-
-    // Produto vinculado ao VÍDEO
-    if (cfg.showProduct) {
-      var productId = video.product_id || video.productId || null;
-      var productData = productId ? readProductsData.find(function (p) { return idsEqual(p.id, productId); }) : null;
-
-      if (productData && productData.name) {
-        var prodInfo = createEl('div', 'vl-carousel-product');
-        prodInfo.style.cssText = [
-          'text-align:center;',
-          'font-family:' + fontFamily + ';',
-          'max-width:' + sizePx + ';'
-        ].join('');
-
-        var pName = createEl('div');
-        pName.textContent = productData.name;
-        pName.style.cssText = 'font-size:11px;font-weight:600;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-        prodInfo.appendChild(pName);
-
-        if (productData.price) {
-          var pPrice = createEl('div');
-          pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
-          pPrice.style.cssText = 'font-size:13px;font-weight:800;color:' + primaryColor + ';';
-          prodInfo.appendChild(pPrice);
-        }
-
-        cardItem.appendChild(prodInfo);
+    var title = createEl('h3', 'vidlytics-carousel-title');
+    title.textContent = stories[0].title;
+    title.style.cssText =
+      'margin:0 !important;' +
+      'font-size:18px !important;' +
+      'font-weight:700 !important;' +
+      'color:' + textColor + ' !important;';
+    header.appendChild(title);
+    wrapper.appendChild(header);
+  }
+  
+  // Track container
+  var trackContainer = createEl('div', 'vidlytics-carousel-track-container');
+  trackContainer.style.cssText =
+    'overflow:hidden !important;' +
+    'position:relative !important;' +
+    'width:100% !important;';
+  
+  var track = createEl('div', 'vidlytics-carousel-track');
+  track.style.cssText =
+    'display:flex !important;' +
+    'gap:' + cfg.itemSpacing + ' !important;' +
+    'transition:transform 0.3s ease !important;' +
+    'will-change:transform !important;';
+  
+  // Items
+  stories.forEach(function(story, storyIndex) {
+    var videos = (story.videos || []).filter(Boolean);
+    videos.forEach(function(video, videoIndex) {
+      var thumbUrl = getVideoThumbnail(video) || story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
+      var item = createEl('div', 'vidlytics-carousel-item');
+      item.style.cssText =
+        'flex:0 0 ' + cfg.itemWidth + ' !important;' +
+        'width:' + cfg.itemWidth + ' !important;' +
+        'aspect-ratio:' + cfg.itemAspect + ' !important;' +
+        'border-radius:' + cfg.itemRadius + ' !important;' +
+        'overflow:hidden !important;' +
+        'cursor:pointer !important;' +
+        'position:relative !important;' +
+        'background:#f0f0f0 !important;';
+      
+      if (thumbUrl) {
+        var img = createEl('img');
+        img.src = thumbUrl;
+        img.alt = story.title || 'Story';
+        img.style.cssText =
+          'width:100% !important;' +
+          'height:100% !important;' +
+          'object-fit:cover !important;' +
+          'display:block !important;';
+        item.appendChild(img);
       }
-    }
-
-// 🆕 Clique no card: abre o modal completo do StoriesWidget
-cardItem.addEventListener('click', function (e) {
-  e.preventDefault();
-  openStoryModal(item.storyIndex, item.videoIndex);
-
-  trackMetric({
-    event_type: 'play',
-    story_id: story.id,
-    video_id: video.id,
-    page_url: window.location.href
-  });
-});
-    // Hover
-    cardItem.addEventListener('mouseenter', function () {
-      cardItem.style.transform = 'translateY(-6px)';
-      if (cfg.borderWidth > 0) {
-        card.style.boxShadow = '0 12px 28px rgba(0,0,0,.18)';
+      
+      // Play icon
+      if (cfg.showPlayIcon) {
+        var play = createEl('div', 'vidlytics-carousel-play');
+        play.style.cssText =
+          'position:absolute !important;' +
+          'top:50% !important;' +
+          'left:50% !important;' +
+          'transform:translate(-50%,-50%) !important;' +
+          'width:40px !important;' +
+          'height:40px !important;' +
+          'border-radius:50% !important;' +
+          'background:rgba(0,0,0,0.5) !important;' +
+          'display:flex !important;' +
+          'align-items:center !important;' +
+          'justify-content:center !important;';
+        play.innerHTML = '<svg width="14" height="16" viewBox="0 0 14 16" fill="white"><path d="M0 0l14 8-14 8z"/></svg>';
+        item.appendChild(play);
       }
+      
+      // Story title overlay
+      if (cfg.showItemTitle && story.title) {
+        var titleOverlay = createEl('div', 'vidlytics-carousel-item-title');
+        titleOverlay.textContent = story.title;
+        titleOverlay.style.cssText =
+          'position:absolute !important;' +
+          'bottom:0 !important;' +
+          'left:0 !important;' +
+          'right:0 !important;' +
+          'padding:8px !important;' +
+          'background:linear-gradient(transparent, rgba(0,0,0,0.7)) !important;' +
+          'color:#fff !important;' +
+          'font-size:12px !important;' +
+          'font-weight:600 !important;' +
+          'text-align:left !important;';
+        item.appendChild(titleOverlay);
+      }
+      
+      item.addEventListener('click', function() {
+        openStoryModal(storyIndex);
+      });
+      
+      track.appendChild(item);
     });
-    cardItem.addEventListener('mouseleave', function () {
-      cardItem.style.transform = 'translateY(0)';
-      if (cfg.borderWidth > 0) {
-        card.style.boxShadow = '0 2px 10px rgba(0,0,0,.1)';
-      } else {
-        card.style.boxShadow = 'none';
-      }
-    });
-    track.appendChild(cardItem);
   });
-
-  wrapper.appendChild(track);
+  
+  trackContainer.appendChild(track);
+  wrapper.appendChild(trackContainer);
+  
+  // Navigation arrows
+  if (cfg.showArrows) {
+    var prevBtn = createEl('button', 'vidlytics-carousel-prev');
+    prevBtn.innerHTML = '&#10094;';
+    prevBtn.style.cssText =
+      'position:absolute !important;' +
+      'left:0 !important;' +
+      'top:50% !important;' +
+      'transform:translateY(-50%) !important;' +
+      'width:36px !important;' +
+      'height:36px !important;' +
+      'border-radius:50% !important;' +
+      'background:' + primaryColor + ' !important;' +
+      'color:#fff !important;' +
+      'border:none !important;' +
+      'cursor:pointer !important;' +
+      'z-index:2 !important;' +
+      'display:flex !important;' +
+      'align-items:center !important;' +
+      'justify-content:center !important;' +
+      'font-size:14px !important;';
+    
+    var nextBtn = createEl('button', 'vidlytics-carousel-next');
+    nextBtn.innerHTML = '&#10095;';
+    nextBtn.style.cssText = prevBtn.style.cssText.replace('left:0', 'right:0');
+    
+    var currentIndex = 0;
+    var itemWidth = parseFloat(cfg.itemWidth) || 120;
+    var gap = parseFloat(cfg.itemSpacing) || 8;
+    var step = itemWidth + gap;
+    
+    prevBtn.addEventListener('click', function() {
+      currentIndex = Math.max(0, currentIndex - 1);
+      track.style.transform = 'translateX(-' + (currentIndex * step) + 'px)';
+    });
+    
+    nextBtn.addEventListener('click', function() {
+      var maxIndex = Math.max(0, track.children.length - Math.floor(trackContainer.offsetWidth / step));
+      currentIndex = Math.min(maxIndex, currentIndex + 1);
+      track.style.transform = 'translateX(-' + (currentIndex * step) + 'px)';
+    });
+    
+    wrapper.appendChild(prevBtn);
+    wrapper.appendChild(nextBtn);
+  }
+  
   container.appendChild(wrapper);
-
-  enableDragScroll(wrapper);
-
-  console.log('[Vidlytics] Carrossel renderizado com ' + allVideos.length + ' video(s).');
+  console.log('[Vidlytics] ✅ Carrossel injetado no DOM:', container);
 }
 
 function renderGridWidget(container, stories, appearance) {
