@@ -3537,15 +3537,16 @@ if (thumbUrl) {
 
     // 🔥 NOVO: overlay de borda por cima de tudo
     var borderOverlay = createEl('div');
-    borderOverlay.style.cssText = [
+borderOverlay.style.cssText = [
       'position:absolute;',
       'inset:0;',
       'pointer-events:none;',
       'z-index:2;',
       'border-radius:' + cfg.borderRadius + 'px;',
-      (hasBorder ? 'box-shadow:inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ';' : '')
-    ].join('');
-    card.appendChild(borderOverlay);
+      (hasBorder
+        ? 'outline:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';outline-offset:-' + cfg.borderWidth + 'px;'
+        : '')
+    ].join('');    card.appendChild(borderOverlay);
 
     card.addEventListener('click', function (e) {
       e.preventDefault();
