@@ -3684,14 +3684,12 @@ function initInlineWidget(options) {
   }
 
   var displayMode = options.storyFormat || getWidgetDisplayMode(currentAppearance);
-  console.log('[Vidlytics] Modo de exibição detectado:', displayMode);
 
   if (displayMode === 'carousel') {
     renderCarouselWidget(container, currentStories, currentAppearance);
-} else if (displayMode === 'grid') {
+  } else if (displayMode === 'grid') {
     renderGridWidget(container, currentStories, currentAppearance);
   } else if (displayMode === 'floating_widget') {
-    // Stories flutuantes não devem ser renderizados inline — usa bubbles como fallback visual
     renderBubbles(container);
   } else {
     renderBubbles(container);
