@@ -4125,18 +4125,16 @@ function initWidget() {
             return loc.active !== false && loc.active !== 'false' && loc.active !== 0 && loc.active !== '0';
           });
 
-                    var displayMode = getWidgetDisplayMode(currentAppearance);
+          var displayMode = getWidgetDisplayMode(currentAppearance);
           console.log('[Vidlytics] 🎯 Display mode detectado:', displayMode);
           console.log('[Vidlytics] 📍 Active locations:', activeLocations.length);
-          
+
           var hasActiveLocations = false;
 
           activeLocations.forEach(function (location, idx) {
-            console.log('[Vidlytics] 🔄 Processando location', idx + 1, ':', location);
-            hasActiveLocations = true;
+            console.log('[Vidlytics] 🔄 Processando location', idx + 1);
             var locStoryId = location.story_id;
-            console.log('[Vidlytics] 📌 Story ID da location:', locStoryId);
-            
+
             if (!locStoryId) {
               console.log('[Vidlytics] ⚠️ Location sem story_id, pulando.');
               return;
@@ -4144,8 +4142,7 @@ function initWidget() {
 
             var story = currentStories.find(function (s) { return idsEqual(s.id, locStoryId); });
             if (!story) {
-              console.warn('[Vidlytics] ❌ Story nao encontrada para location:', locStoryId);
-              console.log('[Vidlytics] 📚 Stories disponíveis:', currentStories.map(function(s) { return s.id; }));
+              console.warn('[Vidlytics] ❌ Story não encontrada para location:', locStoryId);
               return;
             }
             console.log('[Vidlytics] ✅ Story encontrada:', story.title || story.id);
@@ -4153,15 +4150,9 @@ function initWidget() {
             var storyRules = rules.filter(function (r) {
               return idsEqual(r.story_id, locStoryId);
             });
-            console.log('[Vidlytics] 📏 Rules para este story:', storyRules.length);
 
             if (storyRules.length > 0) {
-              var hasMatch = storyRules.some(function (rule) { 
-                console.log('[Vidlytics] 🔍 Verificando rule:', rule);
-                var result = matchesRule(rule);
-                console.log('[Vidlytics] 🎯 matchesRule resultado:', result);
-                return result;
-              });
+              var hasMatch = storyRules.some(function (rule) { return matchesRule(rule); });
               if (!hasMatch) {
                 console.log('[Vidlytics] ❌ Nenhuma regra bateu para location, pulando.');
                 return;
@@ -4169,42 +4160,42 @@ function initWidget() {
               console.log('[Vidlytics] ✅ Regra bateu!');
             }
 
-            // Se display_mode for floating, ignora seletor CSS (floating sempre vai no body)
-            if (displayMode === 'floating') {
-              console.log('[Vidlytics] 🎈 Modo floating — ignorando seletor CSS da location.');
+            var selector = location.selector;
+            var position = location.position || 'beforeend';
+            console.log('[Vidlytics] 🎯 Selector:', selector || '(vazio)', '| Position:', position);
+
+            // Se não tem seletor, pula (flutuante não precisa de seletor, mas já é tratado separadamente)
+            if (!selector) {
+              console.log('[Vidlytics] ⚠️ Location sem selector, pulando.');
               return;
             }
 
-            var selector = location.selector;
-            var position = location.position || 'beforeend';
-            console.log('[Vidlytics] 🎯 Selector:', selector, 'Position:', position);
+            // ✅ Só marca como ativa DEPOIS de confirmar que tem seletor válido
+            hasActiveLocations = true;
 
-            if (selector) {
-              console.log('[Vidlytics] 🚀 Injetando carrossel no seletor:', selector, 'posicao:', position);
-              try {
-                initInlineWidget({
-                  target: selector,
-                  placement: position,
-                  stories: [story],
-                  products: readProductsData,
-                  sizing_models: readSizingModelsData,
-                  comments: readCommentsData,
-                  appearance: currentAppearance
-                });
-                console.log('[Vidlytics] ✅ initInlineWidget executado com sucesso!');
-              } catch (err) {
-                console.error('[Vidlytics] ❌ Erro no initInlineWidget:', err);
-              }
-            } else {
-              console.log('[Vidlytics] ⚠️ Location sem selector, pulando.');
+            try {
+              console.log('[Vidlytics] 🚀 Injetando widget no seletor:', selector);
+              initInlineWidget({
+                target: selector,
+                placement: position,
+                stories: [story],
+                products: readProductsData,
+                sizing_models: readSizingModelsData,
+                comments: readCommentsData,
+                appearance: currentAppearance
+              });
+              console.log('[Vidlytics] ✅ Widget injetado com sucesso!');
+            } catch (err) {
+              console.error('[Vidlytics] ❌ Erro no initInlineWidget:', err);
             }
           });
 
           console.log('[Vidlytics] 🏁 forEach finalizado. hasActiveLocations:', hasActiveLocations);
 
-          // 🔧 FALLBACK: se não há display_locations ativas, renderiza baseado no display_mode
-if (!hasActiveLocations && (displayMode === 'carousel' || displayMode === 'grid' || displayMode === 'stories')) {
-            console.log('[Vidlytics] Nenhuma display_location ativa — renderizando fallback inline.');
+          // 🔧 FALLBACK: se não há display_locations com seletor válido, renderiza baseado no display_mode
+          // ✅ Agora cobre carousel, grid E stories
+          if (!hasActiveLocations && (displayMode === 'carousel' || displayMode === 'grid' || displayMode === 'stories')) {
+            console.log('[Vidlytics] Nenhuma display_location com seletor válido — renderizando fallback inline.');
             var fallbackTarget = document.querySelector('#vidlytics-stories');
             if (!fallbackTarget) {
               fallbackTarget = document.createElement('div');
