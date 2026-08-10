@@ -694,12 +694,12 @@ function getCarouselConfig(appearance) {
     return readConfigValue(appearance, 'carousel_config', jsonbField, flatField, fallback);
   }
   var visibleItems = safeInt(rcv('visible_items', 'carousel_visible_items', '4'), 4);
-var borderColor = String(rcv('border_color', 'carousel_border_color', 'transparent') || 'transparent');
-var borderWidth = toNumber(rcv('border_width', 'carousel_border_width', '0'), 0);
+  var borderColor = String(rcv('border_color', 'carousel_border_color', 'transparent') || 'transparent');
+  var borderWidth = toNumber(rcv('border_width', 'carousel_border_width', '0'), 0);
 
-  var itemWidth = toNumber(rcv('item_width', 'carousel_item_width', '120'), 120);
-  var itemSpacing = toNumber(rcv('item_spacing', 'carousel_item_spacing', '8'), 8);
-  var itemRadius = toNumber(rcv('item_radius', 'carousel_item_radius', '12'), 12);
+  var itemWidth = toNumber(rcv('width', 'carousel_item_width', '120'), 120);
+  var itemSpacing = toNumber(rcv('spacing', 'carousel_item_spacing', '8'), 8);
+  var itemRadius = toNumber(rcv('border_radius', 'carousel_item_radius', '12'), 12); // 🔧 Atualizado para border_radius
   var padding = toNumber(rcv('padding', 'carousel_padding', '16'), 16);
   var marginTop = toNumber(rcv('margin_top', 'carousel_margin_top', '0'), 0);
   var marginBottom = toNumber(rcv('margin_bottom', 'carousel_margin_bottom', '0'), 0);
@@ -708,34 +708,34 @@ var borderWidth = toNumber(rcv('border_width', 'carousel_border_width', '0'), 0)
   if (typeof showTitle === 'string') showTitle = showTitle === 'true';
   var showPlayIcon = rcv('show_play_icon', 'carousel_show_play_icon', true);
   if (typeof showPlayIcon === 'string') showPlayIcon = showPlayIcon === 'true';
-  var showItemTitle = rcv('show_item_title', 'carousel_show_item_title', false);
+  var showItemTitle = rcv('show_title', 'carousel_show_item_title', false); // 🔧 Alinhado
   if (typeof showItemTitle === 'string') showItemTitle = showItemTitle === 'true';
   var showArrows = rcv('show_arrows', 'carousel_show_arrows', true);
   if (typeof showArrows === 'string') showArrows = showArrows === 'true';
   
-  var aspect = String(rcv('aspect_ratio', 'carousel_aspect_ratio', '9/16')).trim().toLowerCase();
-  if (aspect === 'square' || aspect === '1:1') aspect = '1/1';
-  if (aspect === 'portrait' || aspect === '9:16') aspect = '9/16';
-  if (aspect === 'landscape' || aspect === '16:9') aspect = '16/9';
+  // 🔧 Usa card_shape para definir o aspect-ratio dos itens
+  var aspect = String(rcv('card_shape', 'carousel_aspect_ratio', 'portrait')).trim().toLowerCase();
+  if (aspect === 'square' || aspect === '1:1' || aspect === '1/1') aspect = '1/1';
+  if (aspect === 'portrait' || aspect === '9:16' || aspect === '9/16') aspect = '9/16';
+  if (aspect === 'landscape' || aspect === '16:9' || aspect === '16/9') aspect = '16/9';
   
-return {
-  itemWidth: px(itemWidth),
-  itemSpacing: px(itemSpacing),
-  itemRadius: px(itemRadius),
-  padding: px(padding),
-  marginTop: px(marginTop),
-  marginBottom: px(marginBottom),
-  visibleItems: visibleItems,
-  borderColor: borderColor,
-  borderWidth: borderWidth,
-  showTitle: showTitle,
-  showPlayIcon: showPlayIcon,
-  showItemTitle: showItemTitle,
-  showArrows: showArrows,
-  itemAspect: aspect
-};
+  return {
+    itemWidth: px(itemWidth),
+    itemSpacing: px(itemSpacing),
+    itemRadius: px(itemRadius),
+    padding: px(padding),
+    marginTop: px(marginTop),
+    marginBottom: px(marginBottom),
+    visibleItems: visibleItems,
+    borderColor: borderColor,
+    borderWidth: borderWidth,
+    showTitle: showTitle,
+    showPlayIcon: showPlayIcon,
+    showItemTitle: showItemTitle,
+    showArrows: showArrows,
+    itemAspect: aspect
+  };
 }
-
 function getGridConfig(appearance) {
   appearance = normalizeAppearanceItem(appearance || {});
   function rcv(jsonbField, flatField, fallback) {
