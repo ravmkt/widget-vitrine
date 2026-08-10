@@ -3364,6 +3364,20 @@ if (thumbUrl) {
       playIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"></polygon></svg>';
       playBadge.appendChild(playIcon);
       card.appendChild(playBadge);
+          // Overlay de borda com outline (evita vazamento nos cantos)
+    var borderOverlay = createEl('div');
+    borderOverlay.style.cssText = [
+      'position:absolute;',
+      'inset:0;',
+      'pointer-events:none;',
+      'z-index:2;',
+      'border-radius:' + cfg.borderRadius + 'px;',
+      (hasBorder
+        ? 'outline:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';outline-offset:-' + cfg.borderWidth + 'px;'
+        : '')
+    ].join('');
+    card.appendChild(borderOverlay);
+
     }
 
     // Título do story
