@@ -3722,19 +3722,34 @@ card.style.cssText = [
                    story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
 
 if (thumbUrl) {
-  var img = createEl('img');
-  img.src = thumbUrl;
-  img.alt = video.title || story.title || '';
-
+  // Cria um container interno exclusivo para mascarar a imagem perfeitamente dentro da borda
+  var innerMask = createEl('div', 'vl-grid-img-mask');
+  
   var innerRadiusCss = cfg.borderRadius;
   if (cfg.borderWidth > 0 && cfg.borderRadius !== '50%') {
     var rawRadiusNum = parseFloat(cfg.borderRadius) || 0;
     innerRadiusCss = Math.max(0, rawRadiusNum - cfg.borderWidth) + 'px';
   }
 
-  img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;';
+  innerMask.style.cssText = [
+    'position:absolute;',
+    'inset:0;',
+    'overflow:hidden;',
+    'border-radius:' + innerRadiusCss + ';',
+    'z-index:1;',
+    'pointer-events:none;',
+    'transform:translateZ(0);',
+    '-webkit-transform:translateZ(0);'
+  ].join('');
+
+  var img = createEl('img');
+  img.src = thumbUrl;
+  img.alt = video.title || story.title || '';
+  img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';';
   img.loading = 'lazy';
-  card.appendChild(img);
+  
+  innerMask.appendChild(img);
+  card.appendChild(innerMask);
 }
 
     // Play button overlay
