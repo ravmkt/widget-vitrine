@@ -3397,10 +3397,15 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
     'transition:transform 0.3s ease !important;' +
     'will-change:transform !important;';
   
-  // Items
-  stories.forEach(function(story, storyIndex) {
-    var videos = (story.videos || []).filter(Boolean);
-    videos.forEach(function(video, videoIndex) {
+// Items
+var renderedCount = 0;
+var maxItems = cfg.visibleItems || 4;
+
+stories.forEach(function(story, storyIndex) {
+  if (renderedCount >= maxItems) return;
+  var videos = (story.videos || []).filter(Boolean);
+  videos.forEach(function(video, videoIndex) {
+    if (renderedCount >= maxItems) return;
       var thumbUrl = getVideoThumbnail(video) || story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
       var item = document.createElement('div');
       item.className = 'vidlytics-carousel-item';
