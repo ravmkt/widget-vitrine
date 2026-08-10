@@ -4070,6 +4070,7 @@ function renderFloatingWidget(floatingStories) {
     thumbUrl = getVideoThumbnail(story.videos[0]);
   }
 
+// trecho novo
   var cardOuter = createEl('div', 'vl-floating-card-outer');
   var isCircle = cfg.shape === 'circle';
 
@@ -4087,7 +4088,10 @@ function renderFloatingWidget(floatingStories) {
     'transition:transform 0.2s ease,box-shadow 0.2s ease !important;' +
     'flex-shrink:0 !important;' +
     'overflow:hidden !important;' +
-    'box-sizing:content-box !important;';
+    'box-sizing:content-box !important;' +
+    'transform:translateZ(0) !important;' +
+    '-webkit-backface-visibility:hidden !important;' +
+    'outline: 1px solid transparent !important;';
 
   var cardInner = createEl('div', 'vl-floating-card-inner');
   cardInner.style.cssText =
@@ -4099,7 +4103,8 @@ function renderFloatingWidget(floatingStories) {
     'align-items:center !important;' +
     'justify-content:center !important;' +
     'background:#fff !important;' +
-    'position:relative !important;';
+    'position:relative !important;' +
+    'transform:translateZ(0) !important;';
 
   if (thumbUrl) {
     var img = createEl('img');
@@ -4109,11 +4114,12 @@ function renderFloatingWidget(floatingStories) {
       'width:100% !important;' +
       'height:100% !important;' +
       'object-fit:' + cfg.objectFit + ' !important;' +
-      'border-radius:' + cfg.innerRadius + ' !important;';
+      'border-radius:' + cfg.innerRadius + ' !important;' +
+      'transform:scale(1.01) !important;';
     img.loading = 'lazy';
     cardInner.appendChild(img);
   }
-
+  
   // Ícone de play centralizado
   if (cfg.showPlayIcon && thumbUrl) {
     var playOverlay = createEl('div', 'vl-floating-play-icon');
