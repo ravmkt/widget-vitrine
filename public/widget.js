@@ -4141,11 +4141,11 @@ function renderFloatingWidget(floatingStories) {
       'height:100% !important;' +
       'object-fit:' + cfg.objectFit + ' !important;' +
       'border-radius:' + cfg.innerRadius + ' !important;' +
-      'transform:scale(1.01) !important;';
+      '-webkit-backface-visibility:hidden !important;';
     img.loading = 'lazy';
     cardInner.appendChild(img);
   }
-  
+
   // Ícone de play centralizado
   if (cfg.showPlayIcon && thumbUrl) {
     var playOverlay = createEl('div', 'vl-floating-play-icon');
