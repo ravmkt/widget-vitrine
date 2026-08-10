@@ -3514,7 +3514,6 @@ function renderGridWidget(container, stories, appearance) {
       'transition:transform .2s ease, box-shadow .2s ease;',
       'width:100%;',
       'max-width:' + cardMaxWidth + ';',
-      (hasBorder ? 'box-shadow:inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ';' : '')
     ].join('');
 
     var thumbUrl = getVideoThumbnail(video) ||
