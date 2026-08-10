@@ -3320,11 +3320,16 @@ function renderCarouselWidget(targetOrContainer, stories, appearance) {
     return;
   }
   
+  // Remove carrossel anterior se existir
+  var existing = container.querySelector('.vidlytics-carousel-container');
+  if (existing) existing.remove();
+  
   var cfg = getCarouselConfig(appearance);
   var primaryColor = getPrimaryColor(appearance);
   var textColor = getTextColor ? getTextColor(appearance) : '#333';
   
-  var wrapper = createEl('div', 'vidlytics-carousel-container');
+  var wrapper = document.createElement('div');
+  wrapper.className = 'vidlytics-carousel-container';
   wrapper.setAttribute('data-vidlytics-widget', 'carousel');
   wrapper.style.cssText =
     'width:100% !important;' +
@@ -3337,18 +3342,21 @@ function renderCarouselWidget(targetOrContainer, stories, appearance) {
     'visibility:visible !important;' +
     'opacity:1 !important;' +
     'position:relative !important;' +
-    'z-index:1 !important;';
+    'z-index:1 !important;' +
+    'background:transparent !important;';
   
   // Header
   if (cfg.showTitle && stories[0] && stories[0].title) {
-    var header = createEl('div', 'vidlytics-carousel-header');
+    var header = document.createElement('div');
+    header.className = 'vidlytics-carousel-header';
     header.style.cssText =
       'display:flex !important;' +
       'justify-content:space-between !important;' +
       'align-items:center !important;' +
       'margin-bottom:12px !important;';
     
-    var title = createEl('h3', 'vidlytics-carousel-title');
+    var title = document.createElement('h3');
+    title.className = 'vidlytics-carousel-title';
     title.textContent = stories[0].title;
     title.style.cssText =
       'margin:0 !important;' +
@@ -3360,13 +3368,15 @@ function renderCarouselWidget(targetOrContainer, stories, appearance) {
   }
   
   // Track container
-  var trackContainer = createEl('div', 'vidlytics-carousel-track-container');
+  var trackContainer = document.createElement('div');
+  trackContainer.className = 'vidlytics-carousel-track-container';
   trackContainer.style.cssText =
     'overflow:hidden !important;' +
     'position:relative !important;' +
     'width:100% !important;';
   
-  var track = createEl('div', 'vidlytics-carousel-track');
+  var track = document.createElement('div');
+  track.className = 'vidlytics-carousel-track';
   track.style.cssText =
     'display:flex !important;' +
     'gap:' + cfg.itemSpacing + ' !important;' +
@@ -3378,7 +3388,8 @@ function renderCarouselWidget(targetOrContainer, stories, appearance) {
     var videos = (story.videos || []).filter(Boolean);
     videos.forEach(function(video, videoIndex) {
       var thumbUrl = getVideoThumbnail(video) || story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
-      var item = createEl('div', 'vidlytics-carousel-item');
+      var item = document.createElement('div');
+      item.className = 'vidlytics-carousel-item';
       item.style.cssText =
         'flex:0 0 ' + cfg.itemWidth + ' !important;' +
         'width:' + cfg.itemWidth + ' !important;' +
@@ -3390,7 +3401,7 @@ function renderCarouselWidget(targetOrContainer, stories, appearance) {
         'background:#f0f0f0 !important;';
       
       if (thumbUrl) {
-        var img = createEl('img');
+        var img = document.createElement('img');
         img.src = thumbUrl;
         img.alt = story.title || 'Story';
         img.style.cssText =
@@ -3403,7 +3414,8 @@ function renderCarouselWidget(targetOrContainer, stories, appearance) {
       
       // Play icon
       if (cfg.showPlayIcon) {
-        var play = createEl('div', 'vidlytics-carousel-play');
+        var play = document.createElement('div');
+        play.className = 'vidlytics-carousel-play';
         play.style.cssText =
           'position:absolute !important;' +
           'top:50% !important;' +
@@ -3422,7 +3434,8 @@ function renderCarouselWidget(targetOrContainer, stories, appearance) {
       
       // Story title overlay
       if (cfg.showItemTitle && story.title) {
-        var titleOverlay = createEl('div', 'vidlytics-carousel-item-title');
+        var titleOverlay = document.createElement('div');
+        titleOverlay.className = 'vidlytics-carousel-item-title';
         titleOverlay.textContent = story.title;
         titleOverlay.style.cssText =
           'position:absolute !important;' +
@@ -3451,7 +3464,8 @@ function renderCarouselWidget(targetOrContainer, stories, appearance) {
   
   // Navigation arrows
   if (cfg.showArrows) {
-    var prevBtn = createEl('button', 'vidlytics-carousel-prev');
+    var prevBtn = document.createElement('button');
+    prevBtn.className = 'vidlytics-carousel-prev';
     prevBtn.innerHTML = '&#10094;';
     prevBtn.style.cssText =
       'position:absolute !important;' +
@@ -3471,14 +3485,15 @@ function renderCarouselWidget(targetOrContainer, stories, appearance) {
       'justify-content:center !important;' +
       'font-size:14px !important;';
     
-    var nextBtn = createEl('button', 'vidlytics-carousel-next');
+    var nextBtn = document.createElement('button');
+    nextBtn.className = 'vidlytics-carousel-next';
     nextBtn.innerHTML = '&#10095;';
     nextBtn.style.cssText = prevBtn.style.cssText.replace('left:0', 'right:0');
     
     var currentIndex = 0;
-    var itemWidth = parseFloat(cfg.itemWidth) || 120;
-    var gap = parseFloat(cfg.itemSpacing) || 8;
-    var step = itemWidth + gap;
+    var itemWidthPx = parseFloat(cfg.itemWidth) || 120;
+    var gapPx = parseFloat(cfg.itemSpacing) || 8;
+    var step = itemWidthPx + gapPx;
     
     prevBtn.addEventListener('click', function() {
       currentIndex = Math.max(0, currentIndex - 1);
@@ -3486,7 +3501,8 @@ function renderCarouselWidget(targetOrContainer, stories, appearance) {
     });
     
     nextBtn.addEventListener('click', function() {
-      var maxIndex = Math.max(0, track.children.length - Math.floor(trackContainer.offsetWidth / step));
+      var visibleCount = Math.max(1, Math.floor(trackContainer.offsetWidth / step));
+      var maxIndex = Math.max(0, track.children.length - visibleCount);
       currentIndex = Math.min(maxIndex, currentIndex + 1);
       track.style.transform = 'translateX(-' + (currentIndex * step) + 'px)';
     });
@@ -3496,7 +3512,7 @@ function renderCarouselWidget(targetOrContainer, stories, appearance) {
   }
   
   container.appendChild(wrapper);
-  console.log('[Vidlytics] ✅ Carrossel injetado no DOM:', container);
+  console.log('[Vidlytics] ✅ Carrossel injetado no DOM:', container, '| itens:', track.children.length);
 }
 
 function renderGridWidget(container, stories, appearance) {
