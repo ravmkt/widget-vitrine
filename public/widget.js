@@ -4108,7 +4108,11 @@ function initWidget() {
             return loc.active !== false && loc.active !== 'false' && loc.active !== 0 && loc.active !== '0';
           });
 
+          var displayMode = getWidgetDisplayMode(currentAppearance);
+          var hasActiveLocations = false;
+
           activeLocations.forEach(function (location) {
+            hasActiveLocations = true;
             var locStoryId = location.story_id;
             if (!locStoryId) return;
 
