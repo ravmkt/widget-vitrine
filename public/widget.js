@@ -3685,7 +3685,7 @@ function renderGridWidget(container, stories, appearance) {
   var gridWrapper = createEl('div', 'vl-grid-wrapper');
   gridWrapper.style.cssText = [
     'display:grid;',
-'grid-template-columns:repeat(' + columns + ', 1fr);',
+    'grid-template-columns:repeat(' + columns + ', 1fr);',
     'gap:' + gapPx + ';',
     'width:100%;',
     'max-width:' + (columns * ((cfg.size || 200) + cfg.spacing)) + 'px;',
@@ -3697,78 +3697,52 @@ function renderGridWidget(container, stories, appearance) {
     var story = item.story;
     var video = item.video;
 
-// trecho novo
-var card = createEl('div', 'vl-grid-card');
-var hasBorder = cfg.borderWidth > 0;
-card.style.cssText = [
-  'width:100%;',
-  'aspect-ratio:' + cfg.aspectRatio + ';',
-  'border-radius:' + cfg.borderRadius + ';',
-  'overflow:hidden;',
-  'position:relative;',
-  'background:transparent;',
-  'cursor:pointer;',
-  'transition:transform .2s ease, box-shadow .2s ease;',
-  'max-width:' + cardMaxWidth + ';',
-  'transform:translateZ(0);',
-  '-webkit-transform:translateZ(0);',
-  'backface-visibility:hidden;',
-  '-webkit-backface-visibility:hidden;',
-  hasBorder ? ('box-shadow: inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ';') : '',
-].join('');
+    var card = createEl('div', 'vl-grid-card');
+    var hasBorder = cfg.borderWidth > 0;
+    card.style.cssText = [
+      'width:100%;',
+      'aspect-ratio:' + cfg.aspectRatio + ';',
+      'border-radius:' + cfg.borderRadius + ';',
+      'overflow:hidden;',
+      'position:relative;',
+      'background:transparent;',
+      'cursor:pointer;',
+      'transition:transform .2s ease, box-shadow .2s ease;',
+      'max-width:' + cardMaxWidth + ';',
+      'transform:translateZ(0);',
+      '-webkit-transform:translateZ(0);',
+      'backface-visibility:hidden;',
+      '-webkit-backface-visibility:hidden;',
+      hasBorder ? ('box-shadow: inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ';') : '',
+    ].join('');
 
     var thumbUrl = getVideoThumbnail(video) ||
                    story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
 
-if (thumbUrl) {
-  var innerMask = createEl('div', 'vl-grid-img-mask');
-  
-  var innerRadiusCss = cfg.borderRadius;
+    if (thumbUrl) {
+      var innerMask = createEl('div', 'vl-grid-img-mask');
+      var innerRadiusCss = cfg.borderRadius;
 
-  innerMask.style.cssText = [
-    'position:absolute;',
-    'inset:0;',
-    'overflow:hidden;',
-    'border-radius:' + innerRadiusCss + ';',
-    'z-index:1;',
-    'pointer-events:none;',
-    'transform:translateZ(0);',
-    '-webkit-transform:translateZ(0);'
-  ].join('');
+      innerMask.style.cssText = [
+        'position:absolute;',
+        'inset:0;',
+        'overflow:hidden;',
+        'border-radius:' + innerRadiusCss + ';',
+        'z-index:1;',
+        'pointer-events:none;',
+        'transform:translateZ(0);',
+        '-webkit-transform:translateZ(0);'
+      ].join('');
 
-  var img = createEl('img');
-  img.src = thumbUrl;
-  img.alt = video.title || story.title || '';
-  img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;';
-  img.loading = 'lazy';
-  
-  innerMask.appendChild(img);
-  card.appendChild(innerMask);
-}
-  
-  // Usa exatamente o mesmo border-radius do card pai para garantir encaixe perfeito
-  var innerRadiusCss = cfg.borderRadius;
-
-  innerMask.style.cssText = [
-    'position:absolute;',
-    'inset:0;',
-    'overflow:hidden;',
-    'border-radius:' + innerRadiusCss + ';',
-    'z-index:1;',
-    'pointer-events:none;',
-    'transform:translateZ(0);',
-    '-webkit-transform:translateZ(0);'
-  ].join('');
-
-  var img = createEl('img');
-  img.src = thumbUrl;
-  img.alt = video.title || story.title || '';
-  img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;';
-  img.loading = 'lazy';
-  
-  innerMask.appendChild(img);
-  card.appendChild(innerMask);
-}
+      var img = createEl('img');
+      img.src = thumbUrl;
+      img.alt = video.title || story.title || '';
+      img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;';
+      img.loading = 'lazy';
+      
+      innerMask.appendChild(img);
+      card.appendChild(innerMask);
+    }
 
     // Play button overlay
     var playBadge = createEl('div');
@@ -3778,20 +3752,6 @@ if (thumbUrl) {
     playIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"></polygon></svg>';
     playBadge.appendChild(playIcon);
     card.appendChild(playBadge);
-
-    // Overlay de borda com box-shadow: inset (respeita border-radius)
-    var borderOverlay = createEl('div');
-    borderOverlay.style.cssText = [
-      'position:absolute;',
-      'inset:0;',
-      'pointer-events:none;',
-      'z-index:2;',
-      'border-radius:' + cfg.borderRadius + 'px;',
-      (hasBorder
-        ? 'box-shadow:inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ';'
-        : '')
-    ].join('');
-    card.appendChild(borderOverlay);
 
     card.addEventListener('click', function (e) {
       e.preventDefault();
@@ -3817,9 +3777,8 @@ if (thumbUrl) {
   });
 
   container.appendChild(gridWrapper);
-console.log('[Vidlytics] Grade renderizada com ' + allVideos.length + ' video(s) em ' + columns + ' colunas.');
+  console.log('[Vidlytics] Grade renderizada com ' + allVideos.length + ' video(s) em ' + columns + ' colunas.');
 }
-
 
 function initInlineWidget(options) {
   options = options || {};
