@@ -3777,6 +3777,12 @@ function initInlineWidget(options) {
       console.log('[Vidlytics] ✅ Wrapper fix aplicado!');
     }, 200);
 
+  } else if (displayMode === 'grid') { // <--- 🔧 ROTA DO GRID ADICIONADA AQUI
+    var container = document.createElement('div');
+    container.className = 'vl-container';
+    renderGridWidget(container, stories, appearance);
+    target.insertAdjacentElement(position, container);
+
   } else {
     var container = document.createElement('div');
     container.className = 'vl-container';
@@ -3786,7 +3792,6 @@ function initInlineWidget(options) {
   
   console.log('[Vidlytics] ✅ Inline injetado!');
 }
-
 
   /* ================================================================
      INICIALIZAÇÃO PRINCIPAL
