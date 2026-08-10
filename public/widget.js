@@ -4203,7 +4203,7 @@ function initWidget() {
           console.log('[Vidlytics] 🏁 forEach finalizado. hasActiveLocations:', hasActiveLocations);
 
           // 🔧 FALLBACK: se não há display_locations ativas, renderiza baseado no display_mode
-          if (!hasActiveLocations && (displayMode === 'carousel' || displayMode === 'grid')) {
+if (!hasActiveLocations && (displayMode === 'carousel' || displayMode === 'grid' || displayMode === 'stories')) {
             console.log('[Vidlytics] Nenhuma display_location ativa — renderizando fallback inline.');
             var fallbackTarget = document.querySelector('#vidlytics-stories');
             if (!fallbackTarget) {
