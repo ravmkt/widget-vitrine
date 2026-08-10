@@ -3364,7 +3364,9 @@ if (thumbUrl) {
       playIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"></polygon></svg>';
       playBadge.appendChild(playIcon);
       card.appendChild(playBadge);
-          // Overlay de borda com outline (evita vazamento nos cantos)
+    }
+
+    // Overlay de borda com outline (evita vazamento nos cantos)
     var borderOverlay = createEl('div');
     borderOverlay.style.cssText = [
       'position:absolute;',
