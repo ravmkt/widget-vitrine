@@ -3374,8 +3374,6 @@ cardItem.style.cursor = 'pointer';
       card.appendChild(playBadge);
     }
 
-    cardItem.appendChild(card);
-
     // Título do story
     if (cfg.showTitle && story.title) {
       var title = createEl('span', 'vl-carousel-title');
