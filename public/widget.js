@@ -3305,23 +3305,31 @@ function onStart(e) {
   el.addEventListener('touchend', onEnd);
 }
 
-function renderCarouselWidget(targetOrContainer, stories, appearance) {
+function renderCarouselWidget(targetOrOptions, stories, appearance) {
   console.log('[Vidlytics] Iniciando renderCarouselWidget com', stories.length, 'stories');
   
-  var container;
-  if (typeof targetOrContainer === 'string') {
-    container = document.querySelector(targetOrContainer);
-  } else if (targetOrContainer && targetOrContainer.nodeType === 1) {
-    container = targetOrContainer;
+  var target, position;
+  
+  // Suporta { target, position } ou elemento/string direto
+  if (targetOrOptions && typeof targetOrOptions === 'object' && targetOrOptions.nodeType !== 1) {
+    target = targetOrOptions.target;
+    position = targetOrOptions.position || 'afterend';
+  } else {
+    target = targetOrOptions;
+    position = 'afterend';
   }
   
-  if (!container) {
-    console.warn('[Vidlytics] Container não encontrado para carrossel:', targetOrContainer);
+  if (typeof target === 'string') {
+    target = document.querySelector(target);
+  }
+  
+  if (!target) {
+    console.warn('[Vidlytics] Target não encontrado para carrossel:', targetOrOptions);
     return;
   }
   
   // Remove carrossel anterior se existir
-  var existing = container.querySelector('.vidlytics-carousel-container');
+  var existing = target.parentNode ? target.parentNode.querySelector('.vidlytics-carousel-container') : null;
   if (existing) existing.remove();
   
   var cfg = getCarouselConfig(appearance);
@@ -3412,7 +3420,6 @@ function renderCarouselWidget(targetOrContainer, stories, appearance) {
         item.appendChild(img);
       }
       
-      // Play icon
       if (cfg.showPlayIcon) {
         var play = document.createElement('div');
         play.className = 'vidlytics-carousel-play';
@@ -3432,7 +3439,6 @@ function renderCarouselWidget(targetOrContainer, stories, appearance) {
         item.appendChild(play);
       }
       
-      // Story title overlay
       if (cfg.showItemTitle && story.title) {
         var titleOverlay = document.createElement('div');
         titleOverlay.className = 'vidlytics-carousel-item-title';
@@ -3511,8 +3517,8 @@ function renderCarouselWidget(targetOrContainer, stories, appearance) {
     wrapper.appendChild(nextBtn);
   }
   
-  container.appendChild(wrapper);
-  console.log('[Vidlytics] ✅ Carrossel injetado no DOM:', container, '| itens:', track.children.length);
+  target.insertAdjacentElement(position, wrapper);
+  console.log('[Vidlytics] ✅ Carrossel injetado no DOM via', position, '| itens:', track.children.length);
 }
 
 function renderGridWidget(container, stories, appearance) {
