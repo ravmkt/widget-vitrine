@@ -3719,13 +3719,19 @@ function renderGridWidget(container, stories, appearance) {
     var thumbUrl = getVideoThumbnail(video) ||
                    story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
 
+// trecho novo
     if (thumbUrl) {
       var innerMask = createEl('div', 'vl-grid-img-mask');
-      var innerRadiusCss = cfg.borderRadius;
+      
+      // Calcula o raio interno e o recuo (inset) com base na espessura da borda
+      var borderWidthNum = cfg.borderWidth || 0;
+      var rawRadiusNum = parseFloat(cfg.borderRadius) || 20;
+      var innerRadiusVal = Math.max(0, rawRadiusNum - borderWidthNum);
+      var innerRadiusCss = (typeof cfg.borderRadius === 'string' && cfg.borderRadius.indexOf('%') !== -1) ? cfg.borderRadius : (innerRadiusVal + 'px');
 
       innerMask.style.cssText = [
         'position:absolute;',
-        'inset:0;',
+        'inset:' + borderWidthNum + 'px;', // Recua exatamente a espessura da borda para revelá-la
         'overflow:hidden;',
         'border-radius:' + innerRadiusCss + ';',
         'z-index:1;',
@@ -3743,7 +3749,7 @@ function renderGridWidget(container, stories, appearance) {
       innerMask.appendChild(img);
       card.appendChild(innerMask);
     }
-
+    
     // Play button overlay
     var playBadge = createEl('div');
     playBadge.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;';
