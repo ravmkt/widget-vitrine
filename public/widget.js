@@ -559,14 +559,15 @@ function ensureModalStylesInLightDOM(appearance) {
     });
   }
 
-  function normalizeFloatingPosition(value) {
-    var key = normalizeKey(value);
-    if (key === 'fixed-top-left' || key === 'top-left' || key === 'superior-esquerda') return 'top-left';
-    if (key === 'fixed-top-right' || key === 'top-right' || key === 'superior-direita') return 'top-right';
-    if (key === 'fixed-bottom-left' || key === 'bottom-left' || key === 'inferior-esquerda') return 'bottom-left';
-    if (key === 'fixed-bottom-right' || key === 'bottom-right' || key === 'inferior-direita') return 'bottom-right';
-    return DEFAULT_APPEARANCE.floating_position;
-  }
+function normalizeFloatingPosition(pos) {
+  if (!pos) return 'bottom-right';
+  var p = String(pos).trim().toLowerCase();
+  if (p === 'top-left' || p === 'topleft' || p === 'tl' || p === 'fixed_top_left') return 'top-left';
+  if (p === 'top-right' || p === 'topright' || p === 'tr' || p === 'fixed_top_right') return 'top-right';
+  if (p === 'bottom-left' || p === 'bottomleft' || p === 'bl' || p === 'fixed_bottom_left') return 'bottom-left';
+  if (p === 'bottom-right' || p === 'bottomright' || p === 'br' || p === 'fixed_bottom_right') return 'bottom-right';
+  return 'bottom-right';
+}
 
   function normalizeFloatingShape(value) {
     var key = normalizeKey(value);
