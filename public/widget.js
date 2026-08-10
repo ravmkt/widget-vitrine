@@ -3707,7 +3707,7 @@ if (thumbUrl) {
   var img = createEl('img');
   img.src = thumbUrl;
   img.alt = video.title || story.title || '';
-  img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + cfg.borderRadius + 'px;';
+  img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + cfg.borderRadius;
   img.loading = 'lazy';
   card.appendChild(img);
 }
