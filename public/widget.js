@@ -761,14 +761,11 @@ function getGridConfig(appearance) {
     return sanitizeCssValue(raw, DEFAULT_APPEARANCE.secondary_color, 'color');
   }
 
-  function getBorderColor(appearance) {
-    var jsonbVal = sanitizeCssValue(readJsonbConfigValue(appearance, 'floating_config', 'border_color'), '', 'color');
-    if (jsonbVal) return jsonbVal;
-    var flatVal = sanitizeCssValue(readDeviceValue(appearance, 'floating_border_color'), '', 'color');
-    if (flatVal) return flatVal;
-    return getPrimaryColor(appearance);
-  }
-
+function getBorderColor(appearance) {
+  var jsonbVal = sanitizeCssValue(readJsonbConfigValue(appearance, 'floating_config', 'border_color'), '', 'color');
+  if (jsonbVal) return jsonbVal;
+  return getPrimaryColor(appearance);
+}
   function getButtonColor(appearance) {
     var raw = readAppearanceValue(appearance, ['button_color', 'buttonColor', 'btn_color', 'cor_botao']);
     return sanitizeCssValue(raw, getPrimaryColor(appearance), 'color');
