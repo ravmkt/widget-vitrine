@@ -198,7 +198,6 @@ type ExtendedAppearance = Appearance & {
   url?: string | null;
 
   show_product_button: boolean;
-  show_product_whatsapp_button: boolean;
 };
 
 type PreviewColors = {
