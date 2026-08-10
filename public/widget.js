@@ -577,41 +577,82 @@ function normalizeFloatingPosition(pos) {
     return DEFAULT_APPEARANCE.floating_shape;
   }
 
-  function getFloatingConfig(appearance) {
-    appearance = normalizeAppearanceItem(appearance || {});
-    function rcv(jsonbField, flatField, fallback) {
-      return readConfigValue(appearance, 'floating_config', jsonbField, flatField, fallback);
-    }
-    var position = normalizeFloatingPosition(rcv('floating_position', 'floating_position', DEFAULT_APPEARANCE.floating_position));
-    var shape = normalizeFloatingShape(rcv('shape', 'floating_shape', DEFAULT_APPEARANCE.floating_shape));
-    var sizeNumber = toNumber(rcv('width', 'floating_size', '80'), 80);
-    var widthNumber = sizeNumber;
-    var heightNumber;
-    if (shape === 'square' || shape === 'circle') { heightNumber = widthNumber; }
-    else { heightNumber = Math.round(widthNumber * 16 / 9); }
-    var borderWidthNumber = toNumber(rcv('border_style', 'floating_border_width', '2'), 2);
-    var radiusNumber = toNumber(rcv('border_radius', 'floating_border_radius', '12'), 12);
-    if (shape === 'circle') radiusNumber = 999;
-    var marginTopNumber = toNumber(rcv('top_spacing', 'floating_margin_top', '20'), 20);
-    var marginBottomNumber = toNumber(rcv('bottom_spacing', 'floating_margin_bottom', '20'), 20);
-    var marginSideNumber = toNumber(rcv('left_spacing', 'floating_margin_side', '20'), 20);
-    var zIndexNumber = toNumber(rcv('z_index', 'floating_z_index', '2147483647'), 2147483647);
-    var objectFit = String(rcv('object_fit', 'floating_object_fit', 'cover') || 'cover').trim().toLowerCase();
-    var top = 'auto', right = 'auto', bottom = 'auto', left = 'auto', alignItems = 'flex-end';
-    if (position === 'top-left') { top = px(marginTopNumber); left = px(marginSideNumber); alignItems = 'flex-start'; }
-    if (position === 'top-right') { top = px(marginTopNumber); right = px(marginSideNumber); alignItems = 'flex-end'; }
-    if (position === 'bottom-left') { bottom = px(marginBottomNumber); left = px(marginSideNumber); alignItems = 'flex-start'; }
-    if (position === 'bottom-right') { bottom = px(marginBottomNumber); right = px(marginSideNumber); alignItems = 'flex-end'; }
-    return {
-      position: position, shape: shape,
-      top: top, right: right, bottom: bottom, left: left,
-      width: px(widthNumber), height: px(heightNumber),
-      borderWidth: px(borderWidthNumber),
-      radius: shape === 'circle' ? '999px' : px(radiusNumber),
-      innerRadius: shape === 'circle' ? '999px' : px(Math.max(0, radiusNumber - borderWidthNumber)),
-      zIndex: zIndexNumber, alignItems: alignItems, objectFit: objectFit
-    };
+function getFloatingConfig(appearance) {
+  appearance = normalizeAppearanceItem(appearance || {});
+  
+  function rcv(jsonbField, flatField, fallback) {
+    return readConfigValue(appearance, 'floating_config', jsonbField, flatField, fallback);
   }
+  
+  var rawPosition = rcv('floating_position', 'floating_position', DEFAULT_APPEARANCE.floating_position);
+  var position = normalizeFloatingPosition(rawPosition);
+  
+  var shape = normalizeFloatingShape(rcv('shape', 'floating_shape', DEFAULT_APPEARANCE.floating_shape));
+  
+  var sizeNumber = toNumber(rcv('width', 'floating_size', '80'), 80);
+  var widthNumber = sizeNumber;
+  var heightNumber;
+  
+  if (shape === 'square' || shape === 'circle') {
+    heightNumber = widthNumber;
+  } else {
+    heightNumber = Math.round(widthNumber * 16 / 9);
+  }
+  
+  var borderWidthNumber = toNumber(rcv('border_style', 'floating_border_width', '2'), 2);
+  var radiusNumber = toNumber(rcv('border_radius', 'floating_border_radius', '12'), 12);
+  if (shape === 'circle') radiusNumber = 999;
+  
+  var marginTopNumber = toNumber(rcv('top_spacing', 'floating_margin_top', '20'), 20);
+  var marginBottomNumber = toNumber(rcv('bottom_spacing', 'floating_margin_bottom', '20'), 20);
+  var marginSideNumber = toNumber(rcv('left_spacing', 'floating_margin_side', '20'), 20);
+  
+  // fallback para right_spacing se left_spacing não existir
+  var rightSpacingNumber = toNumber(rcv('right_spacing', 'floating_margin_side', '20'), 20);
+  
+  var zIndexNumber = toNumber(rcv('z_index', 'floating_z_index', '2147483647'), 2147483647);
+  var objectFit = String(rcv('object_fit', 'floating_object_fit', 'cover') || 'cover').trim().toLowerCase();
+  
+  var top = 'auto', right = 'auto', bottom = 'auto', left = 'auto', alignItems = 'flex-end';
+  
+  if (position === 'top-left') {
+    top = px(marginTopNumber);
+    left = px(marginSideNumber);
+    alignItems = 'flex-start';
+  }
+  if (position === 'top-right') {
+    top = px(marginTopNumber);
+    right = px(rightSpacingNumber);
+    alignItems = 'flex-end';
+  }
+  if (position === 'bottom-left') {
+    bottom = px(marginBottomNumber);
+    left = px(marginSideNumber);
+    alignItems = 'flex-start';
+  }
+  if (position === 'bottom-right') {
+    bottom = px(marginBottomNumber);
+    right = px(rightSpacingNumber);
+    alignItems = 'flex-end';
+  }
+  
+  return {
+    position: position,
+    shape: shape,
+    top: top,
+    right: right,
+    bottom: bottom,
+    left: left,
+    width: px(widthNumber),
+    height: px(heightNumber),
+    borderWidth: px(borderWidthNumber),
+    radius: shape === 'circle' ? '999px' : px(radiusNumber),
+    innerRadius: shape === 'circle' ? '999px' : px(Math.max(0, radiusNumber - borderWidthNumber)),
+    zIndex: zIndexNumber,
+    alignItems: alignItems,
+    objectFit: objectFit
+  };
+}
 
   function getFloatingBehaviorConfig(appearance) {
     appearance = appearance || {};
