@@ -3639,86 +3639,37 @@ console.log('[Vidlytics] Grade renderizada com ' + allVideos.length + ' video(s)
 
 
 function initInlineWidget(options) {
-  var targetSelector = options.target || options.anchor || '#vidlytics-stories';
-  var placement = String(options.placement || 'beforeend').toLowerCase();
-  var targetEl = document.querySelector(targetSelector);
-
-  console.log('[Vidlytics] Seletor:', targetSelector);
-  console.log('[Vidlytics] Posicao:', placement);
-  console.log('[Vidlytics] Elemento encontrado:', targetEl);
-
-  if (!targetEl) {
-    console.warn('[Vidlytics] Container alvo "' + targetSelector + '" nao encontrado.');
+  options = options || {};
+  var selector = options.selector;
+  var position = options.position || 'afterend';
+  var stories = options.stories || currentStories;
+  var appearance = options.appearance || currentAppearance;
+  
+  console.log('[Vidlytics] Seletor:', selector);
+  console.log('[Vidlytics] Posicao:', position);
+  
+  var target = document.querySelector(selector);
+  if (!target) {
+    console.warn('[Vidlytics] Target não encontrado:', selector);
     return;
   }
-
-  var wrapper = document.createElement('div');
-  wrapper.style.cssText = 'position:relative;width:100%;';
-
-  if (wrapper.shadowRoot) {
-    globalShadowRoot = wrapper.shadowRoot;
-  } else {
-    globalShadowRoot = wrapper.attachShadow({ mode: 'open' });
-  }
-
-  var container = createEl('div', 'vl-container');
-  globalShadowRoot.appendChild(container);
-
-  injectStyles(globalShadowRoot);
-
-  if (options.stories && options.stories.length > 0) {
-    currentStories = options.stories;
-  }
-  if (options.products && options.products.length > 0) {
-    readProductsData = options.products;
-  }
-  if (options.sizing_models && options.sizing_models.length > 0) {
-    readSizingModelsData = options.sizing_models;
-  }
-  if (options.comments && options.comments.length > 0) {
-    readCommentsData = options.comments;
-  }
-  if (options.appearance) {
-    currentAppearance = options.appearance;
-  }
-
-  // Posiciona com insertAdjacentElement
-  if (placement === 'beforebegin' || placement === 'afterbegin' || placement === 'beforeend' || placement === 'afterend') {
-    targetEl.insertAdjacentElement(placement, wrapper);
-  } else if (placement === 'above') {
-    targetEl.parentNode.insertBefore(wrapper, targetEl);
-  } else {
-    targetEl.parentNode.insertBefore(wrapper, targetEl.nextSibling);
-  }
-
-var displayMode = options.storyFormat || getWidgetDisplayMode(currentAppearance);
-console.log('[Vidlytics] Modo de exibição detectado:', displayMode);
-
+  console.log('[Vidlytics] Elemento encontrado:', target);
+  
+  var displayMode = options.storyFormat || getWidgetDisplayMode(appearance);
+  console.log('[Vidlytics] Modo de exibição detectado:', displayMode);
+  
   if (displayMode === 'carousel') {
-    renderCarouselWidget(container, currentStories, currentAppearance);
-  } else if (displayMode === 'grid') {
-    renderGridWidget(container, currentStories, currentAppearance);
-  } else if (displayMode === 'floating_widget') {
-    renderBubbles(container);
+    // Carrossel é injetado diretamente no target, sem container intermediário
+    renderCarouselWidget({ target: target, position: position }, stories, appearance);
   } else {
-    renderBubbles(container);
+    // Bubbles usam container temporário
+    var container = document.createElement('div');
+    container.className = 'vl-container';
+    renderBubbles(container, stories, appearance);
+    target.insertAdjacentElement(position, container);
   }
-  attachKeyboardListeners();
-
-  if (options.api) {
-    window[options.api] = {
-      open: openStoryModal,
-      close: closeOverlay,
-      next: nextStoryOrVideo,
-      prev: prevStoryOrVideo,
-      refresh: function () { renderBubbles(container); },
-      setStories: function (stories) { currentStories = stories; renderBubbles(container); }
-    };
-  }
-
-  trackMetric({ event_type: 'widget_init', page_url: window.location.href });
-
-  console.log('[Vidlytics] Bubbles:', container.querySelectorAll('.vl-bubble-wrapper').length);
+  
+  console.log('[Vidlytics] ✅ Inline injetado!');
 }
 
   /* ================================================================
