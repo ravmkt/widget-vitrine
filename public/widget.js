@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.08.11-00';
+  var WIDGET_VERSION = '2026.08.08-18';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -559,14 +559,14 @@ function ensureModalStylesInLightDOM(appearance) {
     });
   }
 
-function normalizeFloatingPosition(pos) {
-  if (!pos) return 'bottom-right';
-  var p = String(pos).trim().toLowerCase().replace(/_/g, '-');
-  if (p === 'fixed-top-left' || p === 'top-left' || p === 'superior-esquerda') return 'top-left';
-  if (p === 'fixed-top-right' || p === 'top-right' || p === 'superior-direita') return 'top-right';
-  if (p === 'fixed-bottom-left' || p === 'bottom-left' || p === 'inferior-esquerda') return 'bottom-left';
-  return 'bottom-right';
-}
+  function normalizeFloatingPosition(value) {
+    var key = normalizeKey(value);
+    if (key === 'fixed-top-left' || key === 'top-left' || key === 'superior-esquerda') return 'top-left';
+    if (key === 'fixed-top-right' || key === 'top-right' || key === 'superior-direita') return 'top-right';
+    if (key === 'fixed-bottom-left' || key === 'bottom-left' || key === 'inferior-esquerda') return 'bottom-left';
+    if (key === 'fixed-bottom-right' || key === 'bottom-right' || key === 'inferior-direita') return 'bottom-right';
+    return DEFAULT_APPEARANCE.floating_position;
+  }
 
   function normalizeFloatingShape(value) {
     var key = normalizeKey(value);
@@ -576,80 +576,41 @@ function normalizeFloatingPosition(pos) {
     return DEFAULT_APPEARANCE.floating_shape;
   }
 
-function getFloatingConfig(appearance) {
-  appearance = normalizeAppearanceItem(appearance || {});
-  
-  function rcv(jsonbField, flatField, fallback) {
-    return readConfigValue(appearance, 'floating_config', jsonbField, flatField, fallback);
+  function getFloatingConfig(appearance) {
+    appearance = normalizeAppearanceItem(appearance || {});
+    function rcv(jsonbField, flatField, fallback) {
+      return readConfigValue(appearance, 'floating_config', jsonbField, flatField, fallback);
+    }
+    var position = normalizeFloatingPosition(rcv('floating_position', 'floating_position', DEFAULT_APPEARANCE.floating_position));
+    var shape = normalizeFloatingShape(rcv('shape', 'floating_shape', DEFAULT_APPEARANCE.floating_shape));
+    var sizeNumber = toNumber(rcv('width', 'floating_size', '80'), 80);
+    var widthNumber = sizeNumber;
+    var heightNumber;
+    if (shape === 'square' || shape === 'circle') { heightNumber = widthNumber; }
+    else { heightNumber = Math.round(widthNumber * 16 / 9); }
+    var borderWidthNumber = toNumber(rcv('border_style', 'floating_border_width', '2'), 2);
+    var radiusNumber = toNumber(rcv('border_radius', 'floating_border_radius', '12'), 12);
+    if (shape === 'circle') radiusNumber = 999;
+    var marginTopNumber = toNumber(rcv('top_spacing', 'floating_margin_top', '20'), 20);
+    var marginBottomNumber = toNumber(rcv('bottom_spacing', 'floating_margin_bottom', '20'), 20);
+    var marginSideNumber = toNumber(rcv('left_spacing', 'floating_margin_side', '20'), 20);
+    var zIndexNumber = toNumber(rcv('z_index', 'floating_z_index', '2147483647'), 2147483647);
+    var objectFit = String(rcv('object_fit', 'floating_object_fit', 'cover') || 'cover').trim().toLowerCase();
+    var top = 'auto', right = 'auto', bottom = 'auto', left = 'auto', alignItems = 'flex-end';
+    if (position === 'top-left') { top = px(marginTopNumber); left = px(marginSideNumber); alignItems = 'flex-start'; }
+    if (position === 'top-right') { top = px(marginTopNumber); right = px(marginSideNumber); alignItems = 'flex-end'; }
+    if (position === 'bottom-left') { bottom = px(marginBottomNumber); left = px(marginSideNumber); alignItems = 'flex-start'; }
+    if (position === 'bottom-right') { bottom = px(marginBottomNumber); right = px(marginSideNumber); alignItems = 'flex-end'; }
+    return {
+      position: position, shape: shape,
+      top: top, right: right, bottom: bottom, left: left,
+      width: px(widthNumber), height: px(heightNumber),
+      borderWidth: px(borderWidthNumber),
+      radius: shape === 'circle' ? '999px' : px(radiusNumber),
+      innerRadius: shape === 'circle' ? '999px' : px(Math.max(0, radiusNumber - borderWidthNumber)),
+      zIndex: zIndexNumber, alignItems: alignItems, objectFit: objectFit
+    };
   }
-  
-  var rawPosition = rcv('floating_position', 'floating_position', DEFAULT_APPEARANCE.floating_position);
-  var position = normalizeFloatingPosition(rawPosition);
-  
-  var shape = normalizeFloatingShape(rcv('shape', 'floating_shape', DEFAULT_APPEARANCE.floating_shape));
-  
-  var sizeNumber = toNumber(rcv('width', 'floating_size', '80'), 80);
-  var widthNumber = sizeNumber;
-  var heightNumber;
-  
-  if (shape === 'square' || shape === 'circle') {
-    heightNumber = widthNumber;
-  } else {
-    heightNumber = Math.round(widthNumber * 16 / 9);
-  }
-  
-  var borderWidthNumber = toNumber(rcv('border_style', 'floating_border_width', '2'), 2);
-  var radiusNumber = toNumber(rcv('border_radius', 'floating_border_radius', '12'), 12);
-  if (shape === 'circle') radiusNumber = 999;
-  
-  var marginTopNumber = toNumber(rcv('top_spacing', 'floating_margin_top', '20'), 20);
-  var marginBottomNumber = toNumber(rcv('bottom_spacing', 'floating_margin_bottom', '20'), 20);
-  var marginSideNumber = toNumber(rcv('left_spacing', 'floating_margin_side', '20'), 20);
-  var rightSpacingNumber = toNumber(rcv('right_spacing', 'floating_margin_side', '20'), 20);
-  
-  var zIndexNumber = toNumber(rcv('z_index', 'floating_z_index', '2147483647'), 2147483647);
-  var objectFit = String(rcv('object_fit', 'floating_object_fit', 'cover') || 'cover').trim().toLowerCase();
-  
-  var top = 'auto', right = 'auto', bottom = 'auto', left = 'auto', alignItems = 'flex-end';
-  
-  if (position === 'top-left') {
-    top = px(marginTopNumber);
-    left = px(marginSideNumber);
-    alignItems = 'flex-start';
-  }
-  if (position === 'top-right') {
-    top = px(marginTopNumber);
-    right = px(rightSpacingNumber);
-    alignItems = 'flex-end';
-  }
-  if (position === 'bottom-left') {
-    bottom = px(marginBottomNumber);
-    left = px(marginSideNumber);
-    alignItems = 'flex-start';
-  }
-  if (position === 'bottom-right') {
-    bottom = px(marginBottomNumber);
-    right = px(rightSpacingNumber);
-    alignItems = 'flex-end';
-  }
-  
-  return {
-    position: position,
-    shape: shape,
-    top: top,
-    right: right,
-    bottom: bottom,
-    left: left,
-    width: px(widthNumber),
-    height: px(heightNumber),
-    borderWidth: px(borderWidthNumber),
-    radius: shape === 'circle' ? '999px' : px(radiusNumber),
-    innerRadius: shape === 'circle' ? '999px' : px(Math.max(0, radiusNumber - borderWidthNumber)),
-    zIndex: zIndexNumber,
-    alignItems: alignItems,
-    objectFit: objectFit
-  };
-}
 
   function getFloatingBehaviorConfig(appearance) {
     appearance = appearance || {};
@@ -776,6 +737,7 @@ function getFloatingConfig(appearance) {
       show_play_button: rcv('show_play_button', 'modal_show_play_button', true),
       show_product: rcv('show_product', 'modal_show_product', true),
       show_product_button: rcv('show_product_button', 'modal_show_product_button', true),
+      show_product_whatsapp_button: rcv('show_product_whatsapp_button', null, true),
       show_like_button: rcv('show_like_button', 'modal_show_like_button', true),
       show_comment_button: rcv('show_comment_button', 'modal_show_comment_button', true),
       show_share_button: rcv('show_share_button', 'modal_show_share_button', true),
@@ -890,7 +852,6 @@ function getFloatingConfig(appearance) {
           if (location.active === false || location.active === 'false' || location.active === 0 || location.active === '0') {
             return false;
           }
-          
           return true;
         });
       });
@@ -1206,29 +1167,25 @@ function getFloatingConfig(appearance) {
     return getThumbnailFromObject(coverRelation) || getThumbnailFromObject(story) || getVideoThumbnail(coverVideo) || getThumbnailFromObject(coverVideo) || '';
   }
 
-function applyHostPosition(host, appearance) {
-  var cfg = getFloatingConfig(appearance || currentAppearance);
-  
-  setImportant(host, 'position', 'fixed');
-  setImportant(host, 'top', cfg.top);
-  setImportant(host, 'right', cfg.right);
-  setImportant(host, 'bottom', cfg.bottom);
-  setImportant(host, 'left', cfg.left);
-  setImportant(host, 'z-index', cfg.zIndex);
-  setImportant(host, 'width', cfg.width);
-  setImportant(host, 'min-width', cfg.width);
-  setImportant(host, 'max-width', cfg.width);
-  setImportant(host, 'height', 'auto');
-  setImportant(host, 'min-height', '0');
-  setImportant(host, 'overflow', 'visible');
-  setImportant(host, 'background', 'transparent');
-  setImportant(host, 'border', '0');
-  setImportant(host, 'box-shadow', 'none');
-  setImportant(host, 'pointer-events', 'auto');
-  setImportant(host, 'transform', 'none');
-  setImportant(host, 'margin', '0');
-  setImportant(host, 'padding', '0');
-}
+  function applyHostPosition(host, appearance) {
+    var cfg = getFloatingConfig(appearance || currentAppearance);
+    setImportant(host, 'position', 'fixed');
+    setImportant(host, 'top', cfg.top);
+    setImportant(host, 'right', cfg.right);
+    setImportant(host, 'bottom', cfg.bottom);
+    setImportant(host, 'left', cfg.left);
+    setImportant(host, 'z-index', cfg.zIndex);
+    setImportant(host, 'width', cfg.width);
+    setImportant(host, 'min-width', cfg.width);
+    setImportant(host, 'max-width', cfg.width);
+    setImportant(host, 'height', 'auto');
+    setImportant(host, 'overflow', 'visible');
+    setImportant(host, 'background', 'transparent');
+    setImportant(host, 'border', '0');
+    setImportant(host, 'box-shadow', 'none');
+    setImportant(host, 'pointer-events', 'auto');
+    setImportant(host, 'transform', 'none');
+  }
 
   function getOrCreateShadowRoot(appearance) {
     var existingRoot = document.getElementById('vidlytics-widget-root');
@@ -2659,22 +2616,8 @@ function trackMetric(data) {
     body.appendChild(social);
     container.appendChild(body);
 
-var showVerProduto = appearanceConfig.show_product !== false;
-// WhatsApp segue o mesmo critério do card de produto — sem flag separada
-var showWhatsAppProduto = showVerProduto;
-
-    // 🔍 DEBUG — colar AQUI (depois das declarações)
-    var videoProductId = video ? (video.product_id || video.productId) : null;
-    var productData = videoProductId ? readProductsData.find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
-    console.log('🐛 DEBUG WHATSAPP V2:', {
-      showWhatsAppProduto: showWhatsAppProduto,
-      storeWhatsappNumber: storeWhatsappNumber,
-      videoProductId: videoProductId,
-      productDataFound: !!productData,
-      productWhatsapp: productData ? (productData.whatsapp_number || productData.whatsappNumber) : null,
-      modalConfigRaw: currentAppearance.modal_config
-    });
-    // FIM DEBUG
+    var showVerProduto = appearanceConfig.show_product !== false;
+    var showWhatsAppProduto = appearanceConfig.show_product_whatsapp_button !== false;
 
     if (showVerProduto || showWhatsAppProduto) {
       var videoProductId = video.product_id || (video.productId) || null;
@@ -3015,10 +2958,8 @@ function openStoryModal(storyIndex, videoIndex) {
       '.vl-form-btn-row { display: flex; gap: 8px; width: 100%; margin-top: 8px; }',
       '.vl-form-btn-back { flex: 1; height: 42px; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; color: #64748b; font-size: 14px; font-weight: 700; cursor: pointer; }',
       '.vl-form-btn-send { flex: 2; height: 42px; border: none; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }',
-      '.vl-carousel-wrapper img { -webkit-user-drag: none; user-drag: none; pointer-events: none; }',
-      '.vl-carousel-item { cursor: pointer; }',
-      '.vl-carousel-card { outline: none !important; -webkit-backface-visibility: hidden; backface-visibility: hidden; transform: translateZ(0); }',
-      '.vl-carousel-card::after, .vl-carousel-card::before { display: none !important; }',
+'.vl-carousel-wrapper img { -webkit-user-drag: none; user-drag: none; pointer-events: none; }',
+ '.vl-carousel-item { cursor: pointer; }', 
       '@media (max-width: 480px) { .vl-modal { max-width: 100%; border-radius: 0; } .vl-social { right: 4px; bottom: 90px; gap: 12px; } .vl-social-btn { width: 40px; height: 40px; } }'
     ].join('\n');
   }
@@ -3156,26 +3097,21 @@ function getWidgetDisplayMode(appearance) {
     if (mode === 'floating' || mode === 'flutuante') return 'floating';
     if (mode === 'stories' || mode === 'bubbles' || mode === 'bolhas') return 'stories';
   }
-
   // Fallback: detecta pelo jsonb preenchido
-  var gridCfg = appearance.grid_config;
   var carouselCfg = appearance.carousel_config;
-  var floatingCfg = appearance.floating_config;
-
-  if (typeof gridCfg === 'string') { try { gridCfg = JSON.parse(gridCfg); } catch(e) { gridCfg = null; } }
-  if (typeof carouselCfg === 'string') { try { carouselCfg = JSON.parse(carouselCfg); } catch(e) { carouselCfg = null; } }
-  if (typeof floatingCfg === 'string') { try { floatingCfg = JSON.parse(floatingCfg); } catch(e) { floatingCfg = null; } }
-
-  var gridPopulated = gridCfg && typeof gridCfg === 'object' && Object.keys(gridCfg).length > 0;
-  var carouselPopulated = carouselCfg && typeof carouselCfg === 'object' && Object.keys(carouselCfg).length > 0;
-  var floatingPopulated = floatingCfg && typeof floatingCfg === 'object' && Object.keys(floatingCfg).length > 0;
-
-  // ✅ floating tem prioridade máxima (sempre que configurado)
-  if (floatingPopulated) return 'floating';
-  if (gridPopulated && carouselPopulated) return 'stories';
-  if (gridPopulated) return 'grid';
-  if (carouselPopulated) return 'carousel';
-  
+  if (carouselCfg) {
+    if (typeof carouselCfg === 'string') { try { carouselCfg = JSON.parse(carouselCfg); } catch(e) {} }
+    if (carouselCfg && typeof carouselCfg === 'object' && Object.keys(carouselCfg).length > 0) {
+      return 'carousel';
+    }
+  }
+  var gridCfg = appearance.grid_config;
+  if (gridCfg) {
+    if (typeof gridCfg === 'string') { try { gridCfg = JSON.parse(gridCfg); } catch(e) {} }
+    if (gridCfg && typeof gridCfg === 'object' && Object.keys(gridCfg).length > 0) {
+      return 'grid';
+    }
+  }
   return 'stories';
 }
 
@@ -3358,8 +3294,8 @@ cardItem.style.cssText = [
 
 cardItem.style.cursor = 'pointer';
 
+    // Card com thumbnail do VÍDEO
     var card = createEl('div', 'vl-carousel-card');
-    var hasBorder = cfg.borderWidth > 0;
     card.style.cssText = [
       'width:100%;',
       'aspect-ratio:' + cfg.aspectRatio + ';',
@@ -3367,29 +3303,28 @@ cardItem.style.cursor = 'pointer';
       'overflow:hidden;',
       'position:relative;',
       'background:#000;',
-      'outline:none;',
-      'border:0;',
-      'transform:translateZ(0);',
-      '-webkit-transform:translateZ(0);',
-      'backface-visibility:hidden;',
-      (hasBorder
-        ? 'box-shadow:0 2px 10px rgba(0,0,0,.1);'
-        : 'box-shadow:none;')
+      'border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';',
+      'box-shadow:0 2px 10px rgba(0,0,0,.1);'
     ].join('');
 
     // Thumbnail do vídeo (fallback: story cover)
     var thumbUrl = getVideoThumbnail(video) ||
                    story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
 
-if (thumbUrl) {
-  var img = createEl('img');
-  img.src = thumbUrl;
-  img.alt = video.title || story.title || '';
-  img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + cfg.borderRadius + 'px;';
-  img.loading = 'lazy';
-  card.appendChild(img);
-}
-    
+    if (thumbUrl) {
+      var img = createEl('img');
+      img.src = thumbUrl;
+      img.alt = video.title || story.title || '';
+      img.style.cssText = [
+        'width:100%;',
+        'height:100%;',
+        'object-fit:' + cfg.objectFit + ';',
+        'display:block;'
+      ].join('');
+      img.loading = 'lazy';
+      card.appendChild(img);
+    }
+
     // Play button overlay
     if (cfg.showPlayButton) {
       var playBadge = createEl('div', 'vl-carousel-play');
@@ -3416,11 +3351,7 @@ if (thumbUrl) {
       card.appendChild(playBadge);
     }
 
-    // Overlay de borda com box-shadow: inset (respeita border-radius)
-    var borderOverlay = createEl('div');
-    borderOverlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:2;border-radius:' + cfg.borderRadius + 'px;' +
-      (hasBorder ? 'box-shadow:inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ';' : '');
-    card.appendChild(borderOverlay);
+    cardItem.appendChild(card);
 
     // Título do story
     if (cfg.showTitle && story.title) {
@@ -3482,20 +3413,13 @@ cardItem.addEventListener('click', function (e) {
   });
 });
     // Hover
-    cardItem.addEventListener('mouseenter', function () {
-      cardItem.style.transform = 'translateY(-6px)';
-      if (cfg.borderWidth > 0) {
-        card.style.boxShadow = '0 12px 28px rgba(0,0,0,.18)';
-      }
-    });
-    cardItem.addEventListener('mouseleave', function () {
-      cardItem.style.transform = 'translateY(0)';
-      if (cfg.borderWidth > 0) {
-        card.style.boxShadow = '0 2px 10px rgba(0,0,0,.1)';
-      } else {
-        card.style.boxShadow = 'none';
-      }
-    });
+cardItem.addEventListener('mouseenter', function () {
+  cardItem.style.transform = 'translateY(-6px)';
+  card.style.boxShadow = '0 12px 28px rgba(0,0,0,.18)';
+});cardItem.addEventListener('mouseleave', function () {
+  cardItem.style.transform = 'translateY(0)';
+  card.style.boxShadow = '0 2px 10px rgba(0,0,0,.1)';
+});
     track.appendChild(cardItem);
   });
 
@@ -3506,129 +3430,6 @@ cardItem.addEventListener('click', function (e) {
 
   console.log('[Vidlytics] Carrossel renderizado com ' + allVideos.length + ' video(s).');
 }
-
-function renderGridWidget(container, stories, appearance) {
-  var allVideos = [];
-  (stories || []).forEach(function (story, storyIdx) {
-    var videos = story.videos || [];
-    videos.forEach(function (video, videoIdx) {
-      allVideos.push({
-        story: story,
-        storyIndex: storyIdx,
-        video: video,
-        videoIndex: videoIdx
-      });
-    });
-  });
-
-  if (allVideos.length === 0) {
-    var emptyMsg = createEl('div');
-    emptyMsg.textContent = 'Nenhum vídeo disponível.';
-    emptyMsg.style.cssText = 'font-size:14px;color:#94a3b8;text-align:center;padding:20px;';
-    container.appendChild(emptyMsg);
-    return;
-  }
-
-  var cfg = getGridConfig(appearance);
-  var fontFamily = getFontFamily(appearance);
-  var columns = cfg.columns || 4;
-  var gapPx = cfg.spacing + 'px';
-  var cardMaxWidth = (cfg.size || 200) + 'px';
-
-  var gridWrapper = createEl('div', 'vl-grid-wrapper');
-  gridWrapper.style.cssText = [
-    'display:grid;',
-'grid-template-columns:repeat(' + columns + ', 1fr);',
-    'gap:' + gapPx + ';',
-    'width:100%;',
-    'max-width:' + (columns * ((cfg.size || 200) + cfg.spacing)) + 'px;',
-    'margin:0 auto;',
-    'padding:4px;',
-  ].join('');
-
-  allVideos.forEach(function (item) {
-    var story = item.story;
-    var video = item.video;
-
-    var card = createEl('div', 'vl-grid-card');
-    var hasBorder = cfg.borderWidth > 0;
-    card.style.cssText = [
-      'width:100%;',
-      'aspect-ratio:' + cfg.aspectRatio + ';',
-      'border-radius:' + cfg.borderRadius + 'px;',
-      'overflow:hidden;',
-      'position:relative;',
-      'background:#000;',
-      'cursor:pointer;',
-      'transition:transform .2s ease, box-shadow .2s ease;',
-      'max-width:' + cardMaxWidth + ';',
-      'transform:translateZ(0);',
-      '-webkit-transform:translateZ(0);',
-      'backface-visibility:hidden;',
-    ].join('');
-
-    var thumbUrl = getVideoThumbnail(video) ||
-                   story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
-
-if (thumbUrl) {
-  var img = createEl('img');
-  img.src = thumbUrl;
-  img.alt = video.title || story.title || '';
-  img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + cfg.borderRadius + 'px;';
-  img.loading = 'lazy';
-  card.appendChild(img);
-}
-
-    // Play button overlay
-    var playBadge = createEl('div');
-    playBadge.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;';
-    var playIcon = createEl('div');
-    playIcon.style.cssText = 'width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;';
-    playIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"></polygon></svg>';
-    playBadge.appendChild(playIcon);
-    card.appendChild(playBadge);
-
-    // Overlay de borda com box-shadow: inset (respeita border-radius)
-    var borderOverlay = createEl('div');
-    borderOverlay.style.cssText = [
-      'position:absolute;',
-      'inset:0;',
-      'pointer-events:none;',
-      'z-index:2;',
-      'border-radius:' + cfg.borderRadius + 'px;',
-      (hasBorder
-        ? 'box-shadow:inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ';'
-        : '')
-    ].join('');
-    card.appendChild(borderOverlay);
-
-    card.addEventListener('click', function (e) {
-      e.preventDefault();
-      openStoryModal(item.storyIndex, item.videoIndex);
-      trackMetric({
-        event_type: 'play',
-        story_id: story.id,
-        video_id: video.id,
-        page_url: window.location.href
-      });
-    });
-
-    card.addEventListener('mouseenter', function () {
-      card.style.transform = 'translateY(-4px)';
-      card.style.boxShadow = '0 8px 24px rgba(0,0,0,.15)';
-    });
-    card.addEventListener('mouseleave', function () {
-      card.style.transform = 'translateY(0)';
-      card.style.boxShadow = 'none';
-    });
-
-    gridWrapper.appendChild(card);
-  });
-
-  container.appendChild(gridWrapper);
-console.log('[Vidlytics] Grade renderizada com ' + allVideos.length + ' video(s) em ' + columns + ' colunas.');
-}
-
 
 function initInlineWidget(options) {
   var targetSelector = options.target || options.anchor || '#vidlytics-stories';
@@ -3683,14 +3484,14 @@ function initInlineWidget(options) {
     targetEl.parentNode.insertBefore(wrapper, targetEl.nextSibling);
   }
 
-  var displayMode = options.storyFormat || getWidgetDisplayMode(currentAppearance);
+  var displayMode = getWidgetDisplayMode(currentAppearance);
+  console.log('[Vidlytics] Modo de exibição detectado:', displayMode);
 
   if (displayMode === 'carousel') {
     renderCarouselWidget(container, currentStories, currentAppearance);
   } else if (displayMode === 'grid') {
-    renderGridWidget(container, currentStories, currentAppearance);
-  } else if (displayMode === 'floating_widget') {
-    renderBubbles(container);
+    // Por enquanto, fallback para carrossel (grid pode ser adicionado depois)
+    renderCarouselWidget(container, currentStories, currentAppearance);
   } else {
     renderBubbles(container);
   }
@@ -3842,110 +3643,88 @@ function initInlineWidget(options) {
      RENDERIZAÇÃO DO WIDGET FLUTUANTE
      ================================================================ */
 
-function renderFloatingWidget(floatingStories) {
-  if (!currentAppearance) return;
+  function renderFloatingWidget() {
+    if (!currentAppearance) return;
 
-  var stories = floatingStories || currentStories;
-  var mode = 'bubble';
-  console.log('[Vidlytics] 🎈 Renderizando flutuante. Modo:', mode, '| stories:', stories.length);
+    var mode = (currentAppearance.floating_mode || currentAppearance.floatingMode || 'inline').toLowerCase();
+    if (mode === 'inline') return;
 
-  // Remove host antigo se existir
-  var oldHost = document.getElementById('vidlytics-floating-host');
-  if (oldHost) {
-    oldHost.remove();
-    globalShadowRoot = null;
+    if (!globalShadowRoot) {
+      var shadowHost = document.createElement('div');
+      shadowHost.id = 'vidlytics-floating-host';
+      document.body.appendChild(shadowHost);
+      globalShadowRoot = shadowHost.attachShadow({ mode: 'open' });
+      injectStyles(globalShadowRoot);
+    }
+
+    var existing = globalShadowRoot.querySelector('.vidlytics-floating-widget');
+    if (existing) existing.remove();
+
+    var widget = createEl('div', 'vidlytics-floating-widget');
+    var primaryColor = getPrimaryColor(currentAppearance);
+    var behaviorConfig = getFloatingBehaviorConfig(currentAppearance);
+
+    var posRight = behaviorConfig.position === 'left' ? 'auto' : '16px';
+    var posLeft = behaviorConfig.position === 'left' ? '16px' : 'auto';
+
+    widget.style.cssText =
+      'position:fixed;' +
+      'z-index:999998;' +
+      'right:' + posRight + ';' +
+      'left:' + posLeft + ';' +
+      'bottom:16px;' +
+      'width:auto;' +
+      'transition:all 0.3s ease;' +
+      'display:flex;' +
+      'flex-direction:column;' +
+      'align-items:flex-end;' +
+      'gap:8px;';
+
+    if (mode === 'bubble') {
+      if (!currentStories || currentStories.length === 0) return;
+      var story = currentStories[0];
+      var thumbUrl = story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
+      if (!thumbUrl && story.videos && story.videos.length > 0) {
+        thumbUrl = getVideoThumbnail(story.videos[0]);
+      }
+
+      var bubbleBtn = createEl('div', 'vl-floating-bubble-btn');
+      var bubbleSizePx = '64px';
+      bubbleBtn.style.cssText =
+        'width:' + bubbleSizePx + ';' +
+        'height:' + bubbleSizePx + ';' +
+        'border-radius:50%;' +
+        'padding:3px;' +
+        'cursor:pointer;' +
+        'background:linear-gradient(135deg,' + primaryColor + ',' + adjustColor(primaryColor, -20) + ');' +
+        'box-shadow:0 4px 14px rgba(0,0,0,.2);' +
+        'transition:transform 0.2s ease,box-shadow 0.2s ease;';
+
+      var inner = createEl('div');
+      inner.style.cssText = 'width:100%;height:100%;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#fff;border:2.5px solid #fff;';
+
+      if (thumbUrl) {
+        var img = createEl('img');
+        img.src = thumbUrl;
+        img.alt = story.title || 'Story';
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
+        img.loading = 'lazy';
+        inner.appendChild(img);
+      }
+
+      bubbleBtn.appendChild(inner);
+      bubbleBtn.addEventListener('click', function () {
+        if (floatingWasDragged) { floatingWasDragged = false; return; }
+        openStoryModal(0);
+      });
+
+      widget.appendChild(bubbleBtn);
+      applyDraggable(bubbleBtn, currentAppearance);
+    }
+
+    globalShadowRoot.appendChild(widget);
+    applyDraggable(widget, currentAppearance);
   }
-
-  var shadowHost = document.createElement('div');
-  shadowHost.id = 'vidlytics-floating-host';
-  applyHostPosition(shadowHost, currentAppearance);
-  document.body.appendChild(shadowHost);
-  globalShadowRoot = shadowHost.attachShadow({ mode: 'open' });
-  injectStyles(globalShadowRoot);
-
-  var widget = createEl('div', 'vidlytics-floating-widget');
-  var primaryColor = getPrimaryColor(currentAppearance);
-  var floatingCfg = getFloatingConfig(currentAppearance);
-
-  widget.style.cssText =
-    'position:fixed !important;' +
-    'z-index:' + floatingCfg.zIndex + ' !important;' +
-    'top:' + floatingCfg.top + ' !important;' +
-    'right:' + floatingCfg.right + ' !important;' +
-    'bottom:' + floatingCfg.bottom + ' !important;' +
-    'left:' + floatingCfg.left + ' !important;' +
-    'width:auto !important;' +
-    'height:auto !important;' +
-    'transition:all 0.3s ease;' +
-    'display:flex !important;' +
-    'flex-direction:column !important;' +
-    'align-items:' + floatingCfg.alignItems + ' !important;' +
-    'gap:8px;';
-
-  if (mode === 'bubble') {
-    if (!stories || stories.length === 0) {
-      console.log('[Vidlytics] ⚠️ Nenhum story para flutuante.');
-      return;
-    }
-    
-    var story = stories[0];
-    var thumbUrl = story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
-    if (!thumbUrl && story.videos && story.videos.length > 0) {
-      thumbUrl = getVideoThumbnail(story.videos[0]);
-    }
-
-    var bubbleSize = floatingCfg.width || '80px';
-    var bubbleBtn = createEl('div', 'vl-floating-bubble-btn');
-    
-    bubbleBtn.style.cssText =
-      'width:' + bubbleSize + ' !important;' +
-      'height:' + bubbleSize + ' !important;' +
-      'border-radius:50% !important;' +
-      'padding:3px !important;' +
-      'cursor:pointer !important;' +
-      'background:linear-gradient(135deg,' + primaryColor + ',' + adjustColor(primaryColor, -20) + ') !important;' +
-      'box-shadow:0 4px 14px rgba(0,0,0,.2) !important;' +
-      'transition:transform 0.2s ease,box-shadow 0.2s ease !important;' +
-      'flex-shrink:0 !important;';
-
-    var inner = createEl('div');
-    inner.style.cssText =
-      'width:100% !important;' +
-      'height:100% !important;' +
-      'border-radius:50% !important;' +
-      'overflow:hidden !important;' +
-      'display:flex !important;' +
-      'align-items:center !important;' +
-      'justify-content:center !important;' +
-      'background:#fff !important;' +
-      'border:2.5px solid #fff !important;';
-
-    if (thumbUrl) {
-      var img = createEl('img');
-      img.src = thumbUrl;
-      img.alt = story.title || 'Story';
-      img.style.cssText =
-        'width:100% !important;' +
-        'height:100% !important;' +
-        'object-fit:cover !important;' +
-        'border-radius:50% !important;';
-      img.loading = 'lazy';
-      inner.appendChild(img);
-    }
-
-    bubbleBtn.appendChild(inner);
-    bubbleBtn.addEventListener('click', function () {
-      if (floatingWasDragged) { floatingWasDragged = false; return; }
-      openStoryModal(0);
-    });
-
-    widget.appendChild(bubbleBtn);
-    applyDraggable(bubbleBtn, currentAppearance);
-  }
-
-  globalShadowRoot.appendChild(widget);
-  console.log('[Vidlytics] ✅ Flutuante renderizado em:', floatingCfg.position);
-}
 
   /* ================================================================
      ELEMENT PICKER COM storyId
@@ -4157,120 +3936,57 @@ function initWidget() {
           return s.videos && s.videos.length > 0;
         }).length);
 
-        console.log('[Vidlytics] 🔍 Indo buscar products...');
         return readProducts();
       });
     }).then(function (products) {
       readProductsData = products || [];
-      console.log('[Vidlytics] ✅ Products carregados:', readProductsData.length);
-      console.log('[Vidlytics] 🔍 Indo buscar sizing_models...');
       return readSizingModels();
     }).then(function (models) {
       readSizingModelsData = models || [];
-      console.log('[Vidlytics] ✅ Sizing models carregados:', readSizingModelsData.length);
-      console.log('[Vidlytics] 🔍 Indo buscar comments...');
       return readComments();
     }).then(function (comments) {
       readCommentsData = comments || [];
-      console.log('[Vidlytics] ✅ Comments carregados:', readCommentsData.length);
-      console.log('[Vidlytics] 🔍 Indo buscar likes...');
       return readLikesFromDb();
     }).then(function (likes) {
       likedVideos = likes.likedVideos || {};
       videoLikeCounts = likes.likeCounts || {};
-      console.log('[Vidlytics] ✅ Likes carregados. storeId:', storeId, 'hasSupabase:', hasSupabase);
-      console.log('[Vidlytics] 🔍 Indo buscar display_locations...');
 
       // 🆕 LER DISPLAY LOCATIONS E INJETAR CARROSSEL NOS SELETORES
-      if (!storeId || !hasSupabase) {
-        console.log('[Vidlytics] ⚠️ storeId ou hasSupabase inválido, pulando display_locations.');
-        return Promise.resolve();
-      }
+      if (!storeId || !hasSupabase) return Promise.resolve();
 
-      console.log('[Vidlytics] 🔍 Chamando readDisplayLocations()...');
       return readDisplayLocations().then(function (locations) {
-        console.log('[Vidlytics] ✅ readDisplayLocations retornou:', locations ? locations.length : 0, 'locations');
-        console.log('[Vidlytics] 🔍 Chamando readPageRules()...');
         return readPageRules().then(function (rules) {
-          console.log('[Vidlytics] ✅ readPageRules retornou:', rules ? rules.length : 0, 'rules');
-
           var activeLocations = locations.filter(function (loc) {
             return loc.active !== false && loc.active !== 'false' && loc.active !== 0 && loc.active !== '0';
           });
 
-          // ────────────────────────────────────────────
-          // 📋 CLASSIFICAR STORIES POR FORMATO
-          // ────────────────────────────────────────────
-          function getStoryFormat(story) {
-            var fmt = String(story.format || story.display_format || story.displayFormat || story.visual_style || story.visualStyle || '').trim().toLowerCase();
-            if (fmt === 'carrossel' || fmt === 'carousel') return 'carousel';
-            if (fmt === 'grade' || fmt === 'grid') return 'grid';
-            return 'floating_widget';
-          }
-
-          var floatingStories = currentStories.filter(function (s) { return getStoryFormat(s) === 'floating_widget'; });
-          var inlineStories = currentStories.filter(function (s) { return getStoryFormat(s) !== 'floating_widget'; });
-
-          console.log('[Vidlytics] 📋 Stories — floating:', floatingStories.length, '| inline:', inlineStories.length);
-
-          // ────────────────────────────────────────────
-          // 🎈 FLUTUANTE — SEMPRE renderiza, ignora seletor
-          // ────────────────────────────────────────────
-          if (floatingStories.length > 0) {
-            console.log('[Vidlytics] 🎈 Renderizando flutuante para', floatingStories.length, 'story(ies).');
-            renderFloatingWidget(floatingStories);
-          }
-
-          // ────────────────────────────────────────────
-          // 📍 INLINE (carrossel/grade) — precisa de seletor
-          // ────────────────────────────────────────────
-          console.log('[Vidlytics] 📍 Active locations:', activeLocations.length);
-
-          var injected = false;
-
           activeLocations.forEach(function (location) {
             var locStoryId = location.story_id;
-            if (!locStoryId) {
-              console.log('[Vidlytics] ⚠️ Location sem story_id, pulando.');
-              return;
-            }
+            if (!locStoryId) return;
 
             var story = currentStories.find(function (s) { return idsEqual(s.id, locStoryId); });
             if (!story) {
-              console.warn('[Vidlytics] ❌ Story não encontrada:', locStoryId);
+              console.warn('[Vidlytics] Story nao encontrada para location:', locStoryId);
               return;
             }
 
-            var storyFormat = getStoryFormat(story);
-            console.log('[Vidlytics] ✅ Story:', story.title || story.id, '| formato:', storyFormat);
+            var storyRules = rules.filter(function (r) {
+              return idsEqual(r.story_id, locStoryId);
+            });
 
-            // Flutuante já foi renderizado
-            if (storyFormat === 'floating_widget') {
-              console.log('[Vidlytics] ⏭️ Story flutuante já renderizado, pulando inline.');
-              return;
-            }
-
-            var storyRules = rules.filter(function (r) { return idsEqual(r.story_id, locStoryId); });
             if (storyRules.length > 0) {
               var hasMatch = storyRules.some(function (rule) { return matchesRule(rule); });
               if (!hasMatch) {
-                console.log('[Vidlytics] ❌ Regra não bateu, pulando.');
+                console.log('[Vidlytics] Nenhuma regra bateu para location, pulando.');
                 return;
               }
-              console.log('[Vidlytics] ✅ Regra bateu!');
             }
 
             var selector = location.selector;
             var position = location.position || 'beforeend';
-            console.log('[Vidlytics] 🎯 Selector:', selector || '(vazio)', '| Position:', position);
 
-            if (!selector) {
-              console.log('[Vidlytics] ⚠️ Location sem selector, pulando.');
-              return;
-            }
-
-            console.log('[Vidlytics] 🚀 Injetando widget em:', selector);
-            try {
+            if (selector) {
+              console.log('[Vidlytics] Injetando carrossel no seletor:', selector, 'posicao:', position);
               initInlineWidget({
                 target: selector,
                 placement: position,
@@ -4278,47 +3994,17 @@ function initWidget() {
                 products: readProductsData,
                 sizing_models: readSizingModelsData,
                 comments: readCommentsData,
-                appearance: currentAppearance,
-                storyFormat: storyFormat
+                appearance: currentAppearance
               });
-              injected = true;
-              console.log('[Vidlytics] ✅ Inline injetado!');
-            } catch (err) {
-              console.error('[Vidlytics] ❌ Erro:', err);
             }
           });
-
-          // ────────────────────────────────────────────
-          // 🔧 FALLBACK — só para stories inline sem seletor
-          // ────────────────────────────────────────────
-          if (!injected && inlineStories.length > 0 && floatingStories.length === 0) {
-            console.log('[Vidlytics] 🔧 Fallback inline.');
-            var fb = document.querySelector('#vidlytics-stories');
-            if (!fb) {
-              fb = document.createElement('div');
-              fb.id = 'vidlytics-stories';
-              document.body.appendChild(fb);
-            }
-            try {
-              initInlineWidget({
-                target: '#vidlytics-stories',
-                placement: 'beforeend',
-                stories: inlineStories,
-                products: readProductsData,
-                sizing_models: readSizingModelsData,
-                comments: readCommentsData,
-                appearance: currentAppearance,
-                storyFormat: getStoryFormat(inlineStories[0])
-              });
-              console.log('[Vidlytics] ✅ Fallback injetado!');
-            } catch (err) {
-              console.error('[Vidlytics] ❌ Erro no fallback:', err);
-            }
-          }
         });
       });
     }).then(function () {
-      console.log('[Vidlytics] ✅ Widget inicializado com sucesso.');
+      // Renderiza widget flutuante se habilitado
+      if (enableFloating) {
+        renderFloatingWidget();
+      }
     }).catch(function (err) {
       console.warn('[Vidlytics] Erro na inicialização:', err);
     });
