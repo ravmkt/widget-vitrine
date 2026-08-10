@@ -3562,8 +3562,7 @@ function renderGridWidget(container, stories, appearance) {
 
     card.addEventListener('mouseenter', function () {
       card.style.transform = 'translateY(-4px)';
-      card.style.boxShadow = '0 8px 24px rgba(0,0,0,.15)' +
-        (hasBorder ? ', inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor : '');
+      card.style.boxShadow = '0 8px 24px rgba(0,0,0,.15)';
     });
     card.addEventListener('mouseleave', function () {
       card.style.transform = 'translateY(0)';
