@@ -3595,7 +3595,6 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
 
       item.appendChild(videoCard);
 
-// trecho novo
       if (cfg.showProduct) {
         var videoProductId = video.product_id || video.productId || null;
         var productData = videoProductId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
@@ -3730,7 +3729,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
           item.appendChild(prodCard);
         }
       }
-      
+
           if (productData.price) {
             var pPrice = document.createElement('div');
             pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
