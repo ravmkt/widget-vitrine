@@ -3687,7 +3687,7 @@ var hasBorder = cfg.borderWidth > 0;
 card.style.cssText = [
   'width:100%;',
   'aspect-ratio:' + cfg.aspectRatio + ';',
-  'border-radius:' + cfg.borderRadius + 'px;',
+  'border-radius:' + cfg.borderRadius,
   'overflow:hidden;',
   'position:relative;',
   'background:#000;',
