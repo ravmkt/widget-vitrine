@@ -4134,6 +4134,12 @@ function initWidget() {
               }
             }
 
+            // Se display_mode for floating, ignora seletor CSS (floating sempre vai no body)
+            if (displayMode === 'floating') {
+              console.log('[Vidlytics] Modo floating — ignorando seletor CSS da location.');
+              return;
+            }
+
             var selector = location.selector;
             var position = location.position || 'beforeend';
 
