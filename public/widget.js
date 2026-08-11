@@ -788,8 +788,6 @@ function getCarouselConfig(appearance) {
   var pPriceSize = toNumber(rcv('product_card_price_size', 'carousel_product_card_price_size', '12'), 12);
   var pPriceColor = sanitizeCssValue(rcv('product_card_price_color', 'carousel_product_card_price_color', primaryColor), primaryColor, 'color');
   var pPriceBold = toBoolean(rcv('product_card_price_bold', 'carousel_product_card_price_bold', true), true);
-  var pBtnBg = sanitizeCssValue(rcv('product_card_btn_bg', 'carousel_product_card_btn_bg', primaryColor), primaryColor, 'color');
-  var pBtnColor = sanitizeCssValue(rcv('product_card_btn_color', 'carousel_product_card_btn_color', '#FFFFFF'), '#FFFFFF', 'color');
 
   return {
     itemWidth: px(itemWidth),
