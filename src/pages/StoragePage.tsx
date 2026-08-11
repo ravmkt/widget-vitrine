@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { db } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
 
-// Utilitário global para converter Blob para Base64 Data URL (Garante que blobToBase64 esteja sempre definido)
+// Utilitário global para converter Blob para Base64 Data URL
 const blobToBase64 = (blob: Blob): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -58,6 +58,8 @@ const generateVideoThumbnail = (file: File): Promise<Blob> => {
     };
   });
 };
+
+import {
 
 // Utilitário para extrair o primeiro frame de um arquivo de vídeo via Canvas HTML5
   const blobToBase64 = (blob: Blob): Promise<string> => {
