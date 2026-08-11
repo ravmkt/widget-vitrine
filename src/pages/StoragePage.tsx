@@ -1,6 +1,22 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { db } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
+import {
+  HardDrive,
+  Search,
+  Trash2,
+  Eye,
+  Download,
+  Pencil,
+  FileVideo,
+  FileImage,
+  UploadCloud,
+  CheckCircle2,
+  AlertTriangle,
+  Sparkles,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { showSuccess, showError } from '@/utils/toast';
 
 // Utilitário global para converter Blob para Base64 Data URL
 const blobToBase64 = (blob: Blob): Promise<string> => {
@@ -59,79 +75,6 @@ const generateVideoThumbnail = (file: File): Promise<Blob> => {
   });
 };
 
-import {
-
-// Utilitário para extrair o primeiro frame de um arquivo de vídeo via Canvas HTML5
-  const blobToBase64 = (blob: Blob): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-};
-  return new Promise((resolve, reject) => {
-    const video = document.createElement('video');
-    video.preload = 'metadata';
-    video.src = URL.createObjectURL(file);
-    video.muted = true;
-    video.playsInline = true;
-
-    video.onloadeddata = () => {
-      video.currentTime = 0.1; // Avança 0.1s para evitar tela preta inicial
-    };
-
-    video.onseeked = () => {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 360;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          canvas.toBlob(
-            (blob) => {
-              URL.revokeObjectURL(video.src);
-              if (blob) resolve(blob);
-              else reject(new Error('Falha ao gerar blob do canvas'));
-            },
-            'image/jpeg',
-            0.85
-          );
-        } else {
-          URL.revokeObjectURL(video.src);
-          reject(new Error('Não foi possível obter contexto do canvas'));
-        }
-      } catch (err) {
-        URL.revokeObjectURL(video.src);
-        reject(err);
-      }
-    };
-
-    video.onerror = (err) => {
-      URL.revokeObjectURL(video.src);
-      reject(err);
-    };
-  });
-};
-
-import {
-  HardDrive,
-  Search,
-  Trash2,
-  Eye,
-  Download,
-  Pencil,
-  FileVideo,
-  FileImage,
-  UploadCloud,
-  CheckCircle2,
-  AlertTriangle,
-  Sparkles,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { showSuccess, showError } from '@/utils/toast';
-
 interface StorageItem {
   id: string;
   name: string;
@@ -144,46 +87,6 @@ interface StorageItem {
   storyTitle?: string;
   canDelete: boolean;
 }
-
-// Dados simulados iniciais para marcação de interface
-const INITIAL_FILES: StorageItem[] = [
-  {
-    id: '1',
-    name: 'REPLAY/1786447244576-whatsapp-video-2026-04-15.mp4',
-    type: 'video',
-    sizeInBytes: 9437184, // 9 MB
-    createdAt: '11/08/2026',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-    canDelete: true,
-  },
-  {
-    id: '2',
-    name: 'REPLAY/1786447029869-whatsapp-video-2026-04-15.mp4',
-    type: 'video',
-    sizeInBytes: 65011712, // 62 MB
-    createdAt: '11/08/2026',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80',
-    canDelete: true,
-  },
-  {
-    id: '3',
-    name: 'BANNER_PROMO_VERAO_2026.png',
-    type: 'image',
-    sizeInBytes: 2621440, // 2.5 MB
-    createdAt: '10/08/2026',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=200&q=80',
-    canDelete: true,
-  },
-  {
-    id: '4',
-    name: 'LOOKBOOK_COLECAO_SCRUBS_PREMIUM.mp4',
-    type: 'video',
-    sizeInBytes: 157286400, // 150 MB
-    createdAt: '08/08/2026',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
-    canDelete: true,
-  },
-];
 
 const PLAN_LIMIT_BYTES = 1 * 1024 * 1024 * 1024; // 1 GB em bytes para testes de régua
 
@@ -321,7 +224,7 @@ export default function StoragePage() {
     }
   };
 
-  // Função de Download Forçado via Blob (Impede que apenas abra nova aba)
+  // Função de Download Forçado via Blob
   const handleDownloadFile = async (url: string, fileName: string) => {
     if (!url) {
       showError('URL do arquivo indisponível para download.');
@@ -331,7 +234,6 @@ export default function StoragePage() {
     try {
       showSuccess(`Preparando download de "${fileName}"...`);
 
-      // Se for uma Blob URL local ou data URL
       if (url.startsWith('blob:') || url.startsWith('data:')) {
         const link = document.createElement('a');
         link.href = url;
@@ -342,7 +244,6 @@ export default function StoragePage() {
         return;
       }
 
-      // Faz o fetch do arquivo para forçar o download direto em bytes
       const response = await fetch(url);
       const blob = await response.blob();
       const blobUrl = URL.createObjectURL(blob);
@@ -357,7 +258,6 @@ export default function StoragePage() {
       setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
     } catch (err) {
       console.error('Erro ao baixar arquivo por Blob, executando fallback:', err);
-      // Fallback em caso de restrição estrita de CORS
       const link = document.createElement('a');
       link.href = url;
       link.download = fileName;
@@ -374,20 +274,16 @@ export default function StoragePage() {
       setLoading(true);
       const loadedItems: StorageItem[] = [];
 
-      // 1. Buscar vídeos da conta no banco lendo a nova coluna file_size
       const realVideos = await db.videos.getAll();
       if (Array.isArray(realVideos)) {
-        // Função interna para sanitizar URLs de mídia e evitar ERR_FILE_NOT_FOUND de blobs expiradas
         const sanitizeUrl = (rawUrl?: string) => {
           if (!rawUrl) return '';
-          if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
+          if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://') || rawUrl.startsWith('data:')) {
             return rawUrl;
           }
-          // Ignora URLs de blob expiradas salvas no banco
           if (rawUrl.startsWith('blob:')) {
             return '';
           }
-          // Constrói a URL pública absoluta do bucket no Supabase Storage
           return `https://wznvecurmisgoaijykbt.supabase.co/storage/v1/object/public/videos/${rawUrl}`;
         };
 
@@ -401,14 +297,12 @@ export default function StoragePage() {
           const isHostedOnPlatform = videoUrlStr.includes('supabase');
           const isExternalUrl = isExplicitUrlType || (!isHostedOnPlatform && videoUrlStr.startsWith('http'));
 
-          // Peso do vídeo (0 B se for link de CDN externa de terceiros)
           const videoBytes = isExternalUrl 
             ? 0 
             : (vid.file_size && Number(vid.file_size) > 0 
                 ? Number(vid.file_size) 
                 : 20971520);
 
-          // Peso da imagem de capa customizada (se enviada via upload)
           const thumbnailBytes = vid.thumbnail_source_type === 'upload' && vid.thumbnail_file_size
             ? Number(vid.thumbnail_file_size)
             : 0;
@@ -439,7 +333,7 @@ export default function StoragePage() {
       if (settings?.logo_url) {
         const logoBytes = settings.logo_file_size && Number(settings.logo_file_size) > 0
           ? Number(settings.logo_file_size)
-          : 1572864; // Fallback ~1.5 MB
+          : 1572864;
 
         loadedItems.push({
           id: 'logo-setting-file',
@@ -546,7 +440,6 @@ export default function StoragePage() {
             {uploading ? 'Enviando...' : 'Fazer Upload'}
           </button>
         </div>
-
       </div>
 
       {/* Card da Régua de Porcentagem de Armazenamento Dinâmica */}
@@ -623,7 +516,6 @@ export default function StoragePage() {
               </div>
             </div>
 
-            {/* Alerta textual no modo Warning ou Critical */}
             {(isWarning || isCritical) && (
               <div
                 className={cn(
@@ -642,7 +534,6 @@ export default function StoragePage() {
               </div>
             )}
 
-            {/* Barra de Progresso com Cor Dinâmica */}
             <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
               <div
                 className={cn('h-full rounded-full transition-all duration-500', progressColorClass)}
@@ -653,7 +544,7 @@ export default function StoragePage() {
         );
       })()}
 
-      {/* Tabela de Arquivos no Padrão Vidlytics */}
+      {/* Tabela de Arquivos */}
       <div className="overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
         
         {/* Barra de Busca e Filtros */}
@@ -728,13 +619,13 @@ export default function StoragePage() {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-xs font-bold text-slate-400">
+                  <td colSpan={7} className="px-6 py-12 text-center text-xs font-bold text-slate-400">
                     Carregando mídias da sua conta...
                   </td>
                 </tr>
               ) : filteredFiles.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-xs font-bold text-slate-400">
+                  <td colSpan={7} className="px-6 py-12 text-center text-xs font-bold text-slate-400">
                     Nenhum arquivo encontrado no seu armazenamento.
                   </td>
                 </tr>
