@@ -3354,6 +3354,17 @@ const AppearancePage = () => {
                             <FormField label="Cor Preço">
                               <ColorInput label="Cor do preço" value={(formData.modal_config as any).product_card_price_color || formData.primary_color} onChange={e => updateModalConfig({ product_card_price_color: e.target.value } as any)} />
                             </FormField>
+                            <FormField label="Cor Preço">
+                              <ColorInput label="Cor do preço" value={(formData.modal_config as any).product_card_price_color || formData.primary_color} onChange={e => updateModalConfig({ product_card_price_color: e.target.value } as any)} />
+                            </FormField>
+
+                            <FormField label="Cor Botão Produto">
+                              <ColorInput label="Cor do botão do produto" value={(formData.modal_config as any).product_card_button_bg || formData.primary_color} onChange={e => updateModalConfig({ product_card_button_bg: e.target.value } as any)} />
+                            </FormField>
+
+                            <FormField label="Cor Texto Botão">
+                              <ColorInput label="Cor do texto do botão" value={(formData.modal_config as any).product_card_button_color || '#FFFFFF'} onChange={e => updateModalConfig({ product_card_button_color: e.target.value } as any)} />
+                            </FormField>
                           </div>
                         </div>
                       )}
