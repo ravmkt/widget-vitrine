@@ -3605,7 +3605,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
 
       item.appendChild(videoCard);
 
-// trecho novo para o card de produto otimizado (foto maior e melhor aproveitamento do texto)
+// trecho novo para o card de produto otimizado no widget.js (sem botão)
       if (cfg.showProduct) {
         var videoProductId = video.product_id || video.productId || null;
         var productData = videoProductId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
@@ -3630,7 +3630,6 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             'cursor:pointer !important;' +
             'text-align:left !important;';
 
-          // Foto do produto otimizada e maior (54px)
           var prodImgUrl = getThumbnailFromObject(productData) || '';
           if (prodImgUrl) {
             var pImg = document.createElement('img');
@@ -3649,7 +3648,6 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             prodCard.appendChild(pImg);
           }
 
-          // Container de informações (Nome + Linha inferior com Preço e Seta)
           var pInfo = document.createElement('div');
           pInfo.style.cssText =
             'flex:1 !important;' +
@@ -3671,7 +3669,6 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             'width:100% !important;';
           pInfo.appendChild(pName);
 
-          // Sub-linha unindo Preço e Seta alinhados lado a lado
           var pBottomRow = document.createElement('div');
           pBottomRow.style.cssText =
             'display:flex !important;' +
@@ -3694,7 +3691,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
           arrowIndicator.style.cssText =
             'font-size:13px !important;' +
             'font-weight:800 !important;' +
-            'color:' + (cfg.productCardBtnBg || getPrimaryColor(appearance)) + ' !important;' +
+            'color:' + (cfg.productCardPriceColor || getPrimaryColor(appearance)) + ' !important;' +
             'padding-left:4px !important;' +
             'flex-shrink:0 !important;';
           pBottomRow.appendChild(arrowIndicator);
@@ -3702,7 +3699,6 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
           pInfo.appendChild(pBottomRow);
           prodCard.appendChild(pInfo);
 
-          // Clique no card direciona para o produto
           prodCard.addEventListener('click', function(e) {
             e.stopPropagation();
             if (productUrl) {
@@ -3719,8 +3715,8 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
 
           item.appendChild(prodCard);
         }
-      }                  
-      track.appendChild(item);
+      }
+            track.appendChild(item);
     });
   });
       
