@@ -1802,18 +1802,7 @@ const ModalPreview = ({
   return (
     <div className="overflow-hidden rounded-[1rem] border border-slate-200 bg-slate-900/80 p-3 flex flex-col items-center justify-center h-[500px] relative">
       {/* Moldura do Player Centralizado */}
-      <div
-        className="relative h-[420px] w-[230px] overflow-hidden rounded-[1.25rem] shadow-2xl shrink-0"
-        style={{
-          background: `linear-gradient(160deg, ${colors.primary}, ${colors.secondary})`,
-          color: '#FFFFFF',
-          fontFamily: formData.font_family,
-          borderColor: m.border_color || colors.primary,
-          borderWidth: `${borderW}px`,
-          borderStyle: borderW > 0 ? 'solid' : 'none',
-          borderRadius: cssSize(m.border_radius, '1.25rem'),
-        }}
-      >
+
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80" />
 
         <div className="absolute left-3 right-3 top-3 z-20 flex items-center justify-between gap-2">
