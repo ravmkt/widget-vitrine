@@ -2850,12 +2850,7 @@ var showWhatsAppProduto = showVerProduto;
         var pActions = createEl('div', 'vl-product-actions');
         pActions.style.cssText = 'display:flex;gap:8px;flex-shrink:0;margin-top:4px;';
 
-        if (showVerProduto) {
-          var buyBtn = createEl('a', 'vl-product-btn');
-          buyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Ver no site';
-          buyBtn.href = productUrl || '#';
-          buyBtn.target = '_blank';
-          buyBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:8px 14px;background:' + priColor + ';color:#fff;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;';
+
           if (!productUrl) {
             buyBtn.style.opacity = '0.5';
             buyBtn.style.pointerEvents = 'none';
