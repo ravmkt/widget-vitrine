@@ -14,7 +14,26 @@ import {
 } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
 import { useTenant } from '@/context/TenantContext';
-
+import {
+  Plus,
+  Trash2,
+  Edit3,
+  Star,
+  Brush,
+  X,
+  Save,
+  Loader2,
+  Palette,
+  Monitor,
+  Smartphone,
+  LayoutGrid,
+  PlaySquare,
+  Rows3,
+  Settings2,
+  Heart,
+  MessageCircle,
+  Share2,
+} from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import { cn } from '@/lib/utils';
