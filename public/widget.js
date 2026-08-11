@@ -746,11 +746,11 @@ function getFloatingBehaviorConfig(appearance) {
 
 function getCarouselConfig(appearance) {
   appearance = normalizeAppearanceItem(appearance || {});
+  var primaryColor = getPrimaryColor(appearance);
   
   function rcv(jsonbField, flatField, fallback) {
     return readConfigValue(appearance, 'carousel_config', jsonbField, flatField, fallback);
-  }
-  
+  }  
   var visibleItems = safeInt(rcv('visible_items', 'carousel_visible_items', '4'), 4);
   var borderColor = String(rcv('border_color', 'carousel_border_color', 'transparent') || 'transparent');
   
