@@ -802,10 +802,17 @@ return {
     productCardBorderColor: sanitizeCssValue(rcv('product_card_border_color', 'carousel_product_card_border_color', '#E2E8F0'), '#E2E8F0', 'color'),
     productCardBorderWidth: toNumber(rcv('product_card_border_width', 'carousel_product_card_border_width', '1'), 1),
     productCardRadius: toNumber(rcv('product_card_border_radius', 'carousel_product_card_border_radius', '12'), 12),
+    productCardNameSize: toNumber(rcv('product_card_name_size', 'carousel_product_card_name_size', '11'), 11),
+    productCardNameColor: sanitizeCssValue(rcv('product_card_name_color', 'carousel_product_card_name_color', '#0F172A'), '#0F172A', 'color'),
+    productCardPriceSize: toNumber(rcv('product_card_price_size', 'carousel_product_card_price_size', '12'), 12),
+    productCardPriceColor: sanitizeCssValue(rcv('product_card_price_color', 'carousel_product_card_price_color', '#0094EB'), '#0094EB', 'color'),
+    productCardPriceBold: toBoolean(rcv('product_card_price_bold', 'carousel_product_card_price_bold', true), true),
+    productCardBtnBg: sanitizeCssValue(rcv('product_card_btn_bg', 'carousel_product_card_btn_bg', primaryColor), primaryColor, 'color'),
+    productCardBtnColor: sanitizeCssValue(rcv('product_card_btn_color', 'carousel_product_card_btn_color', '#FFFFFF'), '#FFFFFF', 'color'),
     shape: shape,
     itemAspect: aspect
   };
-          }
+            }
 
 function getGridConfig(appearance) {
   appearance = normalizeAppearanceItem(appearance || {});
