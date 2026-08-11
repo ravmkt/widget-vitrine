@@ -2790,7 +2790,14 @@ const AppearancePage = () => {
                               value={toNumberInputValue(activeFloatingConfig.width)}
                               onChange={e => {
                                 const value = e.target.value;
-
+if (activeFloatingConfig.shape === 'portrait') {
+                                updateFloatingConfig({ width: value, height: getPortraitHeightFromWidth(value) });
+                                return;
+                              }
+                              if (activeFloatingConfig.shape === 'landscape') {
+                                updateFloatingConfig({ width: value, height: getLandscapeHeightFromWidth(value) });
+                                return;
+                              }
                                 if (activeFloatingConfig.shape === 'square') {
                                   updateFloatingConfig({ width: value, height: value });
                                   return;
