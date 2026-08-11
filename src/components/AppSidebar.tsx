@@ -83,22 +83,22 @@ export function AppSidebar() {
     };
   }, [loadStoreData]);
 
- return (
-    <Sidebar
+return (
+    <div
       onMouseEnter={() => isCollapsed && setIsHovered(true)}
       onMouseLeave={() => isCollapsed && setIsHovered(false)}
       className={cn(
-        "border-r border-[#E2E8F0] dark:border-slate-800 bg-white dark:bg-slate-950 shadow-none transition-all duration-300 ease-in-out relative z-40 overflow-hidden",
+        "h-screen sticky top-0 border-r border-[#E2E8F0] dark:border-slate-800 bg-white dark:bg-slate-950 flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 z-30 select-none",
         isExpanded ? "w-64" : "w-20"
       )}
     >
-      <SidebarHeader className="p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3 min-w-0 overflow-hidden">
+      <SidebarHeader className="p-4 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-2 min-w-0 overflow-hidden">
           <img
             src="/assets/vidlytics-logo-wide.png"
             alt="Vidlytics"
             className={cn(
-              "h-[42px] w-auto max-w-none transition-all duration-300",
+              "h-10 w-auto max-w-none transition-all duration-300",
               isExpanded ? "opacity-100" : "opacity-0 w-0 pointer-events-none"
             )}
           />
@@ -121,7 +121,7 @@ export function AppSidebar() {
           {isCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
         </button>
       </SidebarHeader>
-
+      
       <SidebarContent className="px-3">
         <SidebarGroup>
           <SidebarGroupContent>
