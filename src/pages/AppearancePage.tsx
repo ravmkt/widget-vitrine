@@ -2658,10 +2658,8 @@ const AppearancePage = () => {
 
       {/* Modal de edição */}
 {/* Modal de edição */}
-      {showModal && (
-        <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-slate-900/60 p-4 sm:p-6 backdrop-blur-sm">
-          <div className="flex h-[92vh] w-full max-w-[96vw] xl:max-w-[1600px] flex-col overflow-hidden rounded-[1.5rem] bg-white shadow-2xl transition-all duration-300">
-
+      
+      
             {/* Header do modal */}
             <div className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-3 shrink-0">
               <div>
