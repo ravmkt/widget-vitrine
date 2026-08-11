@@ -571,8 +571,20 @@ export default function StoragePage() {
                       </span>
                     </td>
 
-                    <td className="px-6 py-3.5 text-center font-mono text-xs font-bold text-slate-500">
-                      {file.createdAt}
+                    <td className="px-6 py-3.5">
+                      <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        {file.productName || 'Sem produto'}
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-3.5">
+                      {file.storyTitle ? (
+                        <span className="inline-flex items-center gap-1 rounded-lg bg-purple-50 px-2.5 py-1 text-[11px] font-extrabold text-purple-600 dark:bg-purple-950/40 dark:text-purple-400">
+                          {file.storyTitle}
+                        </span>
+                      ) : (
+                        <span className="text-xs font-bold text-slate-400">—</span>
+                      )}
                     </td>
 
                     <td className="px-6 py-3.5 text-center font-mono text-xs font-bold text-slate-700 dark:text-slate-300">
