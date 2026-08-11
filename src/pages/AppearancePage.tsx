@@ -1724,7 +1724,111 @@ const GridPreview = ({
   );
 };
 
+// trecho novo
+const ModalPreview = ({
+  formData,
+  colors,
+}: {
+  formData: ExtendedAppearance;
+  colors: PreviewColors;
+}) => {
+  const { modal_config: m } = formData;
+  const borderW = safeNumber(m.border_width, 0, 0);
 
+  return (
+    <div className="overflow-hidden rounded-[1rem] border border-slate-200 bg-slate-900/80 p-3 flex flex-col items-center justify-center h-[500px] relative">
+      {/* Moldura do Player Centralizado */}
+      <div
+        className="relative h-[420px] w-[230px] overflow-hidden rounded-[1.25rem] shadow-2xl shrink-0"
+        style={{
+          background: `linear-gradient(160deg, ${colors.primary}, ${colors.secondary})`,
+          color: '#FFFFFF',
+          fontFamily: formData.font_family,
+          borderColor: m.border_color || colors.primary,
+          borderWidth: `${borderW}px`,
+          borderStyle: borderW > 0 ? 'solid' : 'none',
+          borderRadius: cssSize(m.border_radius, '1.25rem'),
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80" />
+
+        <div className="absolute left-3 right-3 top-3 z-20 flex items-center justify-between gap-2">
+          {m.show_title && (
+            <h4 className="line-clamp-1 text-xs font-black text-white drop-shadow">
+              Calça Confort
+            </h4>
+          )}
+          <button
+            type="button"
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/60 bg-black/30 text-white backdrop-blur"
+          >
+            <X size={12} />
+          </button>
+        </div>
+
+        {m.show_play_button && (
+          <div className="absolute left-1/2 top-[42%] z-10 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur">
+              <PlaySquare size={18} />
+            </div>
+          </div>
+        )}
+
+        <div className="absolute bottom-24 right-2 z-20 flex flex-col gap-2">
+          {m.show_like_button && (
+            <div className="flex h-7 w-7 items-center justify-center rounded-full border border-white/60 bg-black/20 text-white backdrop-blur">
+              <Heart size={14} />
+            </div>
+          )}
+          {m.show_comment_button && (
+            <div className="flex h-7 w-7 items-center justify-center rounded-full border border-white/60 bg-black/20 text-white backdrop-blur">
+              <MessageCircle size={14} />
+            </div>
+          )}
+          {m.show_share_button && (
+            <div className="flex h-7 w-7 items-center justify-center rounded-full border border-white/60 bg-black/20 text-white backdrop-blur">
+              <Share2 size={14} />
+            </div>
+          )}
+        </div>
+
+        {m.show_product && (
+          <div className="absolute bottom-2 left-2 right-2 z-30 rounded-lg border border-white/10 bg-white/95 p-2 text-slate-900 shadow-lg backdrop-blur">
+            <div className="flex items-center gap-1.5">
+              <div
+                className="h-10 w-10 shrink-0 rounded"
+                style={{
+                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+                }}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[10px] font-black">Calça Confort</p>
+                <p className="text-[10px] font-black text-[#0094EB]">R$ 149,95</p>
+                <div className="mt-1 flex gap-1">
+                  {m.show_product_button && (
+                    <button
+                      type="button"
+                      className="flex-1 rounded px-1.5 py-1 text-[8px] font-black text-white"
+                      style={{ backgroundColor: colors.button }}
+                    >
+                      Ver produto
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="flex-1 rounded px-1.5 py-1 text-[8px] font-black text-white bg-[#25D366]"
+                  >
+                    WhatsApp
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const VisualPreview = ({
   formData,
