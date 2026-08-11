@@ -214,19 +214,20 @@ export default function StoragePage() {
       }
 
       const isVideo = file.type.startsWith('video');
-      const fileExt = file.name.split('.').pop() || (isVideo ? 'mp4' : 'jpg');
-      const fileName = `${settings.store_id}/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+      const cleanFileName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+      const fileExt = cleanFileName.split('.').pop() || (isVideo ? 'mp4' : 'jpg');
+      const safeStoragePath = `${settings.store_id}/${Date.now()}_${Math.random().toString(36).substring(2, 7)}_${cleanFileName}`;
 
       let finalVideoUrl = '';
       let finalThumbUrl = '';
       let thumbnailSize = 0;
 
-      // 1. Tenta Upload do Arquivo Principal para o Supabase Storage Bucket
+      // 1. Tenta Upload do Arquivo Principal para o Supabase Storage Bucket com sanitização de caminho
       if (supabase) {
         try {
           const { data: uploadData, error: uploadErr } = await supabase.storage
             .from('videos')
-            .upload(fileName, file, { cacheControl: '3600', upsert: true });
+            .upload(safeStoragePath, file, { cacheControl: '3600', upsert: true });
 
           if (!uploadErr && uploadData?.path) {
             const { data: publicUrlData } = supabase.storage
@@ -234,9 +235,11 @@ export default function StoragePage() {
               .getPublicUrl(uploadData.path);
 
             finalVideoUrl = publicUrlData.publicUrl;
+          } else if (uploadErr) {
+            console.warn('Erro de upload no Storage principal:', uploadErr);
           }
         } catch (storageErr) {
-          console.warn('Supabase Storage indisponível para o vídeo, utilizando URL local:', storageErr);
+          console.warn('Supabase Storage indisponível, aplicando fallback:', storageErr);
         }
       }
 
@@ -244,18 +247,17 @@ export default function StoragePage() {
         finalVideoUrl = URL.createObjectURL(file);
       }
 
-      // 2. Se for vídeo, gera o frame 0.1s e converte para Base64 permanente (Data URL)
+      // 2. Se for vídeo, extrai o frame aos 0.1s e converte para Base64 permanente caso o Storage falhe
       if (isVideo) {
         try {
           const thumbBlob = await generateVideoThumbnail(file);
           thumbnailSize = thumbBlob.size;
 
-          // Tenta salvar a imagem no Storage
           if (supabase) {
-            const thumbFileName = `${settings.store_id}/thumb_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
+            const thumbStoragePath = `${settings.store_id}/thumb_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
             const { data: thumbUploadData, error: thumbErr } = await supabase.storage
               .from('videos')
-              .upload(thumbFileName, thumbBlob, { contentType: 'image/jpeg', upsert: true });
+              .upload(thumbStoragePath, thumbBlob, { contentType: 'image/jpeg', upsert: true });
 
             if (!thumbErr && thumbUploadData?.path) {
               const { data: thumbPublicUrl } = supabase.storage
@@ -266,12 +268,12 @@ export default function StoragePage() {
             }
           }
 
-          // Se o Storage não retornou URL válida, usa Base64 permanente gravado direto no banco
+          // Se a URL pública do Storage não for gerada, usa o fallback Base64 permanente
           if (!finalThumbUrl) {
             finalThumbUrl = await blobToBase64(thumbBlob);
           }
         } catch (thumbErr) {
-          console.warn('Falha ao gerar frame do vídeo, usando fallback:', thumbErr);
+          console.warn('Falha ao gerar frame do vídeo, usando fallback Base64 do arquivo:', thumbErr);
         }
       }
 
