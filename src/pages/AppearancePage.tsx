@@ -2950,6 +2950,40 @@ const stylePayload = {
 <FormField label="Mostrar produto">
                           <ToggleSwitch label="Mostrar produto no carrossel" checked={activeCarouselConfig.show_product} onChange={e => updateCarouselConfig({ show_product: e.target.checked })} />
                         </FormField>
+                        {/* Customização Completa do Card de Produto do Carrossel */}
+                        <FormField label="Fundo do card de produto">
+                          <ColorInput label="Fundo do card" value={activeCarouselConfig.product_card_bg || '#FFFFFF'} onChange={e => updateCarouselConfig({ product_card_bg: e.target.value })} />
+                        </FormField>
+                        <FormField label="Cor da borda do produto">
+                          <ColorInput label="Cor da borda" value={activeCarouselConfig.product_card_border_color || '#E2E8F0'} onChange={e => updateCarouselConfig({ product_card_border_color: e.target.value })} />
+                        </FormField>
+                        <FormField label="Largura da borda (px)">
+                          <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_border_width)} onChange={e => updateCarouselConfig({ product_card_border_width: e.target.value })} placeholder="Ex: 1" className={inputClass} />
+                        </FormField>
+                        <FormField label="Raio da borda (px)">
+                          <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_border_radius)} onChange={e => updateCarouselConfig({ product_card_border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
+                        </FormField>
+                        <FormField label="Tamanho da fonte do nome">
+                          <input type="number" min="8" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_name_size)} onChange={e => updateCarouselConfig({ product_card_name_size: e.target.value })} placeholder="Ex: 11" className={inputClass} />
+                        </FormField>
+                        <FormField label="Cor da fonte do nome">
+                          <ColorInput label="Cor do nome" value={activeCarouselConfig.product_card_name_color || '#0F172A'} onChange={e => updateCarouselConfig({ product_card_name_color: e.target.value })} />
+                        </FormField>
+                        <FormField label="Tamanho da fonte do preço">
+                          <input type="number" min="8" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_price_size)} onChange={e => updateCarouselConfig({ product_card_price_size: e.target.value })} placeholder="Ex: 12" className={inputClass} />
+                        </FormField>
+                        <FormField label="Cor da fonte do preço">
+                          <ColorInput label="Cor do preço" value={activeCarouselConfig.product_card_price_color || '#0094EB'} onChange={e => updateCarouselConfig({ product_card_price_color: e.target.value })} />
+                        </FormField>
+                        <FormField label="Preço em Destaque (Negrito)">
+                          <ToggleSwitch label="Deixar preço em negrito" checked={activeCarouselConfig.product_card_price_bold ?? true} onChange={e => updateCarouselConfig({ product_card_price_bold: e.target.checked })} />
+                        </FormField>
+                        <FormField label="Cor do botão">
+                          <ColorInput label="Cor do botão" value={activeCarouselConfig.product_card_btn_bg || formData.primary_color} onChange={e => updateCarouselConfig({ product_card_btn_bg: e.target.value })} />
+                        </FormField>
+                        <FormField label="Cor da fonte do botão">
+                          <ColorInput label="Cor do texto do botão" value={activeCarouselConfig.product_card_btn_color || '#FFFFFF'} onChange={e => updateCarouselConfig({ product_card_btn_color: e.target.value })} />
+                        </FormField>
                         <FormField label="Fundo do card de produto">
                           <ColorInput label="Fundo do card" value={activeCarouselConfig.product_card_bg || '#FFFFFF'} onChange={e => updateCarouselConfig({ product_card_bg: e.target.value })} />
                         </FormField>
