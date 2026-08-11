@@ -1749,7 +1749,35 @@ const GridPreview = ({
         >
           {items.map((_, index) => (
             <div key={index} className="flex min-w-0 justify-center">
-
+<div
+                className={cn(
+                  'relative overflow-hidden shadow-sm flex items-center justify-center bg-slate-900',
+                  isCircle && 'rounded-full',
+                  !isCircle && 'rounded-xl'
+                )}
+                style={{
+                  width: '100%',
+                  aspectRatio: isPortrait ? '9 / 16' : isLandscape ? '16 / 9' : '1 / 1',
+                  borderColor: grid.border_color || colors.primary,
+                  borderWidth: `${safeNumber(grid.border_style, 2, 0)}px`,
+                  borderStyle: 'solid',
+                  borderRadius: isCircle ? '999px' : cssSize(grid.border_radius, '12px'),
+                }}
+              >
+                <video
+                  src={DEMO_PREVIEW_VIDEOS[index % DEMO_PREVIEW_VIDEOS.length]}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="h-full w-full object-cover pointer-events-none"
+                />
+                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
+                    <PlaySquare size={12} />
+                  </div>
+                </div>
+              </div>
             </div>
           ))}
         </div>
