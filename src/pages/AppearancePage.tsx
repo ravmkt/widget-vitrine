@@ -1554,18 +1554,7 @@ const CarouselPreview = ({
   const visibleItems = safeNumber(carousel.visible_items, 4, 1);
   const shape = normalizeWidgetShape(carousel.shape, 'portrait');
   const items = Array.from({ length: Math.max(1, Math.min(visibleItems, 6)) });
-  const isCircle = shape === 'circle';
-  const isPortrait = shape === 'portrait';
 
-  // Ajuste de proporção para escala do mockup sem estourar
-  const rawWidth = safeNumber(parseFloat(carousel.width || '120'), 120, 40);
-  const cardWidthPx = Math.min(rawWidth, 130);
-  const cardWidth = `${cardWidthPx}px`;
-
-  const cardHeightPx = isPortrait
-    ? Math.min(Math.round((cardWidthPx * 16) / 9), 210)
-    : cardWidthPx;
-  const cardHeight = `${cardHeightPx}px`;
 
   const borderRadius = isCircle
     ? '50%'
