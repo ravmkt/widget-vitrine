@@ -140,10 +140,12 @@ function App() {
           <Route path="/gallery" element={<ProtectedRoute><AppLayout><VideoGalleryPage /></AppLayout></ProtectedRoute>} />
 
           {/* Produtos, Medidas, Aparência, Comentários */}
-          <Route path="/produtos" element={<ProtectedRoute><AppLayout><ProductsPage /></AppLayout></ProtectedRoute>} />
+<Route path="/produtos" element={<ProtectedRoute><AppLayout><ProductsPage /></AppLayout></ProtectedRoute>} />
           <Route path="/medidas" element={<ProtectedRoute><AppLayout><MedidasPage /></AppLayout></ProtectedRoute>} />
           <Route path="/aparencia" element={<ProtectedRoute><AppLayout><AppearancePage /></AppLayout></ProtectedRoute>} />
           <Route path="/comentarios" element={<ProtectedRoute><AppLayout><CommentsPage /></AppLayout></ProtectedRoute>} />
+          <Route path="/storage" element={<ProtectedRoute><AppLayout><StoragePage /></AppLayout></ProtectedRoute>} />
+          <Route path="/armazenamento" element={<ProtectedRoute><AppLayout><StoragePage /></AppLayout></ProtectedRoute>} />
 
           {/* Configurações */}
           <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
