@@ -189,7 +189,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      
+
       <SidebarFooter className="p-4 border-t border-[#F1F5F9] dark:border-slate-800 overflow-hidden shrink-0">
         <div className="flex items-center gap-3 mb-3 min-w-0">
           <div className="h-9 w-9 rounded-full bg-[#F1F5F9] dark:bg-slate-800 border border-[#E2E8F0] dark:border-slate-700 flex items-center justify-center text-[#64748B] dark:text-slate-400 overflow-hidden shrink-0">
@@ -237,9 +237,9 @@ export function AppSidebar() {
             </span>
           </button>
 
-          {!isExpanded && (
-            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover:flex items-center z-[999999] pointer-events-none">
-              <div className="bg-slate-900 text-white text-xs font-extrabold px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap border border-slate-700">
+{!isExpanded && (
+            <div className="absolute left-[calc(100%+8px)] top-1/2 -translate-y-1/2 hidden group-hover:flex items-center z-[999999] pointer-events-none">
+              <div className="bg-slate-900 text-white text-xs font-black px-3 py-1.5 rounded-lg shadow-2xl whitespace-nowrap border border-slate-700">
                 Sair do Painel
               </div>
             </div>
