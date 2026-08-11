@@ -3229,43 +3229,7 @@ const AppearancePage = () => {
                     </SectionCard>
                   )}
 
-                  {/* ── Modal ── */}
-                  {activeTab === 'modal' && (
-                    <SectionCard title="Player / Modal" description="Controle quais elementos são exibidos dentro do player de vídeo.">
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <FormField label="Mostrar título">
-                          <ToggleSwitch label="Mostrar título" checked={formData.modal_config.show_title} onChange={e => updateModalConfig({ show_title: e.target.checked })} />
-                        </FormField>
 
-                        <FormField label="Mostrar botão play">
-                          <ToggleSwitch label="Mostrar botão play/pause no player" checked={formData.modal_config.show_play_button} onChange={e => updateModalConfig({ show_play_button: e.target.checked })} />
-                        </FormField>
-
-                        <FormField label="Mostrar produto">
-                          <ToggleSwitch label="Mostrar card de produto no player" checked={formData.modal_config.show_product} onChange={e => updateModalConfig({ show_product: e.target.checked })} />
-                        </FormField>
-
-                        <FormField label="Mostrar botão like">
-                          <ToggleSwitch label="Mostrar botão like" checked={formData.modal_config.show_like_button} onChange={e => updateModalConfig({ show_like_button: e.target.checked })} />
-                        </FormField>
-                        <FormField label="Mostrar botão comentário">
-                          <ToggleSwitch label="Mostrar botão comentário" checked={formData.modal_config.show_comment_button} onChange={e => updateModalConfig({ show_comment_button: e.target.checked })} />
-                        </FormField>
-                        <FormField label="Mostrar botão compartilhar">
-                          <ToggleSwitch label="Mostrar botão compartilhar" checked={formData.modal_config.show_share_button} onChange={e => updateModalConfig({ show_share_button: e.target.checked })} />
-                        </FormField>
-                        <FormField label="Cor da borda">
-                          <ColorInput label="Cor da borda" value={formData.modal_config.border_color || formData.primary_color} onChange={e => updateModalConfig({ border_color: e.target.value })} />
-                        </FormField>
-                        <FormField label="Largura da borda">
-                          <input type="number" min="0" step="1" value={toNumberInputValue(formData.modal_config.border_width)} onChange={e => updateModalConfig({ border_width: e.target.value })} placeholder="Ex: 2" className={inputClass} />
-                        </FormField>
-                        <FormField label="Raio da borda">
-                          <input type="number" min="0" step="1" value={toNumberInputValue(formData.modal_config.border_radius)} onChange={e => updateModalConfig({ border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
-                        </FormField>
-                      </div>
-                    </SectionCard>
-                  )}
 
                 </div>
 
