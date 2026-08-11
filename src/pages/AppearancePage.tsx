@@ -61,7 +61,6 @@ type DeviceType = 'desktop' | 'mobile';
 
 type ModalTab =
   | 'basic'
-  | 'visual'
   | 'floating'
   | 'carousel'
   | 'grid'
