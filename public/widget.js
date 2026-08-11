@@ -773,11 +773,7 @@ function getCarouselConfig(appearance) {
   var showArrows = toBoolean(rcv('show_arrows', 'carousel_show_arrows', true), true);
   var showProduct = toBoolean(rcv('show_product', 'carousel_show_product', true), true);
 
-  var shape = String(rcv('shape', 'card_shape', 'portrait')).trim().toLowerCase();
-  var aspect = '9/16';
-  if (shape === 'square' || shape === '1:1') aspect = '1/1';
-  else if (shape === 'circle') aspect = '1/1';
-  else if (shape === 'landscape' || shape === '16:9') aspect = '16/9';
+
 
   // Leitura consolidada e única das propriedades do card de produto
   var pBg = sanitizeCssValue(rcv('product_card_bg', 'carousel_product_card_bg', '#FFFFFF'), '#FFFFFF', 'color');
