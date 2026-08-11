@@ -224,10 +224,9 @@ type PreviewColors = {
 const inputClass =
   'w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-800 outline-none transition focus:border-[#0094EB] focus:bg-white disabled:cursor-not-allowed disabled:opacity-50';
 const DEMO_PREVIEW_VIDEOS = [
-  'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-shot-in-a-studio-41528-large.mp4',
-  'https://assets.mixkit.co/videos/preview/mixkit-young-model-posing-for-the-camera-in-a-studio-41527-large.mp4',
-  'https://assets.mixkit.co/videos/preview/mixkit-woman-posing-for-the-camera-in-a-studio-41526-large.mp4',
-  'https://assets.mixkit.co/videos/preview/mixkit-model-walking-on-a-catwalk-41530-large.mp4',
+  '/demo-videos/demo1.mp4',
+  '/demo-videos/demo2.mp4',
+  '/demo-videos/demo3.mp4',
 ];
 
 const selectClass = inputClass;
