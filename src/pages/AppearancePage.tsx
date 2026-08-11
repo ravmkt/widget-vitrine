@@ -1428,6 +1428,8 @@ const getShapeLabel = (shape: WidgetShape) => {
       return 'Círculo';
     case 'square':
       return 'Quadrado';
+    case 'landscape':
+      return 'Paisagem 16:9';
     case 'portrait':
     default:
       return 'Retrato 9:16';
