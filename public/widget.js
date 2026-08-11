@@ -3617,6 +3617,8 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         if (productData) {
           var productUrl = productData.product_url || productData.url || '';
 
+          var cardRadiusVal = (cfg.productCardRadius !== undefined && cfg.productCardRadius !== null) ? cfg.productCardRadius : 12;
+
           var prodCard = document.createElement('div');
           prodCard.className = 'vidlytics-carousel-product-card';
           prodCard.style.cssText =
@@ -3626,8 +3628,8 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             'padding:8px !important;' +
             'width:100% !important;' +
             'background:' + (cfg.productCardBg || '#fff') + ' !important;' +
-            'border-radius:' + (cfg.productCardRadius || 12) + 'px !important;' +
-            'border:' + (cfg.productCardBorderWidth || 1) + 'px solid ' + (cfg.productCardBorderColor || '#e2e8f0') + ' !important;' +
+            'border-radius:' + cardRadiusVal + 'px !important;' +
+            'border:' + (cfg.productCardBorderWidth !== undefined ? cfg.productCardBorderWidth : 1) + 'px solid ' + (cfg.productCardBorderColor || '#e2e8f0') + ' !important;' +
             'box-shadow:0 2px 8px rgba(0,0,0,0.04) !important;' +
             'box-sizing:border-box !important;' +
             'cursor:pointer !important;' +
