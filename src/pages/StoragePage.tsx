@@ -143,7 +143,6 @@ export default function StoragePage() {
       setUploading(true);
       showSuccess(`Iniciando processamento de "${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)} MB)...`);
 
-      // Resgata as configurações para obter o store_id obrigatório
       const settings = await db.getSettings();
       if (!settings?.store_id) {
         throw new Error('ID da loja não encontrado nas configurações.');
@@ -151,15 +150,32 @@ export default function StoragePage() {
 
       const isVideo = file.type.startsWith('video');
       const tempUrl = URL.createObjectURL(file);
+      let thumbnailUrl = tempUrl;
+      let thumbnailSize = 0;
+
+      // Se for vídeo, gera automaticamente a capa a partir do primeiro frame (0.1s)
+      if (isVideo) {
+        try {
+          const thumbBlob = await generateVideoThumbnail(file);
+          thumbnailSize = thumbBlob.size;
+          // Em um ambiente de produção com bucket Supabase, este blob é enviado via upload
+          // e retorna a URL permanente pública do Supabase Storage
+          thumbnailUrl = URL.createObjectURL(thumbBlob);
+        } catch (thumbErr) {
+          console.warn('Não foi possível gerar thumbnail do vídeo, usando fallback:', thumbErr);
+        }
+      }
 
       const payload = {
         store_id: settings.store_id,
         title: file.name,
-        video_source_type: 'upload',
-        source_type: 'upload',
+        video_source_type: isVideo ? 'upload' : 'url',
+        source_type: isVideo ? 'upload' : 'url',
         video_url: tempUrl,
-        thumbnail_url: isVideo ? tempUrl : tempUrl,
+        thumbnail_url: thumbnailUrl,
+        thumbnail_source_type: isVideo ? 'auto' : 'url',
         file_size: file.size,
+        thumbnail_file_size: thumbnailSize,
         status: 'active',
         active: true,
         created_at: new Date().toISOString(),
