@@ -840,11 +840,7 @@ function getGridConfig(appearance) {
   var objectFit = String(rcv('object_fit', 'grid_object_fit', 'cover') || 'cover').trim().toLowerCase();
   var showTitle = toBoolean(rcv('show_title', 'grid_show_title', false), false);
   var aspectRatio = '9 / 16';
-  if (shape.indexOf('landscape') !== -1 || shape.indexOf('16_9') !== -1 || shape.indexOf('16-9') !== -1) {
-    aspectRatio = '16 / 9';
-  } else if (shape.indexOf('square') !== -1 || shape.indexOf('1_1') !== -1 || shape.indexOf('1-1') !== -1 || shape === 'circle') {
-    aspectRatio = '1 / 1';
-  }
+
 
   return {
     shape: shape, size: sizeNumber,
