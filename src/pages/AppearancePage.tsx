@@ -2586,7 +2586,7 @@ const AppearancePage = () => {
                 <ModalTabButton active={activeTab === 'floating'} icon={<PlaySquare size={16} />} label="Flutuante" onClick={() => setActiveTab('floating')} />
                 <ModalTabButton active={activeTab === 'carousel'} icon={<Rows3 size={16} />} label="Carrossel" onClick={() => setActiveTab('carousel')} />
                 <ModalTabButton active={activeTab === 'grid'} icon={<LayoutGrid size={16} />} label="Grade" onClick={() => setActiveTab('grid')} />
-                <ModalTabButton active={activeTab === 'modal'} icon={<PlaySquare size={16} />} label="Player / Modal" onClick={() => setActiveTab('modal')} />
+                <ModalTabButton active={activeTab === 'modal'} icon={<PlaySquare size={16} />} label="Player" onClick={() => setActiveTab('modal')} />
               </div>
             </div>
 
