@@ -1521,7 +1521,6 @@ const FloatingPreview = ({
   );
 };
 
-// trecho novo para CarouselPreview sem botão
 const CarouselPreview = ({
   carousel,
   colors,
