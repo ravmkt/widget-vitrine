@@ -66,7 +66,7 @@ type ModalTab =
   | 'grid'
   | 'modal';
 
-type WidgetShape = 'circle' | 'square' | 'portrait' | 'rounded';
+type WidgetShape = 'circle' | 'square' | 'portrait' | 'landscape' | 'rounded';
 
 type FloatingPosition =
   | 'left'
