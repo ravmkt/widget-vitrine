@@ -1521,7 +1521,7 @@ const FloatingPreview = ({
   );
 };
 
-// trecho novo para CarouselPreview
+// trecho novo para CarouselPreview sem botão
 const CarouselPreview = ({
   carousel,
   colors,
@@ -1534,7 +1534,6 @@ const CarouselPreview = ({
   const items = Array.from({ length: Math.max(1, Math.min(visibleItems, 8)) });
   const isCircle = shape === 'circle';
   const isPortrait = shape === 'portrait';
-  const isSquare = shape === 'square';
 
   const cardWidthPx = safeNumber(parseFloat(carousel.width || '80'), 80, 20);
   const cardWidth = `${cardWidthPx}px`;
@@ -1604,7 +1603,7 @@ const CarouselPreview = ({
                 {/* Card de Produto Realista no Preview */}
                 {carousel.show_product && !isCircle && (
                   <div
-                    className="flex flex-col gap-1 p-2 text-left shadow-sm"
+                    className="flex items-center gap-1.5 p-1.5 text-left shadow-sm"
                     style={{
                       backgroundColor: carousel.product_card_bg || '#FFFFFF',
                       borderColor: carousel.product_card_border_color || '#E2E8F0',
@@ -1613,38 +1612,31 @@ const CarouselPreview = ({
                       borderRadius: `${safeNumber(carousel.product_card_border_radius, 12, 0)}px`,
                     }}
                   >
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-6 w-6 shrink-0 rounded bg-slate-200" />
-                      <div className="min-w-0 flex-1">
-                        <div
-                          className="truncate font-bold leading-tight"
-                          style={{
-                            fontSize: `${safeNumber(carousel.product_card_name_size, 11, 8)}px`,
-                            color: carousel.product_card_name_color || '#0F172A',
-                          }}
-                        >
-                          Calça Confort
-                        </div>
-                        <div
+                    <div className="h-7 w-7 shrink-0 rounded bg-slate-200" />
+                    <div className="min-w-0 flex-1">
+                      <div
+                        className="truncate font-bold leading-tight"
+                        style={{
+                          fontSize: `${safeNumber(carousel.product_card_name_size, 11, 8)}px`,
+                          color: carousel.product_card_name_color || '#0F172A',
+                        }}
+                      >
+                        Blusa Confort
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span
                           style={{
                             fontSize: `${safeNumber(carousel.product_card_price_size, 12, 8)}px`,
                             fontWeight: carousel.product_card_price_bold ?? true ? '800' : '600',
                             color: carousel.product_card_price_color || colors.primary,
                           }}
                         >
-                          R$ 149,95
-                        </div>
+                          R$ 154,95
+                        </span>
+                        <span className="font-extrabold text-[10px]" style={{ color: carousel.product_card_price_color || colors.primary }}>
+                          &rarr;
+                        </span>
                       </div>
-                    </div>
-                    <div
-                      className="w-full text-center rounded py-1 font-bold text-[9px]"
-                      style={{
-                        backgroundColor: carousel.product_card_btn_bg || colors.primary,
-                        color: carousel.product_card_btn_color || '#FFFFFF',
-                        borderRadius: '6px',
-                      }}
-                    >
-                      Ver no site
                     </div>
                   </div>
                 )}
