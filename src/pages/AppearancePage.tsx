@@ -1749,16 +1749,7 @@ const GridPreview = ({
           </div>
         </div>
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-        <PreviewInfo label="Forma" value={getShapeLabel(shape)} />
-        <PreviewInfo label="Colunas" value={`${cols}`} />
-        <PreviewInfo label="Linhas" value={`${rows}`} />
-        <PreviewInfo label="Espaçamento" value={`${grid.spacing}px`} />
-        <PreviewInfo label="Limite" value="10 colunas" />
-      </div>
-    </div>
-  );
-};
+
 
 const ModalPreview = ({
   formData,
