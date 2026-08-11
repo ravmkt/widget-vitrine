@@ -3357,14 +3357,7 @@ if (activeFloatingConfig.shape === 'portrait') {
                               <input type="number" min="8" step="1" value={toNumberInputValue((formData.modal_config as any).product_card_price_size)} onChange={e => updateModalConfig({ product_card_price_size: e.target.value } as any)} placeholder="Ex: 12" className={inputClass} />
                             </FormField>
 
-                            <FormField label="Cor Preço">
-                              <ColorInput label="Cor do preço" value={(formData.modal_config as any).product_card_price_color || formData.primary_color} onChange={e => updateModalConfig({ product_card_price_color: e.target.value } as any)} />
-                            </FormField>
-                            <FormField label="Cor Preço">
-                              <ColorInput label="Cor do preço" value={(formData.modal_config as any).product_card_price_color || formData.primary_color} onChange={e => updateModalConfig({ product_card_price_color: e.target.value } as any)} />
-                            </FormField>
 
-                            <FormField label="Cor Botão Produto">
                               <ColorInput label="Cor do botão do produto" value={(formData.modal_config as any).product_card_button_bg || formData.primary_color} onChange={e => updateModalConfig({ product_card_button_bg: e.target.value } as any)} />
                             </FormField>
 
