@@ -109,7 +109,7 @@ type FloatingConfig = {
 };
 
 type CarouselConfig = {
-  spacing: number;
+spacing: number;
   shape: WidgetShape;
   view_mode: string;
   margin_top: string;
@@ -128,6 +128,13 @@ type CarouselConfig = {
   product_card_border_color: string;
   product_card_border_width: string;
   product_card_border_radius: string;
+  product_card_name_size: string;
+  product_card_name_color: string;
+  product_card_price_size: string;
+  product_card_price_color: string;
+  product_card_price_bold: boolean;
+  product_card_btn_bg: string;
+  product_card_btn_color: string;
 };
 
 type GridConfig = {
