@@ -141,7 +141,7 @@ export default function StoragePage() {
 
     try {
       setUploading(true);
-      showSuccess(`Iniciando processamento de "${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)} MB)...`);
+      showSuccess(`Enviando "${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)} MB)...`);
 
       const settings = await db.getSettings();
       if (!settings?.store_id) {
@@ -149,31 +149,69 @@ export default function StoragePage() {
       }
 
       const isVideo = file.type.startsWith('video');
-      const tempUrl = URL.createObjectURL(file);
-      let thumbnailUrl = tempUrl;
+      const fileExt = file.name.split('.').pop() || (isVideo ? 'mp4' : 'jpg');
+      const fileName = `${settings.store_id}/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+
+      let finalVideoUrl = '';
+      let finalThumbUrl = '';
       let thumbnailSize = 0;
 
-      // Se for vídeo, gera automaticamente a capa a partir do primeiro frame (0.1s)
+      // 1. Upload do Arquivo Principal para o Supabase Storage Bucket
+      if (supabase) {
+        const { data: uploadData, error: uploadErr } = await supabase.storage
+          .from('videos')
+          .upload(fileName, file, { cacheControl: '3600', upsert: true });
+
+        if (uploadErr) throw uploadErr;
+
+        const { data: publicUrlData } = supabase.storage
+          .from('videos')
+          .getPublicUrl(uploadData.path);
+
+        finalVideoUrl = publicUrlData.publicUrl;
+      } else {
+        finalVideoUrl = URL.createObjectURL(file);
+      }
+
+      // 2. Se for vídeo e não houver capa personalizada, gera o frame 0.1s e envia para o Storage
       if (isVideo) {
         try {
           const thumbBlob = await generateVideoThumbnail(file);
           thumbnailSize = thumbBlob.size;
-          // Em um ambiente de produção com bucket Supabase, este blob é enviado via upload
-          // e retorna a URL permanente pública do Supabase Storage
-          thumbnailUrl = URL.createObjectURL(thumbBlob);
+          const thumbFileName = `${settings.store_id}/thumb_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
+
+          if (supabase) {
+            const { data: thumbUploadData, error: thumbErr } = await supabase.storage
+              .from('videos')
+              .upload(thumbFileName, thumbBlob, { contentType: 'image/jpeg', upsert: true });
+
+            if (!thumbErr && thumbUploadData) {
+              const { data: thumbPublicUrl } = supabase.storage
+                .from('videos')
+                .getPublicUrl(thumbUploadData.path);
+
+              finalThumbUrl = thumbPublicUrl.publicUrl;
+            }
+          }
         } catch (thumbErr) {
-          console.warn('Não foi possível gerar thumbnail do vídeo, usando fallback:', thumbErr);
+          console.warn('Falha ao gerar frame do vídeo, mantendo fallback:', thumbErr);
         }
       }
 
+      // Fallback de URL caso não tenha sido possível gerar a capa do Storage
+      if (!finalThumbUrl) {
+        finalThumbUrl = isVideo ? finalVideoUrl : finalVideoUrl;
+      }
+
+      // 3. Grava o registro final na tabela com URLs públicas permanentes
       const payload = {
         store_id: settings.store_id,
         title: file.name,
         video_source_type: isVideo ? 'upload' : 'url',
         source_type: isVideo ? 'upload' : 'url',
-        video_url: tempUrl,
-        thumbnail_url: thumbnailUrl,
-        thumbnail_source_type: isVideo ? 'auto' : 'url',
+        video_url: finalVideoUrl,
+        thumbnail_url: finalThumbUrl,
+        thumbnail_source_type: 'auto',
         file_size: file.size,
         thumbnail_file_size: thumbnailSize,
         status: 'active',
