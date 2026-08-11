@@ -2116,75 +2116,7 @@ const PreviewCard = ({
     </aside>
   );
 };
-  const floating = getActiveResponsiveConfig(
-    formData.floating_config,
-    floatingDevice,
-    formData.useGlobalAppearance,
-  );
-  const carousel = getActiveResponsiveConfig(
-    formData.carousel_config,
-    carouselDevice,
-    formData.useGlobalAppearance,
-  );
-  const grid = getActiveResponsiveConfig(
-    formData.grid_config,
-    gridDevice,
-    formData.useGlobalAppearance,
-  );
 
-  const colors: PreviewColors = {
-    primary: isValidHexColor(formData.primary_color) ? formData.primary_color : '#0094EB',
-    secondary: isValidHexColor(formData.secondary_color) ? formData.secondary_color : '#0094EB',
-    text: isValidHexColor(formData.text_color) ? formData.text_color : '#0F172A',
-    background: isValidHexColor(formData.background_color) ? formData.background_color : '#FFFFFF',
-    button: isValidHexColor(formData.button_color) ? formData.button_color : '#0094EB',
-    floatingBorder: isValidHexColor(floating.border_color) ? floating.border_color : '#0094EB',
-  };
-
-  const titleByTab: Record<ModalTab, string> = {
-    basic: 'Resumo do estilo',
-    visual: 'Identidade visual',
-    floating: 'Preview do flutuante',
-    carousel: 'Preview do carrossel',
-    grid: 'Preview da grade',
-    modal: 'Preview do player/modal',
-  };
-
-  const descriptionByTab: Record<ModalTab, string> = {
-    basic: 'Visualização geral do estilo selecionado.',
-    visual: 'Cores, fonte, fundo e botão.',
-    floating: 'Tamanho, forma, borda e posição do widget.',
-    carousel: 'Formato dos cards, espaçamento, margens e centralização.',
-    grid: 'Colunas, linhas, formato e espaçamento da grade.',
-    modal: 'Botões e elementos exibidos no player/modal.',
-  };
-
-  return (
-    <aside className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-base font-black text-slate-900">
-            {titleByTab[activeTab]}
-          </h3>
-          <p className="mt-1 text-xs font-medium text-slate-500">
-            {descriptionByTab[activeTab]}
-          </p>
-        </div>
-        <span
-          className="h-8 w-8 rounded-full border border-slate-200 shadow-sm"
-          style={{ backgroundColor: colors.primary }}
-        />
-      </div>
-      {activeTab === 'floating' && <FloatingPreview floating={floating} colors={colors} />}
-      {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} />}
-      {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} />}
-      {activeTab === 'modal' && <ModalPreview formData={formData} colors={colors} />}
-      {(activeTab === 'basic' || activeTab === 'visual') && (
-        <VisualPreview formData={formData} colors={colors} />
-      )}
-    </aside>
-  );
-};
 // ════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL
 // ════════════════════════════════════════════════════════════════
