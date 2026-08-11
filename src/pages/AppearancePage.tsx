@@ -3082,7 +3082,152 @@ const AppearancePage = () => {
                     </SectionCard>
                   )}
 
+                  {/* ── Grade ── */}
+                  {activeTab === 'grid' && (
+                    <SectionCard title="Configurações da Grade">
+                      
+                      {/* Seletor Inteligente de Dispositivo */}
+                      <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60">
+                        <span className="text-xs font-bold text-slate-700">Dispositivo</span>
+                        
+                        {formData.useGlobalAppearance ? (
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold" title="Configuração vinculada entre Desktop e Mobile">
+                            <Monitor size={14} />
+                            <Link size={12} className="text-[#0094EB]" />
+                            <Smartphone size={14} />
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
+                            <button
+                              type="button"
+                              onClick={() => setGridDevice('desktop')}
+                              className={cn(
+                                'flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all',
+                                gridDevice === 'desktop'
+                                  ? 'bg-[#0094EB] text-white'
+                                  : 'text-slate-500 hover:text-slate-800'
+                              )}
+                              title="Editar configurações Desktop"
+                            >
+                              <Monitor size={13} />
+                              Desktop
+                            </button>
+                            <Link2Off size={12} className="text-slate-300 mx-0.5" />
+                            <button
+                              type="button"
+                              onClick={() => setGridDevice('mobile')}
+                              className={cn(
+                                'flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all',
+                                gridDevice === 'mobile'
+                                  ? 'bg-[#0094EB] text-white'
+                                  : 'text-slate-500 hover:text-slate-800'
+                              )}
+                              title="Editar configurações Mobile"
+                            >
+                              <Smartphone size={13} />
+                              Mobile
+                            </button>
+                          </div>
+                        )}
+                      </div>
 
+                      {/* 1. Layout & Colunas */}
+                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-3">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">1. Layout & Colunas</h4>
+                        
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <FormField label="Formato dos Cards">
+                            <select
+                              value={activeGridConfig.shape}
+                              onChange={e => updateGridConfig({ shape: e.target.value as WidgetShape })}
+                              className={selectClass}
+                            >
+                              <option value="circle">Circular</option>
+                              <option value="square">Quadrado</option>
+                              <option value="portrait">Retrato 9:16</option>
+                            </select>
+                          </FormField>
+
+                          <FormField label="Largura Card (px)">
+                            <input
+                              type="number" min="20" step="1"
+                              value={toNumberInputValue(activeGridConfig.width)}
+                              onChange={e => updateGridConfig({ width: e.target.value })}
+                              placeholder="Ex: 80"
+                              className={inputClass}
+                            />
+                          </FormField>
+
+                          <FormField label="Colunas por Linha">
+                            <input
+                              type="number" min="1" max="10" step="1"
+                              value={activeGridConfig.visible_items}
+                              onChange={e => updateGridConfig({ visible_items: limitNumber(e.target.value, 1, 1, 10) })}
+                              className={inputClass}
+                            />
+                          </FormField>
+
+                          <FormField label="Espaçamento (px)">
+                            <input
+                              type="number" min="0" step="1"
+                              value={activeGridConfig.spacing}
+                              onChange={e => updateGridConfig({ spacing: safeNumber(e.target.value, 0, 0) })}
+                              className={inputClass}
+                            />
+                          </FormField>
+                        </div>
+                      </div>
+
+                      {/* 2. Bordas & Ajustes */}
+                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-3">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">2. Bordas & Ajustes</h4>
+                        
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <FormField label="Cor da Borda">
+                            <ColorInput label="Cor da borda" value={activeGridConfig.border_color || formData.primary_color} onChange={e => updateGridConfig({ border_color: e.target.value })} />
+                          </FormField>
+
+                          <FormField label="Largura Borda (px)">
+                            <input
+                              type="number" min="0" step="1"
+                              value={toNumberInputValue(activeGridConfig.border_style)}
+                              onChange={e => updateGridConfig({ border_style: e.target.value })}
+                              placeholder="Ex: 2"
+                              className={inputClass}
+                            />
+                          </FormField>
+
+                          <FormField label="Raio da Borda (px)">
+                            <input
+                              type="number" min="0" step="1"
+                              value={toNumberInputValue(activeGridConfig.border_radius)}
+                              onChange={e => updateGridConfig({ border_radius: e.target.value })}
+                              placeholder="Ex: 12"
+                              className={inputClass}
+                            />
+                          </FormField>
+
+                          <FormField label="Ajuste Imagem">
+                            <select value={activeGridConfig.object_fit || 'cover'} onChange={e => updateGridConfig({ object_fit: e.target.value })} className={selectClass}>
+                              <option value="cover">Cover (Preencher)</option>
+                              <option value="contain">Contain (Ajustar)</option>
+                              <option value="fill">Fill (Esticar)</option>
+                            </select>
+                          </FormField>
+                        </div>
+                      </div>
+
+                      {/* 3. Elementos Visíveis */}
+                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-2.5">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">3. Elementos Visíveis</h4>
+                        
+                        <div className="space-y-1.5">
+                          <ToggleSwitch label="Exibir título da grade" checked={activeGridConfig.show_title ?? false} onChange={e => updateGridConfig({ show_title: e.target.checked })} />
+                        </div>
+                      </div>
+
+                    </SectionCard>
+                  )}
 
                   {/* ── Modal ── */}
                   {activeTab === 'modal' && (
