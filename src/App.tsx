@@ -25,6 +25,7 @@ import ProductsPage from "@/pages/ProductsPage";
 import MedidasPage from "@/pages/MedidasPage";
 import AppearancePage from "@/pages/AppearancePage";
 import CommentsPage from "@/pages/CommentsPage";
+import StoragePage from "@/pages/StoragePage";
 import StoryPreviewPage from "@/pages/StoryPreviewPage";
 
 // ── Protege rotas que exigem login ──
