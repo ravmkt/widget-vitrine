@@ -298,37 +298,58 @@ export default function StoragePage() {
       // 1. Buscar vídeos da conta no banco lendo a nova coluna file_size
       const realVideos = await db.videos.getAll();
       if (Array.isArray(realVideos)) {
+        // Função interna para sanitizar URLs de mídia e evitar ERR_FILE_NOT_FOUND de blobs expiradas
+        const sanitizeUrl = (rawUrl?: string) => {
+          if (!rawUrl) return '';
+          if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
+            return rawUrl;
+          }
+          // Ignora URLs de blob expiradas salvas no banco
+          if (rawUrl.startsWith('blob:')) {
+            return '';
+          }
+          // Constrói a URL pública absoluta do bucket no Supabase Storage
+          return `https://wznvecurmisgoaijykbt.supabase.co/storage/v1/object/public/videos/${rawUrl}`;
+        };
+
         realVideos.forEach((vid: any) => {
-          // Identifica se a mídia é um link externo (Instagram, TikTok, URL externa)
-          const videoUrlStr = String(vid.video_url || '').toLowerCase();
+          const validVideoUrl = sanitizeUrl(vid.video_url);
+          const validThumbUrl = sanitizeUrl(vid.thumbnail_url);
+          const finalMediaUrl = validVideoUrl || validThumbUrl;
+
+          const videoUrlStr = String(finalMediaUrl || '').toLowerCase();
           const isExplicitUrlType = vid.video_source_type === 'url' || vid.source_type === 'url';
-          
-          // Se não for uma blob local e não estiver hospedado no bucket oficial do Supabase da plataforma, é externa
-          const isHostedOnPlatform = videoUrlStr.startsWith('blob:') || videoUrlStr.includes('supabase');
-          
+          const isHostedOnPlatform = videoUrlStr.includes('supabase');
           const isExternalUrl = isExplicitUrlType || (!isHostedOnPlatform && videoUrlStr.startsWith('http'));
 
-          // Se for URL externa, o peso ocupado no servidor da plataforma é 0 B
-          const actualBytes = isExternalUrl 
+          // Peso do vídeo (0 B se for link de CDN externa de terceiros)
+          const videoBytes = isExternalUrl 
             ? 0 
             : (vid.file_size && Number(vid.file_size) > 0 
                 ? Number(vid.file_size) 
-                : 20971520); // Fallback de 20MB apenas para arquivos de UPLOAD antigos
+                : 20971520);
+
+          // Peso da imagem de capa customizada (se enviada via upload)
+          const thumbnailBytes = vid.thumbnail_source_type === 'upload' && vid.thumbnail_file_size
+            ? Number(vid.thumbnail_file_size)
+            : 0;
+
+          const totalMediaBytes = videoBytes + thumbnailBytes;
 
           const formattedDate = vid.created_at 
             ? new Date(vid.created_at).toLocaleDateString('pt-BR') 
             : 'Hoje';
 
-          const mediaUrl = vid.video_url || vid.thumbnail_url || '';
-
           loadedItems.push({
             id: vid.id || String(Math.random()),
             name: vid.title || `VIDEO_${vid.id?.slice(0, 6) || 'UPLOAD'}.mp4`,
             type: 'video',
-            sizeInBytes: actualBytes,
+            sizeInBytes: totalMediaBytes,
             createdAt: formattedDate,
-            thumbnailUrl: vid.thumbnail_url || vid.video_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-            fileUrl: mediaUrl,
+            thumbnailUrl: validThumbUrl || finalMediaUrl,
+            fileUrl: finalMediaUrl,
+            productName: vid.product_name || vid.product?.title || undefined,
+            storyTitle: vid.story_title || vid.story?.title || undefined,
             canDelete: true,
           });
         });
