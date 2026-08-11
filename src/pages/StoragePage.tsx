@@ -146,6 +146,8 @@ export default function StoragePage() {
             ? new Date(vid.created_at).toLocaleDateString('pt-BR') 
             : 'Hoje';
 
+       const mediaUrl = vid.video_url || vid.thumbnail_url || '';
+
           loadedItems.push({
             id: vid.id || String(Math.random()),
             name: vid.title || `VIDEO_${vid.id?.slice(0, 6) || 'UPLOAD'}.mp4`,
@@ -153,6 +155,7 @@ export default function StoragePage() {
             sizeInBytes: actualBytes,
             createdAt: formattedDate,
             thumbnailUrl: vid.thumbnail_url || vid.video_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+            fileUrl: mediaUrl,
             canDelete: true,
           });
         });
@@ -172,6 +175,7 @@ export default function StoragePage() {
           sizeInBytes: logoBytes,
           createdAt: 'Ativo',
           thumbnailUrl: settings.logo_url,
+          fileUrl: settings.logo_url,
           canDelete: false,
         });
       }
