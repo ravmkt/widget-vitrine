@@ -229,8 +229,7 @@ const selectClass = inputClass;
 const isValidHexColor = (value?: string) =>
   /^#[0-9A-Fa-f]{6}$/.test(value || '');
 
-const isValidWidgetShape = (value?: string): value is WidgetShape =>
-  value === 'circle' || value === 'square' || value === 'portrait' || value === 'landscape';
+
 
 const normalizeWidgetShape = (
   value: unknown,
