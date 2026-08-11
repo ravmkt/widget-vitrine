@@ -223,7 +223,7 @@ type PreviewColors = {
 // ──────────────────── utilitários ────────────────────
 
 const inputClass =
-  'w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 outline-none placeholder:text-slate-400 transition focus:border-[#0094EB] focus:bg-white focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-50';
+  'w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-800 outline-none transition focus:border-[#0094EB] focus:bg-white disabled:cursor-not-allowed disabled:opacity-50';
 
 const selectClass = inputClass;
 
