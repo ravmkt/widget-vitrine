@@ -52,7 +52,6 @@ export function AppSidebar() {
   const [storeLogoUrl, setStoreLogoUrl] = useState('');
 
   const [isCollapsed, setIsCollapsed] = useState(false);
-
   const isExpanded = !isCollapsed;
 
   const loadStoreData = useCallback(async () => {
@@ -82,57 +81,75 @@ export function AppSidebar() {
     };
   }, [loadStoreData]);
 
-return (
+  return (
     <div
       className={cn(
-        "h-screen sticky top-0 border-r border-[#E2E8F0] dark:border-slate-800 bg-white dark:bg-slate-950 flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 z-30 select-none",
+        "h-screen sticky top-0 border-r border-[#E2E8F0] dark:border-slate-800 bg-white dark:bg-slate-950 flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 z-30 select-none overflow-x-hidden",
         isExpanded ? "w-64" : "w-20"
       )}
     >
-      <SidebarHeader className="p-4 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+      <SidebarHeader className="p-4 flex flex-col gap-3 shrink-0 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-between min-w-0 overflow-hidden">
           {isExpanded ? (
             <img
               src="/assets/vidlytics-logo-wide.png"
               alt="Vidlytics"
-              className="h-10 w-auto max-w-none transition-all duration-300"
+              className="h-9 w-auto max-w-none object-contain transition-all duration-300"
             />
           ) : (
-            <img
-              src="/assets/vidlytics-logo-ico.png"
-              alt="Vidlytics"
-              className="h-9 w-9 object-contain shrink-0"
-            />
+            <div className="w-full flex justify-center py-1">
+              <img
+                src="/assets/vidlytics-logo-ico.png"
+                alt="Vidlytics"
+                className="h-8 w-8 object-contain shrink-0"
+              />
+            </div>
           )}
         </div>
 
+        {/* Botão de Recolher / Expandir Destacado */}
         <button
           type="button"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-1.5 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] dark:hover:bg-slate-800 dark:hover:text-white transition-colors shrink-0"
+          className={cn(
+            "flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-bold transition-all shadow-sm",
+            isExpanded
+              ? "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"
+              : "bg-[#0094EB] text-white hover:bg-[#0E4787] shadow-blue-500/20"
+          )}
           title={isCollapsed ? "Expandir menu" : "Recolher menu"}
         >
-          {isCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          {isCollapsed ? (
+            <>
+              <PanelLeftOpen size={16} className="shrink-0" />
+              <span className="sr-only">Expandir</span>
+            </>
+          ) : (
+            <>
+              <PanelLeftClose size={16} className="shrink-0 text-[#0094EB]" />
+              <span className="truncate">Recolher</span>
+            </>
+          )}
         </button>
       </SidebarHeader>
 
-      <SidebarContent className="px-3">
+      <SidebarContent className="px-3 py-2 overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="gap-1">
+            <SidebarMenu className="gap-1.5">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title} className="relative group">
                   <SidebarMenuButton 
                     asChild 
                     isActive={location.pathname === item.url}
                     className={cn(
-                      "h-11 rounded-xl px-3.5 transition-all duration-200 font-bold overflow-hidden whitespace-nowrap",
+                      "h-11 rounded-xl px-3.5 transition-all duration-200 font-bold overflow-hidden",
                       location.pathname === item.url 
                         ? "bg-[#EAF6FF] dark:bg-[#0094EB]/20 text-[#0094EB] hover:bg-[#EAF6FF] dark:hover:bg-[#0094EB]/20 hover:text-[#0094EB]" 
                         : "text-[#64748B] dark:text-slate-400 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 hover:text-[#0F172A] dark:hover:text-white"
                     )}
                   >
-                    <Link to={item.url} className="flex items-center gap-3">
+                    <Link to={item.url} className="flex items-center gap-3 w-full">
                       <item.icon className={cn(
                         "h-4.5 w-4.5 shrink-0",
                         location.pathname === item.url 
@@ -141,7 +158,7 @@ return (
                       )} />
                       <span
                         className={cn(
-                          "text-sm transition-all duration-300",
+                          "text-sm whitespace-nowrap transition-all duration-300",
                           isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
                         )}
                       >
@@ -150,10 +167,10 @@ return (
                     </Link>
                   </SidebarMenuButton>
 
-                  {/* Tooltip para exibição no modo recolhido */}
+                  {/* Tooltip flutuante no modo recolhido com z-index máximo */}
                   {!isExpanded && (
-                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover:flex items-center z-50 pointer-events-none">
-                      <div className="bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap border border-slate-700">
+                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover:flex items-center z-[999999] pointer-events-none">
+                      <div className="bg-[#0094EB] text-white text-xs font-extrabold px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap">
                         {item.title}
                       </div>
                     </div>
@@ -165,8 +182,8 @@ return (
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-[#F1F5F9] dark:border-slate-800 overflow-hidden">
-        <div className="flex items-center gap-3 mb-4 min-w-0">
+      <SidebarFooter className="p-4 border-t border-[#F1F5F9] dark:border-slate-800 overflow-hidden shrink-0">
+        <div className="flex items-center gap-3 mb-3 min-w-0">
           <div className="h-9 w-9 rounded-full bg-[#F1F5F9] dark:bg-slate-800 border border-[#E2E8F0] dark:border-slate-700 flex items-center justify-center text-[#64748B] dark:text-slate-400 overflow-hidden shrink-0">
             {storeLogoUrl ? (
               <img src={storeLogoUrl} alt={storeName || 'Loja'} className="h-full w-full object-cover" />
@@ -184,6 +201,7 @@ return (
             <span className="text-[10px] font-bold text-[#0094EB] uppercase">Plano Pro</span>
           </div>
         </div>
+
         <div className="relative group">
           <button
             onClick={async () => {
@@ -212,14 +230,14 @@ return (
           </button>
 
           {!isExpanded && (
-            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover:flex items-center z-50 pointer-events-none">
-              <div className="bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap border border-slate-700">
+            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover:flex items-center z-[999999] pointer-events-none">
+              <div className="bg-slate-900 text-white text-xs font-extrabold px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap border border-slate-700">
                 Sair do Painel
               </div>
             </div>
           )}
         </div>
-</SidebarFooter>
+      </SidebarFooter>
     </div>
   );
 }
