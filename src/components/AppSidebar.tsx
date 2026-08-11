@@ -238,8 +238,8 @@ export function AppSidebar() {
           </button>
 
 {!isExpanded && (
-            <div className="absolute left-[calc(100%+8px)] top-1/2 -translate-y-1/2 hidden group-hover:flex items-center z-[999999] pointer-events-none">
-              <div className="bg-slate-900 text-white text-xs font-black px-3 py-1.5 rounded-lg shadow-2xl whitespace-nowrap border border-slate-700">
+            <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-5">
+              <div className="bg-slate-900 text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl whitespace-nowrap border border-slate-700 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
                 Sair do Painel
               </div>
             </div>
