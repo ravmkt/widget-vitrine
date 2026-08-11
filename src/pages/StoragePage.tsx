@@ -523,7 +523,7 @@ export default function StoragePage() {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           type="button"
-                          onClick={() => window.open(file.thumbnailUrl, '_blank')}
+                          onClick={() => window.open(file.fileUrl || file.thumbnailUrl, '_blank')}
                           className="rounded-lg p-2 text-slate-400 hover:bg-blue-50 hover:text-[#0094EB] dark:hover:bg-blue-950"
                           title="Visualizar mídia"
                         >
@@ -531,7 +531,7 @@ export default function StoragePage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDownloadFile(file.thumbnailUrl, file.name)}
+                          onClick={() => handleDownloadFile(file.fileUrl || file.thumbnailUrl, file.name)}
                           className="rounded-lg p-2 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-950"
                           title="Baixar arquivo"
                         >
