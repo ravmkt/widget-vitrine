@@ -185,15 +185,28 @@ export default function StoragePage() {
       const realVideos = await db.videos.getAll();
       if (Array.isArray(realVideos)) {
         realVideos.forEach((vid: any) => {
-          const actualBytes = vid.file_size && Number(vid.file_size) > 0 
-            ? Number(vid.file_size) 
-            : 20971520; // Fallback de 20MB para vídeos sem tamanho cadastrado
+          // Identifica se a mídia é um link externo (Instagram, TikTok, URL externa)
+          const isExternalUrl = 
+            vid.video_source_type === 'url' || 
+            vid.source_type === 'url' ||
+            (vid.video_url && (
+              vid.video_url.includes('instagram.com') || 
+              vid.video_url.includes('tiktok.com') || 
+              vid.video_url.includes('youtube.com')
+            ));
+
+          // Se for URL externa, o peso ocupado no servidor da plataforma é 0 B
+          const actualBytes = isExternalUrl 
+            ? 0 
+            : (vid.file_size && Number(vid.file_size) > 0 
+                ? Number(vid.file_size) 
+                : 20971520); // Fallback de 20MB apenas para arquivos de UPLOAD antigos
 
           const formattedDate = vid.created_at 
             ? new Date(vid.created_at).toLocaleDateString('pt-BR') 
             : 'Hoje';
 
-       const mediaUrl = vid.video_url || vid.thumbnail_url || '';
+          const mediaUrl = vid.video_url || vid.thumbnail_url || '';
 
           loadedItems.push({
             id: vid.id || String(Math.random()),
