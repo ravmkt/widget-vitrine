@@ -1957,7 +1957,7 @@ const VisualPreview = ({
   );
 };
 
-// trecho novo
+// trecho novo para o PreviewCard devidamente encapsulado em função
 const PreviewCard = ({
   formData,
   floatingDevice,
@@ -2003,6 +2003,15 @@ const PreviewCard = ({
     carousel: 'Preview do carrossel',
     grid: 'Preview da grade',
     modal: 'Preview do player/modal',
+  };
+
+  const descriptionByTab: Record<ModalTab, string> = {
+    basic: 'Visualização geral do estilo selecionado.',
+    visual: 'Cores, fonte, fundo e botão.',
+    floating: 'Tamanho, forma, borda e posição do widget.',
+    carousel: 'Formato dos cards, espaçamento, margens e centralização.',
+    grid: 'Colunas, linhas, formato e espaçamento da grade.',
+    modal: 'Botões e elementos exibidos no player/modal.',
   };
 
   return (
