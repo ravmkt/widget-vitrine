@@ -1822,7 +1822,16 @@ const ModalPreview = ({
           }}
         >
           
-          
+          <video
+            src={DEMO_PREVIEW_VIDEOS[0]}
+            autoPlay={true}
+            loop={true}
+            muted={true}
+            playsInline={true}
+            preload="auto"
+            poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
+            className="absolute inset-0 h-full w-full object-cover pointer-events-none"
+          ></video>
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80" />
 
         <div className="absolute left-3 right-3 top-3 z-20 flex items-center justify-between gap-2">
