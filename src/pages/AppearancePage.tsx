@@ -1372,9 +1372,9 @@ const ModalTabButton = ({
       type="button"
       onClick={onClick}
       className={cn(
-        'flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-black transition-all',
+        'flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-black transition-all',
         active
-          ? 'bg-[#0094EB] text-white shadow-lg shadow-blue-500/20'
+          ? 'bg-[#0094EB] text-white shadow-md shadow-blue-500/20'
           : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800',
       )}
     >
