@@ -1,4 +1,31 @@
-
+import {
+  LayoutDashboard, 
+  PlayCircle, 
+  Library, 
+  Palette, 
+  Settings, 
+  Code, 
+  ShoppingCart,
+  MessageSquare,
+  Ruler,
+  MonitorPlay,
+  User,
+  LogOut,
+  BarChart3,
+  PanelLeftClose,
+  PanelLeftOpen
+} from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarFooter,
+} from "@/components/ui/sidebar";
 import React, { useEffect, useState, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
