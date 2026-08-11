@@ -3609,14 +3609,13 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
 
       item.appendChild(videoCard);
 
-// trecho novo para renderização do produto no carrossel
+// trecho novo para renderização do card de produto no carrossel
       if (cfg.showProduct) {
         var videoProductId = video.product_id || video.productId || null;
         var productData = videoProductId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
 
         if (productData) {
           var productUrl = productData.product_url || productData.url || '';
-
           var cardRadiusVal = (cfg.productCardRadius !== undefined && cfg.productCardRadius !== null) ? cfg.productCardRadius : 12;
 
           var prodCard = document.createElement('div');
@@ -3684,7 +3683,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             pPrice.style.cssText =
               'font-size:' + (cfg.productCardPriceSize || 12) + 'px !important;' +
               'font-weight:' + (cfg.productCardPriceBold ? '800' : '600') + ' !important;' +
-              'color:' + (cfg.productCardPriceColor || primaryColor) + ' !important;';
+              'color:' + (cfg.productCardPriceColor || getPrimaryColor(appearance)) + ' !important;';
             pInfo.appendChild(pPrice);
           }
 
@@ -3700,7 +3699,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             'width:100% !important;' +
             'text-align:center !important;' +
             'padding:6px 0 !important;' +
-            'background:' + (cfg.productCardBtnBg || primaryColor) + ' !important;' +
+            'background:' + (cfg.productCardBtnBg || getPrimaryColor(appearance)) + ' !important;' +
             'color:' + (cfg.productCardBtnColor || '#fff') + ' !important;' +
             'font-size:11px !important;' +
             'font-weight:700 !important;' +
@@ -3741,7 +3740,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
           item.appendChild(prodCard);
         }
       }
-      
+            
       track.appendChild(item);
     });
   });
