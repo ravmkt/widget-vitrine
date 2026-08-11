@@ -233,8 +233,14 @@ export default function StoragePage() {
             Gerencie os vídeos e imagens hospedados no seu plano.
           </p>
         </div>
-        
-        
+        <button
+          type="button"
+          onClick={() => showSuccess('Selecione um arquivo para upload.')}
+          className="flex items-center gap-2 rounded-2xl bg-[#0094EB] px-6 py-3 text-sm font-bold text-white shadow-lg hover:bg-[#0E4787] transition-all"
+        >
+          <UploadCloud size={18} />
+          Fazer Upload
+        </button>
       </div>
 
       {/* Card da Régua de Porcentagem de Armazenamento Dinâmica */}
