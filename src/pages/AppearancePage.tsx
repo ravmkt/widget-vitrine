@@ -1526,8 +1526,7 @@ const CarouselPreview = ({
     ? '50%'
     : cssSize(carousel.border_radius, '12px');
 
-  return (
-    <div className="overflow-hidden rounded-[1rem] border border-slate-200 bg-slate-50 flex flex-col h-[520px]">
+
       {/* Mockup Header E-commerce */}
       <div className="flex items-center justify-between bg-white px-4 py-3 shadow-sm shrink-0">
         <div className="flex items-center gap-2">
