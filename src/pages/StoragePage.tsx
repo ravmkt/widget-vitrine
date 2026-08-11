@@ -279,10 +279,27 @@ export default function StoragePage() {
     });
   }, [files, searchTerm, selectedType]);
 
-  const handleDeleteFile = (id: string, name: string) => {
+  const handleDeleteFile = async (id: string, name: string) => {
+    if (id === 'logo-setting-file') {
+      showError('O logotipo da loja não pode ser excluído por este painel.');
+      return;
+    }
+
     if (window.confirm(`Tem certeza que deseja excluir o arquivo "${name}"?`)) {
-      setFiles(prev => prev.filter(f => f.id !== id));
-      showSuccess('Arquivo removido com sucesso!');
+      try {
+        if (supabase) {
+          const { error } = await supabase.from('videos').delete().eq('id', id);
+          if (error) throw error;
+        } else if (typeof db.videos?.delete === 'function') {
+          await db.videos.delete(id);
+        }
+
+        showSuccess('Arquivo removido com sucesso!');
+        await loadAccountStorageData();
+      } catch (err) {
+        console.error('Erro ao excluir arquivo:', err);
+        showError('Não foi possível excluir o arquivo no banco de dados.');
+      }
     }
   };
 
