@@ -164,36 +164,43 @@ export default function StoragePage() {
       let finalThumbUrl = '';
       let thumbnailSize = 0;
 
-      // 1. Upload do Arquivo Principal para o Supabase Storage Bucket
+      // 1. Tenta Upload do Arquivo Principal para o Supabase Storage Bucket
       if (supabase) {
-        const { data: uploadData, error: uploadErr } = await supabase.storage
-          .from('videos')
-          .upload(fileName, file, { cacheControl: '3600', upsert: true });
+        try {
+          const { data: uploadData, error: uploadErr } = await supabase.storage
+            .from('videos')
+            .upload(fileName, file, { cacheControl: '3600', upsert: true });
 
-        if (uploadErr) throw uploadErr;
+          if (!uploadErr && uploadData?.path) {
+            const { data: publicUrlData } = supabase.storage
+              .from('videos')
+              .getPublicUrl(uploadData.path);
 
-        const { data: publicUrlData } = supabase.storage
-          .from('videos')
-          .getPublicUrl(uploadData.path);
+            finalVideoUrl = publicUrlData.publicUrl;
+          }
+        } catch (storageErr) {
+          console.warn('Supabase Storage indisponível para o vídeo, utilizando URL local:', storageErr);
+        }
+      }
 
-        finalVideoUrl = publicUrlData.publicUrl;
-      } else {
+      if (!finalVideoUrl) {
         finalVideoUrl = URL.createObjectURL(file);
       }
 
-      // 2. Se for vídeo e não houver capa personalizada, gera o frame 0.1s e envia para o Storage
+      // 2. Se for vídeo, gera o frame 0.1s e converte para Base64 permanente (Data URL)
       if (isVideo) {
         try {
           const thumbBlob = await generateVideoThumbnail(file);
           thumbnailSize = thumbBlob.size;
-          const thumbFileName = `${settings.store_id}/thumb_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
 
+          // Tenta salvar a imagem no Storage
           if (supabase) {
+            const thumbFileName = `${settings.store_id}/thumb_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
             const { data: thumbUploadData, error: thumbErr } = await supabase.storage
               .from('videos')
               .upload(thumbFileName, thumbBlob, { contentType: 'image/jpeg', upsert: true });
 
-            if (!thumbErr && thumbUploadData) {
+            if (!thumbErr && thumbUploadData?.path) {
               const { data: thumbPublicUrl } = supabase.storage
                 .from('videos')
                 .getPublicUrl(thumbUploadData.path);
@@ -201,14 +208,18 @@ export default function StoragePage() {
               finalThumbUrl = thumbPublicUrl.publicUrl;
             }
           }
+
+          // Se o Storage não retornou URL válida, usa Base64 permanente gravado direto no banco
+          if (!finalThumbUrl) {
+            finalThumbUrl = await blobToBase64(thumbBlob);
+          }
         } catch (thumbErr) {
-          console.warn('Falha ao gerar frame do vídeo, mantendo fallback:', thumbErr);
+          console.warn('Falha ao gerar frame do vídeo, usando fallback:', thumbErr);
         }
       }
 
-      // Fallback de URL caso não tenha sido possível gerar a capa do Storage
       if (!finalThumbUrl) {
-        finalThumbUrl = isVideo ? finalVideoUrl : finalVideoUrl;
+        finalThumbUrl = finalVideoUrl;
       }
 
       // 3. Grava o registro final na tabela com URLs públicas permanentes
