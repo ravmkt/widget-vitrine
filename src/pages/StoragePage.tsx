@@ -195,14 +195,12 @@ export default function StoragePage() {
       if (Array.isArray(realVideos)) {
         realVideos.forEach((vid: any) => {
           // Identifica se a mídia é um link externo (Instagram, TikTok, URL externa)
+          const videoUrlStr = String(vid.video_url || '').toLowerCase();
           const isExternalUrl = 
-            vid.video_source_type === 'url' || 
-            vid.source_type === 'url' ||
-            (vid.video_url && (
-              vid.video_url.includes('instagram.com') || 
-              vid.video_url.includes('tiktok.com') || 
-              vid.video_url.includes('youtube.com')
-            ));
+            videoUrlStr.includes('instagram.com') || 
+            videoUrlStr.includes('tiktok.com') || 
+            videoUrlStr.includes('youtube.com') ||
+            videoUrlStr.includes('vimeo.com');
 
           // Se for URL externa, o peso ocupado no servidor da plataforma é 0 B
           const actualBytes = isExternalUrl 
