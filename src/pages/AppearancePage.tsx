@@ -1821,14 +1821,8 @@ const ModalPreview = ({
             borderRadius: cssSize(m.border_radius, '1.25rem'),
           }}
         >
-          <video
-            src={DEMO_PREVIEW_VIDEOS[0]}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="absolute inset-0 h-full w-full object-cover pointer-events-none"
-          />
+          
+          
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80" />
 
         <div className="absolute left-3 right-3 top-3 z-20 flex items-center justify-between gap-2">
