@@ -3609,7 +3609,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
 
       item.appendChild(videoCard);
 
-// trecho novo para o card de produto horizontal e sofisticado no carrossel
+// trecho novo para o card de produto otimizado (foto maior e melhor aproveitamento do texto)
       if (cfg.showProduct) {
         var videoProductId = video.product_id || video.productId || null;
         var productData = videoProductId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
@@ -3623,8 +3623,8 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
           prodCard.style.cssText =
             'display:flex !important;' +
             'align-items:center !important;' +
-            'gap:10px !important;' +
-            'padding:8px !important;' +
+            'gap:8px !important;' +
+            'padding:6px !important;' +
             'width:100% !important;' +
             'background:' + (cfg.productCardBg || '#fff') + ' !important;' +
             'border-radius:' + cardRadiusVal + 'px !important;' +
@@ -3634,17 +3634,17 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             'cursor:pointer !important;' +
             'text-align:left !important;';
 
-          // Foto do produto maior e em destaque à esquerda
+          // Foto do produto otimizada e maior (54px)
           var prodImgUrl = getThumbnailFromObject(productData) || '';
           if (prodImgUrl) {
             var pImg = document.createElement('img');
             pImg.src = prodImgUrl;
             pImg.alt = productData.name || 'Produto';
             pImg.style.cssText =
-              'width:48px !important;' +
-              'height:48px !important;' +
-              'min-width:48px !important;' +
-              'max-width:48px !important;' +
+              'width:54px !important;' +
+              'height:54px !important;' +
+              'min-width:54px !important;' +
+              'max-width:54px !important;' +
               'border-radius:8px !important;' +
               'object-fit:cover !important;' +
               'background:#f1f5f9 !important;' +
@@ -3653,14 +3653,15 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             prodCard.appendChild(pImg);
           }
 
-          // Container de informações (Nome + Preço) à direita da foto
+          // Container de informações (Nome + Linha inferior com Preço e Seta)
           var pInfo = document.createElement('div');
           pInfo.style.cssText =
             'flex:1 !important;' +
             'min-width:0 !important;' +
             'display:flex !important;' +
             'flex-direction:column !important;' +
-            'gap:3px !important;';
+            'justify-content:center !important;' +
+            'gap:2px !important;';
 
           var pName = document.createElement('div');
           pName.textContent = productData.name || 'Produto';
@@ -3674,6 +3675,14 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             'width:100% !important;';
           pInfo.appendChild(pName);
 
+          // Sub-linha unindo Preço e Seta alinhados lado a lado
+          var pBottomRow = document.createElement('div');
+          pBottomRow.style.cssText =
+            'display:flex !important;' +
+            'align-items:center !important;' +
+            'justify-content:space-between !important;' +
+            'width:100% !important;';
+
           if (productData.price) {
             var pPrice = document.createElement('div');
             pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
@@ -3681,21 +3690,21 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
               'font-size:' + (cfg.productCardPriceSize || 12) + 'px !important;' +
               'font-weight:' + (cfg.productCardPriceBold ? '800' : '600') + ' !important;' +
               'color:' + (cfg.productCardPriceColor || getPrimaryColor(appearance)) + ' !important;';
-            pInfo.appendChild(pPrice);
+            pBottomRow.appendChild(pPrice);
           }
 
-          prodCard.appendChild(pInfo);
-
-          // Ícone de seta discreto ou indicador de clique elegante à direita (estilo referência)
           var arrowIndicator = document.createElement('div');
           arrowIndicator.innerHTML = '&rarr;';
           arrowIndicator.style.cssText =
-            'font-size:14px !important;' +
+            'font-size:13px !important;' +
             'font-weight:800 !important;' +
             'color:' + (cfg.productCardBtnBg || getPrimaryColor(appearance)) + ' !important;' +
-            'padding-left:2px !important;' +
+            'padding-left:4px !important;' +
             'flex-shrink:0 !important;';
-          prodCard.appendChild(arrowIndicator);
+          pBottomRow.appendChild(arrowIndicator);
+
+          pInfo.appendChild(pBottomRow);
+          prodCard.appendChild(pInfo);
 
           // Clique no card direciona para o produto
           prodCard.addEventListener('click', function(e) {
@@ -3714,8 +3723,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
 
           item.appendChild(prodCard);
         }
-      }
-                  
+      }                  
       track.appendChild(item);
     });
   });
