@@ -1771,15 +1771,8 @@ const GridPreview = ({
                   borderRadius: isCircle ? '999px' : cssSize(grid.border_radius, '12px'),
                 }}
               >
-                <video
-                  src={DEMO_PREVIEW_VIDEOS[index % DEMO_PREVIEW_VIDEOS.length]}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  preload="auto"
-                  className="h-full w-full object-cover pointer-events-none"
-                />
+                
+                
                 <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
                     <PlaySquare size={12} />
