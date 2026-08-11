@@ -3129,27 +3129,7 @@ const AppearancePage = () => {
               </div>
             </div>
 
-            {/* Footer do modal */}
-            <div className="flex items-center justify-end gap-3 border-t border-slate-100 bg-white px-6 py-4 shrink-0">
-              <button
-                type="button"
-                onClick={handleCancel}
-                disabled={saving}
-                className="flex items-center gap-2 rounded-2xl border border-slate-200 px-6 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <X size={16} />
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveStyle}
-                disabled={saving}
-                className="flex items-center gap-2 rounded-2xl bg-[#0094EB] px-6 py-3 text-sm font-bold text-white shadow-lg hover:bg-[#0E4787] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                {saving ? 'Salvando...' : 'Salvar'}
-              </button>
-            </div>
+
           </div>
         </div>
       )}
