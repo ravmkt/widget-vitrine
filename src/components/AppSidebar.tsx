@@ -176,9 +176,9 @@ export function AppSidebar() {
                   </SidebarMenuButton>
 
                   {/* Tooltip flutuante destacado no modo recolhido sem corte */}
-                  {!isExpanded && (
-                    <div className="absolute left-[calc(100%+8px)] top-1/2 -translate-y-1/2 hidden group-hover:flex items-center z-[999999] pointer-events-none">
-                      <div className="bg-[#0094EB] text-white text-xs font-black px-3 py-1.5 rounded-lg shadow-2xl shadow-blue-500/30 whitespace-nowrap border border-blue-400/30 flex items-center gap-1">
+                 {!isExpanded && (
+                    <div className="absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 hidden group-hover:flex items-center z-[999999] pointer-events-none">
+                      <div className="bg-[#0094EB] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/40 whitespace-nowrap border border-white/20 flex items-center gap-1">
                         {item.title}
                       </div>
                     </div>
