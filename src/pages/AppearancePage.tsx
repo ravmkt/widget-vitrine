@@ -1232,7 +1232,40 @@ const ToggleSwitch = ({
   );
 };
 
-
+// trecho novo
+const ColorInput = ({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) => {
+  const safeColor = isValidHexColor(value) ? value : '#000000';
+  return (
+    <div className="flex items-center gap-1.5 w-full">
+      <div
+        className="relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-slate-200 shadow-sm overflow-hidden"
+        style={{ backgroundColor: safeColor }}
+      >
+        <input
+          type="color"
+          aria-label={label}
+          value={safeColor}
+          onChange={onChange}
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+        />
+      </div>
+      <input
+        type="text"
+        value={value}
+        onChange={onChange}
+        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 font-mono text-xs font-bold text-slate-800 outline-none transition focus:border-[#0094EB] focus:bg-white"
+      />
+    </div>
+  );
+};
 
 const DeviceTabs = ({
   activeDevice,
