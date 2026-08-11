@@ -561,8 +561,6 @@ const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
   product_card_price_size: '12',
   product_card_price_color: '#0094EB',
   product_card_price_bold: true,
-  product_card_btn_bg: '#0094EB',
-  product_card_btn_color: '#FFFFFF',
 });
 
 const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
@@ -590,8 +588,6 @@ const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
   product_card_price_size: '12',
   product_card_price_color: '#0094EB',
   product_card_price_bold: true,
-  product_card_btn_bg: '#0094EB',
-  product_card_btn_color: '#FFFFFF',
 });
 
 const createDefaultGridDesktopConfig = (): GridConfig => ({
