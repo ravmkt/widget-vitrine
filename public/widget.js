@@ -569,13 +569,7 @@ function normalizeFloatingPosition(pos) {
   return 'bottom-right';
 }
 
-  function normalizeFloatingShape(value) {
-    var key = normalizeKey(value);
-    if (key === 'square' || key === 'quadrado') return 'square';
-    if (key === 'portrait' || key === 'retrato' || key === '9-16') return 'portrait';
-    if (key === 'circle' || key === 'circulo' || key === 'redondo') return 'circle';
-    return DEFAULT_APPEARANCE.floating_shape;
-  }
+
 
 function getFloatingConfig(appearance) {
   appearance = normalizeAppearanceItem(appearance || {});
