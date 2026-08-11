@@ -1,6 +1,54 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { db } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
+
+// Utilitário para extrair o primeiro frame de um arquivo de vídeo via Canvas HTML5
+const generateVideoThumbnail = (file: File): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.src = URL.createObjectURL(file);
+    video.muted = true;
+    video.playsInline = true;
+
+    video.onloadeddata = () => {
+      video.currentTime = 0.1; // Avança 0.1s para evitar tela preta inicial
+    };
+
+    video.onseeked = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 360;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(
+            (blob) => {
+              URL.revokeObjectURL(video.src);
+              if (blob) resolve(blob);
+              else reject(new Error('Falha ao gerar blob do canvas'));
+            },
+            'image/jpeg',
+            0.85
+          );
+        } else {
+          URL.revokeObjectURL(video.src);
+          reject(new Error('Não foi possível obter contexto do canvas'));
+        }
+      } catch (err) {
+        URL.revokeObjectURL(video.src);
+        reject(err);
+      }
+    };
+
+    video.onerror = (err) => {
+      URL.revokeObjectURL(video.src);
+      reject(err);
+    };
+  });
+};
+
 import {
   HardDrive,
   Search,
