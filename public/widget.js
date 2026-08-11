@@ -877,7 +877,41 @@ function getBorderColor(appearance) {
     return sanitizeCssValue(raw, DEFAULT_APPEARANCE.font_family, 'font');
   }
 
-
+function normalizeModalAppearanceConfig(appearance) {
+  appearance = appearance || {};
+  var rawModalConfig = parseJsonIfNeeded(appearance.modal_config || appearance.modalConfig) || {};
+  
+  function rcv(jsonbField, fallback) {
+    var jsonbVal = rawModalConfig[jsonbField];
+    if (jsonbVal !== undefined && jsonbVal !== null && jsonbVal !== '') return jsonbVal;
+    return fallback;
+  }
+  
+  return {
+    show_title: rcv('show_title', true),
+    show_play_button: rcv('show_play_button', true),
+    show_product: rcv('show_product', true),
+    show_product_button: rcv('show_product_button', true),
+    show_like_button: rcv('show_like_button', true),
+    show_comment_button: rcv('show_comment_button', true),
+    show_share_button: rcv('show_share_button', true),
+    show_whatsapp_button: rcv('show_whatsapp_button', true),
+    show_sizing_button: rcv('show_sizing_button', true),
+    hide_stories: rcv('hide_stories', false),
+    shadow_enabled: rcv('shadow_enabled', true),
+    border_color: rcv('border_color', ''),
+    border_width: rcv('border_width', ''),
+    border_radius: rcv('border_radius', ''),
+    product_card_bg: sanitizeCssValue(rcv('product_card_bg', '#FFFFFF'), '#FFFFFF', 'color'),
+    product_card_border_color: sanitizeCssValue(rcv('product_card_border_color', '#E2E8F0'), '#E2E8F0', 'color'),
+    product_card_border_width: toNumber(rcv('product_card_border_width', '1'), 1),
+    product_card_border_radius: toNumber(rcv('product_card_border_radius', '12'), 12),
+    product_card_name_size: toNumber(rcv('product_card_name_size', '11'), 11),
+    product_card_name_color: sanitizeCssValue(rcv('product_card_name_color', '#0F172A'), '#0F172A', 'color'),
+    product_card_price_size: toNumber(rcv('product_card_price_size', '12'), 12),
+    product_card_price_color: sanitizeCssValue(rcv('product_card_price_color', getPrimaryColor(appearance)), getPrimaryColor(appearance), 'color')
+  };
+}
 
   function readStories() {
     if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_stories', []));
