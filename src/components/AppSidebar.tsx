@@ -11,6 +11,7 @@ import {
   MonitorPlay,
   User,
   LogOut,
+  HardDrive,
   BarChart3,
   PanelLeftClose,
   PanelLeftOpen
