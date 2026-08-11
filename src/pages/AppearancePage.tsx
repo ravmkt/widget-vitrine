@@ -2049,9 +2049,7 @@ const PreviewCard = ({
     modal: 'Botões e elementos exibidos no player/modal.',
   };
 
-  return (
-    <aside className="sticky top-6 rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
+
         <div className="flex items-center gap-2">
           <div className="flex gap-1.5">
             <div className="h-2.5 w-2.5 rounded-full bg-rose-400" />
