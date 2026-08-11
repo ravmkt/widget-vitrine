@@ -2904,7 +2904,6 @@ const stylePayload = {
                     </SectionCard>
                   )}
 
-// trecho novo unificado para a aba Carrossel em AppearancePage.tsx
                   {activeTab === 'carousel' && (
                     <SectionCard title="Carrossel" description="Configure a exibição dos vídeos em carrossel, quantidade de itens, formato e margens.">
                       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
