@@ -246,7 +246,7 @@ export function AppSidebar() {
 
 {!isExpanded && (
             <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-5">
-              <div className="bg-slate-900 text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl whitespace-nowrap border border-slate-700 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
+              <div className="bg-[#0094EB] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
                 Sair do Painel
               </div>
             </div>
