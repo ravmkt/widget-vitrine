@@ -2596,8 +2596,13 @@ const AppearancePage = () => {
       </div>
 
       {/* Modal de edição */}
-
-
+{/* Modal de edição */}
+      {showModal && (
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-slate-900/60 p-3 xl:pl-[270px] backdrop-blur-sm">
+          <div className="flex h-[95vh] w-full max-w-[calc(100vw-290px)] flex-col overflow-hidden rounded-[1.5rem] bg-white shadow-2xl">
+            
+            {/* Header do modal */}
+            <div className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-3 shrink-0">
               <div>
                 <h2 className="text-xl font-black text-slate-900">
                   {editingStyle ? 'Editar Estilo' : 'Criar Novo Estilo'}
