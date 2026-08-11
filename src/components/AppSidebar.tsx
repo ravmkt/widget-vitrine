@@ -52,10 +52,9 @@ export function AppSidebar() {
   const [storeLogoUrl, setStoreLogoUrl] = useState('');
 
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
-  const isExpanded = !isCollapsed || isHovered;
-
+  const isExpanded = !isCollapsed;
+  
   const loadStoreData = useCallback(async () => {
     try {
       const settings = await db.getSettings();
