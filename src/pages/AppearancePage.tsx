@@ -2818,7 +2818,207 @@ const AppearancePage = () => {
                     </SectionCard>
                   )}
 
+{/* ── Carrossel ── */}
+                  {activeTab === 'carousel' && (
+                    <SectionCard title="Configurações do Carrossel">
+                      
+                      {/* Seletor Inteligente de Dispositivo */}
+                      <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60">
+                        <span className="text-xs font-bold text-slate-700">Dispositivo</span>
+                        
+                        {formData.useGlobalAppearance ? (
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold" title="Configuração vinculada entre Desktop e Mobile">
+                            <Monitor size={14} />
+                            <Link size={12} className="text-[#0094EB]" />
+                            <Smartphone size={14} />
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
+                            <button
+                              type="button"
+                              onClick={() => setCarouselDevice('desktop')}
+                              className={cn(
+                                'flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all',
+                                carouselDevice === 'desktop'
+                                  ? 'bg-[#0094EB] text-white'
+                                  : 'text-slate-500 hover:text-slate-800'
+                              )}
+                              title="Editar configurações Desktop"
+                            >
+                              <Monitor size={13} />
+                              Desktop
+                            </button>
+                            <Link2Off size={12} className="text-slate-300 mx-0.5" />
+                            <button
+                              type="button"
+                              onClick={() => setCarouselDevice('mobile')}
+                              className={cn(
+                                'flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all',
+                                carouselDevice === 'mobile'
+                                  ? 'bg-[#0094EB] text-white'
+                                  : 'text-slate-500 hover:text-slate-800'
+                              )}
+                              title="Editar configurações Mobile"
+                            >
+                              <Smartphone size={13} />
+                              Mobile
+                            </button>
+                          </div>
+                        )}
+                      </div>
 
+                      {/* 1. Layout & Dimensões */}
+                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-3">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">1. Layout & Dimensões</h4>
+                        
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <FormField label="Formato dos Cards">
+                            <select
+                              value={activeCarouselConfig.shape}
+                              onChange={e => updateCarouselConfig({ shape: e.target.value as WidgetShape })}
+                              className={selectClass}
+                            >
+                              <option value="circle">Circular</option>
+                              <option value="square">Quadrado</option>
+                              <option value="portrait">Retrato 9:16</option>
+                            </select>
+                          </FormField>
+
+                          <FormField label="Largura Card (px)">
+                            <input
+                              type="number" min="20" step="1"
+                              value={toNumberInputValue(activeCarouselConfig.width)}
+                              onChange={e => updateCarouselConfig({ width: e.target.value })}
+                              placeholder="Ex: 120"
+                              className={inputClass}
+                            />
+                          </FormField>
+
+                          <FormField label="Itens Visíveis">
+                            <input
+                              type="number" min="1" step="1"
+                              value={activeCarouselConfig.visible_items}
+                              onChange={e => updateCarouselConfig({ visible_items: safeNumber(e.target.value, 1, 1) })}
+                              className={inputClass}
+                            />
+                          </FormField>
+
+                          <FormField label="Espaçamento (px)">
+                            <input
+                              type="number" min="0" step="1"
+                              value={activeCarouselConfig.spacing}
+                              onChange={e => updateCarouselConfig({ spacing: safeNumber(e.target.value, 0, 0) })}
+                              className={inputClass}
+                            />
+                          </FormField>
+
+                          <FormField label="Margem Superior (px)">
+                            <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.margin_top)} onChange={e => updateCarouselConfig({ margin_top: e.target.value })} placeholder="Ex: 0" className={inputClass} />
+                          </FormField>
+
+                          <FormField label="Margem Inferior (px)">
+                            <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.margin_bottom)} onChange={e => updateCarouselConfig({ margin_bottom: e.target.value })} placeholder="Ex: 0" className={inputClass} />
+                          </FormField>
+                        </div>
+                      </div>
+
+                      {/* 2. Bordas & Ajustes */}
+                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-3">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">2. Bordas & Ajustes</h4>
+                        
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <FormField label="Cor da Borda">
+                            <ColorInput label="Cor da borda" value={activeCarouselConfig.border_color || formData.primary_color} onChange={e => updateCarouselConfig({ border_color: e.target.value })} />
+                          </FormField>
+
+                          <FormField label="Largura Borda (px)">
+                            <input
+                              type="number" min="0" step="1"
+                              value={toNumberInputValue(activeCarouselConfig.border_style)}
+                              onChange={e => updateCarouselConfig({ border_style: e.target.value })}
+                              placeholder="Ex: 2"
+                              className={inputClass}
+                            />
+                          </FormField>
+
+                          <FormField label="Raio da Borda (px)">
+                            <input
+                              type="number" min="0" step="1"
+                              value={toNumberInputValue(activeCarouselConfig.border_radius)}
+                              onChange={e => updateCarouselConfig({ border_radius: e.target.value })}
+                              placeholder="Ex: 12"
+                              className={inputClass}
+                            />
+                          </FormField>
+
+                          <FormField label="Ajuste Imagem">
+                            <select value={activeCarouselConfig.object_fit || 'cover'} onChange={e => updateCarouselConfig({ object_fit: e.target.value })} className={selectClass}>
+                              <option value="cover">Cover (Preencher)</option>
+                              <option value="contain">Contain (Ajustar)</option>
+                              <option value="fill">Fill (Esticar)</option>
+                            </select>
+                          </FormField>
+                        </div>
+                      </div>
+
+                      {/* 3. Elementos Visíveis */}
+                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-2.5">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">3. Elementos Visíveis</h4>
+                        
+                        <div className="space-y-1.5">
+                          <ToggleSwitch label="Exibir título da vitrine" checked={activeCarouselConfig.show_title ?? false} onChange={e => updateCarouselConfig({ show_title: e.target.checked })} />
+                          <ToggleSwitch label="Exibir ícone de Play no centro do vídeo" checked={activeCarouselConfig.show_play_icon} onChange={e => updateCarouselConfig({ show_play_icon: e.target.checked })} />
+                          <ToggleSwitch label="Exibir card de produto abaixo de cada vídeo" checked={activeCarouselConfig.show_product} onChange={e => updateCarouselConfig({ show_product: e.target.checked })} />
+                        </div>
+                      </div>
+
+                      {/* 4. Estilo do Card de Produto */}
+                      {activeCarouselConfig.show_product && (
+                        <div className="rounded-xl border border-blue-200/80 bg-blue-50/30 p-3.5 space-y-3">
+                          <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">
+                            4. Estilo do Card de Produto
+                          </h4>
+                          
+                          <div className="grid grid-cols-2 gap-2.5">
+                            <FormField label="Fundo do Card">
+                              <ColorInput label="Fundo do card" value={activeCarouselConfig.product_card_bg || '#FFFFFF'} onChange={e => updateCarouselConfig({ product_card_bg: e.target.value })} />
+                            </FormField>
+
+                            <FormField label="Cor da Borda">
+                              <ColorInput label="Cor da borda" value={activeCarouselConfig.product_card_border_color || '#E2E8F0'} onChange={e => updateCarouselConfig({ product_card_border_color: e.target.value })} />
+                            </FormField>
+
+                            <FormField label="Largura Borda (px)">
+                              <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_border_width)} onChange={e => updateCarouselConfig({ product_card_border_width: e.target.value })} placeholder="Ex: 1" className={inputClass} />
+                            </FormField>
+
+                            <FormField label="Raio Borda (px)">
+                              <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_border_radius)} onChange={e => updateCarouselConfig({ product_card_border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
+                            </FormField>
+
+                            <FormField label="Fonte Nome (px)">
+                              <input type="number" min="8" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_name_size)} onChange={e => updateCarouselConfig({ product_card_name_size: e.target.value })} placeholder="Ex: 11" className={inputClass} />
+                            </FormField>
+
+                            <FormField label="Cor Fonte Nome">
+                              <ColorInput label="Cor do nome" value={activeCarouselConfig.product_card_name_color || '#0F172A'} onChange={e => updateCarouselConfig({ product_card_name_color: e.target.value })} />
+                            </FormField>
+
+                            <FormField label="Fonte Preço (px)">
+                              <input type="number" min="8" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_price_size)} onChange={e => updateCarouselConfig({ product_card_price_size: e.target.value })} placeholder="Ex: 12" className={inputClass} />
+                            </FormField>
+
+                            <FormField label="Cor Fonte Preço">
+                              <ColorInput label="Cor do preço" value={activeCarouselConfig.product_card_price_color || formData.primary_color} onChange={e => updateCarouselConfig({ product_card_price_color: e.target.value })} />
+                            </FormField>
+                          </div>
+
+                          <ToggleSwitch label="Preço em negrito (destaque)" checked={activeCarouselConfig.product_card_price_bold ?? true} onChange={e => updateCarouselConfig({ product_card_price_bold: e.target.checked })} />
+                        </div>
+                      )}
+
+                    </SectionCard>
+                  )}
 
                   {/* ── Grade ── */}
                   {activeTab === 'grid' && (
