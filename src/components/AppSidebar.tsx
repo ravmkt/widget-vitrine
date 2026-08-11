@@ -131,21 +131,29 @@ export function AppSidebar() {
                   <SidebarMenuButton 
                     asChild 
                     isActive={location.pathname === item.url}
+                    title={!isExpanded ? item.title : undefined}
                     className={cn(
-                      "h-11 rounded-xl px-4 transition-all duration-200 font-bold",
+                      "h-11 rounded-xl px-3.5 transition-all duration-200 font-bold overflow-hidden whitespace-nowrap",
                       location.pathname === item.url 
                         ? "bg-[#EAF6FF] dark:bg-[#0094EB]/20 text-[#0094EB] hover:bg-[#EAF6FF] dark:hover:bg-[#0094EB]/20 hover:text-[#0094EB]" 
                         : "text-[#64748B] dark:text-slate-400 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 hover:text-[#0F172A] dark:hover:text-white"
                     )}
                   >
-                    <Link to={item.url}>
+                    <Link to={item.url} className="flex items-center gap-3">
                       <item.icon className={cn(
-                        "h-4.5 w-4.5",
+                        "h-4.5 w-4.5 shrink-0",
                         location.pathname === item.url 
                           ? "text-[#0094EB]" 
                           : "text-[#94A3B8] dark:text-slate-500"
                       )} />
-                      <span className="text-sm">{item.title}</span>
+                      <span
+                        className={cn(
+                          "text-sm transition-all duration-300",
+                          isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
+                        )}
+                      >
+                        {item.title}
+                      </span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
