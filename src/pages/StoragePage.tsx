@@ -89,23 +89,24 @@ export default function StoragePage() {
 
     try {
       setUploading(true);
-      showSuccess(`Iniciando upload de "${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)} MB)...`);
+      showSuccess(`Iniciando processamento de "${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)} MB)...`);
 
       // Determina o tipo da mídia
       const isVideo = file.type.startsWith('video');
       const tempUrl = URL.createObjectURL(file);
 
-      // Registra a nova mídia na tabela do banco com o tamanho real em bytes (file_size)
-      await db.videos.create({
+      // Registra a nova mídia no banco usando o método correto (.add em vez de .create)
+      await db.videos.add({
         title: file.name,
         video_url: tempUrl,
         thumbnail_url: isVideo ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80' : tempUrl,
         file_size: file.size,
         status: 'active',
+        active: true,
         created_at: new Date().toISOString(),
       });
 
-      showSuccess('Upload concluído com sucesso!');
+      showSuccess('Mídia adicionada com sucesso!');
       await loadAccountStorageData();
     } catch (err) {
       console.error('Erro ao realizar upload:', err);
@@ -116,16 +117,51 @@ export default function StoragePage() {
     }
   };
 
-  // Função para baixar o arquivo
-  const handleDownloadFile = (url: string, fileName: string) => {
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showSuccess(`Baixando "${fileName}"...`);
+  // Função de Download Forçado via Blob (Impede que apenas abra nova aba)
+  const handleDownloadFile = async (url: string, fileName: string) => {
+    if (!url) {
+      showError('URL do arquivo indisponível para download.');
+      return;
+    }
+
+    try {
+      showSuccess(`Preparando download de "${fileName}"...`);
+
+      // Se for uma Blob URL local ou data URL
+      if (url.startsWith('blob:') || url.startsWith('data:')) {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+      }
+
+      // Faz o fetch do arquivo para forçar o download direto em bytes
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+    } catch (err) {
+      console.error('Erro ao baixar arquivo por Blob, executando fallback:', err);
+      // Fallback em caso de restrição estrita de CORS
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   // Carrega vídeos e imagens cadastrados na conta real do usuário
