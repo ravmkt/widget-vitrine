@@ -1526,6 +1526,7 @@ const FloatingPreview = ({
             muted
             playsInline
             preload="auto"
+            onLoadedData={(e) => e.currentTarget.play().catch(() => {})}
             poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
             className="absolute inset-0 h-full w-full object-cover pointer-events-none"
           />
