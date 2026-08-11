@@ -540,19 +540,23 @@ export default function StoragePage() {
                 filteredFiles.map(file => (
                   <tr key={file.id} className="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
                     <td className="px-6 py-3.5">
-                      <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm dark:border-slate-800 flex items-center justify-center bg-slate-900">
+                      <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-slate-200 bg-slate-900 shadow-sm dark:border-slate-800 flex items-center justify-center shrink-0">
                         {file.type === 'video' ? (
-                          <video
-                            src={file.fileUrl || file.thumbnailUrl}
-                            className="h-full w-full object-cover"
-                            preload="metadata"
-                            muted
-                            playsInline
-                          />
+                          file.thumbnailUrl && !file.thumbnailUrl.includes('unsplash.com') ? (
+                            <img src={file.thumbnailUrl} alt={file.name} className="h-full w-full object-cover" />
+                          ) : (
+                            <video
+                              src={`${file.fileUrl || file.thumbnailUrl}#t=0.1`}
+                              className="h-full w-full object-cover"
+                              preload="metadata"
+                              muted
+                              playsInline
+                            />
+                          )
                         ) : (
                           <img src={file.thumbnailUrl} alt={file.name} className="h-full w-full object-cover" />
                         )}
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 text-white pointer-events-none">
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-white pointer-events-none">
                           {file.type === 'video' ? <FileVideo size={16} /> : <FileImage size={16} />}
                         </div>
                       </div>
