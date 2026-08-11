@@ -26,6 +26,8 @@ interface StorageItem {
   createdAt: string;
   thumbnailUrl: string;
   fileUrl: string;
+  productName?: string;
+  storyTitle?: string;
   canDelete: boolean;
 }
 
