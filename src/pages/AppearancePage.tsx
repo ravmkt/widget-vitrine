@@ -1646,6 +1646,7 @@ const isCircle = shape === 'circle';
                     muted
                     playsInline
                     preload="auto"
+                    poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
                     className="h-full w-full object-cover pointer-events-none"
                   />
                   {carousel.show_play_icon && (
