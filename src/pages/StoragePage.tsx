@@ -365,10 +365,16 @@ export default function StoragePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {filteredFiles.length === 0 ? (
+              {loading ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-xs font-bold text-slate-400">
-                    Nenhum arquivo encontrado.
+                    Carregando mídias da sua conta...
+                  </td>
+                </tr>
+              ) : filteredFiles.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-xs font-bold text-slate-400">
+                    Nenhum arquivo encontrado no seu armazenamento.
                   </td>
                 </tr>
               ) : (
