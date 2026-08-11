@@ -27,10 +27,12 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
-        <AppSidebar />
-        <SidebarInset className="flex flex-col flex-1">
-          <main className="flex-1 p-4 md:p-8 animate-fade-in relative">
+      <div className="flex min-h-screen w-full bg-background relative overflow-visible">
+        <div className="relative z-40 shrink-0">
+          <AppSidebar />
+        </div>
+        <SidebarInset className="flex flex-col flex-1 relative z-0 min-w-0">
+          <main className="flex-1 p-4 md:p-8 animate-fade-in relative z-0">
             <div className="mx-auto max-w-7xl">
               {children}
             </div>
