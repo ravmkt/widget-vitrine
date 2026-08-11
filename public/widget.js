@@ -744,20 +744,19 @@ function getFloatingBehaviorConfig(appearance) {
   };
 }
 
+// trecho novo e limpo para getCarouselConfig
 function getCarouselConfig(appearance) {
   appearance = normalizeAppearanceItem(appearance || {});
   var primaryColor = getPrimaryColor(appearance);
   
   function rcv(jsonbField, flatField, fallback) {
     return readConfigValue(appearance, 'carousel_config', jsonbField, flatField, fallback);
-  }  
+  }
+  
   var visibleItems = safeInt(rcv('visible_items', 'carousel_visible_items', '4'), 4);
   var borderColor = String(rcv('border_color', 'carousel_border_color', 'transparent') || 'transparent');
-  
-  // border_style define a espessura da borda em px
   var borderWidth = toNumber(rcv('border_style', 'border_width', '0'), 0);
 
-  // Lê explicitamente o width novo e o card_size legado como fallback
   var itemWidth = toNumber(rcv('width', 'card_size', '120'), 120);
   var itemSpacing = toNumber(rcv('spacing', 'carousel_item_spacing', '8'), 8);
   var itemRadius = toNumber(rcv('border_radius', 'carousel_item_radius', '12'), 12);
@@ -765,26 +764,34 @@ function getCarouselConfig(appearance) {
   var marginTop = toNumber(rcv('margin_top', 'carousel_margin_top', '0'), 0);
   var marginBottom = toNumber(rcv('margin_bottom', 'carousel_margin_bottom', '0'), 0);
   
-  var showTitle = rcv('show_title', 'carousel_show_title', false);
-  if (typeof showTitle === 'string') showTitle = showTitle === 'true';
-  var showPlayIcon = rcv('show_play_icon', 'carousel_show_play_icon', true);
-  if (typeof showPlayIcon === 'string') showPlayIcon = showPlayIcon === 'true';
-  var showItemTitle = rcv('show_item_title', 'carousel_show_item_title', false);
-  if (typeof showItemTitle === 'string') showItemTitle = showItemTitle === 'true';
-  var showArrows = rcv('show_arrows', 'carousel_show_arrows', true);
-  if (typeof showArrows === 'string') showArrows = showArrows === 'true';
+  var showTitle = toBoolean(rcv('show_title', 'carousel_show_title', false), false);
+  var showPlayIcon = toBoolean(rcv('show_play_icon', 'carousel_show_play_icon', true), true);
+  var showItemTitle = toBoolean(rcv('show_item_title', 'carousel_show_item_title', false), false);
+  var showArrows = toBoolean(rcv('show_arrows', 'carousel_show_arrows', true), true);
+  var showProduct = toBoolean(rcv('show_product', 'carousel_show_product', true), true);
 
-  var showProduct = rcv('show_product', 'carousel_show_product', true);
-  if (typeof showProduct === 'string') showProduct = showProduct === 'true';
-
-  // Lê explicitamente o shape novo e o card_shape legado como fallback
   var shape = String(rcv('shape', 'card_shape', 'portrait')).trim().toLowerCase();
   var aspect = '9/16';
   if (shape === 'square' || shape === '1:1') aspect = '1/1';
   else if (shape === 'circle') aspect = '1/1';
   else if (shape === 'landscape' || shape === '16:9') aspect = '16/9';
 
-return {
+  // Leitura consolidada e única das propriedades do card de produto
+  var pBg = sanitizeCssValue(rcv('product_card_bg', 'carousel_product_card_bg', '#FFFFFF'), '#FFFFFF', 'color');
+  var pBorderColor = sanitizeCssValue(rcv('product_card_border_color', 'carousel_product_card_border_color', '#E2E8F0'), '#E2E8F0', 'color');
+  var pBorderWidth = toNumber(rcv('product_card_border_width', 'carousel_product_card_border_width', '1'), 1);
+  var pRadiusInput = rcv('product_card_border_radius', 'carousel_product_card_border_radius');
+  var pRadius = (pRadiusInput !== undefined && pRadiusInput !== null && pRadiusInput !== '') ? toNumber(pRadiusInput, 12) : 12;
+
+  var pNameSize = toNumber(rcv('product_card_name_size', 'carousel_product_card_name_size', '11'), 11);
+  var pNameColor = sanitizeCssValue(rcv('product_card_name_color', 'carousel_product_card_name_color', '#0F172A'), '#0F172A', 'color');
+  var pPriceSize = toNumber(rcv('product_card_price_size', 'carousel_product_card_price_size', '12'), 12);
+  var pPriceColor = sanitizeCssValue(rcv('product_card_price_color', 'carousel_product_card_price_color', primaryColor), primaryColor, 'color');
+  var pPriceBold = toBoolean(rcv('product_card_price_bold', 'carousel_product_card_price_bold', true), true);
+  var pBtnBg = sanitizeCssValue(rcv('product_card_btn_bg', 'carousel_product_card_btn_bg', primaryColor), primaryColor, 'color');
+  var pBtnColor = sanitizeCssValue(rcv('product_card_btn_color', 'carousel_product_card_btn_color', '#FFFFFF'), '#FFFFFF', 'color');
+
+  return {
     itemWidth: px(itemWidth),
     itemSpacing: px(itemSpacing),
     itemRadius: shape === 'circle' ? '999px' : px(itemRadius),
@@ -798,21 +805,21 @@ return {
     showItemTitle: showItemTitle,
     showArrows: showArrows,
     showProduct: showProduct,
-    productCardBg: sanitizeCssValue(rcv('product_card_bg', 'carousel_product_card_bg', '#FFFFFF'), '#FFFFFF', 'color'),
-    productCardBorderColor: sanitizeCssValue(rcv('product_card_border_color', 'carousel_product_card_border_color', '#E2E8F0'), '#E2E8F0', 'color'),
-    productCardBorderWidth: toNumber(rcv('product_card_border_width', 'carousel_product_card_border_width', '1'), 1),
-    productCardRadius: toNumber(rcv('product_card_border_radius', 'carousel_product_card_border_radius', '12'), 12),
-    productCardNameSize: toNumber(rcv('product_card_name_size', 'carousel_product_card_name_size', '11'), 11),
-    productCardNameColor: sanitizeCssValue(rcv('product_card_name_color', 'carousel_product_card_name_color', '#0F172A'), '#0F172A', 'color'),
-    productCardPriceSize: toNumber(rcv('product_card_price_size', 'carousel_product_card_price_size', '12'), 12),
-    productCardPriceColor: sanitizeCssValue(rcv('product_card_price_color', 'carousel_product_card_price_color', primaryColor), primaryColor, 'color'),
-    productCardPriceBold: toBoolean(rcv('product_card_price_bold', 'carousel_product_card_price_bold', true), true),
-    productCardBtnBg: sanitizeCssValue(rcv('product_card_btn_bg', 'carousel_product_card_btn_bg', primaryColor), primaryColor, 'color'),
-    productCardBtnColor: sanitizeCssValue(rcv('product_card_btn_color', 'carousel_product_card_btn_color', '#FFFFFF'), '#FFFFFF', 'color'),
+    productCardBg: pBg,
+    productCardBorderColor: pBorderColor,
+    productCardBorderWidth: pBorderWidth,
+    productCardRadius: pRadius,
+    productCardNameSize: pNameSize,
+    productCardNameColor: pNameColor,
+    productCardPriceSize: pPriceSize,
+    productCardPriceColor: pPriceColor,
+    productCardPriceBold: pPriceBold,
+    productCardBtnBg: pBtnBg,
+    productCardBtnColor: pBtnColor,
     shape: shape,
     itemAspect: aspect
   };
-              }
+}
 
 function getGridConfig(appearance) {
   appearance = normalizeAppearanceItem(appearance || {});
