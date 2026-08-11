@@ -68,7 +68,7 @@ const INITIAL_FILES: StorageItem[] = [
   },
 ];
 
-const PLAN_LIMIT_BYTES = 100 * 1024 * 1024 * 1024; // 100 GB em bytes
+const PLAN_LIMIT_BYTES = 1 * 1024 * 1024 * 1024; // 1 GB em bytes para testes de régua
 
 export default function StoragePage() {
   const [files, setFiles] = useState<StorageItem[]>([]);
