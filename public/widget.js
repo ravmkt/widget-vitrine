@@ -3602,13 +3602,12 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
 
       item.appendChild(videoCard);
 
-// trecho corrigido e unificado
+// trecho novo para renderização do produto no carrossel
       if (cfg.showProduct) {
         var videoProductId = video.product_id || video.productId || null;
         var productData = videoProductId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
 
         if (productData) {
-          var priColor = getPrimaryColor(appearance);
           var productUrl = productData.product_url || productData.url || '';
 
           var prodCard = document.createElement('div');
@@ -3661,9 +3660,9 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
           var pName = document.createElement('div');
           pName.textContent = productData.name || 'Produto';
           pName.style.cssText =
-            'font-size:11px !important;' +
+            'font-size:' + (cfg.productCardNameSize || 11) + 'px !important;' +
             'font-weight:700 !important;' +
-            'color:#0f172a !important;' +
+            'color:' + (cfg.productCardNameColor || '#0f172a') + ' !important;' +
             'white-space:nowrap !important;' +
             'overflow:hidden !important;' +
             'text-overflow:ellipsis !important;' +
@@ -3674,9 +3673,9 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             var pPrice = document.createElement('div');
             pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
             pPrice.style.cssText =
-              'font-size:12px !important;' +
-              'font-weight:800 !important;' +
-              'color:' + priColor + ' !important;';
+              'font-size:' + (cfg.productCardPriceSize || 12) + 'px !important;' +
+              'font-weight:' + (cfg.productCardPriceBold ? '800' : '600') + ' !important;' +
+              'color:' + (cfg.productCardPriceColor || primaryColor) + ' !important;';
             pInfo.appendChild(pPrice);
           }
 
@@ -3692,8 +3691,8 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             'width:100% !important;' +
             'text-align:center !important;' +
             'padding:6px 0 !important;' +
-            'background:' + priColor + ' !important;' +
-            'color:#fff !important;' +
+            'background:' + (cfg.productCardBtnBg || primaryColor) + ' !important;' +
+            'color:' + (cfg.productCardBtnColor || '#fff') + ' !important;' +
             'font-size:11px !important;' +
             'font-weight:700 !important;' +
             'border-radius:8px !important;' +
@@ -3733,7 +3732,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
           item.appendChild(prodCard);
         }
       }
-
+      
       track.appendChild(item);
     });
   });
