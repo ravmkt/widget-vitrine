@@ -524,7 +524,11 @@ export default function StoragePage() {
                         {file.name}
                       </span>
                       <span className="text-[10px] font-bold text-[#0094EB] uppercase">
-                        {file.type === 'video' ? 'Vídeo MP4' : 'Imagem'}
+                        {file.sizeInBytes === 0 && file.type === 'video' 
+                          ? 'Vídeo (URL Externa)' 
+                          : file.type === 'video' 
+                            ? 'Vídeo MP4 (Hospedado)' 
+                            : 'Imagem'}
                       </span>
                     </td>
 
