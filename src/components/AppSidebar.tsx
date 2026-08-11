@@ -163,8 +163,8 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-6 border-t border-[#F1F5F9] dark:border-slate-800">
-        <div className="flex items-center gap-3 mb-4">
+      <SidebarFooter className="p-4 border-t border-[#F1F5F9] dark:border-slate-800 overflow-hidden">
+        <div className="flex items-center gap-3 mb-4 min-w-0">
           <div className="h-9 w-9 rounded-full bg-[#F1F5F9] dark:bg-slate-800 border border-[#E2E8F0] dark:border-slate-700 flex items-center justify-center text-[#64748B] dark:text-slate-400 overflow-hidden shrink-0">
             {storeLogoUrl ? (
               <img src={storeLogoUrl} alt={storeName || 'Loja'} className="h-full w-full object-cover" />
@@ -172,7 +172,12 @@ export function AppSidebar() {
               <User size={18} />
             )}
           </div>
-          <div className="flex flex-col min-w-0">
+          <div
+            className={cn(
+              "flex flex-col min-w-0 transition-all duration-300 whitespace-nowrap",
+              isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
+            )}
+          >
             <span className="text-xs font-bold text-[#0F172A] dark:text-white truncate">{storeName || 'Admin'}</span>
             <span className="text-[10px] font-bold text-[#0094EB] uppercase">Plano Pro</span>
           </div>
@@ -190,10 +195,18 @@ export function AppSidebar() {
             keysToRemove.forEach(key => localStorage.removeItem(key));
             navigate('/login');
           }}
-          className="flex w-full items-center gap-2 px-3 py-2 rounded-xl text-[#64748B] dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-500 transition-colors text-sm font-bold"
+          title={!isExpanded ? "Sair do Painel" : undefined}
+          className="flex w-full items-center gap-2.5 px-2.5 py-2 rounded-xl text-[#64748B] dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-500 transition-colors text-sm font-bold overflow-hidden whitespace-nowrap"
         >
-          <LogOut size={16} />
-          Sair do Painel
+          <LogOut size={16} className="shrink-0" />
+          <span
+            className={cn(
+              "transition-all duration-300",
+              isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
+            )}
+          >
+            Sair do Painel
+          </span>
         </button>
       </SidebarFooter>
     </Sidebar>
