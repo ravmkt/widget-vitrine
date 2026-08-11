@@ -2753,7 +2753,35 @@ const AppearancePage = () => {
                         
                         <div className="grid grid-cols-2 gap-2.5">
                           <FormField label="Formato Widget">
-
+<select
+                              value={activeFloatingConfig.shape}
+                              onChange={e => {
+                                const shape = e.target.value as WidgetShape;
+                                if (shape === 'portrait') {
+                                  const size = formatNumberLikeCurrent(activeFloatingConfig.width, '80');
+                                  updateFloatingConfig({ shape, width: size, height: getPortraitHeightFromWidth(size) });
+                                  return;
+                                }
+                                if (shape === 'landscape') {
+                                  const size = formatNumberLikeCurrent(activeFloatingConfig.width, '80');
+                                  updateFloatingConfig({ shape, width: size, height: getLandscapeHeightFromWidth(size) });
+                                  return;
+                                }
+                                if (shape === 'square') {
+                                  const size = formatNumberLikeCurrent(activeFloatingConfig.width, '80');
+                                  updateFloatingConfig({ shape, width: size, height: size });
+                                  return;
+                                }
+                                const size = toNumberInputValue(activeFloatingConfig.border_radius) || toNumberInputValue(activeFloatingConfig.width) || '80';
+                                updateFloatingConfig({ shape, border_radius: size });
+                              }}
+                              className={selectClass}
+                            >
+                              <option value="circle">Circular</option>
+                              <option value="square">Quadrado</option>
+                              <option value="portrait">Retrato 9:16</option>
+                              <option value="landscape">Paisagem 16:9</option>
+                            </select>
                           </FormField>
 
                           <FormField label="Tamanho Base (px)">
