@@ -3595,7 +3595,74 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
 
       item.appendChild(videoCard);
 
-if (cfg.showProduct) {
+// trecho corrigido e unificado
+      if (cfg.showProduct) {
+        var videoProductId = video.product_id || video.productId || null;
+        var productData = videoProductId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
+
+        if (productData) {
+          var priColor = getPrimaryColor(appearance);
+          var productUrl = productData.product_url || productData.url || '';
+
+          var prodCard = document.createElement('div');
+          prodCard.className = 'vidlytics-carousel-product-card';
+          prodCard.style.cssText =
+            'display:flex !important;' +
+            'flex-direction:column !important;' +
+            'gap:6px !important;' +
+            'padding:8px !important;' +
+            'width:100% !important;' +
+            'background:' + (cfg.productCardBg || '#fff') + ' !important;' +
+            'border-radius:' + (cfg.productCardRadius || 12) + 'px !important;' +
+            'border:' + (cfg.productCardBorderWidth || 1) + 'px solid ' + (cfg.productCardBorderColor || '#e2e8f0') + ' !important;' +
+            'box-shadow:0 2px 8px rgba(0,0,0,0.04) !important;' +
+            'box-sizing:border-box !important;' +
+            'cursor:pointer !important;' +
+            'text-align:left !important;';
+
+          var prodTop = document.createElement('div');
+          prodTop.style.cssText =
+            'display:flex !important;' +
+            'align-items:center !important;' +
+            'gap:8px !important;' +
+            'width:100% !important;';
+
+          var prodImgUrl = getThumbnailFromObject(productData) || '';
+          if (prodImgUrl) {
+            var pImg = document.createElement('img');
+            pImg.src = prodImgUrl;
+            pImg.alt = productData.name || 'Produto';
+            pImg.style.cssText =
+              'width:36px !important;' +
+              'height:36px !important;' +
+              'min-width:36px !important;' +
+              'border-radius:8px !important;' +
+              'object-fit:cover !important;' +
+              'background:#f1f5f9 !important;' +
+              'display:block !important;';
+            prodTop.appendChild(pImg);
+          }
+
+          var pInfo = document.createElement('div');
+          pInfo.style.cssText =
+            'flex:1 !important;' +
+            'min-width:0 !important;' +
+            'display:flex !important;' +
+            'flex-direction:column !important;' +
+            'gap:2px !important;';
+
+          var pName = document.createElement('div');
+          pName.textContent = productData.name || 'Produto';
+          pName.style.cssText =
+            'font-size:11px !important;' +
+            'font-weight:700 !important;' +
+            'color:#0f172a !important;' +
+            'white-space:nowrap !important;' +
+            'overflow:hidden !important;' +
+            'text-overflow:ellipsis !important;' +
+            'width:100% !important;';
+          pInfo.appendChild(pName);
+
           if (productData.price) {
             var pPrice = document.createElement('div');
             pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
@@ -3609,7 +3676,6 @@ if (cfg.showProduct) {
           prodTop.appendChild(pInfo);
           prodCard.appendChild(prodTop);
 
-          // Botão "Ver no site"
           var buyBtn = document.createElement('button');
           buyBtn.type = 'button';
           buyBtn.innerHTML = 'Ver no site &rarr;';
@@ -3643,7 +3709,6 @@ if (cfg.showProduct) {
 
           prodCard.appendChild(buyBtn);
 
-          // Clique geral no card do produto também redireciona
           prodCard.addEventListener('click', function(e) {
             e.stopPropagation();
             if (productUrl) {
@@ -3661,15 +3726,11 @@ if (cfg.showProduct) {
           item.appendChild(prodCard);
         }
       }
-      
-      item.addEventListener('click', function() {
-        openStoryModal(storyIndex, videoIndex);
-      });
-      
+
       track.appendChild(item);
     });
   });
-    
+      
   trackContainer.appendChild(track);
   wrapper.appendChild(trackContainer);
 
