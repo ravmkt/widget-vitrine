@@ -3008,14 +3008,7 @@ const AppearancePage = () => {
                               <input type="number" min="8" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_price_size)} onChange={e => updateCarouselConfig({ product_card_price_size: e.target.value })} placeholder="Ex: 12" className={inputClass} />
                             </FormField>
 
-                            <FormField label="Cor Preço">
-                              <ColorInput label="Cor do preço" value={activeCarouselConfig.product_card_price_color || formData.primary_color} onChange={e => updateCarouselConfig({ product_card_price_color: e.target.value })} />
-                            </FormField>
-                          </div>
-                      )}
 
-                    </SectionCard>
-                  )}
 
                   {/* ── Grade ── */}
                   {activeTab === 'grid' && (
