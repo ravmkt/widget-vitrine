@@ -2671,7 +2671,8 @@ const stylePayload = {
       {/* Modal de edição */}
       {showModal && (
         <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-900/60 p-4 pl-64 backdrop-blur-sm">
-          <div className="flex h-[90vh] max-h-[900px] w-full max-w-[1400px] flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">              <div>
+          <div className="flex h-[90vh] max-h-[900px] w-full max-w-[1400px] flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
+                        <div>
                 <h2 className="text-xl font-black text-slate-900">
                   {editingStyle ? 'Editar Estilo' : 'Criar Novo Estilo'}
                 </h2>
