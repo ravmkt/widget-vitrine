@@ -1717,6 +1717,7 @@ const GridPreview = ({
   const isCircle = shape === 'circle';
   const isSquare = shape === 'square';
   const isPortrait = shape === 'portrait';
+  const isLandscape = shape === 'landscape';
 
   return (
     <div className="overflow-hidden rounded-[1rem] border border-slate-200 bg-slate-50 flex flex-col h-[500px]">
