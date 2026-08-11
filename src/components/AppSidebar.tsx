@@ -89,7 +89,7 @@ export function AppSidebar() {
       )}
     >
       <SidebarHeader className="p-4 flex flex-col gap-3 shrink-0 border-b border-slate-100 dark:border-slate-800">
-        <div className="flex items-center justify-between min-w-0 overflow-hidden">
+        <div className="flex items-center gap-2 min-w-0">
           {isExpanded ? (
             <img
               src="/assets/vidlytics-logo-wide.png"
@@ -97,12 +97,20 @@ export function AppSidebar() {
               className="h-9 w-auto max-w-none object-contain transition-all duration-300"
             />
           ) : (
-            <div className="w-full flex justify-center py-1">
+            <div className="w-full flex justify-center py-0.5">
               <img
                 src="/assets/vidlytics-logo-ico.png"
-                alt="Vidlytics"
+                alt="V"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const fallback = e.currentTarget.nextElementSibling;
+                  if (fallback) fallback.classList.remove('hidden');
+                }}
                 className="h-8 w-8 object-contain shrink-0"
               />
+              <div className="hidden h-8 w-8 shrink-0 rounded-xl bg-[#0094EB] flex items-center justify-center font-black text-white shadow-md shadow-blue-500/20 text-xs">
+                V
+              </div>
             </div>
           )}
         </div>
