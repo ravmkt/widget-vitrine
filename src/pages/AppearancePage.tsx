@@ -2862,7 +2862,7 @@ const stylePayload = {
                     </SectionCard>
                   )}
 
-                  {/* ── Carrossel ── */}
+// trecho novo unificado para a aba Carrossel em AppearancePage.tsx
                   {activeTab === 'carousel' && (
                     <SectionCard title="Carrossel" description="Configure a exibição dos vídeos em carrossel, quantidade de itens, formato e margens.">
                       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
@@ -2892,7 +2892,6 @@ const stylePayload = {
                             placeholder="Ex: 80"
                             className={inputClass}
                           />
-                          <p className="text-xs font-semibold text-slate-400">Tamanho base dos cards no carrossel.</p>
                         </FormField>
                         <FormField label="Itens visíveis">
                           <input
@@ -2947,92 +2946,60 @@ const stylePayload = {
                         <FormField label="Mostrar título">
                           <ToggleSwitch label="Mostrar título no carrossel" checked={activeCarouselConfig.show_title ?? false} onChange={e => updateCarouselConfig({ show_title: e.target.checked })} />
                         </FormField>
-<FormField label="Mostrar produto">
-                          <ToggleSwitch label="Mostrar produto no carrossel" checked={activeCarouselConfig.show_product} onChange={e => updateCarouselConfig({ show_product: e.target.checked })} />
-                        </FormField>
-                        <FormField label="Fundo do card de produto">
-                          <ColorInput label="Fundo do card" value={activeCarouselConfig.product_card_bg || '#FFFFFF'} onChange={e => updateCarouselConfig({ product_card_bg: e.target.value })} />
-                        </FormField>
-                        <FormField label="Cor da borda do produto">
-                          <ColorInput label="Cor da borda" value={activeCarouselConfig.product_card_border_color || '#E2E8F0'} onChange={e => updateCarouselConfig({ product_card_border_color: e.target.value })} />
-                        </FormField>
-                        <FormField label="Largura da borda (px)">
-                          <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_border_width)} onChange={e => updateCarouselConfig({ product_card_border_width: e.target.value })} placeholder="Ex: 1" className={inputClass} />
-                        </FormField>
-                        <FormField label="Raio da borda (px)">
-                          <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_border_radius)} onChange={e => updateCarouselConfig({ product_card_border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
-                        </FormField>
-                        <FormField label="Tamanho da fonte do nome">
-                          <input type="number" min="8" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_name_size)} onChange={e => updateCarouselConfig({ product_card_name_size: e.target.value })} placeholder="Ex: 11" className={inputClass} />
-                        </FormField>
-                        <FormField label="Cor da fonte do nome">
-                          <ColorInput label="Cor do nome" value={activeCarouselConfig.product_card_name_color || '#0F172A'} onChange={e => updateCarouselConfig({ product_card_name_color: e.target.value })} />
-                        </FormField>
-                        <FormField label="Tamanho da fonte do preço">
-                          <input type="number" min="8" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_price_size)} onChange={e => updateCarouselConfig({ product_card_price_size: e.target.value })} placeholder="Ex: 12" className={inputClass} />
-                        </FormField>
-                        <FormField label="Cor da fonte do preço">
-                          <ColorInput label="Cor do preço" value={activeCarouselConfig.product_card_price_color || '#0094EB'} onChange={e => updateCarouselConfig({ product_card_price_color: e.target.value })} />
-                        </FormField>
-                        <FormField label="Preço em Destaque (Negrito)">
-                          <ToggleSwitch label="Deixar preço em negrito" checked={activeCarouselConfig.product_card_price_bold ?? true} onChange={e => updateCarouselConfig({ product_card_price_bold: e.target.checked })} />
-                        </FormField>
-                        <FormField label="Cor do botão">
-                          <ColorInput label="Cor do botão" value={activeCarouselConfig.product_card_btn_bg || formData.primary_color} onChange={e => updateCarouselConfig({ product_card_btn_bg: e.target.value })} />
-                        </FormField>
-                        <FormField label="Cor da fonte do botão">
-                          <ColorInput label="Cor do texto do botão" value={activeCarouselConfig.product_card_btn_color || '#FFFFFF'} onChange={e => updateCarouselConfig({ product_card_btn_color: e.target.value })} />
-                        </FormField>
-                                                <FormField label="Tamanho da fonte do preço">
-                          <input type="number" min="8" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_price_size)} onChange={e => updateCarouselConfig({ product_card_price_size: e.target.value })} placeholder="Ex: 12" className={inputClass} />
-                        </FormField>
-                        <FormField label="Cor da fonte do preço">
-                          <ColorInput label="Cor do preço" value={activeCarouselConfig.product_card_price_color || '#0094EB'} onChange={e => updateCarouselConfig({ product_card_price_color: e.target.value })} />
-                        </FormField>
-                        <FormField label="Preço em Destaque (Negrito)">
-                          <ToggleSwitch label="Deixar preço em negrito" checked={activeCarouselConfig.product_card_price_bold ?? true} onChange={e => updateCarouselConfig({ product_card_price_bold: e.target.checked })} />
-                        </FormField>
-                        <FormField label="Cor do botão">
-                          <ColorInput label="Cor do botão" value={activeCarouselConfig.product_card_btn_bg || formData.primary_color} onChange={e => updateCarouselConfig({ product_card_btn_bg: e.target.value })} />
-                        </FormField>
-                        <FormField label="Cor da fonte do botão">
-                          <ColorInput label="Cor do texto do botão" value={activeCarouselConfig.product_card_btn_color || '#FFFFFF'} onChange={e => updateCarouselConfig({ product_card_btn_color: e.target.value })} />
-                        </FormField>
-                        <FormField label="Fundo do card de produto">
-                          <ColorInput label="Fundo do card" value={activeCarouselConfig.product_card_bg || '#FFFFFF'} onChange={e => updateCarouselConfig({ product_card_bg: e.target.value })} />
-                        </FormField>
-                        <FormField label="Cor da borda do produto">
-                          <ColorInput label="Cor da borda" value={activeCarouselConfig.product_card_border_color || '#E2E8F0'} onChange={e => updateCarouselConfig({ product_card_border_color: e.target.value })} />
-                        </FormField>
-                        <FormField label="Largura da borda do produto">
-                          <input 
-                            type="number" 
-                            min="0" 
-                            step="1" 
-                            value={toNumberInputValue(activeCarouselConfig.product_card_border_width)} 
-                            onChange={e => updateCarouselConfig({ product_card_border_width: e.target.value })} 
-                            placeholder="Ex: 1" 
-                            className={inputClass} 
-                          />
-                        </FormField>
-                        <FormField label="Raio da borda do produto">
-                          <input 
-                            type="number" 
-                            min="0" 
-                            step="1" 
-                            value={toNumberInputValue(activeCarouselConfig.product_card_border_radius)} 
-                            onChange={e => updateCarouselConfig({ product_card_border_radius: e.target.value })} 
-                            placeholder="Ex: 12" 
-                            className={inputClass} 
-                          />
-                        </FormField>
                         <FormField label="Mostrar botão play">
                           <ToggleSwitch label="Mostrar botão play no carrossel" checked={activeCarouselConfig.show_play_icon} onChange={e => updateCarouselConfig({ show_play_icon: e.target.checked })} />
                         </FormField>
-                                              </div>
+                        <FormField label="Mostrar produto" className="md:col-span-2">
+                          <ToggleSwitch label="Mostrar card de produto abaixo dos vídeos no carrossel" checked={activeCarouselConfig.show_product} onChange={e => updateCarouselConfig({ show_product: e.target.checked })} />
+                        </FormField>
+                      </div>
+
+                      {/* Sub-seção condicional: só aparece se "Mostrar produto" estiver ativo */}
+                      {activeCarouselConfig.show_product && (
+                        <div className="mt-6 rounded-2xl border border-blue-100 bg-blue-50/40 p-5 space-y-4">
+                          <h4 className="text-xs font-black uppercase tracking-widest text-[#0094EB]">
+                            Personalização do Card de Produto
+                          </h4>
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <FormField label="Fundo do card">
+                              <ColorInput label="Fundo do card" value={activeCarouselConfig.product_card_bg || '#FFFFFF'} onChange={e => updateCarouselConfig({ product_card_bg: e.target.value })} />
+                            </FormField>
+                            <FormField label="Cor da borda">
+                              <ColorInput label="Cor da borda" value={activeCarouselConfig.product_card_border_color || '#E2E8F0'} onChange={e => updateCarouselConfig({ product_card_border_color: e.target.value })} />
+                            </FormField>
+                            <FormField label="Largura da borda (px)">
+                              <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_border_width)} onChange={e => updateCarouselConfig({ product_card_border_width: e.target.value })} placeholder="Ex: 1" className={inputClass} />
+                            </FormField>
+                            <FormField label="Raio da borda (px)">
+                              <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_border_radius)} onChange={e => updateCarouselConfig({ product_card_border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
+                            </FormField>
+                            <FormField label="Tamanho da fonte do nome">
+                              <input type="number" min="8" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_name_size)} onChange={e => updateCarouselConfig({ product_card_name_size: e.target.value })} placeholder="Ex: 11" className={inputClass} />
+                            </FormField>
+                            <FormField label="Cor da fonte do nome">
+                              <ColorInput label="Cor do nome" value={activeCarouselConfig.product_card_name_color || '#0F172A'} onChange={e => updateCarouselConfig({ product_card_name_color: e.target.value })} />
+                            </FormField>
+                            <FormField label="Tamanho da fonte do preço">
+                              <input type="number" min="8" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_price_size)} onChange={e => updateCarouselConfig({ product_card_price_size: e.target.value })} placeholder="Ex: 12" className={inputClass} />
+                            </FormField>
+                            <FormField label="Cor da fonte do preço">
+                              <ColorInput label="Cor do preço" value={activeCarouselConfig.product_card_price_color || formData.primary_color} onChange={e => updateCarouselConfig({ product_card_price_color: e.target.value })} />
+                            </FormField>
+                            <FormField label="Preço em Destaque (Negrito)">
+                              <ToggleSwitch label="Deixar preço em negrito" checked={activeCarouselConfig.product_card_price_bold ?? true} onChange={e => updateCarouselConfig({ product_card_price_bold: e.target.checked })} />
+                            </FormField>
+                            <FormField label="Cor de fundo do botão">
+                              <ColorInput label="Cor do botão" value={activeCarouselConfig.product_card_btn_bg || formData.primary_color} onChange={e => updateCarouselConfig({ product_card_btn_bg: e.target.value })} />
+                            </FormField>
+                            <FormField label="Cor da fonte do botão" className="md:col-span-2">
+                              <ColorInput label="Cor do texto do botão" value={activeCarouselConfig.product_card_btn_color || '#FFFFFF'} onChange={e => updateCarouselConfig({ product_card_btn_color: e.target.value })} />
+                            </FormField>
+                          </div>
+                        </div>
+                      )}
                     </SectionCard>
                   )}
-
+                  
                   {/* ── Grade ── */}
                   {activeTab === 'grid' && (
                     <SectionCard title="Grade" description="Configure a exibição dos vídeos em grade, colunas, formato e espaçamento.">
