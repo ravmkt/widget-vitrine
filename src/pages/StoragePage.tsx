@@ -196,11 +196,12 @@ export default function StoragePage() {
         realVideos.forEach((vid: any) => {
           // Identifica se a mídia é um link externo (Instagram, TikTok, URL externa)
           const videoUrlStr = String(vid.video_url || '').toLowerCase();
-          const isExternalUrl = 
-            videoUrlStr.includes('instagram.com') || 
-            videoUrlStr.includes('tiktok.com') || 
-            videoUrlStr.includes('youtube.com') ||
-            videoUrlStr.includes('vimeo.com');
+          const isExplicitUrlType = vid.video_source_type === 'url' || vid.source_type === 'url';
+          
+          // Se não for uma blob local e não estiver hospedado no bucket oficial do Supabase da plataforma, é externa
+          const isHostedOnPlatform = videoUrlStr.startsWith('blob:') || videoUrlStr.includes('supabase');
+          
+          const isExternalUrl = isExplicitUrlType || (!isHostedOnPlatform && videoUrlStr.startsWith('http'));
 
           // Se for URL externa, o peso ocupado no servidor da plataforma é 0 B
           const actualBytes = isExternalUrl 
