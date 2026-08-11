@@ -68,9 +68,71 @@ const INITIAL_FILES: StorageItem[] = [
 const PLAN_LIMIT_BYTES = 100 * 1024 * 1024 * 1024; // 100 GB em bytes
 
 export default function StoragePage() {
-  const [files, setFiles] = useState<StorageItem[]>(INITIAL_FILES);
+  const [files, setFiles] = useState<StorageItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<'all' | 'video' | 'image'>('all');
+
+  // Carrega vídeos e imagens cadastrados na conta real do usuário
+  const loadAccountStorageData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const loadedItems: StorageItem[] = [];
+
+      // 1. Buscar vídeos da conta no banco lendo a nova coluna file_size
+      const realVideos = await db.videos.getAll();
+      if (Array.isArray(realVideos)) {
+        realVideos.forEach((vid: any) => {
+          const actualBytes = vid.file_size && Number(vid.file_size) > 0 
+            ? Number(vid.file_size) 
+            : 20971520; // Fallback de 20MB para vídeos sem tamanho cadastrado
+
+          const formattedDate = vid.created_at 
+            ? new Date(vid.created_at).toLocaleDateString('pt-BR') 
+            : 'Hoje';
+
+          loadedItems.push({
+            id: vid.id || String(Math.random()),
+            name: vid.title || `VIDEO_${vid.id?.slice(0, 6) || 'UPLOAD'}.mp4`,
+            type: 'video',
+            sizeInBytes: actualBytes,
+            createdAt: formattedDate,
+            thumbnailUrl: vid.thumbnail_url || vid.video_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+            canDelete: true,
+          });
+        });
+      }
+
+      // 2. Buscar logotipo das configurações da loja
+      const settings = await db.getSettings();
+      if (settings?.logo_url) {
+        const logoBytes = settings.logo_file_size && Number(settings.logo_file_size) > 0
+          ? Number(settings.logo_file_size)
+          : 1572864; // Fallback ~1.5 MB
+
+        loadedItems.push({
+          id: 'logo-setting-file',
+          name: 'LOGOTIPO_OFICIAL_LOJA.png',
+          type: 'image',
+          sizeInBytes: logoBytes,
+          createdAt: 'Ativo',
+          thumbnailUrl: settings.logo_url,
+          canDelete: false,
+        });
+      }
+
+      setFiles(loadedItems);
+    } catch (err) {
+      console.error('Erro ao carregar arquivos da conta:', err);
+      showError('Erro ao carregar dados de armazenamento.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAccountStorageData();
+  }, [loadAccountStorageData]);
 
   // Cálculo dinâmico do consumo de armazenamento
   const totalUsedBytes = useMemo(() => {
