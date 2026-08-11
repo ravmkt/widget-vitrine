@@ -961,11 +961,7 @@ const normalizeAppearance = (
       item.show_product_button ?? modalRaw?.show_product_button ?? defaults.show_product_button,
   };
 
-  const floatingDesktop = floatingConfig.desktop;
-  const carouselDesktop = carouselConfig.desktop;
-  const gridDesktop = gridConfig.desktop;
 
-  return {
     ...defaults,
     ...item,
 
