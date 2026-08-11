@@ -594,8 +594,16 @@ function getFloatingConfig(appearance) {
   var widthNumber = sizeNumber;
   var heightNumber;
   
+if (shape === 'square' || shape === 'circle') {
+    heightNumber = widthNumber;
+  } else if (shape === 'portrait') {
+    heightNumber = Math.round(widthNumber * 16 / 9);
+  } else if (shape === 'landscape') {
+    heightNumber = Math.round(widthNumber * 9 / 16);
+  } else {
+    heightNumber = Math.round(widthNumber * 9 / 16);
+  }
 
-  
   // border_style armazena a LARGURA da borda em px (sempre sólida)
   var borderWidthNumber = toNumber(rcv('border_style', '2'), 2);
   var borderStyle = 'solid';
