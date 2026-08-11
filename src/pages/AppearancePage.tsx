@@ -1526,6 +1526,7 @@ const FloatingPreview = ({
             loop
             muted
             playsInline
+            preload="auto"
             className="absolute inset-0 h-full w-full object-cover pointer-events-none"
           />
           {floating.show_play_icon && (
