@@ -1878,7 +1878,9 @@ const ModalPreview = ({
           )}
         </div>
       </div>
-
+</div>
+  );
+};
 
 const VisualPreview = ({
   formData,
