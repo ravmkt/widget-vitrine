@@ -812,8 +812,6 @@ function getCarouselConfig(appearance) {
     productCardPriceSize: pPriceSize,
     productCardPriceColor: pPriceColor,
     productCardPriceBold: pPriceBold,
-    productCardBtnBg: pBtnBg,
-    productCardBtnColor: pBtnColor,
     shape: shape,
     itemAspect: aspect
   };
