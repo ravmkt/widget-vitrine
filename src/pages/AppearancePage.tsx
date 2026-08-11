@@ -2668,11 +2668,9 @@ const stylePayload = {
         </div>
       </div>
 
-      {/* Modal de edição */}
       {showModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="flex max-h-[92vh] w-full max-w-7xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
-            {/* Header do modal */}
+          <div className="flex max-h-[95vh] w-full max-w-[95vw] flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">            {/* Header do modal */}
             <div className="flex items-center justify-between border-b border-slate-100 bg-white p-6">
               <div>
                 <h2 className="text-xl font-black text-slate-900">
