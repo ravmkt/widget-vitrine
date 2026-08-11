@@ -1527,6 +1527,7 @@ const FloatingPreview = ({
   );
 };
 
+// trecho novo para CarouselPreview
 const CarouselPreview = ({
   carousel,
   colors,
@@ -1580,34 +1581,77 @@ const CarouselPreview = ({
             style={{ gap: `${safeNumber(carousel.spacing, 0, 0)}px` }}
           >
             {items.map((_, index) => (
-              <div
-                key={index}
-                className="relative shrink-0 overflow-hidden border shadow-sm"
-                style={{
-                  width: cardWidth,
-                  height: cardHeight,
-                  minWidth: cardWidth,
-                  flexShrink: 0,
-                  borderColor: carousel.border_color || colors.primary,
-                  borderWidth: `${safeNumber(carousel.border_style, 2, 0)}px`,
-                  borderStyle: 'solid',
-                  borderRadius,
-                  background:
-                    index % 2 === 0
-                      ? `linear-gradient(160deg, ${colors.primary}, #dbeafe)`
-                      : `linear-gradient(160deg, ${colors.secondary}, #f8fafc)`,
-                }}
-              >
-                {carousel.show_play_icon && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
-                      <PlaySquare size={16} />
+              <div key={index} className="flex flex-col gap-1.5 shrink-0" style={{ width: cardWidth }}>
+                {/* Card do Vídeo */}
+                <div
+                  className="relative overflow-hidden border shadow-sm"
+                  style={{
+                    width: cardWidth,
+                    height: cardHeight,
+                    borderColor: carousel.border_color || colors.primary,
+                    borderWidth: `${safeNumber(carousel.border_style, 2, 0)}px`,
+                    borderStyle: 'solid',
+                    borderRadius,
+                    background:
+                      index % 2 === 0
+                        ? `linear-gradient(160deg, ${colors.primary}, #dbeafe)`
+                        : `linear-gradient(160deg, ${colors.secondary}, #f8fafc)`,
+                  }}
+                >
+                  {carousel.show_play_icon && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
+                        <PlaySquare size={14} />
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
+
+                {/* Card de Produto Realista no Preview */}
                 {carousel.show_product && !isCircle && (
-                  <div className="absolute bottom-2 left-2 right-2 rounded-lg bg-white/90 px-2 py-1 text-center text-[10px] font-black text-slate-700">
-                    Produto
+                  <div
+                    className="flex flex-col gap-1 p-2 text-left shadow-sm"
+                    style={{
+                      backgroundColor: carousel.product_card_bg || '#FFFFFF',
+                      borderColor: carousel.product_card_border_color || '#E2E8F0',
+                      borderWidth: `${safeNumber(carousel.product_card_border_width, 1, 0)}px`,
+                      borderStyle: 'solid',
+                      borderRadius: `${safeNumber(carousel.product_card_border_radius, 12, 0)}px`,
+                    }}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-6 w-6 shrink-0 rounded bg-slate-200" />
+                      <div className="min-w-0 flex-1">
+                        <div
+                          className="truncate font-bold leading-tight"
+                          style={{
+                            fontSize: `${safeNumber(carousel.product_card_name_size, 11, 8)}px`,
+                            color: carousel.product_card_name_color || '#0F172A',
+                          }}
+                        >
+                          Calça Confort
+                        </div>
+                        <div
+                          style={{
+                            fontSize: `${safeNumber(carousel.product_card_price_size, 12, 8)}px`,
+                            fontWeight: carousel.product_card_price_bold ?? true ? '800' : '600',
+                            color: carousel.product_card_price_color || colors.primary,
+                          }}
+                        >
+                          R$ 149,95
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      className="w-full text-center rounded py-1 font-bold text-[9px]"
+                      style={{
+                        backgroundColor: carousel.product_card_btn_bg || colors.primary,
+                        color: carousel.product_card_btn_color || '#FFFFFF',
+                        borderRadius: '6px',
+                      }}
+                    >
+                      Ver no site
+                    </div>
                   </div>
                 )}
               </div>
@@ -1619,9 +1663,7 @@ const CarouselPreview = ({
         <PreviewInfo label="Forma" value={getShapeLabel(shape)} />
         <PreviewInfo label="Tamanho" value={`${cardWidth} × ${cardHeight}`} />
         <PreviewInfo label="Itens" value={`${visibleItems}`} />
-        <PreviewInfo label="Margem topo" value={cssSize(carousel.margin_top)} />
-        <PreviewInfo label="Margem inferior" value={cssSize(carousel.margin_bottom)} />
-        <PreviewInfo label="Centralizar" value={carousel.auto_center ? 'Sim' : 'Não'} />
+        <PreviewInfo label="Produto" value={carousel.show_product ? 'Ativo' : 'Desativado'} />
       </div>
     </div>
   );
@@ -2999,7 +3041,7 @@ const stylePayload = {
                       )}
                     </SectionCard>
                   )}
-                  
+
                   {/* ── Grade ── */}
                   {activeTab === 'grid' && (
                     <SectionCard title="Grade" description="Configure a exibição dos vídeos em grade, colunas, formato e espaçamento.">
