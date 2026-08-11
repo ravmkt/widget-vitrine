@@ -2705,7 +2705,182 @@ const AppearancePage = () => {
                     </SectionCard>
                   )}
 
+                  {/* ── Flutuante ── */}
+                  {activeTab === 'floating' && (
+                    <SectionCard title="Configurações do Flutuante">
+                      
+                      {/* Seletor Inteligente de Dispositivo */}
+                      <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60">
+                        <span className="text-xs font-bold text-slate-700">Dispositivo</span>
+                        
+                        {formData.useGlobalAppearance ? (
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold" title="Configuração vinculada entre Desktop e Mobile">
+                            <Monitor size={14} />
+                            <Link size={12} className="text-[#0094EB]" />
+                            <Smartphone size={14} />
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
+                            <button
+                              type="button"
+                              onClick={() => setFloatingDevice('desktop')}
+                              className={cn(
+                                'flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all',
+                                floatingDevice === 'desktop'
+                                  ? 'bg-[#0094EB] text-white'
+                                  : 'text-slate-500 hover:text-slate-800'
+                              )}
+                              title="Editar configurações Desktop"
+                            >
+                              <Monitor size={13} />
+                              Desktop
+                            </button>
+                            <Link2Off size={12} className="text-slate-300 mx-0.5" />
+                            <button
+                              type="button"
+                              onClick={() => setFloatingDevice('mobile')}
+                              className={cn(
+                                'flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all',
+                                floatingDevice === 'mobile'
+                                  ? 'bg-[#0094EB] text-white'
+                                  : 'text-slate-500 hover:text-slate-800'
+                              )}
+                              title="Editar configurações Mobile"
+                            >
+                              <Smartphone size={13} />
+                              Mobile
+                            </button>
+                          </div>
+                        )}
+                      </div>
 
+                      {/* 1. Formato & Dimensões */}
+                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-3">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">1. Formato & Dimensões</h4>
+                        
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <FormField label="Formato Widget">
+                            <select
+                              value={activeFloatingConfig.shape}
+                              onChange={e => {
+                                const shape = e.target.value as WidgetShape;
+                                if (shape === 'portrait') {
+                                  const size = formatNumberLikeCurrent(activeFloatingConfig.width, '80');
+                                  updateFloatingConfig({ shape, width: size, height: getPortraitHeightFromWidth(size) });
+                                  return;
+                                }
+                                if (shape === 'square') {
+                                  const size = formatNumberLikeCurrent(activeFloatingConfig.width, '80');
+                                  updateFloatingConfig({ shape, width: size, height: size });
+                                  return;
+                                }
+                                const size = toNumberInputValue(activeFloatingConfig.border_radius) || toNumberInputValue(activeFloatingConfig.width) || '80';
+                                updateFloatingConfig({ shape, border_radius: size });
+                              }}
+                              className={selectClass}
+                            >
+                              <option value="circle">Circular</option>
+                              <option value="square">Quadrado</option>
+                              <option value="portrait">Retrato 9:16</option>
+                            </select>
+                          </FormField>
+
+                          <FormField label="Tamanho Base (px)">
+                            <input
+                              type="number" min="20" step="1"
+                              value={toNumberInputValue(activeFloatingConfig.width)}
+                              onChange={e => {
+                                const value = e.target.value;
+                                if (activeFloatingConfig.shape === 'portrait') {
+                                  updateFloatingConfig({ width: value, height: getPortraitHeightFromWidth(value) });
+                                  return;
+                                }
+                                if (activeFloatingConfig.shape === 'square') {
+                                  updateFloatingConfig({ width: value, height: value });
+                                  return;
+                                }
+                                updateFloatingConfig({ border_radius: value, width: value, height: value });
+                              }}
+                              placeholder="Ex: 80"
+                              className={inputClass}
+                            />
+                          </FormField>
+                        </div>
+                      </div>
+
+                      {/* 2. Posição & Margens */}
+                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-3">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">2. Posição & Margens</h4>
+                        
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <FormField label="Posição na Tela" className="col-span-2">
+                            <select value={activeFloatingConfig.position} onChange={e => updateFloatingConfig({ position: e.target.value as PositionValue })} className={selectClass}>
+                              <option value="fixed_bottom_right">Inferior Direita</option>
+                              <option value="fixed_bottom_left">Inferior Esquerda</option>
+                              <option value="fixed_top_right">Superior Direita</option>
+                              <option value="fixed_top_left">Superior Esquerda</option>
+                            </select>
+                          </FormField>
+
+                          <FormField label="Margem Inferior (px)">
+                            <input type="number" min="0" step="1" value={toNumberInputValue(activeFloatingConfig.bottom_spacing)} onChange={e => updateFloatingConfig({ bottom_spacing: e.target.value })} placeholder="Ex: 20" className={inputClass} />
+                          </FormField>
+
+                          <FormField label="Margem Superior (px)">
+                            <input type="number" min="0" step="1" value={toNumberInputValue(activeFloatingConfig.top_spacing)} onChange={e => updateFloatingConfig({ top_spacing: e.target.value })} placeholder="Ex: 20" className={inputClass} />
+                          </FormField>
+
+                          <FormField label="Margem Lateral (px)" className="col-span-2">
+                            <input type="number" min="0" step="1" value={toNumberInputValue(activeFloatingConfig.left_spacing)} onChange={e => updateFloatingConfig({ left_spacing: e.target.value, right_spacing: e.target.value })} placeholder="Ex: 20" className={inputClass} />
+                          </FormField>
+                        </div>
+                      </div>
+
+                      {/* 3. Bordas & Ajustes */}
+                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-3">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">3. Bordas & Estilo</h4>
+                        
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <FormField label="Cor da Borda">
+                            <ColorInput label="Cor da borda" value={activeFloatingConfig.border_color} onChange={e => updateFloatingConfig({ border_color: e.target.value })} />
+                          </FormField>
+
+                          <FormField label="Largura Borda (px)">
+                            <input type="number" min="0" step="1" value={toNumberInputValue(activeFloatingConfig.border_style)} onChange={e => updateFloatingConfig({ border_style: e.target.value })} placeholder="Ex: 2" className={inputClass} />
+                          </FormField>
+
+                          <FormField label="Raio da Borda (px)">
+                            <input type="number" min="0" step="1" value={toNumberInputValue(activeFloatingConfig.border_radius)} onChange={e => updateFloatingConfig({ border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
+                          </FormField>
+
+                          <FormField label="Ajuste Imagem">
+                            <select value={activeFloatingConfig.object_fit} onChange={e => updateFloatingConfig({ object_fit: e.target.value })} className={selectClass}>
+                              <option value="cover">Cover (Preencher)</option>
+                              <option value="contain">Contain (Ajustar)</option>
+                              <option value="fill">Fill (Esticar)</option>
+                            </select>
+                          </FormField>
+
+                          <FormField label="Z-Index" className="col-span-2">
+                            <input type="number" min="1" step="1" value={toNumberInputValue(activeFloatingConfig.z_index)} onChange={e => updateFloatingConfig({ z_index: e.target.value })} placeholder="Ex: 2147483647" className={inputClass} />
+                          </FormField>
+                        </div>
+                      </div>
+
+                      {/* 4. Comportamento & Visibilidade */}
+                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-2.5">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">4. Comportamento & Visibilidade</h4>
+                        
+                        <div className="space-y-1.5">
+                          <ToggleSwitch label="Exibir título no flutuante" checked={activeFloatingConfig.show_title ?? true} onChange={e => updateFloatingConfig({ show_title: e.target.checked })} />
+                          <ToggleSwitch label="Exibir botão Play no centro" checked={activeFloatingConfig.show_play_icon} onChange={e => updateFloatingConfig({ show_play_icon: e.target.checked })} />
+                          <ToggleSwitch label="Permitir arrastar widget na tela" checked={activeFloatingConfig.draggable} onChange={e => updateFloatingConfig({ draggable: e.target.checked })} />
+                          <ToggleSwitch label="Exibir botão de fechar (X)" checked={activeFloatingConfig.allow_close} onChange={e => updateFloatingConfig({ allow_close: e.target.checked })} />
+                        </div>
+                      </div>
+
+                    </SectionCard>
+                  )}
 
 {/* ── Carrossel ── */}
                   {activeTab === 'carousel' && (
