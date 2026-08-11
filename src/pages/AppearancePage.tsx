@@ -443,43 +443,7 @@ const normalizeBorderWidth = (value: unknown, fallback = '0') => {
   return toNumberInputValue(value) || fallback;
 };
 
-const normalizeFloatingShapeValues = (
-  config: FloatingConfig,
-): FloatingConfig => {
-  const shape = normalizeWidgetShape(config.shape);
-  if (shape === 'portrait') {
-    const width = formatNumberLikeCurrent(config.width, '80');
-    return {
-      ...config,
-      shape,
-      width,
-      height: getPortraitHeightFromWidth(width),
-      border_radius: normalizeBorderWidth(config.border_radius, '12'),
-      border_style: normalizeBorderWidth(config.border_style, '2'),
-    };
-  }
-  if (shape === 'square') {
-    const size = formatNumberLikeCurrent(config.width, '80');
-    return {
-      ...config,
-      shape,
-      width: size,
-      height: size,
-      border_radius: normalizeBorderWidth(config.border_radius, '12'),
-      border_style: normalizeBorderWidth(config.border_style, '2'),
-    };
-  }
-  const circleSize =
-    toNumberInputValue(config.border_radius) ||
-    toNumberInputValue(config.width) ||
-    '80';
-  return {
-    ...config,
-    shape,
-    border_radius: circleSize,
-    border_style: normalizeBorderWidth(config.border_style, '2'),
-  };
-};
+
 
 const normalizeCarouselConfigShape = (
   config: CarouselConfig,
