@@ -1810,7 +1810,27 @@ const ModalPreview = ({
   return (
     <div className="overflow-hidden rounded-[1rem] border border-slate-200 bg-slate-900/80 p-3 flex flex-col items-center justify-center h-[500px] relative">
       {/* Moldura do Player Centralizado */}
-
+<div
+          className="relative h-[420px] w-[230px] overflow-hidden rounded-[1.25rem] shadow-2xl shrink-0 bg-slate-900"
+          style={{
+            color: '#FFFFFF',
+            fontFamily: formData.font_family,
+            borderColor: m.border_color || colors.primary,
+            borderWidth: `${borderW}px`,
+            borderStyle: borderW > 0 ? 'solid' : 'none',
+            borderRadius: cssSize(m.border_radius, '1.25rem'),
+          }}
+        >
+          <video
+            src={DEMO_PREVIEW_VIDEOS[0]}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
+            className="absolute inset-0 h-full w-full object-cover pointer-events-none"
+          />
 
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80" />
 
