@@ -1203,7 +1203,70 @@ const syncGlobalConfig = (
 
 // ──────────────────── componentes de UI ────────────────────
 
+const ToggleSwitch = ({
+  label,
+  checked,
+  onChange,
+  description,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  description?: string;
+}) => {
+  return (
+    <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200/80 bg-white px-3 py-2 transition hover:border-blue-200 hover:bg-blue-50/20">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+        className="h-4 w-4 rounded border-slate-300 text-[#0094EB] accent-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
+      />
+      <span className="min-w-0 flex-1">
+        <span className="block text-xs font-bold text-slate-800">{label}</span>
+        {description && (
+          <span className="block text-[11px] font-medium text-slate-500">
+            {description}
+          </span>
+        )}
+      </span>
+    </label>
+  );
+};
 
+const ColorInput = ({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) => {
+  const safeColor = isValidHexColor(value) ? value : '#000000';
+  return (
+    <div className="flex items-center gap-1.5 w-full">
+      <div
+        className="relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-slate-200 shadow-sm overflow-hidden"
+        style={{ backgroundColor: safeColor }}
+      >
+        <input
+          type="color"
+          aria-label={label}
+          value={safeColor}
+          onChange={onChange}
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+        />
+      </div>
+      <input
+        type="text"
+        value={value}
+        onChange={onChange}
+        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 font-mono text-xs font-bold text-slate-800 outline-none transition focus:border-[#0094EB] focus:bg-white"
+      />
+    </div>
+  );
+};
 
 const DeviceTabs = ({
   activeDevice,
