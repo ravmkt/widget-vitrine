@@ -805,14 +805,14 @@ return {
     productCardNameSize: toNumber(rcv('product_card_name_size', 'carousel_product_card_name_size', '11'), 11),
     productCardNameColor: sanitizeCssValue(rcv('product_card_name_color', 'carousel_product_card_name_color', '#0F172A'), '#0F172A', 'color'),
     productCardPriceSize: toNumber(rcv('product_card_price_size', 'carousel_product_card_price_size', '12'), 12),
-    productCardPriceColor: sanitizeCssValue(rcv('product_card_price_color', 'carousel_product_card_price_color', '#0094EB'), '#0094EB', 'color'),
+    productCardPriceColor: sanitizeCssValue(rcv('product_card_price_color', 'carousel_product_card_price_color', primaryColor), primaryColor, 'color'),
     productCardPriceBold: toBoolean(rcv('product_card_price_bold', 'carousel_product_card_price_bold', true), true),
     productCardBtnBg: sanitizeCssValue(rcv('product_card_btn_bg', 'carousel_product_card_btn_bg', primaryColor), primaryColor, 'color'),
     productCardBtnColor: sanitizeCssValue(rcv('product_card_btn_color', 'carousel_product_card_btn_color', '#FFFFFF'), '#FFFFFF', 'color'),
     shape: shape,
     itemAspect: aspect
   };
-            }
+              }
 
 function getGridConfig(appearance) {
   appearance = normalizeAppearanceItem(appearance || {});
