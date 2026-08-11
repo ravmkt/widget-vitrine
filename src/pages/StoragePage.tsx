@@ -73,6 +73,59 @@ export default function StoragePage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<'all' | 'video' | 'image'>('all');
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Gatilho para abrir a janela do sistema operacional ao clicar no botão "Fazer Upload"
+  const handleTriggerUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Processa o arquivo selecionado na janela
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      showSuccess(`Iniciando upload de "${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)} MB)...`);
+
+      // Determina o tipo da mídia
+      const isVideo = file.type.startsWith('video');
+      const tempUrl = URL.createObjectURL(file);
+
+      // Registra a nova mídia na tabela do banco com o tamanho real em bytes (file_size)
+      await db.videos.create({
+        title: file.name,
+        video_url: tempUrl,
+        thumbnail_url: isVideo ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80' : tempUrl,
+        file_size: file.size,
+        status: 'active',
+        created_at: new Date().toISOString(),
+      });
+
+      showSuccess('Upload concluído com sucesso!');
+      await loadAccountStorageData();
+    } catch (err) {
+      console.error('Erro ao realizar upload:', err);
+      showError('Falha ao salvar o arquivo enviado.');
+    } finally {
+      setUploading(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  // Função para baixar o arquivo
+  const handleDownloadFile = (url: string, fileName: string) => {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showSuccess(`Baixando "${fileName}"...`);
+  };
 
   // Carrega vídeos e imagens cadastrados na conta real do usuário
   const loadAccountStorageData = useCallback(async () => {
