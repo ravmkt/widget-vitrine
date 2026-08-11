@@ -2812,7 +2812,38 @@ var showWhatsAppProduto = showVerProduto;
         var footer = createEl('div', 'vl-footer');
         var footerInner = createEl('div', 'vl-footer-inner');
 
+        var pBg = appearanceConfig.product_card_bg || '#FFFFFF';
+        var pBorderColor = appearanceConfig.product_card_border_color || '#E2E8F0';
+        var pBorderWidth = appearanceConfig.product_card_border_width !== undefined ? appearanceConfig.product_card_border_width : 1;
+        var pRadius = appearanceConfig.product_card_border_radius !== undefined ? appearanceConfig.product_card_border_radius : 12;
+        var pNameSize = appearanceConfig.product_card_name_size || 11;
+        var pNameColor = appearanceConfig.product_card_name_color || '#0F172A';
+        var pPriceSize = appearanceConfig.product_card_price_size || 12;
+        var pPriceColor = appearanceConfig.product_card_price_color || priColor;
 
+        var prodCard = createEl('div', 'vl-product');
+        prodCard.style.cssText = 'display:flex !important;align-items:center !important;gap:12px !important;width:100% !important;padding:10px 12px !important;border-radius:' + pRadius + 'px !important;border:' + pBorderWidth + 'px solid ' + pBorderColor + ' !important;background:' + pBg + ' !important;box-sizing:border-box !important;';
+
+        var prodImg = createEl('img', 'vl-product-img');
+        prodImg.src = getThumbnailFromObject(productData) || '';
+        prodImg.alt = productData.name || 'Produto';
+        prodImg.style.cssText = 'width:52px !important;height:52px !important;border-radius:10px !important;object-fit:cover !important;flex-shrink:0 !important;';
+        prodCard.appendChild(prodImg);
+
+        var prodInfo = createEl('div', 'vl-product-info');
+        prodInfo.style.cssText = 'flex:1 !important;min-width:0 !important;display:flex !important;flex-direction:column !important;gap:2px !important;';
+
+        var pName = createEl('div', 'vl-product-name');
+        pName.textContent = productData.name || 'Produto';
+        pName.style.cssText = 'font-size:' + pNameSize + 'px !important;font-weight:700 !important;color:' + pNameColor + ' !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important;';
+        prodInfo.appendChild(pName);
+
+        if (productData.price) {
+          var pPrice = createEl('div', 'vl-product-price');
+          pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
+          pPrice.style.cssText = 'font-size:' + pPriceSize + 'px !important;font-weight:800 !important;color:' + pPriceColor + ' !important;';
+          prodInfo.appendChild(pPrice);
+        }
 
         var pActions = createEl('div', 'vl-product-actions');
         pActions.style.cssText = 'display:flex;gap:8px;flex-shrink:0;margin-top:4px;';
