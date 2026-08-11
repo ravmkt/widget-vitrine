@@ -1655,7 +1655,74 @@ const CarouselPreview = ({
   );
 };
 
+// trecho novo
+const GridPreview = ({
+  grid,
+  colors,
+}: {
+  grid: GridConfig;
+  colors: PreviewColors;
+}) => {
+  const cols = limitNumber(grid.visible_items, 10, 1, 10);
+  const rows = safeNumber(grid.rows, 1, 1);
+  const shape = normalizeWidgetShape(grid.shape, 'portrait');
+  const totalItems = Math.max(1, Math.min(cols * rows, 12));
+  const items = Array.from({ length: totalItems });
+  const isCircle = shape === 'circle';
+  const isSquare = shape === 'square';
+  const isPortrait = shape === 'portrait';
 
+  return (
+    <div className="overflow-hidden rounded-[1rem] border border-slate-200 bg-slate-50 flex flex-col h-[500px]">
+      <div className="flex items-center justify-between bg-white px-4 py-2.5 shadow-sm shrink-0 border-b border-slate-100">
+        <div className="flex items-center gap-2">
+          <div className="flex h-6 w-6 items-center justify-center rounded-md" style={{ backgroundColor: colors.primary }}>
+            <span className="text-[9px] font-black text-white">LJ</span>
+          </div>
+          <div className="h-2 w-14 rounded-full bg-slate-200" />
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 [&::-webkit-scrollbar]:hidden">
+        <div
+          className="grid justify-center"
+          style={{
+            gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+            gap: `${safeNumber(grid.spacing, 8, 0)}px`,
+          }}
+        >
+          {items.map((_, index) => (
+            <div key={index} className="flex min-w-0 justify-center">
+              <div
+                className={cn(
+                  'relative overflow-hidden shadow-sm flex items-center justify-center',
+                  isCircle && 'rounded-full',
+                  !isCircle && 'rounded-xl'
+                )}
+                style={{
+                  width: '100%',
+                  aspectRatio: isPortrait ? '9 / 16' : '1 / 1',
+                  borderColor: grid.border_color || colors.primary,
+                  borderWidth: `${safeNumber(grid.border_style, 2, 0)}px`,
+                  borderStyle: 'solid',
+                  borderRadius: isCircle ? '999px' : cssSize(grid.border_radius, '12px'),
+                  background:
+                    index % 2 === 0
+                      ? `linear-gradient(160deg, ${colors.primary}, #c7d2fe)`
+                      : `linear-gradient(160deg, ${colors.secondary}, #f1f5f9)`,
+                }}
+              >
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
+                  <PlaySquare size={12} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const ModalPreview = ({
   formData,
