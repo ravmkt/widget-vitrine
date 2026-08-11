@@ -1497,25 +1497,6 @@ const FloatingPreview = ({
           )}
         </div>
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-        {isCircle ? (
-          <PreviewInfo label="Raio/Tamanho" value={circleSize} />
-        ) : (
-          <PreviewInfo label="Tamanho" value={`${width} x ${height}`} />
-        )}
-        <PreviewInfo label="Forma" value={getShapeLabel(floating.shape)} />
-        <PreviewInfo
-          label="Raio da borda"
-          value={isCircle ? 'Circular fixo' : cssSize(floating.border_radius)}
-        />
-        <PreviewInfo
-          label="Borda"
-          value={`${extractNumericCssSize(floating.border_style)} solid`}
-        />
-      </div>
-    </div>
-  );
-};
 
 const CarouselPreview = ({
   carousel,
