@@ -1749,7 +1749,9 @@ const GridPreview = ({
           </div>
         </div>
       </div>
-
+</div>
+  );
+};
 
 const ModalPreview = ({
   formData,
