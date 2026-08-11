@@ -1520,16 +1520,8 @@ const FloatingPreview = ({
           }}
         >
 <video
-            <video
-            src={DEMO_PREVIEW_VIDEOS[0]}
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="auto"
-            poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
-            className="absolute inset-0 h-full w-full object-cover pointer-events-none"
-          />
+            
+            
           {floating.show_play_icon && (
             <div className="relative z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
               <PlaySquare size={16} />
