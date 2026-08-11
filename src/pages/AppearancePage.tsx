@@ -1519,7 +1519,6 @@ const FloatingPreview = ({
             ...positionStyle,
           }}
         >
-<video
            <video
             src={DEMO_PREVIEW_VIDEOS[0]}
             autoPlay
