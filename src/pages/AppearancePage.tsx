@@ -1308,53 +1308,7 @@ const GlobalDeviceNotice = () => {
   );
 };
 
-const SectionCard = ({
-  title,
-  description,
-  children,
-  className,
-}: {
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-  className?: string;
-}) => {
-  return (
-    <div
-      className={cn(
-        'space-y-6 rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm',
-        className,
-      )}
-    >
-      <div>
-        <h3 className="text-lg font-black text-slate-900">{title}</h3>
-        {description && (
-          <p className="mt-1 text-sm font-medium text-slate-500">{description}</p>
-        )}
-      </div>
-      {children}
-    </div>
-  );
-};
 
-const FormField = ({
-  label,
-  children,
-  className,
-}: {
-  label: string;
-  children: React.ReactNode;
-  className?: string;
-}) => {
-  return (
-    <div className={cn('space-y-3', className)}>
-      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500">
-        {label}
-      </label>
-      {children}
-    </div>
-  );
-};
 
 const ModalTabButton = ({
   active,
