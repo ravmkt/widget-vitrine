@@ -23,6 +23,7 @@ interface StorageItem {
   sizeInBytes: number;
   createdAt: string;
   thumbnailUrl: string;
+  fileUrl: string;
   canDelete: boolean;
 }
 
