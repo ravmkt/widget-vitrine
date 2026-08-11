@@ -83,12 +83,43 @@ export function AppSidebar() {
     };
   }, [loadStoreData]);
 
-  return (
-    <Sidebar className="border-r border-[#E2E8F0] dark:border-slate-800 bg-white dark:bg-slate-950 shadow-none">
-      <SidebarHeader className="p-6">
-        <div className="flex items-center gap-3">
-          <img src="/assets/vidlytics-logo-wide.png" alt="Vidlytics" className="h-[58px] w-auto max-w-[260px]" />
+ return (
+    <Sidebar
+      onMouseEnter={() => isCollapsed && setIsHovered(true)}
+      onMouseLeave={() => isCollapsed && setIsHovered(false)}
+      className={cn(
+        "border-r border-[#E2E8F0] dark:border-slate-800 bg-white dark:bg-slate-950 shadow-none transition-all duration-300 ease-in-out relative z-40 overflow-hidden",
+        isExpanded ? "w-64" : "w-20"
+      )}
+    >
+      <SidebarHeader className="p-4 flex items-center justify-between">
+        <div className="flex items-center gap-3 min-w-0 overflow-hidden">
+          <img
+            src="/assets/vidlytics-logo-wide.png"
+            alt="Vidlytics"
+            className={cn(
+              "h-[42px] w-auto max-w-none transition-all duration-300",
+              isExpanded ? "opacity-100" : "opacity-0 w-0 pointer-events-none"
+            )}
+          />
+          {!isExpanded && (
+            <div className="h-9 w-9 shrink-0 rounded-xl bg-[#0094EB] flex items-center justify-center font-black text-white shadow-md shadow-blue-500/20">
+              V
+            </div>
+          )}
         </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            setIsCollapsed(!isCollapsed);
+            setIsHovered(false);
+          }}
+          className="p-1.5 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] dark:hover:bg-slate-800 dark:hover:text-white transition-colors shrink-0"
+          title={isCollapsed ? "Expandir menu" : "Recolher menu"}
+        >
+          {isCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+        </button>
       </SidebarHeader>
 
       <SidebarContent className="px-3">
