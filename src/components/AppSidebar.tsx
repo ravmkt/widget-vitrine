@@ -184,32 +184,41 @@ return (
             <span className="text-[10px] font-bold text-[#0094EB] uppercase">Plano Pro</span>
           </div>
         </div>
-        <button
-          onClick={async () => {
-            await signOut();
-            const keysToRemove: string[] = [];
-            for (let i = 0; i < localStorage.length; i++) {
-              const key = localStorage.key(i);
-              if (key && key.startsWith('vidlytics_')) {
-                keysToRemove.push(key);
+        <div className="relative group">
+          <button
+            onClick={async () => {
+              await signOut();
+              const keysToRemove: string[] = [];
+              for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('vidlytics_')) {
+                  keysToRemove.push(key);
+                }
               }
-            }
-            keysToRemove.forEach(key => localStorage.removeItem(key));
-            navigate('/login');
-          }}
-          title={!isExpanded ? "Sair do Painel" : undefined}
-          className="flex w-full items-center gap-2.5 px-2.5 py-2 rounded-xl text-[#64748B] dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-500 transition-colors text-sm font-bold overflow-hidden whitespace-nowrap"
-        >
-          <LogOut size={16} className="shrink-0" />
-          <span
-            className={cn(
-              "transition-all duration-300",
-              isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
-            )}
+              keysToRemove.forEach(key => localStorage.removeItem(key));
+              navigate('/login');
+            }}
+            className="flex w-full items-center gap-2.5 px-2.5 py-2 rounded-xl text-[#64748B] dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-500 transition-colors text-sm font-bold overflow-hidden whitespace-nowrap"
           >
-            Sair do Painel
-          </span>
-        </button>
+            <LogOut size={16} className="shrink-0" />
+            <span
+              className={cn(
+                "transition-all duration-300",
+                isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
+              )}
+            >
+              Sair do Painel
+            </span>
+          </button>
+
+          {!isExpanded && (
+            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover:flex items-center z-50 pointer-events-none">
+              <div className="bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap border border-slate-700">
+                Sair do Painel
+              </div>
+            </div>
+          )}
+        </div>
 </SidebarFooter>
     </div>
   );
