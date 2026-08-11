@@ -413,12 +413,6 @@ const getPortraitHeightFromWidth = (width: unknown) => {
   return String(Math.round((numeric * 16) / 9));
 };
 
-const getPortraitWidthFromHeight = (height: unknown) => {
-  const numeric = Number(toNumberInputValue(height));
-  if (!numeric || Number.isNaN(numeric)) return '80';
-  return String(Math.round((numeric * 9) / 16));
-};
-
 const cssSize = (value: unknown, fallback = '0px') => {
   if (value === null || value === undefined) return fallback;
   const text = String(value).trim();
@@ -678,6 +672,7 @@ const getActiveResponsiveConfig = <T,>(
   if (useGlobalAppearance || config.same_for_all) return config.desktop;
   return config[device];
 };
+
 const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
   const now = new Date().toISOString();
   const floatingDesktop = createDefaultFloatingDesktopConfig();
@@ -969,7 +964,6 @@ const normalizeAppearance = (
   const floatingDesktop = floatingConfig.desktop;
   const carouselDesktop = carouselConfig.desktop;
   const gridDesktop = gridConfig.desktop;
-  const gridMobile = gridConfig.mobile;
 
   return {
     ...defaults,
@@ -1203,6 +1197,7 @@ const syncGlobalConfig = (
     },
   };
 };
+
 // ──────────────────── componentes de UI ────────────────────
 
 const ToggleSwitch = ({
@@ -1409,7 +1404,7 @@ const getShapeLabel = (shape: WidgetShape) => {
   }
 };
 
-// ──────────────────── previews ────────────────────
+// ──────────────────── PREVIEWS ────────────────────
 
 const FloatingPreview = ({
   floating,
@@ -1454,7 +1449,7 @@ const FloatingPreview = ({
 
   return (
     <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
-      <div className="relative h-[520px] overflow-hidden rounded-[1rem] border border-slate-200 bg-white">
+      <div className="relative h-[480px] overflow-hidden rounded-[1rem] border border-slate-200 bg-white">
         <div className="p-5">
           <div className="h-3 w-28 rounded-full bg-slate-200" />
           <div className="mt-2 h-3 w-48 rounded-full bg-slate-100" />
@@ -1521,7 +1516,6 @@ const FloatingPreview = ({
   );
 };
 
-// trecho novo
 const CarouselPreview = ({
   carousel,
   colors,
@@ -1548,7 +1542,7 @@ const CarouselPreview = ({
     : cssSize(carousel.border_radius, '12px');
 
   return (
-    <div className="overflow-hidden rounded-[1rem] border border-slate-200 bg-slate-50 flex flex-col h-[560px]">
+    <div className="overflow-hidden rounded-[1rem] border border-slate-200 bg-slate-50 flex flex-col h-[520px]">
       {/* Mockup Header E-commerce */}
       <div className="flex items-center justify-between bg-white px-4 py-3 shadow-sm shrink-0">
         <div className="flex items-center gap-2">
@@ -1570,7 +1564,7 @@ const CarouselPreview = ({
         {/* Mockup Banner Principal */}
         <div className="px-4 pt-4">
           <div
-            className="h-28 w-full rounded-xl"
+            className="h-24 w-full rounded-xl"
             style={{
               background: `linear-gradient(135deg, ${colors.primary}15, ${colors.secondary}30)`,
               border: `1px solid ${colors.primary}20`
@@ -1678,10 +1672,10 @@ const CarouselPreview = ({
         <div className="px-4 mt-2 pb-8">
           <div className="h-3.5 w-40 rounded bg-slate-800 mb-4" style={{ opacity: 0.8 }} />
           <div className="grid grid-cols-2 gap-3">
-            <div className="h-40 rounded-xl bg-white shadow-sm border border-slate-100" />
-            <div className="h-40 rounded-xl bg-white shadow-sm border border-slate-100" />
-            <div className="h-40 rounded-xl bg-white shadow-sm border border-slate-100" />
-            <div className="h-40 rounded-xl bg-white shadow-sm border border-slate-100" />
+            <div className="h-36 rounded-xl bg-white shadow-sm border border-slate-100" />
+            <div className="h-36 rounded-xl bg-white shadow-sm border border-slate-100" />
+            <div className="h-36 rounded-xl bg-white shadow-sm border border-slate-100" />
+            <div className="h-36 rounded-xl bg-white shadow-sm border border-slate-100" />
           </div>
         </div>
         
@@ -1794,9 +1788,8 @@ const ModalPreview = ({
   return (
     <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
       <div className="rounded-[1rem] border border-slate-200 bg-white p-3">
-        {/* Moldura do player - reduzida e mais compacta */}
         <div
-          className="relative mx-auto h-[400px] max-w-[240px] overflow-hidden rounded-[1.5rem]"
+          className="relative mx-auto h-[380px] max-w-[230px] overflow-hidden rounded-[1.5rem]"
           style={{
             background: `linear-gradient(160deg, ${colors.primary}, ${colors.secondary})`,
             color: '#FFFFFF',
@@ -1807,10 +1800,8 @@ const ModalPreview = ({
             borderRadius: cssSize(m.border_radius, '1.5rem'),
           }}
         >
-          {/* Overlay escuro */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/70" />
 
-          {/* Título + fechar */}
           <div className="absolute left-3 right-3 top-3 z-20 flex items-start justify-between gap-2">
             {m.show_title && (
               <h4 className="line-clamp-1 text-sm font-black text-white drop-shadow">
@@ -1825,7 +1816,6 @@ const ModalPreview = ({
             </button>
           </div>
 
-          {/* Navegação lateral */}
           <button
             type="button"
             className="absolute left-2 top-1/2 z-20 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-black/10 text-lg text-white backdrop-blur"
@@ -1839,7 +1829,6 @@ const ModalPreview = ({
             ›
           </button>
 
-          {/* Play */}
           {m.show_play_button && (
             <div className="absolute left-1/2 top-[45%] z-10 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur">
@@ -1848,7 +1837,6 @@ const ModalPreview = ({
             </div>
           )}
 
-          {/* Botões laterais */}
           <div className="absolute bottom-28 right-2 z-20 flex flex-col gap-2">
             {m.show_like_button && (
               <button
@@ -1876,7 +1864,6 @@ const ModalPreview = ({
             )}
           </div>
 
-          {/* Card do produto */}
           {m.show_product && (
             <div className="absolute bottom-2 left-2 right-2 z-30 rounded-xl border border-white/10 bg-white/95 p-2 text-slate-900 shadow-lg backdrop-blur">
               <div className="flex items-center gap-2">
@@ -1899,13 +1886,13 @@ const ModalPreview = ({
                         Ver produto
                       </button>
                     )}
-<button
-  type="button"
-  className="flex-1 shrink-0 whitespace-nowrap rounded-lg px-2 py-1.5 text-[10px] font-black text-white"
-  style={{ backgroundColor: '#25D366' }}
->
-  Comprar pelo WhatsApp
-</button>
+                    <button
+                      type="button"
+                      className="flex-1 shrink-0 whitespace-nowrap rounded-lg px-2 py-1.5 text-[10px] font-black text-white"
+                      style={{ backgroundColor: '#25D366' }}
+                    >
+                      Comprar pelo WhatsApp
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1992,7 +1979,6 @@ const VisualPreview = ({
   );
 };
 
-// trecho novo
 const PreviewCard = ({
   formData,
   floatingDevice,
@@ -2006,6 +1992,61 @@ const PreviewCard = ({
   gridDevice: DeviceType;
   activeTab: ModalTab;
 }) => {
+  const floating = getActiveResponsiveConfig(
+    formData.floating_config,
+    floatingDevice,
+    formData.useGlobalAppearance,
+  );
+  const carousel = getActiveResponsiveConfig(
+    formData.carousel_config,
+    carouselDevice,
+    formData.useGlobalAppearance,
+  );
+  const grid = getActiveResponsiveConfig(
+    formData.grid_config,
+    gridDevice,
+    formData.useGlobalAppearance,
+  );
+
+  const colors: PreviewColors = {
+    primary: isValidHexColor(formData.primary_color) ? formData.primary_color : '#0094EB',
+    secondary: isValidHexColor(formData.secondary_color) ? formData.secondary_color : '#0094EB',
+    text: isValidHexColor(formData.text_color) ? formData.text_color : '#0F172A',
+    background: isValidHexColor(formData.background_color) ? formData.background_color : '#FFFFFF',
+    button: isValidHexColor(formData.button_color) ? formData.button_color : '#0094EB',
+    floatingBorder: isValidHexColor(floating.border_color) ? floating.border_color : '#0094EB',
+  };
+
+  return (
+    <aside className="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="mb-3 flex shrink-0 items-center justify-between border-b border-slate-100 pb-2">
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1.5">
+            <div className="h-2.5 w-2.5 rounded-full bg-rose-400" />
+            <div className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+            <div className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+          </div>
+          <span className="ml-2 font-mono text-[11px] font-bold text-slate-400">sualoja.com.br</span>
+        </div>
+        <span
+          className="h-6 w-6 rounded-full border border-slate-200 shadow-sm"
+          style={{ backgroundColor: colors.primary }}
+        />
+      </div>
+
+      <div className="space-y-4">
+        {activeTab === 'floating' && <FloatingPreview floating={floating} colors={colors} />}
+        {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} />}
+        {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} />}
+        {activeTab === 'modal' && <ModalPreview formData={formData} colors={colors} />}
+        {(activeTab === 'basic' || activeTab === 'visual') && (
+          <VisualPreview formData={formData} colors={colors} />
+        )}
+      </div>
+    </aside>
+  );
+};
+
 // ════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL
 // ════════════════════════════════════════════════════════════════
@@ -2373,35 +2414,34 @@ const AppearancePage = () => {
         floatingConfig.mobile = floatingConfig.desktop;
       }
 
-      const floatingDesktop = floatingConfig.desktop;
       const modalConfig = formData.modal_config;
       const shouldBeDefault = formData.is_default || appearances.length === 0;
 
-const stylePayload = {
-  id,
-  store_id: finalStoreId,
-  name: formData.name.trim(),
-  is_default: shouldBeDefault,
+      const stylePayload = {
+        id,
+        store_id: finalStoreId,
+        name: formData.name.trim(),
+        is_default: shouldBeDefault,
 
-  primary_color: formData.primary_color,
-  secondary_color: formData.secondary_color,
-  text_color: formData.text_color,
-  background_color: formData.background_color,
-  button_color: formData.button_color,
-  font_family: formData.font_family,
-  font_size: String(formData.font_size || '14'),
+        primary_color: formData.primary_color,
+        secondary_color: formData.secondary_color,
+        text_color: formData.text_color,
+        background_color: formData.background_color,
+        button_color: formData.button_color,
+        font_family: formData.font_family,
+        font_size: String(formData.font_size || '14'),
 
-  floating_config: floatingConfig,
-  carousel_config: carouselConfig,
-  grid_config: gridConfig,
-  modal_config: modalConfig,
+        floating_config: floatingConfig,
+        carousel_config: carouselConfig,
+        grid_config: gridConfig,
+        modal_config: modalConfig,
 
-  use_global_appearance: formData.useGlobalAppearance,
-  url: formData.url || null,
+        use_global_appearance: formData.useGlobalAppearance,
+        url: formData.url || null,
 
-  created_at: formData.created_at || editingStyle?.created_at || now,
-  updated_at: now,
-};
+        created_at: formData.created_at || editingStyle?.created_at || now,
+        updated_at: now,
+      };
 
       if (stylePayload.is_default) {
         await Promise.all(
@@ -2597,9 +2637,12 @@ const stylePayload = {
 
       {/* Modal de edição */}
       {showModal && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-900/60 p-4 pl-64 backdrop-blur-sm">
-          <div className="flex h-[90vh] max-h-[900px] w-full max-w-[1400px] flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
-                        <div>
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-slate-900/60 p-4 xl:pl-[280px] backdrop-blur-sm">
+          <div className="flex h-[92vh] max-h-[950px] w-full max-w-7xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
+            
+            {/* Header do modal */}
+            <div className="flex items-center justify-between border-b border-slate-100 bg-white p-6 shrink-0">
+              <div>
                 <h2 className="text-xl font-black text-slate-900">
                   {editingStyle ? 'Editar Estilo' : 'Criar Novo Estilo'}
                 </h2>
@@ -2619,7 +2662,7 @@ const stylePayload = {
             </div>
 
             {/* Tabs */}
-            <div className="border-b border-slate-100 bg-slate-50/70 px-6 py-4">
+            <div className="border-b border-slate-100 bg-slate-50/70 px-6 py-4 shrink-0">
               <div className="flex flex-wrap gap-2">
                 <ModalTabButton active={activeTab === 'basic'} icon={<Settings2 size={16} />} label="Básico" onClick={() => setActiveTab('basic')} />
                 <ModalTabButton active={activeTab === 'visual'} icon={<Palette size={16} />} label="Identidade Visual" onClick={() => setActiveTab('visual')} />
@@ -2631,10 +2674,13 @@ const stylePayload = {
             </div>
 
             {/* Conteúdo */}
-            <div className="flex-1 overflow-hidden bg-slate-50/60 p-6">
-              <div className="grid h-full grid-cols-1 gap-6 items-start xl:grid-cols-[380px_minmax(0,1fr)]">
-                <div className="h-full overflow-y-auto pr-2 space-y-6">
-            {/* ── Básico ── */}
+            <div className="flex-1 overflow-hidden bg-slate-50/60 p-6 xl:p-8">
+              <div className="grid h-full grid-cols-1 gap-8 items-start xl:grid-cols-[380px_minmax(0,1fr)]">
+                
+                {/* Painel Esquerdo com Scroll */}
+                <div className="h-full overflow-y-auto pr-4 pb-12 space-y-6 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300">
+                  
+                  {/* ── Básico ── */}
                   {activeTab === 'basic' && (
                     <SectionCard title="Dados Básicos" description="Defina o nome do estilo e o comportamento global entre Desktop e Mobile.">
                       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -2855,6 +2901,7 @@ const stylePayload = {
                     </SectionCard>
                   )}
 
+                  {/* ── Carrossel ── */}
                   {activeTab === 'carousel' && (
                     <SectionCard title="Carrossel" description="Configure a exibição dos vídeos em carrossel, quantidade de itens, formato e margens.">
                       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
@@ -3074,17 +3121,17 @@ const stylePayload = {
                   {activeTab === 'modal' && (
                     <SectionCard title="Player / Modal" description="Controle quais elementos são exibidos dentro do player de vídeo.">
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <FormField label="Mostrar título">
-                      <ToggleSwitch label="Mostrar título" checked={formData.modal_config.show_title} onChange={e => updateModalConfig({ show_title: e.target.checked })} />
-                    </FormField>
+                        <FormField label="Mostrar título">
+                          <ToggleSwitch label="Mostrar título" checked={formData.modal_config.show_title} onChange={e => updateModalConfig({ show_title: e.target.checked })} />
+                        </FormField>
 
-                    <FormField label="Mostrar botão play">
-                      <ToggleSwitch label="Mostrar botão play/pause no player" checked={formData.modal_config.show_play_button} onChange={e => updateModalConfig({ show_play_button: e.target.checked })} />
-                    </FormField>
+                        <FormField label="Mostrar botão play">
+                          <ToggleSwitch label="Mostrar botão play/pause no player" checked={formData.modal_config.show_play_button} onChange={e => updateModalConfig({ show_play_button: e.target.checked })} />
+                        </FormField>
 
-                    <FormField label="Mostrar produto">
-                      <ToggleSwitch label="Mostrar card de produto no player" checked={formData.modal_config.show_product} onChange={e => updateModalConfig({ show_product: e.target.checked })} />
-                    </FormField>
+                        <FormField label="Mostrar produto">
+                          <ToggleSwitch label="Mostrar card de produto no player" checked={formData.modal_config.show_product} onChange={e => updateModalConfig({ show_product: e.target.checked })} />
+                        </FormField>
 
                         <FormField label="Mostrar botão like">
                           <ToggleSwitch label="Mostrar botão like" checked={formData.modal_config.show_like_button} onChange={e => updateModalConfig({ show_like_button: e.target.checked })} />
@@ -3108,8 +3155,9 @@ const stylePayload = {
                     </SectionCard>
                   )}
 
-                  </div>
+                </div>
 
+                {/* Coluna Direita: Preview Lateral */}
                 <PreviewCard
                   formData={formData}
                   floatingDevice={floatingDevice}
@@ -3121,7 +3169,7 @@ const stylePayload = {
             </div>
 
             {/* Footer do modal */}
-            <div className="flex items-center justify-end gap-3 border-t border-slate-100 bg-white px-6 py-4">
+            <div className="flex items-center justify-end gap-3 border-t border-slate-100 bg-white px-6 py-4 shrink-0">
               <button
                 type="button"
                 onClick={handleCancel}
