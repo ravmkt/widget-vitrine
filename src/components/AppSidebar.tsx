@@ -121,7 +121,7 @@ return (
           {isCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
         </button>
       </SidebarHeader>
-      
+
       <SidebarContent className="px-3">
         <SidebarGroup>
           <SidebarGroupContent>
@@ -208,7 +208,7 @@ return (
             Sair do Painel
           </span>
         </button>
-      </SidebarFooter>
-    </Sidebar>
+</SidebarFooter>
+    </div>
   );
 }
