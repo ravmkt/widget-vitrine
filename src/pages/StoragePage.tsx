@@ -375,11 +375,11 @@ export default function StoragePage() {
                       Plano Pro
                     </h3>
                     <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-black uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                      100 GB Limite
+                      {formatSize(PLAN_LIMIT_BYTES)} Limite
                     </span>
                   </div>
                   <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
-                    Uso atual: <strong className="text-slate-800 dark:text-slate-200">{formatSize(totalUsedBytes)}</strong> de 100 GB
+                    Uso atual: <strong className="text-slate-800 dark:text-slate-200">{formatSize(totalUsedBytes)}</strong> de {formatSize(PLAN_LIMIT_BYTES)}
                   </p>
                 </div>
               </div>
