@@ -2812,29 +2812,7 @@ var showWhatsAppProduto = showVerProduto;
         var footer = createEl('div', 'vl-footer');
         var footerInner = createEl('div', 'vl-footer-inner');
 
-        var prodCard = createEl('div', 'vl-product');
-        prodCard.style.cssText = 'display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border-radius:14px;background:#fff;';
 
-        var prodImg = createEl('img', 'vl-product-img');
-        prodImg.src = getThumbnailFromObject(productData) || '';
-        prodImg.alt = productData.name || 'Produto';
-        prodImg.style.cssText = 'width:52px;height:52px;border-radius:10px;object-fit:cover;flex-shrink:0;';
-        prodCard.appendChild(prodImg);
-
-        var prodInfo = createEl('div', 'vl-product-info');
-        prodInfo.style.cssText = 'flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;';
-
-        var pName = createEl('div', 'vl-product-name');
-        pName.textContent = productData.name || 'Produto';
-        pName.style.cssText = 'font-size:13px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-        prodInfo.appendChild(pName);
-
-        if (productData.price) {
-          var pPrice = createEl('div', 'vl-product-price');
-          pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
-          pPrice.style.cssText = 'font-size:15px;font-weight:800;color:' + priColor + ';';
-          prodInfo.appendChild(pPrice);
-        }
 
         var pActions = createEl('div', 'vl-product-actions');
         pActions.style.cssText = 'display:flex;gap:8px;flex-shrink:0;margin-top:4px;';
