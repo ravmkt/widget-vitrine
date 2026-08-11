@@ -612,18 +612,7 @@ const createDefaultGridMobileConfig = (): GridConfig => ({
   show_title: false,
 });
 
-const createDefaultModalConfig = (): ModalConfig => ({
-  show_title: true,
-  show_play_button: true,
-  show_product: true,
-  show_product_button: true,
-  show_like_button: true,
-  show_comment_button: true,
-  show_share_button: true,
-  border_color: '#0094EB',
-  border_width: '2',
-  border_radius: '12',
-});
+
 
 const createResponsiveConfig = <T,>(
   desktop: T,
