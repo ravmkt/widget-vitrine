@@ -92,12 +92,10 @@ export default function StoragePage() {
       setUploading(true);
       showSuccess(`Iniciando processamento de "${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)} MB)...`);
 
-      // Determina o tipo da mídia
       const isVideo = file.type.startsWith('video');
       const tempUrl = URL.createObjectURL(file);
 
-      // Registra a nova mídia no banco usando o método correto (.add em vez de .create)
-      await db.videos.add({
+      const payload = {
         title: file.name,
         video_url: tempUrl,
         thumbnail_url: isVideo ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80' : tempUrl,
@@ -105,7 +103,19 @@ export default function StoragePage() {
         status: 'active',
         active: true,
         created_at: new Date().toISOString(),
-      });
+      };
+
+      // Tenta salvar usando o cliente Supabase direto para evitar exceções de wrapper
+      if (supabase) {
+        const { error } = await supabase.from('videos').insert([payload]);
+        if (error) throw error;
+      } else if (typeof db.videos?.create === 'function') {
+        await db.videos.create(payload);
+      } else if (typeof db.videos?.insert === 'function') {
+        await db.videos.insert(payload);
+      } else {
+        throw new Error('Nenhum método de gravação válido encontrado em db.videos');
+      }
 
       showSuccess('Mídia adicionada com sucesso!');
       await loadAccountStorageData();
