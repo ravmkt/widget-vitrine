@@ -1476,7 +1476,7 @@ function applyHostPosition(host, appearance) {
       + '.vl-product-name{font-weight:800!important;font-size:' + modalConfig.product_card_name_size + 'px!important;color:' + modalConfig.product_card_name_color + '!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}'
       + '.vl-product-price{margin-top:2px!important;font-weight:800!important;font-size:' + modalConfig.product_card_price_size + 'px!important;color:' + modalConfig.product_card_price_color + '!important;}'
       + '.vl-product-actions{display:flex!important;align-items:center!important;gap:8px!important;flex-wrap:wrap!important;margin-top:6px!important;}'
-
++ '.vl-product-btn{all:unset!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:4px!important;border-radius:999px!important;padding:6px 12px!important;background:' + modalConfig.product_card_button_bg + '!important;color:' + modalConfig.product_card_button_color + '!important;font-size:11px!important;font-weight:800!important;cursor:pointer!important;text-decoration:none!important;white-space:nowrap!important;}'
       + '.vl-product-whatsapp-btn{all:unset!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:4px!important;border-radius:999px!important;padding:6px 12px!important;background:#25d366!important;color:#fff!important;font-size:11px!important;font-weight:800!important;cursor:pointer!important;text-decoration:none!important;white-space:nowrap!important;}'
       + '.vl-product-whatsapp-btn:hover{background:#1ebe5d!important;color:#fff!important;}'
       + '.vl-product-whatsapp-btn:focus{outline:2px solid #128c7e!important;outline-offset:2px!important;}'
