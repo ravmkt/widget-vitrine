@@ -3131,9 +3131,9 @@ const AppearancePage = () => {
                         )}
                       </div>
 
-                      {/* 1. Layout & Colunas */}
+                      {/* 1. Layout & Dimensões */}
                       <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-3">
-                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">1. Layout & Colunas</h4>
+                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">1. Layout & Dimensões</h4>
                         
                         <div className="grid grid-cols-2 gap-2.5">
                           <FormField label="Formato dos Cards">
