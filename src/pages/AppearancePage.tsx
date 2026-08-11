@@ -2940,7 +2940,16 @@ if (activeFloatingConfig.shape === 'portrait') {
                         
                         <div className="grid grid-cols-2 gap-2.5">
                           <FormField label="Formato dos Cards">
-
+<select
+                              value={activeCarouselConfig.shape}
+                              onChange={e => updateCarouselConfig({ shape: e.target.value as WidgetShape })}
+                              className={selectClass}
+                            >
+                              <option value="circle">Circular</option>
+                              <option value="square">Quadrado</option>
+                              <option value="portrait">Retrato 9:16</option>
+                              <option value="landscape">Paisagem 16:9</option>
+                            </select>
                           </FormField>
 
                           <FormField label="Largura Card (px)">
