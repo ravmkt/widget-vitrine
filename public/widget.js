@@ -3609,7 +3609,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
 
       item.appendChild(videoCard);
 
-// trecho novo para renderização do card de produto no carrossel
+// trecho novo para o card de produto horizontal e sofisticado no carrossel
       if (cfg.showProduct) {
         var videoProductId = video.product_id || video.productId || null;
         var productData = videoProductId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
@@ -3622,8 +3622,8 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
           prodCard.className = 'vidlytics-carousel-product-card';
           prodCard.style.cssText =
             'display:flex !important;' +
-            'flex-direction:column !important;' +
-            'gap:6px !important;' +
+            'align-items:center !important;' +
+            'gap:10px !important;' +
             'padding:8px !important;' +
             'width:100% !important;' +
             'background:' + (cfg.productCardBg || '#fff') + ' !important;' +
@@ -3634,36 +3634,33 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             'cursor:pointer !important;' +
             'text-align:left !important;';
 
-          var prodTop = document.createElement('div');
-          prodTop.style.cssText =
-            'display:flex !important;' +
-            'align-items:center !important;' +
-            'gap:8px !important;' +
-            'width:100% !important;';
-
+          // Foto do produto maior e em destaque à esquerda
           var prodImgUrl = getThumbnailFromObject(productData) || '';
           if (prodImgUrl) {
             var pImg = document.createElement('img');
             pImg.src = prodImgUrl;
             pImg.alt = productData.name || 'Produto';
             pImg.style.cssText =
-              'width:36px !important;' +
-              'height:36px !important;' +
-              'min-width:36px !important;' +
+              'width:48px !important;' +
+              'height:48px !important;' +
+              'min-width:48px !important;' +
+              'max-width:48px !important;' +
               'border-radius:8px !important;' +
               'object-fit:cover !important;' +
               'background:#f1f5f9 !important;' +
-              'display:block !important;';
-            prodTop.appendChild(pImg);
+              'display:block !important;' +
+              'flex-shrink:0 !important;';
+            prodCard.appendChild(pImg);
           }
 
+          // Container de informações (Nome + Preço) à direita da foto
           var pInfo = document.createElement('div');
           pInfo.style.cssText =
             'flex:1 !important;' +
             'min-width:0 !important;' +
             'display:flex !important;' +
             'flex-direction:column !important;' +
-            'gap:2px !important;';
+            'gap:3px !important;';
 
           var pName = document.createElement('div');
           pName.textContent = productData.name || 'Produto';
@@ -3687,42 +3684,20 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             pInfo.appendChild(pPrice);
           }
 
-          prodTop.appendChild(pInfo);
-          prodCard.appendChild(prodTop);
+          prodCard.appendChild(pInfo);
 
-          var buyBtn = document.createElement('button');
-          buyBtn.type = 'button';
-          buyBtn.innerHTML = 'Ver no site &rarr;';
-          buyBtn.style.cssText =
-            'all:unset !important;' +
-            'display:block !important;' +
-            'width:100% !important;' +
-            'text-align:center !important;' +
-            'padding:6px 0 !important;' +
-            'background:' + (cfg.productCardBtnBg || getPrimaryColor(appearance)) + ' !important;' +
-            'color:' + (cfg.productCardBtnColor || '#fff') + ' !important;' +
-            'font-size:11px !important;' +
-            'font-weight:700 !important;' +
-            'border-radius:8px !important;' +
-            'cursor:pointer !important;' +
-            'box-sizing:border-box !important;';
+          // Ícone de seta discreto ou indicador de clique elegante à direita (estilo referência)
+          var arrowIndicator = document.createElement('div');
+          arrowIndicator.innerHTML = '&rarr;';
+          arrowIndicator.style.cssText =
+            'font-size:14px !important;' +
+            'font-weight:800 !important;' +
+            'color:' + (cfg.productCardBtnBg || getPrimaryColor(appearance)) + ' !important;' +
+            'padding-left:2px !important;' +
+            'flex-shrink:0 !important;';
+          prodCard.appendChild(arrowIndicator);
 
-          buyBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            if (productUrl) {
-              window.open(productUrl, '_blank');
-            }
-            trackMetric({
-              event_type: 'product_click',
-              story_id: story.id,
-              video_id: video.id,
-              product_id: productData.id,
-              page_url: window.location.href
-            });
-          });
-
-          prodCard.appendChild(buyBtn);
-
+          // Clique no card direciona para o produto
           prodCard.addEventListener('click', function(e) {
             e.stopPropagation();
             if (productUrl) {
@@ -3740,7 +3715,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
           item.appendChild(prodCard);
         }
       }
-            
+                  
       track.appendChild(item);
     });
   });
