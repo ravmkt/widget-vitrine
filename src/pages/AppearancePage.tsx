@@ -1992,7 +1992,9 @@ const PreviewCard = ({
         {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} />}
         {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} />}
         {activeTab === 'modal' && <ModalPreview formData={formData} colors={colors} />}
-        
+        {activeTab === 'basic' && (
+          <VisualPreview formData={formData} colors={colors} />
+        )}
               </div>
     </aside>
   );
