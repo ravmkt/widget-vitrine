@@ -233,7 +233,6 @@ export default function StoragePage() {
             Gerencie os vídeos e imagens hospedados no seu plano.
           </p>
         </div>
-        // trecho novo
         <div>
           <input
             type="file"
