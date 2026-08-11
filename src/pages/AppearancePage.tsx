@@ -2051,7 +2051,8 @@ const PreviewCard = ({
 
   return (
     <aside className="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="mb-3 flex shrink-0 items-center justify-between border-b border-slate-100 pb-2">        <div className="flex items-center gap-2">
+      <div className="mb-3 flex shrink-0 items-center justify-between border-b border-slate-100 pb-2">
+              <div className="flex items-center gap-2">
           <div className="flex gap-1.5">
             <div className="h-2.5 w-2.5 rounded-full bg-rose-400" />
             <div className="h-2.5 w-2.5 rounded-full bg-amber-400" />
