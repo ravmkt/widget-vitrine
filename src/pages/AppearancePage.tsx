@@ -1519,11 +1519,13 @@ const FloatingPreview = ({
             ...positionStyle,
           }}
         >
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `linear-gradient(160deg, ${colors.primary}, ${colors.secondary})`,
-            }}
+<video
+            src={DEMO_PREVIEW_VIDEOS[0]}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute inset-0 h-full w-full object-cover pointer-events-none"
           />
           {floating.show_play_icon && (
             <div className="relative z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
