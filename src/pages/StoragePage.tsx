@@ -7,6 +7,7 @@ import {
   Trash2,
   Eye,
   Download,
+  Pencil,
   FileVideo,
   FileImage,
   UploadCloud,
