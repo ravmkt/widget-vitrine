@@ -1878,27 +1878,7 @@ const ModalPreview = ({
           )}
         </div>
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-        <PreviewInfo label="Borda" value={`${borderW}px`} />
-        <PreviewInfo label="Raio" value={cssSize(m.border_radius)} />
-        <PreviewInfo label="Cor borda" value={m.border_color} />
-        <PreviewInfo
-          label="Elementos"
-          value={[
-            m.show_title && 'Título',
-            m.show_play_button && 'Play',
-            m.show_like_button && 'Like',
-            m.show_comment_button && 'Coment.',
-            m.show_share_button && 'Compart.',
-            m.show_product && 'Produto',
-          ]
-            .filter(Boolean)
-            .join(', ') || 'Nenhum'}
-        />
-      </div>
-    </div>
-  );
-};
+
 
 const VisualPreview = ({
   formData,
