@@ -34,9 +34,8 @@ import { db } from "@/lib/db";
 import { signOut } from '@/lib/auth';
 
 const menuItems = [
-{ title: "Visão Geral", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Visão Geral", url: "/dashboard", icon: LayoutDashboard },
   { title: "Stories", url: "/stories", icon: PlayCircle },
-  { title: "Galeria", url: "/gallery", icon: Library },
   { title: "Armazenamento", url: "/armazenamento", icon: HardDrive },
   { title: "Performance", url: "/videos/performance", icon: BarChart3 },
   { title: "Produtos", url: "/produtos", icon: ShoppingCart },
