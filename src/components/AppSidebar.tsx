@@ -81,11 +81,11 @@ export function AppSidebar() {
     };
   }, [loadStoreData]);
 
-  return (
+ return (
     <div
       className={cn(
-        "h-screen sticky top-0 border-r border-[#E2E8F0] dark:border-slate-800 bg-white dark:bg-slate-950 flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 z-30 select-none overflow-x-hidden",
-        isExpanded ? "w-64" : "w-20"
+        "h-screen sticky top-0 border-r border-[#E2E8F0] dark:border-slate-800 bg-white dark:bg-slate-950 flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 z-50 select-none",
+        isExpanded ? "w-64 overflow-x-hidden" : "w-20 overflow-visible"
       )}
     >
       <SidebarHeader className="p-4 flex flex-col gap-3 shrink-0 border-b border-slate-100 dark:border-slate-800">
