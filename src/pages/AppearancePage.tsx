@@ -3023,12 +3023,6 @@ const stylePayload = {
                             <FormField label="Preço em Destaque (Negrito)">
                               <ToggleSwitch label="Deixar preço em negrito" checked={activeCarouselConfig.product_card_price_bold ?? true} onChange={e => updateCarouselConfig({ product_card_price_bold: e.target.checked })} />
                             </FormField>
-                            <FormField label="Cor de fundo do botão">
-                              <ColorInput label="Cor do botão" value={activeCarouselConfig.product_card_btn_bg || formData.primary_color} onChange={e => updateCarouselConfig({ product_card_btn_bg: e.target.value })} />
-                            </FormField>
-                            <FormField label="Cor da fonte do botão" className="md:col-span-2">
-                              <ColorInput label="Cor do texto do botão" value={activeCarouselConfig.product_card_btn_color || '#FFFFFF'} onChange={e => updateCarouselConfig({ product_card_btn_color: e.target.value })} />
-                            </FormField>
                           </div>
                         </div>
                       )}
