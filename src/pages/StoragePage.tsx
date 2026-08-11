@@ -516,7 +516,8 @@ export default function StoragePage() {
               <tr className="border-b border-slate-100 bg-slate-50/50 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:border-slate-800 dark:bg-slate-900/50">
                 <th className="px-6 py-4">Mídia</th>
                 <th className="px-6 py-4">Nome do Arquivo</th>
-                <th className="px-6 py-4 text-center">Criado em</th>
+                <th className="px-6 py-4">Produto</th>
+                <th className="px-6 py-4">Story Vinculado</th>
                 <th className="px-6 py-4 text-center">Tamanho</th>
                 <th className="px-6 py-4 text-center">Status</th>
                 <th className="px-6 py-4 text-right">Ações</th>
