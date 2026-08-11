@@ -252,7 +252,7 @@ export default function StoragePage() {
             {uploading ? 'Enviando...' : 'Fazer Upload'}
           </button>
         </div>
-        
+
       </div>
 
       {/* Card da Régua de Porcentagem de Armazenamento Dinâmica */}
@@ -479,7 +479,7 @@ export default function StoragePage() {
                       </span>
                     </td>
 
-                    <td className="px-6 py-3.5 text-right">
+                   <td className="px-6 py-3.5 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           type="button"
@@ -488,6 +488,14 @@ export default function StoragePage() {
                           title="Visualizar mídia"
                         >
                           <Eye size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadFile(file.thumbnailUrl, file.name)}
+                          className="rounded-lg p-2 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-950"
+                          title="Baixar arquivo"
+                        >
+                          <Download size={16} />
                         </button>
                         <button
                           type="button"
