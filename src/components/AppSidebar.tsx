@@ -84,7 +84,7 @@ export function AppSidebar() {
  return (
     <div
       className={cn(
-        "h-screen sticky top-0 border-r border-[#E2E8F0] dark:border-slate-800 bg-white dark:bg-slate-950 flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 z-50 select-none",
+        "h-screen sticky top-0 border-r border-[#E2E8F0] dark:border-slate-800 bg-white dark:bg-slate-950 flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 z-[9999] select-none",
         isExpanded ? "w-64 overflow-x-hidden" : "w-20 overflow-visible"
       )}
     >
