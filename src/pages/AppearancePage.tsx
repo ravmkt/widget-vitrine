@@ -1555,6 +1555,7 @@ const CarouselPreview = ({
   const shape = normalizeWidgetShape(carousel.shape, 'portrait');
   const items = Array.from({ length: Math.max(1, Math.min(visibleItems, 6)) });
 const isCircle = shape === 'circle';
+  const isSquare = shape === 'square';
   const isPortrait = shape === 'portrait';
   const isLandscape = shape === 'landscape';
 
