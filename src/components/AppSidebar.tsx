@@ -115,17 +115,16 @@ return (
           {isCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
         </button>
       </SidebarHeader>
-      
+
       <SidebarContent className="px-3">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1">
               {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.title} className="relative group">
                   <SidebarMenuButton 
                     asChild 
                     isActive={location.pathname === item.url}
-                    title={!isExpanded ? item.title : undefined}
                     className={cn(
                       "h-11 rounded-xl px-3.5 transition-all duration-200 font-bold overflow-hidden whitespace-nowrap",
                       location.pathname === item.url 
@@ -150,6 +149,15 @@ return (
                       </span>
                     </Link>
                   </SidebarMenuButton>
+
+                  {/* Tooltip para exibição no modo recolhido */}
+                  {!isExpanded && (
+                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 hidden group-hover:flex items-center z-50 pointer-events-none">
+                      <div className="bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap border border-slate-700">
+                        {item.title}
+                      </div>
+                    </div>
+                  )}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
