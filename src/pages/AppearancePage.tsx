@@ -2672,8 +2672,8 @@ const stylePayload = {
 
             {/* Conteúdo */}
             <div className="flex-1 overflow-y-auto bg-slate-50/60 p-6">
-              <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
-                <div className="space-y-6">
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_440px]">
+                              <div className="space-y-6">
                   {/* ── Básico ── */}
                   {activeTab === 'basic' && (
                     <SectionCard title="Dados Básicos" description="Defina o nome do estilo e o comportamento global entre Desktop e Mobile.">
