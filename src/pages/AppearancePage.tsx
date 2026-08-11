@@ -1497,6 +1497,9 @@ const FloatingPreview = ({
           )}
         </div>
       </div>
+</div>
+  );
+};
 
 const CarouselPreview = ({
   carousel,
