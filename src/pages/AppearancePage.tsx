@@ -1232,34 +1232,7 @@ const ToggleSwitch = ({
   );
 };
 
-const ColorInput = ({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}) => {
-  const safeColor = isValidHexColor(value) ? value : '#000000';
-  return (
-    <div className="flex items-center gap-2">
-      <div
-        className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm"
-        style={{ backgroundColor: safeColor }}
-      >
-        <input
-          type="color"
-          aria-label={label}
-          value={safeColor}
-          onChange={onChange}
-          className="h-8 w-8 cursor-pointer appearance-none rounded-full border-0 bg-transparent text-transparent"
-        />
-      </div>
-      <input type="text" value={value} onChange={onChange} className={inputClass} />
-    </div>
-  );
-};
+
 
 const DeviceTabs = ({
   activeDevice,
