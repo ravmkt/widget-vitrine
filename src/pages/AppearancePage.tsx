@@ -1780,6 +1780,7 @@ const GridPreview = ({
                   muted
                   playsInline
                   preload="auto"
+                  onLoadedData={(e) => e.currentTarget.play().catch(() => {})}
                   poster="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80"
                   className="h-full w-full object-cover pointer-events-none"
                 />
