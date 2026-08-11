@@ -116,29 +116,36 @@ export function AppSidebar() {
         </div>
 
         {/* Botão de Recolher / Expandir Destacado */}
-        <button
-          type="button"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className={cn(
-            "flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-bold transition-all shadow-sm",
-            isExpanded
-              ? "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"
-              : "bg-[#0094EB] text-white hover:bg-[#0E4787] shadow-blue-500/20"
-          )}
-          title={isCollapsed ? "Expandir menu" : "Recolher menu"}
-        >
-          {isCollapsed ? (
-            <>
+        <div className="relative group">
+          <button
+            type="button"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className={cn(
+              "flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-bold transition-all shadow-sm",
+              isExpanded
+                ? "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"
+                : "bg-[#0094EB] text-white hover:bg-[#0E4787] shadow-blue-500/20"
+            )}
+          >
+            {isCollapsed ? (
               <PanelLeftOpen size={16} className="shrink-0" />
-              <span className="sr-only">Expandir</span>
-            </>
-          ) : (
-            <>
-              <PanelLeftClose size={16} className="shrink-0 text-[#0094EB]" />
-              <span className="truncate">Recolher</span>
-            </>
+            ) : (
+              <>
+                <PanelLeftClose size={16} className="shrink-0 text-[#0094EB]" />
+                <span className="truncate">Recolher</span>
+              </>
+            )}
+          </button>
+
+          {/* Tooltip flutuante estilizado no mesmo padrão azul */}
+          {!isExpanded && (
+            <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-3">
+              <div className="bg-[#0094EB] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
+                Expandir menu
+              </div>
+            </div>
           )}
-        </button>
+        </div>
       </SidebarHeader>
 
 <SidebarContent className={cn("px-3 py-2 overflow-y-auto [&::-webkit-scrollbar]:hidden", isExpanded ? "overflow-x-hidden" : "overflow-x-visible")}>
