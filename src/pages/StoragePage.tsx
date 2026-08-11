@@ -92,10 +92,17 @@ export default function StoragePage() {
       setUploading(true);
       showSuccess(`Iniciando processamento de "${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)} MB)...`);
 
+      // Resgata as configurações para obter o store_id obrigatório
+      const settings = await db.getSettings();
+      if (!settings?.store_id) {
+        throw new Error('ID da loja não encontrado nas configurações.');
+      }
+
       const isVideo = file.type.startsWith('video');
       const tempUrl = URL.createObjectURL(file);
 
       const payload = {
+        store_id: settings.store_id,
         title: file.name,
         video_url: tempUrl,
         thumbnail_url: isVideo ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80' : tempUrl,
