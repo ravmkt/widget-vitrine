@@ -414,6 +414,18 @@ const getPortraitHeightFromWidth = (width: unknown) => {
   return String(Math.round((numeric * 16) / 9));
 };
 
+const getLandscapeHeightFromWidth = (width: unknown) => {
+  const numeric = Number(toNumberInputValue(width));
+  if (!numeric || Number.isNaN(numeric)) return '45';
+  return String(Math.round((numeric * 9) / 16));
+};
+
+const getPortraitWidthFromHeight = (height: unknown) => {
+  const numeric = Number(toNumberInputValue(height));
+  if (!numeric || Number.isNaN(numeric)) return '80';
+  return String(Math.round((numeric * 9) / 16));
+};
+
 const cssSize = (value: unknown, fallback = '0px') => {
   if (value === null || value === undefined) return fallback;
   const text = String(value).trim();
