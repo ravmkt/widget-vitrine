@@ -908,8 +908,10 @@ function normalizeModalAppearanceConfig(appearance) {
     product_card_border_radius: toNumber(rcv('product_card_border_radius', '12'), 12),
     product_card_name_size: toNumber(rcv('product_card_name_size', '11'), 11),
     product_card_name_color: sanitizeCssValue(rcv('product_card_name_color', '#0F172A'), '#0F172A', 'color'),
-    product_card_price_size: toNumber(rcv('product_card_price_size', '12'), 12),
-    product_card_price_color: sanitizeCssValue(rcv('product_card_price_color', getPrimaryColor(appearance)), getPrimaryColor(appearance), 'color')
+product_card_price_size: toNumber(rcv('product_card_price_size', '12'), 12),
+    product_card_price_color: sanitizeCssValue(rcv('product_card_price_color', getPrimaryColor(appearance)), getPrimaryColor(appearance), 'color'),
+    product_card_button_bg: sanitizeCssValue(rcv('product_card_button_bg', getPrimaryColor(appearance)), getPrimaryColor(appearance), 'color'),
+    product_card_button_color: sanitizeCssValue(rcv('product_card_button_color', '#FFFFFF'), '#FFFFFF', 'color')
   };
 }
 
