@@ -612,7 +612,26 @@ const createDefaultGridMobileConfig = (): GridConfig => ({
   show_title: false,
 });
 
-
+const createDefaultModalConfig = (): ModalConfig & Record<string, any> => ({
+  show_title: true,
+  show_play_button: true,
+  show_product: true,
+  show_product_button: true,
+  show_like_button: true,
+  show_comment_button: true,
+  show_share_button: true,
+  border_color: '#0094EB',
+  border_width: '2',
+  border_radius: '12',
+  product_card_bg: '#FFFFFF',
+  product_card_border_color: '#E2E8F0',
+  product_card_border_width: '1',
+  product_card_border_radius: '12',
+  product_card_name_size: '11',
+  product_card_name_color: '#0F172A',
+  product_card_price_size: '12',
+  product_card_price_color: '#0094EB',
+});
 
 const createResponsiveConfig = <T,>(
   desktop: T,
