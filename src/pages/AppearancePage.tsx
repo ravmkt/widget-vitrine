@@ -538,7 +538,6 @@ const createDefaultFloatingMobileConfig = (): FloatingConfig => ({
   show_title: true,
 });
 
-// trecho novo
 const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
   spacing: 16,
   shape: 'portrait',
@@ -559,6 +558,13 @@ const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
   product_card_border_color: '#E2E8F0',
   product_card_border_width: '1',
   product_card_border_radius: '12',
+  product_card_name_size: '11',
+  product_card_name_color: '#0F172A',
+  product_card_price_size: '12',
+  product_card_price_color: '#0094EB',
+  product_card_price_bold: true,
+  product_card_btn_bg: '#0094EB',
+  product_card_btn_color: '#FFFFFF',
 });
 
 const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
@@ -581,6 +587,13 @@ const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
   product_card_border_color: '#E2E8F0',
   product_card_border_width: '1',
   product_card_border_radius: '10',
+  product_card_name_size: '11',
+  product_card_name_color: '#0F172A',
+  product_card_price_size: '12',
+  product_card_price_color: '#0094EB',
+  product_card_price_bold: true,
+  product_card_btn_bg: '#0094EB',
+  product_card_btn_color: '#FFFFFF',
 });
 
 const createDefaultGridDesktopConfig = (): GridConfig => ({
