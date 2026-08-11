@@ -1624,7 +1624,34 @@ const isCircle = shape === 'circle';
             {items.map((_, index) => (
               <div key={index} className="flex flex-col gap-1 shrink-0" style={{ width: cardWidth }}>
                 
-
+{/* Vídeo / Story */}
+                <div
+                  className="relative overflow-hidden shadow-sm bg-slate-900"
+                  style={{
+                    width: cardWidth,
+                    height: cardHeight,
+                    borderColor: carousel.border_color || colors.primary,
+                    borderWidth: `${safeNumber(carousel.border_style, 2, 0)}px`,
+                    borderStyle: 'solid',
+                    borderRadius,
+                  }}
+                >
+                  <video
+                    src={DEMO_PREVIEW_VIDEOS[index % DEMO_PREVIEW_VIDEOS.length]}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="h-full w-full object-cover pointer-events-none"
+                  />
+                  {carousel.show_play_icon && (
+                    <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
+                        <PlaySquare size={12} />
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* Card de Produto Otimizado (Lado a Lado) */}
                 {carousel.show_product && !isCircle && (
