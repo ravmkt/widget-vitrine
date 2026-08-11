@@ -600,6 +600,16 @@ export default function StoragePage() {
 
                    <td className="px-6 py-3.5 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        {file.type === 'video' && (
+                          <button
+                            type="button"
+                            onClick={() => window.location.href = `/videos/${file.id}/edit`}
+                            className="rounded-lg p-2 text-slate-400 hover:bg-purple-50 hover:text-purple-600 dark:hover:bg-purple-950"
+                            title="Editar vínculos e dados do vídeo"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => window.open(file.fileUrl || file.thumbnailUrl, '_blank')}
