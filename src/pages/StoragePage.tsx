@@ -104,8 +104,10 @@ export default function StoragePage() {
       const payload = {
         store_id: settings.store_id,
         title: file.name,
+        video_source_type: 'upload',
+        source_type: 'upload',
         video_url: tempUrl,
-        thumbnail_url: isVideo ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80' : tempUrl,
+        thumbnail_url: isVideo ? tempUrl : tempUrl,
         file_size: file.size,
         status: 'active',
         active: true,
