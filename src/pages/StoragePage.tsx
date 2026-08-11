@@ -5,6 +5,7 @@ import {
   Search,
   Trash2,
   Eye,
+  Download,
   FileVideo,
   FileImage,
   UploadCloud,
