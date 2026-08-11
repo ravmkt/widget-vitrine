@@ -1808,39 +1808,7 @@ const ModalPreview = ({
           )}
         </div>
 
-        {m.show_product && (
-          <div className="absolute bottom-2 left-2 right-2 z-30 rounded-lg border border-white/10 bg-white/95 p-2 text-slate-900 shadow-lg backdrop-blur">
-            <div className="flex items-center gap-1.5">
-              <div
-                className="h-10 w-10 shrink-0 rounded"
-                style={{
-                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
-                }}
-              />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[10px] font-black">Calça Confort</p>
-                <p className="text-[10px] font-black text-[#0094EB]">R$ 149,95</p>
-                <div className="mt-1 flex gap-1">
-                  {m.show_product_button && (
-                    <button
-                      type="button"
-                      className="flex-1 rounded px-1.5 py-1 text-[8px] font-black text-white"
-                      style={{ backgroundColor: colors.button }}
-                    >
-                      Ver produto
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className="flex-1 rounded px-1.5 py-1 text-[8px] font-black text-white bg-[#25D366]"
-                  >
-                    WhatsApp
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+
       </div>
     </div>
   );
