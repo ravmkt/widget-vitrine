@@ -1847,23 +1847,7 @@ const ModalPreview = ({
                 >
                   R$ 149,95
                 </p>
-                <div className="mt-1 flex gap-1">
-                  {m.show_product_button && (
-                    <button
-                      type="button"
-                      className="flex-1 rounded px-1.5 py-1 text-[8px] font-black text-white"
-                      style={{ backgroundColor: colors.button }}
-                    >
-                      Ver produto
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className="flex-1 rounded px-1.5 py-1 text-[8px] font-black text-white bg-[#25D366]"
-                  >
-                    WhatsApp
-                  </button>
-                </div>
+
               </div>
             </div>
           </div>
