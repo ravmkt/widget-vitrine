@@ -11,7 +11,9 @@ import {
   MonitorPlay,
   User,
   LogOut,
-  BarChart3
+  BarChart3,
+  PanelLeftClose,
+  PanelLeftOpen
 } from "lucide-react";
 import {
   Sidebar,
