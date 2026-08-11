@@ -820,7 +820,32 @@ var shape = String(rcv('shape', 'card_shape', 'portrait')).trim().toLowerCase();
   };
 }
 
+function getGridConfig(appearance) {
+  appearance = normalizeAppearanceItem(appearance || {});
+  function rcv(jsonbField, flatField, fallback) {
+    return readConfigValue(appearance, 'grid_config', jsonbField, flatField, fallback);
+  }
+  var rawShape = rcv('shape', 'grid_shape', 'portrait');
+  var shape = String(rawShape !== undefined && rawShape !== null ? rawShape : 'portrait').trim().toLowerCase();
+  var sizeNumber = toNumber(rcv('width', 'grid_size', '30'), 30);
+  var columns = safeInt(rcv('visible_items', 'grid_columns', '4'), 4);
+  var rows = safeInt(rcv('rows', 'grid_rows', '1'), 1);
+  var spacing = safeInt(rcv('spacing', 'grid_spacing', '16'), 16);
+  var borderColor = rcv('border_color', 'grid_border_color', '#0094EB') || '#0094EB';
+  var borderWidth = safeInt(rcv('border_style', 'grid_border_width', '2'), 2);
+  
+  var rawBorderRadius = safeInt(rcv('border_radius', 'grid_border_radius', '12'), 12);
+  // Se o formato for círculo, força o border-radius para 50%
+  var borderRadius = (shape === 'circle') ? '50%' : (rawBorderRadius + 'px');
 
+  var objectFit = String(rcv('object_fit', 'grid_object_fit', 'cover') || 'cover').trim().toLowerCase();
+  var showTitle = toBoolean(rcv('show_title', 'grid_show_title', false), false);
+  var aspectRatio = '9 / 16';
+  if (typeof shape === 'string' && (shape.indexOf('landscape') !== -1 || shape.indexOf('paisagem') !== -1 || shape.indexOf('16_9') !== -1 || shape.indexOf('16-9') !== -1)) {
+    aspectRatio = '16 / 9';
+  } else if (typeof shape === 'string' && (shape.indexOf('square') !== -1 || shape.indexOf('1_1') !== -1 || shape.indexOf('1-1') !== -1 || shape === 'circle')) {
+    aspectRatio = '1 / 1';
+  }
 
   return {
     shape: shape, size: sizeNumber,
