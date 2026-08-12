@@ -1,4 +1,4 @@
-// src/lib/services/metrics-service.ts
+// src/services/metrics-service.ts
 
 import { supabase } from '@/lib/supabase'
 import { subDays } from 'date-fns'

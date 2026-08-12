@@ -13,7 +13,7 @@ import { ptBR } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 import { DayPicker } from 'react-day-picker'
 import CustomDialog from '@/components/CustomDialog'
-import type { TimeRange } from '@/lib/services/metrics-service'
+import type { TimeRange } from '@/services/metrics-service'
 
 // Placeholders — vamos codar depois
 import { OverviewTab } from '@/components/performance/overview-tab'

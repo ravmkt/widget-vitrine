@@ -35,7 +35,7 @@ import {
   getVideoMetricsRows,
   type AnalyticsInterval,
 } from '@/lib/analytics';
-import { getSectorBenchmark } from '@/lib/services/metrics-service';
+import { getSectorBenchmark } from '@/services/metrics-service';
 import { supabase } from '@/lib/supabase';
 import {
   Select,
