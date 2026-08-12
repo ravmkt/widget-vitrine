@@ -1,4 +1,3 @@
-// trecho novo
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { db } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
@@ -38,139 +37,11 @@ import {
 } from '@/services/integrations';
 // Utilitário robusto para extrair e gerar a capa de links externos (YouTube Shorts, Vídeos e Instagram Reels)
 const getExternalVideoThumbnail = (url: string): string => {
-  if (!url) return '';
-  const cleanUrl = url.trim();
-
-  // 1. YouTube Shorts e Vídeos Tradicionais (youtube.com/shorts/, watch?v=, youtu.be/)
-  const youtubeMatch = cleanUrl.match(/(?:youtube\.com\/(?:shorts\/|watch\?v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
-  if (youtubeMatch && youtubeMatch[1]) {
-    const videoId = youtubeMatch[1];
-    return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-  }
-
-  // 2. Instagram Reels (instagram.com/reel/ or instagram.com/p/)
-  const instaMatch = cleanUrl.match(/instagram\.com\/(?:reel|p)\/([a-zA-Z0-9_-]+)/i);
-  if (instaMatch) {
-    // Gerador de capa vetorizada SVG em Base64 com branding do Instagram para evitar restrições de CORS da Meta
-    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
-      <defs>
-        <linearGradient id="igGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="#f09433"/>
-          <stop offset="25%" stop-color="#e6683c"/>
-          <stop offset="50%" stop-color="#dc2743"/>
-          <stop offset="75%" stop-color="#cc2366"/>
-          <stop offset="100%" stop-color="#bc1888"/>
-        </linearGradient>
-      </defs>
-      <rect width="320" height="320" fill="url(#igGrad)"/>
-      <rect x="80" y="80" width="160" height="160" rx="40" fill="none" stroke="#ffffff" stroke-width="12"/>
-      <circle cx="160" cy="160" r="40" fill="none" stroke="#ffffff" stroke-width="12"/>
-      <circle cx="205" cy="115" r="10" fill="#ffffff"/>
-    </svg>`;
-    return `data:image/svg+xml;base64,${btoa(svgContent)}`;
-  }
-
-  // 3. Imagens ou Mídias diretas com extensões válidas
-  if (cleanUrl.match(/\.(jpeg|jpg|gif|png|webp)($|\?)/i)) {
-    return cleanUrl;
-  }
-
-  return cleanUrl;
-};
-
-// Utilitário global para converter Blob para Base64 Data URL
-const blobToBase64 = (blob: Blob): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-};
-
-// Utilitário global para extrair o primeiro frame de um vídeo via Canvas
-const generateVideoThumbnail = (file: File): Promise<Blob> => {
-  return new Promise((resolve, reject) => {
-    const video = document.createElement('video');
-    video.preload = 'metadata';
-    video.src = URL.createObjectURL(file);
-    video.muted = true;
-    video.playsInline = true;
-
-    video.onloadeddata = () => {
-      video.currentTime = 0.1;
-    };
-
-    video.onseeked = () => {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 360;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          canvas.toBlob(
-            (blob) => {
-              URL.revokeObjectURL(video.src);
-              if (blob) resolve(blob);
-              else reject(new Error('Falha ao gerar blob do canvas'));
-            },
-            'image/jpeg',
-            0.85
-          );
-        } else {
-          URL.revokeObjectURL(video.src);
-          reject(new Error('Não foi possível obter contexto do canvas'));
-        }
-      } catch (err) {
-        URL.revokeObjectURL(video.src);
-        reject(err);
-      }
-    };
-
-    video.onerror = (err) => {
-      URL.revokeObjectURL(video.src);
-      reject(err);
-    };
-  });
-};
-
-interface StorageItem {
-  id: string;
-  name: string;
-  type: 'video' | 'image';
-  sizeInBytes: number;
-  createdAt: string;
-  thumbnailUrl: string;
-  fileUrl: string;
-  productName?: string;
-  storyTitle?: string;
-  canDelete: boolean;
-}
-
+...
 const PLAN_LIMIT_BYTES = 1 * 1024 * 1024 * 1024; // 1 GB em bytes para testes de régua
 // Componentes de Ícones Vetorizados Oficiais das Plataformas
 const SocialIcons = {
-  Instagram: () => (
-    <svg className="h-4 w-4 shrink-0 fill-current" viewBox="0 0 24 24">
-      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-    </svg>
-  ),
-  TikTok: () => (
-    <svg className="h-4 w-4 shrink-0 fill-current" viewBox="0 0 24 24">
-      <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.82.57-1.31 1.56-1.31 2.56.02.83.42 1.63 1.05 2.15.82.68 1.97.87 2.97.58.98-.28 1.83-1.07 2.13-2.05.17-.63.19-1.29.18-1.94V.02z" />
-    </svg>
-  ),
-  YouTube: () => (
-    <svg className="h-4 w-4 shrink-0 fill-current" viewBox="0 0 24 24">
-      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-    </svg>
-  ),
-  Pinterest: () => (
-    <svg className="h-4 w-4 shrink-0 fill-current" viewBox="0 0 24 24">
-      <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.02 0 1.513.769 1.513 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.401.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.367 18.62 0 12.017 0z" />
-    </svg>
-  ),
+  ...
 };
 const [connectedPlatforms, setConnectedPlatforms] = useState<string[]>([]);
 
