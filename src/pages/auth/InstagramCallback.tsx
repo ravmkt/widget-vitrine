@@ -42,12 +42,10 @@ export default function InstagramCallback() {
         setErrorMessage(err.message || 'Falha ao registrar autorização do Instagram.');
         showError('Erro ao conectar conta do Instagram.');
       }
-        console.error('Erro no callback do Instagram:', err);
-        setStatus('error');
-        setErrorMessage('Falha ao registrar autorização do Instagram no banco.');
-        showError('Erro ao conectar conta do Instagram.');
-      }
     };
+
+    handleProcessCallback();
+  }, [searchParams, navigate]);
 
     handleProcessCallback();
   }, [searchParams, navigate]);
