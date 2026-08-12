@@ -26,6 +26,7 @@ import MedidasPage from "@/pages/MedidasPage";
 import AppearancePage from "@/pages/AppearancePage";
 import CommentsPage from "@/pages/CommentsPage";
 import StoragePage from "@/pages/StoragePage";
+import InstagramCallback from "@/pages/auth/InstagramCallback";
 import StoryPreviewPage from "@/pages/StoryPreviewPage";
 
 // ── Protege rotas que exigem login ──
@@ -119,6 +120,7 @@ function App() {
           {/* Rotas públicas */}
           <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
           <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
+          <Route path="/auth/instagram/callback" element={<InstagramCallback />} />
 
           {/* Raiz → verifica estado */}
           <Route path="/" element={<HomeGuard />} />
