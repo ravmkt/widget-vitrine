@@ -100,8 +100,7 @@ export default function StoragePage() {
   const [selectedType, setSelectedType] = useState<'all' | 'video' | 'image'>('all');
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [showAddMenu, setShowAddMenu] = useState(false);
-  const [showUrlModal, setShowUrlModal] = useState(false);
+const [showUrlModal, setShowUrlModal] = useState(false);
   const [externalUrl, setExternalUrl] = useState('');
   const [externalTitle, setExternalTitle] = useState('');
   const [selectedProductId, setSelectedProductId] = useState('');
