@@ -34,10 +34,20 @@ export const connectInstagramAccount = async () => {
     return;
   }
 
-  const { APP_ID, REDIRECT_URI, SCOPE } = INTEGRATION_CONFIGS.INSTAGRAM;
-  const authUrl = `https://api.instagram.com/oauth/authorize?client_id=${APP_ID}&redirect_uri=${encodeURIComponent(
+  const { APP_ID, REDIRECT_URI } = INTEGRATION_CONFIGS.INSTAGRAM;
+  
+  // Escopos exigidos pela Meta para a API do Instagram Graph (Business / Creator)
+  const graphScopes = [
+    'instagram_basic',
+    'instagram_manage_insights',
+    'pages_show_list',
+    'pages_read_engagement'
+  ].join(',');
+
+  // Endpoint oficial OAuth do Facebook/Instagram Graph API
+  const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${encodeURIComponent(
     REDIRECT_URI
-  )}&scope=${encodeURIComponent(SCOPE)}&response_type=code&state=${settings.store_id}&enable_fb_login=0&force_authentication=1`;
+  )}&scope=${encodeURIComponent(graphScopes)}&response_type=code&state=${settings.store_id}`;
 
   window.location.href = authUrl;
 };
