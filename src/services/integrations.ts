@@ -35,14 +35,11 @@ export const connectInstagramAccount = async () => {
   }
 
   const { APP_ID, REDIRECT_URI } = INTEGRATION_CONFIGS.INSTAGRAM;
-  
-  // Escopos unificados para acesso e leitura básica da conta do Instagram via Facebook
-  const graphScopes = ['public_profile', 'instagram_basic', 'pages_show_list'].join(',');
 
-  // Endpoint oficial do Dialog OAuth sem trava de versão rígida
+  // Usa apenas public_profile para passar pela validação inicial sem exigência de permissões extras no painel
   const authUrl = `https://www.facebook.com/dialog/oauth?client_id=${APP_ID}&redirect_uri=${encodeURIComponent(
     REDIRECT_URI
-  )}&scope=${encodeURIComponent(graphScopes)}&response_type=code&state=${settings.store_id}`;
+  )}&scope=public_profile&response_type=code&state=${settings.store_id}`;
 
   window.location.href = authUrl;
 };
