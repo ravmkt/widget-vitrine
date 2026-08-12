@@ -35,7 +35,7 @@ export default function InstagramCallback() {
 
         setStatus('success');
         showSuccess('Instagram conectado com sucesso!');
-        setTimeout(() => navigate('/storage'), 2000);
+        setTimeout(() => navigate('/armazenamento'), 2000);
       } catch (err: any) {
         console.error('Erro no callback do Instagram:', err);
         setStatus('error');
@@ -72,7 +72,7 @@ export default function InstagramCallback() {
             <h2 className="text-lg font-bold text-white">Falha na Conexão</h2>
             <p className="text-xs text-rose-400">{errorMessage}</p>
             <button
-              onClick={() => navigate('/storage')}
+              onClick={() => navigate('/armazenamento')}
               className="mt-4 rounded-xl bg-slate-800 px-4 py-2 text-xs font-bold text-white hover:bg-slate-700"
             >
               Voltar ao Armazenamento
