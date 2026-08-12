@@ -625,6 +625,71 @@ const [showUrlModal, setShowUrlModal] = useState(false);
             {connectedPlatforms.includes('instagram') ? 'Instagram Conectado' : 'Conectar Instagram'}
           </button>
 
+          <div className="flex flex-wrap items-center gap-2.5">
+          {/* Botão Instagram */}
+          <button
+            type="button"
+            onClick={() => connectInstagramAccount()}
+            title="Conectar Conta do Instagram"
+            className={cn(
+              "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-bold transition-all border shadow-sm",
+              connectedPlatforms.includes('instagram')
+                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "border-pink-200 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-amber-500/10 text-pink-600 hover:opacity-90 dark:border-pink-900/40 dark:text-pink-400"
+            )}
+          >
+            <SocialIcons.Instagram />
+            {connectedPlatforms.includes('instagram') ? 'Instagram Conectado' : 'Instagram'}
+          </button>
+
+          {/* Botão TikTok */}
+          <button
+            type="button"
+            onClick={() => connectTikTokAccount()}
+            title="Conectar Conta do TikTok"
+            className={cn(
+              "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-bold transition-all border shadow-sm",
+              connectedPlatforms.includes('tiktok')
+                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "border-slate-200 bg-slate-900 text-white hover:bg-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+            )}
+          >
+            <SocialIcons.TikTok />
+            {connectedPlatforms.includes('tiktok') ? 'TikTok Conectado' : 'TikTok'}
+          </button>
+
+          {/* Botão YouTube Shorts */}
+          <button
+            type="button"
+            onClick={() => connectYouTubeAccount()}
+            title="Conectar Canal do YouTube"
+            className={cn(
+              "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-bold transition-all border shadow-sm",
+              connectedPlatforms.includes('youtube')
+                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-400"
+            )}
+          >
+            <SocialIcons.YouTube />
+            {connectedPlatforms.includes('youtube') ? 'Shorts Conectado' : 'YouTube'}
+          </button>
+
+          {/* Botão Pinterest */}
+          <button
+            type="button"
+            onClick={() => connectPinterestAccount()}
+            title="Conectar Conta do Pinterest"
+            className={cn(
+              "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-bold transition-all border shadow-sm",
+              connectedPlatforms.includes('pinterest')
+                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "border-red-200 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-400"
+            )}
+          >
+            <SocialIcons.Pinterest />
+            {connectedPlatforms.includes('pinterest') ? 'Pinterest Conectado' : 'Pinterest'}
+          </button>
+
           <input
             type="file"
             ref={fileInputRef}
@@ -633,22 +698,24 @@ const [showUrlModal, setShowUrlModal] = useState(false);
             className="hidden"
           />
 
+          {/* Botão URL Externa */}
           <button
             type="button"
             onClick={() => setShowUrlModal(true)}
-            className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm hover:border-purple-300 hover:bg-purple-50/50 hover:text-purple-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-purple-800 dark:hover:bg-purple-950/40 dark:hover:text-purple-400 transition-all"
+            className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm hover:border-purple-300 hover:bg-purple-50/50 hover:text-purple-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-purple-800 dark:hover:bg-purple-950/40 dark:hover:text-purple-400 transition-all"
           >
-            <Link size={18} className="text-purple-500" />
+            <Link size={16} className="text-purple-500" />
             URL Externa
           </button>
 
+          {/* Botão Fazer Upload */}
           <button
             type="button"
             disabled={uploading}
             onClick={handleTriggerUpload}
-            className="flex items-center gap-2 rounded-2xl bg-[#0094EB] px-6 py-3 text-sm font-bold text-white shadow-lg hover:bg-[#0E4787] transition-all disabled:opacity-50"
+            className="flex items-center gap-2 rounded-2xl bg-[#0094EB] px-5 py-2.5 text-xs font-bold text-white shadow-lg hover:bg-[#0E4787] transition-all disabled:opacity-50"
           >
-            <UploadCloud size={18} className={uploading ? 'animate-bounce' : ''} />
+            <UploadCloud size={16} className={uploading ? 'animate-bounce' : ''} />
             {uploading ? 'Enviando...' : 'Fazer Upload'}
           </button>
         </div>
