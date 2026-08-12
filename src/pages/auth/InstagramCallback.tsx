@@ -22,23 +22,26 @@ export default function InstagramCallback() {
       }
 
       try {
-        // Envia o código temporário para ser trocado pelo Access Token final de longa duração
+        // Chama a Edge Function do Supabase para processar a troca do token com o secret
         if (supabase) {
-          const { error } = await supabase.from('store_integrations').upsert({
-            store_id: storeId,
-            platform: 'instagram',
-            access_token: code, // Salva temporariamente para processamento da Edge Function
-            account_username: 'Instagram Conectado',
-            updated_at: new Date().toISOString(),
+          const { data, error } = await supabase.functions.invoke('instagram-auth', {
+            body: { code, store_id: storeId },
           });
 
-          if (error) throw error;
+          if (error || data?.error) {
+            throw new Error(error?.message || data?.error || 'Erro ao validar autorização na Meta.');
+          }
         }
 
         setStatus('success');
         showSuccess('Instagram conectado com sucesso!');
         setTimeout(() => navigate('/storage'), 2000);
-      } catch (err) {
+      } catch (err: any) {
+        console.error('Erro no callback do Instagram:', err);
+        setStatus('error');
+        setErrorMessage(err.message || 'Falha ao registrar autorização do Instagram.');
+        showError('Erro ao conectar conta do Instagram.');
+      }
         console.error('Erro no callback do Instagram:', err);
         setStatus('error');
         setErrorMessage('Falha ao registrar autorização do Instagram no banco.');
