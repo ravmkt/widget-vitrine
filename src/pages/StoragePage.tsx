@@ -767,19 +767,37 @@ const [showUrlModal, setShowUrlModal] = useState(false);
                     <td className="px-6 py-3.5">
                       <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-slate-200 bg-slate-900 shadow-sm dark:border-slate-800 flex items-center justify-center shrink-0">
                         {file.type === 'video' ? (
-                          file.thumbnailUrl && !file.thumbnailUrl.includes('unsplash.com') ? (
-                            <img src={file.thumbnailUrl} alt={file.name} className="h-full w-full object-cover" />
+                          file.thumbnailUrl && !file.thumbnailUrl.includes('unsplash.com') && (file.thumbnailUrl.startsWith('http') || file.thumbnailUrl.startsWith('data:')) ? (
+                            <img 
+                              src={file.thumbnailUrl} 
+                              alt={file.name} 
+                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                // Esconde a imagem quebrada em caso de falha de CORS
+                                e.currentTarget.style.display = 'none';
+                              }} 
+                            />
                           ) : (
                             <video
-                              src={`${file.fileUrl || file.thumbnailUrl}#t=0.1`}
+                              src={file.fileUrl && file.fileUrl.endsWith('.mp4') ? `${file.fileUrl}#t=0.1` : undefined}
                               className="h-full w-full object-cover"
                               preload="metadata"
                               muted
                               playsInline
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
                             />
                           )
                         ) : (
-                          <img src={file.thumbnailUrl} alt={file.name} className="h-full w-full object-cover" />
+                          <img 
+                            src={file.thumbnailUrl} 
+                            alt={file.name} 
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
                         )}
                         <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-white pointer-events-none">
                           {file.type === 'video' ? <FileVideo size={16} /> : <FileImage size={16} />}
