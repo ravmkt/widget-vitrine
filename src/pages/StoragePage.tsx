@@ -22,6 +22,13 @@ import {
 import { connectInstagramAccount, getConnectedIntegrations } from '@/services/integrations';
 import { cn } from '@/lib/utils';
 import { showSuccess, showError } from '@/utils/toast';
+import {
+  connectInstagramAccount,
+  connectTikTokAccount,
+  connectYouTubeAccount,
+  connectPinterestAccount,
+  getConnectedIntegrations,
+} from '@/services/integrations';
 // Utilitário robusto para extrair e gerar a capa de links externos (YouTube Shorts, Vídeos e Instagram Reels)
 const getExternalVideoThumbnail = (url: string): string => {
   if (!url) return '';
