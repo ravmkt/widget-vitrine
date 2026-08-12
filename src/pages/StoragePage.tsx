@@ -158,6 +158,7 @@ const [showUrlModal, setShowUrlModal] = useState(false);
       }
 
       const formattedUrl = externalUrl.trim();
+      const extractedThumb = getExternalVideoThumbnail(formattedUrl);
       const title = externalTitle.trim() || `VÍDEO_EXTERNO_${Date.now().toString().slice(-4)}`;
 
       const payload = {
@@ -166,10 +167,10 @@ const [showUrlModal, setShowUrlModal] = useState(false);
         video_source_type: 'url',
         source_type: 'url',
         video_url: formattedUrl,
-        thumbnail_url: formattedUrl,
-        thumbnail_source_type: 'url',
+        thumbnail_url: extractedThumb,
+        thumbnail_source_type: 'auto',
         product_id: selectedProductId || null,
-        file_size: 0, // Links externos consomem 0 B da cota
+        file_size: 0, // Links externos consomem 0 B da cota da plataforma
         thumbnail_file_size: 0,
         status: 'active',
         active: true,
