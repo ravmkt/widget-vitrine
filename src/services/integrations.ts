@@ -27,6 +27,7 @@ export const INTEGRATION_CONFIGS = {
 /**
  * Dispara o fluxo oficial OAuth do Instagram
  */
+// trecho novo
 export const connectInstagramAccount = async () => {
   const settings = await db.getSettings();
   if (!settings?.store_id) {
@@ -34,15 +35,11 @@ export const connectInstagramAccount = async () => {
     return;
   }
 
-  const { APP_ID, REDIRECT_URI } = INTEGRATION_CONFIGS.INSTAGRAM;
+  const { APP_ID, REDIRECT_URI, SCOPE } = INTEGRATION_CONFIGS.INSTAGRAM;
 
-  // Escopo oficial do Instagram Business Login
-  const scope = 'instagram_business_basic';
-
-  // Endpoint nativo do Instagram OAuth (sem dependência do Facebook Login)
   const authUrl = `https://www.instagram.com/oauth/authorize?client_id=${APP_ID}&redirect_uri=${encodeURIComponent(
     REDIRECT_URI
-  )}&response_type=code&scope=${scope}&state=${settings.store_id}`;
+  )}&response_type=code&scope=${SCOPE}&state=${settings.store_id}`;
 
   window.location.href = authUrl;
 };
