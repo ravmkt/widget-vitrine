@@ -21,8 +21,8 @@ serve(async (req) => {
       );
     }
 
-    const APP_ID = Deno.env.get('INSTAGRAM_APP_ID') || '4361903077394793';
-    const APP_SECRET = Deno.env.get('INSTAGRAM_APP_SECRET') || '7163d5d8fddb725d19f12c20f47f71db';
+    const APP_ID = '1780976113328436';
+    const APP_SECRET = 'COLE_AQUI_A_CHAVE_SECRETA_MOSTRADA_AO_CLICAR_EM_MOSTRAR';
     const REDIRECT_URI = 'https://app.vidlytics.com.br/api/auth/instagram/callback';
 
     // 1. Troca o código temporário pelo Short-Lived Access Token
