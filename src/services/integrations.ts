@@ -36,12 +36,13 @@ export const connectInstagramAccount = async () => {
 
   const { APP_ID, REDIRECT_URI } = INTEGRATION_CONFIGS.INSTAGRAM;
 
-  // Permissão suportada e obrigatória para a API do Instagram Graph
-  const graphScopes = ['public_profile', 'instagram_basic'].join(',');
+  // Escopo oficial do Instagram Business Login
+  const scope = 'instagram_business_basic';
 
-  const authUrl = `https://www.facebook.com/dialog/oauth?client_id=${APP_ID}&redirect_uri=${encodeURIComponent(
+  // Endpoint nativo do Instagram OAuth (sem dependência do Facebook Login)
+  const authUrl = `https://www.instagram.com/oauth/authorize?client_id=${APP_ID}&redirect_uri=${encodeURIComponent(
     REDIRECT_URI
-  )}&scope=${encodeURIComponent(graphScopes)}&response_type=code&state=${settings.store_id}`;
+  )}&response_type=code&scope=${scope}&state=${settings.store_id}`;
 
   window.location.href = authUrl;
 };
