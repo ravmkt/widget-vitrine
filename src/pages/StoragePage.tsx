@@ -135,6 +135,23 @@ interface StorageItem {
 }
 
 const PLAN_LIMIT_BYTES = 1 * 1024 * 1024 * 1024; // 1 GB em bytes para testes de régua
+const [connectedPlatforms, setConnectedPlatforms] = useState<string[]>([]);
+
+  // Busca integrações conectadas no Supabase ao carregar a página
+  useEffect(() => {
+    const checkIntegrations = async () => {
+      try {
+        const settings = await db.getSettings();
+        if (settings?.store_id) {
+          const data = await getConnectedIntegrations(settings.store_id);
+          setConnectedPlatforms(data.map((item: any) => item.platform));
+        }
+      } catch (err) {
+        console.warn('Erro ao verificar integrações sociais:', err);
+      }
+    };
+    checkIntegrations();
+  }, []);
 
 export default function StoragePage() {
   const [files, setFiles] = useState<StorageItem[]>([]);
