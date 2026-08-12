@@ -36,13 +36,14 @@ export const connectInstagramAccount = async () => {
 
   const { APP_ID, REDIRECT_URI } = INTEGRATION_CONFIGS.INSTAGRAM;
   
-  // Escopos oficiais da API do Instagram Graph para leitura de perfil e mídias/reels
+  // Escopos aceitos pelo Facebook Dialog OAuth para a API do Instagram Graph
   const graphScopes = [
-    'instagram_graph_user_profile',
-    'instagram_graph_user_media'
+    'public_profile',
+    'instagram_basic',
+    'pages_show_list'
   ].join(',');
 
-  // Endpoint oficial OAuth
+  // Endpoint oficial OAuth do Facebook
   const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${encodeURIComponent(
     REDIRECT_URI
   )}&scope=${encodeURIComponent(graphScopes)}&response_type=code&state=${settings.store_id}`;
