@@ -47,9 +47,6 @@ export default function InstagramCallback() {
     handleProcessCallback();
   }, [searchParams, navigate]);
 
-    handleProcessCallback();
-  }, [searchParams, navigate]);
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-900 p-4">
       <div className="w-full max-w-md rounded-3xl bg-slate-950 p-8 text-center shadow-2xl border border-slate-800 space-y-4">
