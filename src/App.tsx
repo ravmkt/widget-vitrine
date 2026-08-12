@@ -117,9 +117,10 @@ function App() {
     <TenantProvider>
       <BrowserRouter>
         <Routes>
-          {/* Rotas públicas */}
+{/* Rotas públicas */}
           <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
           <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
+          <Route path="/api/auth/instagram/callback" element={<InstagramCallback />} />
           <Route path="/auth/instagram/callback" element={<InstagramCallback />} />
 
           {/* Raiz → verifica estado */}
