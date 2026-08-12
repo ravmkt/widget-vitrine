@@ -1,3 +1,4 @@
+// trecho novo
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { db } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
