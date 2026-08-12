@@ -527,16 +527,16 @@ export default function StoragePage() {
 
             <button
               type="button"
-              onClick={() => setShowAddMenu(!showAddMenu)}
+              onClick={() => setShowAddMenu((prev) => !prev)}
               className="px-3 py-3 hover:bg-black/10 rounded-r-2xl transition-all"
               title="Mais opções de adição"
             >
-              <ChevronDown size={16} className={cn("transition-transform", showAddMenu && "rotate-180")} />
+              <ChevronDown size={16} className={cn('transition-transform', showAddMenu ? 'rotate-180' : '')} />
             </button>
           </div>
 
-          {{/* Menu Dropdown de Ações */}
-          {showAddMenu && (
+          {/* Menu Dropdown de Ações */}
+          {Boolean(showAddMenu) && (
             <div 
               className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 z-50 animate-in fade-in slide-in-from-top-2"
               onClick={() => setShowAddMenu(false)}
