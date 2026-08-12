@@ -2,6 +2,13 @@ import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { db } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
 import {
+  connectInstagramAccount,
+  connectTikTokAccount,
+  connectYouTubeAccount,
+  connectPinterestAccount,
+  getConnectedIntegrations,
+} from '@/services/integrations';
+import {
   HardDrive,
   Search,
   Trash2,
@@ -19,7 +26,6 @@ import {
   Sparkles,
   Instagram,
 } from 'lucide-react';
-import { connectInstagramAccount, getConnectedIntegrations } from '@/services/integrations';
 import { cn } from '@/lib/utils';
 import { showSuccess, showError } from '@/utils/toast';
 import {
