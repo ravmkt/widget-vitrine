@@ -503,7 +503,7 @@ export default function StoragePage() {
             Gerencie os vídeos e imagens hospedados no seu plano.
           </p>
         </div>
-        <div>
+        <div className="relative">
           <input
             type="file"
             ref={fileInputRef}
@@ -511,17 +511,55 @@ export default function StoragePage() {
             accept="video/*,image/*"
             className="hidden"
           />
-          <button
-            type="button"
-            disabled={uploading}
-            onClick={handleTriggerUpload}
-            className="flex items-center gap-2 rounded-2xl bg-[#0094EB] px-6 py-3 text-sm font-bold text-white shadow-lg hover:bg-[#0E4787] transition-all disabled:opacity-50"
-          >
-            <UploadCloud size={18} className={uploading ? 'animate-bounce' : ''} />
-            {uploading ? 'Enviando...' : 'Fazer Upload'}
-          </button>
+          
+          <div className="flex items-center rounded-2xl bg-[#0094EB] text-white shadow-lg hover:bg-[#0E4787] transition-all">
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={handleTriggerUpload}
+              className="flex items-center gap-2 px-5 py-3 text-sm font-bold disabled:opacity-50"
+            >
+              <UploadCloud size={18} className={uploading ? 'animate-bounce' : ''} />
+              {uploading ? 'Enviando...' : 'Fazer Upload'}
+            </button>
+            
+            <div className="h-6 w-[1px] bg-white/20" />
+
+            <button
+              type="button"
+              onClick={() => setShowAddMenu(!showAddMenu)}
+              className="px-3 py-3 hover:bg-black/10 rounded-r-2xl transition-all"
+              title="Mais opções de adição"
+            >
+              <ChevronDown size={16} className={cn("transition-transform", showAddMenu && "rotate-180")} />
+            </button>
+          </div>
+
+          {/* Menu Dropdown de Ações */}
+          {showAddMenu && (
+            <div 
+              className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 z-50 animate-in fade-in slide-in-from-top-2"
+              onClick={() => setShowAddMenu(false)}
+            >
+              <button
+                type="button"
+                onClick={handleTriggerUpload}
+                className="flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 transition-all"
+              >
+                <UploadCloud size={16} className="text-[#0094EB]" />
+                Upload do Computador
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowUrlModal(true)}
+                className="flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 transition-all"
+              >
+                <Link size={16} className="text-purple-500" />
+                Adicionar por URL Externa
+              </button>
+            </div>
+          )}
         </div>
-      </div>
 
       {/* Card da Régua de Porcentagem de Armazenamento Dinâmica */}
       {(() => {
