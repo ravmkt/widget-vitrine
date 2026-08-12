@@ -22,7 +22,7 @@ serve(async (req) => {
     }
 
     const APP_ID = '1780976113328436';
-    const APP_SECRET = 'COLE_AQUI_A_CHAVE_SECRETA_MOSTRADA_AO_CLICAR_EM_MOSTRAR';
+    const APP_SECRET = 'c195148f7e036d59ad9c39c13415bea2';
     const REDIRECT_URI = 'https://app.vidlytics.com.br/api/auth/instagram/callback';
 
     // 1. Troca o código temporário pelo Short-Lived Access Token
