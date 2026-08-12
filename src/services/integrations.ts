@@ -37,11 +37,10 @@ export const connectInstagramAccount = async () => {
   const { APP_ID, REDIRECT_URI, SCOPE } = INTEGRATION_CONFIGS.INSTAGRAM;
   const authUrl = `https://api.instagram.com/oauth/authorize?client_id=${APP_ID}&redirect_uri=${encodeURIComponent(
     REDIRECT_URI
-  )}&scope=${encodeURIComponent(SCOPE)}&response_type=code&state=${settings.store_id}`;
+  )}&scope=${encodeURIComponent(SCOPE)}&response_type=code&state=${settings.store_id}&enable_fb_login=0&force_authentication=1`;
 
   window.location.href = authUrl;
 };
-
 /**
  * Dispara o fluxo oficial OAuth do TikTok
  */
