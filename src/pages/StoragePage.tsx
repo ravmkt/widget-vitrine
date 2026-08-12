@@ -185,6 +185,23 @@ const [connectedPlatforms, setConnectedPlatforms] = useState<string[]>([]);
 
 export default function StoragePage() {
   const [files, setFiles] = useState<StorageItem[]>([]);
+  const [connectedPlatforms, setConnectedPlatforms] = useState<string[]>([]);
+
+  // Carrega as plataformas sociais conectadas à loja no Supabase
+  useEffect(() => {
+    const checkIntegrations = async () => {
+      try {
+        const settings = await db.getSettings();
+        if (settings?.store_id) {
+          const data = await getConnectedIntegrations(settings.store_id);
+          setConnectedPlatforms(data.map((item: any) => item.platform));
+        }
+      } catch (err) {
+        console.warn('Erro ao carregar integrações sociais:', err);
+      }
+    };
+    checkIntegrations();
+  }, []);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<'all' | 'video' | 'image'>('all');
