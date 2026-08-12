@@ -535,7 +535,7 @@ export default function StoragePage() {
             </button>
           </div>
 
-          {/* Menu Dropdown de Ações */}
+          {{/* Menu Dropdown de Ações */}
           {showAddMenu && (
             <div 
               className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 z-50 animate-in fade-in slide-in-from-top-2"
@@ -560,6 +560,7 @@ export default function StoragePage() {
             </div>
           )}
         </div>
+      </div>
 
       {/* Card da Régua de Porcentagem de Armazenamento Dinâmica */}
       {(() => {
