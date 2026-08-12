@@ -20,6 +20,25 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { showSuccess, showError } from '@/utils/toast';
+// Utilitário para extrair a capa de links externos (YouTube Shorts, YouTube Vídeos e Instagram Reels)
+const getExternalVideoThumbnail = (url: string): string => {
+  if (!url) return '';
+  const cleanUrl = url.trim();
+
+  // 1. YouTube Shorts e Vídeos Tradicionais
+  const youtubeShortsMatch = cleanUrl.match(/(?:youtube\.com\/shorts\/|youtu\.be\/|youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/i);
+  if (youtubeShortsMatch && youtubeShortsMatch[1]) {
+    const videoId = youtubeShortsMatch[1];
+    return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+  }
+
+  // 2. Se for link direto de imagem/vídeo ou CDN externa de terceiros
+  if (cleanUrl.match(/\.(jpeg|jpg|gif|png|webp)($|\?)/i)) {
+    return cleanUrl;
+  }
+
+  return cleanUrl;
+};
 
 // Utilitário global para converter Blob para Base64 Data URL
 const blobToBase64 = (blob: Blob): Promise<string> => {
