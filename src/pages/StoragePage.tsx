@@ -100,6 +100,84 @@ export default function StoragePage() {
   const [selectedType, setSelectedType] = useState<'all' | 'video' | 'image'>('all');
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showAddMenu, setShowAddMenu] = useState(false);
+  const [showUrlModal, setShowUrlModal] = useState(false);
+  const [externalUrl, setExternalUrl] = useState('');
+  const [externalTitle, setExternalTitle] = useState('');
+  const [selectedProductId, setSelectedProductId] = useState('');
+  const [productsList, setProductsList] = useState<any[]>([]);
+  const [savingUrl, setSavingUrl] = useState(false);
+
+  // Carrega produtos da loja para o seletor da modal
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        if (typeof db.products?.getAll === 'function') {
+          const prods = await db.products.getAll();
+          setProductsList(Array.isArray(prods) ? prods : []);
+        }
+      } catch (err) {
+        console.warn('Não foi possível carregar produtos:', err);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  // Processa a gravação da Mídia por URL Externa
+  const handleSaveExternalUrl = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!externalUrl.trim()) {
+      showError('Por favor, informe a URL do vídeo.');
+      return;
+    }
+
+    try {
+      setSavingUrl(true);
+      const settings = await db.getSettings();
+      if (!settings?.store_id) {
+        throw new Error('ID da loja não encontrado.');
+      }
+
+      const formattedUrl = externalUrl.trim();
+      const title = externalTitle.trim() || `VÍDEO_EXTERNO_${Date.now().toString().slice(-4)}`;
+
+      const payload = {
+        store_id: settings.store_id,
+        title: title,
+        video_source_type: 'url',
+        source_type: 'url',
+        video_url: formattedUrl,
+        thumbnail_url: formattedUrl,
+        thumbnail_source_type: 'url',
+        product_id: selectedProductId || null,
+        file_size: 0, // Links externos consomem 0 B da cota
+        thumbnail_file_size: 0,
+        status: 'active',
+        active: true,
+        created_at: new Date().toISOString(),
+      };
+
+      if (supabase) {
+        const { error } = await supabase.from('videos').insert([payload]);
+        if (error) throw error;
+      } else if (typeof db.videos?.create === 'function') {
+        await db.videos.create(payload);
+      }
+
+      showSuccess('Mídia externa cadastrada com sucesso!');
+      setShowUrlModal(false);
+      setExternalUrl('');
+      setExternalTitle('');
+      setSelectedProductId('');
+      await loadAccountStorageData();
+    } catch (err) {
+      console.error('Erro ao salvar URL externa:', err);
+      showError('Falha ao cadastrar vídeo por URL.');
+    } finally {
+      setSavingUrl(false);
+    }
+  };
 
   // Gatilho para abrir a janela do sistema operacional ao clicar no botão "Fazer Upload"
   const handleTriggerUpload = () => {
