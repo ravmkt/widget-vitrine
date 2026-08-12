@@ -3,9 +3,9 @@ import { supabase } from '@/lib/supabase';
 
 export const INTEGRATION_CONFIGS = {
   INSTAGRAM: {
-    APP_ID: '4361903077394793',
+    APP_ID: '1780976113328436', // Instagram App ID dedicado obtido do painel da Meta
     REDIRECT_URI: 'https://app.vidlytics.com.br/api/auth/instagram/callback',
-    SCOPE: 'instagram_graph_user_media,instagram_graph_user_profile',
+    SCOPE: 'instagram_business_basic',
   },
   TIKTOK: {
     CLIENT_KEY: '', // Inserir quando aprovado no portal do TikTok
