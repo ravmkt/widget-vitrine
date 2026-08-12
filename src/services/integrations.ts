@@ -36,10 +36,12 @@ export const connectInstagramAccount = async () => {
 
   const { APP_ID, REDIRECT_URI } = INTEGRATION_CONFIGS.INSTAGRAM;
 
-  // Usa apenas public_profile para passar pela validação inicial sem exigência de permissões extras no painel
+  // Permissão suportada e obrigatória para a API do Instagram Graph
+  const graphScopes = ['public_profile', 'instagram_basic'].join(',');
+
   const authUrl = `https://www.facebook.com/dialog/oauth?client_id=${APP_ID}&redirect_uri=${encodeURIComponent(
     REDIRECT_URI
-  )}&scope=public_profile&response_type=code&state=${settings.store_id}`;
+  )}&scope=${encodeURIComponent(graphScopes)}&response_type=code&state=${settings.store_id}`;
 
   window.location.href = authUrl;
 };
