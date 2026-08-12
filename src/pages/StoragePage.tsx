@@ -563,7 +563,21 @@ const [showUrlModal, setShowUrlModal] = useState(false);
             Gerencie os vídeos e imagens hospedados no seu plano.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => connectInstagramAccount()}
+            className={cn(
+              "flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold transition-all border shadow-sm",
+              connectedPlatforms.includes('instagram')
+                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "border-pink-200 bg-pink-50/50 text-pink-600 hover:bg-pink-100/80 dark:border-pink-900/40 dark:bg-pink-950/30 dark:text-pink-400"
+            )}
+          >
+            <Instagram size={18} />
+            {connectedPlatforms.includes('instagram') ? 'Instagram Conectado' : 'Conectar Instagram'}
+          </button>
+
           <input
             type="file"
             ref={fileInputRef}
