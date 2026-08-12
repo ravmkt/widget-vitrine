@@ -17,7 +17,9 @@ import {
   CheckCircle2,
   AlertTriangle,
   Sparkles,
+  Instagram,
 } from 'lucide-react';
+import { connectInstagramAccount, getConnectedIntegrations } from '@/services/integrations';
 import { cn } from '@/lib/utils';
 import { showSuccess, showError } from '@/utils/toast';
 // Utilitário robusto para extrair e gerar a capa de links externos (YouTube Shorts, Vídeos e Instagram Reels)
