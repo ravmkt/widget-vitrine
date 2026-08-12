@@ -20,19 +20,41 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { showSuccess, showError } from '@/utils/toast';
-// Utilitário para extrair a capa de links externos (YouTube Shorts, YouTube Vídeos e Instagram Reels)
+// Utilitário robusto para extrair e gerar a capa de links externos (YouTube Shorts, Vídeos e Instagram Reels)
 const getExternalVideoThumbnail = (url: string): string => {
   if (!url) return '';
   const cleanUrl = url.trim();
 
-  // 1. YouTube Shorts e Vídeos Tradicionais
-  const youtubeShortsMatch = cleanUrl.match(/(?:youtube\.com\/shorts\/|youtu\.be\/|youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/i);
-  if (youtubeShortsMatch && youtubeShortsMatch[1]) {
-    const videoId = youtubeShortsMatch[1];
+  // 1. YouTube Shorts e Vídeos Tradicionais (youtube.com/shorts/, watch?v=, youtu.be/)
+  const youtubeMatch = cleanUrl.match(/(?:youtube\.com\/(?:shorts\/|watch\?v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
+  if (youtubeMatch && youtubeMatch[1]) {
+    const videoId = youtubeMatch[1];
     return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
   }
 
-  // 2. Se for link direto de imagem/vídeo ou CDN externa de terceiros
+  // 2. Instagram Reels (instagram.com/reel/ or instagram.com/p/)
+  const instaMatch = cleanUrl.match(/instagram\.com\/(?:reel|p)\/([a-zA-Z0-9_-]+)/i);
+  if (instaMatch) {
+    // Gerador de capa vetorizada SVG em Base64 com branding do Instagram para evitar restrições de CORS da Meta
+    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
+      <defs>
+        <linearGradient id="igGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#f09433"/>
+          <stop offset="25%" stop-color="#e6683c"/>
+          <stop offset="50%" stop-color="#dc2743"/>
+          <stop offset="75%" stop-color="#cc2366"/>
+          <stop offset="100%" stop-color="#bc1888"/>
+        </linearGradient>
+      </defs>
+      <rect width="320" height="320" fill="url(#igGrad)"/>
+      <rect x="80" y="80" width="160" height="160" rx="40" fill="none" stroke="#ffffff" stroke-width="12"/>
+      <circle cx="160" cy="160" r="40" fill="none" stroke="#ffffff" stroke-width="12"/>
+      <circle cx="205" cy="115" r="10" fill="#ffffff"/>
+    </svg>`;
+    return `data:image/svg+xml;base64,${btoa(svgContent)}`;
+  }
+
+  // 3. Imagens ou Mídias diretas com extensões válidas
   if (cleanUrl.match(/\.(jpeg|jpg|gif|png|webp)($|\?)/i)) {
     return cleanUrl;
   }
