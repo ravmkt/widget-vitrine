@@ -885,10 +885,22 @@ export default function StoragePage() {
                     alt={video.caption || 'Reels do Instagram'}
                     className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-80" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-95 transition-opacity" />
                   
+                  {/* Botão de Ação Rápida no Hover */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-[2px]">
+                    <button
+                      type="button"
+                      onClick={() => handleImportAndEditInstagramVideo(video)}
+                      className="flex items-center gap-1.5 rounded-xl bg-pink-600 px-3 py-2 text-[10px] font-black text-white shadow-lg hover:bg-pink-700 transition-all transform hover:scale-105"
+                    >
+                      <Sparkles size={12} />
+                      Usar & Editar
+                    </button>
+                  </div>
+
                   {video.caption && (
-                    <p className="absolute bottom-2.5 left-2.5 right-2.5 text-[10px] font-bold text-white line-clamp-2 leading-tight">
+                    <p className="absolute bottom-2.5 left-2.5 right-2.5 text-[10px] font-bold text-white line-clamp-2 leading-tight pointer-events-none">
                       {video.caption}
                     </p>
                   )}
