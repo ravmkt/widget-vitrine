@@ -1039,13 +1039,16 @@ export default function StoragePage() {
                                 e.currentTarget.style.display = 'none';
                               }} 
                             />
+                          // trecho novo
                           ) : (
                             <video
-                              src={file.fileUrl && file.fileUrl.endsWith('.mp4') ? `${file.fileUrl}#t=0.1` : undefined}
+                              src={file.fileUrl ? `${file.fileUrl}#t=0.1` : undefined}
                               className="h-full w-full object-cover"
                               preload="metadata"
                               muted
                               playsInline
+                              referrerPolicy="no-referrer"
+                              crossOrigin="anonymous"
                               onError={(e) => {
                                 e.currentTarget.style.display = 'none';
                               }}
