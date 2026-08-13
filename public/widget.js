@@ -1627,14 +1627,8 @@ function trackMetric(data) {
   }).catch(function () {});
 }
 
+  // trecho novo
   function buildVideoPlayer(video, storyId, onEnded) {
-    var url = getVideoUrl(video);
-    var sourceType = String(video.source_type || video.sourceType || '').toLowerCase();
-    
-    console.log('🔍 VIDLYTICS DEBUG:', {
-      video_id: video.id,
-      source_type: sourceType,
-      url: url,function buildVideoPlayer(video, storyId, onEnded) {
     var url = getVideoUrl(video);
     var sourceType = String(video.source_type || video.sourceType || '').toLowerCase();
     var ytId = extractYouTubeId(url);
