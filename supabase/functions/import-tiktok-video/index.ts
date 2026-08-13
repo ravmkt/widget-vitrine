@@ -9,10 +9,7 @@ const corsHeaders = {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, {
-      status: 200,
-      headers: corsHeaders,
-    });
+    return new Response(null, { status: 200, headers: corsHeaders });
   }
 
   try {
@@ -20,12 +17,6 @@ serve(async (req) => {
 
     if (!storeId || !videoData) {
       throw new Error("Parâmetros inválidos. Faltando storeId ou dados do vídeo do TikTok.");
-    }
-
-    const rawVideoUrl = videoData.video_url || videoData.download_url || videoData.media_url || videoData.embed_link || videoData.share_url;
-
-    if (!rawVideoUrl) {
-      throw new Error("Nenhuma URL de vídeo válida encontrada nos dados do TikTok.");
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
@@ -36,40 +27,19 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    // 1. Download do TikTok (contornando CORS do navegador)
-    const tkResponse = await fetch(rawVideoUrl);
-    if (!tkResponse.ok) {
-      throw new Error(`Falha ao baixar do TikTok: ${tkResponse.statusText}`);
-    }
-    const arrayBuffer = await tkResponse.arrayBuffer();
+    const mediaTitle = String(videoData.title || videoData.description || `TIKTOK_POST_${String(videoData.id || '').slice(-6)}`);
+    const referenceUrl = videoData.share_url || videoData.embed_link || `https://www.tiktok.com`;
+    const thumbnailPic = videoData.cover_image_url || videoData.thumbnail_url || '';
 
-    // 2. Upload seguro para o Storage
-    const safeStoragePath = `${storeId}/${Date.now()}_tk_${videoData.id || Math.random().toString(36).substring(7)}.mp4`;
-    const { data: uploadData, error: uploadErr } = await supabase.storage
-      .from("videos")
-      .upload(safeStoragePath, arrayBuffer, {
-        contentType: "video/mp4",
-        cacheControl: "3600",
-        upsert: true,
-      });
-
-    if (uploadErr) throw uploadErr;
-
-    const { data: publicUrlData } = supabase.storage
-      .from("videos")
-      .getPublicUrl(uploadData.path);
-
-    // 3. Salva no banco de dados como 'upload' nativo
-    const title = String(videoData.title || videoData.description || `TIKTOK_VIDEO_${String(videoData.id || '').slice(-6)}`);
     const payload = {
       store_id: storeId,
-      title: title.slice(0, 60),
-      video_source_type: "upload",
-      source_type: "upload",
-      video_url: publicUrlData.publicUrl,
-      thumbnail_url: videoData.cover_image_url || videoData.thumbnail_url || publicUrlData.publicUrl,
+      title: mediaTitle.slice(0, 60),
+      video_source_type: "url",
+      source_type: "url",
+      video_url: referenceUrl,
+      thumbnail_url: thumbnailPic,
       thumbnail_source_type: "auto",
-      file_size: arrayBuffer.byteLength,
+      file_size: 0,
       status: "active",
       active: true,
       created_at: new Date().toISOString(),
