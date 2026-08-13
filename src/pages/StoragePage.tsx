@@ -224,6 +224,25 @@ export default function StoragePage() {
     loadInstagramContent();
   }, [storeId, connectedPlatforms]);
 
+  // Busca os vídeos do TikTok assim que a loja for identificada e a plataforma conectada
+  useEffect(() => {
+    const loadTikTokContent = async () => {
+      if (!storeId || !connectedPlatforms.includes('tiktok')) return;
+
+      try {
+        setLoadingTikTok(true);
+        const videos = await fetchTikTokMedia(storeId);
+        setTikTokVideos(Array.isArray(videos) ? videos : []);
+      } catch (err) {
+        console.error('Erro ao carregar vídeos do TikTok:', err);
+      } finally {
+        setLoadingTikTok(false);
+      }
+    };
+
+    loadTikTokContent();
+  }, [storeId, connectedPlatforms]);
+
   // Função para salvar o Vídeo do TikTok no banco de dados
   const handleImportAndEditTikTokVideo = async (video: any) => {
     try {
