@@ -221,6 +221,53 @@ export default function StoragePage() {
     loadInstagramContent();
   }, [storeId, connectedPlatforms]);
 
+  // Função para salvar o Reels do Instagram no banco de dados e abrir a edição para vincular produtos/stories
+  const handleImportAndEditInstagramVideo = async (video: InstagramMedia) => {
+    try {
+      if (!storeId) {
+        showError('ID da loja não identificado.');
+        return;
+      }
+
+      showSuccess('Salvando mídia na sua biblioteca...');
+
+      const payload = {
+        store_id: storeId,
+        title: video.caption ? video.caption.slice(0, 60) : `INSTAGRAM_REELS_${video.id.slice(-6)}`,
+        video_source_type: 'url',
+        source_type: 'url',
+        video_url: video.media_url,
+        thumbnail_url: video.thumbnail_url || video.media_url,
+        thumbnail_source_type: 'auto',
+        status: 'active',
+        active: true,
+        created_at: new Date().toISOString(),
+      };
+
+      let createdVideoId = '';
+
+      if (supabase) {
+        const { data, error } = await supabase.from('videos').insert([payload]).select('id').single();
+        if (error) throw error;
+        createdVideoId = data.id;
+      } else if (typeof db.videos?.create === 'function') {
+        const res = await db.videos.create(payload);
+        createdVideoId = res.id;
+      }
+
+      showSuccess('Mídia importada com sucesso! Redirecionando para edição...');
+      await loadAccountStorageData();
+
+      // Redireciona direto para a tela de edição para vincular produtos e modelos
+      if (createdVideoId) {
+        window.location.href = `/videos/${createdVideoId}/edit`;
+      }
+    } catch (err) {
+      console.error('Erro ao importar vídeo do Instagram:', err);
+      showError('Falha ao salvar vídeo do Instagram no banco de dados.');
+    }
+  };
+
   // Carrega produtos da loja para o seletor da modal
   useEffect(() => {
     const fetchProducts = async () => {
