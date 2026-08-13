@@ -8,8 +8,7 @@ export const INTEGRATION_CONFIGS = {
     SCOPE: 'instagram_business_basic',
   },
   TIKTOK: {
-    CLIENT_KEY: 'COLOQUE_AQUI_A_SUA_CLIENT_KEY', // A mesma que você colocou no secrets do Supabase
-    // Aponta diretamente para a sua Edge Function no Supabase (Substitua SEU_PROJETO pelo ID real do seu Supabase)
+    CLIENT_KEY: '7uKXGVy5BSbWCho2ulqUXM1OCB9idjJe',
     REDIRECT_URI: 'https://wznvecurmisgoaijykbt.supabase.co/functions/v1/tiktok-oauth-callback',
   },
   YOUTUBE: {
