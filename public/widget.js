@@ -2575,8 +2575,8 @@ function trackMetric(data) {
 
     var muteBtn = createEl('button', 'vl-control');
     muteBtn.id = 'vl-mute-btn';
-    muteBtn.innerHTML = svgIcon('volume');
-    muteBtn.title = 'Mudo';
+    muteBtn.innerHTML = svgIcon('volumeOff'); // Inicia com o ícone correto (mudo)
+    muteBtn.title = 'Ativar som';
     muteBtn.onclick = function (e) {
       e.stopPropagation();
       var vid = modalContent.querySelector('video');
