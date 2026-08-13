@@ -47,23 +47,26 @@ export const connectInstagramAccount = async () => {
  * Dispara o fluxo oficial OAuth do TikTok
  */
 export const connectTikTokAccount = async () => {
-  const settings = await db.getSettings();
-  if (!settings?.store_id) {
-    alert('ID da loja não encontrado.');
-    return;
+  try {
+    const settings = await db.getSettings();
+    if (!settings?.store_id) {
+      console.error('ID da loja não encontrado.');
+      return;
+    }
+
+    const { CLIENT_KEY, REDIRECT_URI, SCOPE } = INTEGRATION_CONFIGS.TIKTOK;
+
+    if (!CLIENT_KEY) {
+      console.warn('A integração com o TikTok está em fase de ativação.');
+      return;
+    }
+
+    const authUrl = `https://www.tiktok.com/v2/auth/authorize/?client_key=${CLIENT_KEY}&response_type=code&scope=${encodeURIComponent(SCOPE)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state=${settings.store_id}`;
+
+    window.location.href = authUrl;
+  } catch (error) {
+    console.error('Erro ao conectar com TikTok:', error);
   }
-
-  const { CLIENT_KEY, REDIRECT_URI, SCOPE } = INTEGRATION_CONFIGS.TIKTOK;
-  if (!CLIENT_KEY) {
-    alert('A integração com o TikTok está em fase de ativação no portal de desenvolvedores.');
-    return;
-  }
-
-  const authUrl = `https://www.tiktok.com/v2/auth/authorize/?client_key=${CLIENT_KEY}&scope=${encodeURIComponent(
-    SCOPE
-  )}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state=${settings.store_id}`;
-
-  window.location.href = authUrl;
 };
 
 /**
