@@ -1733,18 +1733,38 @@ function trackMetric(data) {
       media.preload = 'auto';
       media.setAttribute('playsinline', '');
       media.setAttribute('webkit-playsinline', '');
+      media.setAttribute('crossorigin', 'anonymous');
+      media.setAttribute('referrerpolicy', 'no-referrer');
+      media.referrerPolicy = 'no-referrer';
+      media.crossOrigin = 'anonymous';
       media.playsInline = true;
       media.muted = false;
       media.loop = true;
       var thumb = getVideoThumbnail(video);
       if (thumb) media.poster = thumb;
       media.src = url;
+
       media.addEventListener('play', function () {
         trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
       });
       media.addEventListener('ended', function () {
         if (typeof onEnded === 'function') onEnded();
       });
+
+      // Tenta a reprodução automática forçada com fallback mudo para contornar a trava do navegador
+      setTimeout(function () {
+        var playPromise = media.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(function (error) {
+            console.warn('[Vidlytics] Autoplay bloqueado pelo navegador, tentando mudo:', error);
+            media.muted = true;
+            media.play().catch(function (e) {
+              console.error('[Vidlytics] Erro na reprodução do vídeo:', e);
+            });
+          });
+        }
+      }, 100);
+
       wrapper.appendChild(media);
       return wrapper;
     }
