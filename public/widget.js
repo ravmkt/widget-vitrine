@@ -2675,29 +2675,7 @@ function trackMetric(data) {
       });
       body.appendChild(player);
 
-      setTimeout(function () {
-        var vidEl = player.querySelector('video');
-        if (vidEl) {
-          vidEl.muted = false;
-          vidEl.play().catch(function () {});
-
-          vidEl.addEventListener('play', function () {
-            var pb = modalContent.querySelector('#vl-play-btn');
-            if (pb) { pb.innerHTML = svgIcon('pause'); pb.title = 'Pausar'; }
-          });
-          vidEl.addEventListener('pause', function () {
-            var pb = modalContent.querySelector('#vl-play-btn');
-            if (pb) { pb.innerHTML = svgIcon('play'); pb.title = 'Reproduzir'; }
-          });
-          vidEl.addEventListener('volumechange', function () {
-            var mb = modalContent.querySelector('#vl-mute-btn');
-            if (mb) {
-              mb.innerHTML = vidEl.muted ? svgIcon('volumeOff') : svgIcon('volume');
-              mb.title = vidEl.muted ? 'Ativar som' : 'Mudo';
-            }
-          });
-        }
-      }, 200);
+      var vidEl = player.querySelector('video');
     } else {
       var emptyBody = createEl('div');
       emptyBody.style.cssText = 'padding:40px;text-align:center;color:#fff;';
