@@ -173,6 +173,8 @@ export default function StoragePage() {
   const [loading, setLoading] = useState(true);
   const [instagramVideos, setInstagramVideos] = useState<InstagramMedia[]>([]);
   const [loadingVideos, setLoadingVideos] = useState(false);
+  const [tiktokVideos, setTikTokVideos] = useState<any[]>([]); // Estado para vídeos do TikTok
+  const [loadingTikTok, setLoadingTikTok] = useState(false); // Carregamento do TikTok
   const [storeId, setStoreId] = useState<string | null>(null);
   const [activePlatformTab, setActivePlatformTab] = useState<'none' | 'instagram' | 'tiktok' | 'youtube' | 'pinterest'>('none');
   const [searchTerm, setSearchTerm] = useState('');
