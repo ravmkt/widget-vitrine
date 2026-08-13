@@ -1641,6 +1641,8 @@ function trackMetric(data) {
     var isUpload = video.source_type === 'upload' || video.sourceType === 'upload';
     var isDirect = isDirectVideoUrl(url);
     var wrapper = createEl('div', 'vl-player');
+
+    // 1. YouTube
     if (!isUpload && ytId) {
       var iframe = createEl('iframe');
       iframe.src = 'https://www.youtube.com/embed/' + ytId + '?autoplay=1&playsinline=1&rel=0&loop=1&playlist=' + ytId;
@@ -1650,12 +1652,14 @@ function trackMetric(data) {
       trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
       return wrapper;
     }
+
+    // 2. Upload / Vídeo direto / MP4 / CDN Instagram
     if ((isUpload || isDirect) && url) {
       var media = createEl('video');
       media.controls = false;
       media.preload = 'auto';
       media.autoplay = true;
-      media.muted = true; // Inicia mudo para garantir a liberação do streaming pelo navegador
+      media.muted = true; // Inicia mudo para garantir a liberação pelo navegador
       media.loop = true;
       media.playsInline = true;
       media.setAttribute('playsinline', '');
@@ -1676,7 +1680,6 @@ function trackMetric(data) {
 
       wrapper.appendChild(media);
 
-      // Dispara o play garantido assim que o elemento for inserido
       setTimeout(function () {
         var p = media.play();
         if (p && typeof p.catch === 'function') {
@@ -1688,7 +1691,8 @@ function trackMetric(data) {
 
       return wrapper;
     }
-    }
+
+    // 3. Fallback genérico para link externo
     var link = createEl('a');
     link.href = url || '#';
     link.target = '_blank';
