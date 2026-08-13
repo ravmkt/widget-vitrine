@@ -224,8 +224,42 @@ export default function StoragePage() {
     loadInstagramContent();
   }, [storeId, connectedPlatforms]);
 
-  // trecho novo
+  // Função para salvar o Vídeo do TikTok no banco de dados
+  const handleImportAndEditTikTokVideo = async (video: any) => {
+    try {
+      if (!storeId) {
+        showError('ID da loja não identificado.');
+        return;
+      }
+      if (!supabase) {
+        showError('Conexão com o banco de dados indisponível.');
+        return;
+      }
+
+      showSuccess('Importando vídeo do TikTok para a sua biblioteca... Isso pode levar alguns segundos.');
+
+      const { data, error } = await supabase.functions.invoke('import-tiktok-video', {
+        body: { storeId, videoData: video },
+      });
+
+      if (error || !data?.success) {
+        throw new Error(error?.message || data?.error || 'Erro na importação.');
+      }
+
+      showSuccess('Mídia do TikTok importada com sucesso!');
+      await loadAccountStorageData();
+
+      if (data.videoId) {
+        window.location.href = `/videos/${data.videoId}/edit`;
+      }
+    } catch (err) {
+      console.error('Erro ao importar vídeo do TikTok:', err);
+      showError('Falha ao processar a importação do vídeo do TikTok.');
+    }
+  };
+
   // Função para salvar o Reels do Instagram no banco de dados e abrir a edição para vincular produtos/stories
+
   const handleImportAndEditInstagramVideo = async (video: InstagramMedia) => {
     try {
       if (!storeId) {
