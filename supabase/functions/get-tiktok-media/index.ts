@@ -1,3 +1,4 @@
+// trecho antigo
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
@@ -26,8 +27,6 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    // 1. Resgatar o Token do TikTok salvo no seu banco de dados
-    // NOTA: Ajuste 'store_integrations' e a estrutura conforme sua modelagem real do banco
     const { data: integration, error: dbError } = await supabase
       .from("store_integrations")
       .select("access_token")
@@ -41,7 +40,6 @@ serve(async (req) => {
 
     const accessToken = integration.access_token;
 
-    /// 2. Chamar a API oficial do TikTok para listar os vídeos do perfil com os campos corretos da v2
     const fieldsParam = "id,title,cover_image_url,video_url";
     const tkResponse = await fetch(`https://open.tiktokapis.com/v2/video/list/?fields=${fieldsParam}`, {
       method: "POST",
@@ -57,25 +55,21 @@ serve(async (req) => {
     const responseText = await tkResponse.text();
     
     if (!tkResponse.ok) {
-      console.error("Erro detalhado API TikTok (Status " + tkResponse.status + "):", responseText);
-      throw new Error(`Falha na comunicação com o TikTok: ${tkResponse.status} - ${responseText}`);
+      console.error("Erro detalhado API TikTok:", responseText);
+      throw new Error(`TikTok API HTTP ${tkResponse.status}: ${responseText}`);
     }
 
     let tkData;
     try {
       tkData = JSON.parse(responseText);
     } catch (e) {
-      console.error("Erro ao parsear JSON do TikTok:", responseText);
-      throw new Error("Resposta inválida recebida da API do TikTok.");
+      throw new Error("Resposta inválida da API do TikTok: " + responseText);
     }
 
-    // Validação de erros internos retornados no payload JSON da API do TikTok
     if (tkData.error && tkData.error.code !== "ok") {
-      console.error("Erro interno retornado pelo TikTok:", tkData.error);
-      throw new Error(`TikTok API Error: ${tkData.error.message || tkData.error.code}`);
+      throw new Error(`TikTok Error Code ${tkData.error.code}: ${tkData.error.message}`);
     }
 
-    // 3. Devolver os dados limpos para o React
     const videosList = tkData.data?.videos || tkData.videos || [];
 
     return new Response(JSON.stringify({ success: true, videos: videosList }), {
@@ -83,9 +77,9 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error("Erro na Edge Function get-tiktok-media:", error);
+    console.error("Erro na Edge Function get-tiktok-media:", error.message);
     return new Response(JSON.stringify({ success: false, error: error.message }), {
-      status: 400,
+      status: 200, // Retornamos 200 para o front ler o JSON de erro limpo em vez de "non-2xx"
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
