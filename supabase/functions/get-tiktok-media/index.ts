@@ -41,28 +41,44 @@ serve(async (req) => {
 
     const accessToken = integration.access_token;
 
-    // 2. Chamar a API oficial do TikTok para listar os vídeos do perfil
-    const tkResponse = await fetch("https://open.tiktokapis.com/v2/video/list/?fields=id,title,cover_image_url,video_url,download_url", {
+    /// 2. Chamar a API oficial do TikTok para listar os vídeos do perfil com os campos corretos da v2
+    const fieldsParam = "id,title,cover_image_url,video_url";
+    const tkResponse = await fetch(`https://open.tiktokapis.com/v2/video/list/?fields=${fieldsParam}`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        "max_count": 20
+        max_count: 20
       })
     });
 
+    const responseText = await tkResponse.text();
+    
     if (!tkResponse.ok) {
-      const errBody = await tkResponse.text();
-      console.error("Erro API TikTok:", errBody);
-      throw new Error(`Falha na comunicação com o TikTok: ${tkResponse.statusText}`);
+      console.error("Erro detalhado API TikTok (Status " + tkResponse.status + "):", responseText);
+      throw new Error(`Falha na comunicação com o TikTok: ${tkResponse.status} - ${responseText}`);
     }
 
-    const tkData = await tkResponse.json();
+    let tkData;
+    try {
+      tkData = JSON.parse(responseText);
+    } catch (e) {
+      console.error("Erro ao parsear JSON do TikTok:", responseText);
+      throw new Error("Resposta inválida recebida da API do TikTok.");
+    }
+
+    // Validação de erros internos retornados no payload JSON da API do TikTok
+    if (tkData.error && tkData.error.code !== "ok") {
+      console.error("Erro interno retornado pelo TikTok:", tkData.error);
+      throw new Error(`TikTok API Error: ${tkData.error.message || tkData.error.code}`);
+    }
 
     // 3. Devolver os dados limpos para o React
-    return new Response(JSON.stringify({ success: true, videos: tkData.data?.videos || [] }), {
+    const videosList = tkData.data?.videos || tkData.videos || [];
+
+    return new Response(JSON.stringify({ success: true, videos: videosList }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
