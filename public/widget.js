@@ -1627,7 +1627,6 @@ function trackMetric(data) {
   }).catch(function () {});
 }
 
-  // trecho novo
   function buildVideoPlayer(video, storyId, onEnded) {
     var url = getVideoUrl(video);
     var sourceType = String(video.source_type || video.sourceType || '').toLowerCase();
