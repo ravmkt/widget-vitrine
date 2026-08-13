@@ -8,6 +8,7 @@ import {
   connectPinterestAccount,
   getConnectedIntegrations,
 } from '@/services/integrations';
+import { fetchInstagramMedia, InstagramMedia } from '@/services/instagram';
 import {
   HardDrive,
   Search,
