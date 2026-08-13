@@ -1655,14 +1655,14 @@ function trackMetric(data) {
       return wrapper;
     }
 
-    // 2. Página de Reels do Instagram (Usa o Iframe Embed Oficial sem erros 403)
-    if (sourceType === 'instagram' || (igId && url.indexOf('instagram.com') !== -1)) {
-      var igIframe = createEl('iframe');
-      igIframe.src = 'https://www.instagram.com/reel/' + igId + '/embed/';
-      igIframe.allow = 'autoplay; fullscreen';
-      igIframe.setAttribute('allowfullscreen', '');
-      igIframe.style.cssText = 'width:100% !important;height:100% !important;border:none !important;';
-      wrapper.appendChild(igIframe);
+    // 2.1. TikTok Embed Oficial (evita erro NotSupportedError em URLs de compartilhamento/página)
+    if (sourceType === 'tiktok' || (tkId && url.indexOf('tiktok.com') !== -1)) {
+      var tkIframe = createEl('iframe');
+      tkIframe.src = 'https://www.tiktok.com/embed/v2/' + tkId;
+      tkIframe.allow = 'autoplay; fullscreen';
+      tkIframe.setAttribute('allowfullscreen', '');
+      tkIframe.style.cssText = 'width:100% !important;height:100% !important;border:none !important;';
+      wrapper.appendChild(tkIframe);
       trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
       return wrapper;
     }
