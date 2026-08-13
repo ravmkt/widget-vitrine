@@ -174,6 +174,7 @@ export default function StoragePage() {
   const [instagramVideos, setInstagramVideos] = useState<InstagramMedia[]>([]);
   const [loadingVideos, setLoadingVideos] = useState(false);
   const [storeId, setStoreId] = useState<string | null>(null);
+  const [activePlatformTab, setActivePlatformTab] = useState<'none' | 'instagram' | 'tiktok' | 'youtube' | 'pinterest'>('none');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<'all' | 'video' | 'image'>('all');
   const [uploading, setUploading] = useState(false);
