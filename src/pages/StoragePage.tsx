@@ -188,10 +188,18 @@ export default function StoragePage() {
   const [productsList, setProductsList] = useState<any[]>([]);
   const [savingUrl, setSavingUrl] = useState(false);
 
-  // Carrega as plataformas sociais conectadas à loja no Supabase
+  // Carrega as plataformas sociais conectadas à loja no Supabase e trata o retorno do OAuth
   useEffect(() => {
     const checkIntegrations = async () => {
       try {
+        // Verifica se a URL retornou com sucesso do OAuth (ex: TikTok ou Instagram)
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('tiktok') === 'connected' || params.get('success') === 'true') {
+          showSuccess('Conta conectada com sucesso!');
+          // Limpa os parâmetros da URL mantendo a limpa
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
         const settings = await db.getSettings();
         if (settings?.store_id) {
           setStoreId(settings.store_id);
