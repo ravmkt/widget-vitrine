@@ -1634,21 +1634,24 @@ function trackMetric(data) {
     console.log('🔍 VIDLYTICS DEBUG:', {
       video_id: video.id,
       source_type: sourceType,
-      url: url,
-      isUpload: sourceType === 'upload',
-      isDirectVideo: isDirectVideoUrl(url),
-      isYouTube: !!extractYouTubeId(url),
-      isInstagram: sourceType === 'instagram' || url.indexOf('instagram.com') !== -1
-    });
-
+      url: url,function buildVideoPlayer(video, storyId, onEnded) {
+    var url = getVideoUrl(video);
+    var sourceType = String(video.source_type || video.sourceType || '').toLowerCase();
     var ytId = extractYouTubeId(url);
     var igId = extractInstagramId(url);
-    var isUpload = sourceType === 'upload';
-    var isDirect = isDirectVideoUrl(url) && url.indexOf('fbcdn.net') === -1;
+
+    console.log('🔍 VIDLYTICS DEBUG:', {
+      video_id: video.id,
+      source_type: sourceType,
+      url: url,
+      isYouTube: !!ytId,
+      isInstagramReelPage: !!(igId && url.indexOf('instagram.com') !== -1)
+    });
+
     var wrapper = createEl('div', 'vl-player');
 
-    // 1. YouTube
-    if (!isUpload && ytId) {
+    // 1. YouTube Shorts ou Vídeo Tradicional
+    if (ytId) {
       var iframe = createEl('iframe');
       iframe.src = 'https://www.youtube.com/embed/' + ytId + '?autoplay=1&playsinline=1&rel=0&loop=1&playlist=' + ytId;
       iframe.allow = 'autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
@@ -1658,7 +1661,7 @@ function trackMetric(data) {
       return wrapper;
     }
 
-    // 2. Instagram Embed Oficial (Elimina o erro 403 Forbidden da CDN da Meta)
+    // 2. Página de Reels do Instagram (Usa o Iframe Embed Oficial sem erros 403)
     if (sourceType === 'instagram' || (igId && url.indexOf('instagram.com') !== -1)) {
       var igIframe = createEl('iframe');
       igIframe.src = 'https://www.instagram.com/reel/' + igId + '/embed/';
@@ -1670,13 +1673,13 @@ function trackMetric(data) {
       return wrapper;
     }
 
-    // 2. Upload / Vídeo direto / MP4 / CDN Instagram
-    if ((isUpload || isDirect) && url) {
+    // 3. Mídia MP4 / Upload / CDN / URL Externa (Toca na tag <video> nativa)
+    if (url) {
       var media = createEl('video');
       media.controls = false;
       media.preload = 'auto';
       media.autoplay = true;
-      media.muted = true; // Inicia mudo para garantir a liberação pelo navegador
+      media.muted = true; // Inicia mudo para liberar Autoplay em navegadores estritos
       media.loop = true;
       media.playsInline = true;
       media.setAttribute('playsinline', '');
@@ -1709,11 +1712,11 @@ function trackMetric(data) {
       return wrapper;
     }
 
-    // 3. Fallback genérico para link externo
+    // 4. Fallback caso não haja nenhuma URL
     var link = createEl('a');
     link.href = url || '#';
     link.target = '_blank';
-    link.textContent = 'Abrir vídeo';
+    link.textContent = 'Ver vídeo';
     link.className = 'vl-cta';
     wrapper.appendChild(link);
     return wrapper;
