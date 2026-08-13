@@ -711,12 +711,20 @@ export default function StoragePage() {
           {/* Botão TikTok */}
           <button
             type="button"
-            onClick={() => connectTikTokAccount()}
-            title="Conectar Conta do TikTok"
+            onClick={() => {
+              if (connectedPlatforms.includes('tiktok')) {
+                setActivePlatformTab(activePlatformTab === 'tiktok' ? 'none' : 'tiktok');
+              } else {
+                connectTikTokAccount();
+              }
+            }}
+            title={connectedPlatforms.includes('tiktok') ? "Ver Vídeos do TikTok" : "Conectar Conta do TikTok"}
             className={cn(
               "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-bold transition-all border shadow-sm",
               connectedPlatforms.includes('tiktok')
-                ? "border-slate-700 bg-black text-white shadow-slate-900/40 hover:bg-slate-950"
+                ? activePlatformTab === 'tiktok'
+                  ? "border-slate-800 bg-slate-800 text-white shadow-slate-900/40"
+                  : "border-slate-700 bg-black text-white shadow-slate-900/40 hover:bg-slate-950"
                 : "border-slate-200 bg-slate-100 text-slate-400 hover:bg-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500"
             )}
           >
