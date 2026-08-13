@@ -171,6 +171,9 @@ export default function StoragePage() {
   const [files, setFiles] = useState<StorageItem[]>([]);
   const [connectedPlatforms, setConnectedPlatforms] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [instagramVideos, setInstagramVideos] = useState<InstagramMedia[]>([]);
+  const [loadingVideos, setLoadingVideos] = useState(false);
+  const [storeId, setStoreId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<'all' | 'video' | 'image'>('all');
   const [uploading, setUploading] = useState(false);
