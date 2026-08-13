@@ -1632,6 +1632,7 @@ function trackMetric(data) {
     var sourceType = String(video.source_type || video.sourceType || '').toLowerCase();
     var ytId = extractYouTubeId(url);
     var igId = extractInstagramId(url);
+    var tkId = extractTikTokId(url);
 
     console.log('🔍 VIDLYTICS DEBUG:', {
       video_id: video.id,
