@@ -1038,15 +1038,17 @@ export default function StoragePage() {
                           // trecho novo
                           ) : (
                             <video
-                              src={file.fileUrl ? `${file.fileUrl}#t=0.1` : undefined}
+                              src={file.fileUrl || undefined}
                               className="h-full w-full object-cover"
-                              preload="metadata"
+                              preload="auto"
+                              controls
+                              autoPlay
                               muted
                               playsInline
                               referrerPolicy="no-referrer"
                               crossOrigin="anonymous"
                               onError={(e) => {
-                                e.currentTarget.style.display = 'none';
+                                console.warn('Falha no streaming do vídeo:', e);
                               }}
                             />
                           )
