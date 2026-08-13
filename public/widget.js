@@ -1629,17 +1629,22 @@ function trackMetric(data) {
 
   function buildVideoPlayer(video, storyId, onEnded) {
     var url = getVideoUrl(video);
+    var sourceType = String(video.source_type || video.sourceType || '').toLowerCase();
+    
     console.log('🔍 VIDLYTICS DEBUG:', {
       video_id: video.id,
-      source_type: video.source_type || video.sourceType,
+      source_type: sourceType,
       url: url,
-      isUpload: video.source_type === 'upload' || video.sourceType === 'upload',
+      isUpload: sourceType === 'upload',
       isDirectVideo: isDirectVideoUrl(url),
-      isYouTube: !!extractYouTubeId(url)
+      isYouTube: !!extractYouTubeId(url),
+      isInstagram: sourceType === 'instagram' || url.indexOf('instagram.com') !== -1
     });
+
     var ytId = extractYouTubeId(url);
-    var isUpload = video.source_type === 'upload' || video.sourceType === 'upload';
-    var isDirect = isDirectVideoUrl(url);
+    var igId = extractInstagramId(url);
+    var isUpload = sourceType === 'upload';
+    var isDirect = isDirectVideoUrl(url) && url.indexOf('fbcdn.net') === -1;
     var wrapper = createEl('div', 'vl-player');
 
     // 1. YouTube
@@ -1649,6 +1654,18 @@ function trackMetric(data) {
       iframe.allow = 'autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
       iframe.allowFullscreen = true;
       wrapper.appendChild(iframe);
+      trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
+      return wrapper;
+    }
+
+    // 2. Instagram Embed Oficial (Elimina o erro 403 Forbidden da CDN da Meta)
+    if (sourceType === 'instagram' || (igId && url.indexOf('instagram.com') !== -1)) {
+      var igIframe = createEl('iframe');
+      igIframe.src = 'https://www.instagram.com/reel/' + igId + '/embed/';
+      igIframe.allow = 'autoplay; fullscreen';
+      igIframe.setAttribute('allowfullscreen', '');
+      igIframe.style.cssText = 'width:100% !important;height:100% !important;border:none !important;';
+      wrapper.appendChild(igIframe);
       trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
       return wrapper;
     }
