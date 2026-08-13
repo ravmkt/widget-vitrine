@@ -10,6 +10,7 @@ export const INTEGRATION_CONFIGS = {
   TIKTOK: {
     CLIENT_KEY: 'awpnw23q9tf7b3cp',
     REDIRECT_URI: 'https://wznvecurmisgoaijykbt.supabase.co/functions/v1/tiktok-oauth-callback',
+    SCOPE: 'user.info.basic,video.list',
   },
   YOUTUBE: {
     CLIENT_ID: '', // Estrutura pronta para integração do YouTube
