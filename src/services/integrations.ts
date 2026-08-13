@@ -10,7 +10,7 @@ export const INTEGRATION_CONFIGS = {
   TIKTOK: {
     CLIENT_KEY: 'COLOQUE_AQUI_A_SUA_CLIENT_KEY', // A mesma que você colocou no secrets do Supabase
     // Aponta diretamente para a sua Edge Function no Supabase (Substitua SEU_PROJETO pelo ID real do seu Supabase)
-    REDIRECT_URI: 'https://SEU_PROJETO.supabase.co/functions/v1/tiktok-oauth-callback',
+    REDIRECT_URI: 'https://wznvecurmisgoaijykbt.supabase.co/functions/v1/tiktok-oauth-callback',
   },
   YOUTUBE: {
     CLIENT_ID: '', // Estrutura pronta para integração do YouTube
