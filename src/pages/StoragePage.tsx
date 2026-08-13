@@ -663,17 +663,27 @@ export default function StoragePage() {
           {/* Botão Instagram */}
           <button
             type="button"
-            onClick={() => connectInstagramAccount()}
-            title="Conectar Conta do Instagram"
+            onClick={() => {
+              if (connectedPlatforms.includes('instagram')) {
+                setActivePlatformTab(activePlatformTab === 'instagram' ? 'none' : 'instagram');
+              } else {
+                connectInstagramAccount();
+              }
+            }}
+            title={connectedPlatforms.includes('instagram') ? "Ver Vídeos do Instagram" : "Conectar Conta do Instagram"}
             className={cn(
               "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-bold transition-all border shadow-sm",
               connectedPlatforms.includes('instagram')
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                ? activePlatformTab === 'instagram'
+                  ? "border-pink-500 bg-pink-500 text-white shadow-pink-500/20"
+                  : "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:border-pink-500"
                 : "border-pink-200 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-amber-500/10 text-pink-600 hover:opacity-90 dark:border-pink-900/40 dark:text-pink-400"
             )}
           >
             <SocialIcons.Instagram />
-            {connectedPlatforms.includes('instagram') ? 'Instagram Conectado' : 'Instagram'}
+            {connectedPlatforms.includes('instagram')
+              ? activePlatformTab === 'instagram' ? 'Ocultar Instagram' : 'Instagram (Ver Vídeos)'
+              : 'Instagram'}
           </button>
 
           {/* Botão TikTok */}
