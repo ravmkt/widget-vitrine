@@ -1690,6 +1690,15 @@ function trackMetric(data) {
       media.addEventListener('ended', function () {
         if (typeof onEnded === 'function') onEnded();
       });
+      
+      // Tratamento de Erro Fallback (Ex: link 403 Forbidden expirado)
+      media.addEventListener('error', function () {
+        console.error('[Vidlytics] Erro fatal ao carregar mídia:', url);
+        var errorMsg = createEl('div');
+        errorMsg.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#111;color:#ef4444;font-size:13px;font-weight:700;text-align:center;padding:20px;z-index:10;';
+        errorMsg.innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:8px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>Mídia indisponível ou expirada.';
+        wrapper.appendChild(errorMsg);
+      });
 
       wrapper.appendChild(media);
 
