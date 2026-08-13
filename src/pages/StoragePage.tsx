@@ -222,6 +222,7 @@ export default function StoragePage() {
     loadInstagramContent();
   }, [storeId, connectedPlatforms]);
 
+  // trecho novo
   // Função para salvar o Reels do Instagram no banco de dados e abrir a edição para vincular produtos/stories
   const handleImportAndEditInstagramVideo = async (video: InstagramMedia) => {
     try {
@@ -230,45 +231,31 @@ export default function StoragePage() {
         return;
       }
 
-      showSuccess('Salvando mídia na sua biblioteca...');
-
-      // Identifica o permalink e ID do Instagram para evitar expiração de token da CDN
-      const instagramReelUrl = video.permalink || `https://www.instagram.com/reel/${video.id}/`;
-
-      const payload = {
-        store_id: storeId,
-        title: video.caption ? video.caption.slice(0, 60) : `INSTAGRAM_REELS_${video.id.slice(-6)}`,
-        video_source_type: 'instagram',
-        source_type: 'instagram',
-        video_url: instagramReelUrl, // Salva o permalink oficial do Reels em vez da URL temporária do fbcdn
-        thumbnail_url: video.thumbnail_url || video.media_url,
-        thumbnail_source_type: 'auto',
-        status: 'active',
-        active: true,
-        created_at: new Date().toISOString(),
-      };
-
-      let createdVideoId = '';
-
-      if (supabase) {
-        const { data, error } = await supabase.from('videos').insert([payload]).select('id').single();
-        if (error) throw error;
-        createdVideoId = data.id;
-      } else if (typeof db.videos?.create === 'function') {
-        const res = await db.videos.create(payload);
-        createdVideoId = res.id;
+      if (!supabase) {
+        showError('Conexão com o banco de dados indisponível.');
+        return;
       }
 
-      showSuccess('Mídia importada com sucesso! Redirecionando para edição...');
+      showSuccess('Importando vídeo para a sua biblioteca... Isso pode levar alguns segundos.');
+
+      // Chama a Edge Function para lidar com o download, bypass de CORS e upload para o Storage
+      const { data, error } = await supabase.functions.invoke('import-instagram-video', {
+        body: { storeId, videoData: video },
+      });
+
+      if (error || !data?.success) {
+        throw new Error(error?.message || data?.error || 'Erro na importação.');
+      }
+
+      showSuccess('Mídia importada e hospedada com sucesso!');
       await loadAccountStorageData();
 
-      // Redireciona direto para a tela de edição para vincular produtos e modelos
-      if (createdVideoId) {
-        window.location.href = `/videos/${createdVideoId}/edit`;
+      if (data.videoId) {
+        window.location.href = `/videos/${data.videoId}/edit`;
       }
     } catch (err) {
-      console.error('Erro ao importar vídeo do Instagram:', err);
-      showError('Falha ao salvar vídeo do Instagram no banco de dados.');
+      console.error('Erro ao importar vídeo do Instagram via Edge Function:', err);
+      showError('Falha ao processar a importação do vídeo do Instagram.');
     }
   };
 
