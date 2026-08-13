@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Tratamento de preflight CORS
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -19,7 +18,6 @@ serve(async (req) => {
       throw new Error("Parâmetros inválidos. Faltando storeId ou media_url.");
     }
 
-    // Inicializa o cliente do Supabase usando o Authorization header da requisição para manter o RLS do usuário
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
     const authHeader = req.headers.get("Authorization")!;
@@ -28,14 +26,14 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    // 1. Faz o download do vídeo da Meta (Sem restrição de CORS no servidor)
+    // 1. Faz o download do vídeo limpo da Meta
     const fbResponse = await fetch(videoData.media_url);
     if (!fbResponse.ok) {
       throw new Error(`Falha ao baixar da Meta: ${fbResponse.statusText}`);
     }
     const arrayBuffer = await fbResponse.arrayBuffer();
 
-    // 2. Faz o upload para o Supabase Storage
+    // 2. Faz o upload permanente para a sua conta no Supabase Storage
     const safeStoragePath = `${storeId}/${Date.now()}_ig_${videoData.id}.mp4`;
     const { data: uploadData, error: uploadErr } = await supabase.storage
       .from("videos")
@@ -47,12 +45,11 @@ serve(async (req) => {
 
     if (uploadErr) throw uploadErr;
 
-    // Resgata a URL pública recém-criada
     const { data: publicUrlData } = supabase.storage
       .from("videos")
       .getPublicUrl(uploadData.path);
 
-    // 3. Salva o registro na tabela de vídeos como 'upload' nativo
+    // 3. Salva no banco de dados como 'upload' nativo (Desvincula do Instagram)
     const title = videoData.caption ? videoData.caption.slice(0, 60) : `INSTAGRAM_REELS_${videoData.id.slice(-6)}`;
     const payload = {
       store_id: storeId,
@@ -76,13 +73,12 @@ serve(async (req) => {
 
     if (dbErr) throw dbErr;
 
-    // Retorna o ID gerado para o front-end redirecionar
     return new Response(JSON.stringify({ success: true, videoId: dbData.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
   } catch (error) {
-    console.error("Erro na Edge Function import-instagram-video:", error);
+    console.error("Erro na import-instagram-video:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
