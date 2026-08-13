@@ -232,12 +232,15 @@ export default function StoragePage() {
 
       showSuccess('Salvando mídia na sua biblioteca...');
 
+      // Identifica o permalink e ID do Instagram para evitar expiração de token da CDN
+      const instagramReelUrl = video.permalink || `https://www.instagram.com/reel/${video.id}/`;
+
       const payload = {
         store_id: storeId,
         title: video.caption ? video.caption.slice(0, 60) : `INSTAGRAM_REELS_${video.id.slice(-6)}`,
-        video_source_type: 'url',
-        source_type: 'url',
-        video_url: video.media_url,
+        video_source_type: 'instagram',
+        source_type: 'instagram',
+        video_url: instagramReelUrl, // Salva o permalink oficial do Reels em vez da URL temporária do fbcdn
         thumbnail_url: video.thumbnail_url || video.media_url,
         thumbnail_source_type: 'auto',
         status: 'active',
