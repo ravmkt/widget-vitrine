@@ -8,7 +8,7 @@ export const INTEGRATION_CONFIGS = {
     SCOPE: 'instagram_business_basic',
   },
   TIKTOK: {
-    CLIENT_KEY: '7uKXGVy5BSbWCho2ulqUXM1OCB9idjJe',
+    CLIENT_KEY: 'awpnw23q9tf7b3cp',
     REDIRECT_URI: 'https://wznvecurmisgoaijykbt.supabase.co/functions/v1/tiktok-oauth-callback',
   },
   YOUTUBE: {
