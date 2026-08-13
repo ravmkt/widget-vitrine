@@ -670,20 +670,16 @@ export default function StoragePage() {
                 connectInstagramAccount();
               }
             }}
-            title={connectedPlatforms.includes('instagram') ? "Ver Vídeos do Instagram" : "Conectar Conta do Instagram"}
+            title={connectedPlatforms.includes('instagram') ? "Ver Mídias do Instagram" : "Conectar Conta do Instagram"}
             className={cn(
               "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-bold transition-all border shadow-sm",
               connectedPlatforms.includes('instagram')
-                ? activePlatformTab === 'instagram'
-                  ? "border-pink-500 bg-pink-500 text-white shadow-pink-500/20"
-                  : "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:border-pink-500"
-                : "border-pink-200 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-amber-500/10 text-pink-600 hover:opacity-90 dark:border-pink-900/40 dark:text-pink-400"
+                ? "border-pink-500/40 bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white shadow-pink-500/20 hover:opacity-95"
+                : "border-slate-200 bg-slate-100 text-slate-400 hover:bg-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500"
             )}
           >
             <SocialIcons.Instagram />
-            {connectedPlatforms.includes('instagram')
-              ? activePlatformTab === 'instagram' ? 'Ocultar Instagram' : 'Instagram (Ver Vídeos)'
-              : 'Instagram'}
+            Instagram
           </button>
 
           {/* Botão TikTok */}
@@ -694,12 +690,12 @@ export default function StoragePage() {
             className={cn(
               "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-bold transition-all border shadow-sm",
               connectedPlatforms.includes('tiktok')
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                : "border-slate-200 bg-slate-900 text-white hover:bg-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+                ? "border-slate-700 bg-black text-white shadow-slate-900/40 hover:bg-slate-950"
+                : "border-slate-200 bg-slate-100 text-slate-400 hover:bg-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500"
             )}
           >
             <SocialIcons.TikTok />
-            {connectedPlatforms.includes('tiktok') ? 'TikTok Conectado' : 'TikTok'}
+            TikTok
           </button>
 
           {/* Botão YouTube Shorts */}
@@ -710,12 +706,12 @@ export default function StoragePage() {
             className={cn(
               "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-bold transition-all border shadow-sm",
               connectedPlatforms.includes('youtube')
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                : "border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-400"
+                ? "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                : "border-slate-200 bg-slate-100 text-slate-400 hover:bg-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500"
             )}
           >
             <SocialIcons.YouTube />
-            {connectedPlatforms.includes('youtube') ? 'Shorts Conectado' : 'YouTube'}
+            YouTube
           </button>
 
           {/* Botão Pinterest */}
@@ -726,12 +722,12 @@ export default function StoragePage() {
             className={cn(
               "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-bold transition-all border shadow-sm",
               connectedPlatforms.includes('pinterest')
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                : "border-red-200 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-400"
+                ? "border-red-600 bg-red-600 text-white shadow-red-500/20 hover:bg-red-700"
+                : "border-slate-200 bg-slate-100 text-slate-400 hover:bg-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500"
             )}
           >
             <SocialIcons.Pinterest />
-            {connectedPlatforms.includes('pinterest') ? 'Pinterest Conectado' : 'Pinterest'}
+            Pinterest
           </button>
 
           <input
