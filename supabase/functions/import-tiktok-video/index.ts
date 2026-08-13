@@ -14,11 +14,49 @@ serve(async (req) => {
   try {
     const { storeId, videoData } = await req.json();
 
-    // Adaptação para a estrutura da API do TikTok (que pode variar entre video_url, download_url ou media_url)
-    const rawVideoUrl = videoData.video_url || videoData.download_url || videoData.media_url;
+    const rawVideoUrl = videoData.video_url || videoData.download_url || videoData.media_url || videoData.embed_link || videoData.share_url;
 
-    if (!storeId || !videoData || !rawVideoUrl) {
-      throw new Error("Parâmetros inválidos. Faltando storeId ou URL do vídeo do TikTok.");
+    if (!storeId || !videoData) {
+      throw new Error("Parâmetros inválidos. Faltando storeId ou dados do vídeo do TikTok.");
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    const authHeader = req.headers.get("Authorization")!;
+
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    let finalVideoUrl = rawVideoUrl;
+    let fileSize = 0;
+
+    if (rawVideoUrl && (rawVideoUrl.startsWith('http://') || rawVideoUrl.startsWith('https://'))) {
+      try {
+        const tkResponse = await fetch(rawVideoUrl);
+        if (tkResponse.ok) {
+          const arrayBuffer = await tkResponse.arrayBuffer();
+          fileSize = arrayBuffer.byteLength;
+
+          const safeStoragePath = `${storeId}/${Date.now()}_tk_${videoData.id || Math.random().toString(36).substring(7)}.mp4`;
+          const { data: uploadData, error: uploadErr } = await supabase.storage
+            .from("videos")
+            .upload(safeStoragePath, arrayBuffer, {
+              contentType: "video/mp4",
+              cacheControl: "3600",
+              upsert: true,
+            });
+
+          if (!uploadErr && uploadData?.path) {
+            const { data: publicUrlData } = supabase.storage
+              .from("videos")
+              .getPublicUrl(uploadData.path);
+            finalVideoUrl = publicUrlData.publicUrl;
+          }
+        }
+      } catch (err) {
+        console.warn("Aviso: Não foi possível baixar o binário direto do TikTok, usando URL de referência:", err);
+      }
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
