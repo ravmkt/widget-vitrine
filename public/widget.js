@@ -578,85 +578,7 @@ function normalizeFloatingShape(value) {
     return DEFAULT_APPEARANCE.floating_shape;
   }
 
-function getFloatingConfig(appearance) {
-  appearance = normalizeAppearanceItem(appearance || {});
-  
-  function rcv(jsonbField, fallback) {
-    return readConfigValue(appearance, 'floating_config', jsonbField, fallback);
-  }
-  
-  var rawPosition = rcv('floating_position', DEFAULT_APPEARANCE.floating_position);
-  var position = normalizeFloatingPosition(rawPosition);
-  
-  var shape = normalizeFloatingShape(rcv('shape', DEFAULT_APPEARANCE.floating_shape));
-  
-  var sizeNumber = toNumber(rcv('width', '80'), 80);
-  var widthNumber = sizeNumber;
-  var heightNumber;
-  
-if (shape === 'square' || shape === 'circle') {
-    heightNumber = widthNumber;
-  } else if (shape === 'portrait') {
-    heightNumber = Math.round(widthNumber * 16 / 9);
-  } else if (shape === 'landscape') {
-    heightNumber = Math.round(widthNumber * 9 / 16);
-  } else {
-    heightNumber = Math.round(widthNumber * 9 / 16);
-  }
-
-  // border_style armazena a LARGURA da borda em px (sempre sólida)
-  var borderWidthNumber = toNumber(rcv('border_style', '2'), 2);
-  var borderStyle = 'solid';
-
-  var borderColor = rcv('border_color', null) || getPrimaryColor(appearance);
-  var radiusNumber = toNumber(rcv('border_radius', '12'), 12);
-  if (shape === 'circle') radiusNumber = 999;
-  
-  var marginTopNumber = toNumber(rcv('top_spacing', '20'), 20);
-  var marginBottomNumber = toNumber(rcv('bottom_spacing', '20'), 20);
-  var marginSideNumber = toNumber(rcv('left_spacing', '20'), 20);
-  var rightSpacingNumber = toNumber(rcv('right_spacing', '20'), 20);
-  
-  var zIndexNumber = toNumber(rcv('z_index', '2147483647'), 2147483647);
-  var objectFit = String(rcv('object_fit', 'cover') || 'cover').trim().toLowerCase();
-  
-  var showTitle = rcv('show_title', false);
-  if (typeof showTitle === 'string') showTitle = showTitle === 'true';
-  var showPlayIcon = rcv('show_play_icon', false);
-  if (typeof showPlayIcon === 'string') showPlayIcon = showPlayIcon === 'true';
-  var allowClose = rcv('allow_close', false);
-  if (typeof allowClose === 'string') allowClose = allowClose === 'true';
-  
-  var top = 'auto', right = 'auto', bottom = 'auto', left = 'auto', alignItems = 'flex-end';
-  
-  if (position === 'top-left') {
-    top = px(marginTopNumber); left = px(marginSideNumber); alignItems = 'flex-start';
-  }
-  if (position === 'top-right') {
-    top = px(marginTopNumber); right = px(rightSpacingNumber); alignItems = 'flex-end';
-  }
-  if (position === 'bottom-left') {
-    bottom = px(marginBottomNumber); left = px(marginSideNumber); alignItems = 'flex-start';
-  }
-  if (position === 'bottom-right') {
-    bottom = px(marginBottomNumber); right = px(rightSpacingNumber); alignItems = 'flex-end';
-  }
-  
-  var displayRadius = shape === 'circle' ? '999px' : px(radiusNumber);
-  
-  return {
-    position: position, shape: shape, top: top, right: right, bottom: bottom, left: left,
-    width: px(widthNumber), height: px(heightNumber),
-    borderWidth: px(borderWidthNumber), borderColor: borderColor, borderStyle: borderStyle,
-    radius: displayRadius,
-    innerRadius: shape === 'circle' ? '999px' : px(Math.max(0, radiusNumber - borderWidthNumber)),
-    zIndex: zIndexNumber, alignItems: alignItems, objectFit: objectFit,
-    showTitle: showTitle, showPlayIcon: showPlayIcon, allowClose: allowClose,
-    marginTop: px(marginTopNumber), marginBottom: px(marginBottomNumber),
-    marginLeft: px(marginSideNumber), marginRight: px(rightSpacingNumber)
-  };
-}
-
+// trecho novo
 function getFloatingConfig(appearance) {
   appearance = normalizeAppearanceItem(appearance || {});
   
@@ -677,11 +599,12 @@ function getFloatingConfig(appearance) {
     heightNumber = widthNumber;
   } else if (shape === 'portrait') {
     heightNumber = Math.round(widthNumber * 16 / 9);
+  } else if (shape === 'landscape') {
+    heightNumber = Math.round(widthNumber * 9 / 16);
   } else {
     heightNumber = Math.round(widthNumber * 9 / 16);
   }
-  
-  // border_style armazena a LARGURA da borda em px (sempre sólida)
+
   var borderWidthNumber = toNumber(rcv('border_style', '2'), 2);
   var borderStyle = 'solid';
 
