@@ -191,6 +191,7 @@ export default function StoragePage() {
       try {
         const settings = await db.getSettings();
         if (settings?.store_id) {
+          setStoreId(settings.store_id);
           const data = await getConnectedIntegrations(settings.store_id);
           setConnectedPlatforms(data.map((item: any) => item.platform));
         }
@@ -200,6 +201,25 @@ export default function StoragePage() {
     };
     checkIntegrations();
   }, []);
+
+  // Busca os vídeos do Instagram assim que a loja for identificada e o Instagram estiver conectado
+  useEffect(() => {
+    const loadInstagramContent = async () => {
+      if (!storeId || !connectedPlatforms.includes('instagram')) return;
+
+      try {
+        setLoadingVideos(true);
+        const videos = await fetchInstagramMedia(storeId);
+        setInstagramVideos(videos);
+      } catch (err) {
+        console.error('Erro ao carregar vídeos do Instagram:', err);
+      } finally {
+        setLoadingVideos(false);
+      }
+    };
+
+    loadInstagramContent();
+  }, [storeId, connectedPlatforms]);
 
   // Carrega produtos da loja para o seletor da modal
   useEffect(() => {
