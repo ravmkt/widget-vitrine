@@ -40,7 +40,7 @@ serve(async (req) => {
 
     const accessToken = integration.access_token;
 
-    const fieldsParam = "id,title,cover_image_url,video_url";
+    const fieldsParam = "id,title,cover_image_url,embed_link,share_url,duration,view_count,like_count";
     const tkResponse = await fetch(`https://open.tiktokapis.com/v2/video/list/?fields=${fieldsParam}`, {
       method: "POST",
       headers: {
