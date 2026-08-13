@@ -1,0 +1,2 @@
+supabase secrets set TIKTOK_CLIENT_KEY=sua_client_key_aqui
+supabase secrets set TIKTOK_CLIENT_SECRET=seu_client_secret_aqui
