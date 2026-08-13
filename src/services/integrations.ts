@@ -61,7 +61,7 @@ export const connectTikTokAccount = async () => {
       return;
     }
 
-    const authUrl = `https://www.tiktok.com/v2/auth/authorize/?client_key=${CLIENT_KEY}&response_type=code&scope=${encodeURIComponent(SCOPE)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state=${settings.store_id}`;
+    const authUrl = `https://www.tiktok.com/v2/auth/authorize/?client_key=${CLIENT_KEY}&response_type=code&scope=${SCOPE}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state=${settings.store_id}`;
 
     window.location.href = authUrl;
   } catch (error) {
