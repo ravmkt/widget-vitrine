@@ -9,6 +9,7 @@ import {
   getConnectedIntegrations,
 } from '@/services/integrations';
 import { fetchTikTokMedia } from '@/services/tiktok';
+import { fetchInstagramMedia, InstagramMedia } from '@/services/instagram';
 import {
   HardDrive,
   Search,
