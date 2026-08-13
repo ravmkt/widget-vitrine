@@ -809,6 +809,53 @@ export default function StoragePage() {
         );
       })()}
 
+{/* Seção de Vídeos Importados do Instagram */}
+      {connectedPlatforms.includes('instagram') && (
+        <div className="rounded-[1.5rem] border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <Instagram className="h-5 w-5 text-pink-500" />
+              Reels Importados do Instagram
+            </h2>
+            <span className="text-xs font-bold text-slate-400">
+              {instagramVideos.length} mídias encontradas
+            </span>
+          </div>
+
+          {loadingVideos ? (
+            <div className="flex min-h-[160px] items-center justify-center rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+              <span className="text-xs font-bold text-slate-400">Carregando mídias do Instagram...</span>
+            </div>
+          ) : instagramVideos.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {instagramVideos.map((video) => (
+                <div
+                  key={video.id}
+                  className="group relative aspect-[9/16] overflow-hidden rounded-2xl bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-pink-500 transition-all duration-300 shadow-sm"
+                >
+                  <img
+                    src={video.thumbnail_url || video.media_url}
+                    alt={video.caption || 'Reels do Instagram'}
+                    className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-80" />
+                  
+                  {video.caption && (
+                    <p className="absolute bottom-2.5 left-2.5 right-2.5 text-[10px] font-bold text-white line-clamp-2 leading-tight">
+                      {video.caption}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-center">
+              <p className="text-xs font-bold text-slate-400">Nenhum Reels ou vídeo encontrado nesta conta do Instagram.</p>
+            </div>
+          )}
+        </div>
+      )}
+      
       {/* Tabela de Arquivos */}
       <div className="overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
         
