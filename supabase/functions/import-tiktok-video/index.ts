@@ -27,6 +27,32 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
+    // 🔒 VALIDAÇÃO PRÉVIA DE COTA DE ARMAZENAMENTO (Proteção do Plano)
+    const { data: storeData, error: storeErr } = await supabase
+      .from("stores")
+      .select("storage_used_bytes, storage_limit_bytes")
+      .eq("id", storeId)
+      .single();
+
+    if (storeErr || !storeData) {
+      return new Response(JSON.stringify({ error: "Não foi possível verificar o plano de armazenamento da loja." }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    if (storeData.storage_used_bytes >= storeData.storage_limit_bytes) {
+      return new Response(JSON.stringify({ 
+        error: "Limite de armazenamento do plano atingido. Faça upgrade do seu plano para continuar importando vídeos." 
+      }), { 
+        status: 403, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      });
+    }
+
+    const currentUsedBytes = Number(storeData.storage_used_bytes || 0);
+    const maxLimitBytes = Number(storeData.storage_limit_bytes || 1073741824);
+
     const rawUrl = videoData.video_url || videoData.download_url || videoData.media_url || videoData.share_url;
     const mediaTitle = String(videoData.title || videoData.description || `TIKTOK_${Date.now()}`);
     const thumbnailPic = videoData.cover_image_url || '';
