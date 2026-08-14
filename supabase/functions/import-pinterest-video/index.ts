@@ -335,9 +335,9 @@ serve(async (req) => {
       }
     }
 
-    // Se falhar o download da thumbnail, usa o próprio link do vídeo hospedado como fallback
-    if (!finalThumbnailUrl) {
-      finalThumbnailUrl = finalVideoUrl;
+    // Se falhar o download da thumbnail, preserva a URL externa encontrada ou mantém vazio para captura de frame no frontend
+    if (!finalThumbnailUrl && thumbnailPic && !thumbnailPic.includes(".mp4")) {
+      finalThumbnailUrl = thumbnailPic;
     }
 
     // 4. Inserção na Tabela Videos
