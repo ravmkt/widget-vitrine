@@ -7,6 +7,27 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+// Varredura recursiva para encontrar qualquer link .mp4 ou .m3u8 da CDN do Pinterest no JSON
+function findVideoUrlsDeep(obj: any): string[] {
+  const urls: string[] = [];
+  function search(node: any) {
+    if (!node) return;
+    if (typeof node === "string") {
+      if (node.startsWith("http") && (node.includes("pinimg.com") || node.includes("pinterest.com")) && (node.includes(".mp4") || node.includes(".m3u8") || node.includes("/v1/") || node.includes("/v3/"))) {
+        urls.push(node);
+      }
+      return;
+    }
+    if (Array.isArray(node)) {
+      for (const item of node) search(item);
+    } else if (typeof node === "object") {
+      for (const key of Object.keys(node)) search(node[key]);
+    }
+  }
+  search(obj);
+  return urls;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -38,8 +59,8 @@ serve(async (req) => {
       .single();
 
     if (storeErr || !storeData) {
-      console.error("[Pinterest] Erro ao consultar dados da loja:", storeErr);
-      return new Response(JSON.stringify({ error: "Não foi possível verificar o plano de armazenamento da loja." }), {
+      console.error("[Pinterest] Erro ao verificar plano:", storeErr);
+      return new Response(JSON.stringify({ error: "Não foi possível verificar o plano da loja." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
@@ -50,14 +71,14 @@ serve(async (req) => {
 
     if (currentUsedBytes >= maxLimitBytes) {
       return new Response(JSON.stringify({
-        error: "Limite de armazenamento do plano atingido. Faça upgrade do seu plano para continuar importando vídeos."
+        error: "Limite de armazenamento atingido. Faça upgrade para importar novos vídeos."
       }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
-    const rawUrl = String(videoData.video_url || videoData.pin_url || videoData.share_url || "").trim();
+    let rawUrl = String(videoData.video_url || videoData.pin_url || videoData.share_url || "").trim();
 
     if (!rawUrl || (!rawUrl.includes("pinterest.") && !rawUrl.includes("pin.it"))) {
       return new Response(JSON.stringify({ error: "URL do Pinterest inválida ou não informada." }), {
@@ -66,37 +87,106 @@ serve(async (req) => {
       });
     }
 
-    let directMp4Url = "";
-    let thumbnailPic = "";
-    let mediaTitle = String(videoData.title || `PINTEREST_${Date.now()}`);
+    // Normaliza subdomínios regionais para canonical pinterest.com
+    rawUrl = rawUrl.replace(/https?:\/\/(?:[a-z]{2}\.)?pinterest\./i, "https://www.pinterest.");
 
-    console.log("[Vidlytics] Resolvendo Pin do Pinterest:", rawUrl);
+    // Se for link encurtado pin.it, resolve o redirect
+    if (rawUrl.includes("pin.it")) {
+      try {
+        const headResp = await fetch(rawUrl, { method: "HEAD", redirect: "follow" });
+        rawUrl = headResp.url || rawUrl;
+      } catch (e) {
+        console.warn("[Pinterest] Falha ao resolver redirecionamento pin.it:", e);
+      }
+    }
 
-    // 1. Extração do ID do Pin a partir da URL fornecida (incluindo links encurtados pin.it)
+    // Extração do ID do Pin
     let pinId = "";
     const pinMatch = rawUrl.match(/\/pin\/(\d+)/i);
     if (pinMatch && pinMatch[1]) {
       pinId = pinMatch[1];
     }
 
-    // Se for link encurtado pin.it, resolve o redirect primeiro para obter o ID
-    if (!pinId && rawUrl.includes("pin.it")) {
-      try {
-        const headResp = await fetch(rawUrl, { method: "HEAD", redirect: "follow" });
-        const finalUrl = headResp.url || "";
-        const redirectedMatch = finalUrl.match(/\/pin\/(\d+)/i);
-        if (redirectedMatch && redirectedMatch[1]) {
-          pinId = redirectedMatch[1];
+    let directMp4Url = "";
+    let thumbnailPic = "";
+    let mediaTitle = String(videoData.title || `PINTEREST_${Date.now()}`);
+
+    console.log("[Pinterest] Resolvendo Pin ID:", pinId, "URL:", rawUrl);
+
+    // --- ESTRATÉGIA 1: Scraping com Emulação de Navegador Desktop Real ---
+    try {
+      const pageResp = await fetch(rawUrl, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.9,pt-BR;q=0.8,pt;q=0.7",
+          "Sec-Ch-Ua": '"Chromium";v="124", "Google Chrome";v="124"',
+          "Sec-Ch-Ua-Mobile": "?0",
+          "Sec-Ch-Ua-Platform": '"Windows"',
+          "Upgrade-Insecure-Requests": "1"
         }
-      } catch (e) {
-        console.warn("[Vidlytics] Falha ao resolver link pin.it:", e);
+      });
+
+      if (pageResp.ok) {
+        const html = await pageResp.text();
+
+        // 1.1 JSON embutido __PWS_DATA__
+        const jsonMatch = html.match(/<script id="__PWS_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+        if (jsonMatch) {
+          try {
+            const pinData = JSON.parse(jsonMatch[1]);
+            const videoCandidates = findVideoUrlsDeep(pinData);
+            
+            // Prioriza .mp4 direto sobre .m3u8
+            const mp4Candidate = videoCandidates.find(u => u.includes(".mp4") && !u.includes("live"));
+            if (mp4Candidate) {
+              directMp4Url = mp4Candidate;
+            } else if (videoCandidates.length > 0) {
+              directMp4Url = videoCandidates[0];
+            }
+
+            // Thumbnail
+            const imgCandidates = findVideoUrlsDeep(pinData?.props?.initialReduxState?.pins || pinData);
+            const foundThumb = html.match(/https:\/\/[^"'\s]+\.pinimg\.com\/originals\/[^"'\s]+\.(?:jpg|jpeg|png|webp)/i)
+              || html.match(/https:\/\/[^"'\s]+\.pinimg\.com\/736x\/[^"'\s]+\.(?:jpg|jpeg|png|webp)/i);
+            if (foundThumb) thumbnailPic = foundThumb[0];
+          } catch (e) {
+            console.warn("[Pinterest] Falha no parser __PWS_DATA__:", e);
+          }
+        }
+
+        // 1.2 Regex Direto no HTML por CDN de Vídeo do Pinterest (v.pinimg.com/*.mp4)
+        if (!directMp4Url) {
+          const directMatch = html.match(/https:\/\/(?:v1|v2|v3|v|video)\.pinimg\.com\/videos\/[a-zA-Z0-9_\-\/]+\.mp4/i)
+            || html.match(/https:\/\/[^"'\s]+\.pinimg\.com\/[^"'\s]+\.mp4/i);
+          if (directMatch) {
+            directMp4Url = directMatch[0];
+          }
+        }
+
+        // 1.3 Schema.org JSON-LD
+        if (!directMp4Url) {
+          const ldJsonMatches = html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
+          for (const match of ldJsonMatches) {
+            try {
+              const ldData = JSON.parse(match[1]);
+              if (ldData.contentUrl || ldData["@type"] === "VideoObject") {
+                directMp4Url = ldData.contentUrl || ldData.embedUrl || "";
+                if (ldData.thumbnailUrl) thumbnailPic = ldData.thumbnailUrl;
+                if (directMp4Url) break;
+              }
+            } catch (_) {}
+          }
+        }
       }
+    } catch (scrapErr) {
+      console.warn("[Pinterest] Erro no scraping HTML:", scrapErr);
     }
 
-    // --- ESTRATÉGIA 1 (Principal): Consulta à API JSON de Recursos do Pinterest (PinResource) ---
-    if (pinId) {
+    // --- ESTRATÉGIA 2: Fallback via API Pública de Recursos (PinResource) ---
+    if (!directMp4Url && pinId) {
       try {
-        console.log("[Vidlytics] Consultando PinResource do Pinterest para o ID:", pinId);
+        console.log("[Pinterest] Tentando fallback PinResource API para ID:", pinId);
         const resourceUrl = `https://www.pinterest.com/resource/PinResource/get/?data=${encodeURIComponent(
           JSON.stringify({
             options: { id: pinId, field_set_key: "detailed" },
@@ -106,117 +196,58 @@ serve(async (req) => {
 
         const apiResp = await fetch(resourceUrl, {
           headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
             "X-Requested-With": "XMLHttpRequest",
-            "Accept": "application/json, text/javascript, */*; q=0.01"
+            "Accept": "application/json"
           }
         });
 
         if (apiResp.ok) {
-          const apiData = await apiResp.json();
-          const pinData = apiData?.resource_response?.data;
-
-          if (pinData) {
-            const videoList = pinData.videos?.video_list;
-            if (videoList) {
-              const preferredKeys = ["V_720P", "V_HLSV4", "V_EXP7", "V_EXP6", "V_EXP5", "V_EXP4", "V_EXP3"];
-              for (const key of preferredKeys) {
-                if (videoList[key]?.url) {
-                  directMp4Url = videoList[key].url;
-                  break;
-                }
-              }
-              if (!directMp4Url) {
-                const firstVariant = Object.values(videoList)[0] as any;
-                directMp4Url = firstVariant?.url || "";
-              }
-            }
-
-            thumbnailPic = pinData.images?.orig?.url || pinData.images?.["736x"]?.url || "";
-            if (pinData.title || pinData.description) {
-              mediaTitle = pinData.title || pinData.description;
-            }
+          const apiJson = await apiResp.json();
+          const videoCandidates = findVideoUrlsDeep(apiJson);
+          const mp4Candidate = videoCandidates.find(u => u.includes(".mp4"));
+          if (mp4Candidate) {
+            directMp4Url = mp4Candidate;
+          } else if (videoCandidates.length > 0) {
+            directMp4Url = videoCandidates[0];
           }
         }
       } catch (apiErr) {
-        console.warn("[Vidlytics] Falha ao consultar PinResource API:", apiErr);
-      }
-    }
-
-    // --- ESTRATÉGIA 2 (Fallback): Scraping HTML se a API falhar ---
-    if (!directMp4Url) {
-      console.log("[Vidlytics] API PinResource não retornou vídeo. Tentando scraping HTML...");
-      const pageResp = await fetch(rawUrl, {
-        redirect: "follow",
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-          "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8"
-        }
-      });
-
-      if (pageResp.ok) {
-        const html = await pageResp.text();
-
-        // Parser JSON-LD
-        const ldJsonMatches = html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
-        for (const match of ldJsonMatches) {
-          try {
-            const ldData = JSON.parse(match[1]);
-            if (ldData["@type"] === "VideoObject" || ldData.contentUrl) {
-              directMp4Url = ldData.contentUrl || ldData.embedUrl || "";
-              if (!thumbnailPic) thumbnailPic = ldData.thumbnailUrl || "";
-              if (directMp4Url) break;
-            }
-          } catch (_) {}
-        }
-
-        // Meta tags OpenGraph / Twitter Stream
-        if (!directMp4Url) {
-          const ogVideo = html.match(/<meta property="og:video(?::secure_url)?" content="([^"]+)"/i);
-          const twitterStream = html.match(/<meta name="twitter:player:stream" content="([^"]+)"/i);
-          directMp4Url = ogVideo?.[1] || twitterStream?.[1] || "";
-        }
-
-        if (!thumbnailPic) {
-          const ogImage = html.match(/<meta property="og:image" content="([^"]+)"/i);
-          thumbnailPic = ogImage?.[1] || "";
-        }
+        console.warn("[Pinterest] Erro no fallback de API:", apiErr);
       }
     }
 
     if (!directMp4Url) {
-      console.error("[Vidlytics] Falha crítica: Nenhuma URL de vídeo encontrada no HTML do Pin.");
-      return new Response(JSON.stringify({ 
-        error: "Não foi possível identificar o vídeo deste Pin. Certifique-se de que é um Pin de vídeo e não uma imagem estática." 
+      return new Response(JSON.stringify({
+        error: "Não foi possível extrair o vídeo deste Pin. Verifique se o link informado contém um vídeo público ativo."
       }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
-    console.log("[Vidlytics] ✅ Mídia resolvida com sucesso:", directMp4Url);
+    console.log("[Pinterest] ✅ Mídia localizada com sucesso:", directMp4Url);
 
     // 2. Download do binário
-    console.log("[Vidlytics] Baixando binário MP4...");
+    console.log("[Pinterest] Baixando binário MP4...");
     const mediaResp = await fetch(directMp4Url, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "Referer": "https://www.pinterest.com/"
       }
     });
 
     if (!mediaResp.ok) {
-      throw new Error(`Falha no download da CDN de mídia (status ${mediaResp.status}).`);
+      throw new Error(`Falha no download da CDN (status ${mediaResp.status}).`);
     }
 
     const videoBuffer = await mediaResp.arrayBuffer();
     const fileSize = videoBuffer.byteLength;
 
-    // 🔒 2ª CAMADA: Validação pós-download
+    // 🔒 2ª CAMADA: Validação pós-download contra o teto
     if ((currentUsedBytes + fileSize) > maxLimitBytes) {
       return new Response(JSON.stringify({
-        error: "Este vídeo excede o espaço restante do seu plano de armazenamento. Faça upgrade para continuar."
+        error: "Este vídeo excede o espaço restante do seu plano. Faça upgrade para continuar."
       }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -225,7 +256,7 @@ serve(async (req) => {
 
     // 3. Upload para o Supabase Storage
     const fileName = `${storeId}/${Date.now()}_pinterest_pure.mp4`;
-    console.log("[Vidlytics] Enviando para o Supabase Storage:", fileName, `(${fileSize} bytes)`);
+    console.log("[Pinterest] Gravando no Supabase Storage:", fileName, `(${fileSize} bytes)`);
 
     const { data: uploadData, error: uploadErr } = await supabase.storage
       .from("videos")
@@ -243,10 +274,10 @@ serve(async (req) => {
 
       if (publicUrlData?.publicUrl) {
         finalVideoUrl = publicUrlData.publicUrl;
-        console.log("[Vidlytics] ✅ Arquivo salvo no Storage:", finalVideoUrl);
+        console.log("[Pinterest] ✅ Vídeo hospedado com sucesso:", finalVideoUrl);
       }
     } else {
-      console.warn("[Vidlytics] Aviso: Upload no Storage falhou, mantendo URL direta:", uploadErr);
+      console.warn("[Pinterest] Aviso no upload para o Storage:", uploadErr);
     }
 
     // 4. Inserção na Tabela Videos
@@ -257,7 +288,7 @@ serve(async (req) => {
       video_source_type: isSupabaseHosted ? "upload" : "url",
       source_type: isSupabaseHosted ? "upload" : "url",
       video_url: finalVideoUrl,
-      thumbnail_url: thumbnailPic,
+      thumbnail_url: thumbnailPic || finalVideoUrl,
       thumbnail_source_type: "auto",
       file_size: fileSize,
       status: "active",
@@ -278,8 +309,8 @@ serve(async (req) => {
     });
 
   } catch (error: any) {
-    console.error("[Vidlytics] Erro fatal na Edge Function:", error);
-    return new Response(JSON.stringify({ error: error?.message || "Erro interno ao processar o vídeo do Pinterest." }), {
+    console.error("[Pinterest] Erro crítico:", error);
+    return new Response(JSON.stringify({ error: error?.message || "Erro ao processar vídeo do Pinterest." }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
