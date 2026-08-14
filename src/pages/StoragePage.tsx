@@ -417,26 +417,42 @@ export default function StoragePage() {
         created_at: new Date().toISOString(),
       };
 
-      if (supabase) {
-        const { error } = await supabase.from('videos').insert([payload]);
-        if (error) throw error;
-      } else if (typeof db.videos?.create === 'function') {
-        await db.videos.create(payload);
-      }
+let createdVideoId: string | null = null;
 
-      showSuccess('Mídia externa cadastrada com sucesso!');
-      setShowUrlModal(false);
-      setExternalUrl('');
-      setExternalTitle('');
-      setSelectedProductId('');
-      await loadAccountStorageData();
-    } catch (err: any) {
-      console.error('Erro ao salvar URL externa:', err);
-      showError(err.message || 'Falha ao cadastrar vídeo por URL.');
-    } finally {
-      setSavingUrl(false);
+    if (supabase) {
+      const { data: insertData, error } = await supabase
+        .from('videos')
+        .insert([payload])
+        .select('id')
+        .single();
+
+      if (error) throw error;
+      if (insertData?.id) {
+        createdVideoId = insertData.id;
+      }
+    } else if (typeof db.videos?.create === 'function') {
+      const result: any = await db.videos.create(payload);
+      createdVideoId = result?.id || null;
     }
-  };
+
+    showSuccess('Mídia externa cadastrada com sucesso!');
+    setShowUrlModal(false);
+    setExternalUrl('');
+    setExternalTitle('');
+    setSelectedProductId('');
+    await loadAccountStorageData();
+
+    // 🚀 Redireciona automaticamente para a edição do vídeo cadastrado (YouTube / Link Direto)
+    if (createdVideoId) {
+      window.location.href = `/videos/${createdVideoId}/edit`;
+    }
+  } catch (err: any) {
+    console.error('Erro ao salvar URL externa:', err);
+    showError(err.message || 'Falha ao cadastrar vídeo por URL.');
+  } finally {
+    setSavingUrl(false);
+  }
+};
 
   // Gatilho para abrir a janela do sistema operacional ao clicar em "Fazer Upload"
   const handleTriggerUpload = () => {
