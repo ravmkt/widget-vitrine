@@ -338,7 +338,7 @@ export default function StoragePage() {
     fetchProducts();
   }, []);
 
-  // Processa a gravação da Mídia por URL Externa
+// Processa a gravação da Mídia por URL Externa com suporte nativo ao Pinterest
   const handleSaveExternalUrl = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -347,6 +347,9 @@ export default function StoragePage() {
       return;
     }
 
+    const formattedUrl = externalUrl.trim();
+    const isPinterestUrl = formattedUrl.includes('pinterest.') || formattedUrl.includes('pin.it');
+
     try {
       setSavingUrl(true);
       const settings = await db.getSettings();
@@ -354,7 +357,43 @@ export default function StoragePage() {
         throw new Error('ID da loja não encontrado.');
       }
 
-      const formattedUrl = externalUrl.trim();
+      // 🔴 Fluxo Pinterest: Baixa e hospeda o arquivo via Edge Function
+      if (isPinterestUrl) {
+        if (!supabase) {
+          throw new Error('Conexão com o banco de dados indisponível.');
+        }
+
+        showSuccess('Importando vídeo do Pinterest... Isso pode levar alguns segundos.');
+
+        const { data, error } = await supabase.functions.invoke('import-pinterest-video', {
+          body: {
+            storeId: settings.store_id,
+            videoData: {
+              video_url: formattedUrl,
+              title: externalTitle.trim() || undefined,
+            },
+          },
+        });
+
+        if (error || !data?.success) {
+          throw new Error(error?.message || data?.error || 'Erro ao importar o Pin.');
+        }
+
+        showSuccess('Vídeo do Pinterest importado e hospedado com sucesso!');
+        setShowUrlModal(false);
+        setExternalUrl('');
+        setExternalTitle('');
+        setSelectedProductId('');
+        await loadAccountStorageData();
+
+        if (data.videoId && selectedProductId) {
+          await supabase.from('videos').update({ product_id: selectedProductId }).eq('id', data.videoId);
+        }
+
+        return;
+      }
+
+      // Fluxo padrão para outras URLs externas
       const extractedThumb = getExternalVideoThumbnail(formattedUrl);
       const title = externalTitle.trim() || `VÍDEO_EXTERNO_${Date.now().toString().slice(-4)}`;
 
@@ -387,14 +426,14 @@ export default function StoragePage() {
       setExternalTitle('');
       setSelectedProductId('');
       await loadAccountStorageData();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erro ao salvar URL externa:', err);
-      showError('Falha ao cadastrar vídeo por URL.');
+      showError(err.message || 'Falha ao cadastrar vídeo por URL.');
     } finally {
       setSavingUrl(false);
     }
   };
-
+  
   // Gatilho para abrir a janela do sistema operacional ao clicar em "Fazer Upload"
   const handleTriggerUpload = () => {
     fileInputRef.current?.click();
