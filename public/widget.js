@@ -103,14 +103,14 @@ function ensureModalStylesInLightDOM(appearance) {
     fsPlayerContainer.innerHTML = '';
     sourceType = String(sourceType || '').trim().toLowerCase();
 
-    // YouTube
+// YouTube (Mutado por padrão no autoplay)
     if (sourceType === 'youtube' || sourceType === 'yt') {
       var ytId = extractYouTubeId(videoUrl);
       if (ytId) {
-        fsPlayerContainer.innerHTML = '<iframe src="https://www.youtube.com/embed/' + ytId + '?autoplay=1&rel=0" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
+        fsPlayerContainer.innerHTML = '<iframe src="https://www.youtube.com/embed/' + ytId + '?autoplay=1&mute=1&enablejsapi=1&rel=0" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
       }
     }
-
+    
     // Pinterest
     else if (sourceType === 'pinterest' || sourceType === 'pin') {
       var pinId = extractPinterestId(videoUrl);
