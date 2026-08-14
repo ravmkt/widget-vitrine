@@ -110,6 +110,7 @@ serve(async (req) => {
     let directMp4Url = "";
     let thumbnailPic = "";
     let mediaTitle = String(videoData.title || `PINTEREST_${Date.now()}`);
+    let html = ""; // 🚀 Declarado no escopo da requisição para evitar ReferenceError
 
     console.log("[Pinterest] Resolvendo Pin ID:", pinId, "URL:", rawUrl);
 
@@ -128,7 +129,7 @@ serve(async (req) => {
       });
 
       if (pageResp.ok) {
-        const html = await pageResp.text();
+        html = await pageResp.text();
 
         // 1.1 JSON embutido __PWS_DATA__
         const jsonMatch = html.match(/<script id="__PWS_DATA__"[^>]*>([\s\S]*?)<\/script>/);
