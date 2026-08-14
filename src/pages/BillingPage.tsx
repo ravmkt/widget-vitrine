@@ -80,7 +80,7 @@ export function BillingPage() {
             }
           }
 
-          // 2. Busca Assinatura Corrente
+          // 2. Busca Assinatura Corrente e sincroniza o limite do plano
           const { data: subData } = await supabase
             .from('subscriptions')
             .select('*, plans(*)')
@@ -91,6 +91,9 @@ export function BillingPage() {
           if (subData) {
             setSubscription(subData);
             setPlan(subData.plans);
+            if (subData.plans?.storage_limit_bytes) {
+              setStorageLimitBytes(Number(subData.plans.storage_limit_bytes));
+            }
           }
 
           // 3. Busca Histórico de Faturas
