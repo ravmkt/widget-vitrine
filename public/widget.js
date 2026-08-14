@@ -163,6 +163,7 @@ function ensureModalStylesInLightDOM(appearance) {
   var currentStories = [];
   var currentStoryIndex = 0;
   var currentVideoIndex = 0;
+var isUserMuted = true; // Controla a persistência da preferência de som durante a navegação
 
   var VIDEO_FILE_REGEX = /\.(mp4|webm|ogg|mov|m4v|m3u8)(\?.*)?$/i;
 
