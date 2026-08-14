@@ -687,11 +687,30 @@ export default function StoragePage() {
         });
       }
 
-      const settings = await db.getSettings();
+const settings = await db.getSettings();
+      
+      // Busca os dados oficiais de cota sincronizados pela trigger no Supabase
+      if (settings?.store_id && supabase) {
+        const { data: storeRow } = await supabase
+          .from('stores')
+          .select('storage_used_bytes, storage_limit_bytes')
+          .eq('id', settings.store_id)
+          .single();
+
+        if (storeRow) {
+          if (storeRow.storage_used_bytes !== null && storeRow.storage_used_bytes !== undefined) {
+            setServerStorageUsedBytes(Number(storeRow.storage_used_bytes));
+          }
+          if (storeRow.storage_limit_bytes) {
+            setServerStorageLimitBytes(Number(storeRow.storage_limit_bytes));
+          }
+        }
+      }
+
       if (settings?.logo_url) {
         const logoBytes = settings.logo_file_size && Number(settings.logo_file_size) > 0
           ? Number(settings.logo_file_size)
-          : 1572864;
+          : 0;
 
         loadedItems.push({
           id: 'logo-setting-file',
@@ -706,7 +725,7 @@ export default function StoragePage() {
       }
 
       setFiles(loadedItems);
-    } catch (err) {
+          } catch (err) {
       console.error('Erro ao carregar arquivos da conta:', err);
       showError('Erro ao carregar dados de armazenamento.');
     } finally {
