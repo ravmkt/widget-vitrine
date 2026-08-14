@@ -199,23 +199,46 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-[#F1F5F9] dark:border-slate-800 overflow-hidden shrink-0">
-        <div className="flex items-center gap-3 mb-3 min-w-0">
-          <div className="h-9 w-9 rounded-full bg-[#F1F5F9] dark:bg-slate-800 border border-[#E2E8F0] dark:border-slate-700 flex items-center justify-center text-[#64748B] dark:text-slate-400 overflow-hidden shrink-0">
-            {storeLogoUrl ? (
-              <img src={storeLogoUrl} alt={storeName || 'Loja'} className="h-full w-full object-cover" />
-            ) : (
-              <User size={18} />
-            )}
-          </div>
-          <div
+        <div className="relative group mb-3">
+          <Link
+            to="/billing"
             className={cn(
-              "flex flex-col min-w-0 transition-all duration-300 whitespace-nowrap",
-              isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
+              "flex items-center gap-3 min-w-0 p-1.5 -m-1.5 rounded-xl transition-all duration-200 cursor-pointer",
+              location.pathname === "/billing"
+                ? "bg-[#EAF6FF] dark:bg-[#0094EB]/20"
+                : "hover:bg-[#F8FAFC] dark:hover:bg-slate-900"
             )}
           >
-            <span className="text-xs font-bold text-[#0F172A] dark:text-white truncate">{storeName || 'Admin'}</span>
-            <span className="text-[10px] font-bold text-[#0094EB] uppercase">Plano Pro</span>
-          </div>
+            <div className="h-9 w-9 rounded-full bg-[#F1F5F9] dark:bg-slate-800 border border-[#E2E8F0] dark:border-slate-700 flex items-center justify-center text-[#64748B] dark:text-slate-400 overflow-hidden shrink-0">
+              {storeLogoUrl ? (
+                <img src={storeLogoUrl} alt={storeName || 'Loja'} className="h-full w-full object-cover" />
+              ) : (
+                <User size={18} />
+              )}
+            </div>
+            <div
+              className={cn(
+                "flex flex-col min-w-0 transition-all duration-300 whitespace-nowrap",
+                isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
+              )}
+            >
+              <span className="text-xs font-bold text-[#0F172A] dark:text-white truncate group-hover:text-[#0094EB] transition-colors">
+                {storeName || 'Admin'}
+              </span>
+              <span className="text-[10px] font-bold text-[#0094EB] uppercase tracking-wide">
+                Plano Pro
+              </span>
+            </div>
+          </Link>
+
+          {/* Tooltip flutuante no modo recolhido */}
+          {!isExpanded && (
+            <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-4">
+              <div className="bg-[#0094EB] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
+                Minha Assinatura / Financeiro
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="relative group">
