@@ -187,6 +187,8 @@ export default function StoragePage() {
   const [externalTitle, setExternalTitle] = useState('');
   const [selectedProductId, setSelectedProductId] = useState('');
   const [productsList, setProductsList] = useState<any[]>([]);
+  const [selectedModelId, setSelectedModelId] = useState('');
+  const [sizingModelsList, setSizingModelsList] = useState<any[]>([]);
   const [savingUrl, setSavingUrl] = useState(false);
 
   // Carrega as plataformas sociais conectadas à loja no Supabase e trata o retorno do OAuth
