@@ -155,6 +155,10 @@ function App() {
           <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
           <Route path="/integration" element={<ProtectedRoute><AppLayout><IntegrationPage /></AppLayout></ProtectedRoute>} />
 
+          {/* Financeiro e Planos */}
+          <Route path="/billing" element={<ProtectedRoute><AppLayout><BillingPage /></AppLayout></ProtectedRoute>} />
+          <Route path="/plans" element={<ProtectedRoute><AppLayout><BillingPage /></AppLayout></ProtectedRoute>} />
+
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
