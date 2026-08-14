@@ -1664,13 +1664,14 @@ function trackMetric(data) {
 
     var wrapper = createEl('div', 'vl-player');
 
-// 1. YouTube Shorts ou Vídeo Tradicional (Inicia Mutado e com JS API ativada)
+// 1. YouTube Shorts ou Vídeo Tradicional (Respeita a preferência de áudio ativa do usuário)
     if (ytId) {
       var iframe = createEl('iframe');
-      iframe.src = 'https://www.youtube.com/embed/' + ytId + '?autoplay=1&mute=1&enablejsapi=1&playsinline=1&rel=0&loop=1&playlist=' + ytId;
+      var ytMuteParam = isUserMuted ? '1' : '0';
+      iframe.src = 'https://www.youtube.com/embed/' + ytId + '?autoplay=1&mute=' + ytMuteParam + '&enablejsapi=1&playsinline=1&rel=0&loop=1&playlist=' + ytId;
       iframe.allow = 'autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
       iframe.allowFullscreen = true;
-      iframe.setAttribute('data-is-muted', 'true');
+      iframe.setAttribute('data-is-muted', isUserMuted ? 'true' : 'false');
       iframe.setAttribute('data-is-paused', 'false');
       wrapper.appendChild(iframe);
       trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
