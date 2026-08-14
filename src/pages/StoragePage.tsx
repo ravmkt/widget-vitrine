@@ -920,18 +920,18 @@ const settings = await db.getSettings();
                   <HardDrive size={24} />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
+<div className="flex items-center gap-2">
                     <h3 className="text-base font-black text-slate-900 dark:text-white">
                       Plano Pro
                     </h3>
                     <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-black uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                      {formatSize(PLAN_LIMIT_BYTES)} Limite
+                      {formatSize(maxLimitBytes)} Limite
                     </span>
                   </div>
                   <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
-                    Uso atual: <strong className="text-slate-800 dark:text-slate-200">{formatSize(totalUsedBytes)}</strong> de {formatSize(PLAN_LIMIT_BYTES)}
+                    Uso atual: <strong className="text-slate-800 dark:text-slate-200">{formatSize(totalUsedBytes)}</strong> de {formatSize(maxLimitBytes)}
                   </p>
-                </div>
+                                  </div>
               </div>
 
               <div className="flex items-center gap-4 text-right">
