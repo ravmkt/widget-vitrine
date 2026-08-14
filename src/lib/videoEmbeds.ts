@@ -102,7 +102,7 @@ export const getYouTubeThumbnailUrl = (video: Record<string, any> | null): strin
   return youTubeId ? `https://img.youtube.com/vi/${youTubeId}/hqdefault.jpg` : '';
 };
 
-export type VideoPlatform = 'youtube' | 'instagram' | 'tiktok';
+export type VideoPlatform = 'youtube' | 'instagram' | 'tiktok' | 'pinterest';
 
 export const getExternalVideoData = (video: { source_type?: string; platform?: string; external_id?: string; video_url?: string; source_url?: string }) => {
   if (video.source_type === 'upload') {
@@ -135,6 +135,10 @@ export const getExternalVideoData = (video: { source_type?: string; platform?: s
 
   if (finalPlatform === 'tiktok') {
     return { platform: finalPlatform, externalId: finalExternalId, embedUrl: `https://www.tiktok.com/embed/v2/${finalExternalId}`, sourceUrl };
+  }
+
+  if (finalPlatform === 'pinterest') {
+    return { platform: finalPlatform, externalId: finalExternalId, embedUrl: `https://www.pinterest.com/pin/${finalExternalId}/embed`, sourceUrl };
   }
 
   return { platform: finalPlatform, externalId: finalExternalId, embedUrl: null, sourceUrl };
@@ -192,6 +196,25 @@ export const parseVideoPlatform = (url: string): { platform: VideoPlatform | nul
     if (host === 'vm.tiktok.com') {
       const externalId = parsed.pathname.replace(/^\//, '').split('/')[0] || '';
       return { platform: 'tiktok', externalId, embedUrl: sourceUrl, sourceUrl };
+    }
+
+    if (host === 'pinterest.com' || host === 'br.pinterest.com') {
+      const match = parsed.pathname.match(/^\/pin\/(\d+)\/?$/);
+      if (match) {
+        const externalId = match[1];
+        return {
+          platform: 'pinterest',
+          externalId,
+          embedUrl: `https://www.pinterest.com/pin/${externalId}/embed`,
+          sourceUrl,
+        };
+      }
+    }
+
+    if (host === 'pin.it') {
+      // Link curto do Pinterest — não tem ID extraível direto na URL.
+      // Mantém sourceUrl para eventual resolução posterior (redirecionamento).
+      return { platform: 'pinterest', externalId: '', embedUrl: sourceUrl, sourceUrl };
     }
   } catch {
     return { platform: null, externalId: '', embedUrl: sourceUrl, sourceUrl };
