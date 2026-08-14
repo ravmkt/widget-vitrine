@@ -1322,12 +1322,12 @@ let createdVideoId: string | null = null;
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400">
                   <Link size={20} />
                 </div>
-                <div>
+<div>
                   <h3 className="text-lg font-black text-slate-900 dark:text-white">
                     Adicionar Vídeo por URL
                   </h3>
                   <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                    Insira links do Pinterest, Instagram, TikTok, YouTube, Panda Video ou link direto.
+                    Insira links do Pinterest, YouTube, Panda Video, Bunny CDN ou link direto.
                   </p>
                 </div>
               </div>
@@ -1350,11 +1350,11 @@ let createdVideoId: string | null = null;
                   required
                   value={externalUrl}
                   onChange={(e) => setExternalUrl(e.target.value)}
-                  placeholder="https://pinterest.com/pin/... ou YouTube / Instagram"
+                  placeholder="https://pinterest.com/pin/... ou YouTube / Link direto"
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-800 outline-none transition focus:border-[#0094EB] focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white"
                 />
               </div>
-
+              
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Título ou Identificação da Mídia
