@@ -254,7 +254,7 @@ serve(async (req) => {
       });
     }
 
-    // 3. Upload para o Supabase Storage
+    // 3. Upload do Vídeo para o Supabase Storage
     const fileName = `${storeId}/${Date.now()}_pinterest_pure.mp4`;
     console.log("[Pinterest] Gravando no Supabase Storage:", fileName, `(${fileSize} bytes)`);
 
@@ -277,7 +277,46 @@ serve(async (req) => {
         console.log("[Pinterest] ✅ Vídeo hospedado com sucesso:", finalVideoUrl);
       }
     } else {
-      console.warn("[Pinterest] Aviso no upload para o Storage:", uploadErr);
+      console.warn("[Pinterest] Aviso no upload do vídeo:", uploadErr);
+    }
+
+    // 3.1 Download e Hospedagem da Capa (Thumbnail) no Storage para evitar bloqueios de Hotlink
+    let finalThumbnailUrl = thumbnailPic;
+    if (thumbnailPic && thumbnailPic.startsWith("http")) {
+      try {
+        console.log("[Pinterest] Baixando capa oficial do Pin:", thumbnailPic);
+        const thumbResp = await fetch(thumbnailPic, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Referer": "https://www.pinterest.com/"
+          }
+        });
+
+        if (thumbResp.ok) {
+          const thumbBuffer = await thumbResp.arrayBuffer();
+          const thumbFileName = `${storeId}/thumb_${Date.now()}_pinterest.jpg`;
+
+          const { data: thumbUploadData, error: thumbUploadErr } = await supabase.storage
+            .from("videos")
+            .upload(thumbFileName, thumbBuffer, {
+              contentType: "image/jpeg",
+              upsert: true
+            });
+
+          if (!thumbUploadErr && thumbUploadData) {
+            const { data: thumbPublicUrlData } = supabase.storage
+              .from("videos")
+              .getPublicUrl(thumbFileName);
+
+            if (thumbPublicUrlData?.publicUrl) {
+              finalThumbnailUrl = thumbPublicUrlData.publicUrl;
+              console.log("[Pinterest] ✅ Thumbnail hospedada com sucesso:", finalThumbnailUrl);
+            }
+          }
+        }
+      } catch (thumbErr) {
+        console.warn("[Pinterest] Não foi possível salvar a thumbnail no Storage, usando URL original:", thumbErr);
+      }
     }
 
     // 4. Inserção na Tabela Videos
@@ -288,8 +327,8 @@ serve(async (req) => {
       video_source_type: isSupabaseHosted ? "upload" : "url",
       source_type: isSupabaseHosted ? "upload" : "url",
       video_url: finalVideoUrl,
-      thumbnail_url: thumbnailPic || finalVideoUrl,
-      thumbnail_source_type: "auto",
+      thumbnail_url: finalThumbnailUrl || finalVideoUrl,
+      thumbnail_source_type: "upload",
       file_size: fileSize,
       status: "active",
       active: true,
