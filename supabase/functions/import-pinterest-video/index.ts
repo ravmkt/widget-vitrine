@@ -293,14 +293,23 @@ serve(async (req) => {
 
     // 3.1 Download Mandatório e Hospedagem da Capa (Thumbnail) no Supabase Storage
     let finalThumbnailUrl = "";
+    
+    // Se a thumbnailPic não veio no parser inicial, busca na meta tag og:image do HTML
+    if (!thumbnailPic || thumbnailPic.includes(".mp4")) {
+      const ogMatch = html.match(/<meta property="og:image" content="([^"]+)"/i) 
+                   || html.match(/<meta name="og:image" content="([^"]+)"/i);
+      if (ogMatch && ogMatch[1]) {
+        thumbnailPic = ogMatch[1];
+      }
+    }
+
     if (thumbnailPic && thumbnailPic.startsWith("http") && !thumbnailPic.includes(".mp4")) {
       try {
         console.log("[Pinterest] Baixando binário da capa oficial:", thumbnailPic);
         const thumbResp = await fetch(thumbnailPic, {
           headers: {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-            "Referer": "https://www.pinterest.com/",
-            "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
+            "Referer": "https://www.pinterest.com/"
           }
         });
 
@@ -309,7 +318,7 @@ serve(async (req) => {
           const isPng = thumbnailPic.toLowerCase().includes(".png");
           const ext = isPng ? "png" : "jpg";
           const contentType = isPng ? "image/png" : "image/jpeg";
-          const thumbFileName = `${storeId}/thumb_${Date.now()}_pinterest_${Math.random().toString(36).substring(2, 7)}.${ext}`;
+          const thumbFileName = `${storeId}/thumb_${Date.now()}_pinterest.${ext}`;
 
           const { data: thumbUploadData, error: thumbUploadErr } = await supabase.storage
             .from("videos")
@@ -336,6 +345,11 @@ serve(async (req) => {
       } catch (thumbErr) {
         console.error("[Pinterest] ❌ Erro na requisição da thumbnail:", thumbErr);
       }
+    }
+
+    // 🔒 Blindagem: NUNCA salva link de vídeo .mp4 no campo da thumbnail
+    if (!finalThumbnailUrl) {
+      finalThumbnailUrl = "";
     }
 
     // 4. Inserção na Tabela Videos
