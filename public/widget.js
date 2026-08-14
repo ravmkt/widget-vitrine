@@ -1675,7 +1675,7 @@ function trackMetric(data) {
       trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
       return wrapper;
     }
-    
+
     // 1.1. Pinterest Pin Embed com Validação Defensiva de ID
     var pinId = extractPinterestId(url);
     if (sourceType === 'pinterest' || pinId) {
@@ -2617,15 +2617,27 @@ function trackMetric(data) {
 
     var muteBtn = createEl('button', 'vl-control');
     muteBtn.id = 'vl-mute-btn';
-    muteBtn.innerHTML = svgIcon('volumeOff'); // Inicia com o ícone correto (mudo)
+    muteBtn.innerHTML = svgIcon('volumeOff'); // Inicia sempre mutado visualmente
     muteBtn.title = 'Ativar som';
     muteBtn.onclick = function (e) {
       e.stopPropagation();
       var vid = modalContent.querySelector('video');
-      if (!vid) return;
-      vid.muted = !vid.muted;
-      muteBtn.innerHTML = vid.muted ? svgIcon('volumeOff') : svgIcon('volume');
-      muteBtn.title = vid.muted ? 'Ativar som' : 'Mudo';
+      var iframe = modalContent.querySelector('iframe');
+
+      if (vid) {
+        vid.muted = !vid.muted;
+        muteBtn.innerHTML = vid.muted ? svgIcon('volumeOff') : svgIcon('volume');
+        muteBtn.title = vid.muted ? 'Ativar som' : 'Mudo';
+      } else if (iframe && iframe.contentWindow) {
+        var isCurrentlyMuted = iframe.getAttribute('data-is-muted') !== 'false';
+        var nextMutedState = !isCurrentlyMuted;
+        var command = nextMutedState ? 'mute' : 'unMute';
+        
+        iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: command, args: [] }), '*');
+        iframe.setAttribute('data-is-muted', nextMutedState ? 'true' : 'false');
+        muteBtn.innerHTML = nextMutedState ? svgIcon('volumeOff') : svgIcon('volume');
+        muteBtn.title = nextMutedState ? 'Ativar som' : 'Mudo';
+      }
     };
     headerActions.appendChild(muteBtn);
 
@@ -2636,15 +2648,26 @@ function trackMetric(data) {
     playBtn.onclick = function (e) {
       e.stopPropagation();
       var vid = modalContent.querySelector('video');
-      if (!vid) return;
-      if (vid.paused) {
-        vid.play().catch(function () {});
-        playBtn.innerHTML = svgIcon('pause');
-        playBtn.title = 'Pausar';
-      } else {
-        vid.pause();
-        playBtn.innerHTML = svgIcon('play');
-        playBtn.title = 'Reproduzir';
+      var iframe = modalContent.querySelector('iframe');
+
+      if (vid) {
+        if (vid.paused) {
+          vid.play().catch(function () {});
+          playBtn.innerHTML = svgIcon('pause');
+          playBtn.title = 'Pausar';
+        } else {
+          vid.pause();
+          playBtn.innerHTML = svgIcon('play');
+          playBtn.title = 'Reproduzir';
+        }
+      } else if (iframe && iframe.contentWindow) {
+        var isPaused = iframe.getAttribute('data-is-paused') === 'true';
+        var command = isPaused ? 'playVideo' : 'pauseVideo';
+        
+        iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: command, args: [] }), '*');
+        iframe.setAttribute('data-is-paused', isPaused ? 'false' : 'true');
+        playBtn.innerHTML = isPaused ? svgIcon('pause') : svgIcon('play');
+        playBtn.title = isPaused ? 'Pausar' : 'Reproduzir';
       }
     };
     headerActions.appendChild(playBtn);
