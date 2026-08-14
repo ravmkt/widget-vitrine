@@ -2,14 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Check, 
-  Sparkles, 
   ArrowLeft, 
   Loader2 
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { db } from '@/lib/db';
 import { cn } from '@/lib/utils';
-import { showSuccess, showError } from '@/utils/toast';
+import { showSuccess, showError, showWarning } from '@/lib/toast';
 
 export function PlansPage() {
   const navigate = useNavigate();
@@ -60,46 +59,65 @@ export function PlansPage() {
     loadPlansData();
   }, []);
 
-  // Processa a troca de plano (Upgrade / Downgrade)
-  const handleSelectPlan = async (targetPlan: any) => {
+  // Processa o Checkout e Assinatura via Edge Function do Asaas
+  const handleSelectPlan = async (
+    targetPlan: any, 
+    billingType: 'PIX' | 'BOLETO' | 'CREDIT_CARD' | 'UNDEFINED' = 'UNDEFINED'
+  ) => {
     if (!storeId || !supabase) return;
     if (targetPlan.id === currentPlanId) return;
 
     try {
       setUpdatingPlanId(targetPlan.id);
 
-      // 1. Desativa a assinatura corrente anterior (respeita o índice único parcial)
-      await supabase
-        .from('subscriptions')
-        .update({ is_current: false })
-        .eq('store_id', storeId)
-        .eq('is_current', true);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
 
-      // 2. Cria o novo registro de assinatura ativa (Trigger atualiza stores.plan_id no banco)
-      const { error: subErr } = await supabase
-        .from('subscriptions')
-        .insert([{
-          store_id: storeId,
+      if (!accessToken) {
+        showError('Sessão expirada. Faça login novamente.');
+        navigate('/login');
+        return;
+      }
+
+      // Invoca a Edge Function do Asaas
+      const { data, error } = await supabase.functions.invoke('create-asaas-subscription', {
+        body: {
           plan_id: targetPlan.id,
-          status: 'active',
-          is_current: true,
-          billing_cycle: 'monthly',
-          current_period_start: new Date().toISOString(),
-          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        }]);
+          store_id: storeId,
+          billing_type: billingType,
+        },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
 
-      if (subErr) throw subErr;
+      if (error) {
+        console.error('Erro ao invocar create-asaas-subscription:', error);
+        showError('Erro ao processar sua assinatura. Tente novamente.');
+        return;
+      }
 
-      setCurrentPlanId(targetPlan.id);
-      showSuccess(`Plano alterado para ${targetPlan.name} com sucesso!`);
-      
-      // Redireciona de volta para o Hub Financeiro
-      setTimeout(() => {
+      // Tratamento de Dados Fiscais Pendentes
+      if (data?.error === 'DADOS_FISCAIS_OBRIGATORIOS') {
+        showWarning(data.message || 'Preencha seus dados de faturamento antes de assinar.');
         navigate('/billing');
-      }, 800);
+        return;
+      }
+
+      if (data?.error) {
+        showError(data.message || 'Não foi possível criar a assinatura.');
+        return;
+      }
+
+      if (data?.invoice_url) {
+        showSuccess('Redirecionando para o checkout do Asaas...');
+        window.location.href = data.invoice_url;
+      } else {
+        showError('Assinatura criada, mas não foi possível gerar o link de pagamento.');
+      }
     } catch (err: any) {
-      console.error('Erro ao migrar plano:', err);
-      showError(err.message || 'Falha ao alterar plano.');
+      console.error('Erro inesperado ao escolher plano:', err);
+      showError('Erro inesperado. Tente novamente em alguns instantes.');
     } finally {
       setUpdatingPlanId(null);
     }
