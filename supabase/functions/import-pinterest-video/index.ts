@@ -352,7 +352,7 @@ serve(async (req) => {
       finalThumbnailUrl = "";
     }
 
-    // 4. Inserção na Tabela Videos
+    // 4. Inserção na Tabela Videos (Blindagem de Thumbnail e Source Type)
     const isSupabaseHosted = finalVideoUrl.includes("supabase.co");
     const payload = {
       store_id: storeId,
@@ -360,8 +360,8 @@ serve(async (req) => {
       video_source_type: isSupabaseHosted ? "upload" : "url",
       source_type: isSupabaseHosted ? "upload" : "url",
       video_url: finalVideoUrl,
-thumbnail_url: finalThumbnailUrl || null,
-      thumbnail_source_type: "upload",
+      thumbnail_url: finalThumbnailUrl || null,
+      thumbnail_source_type: finalThumbnailUrl ? "upload" : "auto",
       file_size: fileSize,
       status: "active",
       active: true,
