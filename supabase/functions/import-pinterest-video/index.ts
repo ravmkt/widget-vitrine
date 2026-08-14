@@ -360,7 +360,7 @@ serve(async (req) => {
       video_source_type: isSupabaseHosted ? "upload" : "url",
       source_type: isSupabaseHosted ? "upload" : "url",
       video_url: finalVideoUrl,
-      thumbnail_url: finalThumbnailUrl || finalVideoUrl,
+thumbnail_url: finalThumbnailUrl || null,
       thumbnail_source_type: "upload",
       file_size: fileSize,
       status: "active",
