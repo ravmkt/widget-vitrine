@@ -433,7 +433,7 @@ export default function StoragePage() {
       setSavingUrl(false);
     }
   };
-  
+
   // Gatilho para abrir a janela do sistema operacional ao clicar em "Fazer Upload"
   const handleTriggerUpload = () => {
     fileInputRef.current?.click();
@@ -1339,7 +1339,7 @@ export default function StoragePage() {
                     Adicionar Vídeo por URL
                   </h3>
                   <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                    Insira links do Instagram, TikTok, YouTube, Panda Video, Bunny CDN ou Drive.
+                    Insira links do Pinterest, Instagram, TikTok, YouTube, Panda Video ou link direto.
                   </p>
                 </div>
               </div>
@@ -1362,7 +1362,7 @@ export default function StoragePage() {
                   required
                   value={externalUrl}
                   onChange={(e) => setExternalUrl(e.target.value)}
-                  placeholder="https://www.instagram.com/reel/..."
+                  placeholder="https://pinterest.com/pin/... ou YouTube / Instagram"
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-800 outline-none transition focus:border-[#0094EB] focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white"
                 />
               </div>
