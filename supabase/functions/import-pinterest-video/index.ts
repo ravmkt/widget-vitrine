@@ -145,14 +145,25 @@ serve(async (req) => {
               directMp4Url = videoCandidates[0];
             }
 
-            // Thumbnail
-            const imgCandidates = findVideoUrlsDeep(pinData?.props?.initialReduxState?.pins || pinData);
-            const foundThumb = html.match(/https:\/\/[^"'\s]+\.pinimg\.com\/originals\/[^"'\s]+\.(?:jpg|jpeg|png|webp)/i)
-              || html.match(/https:\/\/[^"'\s]+\.pinimg\.com\/736x\/[^"'\s]+\.(?:jpg|jpeg|png|webp)/i);
-            if (foundThumb) thumbnailPic = foundThumb[0];
+            // Extrai a Thumbnail em alta resolução do Pin
+            const pinsObj = pinData?.props?.initialReduxState?.pins;
+            if (pinsObj) {
+              const pin = Object.values(pinsObj)[0] as any;
+              thumbnailPic = pin?.images?.orig?.url || pin?.images?.["736x"]?.url || pin?.images?.["474x"]?.url || "";
+            }
           } catch (e) {
             console.warn("[Pinterest] Falha no parser __PWS_DATA__:", e);
           }
+        }
+
+        // 1.1.2 Fallback de busca de imagem por Regex estrito no HTML
+        if (!thumbnailPic || thumbnailPic.includes(".mp4")) {
+          const ogImgMatch = html.match(/<meta\s+(?:property|name)=["']og:image["']\s+content=["']([^"']+)["']/i)
+            || html.match(/<meta\s+content=["']([^"']+)["']\s+(?:property|name)=["']og:image["']/i);
+          const foundThumb = ogImgMatch?.[1]
+            || (html.match(/https:\/\/[^"'\s]+\.pinimg\.com\/originals\/[^"'\s]+\.(?:jpg|jpeg|png|webp)/i)?.[0])
+            || (html.match(/https:\/\/[^"'\s]+\.pinimg\.com\/736x\/[^"'\s]+\.(?:jpg|jpeg|png|webp)/i)?.[0]);
+          if (foundThumb) thumbnailPic = foundThumb;
         }
 
         // 1.2 Regex Direto no HTML por CDN de Vídeo do Pinterest (v.pinimg.com/*.mp4)
