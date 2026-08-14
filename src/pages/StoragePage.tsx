@@ -1375,7 +1375,7 @@ export default function StoragePage() {
                 />
               </div>
 
-              <div>
+<div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Vincular a um Produto (Opcional)
                 </label>
@@ -1393,8 +1393,26 @@ export default function StoragePage() {
                 </select>
               </div>
 
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Vincular a um Modelo de Medidas (Opcional)
+                </label>
+                <select
+                  value={selectedModelId}
+                  onChange={(e) => setSelectedModelId(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-800 outline-none transition focus:border-[#0094EB] focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                >
+                  <option value="">Sem modelo de medidas vinculado</option>
+                  {sizingModelsList.map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {model.name || model.title || `Modelo ${model.id.slice(0, 6)}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <button
+              <button
                   type="button"
                   onClick={() => setShowUrlModal(false)}
                   className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-all"
