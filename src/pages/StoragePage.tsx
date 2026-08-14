@@ -737,15 +737,23 @@ const settings = await db.getSettings();
     loadAccountStorageData();
   }, [loadAccountStorageData]);
 
-  // Cálculo dinâmico do consumo de armazenamento
+  // Cálculo oficial do consumo de armazenamento (prioriza a autoridade do banco de dados)
   const totalUsedBytes = useMemo(() => {
+    if (serverStorageUsedBytes !== null) {
+      return serverStorageUsedBytes;
+    }
     return files.reduce((acc, file) => acc + file.sizeInBytes, 0);
-  }, [files]);
+  }, [serverStorageUsedBytes, files]);
+
+  const maxLimitBytes = useMemo(() => {
+    return serverStorageLimitBytes || PLAN_LIMIT_BYTES;
+  }, [serverStorageLimitBytes]);
 
   const usedPercentage = useMemo(() => {
-    const pct = (totalUsedBytes / PLAN_LIMIT_BYTES) * 100;
-    return Math.max(1, Math.min(100, Number(pct.toFixed(2))));
-  }, [totalUsedBytes]);
+    const pct = (totalUsedBytes / maxLimitBytes) * 100;
+    if (totalUsedBytes === 0) return 0;
+    return Math.max(0.1, Math.min(100, Number(pct.toFixed(2))));
+  }, [totalUsedBytes, maxLimitBytes]);
 
   const formatSize = (bytes: number) => {
     if (bytes === 0) return '0 B';
