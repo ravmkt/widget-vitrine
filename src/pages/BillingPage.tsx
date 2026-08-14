@@ -238,25 +238,48 @@ export function BillingPage() {
           </div>
         </div>
 
-        {/* Consumo de Cotas / Limites */}
+        {/* Consumo de Cotas / Limites com Destaque em Armazenamento */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 md:col-span-2 space-y-5">
-          <h3 className="text-sm font-black text-slate-900 dark:text-white">Consumo de Recursos</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-black text-slate-900 dark:text-white">Consumo de Recursos</h3>
+            <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full">
+              {formatSize(Math.max(0, storageLimitBytes - storageUsedBytes))} livres
+            </span>
+          </div>
 
-          {/* Barra de Armazenamento */}
-          <div>
-            <div className="flex items-center justify-between text-xs font-bold mb-1.5">
-              <span className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
-                <HardDrive size={16} className="text-[#0094EB]" /> Armazenamento em Nuvem
-              </span>
-              <span className="text-slate-500">
-                {formatSize(storageUsedBytes)} de {formatSize(storageLimitBytes)} ({storagePct}%)
-              </span>
+          {/* Card Destacado de Armazenamento */}
+          <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50/50 to-white p-4.5 dark:border-slate-800 dark:from-slate-900 dark:to-slate-950">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#0094EB] text-white shadow-md shadow-blue-500/20">
+                  <HardDrive size={18} />
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-slate-900 dark:text-white block">Armazenamento em Nuvem</span>
+                  <span className="text-[10px] font-semibold text-slate-400">Vídeos, mídias e assets</span>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-lg font-black text-slate-900 dark:text-white block">
+                  {formatSize(storageUsedBytes)}
+                  <span className="text-xs font-bold text-slate-400"> / {formatSize(storageLimitBytes)}</span>
+                </span>
+                <span className="text-[10px] font-bold text-[#0094EB]">
+                  {storagePct}% utilizado
+                </span>
+              </div>
             </div>
-            <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+
+            {/* Barra de Progresso Encorpada */}
+            <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100 p-0.5 dark:bg-slate-800">
               <div
                 className={cn(
-                  "h-full rounded-full transition-all duration-500",
-                  storagePct > 90 ? "bg-red-500" : storagePct > 70 ? "bg-amber-500" : "bg-[#0094EB]"
+                  "h-full rounded-full transition-all duration-700 shadow-sm",
+                  storagePct > 90 
+                    ? "bg-red-500" 
+                    : storagePct > 70 
+                    ? "bg-amber-500" 
+                    : "bg-[#0094EB]"
                 )}
                 style={{ width: `${Math.max(1, storagePct)}%` }}
               />
@@ -264,10 +287,10 @@ export function BillingPage() {
           </div>
 
           {/* Cards de Métricas Secundárias */}
-          <div className="grid grid-cols-2 gap-4 pt-2">
+          <div className="grid grid-cols-2 gap-4 pt-1">
             <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
               <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                <Eye size={16} />
+                <Eye size={16} className="text-[#0094EB]" />
                 <span className="text-xs font-bold">Limite de Views</span>
               </div>
               <p className="mt-2 text-lg font-black text-slate-900 dark:text-white">
@@ -277,7 +300,7 @@ export function BillingPage() {
 
             <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
               <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                <FileCode size={16} />
+                <FileCode size={16} className="text-[#0094EB]" />
                 <span className="text-xs font-bold">Páginas Ativas</span>
               </div>
               <p className="mt-2 text-lg font-black text-slate-900 dark:text-white">
