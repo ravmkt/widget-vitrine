@@ -2580,6 +2580,7 @@ function trackMetric(data) {
       if (oldVid) { oldVid.pause(); oldVid.removeAttribute('src'); oldVid.load(); }
       modalContent.innerHTML = '';
     }
+    isUserMuted = true; // Reseta para o padrão seguro no próximo clique de abertura
     resumePreviews();
   }
 
