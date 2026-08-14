@@ -325,9 +325,9 @@ export default function StoragePage() {
     }
   };
 
-  // Carrega produtos da loja para o seletor da modal
+  // Carrega produtos e modelos de medidas da loja para os seletores do modal
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchSelectData = async () => {
       try {
         if (typeof db.products?.getAll === 'function') {
           const prods = await db.products.getAll();
@@ -336,8 +336,26 @@ export default function StoragePage() {
       } catch (err) {
         console.warn('Não foi possível carregar produtos:', err);
       }
+
+      try {
+        if (supabase) {
+          const settings = await db.getSettings();
+          if (settings?.store_id) {
+            const { data: modelsData } = await supabase
+              .from('sizing_models')
+              .select('*')
+              .eq('store_id', settings.store_id);
+            setSizingModelsList(Array.isArray(modelsData) ? modelsData : []);
+          }
+        } else if (typeof (db as any).sizingModels?.getAll === 'function') {
+          const modelsData = await (db as any).sizingModels.getAll();
+          setSizingModelsList(Array.isArray(modelsData) ? modelsData : []);
+        }
+      } catch (err) {
+        console.warn('Não foi possível carregar modelos de medidas:', err);
+      }
     };
-    fetchProducts();
+    fetchSelectData();
   }, []);
 
 // Processa a gravação da Mídia por URL Externa com suporte nativo ao Pinterest
