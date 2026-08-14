@@ -358,7 +358,7 @@ export default function StoragePage() {
     fetchSelectData();
   }, []);
 
-// Processa a gravação da Mídia por URL Externa com suporte nativo ao Pinterest
+// Processa a gravação da Mídia por URL Externa com suporte a Produto e Modelo de Medidas
   const handleSaveExternalUrl = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -399,25 +399,26 @@ export default function StoragePage() {
           throw new Error(error?.message || data?.error || 'Erro ao importar o Pin.');
         }
 
+        // Atualiza os vínculos opcionais caso tenham sido selecionados no modal
+        if (data.videoId && (selectedProductId || selectedModelId)) {
+          const updatePayload: Record<string, any> = {};
+          if (selectedProductId) updatePayload.product_id = selectedProductId;
+          if (selectedModelId) updatePayload.model_id = selectedModelId;
+
+          await supabase.from('videos').update(updatePayload).eq('id', data.videoId);
+        }
+
         showSuccess('Vídeo do Pinterest importado e hospedado com sucesso!');
         setShowUrlModal(false);
         setExternalUrl('');
         setExternalTitle('');
         setSelectedProductId('');
+        setSelectedModelId('');
         await loadAccountStorageData();
-
-        if (data.videoId) {
-          if (selectedProductId) {
-            await supabase.from('videos').update({ product_id: selectedProductId }).eq('id', data.videoId);
-          }
-          // Redireciona automaticamente para a edição do vídeo importado
-          window.location.href = `/videos/${data.videoId}/edit`;
-        }
-
         return;
       }
 
-      // Fluxo padrão para outras URLs externas
+      // Fluxo padrão para outras URLs externas (YouTube, links diretos, etc.)
       const extractedThumb = getExternalVideoThumbnail(formattedUrl);
       const title = externalTitle.trim() || `VÍDEO_EXTERNO_${Date.now().toString().slice(-4)}`;
 
@@ -430,6 +431,7 @@ export default function StoragePage() {
         thumbnail_url: extractedThumb,
         thumbnail_source_type: 'auto',
         product_id: selectedProductId || null,
+        model_id: selectedModelId || null,
         file_size: 0,
         thumbnail_file_size: 0,
         status: 'active',
@@ -437,42 +439,27 @@ export default function StoragePage() {
         created_at: new Date().toISOString(),
       };
 
-let createdVideoId: string | null = null;
-
-    if (supabase) {
-      const { data: insertData, error } = await supabase
-        .from('videos')
-        .insert([payload])
-        .select('id')
-        .single();
-
-      if (error) throw error;
-      if (insertData?.id) {
-        createdVideoId = insertData.id;
+      if (supabase) {
+        const { error } = await supabase.from('videos').insert([payload]);
+        if (error) throw error;
+      } else if (typeof db.videos?.create === 'function') {
+        await db.videos.create(payload);
       }
-    } else if (typeof db.videos?.create === 'function') {
-      const result: any = await db.videos.create(payload);
-      createdVideoId = result?.id || null;
-    }
 
-    showSuccess('Mídia externa cadastrada com sucesso!');
-    setShowUrlModal(false);
-    setExternalUrl('');
-    setExternalTitle('');
-    setSelectedProductId('');
-    await loadAccountStorageData();
-
-    // 🚀 Redireciona automaticamente para a edição do vídeo cadastrado (YouTube / Link Direto)
-    if (createdVideoId) {
-      window.location.href = `/videos/${createdVideoId}/edit`;
+      showSuccess('Mídia externa cadastrada com sucesso!');
+      setShowUrlModal(false);
+      setExternalUrl('');
+      setExternalTitle('');
+      setSelectedProductId('');
+      setSelectedModelId('');
+      await loadAccountStorageData();
+    } catch (err: any) {
+      console.error('Erro ao salvar URL externa:', err);
+      showError(err.message || 'Falha ao cadastrar vídeo por URL.');
+    } finally {
+      setSavingUrl(false);
     }
-  } catch (err: any) {
-    console.error('Erro ao salvar URL externa:', err);
-    showError(err.message || 'Falha ao cadastrar vídeo por URL.');
-  } finally {
-    setSavingUrl(false);
-  }
-};
+  };
 
   // Gatilho para abrir a janela do sistema operacional ao clicar em "Fazer Upload"
   const handleTriggerUpload = () => {
