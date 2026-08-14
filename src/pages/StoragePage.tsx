@@ -386,8 +386,12 @@ export default function StoragePage() {
         setSelectedProductId('');
         await loadAccountStorageData();
 
-        if (data.videoId && selectedProductId) {
-          await supabase.from('videos').update({ product_id: selectedProductId }).eq('id', data.videoId);
+        if (data.videoId) {
+          if (selectedProductId) {
+            await supabase.from('videos').update({ product_id: selectedProductId }).eq('id', data.videoId);
+          }
+          // 🚀 Redireciona automaticamente para a edição do vídeo importado
+          window.location.href = `/videos/${data.videoId}/edit`;
         }
 
         return;
