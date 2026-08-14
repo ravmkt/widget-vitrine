@@ -26,6 +26,7 @@ import MedidasPage from "@/pages/MedidasPage";
 import AppearancePage from "@/pages/AppearancePage";
 import CommentsPage from "@/pages/CommentsPage";
 import StoragePage from "@/pages/StoragePage";
+import { BillingPage } from "@/pages/BillingPage";
 import InstagramCallback from "@/pages/auth/InstagramCallback";
 import StoryPreviewPage from "@/pages/StoryPreviewPage";
 
