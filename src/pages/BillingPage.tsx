@@ -247,7 +247,7 @@ export function BillingPage() {
             </span>
           </div>
 
-{/* Card Destacado de Armazenamento */}
+          {/* Card Destacado de Armazenamento */}
           <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50/50 to-white p-5 dark:border-slate-800 dark:from-slate-900 dark:to-slate-950">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2.5">
