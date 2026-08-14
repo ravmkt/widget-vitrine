@@ -110,6 +110,15 @@ function ensureModalStylesInLightDOM(appearance) {
         fsPlayerContainer.innerHTML = '<iframe src="https://www.youtube.com/embed/' + ytId + '?autoplay=1&rel=0" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
       }
     }
+
+    // Pinterest
+    else if (sourceType === 'pinterest' || sourceType === 'pin') {
+      var pinId = extractPinterestId(videoUrl);
+      if (pinId) {
+        fsPlayerContainer.innerHTML = '<iframe src="https://assets.pinterest.com/ext/embed.html?id=' + pinId + '" frameborder="0" allow="autoplay; fullscreen" allowfullscreen style="background:#fff!important;"></iframe>';
+      }
+    }
+    
     // Instagram Reel
     else if (sourceType === 'instagram' || sourceType === 'ig') {
       var igId = extractInstagramId(videoUrl);
