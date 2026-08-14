@@ -72,53 +72,53 @@ serve(async (req) => {
 
     console.log("[Vidlytics] Resolvendo Pin do Pinterest:", rawUrl);
 
-    // 1. Scraping com Headers completos de Navegador
-    const pageResp = await fetch(rawUrl, {
-      redirect: "follow",
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "none",
-        "Upgrade-Insecure-Requests": "1"
-      }
-    });
-
-    if (!pageResp.ok) {
-      throw new Error(`Servidor do Pinterest respondeu com status ${pageResp.status}. Verifique se o Pin é público.`);
+    // 1. Extração do ID do Pin a partir da URL fornecida (incluindo links encurtados pin.it)
+    let pinId = "";
+    const pinMatch = rawUrl.match(/\/pin\/(\d+)/i);
+    if (pinMatch && pinMatch[1]) {
+      pinId = pinMatch[1];
     }
 
-    const html = await pageResp.text();
-
-    // --- ESTRATÉGIA A: Parser JSON-LD (Schema.org VideoObject) ---
-    const ldJsonMatches = html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
-    for (const match of ldJsonMatches) {
+    // Se for link encurtado pin.it, resolve o redirect primeiro para obter o ID
+    if (!pinId && rawUrl.includes("pin.it")) {
       try {
-        const ldData = JSON.parse(match[1]);
-        if (ldData["@type"] === "VideoObject" || ldData.contentUrl) {
-          directMp4Url = ldData.contentUrl || ldData.embedUrl || "";
-          thumbnailPic = ldData.thumbnailUrl || "";
-          if (ldData.name) mediaTitle = ldData.name;
-          if (directMp4Url) break;
+        const headResp = await fetch(rawUrl, { method: "HEAD", redirect: "follow" });
+        const finalUrl = headResp.url || "";
+        const redirectedMatch = finalUrl.match(/\/pin\/(\d+)/i);
+        if (redirectedMatch && redirectedMatch[1]) {
+          pinId = redirectedMatch[1];
         }
-      } catch (_) {
-        // ignora erro de parse individual
+      } catch (e) {
+        console.warn("[Vidlytics] Falha ao resolver link pin.it:", e);
       }
     }
 
-    // --- ESTRATÉGIA B: Parser __PWS_DATA__ (Redux Store) ---
-    if (!directMp4Url) {
-      const jsonMatch = html.match(/<script id="__PWS_DATA__"[^>]*>([\s\S]*?)<\/script>/);
-      if (jsonMatch) {
-        try {
-          const pinData = JSON.parse(jsonMatch[1]);
-          const pinsObj = pinData?.props?.initialReduxState?.pins;
-          if (pinsObj) {
-            const pin = Object.values(pinsObj)[0] as any;
-            if (pin?.videos?.video_list) {
-              const videoList = pin.videos.video_list;
+    // --- ESTRATÉGIA 1 (Principal): Consulta à API JSON de Recursos do Pinterest (PinResource) ---
+    if (pinId) {
+      try {
+        console.log("[Vidlytics] Consultando PinResource do Pinterest para o ID:", pinId);
+        const resourceUrl = `https://www.pinterest.com/resource/PinResource/get/?data=${encodeURIComponent(
+          JSON.stringify({
+            options: { id: pinId, field_set_key: "detailed" },
+            context: {}
+          })
+        )}`;
+
+        const apiResp = await fetch(resourceUrl, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept": "application/json, text/javascript, */*; q=0.01"
+          }
+        });
+
+        if (apiResp.ok) {
+          const apiData = await apiResp.json();
+          const pinData = apiData?.resource_response?.data;
+
+          if (pinData) {
+            const videoList = pinData.videos?.video_list;
+            if (videoList) {
               const preferredKeys = ["V_720P", "V_HLSV4", "V_EXP7", "V_EXP6", "V_EXP5", "V_EXP4", "V_EXP3"];
               for (const key of preferredKeys) {
                 if (videoList[key]?.url) {
@@ -131,31 +131,58 @@ serve(async (req) => {
                 directMp4Url = firstVariant?.url || "";
               }
             }
-            if (!thumbnailPic) {
-              thumbnailPic = pin?.images?.orig?.url || pin?.images?.["736x"]?.url || "";
-            }
-            if (pin?.title || pin?.description) {
-              mediaTitle = pin.title || pin.description;
+
+            thumbnailPic = pinData.images?.orig?.url || pinData.images?.["736x"]?.url || "";
+            if (pinData.title || pinData.description) {
+              mediaTitle = pinData.title || pinData.description;
             }
           }
-        } catch (e) {
-          console.warn("[Vidlytics] Falha ao ler __PWS_DATA__:", e);
         }
+      } catch (apiErr) {
+        console.warn("[Vidlytics] Falha ao consultar PinResource API:", apiErr);
       }
     }
 
-    // --- ESTRATÉGIA C: Meta Tags OpenGraph / Twitter Stream ---
+    // --- ESTRATÉGIA 2 (Fallback): Scraping HTML se a API falhar ---
     if (!directMp4Url) {
-      const ogVideo = html.match(/<meta property="og:video(?::secure_url)?" content="([^"]+)"/i);
-      const twitterStream = html.match(/<meta name="twitter:player:stream" content="([^"]+)"/i);
-      const rawVideoTag = html.match(/<video[^>]+src="([^">]+)"/i);
+      console.log("[Vidlytics] API PinResource não retornou vídeo. Tentando scraping HTML...");
+      const pageResp = await fetch(rawUrl, {
+        redirect: "follow",
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8"
+        }
+      });
 
-      directMp4Url = ogVideo?.[1] || twitterStream?.[1] || rawVideoTag?.[1] || "";
-    }
+      if (pageResp.ok) {
+        const html = await pageResp.text();
 
-    if (!thumbnailPic) {
-      const ogImage = html.match(/<meta property="og:image" content="([^"]+)"/i);
-      thumbnailPic = ogImage?.[1] || "";
+        // Parser JSON-LD
+        const ldJsonMatches = html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
+        for (const match of ldJsonMatches) {
+          try {
+            const ldData = JSON.parse(match[1]);
+            if (ldData["@type"] === "VideoObject" || ldData.contentUrl) {
+              directMp4Url = ldData.contentUrl || ldData.embedUrl || "";
+              if (!thumbnailPic) thumbnailPic = ldData.thumbnailUrl || "";
+              if (directMp4Url) break;
+            }
+          } catch (_) {}
+        }
+
+        // Meta tags OpenGraph / Twitter Stream
+        if (!directMp4Url) {
+          const ogVideo = html.match(/<meta property="og:video(?::secure_url)?" content="([^"]+)"/i);
+          const twitterStream = html.match(/<meta name="twitter:player:stream" content="([^"]+)"/i);
+          directMp4Url = ogVideo?.[1] || twitterStream?.[1] || "";
+        }
+
+        if (!thumbnailPic) {
+          const ogImage = html.match(/<meta property="og:image" content="([^"]+)"/i);
+          thumbnailPic = ogImage?.[1] || "";
+        }
+      }
     }
 
     if (!directMp4Url) {
