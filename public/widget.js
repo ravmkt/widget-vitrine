@@ -1665,6 +1665,19 @@ function trackMetric(data) {
       return wrapper;
     }
 
+    // 1.1. Pinterest Pin Embed
+    var pinId = extractPinterestId(url);
+    if (sourceType === 'pinterest' || pinId) {
+      var pinIframe = createEl('iframe');
+      pinIframe.src = 'https://assets.pinterest.com/ext/embed.html?id=' + (pinId || url);
+      pinIframe.allow = 'autoplay; fullscreen';
+      pinIframe.setAttribute('allowfullscreen', '');
+      pinIframe.style.cssText = 'width:100% !important;height:100% !important;border:none !important;background:#fff !important;';
+      wrapper.appendChild(pinIframe);
+      trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
+      return wrapper;
+    }
+
     // 2.1. TikTok Embed Oficial (evita erro NotSupportedError em URLs de compartilhamento/página)
     if (sourceType === 'tiktok' || (tkId && url.indexOf('tiktok.com') !== -1)) {
       var tkIframe = createEl('iframe');
