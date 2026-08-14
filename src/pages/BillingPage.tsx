@@ -80,7 +80,7 @@ export function BillingPage() {
             }
           }
 
-          // 2. Busca Assinatura Corrente e sincroniza o limite do plano
+          // 2. Busca Assinatura Corrente e sincroniza o limite oficial do plano
           const { data: subData } = await supabase
             .from('subscriptions')
             .select('*, plans(*)')
