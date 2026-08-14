@@ -2619,27 +2619,26 @@ function trackMetric(data) {
 
     var muteBtn = createEl('button', 'vl-control');
     muteBtn.id = 'vl-mute-btn';
-    muteBtn.innerHTML = svgIcon('volumeOff'); // Inicia sempre mutado visualmente
-    muteBtn.title = 'Ativar som';
+    // Renderiza o ícone de acordo com o estado de áudio ativo no momento
+    muteBtn.innerHTML = isUserMuted ? svgIcon('volumeOff') : svgIcon('volume');
+    muteBtn.title = isUserMuted ? 'Ativar som' : 'Mudo';
     muteBtn.onclick = function (e) {
       e.stopPropagation();
+      isUserMuted = !isUserMuted; // Persiste a decisão do usuário para os próximos vídeos
+
       var vid = modalContent.querySelector('video');
       var iframe = modalContent.querySelector('iframe');
 
       if (vid) {
-        vid.muted = !vid.muted;
-        muteBtn.innerHTML = vid.muted ? svgIcon('volumeOff') : svgIcon('volume');
-        muteBtn.title = vid.muted ? 'Ativar som' : 'Mudo';
+        vid.muted = isUserMuted;
       } else if (iframe && iframe.contentWindow) {
-        var isCurrentlyMuted = iframe.getAttribute('data-is-muted') !== 'false';
-        var nextMutedState = !isCurrentlyMuted;
-        var command = nextMutedState ? 'mute' : 'unMute';
-        
+        var command = isUserMuted ? 'mute' : 'unMute';
         iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: command, args: [] }), '*');
-        iframe.setAttribute('data-is-muted', nextMutedState ? 'true' : 'false');
-        muteBtn.innerHTML = nextMutedState ? svgIcon('volumeOff') : svgIcon('volume');
-        muteBtn.title = nextMutedState ? 'Ativar som' : 'Mudo';
+        iframe.setAttribute('data-is-muted', isUserMuted ? 'true' : 'false');
       }
+
+      muteBtn.innerHTML = isUserMuted ? svgIcon('volumeOff') : svgIcon('volume');
+      muteBtn.title = isUserMuted ? 'Ativar som' : 'Mudo';
     };
     headerActions.appendChild(muteBtn);
 
