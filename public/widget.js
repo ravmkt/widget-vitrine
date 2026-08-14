@@ -1226,6 +1226,16 @@ product_card_price_size: toNumber(rcv('product_card_price_size', '12'), 12),
     } catch (e) { return url; }
   }
 
+  // 🆕 EXTRAIR ID DO PIN DO PINTEREST
+  function extractPinterestId(url) {
+    if (!url) return '';
+    try {
+      var u = String(url).trim();
+      var match = u.match(/pinterest\.com\/pin\/(\d+)/i);
+      return match ? match[1] : '';
+    } catch (e) { return ''; }
+  }
+
   function getYouTubeThumbnail(url) {
     var id = extractYouTubeId(url);
     return id ? 'https://img.youtube.com/vi/' + id + '/hqdefault.jpg' : '';
