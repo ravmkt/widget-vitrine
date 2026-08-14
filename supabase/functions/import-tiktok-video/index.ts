@@ -103,6 +103,17 @@ serve(async (req) => {
         if (mediaResp.ok) {
           const videoBuffer = await mediaResp.arrayBuffer();
           fileSize = videoBuffer.byteLength;
+
+          // 🔒 VALIDAÇÃO PÓS-DOWNLOAD: O arquivo novo estouraria o teto?
+          if ((currentUsedBytes + fileSize) > maxLimitBytes) {
+            return new Response(JSON.stringify({ 
+              error: "Este vídeo excede o espaço restante do seu plano de armazenamento. Faça upgrade para salvar este arquivo." 
+            }), { 
+              status: 403, 
+              headers: { ...corsHeaders, "Content-Type": "application/json" } 
+            });
+          }
+
           const fileName = `${storeId}/${Date.now()}_tiktok_pure.mp4`;
 
           console.log("[Vidlytics] Enviando para o Supabase Storage:", fileName, `(${fileSize} bytes)`);
