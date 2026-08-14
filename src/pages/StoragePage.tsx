@@ -819,38 +819,6 @@ let createdVideoId: string | null = null;
             TikTok
           </button>
 
-          {/* Botão YouTube Shorts */}
-          <button
-            type="button"
-            onClick={() => connectYouTubeAccount()}
-            title="Conectar Canal do YouTube"
-            className={cn(
-              "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-bold transition-all border shadow-sm",
-              connectedPlatforms.includes('youtube')
-                ? "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400"
-                : "border-slate-200 bg-slate-100 text-slate-400 hover:bg-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500"
-            )}
-          >
-            <SocialIcons.YouTube />
-            YouTube
-          </button>
-
-          {/* Botão Pinterest */}
-          <button
-            type="button"
-            onClick={() => connectPinterestAccount()}
-            title="Conectar Conta do Pinterest"
-            className={cn(
-              "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-bold transition-all border shadow-sm",
-              connectedPlatforms.includes('pinterest')
-                ? "border-red-600 bg-red-600 text-white shadow-red-500/20 hover:bg-red-700"
-                : "border-slate-200 bg-slate-100 text-slate-400 hover:bg-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500"
-            )}
-          >
-            <SocialIcons.Pinterest />
-            Pinterest
-          </button>
-
           <input
             type="file"
             ref={fileInputRef}
