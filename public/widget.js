@@ -1710,13 +1710,13 @@ function trackMetric(data) {
       return wrapper;
     }
 
-    // 3. Mídia MP4 / Upload / CDN / URL Externa (Toca na tag <video> nativa)
+    // 3. Mídia MP4 / Upload / CDN / URL Externa (Respeita a preferência de áudio ativa do usuário)
     if (url) {
       var media = createEl('video');
       media.controls = false;
       media.preload = 'auto';
       media.autoplay = true;
-      media.muted = true; // Inicia mudo para liberar Autoplay em navegadores estritos
+      media.muted = isUserMuted; // Mantém o som ligado se o usuário já tiver desmutado anteriormente
       media.loop = true;
       media.playsInline = true;
       media.setAttribute('playsinline', '');
