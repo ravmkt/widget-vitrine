@@ -294,6 +294,7 @@ serve(async (req) => {
 
     // 3.1 Download Mandatório e Hospedagem da Capa (Thumbnail) no Supabase Storage
     let finalThumbnailUrl = "";
+    let thumbnailFileSize = 0; // 🚀 Captura o consumo real da capa para a cota de armazenamento
     
     // Se a thumbnailPic não veio no parser inicial, busca na meta tag og:image do HTML
     if (!thumbnailPic || thumbnailPic.includes(".mp4")) {
@@ -316,6 +317,8 @@ serve(async (req) => {
 
         if (thumbResp.ok) {
           const thumbBuffer = await thumbResp.arrayBuffer();
+          thumbnailFileSize = thumbBuffer.byteLength; // 📦 Tamanho em bytes da imagem
+
           const isPng = thumbnailPic.toLowerCase().includes(".png");
           const ext = isPng ? "png" : "jpg";
           const contentType = isPng ? "image/png" : "image/jpeg";
@@ -351,9 +354,10 @@ serve(async (req) => {
     // 🔒 Blindagem: NUNCA salva link de vídeo .mp4 no campo da thumbnail
     if (!finalThumbnailUrl) {
       finalThumbnailUrl = "";
+      thumbnailFileSize = 0;
     }
 
-    // 4. Inserção na Tabela Videos (Blindagem de Thumbnail e Source Type)
+    // 4. Inserção na Tabela Videos (Blindagem de Thumbnail e Contabilização de Bytes)
     const isSupabaseHosted = finalVideoUrl.includes("supabase.co");
     const payload = {
       store_id: storeId,
@@ -364,6 +368,7 @@ serve(async (req) => {
       thumbnail_url: finalThumbnailUrl || null,
       thumbnail_source_type: finalThumbnailUrl ? "upload" : "auto",
       file_size: fileSize,
+      thumbnail_file_size: thumbnailFileSize, // 🚀 Gravado com precisão para auditoria
       status: "active",
       active: true,
       created_at: new Date().toISOString(),
