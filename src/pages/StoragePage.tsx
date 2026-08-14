@@ -14,7 +14,7 @@ import {
   HardDrive,
   Search,
   Trash2,
-  Eye,s
+  Eye,
   Download,
   Pencil,
   FileVideo,
