@@ -118,7 +118,7 @@ function ensureModalStylesInLightDOM(appearance) {
         fsPlayerContainer.innerHTML = '<iframe src="https://assets.pinterest.com/ext/embed.html?id=' + pinId + '" frameborder="0" allow="autoplay; fullscreen" allowfullscreen style="background:#fff!important;"></iframe>';
       }
     }
-    
+
     // Instagram Reel
     else if (sourceType === 'instagram' || sourceType === 'ig') {
       var igId = extractInstagramId(videoUrl);
@@ -1674,11 +1674,18 @@ function trackMetric(data) {
       return wrapper;
     }
 
-    // 1.1. Pinterest Pin Embed
+    // 1.1. Pinterest Pin Embed com Validação Defensiva de ID
     var pinId = extractPinterestId(url);
     if (sourceType === 'pinterest' || pinId) {
+      if (!pinId) {
+        var errorMsg = createEl('div');
+        errorMsg.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:#999;font-size:13px;text-align:center;padding:16px;background:#111;';
+        errorMsg.textContent = 'Não foi possível carregar este Pin do Pinterest';
+        wrapper.appendChild(errorMsg);
+        return wrapper;
+      }
       var pinIframe = createEl('iframe');
-      pinIframe.src = 'https://assets.pinterest.com/ext/embed.html?id=' + (pinId || url);
+      pinIframe.src = 'https://assets.pinterest.com/ext/embed.html?id=' + pinId;
       pinIframe.allow = 'autoplay; fullscreen';
       pinIframe.setAttribute('allowfullscreen', '');
       pinIframe.style.cssText = 'width:100% !important;height:100% !important;border:none !important;background:#fff !important;';
