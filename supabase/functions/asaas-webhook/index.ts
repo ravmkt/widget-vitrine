@@ -5,6 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, asaas-access-token",
 };
 
+const PLANO_INICIANTE_ID = "c8c634e6-0641-4f5b-a826-4db837192c83";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
