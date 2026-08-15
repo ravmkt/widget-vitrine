@@ -141,46 +141,40 @@ Deno.serve(async (req) => {
       subscription = createdSub;
     }
 
-    // 5. Atualizar ou criar a invoice (agora com subscription já resolvida)
-    if (existingInvoice) {
-      await supabaseAdmin
-        .from("invoices")
-        .update({
+    // 5. Atualizar ou criar a invoice apenas se houver cobrança (payment)
+    if (payment && asaasPaymentId) {
+      if (existingInvoice) {
+        await supabaseAdmin
+          .from("invoices")
+          .update({
+            status: newInvoiceStatus,
+            paid_at: event === "PAYMENT_RECEIVED" || event === "PAYMENT_CONFIRMED"
+              ? new Date().toISOString()
+              : null,
+            store_id: storeId || undefined,
+            subscription_id: subscription?.id || undefined,
+          })
+          .eq("id", existingInvoice.id);
+      } else {
+        await supabaseAdmin.from("invoices").insert({
+          store_id: storeId,
+          subscription_id: subscription?.id || null,
+          asaas_payment_id: asaasPaymentId,
           status: newInvoiceStatus,
+          amount_cents: paymentAmountCents,
+          currency: "BRL",
+          description: payment.description || null,
+          due_date: payment.dueDate,
           paid_at: event === "PAYMENT_RECEIVED" || event === "PAYMENT_CONFIRMED"
             ? new Date().toISOString()
             : null,
-          store_id: storeId || undefined,
-          subscription_id: subscription?.id || undefined,
-        })
-        .eq("id", existingInvoice.id);
-    } else {
-      await supabaseAdmin.from("invoices").insert({
-        store_id: storeId,
-        subscription_id: subscription?.id || null,
-        asaas_payment_id: asaasPaymentId,
-        status: newInvoiceStatus,
-        amount_cents: Math.round((payment.value || 0) * 100),
-        currency: "BRL",
-        description: payment.description || null,
-        due_date: payment.dueDate,
-        paid_at: event === "PAYMENT_RECEIVED" || event === "PAYMENT_CONFIRMED"
-          ? new Date().toISOString()
-          : null,
-        gateway_provider: "asaas",
-        gateway_invoice_id: asaasPaymentId,
-        invoice_pdf_url: payment.bankSlipUrl || null,
-        invoice_url: payment.invoiceUrl || payment.bankSlipUrl || null,
-        payment_method: payment.billingType || null,
-      });
-    }
-
-    if (!subscription) {
-      console.warn("Nenhuma subscription encontrada nem criada para:", asaasSubscriptionId);
-      return new Response(
-        JSON.stringify({ message: "Invoice atualizada, subscription não encontrada." }),
-        { status: 200, headers: corsHeaders }
-      );
+          gateway_provider: "asaas",
+          gateway_invoice_id: asaasPaymentId,
+          invoice_pdf_url: payment.bankSlipUrl || null,
+          invoice_url: payment.invoiceUrl || payment.bankSlipUrl || null,
+          payment_method: payment.billingType || null,
+        });
+      }
     }
 
     // 6. Tratar o ciclo de vida da assinatura conforme o evento
