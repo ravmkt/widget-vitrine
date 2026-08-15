@@ -1366,11 +1366,12 @@ const createSupabaseCrudFunctions = <
 
       if (error) {
         console.error(`Erro ao buscar dados da tabela ${tableName}:`, error);
-        throw error;
+        return [];
       }
 
+      // Se a loja existe e tem 0 itens (ex: vídeos de loja nova), retorna array vazio em vez do fallback da loja antiga
       if (!data || data.length === 0) {
-        return localFallback.getAll(storeId);
+        return storeId ? [] : localFallback.getAll(storeId);
       }
 
       return ((data || []) as T[]).map(item =>
