@@ -824,9 +824,9 @@ const payload = {
             ? new Date(vid.created_at).toLocaleDateString('pt-BR') 
             : 'Hoje';
 
-          // Resolução do Nome do Produto
-          const resolvedProductName = vid.products?.name || vid.products?.title || vid.product_name || vid.product?.title || undefined;
-
+// Resolução do Nome do Produto
+          const resolvedProductName = vid.products?.name || vid.product_name || vid.product?.name || vid.product?.title || undefined;
+          
           // Resolução do Nome do Story Vinculado (cobre array 1:N e objeto 1:1)
           let resolvedStoryTitle: string | undefined = undefined;
           if (Array.isArray(vid.story_videos) && vid.story_videos.length > 0) {
