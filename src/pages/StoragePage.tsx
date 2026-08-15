@@ -602,45 +602,40 @@ const { data, error } = await supabase.functions.invoke('import-pinterest-video'
         finalVideoUrl = URL.createObjectURL(file);
       }
 
-      if (isVideo) {
+if (isVideo) {
         try {
           const thumbBlob = await generateVideoThumbnail(file);
           thumbnailSize = thumbBlob.size;
 
-if (supabase) {
+          if (supabase && thumbBlob && thumbBlob.size > 0) {
             const thumbStoragePath = `${activeId}/thumb_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
-            
-            // Tenta salvar primeiro no bucket store-assets (específico para imagens), com fallback para o bucket videos
-            let thumbRes = await supabase.storage
-              .from('store-assets')
-              .upload(thumbStoragePath, thumbBlob, { contentType: 'image/jpeg', upsert: true });
 
-            if (thumbRes.error) {
-              thumbRes = await supabase.storage
+            const { data: thumbUploadData, error: thumbUploadErr } = await supabase.storage
+              .from('videos')
+              .upload(thumbStoragePath, thumbBlob, {
+                contentType: 'image/jpeg',
+                cacheControl: '3600',
+                upsert: true,
+              });
+
+            if (!thumbUploadErr && thumbUploadData?.path) {
+              const { data: thumbPublicUrlData } = supabase.storage
                 .from('videos')
-                .upload(thumbStoragePath, thumbBlob, { contentType: 'image/jpeg', upsert: true });
+                .getPublicUrl(thumbUploadData.path);
+
+              finalThumbUrl = thumbPublicUrlData.publicUrl;
+            } else if (thumbUploadErr) {
+              console.warn('Erro ao enviar thumbnail para o Supabase Storage:', thumbUploadErr);
             }
-
-            if (!thumbRes.error && thumbRes.data?.path) {
-              const bucketName = thumbRes.data.path.includes('store-assets') ? 'store-assets' : 'videos';
-              const { data: thumbPublicUrl } = supabase.storage
-                .from(bucketName)
-                .getPublicUrl(thumbRes.data.path);
-
-              finalThumbUrl = thumbPublicUrl.publicUrl;
-            }
-          }
-
-          if (!finalThumbUrl) {
-            finalThumbUrl = await blobToBase64(thumbBlob);
           }
         } catch (thumbErr) {
-          console.warn('Falha ao gerar frame do vídeo, usando fallback Base64 do arquivo:', thumbErr);
+          console.warn('Falha na geração automática da thumbnail:', thumbErr);
         }
       }
 
+      // Se não gerou thumbnail JPG com sucesso no Storage, salva como vazio (NUNCA URL quebrada 404)
       if (!finalThumbUrl) {
-        finalThumbUrl = finalVideoUrl;
+        finalThumbUrl = '';
       }
 
 const payload = {
