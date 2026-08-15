@@ -16,6 +16,8 @@ import {
   Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
+import { showSuccess, showError } from '@/utils/toast';
 
 export function BillingPage() {
   const navigate = useNavigate();
