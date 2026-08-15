@@ -64,7 +64,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 4. Buscar a subscription local (por asaas_subscription_id ou fallback por store_id)
+    // 4. Buscar a subscription local e resolver plano por valor pago
+    const paymentAmountCents = Math.round((payment.value || 0) * 100);
+
+    const { data: matchedPlan } = await supabaseAdmin
+      .from("plans")
+      .select("id, name, price_cents")
+      .eq("price_cents", paymentAmountCents)
+      .maybeSingle();
+
+    const resolvedPlanId = matchedPlan?.id || null;
+
     let subscription: any = null;
 
     if (asaasSubscriptionId) {
@@ -90,26 +100,27 @@ Deno.serve(async (req) => {
 
       if (subByStore) {
         subscription = subByStore;
-        if (asaasSubscriptionId) {
+        
+        // Atualiza a subscription com o ID do Asaas e o plano correspondente ao valor pago
+        const updatePayload: Record<string, any> = {};
+        if (asaasSubscriptionId) updatePayload.asaas_subscription_id = asaasSubscriptionId;
+        if (asaasCustomerId) updatePayload.asaas_customer_id = asaasCustomerId;
+        if (resolvedPlanId && subscription.plan_id !== resolvedPlanId) {
+          updatePayload.plan_id = resolvedPlanId;
+          subscription.plan_id = resolvedPlanId;
+        }
+
+        if (Object.keys(updatePayload).length > 0) {
           await supabaseAdmin
             .from("subscriptions")
-            .update({
-              asaas_subscription_id: asaasSubscriptionId,
-              asaas_customer_id: asaasCustomerId,
-            })
+            .update(updatePayload)
             .eq("id", subscription.id);
         }
       }
     }
 
     if (!subscription && storeId) {
-      const { data: planPro } = await supabaseAdmin
-        .from("plans")
-        .select("id")
-        .eq("price_cents", Math.round((payment.value || 0) * 100))
-        .maybeSingle();
-
-      const targetPlanId = planPro?.id || "4b5d747e-af5c-46e9-a6aa-0682cc253110";
+      const targetPlanId = resolvedPlanId || "4b5d747e-af5c-46e9-a6aa-0682cc253110";
 
       const { data: createdSub } = await supabaseAdmin
         .from("subscriptions")
