@@ -4095,11 +4095,18 @@ var rawVideoUrl = getVideoUrl(video);
       if (isDirectVideo) {
         var gridVideo = createEl('video');
         var gridUrlWithFragment = effectiveMediaUrl.indexOf('#t=') === -1 ? effectiveMediaUrl + '#t=0.001' : effectiveMediaUrl;
-        gridVideo.src = gridUrlWithFragment;
+
         gridVideo.preload = 'auto';
+        gridVideo.muted = true;
+        gridVideo.defaultMuted = true;
+        gridVideo.playsInline = true;
+        gridVideo.setAttribute('playsinline', '');
+        gridVideo.setAttribute('webkit-playsinline', '');
+        gridVideo.setAttribute('muted', '');
         gridVideo.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;';
 
         primeVideoFrame(gridVideo);
+        gridVideo.src = gridUrlWithFragment;
 
         innerMask.appendChild(gridVideo);
       } else {
@@ -4114,11 +4121,18 @@ var rawVideoUrl = getVideoUrl(video);
             img.style.display = 'none';
             var fallbackGridVid = createEl('video');
             var fallbackGridUrlWithFragment = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
-            fallbackGridVid.src = fallbackGridUrlWithFragment;
+
             fallbackGridVid.preload = 'auto';
+            fallbackGridVid.muted = true;
+            fallbackGridVid.defaultMuted = true;
+            fallbackGridVid.playsInline = true;
+            fallbackGridVid.setAttribute('playsinline', '');
+            fallbackGridVid.setAttribute('webkit-playsinline', '');
+            fallbackGridVid.setAttribute('muted', '');
             fallbackGridVid.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;';
 
             primeVideoFrame(fallbackGridVid);
+            fallbackGridVid.src = fallbackGridUrlWithFragment;
 
             innerMask.appendChild(fallbackGridVid);
           }
