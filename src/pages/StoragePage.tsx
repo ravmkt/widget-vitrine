@@ -82,50 +82,97 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
   });
 };
 
-// Utilitário global para extrair o primeiro frame de um vídeo via Canvas
+// Utilitário global para extrair o primeiro frame de um vídeo via Canvas de forma resiliente
 const generateVideoThumbnail = (file: File): Promise<Blob> => {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
-    video.preload = 'metadata';
-    video.src = URL.createObjectURL(file);
+    video.preload = 'auto';
     video.muted = true;
+    video.defaultMuted = true;
     video.playsInline = true;
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    video.setAttribute('muted', '');
 
-    video.onloadeddata = () => {
-      video.currentTime = 0.1;
+    const objectUrl = URL.createObjectURL(file);
+    video.src = objectUrl;
+
+    let captured = false;
+    let timeoutId: any = null;
+
+    const cleanup = () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+      try {
+        URL.revokeObjectURL(objectUrl);
+      } catch (_) {}
     };
 
-    video.onseeked = () => {
+    const captureFrame = () => {
+      if (captured) return;
+      captured = true;
+      cleanup();
+
       try {
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth || 640;
         canvas.height = video.videoHeight || 360;
         const ctx = canvas.getContext('2d');
-        if (ctx) {
+
+        if (ctx && canvas.width > 0 && canvas.height > 0) {
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           canvas.toBlob(
             (blob) => {
-              URL.revokeObjectURL(video.src);
-              if (blob) resolve(blob);
-              else reject(new Error('Falha ao gerar blob do canvas'));
+              if (blob && blob.size > 0) {
+                resolve(blob);
+              } else {
+                reject(new Error('Blob gerado está vazio.'));
+              }
             },
             'image/jpeg',
             0.85
           );
         } else {
-          URL.revokeObjectURL(video.src);
-          reject(new Error('Não foi possível obter contexto do canvas'));
+          reject(new Error('Dimensões do vídeo inválidas para captura.'));
         }
       } catch (err) {
-        URL.revokeObjectURL(video.src);
         reject(err);
       }
     };
 
+    video.onloadeddata = () => {
+      try {
+        video.currentTime = 0.001;
+      } catch (_) {
+        captureFrame();
+      }
+    };
+
+    video.onseeked = () => {
+      captureFrame();
+    };
+
     video.onerror = (err) => {
-      URL.revokeObjectURL(video.src);
+      if (captured) return;
+      captured = true;
+      cleanup();
       reject(err);
     };
+
+    // Timeout defensivo de 4 segundos com guarda de decodificação
+    timeoutId = setTimeout(() => {
+      if (!captured) {
+        if (video.readyState >= 2) {
+          captureFrame();
+        } else {
+          captured = true;
+          cleanup();
+          reject(new Error('Timeout ao decodificar frame do vídeo.'));
+        }
+      }
+    }, 4000);
   });
 };
 
