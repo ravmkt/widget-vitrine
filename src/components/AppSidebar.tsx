@@ -59,59 +59,39 @@ export function AppSidebar() {
 
   const loadStoreData = useCallback(async () => {
     try {
-      let activeStoreId =
-        localStorage.getItem('vidlytics_current_store_id') ||
-        localStorage.getItem('current_store_id') ||
-        localStorage.getItem('store_id');
+      if (!supabase) return;
 
-      if (!activeStoreId && supabase) {
-        const { data: userData } = await supabase.auth.getUser();
-        const user = userData?.user;
-        if (user) {
-          const { data: userStore } = await supabase
-            .from('stores')
-            .select('id, name, logo_url, plan_id, plans(name)')
-            .eq('owner_user_id', user.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
+      // 1. Prioriza o usuário autenticado na sessão atual (isolamento multi-tenant seguro)
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData?.user;
 
-          if (userStore) {
-            activeStoreId = userStore.id;
-            setStoreName(userStore.name || 'Minha Loja');
-            setStoreLogoUrl((userStore as any).logo_url || '');
-            if ((userStore as any).plans?.name) {
-              setPlanName((userStore as any).plans.name);
-            }
-          }
-        }
+      if (!user) {
+        setStoreName('');
+        setStoreLogoUrl('');
+        setPlanName('Plano Iniciante');
+        return;
       }
 
-      if (activeStoreId && supabase) {
-        const { data: storeData } = await supabase
-          .from('stores')
-          .select('name, logo_url, plan_id, plans(name)')
-          .eq('id', activeStoreId)
-          .maybeSingle();
+      // 2. Busca a loja vinculada estritamente ao owner_user_id logado
+      const { data: userStore } = await supabase
+        .from('stores')
+        .select('id, name, logo_url, plan_id, plans(name)')
+        .eq('owner_user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-        if (storeData) {
-          setStoreName(storeData.name || 'Minha Loja');
-          setStoreLogoUrl((storeData as any).logo_url || '');
-          if ((storeData as any).plans?.name) {
-            setPlanName((storeData as any).plans.name);
-          }
+      if (userStore) {
+        localStorage.setItem('vidlytics_current_store_id', userStore.id);
+        setStoreName(userStore.name || 'Minha Loja');
+        setStoreLogoUrl((userStore as any).logo_url || '');
+        if ((userStore as any).plans?.name) {
+          setPlanName((userStore as any).plans.name);
         }
-
-        const { data: settingsData } = await supabase
-          .from('store_settings')
-          .select('store_name, logo_url')
-          .eq('store_id', activeStoreId)
-          .maybeSingle();
-
-        if (settingsData) {
-          if (settingsData.store_name) setStoreName(settingsData.store_name);
-          if (settingsData.logo_url) setStoreLogoUrl(settingsData.logo_url);
-        }
+      } else {
+        setStoreName('Minha Loja');
+        setStoreLogoUrl('');
+        setPlanName('Plano Iniciante');
       }
     } catch (err) {
       console.error('Erro ao carregar dados da loja no AppSidebar:', err);
