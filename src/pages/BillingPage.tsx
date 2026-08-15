@@ -70,23 +70,27 @@ export function BillingPage() {
           return;
         }
 
-        // 1. Resolve o store_id da loja ativa diretamente do storage ou do banco
+        // 1. Resolve o store_id da loja ativa com amarração ao usuário autenticado
         let activeStoreId =
           localStorage.getItem('vidlytics_current_store_id') ||
           localStorage.getItem('current_store_id') ||
           localStorage.getItem('store_id');
 
-        if (!activeStoreId) {
-          const { data: storeData } = await supabase
+        const { data: userData } = await supabase.auth.getUser();
+        const user = userData?.user;
+
+        if (!activeStoreId && user) {
+          const { data: userStore } = await supabase
             .from('stores')
             .select('id')
+            .eq('owner_user_id', user.id)
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle();
 
-          if (storeData) {
-            activeStoreId = storeData.id;
-            localStorage.setItem('vidlytics_current_store_id', storeData.id);
+          if (userStore) {
+            activeStoreId = userStore.id;
+            localStorage.setItem('vidlytics_current_store_id', userStore.id);
           }
         }
 
@@ -97,18 +101,16 @@ export function BillingPage() {
 
         setStoreId(activeStoreId);
 
-        // 2. Busca dados da loja e status oficial da assinatura
+        // 2. Busca dados da loja, plano e status oficial da assinatura via maybeSingle
         const { data: storeRow, error: storeErr } = await supabase
           .from('stores')
-          .select('storage_used_bytes, storage_limit_bytes, plan_id, subscription_status, trial_ends_at')
+          .select('storage_used_bytes, storage_limit_bytes, plan_id, subscription_status, trial_ends_at, plans(*)')
           .eq('id', activeStoreId)
-          .single();
+          .maybeSingle();
 
         if (storeErr) {
           console.error('[Billing] Erro ao buscar loja:', storeErr);
         }
-
-        const currentPlanId = storeRow?.plan_id;
 
         if (storeRow) {
           setStorageUsedBytes(Number(storeRow.storage_used_bytes || 0));
@@ -118,17 +120,23 @@ export function BillingPage() {
           if (storeRow.subscription_status) {
             setSubscriptionStatus(storeRow.subscription_status);
           }
-          if (storeRow.trial_ends_at) {
-            setTrialEndsAt(storeRow.trial_ends_at);
+          setTrialEndsAt(storeRow.trial_ends_at || null);
+
+          if ((storeRow as any).plans) {
+            setPlan((storeRow as any).plans);
+            if ((storeRow as any).plans?.storage_limit_bytes) {
+              setStorageLimitBytes(Number((storeRow as any).plans.storage_limit_bytes));
+            }
           }
         }
 
-        // 3. Busca Assinatura Corrente e sincroniza o plano
+        // 3. Busca Assinatura Corrente mais recente
         const { data: subData } = await supabase
           .from('subscriptions')
           .select('*, plans(*)')
           .eq('store_id', activeStoreId)
-          .eq('is_current', true)
+          .order('created_at', { ascending: false })
+          .limit(1)
           .maybeSingle();
 
         if (subData) {
@@ -137,19 +145,6 @@ export function BillingPage() {
             setPlan(subData.plans);
             if (subData.plans?.storage_limit_bytes) {
               setStorageLimitBytes(Number(subData.plans.storage_limit_bytes));
-            }
-          }
-        } else if (currentPlanId) {
-          const { data: planRow } = await supabase
-            .from('plans')
-            .select('*')
-            .eq('id', currentPlanId)
-            .maybeSingle();
-
-          if (planRow) {
-            setPlan(planRow);
-            if (planRow.storage_limit_bytes) {
-              setStorageLimitBytes(Number(planRow.storage_limit_bytes));
             }
           }
         }
