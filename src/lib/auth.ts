@@ -56,24 +56,30 @@ export const createInitialTenantForUser = async ({
   const now = new Date().toISOString();
   const month = now.slice(0, 7);
 
-await db.profiles.save({
-  id: crypto.randomUUID(),
-  user_id: userId,
-  name,
-  email,
-  avatar_url: null,
-  role: 'user',
-  created_at: now,
-});
+  // 1. Limpa cache local de lojas/sessões anteriores para evitar conflito de tenant
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.removeItem('vidlytics_stores');
+      localStorage.removeItem('vidlytics_store_settings');
+      localStorage.setItem('vidlytics_current_store_id', storeId);
+      localStorage.setItem('current_store_id', storeId);
+      localStorage.setItem('store_id', storeId);
+    }
+  } catch (e) {
+    console.warn('Falha ao redefinir storage de loja:', e);
+  }
 
+  // 2. Cria a loja vinculada ao owner_user_id (o trigger trg_set_trial_defaults aplicará o trial de 7 dias e o plano no Postgres)
   await db.stores.save({
     id: storeId,
     name: storeName,
     url: storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'empresa',
     active: true,
+    owner_user_id: userId,
     created_at: now,
   });
 
+  // 3. Registra associação de membro owner
   await db.storeMembers.save({
     id: crypto.randomUUID(),
     store_id: storeId,
@@ -82,16 +88,7 @@ await db.profiles.save({
     created_at: now,
   });
 
-  await db.subscriptions.save({
-    id: crypto.randomUUID(),
-    store_id: storeId,
-    plan_name: 'Essencial',
-    status: 'trialing',
-    current_period_start: now,
-    current_period_end: now,
-    created_at: now,
-  });
-
+  // 4. Cria contadores de consumo iniciais
   await db.usageCounters.save({
     id: crypto.randomUUID(),
     store_id: storeId,
