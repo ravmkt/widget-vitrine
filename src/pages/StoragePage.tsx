@@ -811,7 +811,7 @@ const sanitizeUrl = (rawUrl?: string) => {
 
           return `https://wznvecurmisgoaijykbt.supabase.co/storage/v1/object/public/videos/${cleanPath}`;
         };
-        
+
 realVideos.forEach((vid: any) => {
           const validVideoUrl = sanitizeUrl(vid.video_url);
           const rawThumb = sanitizeUrl(vid.thumbnail_url);
@@ -1431,15 +1431,16 @@ filteredFiles.map(file => (
                   <tr key={file.id} className="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
 <td className="px-6 py-3.5">
                       <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex items-center justify-center shrink-0">
+                        {/* Camada de Imagem */}
                         {file.thumbnailUrl || (file.type === 'image' && file.fileUrl) ? (
                           <img 
                             src={file.thumbnailUrl || file.fileUrl} 
                             alt={file.name} 
                             referrerPolicy="no-referrer"
-                            className="h-full w-full object-cover"
+                            className="relative z-10 h-full w-full object-cover"
                             onError={(e) => {
-                              // Se der erro ao carregar o arquivo remoto, oculta o alt quebrado e mostra o ícone limpo
-                              e.currentTarget.style.opacity = '0';
+                              // Se o arquivo não existir ou falhar, oculta a tag quebrada e mostra o ícone de fundo
+                              e.currentTarget.style.display = 'none';
                             }}
                           />
                         ) : file.fileUrl && file.type === 'video' ? (
@@ -1452,12 +1453,19 @@ filteredFiles.map(file => (
                           />
                         ) : null}
 
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/10 text-white pointer-events-none">
-                          {file.type === 'video' ? <FileVideo size={16} /> : null}
+                        {/* Ícones de Fundo/Overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          {file.type === 'video' ? (
+                            <div className="flex h-full w-full items-center justify-center bg-black/20 text-white">
+                              <FileVideo size={16} />
+                            </div>
+                          ) : (
+                            <FileImage size={16} className="text-slate-400" />
+                          )}
                         </div>
                       </div>
                     </td>
-
+                    
                     <td className="px-6 py-3.5 max-w-xs truncate">
                       <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate" title={file.name}>
                         {file.name}
