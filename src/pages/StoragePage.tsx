@@ -796,16 +796,18 @@ const { data: vidsData, error: vidsError } = await supabase
       }
 
 if (Array.isArray(realVideos)) {
-        const sanitizeUrl = (rawUrl?: string) => {
+const sanitizeUrl = (rawUrl?: string) => {
           if (!rawUrl) return '';
           const str = String(rawUrl).trim();
+          if (!str || str === 'null' || str === 'undefined') return '';
           if (str.startsWith('http://') || str.startsWith('https://') || str.startsWith('data:')) {
             return str;
           }
           if (str.startsWith('blob:')) {
             return '';
           }
-          return `https://wznvecurmisgoaijykbt.supabase.co/storage/v1/object/public/videos/${str.replace(/^\/+/, '')}`;
+          const cleanPath = str.replace(/^\/+/, '').replace(/^videos\//, '');
+          return `https://wznvecurmisgoaijykbt.supabase.co/storage/v1/object/public/videos/${cleanPath}`;
         };
 
 realVideos.forEach((vid: any) => {
