@@ -466,7 +466,7 @@ const { data, error } = await supabase.functions.invoke('import-pinterest-video'
       const title = externalTitle.trim() || `VÍDEO_EXTERNO_${Date.now().toString().slice(-4)}`;
 
       const payload = {
-        store_id: settings.store_id,
+        store_id: activeId,
         title: title,
         video_source_type: 'url',
         source_type: 'url',
