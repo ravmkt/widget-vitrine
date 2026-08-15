@@ -70,38 +70,24 @@ export function BillingPage() {
           return;
         }
 
-        // 1. Resolve o store_id da loja ativa
+        // 1. Resolve o store_id da loja ativa diretamente do storage ou da primeira loja vinculada
         let activeStoreId = localStorage.getItem('vidlytics_current_store_id') || 
                             localStorage.getItem('current_store_id') || 
                             localStorage.getItem('store_id');
 
-if (!activeStoreId) {
-          const { data: userData } = await supabase.auth.getUser();
-          const user = userData?.user;
-          if (user) {
-            // 1. Tenta buscar pela coluna user_id
-            const { data: storeByUser } = await supabase
-              .from('stores')
-              .select('id')
-              .eq('user_id', user.id)
-              .limit(1)
-              .maybeSingle();
+        if (!activeStoreId) {
+          const { data: storeData } = await supabase
+            .from('stores')
+            .select('id')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
 
-            if (storeByUser) {
-              activeStoreId = storeByUser.id;
-            } else {
-              // 2. Fallback: tenta buscar pela coluna owner_id caso exista
-              const { data: storeByOwner } = await supabase
-                .from('stores')
-                .select('id')
-                .eq('owner_id', user.id)
-                .limit(1)
-                .maybeSingle();
-
-              if (storeByOwner) {
-                activeStoreId = storeByOwner.id;
-              }
-            }
+          if (storeData) {
+            activeStoreId = storeData.id;
+            localStorage.setItem('vidlytics_current_store_id', storeData.id);
+          }
+        }
           }
         }
 
