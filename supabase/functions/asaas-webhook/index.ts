@@ -241,6 +241,8 @@ Deno.serve(async (req) => {
             .update({ subscription_status: "past_due" })
             .eq("id", targetStoreId);
         }
+
+        console.log(`Subscription ${subscription?.id} marcada como past_due.`);
         break;
       }
 
@@ -290,10 +292,6 @@ Deno.serve(async (req) => {
         }
         break;
       }
-
-      default:
-        console.log(`Evento ${event} recebido mas sem ação de ciclo de vida definida.`);
-    }
 
       default:
         console.log(`Evento ${event} recebido mas sem ação de ciclo de vida definida.`);
