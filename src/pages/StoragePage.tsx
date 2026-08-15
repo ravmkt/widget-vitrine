@@ -1402,7 +1402,7 @@ realVideos.forEach((vid: any) => {
               ) : (
 filteredFiles.map(file => (
                   <tr key={file.id} className="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
-                    <td className="px-6 py-3.5">
+<td className="px-6 py-3.5">
                       <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex items-center justify-center shrink-0">
                         {file.thumbnailUrl ? (
                           <img 
@@ -1414,9 +1414,9 @@ filteredFiles.map(file => (
                               e.currentTarget.style.display = 'none';
                             }} 
                           />
-                        ) : file.fileUrl ? (
+                        ) : file.fileUrl && file.type === 'video' ? (
                           <video
-                            src={file.fileUrl}
+                            src={file.fileUrl.indexOf('#t=') === -1 ? `${file.fileUrl}#t=0.001` : file.fileUrl}
                             className="h-full w-full object-cover"
                             preload="metadata"
                             muted
