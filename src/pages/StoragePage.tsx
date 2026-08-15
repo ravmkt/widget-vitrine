@@ -808,20 +808,26 @@ if (Array.isArray(realVideos)) {
           return `https://wznvecurmisgoaijykbt.supabase.co/storage/v1/object/public/videos/${str.replace(/^\/+/, '')}`;
         };
 
-        realVideos.forEach((vid: any) => {
+realVideos.forEach((vid: any) => {
           const validVideoUrl = sanitizeUrl(vid.video_url);
           const rawThumb = sanitizeUrl(vid.thumbnail_url);
 
           const isFileImage = /\.(jpeg|jpg|png|webp|gif)($|\?)/i.test(validVideoUrl) || 
-                              /\.(jpeg|jpg|png|webp|gif)($|\?)/i.test(vid.title || '');
+                              /\.(jpeg|jpg|png|webp|gif)($|\?)/i.test(vid.title || '') ||
+                              vid.source_type === 'image' ||
+                              vid.video_source_type === 'image';
 
-          // Valida se a thumbnail é de fato uma imagem
-          const isImageThumb = rawThumb && (
+          // Para imagens, a própria URL do arquivo serve como thumbnail
+          let finalThumbnail = '';
+          if (isFileImage) {
+            finalThumbnail = rawThumb || validVideoUrl;
+          } else if (rawThumb && (
             rawThumb.startsWith('data:image') ||
             /\.(jpeg|jpg|png|webp|gif)($|\?)/i.test(rawThumb) ||
             rawThumb.includes('img.youtube.com')
-          );
-          const validThumbUrl = isImageThumb ? rawThumb : (isFileImage ? validVideoUrl : '');
+          )) {
+            finalThumbnail = rawThumb;
+          }
 
           const videoUrlStr = String(validVideoUrl || '').toLowerCase();
           const isExplicitUrlType = (vid.video_source_type === 'url' || vid.source_type === 'url') && !videoUrlStr.includes('supabase');
@@ -874,7 +880,7 @@ if (Array.isArray(realVideos)) {
             type: isFileImage ? 'image' : 'video',
             sizeInBytes: totalMediaBytes,
             createdAt: formattedDate,
-            thumbnailUrl: validThumbUrl,
+            thumbnailUrl: finalThumbnail,
             fileUrl: validVideoUrl,
             productName: resolvedProductName,
             productImageUrl: resolvedProductImage || undefined,
