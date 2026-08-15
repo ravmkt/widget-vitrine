@@ -275,16 +275,18 @@ export function AppSidebar() {
         <div className="relative group">
           <button
             onClick={async () => {
-              await signOut();
-              const keysToRemove: string[] = [];
-              for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && key.startsWith('vidlytics_')) {
-                  keysToRemove.push(key);
+              try {
+                if (supabase) {
+                  await supabase.auth.signOut();
                 }
-              }
-              keysToRemove.forEach(key => localStorage.removeItem(key));
-              navigate('/login');
+              } catch (_) {}
+              try {
+                const theme = localStorage.getItem('app-theme');
+                localStorage.clear();
+                sessionStorage.clear();
+                if (theme) localStorage.setItem('app-theme', theme);
+              } catch (_) {}
+              window.location.href = '/login';
             }}
             className="flex w-full items-center gap-2.5 px-2.5 py-2 rounded-xl text-[#64748B] dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-500 transition-colors text-sm font-bold overflow-hidden whitespace-nowrap"
           >
