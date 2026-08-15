@@ -56,22 +56,30 @@ export function BillingPage() {
         if (!settings?.store_id) return;
         setStoreId(settings.store_id);
 
-        if (supabase) {
-          // 1. Busca dados da loja e plano ativo
+if (supabase) {
+          // 1. Busca dados da loja e plano ativo com status da assinatura
           const { data: storeRow } = await supabase
             .from('stores')
-            .select('storage_used_bytes, storage_limit_bytes, plan_id')
+            .select('storage_used_bytes, storage_limit_bytes, plan_id, subscription_status, trial_ends_at')
             .eq('id', settings.store_id)
             .single();
+
+          let currentPlanId = storeRow?.plan_id;
 
           if (storeRow) {
             setStorageUsedBytes(Number(storeRow.storage_used_bytes || 0));
             if (storeRow.storage_limit_bytes) {
               setStorageLimitBytes(Number(storeRow.storage_limit_bytes));
             }
+            if (storeRow.subscription_status) {
+              setSubscriptionStatus(storeRow.subscription_status);
+            }
+            if (storeRow.trial_ends_at) {
+              setTrialEndsAt(storeRow.trial_ends_at);
+            }
           }
 
-          // 2. Busca Assinatura Corrente e sincroniza o limite oficial do plano
+          // 2. Busca Assinatura Corrente e sincroniza o plano
           const { data: subData } = await supabase
             .from('subscriptions')
             .select('*, plans(*)')
@@ -81,9 +89,25 @@ export function BillingPage() {
 
           if (subData) {
             setSubscription(subData);
-            setPlan(subData.plans);
-            if (subData.plans?.storage_limit_bytes) {
-              setStorageLimitBytes(Number(subData.plans.storage_limit_bytes));
+            if (subData.plans) {
+              setPlan(subData.plans);
+              if (subData.plans?.storage_limit_bytes) {
+                setStorageLimitBytes(Number(subData.plans.storage_limit_bytes));
+              }
+            }
+          } else if (currentPlanId) {
+            // Fallback: se não houver sub corrente ativa, busca os dados do plano direto da store
+            const { data: planRow } = await supabase
+              .from('plans')
+              .select('*')
+              .eq('id', currentPlanId)
+              .maybeSingle();
+
+            if (planRow) {
+              setPlan(planRow);
+              if (planRow.storage_limit_bytes) {
+                setStorageLimitBytes(Number(planRow.storage_limit_bytes));
+              }
             }
           }
 
