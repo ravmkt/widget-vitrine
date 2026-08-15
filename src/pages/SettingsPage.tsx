@@ -367,13 +367,21 @@ useEffect(() => {
       const payload = appSettingsToGeneralSettings(updatedSettings);
       await db.generalSettings.save(payload as GeneralSettings);
 
-      // ── NOVO: Salvar setor na tabela stores ──
+      // ── Sincronização atômica na tabela principal stores ──
       if (supabase && settings.store_id) {
         const sectorValue =
           selectedSectorId === 'none' ? null : selectedSectorId || null;
+
         await supabase
           .from('stores')
-          .update({ sector_id: sectorValue })
+          .update({
+            name: updatedSettings.store_name || 'Loja',
+            url: updatedSettings.store_url || null,
+            logo_url: finalLogoUrl || null,
+            contact_email: updatedSettings.contact_email || null,
+            sector_id: sectorValue,
+            updated_at: now,
+          })
           .eq('id', settings.store_id);
       }
 
