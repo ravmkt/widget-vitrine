@@ -3599,22 +3599,11 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
 
         var isDirectVideo = isDirectVideoUrl(effectiveMediaUrl);
 
-function primeVideoFrame(vidEl) {
-          if (!vidEl) return;
-          var playPromise = vidEl.play();
-          if (playPromise !== undefined) {
-            playPromise.then(function() {
-              vidEl.pause();
-              try {
-                vidEl.currentTime = 0.001;
-              } catch (e) {}
-            }).catch(function() {});
-          }
-        }
-
         if (isDirectVideo) {
           var previewVideo = document.createElement('video');
-          previewVideo.src = effectiveMediaUrl;
+          var videoUrlWithFragment = effectiveMediaUrl.indexOf('#t=') === -1 ? effectiveMediaUrl + '#t=0.001' : effectiveMediaUrl;
+
+          previewVideo.src = videoUrlWithFragment;
           previewVideo.preload = 'auto';
           previewVideo.muted = true;
           previewVideo.defaultMuted = true;
@@ -3631,8 +3620,16 @@ function primeVideoFrame(vidEl) {
             '-webkit-backface-visibility:hidden !important;' +
             'background:#000 !important;';
 
-          previewVideo.addEventListener('loadeddata', function () { primeVideoFrame(previewVideo); }, { once: true });
-          previewVideo.addEventListener('canplay', function () { primeVideoFrame(previewVideo); }, { once: true });
+          previewVideo.addEventListener('loadedmetadata', function () {
+            var p = previewVideo.play();
+            if (p !== undefined) {
+              p.then(function() {
+                previewVideo.pause();
+              }).catch(function () {
+                try { previewVideo.currentTime = 0.001; } catch (e) {}
+              });
+            }
+          }, { once: true });
 
           innerMask.appendChild(previewVideo);
         } else {
