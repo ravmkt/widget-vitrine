@@ -763,7 +763,7 @@ const { data: vidsData, error: vidsError } = await supabase
               .from('videos')
               .select(`
                 *,
-                products:product_id (id, name, image_url, thumbnail_url, cover_url),
+                products:product_id (id, name, image_url),
                 story_videos (
                   story_id,
                   stories:story_id (id, title)
