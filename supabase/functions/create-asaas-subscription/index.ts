@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 const ASAAS_BASE_URL = (Deno.env.get("ASAAS_BASE_URL") || "https://api-sandbox.asaas.com/v3").replace(/\/$/, "");
@@ -10,7 +11,7 @@ const ASAAS_API_KEY = Deno.env.get("ASAAS_API_KEY") || "";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { status: 200, headers: corsHeaders });
   }
 
   try {
@@ -19,7 +20,7 @@ Deno.serve(async (req) => {
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: "UNAUTHORIZED", message: "Token de autenticação ausente." }),
-        { status: 401, headers: corsHeaders }
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -33,7 +34,7 @@ Deno.serve(async (req) => {
     if (userError || !userData?.user) {
       return new Response(
         JSON.stringify({ error: "UNAUTHORIZED", message: "Usuário não autenticado." }),
-        { status: 401, headers: corsHeaders }
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -45,7 +46,7 @@ Deno.serve(async (req) => {
     if (!plan_id || !store_id) {
       return new Response(
         JSON.stringify({ error: "INVALID_PAYLOAD", message: "plan_id e store_id são obrigatórios." }),
-        { status: 400, headers: corsHeaders }
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -65,17 +66,17 @@ Deno.serve(async (req) => {
     if (planError || !plan) {
       return new Response(
         JSON.stringify({ error: "PLAN_NOT_FOUND", message: "Plano não encontrado." }),
-        { status: 404, headers: corsHeaders }
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 5. Buscar dados fiscais: primeiro em billing_info (cnpj_cpf, legal_name), senão em profiles
+    // 5. Buscar dados fiscais: primeiro em billing_info, senão em profiles
     let document: string | null = null;
     let phone: string | null = null;
     let name: string | null = null;
     let email: string | null = user.email ?? null;
 
-    const { data: billingInfo, error: billingErr } = await supabaseAdmin
+    const { data: billingInfo } = await supabaseAdmin
       .from("billing_info")
       .select("cnpj_cpf, legal_name, phone, email")
       .eq("store_id", store_id)
@@ -87,7 +88,6 @@ Deno.serve(async (req) => {
       name = billingInfo.legal_name || null;
       email = billingInfo.email || email;
     } else {
-      // Fallback para tabela profiles
       const { data: profile } = await supabaseAdmin
         .from("profiles")
         .select("document_number, phone, name, email")
@@ -108,11 +108,11 @@ Deno.serve(async (req) => {
           error: "DADOS_FISCAIS_OBRIGATORIOS",
           message: "Preencha seus dados de faturamento (CPF/CNPJ) antes de assinar um plano.",
         }),
-        { status: 400, headers: corsHeaders }
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 5.1 Normalização rigorosa do CPF/CNPJ (adiciona zero à esquerda se necessário)
+    // 5.1 Normalização do CPF/CNPJ
     let cleanDoc = document.replace(/\D/g, "");
     if (cleanDoc.length <= 11) {
       cleanDoc = cleanDoc.padStart(11, "0");
@@ -131,7 +131,6 @@ Deno.serve(async (req) => {
 
     let asaasCustomerId = storeRow?.asaas_customer_id;
 
-    // Headers padronizados com User-Agent obrigatório do Asaas
     const asaasHeaders = {
       "Content-Type": "application/json",
       "User-Agent": "Vidlytics-App/1.0",
@@ -139,7 +138,6 @@ Deno.serve(async (req) => {
     };
 
     if (!asaasCustomerId) {
-      // Diferencia celular (11 dígitos) de telefone fixo (10 dígitos)
       const isMobile = cleanPhone && cleanPhone.length === 11;
 
       const customerPayload: Record<string, any> = {
@@ -177,12 +175,12 @@ Deno.serve(async (req) => {
         console.error("[ASAAS] Erro HTTP ao criar customer:", customerResponse.status, customerData);
         const errMsg = customerData?.errors?.[0]?.description || customerData?.message || `Erro HTTP ${customerResponse.status} do Asaas`;
         return new Response(
-          JSON.stringify({ 
-            error: "ASAAS_CUSTOMER_ERROR", 
-            message: errMsg, 
-            details: customerData 
+          JSON.stringify({
+            error: "ASAAS_CUSTOMER_ERROR",
+            message: errMsg,
+            details: customerData,
           }),
-          { status: 400, headers: corsHeaders }
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
@@ -228,16 +226,16 @@ Deno.serve(async (req) => {
       console.error("[ASAAS] Erro HTTP ao criar subscription:", subscriptionResponse.status, subscriptionData);
       const errMsg = subscriptionData?.errors?.[0]?.description || subscriptionData?.message || `Erro HTTP ${subscriptionResponse.status} ao criar assinatura`;
       return new Response(
-        JSON.stringify({ 
-          error: "ASAAS_SUBSCRIPTION_ERROR", 
-          message: errMsg, 
-          details: subscriptionData 
+        JSON.stringify({
+          error: "ASAAS_SUBSCRIPTION_ERROR",
+          message: errMsg,
+          details: subscriptionData,
         }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 8. Salvar a subscription local (histórico preservado via insert)
+    // 8. Salvar a subscription local
     const { data: newSubscription, error: insertError } = await supabaseAdmin
       .from("subscriptions")
       .insert({
@@ -267,7 +265,7 @@ Deno.serve(async (req) => {
       try {
         const paymentsData = paymentsText ? JSON.parse(paymentsText) : {};
         invoiceUrl = paymentsData?.data?.[0]?.invoiceUrl || paymentsData?.data?.[0]?.bankSlipUrl || null;
-      } catch (e) {
+      } catch {
         console.warn("[ASAAS] Não foi possível parsear lista de pagamentos:", paymentsText);
       }
     }
@@ -281,77 +279,11 @@ Deno.serve(async (req) => {
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-
-    const subscriptionText = await subscriptionResponse.text();
-    let subscriptionData: any = {};
-    try {
-      subscriptionData = subscriptionText ? JSON.parse(subscriptionText) : {};
-    } catch (e) {
-      console.error("[ASAAS] Resposta não-JSON ao criar subscription:", subscriptionText);
-      throw new Error(`Asaas retornou resposta inválida ao criar assinatura: ${subscriptionText || subscriptionResponse.statusText}`);
-    }
-
-    if (!subscriptionResponse.ok) {
-      console.error("[ASAAS] Erro ao criar subscription no Asaas:", subscriptionData);
-      return new Response(
-        JSON.stringify({ 
-          error: "ASAAS_SUBSCRIPTION_ERROR", 
-          message: subscriptionData.errors?.[0]?.description || "Erro ao criar assinatura no Asaas.", 
-          details: subscriptionData 
-        }),
-        { status: 400, headers: corsHeaders }
-      );
-    }
-
-    // 8. Salvar a subscription local (histórico preservado via insert)
-    const { data: newSubscription, error: insertError } = await supabaseAdmin
-      .from("subscriptions")
-      .insert({
-        store_id,
-        plan_id,
-        asaas_subscription_id: subscriptionData.id,
-        asaas_customer_id: asaasCustomerId,
-        status: "pending",
-        is_current: false,
-      })
-      .select()
-      .single();
-
-    if (insertError) {
-      console.error("Erro ao salvar subscription local:", insertError);
-    }
-
-    // 9. Buscar a primeira invoice gerada para obter a invoice_url
-    let invoiceUrl = subscriptionData.invoiceUrl || null;
-
-    if (!invoiceUrl) {
-      const paymentsResponse = await fetch(
-        `${ASAAS_BASE_URL}/payments?subscription=${subscriptionData.id}`,
-        { headers: { "access_token": ASAAS_API_KEY } }
-      );
-      const paymentsText = await paymentsResponse.text();
-      try {
-        const paymentsData = paymentsText ? JSON.parse(paymentsText) : {};
-        invoiceUrl = paymentsData?.data?.[0]?.invoiceUrl || paymentsData?.data?.[0]?.bankSlipUrl || null;
-      } catch (e) {
-        console.warn("[ASAAS] Não foi possível parsear lista de pagamentos:", paymentsText);
-      }
-    }
-
-    return new Response(
-      JSON.stringify({
-        message: "Assinatura criada com sucesso.",
-        subscription_id: newSubscription?.id,
-        asaas_subscription_id: subscriptionData.id,
-        invoice_url: invoiceUrl,
-      }),
-      { status: 200, headers: corsHeaders }
-    );
   } catch (err) {
     console.error("Erro inesperado:", err);
     return new Response(
       JSON.stringify({ error: "INTERNAL_ERROR", message: "Erro interno ao processar assinatura.", details: String(err) }),
-      { status: 500, headers: corsHeaders }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
