@@ -4583,6 +4583,39 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
     return path.join(' > ');
   }
 
+/* ================================================================
+     VALIDAÇÃO DE STATUS DA ASSINATURA / TRIAL
+     ================================================================ */
+
+  function isStoreBlocked(store) {
+    if (!store) return false;
+    var status = String(store.subscription_status || '').toLowerCase().trim();
+    if (status === 'canceled' || status === 'past_due') {
+      return true;
+    }
+    if (status === 'trialing' && store.trial_ends_at) {
+      return new Date(store.trial_ends_at) < new Date();
+    }
+    return false;
+  }
+
+  function readStoreStatus() {
+    if (!storeId || !hasSupabase) return Promise.resolve(null);
+    return supabaseFetch(
+      'stores?select=id,subscription_status,trial_ends_at&id=eq.' + encodeURIComponent(storeId) + '&limit=1',
+      { method: 'GET' }
+    )
+      .then(function (response) {
+        if (!response.ok) return null;
+        return response.json();
+      })
+      .then(function (data) {
+        if (Array.isArray(data) && data.length > 0) return data[0];
+        return null;
+      })
+      .catch(function () { return null; });
+  }
+  
   /* ================================================================
      INICIALIZAÇÃO DO WIDGET (COM story_id DA URL)
      ================================================================ */
