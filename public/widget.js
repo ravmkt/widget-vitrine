@@ -3597,13 +3597,38 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
           'background:#000 !important;'
         ].join('');
 
-        var isDirectVideo = isDirectVideoUrl(effectiveMediaUrl);
+var isDirectVideo = isDirectVideoUrl(effectiveMediaUrl);
+
+        function primeVideoFrame(vidEl) {
+          if (!vidEl) return;
+          vidEl.muted = true;
+          vidEl.defaultMuted = true;
+          vidEl.playsInline = true;
+          vidEl.setAttribute('playsinline', '');
+          vidEl.setAttribute('webkit-playsinline', '');
+          vidEl.setAttribute('muted', '');
+
+          function tryPrime() {
+            var playPromise = vidEl.play();
+            if (playPromise !== undefined) {
+              playPromise.then(function () {
+                vidEl.pause();
+              }).catch(function () {
+                try { vidEl.currentTime = 0.001; } catch (e) {}
+              });
+            }
+          }
+
+          if (vidEl.readyState >= 2) {
+            tryPrime();
+          } else {
+            vidEl.addEventListener('loadeddata', tryPrime, { once: true });
+          }
+        }
 
         if (isDirectVideo) {
           var previewVideo = document.createElement('video');
-          var videoUrlWithFragment = effectiveMediaUrl.indexOf('#t=') === -1 ? effectiveMediaUrl + '#t=0.001' : effectiveMediaUrl;
-
-          previewVideo.src = videoUrlWithFragment;
+          previewVideo.src = effectiveMediaUrl;
           previewVideo.preload = 'auto';
           previewVideo.muted = true;
           previewVideo.defaultMuted = true;
@@ -3620,16 +3645,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             '-webkit-backface-visibility:hidden !important;' +
             'background:#000 !important;';
 
-          previewVideo.addEventListener('loadedmetadata', function () {
-            var p = previewVideo.play();
-            if (p !== undefined) {
-              p.then(function() {
-                previewVideo.pause();
-              }).catch(function () {
-                try { previewVideo.currentTime = 0.001; } catch (e) {}
-              });
-            }
-          }, { once: true });
+          primeVideoFrame(previewVideo);
 
           innerMask.appendChild(previewVideo);
         } else {
@@ -3665,8 +3681,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
                 '-webkit-backface-visibility:hidden !important;' +
                 'background:#000 !important;';
 
-              fallbackVid.addEventListener('loadeddata', function () { primeVideoFrame(fallbackVid); }, { once: true });
-              fallbackVid.addEventListener('canplay', function () { primeVideoFrame(fallbackVid); }, { once: true });
+              primeVideoFrame(fallbackVid);
 
               innerMask.appendChild(fallbackVid);
             }
