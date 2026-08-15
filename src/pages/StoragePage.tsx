@@ -587,8 +587,8 @@ if (supabase) {
         finalThumbUrl = finalVideoUrl;
       }
 
-      const payload = {
-        store_id: settings.store_id,
+const payload = {
+        store_id: activeId,
         title: file.name,
         video_source_type: isVideo ? 'upload' : 'url',
         source_type: isVideo ? 'upload' : 'url',
