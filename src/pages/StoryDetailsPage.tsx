@@ -105,9 +105,30 @@ const deleteSafe = async (collection: any, id: string, storeId?: string) => {
   }
 };
 
-const getVideoPosterUrl = (video: Video) => {
+const normalizeMediaUrl = (rawUrl?: string): string => {
+  if (!rawUrl) return '';
+  const url = String(rawUrl).trim();
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:') || url.startsWith('blob:')) {
+    return url;
+  }
+  return `https://wznvecurmisgoaijykbt.supabase.co/storage/v1/object/public/videos/${url}`;
+};
+
+const getVideoPosterUrl = (video: Video): string => {
   const item = video as any;
-  return item.cover_url || item.coverUrl || item.thumbnail_url || item.thumbnailUrl || item.poster_url || item.posterUrl || item.image_url || item.imageUrl || item.thumbnail || '';
+  const raw = item.thumbnail_url || item.thumbnailUrl || item.cover_url || item.coverUrl || item.poster_url || item.posterUrl || item.image_url || item.imageUrl || item.thumbnail || '';
+  return normalizeMediaUrl(raw);
+};
+
+const getVideoFileUrl = (video: Video): string => {
+  const item = video as any;
+  const raw = item.video_url || item.videoUrl || item.file_url || item.fileUrl || item.url || item.src || '';
+  return normalizeMediaUrl(raw);
+};
+
+const isVideoUrl = (url: string): boolean => {
+  if (!url) return false;
+  return /\.(mp4|webm|ogg|mov|m4v|m3u8)(\?.*)?$/i.test(url);
 };
 
 type PageRuleUi = {
