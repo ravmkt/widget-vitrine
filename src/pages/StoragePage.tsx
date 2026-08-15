@@ -1395,48 +1395,6 @@ const payload = {
                 filteredFiles.map(file => (
                   <tr key={file.id} className="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
 <td className="px-6 py-3.5">
-                      <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-slate-200 bg-slate-900 shadow-sm dark:border-slate-800 flex items-center justify-center shrink-0">
-                        {file.type === 'video' ? (
-                          file.thumbnailUrl && !file.thumbnailUrl.includes('unsplash.com') && (file.thumbnailUrl.startsWith('http') || file.thumbnailUrl.startsWith('data:')) ? (
-                            <img 
-                              src={file.thumbnailUrl} 
-                              alt={file.name} 
-                              className="h-full w-full object-cover"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                              }} 
-                            />
-                          ) : (
-                            <video
-                              src={file.fileUrl || undefined}
-                              className="h-full w-full object-cover"
-                              preload="auto"
-                              controls
-                              autoPlay
-                              muted
-                              playsInline
-                              referrerPolicy="no-referrer"
-                              crossOrigin="anonymous"
-                              onError={(e) => {
-                                console.warn('Falha no streaming do vídeo:', e);
-                              }}
-                            />
-                          )
-                        ) : (
-                          <img 
-                            src={file.thumbnailUrl} 
-                            alt={file.name} 
-                            className="h-full w-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                        )}
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-white pointer-events-none">
-                          {file.type === 'video' ? <FileVideo size={16} /> : <FileImage size={16} />}
-                        </div>
-                      </div>
-                    </td>
 
                     <td className="px-6 py-3.5 max-w-xs truncate">
                       <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate" title={file.name}>
