@@ -428,9 +428,9 @@ export default function StoragePage() {
 
         showSuccess('Importando vídeo do Pinterest... Isso pode levar alguns segundos.');
 
-        const { data, error } = await supabase.functions.invoke('import-pinterest-video', {
+const { data, error } = await supabase.functions.invoke('import-pinterest-video', {
           body: {
-            storeId: settings.store_id,
+            storeId: activeId,
             videoData: {
               video_url: formattedUrl,
               title: externalTitle.trim() || undefined,
