@@ -174,20 +174,20 @@ export function BillingPage() {
           }
 
           // 3. Busca Histórico de Faturas
-          const { data: invData } = await supabase
-            .from('invoices')
-            .select('*')
-            .eq('store_id', settings.store_id)
-            .order('created_at', { ascending: false });
+        const { data: invData } = await supabase
+          .from('invoices')
+          .select('*')
+          .eq('store_id', activeStoreId)
+          .order('created_at', { ascending: false });
 
-          setInvoices(invData || []);
+        setInvoices(invData || []);
 
-          // 4. Busca Dados Fiscais
-          const { data: billData } = await supabase
-            .from('billing_info')
-            .select('*')
-            .eq('store_id', settings.store_id)
-            .maybeSingle();
+        // 4. Busca Dados Fiscais
+        const { data: billData } = await supabase
+          .from('billing_info')
+          .select('*')
+          .eq('store_id', activeStoreId)
+          .maybeSingle();
 
           if (billData) {
             setFiscalData({
