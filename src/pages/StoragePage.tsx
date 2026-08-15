@@ -800,17 +800,9 @@ const sanitizeUrl = (rawUrl?: string) => {
           if (!rawUrl) return '';
           const str = String(rawUrl).trim();
           if (!str || str === 'null' || str === 'undefined') return '';
+          if (str.startsWith('http://') || str.startsWith('https://')) return str;
           if (str.startsWith('data:')) return str;
           if (str.startsWith('blob:')) return '';
-
-          // Se já for uma URL completa do Supabase
-          if (str.includes('/storage/v1/object/public/')) {
-            return str;
-          }
-
-          if (str.startsWith('http://') || str.startsWith('https://')) {
-            return str;
-          }
 
           const cleanPath = str
             .replace(/^\/+/, '')
@@ -819,7 +811,7 @@ const sanitizeUrl = (rawUrl?: string) => {
 
           return `https://wznvecurmisgoaijykbt.supabase.co/storage/v1/object/public/videos/${cleanPath}`;
         };
-
+        
 realVideos.forEach((vid: any) => {
           const validVideoUrl = sanitizeUrl(vid.video_url);
           const rawThumb = sanitizeUrl(vid.thumbnail_url);
@@ -1465,7 +1457,7 @@ filteredFiles.map(file => (
                         </div>
                       </div>
                     </td>
-                    
+
                     <td className="px-6 py-3.5 max-w-xs truncate">
                       <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate" title={file.name}>
                         {file.name}
