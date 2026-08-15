@@ -571,38 +571,96 @@ const { data, error } = await supabase.functions.invoke('import-pinterest-video'
         throw new Error('ID da loja não encontrado. Recarregue a página.');
       }
 
-realVideos.forEach((vid: any) => {
-          const validVideoUrl = sanitizeUrl(vid.video_url);
-          const rawThumb = sanitizeUrl(vid.thumbnail_url);
+      const isVideo = file.type.startsWith('video');
+      const isImage = file.type.startsWith('image') || /\.(jpg|jpeg|png|webp|gif)$/i.test(file.name);
+      const cleanFileName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+      const safeStoragePath = `${activeId}/${Date.now()}_${Math.random().toString(36).substring(2, 7)}_${cleanFileName}`;
 
-          // Valida se a thumbnail é de fato uma imagem (evita passar URL de mp4 para tag <img>)
-          const isImageThumb = rawThumb && (
-            rawThumb.startsWith('data:image') ||
-            /\.(jpeg|jpg|png|webp|gif)($|\?)/i.test(rawThumb) ||
-            rawThumb.includes('img.youtube.com')
-          );
-          const validThumbUrl = isImageThumb ? rawThumb : '';
+      let finalVideoUrl = '';
+      let finalThumbUrl = '';
+      let thumbnailSize = 0;
 
-          const videoUrlStr = String(validVideoUrl || '').toLowerCase();
-          const isExplicitUrlType = vid.video_source_type === 'url' || vid.source_type === 'url';
-          const isHostedOnPlatform = videoUrlStr.includes('supabase');
-          const isExternalUrl = isExplicitUrlType || (!isHostedOnPlatform && videoUrlStr.startsWith('http'));
+      if (supabase) {
+        try {
+          const { data: uploadData, error: uploadErr } = await supabase.storage
+            .from('videos')
+            .upload(safeStoragePath, file, { 
+              cacheControl: '3600', 
+              contentType: file.type || (isImage ? 'image/jpeg' : 'video/mp4'),
+              upsert: true 
+            });
 
-          const videoBytes = isExternalUrl 
-            ? 0 
-            : (vid.file_size && Number(vid.file_size) > 0 
-                ? Number(vid.file_size) 
-                : 20971520);
+          if (!uploadErr && uploadData?.path) {
+            const { data: publicUrlData } = supabase.storage
+              .from('videos')
+              .getPublicUrl(uploadData.path);
 
-          const thumbnailBytes = vid.thumbnail_source_type === 'upload' && vid.thumbnail_file_size
-            ? Number(vid.thumbnail_file_size)
-            : 0;
+            finalVideoUrl = publicUrlData.publicUrl;
+          } else if (uploadErr) {
+            console.warn('Erro de upload no Storage principal:', uploadErr);
+          }
+        } catch (storageErr) {
+          console.warn('Supabase Storage indisponível, aplicando fallback:', storageErr);
+        }
+      }
 
-          const totalMediaBytes = videoBytes + thumbnailBytes;
+      if (!finalVideoUrl) {
+        finalVideoUrl = URL.createObjectURL(file);
+      }
 
-          const formattedDate = vid.created_at 
-            ? new Date(vid.created_at).toLocaleDateString('pt-BR') 
-            : 'Hoje';
+      if (isImage) {
+        finalThumbUrl = finalVideoUrl;
+        thumbnailSize = file.size;
+      } else if (isVideo) {
+        try {
+          const thumbBlob = await generateVideoThumbnail(file);
+          thumbnailSize = thumbBlob.size;
+
+          if (supabase && thumbBlob && thumbBlob.size > 0) {
+            const thumbStoragePath = `${activeId}/thumb_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
+
+            const { data: thumbUploadData, error: thumbUploadErr } = await supabase.storage
+              .from('videos')
+              .upload(thumbStoragePath, thumbBlob, {
+                contentType: 'image/jpeg',
+                cacheControl: '3600',
+                upsert: true,
+              });
+
+            if (!thumbUploadErr && thumbUploadData?.path) {
+              const { data: thumbPublicUrlData } = supabase.storage
+                .from('videos')
+                .getPublicUrl(thumbUploadData.path);
+
+              finalThumbUrl = thumbPublicUrlData.publicUrl;
+            } else if (thumbUploadErr) {
+              console.warn('Erro ao enviar thumbnail para o Supabase Storage:', thumbUploadErr);
+            }
+          }
+        } catch (thumbErr) {
+          console.warn('Falha na geração automática da thumbnail:', thumbErr);
+        }
+      }
+
+      // Se não gerou thumbnail JPG com sucesso no Storage, salva como vazio (NUNCA URL quebrada 404)
+      if (!finalThumbUrl) {
+        finalThumbUrl = isImage ? finalVideoUrl : '';
+      }
+
+      const payload = {
+        store_id: activeId,
+        title: file.name,
+        video_source_type: 'upload',
+        source_type: 'upload',
+        video_url: finalVideoUrl,
+        thumbnail_url: finalThumbUrl,
+        thumbnail_source_type: isImage ? 'upload' : 'auto',
+        file_size: file.size,
+        thumbnail_file_size: thumbnailSize,
+        status: 'active',
+        active: true,
+        created_at: new Date().toISOString(),
+      };
 
       if (supabase) {
         const { error } = await supabase.from('videos').insert([payload]);
