@@ -4826,13 +4826,16 @@ function initWidget() {
           }
         });
       });
-    }).then(function () {
+}).then(function () {
       console.log('[Vidlytics] ✅ Widget inicializado com sucesso.');
     }).catch(function (err) {
       console.warn('[Vidlytics] Erro na inicialização:', err);
     });
   }).catch(function (err) {
     console.warn('[Vidlytics] Erro ao carregar aparência:', err);
+  });
+  }).catch(function (err) {
+    console.warn('[Vidlytics] Erro ao verificar status da loja:', err);
   });
   }
 
