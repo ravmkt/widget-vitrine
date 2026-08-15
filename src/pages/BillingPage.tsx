@@ -70,10 +70,11 @@ export function BillingPage() {
           return;
         }
 
-        // 1. Resolve o store_id da loja ativa diretamente do storage ou da primeira loja vinculada
-        let activeStoreId = localStorage.getItem('vidlytics_current_store_id') || 
-                            localStorage.getItem('current_store_id') || 
-                            localStorage.getItem('store_id');
+        // 1. Resolve o store_id da loja ativa diretamente do storage ou do banco
+        let activeStoreId =
+          localStorage.getItem('vidlytics_current_store_id') ||
+          localStorage.getItem('current_store_id') ||
+          localStorage.getItem('store_id');
 
         if (!activeStoreId) {
           const { data: storeData } = await supabase
@@ -86,20 +87,6 @@ export function BillingPage() {
           if (storeData) {
             activeStoreId = storeData.id;
             localStorage.setItem('vidlytics_current_store_id', storeData.id);
-          }
-        }
-          }
-        }
-
-        if (!activeStoreId) {
-          const { data: firstStore } = await supabase
-            .from('stores')
-            .select('id')
-            .limit(1)
-            .maybeSingle();
-
-          if (firstStore) {
-            activeStoreId = firstStore.id;
           }
         }
 
