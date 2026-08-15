@@ -809,8 +809,8 @@ realVideos.forEach((vid: any) => {
 
           loadedItems.push({
             id: vid.id || String(Math.random()),
-            name: vid.title || `VIDEO_${vid.id?.slice(0, 6) || 'UPLOAD'}.mp4`,
-            type: 'video',
+            name: vid.title || (isFileImage ? `IMAGEM_${vid.id?.slice(0, 6) || 'UPLOAD'}.jpg` : `VIDEO_${vid.id?.slice(0, 6) || 'UPLOAD'}.mp4`),
+            type: isFileImage ? 'image' : 'video',
             sizeInBytes: totalMediaBytes,
             createdAt: formattedDate,
             thumbnailUrl: validThumbUrl,
