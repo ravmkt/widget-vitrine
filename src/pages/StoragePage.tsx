@@ -737,7 +737,7 @@ const { data: vidsData, error: vidsError } = await supabase
         }
       }
 
-      if (Array.isArray(realVideos)) {
+if (Array.isArray(realVideos)) {
         const sanitizeUrl = (rawUrl?: string) => {
           if (!rawUrl) return '';
           const str = String(rawUrl).trim();
@@ -750,20 +750,23 @@ const { data: vidsData, error: vidsError } = await supabase
           return `https://wznvecurmisgoaijykbt.supabase.co/storage/v1/object/public/videos/${str.replace(/^\/+/, '')}`;
         };
 
-realVideos.forEach((vid: any) => {
+        realVideos.forEach((vid: any) => {
           const validVideoUrl = sanitizeUrl(vid.video_url);
           const rawThumb = sanitizeUrl(vid.thumbnail_url);
 
-          // Valida se a thumbnail é de fato uma imagem (evita passar URL de mp4 para tag <img>)
+          const isFileImage = /\.(jpeg|jpg|png|webp|gif)($|\?)/i.test(validVideoUrl) || 
+                              /\.(jpeg|jpg|png|webp|gif)($|\?)/i.test(vid.title || '');
+
+          // Valida se a thumbnail é de fato uma imagem
           const isImageThumb = rawThumb && (
             rawThumb.startsWith('data:image') ||
             /\.(jpeg|jpg|png|webp|gif)($|\?)/i.test(rawThumb) ||
             rawThumb.includes('img.youtube.com')
           );
-          const validThumbUrl = isImageThumb ? rawThumb : '';
+          const validThumbUrl = isImageThumb ? rawThumb : (isFileImage ? validVideoUrl : '');
 
           const videoUrlStr = String(validVideoUrl || '').toLowerCase();
-          const isExplicitUrlType = vid.video_source_type === 'url' || vid.source_type === 'url';
+          const isExplicitUrlType = (vid.video_source_type === 'url' || vid.source_type === 'url') && !videoUrlStr.includes('supabase');
           const isHostedOnPlatform = videoUrlStr.includes('supabase');
           const isExternalUrl = isExplicitUrlType || (!isHostedOnPlatform && videoUrlStr.startsWith('http'));
 
@@ -777,13 +780,13 @@ realVideos.forEach((vid: any) => {
             ? Number(vid.thumbnail_file_size)
             : 0;
 
-          const totalMediaBytes = videoBytes + thumbnailBytes;
+          const totalMediaBytes = Math.max(videoBytes, thumbnailBytes);
 
           const formattedDate = vid.created_at 
             ? new Date(vid.created_at).toLocaleDateString('pt-BR') 
             : 'Hoje';
 
-// Resolução do Nome e Imagem do Produto
+          // Resolução do Nome e Imagem do Produto
           const resolvedProductName = vid.products?.name || vid.product_name || vid.product?.name || vid.product?.title || undefined;
           const resolvedProductImage = sanitizeUrl(
             vid.products?.image_url || (vid.products as any)?.image ||
