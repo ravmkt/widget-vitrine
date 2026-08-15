@@ -63,17 +63,68 @@ export function BillingPage() {
     const loadBillingData = async () => {
       try {
         setLoading(true);
-        const settings = await db.getSettings();
-        if (!settings?.store_id) return;
-        setStoreId(settings.store_id);
+        if (!supabase) return;
 
-if (supabase) {
-          // 1. Busca dados da loja e plano ativo com status da assinatura
-          const { data: storeRow } = await supabase
+        // 1. Resolve o store_id da loja ativa com fallbacks seguros
+        let activeStoreId = localStorage.getItem('vidlytics_current_store_id') || localStorage.getItem('current_store_id');
+
+        if (!activeStoreId) {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data: userStore } = await supabase
+              .from('stores')
+              .select('id')
+              .eq('owner_id', user.id)
+              .limit(1)
+              .maybeSingle();
+
+            if (userStore) {
+              activeStoreId = userStore.id;
+            }
+          }
+        }
+
+        if (!activeStoreId) {
+          // Fallback global caso não encontre nas opções acima
+          const { data: firstStore } = await supabase
             .from('stores')
-            .select('storage_used_bytes, storage_limit_bytes, plan_id, subscription_status, trial_ends_at')
-            .eq('id', settings.store_id)
-            .single();
+            .select('id')
+            .limit(1)
+            .maybeSingle();
+
+          if (firstStore) {
+            activeStoreId = firstStore.id;
+          }
+        }
+
+        if (!activeStoreId) {
+          console.warn('[Billing] Nenhuma loja localizada para carregar faturamento.');
+          return;
+        }
+
+        setStoreId(activeStoreId);
+
+        // 2. Busca dados da loja e status oficial da assinatura
+        const { data: storeRow } = await supabase
+          .from('stores')
+          .select('storage_used_bytes, storage_limit_bytes, plan_id, subscription_status, trial_ends_at')
+          .eq('id', activeStoreId)
+          .single();
+
+        let currentPlanId = storeRow?.plan_id;
+
+        if (storeRow) {
+          setStorageUsedBytes(Number(storeRow.storage_used_bytes || 0));
+          if (storeRow.storage_limit_bytes) {
+            setStorageLimitBytes(Number(storeRow.storage_limit_bytes));
+          }
+          if (storeRow.subscription_status) {
+            setSubscriptionStatus(storeRow.subscription_status);
+          }
+          if (storeRow.trial_ends_at) {
+            setTrialEndsAt(storeRow.trial_ends_at);
+          }
+        }
 
           let currentPlanId = storeRow?.plan_id;
 
