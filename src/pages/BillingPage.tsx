@@ -195,6 +195,54 @@ if (supabase) {
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 p-6 pb-20">
+{/* Banner de Alerta para Assinaturas Canceladas ou Pendentes */}
+      {subscriptionStatus === 'canceled' && (
+        <div className="flex flex-col gap-3 rounded-2xl border border-red-200 bg-red-50/80 p-5 dark:border-red-950/60 dark:bg-red-950/30 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-500 text-white shadow-md shadow-red-500/20">
+              <XCircle size={22} />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-red-900 dark:text-red-300">Assinatura Cancelada</h3>
+              <p className="text-xs font-semibold text-red-700 dark:text-red-400">
+                Os widgets de vídeo estão pausados na sua loja virtual. Assine um plano para reativá-los imediatamente.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/plans')}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-red-600/20 transition-all hover:bg-red-700"
+          >
+            <Sparkles size={15} />
+            Reativar Assinatura
+          </button>
+        </div>
+      )}
+
+      {subscriptionStatus === 'past_due' && (
+        <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50/80 p-5 dark:border-amber-950/60 dark:bg-amber-950/30 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-md shadow-amber-500/20">
+              <AlertTriangle size={22} />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-amber-900 dark:text-amber-300">Pagamento Pendente</h3>
+              <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                Identificamos uma fatura pendente. Regularize o pagamento para evitar o bloqueio dos widgets.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/plans')}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-amber-600/20 transition-all hover:bg-amber-700"
+          >
+            Regularizar Pagamento
+          </button>
+        </div>
+      )}
+
       {/* Cabeçalho */}
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
@@ -220,26 +268,59 @@ if (supabase) {
           <div>
             <div className="flex items-center justify-between">
               <span className="rounded-full bg-blue-50 px-3 py-1 text-[10px] font-black uppercase text-[#0094EB] dark:bg-blue-950/40">
-                Plano Ativo
+                Plano Atual
               </span>
-              <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600">
-                <CheckCircle2 size={14} /> Ativo
-              </span>
+
+              {/* Badge Dinâmico de Status */}
+              {subscriptionStatus === 'active' && (
+                <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-600 dark:bg-emerald-950/40">
+                  <CheckCircle2 size={14} /> Ativo
+                </span>
+              )}
+              {subscriptionStatus === 'canceled' && (
+                <span className="flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-bold text-red-600 dark:bg-red-950/40">
+                  <XCircle size={14} /> Cancelada
+                </span>
+              )}
+              {subscriptionStatus === 'past_due' && (
+                <span className="flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-600 dark:bg-amber-950/40">
+                  <AlertTriangle size={14} /> Pendente
+                </span>
+              )}
+              {subscriptionStatus === 'trialing' && (
+                <span className="flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-[#0094EB] dark:bg-blue-950/40">
+                  <Clock size={14} /> Em Teste
+                </span>
+              )}
             </div>
+
             <h2 className="mt-4 text-2xl font-black text-slate-900 dark:text-white">
-              {plan?.name ? `Plano ${plan.name}` : 'Plano Pro'}
+              {plan?.name ? `Plano ${plan.name}` : 'Plano Iniciante'}
             </h2>
             <p className="mt-1 text-3xl font-black text-[#0094EB]">
-              R$ {plan?.price_cents ? (plan.price_cents / 100).toFixed(2).replace('.', ',') : '97,00'}
+              R$ {plan?.price_cents !== undefined ? (plan.price_cents / 100).toFixed(2).replace('.', ',') : '0,00'}
               <span className="text-xs font-bold text-slate-400">/mês</span>
             </p>
             <p className="mt-3 text-xs font-medium text-slate-500">
-              Renovação em:{' '}
-              <strong className="text-slate-700 dark:text-slate-300">
-                {subscription?.current_period_end
-                  ? new Date(subscription.current_period_end).toLocaleDateString('pt-BR')
-                  : 'Em 30 dias'}
-              </strong>
+              {subscriptionStatus === 'canceled' ? (
+                <span className="text-red-500 font-bold">Assinatura desativada</span>
+              ) : subscriptionStatus === 'trialing' ? (
+                <>
+                  Período de teste até:{' '}
+                  <strong className="text-slate-700 dark:text-slate-300">
+                    {trialEndsAt ? new Date(trialEndsAt).toLocaleDateString('pt-BR') : '14 dias'}
+                  </strong>
+                </>
+              ) : (
+                <>
+                  Renovação em:{' '}
+                  <strong className="text-slate-700 dark:text-slate-300">
+                    {subscription?.current_period_end
+                      ? new Date(subscription.current_period_end).toLocaleDateString('pt-BR')
+                      : 'Em 30 dias'}
+                  </strong>
+                </>
+              )}
             </p>
           </div>
 
