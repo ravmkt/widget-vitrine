@@ -181,7 +181,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </>
           )}
 
-          <main className="flex-1 p-4 md:p-8 animate-fade-in relative z-0">
+<main className="flex-1 p-4 md:p-8 animate-fade-in relative z-0">
             <div className="mx-auto max-w-7xl">
               {children}
             </div>
@@ -189,7 +189,6 @@ export function AppLayout({ children }: AppLayoutProps) {
           </main>
         </SidebarInset>
       </div>
-      <Toaster position="top-center" richColors duration={3000} />
     </SidebarProvider>
   );
 }
