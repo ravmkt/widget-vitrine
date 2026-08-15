@@ -18,7 +18,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [trialDaysRemaining, setTrialDaysRemaining] = useState<number | null>(null);
 
-  // Busca status de assinatura para controle do banner global
+  // Busca status de assinatura para controle do banner global (isolamento multi-tenant seguro e montagem única)
   useEffect(() => {
     const checkStoreSubscription = async () => {
       try {
@@ -30,15 +30,20 @@ export function AppLayout({ children }: AppLayoutProps) {
           localStorage.getItem('store_id');
 
         if (!activeStoreId) {
-          const { data: storeData } = await supabase
-            .from('stores')
-            .select('id')
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
+          const { data: userData } = await supabase.auth.getUser();
+          const user = userData?.user;
+          if (user) {
+            const { data: userStore } = await supabase
+              .from('stores')
+              .select('id')
+              .eq('owner_user_id', user.id)
+              .limit(1)
+              .maybeSingle();
 
-          if (storeData) {
-            activeStoreId = storeData.id;
+            if (userStore) {
+              activeStoreId = userStore.id;
+              localStorage.setItem('vidlytics_current_store_id', userStore.id);
+            }
           }
         }
 
@@ -66,7 +71,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     };
 
     checkStoreSubscription();
-  }, [location.pathname]);
+  }, []);
   // ═══════════════════════════════════════════════
   // 🌗 APLICA O TEMA SALVO AO CARREGAR QUALQUER PÁGINA
   // ═══════════════════════════════════════════════
