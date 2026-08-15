@@ -1385,16 +1385,16 @@ filteredFiles.map(file => (
                       </div>
                     </td>
 
-                    <td className="px-6 py-3.5 max-w-xs truncate">
+<td className="px-6 py-3.5 max-w-xs truncate">
                       <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate" title={file.name}>
                         {file.name}
                       </span>
                       <span className="text-[10px] font-bold text-[#0094EB] uppercase">
-                        {file.sizeInBytes === 0 && file.type === 'video' 
-                          ? 'Vídeo (URL Externa)' 
-                          : file.type === 'video' 
-                            ? 'Vídeo MP4 (Hospedado)' 
-                            : 'Imagem'}
+                        {file.type === 'image'
+                          ? 'Imagem (Hospedada)'
+                          : file.sizeInBytes === 0
+                            ? 'Vídeo (URL Externa)'
+                            : 'Vídeo MP4 (Hospedado)'}
                       </span>
                     </td>
 
