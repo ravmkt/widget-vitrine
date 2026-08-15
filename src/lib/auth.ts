@@ -94,6 +94,33 @@ export const createInitialTenantForUser = async ({
     console.warn('[Auth] Aviso ao vincular membro (fallback silencioso):', memberError);
   }
 
+  // 3.1. Cria as configurações padrão da nova loja no Supabase
+  const { error: settingsError } = await supabase
+    .from('store_settings')
+    .insert({
+      id: crypto.randomUUID(),
+      store_id: storeId,
+      store_name: storeName,
+      store_url: storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+      contact_email: email,
+      app_enabled: true,
+      stories_enabled: true,
+      carousel_enabled: true,
+      floating_widget_enabled: true,
+      widget_enabled: true,
+      open_product_new_tab: true,
+      autoplay: true,
+      muted_by_default: true,
+      show_video_controls: false,
+      timezone: 'America/Sao_Paulo',
+      language: 'pt-BR',
+      created_at: now,
+    });
+
+  if (settingsError) {
+    console.warn('[Auth] Aviso ao criar store_settings padrão:', settingsError);
+  }
+
   await db.usageCounters.save({
     id: crypto.randomUUID(),
     store_id: storeId,
