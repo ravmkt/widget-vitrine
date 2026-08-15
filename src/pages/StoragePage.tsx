@@ -509,7 +509,7 @@ const { data, error } = await supabase.functions.invoke('import-pinterest-video'
     fileInputRef.current?.click();
   };
 
-  // Processa o arquivo selecionado na janela
+// Processa o arquivo selecionado na janela
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -518,15 +518,15 @@ const { data, error } = await supabase.functions.invoke('import-pinterest-video'
       setUploading(true);
       showSuccess(`Enviando "${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)} MB)...`);
 
-      const settings = await db.getSettings();
-      if (!settings?.store_id) {
-        throw new Error('ID da loja não encontrado nas configurações.');
+      const activeId = await resolveActiveStoreId();
+      if (!activeId) {
+        throw new Error('ID da loja não encontrado. Recarregue a página.');
       }
 
       const isVideo = file.type.startsWith('video');
       const cleanFileName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
-      const safeStoragePath = `${settings.store_id}/${Date.now()}_${Math.random().toString(36).substring(2, 7)}_${cleanFileName}`;
-
+      const safeStoragePath = `${activeId}/${Date.now()}_${Math.random().toString(36).substring(2, 7)}_${cleanFileName}`;
+      
       let finalVideoUrl = '';
       let finalThumbUrl = '';
       let thumbnailSize = 0;
