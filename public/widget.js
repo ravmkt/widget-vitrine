@@ -1173,7 +1173,7 @@ product_card_price_size: toNumber(rcv('product_card_price_size', '12'), 12),
     });
   }
 
-  function getVideoUrl(video) {
+function getVideoUrl(video) {
     if (!video) return '';
     var rawUrl = firstDefined(
       video.video_url, video.videoUrl, video.url, video.source_url,
@@ -1184,9 +1184,9 @@ product_card_price_size: toNumber(rcv('product_card_price_size', '12'), 12),
     if (urlStr.indexOf('http://') === 0 || urlStr.indexOf('https://') === 0 || urlStr.indexOf('data:') === 0 || urlStr.indexOf('blob:') === 0) {
       return urlStr;
     }
-    // Garante a URL pública completa do Supabase Storage caso seja um caminho relativo
-    var baseUrl = supabaseUrl || 'https://wznvecurmisgoaijykbt.supabase.co';
-    return baseUrl.replace(/\/+$/, '') + '/storage/v1/object/public/videos/' + urlStr.replace(/^\/+/, '');
+    var cleanBase = String(supabaseUrl || 'https://wznvecurmisgoaijykbt.supabase.co').replace(/\/+$/, '');
+    var cleanPath = urlStr.replace(/^\/+/, '');
+    return cleanBase + '/storage/v1/object/public/videos/' + cleanPath;
   }
 
   function isDirectVideoUrl(url) {
