@@ -1294,7 +1294,7 @@ const payload = {
                   <tr key={file.id} className="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
                     <td className="px-6 py-3.5">
                       <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-slate-200 bg-slate-900 shadow-sm dark:border-slate-800 flex items-center justify-center shrink-0">
-                        {file.type === 'video' ? (
+{file.type === 'video' ? (
                           file.thumbnailUrl && !file.thumbnailUrl.includes('unsplash.com') && (file.thumbnailUrl.startsWith('http') || file.thumbnailUrl.startsWith('data:')) ? (
                             <img 
                               src={file.thumbnailUrl} 
@@ -1304,28 +1304,10 @@ const payload = {
                                 e.currentTarget.style.display = 'none';
                               }} 
                             />
-                          // trecho novo
                           ) : (
                             <video
                               src={file.fileUrl || undefined}
                               className="h-full w-full object-cover"
-                              preload="auto"
-                              controls
-                              autoPlay
-                              muted
-                              playsInline
-                              referrerPolicy="no-referrer"
-                              crossOrigin="anonymous"
-                              onError={(e) => {
-                                console.warn('Falha no streaming do vídeo:', e);
-                              }}
-                            />
-                          )
-                        ) : (
-                          <img 
-                            src={file.thumbnailUrl} 
-                            alt={file.name} 
-                            className="h-full w-full object-cover"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
                             }}
