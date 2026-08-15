@@ -1390,11 +1390,11 @@ filteredFiles.map(file => (
                         {file.name}
                       </span>
                       <span className="text-[10px] font-bold text-[#0094EB] uppercase">
-                        {file.sizeInBytes === 0 && file.type === 'video' 
-                          ? 'Vídeo (URL Externa)' 
-                          : file.type === 'video' 
-                            ? 'Vídeo MP4 (Hospedado)' 
-                            : 'Imagem'}
+                        {file.type === 'image'
+                          ? 'Imagem (Hospedada)'
+                          : file.sizeInBytes === 0
+                            ? 'Vídeo (URL Externa)'
+                            : 'Vídeo MP4 (Hospedado)'}
                       </span>
                     </td>
 
