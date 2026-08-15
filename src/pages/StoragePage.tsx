@@ -562,14 +562,23 @@ const { data, error } = await supabase.functions.invoke('import-pinterest-video'
 
 if (supabase) {
             const thumbStoragePath = `${activeId}/thumb_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
-            const { data: thumbUploadData, error: thumbErr } = await supabase.storage
-              .from('videos')
+            
+            // Tenta salvar primeiro no bucket store-assets (específico para imagens), com fallback para o bucket videos
+            let thumbRes = await supabase.storage
+              .from('store-assets')
               .upload(thumbStoragePath, thumbBlob, { contentType: 'image/jpeg', upsert: true });
 
-            if (!thumbErr && thumbUploadData?.path) {
-              const { data: thumbPublicUrl } = supabase.storage
+            if (thumbRes.error) {
+              thumbRes = await supabase.storage
                 .from('videos')
-                .getPublicUrl(thumbUploadData.path);
+                .upload(thumbStoragePath, thumbBlob, { contentType: 'image/jpeg', upsert: true });
+            }
+
+            if (!thumbRes.error && thumbRes.data?.path) {
+              const bucketName = thumbRes.data.path.includes('store-assets') ? 'store-assets' : 'videos';
+              const { data: thumbPublicUrl } = supabase.storage
+                .from(bucketName)
+                .getPublicUrl(thumbRes.data.path);
 
               finalThumbUrl = thumbPublicUrl.publicUrl;
             }
