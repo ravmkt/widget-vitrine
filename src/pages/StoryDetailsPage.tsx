@@ -488,17 +488,69 @@ const response = await fetch(
           <button type="button" onClick={() => setIsGalleryOpen(false)} className="rounded-full p-2 text-slate-500 hover:bg-slate-100"><X size={18} /></button>
         </div>
         <div className="max-h-[70vh] overflow-y-auto pr-1">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+<div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {allVideos.map((video) => {
               const selected = selectedVideoIds.includes(video.id);
               const posterUrl = getVideoPosterUrl(video);
+              const fileUrl = getVideoFileUrl(video);
+              const isPosterVideo = isVideoUrl(posterUrl) || (!posterUrl && Boolean(fileUrl));
+              const mediaSource = posterUrl || fileUrl;
+
               return (
-                <button key={video.id} type="button" onClick={() => handleToggleVideo(video.id)} className={cn('group relative aspect-[9/16] overflow-hidden rounded-2xl border-2 transition-all', selected ? 'border-[#0094EB] shadow-lg shadow-blue-100' : 'border-slate-200')}>
-                  {posterUrl ? <img src={posterUrl} alt={video.title || 'Vídeo'} className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400"><Film size={24} /></div>}
-                  <div className={cn('absolute inset-0 flex items-center justify-center transition-all', selected ? 'bg-[#0094EB]/20' : 'bg-black/10')}>
-                    {selected && <div className="rounded-full bg-[#0094EB] p-1 text-white"><CheckCircle2 size={16} /></div>}
+                <button
+                  key={video.id}
+                  type="button"
+                  onClick={() => handleToggleVideo(video.id)}
+                  className={cn(
+                    'group relative aspect-[9/16] overflow-hidden rounded-2xl border-2 bg-slate-900 transition-all text-left',
+                    selected ? 'border-[#0094EB] shadow-lg shadow-blue-100 ring-2 ring-[#0094EB]/30' : 'border-slate-200 hover:border-slate-300'
+                  )}
+                >
+                  {isPosterVideo ? (
+                    <video
+                      src={mediaSource}
+                      preload="metadata"
+                      muted
+                      playsInline
+                      className="h-full w-full object-cover pointer-events-none"
+                    />
+                  ) : posterUrl ? (
+                    <img
+                      src={posterUrl}
+                      alt={video.title || 'Vídeo'}
+                      className="h-full w-full object-cover pointer-events-none"
+                      onError={(e) => {
+                        if (fileUrl) {
+                          e.currentTarget.style.display = 'none';
+                          const fallbackVideo = e.currentTarget.nextElementSibling as HTMLVideoElement;
+                          if (fallbackVideo) fallbackVideo.style.display = 'block';
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400">
+                      <Film size={24} />
+                    </div>
+                  )}
+
+                  {/* Fallback de streaming invisível para caso a tag img falhe */}
+                  {fileUrl && !isPosterVideo && (
+                    <video
+                      src={fileUrl}
+                      preload="metadata"
+                      muted
+                      playsInline
+                      style={{ display: 'none' }}
+                      className="h-full w-full object-cover pointer-events-none"
+                    />
+                  )}
+
+                  <div className={cn('absolute inset-0 flex items-center justify-center transition-all pointer-events-none', selected ? 'bg-[#0094EB]/25' : 'bg-black/10 group-hover:bg-black/20')}>
+                    {selected && <div className="rounded-full bg-[#0094EB] p-1.5 text-white shadow-md"><CheckCircle2 size={16} /></div>}
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2"><p className="truncate text-[9px] font-black text-white">{video.title || 'Sem título'}</p></div>
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2.5 pointer-events-none">
+                    <p className="truncate text-[10px] font-black text-white">{video.title || 'Sem título'}</p>
+                  </div>
                 </button>
               );
             })}
