@@ -759,11 +759,11 @@ const payload = {
       if (activeStoreId) {
         if (supabase) {
           try {
-            const { data: vidsData, error: vidsError } = await supabase
+const { data: vidsData, error: vidsError } = await supabase
               .from('videos')
               .select(`
                 *,
-                products:product_id (id, name),
+                products:product_id (id, name, image_url, thumbnail_url, cover_url),
                 story_videos (
                   story_id,
                   stories:story_id (id, title)
