@@ -18,51 +18,64 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [trialDaysRemaining, setTrialDaysRemaining] = useState<number | null>(null);
 
-  // Busca status de assinatura para controle do banner global (isolamento multi-tenant seguro e montagem única)
+  // Busca status de assinatura para controle do banner global com reatividade e invalidação
   useEffect(() => {
     const checkStoreSubscription = async () => {
       try {
         if (!supabase) return;
+
+        const { data: userData } = await supabase.auth.getUser();
+        const user = userData?.user;
 
         let activeStoreId =
           localStorage.getItem('vidlytics_current_store_id') ||
           localStorage.getItem('current_store_id') ||
           localStorage.getItem('store_id');
 
-        if (!activeStoreId) {
-          const { data: userData } = await supabase.auth.getUser();
-          const user = userData?.user;
-          if (user) {
-            const { data: userStore } = await supabase
-              .from('stores')
-              .select('id')
-              .eq('owner_user_id', user.id)
-              .limit(1)
-              .maybeSingle();
+        if (user) {
+          const { data: userStore } = await supabase
+            .from('stores')
+            .select('id, subscription_status, trial_ends_at')
+            .eq('owner_user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
 
-            if (userStore) {
-              activeStoreId = userStore.id;
-              localStorage.setItem('vidlytics_current_store_id', userStore.id);
+          if (userStore) {
+            activeStoreId = userStore.id;
+            localStorage.setItem('vidlytics_current_store_id', userStore.id);
+            setSubscriptionStatus(userStore.subscription_status || 'trialing');
+
+            if (userStore.subscription_status === 'trialing' && userStore.trial_ends_at) {
+              const endsAt = new Date(userStore.trial_ends_at).getTime();
+              const now = new Date().getTime();
+              const diffDays = Math.ceil((endsAt - now) / (1000 * 60 * 60 * 24));
+              setTrialDaysRemaining(Math.max(0, diffDays));
+            } else {
+              setTrialDaysRemaining(null);
             }
+            return;
           }
         }
 
-        if (!activeStoreId) return;
+        if (activeStoreId) {
+          const { data: store } = await supabase
+            .from('stores')
+            .select('subscription_status, trial_ends_at')
+            .eq('id', activeStoreId)
+            .maybeSingle();
 
-        const { data: store } = await supabase
-          .from('stores')
-          .select('subscription_status, trial_ends_at')
-          .eq('id', activeStoreId)
-          .maybeSingle();
+          if (store) {
+            setSubscriptionStatus(store.subscription_status || 'trialing');
 
-        if (store) {
-          setSubscriptionStatus(store.subscription_status || 'trialing');
-
-          if (store.subscription_status === 'trialing' && store.trial_ends_at) {
-            const endsAt = new Date(store.trial_ends_at).getTime();
-            const now = new Date().getTime();
-            const diffDays = Math.ceil((endsAt - now) / (1000 * 60 * 60 * 24));
-            setTrialDaysRemaining(Math.max(0, diffDays));
+            if (store.subscription_status === 'trialing' && store.trial_ends_at) {
+              const endsAt = new Date(store.trial_ends_at).getTime();
+              const now = new Date().getTime();
+              const diffDays = Math.ceil((endsAt - now) / (1000 * 60 * 60 * 24));
+              setTrialDaysRemaining(Math.max(0, diffDays));
+            } else {
+              setTrialDaysRemaining(null);
+            }
           }
         }
       } catch (e) {
@@ -71,7 +84,16 @@ export function AppLayout({ children }: AppLayoutProps) {
     };
 
     checkStoreSubscription();
-  }, []);
+
+    const handleFocus = () => checkStoreSubscription();
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('storage', handleFocus);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('storage', handleFocus);
+    };
+  }, [location.pathname]);
   // ═══════════════════════════════════════════════
   // 🌗 APLICA O TEMA SALVO AO CARREGAR QUALQUER PÁGINA
   // ═══════════════════════════════════════════════
