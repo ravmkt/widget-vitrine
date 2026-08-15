@@ -90,6 +90,71 @@ export function AppLayout({ children }: AppLayoutProps) {
           <AppSidebar />
         </div>
         <SidebarInset className="flex flex-col flex-1 relative z-0 min-w-0">
+          {/* Banner Global de Trial / Status (exceto na página de billing e plans para evitar duplicidade visual) */}
+          {location.pathname !== '/billing' && location.pathname !== '/plans' && (
+            <>
+              {subscriptionStatus === 'trialing' && (
+                <div className="bg-gradient-to-r from-blue-600 to-[#0094EB] px-4 py-2.5 text-white shadow-sm">
+                  <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
+                    <div className="flex items-center gap-2">
+                      <Clock size={16} className="shrink-0 animate-pulse text-blue-100" />
+                      <span>
+                        {trialDaysRemaining !== null && trialDaysRemaining > 0
+                          ? `Você está no período de teste gratuito: restam ${trialDaysRemaining} ${trialDaysRemaining === 1 ? 'dia' : 'dias'}.`
+                          : 'Seu período de teste gratuito encerrou hoje.'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/plans')}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1 text-xs font-bold text-[#0094EB] shadow-sm transition hover:bg-blue-50"
+                    >
+                      <Sparkles size={13} />
+                      Fazer Upgrade
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {subscriptionStatus === 'canceled' && (
+                <div className="bg-red-600 px-4 py-2.5 text-white shadow-sm">
+                  <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
+                    <div className="flex items-center gap-2">
+                      <XCircle size={16} className="shrink-0 text-red-100" />
+                      <span>Sua assinatura está cancelada e os widgets estão pausados na sua loja.</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/plans')}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1 text-xs font-bold text-red-600 shadow-sm transition hover:bg-red-50"
+                    >
+                      <Sparkles size={13} />
+                      Reativar Assinatura
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {subscriptionStatus === 'past_due' && (
+                <div className="bg-amber-500 px-4 py-2.5 text-white shadow-sm">
+                  <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle size={16} className="shrink-0 text-amber-100" />
+                      <span>Identificamos uma fatura pendente. Regularize o pagamento para evitar o bloqueio dos vídeos.</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/billing')}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1 text-xs font-bold text-amber-700 shadow-sm transition hover:bg-amber-50"
+                    >
+                      Ver Faturas
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
           <main className="flex-1 p-4 md:p-8 animate-fade-in relative z-0">
             <div className="mx-auto max-w-7xl">
               {children}
