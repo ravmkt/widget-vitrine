@@ -318,6 +318,12 @@ export interface Store {
   active: boolean;
   platform?: string;
   owner_user_id?: string;
+  plan_id?: string;
+  subscription_status?: 'trialing' | 'active' | 'past_due' | 'canceled';
+  trial_ends_at?: string | null;
+  storage_used_bytes?: number;
+  storage_limit_bytes?: number;
+  asaas_customer_id?: string | null;
   created_at?: string;
 }
 
