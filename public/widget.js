@@ -372,11 +372,9 @@ function normalizeMediaUrl(url) {
     if (!value) return '';
     if (value.indexOf('http://') === 0 || value.indexOf('https://') === 0 || value.indexOf('data:') === 0 || value.indexOf('blob:') === 0) return value;
     if (value.indexOf('//') === 0) return window.location.protocol + value;
-    if (value.charAt(0) === '/' && supabaseUrl) return supabaseUrl + value;
-    if (supabaseUrl && value.indexOf('/') !== -1 && value.indexOf('.') !== -1) {
-      return supabaseUrl + '/storage/v1/object/public/videos/' + value;
-    }
-    return value;
+    var cleanBase = String(supabaseUrl || 'https://wznvecurmisgoaijykbt.supabase.co').replace(/\/+$/, '');
+    var cleanPath = value.replace(/^\/+/, '');
+    return cleanBase + '/storage/v1/object/public/videos/' + cleanPath;
   }
 
   function getStorageItem(key, fallback) {
