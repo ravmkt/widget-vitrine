@@ -634,79 +634,34 @@ export default function StoragePage() {
       setLoading(true);
       const loadedItems: StorageItem[] = [];
 
-      const realVideos = await db.videos.getAll();
-      if (Array.isArray(realVideos)) {
-        const sanitizeUrl = (rawUrl?: string) => {
-          if (!rawUrl) return '';
-          if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://') || rawUrl.startsWith('data:')) {
-            return rawUrl;
-          }
-          if (rawUrl.startsWith('blob:')) {
-            return '';
-          }
-          return `https://wznvecurmisgoaijykbt.supabase.co/storage/v1/object/public/videos/${rawUrl}`;
-        };
+      let activeStoreId =
+        localStorage.getItem('vidlytics_current_store_id') ||
+        localStorage.getItem('current_store_id') ||
+        localStorage.getItem('store_id');
 
-        realVideos.forEach((vid: any) => {
-          const validVideoUrl = sanitizeUrl(vid.video_url);
-          const validThumbUrl = sanitizeUrl(vid.thumbnail_url);
-          const finalMediaUrl = validVideoUrl || validThumbUrl;
+      if (!activeStoreId && supabase) {
+        const { data: userData } = await supabase.auth.getUser();
+        const user = userData?.user;
+        if (user) {
+          const { data: storeRow } = await supabase
+            .from('stores')
+            .select('id')
+            .eq('owner_user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
 
-          const videoUrlStr = String(finalMediaUrl || '').toLowerCase();
-          const isExplicitUrlType = vid.video_source_type === 'url' || vid.source_type === 'url';
-          const isHostedOnPlatform = videoUrlStr.includes('supabase');
-          const isExternalUrl = isExplicitUrlType || (!isHostedOnPlatform && videoUrlStr.startsWith('http'));
-
-          const videoBytes = isExternalUrl 
-            ? 0 
-            : (vid.file_size && Number(vid.file_size) > 0 
-                ? Number(vid.file_size) 
-                : 20971520);
-
-          const thumbnailBytes = vid.thumbnail_source_type === 'upload' && vid.thumbnail_file_size
-            ? Number(vid.thumbnail_file_size)
-            : 0;
-
-          const totalMediaBytes = videoBytes + thumbnailBytes;
-
-          const formattedDate = vid.created_at 
-            ? new Date(vid.created_at).toLocaleDateString('pt-BR') 
-            : 'Hoje';
-
-          loadedItems.push({
-            id: vid.id || String(Math.random()),
-            name: vid.title || `VIDEO_${vid.id?.slice(0, 6) || 'UPLOAD'}.mp4`,
-            type: 'video',
-            sizeInBytes: totalMediaBytes,
-            createdAt: formattedDate,
-            thumbnailUrl: validThumbUrl || finalMediaUrl,
-            fileUrl: finalMediaUrl,
-            productName: vid.product_name || vid.product?.title || undefined,
-            storyTitle: vid.story_title || vid.story?.title || undefined,
-            canDelete: true,
-          });
-        });
-      }
-
-const settings = await db.getSettings();
-      
-      // Busca os dados oficiais de cota sincronizados pela trigger no Supabase
-      if (settings?.store_id && supabase) {
-        const { data: storeRow } = await supabase
-          .from('stores')
-          .select('storage_used_bytes, storage_limit_bytes')
-          .eq('id', settings.store_id)
-          .single();
-
-        if (storeRow) {
-          if (storeRow.storage_used_bytes !== null && storeRow.storage_used_bytes !== undefined) {
-            setServerStorageUsedBytes(Number(storeRow.storage_used_bytes));
-          }
-          if (storeRow.storage_limit_bytes) {
-            setServerStorageLimitBytes(Number(storeRow.storage_limit_bytes));
+          if (storeRow) {
+            activeStoreId = storeRow.id;
           }
         }
       }
+
+      if (activeStoreId) {
+        setStoreId(activeStoreId);
+      }
+
+      const realVideos = activeStoreId ? await db.videos.getAll(activeStoreId) : [];
 
       if (settings?.logo_url) {
         const logoBytes = settings.logo_file_size && Number(settings.logo_file_size) > 0
