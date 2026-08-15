@@ -1062,11 +1062,17 @@ const ensureSupabaseStoreExists = async (storeId?: string) => {
     console.warn('Não foi possível buscar loja no localStorage:', error);
   }
 
+  const trialEndsDate = new Date();
+  trialEndsDate.setDate(trialEndsDate.getDate() + 7);
+
   const storeToInsert = sanitizeTablePayload('stores', {
     id: storeId,
     name: localStore?.name || 'Loja',
     url: localStore?.url || '',
     owner_user_id: user.id,
+    plan_id: (localStore as any)?.plan_id || 'c8c634e6-0641-4f5b-a826-4db837192c83',
+    subscription_status: (localStore as any)?.subscription_status || 'trialing',
+    trial_ends_at: (localStore as any)?.trial_ends_at || trialEndsDate.toISOString(),
   });
 
   const { error } = await supabase
