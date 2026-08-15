@@ -27,21 +27,22 @@ Deno.serve(async (req) => {
 
     const payload = await req.json();
     const event = payload.event;
-    const payment = payload.payment;
+    const payment = payload.payment || null;
+    const subEventData = payload.subscription || null;
 
-    if (!payment) {
+    if (!payment && !subEventData) {
       return new Response(
-        JSON.stringify({ message: "Payload sem dados de pagamento, ignorado." }),
+        JSON.stringify({ message: "Payload sem dados de pagamento ou assinatura, ignorado." }),
         { status: 200, headers: corsHeaders }
       );
     }
 
-    const asaasPaymentId = payment.id;
-    const asaasSubscriptionId = payment.subscription; // ID da assinatura no Asaas
-    const asaasCustomerId = payment.customer;
-    const storeId = payment.externalReference || null;
+    const asaasPaymentId = payment?.id || null;
+    const asaasSubscriptionId = payment?.subscription || subEventData?.id || null;
+    const asaasCustomerId = payment?.customer || subEventData?.customer || null;
+    const storeId = payment?.externalReference || subEventData?.externalReference || null;
 
-    console.log(`Webhook recebido: ${event} | Payment ID: ${asaasPaymentId} | Store: ${storeId}`);
+    console.log(`Webhook recebido: ${event} | Payment ID: ${asaasPaymentId} | Sub ID: ${asaasSubscriptionId} | Customer ID: ${asaasCustomerId} | Store: ${storeId}`);
 
     // 2. Conectar ao Supabase com service_role (bypassa RLS)
     const supabaseAdmin = createClient(
