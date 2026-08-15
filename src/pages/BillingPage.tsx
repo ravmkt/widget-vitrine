@@ -13,6 +13,8 @@ export function BillingPage() {
 
   // Estados de Assinatura & Plano
   const [storeId, setStoreId] = useState<string | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string>('trialing');
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<any>(null);
   const [plan, setPlan] = useState<any>(null);
   const [invoices, setInvoices] = useState<any[]>([]);
