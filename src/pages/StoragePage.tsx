@@ -1053,7 +1053,7 @@ const payload = {
               </div>
             )}
 
-            <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+<div className="h-3 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
               <div
                 className={cn('h-full rounded-full transition-all duration-500', progressColorClass)}
                 style={{ width: `${usedPercentage}%` }}
@@ -1063,7 +1063,6 @@ const payload = {
         );
       })()}
 
-// trecho novo
       {/* Seção de Vídeos Importados do Instagram (Exibido somente ao clicar na aba do Instagram) */}
       {connectedPlatforms.includes('instagram') && activePlatformTab === 'instagram' && (
         <div className="rounded-[1.5rem] border border-pink-500/20 bg-white p-6 shadow-sm dark:border-pink-900/30 dark:bg-slate-950 space-y-4 animate-in fade-in duration-300">
