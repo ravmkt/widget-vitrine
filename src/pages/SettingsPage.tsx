@@ -256,7 +256,7 @@ useEffect(() => {
     };
     fetchSettings();
   }, []);
-  
+
   // ── NOVO: Buscar setores e setor atual da loja ──
   useEffect(() => {
     const fetchSectors = async () => {
@@ -278,7 +278,7 @@ useEffect(() => {
             .from('stores')
             .select('sector_id')
             .eq('id', storeId)
-            .single();
+            .maybeSingle();
           if (store?.sector_id) setSelectedSectorId(store.sector_id);
         }
       } catch (e) {
