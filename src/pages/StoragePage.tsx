@@ -762,7 +762,7 @@ const payload = {
               .from('videos')
               .select(`
                 *,
-                products:product_id (id, name, title),
+                products:product_id (id, name),
                 story_videos (
                   story_id,
                   stories:story_id (id, title)
