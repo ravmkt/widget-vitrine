@@ -64,6 +64,8 @@ export function PlansPage() {
     targetPlan: any, 
     billingType: 'PIX' | 'BOLETO' | 'CREDIT_CARD' | 'UNDEFINED' = 'UNDEFINED'
   ) => {
+     console.log('🔥 handleSelectPlan CHAMADO', targetPlan.id); // <-- ADICIONE ESTA LINHA
+  if (!storeId || !supabase) return;
     if (!storeId || !supabase) return;
     if (targetPlan.id === currentPlanId) return;
 
