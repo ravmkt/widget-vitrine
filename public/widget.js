@@ -1175,10 +1175,18 @@ product_card_price_size: toNumber(rcv('product_card_price_size', '12'), 12),
 
   function getVideoUrl(video) {
     if (!video) return '';
-    return normalizeMediaUrl(firstDefined(
+    var rawUrl = firstDefined(
       video.video_url, video.videoUrl, video.url, video.source_url,
       video.sourceUrl, video.file_url, video.fileUrl, video.video, video.src, ''
-    ));
+    );
+    if (!rawUrl) return '';
+    var urlStr = String(rawUrl).trim();
+    if (urlStr.indexOf('http://') === 0 || urlStr.indexOf('https://') === 0 || urlStr.indexOf('data:') === 0 || urlStr.indexOf('blob:') === 0) {
+      return urlStr;
+    }
+    // Garante a URL pública completa do Supabase Storage caso seja um caminho relativo
+    var baseUrl = supabaseUrl || 'https://wznvecurmisgoaijykbt.supabase.co';
+    return baseUrl.replace(/\/+$/, '') + '/storage/v1/object/public/videos/' + urlStr.replace(/^\/+/, '');
   }
 
   function isDirectVideoUrl(url) {
