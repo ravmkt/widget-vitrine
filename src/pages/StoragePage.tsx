@@ -1446,7 +1446,7 @@ filteredFiles.map(file => (
                             referrerPolicy="no-referrer"
                             className="relative z-10 h-full w-full object-cover"
                             onError={(e) => {
-                              // Se o arquivo não existir ou falhar, oculta a tag quebrada e mostra o ícone de fundo
+                              // Se o link falhar ou der 404, oculta a tag quebrada e deixa o ícone limpo
                               e.currentTarget.style.display = 'none';
                             }}
                           />
@@ -1460,7 +1460,7 @@ filteredFiles.map(file => (
                           />
                         ) : null}
 
-                        {/* Ícones de Fundo/Overlay */}
+                        {/* Ícones de Fundo / Overlay */}
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                           {file.type === 'video' ? (
                             <div className="flex h-full w-full items-center justify-center bg-black/20 text-white">
