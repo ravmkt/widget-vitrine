@@ -273,10 +273,10 @@ export function AppSidebar() {
               )}
             >
               <span className="text-xs font-bold text-[#0F172A] dark:text-white truncate group-hover:text-[#0094EB] transition-colors">
-                {storeName || 'Admin'}
+                {storeName || 'Minha Loja'}
               </span>
               <span className="text-[10px] font-bold text-[#0094EB] uppercase tracking-wide">
-                Plano Pro
+                {planName}
               </span>
             </div>
           </Link>
