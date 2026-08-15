@@ -109,12 +109,28 @@ export const createInitialTenantForUser = async ({
 };
 
 export const getTenantForUser = async (userId: string) => {
-  const members = await db.storeMembers.getAll();
-  const member = members.find((item) => item.user_id === userId);
-  if (!member) return null;
+  if (!supabase) return null;
 
-  const stores = await db.stores.getAll();
-  return stores.find((store) => store.id === member.store_id) || null;
+  // Busca a loja diretamente pelo owner_user_id no Supabase
+  const { data: store } = await supabase
+    .from('stores')
+    .select('*')
+    .eq('owner_user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (store) return store;
+
+  // Fallback por store_members
+  const { data: member } = await supabase
+    .from('store_members')
+    .select('store_id, stores(*)')
+    .eq('user_id', userId)
+    .limit(1)
+    .maybeSingle();
+
+  return (member as any)?.stores || null;
 };
 
 export const resolveCurrentStoreId = async () => {
@@ -122,5 +138,12 @@ export const resolveCurrentStoreId = async () => {
   if (!user) return resolveStoreId();
 
   const store = await getTenantForUser(user.id);
-  return store?.id || resolveStoreId();
+  if (store?.id) {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem('vidlytics_current_store_id', store.id);
+    }
+    return store.id;
+  }
+
+  return resolveStoreId();
 };
