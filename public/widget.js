@@ -3533,7 +3533,6 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
     'will-change:transform !important;';
   track.style.transform = 'translateX(0px)';
   
-// trecho novo
   // Items renderizam completamente
   stories.forEach(function(story, storyIndex) {
     var videos = (story.videos || []).filter(Boolean);
