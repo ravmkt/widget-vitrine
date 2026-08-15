@@ -1,331 +1,226 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Produção: https://api.asaas.com/v3 | Sandbox: https://api-sandbox.asaas.com/v3
-const ASAAS_API_URL = Deno.env.get("ASAAS_API_URL") ?? "https://api.asaas.com/v3";
+const ASAAS_BASE_URL = Deno.env.get("ASAAS_BASE_URL") || "https://sandbox.asaas.com/api/v3";
+const ASAAS_API_KEY = Deno.env.get("ASAAS_API_KEY")!;
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    // ─────────────────────────────────────────────────────────
-    // 1. AUTENTICAÇÃO JWT MANUAL (verify_jwt = false por padrão)
-    // ─────────────────────────────────────────────────────────
+    // 1. Autenticar o usuário via JWT
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      console.warn("[create-asaas-subscription] Requisição sem token Bearer.");
+    if (!authHeader) {
       return new Response(
-        JSON.stringify({ error: "Não autorizado: token ausente." }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "UNAUTHORIZED", message: "Token de autenticação ausente." }),
+        { status: 401, headers: corsHeaders }
       );
     }
-    const token = authHeader.replace("Bearer ", "");
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
 
-    // Cliente com anon key APENAS para validar o JWT no servidor de Auth
-    const authClient = createClient(supabaseUrl, supabaseAnonKey);
-    const { data: userData, error: authError } = await authClient.auth.getUser(token);
-
-    if (authError || !userData?.user) {
-      console.error("[create-asaas-subscription] JWT inválido ou expirado:", authError?.message);
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser();
+    if (userError || !userData?.user) {
       return new Response(
-        JSON.stringify({ error: "Não autorizado: JWT inválido ou expirado." }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "UNAUTHORIZED", message: "Usuário não autenticado." }),
+        { status: 401, headers: corsHeaders }
       );
     }
 
     const user = userData.user;
-    const userId = user.id;
-    console.log("[create-asaas-subscription] Usuário autenticado:", userId);
 
-    // Cliente administrativo (service role)
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // 2. Ler o body da requisição
+    const { plan_id, store_id, billing_type } = await req.json();
 
-    // ─────────────────────────────────────────────────────────
-    // 2. PARÂMETROS DE ENTRADA
-    // ─────────────────────────────────────────────────────────
-    const { storeId, planId } = await req.json();
-
-    if (!storeId || !planId) {
+    if (!plan_id || !store_id) {
       return new Response(
-        JSON.stringify({ error: "Parâmetros obrigatórios ausentes: storeId e planId." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "INVALID_PAYLOAD", message: "plan_id e store_id são obrigatórios." }),
+        { status: 400, headers: corsHeaders }
       );
     }
 
-    // ─────────────────────────────────────────────────────────
-    // 3. VALIDAÇÃO DA LOJA E DO PLANO
-    // ─────────────────────────────────────────────────────────
-    const { data: storeRow, error: storeErr } = await supabase
-      .from("stores")
-      .select("id, name, owner_id")
-      .eq("id", storeId)
-      .single();
+    // 3. Cliente admin (service_role) para consultas privilegiadas
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
 
-    if (storeErr || !storeRow) {
-      console.error("[create-asaas-subscription] Loja não encontrada:", storeErr?.message);
-      return new Response(
-        JSON.stringify({ error: "Loja não encontrada." }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Garante que o usuário autenticado é o dono da loja (quando owner_id existe)
-    if (storeRow.owner_id && storeRow.owner_id !== userId) {
-      console.error("[create-asaas-subscription] Usuário não é dono da loja.");
-      return new Response(
-        JSON.stringify({ error: "Não autorizado: você não tem permissão sobre esta loja." }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const { data: planRow, error: planErr } = await supabase
+    // 4. Buscar o plano
+    const { data: plan, error: planError } = await supabaseAdmin
       .from("plans")
-      .select("id, name, price_cents")
-      .eq("id", planId)
+      .select("id, name, price_cents, billing_cycle")
+      .eq("id", plan_id)
       .single();
 
-    if (planErr || !planRow) {
-      console.error("[create-asaas-subscription] Plano não encontrado:", planErr?.message);
+    if (planError || !plan) {
       return new Response(
-        JSON.stringify({ error: "Plano não encontrado." }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "PLAN_NOT_FOUND", message: "Plano não encontrado." }),
+        { status: 404, headers: corsHeaders }
       );
     }
 
-    // ─────────────────────────────────────────────────────────
-    // 4. BUSCA HIERÁRQUICA DE DADOS DO CLIENTE:
-    //    billing_info (preferencial) → profiles (fallback)
-    // ─────────────────────────────────────────────────────────
-    const { data: billingInfo } = await supabase
+    // 5. Buscar dados fiscais: primeiro em billing_info, senão em profiles
+    let document: string | null = null;
+    let phone: string | null = null;
+    let name: string | null = null;
+    let email: string | null = user.email ?? null;
+
+    const { data: billingInfo } = await supabaseAdmin
       .from("billing_info")
-      .select("*")
-      .eq("store_id", storeId)
+      .select("document_number, phone, full_name")
+      .eq("store_id", store_id)
       .maybeSingle();
 
-    let customerName = billingInfo?.legal_name?.trim() || "";
-    let customerEmail = billingInfo?.email?.trim() || "";
-    let customerCpfCnpj = billingInfo?.cnpj_cpf?.trim() || "";
-    let customerPhone = billingInfo?.phone?.trim() || "";
-    const addressLine = billingInfo?.address?.trim() || "";
-    const addressNumber = billingInfo?.number?.trim() || "";
-    const complement = billingInfo?.complement?.trim() || "";
-    const neighborhood = billingInfo?.neighborhood?.trim() || "";
-    const city = billingInfo?.city?.trim() || "";
-    const state = billingInfo?.state?.trim() || "";
-    let postalCode = billingInfo?.cep?.trim() || "";
-
-    // Fallback: perfil do usuário autenticado
-    if (!customerName || !customerEmail) {
-      console.log("[create-asaas-subscription] billing_info incompleto. Usando fallback profiles:", userId);
-
-      const { data: profile } = await supabase
+    if (billingInfo?.document_number) {
+      document = billingInfo.document_number;
+      phone = billingInfo.phone;
+      name = billingInfo.full_name;
+    } else {
+      const { data: profile } = await supabaseAdmin
         .from("profiles")
-        .select("first_name, last_name, full_name, display_name")
-        .eq("id", userId)
+        .select("document_number, phone, full_name")
+        .eq("id", user.id)
         .maybeSingle();
 
-      const profileName = profile?.full_name?.trim() ||
-        profile?.display_name?.trim() ||
-        [profile?.first_name, profile?.last_name].filter(Boolean).join(" ").trim();
-
-      if (!customerName) customerName = profileName || user.user_metadata?.full_name || user.email || "Cliente Vidlytics";
-      if (!customerEmail) customerEmail = user.email || "";
+      document = profile?.document_number ?? null;
+      phone = profile?.phone ?? null;
+      name = profile?.full_name ?? null;
     }
 
-    if (!customerEmail) {
+    if (!document) {
       return new Response(
-        JSON.stringify({ error: "Não foi possível determinar o e-mail do cliente. Preencha os dados fiscais." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          error: "DADOS_FISCAIS_OBRIGATORIOS",
+          message: "Preencha seus dados de faturamento (CPF/CNPJ) antes de assinar um plano.",
+        }),
+        { status: 400, headers: corsHeaders }
       );
     }
 
-    // Sanitizações
-    const onlyDigits = (v: string) => v.replace(/\D/g, "");
-    customerCpfCnpj = onlyDigits(customerCpfCnpj);
-    customerPhone = onlyDigits(customerPhone);
-    postalCode = onlyDigits(postalCode);
+    // 6. Buscar ou criar o customer no Asaas
+    const { data: storeRow } = await supabaseAdmin
+      .from("stores")
+      .select("asaas_customer_id")
+      .eq("id", store_id)
+      .single();
 
-    console.log("[create-asaas-subscription] Dados do cliente resolvidos:", {
-      nome: customerName,
-      email: customerEmail,
-      doc: customerCpfCnpj ? "presente" : "ausente",
-      origem: billingInfo ? "billing_info" : "profiles",
-    });
+    let asaasCustomerId = storeRow?.asaas_customer_id;
 
-    // ─────────────────────────────────────────────────────────
-    // 5. ASAAS: LOCALIZA OU CRIA O CUSTOMER
-    // ─────────────────────────────────────────────────────────
-    const asaasApiKey = Deno.env.get("ASAAS_API_KEY") ?? "";
-    if (!asaasApiKey) {
-      console.error("[create-asaas-subscription] Secret ASAAS_API_KEY não configurado.");
-      return new Response(
-        JSON.stringify({ error: "Gateway de pagamento não configurado (ASAAS_API_KEY)." }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const asaasHeaders = {
-      "Content-Type": "application/json",
-      access_token: asaasApiKey,
-    };
-
-    let asaasCustomerId = "";
-
-    // 5.1 Tenta reutilizar customer já cadastrado pelo documento
-    if (customerCpfCnpj) {
-      const findResp = await fetch(
-        `${ASAAS_API_URL}/customers?cpfCnpj=${customerCpfCnpj}`,
-        { headers: asaasHeaders }
-      );
-      const findData = await findResp.json();
-      if (findResp.ok && findData?.data?.length > 0) {
-        asaasCustomerId = findData.data[0].id;
-        console.log("[create-asaas-subscription] Customer existente reutilizado:", asaasCustomerId);
-      }
-    }
-
-    // 5.2 Cria novo customer quando necessário
     if (!asaasCustomerId) {
-      const customerPayload: Record<string, string> = {
-        name: customerName,
-        email: customerEmail,
-      };
-      if (customerCpfCnpj) customerPayload.cpfCnpj = customerCpfCnpj;
-      if (customerPhone) customerPayload.mobilePhone = customerPhone;
-      if (postalCode) customerPayload.postalCode = postalCode;
-      if (addressLine) customerPayload.address = addressLine;
-      if (addressNumber) customerPayload.addressNumber = addressNumber;
-      if (complement) customerPayload.complement = complement;
-      if (neighborhood) customerPayload.province = neighborhood;
-      if (city) customerPayload.city = city;
-
-      const createResp = await fetch(`${ASAAS_API_URL}/customers`, {
+      const customerResponse = await fetch(`${ASAAS_BASE_URL}/customers`, {
         method: "POST",
-        headers: asaasHeaders,
-        body: JSON.stringify(customerPayload),
+        headers: {
+          "Content-Type": "application/json",
+          access_token: ASAAS_API_KEY,
+        },
+        body: JSON.stringify({
+          name: name || email,
+          email,
+          cpfCnpj: document,
+          phone: phone || undefined,
+        }),
       });
-      const createData = await createResp.json();
 
-      if (!createResp.ok || !createData?.id) {
-        console.error("[create-asaas-subscription] Falha ao criar customer no Asaas:", createData);
-        throw new Error(createData?.errors?.[0]?.description || "Falha ao cadastrar cliente no gateway.");
+      const customerData = await customerResponse.json();
+
+      if (!customerResponse.ok) {
+        console.error("Erro ao criar customer no Asaas:", customerData);
+        return new Response(
+          JSON.stringify({ error: "ASAAS_CUSTOMER_ERROR", message: "Erro ao criar cliente no Asaas.", details: customerData }),
+          { status: 400, headers: corsHeaders }
+        );
       }
 
-      asaasCustomerId = createData.id;
-      console.log("[create-asaas-subscription] Customer criado no Asaas:", asaasCustomerId);
+      asaasCustomerId = customerData.id;
+
+      await supabaseAdmin
+        .from("stores")
+        .update({ asaas_customer_id: asaasCustomerId })
+        .eq("id", store_id);
     }
 
-    // ─────────────────────────────────────────────────────────
-    // 6. ASAAS: CRIA A ASSINATURA MENSAL
-    // ─────────────────────────────────────────────────────────
-    const todayBR = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+    // 7. Criar a assinatura no Asaas
+    const cycle = plan.billing_cycle === "yearly" ? "YEARLY" : "MONTHLY";
 
-    const subResp = await fetch(`${ASAAS_API_URL}/subscriptions`, {
+    const subscriptionResponse = await fetch(`${ASAAS_BASE_URL}/subscriptions`, {
       method: "POST",
-      headers: asaasHeaders,
+      headers: {
+        "Content-Type": "application/json",
+        access_token: ASAAS_API_KEY,
+      },
       body: JSON.stringify({
         customer: asaasCustomerId,
-        billingType: "UNDEFINED", // Cliente escolhe PIX, boleto ou cartão
-        value: planRow.price_cents / 100,
-        cycle: "MONTHLY",
-        description: `Vidlytics - Plano ${planRow.name}`,
-        nextDueDate: todayBR,
+        billingType: billing_type || "UNDEFINED",
+        value: plan.price_cents / 100,
+        nextDueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        cycle,
+        description: `Assinatura ${plan.name} - Vidlytics`,
       }),
     });
-    const subData = await subResp.json();
 
-    if (!subResp.ok || !subData?.id) {
-      console.error("[create-asaas-subscription] Falha ao criar assinatura no Asaas:", subData);
-      throw new Error(subData?.errors?.[0]?.description || "Falha ao criar assinatura no gateway.");
-    }
+    const subscriptionData = await subscriptionResponse.json();
 
-    console.log("[create-asaas-subscription] Assinatura Asaas criada:", subData.id);
-
-    // ─────────────────────────────────────────────────────────
-    // 7. BUSCA A COBRANÇA INICIAL (PIX / BOLETO / LINK)
-    // ─────────────────────────────────────────────────────────
-    let firstCharge: Record<string, any> | null = null;
-    try {
-      const chargeResp = await fetch(
-        `${ASAAS_API_URL}/payments?subscription=${subData.id}&limit=1`,
-        { headers: asaasHeaders }
+    if (!subscriptionResponse.ok) {
+      console.error("Erro ao criar subscription no Asaas:", subscriptionData);
+      return new Response(
+        JSON.stringify({ error: "ASAAS_SUBSCRIPTION_ERROR", message: "Erro ao criar assinatura no Asaas.", details: subscriptionData }),
+        { status: 400, headers: corsHeaders }
       );
-      const chargeData = await chargeResp.json();
-      if (chargeResp.ok && chargeData?.data?.length > 0) {
-        const c = chargeData.data[0];
-        firstCharge = {
-          id: c.id,
-          value: c.value,
-          billingType: c.billingType,
-          status: c.status,
-          dueDate: c.dueDate,
-          invoiceUrl: c.invoiceUrl,
-          bankSlipUrl: c.bankSlipUrl ?? null,
-          pixQrCodeUrl: (c as any).pixQrCode?.qrCodeImageUrl ?? null,
-          pixCopyPaste: (c as any).pixQrCode?.payload ?? null,
-        };
-      }
-    } catch (chargeErr) {
-      console.warn("[create-asaas-subscription] Cobrança inicial ainda não disponível:", chargeErr);
     }
 
-    // ─────────────────────────────────────────────────────────
-    // 8. PERSISTÊNCIA NO SUPABASE
-    // ─────────────────────────────────────────────────────────
-    const periodStart = new Date();
-    const periodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    // 8. Salvar a subscription local (histórico preservado via insert)
+    const { data: newSubscription, error: insertError } = await supabaseAdmin
+      .from("subscriptions")
+      .insert({
+        store_id,
+        plan_id,
+        asaas_subscription_id: subscriptionData.id,
+        status: "pending",
+        is_current: false, // vira "true" somente após confirmação de pagamento via webhook
+      })
+      .select()
+      .single();
 
-    const { error: upsertErr } = await supabase.from("subscriptions").upsert({
-      store_id: storeId,
-      plan_id: planRow.id,
-      status: "active",
-      is_current: true,
-      billing_cycle: "monthly",
-      billing_provider: "asaas",
-      asaas_customer_id: asaasCustomerId,
-      asaas_subscription_id: subData.id,
-      current_period_start: periodStart.toISOString(),
-      current_period_end: periodEnd.toISOString(),
-      updated_at: periodStart.toISOString(),
-    });
-
-    if (upsertErr) {
-      console.error("[create-asaas-subscription] Erro ao gravar assinatura no banco:", upsertErr);
-      throw new Error("Assinatura criada no gateway, mas falhou ao registrar no banco.");
+    if (insertError) {
+      console.error("Erro ao salvar subscription local:", insertError);
     }
 
-    console.log("[create-asaas-subscription] Fluxo concluído com sucesso.");
+    // 9. Buscar a primeira invoice gerada para obter a invoice_url
+    let invoiceUrl = subscriptionData.invoiceUrl || null;
 
-    // ─────────────────────────────────────────────────────────
-    // 9. RESPOSTA FINAL
-    // ─────────────────────────────────────────────────────────
+    if (!invoiceUrl) {
+      const paymentsResponse = await fetch(
+        `${ASAAS_BASE_URL}/payments?subscription=${subscriptionData.id}`,
+        { headers: { access_token: ASAAS_API_KEY } }
+      );
+      const paymentsData = await paymentsResponse.json();
+      invoiceUrl = paymentsData?.data?.[0]?.invoiceUrl || null;
+    }
+
     return new Response(
       JSON.stringify({
-        success: true,
-        subscriptionId: subData.id,
-        customerId: asaasCustomerId,
-        plan: { id: planRow.id, name: planRow.name, value: planRow.price_cents / 100 },
-        firstCharge,
+        message: "Assinatura criada com sucesso.",
+        subscription_id: newSubscription?.id,
+        asaas_subscription_id: subscriptionData.id,
+        invoice_url: invoiceUrl,
       }),
-      { status: 201, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: corsHeaders }
     );
-  } catch (error: any) {
-    console.error("[create-asaas-subscription] Erro inesperado:", error);
+  } catch (err) {
+    console.error("Erro inesperado:", err);
     return new Response(
-      JSON.stringify({ error: error.message || "Erro interno de servidor." }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: "INTERNAL_ERROR", message: "Erro interno ao processar assinatura.", details: String(err) }),
+      { status: 500, headers: corsHeaders }
     );
   }
 });
