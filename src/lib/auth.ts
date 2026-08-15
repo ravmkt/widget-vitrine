@@ -80,13 +80,19 @@ export const createInitialTenantForUser = async ({
   });
 
   // 3. Registra associação de membro owner
-  await db.storeMembers.save({
-    id: crypto.randomUUID(),
-    store_id: storeId,
-    user_id: userId,
-    role: 'owner',
-    created_at: now,
-  });
+  const { error: memberError } = await supabase
+    .from('store_members')
+    .insert({
+      id: crypto.randomUUID(),
+      store_id: storeId,
+      user_id: userId,
+      role: 'owner',
+      created_at: now,
+    });
+
+  if (memberError) {
+    console.warn('[Auth] Aviso ao vincular membro (fallback silencioso):', memberError);
+  }
 
   // 4. Cria contadores de consumo iniciais
   await db.usageCounters.save({
