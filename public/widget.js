@@ -4572,11 +4572,15 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
   function isStoreBlocked(store) {
     if (!store) return false;
     var status = String(store.subscription_status || '').toLowerCase().trim();
-    if (status === 'canceled' || status === 'past_due') {
+    if (status === 'canceled' || status === 'past_due' || status === 'unpaid') {
       return true;
     }
-    if (status === 'trialing' && store.trial_ends_at) {
-      return new Date(store.trial_ends_at) < new Date();
+    if (status === 'trialing') {
+      if (!store.trial_ends_at) return true;
+      return new Date(store.trial_ends_at).getTime() <= Date.now();
+    }
+    if (status !== 'active') {
+      return true; // Fail-closed: bloqueia qualquer status não autorizado
     }
     return false;
   }
