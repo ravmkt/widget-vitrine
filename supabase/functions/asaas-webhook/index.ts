@@ -86,15 +86,76 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 5. Buscar a subscription local vinculada ao asaas_subscription_id
-    const { data: subscription } = await supabaseAdmin
-      .from("subscriptions")
-      .select("id, store_id, plan_id, status")
-      .eq("asaas_subscription_id", asaasSubscriptionId)
-      .maybeSingle();
+    // 5. Buscar a subscription local vinculada ao asaas_subscription_id com fallback por store_id
+    let subscription: any = null;
+
+    if (asaasSubscriptionId) {
+      const { data: subById } = await supabaseAdmin
+        .from("subscriptions")
+        .select("id, store_id, plan_id, status")
+        .eq("asaas_subscription_id", asaasSubscriptionId)
+        .maybeSingle();
+      
+      subscription = subById;
+    }
+
+    // Fallback: se não encontrou pelo ID do Asaas, busca pela loja via externalReference
+    const storeId = payment.externalReference;
+    if (!subscription && storeId) {
+      console.log(`[WEBHOOK] Buscando fallback para store_id: ${storeId}`);
+      
+      const { data: subByStore } = await supabaseAdmin
+        .from("subscriptions")
+        .select("id, store_id, plan_id, status")
+        .eq("store_id", storeId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (subByStore) {
+        subscription = subByStore;
+        // Salva o asaas_subscription_id para os próximos webhooks
+        if (asaasSubscriptionId) {
+          await supabaseAdmin
+            .from("subscriptions")
+            .update({ 
+              asaas_subscription_id: asaasSubscriptionId,
+              asaas_customer_id: asaasCustomerId 
+            })
+            .eq("id", subscription.id);
+        }
+      }
+    }
+
+    // Se ainda não encontrou nenhuma subscription, cria uma nova para a loja
+    if (!subscription && storeId) {
+      // Descobre o plano Pro pelo valor ou nome
+      const { data: planPro } = await supabaseAdmin
+        .from("plans")
+        .select("id")
+        .eq("price_cents", Math.round((payment.value || 0) * 100))
+        .maybeSingle();
+
+      const targetPlanId = planPro?.id || "4b5d747e-af5c-46e9-a6aa-0682cc253110";
+
+      const { data: createdSub } = await supabaseAdmin
+        .from("subscriptions")
+        .insert({
+          store_id: storeId,
+          plan_id: targetPlanId,
+          asaas_subscription_id: asaasSubscriptionId,
+          asaas_customer_id: asaasCustomerId,
+          status: "pending",
+          is_current: false,
+        })
+        .select("id, store_id, plan_id, status")
+        .single();
+
+      subscription = createdSub;
+    }
 
     if (!subscription) {
-      console.warn("Nenhuma subscription local encontrada para:", asaasSubscriptionId);
+      console.warn("Nenhuma subscription encontrada nem criada para:", asaasSubscriptionId);
       return new Response(
         JSON.stringify({ message: "Invoice atualizada, subscription não encontrada." }),
         { status: 200, headers: corsHeaders }
