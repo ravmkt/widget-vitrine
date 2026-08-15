@@ -3539,7 +3539,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
     'will-change:transform !important;';
   track.style.transform = 'translateX(0px)';
   
-// Items renderizam completamente
+// Items renderizam completamente com suporte robusto a vídeo e imagem
   stories.forEach(function(story, storyIndex) {
     var videos = (story.videos || []).filter(Boolean);
     videos.forEach(function(video, videoIndex) {
@@ -3599,7 +3599,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
 
         var isDirectVideo = isDirectVideoUrl(effectiveMediaUrl);
 
-if (isDirectVideo) {
+        if (isDirectVideo) {
           var previewVideo = document.createElement('video');
           previewVideo.src = effectiveMediaUrl;
           previewVideo.preload = 'auto';
@@ -3617,7 +3617,6 @@ if (isDirectVideo) {
             '-webkit-backface-visibility:hidden !important;' +
             'background:#000 !important;';
 
-          // Força a decodificação e pintura do frame 0.1 na GPU do navegador
           previewVideo.addEventListener('loadeddata', function () {
             try {
               previewVideo.currentTime = 0.1;
@@ -3625,7 +3624,7 @@ if (isDirectVideo) {
           });
 
           innerMask.appendChild(previewVideo);
-        }
+        } else {
           var img = document.createElement('img');
           img.src = effectiveMediaUrl;
           img.alt = story.title || 'Story';
@@ -3641,8 +3640,7 @@ if (isDirectVideo) {
             if (rawVideoUrl && rawVideoUrl !== effectiveMediaUrl) {
               img.style.display = 'none';
               var fallbackVid = document.createElement('video');
-              var fallbackSrc = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
-              fallbackVid.src = fallbackSrc;
+              fallbackVid.src = rawVideoUrl;
               fallbackVid.preload = 'auto';
               fallbackVid.muted = true;
               fallbackVid.playsInline = true;
@@ -3713,7 +3711,6 @@ if (isDirectVideo) {
 
       item.appendChild(videoCard);
 
-// trecho novo para o card de produto otimizado no widget.js (sem botão)
       if (cfg.showProduct) {
         var videoProductId = video.product_id || video.productId || null;
         var productData = videoProductId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
@@ -3824,7 +3821,8 @@ if (isDirectVideo) {
           item.appendChild(prodCard);
         }
       }
-            track.appendChild(item);
+
+      track.appendChild(item);
     });
   });
       
