@@ -3599,11 +3599,25 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
 
         var isDirectVideo = isDirectVideoUrl(effectiveMediaUrl);
 
+function primeVideoFrame(vidEl) {
+          if (!vidEl) return;
+          var playPromise = vidEl.play();
+          if (playPromise !== undefined) {
+            playPromise.then(function() {
+              vidEl.pause();
+              try {
+                vidEl.currentTime = 0.001;
+              } catch (e) {}
+            }).catch(function() {});
+          }
+        }
+
         if (isDirectVideo) {
           var previewVideo = document.createElement('video');
           previewVideo.src = effectiveMediaUrl;
           previewVideo.preload = 'auto';
           previewVideo.muted = true;
+          previewVideo.defaultMuted = true;
           previewVideo.playsInline = true;
           previewVideo.setAttribute('playsinline', '');
           previewVideo.setAttribute('webkit-playsinline', '');
@@ -3617,11 +3631,8 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             '-webkit-backface-visibility:hidden !important;' +
             'background:#000 !important;';
 
-          previewVideo.addEventListener('loadeddata', function () {
-            try {
-              previewVideo.currentTime = 0.1;
-            } catch (e) {}
-          });
+          previewVideo.addEventListener('loadeddata', function () { primeVideoFrame(previewVideo); }, { once: true });
+          previewVideo.addEventListener('canplay', function () { primeVideoFrame(previewVideo); }, { once: true });
 
           innerMask.appendChild(previewVideo);
         } else {
@@ -3643,6 +3654,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
               fallbackVid.src = rawVideoUrl;
               fallbackVid.preload = 'auto';
               fallbackVid.muted = true;
+              fallbackVid.defaultMuted = true;
               fallbackVid.playsInline = true;
               fallbackVid.setAttribute('playsinline', '');
               fallbackVid.setAttribute('webkit-playsinline', '');
@@ -3655,6 +3667,10 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
                 'border-radius:' + innerRadiusCss + ' !important;' +
                 '-webkit-backface-visibility:hidden !important;' +
                 'background:#000 !important;';
+
+              fallbackVid.addEventListener('loadeddata', function () { primeVideoFrame(fallbackVid); }, { once: true });
+              fallbackVid.addEventListener('canplay', function () { primeVideoFrame(fallbackVid); }, { once: true });
+
               innerMask.appendChild(fallbackVid);
             }
           };
