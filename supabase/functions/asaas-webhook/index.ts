@@ -187,54 +187,113 @@ Deno.serve(async (req) => {
     switch (event) {
       case "PAYMENT_RECEIVED":
       case "PAYMENT_CONFIRMED": {
-        await supabaseAdmin
-          .from("subscriptions")
-          .update({ is_current: false })
-          .eq("store_id", subscription.store_id)
-          .eq("is_current", true)
-          .neq("id", subscription.id);
-
-        await supabaseAdmin
-          .from("subscriptions")
-          .update({
-            status: "active",
-            is_current: true,
-            asaas_subscription_id: asaasSubscriptionId || undefined,
-            asaas_customer_id: asaasCustomerId || undefined,
-          })
-          .eq("id", subscription.id);
-
-        if (subscription.plan_id) {
+        if (subscription?.store_id) {
           await supabaseAdmin
-            .from("stores")
-            .update({ plan_id: subscription.plan_id })
-            .eq("id", subscription.store_id);
+            .from("subscriptions")
+            .update({ is_current: false })
+            .eq("store_id", subscription.store_id)
+            .eq("is_current", true)
+            .neq("id", subscription.id);
         }
 
-        console.log(`Subscription ${subscription.id} e Store ${subscription.store_id} ativadas com sucesso.`);
+        if (subscription?.id) {
+          await supabaseAdmin
+            .from("subscriptions")
+            .update({
+              status: "active",
+              is_current: true,
+              asaas_subscription_id: asaasSubscriptionId || undefined,
+              asaas_customer_id: asaasCustomerId || undefined,
+            })
+            .eq("id", subscription.id);
+        }
+
+        const activePlanId = resolvedPlanId || subscription?.plan_id;
+        const targetStoreId = subscription?.store_id || storeId;
+
+        if (targetStoreId && activePlanId) {
+          await supabaseAdmin
+            .from("stores")
+            .update({
+              plan_id: activePlanId,
+              subscription_status: "active",
+              trial_ends_at: null,
+            })
+            .eq("id", targetStoreId);
+        }
+
+        console.log(`Subscription ${subscription?.id} e Store ${targetStoreId} ativadas com sucesso.`);
         break;
       }
 
       case "PAYMENT_OVERDUE": {
-        await supabaseAdmin
-          .from("subscriptions")
-          .update({ status: "past_due" })
-          .eq("id", subscription.id);
+        if (subscription?.id) {
+          await supabaseAdmin
+            .from("subscriptions")
+            .update({ status: "past_due" })
+            .eq("id", subscription.id);
+        }
 
-        console.log(`Subscription ${subscription.id} marcada como past_due.`);
+        const targetStoreId = subscription?.store_id || storeId;
+        if (targetStoreId) {
+          await supabaseAdmin
+            .from("stores")
+            .update({ subscription_status: "past_due" })
+            .eq("id", targetStoreId);
+        }
         break;
       }
 
+      case "SUBSCRIPTION_DELETED":
+      case "SUBSCRIPTION_INACTIVATED":
       case "PAYMENT_DELETED":
       case "PAYMENT_REFUNDED": {
-        await supabaseAdmin
-          .from("subscriptions")
-          .update({ status: "canceled", is_current: false })
-          .eq("id", subscription.id);
+        let targetStoreId = subscription?.store_id || storeId;
 
-        console.log(`Subscription ${subscription.id} cancelada.`);
+        // Fallback defensivo por Customer ID
+        if (!targetStoreId && asaasCustomerId) {
+          const { data: storeByCustomer } = await supabaseAdmin
+            .from("stores")
+            .select("id")
+            .eq("asaas_customer_id", asaasCustomerId)
+            .maybeSingle();
+
+          if (storeByCustomer) {
+            targetStoreId = storeByCustomer.id;
+          }
+        }
+
+        // Desativa assinaturas locais
+        if (targetStoreId) {
+          await supabaseAdmin
+            .from("subscriptions")
+            .update({ status: "canceled", is_current: false })
+            .eq("store_id", targetStoreId);
+        } else if (subscription?.id) {
+          await supabaseAdmin
+            .from("subscriptions")
+            .update({ status: "canceled", is_current: false })
+            .eq("id", subscription.id);
+        }
+
+        // Rebaixa o plano da loja para o Plano Iniciante e marca como canceled
+        if (targetStoreId) {
+          await supabaseAdmin
+            .from("stores")
+            .update({
+              plan_id: PLANO_INICIANTE_ID,
+              subscription_status: "canceled",
+            })
+            .eq("id", targetStoreId);
+
+          console.log(`[WEBHOOK] Store ${targetStoreId} rebaixada para o Plano Iniciante (subscription_status: canceled).`);
+        }
         break;
       }
+
+      default:
+        console.log(`Evento ${event} recebido mas sem ação de ciclo de vida definida.`);
+    }
 
       default:
         console.log(`Evento ${event} recebido mas sem ação de ciclo de vida definida.`);
