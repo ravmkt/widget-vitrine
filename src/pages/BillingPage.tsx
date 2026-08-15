@@ -65,19 +65,25 @@ export function BillingPage() {
     const loadBillingData = async () => {
       try {
         setLoading(true);
-        if (!supabase) return;
+        if (!supabase) {
+          console.error('[Billing] Cliente Supabase não inicializado.');
+          return;
+        }
 
-        // 1. Resolve o store_id da loja ativa com fallbacks seguros
-        let activeStoreId = localStorage.getItem('vidlytics_current_store_id') || localStorage.getItem('current_store_id');
+        // 1. Resolve o store_id da loja ativa
+        let activeStoreId = localStorage.getItem('vidlytics_current_store_id') || 
+                            localStorage.getItem('current_store_id') || 
+                            localStorage.getItem('store_id');
 
         if (!activeStoreId) {
           const { data: userData } = await supabase.auth.getUser();
           const user = userData?.user;
           if (user) {
+            // Tenta buscar por user_id ou owner_id
             const { data: userStore } = await supabase
               .from('stores')
               .select('id')
-              .eq('owner_id', user.id)
+              .or(`user_id.eq.${user.id},owner_id.eq.${user.id}`)
               .limit(1)
               .maybeSingle();
 
@@ -107,11 +113,15 @@ export function BillingPage() {
         setStoreId(activeStoreId);
 
         // 2. Busca dados da loja e status oficial da assinatura
-        const { data: storeRow } = await supabase
+        const { data: storeRow, error: storeErr } = await supabase
           .from('stores')
           .select('storage_used_bytes, storage_limit_bytes, plan_id, subscription_status, trial_ends_at')
           .eq('id', activeStoreId)
           .single();
+
+        if (storeErr) {
+          console.error('[Billing] Erro ao buscar loja:', storeErr);
+        }
 
         const currentPlanId = storeRow?.plan_id;
 
