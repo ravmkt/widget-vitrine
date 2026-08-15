@@ -1,4 +1,4 @@
-import StoriesWidgetPage from '@/pages/StoriesWidgetPage';
+﻿import StoriesWidgetPage from '@/pages/StoriesWidgetPage';
 import StoryDetailsPage from '@/pages/StoryDetailsPage';
 import VideoPerformancePage from '@/pages/VideoPerformancePage';
 import React, { useEffect, useState } from "react";
@@ -29,9 +29,10 @@ import StoragePage from "@/pages/StoragePage";
 import { BillingPage } from "@/pages/BillingPage";
 import { PlansPage } from "@/pages/PlansPage";
 import InstagramCallback from "@/pages/auth/InstagramCallback";
+import { Toaster } from "sonner";
 import StoryPreviewPage from "@/pages/StoryPreviewPage";
 
-// ── Protege rotas que exigem login ──
+// â”€â”€ Protege rotas que exigem login â”€â”€
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
 
@@ -50,7 +51,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// ── Redireciona usuário logado para o dashboard ──
+// â”€â”€ Redireciona usuÃ¡rio logado para o dashboard â”€â”€
 const GuestRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
 
@@ -69,7 +70,7 @@ const GuestRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// ── HomeGuard: redireciona raiz conforme estado do banco ──
+// â”€â”€ HomeGuard: redireciona raiz conforme estado do banco â”€â”€
 const HomeGuard = () => {
   const { user, loading: authLoading } = useAuth();
   const [checking, setChecking] = useState(true);
@@ -113,38 +114,39 @@ const HomeGuard = () => {
   return <Navigate to="/dashboard" replace />;
 };
 
-// ── App ──
+// â”€â”€ App â”€â”€
 function App() {
   return (
     <TenantProvider>
+      <Toaster richColors position="top-right" />
       <BrowserRouter>
         <Routes>
-{/* Rotas públicas */}
+{/* Rotas pÃºblicas */}
           <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
           <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
           <Route path="/api/auth/instagram/callback" element={<InstagramCallback />} />
           <Route path="/auth/instagram/callback" element={<InstagramCallback />} />
 
-          {/* Raiz → verifica estado */}
+          {/* Raiz â†’ verifica estado */}
           <Route path="/" element={<HomeGuard />} />
 
           {/* Dashboard */}
           <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
 
-          {/* ── Stories (rotas específicas ANTES da genérica) ── */}
+          {/* â”€â”€ Stories (rotas especÃ­ficas ANTES da genÃ©rica) â”€â”€ */}
           <Route path="/stories/widget" element={<ProtectedRoute><AppLayout><StoriesWidgetPage /></AppLayout></ProtectedRoute>} />
           <Route path="/stories/preview/:id" element={<ProtectedRoute><StoryPreviewPage /></ProtectedRoute>} />
 <Route path="/stories/:id" element={<ProtectedRoute><AppLayout><StoryDetailsPage /></AppLayout></ProtectedRoute>} /> 
           <Route path="/stories" element={<ProtectedRoute><AppLayout><StoriesPage /></AppLayout></ProtectedRoute>} />
 
-          {/* ── Vídeos (rotas específicas ANTES das genéricas) ── */}
+          {/* â”€â”€ VÃ­deos (rotas especÃ­ficas ANTES das genÃ©ricas) â”€â”€ */}
           <Route path="/videos/performance" element={<ProtectedRoute><AppLayout><PerformancePage /></AppLayout></ProtectedRoute>} />
           <Route path="/videos/:videoId/performance" element={<ProtectedRoute><AppLayout><VideoPerformancePage /></AppLayout></ProtectedRoute>} />
           <Route path="/videos/new" element={<ProtectedRoute><AppLayout><VideoEditPage /></AppLayout></ProtectedRoute>} />
           <Route path="/videos/:id/edit" element={<ProtectedRoute><AppLayout><VideoEditPage /></AppLayout></ProtectedRoute>} />
 <Route path="/gallery" element={<Navigate to="/armazenamento" replace />} />
 
-          {/* Produtos, Medidas, Aparência, Comentários */}
+          {/* Produtos, Medidas, AparÃªncia, ComentÃ¡rios */}
 <Route path="/produtos" element={<ProtectedRoute><AppLayout><ProductsPage /></AppLayout></ProtectedRoute>} />
           <Route path="/medidas" element={<ProtectedRoute><AppLayout><MedidasPage /></AppLayout></ProtectedRoute>} />
           <Route path="/aparencia" element={<ProtectedRoute><AppLayout><AppearancePage /></AppLayout></ProtectedRoute>} />
@@ -152,7 +154,7 @@ function App() {
           <Route path="/storage" element={<ProtectedRoute><AppLayout><StoragePage /></AppLayout></ProtectedRoute>} />
           <Route path="/armazenamento" element={<ProtectedRoute><AppLayout><StoragePage /></AppLayout></ProtectedRoute>} />
 
-          {/* Configurações */}
+          {/* ConfiguraÃ§Ãµes */}
           <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
           <Route path="/integration" element={<ProtectedRoute><AppLayout><IntegrationPage /></AppLayout></ProtectedRoute>} />
 
@@ -169,3 +171,5 @@ function App() {
 }
 
 export default App;
+
+
