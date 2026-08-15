@@ -213,14 +213,21 @@ Deno.serve(async (req) => {
         const activePlanId = resolvedPlanId || subscription?.plan_id;
         const targetStoreId = subscription?.store_id || storeId;
 
-        if (targetStoreId && activePlanId) {
+        if (targetStoreId) {
+          const storeUpdatePayload: Record<string, any> = {
+            subscription_status: "active",
+            trial_ends_at: null,
+            past_due_since: null, // Limpa o timestamp de carência após regularização
+            updated_at: new Date().toISOString(),
+          };
+
+          if (activePlanId) {
+            storeUpdatePayload.plan_id = activePlanId;
+          }
+
           await supabaseAdmin
             .from("stores")
-            .update({
-              plan_id: activePlanId,
-              subscription_status: "active",
-              trial_ends_at: null,
-            })
+            .update(storeUpdatePayload)
             .eq("id", targetStoreId);
         }
 
@@ -229,22 +236,42 @@ Deno.serve(async (req) => {
       }
 
       case "PAYMENT_OVERDUE": {
-        if (subscription?.id) {
-          await supabaseAdmin
-            .from("subscriptions")
-            .update({ status: "past_due" })
-            .eq("id", subscription.id);
-        }
-
         const targetStoreId = subscription?.store_id || storeId;
+
         if (targetStoreId) {
+          const { data: storeRow } = await supabaseAdmin
+            .from("stores")
+            .select("past_due_since")
+            .eq("id", targetStoreId)
+            .maybeSingle();
+
+          const updatePayload: Record<string, any> = {
+            subscription_status: "past_due",
+            updated_at: new Date().toISOString(),
+          };
+
+          // Grava past_due_since apenas se ainda não existir (idempotência para não reiniciar a janela)
+          if (!storeRow?.past_due_since) {
+            updatePayload.past_due_since = new Date().toISOString();
+          }
+
           await supabaseAdmin
             .from("stores")
-            .update({ subscription_status: "past_due" })
+            .update(updatePayload)
             .eq("id", targetStoreId);
         }
 
-        console.log(`Subscription ${subscription?.id} marcada como past_due.`);
+        if (subscription?.id) {
+          await supabaseAdmin
+            .from("subscriptions")
+            .update({
+              status: "past_due",
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", subscription.id);
+        }
+
+        console.log(`Subscription ${subscription?.id} marcada como past_due com janela de carência iniciada.`);
         break;
       }
 
@@ -271,26 +298,29 @@ Deno.serve(async (req) => {
         if (targetStoreId) {
           await supabaseAdmin
             .from("subscriptions")
-            .update({ status: "canceled", is_current: false })
+            .update({ status: "canceled", is_current: false, updated_at: new Date().toISOString() })
             .eq("store_id", targetStoreId);
         } else if (subscription?.id) {
           await supabaseAdmin
             .from("subscriptions")
-            .update({ status: "canceled", is_current: false })
+            .update({ status: "canceled", is_current: false, updated_at: new Date().toISOString() })
             .eq("id", subscription.id);
         }
 
-        // Rebaixa o plano da loja para o Plano Iniciante e marca como canceled
+        // Rebaixa a loja para o Plano Iniciante, zera carência, seta canceled e limita a 1 GB
         if (targetStoreId) {
           await supabaseAdmin
             .from("stores")
             .update({
               plan_id: PLANO_INICIANTE_ID,
               subscription_status: "canceled",
+              past_due_since: null,
+              storage_limit_bytes: 1073741824, // 1 GB
+              updated_at: new Date().toISOString(),
             })
             .eq("id", targetStoreId);
 
-          console.log(`[WEBHOOK] Store ${targetStoreId} rebaixada para o Plano Iniciante (subscription_status: canceled).`);
+          console.log(`[WEBHOOK] Store ${targetStoreId} cancelada e rebaixada para cota de 1 GB.`);
         }
         break;
       }
