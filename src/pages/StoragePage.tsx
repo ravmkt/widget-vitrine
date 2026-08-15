@@ -185,6 +185,7 @@ interface StorageItem {
   thumbnailUrl: string;
   fileUrl: string;
   productName?: string;
+  productImageUrl?: string;
   storyTitle?: string;
   canDelete: boolean;
 }
