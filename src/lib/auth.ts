@@ -94,7 +94,6 @@ export const createInitialTenantForUser = async ({
     console.warn('[Auth] Aviso ao vincular membro (fallback silencioso):', memberError);
   }
 
-  // 4. Cria contadores de consumo iniciais
   await db.usageCounters.save({
     id: crypto.randomUUID(),
     store_id: storeId,
