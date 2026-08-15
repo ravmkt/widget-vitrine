@@ -51,19 +51,69 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const [storeName, setStoreName] = useState('');
   const [storeLogoUrl, setStoreLogoUrl] = useState('');
+  const [planName, setPlanName] = useState('Plano Iniciante');
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const isExpanded = !isCollapsed;
 
   const loadStoreData = useCallback(async () => {
     try {
-      const settings = await db.getSettings();
-      if (settings) {
-        setStoreName(settings.store_name || '');
-        setStoreLogoUrl(settings.logo_url || '');
+      let activeStoreId =
+        localStorage.getItem('vidlytics_current_store_id') ||
+        localStorage.getItem('current_store_id') ||
+        localStorage.getItem('store_id');
+
+      if (!activeStoreId && supabase) {
+        const { data: userData } = await supabase.auth.getUser();
+        const user = userData?.user;
+        if (user) {
+          const { data: userStore } = await supabase
+            .from('stores')
+            .select('id, name, logo_url, plan_id, plans(name)')
+            .eq('owner_user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (userStore) {
+            activeStoreId = userStore.id;
+            setStoreName(userStore.name || 'Minha Loja');
+            setStoreLogoUrl((userStore as any).logo_url || '');
+            if ((userStore as any).plans?.name) {
+              setPlanName((userStore as any).plans.name);
+            }
+          }
+        }
+      }
+
+      if (activeStoreId && supabase) {
+        const { data: storeData } = await supabase
+          .from('stores')
+          .select('name, logo_url, plan_id, plans(name)')
+          .eq('id', activeStoreId)
+          .maybeSingle();
+
+        if (storeData) {
+          setStoreName(storeData.name || 'Minha Loja');
+          setStoreLogoUrl((storeData as any).logo_url || '');
+          if ((storeData as any).plans?.name) {
+            setPlanName((storeData as any).plans.name);
+          }
+        }
+
+        const { data: settingsData } = await supabase
+          .from('store_settings')
+          .select('store_name, logo_url')
+          .eq('store_id', activeStoreId)
+          .maybeSingle();
+
+        if (settingsData) {
+          if (settingsData.store_name) setStoreName(settingsData.store_name);
+          if (settingsData.logo_url) setStoreLogoUrl(settingsData.logo_url);
+        }
       }
     } catch (err) {
-      console.error('Erro ao carregar dados da loja:', err);
+      console.error('Erro ao carregar dados da loja no AppSidebar:', err);
     }
   }, []);
 
