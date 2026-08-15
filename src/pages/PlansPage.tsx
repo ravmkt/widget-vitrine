@@ -122,21 +122,24 @@ export function PlansPage() {
         },
       });
 
-      if (error) {
-        console.error('Erro ao invocar create-asaas-subscription:', error);
-        showError('Erro ao processar sua assinatura. Tente novamente.');
-        return;
+      // Extrai a resposta mesmo em caso de erro HTTP 400
+      let responseBody = data;
+      if (error && (error as any).context) {
+        try {
+          responseBody = await (error as any).context.json();
+        } catch (_) {}
       }
 
       // Tratamento de Dados Fiscais Pendentes
-      if (data?.error === 'DADOS_FISCAIS_OBRIGATORIOS') {
-        showWarning(data.message || 'Preencha seus dados de faturamento antes de assinar.');
+      if (responseBody?.error === 'DADOS_FISCAIS_OBRIGATORIOS') {
+        showWarning(responseBody.message || 'Preencha seus dados de faturamento (CPF/CNPJ) antes de assinar.');
         navigate('/billing');
         return;
       }
 
-      if (data?.error) {
-        showError(data.message || 'Não foi possível criar a assinatura.');
+      if (error || responseBody?.error) {
+        console.error('Erro ao invocar create-asaas-subscription:', error || responseBody);
+        showError(responseBody?.message || 'Erro ao processar sua assinatura. Tente novamente.');
         return;
       }
 
