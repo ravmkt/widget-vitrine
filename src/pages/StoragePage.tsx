@@ -1448,10 +1448,38 @@ filteredFiles.map(file => (
                       </span>
                     </td>
 
-                    <td className="px-6 py-3.5">
-                      <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                        {file.productName || 'Sem produto'}
-                      </span>
+<td className="px-6 py-3.5">
+                      {file.productName ? (
+                        <div 
+                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200/80 bg-slate-50/80 p-1.5 pr-3 shadow-sm transition hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:bg-slate-800"
+                          title={file.productName}
+                        >
+                          <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xs dark:border-slate-700 dark:bg-slate-800">
+                            {file.productImageUrl ? (
+                              <img
+                                src={file.productImageUrl}
+                                alt={file.productName}
+                                referrerPolicy="no-referrer"
+                                className="h-full w-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center bg-slate-100 text-[11px] font-black text-slate-400 dark:bg-slate-800">
+                                {file.productName.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <span className="max-w-[130px] truncate text-[11px] font-bold text-slate-700 dark:text-slate-200">
+                            {file.productName}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="inline-flex items-center rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-400 dark:bg-slate-800/60 dark:text-slate-500">
+                          Sem produto
+                        </span>
+                      )}
                     </td>
 
                     <td className="px-6 py-3.5">
