@@ -64,7 +64,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 4. Atualizar ou criar a invoice
+    const storeId = payment.externalReference || null;
+
+    // 4. Atualizar ou criar a invoice (com store_id garantido para exibição no frontend)
     if (existingInvoice) {
       await supabaseAdmin
         .from("invoices")
@@ -73,16 +75,25 @@ Deno.serve(async (req) => {
           paid_at: event === "PAYMENT_RECEIVED" || event === "PAYMENT_CONFIRMED"
             ? new Date().toISOString()
             : null,
+          store_id: storeId || undefined,
+          invoice_url: payment.invoiceUrl || payment.bankSlipUrl || undefined,
+          payment_method: payment.billingType || undefined,
         })
         .eq("id", existingInvoice.id);
     } else {
       await supabaseAdmin.from("invoices").insert({
+        store_id: storeId,
         asaas_payment_id: asaasPaymentId,
         asaas_subscription_id: asaasSubscriptionId,
         asaas_customer_id: asaasCustomerId,
         status: newInvoiceStatus,
         amount_cents: Math.round((payment.value || 0) * 100),
         due_date: payment.dueDate,
+        paid_at: event === "PAYMENT_RECEIVED" || event === "PAYMENT_CONFIRMED"
+          ? new Date().toISOString()
+          : null,
+        invoice_url: payment.invoiceUrl || payment.bankSlipUrl || null,
+        payment_method: payment.billingType || "PIX",
       });
     }
 
