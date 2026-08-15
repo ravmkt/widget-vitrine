@@ -4615,7 +4615,7 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
       })
       .catch(function () { return null; });
   }
-  
+
   /* ================================================================
      INICIALIZAÇÃO DO WIDGET (COM story_id DA URL)
      ================================================================ */
@@ -4630,8 +4630,14 @@ function initWidget() {
     return;
   }
 
-  readAppearance().then(function (appearance) {
-    currentAppearance = appearance;
+  readStoreStatus().then(function (storeData) {
+    if (storeData && isStoreBlocked(storeData)) {
+      console.warn('[Vidlytics] Widget inativo: assinatura cancelada, pendente ou trial encerrado.');
+      return;
+    }
+
+    return readAppearance().then(function (appearance) {
+          currentAppearance = appearance;
 
     return readStoreSettings().then(function (settings) {
       autoApproveComments = settings.auto_approve_comments === true || settings.auto_approve_comments === 'true';
