@@ -804,12 +804,19 @@ const sanitizeUrl = (rawUrl?: string) => {
           if (str.startsWith('data:')) return str;
           if (str.startsWith('blob:')) return '';
 
+          // Limpa prefixos redundantes do Supabase Storage
           const cleanPath = str
             .replace(/^\/+/, '')
             .replace(/^storage\/v1\/object\/public\/videos\//, '')
             .replace(/^videos\//, '');
 
-          return `https://wznvecurmisgoaijykbt.supabase.co/storage/v1/object/public/videos/${cleanPath}`;
+          // Codifica cada segmento do caminho de forma segura (preservando barras e tratando espaços)
+          const encodedPath = cleanPath
+            .split('/')
+            .map(seg => encodeURIComponent(decodeURIComponent(seg)))
+            .join('/');
+
+          return `https://wznvecurmisgoaijykbt.supabase.co/storage/v1/object/public/videos/${encodedPath}`;
         };
 
 realVideos.forEach((vid: any) => {
