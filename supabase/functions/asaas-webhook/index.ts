@@ -177,10 +177,23 @@ Deno.serve(async (req) => {
         // Ativa a subscription atual
         await supabaseAdmin
           .from("subscriptions")
-          .update({ status: "active", is_current: true })
+          .update({ 
+            status: "active", 
+            is_current: true,
+            asaas_subscription_id: asaasSubscriptionId || undefined,
+            asaas_customer_id: asaasCustomerId || undefined
+          })
           .eq("id", subscription.id);
 
-        console.log(`Subscription ${subscription.id} ativada.`);
+        // Sincroniza diretamente o plano ativo na tabela stores
+        if (subscription.plan_id) {
+          await supabaseAdmin
+            .from("stores")
+            .update({ plan_id: subscription.plan_id })
+            .eq("id", subscription.store_id);
+        }
+
+        console.log(`Subscription ${subscription.id} e Store ${subscription.store_id} ativadas com sucesso.`);
         break;
       }
 
