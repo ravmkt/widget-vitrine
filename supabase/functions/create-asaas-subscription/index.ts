@@ -216,12 +216,12 @@ Deno.serve(async (req) => {
       body: JSON.stringify(subscriptionPayload),
     });
 
-    const subscriptionText = await subscriptionResponse.text();
+    const subText = await subscriptionResponse.text();
     let subscriptionData: any = {};
     try {
-      subscriptionData = subscriptionText ? JSON.parse(subscriptionText) : {};
+      subscriptionData = subText ? JSON.parse(subText) : {};
     } catch {
-      subscriptionData = { rawResponse: subscriptionText };
+      subscriptionData = { rawResponse: subText };
     }
 
     if (!subscriptionResponse.ok) {
@@ -233,9 +233,54 @@ Deno.serve(async (req) => {
           message: errMsg, 
           details: subscriptionData 
         }),
-        { status: 400, headers: corsHeaders }
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // 8. Salvar a subscription local (histórico preservado via insert)
+    const { data: newSubscription, error: insertError } = await supabaseAdmin
+      .from("subscriptions")
+      .insert({
+        store_id,
+        plan_id,
+        asaas_subscription_id: subscriptionData.id,
+        asaas_customer_id: asaasCustomerId,
+        status: "pending",
+        is_current: false,
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error("Erro ao salvar subscription local:", insertError);
+    }
+
+    // 9. Buscar a primeira invoice gerada para obter a invoice_url
+    let invoiceUrl = subscriptionData.invoiceUrl || null;
+
+    if (!invoiceUrl) {
+      const paymentsResponse = await fetch(
+        `${ASAAS_BASE_URL}/payments?subscription=${subscriptionData.id}`,
+        { headers: asaasHeaders }
+      );
+      const paymentsText = await paymentsResponse.text();
+      try {
+        const paymentsData = paymentsText ? JSON.parse(paymentsText) : {};
+        invoiceUrl = paymentsData?.data?.[0]?.invoiceUrl || paymentsData?.data?.[0]?.bankSlipUrl || null;
+      } catch (e) {
+        console.warn("[ASAAS] Não foi possível parsear lista de pagamentos:", paymentsText);
+      }
+    }
+
+    return new Response(
+      JSON.stringify({
+        message: "Assinatura criada com sucesso.",
+        subscription_id: newSubscription?.id,
+        asaas_subscription_id: subscriptionData.id,
+        invoice_url: invoiceUrl,
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
 
     const subscriptionText = await subscriptionResponse.text();
     let subscriptionData: any = {};
