@@ -3966,14 +3966,13 @@ function renderGridWidget(container, stories, appearance) {
       hasBorder ? ('box-shadow: inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ';') : '',
     ].join('');
 
-    var thumbUrl = getVideoThumbnail(video) ||
-                   story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
+var rawVideoUrl = getVideoUrl(video);
+    var thumbUrl = getVideoThumbnail(video) || story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
+    var effectiveMediaUrl = thumbUrl || rawVideoUrl;
 
-// trecho novo
-    if (thumbUrl) {
+    if (effectiveMediaUrl) {
       var innerMask = createEl('div', 'vl-grid-img-mask');
       
-      // Calcula o raio interno e o recuo (inset) com base na espessura da borda
       var borderWidthNum = cfg.borderWidth || 0;
       var rawRadiusNum = parseFloat(cfg.borderRadius) || 20;
       var innerRadiusVal = Math.max(0, rawRadiusNum - borderWidthNum);
@@ -3981,22 +3980,57 @@ function renderGridWidget(container, stories, appearance) {
 
       innerMask.style.cssText = [
         'position:absolute;',
-        'inset:' + borderWidthNum + 'px;', // Recua exatamente a espessura da borda para revelá-la
+        'inset:' + borderWidthNum + 'px;',
         'overflow:hidden;',
         'border-radius:' + innerRadiusCss + ';',
         'z-index:1;',
         'pointer-events:none;',
         'transform:translateZ(0);',
-        '-webkit-transform:translateZ(0);'
+        '-webkit-transform:translateZ(0);',
+        'background:#000;'
       ].join('');
 
-      var img = createEl('img');
-      img.src = thumbUrl;
-      img.alt = video.title || story.title || '';
-      img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;';
-      img.loading = 'lazy';
+      var isDirectVideo = isDirectVideoUrl(effectiveMediaUrl);
+
+      if (isDirectVideo) {
+        var gridVideo = createEl('video');
+        var gridSrc = effectiveMediaUrl.indexOf('#t=') === -1 ? effectiveMediaUrl + '#t=0.001' : effectiveMediaUrl;
+        gridVideo.src = gridSrc;
+        gridVideo.preload = 'auto';
+        gridVideo.muted = true;
+        gridVideo.playsInline = true;
+        gridVideo.setAttribute('playsinline', '');
+        gridVideo.setAttribute('webkit-playsinline', '');
+        gridVideo.setAttribute('muted', '');
+        gridVideo.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;';
+        innerMask.appendChild(gridVideo);
+      } else {
+        var img = createEl('img');
+        img.src = effectiveMediaUrl;
+        img.alt = video.title || story.title || '';
+        img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;';
+        img.loading = 'lazy';
+        
+        img.onerror = function () {
+          if (rawVideoUrl && rawVideoUrl !== effectiveMediaUrl) {
+            img.style.display = 'none';
+            var fallbackGridVid = createEl('video');
+            var fSrc = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
+            fallbackGridVid.src = fSrc;
+            fallbackGridVid.preload = 'auto';
+            fallbackGridVid.muted = true;
+            fallbackGridVid.playsInline = true;
+            fallbackGridVid.setAttribute('playsinline', '');
+            fallbackGridVid.setAttribute('webkit-playsinline', '');
+            fallbackGridVid.setAttribute('muted', '');
+            fallbackGridVid.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;';
+            innerMask.appendChild(fallbackGridVid);
+          }
+        };
+
+        innerMask.appendChild(img);
+      }
       
-      innerMask.appendChild(img);
       card.appendChild(innerMask);
     }
     
