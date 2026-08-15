@@ -1379,9 +1379,11 @@ filteredFiles.map(file => (
                             playsInline
                           />
                         ) : null}
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 text-white pointer-events-none">
-                          {file.type === 'video' ? <FileVideo size={16} /> : <FileImage size={16} />}
-                        </div>
+                        {file.type === 'video' && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 text-white pointer-events-none">
+                            <FileVideo size={16} />
+                          </div>
+                        )}
                       </div>
                     </td>
 
