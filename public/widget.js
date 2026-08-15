@@ -3533,11 +3533,13 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
     'will-change:transform !important;';
   track.style.transform = 'translateX(0px)';
   
-  // Items renderizam completamente
+// Items renderizam completamente
   stories.forEach(function(story, storyIndex) {
     var videos = (story.videos || []).filter(Boolean);
     videos.forEach(function(video, videoIndex) {
+      var rawVideoUrl = getVideoUrl(video);
       var thumbUrl = getVideoThumbnail(video) || story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
+      var effectiveMediaUrl = thumbUrl || rawVideoUrl;
       
       // Container principal do item em coluna
       var item = document.createElement('div');
@@ -3565,14 +3567,11 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         'border-radius:' + cfg.itemRadius + ' !important;' +
         'overflow:hidden !important;' +
         'position:relative !important;' +
-        'background:transparent !important;' +
+        'background:#000 !important;' +
         'transform:translateZ(0) !important;' +
         '-webkit-backface-visibility:hidden !important;' +
         '-webkit-mask-image: -webkit-radial-gradient(white, black) !important;' +
         carouselBorderCss;
-      
-var rawVideoUrl = getVideoUrl(video);
-      var effectiveMediaUrl = thumbUrl || rawVideoUrl;
 
       if (effectiveMediaUrl) {
         var borderWidthNum = cfg.borderWidth || 0;
@@ -3588,26 +3587,33 @@ var rawVideoUrl = getVideoUrl(video);
           'border-radius:' + innerRadiusCss + ' !important;',
           'z-index:1 !important;',
           'pointer-events:none !important;',
-          'transform:translateZ(0) !important;'
+          'transform:translateZ(0) !important;',
+          'background:#000 !important;'
         ].join('');
 
         var isDirectVideo = isDirectVideoUrl(effectiveMediaUrl);
 
         if (isDirectVideo) {
           var previewVideo = document.createElement('video');
-          previewVideo.src = effectiveMediaUrl;
-          previewVideo.preload = 'metadata';
+          var videoSrcWithTime = effectiveMediaUrl;
+          if (videoSrcWithTime.indexOf('#t=') === -1) {
+            videoSrcWithTime += '#t=0.001';
+          }
+          previewVideo.src = videoSrcWithTime;
+          previewVideo.preload = 'auto';
           previewVideo.muted = true;
           previewVideo.playsInline = true;
           previewVideo.setAttribute('playsinline', '');
           previewVideo.setAttribute('webkit-playsinline', '');
+          previewVideo.setAttribute('muted', '');
           previewVideo.style.cssText =
             'width:100% !important;' +
             'height:100% !important;' +
             'object-fit:cover !important;' +
             'display:block !important;' +
             'border-radius:' + innerRadiusCss + ' !important;' +
-            '-webkit-backface-visibility:hidden !important;';
+            '-webkit-backface-visibility:hidden !important;' +
+            'background:#000 !important;';
           innerMask.appendChild(previewVideo);
         } else {
           var img = document.createElement('img');
@@ -3625,11 +3631,22 @@ var rawVideoUrl = getVideoUrl(video);
             if (rawVideoUrl && rawVideoUrl !== effectiveMediaUrl) {
               img.style.display = 'none';
               var fallbackVid = document.createElement('video');
-              fallbackVid.src = rawVideoUrl;
-              fallbackVid.preload = 'metadata';
+              var fallbackSrc = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
+              fallbackVid.src = fallbackSrc;
+              fallbackVid.preload = 'auto';
               fallbackVid.muted = true;
               fallbackVid.playsInline = true;
-              fallbackVid.style.cssText = img.style.cssText;
+              fallbackVid.setAttribute('playsinline', '');
+              fallbackVid.setAttribute('webkit-playsinline', '');
+              fallbackVid.setAttribute('muted', '');
+              fallbackVid.style.cssText =
+                'width:100% !important;' +
+                'height:100% !important;' +
+                'object-fit:cover !important;' +
+                'display:block !important;' +
+                'border-radius:' + innerRadiusCss + ' !important;' +
+                '-webkit-backface-visibility:hidden !important;' +
+                'background:#000 !important;';
               innerMask.appendChild(fallbackVid);
             }
           };
