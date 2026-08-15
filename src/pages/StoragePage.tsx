@@ -833,8 +833,12 @@ realVideos.forEach((vid: any) => {
             ? new Date(vid.created_at).toLocaleDateString('pt-BR') 
             : 'Hoje';
 
-          // Resolução do Nome do Produto
+// Resolução do Nome e Imagem do Produto
           const resolvedProductName = vid.products?.name || vid.product_name || vid.product?.name || vid.product?.title || undefined;
+          const resolvedProductImage = sanitizeUrl(
+            vid.products?.image_url || vid.products?.thumbnail_url || vid.products?.cover_url ||
+            vid.product?.image_url || vid.product?.thumbnail_url || vid.product_image_url
+          );
 
           // Resolução do Nome do Story Vinculado (cobre array 1:N e objeto 1:1)
           let resolvedStoryTitle: string | undefined = undefined;
@@ -862,6 +866,7 @@ realVideos.forEach((vid: any) => {
             thumbnailUrl: validThumbUrl,
             fileUrl: validVideoUrl,
             productName: resolvedProductName,
+            productImageUrl: resolvedProductImage || undefined,
             storyTitle: resolvedStoryTitle,
             canDelete: true,
           });
