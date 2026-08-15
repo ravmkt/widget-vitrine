@@ -836,8 +836,8 @@ realVideos.forEach((vid: any) => {
 // Resolução do Nome e Imagem do Produto
           const resolvedProductName = vid.products?.name || vid.product_name || vid.product?.name || vid.product?.title || undefined;
           const resolvedProductImage = sanitizeUrl(
-            vid.products?.image_url || vid.products?.thumbnail_url || vid.products?.cover_url ||
-            vid.product?.image_url || vid.product?.thumbnail_url || vid.product_image_url
+            vid.products?.image_url || (vid.products as any)?.image ||
+            vid.product?.image_url || (vid.product as any)?.image || vid.product_image_url
           );
 
           // Resolução do Nome do Story Vinculado (cobre array 1:N e objeto 1:1)
