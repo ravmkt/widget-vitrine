@@ -800,13 +800,23 @@ const sanitizeUrl = (rawUrl?: string) => {
           if (!rawUrl) return '';
           const str = String(rawUrl).trim();
           if (!str || str === 'null' || str === 'undefined') return '';
-          if (str.startsWith('http://') || str.startsWith('https://') || str.startsWith('data:')) {
+          if (str.startsWith('data:')) return str;
+          if (str.startsWith('blob:')) return '';
+
+          // Se já for uma URL completa do Supabase
+          if (str.includes('/storage/v1/object/public/')) {
             return str;
           }
-          if (str.startsWith('blob:')) {
-            return '';
+
+          if (str.startsWith('http://') || str.startsWith('https://')) {
+            return str;
           }
-          const cleanPath = str.replace(/^\/+/, '').replace(/^videos\//, '');
+
+          const cleanPath = str
+            .replace(/^\/+/, '')
+            .replace(/^storage\/v1\/object\/public\/videos\//, '')
+            .replace(/^videos\//, '');
+
           return `https://wznvecurmisgoaijykbt.supabase.co/storage/v1/object/public/videos/${cleanPath}`;
         };
 
