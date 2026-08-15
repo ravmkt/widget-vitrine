@@ -37,8 +37,9 @@ Deno.serve(async (req) => {
     const asaasPaymentId = payment.id;
     const asaasSubscriptionId = payment.subscription; // ID da assinatura no Asaas
     const asaasCustomerId = payment.customer;
+    const storeId = payment.externalReference || null;
 
-    console.log(`Webhook recebido: ${event} | Payment ID: ${asaasPaymentId}`);
+    console.log(`Webhook recebido: ${event} | Payment ID: ${asaasPaymentId} | Store: ${storeId}`);
 
     // 2. Conectar ao Supabase com service_role (bypassa RLS)
     const supabaseAdmin = createClient(
@@ -53,7 +54,6 @@ Deno.serve(async (req) => {
       .eq("asaas_payment_id", asaasPaymentId)
       .maybeSingle();
 
-    // Se já existe e o status já é o mesmo, não faz nada (evita reprocessamento)
     const newInvoiceStatus = mapAsaasStatusToInvoiceStatus(event);
 
     if (existingInvoice && existingInvoice.status === newInvoiceStatus) {
@@ -64,44 +64,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const storeId = payment.externalReference || null;
-
-    // 4. Atualizar ou criar a invoice (com store_id garantido para exibição no frontend)
-    if (existingInvoice) {
-  await supabaseAdmin
-    .from("invoices")
-    .update({
-      status: newInvoiceStatus,
-      paid_at: event === "PAYMENT_RECEIVED" || event === "PAYMENT_CONFIRMED"
-        ? new Date().toISOString()
-        : null,
-      store_id: storeId || undefined,
-      subscription_id: subscription?.id || undefined,
-    })
-    .eq("id", existingInvoice.id);
-} else {
-  await supabaseAdmin.from("invoices").insert({
-    store_id: storeId,
-    subscription_id: subscription?.id || null,
-    asaas_payment_id: asaasPaymentId,
-    status: newInvoiceStatus,
-    amount_cents: Math.round((payment.value || 0) * 100),
-    currency: "BRL",
-    description: payment.description || null,
-    due_date: payment.dueDate,
-    paid_at: event === "PAYMENT_RECEIVED" || event === "PAYMENT_CONFIRMED"
-      ? new Date().toISOString()
-      : null,
-    gateway_provider: "asaas",
-    gateway_invoice_id: asaasPaymentId,
-    invoice_pdf_url: payment.bankSlipUrl || null,
-    invoice_url: payment.invoiceUrl || payment.bankSlipUrl || null,
-    payment_method: payment.billingType || null,
-  });
-}
-
-
-    // 5. Buscar a subscription local vinculada ao asaas_subscription_id com fallback por store_id
+    // 4. Buscar a subscription local (por asaas_subscription_id ou fallback por store_id)
     let subscription: any = null;
 
     if (asaasSubscriptionId) {
@@ -110,15 +73,13 @@ Deno.serve(async (req) => {
         .select("id, store_id, plan_id, status")
         .eq("asaas_subscription_id", asaasSubscriptionId)
         .maybeSingle();
-      
+
       subscription = subById;
     }
 
-    // Fallback: se não encontrou pelo ID do Asaas, busca pela loja via externalReference
-    const storeId = payment.externalReference;
     if (!subscription && storeId) {
       console.log(`[WEBHOOK] Buscando fallback para store_id: ${storeId}`);
-      
+
       const { data: subByStore } = await supabaseAdmin
         .from("subscriptions")
         .select("id, store_id, plan_id, status")
@@ -129,22 +90,19 @@ Deno.serve(async (req) => {
 
       if (subByStore) {
         subscription = subByStore;
-        // Salva o asaas_subscription_id para os próximos webhooks
         if (asaasSubscriptionId) {
           await supabaseAdmin
             .from("subscriptions")
-            .update({ 
+            .update({
               asaas_subscription_id: asaasSubscriptionId,
-              asaas_customer_id: asaasCustomerId 
+              asaas_customer_id: asaasCustomerId,
             })
             .eq("id", subscription.id);
         }
       }
     }
 
-    // Se ainda não encontrou nenhuma subscription, cria uma nova para a loja
     if (!subscription && storeId) {
-      // Descobre o plano Pro pelo valor ou nome
       const { data: planPro } = await supabaseAdmin
         .from("plans")
         .select("id")
@@ -169,6 +127,40 @@ Deno.serve(async (req) => {
       subscription = createdSub;
     }
 
+    // 5. Atualizar ou criar a invoice (agora com subscription já resolvida)
+    if (existingInvoice) {
+      await supabaseAdmin
+        .from("invoices")
+        .update({
+          status: newInvoiceStatus,
+          paid_at: event === "PAYMENT_RECEIVED" || event === "PAYMENT_CONFIRMED"
+            ? new Date().toISOString()
+            : null,
+          store_id: storeId || undefined,
+          subscription_id: subscription?.id || undefined,
+        })
+        .eq("id", existingInvoice.id);
+    } else {
+      await supabaseAdmin.from("invoices").insert({
+        store_id: storeId,
+        subscription_id: subscription?.id || null,
+        asaas_payment_id: asaasPaymentId,
+        status: newInvoiceStatus,
+        amount_cents: Math.round((payment.value || 0) * 100),
+        currency: "BRL",
+        description: payment.description || null,
+        due_date: payment.dueDate,
+        paid_at: event === "PAYMENT_RECEIVED" || event === "PAYMENT_CONFIRMED"
+          ? new Date().toISOString()
+          : null,
+        gateway_provider: "asaas",
+        gateway_invoice_id: asaasPaymentId,
+        invoice_pdf_url: payment.bankSlipUrl || null,
+        invoice_url: payment.invoiceUrl || payment.bankSlipUrl || null,
+        payment_method: payment.billingType || null,
+      });
+    }
+
     if (!subscription) {
       console.warn("Nenhuma subscription encontrada nem criada para:", asaasSubscriptionId);
       return new Response(
@@ -181,7 +173,6 @@ Deno.serve(async (req) => {
     switch (event) {
       case "PAYMENT_RECEIVED":
       case "PAYMENT_CONFIRMED": {
-        // Desativa qualquer subscription anterior "current" da mesma loja
         await supabaseAdmin
           .from("subscriptions")
           .update({ is_current: false })
@@ -189,18 +180,16 @@ Deno.serve(async (req) => {
           .eq("is_current", true)
           .neq("id", subscription.id);
 
-        // Ativa a subscription atual
         await supabaseAdmin
           .from("subscriptions")
-          .update({ 
-            status: "active", 
+          .update({
+            status: "active",
             is_current: true,
             asaas_subscription_id: asaasSubscriptionId || undefined,
-            asaas_customer_id: asaasCustomerId || undefined
+            asaas_customer_id: asaasCustomerId || undefined,
           })
           .eq("id", subscription.id);
 
-        // Sincroniza diretamente o plano ativo na tabela stores
         if (subscription.plan_id) {
           await supabaseAdmin
             .from("stores")
