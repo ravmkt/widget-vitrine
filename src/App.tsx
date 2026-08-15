@@ -1,4 +1,4 @@
-﻿import StoriesWidgetPage from '@/pages/StoriesWidgetPage';
+import StoriesWidgetPage from '@/pages/StoriesWidgetPage';
 import StoryDetailsPage from '@/pages/StoryDetailsPage';
 import VideoPerformancePage from '@/pages/VideoPerformancePage';
 import React, { useEffect, useState } from "react";
@@ -114,11 +114,11 @@ const HomeGuard = () => {
   return <Navigate to="/dashboard" replace />;
 };
 
-// â”€â”€ App â”€â”€
+// ── App ──
 function App() {
   return (
     <TenantProvider>
-      <Toaster richColors position="top-right" />
+      <Toaster richColors position="top-center" duration={3000} />
       <BrowserRouter>
         <Routes>
 {/* Rotas pÃºblicas */}
