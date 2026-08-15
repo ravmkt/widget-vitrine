@@ -57,12 +57,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     });
 
-    return () => {
+return () => {
       listener.subscription.unsubscribe();
     };
   }, []);
 
-  const value = useMemo(() => ({ user, loading }), [user, loading]);
+  const value = useMemo(() => ({ user, loading, logout }), [user, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
