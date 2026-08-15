@@ -361,7 +361,47 @@ export default function StoragePage() {
     fetchSelectData();
   }, []);
 
-// Processa a gravação da Mídia por URL Externa com suporte a Produto e Modelo de Medidas
+// Resolução resiliente de Store ID em cascata multi-tenant
+  const resolveActiveStoreId = async (): Promise<string | null> => {
+    if (storeId) return storeId;
+
+    const fromStorage =
+      localStorage.getItem('vidlytics_current_store_id') ||
+      localStorage.getItem('current_store_id') ||
+      localStorage.getItem('store_id');
+    if (fromStorage) return fromStorage;
+
+    try {
+      const settings = await db.getSettings();
+      if (settings?.store_id) return settings.store_id;
+    } catch (_) {}
+
+    if (supabase) {
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        const user = userData?.user;
+        if (user) {
+          const { data: storeRow } = await supabase
+            .from('stores')
+            .select('id')
+            .eq('owner_user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (storeRow?.id) {
+            localStorage.setItem('vidlytics_current_store_id', storeRow.id);
+            setStoreId(storeRow.id);
+            return storeRow.id;
+          }
+        }
+      } catch (_) {}
+    }
+
+    return null;
+  };
+
+  // Processa a gravação da Mídia por URL Externa com suporte a Produto e Modelo de Medidas
   const handleSaveExternalUrl = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -375,8 +415,8 @@ export default function StoragePage() {
 
     try {
       setSavingUrl(true);
-      const settings = await db.getSettings();
-      if (!settings?.store_id) {
+      const activeId = await resolveActiveStoreId();
+      if (!activeId) {
         throw new Error('ID da loja não encontrado.');
       }
 
