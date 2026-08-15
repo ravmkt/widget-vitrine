@@ -4566,29 +4566,58 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
   }
 
 /* ================================================================
-     VALIDAÇÃO DE STATUS DA ASSINATURA / TRIAL
+     VALIDAÇÃO DE STATUS DA ASSINATURA / TRIAL & CARÊNCIA DE 72H
      ================================================================ */
 
   function isStoreBlocked(store) {
     if (!store) return false;
     var status = String(store.subscription_status || '').toLowerCase().trim();
-    if (status === 'canceled' || status === 'past_due' || status === 'unpaid') {
+
+    // 1. Cancelamento definitivo: bloqueio imediato
+    if (status === 'canceled' || status === 'unpaid') {
       return true;
     }
+
+    // 2. Inadimplência: avalia a janela de carência de 72 horas (Grace Period)
+    if (status === 'past_due') {
+      var pastDueSince = store.past_due_since;
+      if (!pastDueSince) {
+        // Se entrou em past_due sem timestamp registrado, bloqueia por segurança
+        return true;
+      }
+
+      var GRACE_PERIOD_MS = 72 * 60 * 60 * 1000; // 259.200.000 ms (72 horas)
+      var pastDueTime = new Date(pastDueSince).getTime();
+      var now = Date.now();
+
+      if (isNaN(pastDueTime)) {
+        return true;
+      }
+
+      var elapsed = now - pastDueTime;
+      // Retorna true (bloqueia) apenas se o atraso ultrapassar 72 horas
+      return elapsed > GRACE_PERIOD_MS;
+    }
+
+    // 3. Período de teste (trialing)
     if (status === 'trialing') {
       if (!store.trial_ends_at) return true;
       return new Date(store.trial_ends_at).getTime() <= Date.now();
     }
-    if (status !== 'active') {
-      return true; // Fail-closed: bloqueia qualquer status não autorizado
+
+    // 4. Status ativo: liberado
+    if (status === 'active') {
+      return false;
     }
-    return false;
+
+    // Fail-closed por padrão
+    return true;
   }
 
   function readStoreStatus() {
     if (!storeId || !hasSupabase) return Promise.resolve(null);
     return supabaseFetch(
-      'stores?select=id,subscription_status,trial_ends_at&id=eq.' + encodeURIComponent(storeId) + '&limit=1',
+      'stores?select=id,subscription_status,trial_ends_at,past_due_since&id=eq.' + encodeURIComponent(storeId) + '&limit=1',
       { method: 'GET' }
     )
       .then(function (response) {
