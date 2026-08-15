@@ -1201,6 +1201,43 @@ function getVideoUrl(video) {
     vidEl.setAttribute('webkit-playsinline', '');
     vidEl.setAttribute('muted', '');
 
+    var primed = false;
+    function tryPrime() {
+      if (primed) return;
+      primed = true;
+      try {
+        var playPromise = vidEl.play();
+        if (playPromise !== undefined) {
+          playPromise.then(function () {
+            vidEl.pause();
+            try { vidEl.currentTime = 0.001; } catch (e) {}
+          }).catch(function () {
+            try { vidEl.currentTime = 0.001; } catch (e) {}
+          });
+        } else {
+          vidEl.pause();
+          try { vidEl.currentTime = 0.001; } catch (e) {}
+        }
+      } catch (e) {}
+    }
+
+    if (vidEl.readyState >= 2) {
+      tryPrime();
+    } else {
+      vidEl.addEventListener('loadeddata', tryPrime, { once: true });
+      vidEl.addEventListener('canplay', tryPrime, { once: true });
+    }
+  }
+
+  function primeVideoFrame(vidEl) {
+    if (!vidEl) return;
+    vidEl.muted = true;
+    vidEl.defaultMuted = true;
+    vidEl.playsInline = true;
+    vidEl.setAttribute('playsinline', '');
+    vidEl.setAttribute('webkit-playsinline', '');
+    vidEl.setAttribute('muted', '');
+
     function tryPrime() {
       var playPromise = vidEl.play();
       if (playPromise !== undefined) {
