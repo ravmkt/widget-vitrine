@@ -1192,6 +1192,33 @@ function getVideoUrl(video) {
     return VIDEO_FILE_REGEX.test(url) || url.indexOf('/storage/v1/object/') !== -1;
   }
 
+  function primeVideoFrame(vidEl) {
+    if (!vidEl) return;
+    vidEl.muted = true;
+    vidEl.defaultMuted = true;
+    vidEl.playsInline = true;
+    vidEl.setAttribute('playsinline', '');
+    vidEl.setAttribute('webkit-playsinline', '');
+    vidEl.setAttribute('muted', '');
+
+    function tryPrime() {
+      var playPromise = vidEl.play();
+      if (playPromise !== undefined) {
+        playPromise.then(function () {
+          vidEl.pause();
+        }).catch(function () {
+          try { vidEl.currentTime = 0.001; } catch (e) {}
+        });
+      }
+    }
+
+    if (vidEl.readyState >= 2) {
+      tryPrime();
+    } else {
+      vidEl.addEventListener('loadeddata', tryPrime, { once: true });
+    }
+  }
+
   function extractYouTubeId(url) {
     if (!url) return '';
     try {
