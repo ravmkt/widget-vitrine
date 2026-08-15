@@ -508,27 +508,9 @@ function normalizeAppearanceItem(item) {
         if (Array.isArray(data) && data.length > 0) {
           return normalizeAppearanceItem(data[0]);
         }
-        return tryLegacyTable();
+        return {};
       })
-      .catch(function () { return tryLegacyTable(); });
-
-    function tryLegacyTable() {
-      return supabaseFetch(
-        'widget_appearances?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
-        { method: 'GET' }
-      )
-        .then(function (response) {
-          if (!response.ok) return null;
-          return response.json();
-        })
-        .then(function (data) {
-          if (Array.isArray(data) && data.length > 0) {
-            return normalizeAppearanceItem(data[0]);
-          }
-          return {};
-        })
-        .catch(function () { return {}; });
-    }
+      .catch(function () { return {}; });
   }
 
   function getConfigAppearance() {
