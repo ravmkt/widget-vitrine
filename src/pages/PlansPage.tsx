@@ -19,28 +19,57 @@ export function PlansPage() {
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
   const [plans, setPlans] = useState<any[]>([]);
 
-  // Carrega a lista oficial de planos do Supabase e o plano atual da loja
+  /// Carrega a lista oficial de planos do Supabase e o plano atual da loja
   useEffect(() => {
     const loadPlansData = async () => {
       try {
         setLoading(true);
-        const settings = await db.getSettings();
-        if (!settings?.store_id) return;
-        setStoreId(settings.store_id);
+
+        // 1. Resolve o storeId ativo com segurança multi-tenant
+        let activeStoreId =
+          localStorage.getItem('vidlytics_current_store_id') ||
+          localStorage.getItem('current_store_id') ||
+          localStorage.getItem('store_id');
+
+        if (!activeStoreId && supabase) {
+          const { data: userData } = await supabase.auth.getUser();
+          const user = userData?.user;
+          if (user) {
+            const { data: userStore } = await supabase
+              .from('stores')
+              .select('id, plan_id')
+              .eq('owner_user_id', user.id)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            if (userStore) {
+              activeStoreId = userStore.id;
+              setCurrentPlanId(userStore.plan_id);
+              localStorage.setItem('vidlytics_current_store_id', userStore.id);
+            }
+          }
+        }
+
+        if (activeStoreId) {
+          setStoreId(activeStoreId);
+        }
 
         if (supabase) {
-          // 1. Busca dados da loja para identificar o plano atual
-          const { data: storeRow } = await supabase
-            .from('stores')
-            .select('plan_id')
-            .eq('id', settings.store_id)
-            .single();
+          // 2. Se já tem o activeStoreId, busca o plano atual da loja
+          if (activeStoreId) {
+            const { data: storeRow } = await supabase
+              .from('stores')
+              .select('plan_id')
+              .eq('id', activeStoreId)
+              .maybeSingle();
 
-          if (storeRow) {
-            setCurrentPlanId(storeRow.plan_id);
+            if (storeRow?.plan_id) {
+              setCurrentPlanId(storeRow.plan_id);
+            }
           }
 
-          // 2. Busca todos os planos cadastrados ordenados por preço
+          // 3. Busca todos os planos cadastrados ordenados por preço (independente de loja)
           const { data: plansData, error: plansErr } = await supabase
             .from('plans')
             .select('*')
