@@ -799,9 +799,17 @@ const payload = {
           return `https://wznvecurmisgoaijykbt.supabase.co/storage/v1/object/public/videos/${str.replace(/^\/+/, '')}`;
         };
 
-        realVideos.forEach((vid: any) => {
+realVideos.forEach((vid: any) => {
           const validVideoUrl = sanitizeUrl(vid.video_url);
-          const validThumbUrl = sanitizeUrl(vid.thumbnail_url);
+          const rawThumb = sanitizeUrl(vid.thumbnail_url);
+
+          // Valida se a thumbnail é de fato uma imagem (evita passar URL de mp4 para tag <img>)
+          const isImageThumb = rawThumb && (
+            rawThumb.startsWith('data:image') ||
+            /\.(jpeg|jpg|png|webp|gif)($|\?)/i.test(rawThumb) ||
+            rawThumb.includes('img.youtube.com')
+          );
+          const validThumbUrl = isImageThumb ? rawThumb : '';
 
           const videoUrlStr = String(validVideoUrl || '').toLowerCase();
           const isExplicitUrlType = vid.video_source_type === 'url' || vid.source_type === 'url';
@@ -824,9 +832,9 @@ const payload = {
             ? new Date(vid.created_at).toLocaleDateString('pt-BR') 
             : 'Hoje';
 
-// Resolução do Nome do Produto
+          // Resolução do Nome do Produto
           const resolvedProductName = vid.products?.name || vid.product_name || vid.product?.name || vid.product?.title || undefined;
-          
+
           // Resolução do Nome do Story Vinculado (cobre array 1:N e objeto 1:1)
           let resolvedStoryTitle: string | undefined = undefined;
           if (Array.isArray(vid.story_videos) && vid.story_videos.length > 0) {
@@ -850,8 +858,8 @@ const payload = {
             type: 'video',
             sizeInBytes: totalMediaBytes,
             createdAt: formattedDate,
-            thumbnailUrl: validThumbUrl || validVideoUrl,
-            fileUrl: validVideoUrl || validThumbUrl,
+            thumbnailUrl: validThumbUrl,
+            fileUrl: validVideoUrl,
             productName: resolvedProductName,
             storyTitle: resolvedStoryTitle,
             canDelete: true,
