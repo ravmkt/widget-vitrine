@@ -112,6 +112,16 @@ Deno.serve(async (req) => {
       );
     }
 
+    // 5.1 Normalização rigorosa do CPF/CNPJ (adiciona zero à esquerda se necessário)
+    let cleanDoc = document.replace(/\D/g, "");
+    if (cleanDoc.length <= 11) {
+      cleanDoc = cleanDoc.padStart(11, "0");
+    } else if (cleanDoc.length <= 14) {
+      cleanDoc = cleanDoc.padStart(14, "0");
+    }
+
+    const cleanPhone = phone ? phone.replace(/\D/g, "") : undefined;
+
     // 6. Buscar ou criar o customer no Asaas
     const { data: storeRow } = await supabaseAdmin
       .from("stores")
@@ -122,26 +132,40 @@ Deno.serve(async (req) => {
     let asaasCustomerId = storeRow?.asaas_customer_id;
 
     if (!asaasCustomerId) {
+      console.log("[ASAAS] Criando customer:", { name, email, cpfCnpj: cleanDoc });
+
       const customerResponse = await fetch(`${ASAAS_BASE_URL}/customers`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          access_token: ASAAS_API_KEY,
+          "access_token": ASAAS_API_KEY,
         },
         body: JSON.stringify({
-          name: name || email,
-          email,
-          cpfCnpj: document,
-          phone: phone || undefined,
+          name: name || email || "Cliente Vidlytics",
+          email: email || undefined,
+          cpfCnpj: cleanDoc,
+          phone: cleanPhone,
+          externalReference: store_id,
         }),
       });
 
-      const customerData = await customerResponse.json();
+      const customerText = await customerResponse.text();
+      let customerData: any = {};
+      try {
+        customerData = customerText ? JSON.parse(customerText) : {};
+      } catch (e) {
+        console.error("[ASAAS] Resposta não-JSON ao criar customer:", customerText);
+        throw new Error(`Asaas retornou resposta inválida: ${customerText || customerResponse.statusText}`);
+      }
 
       if (!customerResponse.ok) {
-        console.error("Erro ao criar customer no Asaas:", customerData);
+        console.error("[ASAAS] Erro retornado pelo Asaas ao criar customer:", customerData);
         return new Response(
-          JSON.stringify({ error: "ASAAS_CUSTOMER_ERROR", message: "Erro ao criar cliente no Asaas.", details: customerData }),
+          JSON.stringify({ 
+            error: "ASAAS_CUSTOMER_ERROR", 
+            message: customerData.errors?.[0]?.description || "Erro ao criar cliente no Asaas.", 
+            details: customerData 
+          }),
           { status: 400, headers: corsHeaders }
         );
       }
@@ -156,29 +180,44 @@ Deno.serve(async (req) => {
 
     // 7. Criar a assinatura no Asaas
     const cycle = plan.billing_cycle === "yearly" ? "YEARLY" : "MONTHLY";
+    const nextDueDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+    console.log("[ASAAS] Criando subscription:", { customer: asaasCustomerId, cycle, value: plan.price_cents / 100 });
 
     const subscriptionResponse = await fetch(`${ASAAS_BASE_URL}/subscriptions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        access_token: ASAAS_API_KEY,
+        "access_token": ASAAS_API_KEY,
       },
       body: JSON.stringify({
         customer: asaasCustomerId,
         billingType: billing_type || "UNDEFINED",
         value: plan.price_cents / 100,
-        nextDueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        nextDueDate,
         cycle,
         description: `Assinatura ${plan.name} - Vidlytics`,
+        externalReference: store_id,
       }),
     });
 
-    const subscriptionData = await subscriptionResponse.json();
+    const subscriptionText = await subscriptionResponse.text();
+    let subscriptionData: any = {};
+    try {
+      subscriptionData = subscriptionText ? JSON.parse(subscriptionText) : {};
+    } catch (e) {
+      console.error("[ASAAS] Resposta não-JSON ao criar subscription:", subscriptionText);
+      throw new Error(`Asaas retornou resposta inválida ao criar assinatura: ${subscriptionText || subscriptionResponse.statusText}`);
+    }
 
     if (!subscriptionResponse.ok) {
-      console.error("Erro ao criar subscription no Asaas:", subscriptionData);
+      console.error("[ASAAS] Erro ao criar subscription no Asaas:", subscriptionData);
       return new Response(
-        JSON.stringify({ error: "ASAAS_SUBSCRIPTION_ERROR", message: "Erro ao criar assinatura no Asaas.", details: subscriptionData }),
+        JSON.stringify({ 
+          error: "ASAAS_SUBSCRIPTION_ERROR", 
+          message: subscriptionData.errors?.[0]?.description || "Erro ao criar assinatura no Asaas.", 
+          details: subscriptionData 
+        }),
         { status: 400, headers: corsHeaders }
       );
     }
@@ -190,8 +229,9 @@ Deno.serve(async (req) => {
         store_id,
         plan_id,
         asaas_subscription_id: subscriptionData.id,
+        asaas_customer_id: asaasCustomerId,
         status: "pending",
-        is_current: false, // vira "true" somente após confirmação de pagamento via webhook
+        is_current: false,
       })
       .select()
       .single();
@@ -206,10 +246,15 @@ Deno.serve(async (req) => {
     if (!invoiceUrl) {
       const paymentsResponse = await fetch(
         `${ASAAS_BASE_URL}/payments?subscription=${subscriptionData.id}`,
-        { headers: { access_token: ASAAS_API_KEY } }
+        { headers: { "access_token": ASAAS_API_KEY } }
       );
-      const paymentsData = await paymentsResponse.json();
-      invoiceUrl = paymentsData?.data?.[0]?.invoiceUrl || null;
+      const paymentsText = await paymentsResponse.text();
+      try {
+        const paymentsData = paymentsText ? JSON.parse(paymentsText) : {};
+        invoiceUrl = paymentsData?.data?.[0]?.invoiceUrl || paymentsData?.data?.[0]?.bankSlipUrl || null;
+      } catch (e) {
+        console.warn("[ASAAS] Não foi possível parsear lista de pagamentos:", paymentsText);
+      }
     }
 
     return new Response(
