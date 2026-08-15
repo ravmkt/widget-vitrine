@@ -719,9 +719,29 @@ const SelectorModal = () => {
                           isDragging ? 'scale-105 border-[#0094EB] opacity-70 shadow-2xl' : 'border-[#0094EB] shadow-lg shadow-blue-100',
                         )}
                       >
-                        {/* Poster / Placeholder */}
-                        {posterUrl ? (
-                          <img src={posterUrl} alt={video.title || 'Vídeo'} className="h-full w-full object-cover" />
+{/* Poster / Fallback de Streaming */}
+                        {isVideoUrl(posterUrl) || (!posterUrl && Boolean(getVideoFileUrl(video))) ? (
+                          <video
+                            src={posterUrl || getVideoFileUrl(video)}
+                            preload="metadata"
+                            muted
+                            playsInline
+                            className="h-full w-full object-cover pointer-events-none"
+                          />
+                        ) : posterUrl ? (
+                          <img
+                            src={posterUrl}
+                            alt={video.title || 'Vídeo'}
+                            className="h-full w-full object-cover pointer-events-none"
+                            onError={(e) => {
+                              const fileUrl = getVideoFileUrl(video);
+                              if (fileUrl) {
+                                e.currentTarget.style.display = 'none';
+                                const fallbackVideo = e.currentTarget.nextElementSibling as HTMLVideoElement;
+                                if (fallbackVideo) fallbackVideo.style.display = 'block';
+                              }
+                            }}
+                          />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400">
                             <div className="flex flex-col items-center gap-2">
@@ -729,6 +749,17 @@ const SelectorModal = () => {
                               <span className="text-[10px] font-black uppercase tracking-widest">Sem capa</span>
                             </div>
                           </div>
+                        )}
+
+                        {getVideoFileUrl(video) && !isVideoUrl(posterUrl) && posterUrl && (
+                          <video
+                            src={getVideoFileUrl(video)}
+                            preload="metadata"
+                            muted
+                            playsInline
+                            style={{ display: 'none' }}
+                            className="h-full w-full object-cover pointer-events-none"
+                          />
                         )}
 
                         {/* Indicador de ordem (badge numerado) */}
