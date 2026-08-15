@@ -58,7 +58,7 @@ export function BillingPage() {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   };
 
-  // Carrega todos os dados financeiros
+// Carrega todos os dados financeiros
   useEffect(() => {
     const loadBillingData = async () => {
       try {
@@ -69,7 +69,8 @@ export function BillingPage() {
         let activeStoreId = localStorage.getItem('vidlytics_current_store_id') || localStorage.getItem('current_store_id');
 
         if (!activeStoreId) {
-          const { data: { user } } = await supabase.auth.getUser();
+          const { data: userData } = await supabase.auth.getUser();
+          const user = userData?.user;
           if (user) {
             const { data: userStore } = await supabase
               .from('stores')
@@ -85,7 +86,6 @@ export function BillingPage() {
         }
 
         if (!activeStoreId) {
-          // Fallback global caso não encontre nas opções acima
           const { data: firstStore } = await supabase
             .from('stores')
             .select('id')
@@ -111,7 +111,7 @@ export function BillingPage() {
           .eq('id', activeStoreId)
           .single();
 
-        let currentPlanId = storeRow?.plan_id;
+        const currentPlanId = storeRow?.plan_id;
 
         if (storeRow) {
           setStorageUsedBytes(Number(storeRow.storage_used_bytes || 0));
@@ -126,54 +126,38 @@ export function BillingPage() {
           }
         }
 
-          let currentPlanId = storeRow?.plan_id;
+        // 3. Busca Assinatura Corrente e sincroniza o plano
+        const { data: subData } = await supabase
+          .from('subscriptions')
+          .select('*, plans(*)')
+          .eq('store_id', activeStoreId)
+          .eq('is_current', true)
+          .maybeSingle();
 
-          if (storeRow) {
-            setStorageUsedBytes(Number(storeRow.storage_used_bytes || 0));
-            if (storeRow.storage_limit_bytes) {
-              setStorageLimitBytes(Number(storeRow.storage_limit_bytes));
-            }
-            if (storeRow.subscription_status) {
-              setSubscriptionStatus(storeRow.subscription_status);
-            }
-            if (storeRow.trial_ends_at) {
-              setTrialEndsAt(storeRow.trial_ends_at);
+        if (subData) {
+          setSubscription(subData);
+          if (subData.plans) {
+            setPlan(subData.plans);
+            if (subData.plans?.storage_limit_bytes) {
+              setStorageLimitBytes(Number(subData.plans.storage_limit_bytes));
             }
           }
-
-          // 2. Busca Assinatura Corrente e sincroniza o plano
-          const { data: subData } = await supabase
-            .from('subscriptions')
-            .select('*, plans(*)')
-            .eq('store_id', settings.store_id)
-            .eq('is_current', true)
+        } else if (currentPlanId) {
+          const { data: planRow } = await supabase
+            .from('plans')
+            .select('*')
+            .eq('id', currentPlanId)
             .maybeSingle();
 
-          if (subData) {
-            setSubscription(subData);
-            if (subData.plans) {
-              setPlan(subData.plans);
-              if (subData.plans?.storage_limit_bytes) {
-                setStorageLimitBytes(Number(subData.plans.storage_limit_bytes));
-              }
-            }
-          } else if (currentPlanId) {
-            // Fallback: se não houver sub corrente ativa, busca os dados do plano direto da store
-            const { data: planRow } = await supabase
-              .from('plans')
-              .select('*')
-              .eq('id', currentPlanId)
-              .maybeSingle();
-
-            if (planRow) {
-              setPlan(planRow);
-              if (planRow.storage_limit_bytes) {
-                setStorageLimitBytes(Number(planRow.storage_limit_bytes));
-              }
+          if (planRow) {
+            setPlan(planRow);
+            if (planRow.storage_limit_bytes) {
+              setStorageLimitBytes(Number(planRow.storage_limit_bytes));
             }
           }
+        }
 
-          // 3. Busca Histórico de Faturas
+        // 4. Busca Histórico de Faturas
         const { data: invData } = await supabase
           .from('invoices')
           .select('*')
@@ -182,28 +166,27 @@ export function BillingPage() {
 
         setInvoices(invData || []);
 
-        // 4. Busca Dados Fiscais
+        // 5. Busca Dados Fiscais
         const { data: billData } = await supabase
           .from('billing_info')
           .select('*')
           .eq('store_id', activeStoreId)
           .maybeSingle();
 
-          if (billData) {
-            setFiscalData({
-              cnpj_cpf: billData.cnpj_cpf || '',
-              legal_name: billData.legal_name || '',
-              email: billData.email || '',
-              phone: billData.phone || '',
-              cep: billData.cep || '',
-              address: billData.address || '',
-              number: billData.number || '',
-              complement: billData.complement || '',
-              neighborhood: billData.neighborhood || '',
-              city: billData.city || '',
-              state: billData.state || '',
-            });
-          }
+        if (billData) {
+          setFiscalData({
+            cnpj_cpf: billData.cnpj_cpf || '',
+            legal_name: billData.legal_name || '',
+            email: billData.email || '',
+            phone: billData.phone || '',
+            cep: billData.cep || '',
+            address: billData.address || '',
+            number: billData.number || '',
+            complement: billData.complement || '',
+            neighborhood: billData.neighborhood || '',
+            city: billData.city || '',
+            state: billData.state || '',
+          });
         }
       } catch (err) {
         console.error('Erro ao carregar módulo financeiro:', err);
@@ -214,7 +197,7 @@ export function BillingPage() {
 
     loadBillingData();
   }, []);
-
+  
   // Salvar Dados Fiscais
   const handleSaveFiscal = async (e: React.FormEvent) => {
     e.preventDefault();
