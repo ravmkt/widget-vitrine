@@ -4617,6 +4617,11 @@ function initWidget() {
   }
 
   readStoreStatus().then(function (storeData) {
+    if (hasSupabase && !storeData) {
+      console.warn('[Vidlytics] Widget inativo: não foi possível validar a autenticidade da loja.');
+      return;
+    }
+
     if (storeData && isStoreBlocked(storeData)) {
       console.warn('[Vidlytics] Widget inativo: assinatura cancelada, pendente ou trial encerrado.');
       return;
