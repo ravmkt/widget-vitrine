@@ -177,6 +177,7 @@ export default function StoragePage() {
   const [tiktokVideos, setTikTokVideos] = useState<any[]>([]); // Estado para vídeos do TikTok
   const [loadingTikTok, setLoadingTikTok] = useState(false); // Carregamento do TikTok
   const [storeId, setStoreId] = useState<string | null>(null);
+  const [planName, setPlanName] = useState<string>('Plano Iniciante');
   const [serverStorageUsedBytes, setServerStorageUsedBytes] = useState<number | null>(null);
   const [serverStorageLimitBytes, setServerStorageLimitBytes] = useState<number>(PLAN_LIMIT_BYTES);
   const [activePlatformTab, setActivePlatformTab] = useState<'none' | 'instagram' | 'tiktok' | 'youtube' | 'pinterest'>('none');
