@@ -4030,14 +4030,28 @@ var rawVideoUrl = getVideoUrl(video);
 
       function primeGridVideoFrame(vidEl) {
         if (!vidEl) return;
-        var playPromise = vidEl.play();
-        if (playPromise !== undefined) {
-          playPromise.then(function() {
-            vidEl.pause();
-            try {
-              vidEl.currentTime = 0.001;
-            } catch (e) {}
-          }).catch(function() {});
+        vidEl.muted = true;
+        vidEl.defaultMuted = true;
+        vidEl.playsInline = true;
+        vidEl.setAttribute('playsinline', '');
+        vidEl.setAttribute('webkit-playsinline', '');
+        vidEl.setAttribute('muted', '');
+
+        function tryPrime() {
+          var playPromise = vidEl.play();
+          if (playPromise !== undefined) {
+            playPromise.then(function () {
+              vidEl.pause();
+            }).catch(function () {
+              try { vidEl.currentTime = 0.001; } catch (e) {}
+            });
+          }
+        }
+
+        if (vidEl.readyState >= 2) {
+          tryPrime();
+        } else {
+          vidEl.addEventListener('loadeddata', tryPrime, { once: true });
         }
       }
 
@@ -4053,8 +4067,7 @@ var rawVideoUrl = getVideoUrl(video);
         gridVideo.setAttribute('muted', '');
         gridVideo.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;';
 
-        gridVideo.addEventListener('loadeddata', function () { primeGridVideoFrame(gridVideo); }, { once: true });
-        gridVideo.addEventListener('canplay', function () { primeGridVideoFrame(gridVideo); }, { once: true });
+        primeGridVideoFrame(gridVideo);
 
         innerMask.appendChild(gridVideo);
       } else {
@@ -4078,8 +4091,7 @@ var rawVideoUrl = getVideoUrl(video);
             fallbackGridVid.setAttribute('muted', '');
             fallbackGridVid.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;';
 
-            fallbackGridVid.addEventListener('loadeddata', function () { primeGridVideoFrame(fallbackGridVid); }, { once: true });
-            fallbackGridVid.addEventListener('canplay', function () { primeGridVideoFrame(fallbackGridVid); }, { once: true });
+            primeGridVideoFrame(fallbackGridVid);
 
             innerMask.appendChild(fallbackGridVid);
           }
