@@ -575,7 +575,7 @@ function getFloatingConfig(appearance) {
   appearance = normalizeAppearanceItem(appearance || {});
   
   function rcv(jsonbField, fallback) {
-    return readConfigValue(appearance, 'floating_config', jsonbField, fallback);
+    return readConfigValue(appearance, 'floating_config', jsonbField, null, fallback);
   }
   
   var rawPosition = rcv('floating_position', DEFAULT_APPEARANCE.floating_position);
