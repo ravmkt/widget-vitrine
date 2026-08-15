@@ -142,7 +142,7 @@ interface StorageItem {
   canDelete: boolean;
 }
 
-const PLAN_LIMIT_BYTES = 1 * 1024 * 1024 * 1024; // 1 GB em bytes para testes de régua
+const PLAN_LIMIT_BYTES = 500 * 1024 * 1024; // 500 MB em bytes (Padrão Plano Iniciante)
 
 // Componentes de Ícones Vetorizados Oficiais das Plataformas
 const SocialIcons = {
