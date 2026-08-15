@@ -50,34 +50,42 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // 3. Buscar a invoice existente (idempotência)
-    const { data: existingInvoice } = await supabaseAdmin
-      .from("invoices")
-      .select("id, status")
-      .eq("asaas_payment_id", asaasPaymentId)
-      .maybeSingle();
-
+// 3. Buscar a invoice existente (idempotência) apenas se houver pagamento
+    let existingInvoice: any = null;
     const newInvoiceStatus = mapAsaasStatusToInvoiceStatus(event);
 
-    if (existingInvoice && existingInvoice.status === newInvoiceStatus) {
-      console.log("Status já sincronizado, ignorando webhook duplicado.");
-      return new Response(
-        JSON.stringify({ message: "Já processado." }),
-        { status: 200, headers: corsHeaders }
-      );
+    if (asaasPaymentId) {
+      const { data } = await supabaseAdmin
+        .from("invoices")
+        .select("id, status")
+        .eq("asaas_payment_id", asaasPaymentId)
+        .maybeSingle();
+
+      existingInvoice = data;
+
+      if (existingInvoice && existingInvoice.status === newInvoiceStatus) {
+        console.log("Status já sincronizado, ignorando webhook duplicado.");
+        return new Response(
+          JSON.stringify({ message: "Já processado." }),
+          { status: 200, headers: corsHeaders }
+        );
+      }
     }
 
-    // 4. Buscar a subscription local e resolver plano por valor pago
-    const paymentAmountCents = Math.round((payment.value || 0) * 100);
+    // 4. Buscar a subscription local e resolver plano por valor pago (protegido contra payment nulo)
+    const paymentAmountCents = payment ? Math.round((payment.value || 0) * 100) : 0;
+    let resolvedPlanId: string | null = null;
 
-    const { data: matchedPlan } = await supabaseAdmin
-      .from("plans")
-      .select("id, name, price_cents")
-      .eq("price_cents", paymentAmountCents)
-      .maybeSingle();
+    if (paymentAmountCents > 0) {
+      const { data: matchedPlan } = await supabaseAdmin
+        .from("plans")
+        .select("id, name, price_cents")
+        .eq("price_cents", paymentAmountCents)
+        .maybeSingle();
 
-    const resolvedPlanId = matchedPlan?.id || null;
-
+      resolvedPlanId = matchedPlan?.id || null;
+    }
+    
     let subscription: any = null;
 
     if (asaasSubscriptionId) {
