@@ -526,7 +526,7 @@ const { data, error } = await supabase.functions.invoke('import-pinterest-video'
       const isVideo = file.type.startsWith('video');
       const cleanFileName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
       const safeStoragePath = `${activeId}/${Date.now()}_${Math.random().toString(36).substring(2, 7)}_${cleanFileName}`;
-      
+
       let finalVideoUrl = '';
       let finalThumbUrl = '';
       let thumbnailSize = 0;
@@ -560,8 +560,8 @@ const { data, error } = await supabase.functions.invoke('import-pinterest-video'
           const thumbBlob = await generateVideoThumbnail(file);
           thumbnailSize = thumbBlob.size;
 
-          if (supabase) {
-            const thumbStoragePath = `${settings.store_id}/thumb_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
+if (supabase) {
+            const thumbStoragePath = `${activeId}/thumb_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
             const { data: thumbUploadData, error: thumbErr } = await supabase.storage
               .from('videos')
               .upload(thumbStoragePath, thumbBlob, { contentType: 'image/jpeg', upsert: true });
