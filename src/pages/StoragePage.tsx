@@ -1553,9 +1553,16 @@ filteredFiles.map(file => (
                             <Pencil size={16} />
                           </button>
                         )}
-                        <button
+<button
                           type="button"
-                          onClick={() => window.open(file.fileUrl || file.thumbnailUrl, '_blank')}
+                          onClick={() => {
+                            const targetUrl = file.fileUrl || file.thumbnailUrl;
+                            if (targetUrl && !targetUrl.startsWith('blob:') && targetUrl.trim() !== '') {
+                              window.open(targetUrl, '_blank');
+                            } else {
+                              showError('Endereço do arquivo indisponível para visualização.');
+                            }
+                          }}
                           className="rounded-lg p-2 text-slate-400 hover:bg-blue-50 hover:text-[#0094EB] dark:hover:bg-blue-950"
                           title="Visualizar mídia"
                         >
