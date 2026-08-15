@@ -3601,13 +3601,9 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
 
         var isDirectVideo = isDirectVideoUrl(effectiveMediaUrl);
 
-        if (isDirectVideo) {
+if (isDirectVideo) {
           var previewVideo = document.createElement('video');
-          var videoSrcWithTime = effectiveMediaUrl;
-          if (videoSrcWithTime.indexOf('#t=') === -1) {
-            videoSrcWithTime += '#t=0.001';
-          }
-          previewVideo.src = videoSrcWithTime;
+          previewVideo.src = effectiveMediaUrl;
           previewVideo.preload = 'auto';
           previewVideo.muted = true;
           previewVideo.playsInline = true;
@@ -3622,8 +3618,16 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             'border-radius:' + innerRadiusCss + ' !important;' +
             '-webkit-backface-visibility:hidden !important;' +
             'background:#000 !important;';
+
+          // Força a decodificação e pintura do frame 0.1 na GPU do navegador
+          previewVideo.addEventListener('loadeddata', function () {
+            try {
+              previewVideo.currentTime = 0.1;
+            } catch (e) {}
+          });
+
           innerMask.appendChild(previewVideo);
-        } else {
+        }
           var img = document.createElement('img');
           img.src = effectiveMediaUrl;
           img.alt = story.title || 'Story';
