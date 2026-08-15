@@ -188,19 +188,64 @@ const SettingsPage = () => {
     localStorage.setItem('app-theme', isDark ? 'dark' : 'light');
   }, [isDark]);
 
-  useEffect(() => {
+useEffect(() => {
     const fetchSettings = async () => {
       try {
         setLoading(true);
-        const settingsArr = await db.generalSettings.getAll();
+        let activeStoreId =
+          localStorage.getItem('vidlytics_current_store_id') ||
+          localStorage.getItem('current_store_id') ||
+          localStorage.getItem('store_id');
 
-        if (settingsArr?.length) {
-          const loaded = generalSettingsToAppSettings(settingsArr[0]);
-          setSettings(loaded);
-          setLogoPreview(loaded.store_logo_url || "");
+        if (!activeStoreId && supabase) {
+          const { data: userData } = await supabase.auth.getUser();
+          const user = userData?.user;
+          if (user) {
+            const { data: userStore } = await supabase
+              .from('stores')
+              .select('id, name, url')
+              .eq('owner_user_id', user.id)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            if (userStore) {
+              activeStoreId = userStore.id;
+              localStorage.setItem('vidlytics_current_store_id', userStore.id);
+            }
+          }
+        }
+
+        if (activeStoreId && supabase) {
+          const { data: storeRow } = await supabase
+            .from('stores')
+            .select('id, name, url, logo_url, contact_email')
+            .eq('id', activeStoreId)
+            .maybeSingle();
+
+          const { data: settingsRow } = await supabase
+            .from('store_settings')
+            .select('*')
+            .eq('store_id', activeStoreId)
+            .maybeSingle();
+
+          if (settingsRow) {
+            const loaded = generalSettingsToAppSettings(settingsRow as GeneralSettings);
+            setSettings(loaded);
+            setLogoPreview(loaded.store_logo_url || "");
+          } else if (storeRow) {
+            setSettings({
+              ...DEFAULT_SETTINGS,
+              store_id: storeRow.id,
+              store_name: storeRow.name || '',
+              store_url: storeRow.url || '',
+              store_logo_url: storeRow.logo_url || null,
+              contact_email: storeRow.contact_email || null,
+            });
+            setLogoPreview(storeRow.logo_url || "");
+          }
         } else {
-          const storeId = await db.resolveStoreId();
-          setSettings({ ...DEFAULT_SETTINGS, store_id: storeId });
+          setSettings(DEFAULT_SETTINGS);
         }
       } catch (err) {
         console.error('Error fetching settings:', err);
@@ -211,7 +256,7 @@ const SettingsPage = () => {
     };
     fetchSettings();
   }, []);
-
+  
   // ── NOVO: Buscar setores e setor atual da loja ──
   useEffect(() => {
     const fetchSectors = async () => {
