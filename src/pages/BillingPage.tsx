@@ -1,10 +1,21 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-Building2
+import { 
+  Receipt, 
+  Building2, 
+  Sparkles, 
+  CheckCircle2, 
+  ChevronRight, 
+  HardDrive, 
+  Eye, 
+  FileCode,
+  Save,
+  Loader2,
+  AlertTriangle,
+  XCircle,
+  Clock
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/lib/supabase';
-import { db } from '@/lib/db';
-import { showSuccess, showError } from '@/utils/toast';
 
 export function BillingPage() {
   const navigate = useNavigate();
