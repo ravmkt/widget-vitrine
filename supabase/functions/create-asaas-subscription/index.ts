@@ -69,32 +69,37 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 5. Buscar dados fiscais: primeiro em billing_info, senão em profiles
+    // 5. Buscar dados fiscais: primeiro em billing_info (cnpj_cpf, legal_name), senão em profiles
     let document: string | null = null;
     let phone: string | null = null;
     let name: string | null = null;
     let email: string | null = user.email ?? null;
 
-    const { data: billingInfo } = await supabaseAdmin
+    const { data: billingInfo, error: billingErr } = await supabaseAdmin
       .from("billing_info")
-      .select("document_number, phone, full_name")
+      .select("cnpj_cpf, legal_name, phone, email")
       .eq("store_id", store_id)
       .maybeSingle();
 
-    if (billingInfo?.document_number) {
-      document = billingInfo.document_number;
-      phone = billingInfo.phone;
-      name = billingInfo.full_name;
+    if (billingInfo?.cnpj_cpf) {
+      document = String(billingInfo.cnpj_cpf).trim();
+      phone = billingInfo.phone ? String(billingInfo.phone).trim() : null;
+      name = billingInfo.legal_name || null;
+      email = billingInfo.email || email;
     } else {
+      // Fallback para tabela profiles
       const { data: profile } = await supabaseAdmin
         .from("profiles")
-        .select("document_number, phone, full_name")
-        .eq("id", user.id)
+        .select("document_number, phone, name, email")
+        .eq("user_id", user.id)
         .maybeSingle();
 
-      document = profile?.document_number ?? null;
-      phone = profile?.phone ?? null;
-      name = profile?.full_name ?? null;
+      if (profile?.document_number) {
+        document = String(profile.document_number).trim();
+        phone = profile.phone ? String(profile.phone).trim() : null;
+        name = profile.name || null;
+        email = profile.email || email;
+      }
     }
 
     if (!document) {
