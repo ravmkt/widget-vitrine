@@ -653,6 +653,7 @@ export default function StoragePage() {
 
           if (storeRow) {
             activeStoreId = storeRow.id;
+            localStorage.setItem('vidlytics_current_store_id', storeRow.id);
           }
         }
       }
@@ -661,27 +662,105 @@ export default function StoragePage() {
         setStoreId(activeStoreId);
       }
 
+      // Busca vídeos reais da loja ativa
       const realVideos = activeStoreId ? await db.videos.getAll(activeStoreId) : [];
+      if (Array.isArray(realVideos)) {
+        const sanitizeUrl = (rawUrl?: string) => {
+          if (!rawUrl) return '';
+          if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://') || rawUrl.startsWith('data:')) {
+            return rawUrl;
+          }
+          if (rawUrl.startsWith('blob:')) {
+            return '';
+          }
+          return `https://wznvecurmisgoaijykbt.supabase.co/storage/v1/object/public/videos/${rawUrl}`;
+        };
 
-      if (settings?.logo_url) {
-        const logoBytes = settings.logo_file_size && Number(settings.logo_file_size) > 0
-          ? Number(settings.logo_file_size)
-          : 0;
+        realVideos.forEach((vid: any) => {
+          const validVideoUrl = sanitizeUrl(vid.video_url);
+          const validThumbUrl = sanitizeUrl(vid.thumbnail_url);
+          const finalMediaUrl = validVideoUrl || validThumbUrl;
 
-        loadedItems.push({
-          id: 'logo-setting-file',
-          name: 'LOGOTIPO_OFICIAL_LOJA.png',
-          type: 'image',
-          sizeInBytes: logoBytes,
-          createdAt: 'Ativo',
-          thumbnailUrl: settings.logo_url,
-          fileUrl: settings.logo_url,
-          canDelete: false,
+          const videoUrlStr = String(finalMediaUrl || '').toLowerCase();
+          const isExplicitUrlType = vid.video_source_type === 'url' || vid.source_type === 'url';
+          const isHostedOnPlatform = videoUrlStr.includes('supabase');
+          const isExternalUrl = isExplicitUrlType || (!isHostedOnPlatform && videoUrlStr.startsWith('http'));
+
+          const videoBytes = isExternalUrl 
+            ? 0 
+            : (vid.file_size && Number(vid.file_size) > 0 
+                ? Number(vid.file_size) 
+                : 20971520);
+
+          const thumbnailBytes = vid.thumbnail_source_type === 'upload' && vid.thumbnail_file_size
+            ? Number(vid.thumbnail_file_size)
+            : 0;
+
+          const totalMediaBytes = videoBytes + thumbnailBytes;
+
+          const formattedDate = vid.created_at 
+            ? new Date(vid.created_at).toLocaleDateString('pt-BR') 
+            : 'Hoje';
+
+          loadedItems.push({
+            id: vid.id || String(Math.random()),
+            name: vid.title || `VIDEO_${vid.id?.slice(0, 6) || 'UPLOAD'}.mp4`,
+            type: 'video',
+            sizeInBytes: totalMediaBytes,
+            createdAt: formattedDate,
+            thumbnailUrl: validThumbUrl || finalMediaUrl,
+            fileUrl: finalMediaUrl,
+            productName: vid.product_name || vid.product?.title || undefined,
+            storyTitle: vid.story_title || vid.story?.title || undefined,
+            canDelete: true,
+          });
         });
       }
 
+      // Busca cota oficial e plano da loja ativa no Supabase
+      if (activeStoreId && supabase) {
+        const { data: storeRow } = await supabase
+          .from('stores')
+          .select('storage_used_bytes, storage_limit_bytes, plan_id, plans(name, storage_limit_bytes)')
+          .eq('id', activeStoreId)
+          .maybeSingle();
+
+        if (storeRow) {
+          if (storeRow.storage_used_bytes !== null && storeRow.storage_used_bytes !== undefined) {
+            setServerStorageUsedBytes(Number(storeRow.storage_used_bytes));
+          }
+          if (storeRow.storage_limit_bytes) {
+            setServerStorageLimitBytes(Number(storeRow.storage_limit_bytes));
+          } else if ((storeRow as any).plans?.storage_limit_bytes) {
+            setServerStorageLimitBytes(Number((storeRow as any).plans.storage_limit_bytes));
+          }
+          if ((storeRow as any).plans?.name) {
+            setPlanName((storeRow as any).plans.name);
+          }
+        }
+
+        const { data: settingsData } = await supabase
+          .from('store_settings')
+          .select('logo_url')
+          .eq('store_id', activeStoreId)
+          .maybeSingle();
+
+        if (settingsData?.logo_url) {
+          loadedItems.push({
+            id: 'logo-setting-file',
+            name: 'LOGOTIPO_OFICIAL_LOJA.png',
+            type: 'image',
+            sizeInBytes: 0,
+            createdAt: 'Ativo',
+            thumbnailUrl: settingsData.logo_url,
+            fileUrl: settingsData.logo_url,
+            canDelete: false,
+          });
+        }
+      }
+
       setFiles(loadedItems);
-          } catch (err) {
+    } catch (err) {
       console.error('Erro ao carregar arquivos da conta:', err);
       showError('Erro ao carregar dados de armazenamento.');
     } finally {
