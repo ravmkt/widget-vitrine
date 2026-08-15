@@ -1652,8 +1652,21 @@ export const db = {
     memoryStoreSettings,
   ),
 
-  getSettings: async (): Promise<GeneralSettings | null> => {
-    const settings = await db.generalSettings.getAll();
+  getSettings: async (storeId?: string): Promise<GeneralSettings | null> => {
+    const resolvedId = storeId || (await resolveStoreId());
+    if (isSupabaseConfigured && isValidUuid(resolvedId)) {
+      const { data } = await supabase
+        .from('store_settings')
+        .select('*')
+        .eq('store_id', resolvedId)
+        .maybeSingle();
+
+      if (data) {
+        return normalizeTableItemForClient('store_settings', data) as GeneralSettings;
+      }
+    }
+
+    const settings = await db.generalSettings.getAll(resolvedId);
     return settings[0] || null;
   },
 
