@@ -32,6 +32,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { db } from "@/lib/db";
 import { signOut } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
 
 const menuItems = [
   { title: "Visão Geral", url: "/dashboard", icon: LayoutDashboard },
