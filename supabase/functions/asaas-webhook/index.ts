@@ -68,34 +68,38 @@ Deno.serve(async (req) => {
 
     // 4. Atualizar ou criar a invoice (com store_id garantido para exibição no frontend)
     if (existingInvoice) {
-      await supabaseAdmin
-        .from("invoices")
-        .update({
-          status: newInvoiceStatus,
-          paid_at: event === "PAYMENT_RECEIVED" || event === "PAYMENT_CONFIRMED"
-            ? new Date().toISOString()
-            : null,
-          store_id: storeId || undefined,
-          invoice_url: payment.invoiceUrl || payment.bankSlipUrl || undefined,
-          payment_method: payment.billingType || undefined,
-        })
-        .eq("id", existingInvoice.id);
-    } else {
-      await supabaseAdmin.from("invoices").insert({
-        store_id: storeId,
-        asaas_payment_id: asaasPaymentId,
-        asaas_subscription_id: asaasSubscriptionId,
-        asaas_customer_id: asaasCustomerId,
-        status: newInvoiceStatus,
-        amount_cents: Math.round((payment.value || 0) * 100),
-        due_date: payment.dueDate,
-        paid_at: event === "PAYMENT_RECEIVED" || event === "PAYMENT_CONFIRMED"
-          ? new Date().toISOString()
-          : null,
-        invoice_url: payment.invoiceUrl || payment.bankSlipUrl || null,
-        payment_method: payment.billingType || "PIX",
-      });
-    }
+  await supabaseAdmin
+    .from("invoices")
+    .update({
+      status: newInvoiceStatus,
+      paid_at: event === "PAYMENT_RECEIVED" || event === "PAYMENT_CONFIRMED"
+        ? new Date().toISOString()
+        : null,
+      store_id: storeId || undefined,
+      subscription_id: subscription?.id || undefined,
+    })
+    .eq("id", existingInvoice.id);
+} else {
+  await supabaseAdmin.from("invoices").insert({
+    store_id: storeId,
+    subscription_id: subscription?.id || null,
+    asaas_payment_id: asaasPaymentId,
+    status: newInvoiceStatus,
+    amount_cents: Math.round((payment.value || 0) * 100),
+    currency: "BRL",
+    description: payment.description || null,
+    due_date: payment.dueDate,
+    paid_at: event === "PAYMENT_RECEIVED" || event === "PAYMENT_CONFIRMED"
+      ? new Date().toISOString()
+      : null,
+    gateway_provider: "asaas",
+    gateway_invoice_id: asaasPaymentId,
+    invoice_pdf_url: payment.bankSlipUrl || null,
+    invoice_url: payment.invoiceUrl || payment.bankSlipUrl || null,
+    payment_method: payment.billingType || null,
+  });
+}
+
 
     // 5. Buscar a subscription local vinculada ao asaas_subscription_id com fallback por store_id
     let subscription: any = null;
