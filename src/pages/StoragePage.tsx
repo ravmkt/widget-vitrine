@@ -878,7 +878,7 @@ export default function StoragePage() {
                 <div>
 <div className="flex items-center gap-2">
                     <h3 className="text-base font-black text-slate-900 dark:text-white">
-                      Plano Pro
+                      {planName}
                     </h3>
                     <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-black uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                       {formatSize(maxLimitBytes)} Limite
