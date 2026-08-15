@@ -1427,9 +1427,9 @@ filteredFiles.map(file => (
                   <tr key={file.id} className="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
 <td className="px-6 py-3.5">
                       <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex items-center justify-center shrink-0">
-                        {file.thumbnailUrl ? (
+                        {file.thumbnailUrl || (file.type === 'image' && file.fileUrl) ? (
                           <img 
-                            src={file.thumbnailUrl} 
+                            src={file.thumbnailUrl || file.fileUrl} 
                             alt={file.name} 
                             referrerPolicy="no-referrer"
                             className="h-full w-full object-cover"
@@ -1446,11 +1446,15 @@ filteredFiles.map(file => (
                             playsInline
                           />
                         ) : null}
-                        {file.type === 'video' && (
+                        {file.type === 'video' ? (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/20 text-white pointer-events-none">
                             <FileVideo size={16} />
                           </div>
-                        )}
+                        ) : (!file.thumbnailUrl && !file.fileUrl) ? (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/5 text-slate-400 pointer-events-none">
+                            <FileImage size={16} />
+                          </div>
+                        ) : null}
                       </div>
                     </td>
 
