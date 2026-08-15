@@ -75,20 +75,32 @@ export function BillingPage() {
                             localStorage.getItem('current_store_id') || 
                             localStorage.getItem('store_id');
 
-        if (!activeStoreId) {
+if (!activeStoreId) {
           const { data: userData } = await supabase.auth.getUser();
           const user = userData?.user;
           if (user) {
-            // Tenta buscar por user_id ou owner_id
-            const { data: userStore } = await supabase
+            // 1. Tenta buscar pela coluna user_id
+            const { data: storeByUser } = await supabase
               .from('stores')
               .select('id')
-              .or(`user_id.eq.${user.id},owner_id.eq.${user.id}`)
+              .eq('user_id', user.id)
               .limit(1)
               .maybeSingle();
 
-            if (userStore) {
-              activeStoreId = userStore.id;
+            if (storeByUser) {
+              activeStoreId = storeByUser.id;
+            } else {
+              // 2. Fallback: tenta buscar pela coluna owner_id caso exista
+              const { data: storeByOwner } = await supabase
+                .from('stores')
+                .select('id')
+                .eq('owner_id', user.id)
+                .limit(1)
+                .maybeSingle();
+
+              if (storeByOwner) {
+                activeStoreId = storeByOwner.id;
+              }
             }
           }
         }
