@@ -753,26 +753,57 @@ const payload = {
         setStoreId(activeStoreId);
       }
 
-      // Busca vídeos reais da loja ativa
-      const realVideos = activeStoreId ? await db.videos.getAll(activeStoreId) : [];
+// Busca vídeos reais da loja ativa com joins relacionais e fallback defensivo
+      let realVideos: any[] = [];
+      if (activeStoreId) {
+        if (supabase) {
+          try {
+            const { data: vidsData, error: vidsError } = await supabase
+              .from('videos')
+              .select(`
+                *,
+                products:product_id (id, name, title),
+                story_videos (
+                  story_id,
+                  stories:story_id (id, title)
+                )
+              `)
+              .eq('store_id', activeStoreId)
+              .order('created_at', { ascending: false });
+
+            if (vidsError || !vidsData) {
+              console.warn('[Vidlytics Storage] Query relacional falhou, aplicando fallback local:', vidsError);
+              realVideos = await db.videos.getAll(activeStoreId);
+            } else {
+              realVideos = vidsData;
+            }
+          } catch (queryErr) {
+            console.warn('[Vidlytics Storage] Exceção na query relacional:', queryErr);
+            realVideos = await db.videos.getAll(activeStoreId);
+          }
+        } else {
+          realVideos = await db.videos.getAll(activeStoreId);
+        }
+      }
+
       if (Array.isArray(realVideos)) {
         const sanitizeUrl = (rawUrl?: string) => {
           if (!rawUrl) return '';
-          if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://') || rawUrl.startsWith('data:')) {
-            return rawUrl;
+          const str = String(rawUrl).trim();
+          if (str.startsWith('http://') || str.startsWith('https://') || str.startsWith('data:')) {
+            return str;
           }
-          if (rawUrl.startsWith('blob:')) {
+          if (str.startsWith('blob:')) {
             return '';
           }
-          return `https://wznvecurmisgoaijykbt.supabase.co/storage/v1/object/public/videos/${rawUrl}`;
+          return `https://wznvecurmisgoaijykbt.supabase.co/storage/v1/object/public/videos/${str.replace(/^\/+/, '')}`;
         };
 
         realVideos.forEach((vid: any) => {
           const validVideoUrl = sanitizeUrl(vid.video_url);
           const validThumbUrl = sanitizeUrl(vid.thumbnail_url);
-          const finalMediaUrl = validVideoUrl || validThumbUrl;
 
-          const videoUrlStr = String(finalMediaUrl || '').toLowerCase();
+          const videoUrlStr = String(validVideoUrl || '').toLowerCase();
           const isExplicitUrlType = vid.video_source_type === 'url' || vid.source_type === 'url';
           const isHostedOnPlatform = videoUrlStr.includes('supabase');
           const isExternalUrl = isExplicitUrlType || (!isHostedOnPlatform && videoUrlStr.startsWith('http'));
@@ -793,16 +824,36 @@ const payload = {
             ? new Date(vid.created_at).toLocaleDateString('pt-BR') 
             : 'Hoje';
 
+          // Resolução do Nome do Produto
+          const resolvedProductName = vid.products?.name || vid.products?.title || vid.product_name || vid.product?.title || undefined;
+
+          // Resolução do Nome do Story Vinculado (cobre array 1:N e objeto 1:1)
+          let resolvedStoryTitle: string | undefined = undefined;
+          if (Array.isArray(vid.story_videos) && vid.story_videos.length > 0) {
+            const firstStory = vid.story_videos[0]?.stories;
+            if (firstStory) {
+              resolvedStoryTitle = firstStory.title || undefined;
+            }
+          } else if (vid.story_videos && typeof vid.story_videos === 'object') {
+            const directStory = (vid.story_videos as any).stories;
+            if (directStory) {
+              resolvedStoryTitle = directStory.title || undefined;
+            }
+          }
+          if (!resolvedStoryTitle) {
+            resolvedStoryTitle = vid.story_title || vid.story?.title || undefined;
+          }
+
           loadedItems.push({
             id: vid.id || String(Math.random()),
             name: vid.title || `VIDEO_${vid.id?.slice(0, 6) || 'UPLOAD'}.mp4`,
             type: 'video',
             sizeInBytes: totalMediaBytes,
             createdAt: formattedDate,
-            thumbnailUrl: validThumbUrl || finalMediaUrl,
-            fileUrl: finalMediaUrl,
-            productName: vid.product_name || vid.product?.title || undefined,
-            storyTitle: vid.story_title || vid.story?.title || undefined,
+            thumbnailUrl: validThumbUrl || validVideoUrl,
+            fileUrl: validVideoUrl || validThumbUrl,
+            productName: resolvedProductName,
+            storyTitle: resolvedStoryTitle,
             canDelete: true,
           });
         });
