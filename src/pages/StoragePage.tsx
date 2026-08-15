@@ -1429,17 +1429,14 @@ filteredFiles.map(file => (
                   <tr key={file.id} className="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
 <td className="px-6 py-3.5">
                       <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex items-center justify-center shrink-0">
-                        {file.thumbnailUrl || (file.type === 'image' && file.fileUrl) ? (
+                        {file.type === 'image' || file.thumbnailUrl ? (
                           <img 
                             src={file.thumbnailUrl || file.fileUrl} 
                             alt={file.name} 
                             referrerPolicy="no-referrer"
                             className="h-full w-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                            }} 
                           />
-                        ) : file.fileUrl && file.type === 'video' ? (
+                        ) : file.fileUrl ? (
                           <video
                             src={file.fileUrl.indexOf('#t=') === -1 ? `${file.fileUrl}#t=0.001` : file.fileUrl}
                             className="h-full w-full object-cover"
@@ -1447,16 +1444,15 @@ filteredFiles.map(file => (
                             muted
                             playsInline
                           />
-                        ) : null}
-                        {file.type === 'video' ? (
+                        ) : (
+                          <FileImage size={16} className="text-slate-400" />
+                        )}
+
+                        {file.type === 'video' && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/20 text-white pointer-events-none">
                             <FileVideo size={16} />
                           </div>
-                        ) : (!file.thumbnailUrl && !file.fileUrl) ? (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/5 text-slate-400 pointer-events-none">
-                            <FileImage size={16} />
-                          </div>
-                        ) : null}
+                        )}
                       </div>
                     </td>
 
