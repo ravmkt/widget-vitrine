@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { ensureUserTenantAtomics } from '@/lib/auth';
@@ -6,95 +6,104 @@ import { ensureUserTenantAtomics } from '@/lib/auth';
 const AuthCallbackPage: React.FC = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const processingRef = useRef(false);
 
   useEffect(() => {
     let isMounted = true;
-    let authProcessed = false;
-
-    const processUser = async (user: any) => {
-      if (authProcessed || !user) return;
-      authProcessed = true;
-      console.log('[Auth Callback] Usuário autenticado detectado:', user.id, user.email);
-
-      try {
-        const tenantResult = await ensureUserTenantAtomics(user);
-        console.log('[Auth Callback] Tenant provisionado com sucesso:', tenantResult);
-        if (isMounted) {
-          navigate('/dashboard', { replace: true });
-        }
-      } catch (err: any) {
-        console.error('[Auth Callback] Erro ao provisionar tenant:', err);
-        if (isMounted) {
-          setError(err.message || 'Falha ao provisionar acesso à sua loja.');
-          setTimeout(() => navigate('/login', { replace: true }), 4000);
-        }
-      }
-    };
+    let timerId: any = null;
 
     if (!supabase) {
       setError('Configuração do Supabase não encontrada.');
       return;
     }
 
-    // 1. Processamento explícito do código de autorização PKCE (?code=...)
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
+    const processAuthUser = async (user: any) => {
+      if (processingRef.current || !user) return;
+      processingRef.current = true;
+      if (timerId) clearTimeout(timerId);
 
-    const handleCallbackFlow = async () => {
       try {
-        if (code) {
-          console.log('[Auth Callback] Processando troca de código PKCE...');
-          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-          if (exchangeError) throw exchangeError;
-          if (data?.session?.user) {
-            return processUser(data.session.user);
-          }
-        }
-
-        // 2. Se não houver code na query ou se já foi processado, obtém a sessão ativa
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) throw sessionError;
-        if (session?.user) {
-          return processUser(session.user);
-        }
-
-        // 3. Fallback adicional via getUser
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (!userError && user) {
-          return processUser(user);
+        console.log('[Auth Callback] Autenticando tenant para o usuário:', user.id);
+        await ensureUserTenantAtomics(user);
+        if (isMounted) {
+          navigate('/dashboard', { replace: true });
         }
       } catch (err: any) {
-        console.error('[Auth Callback] Erro no fluxo de sessão:', err);
-        if (isMounted && !authProcessed) {
-          setError(err.message || 'Não foi possível validar a sessão do Google.');
-          setTimeout(() => navigate('/login', { replace: true }), 4000);
+        console.error('[Auth Callback] Erro na procedure de tenant:', err);
+        if (isMounted) {
+          setError(err.message || 'Falha ao configurar a sua loja.');
+          setTimeout(() => navigate('/login', { replace: true }), 3500);
         }
       }
     };
 
-    // Escuta eventos de login caso a resolução assíncrona dispare após o mount
+    const handleAuthInit = async () => {
+      // 1. Verifica se houve erro retornado diretamente pelo provedor OAuth
+      const urlParams = new URLSearchParams(window.location.search);
+      const oauthError = urlParams.get('error_description') || urlParams.get('error');
+      if (oauthError) {
+        setError(oauthError);
+        setTimeout(() => navigate('/login', { replace: true }), 3500);
+        return;
+      }
+
+      const code = urlParams.get('code');
+
+      try {
+        // 2. Se houver código PKCE (?code=...), troca explicitamente
+        if (code) {
+          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) throw exchangeError;
+          if (data?.session?.user) {
+            await processAuthUser(data.session.user);
+            return;
+          }
+        }
+
+        // 3. Verifica sessão ativa (recuperada via hash ou cookies do storage)
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+        if (session?.user) {
+          await processAuthUser(session.user);
+          return;
+        }
+
+        // 4. Fallback direto via getUser
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (!userError && user) {
+          await processAuthUser(user);
+        }
+      } catch (err: any) {
+        console.error('[Auth Callback] Erro no fluxo inicial de autenticação:', err);
+        if (isMounted && !processingRef.current) {
+          setError(err.message || 'Erro ao validar autorização com o Google.');
+          setTimeout(() => navigate('/login', { replace: true }), 3500);
+        }
+      }
+    };
+
+    // 5. Listener de eventos de autenticação do Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('[Auth Callback] onAuthStateChange event:', event, 'tem session:', !!session);
-      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session?.user) {
-        processUser(session.user);
+      console.log('[Auth Callback] onAuthStateChange:', event, 'Sessão ativa:', !!session);
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'USER_UPDATED') && session?.user) {
+        processAuthUser(session.user);
       }
     });
 
-    handleCallbackFlow();
+    handleAuthInit();
 
-    // Timeout de segurança para evitar carregamento infinito (10 segundos)
-    const safetyTimeout = setTimeout(() => {
-      if (isMounted && !authProcessed) {
-        console.warn('[Auth Callback] Timeout de 10s atingido sem resolução de sessão.');
+    // Timer de tolerância de 12s para redes lentas
+    timerId = setTimeout(() => {
+      if (isMounted && !processingRef.current) {
         setError('Tempo limite excedido ao validar o login. Redirecionando...');
         setTimeout(() => navigate('/login', { replace: true }), 2500);
       }
-    }, 10000);
+    }, 12000);
 
     return () => {
       isMounted = false;
+      if (timerId) clearTimeout(timerId);
       subscription.unsubscribe();
-      clearTimeout(safetyTimeout);
     };
   }, [navigate]);
 
