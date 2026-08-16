@@ -3626,8 +3626,9 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
     var videos = (story.videos || []).filter(Boolean);
     videos.forEach(function(video, videoIndex) {
       var rawVideoUrl = getVideoUrl(video);
-      var thumbUrl = getVideoThumbnail(video) || story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
-      var effectiveMediaUrl = thumbUrl || rawVideoUrl;
+      var thumbUrl = getVideoThumbnail(video) || 
+                     (video && (video.thumbnail_url || video.cover_image_url || video.poster_url || video.image_url)) ||
+                     (story && (story.cover_url || story.thumbnail_url || story.cover || story.thumbnail)) || '';
       
       // Container principal do item em coluna
       var item = document.createElement('div');
