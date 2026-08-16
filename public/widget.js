@@ -3621,8 +3621,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
     var videos = (story.videos || []).filter(Boolean);
     videos.forEach(function(video, videoIndex) {
       var rawVideoUrl = getVideoUrl(video);
-      var thumbUrl = getVideoThumbnail(video) || story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
-      var effectiveMediaUrl = thumbUrl || rawVideoUrl;
+      var thumbUrl = getVideoThumbnail(video) || (story && (story.cover_url || story.thumbnail_url || story.cover || story.thumbnail)) || '';
       
       // Container principal do item em coluna
       var item = document.createElement('div');
@@ -3650,90 +3649,85 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         'border-radius:' + cfg.itemRadius + ' !important;' +
         'overflow:hidden !important;' +
         'position:relative !important;' +
-        'background:#000 !important;' +
+        'background:#0f172a !important;' +
         'transform:translateZ(0) !important;' +
         '-webkit-backface-visibility:hidden !important;' +
         '-webkit-mask-image: -webkit-radial-gradient(white, black) !important;' +
         carouselBorderCss;
 
-      if (effectiveMediaUrl) {
-        var borderWidthNum = cfg.borderWidth || 0;
-        var rawRadiusNum = parseFloat(cfg.itemRadius) || 12;
-        var innerRadiusVal = Math.max(0, rawRadiusNum - borderWidthNum);
-        var innerRadiusCss = (typeof cfg.itemRadius === 'string' && cfg.itemRadius.indexOf('%') !== -1) ? cfg.itemRadius : (innerRadiusVal + 'px');
+      var borderWidthNum = cfg.borderWidth || 0;
+      var rawRadiusNum = parseFloat(cfg.itemRadius) || 12;
+      var innerRadiusVal = Math.max(0, rawRadiusNum - borderWidthNum);
+      var innerRadiusCss = (typeof cfg.itemRadius === 'string' && cfg.itemRadius.indexOf('%') !== -1) ? cfg.itemRadius : (innerRadiusVal + 'px');
 
-        var innerMask = document.createElement('div');
-        innerMask.style.cssText = [
-          'position:absolute !important;',
-          'inset:' + borderWidthNum + 'px !important;',
-          'overflow:hidden !important;',
-          'border-radius:' + innerRadiusCss + ' !important;',
-          'z-index:1 !important;',
-          'pointer-events:none !important;',
-          'transform:translateZ(0) !important;',
-          'background:#000 !important;'
-        ].join('');
+      var innerMask = document.createElement('div');
+      innerMask.style.cssText = [
+        'position:absolute !important;',
+        'inset:' + borderWidthNum + 'px !important;',
+        'overflow:hidden !important;',
+        'border-radius:' + innerRadiusCss + ' !important;',
+        'z-index:1 !important;',
+        'pointer-events:none !important;',
+        'transform:translateZ(0) !important;',
+        'background:#0f172a !important;'
+      ].join('');
 
-var isDirectVideo = isDirectVideoUrl(effectiveMediaUrl);
+      if (thumbUrl) {
+        var cardImg = document.createElement('img');
+        cardImg.src = thumbUrl;
+        cardImg.alt = (story && story.title) || 'Mídia';
+        cardImg.loading = 'lazy';
+        cardImg.style.cssText =
+          'width:100% !important;' +
+          'height:100% !important;' +
+          'object-fit:cover !important;' +
+          'display:block !important;' +
+          'border-radius:' + innerRadiusCss + ' !important;' +
+          '-webkit-backface-visibility:hidden !important;';
 
-        if (isDirectVideo) {
-          var previewVideo = document.createElement('video');
-          var videoUrlWithFragment = effectiveMediaUrl.indexOf('#t=') === -1 ? effectiveMediaUrl + '#t=0.001' : effectiveMediaUrl;
-          
-          previewVideo.preload = 'auto';
-          previewVideo.style.cssText =
-            'width:100% !important;' +
-            'height:100% !important;' +
-            'object-fit:cover !important;' +
-            'display:block !important;' +
-            'border-radius:' + innerRadiusCss + ' !important;' +
-            '-webkit-backface-visibility:hidden !important;' +
-            'background:#000 !important;';
+        cardImg.onerror = function () {
+          if (rawVideoUrl) {
+            cardImg.style.display = 'none';
+            var fallbackVid = document.createElement('video');
+            var fallbackUrl = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
+            fallbackVid.preload = 'metadata';
+            fallbackVid.muted = true;
+            fallbackVid.playsInline = true;
+            fallbackVid.setAttribute('playsinline', '');
+            fallbackVid.setAttribute('muted', '');
+            fallbackVid.style.cssText =
+              'width:100% !important;' +
+              'height:100% !important;' +
+              'object-fit:cover !important;' +
+              'display:block !important;' +
+              'border-radius:' + innerRadiusCss + ' !important;' +
+              'background:#0f172a !important;';
+            fallbackVid.src = fallbackUrl;
+            innerMask.appendChild(fallbackVid);
+          }
+        };
 
-          primeVideoFrame(previewVideo);
-          previewVideo.src = videoUrlWithFragment;
-
-          innerMask.appendChild(previewVideo);
-        } else {
-          var img = document.createElement('img');
-          img.src = effectiveMediaUrl;
-          img.alt = story.title || 'Story';
-          img.style.cssText =
-            'width:100% !important;' +
-            'height:100% !important;' +
-            'object-fit:cover !important;' +
-            'display:block !important;' +
-            'border-radius:' + innerRadiusCss + ' !important;' +
-            '-webkit-backface-visibility:hidden !important;';
-
-          img.onerror = function () {
-            if (rawVideoUrl && rawVideoUrl !== effectiveMediaUrl) {
-              img.style.display = 'none';
-              var fallbackVid = document.createElement('video');
-              var fallbackUrlWithFragment = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
-              
-              fallbackVid.preload = 'auto';
-              fallbackVid.style.cssText =
-                'width:100% !important;' +
-                'height:100% !important;' +
-                'object-fit:cover !important;' +
-                'display:block !important;' +
-                'border-radius:' + innerRadiusCss + ' !important;' +
-                '-webkit-backface-visibility:hidden !important;' +
-                'background:#000 !important;';
-
-              primeVideoFrame(fallbackVid);
-              fallbackVid.src = fallbackUrlWithFragment;
-
-              innerMask.appendChild(fallbackVid);
-            }
-          };
-
-          innerMask.appendChild(img);
-        }
-
-        videoCard.appendChild(innerMask);
+        innerMask.appendChild(cardImg);
+      } else if (rawVideoUrl) {
+        var directVideo = document.createElement('video');
+        var directVideoUrl = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
+        directVideo.preload = 'metadata';
+        directVideo.muted = true;
+        directVideo.playsInline = true;
+        directVideo.setAttribute('playsinline', '');
+        directVideo.setAttribute('muted', '');
+        directVideo.style.cssText =
+          'width:100% !important;' +
+          'height:100% !important;' +
+          'object-fit:cover !important;' +
+          'display:block !important;' +
+          'border-radius:' + innerRadiusCss + ' !important;' +
+          'background:#0f172a !important;';
+        directVideo.src = directVideoUrl;
+        innerMask.appendChild(directVideo);
       }
+
+      videoCard.appendChild(innerMask);
 
       if (cfg.showPlayIcon) {
         var play = document.createElement('div');
