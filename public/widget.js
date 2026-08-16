@@ -684,7 +684,7 @@ function getCarouselConfig(appearance) {
     return readConfigValue(appearance, 'carousel_config', jsonbField, flatField, fallback);
   }
   
-  // 1. CORREÇÃO DO REFERENCE ERROR: Garantindo que visibleItems e bordas estão declaradas!
+// 1. Definições estruturais do carrossel
   var visibleItems = safeInt(rcv('visible_items', 'carousel_visible_items', '4'), 4);
   var borderColor = String(rcv('border_color', 'carousel_border_color', 'transparent') || 'transparent');
   var borderWidth = toNumber(rcv('border_style', 'border_width', '0'), 0);
@@ -692,20 +692,12 @@ function getCarouselConfig(appearance) {
   var itemWidth = toNumber(rcv('width', 'card_size', '120'), 120);
   var itemSpacing = toNumber(rcv('spacing', 'carousel_item_spacing', '8'), 8);
   
-  // 2. CORREÇÃO DOS CANTOS RETOS: Leitura segura que aceita 0 sem cair no fallback 12
+  // 2. Leitura segura de border_radius (suporta 0 para canto reto)
   var rawRadiusInput = rcv('border_radius', 'carousel_item_radius', 12);
   var parsedRadiusVal = parseFloat(rawRadiusInput);
   var safeRadiusNum = !isNaN(parsedRadiusVal) ? Math.max(0, parsedRadiusVal) : 12;
   var itemRadius = (String(rawRadiusInput).trim() === '0' || rawRadiusInput === 0) ? '0px' : px(safeRadiusNum, 12);
-  
-  var itemWidth = toNumber(rcv('width', 120), 120);
-  var itemSpacing = toNumber(rcv('spacing', 8), 8);
-  
-  var rawRadiusInput = rcv('border_radius', 12);
-  var parsedRadiusVal = parseFloat(rawRadiusInput);
-  var safeRadiusNum = !isNaN(parsedRadiusVal) ? Math.max(0, parsedRadiusVal) : 12;
-  var itemRadius = (String(rawRadiusInput).trim() === '0' || rawRadiusInput === 0) ? '0px' : px(safeRadiusNum, 12);
-  
+    
   var marginTop = toNumber(rcv('margin_top', 'carousel_margin_top', '0'), 0);
   var marginBottom = toNumber(rcv('margin_bottom', 'carousel_margin_bottom', '0'), 0);
   
