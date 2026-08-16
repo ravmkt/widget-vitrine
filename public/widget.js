@@ -4120,8 +4120,13 @@ function renderGridWidget(container, stories, appearance) {
       hasBorder ? ('box-shadow: inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ';') : '',
     ].join('');
 
-var rawVideoUrl = getVideoUrl(video);
-    var thumbUrl = getVideoThumbnail(video) || story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
+// 1. Resolução segura de URLs e Mídia da Grade
+    var rawVideoUrl = getVideoUrl(video);
+    var thumbUrl = getVideoThumbnail(video) || 
+                   (video && (video.thumbnail_url || video.cover_image_url || video.poster_url || video.image_url)) ||
+                   (story && (story.cover_url || story.thumbnail_url || story.cover || story.thumbnail)) || '';
+    var sourceType = String(video.source_type || video.sourceType || '').toLowerCase();
+    var isImageItem = sourceType === 'image' || (video && video.type === 'image');
     var effectiveMediaUrl = thumbUrl || rawVideoUrl;
 
     if (effectiveMediaUrl) {
@@ -4144,39 +4149,21 @@ var rawVideoUrl = getVideoUrl(video);
         'background:#000;'
       ].join('');
 
-      var isDirectVideo = isDirectVideoUrl(effectiveMediaUrl);
-
-      if (isDirectVideo) {
-        var gridVideo = createEl('video');
-        var gridUrlWithFragment = effectiveMediaUrl.indexOf('#t=') === -1 ? effectiveMediaUrl + '#t=0.001' : effectiveMediaUrl;
-
-        gridVideo.preload = 'auto';
-        gridVideo.muted = true;
-        gridVideo.defaultMuted = true;
-        gridVideo.playsInline = true;
-        gridVideo.setAttribute('playsinline', '');
-        gridVideo.setAttribute('webkit-playsinline', '');
-        gridVideo.setAttribute('muted', '');
-        gridVideo.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;';
-
-        primeVideoFrame(gridVideo);
-        gridVideo.src = gridUrlWithFragment;
-
-        innerMask.appendChild(gridVideo);
-      } else {
+      // 2. Renderização Determinística: Prioriza Imagem e usa Vídeo apenas como fallback do primeiro frame
+      if (thumbUrl || isImageItem) {
         var img = createEl('img');
-        img.src = effectiveMediaUrl;
-        img.alt = video.title || story.title || '';
+        img.src = thumbUrl || rawVideoUrl;
+        img.alt = (video && video.title) || (story && story.title) || 'Story';
         img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;';
         img.loading = 'lazy';
         
         img.onerror = function () {
-          if (rawVideoUrl && rawVideoUrl !== effectiveMediaUrl) {
+          if (rawVideoUrl && !isImageItem) {
             img.style.display = 'none';
             var fallbackGridVid = createEl('video');
             var fallbackGridUrlWithFragment = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
 
-            fallbackGridVid.preload = 'auto';
+            fallbackGridVid.preload = 'metadata';
             fallbackGridVid.muted = true;
             fallbackGridVid.defaultMuted = true;
             fallbackGridVid.playsInline = true;
@@ -4193,11 +4180,28 @@ var rawVideoUrl = getVideoUrl(video);
         };
 
         innerMask.appendChild(img);
+      } else if (rawVideoUrl) {
+        var gridVideo = createEl('video');
+        var gridUrlWithFragment = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
+
+        gridVideo.preload = 'metadata';
+        gridVideo.muted = true;
+        gridVideo.defaultMuted = true;
+        gridVideo.playsInline = true;
+        gridVideo.setAttribute('playsinline', '');
+        gridVideo.setAttribute('webkit-playsinline', '');
+        gridVideo.setAttribute('muted', '');
+        gridVideo.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;';
+
+        primeVideoFrame(gridVideo);
+        gridVideo.src = gridUrlWithFragment;
+
+        innerMask.appendChild(gridVideo);
       }
       
       card.appendChild(innerMask);
     }
-    
+        
     // Play button overlay
     var playBadge = createEl('div');
     playBadge.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;';
