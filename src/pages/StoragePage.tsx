@@ -576,36 +576,36 @@ const { data, error } = await supabase.functions.invoke('import-pinterest-video'
       const cleanFileName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
       const safeStoragePath = `${activeId}/${Date.now()}_${Math.random().toString(36).substring(2, 7)}_${cleanFileName}`;
 
-      let finalVideoUrl = '';
+let finalVideoUrl = '';
       let finalThumbUrl = '';
       let thumbnailSize = 0;
 
       if (supabase) {
-        try {
-          const { data: uploadData, error: uploadErr } = await supabase.storage
+        const detectedContentType = file.type || (isImage ? 'image/jpeg' : 'video/mp4');
+        const { data: uploadData, error: uploadErr } = await supabase.storage
+          .from('videos')
+          .upload(safeStoragePath, file, { 
+            cacheControl: '3600', 
+            contentType: detectedContentType,
+            upsert: true 
+          });
+
+        if (uploadErr) {
+          console.error('[Vidlytics Storage] Erro no upload principal:', uploadErr);
+          throw new Error('Falha ao enviar arquivo para o armazenamento.');
+        }
+
+        if (uploadData?.path) {
+          const { data: publicUrlData } = supabase.storage
             .from('videos')
-            .upload(safeStoragePath, file, { 
-              cacheControl: '3600', 
-              contentType: file.type || (isImage ? 'image/jpeg' : 'video/mp4'),
-              upsert: true 
-            });
+            .getPublicUrl(uploadData.path);
 
-          if (!uploadErr && uploadData?.path) {
-            const { data: publicUrlData } = supabase.storage
-              .from('videos')
-              .getPublicUrl(uploadData.path);
-
-            finalVideoUrl = publicUrlData.publicUrl;
-          } else if (uploadErr) {
-            console.warn('Erro de upload no Storage principal:', uploadErr);
-          }
-        } catch (storageErr) {
-          console.warn('Supabase Storage indisponível, aplicando fallback:', storageErr);
+          finalVideoUrl = publicUrlData.publicUrl;
         }
       }
 
       if (!finalVideoUrl) {
-        finalVideoUrl = URL.createObjectURL(file);
+        throw new Error('Não foi possível obter o endereço público do arquivo.');
       }
 
       if (isImage) {
@@ -634,15 +634,14 @@ const { data, error } = await supabase.functions.invoke('import-pinterest-video'
 
               finalThumbUrl = thumbPublicUrlData.publicUrl;
             } else if (thumbUploadErr) {
-              console.warn('Erro ao enviar thumbnail para o Supabase Storage:', thumbUploadErr);
+              console.warn('[Vidlytics Storage] Erro ao enviar thumbnail:', thumbUploadErr);
             }
           }
         } catch (thumbErr) {
-          console.warn('Falha na geração automática da thumbnail:', thumbErr);
+          console.warn('[Vidlytics Storage] Falha na geração automática de thumbnail:', thumbErr);
         }
       }
 
-      // Se não gerou thumbnail JPG com sucesso no Storage, salva como vazio (NUNCA URL quebrada 404)
       if (!finalThumbUrl) {
         finalThumbUrl = isImage ? finalVideoUrl : '';
       }
@@ -650,8 +649,8 @@ const { data, error } = await supabase.functions.invoke('import-pinterest-video'
       const payload = {
         store_id: activeId,
         title: file.name,
-        video_source_type: 'upload',
-        source_type: 'upload',
+        video_source_type: isImage ? 'image' : 'upload',
+        source_type: isImage ? 'image' : 'upload',
         video_url: finalVideoUrl,
         thumbnail_url: finalThumbUrl,
         thumbnail_source_type: isImage ? 'upload' : 'auto',
@@ -661,7 +660,7 @@ const { data, error } = await supabase.functions.invoke('import-pinterest-video'
         active: true,
         created_at: new Date().toISOString(),
       };
-
+      
       if (supabase) {
         const { error } = await supabase.from('videos').insert([payload]);
         if (error) throw error;
