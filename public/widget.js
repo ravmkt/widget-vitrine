@@ -710,7 +710,7 @@ var showTitle = toBoolean(rcv('show_title', 'carousel_show_title', false), false
   // Leitura da chave real view_mode ('preview' / 'playing' / 'video' = reproduz mutado)
   var rawViewMode = String(rcv('view_mode', 'carousel_view_mode', 'preview') || '').trim().toLowerCase();
   var carouselPlayMode = (rawViewMode === 'preview' || rawViewMode === 'playing' || rawViewMode === 'video' || rawViewMode === 'true') ? 'playing' : 'static';
-  
+
 var shape = String(rcv('shape', 'card_shape', 'portrait')).trim().toLowerCase();
   var aspect = '9/16';
   if (shape === 'square' || shape === '1:1') aspect = '1/1';
@@ -753,6 +753,7 @@ var shape = String(rcv('shape', 'card_shape', 'portrait')).trim().toLowerCase();
     productCardPriceSize: pPriceSize,
     productCardPriceColor: pPriceColor,
     productCardPriceBold: pPriceBold,
+    carouselPlayMode: carouselPlayMode,
     shape: shape,
     itemAspect: aspect
   };
