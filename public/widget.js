@@ -687,12 +687,12 @@ function getCarouselConfig(appearance) {
 // 1. Definições estruturais do carrossel
   var visibleItems = safeInt(rcv('visible_items', 'carousel_visible_items', '4'), 4);
   var borderColor = String(rcv('border_color', 'carousel_border_color', 'transparent') || 'transparent');
-  var borderWidth = toNumber(rcv('border_style', 'border_width', '0'), 0);
+  var borderWidth = toNumber(rcv('border_width', 'carousel_border_width', '0'), 0);
 
   var itemWidth = toNumber(rcv('width', 'card_size', '120'), 120);
   var itemSpacing = toNumber(rcv('spacing', 'carousel_item_spacing', '8'), 8);
   
-  // 2. Leitura segura de border_radius (suporta 0 para canto reto)
+  // 2. Leitura segura de border_radius (preserva 0 para canto reto)
   var rawRadiusInput = rcv('border_radius', 'carousel_item_radius', 12);
   var parsedRadiusVal = parseFloat(rawRadiusInput);
   var safeRadiusNum = !isNaN(parsedRadiusVal) ? Math.max(0, parsedRadiusVal) : 12;
