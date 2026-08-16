@@ -1,20 +1,33 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signUp } from '@/lib/auth';
+import { signUp, signInWithGoogle } from '@/lib/auth';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [storeName, setStoreName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+
+    if (password.length < 6) {
+      setError('A senha deve conter no mínimo 6 caracteres.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('As senhas não conferem. Por favor, verifique e tente novamente.');
+      return;
+    }
+
+    setLoading(true);
     try {
       await signUp(name, email, password, storeName);
       navigate('/dashboard');
@@ -22,6 +35,17 @@ const RegisterPage = () => {
       setError(err.message || 'Não foi possível criar a conta.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    setError('');
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (err: any) {
+      setError(err.message || 'Erro ao autenticar com o Google.');
+      setGoogleLoading(false);
     }
   };
 
