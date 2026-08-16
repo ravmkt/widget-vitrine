@@ -1726,21 +1726,31 @@ function trackMetric(data) {
 }
 
   function buildVideoPlayer(video, storyId, onEnded) {
-    var url = getVideoUrl(video);
     var sourceType = String(video.source_type || video.sourceType || '').toLowerCase();
-    var ytId = extractYouTubeId(url);
-    var igId = extractInstagramId(url);
-    var tkId = extractTikTokId(url);
-
-    console.log('🔍 VIDLYTICS DEBUG:', {
-      video_id: video.id,
-      source_type: sourceType,
-      url: url,
-      isYouTube: !!ytId,
-      isInstagramReelPage: !!(igId && url.indexOf('instagram.com') !== -1)
-    });
+    var isImage = sourceType === 'image' || (video && video.type === 'image');
+    var url = isImage ? (getVideoThumbnail(video) || (video && (video.video_url || video.url)) || '') : getVideoUrl(video);
+    var ytId = !isImage ? extractYouTubeId(url) : null;
+    var igId = !isImage ? extractInstagramId(url) : null;
+    var tkId = !isImage ? extractTikTokId(url) : null;
 
     var wrapper = createEl('div', 'vl-player');
+
+    // 0. Imagem Estática / Foto no Story
+    if (isImage || (url && /\.(jpe?g|png|webp|gif|svg)($|\?|#)/i.test(url))) {
+      var imgEl = createEl('img');
+      imgEl.src = url || getVideoThumbnail(video);
+      imgEl.alt = (video && video.title) || 'Story';
+      imgEl.style.cssText =
+        'width:100% !important;' +
+        'height:100% !important;' +
+        'object-fit:cover !important;' +
+        'display:block !important;' +
+        'background:#000 !important;';
+
+      wrapper.appendChild(imgEl);
+      trackMetric({ event_type: 'play', story_id: storyId, video_id: video ? video.id : null, page_url: window.location.href });
+      return wrapper;
+    }
 
 // 1. YouTube Shorts ou Vídeo Tradicional (Respeita a preferência de áudio ativa do usuário)
     if (ytId) {
