@@ -1,361 +1,237 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, asaas-access-token",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const PLANO_INICIANTE_ID = "c8c634e6-0641-4f5b-a826-4db837192c83";
+// Mapa de status do Asaas → status interno das faturas
+const INVOICE_STATUS_MAP: Record<string, string> = {
+  PAYMENT_CREATED: "pending",
+  PAYMENT_AWAITING_RISK_ANALYSIS: "pending",
+  PAYMENT_UPDATED: "pending",
+  PAYMENT_CONFIRMED: "paid",
+  PAYMENT_RECEIVED: "paid",
+  PAYMENT_RECEIVED_IN_CASH_UNCONFERMED: "paid",
+  PAYMENT_REFUNDED: "refunded",
+  PAYMENT_REFUND_CONCILIATED: "refunded",
+  PAYMENT_CHARGEBACK_REQUESTED: "disputed",
+  PAYMENT_CHARGEBACK_DISPUTE: "disputed",
+  PAYMENT_AWAITING_CHARGEBACK_REVERSAL: "disputed",
+  PAYMENT_DUNNING_RECEIVED: "paid",
+  PAYMENT_DUNNING_REQUESTED: "pending",
+  PAYMENT_OVERDUE: "overdue",
+  PAYMENT_DELETED: "canceled",
+  ANTICIPATION_REFUND_REFUND_IN_BANKACCOUNT: "refunded",
+};
 
-Deno.serve(async (req) => {
+// Eventos que marcam a assinatura como inadimplente/cancelada
+const SUBSCRIPTION_BLOCKING_EVENTS = new Set([
+  "PAYMENT_OVERDUE",
+  "PAYMENT_DELETED",
+  "PAYMENT_REFUNDED",
+  "PAYMENT_CHARGEBACK_REQUESTED",
+]);
+
+serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   try {
-    // 1. Validar o token do webhook (segurança)
-    const webhookToken = req.headers.get("asaas-access-token");
-    const expectedSecret = Deno.env.get("ASAAS_WEBHOOK_SECRET");
+    // ─────────────────────────────────────────────────────────
+    // 1. VALIDAÇÃO DO asaas-access-token
+    //    (token configurado no painel do Asaas → Integrações → Webhook)
+    // ─────────────────────────────────────────────────────────
+    const expectedToken = Deno.env.get("ASAAS_ACCESS_TOKEN") ??
+      Deno.env.get("ASAAS_WEBHOOK_TOKEN") ?? "";
 
-    if (!webhookToken || webhookToken !== expectedSecret) {
-      console.error("Token de webhook inválido ou ausente.");
+    if (!expectedToken) {
+      console.error("[asaas-webhook] Secret ASAAS_ACCESS_TOKEN não configurado.");
       return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: corsHeaders }
+        JSON.stringify({ error: "Webhook não configurado no servidor." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    const receivedToken = req.headers.get("asaas-access-token");
+    if (!receivedToken || receivedToken !== expectedToken) {
+      console.warn("[asaas-webhook] Tentativa de acesso com token inválido.");
+      return new Response(
+        JSON.stringify({ error: "Não autorizado: asaas-access-token inválido." }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // 2. PARSE DO EVENTO
+    // ─────────────────────────────────────────────────────────
     const payload = await req.json();
-    const event = payload.event;
-    const payment = payload.payment || null;
-    const subEventData = payload.subscription || null;
+    const event = payload?.event ?? "";
+    const payment = payload?.payment ?? null;
+    const subscriptionId = payment?.subscription ?? null;
 
-    if (!payment && !subEventData) {
+    console.log("[asaas-webhook] Evento recebido:", event, "| Pagamento:", payment?.id ?? "n/d");
+
+    if (!event) {
       return new Response(
-        JSON.stringify({ message: "Payload sem dados de pagamento ou assinatura, ignorado." }),
-        { status: 200, headers: corsHeaders }
+        JSON.stringify({ error: "Evento ausente no payload." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const asaasPaymentId = payment?.id || null;
-    const asaasSubscriptionId = payment?.subscription || subEventData?.id || null;
-    const asaasCustomerId = payment?.customer || subEventData?.customer || null;
-    const storeId = payment?.externalReference || subEventData?.externalReference || null;
+    // Eventos sem pagamento (ex.: SUBSCRIPTION_*) apenas confirmam recebimento
+    if (!payment?.id) {
+      console.log("[asaas-webhook] Evento sem pagamento associado. Ack e encerramento.");
+      return new Response(
+        JSON.stringify({ received: true, processed: false }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    console.log(`Webhook recebido: ${event} | Payment ID: ${asaasPaymentId} | Sub ID: ${asaasSubscriptionId} | Customer ID: ${asaasCustomerId} | Store: ${storeId}`);
+    // ─────────────────────────────────────────────────────────
+    // 3. CLIENTE ADMINISTRATIVO
+    // ─────────────────────────────────────────────────────────
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const supabase = createClient(supabaseUrl, serviceKey);
 
-    // 2. Conectar ao Supabase com service_role (bypassa RLS)
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    // ─────────────────────────────────────────────────────────
+    // 4. IDEMPOTÊNCIA
+    //    Registra o evento na tabela asaas_webhook_events.
+    //    Se o mesmo evento já foi processado, responde 200 sem reprocessar.
+    // ─────────────────────────────────────────────────────────
+    const eventKey = `${event}:${payment.id}`;
 
-// 3. Buscar a invoice existente (idempotência) apenas se houver pagamento
-    let existingInvoice: any = null;
-    const newInvoiceStatus = mapAsaasStatusToInvoiceStatus(event);
+    const { error: insertEventErr } = await supabase
+      .from("asaas_webhook_events")
+      .insert({
+        event_id: eventKey,
+        event_type: event,
+        payment_id: payment.id,
+        subscription_id: subscriptionId,
+        payload: payload,
+        received_at: new Date().toISOString(),
+      });
 
-    if (asaasPaymentId) {
-      const { data } = await supabaseAdmin
-        .from("invoices")
-        .select("id, status")
-        .eq("asaas_payment_id", asaasPaymentId)
-        .maybeSingle();
-
-      existingInvoice = data;
-
-      if (existingInvoice && existingInvoice.status === newInvoiceStatus) {
-        console.log("Status já sincronizado, ignorando webhook duplicado.");
+    if (insertEventErr) {
+      // Violação de chave única = evento duplicado → idempotência garantida
+      if (insertEventErr.code === "23505" || /duplicate key|unique/i.test(insertEventErr.message)) {
+        console.log("[asaas-webhook] Evento duplicado detectado (idempotência):", eventKey);
         return new Response(
-          JSON.stringify({ message: "Já processado." }),
-          { status: 200, headers: corsHeaders }
+          JSON.stringify({ received: true, duplicate: true }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+      console.error("[asaas-webhook] Erro ao registrar evento:", insertEventErr);
+      return new Response(
+        JSON.stringify({ error: "Falha ao registrar evento de webhook." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // 4. Buscar a subscription local e resolver plano por valor pago (protegido contra payment nulo)
-    const paymentAmountCents = payment ? Math.round((payment.value || 0) * 100) : 0;
-    let resolvedPlanId: string | null = null;
-
-    if (paymentAmountCents > 0) {
-      const { data: matchedPlan } = await supabaseAdmin
-        .from("plans")
-        .select("id, name, price_cents")
-        .eq("price_cents", paymentAmountCents)
-        .maybeSingle();
-
-      resolvedPlanId = matchedPlan?.id || null;
+    // ─────────────────────────────────────────────────────────
+    // 5. RESOLVE A LOJA ATRAVÉS DA ASSINATURA
+    // ─────────────────────────────────────────────────────────
+    if (!subscriptionId) {
+      console.log("[asaas-webhook] Pagamento sem subscription_id. Encerrando com ack.");
+      return new Response(
+        JSON.stringify({ received: true, processed: false }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
-    
-    let subscription: any = null;
 
-    if (asaasSubscriptionId) {
-      const { data: subById } = await supabaseAdmin
+    const { data: subscriptionRow, error: subErr } = await supabase
+      .from("subscriptions")
+      .select("id, store_id, plan_id")
+      .eq("asaas_subscription_id", subscriptionId)
+      .maybeSingle();
+
+    if (subErr || !subscriptionRow) {
+      console.warn("[asaas-webhook] Assinatura local não encontrada para:", subscriptionId);
+      // Ack para o Asaas não ficar reenviando; o evento já ficou registrado para auditoria
+      return new Response(
+        JSON.stringify({ received: true, processed: false, reason: "subscription_not_found" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const storeId = subscriptionRow.store_id;
+
+    // ─────────────────────────────────────────────────────────
+    // 6. ATUALIZA A FATURA (upsert por asaas_payment_id)
+    // ─────────────────────────────────────────────────────────
+    const invoiceStatus = INVOICE_STATUS_MAP[event] ?? "pending";
+    const isPaid = invoiceStatus === "paid";
+
+    const invoicePayload = {
+      store_id: storeId,
+      subscription_id: subscriptionRow.id,
+      asaas_payment_id: payment.id,
+      description: `Assinatura Vidlytics - ${payment.description ?? ""}`.trim(),
+      amount_cents: Math.round(Number(payment.value ?? 0) * 100),
+      status: invoiceStatus,
+      billing_type: payment.billingType ?? null,
+      due_date: payment.dueDate ?? null,
+      paid_at: payment.paymentDate ?? (isPaid ? new Date().toISOString() : null),
+      invoice_pdf_url: payment.invoiceUrl ?? null,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error: invoiceErr } = await supabase
+      .from("invoices")
+      .upsert(invoicePayload, { onConflict: "asaas_payment_id" });
+
+    if (invoiceErr) {
+      console.error("[asaas-webhook] Erro ao gravar fatura:", invoiceErr);
+      throw new Error("Falha ao atualizar a fatura no banco.");
+    }
+
+    console.log("[asaas-webhook] Fatura atualizada:", payment.id, "→", invoiceStatus);
+
+    // ─────────────────────────────────────────────────────────
+    // 7. ESTADO DA ASSINATURA CONFORME O PAGAMENTO
+    // ─────────────────────────────────────────────────────────
+    let subStatus: string | null = null;
+    if (isPaid) subStatus = "active";
+    else if (SUBSCRIPTION_BLOCKING_EVENTS.has(event)) subStatus = "past_due";
+
+    if (subStatus) {
+      const { error: updSubErr } = await supabase
         .from("subscriptions")
-        .select("id, store_id, plan_id, status")
-        .eq("asaas_subscription_id", asaasSubscriptionId)
-        .maybeSingle();
-
-      subscription = subById;
-    }
-
-    if (!subscription && storeId) {
-      console.log(`[WEBHOOK] Buscando fallback para store_id: ${storeId}`);
-
-      const { data: subByStore } = await supabaseAdmin
-        .from("subscriptions")
-        .select("id, store_id, plan_id, status")
-        .eq("store_id", storeId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (subByStore) {
-        subscription = subByStore;
-        
-        // Atualiza a subscription com o ID do Asaas e o plano correspondente ao valor pago
-        const updatePayload: Record<string, any> = {};
-        if (asaasSubscriptionId) updatePayload.asaas_subscription_id = asaasSubscriptionId;
-        if (asaasCustomerId) updatePayload.asaas_customer_id = asaasCustomerId;
-        if (resolvedPlanId && subscription.plan_id !== resolvedPlanId) {
-          updatePayload.plan_id = resolvedPlanId;
-          subscription.plan_id = resolvedPlanId;
-        }
-
-        if (Object.keys(updatePayload).length > 0) {
-          await supabaseAdmin
-            .from("subscriptions")
-            .update(updatePayload)
-            .eq("id", subscription.id);
-        }
-      }
-    }
-
-    if (!subscription && storeId) {
-      const targetPlanId = resolvedPlanId || "4b5d747e-af5c-46e9-a6aa-0682cc253110";
-
-      const { data: createdSub } = await supabaseAdmin
-        .from("subscriptions")
-        .insert({
-          store_id: storeId,
-          plan_id: targetPlanId,
-          asaas_subscription_id: asaasSubscriptionId,
-          asaas_customer_id: asaasCustomerId,
-          status: "pending",
-          is_current: false,
+        .update({
+          status: subStatus,
+          updated_at: new Date().toISOString(),
+          ...(isPaid
+            ? {
+                current_period_start: new Date().toISOString(),
+                current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+              }
+            : {}),
         })
-        .select("id, store_id, plan_id, status")
-        .single();
+        .eq("asaas_subscription_id", subscriptionId)
+        .eq("is_current", true);
 
-      subscription = createdSub;
-    }
-
-    // 5. Atualizar ou criar a invoice apenas se houver cobrança (payment)
-    if (payment && asaasPaymentId) {
-      if (existingInvoice) {
-        await supabaseAdmin
-          .from("invoices")
-          .update({
-            status: newInvoiceStatus,
-            paid_at: event === "PAYMENT_RECEIVED" || event === "PAYMENT_CONFIRMED"
-              ? new Date().toISOString()
-              : null,
-            store_id: storeId || undefined,
-            subscription_id: subscription?.id || undefined,
-          })
-          .eq("id", existingInvoice.id);
+      if (updSubErr) {
+        console.error("[asaas-webhook] Erro ao atualizar assinatura:", updSubErr);
       } else {
-        await supabaseAdmin.from("invoices").insert({
-          store_id: storeId,
-          subscription_id: subscription?.id || null,
-          asaas_payment_id: asaasPaymentId,
-          status: newInvoiceStatus,
-          amount_cents: paymentAmountCents,
-          currency: "BRL",
-          description: payment.description || null,
-          due_date: payment.dueDate,
-          paid_at: event === "PAYMENT_RECEIVED" || event === "PAYMENT_CONFIRMED"
-            ? new Date().toISOString()
-            : null,
-          gateway_provider: "asaas",
-          gateway_invoice_id: asaasPaymentId,
-          invoice_pdf_url: payment.bankSlipUrl || null,
-          invoice_url: payment.invoiceUrl || payment.bankSlipUrl || null,
-          payment_method: payment.billingType || null,
-        });
+        console.log("[asaas-webhook] Assinatura marcada como:", subStatus);
       }
     }
 
-    // 6. Tratar o ciclo de vida da assinatura conforme o evento
-    switch (event) {
-      case "PAYMENT_RECEIVED":
-      case "PAYMENT_CONFIRMED": {
-        if (subscription?.store_id) {
-          await supabaseAdmin
-            .from("subscriptions")
-            .update({ is_current: false })
-            .eq("store_id", subscription.store_id)
-            .eq("is_current", true)
-            .neq("id", subscription.id);
-        }
-
-        if (subscription?.id) {
-          await supabaseAdmin
-            .from("subscriptions")
-            .update({
-              status: "active",
-              is_current: true,
-              asaas_subscription_id: asaasSubscriptionId || undefined,
-              asaas_customer_id: asaasCustomerId || undefined,
-            })
-            .eq("id", subscription.id);
-        }
-
-        const activePlanId = resolvedPlanId || subscription?.plan_id;
-        const targetStoreId = subscription?.store_id || storeId;
-
-        if (targetStoreId) {
-          const storeUpdatePayload: Record<string, any> = {
-            subscription_status: "active",
-            trial_ends_at: null,
-            past_due_since: null, // Limpa o timestamp de carência após regularização
-            updated_at: new Date().toISOString(),
-          };
-
-          if (activePlanId) {
-            storeUpdatePayload.plan_id = activePlanId;
-          }
-
-          await supabaseAdmin
-            .from("stores")
-            .update(storeUpdatePayload)
-            .eq("id", targetStoreId);
-        }
-
-        console.log(`Subscription ${subscription?.id} e Store ${targetStoreId} ativadas com sucesso.`);
-        break;
-      }
-
-      case "PAYMENT_OVERDUE": {
-        const targetStoreId = subscription?.store_id || storeId;
-
-        if (targetStoreId) {
-          const { data: storeRow } = await supabaseAdmin
-            .from("stores")
-            .select("past_due_since")
-            .eq("id", targetStoreId)
-            .maybeSingle();
-
-          const updatePayload: Record<string, any> = {
-            subscription_status: "past_due",
-            updated_at: new Date().toISOString(),
-          };
-
-          // Grava past_due_since apenas se ainda não existir (idempotência para não reiniciar a janela)
-          if (!storeRow?.past_due_since) {
-            updatePayload.past_due_since = new Date().toISOString();
-          }
-
-          await supabaseAdmin
-            .from("stores")
-            .update(updatePayload)
-            .eq("id", targetStoreId);
-        }
-
-        if (subscription?.id) {
-          await supabaseAdmin
-            .from("subscriptions")
-            .update({
-              status: "past_due",
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", subscription.id);
-        }
-
-        console.log(`Subscription ${subscription?.id} marcada como past_due com janela de carência iniciada.`);
-        break;
-      }
-
-      case "SUBSCRIPTION_DELETED":
-      case "SUBSCRIPTION_INACTIVATED":
-      case "PAYMENT_DELETED":
-      case "PAYMENT_REFUNDED": {
-        let targetStoreId = subscription?.store_id || storeId;
-
-        // Fallback defensivo por Customer ID
-        if (!targetStoreId && asaasCustomerId) {
-          const { data: storeByCustomer } = await supabaseAdmin
-            .from("stores")
-            .select("id")
-            .eq("asaas_customer_id", asaasCustomerId)
-            .maybeSingle();
-
-          if (storeByCustomer) {
-            targetStoreId = storeByCustomer.id;
-          }
-        }
-
-        // Desativa assinaturas locais
-        if (targetStoreId) {
-          await supabaseAdmin
-            .from("subscriptions")
-            .update({ status: "canceled", is_current: false, updated_at: new Date().toISOString() })
-            .eq("store_id", targetStoreId);
-        } else if (subscription?.id) {
-          await supabaseAdmin
-            .from("subscriptions")
-            .update({ status: "canceled", is_current: false, updated_at: new Date().toISOString() })
-            .eq("id", subscription.id);
-        }
-
-        // Rebaixa a loja para o Plano Iniciante, zera carência, seta canceled e limita a 1 GB
-        if (targetStoreId) {
-          await supabaseAdmin
-            .from("stores")
-            .update({
-              plan_id: PLANO_INICIANTE_ID,
-              subscription_status: "canceled",
-              past_due_since: null,
-              storage_limit_bytes: 1073741824, // 1 GB
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", targetStoreId);
-
-          console.log(`[WEBHOOK] Store ${targetStoreId} cancelada e rebaixada para cota de 1 GB.`);
-        }
-        break;
-      }
-
-      default:
-        console.log(`Evento ${event} recebido mas sem ação de ciclo de vida definida.`);
-    }
+    console.log("[asaas-webhook] Evento processado com sucesso:", eventKey);
 
     return new Response(
-      JSON.stringify({ message: "Webhook processado com sucesso." }),
-      { status: 200, headers: corsHeaders }
+      JSON.stringify({ received: true, processed: true }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (err) {
-    console.error("Erro ao processar webhook:", err);
+  } catch (error: any) {
+    console.error("[asaas-webhook] Erro inesperado:", error);
     return new Response(
-      JSON.stringify({ error: "Erro interno ao processar webhook.", details: String(err) }),
-      { status: 500, headers: corsHeaders }
+      JSON.stringify({ error: error.message || "Erro interno de servidor." }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
-
-function mapAsaasStatusToInvoiceStatus(event: string): string {
-  switch (event) {
-    case "PAYMENT_RECEIVED":
-    case "PAYMENT_CONFIRMED":
-      return "paid";
-    case "PAYMENT_OVERDUE":
-      return "overdue";
-    case "PAYMENT_DELETED":
-    case "PAYMENT_REFUNDED":
-      return "canceled";
-    case "PAYMENT_CREATED":
-    case "PAYMENT_UPDATED":
-      return "pending";
-    default:
-      return "pending";
-  }
-}
