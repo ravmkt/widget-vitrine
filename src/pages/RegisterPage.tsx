@@ -81,7 +81,8 @@ const RegisterPage = () => {
           {googleLoading ? 'Conectando...' : 'Cadastrar com Google'}
         </button>
 
-        <button type="button" onClick={() => navigate('/login')} className="w-full text-sm font-bold text-[#0094EB] pt-2">Já tenho conta</button>      </form>
+        <button type="button" onClick={() => navigate('/login')} className="w-full text-sm font-bold text-[#0094EB] pt-2">Já tenho conta</button>   
+           </form>
     </div>
   );
 };
