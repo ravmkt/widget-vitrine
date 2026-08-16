@@ -31,6 +31,7 @@ import { PlansPage } from "@/pages/PlansPage";
 import InstagramCallback from "@/pages/auth/InstagramCallback";
 import { Toaster } from "sonner";
 import StoryPreviewPage from "@/pages/StoryPreviewPage";
+import AuthCallbackPage from '@/pages/AuthCallbackPage';
 
 // â”€â”€ Protege rotas que exigem login â”€â”€
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
