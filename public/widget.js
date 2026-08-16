@@ -3927,17 +3927,13 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         }
       }
 
-      track.appendChild(item);
-    });
-  });
-      
-  trackContainer.appendChild(track);
+track.appendChild(item);
     });
   });
       
   trackContainer.appendChild(track);
   wrapper.appendChild(trackContainer);
-
+  
   // --- DRAG TO SCROLL ---
   var isDragging = false;
   var startX = 0;
