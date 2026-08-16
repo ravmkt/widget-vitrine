@@ -369,12 +369,25 @@ var isUserMuted = true; // Controla a persistência da preferência de som duran
 function normalizeMediaUrl(url) {
     if (!url) return '';
     var value = String(url).trim();
-    if (!value) return '';
-    if (value.indexOf('http://') === 0 || value.indexOf('https://') === 0 || value.indexOf('data:') === 0 || value.indexOf('blob:') === 0) return value;
+    if (!value || value === 'null' || value === 'undefined') return '';
+    if (value.indexOf('http://') === 0 || value.indexOf('https://') === 0 || value.indexOf('data:') === 0 || value.indexOf('blob:') === 0) {
+      try {
+        var parts = value.split('?');
+        var base = parts[0].replace(/ /g, '%20');
+        var query = parts.length > 1 ? '?' + parts.slice(1).join('?') : '';
+        return base + query;
+      } catch (e) {
+        return value;
+      }
+    }
     if (value.indexOf('//') === 0) return window.location.protocol + value;
     var cleanBase = String(supabaseUrl || 'https://wznvecurmisgoaijykbt.supabase.co').replace(/\/+$/, '');
-    var cleanPath = value.replace(/^\/+/, '');
-    return cleanBase + '/storage/v1/object/public/videos/' + cleanPath;
+    var cleanPath = value.replace(/^\/+/, '').replace(/^storage\/v1\/object\/public\//, '');
+    var targetBucket = /\.(jpeg|jpg|png|webp|gif)($|\?)/i.test(cleanPath) ? 'store-assets' : 'videos';
+    if (cleanPath.indexOf('store-assets/') === 0 || cleanPath.indexOf('videos/') === 0) {
+      return cleanBase + '/storage/v1/object/public/' + cleanPath;
+    }
+    return cleanBase + '/storage/v1/object/public/' + targetBucket + '/' + cleanPath;
   }
 
   function getStorageItem(key, fallback) {
