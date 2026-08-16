@@ -581,23 +581,25 @@ let finalVideoUrl = '';
       let thumbnailSize = 0;
 
       if (supabase) {
+        const targetBucket = isImage ? 'store-assets' : 'videos';
         const detectedContentType = file.type || (isImage ? 'image/jpeg' : 'video/mp4');
+
         const { data: uploadData, error: uploadErr } = await supabase.storage
-          .from('videos')
-          .upload(safeStoragePath, file, { 
-            cacheControl: '3600', 
+          .from(targetBucket)
+          .upload(safeStoragePath, file, {
+            cacheControl: '3600',
             contentType: detectedContentType,
-            upsert: true 
+            upsert: true,
           });
 
         if (uploadErr) {
-          console.error('[Vidlytics Storage] Erro no upload principal:', uploadErr);
-          throw new Error('Falha ao enviar arquivo para o armazenamento.');
+          console.error(`[Vidlytics Storage] Erro no upload para o bucket ${targetBucket}:`, uploadErr);
+          throw new Error(`Falha ao enviar arquivo para o armazenamento (${targetBucket}).`);
         }
 
         if (uploadData?.path) {
           const { data: publicUrlData } = supabase.storage
-            .from('videos')
+            .from(targetBucket)
             .getPublicUrl(uploadData.path);
 
           finalVideoUrl = publicUrlData.publicUrl;
