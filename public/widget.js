@@ -3681,54 +3681,62 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         '-webkit-mask-image: -webkit-radial-gradient(white, black) !important;' +
         carouselBorderCss;
 
-      // 5. Máscara interna para corte perfeito da mídia
-      if (effectiveMediaUrl) {
-        var innerMask = document.createElement('div');
-        innerMask.className = 'vidlytics-carousel-inner-mask';
-        innerMask.style.cssText = [
-          'position:absolute !important;',
-          'inset:' + borderWidthNum + 'px !important;',
-          'overflow:hidden !important;',
-          'border-radius:' + innerRadiusCss + ' !important;',
-          'z-index:1 !important;',
-          'pointer-events:none !important;',
-          'transform:translateZ(0) !important;',
-          '-webkit-transform:translateZ(0) !important;',
-          'background:#000 !important;'
-        ].join('');
+      // 5. Máscara interna para corte perfeito da mídia (Decisão por view_mode)
+      var innerMask = document.createElement('div');
+      innerMask.className = 'vidlytics-carousel-inner-mask';
+      innerMask.style.cssText = [
+        'position:absolute !important;',
+        'inset:' + borderWidthNum + 'px !important;',
+        'overflow:hidden !important;',
+        'border-radius:' + innerRadiusCss + ' !important;',
+        'z-index:1 !important;',
+        'pointer-events:none !important;',
+        'transform:translateZ(0) !important;',
+        '-webkit-transform:translateZ(0) !important;',
+        'background:#000 !important;'
+      ].join('');
 
-        var isDirectVideo = isDirectVideoUrl(effectiveMediaUrl);
+      // Modo 'playing' (preview): reproduz vídeo mutado com poster nativo da capa
+      // Modo 'static': renderiza exclusivamente tag <img> da capa
+      if (cfg.carouselPlayMode === 'playing' && rawVideoUrl) {
+        var previewVideo = document.createElement('video');
+        var videoUrlWithFragment = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
 
-        if (isDirectVideo) {
-          var previewVideo = document.createElement('video');
-          var videoUrlWithFragment = effectiveMediaUrl.indexOf('#t=') === -1 ? effectiveMediaUrl + '#t=0.001' : effectiveMediaUrl;
-          
-          previewVideo.preload = 'metadata';
-          previewVideo.muted = true;
-          previewVideo.defaultMuted = true;
-          previewVideo.playsInline = true;
-          previewVideo.setAttribute('playsinline', '');
-          previewVideo.setAttribute('webkit-playsinline', '');
-          previewVideo.setAttribute('muted', '');
-          previewVideo.style.cssText =
-            'width:100% !important;' +
-            'height:100% !important;' +
-            'object-fit:cover !important;' +
-            'display:block !important;' +
-            'border-radius:' + innerRadiusCss + ' !important;' +
-            '-webkit-backface-visibility:hidden !important;' +
-            'background:#000 !important;';
+        previewVideo.preload = 'metadata';
+        previewVideo.muted = true;
+        previewVideo.defaultMuted = true;
+        previewVideo.autoplay = true;
+        previewVideo.loop = true;
+        previewVideo.playsInline = true;
+        previewVideo.setAttribute('playsinline', '');
+        previewVideo.setAttribute('webkit-playsinline', '');
+        previewVideo.setAttribute('muted', '');
+        if (thumbUrl) {
+          previewVideo.poster = thumbUrl;
+        }
 
-          primeVideoFrame(previewVideo);
-          previewVideo.src = videoUrlWithFragment;
+        previewVideo.style.cssText =
+          'width:100% !important;' +
+          'height:100% !important;' +
+          'object-fit:cover !important;' +
+          'display:block !important;' +
+          'border-radius:' + innerRadiusCss + ' !important;' +
+          '-webkit-backface-visibility:hidden !important;' +
+          'background:#000 !important;';
 
-          innerMask.appendChild(previewVideo);
-        } else {
-          var img = document.createElement('img');
-          img.src = effectiveMediaUrl;
-          img.alt = (story && story.title) || 'Story';
-          img.loading = 'lazy';
-          img.style.cssText =
+        primeVideoFrame(previewVideo);
+        previewVideo.src = videoUrlWithFragment;
+
+        innerMask.appendChild(previewVideo);
+      } else {
+        var displayImgSrc = thumbUrl;
+
+        if (displayImgSrc) {
+          var cardImg = document.createElement('img');
+          cardImg.src = displayImgSrc;
+          cardImg.alt = (story && story.title) || 'Story';
+          cardImg.loading = 'lazy';
+          cardImg.style.cssText =
             'width:100% !important;' +
             'height:100% !important;' +
             'object-fit:cover !important;' +
@@ -3736,12 +3744,11 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             'border-radius:' + innerRadiusCss + ' !important;' +
             '-webkit-backface-visibility:hidden !important;';
 
-          img.onerror = function () {
-            if (rawVideoUrl && rawVideoUrl !== effectiveMediaUrl) {
-              img.style.display = 'none';
+          cardImg.onerror = function () {
+            if (rawVideoUrl) {
+              cardImg.style.display = 'none';
               var fallbackVid = document.createElement('video');
-              var fallbackUrlWithFragment = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
-              
+              var fallbackUrl = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
               fallbackVid.preload = 'metadata';
               fallbackVid.muted = true;
               fallbackVid.defaultMuted = true;
@@ -3757,19 +3764,38 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
                 'border-radius:' + innerRadiusCss + ' !important;' +
                 '-webkit-backface-visibility:hidden !important;' +
                 'background:#000 !important;';
-
               primeVideoFrame(fallbackVid);
-              fallbackVid.src = fallbackUrlWithFragment;
-
+              fallbackVid.src = fallbackUrl;
               innerMask.appendChild(fallbackVid);
             }
           };
 
-          innerMask.appendChild(img);
+          innerMask.appendChild(cardImg);
+        } else if (rawVideoUrl) {
+          var directFrameVid = document.createElement('video');
+          var directUrl = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
+          directFrameVid.preload = 'metadata';
+          directFrameVid.muted = true;
+          directFrameVid.defaultMuted = true;
+          directFrameVid.playsInline = true;
+          directFrameVid.setAttribute('playsinline', '');
+          directFrameVid.setAttribute('webkit-playsinline', '');
+          directFrameVid.setAttribute('muted', '');
+          directFrameVid.style.cssText =
+            'width:100% !important;' +
+            'height:100% !important;' +
+            'object-fit:cover !important;' +
+            'display:block !important;' +
+            'border-radius:' + innerRadiusCss + ' !important;' +
+            '-webkit-backface-visibility:hidden !important;' +
+            'background:#000 !important;';
+          primeVideoFrame(directFrameVid);
+          directFrameVid.src = directUrl;
+          innerMask.appendChild(directFrameVid);
         }
-
-        videoCard.appendChild(innerMask);
       }
+
+      videoCard.appendChild(innerMask);
 
       // 6. Ícone de Play centralizado
       if (cfg.showPlayIcon) {
