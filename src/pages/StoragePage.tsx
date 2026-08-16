@@ -802,27 +802,24 @@ if (Array.isArray(realVideos)) {
           if (str.startsWith('data:')) return str;
           if (str.startsWith('blob:')) return '';
 
-          // Extrai o caminho e trata URLs do Supabase (completas ou relativas)
-          let path = str;
-          const hostPrefix = 'https://wznvecurmisgoaijykbt.supabase.co/storage/v1/object/public/videos/';
-
-          const matchFullSupabase = str.match(/https?:\/\/[^/]+\/storage\/v1\/object\/public\/videos\/(.+)$/i);
-          if (matchFullSupabase && matchFullSupabase[1]) {
-            path = matchFullSupabase[1];
-          } else if (/^https?:\/\//i.test(str) && !str.includes('supabase.co')) {
-            // URL externa de terceiros (ex: YouTube, CDN externo)
-            return str;
-          } else {
-            // Caminho relativo ou com prefixo parcial
-            path = str
-              .replace(/^https?:\/\/[^/]+\/videos\//i, '')
-              .replace(/^\/+/, '')
-              .replace(/^storage\/v1\/object\/public\/videos\//, '')
-              .replace(/^videos\//, '');
+          // Se já for uma URL absoluta completa com scheme (Supabase store-assets, videos ou CDN externo)
+          if (/^https?:\/\//i.test(str)) {
+            try {
+              const [baseUrl, ...queryParts] = str.split('?');
+              const queryPart = queryParts.length ? '?' + queryParts.join('?') : '';
+              return baseUrl.replace(/ /g, '%20') + queryPart;
+            } catch (_) {
+              return str;
+            }
           }
 
-          // Codifica cada segmento com proteção contra URIError
-          const encodedPath = path
+          // Caminho relativo dentro do bucket videos
+          const cleanPath = str
+            .replace(/^\/+/, '')
+            .replace(/^storage\/v1\/object\/public\/videos\//, '')
+            .replace(/^videos\//, '');
+
+          const encodedPath = cleanPath
             .split('/')
             .map(seg => {
               try {
@@ -833,7 +830,7 @@ if (Array.isArray(realVideos)) {
             })
             .join('/');
 
-          return hostPrefix + encodedPath;
+          return `https://wznvecurmisgoaijykbt.supabase.co/storage/v1/object/public/videos/${encodedPath}`;
         };
 
         realVideos.forEach((vid: any) => {
