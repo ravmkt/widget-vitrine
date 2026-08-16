@@ -14,6 +14,52 @@ export const signIn = async (email: string, password: string) => {
   return data.user;
 };
 
+export const signInWithGoogle = async () => {
+  if (!supabase) throw new Error('Supabase não configurado.');
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback`,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      },
+    },
+  });
+  if (error) throw error;
+  return data;
+};
+
+export const ensureUserTenantAtomics = async (user: any, customStoreName?: string) => {
+  if (!supabase) throw new Error('Supabase não configurado.');
+  if (!user?.id) throw new Error('Usuário inválido para provisionamento de tenant.');
+
+  const userName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Empresa';
+  const finalStoreName = customStoreName || user.user_metadata?.store_name || `Loja de ${userName}`;
+
+  // Executa procedure atômica no banco de dados (previne race condition e estado parcial)
+  const { data, error } = await supabase.rpc('create_or_get_user_tenant', {
+    p_user_id: user.id,
+    p_user_name: userName,
+    p_user_email: user.email || '',
+    p_store_name: finalStoreName,
+  });
+
+  if (error) {
+    console.error('[Auth] Erro na procedure create_or_get_user_tenant:', error);
+    throw error;
+  }
+
+  const storeId = data?.store_id;
+  if (storeId && typeof window !== 'undefined' && window.localStorage) {
+    localStorage.setItem('vidlytics_current_store_id', storeId);
+    localStorage.setItem('current_store_id', storeId);
+    localStorage.setItem('store_id', storeId);
+  }
+
+  return { storeId, isNew: data?.is_new };
+};
+
 export const signUp = async (name: string, email: string, password: string, storeName: string) => {
   if (!supabase) throw new Error('Supabase não configurado.');
 
@@ -21,19 +67,14 @@ export const signUp = async (name: string, email: string, password: string, stor
     email,
     password,
     options: {
-      data: { name },
+      data: { name, store_name: storeName },
     },
   });
 
   if (error) throw error;
   if (!data.user) throw new Error('Não foi possível criar o usuário.');
 
-  return createInitialTenantForUser({
-    userId: data.user.id,
-    name,
-    email,
-    storeName,
-  });
+  return ensureUserTenantAtomics(data.user, storeName);
 };
 
 export const signOut = async () => {
