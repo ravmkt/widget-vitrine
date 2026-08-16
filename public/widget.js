@@ -3625,12 +3625,14 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
   stories.forEach(function(story, storyIndex) {
     var videos = (story.videos || []).filter(Boolean);
     videos.forEach(function(video, videoIndex) {
+      // 1. Resolução completa e defensiva de URLs
       var rawVideoUrl = getVideoUrl(video);
       var thumbUrl = getVideoThumbnail(video) || 
                      (video && (video.thumbnail_url || video.cover_image_url || video.poster_url || video.image_url)) ||
                      (story && (story.cover_url || story.thumbnail_url || story.cover || story.thumbnail)) || '';
+      var effectiveMediaUrl = thumbUrl || rawVideoUrl;
       
-      // Container principal do item em coluna
+      // 2. Container principal do item em coluna
       var item = document.createElement('div');
       item.className = 'vidlytics-carousel-item';
       item.style.cssText =
@@ -3644,10 +3646,22 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         'background:transparent !important;' +
         'cursor:pointer !important;';
 
-      // Card visual do vídeo
+      // 3. Resolução precisa de bordas e raios (preserva 0 para canto reto)
+      var parsedBorder = parseFloat(cfg.borderWidth);
+      var borderWidthNum = !isNaN(parsedBorder) ? Math.max(0, parsedBorder) : 0;
+
+      var parsedRadius = parseFloat(cfg.itemRadius);
+      var rawRadiusNum = !isNaN(parsedRadius) ? Math.max(0, parsedRadius) : 12;
+
+      var innerRadiusVal = Math.max(0, rawRadiusNum - borderWidthNum);
+      var innerRadiusCss = (typeof cfg.itemRadius === 'string' && cfg.itemRadius.indexOf('%') !== -1)
+        ? cfg.itemRadius
+        : (innerRadiusVal + 'px');
+
+      // 4. Card visual do vídeo
       var videoCard = document.createElement('div');
-      var carouselBorderCss = (cfg.borderWidth > 0)
-        ? ('box-shadow: inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ' !important;')
+      var carouselBorderCss = (borderWidthNum > 0)
+        ? ('box-shadow: inset 0 0 0 ' + borderWidthNum + 'px ' + cfg.borderColor + ' !important;')
         : '';
 
       videoCard.style.cssText =
@@ -3662,13 +3676,10 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         '-webkit-mask-image: -webkit-radial-gradient(white, black) !important;' +
         carouselBorderCss;
 
+      // 5. Máscara interna para corte perfeito da mídia
       if (effectiveMediaUrl) {
-        var borderWidthNum = cfg.borderWidth || 0;
-        var rawRadiusNum = parseFloat(cfg.itemRadius) || 12;
-        var innerRadiusVal = Math.max(0, rawRadiusNum - borderWidthNum);
-        var innerRadiusCss = (typeof cfg.itemRadius === 'string' && cfg.itemRadius.indexOf('%') !== -1) ? cfg.itemRadius : (innerRadiusVal + 'px');
-
         var innerMask = document.createElement('div');
+        innerMask.className = 'vidlytics-carousel-inner-mask';
         innerMask.style.cssText = [
           'position:absolute !important;',
           'inset:' + borderWidthNum + 'px !important;',
@@ -3677,16 +3688,23 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
           'z-index:1 !important;',
           'pointer-events:none !important;',
           'transform:translateZ(0) !important;',
+          '-webkit-transform:translateZ(0) !important;',
           'background:#000 !important;'
         ].join('');
 
-var isDirectVideo = isDirectVideoUrl(effectiveMediaUrl);
+        var isDirectVideo = isDirectVideoUrl(effectiveMediaUrl);
 
         if (isDirectVideo) {
           var previewVideo = document.createElement('video');
           var videoUrlWithFragment = effectiveMediaUrl.indexOf('#t=') === -1 ? effectiveMediaUrl + '#t=0.001' : effectiveMediaUrl;
           
-          previewVideo.preload = 'auto';
+          previewVideo.preload = 'metadata';
+          previewVideo.muted = true;
+          previewVideo.defaultMuted = true;
+          previewVideo.playsInline = true;
+          previewVideo.setAttribute('playsinline', '');
+          previewVideo.setAttribute('webkit-playsinline', '');
+          previewVideo.setAttribute('muted', '');
           previewVideo.style.cssText =
             'width:100% !important;' +
             'height:100% !important;' +
@@ -3703,7 +3721,8 @@ var isDirectVideo = isDirectVideoUrl(effectiveMediaUrl);
         } else {
           var img = document.createElement('img');
           img.src = effectiveMediaUrl;
-          img.alt = story.title || 'Story';
+          img.alt = (story && story.title) || 'Story';
+          img.loading = 'lazy';
           img.style.cssText =
             'width:100% !important;' +
             'height:100% !important;' +
@@ -3718,7 +3737,13 @@ var isDirectVideo = isDirectVideoUrl(effectiveMediaUrl);
               var fallbackVid = document.createElement('video');
               var fallbackUrlWithFragment = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
               
-              fallbackVid.preload = 'auto';
+              fallbackVid.preload = 'metadata';
+              fallbackVid.muted = true;
+              fallbackVid.defaultMuted = true;
+              fallbackVid.playsInline = true;
+              fallbackVid.setAttribute('playsinline', '');
+              fallbackVid.setAttribute('webkit-playsinline', '');
+              fallbackVid.setAttribute('muted', '');
               fallbackVid.style.cssText =
                 'width:100% !important;' +
                 'height:100% !important;' +
@@ -3741,6 +3766,7 @@ var isDirectVideo = isDirectVideoUrl(effectiveMediaUrl);
         videoCard.appendChild(innerMask);
       }
 
+      // 6. Ícone de Play centralizado
       if (cfg.showPlayIcon) {
         var play = document.createElement('div');
         play.className = 'vidlytics-carousel-play';
@@ -3761,6 +3787,7 @@ var isDirectVideo = isDirectVideoUrl(effectiveMediaUrl);
         videoCard.appendChild(play);
       }
       
+      // 7. Título do Item sobreposto
       if (cfg.showItemTitle && story.title) {
         var titleOverlay = document.createElement('div');
         titleOverlay.className = 'vidlytics-carousel-item-title';
@@ -3780,6 +3807,7 @@ var isDirectVideo = isDirectVideoUrl(effectiveMediaUrl);
         videoCard.appendChild(titleOverlay);
       }
 
+      // 8. Evento de clique para abrir Story
       videoCard.addEventListener('click', function(e) {
         e.stopPropagation();
         openStoryModal(storyIndex, videoIndex);
@@ -3787,6 +3815,7 @@ var isDirectVideo = isDirectVideoUrl(effectiveMediaUrl);
 
       item.appendChild(videoCard);
 
+      // 9. Card de produto acoplado
       if (cfg.showProduct) {
         var videoProductId = video.product_id || video.productId || null;
         var productData = videoProductId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
@@ -3899,6 +3928,10 @@ var isDirectVideo = isDirectVideoUrl(effectiveMediaUrl);
       }
 
       track.appendChild(item);
+    });
+  });
+      
+  trackContainer.appendChild(track);
     });
   });
       
