@@ -14,16 +14,19 @@ const AuthCallbackPage: React.FC = () => {
     const processUser = async (user: any) => {
       if (authProcessed || !user) return;
       authProcessed = true;
+      console.log('[Auth Callback] Usuário autenticado detectado:', user.id, user.email);
+
       try {
-        await ensureUserTenantAtomics(user);
+        const tenantResult = await ensureUserTenantAtomics(user);
+        console.log('[Auth Callback] Tenant provisionado com sucesso:', tenantResult);
         if (isMounted) {
           navigate('/dashboard', { replace: true });
         }
       } catch (err: any) {
-        console.error('[Auth Callback] Erro ao processar tenant:', err);
+        console.error('[Auth Callback] Erro ao provisionar tenant:', err);
         if (isMounted) {
           setError(err.message || 'Falha ao provisionar acesso à sua loja.');
-          setTimeout(() => navigate('/login', { replace: true }), 3500);
+          setTimeout(() => navigate('/login', { replace: true }), 4000);
         }
       }
     };
@@ -33,27 +36,65 @@ const AuthCallbackPage: React.FC = () => {
       return;
     }
 
-    // 1. Escuta mudanças de estado de autenticação (OAuth PKCE / Hash parsing)
+    // 1. Processamento explícito do código de autorização PKCE (?code=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+
+    const handleCallbackFlow = async () => {
+      try {
+        if (code) {
+          console.log('[Auth Callback] Processando troca de código PKCE...');
+          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) throw exchangeError;
+          if (data?.session?.user) {
+            return processUser(data.session.user);
+          }
+        }
+
+        // 2. Se não houver code na query ou se já foi processado, obtém a sessão ativa
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+        if (session?.user) {
+          return processUser(session.user);
+        }
+
+        // 3. Fallback adicional via getUser
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (!userError && user) {
+          return processUser(user);
+        }
+      } catch (err: any) {
+        console.error('[Auth Callback] Erro no fluxo de sessão:', err);
+        if (isMounted && !authProcessed) {
+          setError(err.message || 'Não foi possível validar a sessão do Google.');
+          setTimeout(() => navigate('/login', { replace: true }), 4000);
+        }
+      }
+    };
+
+    // Escuta eventos de login caso a resolução assíncrona dispare após o mount
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'USER_UPDATED') && session?.user) {
+      console.log('[Auth Callback] onAuthStateChange event:', event, 'tem session:', !!session);
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session?.user) {
         processUser(session.user);
       }
     });
 
-    // 2. Checagem de segurança inicial caso a sessão já esteja ativa
-    supabase.auth.getSession().then(({ data: { session }, error: sessionErr }) => {
-      if (sessionErr) {
-        console.warn('[Auth Callback] Erro ao recuperar sessão:', sessionErr);
-        return;
+    handleCallbackFlow();
+
+    // Timeout de segurança para evitar carregamento infinito (10 segundos)
+    const safetyTimeout = setTimeout(() => {
+      if (isMounted && !authProcessed) {
+        console.warn('[Auth Callback] Timeout de 10s atingido sem resolução de sessão.');
+        setError('Tempo limite excedido ao validar o login. Redirecionando...');
+        setTimeout(() => navigate('/login', { replace: true }), 2500);
       }
-      if (session?.user) {
-        processUser(session.user);
-      }
-    });
+    }, 10000);
 
     return () => {
       isMounted = false;
       subscription.unsubscribe();
+      clearTimeout(safetyTimeout);
     };
   }, [navigate]);
 
