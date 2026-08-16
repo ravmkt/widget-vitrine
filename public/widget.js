@@ -3656,7 +3656,8 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         carouselBorderCss;
 
       var borderWidthNum = cfg.borderWidth || 0;
-      var rawRadiusNum = parseFloat(cfg.itemRadius) || 12;
+      var parsedRad = parseFloat(cfg.itemRadius);
+var rawRadiusNum = !isNaN(parsedRad) ? parsedRad : 12;
       var innerRadiusVal = Math.max(0, rawRadiusNum - borderWidthNum);
       var innerRadiusCss = (typeof cfg.itemRadius === 'string' && cfg.itemRadius.indexOf('%') !== -1) ? cfg.itemRadius : (innerRadiusVal + 'px');
 
