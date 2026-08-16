@@ -676,23 +676,21 @@ function getFloatingBehaviorConfig(appearance) {
   };
 }
 
-// trecho novo e limpo para getCarouselConfig
 function getCarouselConfig(appearance) {
   appearance = normalizeAppearanceItem(appearance || {});
   var primaryColor = getPrimaryColor(appearance);
   
-  function rcv(jsonbField, flatField, fallback) {
-    return readConfigValue(appearance, 'carousel_config', jsonbField, flatField, fallback);
+  function rcv(jsonbField, fallback) {
+    return readConfigValue(appearance, 'carousel_config', jsonbField, fallback);
   }
   
-  var itemWidth = toNumber(rcv('width', 'card_size', '120'), 120);
-    var itemSpacing = toNumber(rcv('spacing', 'carousel_item_spacing', '8'), 8);
-    
-    // Leitura segura que aceita 0 (canto reto) e utiliza o formatador px() nativo do widget
-    var rawRadiusInput = rcv('border_radius', 'carousel_item_radius', 12);
-    var parsedRadiusVal = parseFloat(rawRadiusInput);
-    var safeRadiusNum = !isNaN(parsedRadiusVal) ? Math.max(0, parsedRadiusVal) : 12;
-    var itemRadius = (String(rawRadiusInput).trim() === '0' || rawRadiusInput === 0) ? '0px' : px(safeRadiusNum, 12);
+  var itemWidth = toNumber(rcv('width', 120), 120);
+  var itemSpacing = toNumber(rcv('spacing', 8), 8);
+  
+  var rawRadiusInput = rcv('border_radius', 12);
+  var parsedRadiusVal = parseFloat(rawRadiusInput);
+  var safeRadiusNum = !isNaN(parsedRadiusVal) ? Math.max(0, parsedRadiusVal) : 12;
+  var itemRadius = (String(rawRadiusInput).trim() === '0' || rawRadiusInput === 0) ? '0px' : px(safeRadiusNum, 12);
   
   var marginTop = toNumber(rcv('margin_top', 'carousel_margin_top', '0'), 0);
   var marginBottom = toNumber(rcv('margin_bottom', 'carousel_margin_bottom', '0'), 0);
