@@ -197,7 +197,7 @@ return (
         </div>
       </div>
 
-      {/* ── GRID DE CARDS MODULARES DE PLANOS ── */}
+{/* ── GRID DE CARDS MODULARES DE PLANOS ── */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 pt-4 items-stretch">
         {plans.map((p, idx) => {
           const isCurrent = p.id === currentPlanId;
@@ -210,12 +210,12 @@ return (
               className={cn(
                 "relative flex flex-col justify-between rounded-[2.5rem] border bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 transition-all duration-300 hover:-translate-y-1.5 shadow-sm",
                 isPopular
-                  ? "border-[#ff7a29] dark:border-[#ff7a29]/70 shadow-lg dark:shadow-[0_12px_35px_rgba(255,122,41,0.22)] ring-1 ring-[#ff7a29]/30"
+                  ? "border-[#0094EB] dark:border-[#ff7a29]/70 shadow-lg shadow-blue-500/10 dark:shadow-[0_12px_35px_rgba(255,122,41,0.22)] ring-1 ring-[#0094EB]/30 dark:ring-[#ff7a29]/30"
                   : "border-slate-200 dark:border-orange-500/15 dark:hover:border-orange-500/35 dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.1)]",
                 isCurrent && "bg-slate-50/70 dark:bg-[#1a1f35]/95"
               )}
             >
-{/* Badge Arredondado "Mais Popular" Dual-Theme */}
+              {/* Badge Arredondado "Mais Popular" Dual-Theme */}
               {isPopular && (
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-[#0094EB] dark:bg-[#ff7a29] px-3.5 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-md shadow-blue-500/30 dark:shadow-orange-500/40">
                   Mais Popular
@@ -241,33 +241,24 @@ return (
                   <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">/mês</span>
                 </div>
 
-                {/* Lista de Recursos com Checkmark Laranja */}
+                {/* Lista de Recursos com Checkmark Dual-Theme */}
                 <div className="mt-6 space-y-3.5 border-t border-slate-100 dark:border-white/5 pt-5">
                   <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-[#c0c5d4]">
-                    <div 
-                      style={{ backgroundColor: '#ff7a29' }}
-                      className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 shadow-xs shadow-orange-500/30"
-                    >
+                    <div className="w-4 h-4 rounded-full flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shrink-0 shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
                       <Check size={11} className="text-white stroke-[3]" />
                     </div>
                     <span><strong className="text-slate-900 dark:text-white">{(p.views_limit / 1000).toFixed(0)}k</strong> visualizações/mês</span>
                   </div>
 
                   <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-[#c0c5d4]">
-                    <div 
-                      style={{ backgroundColor: '#ff7a29' }}
-                      className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 shadow-xs shadow-orange-500/30"
-                    >
+                    <div className="w-4 h-4 rounded-full flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shrink-0 shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
                       <Check size={11} className="text-white stroke-[3]" />
                     </div>
                     <span><strong className="text-slate-900 dark:text-white">{p.pages_limit}</strong> páginas ativas</span>
                   </div>
 
                   <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-[#c0c5d4]">
-                    <div 
-                      style={{ backgroundColor: '#ff7a29' }}
-                      className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 shadow-xs shadow-orange-500/30"
-                    >
+                    <div className="w-4 h-4 rounded-full flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shrink-0 shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
                       <Check size={11} className="text-white stroke-[3]" />
                     </div>
                     <span><strong className="text-slate-900 dark:text-white">{formatSize(p.storage_limit_bytes)}</strong> armazenamento</span>
@@ -275,20 +266,19 @@ return (
                 </div>
               </div>
 
-              {/* Botão de Ação Alinhado ao Padrão Vidlytics */}
+              {/* Botão de Ação Dual-Theme */}
               <div className="mt-8 pt-4 border-t border-slate-100 dark:border-white/5">
                 <button
                   type="button"
                   disabled={isCurrent || !!updatingPlanId}
                   onClick={() => handleSelectPlan(p)}
-                  style={isPopular && !isCurrent ? { backgroundColor: '#ff7a29' } : undefined}
                   className={cn(
                     "w-full rounded-2xl py-3 px-4 text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer",
                     isCurrent
                       ? "bg-slate-100 dark:bg-[#0f1220] text-slate-400 dark:text-slate-500 border border-transparent dark:border-white/5 cursor-default shadow-none"
                       : isPopular
-                      ? "!bg-[#ff7a29] text-white shadow-lg shadow-orange-500/30 hover:opacity-95 hover:scale-[1.02]"
-                      : "bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white hover:border-[#ff7a29]/60 hover:bg-slate-200 dark:hover:bg-white/5 shadow-xs"
+                      ? "bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02]"
+                      : "bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white hover:border-[#0094EB] dark:hover:border-[#ff7a29]/60 hover:bg-slate-200 dark:hover:bg-white/5 shadow-xs"
                   )}
                 >
                   {isUpdating ? (
@@ -304,6 +294,6 @@ return (
           );
         })}
       </div>
-    </div>
+          </div>
   );
   }
