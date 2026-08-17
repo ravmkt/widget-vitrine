@@ -460,59 +460,77 @@ export function BillingPage() {
           </div>
         </div>
       </div>
-      
-      {/* Histórico de Faturas */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Receipt size={18} className="text-[#0094EB]" />
-            <h3 className="text-sm font-black text-slate-900 dark:text-white">Histórico de Faturas</h3>
+
+{/* ── HISTÓRICO DE FATURAS (MODULAR NO PADRÃO TOP VÍDEOS DASHBOARD) ── */}
+      <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
+          <div className="flex items-center gap-3">
+            <div 
+              style={{ backgroundColor: '#ff7a29' }}
+              className="w-10 h-10 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0"
+            >
+              <Receipt size={18} className="!text-white stroke-[2.5]" />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                Histórico de Faturas
+              </h3>
+              <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0]">
+                Demonstrativo financeiro dos ciclos e pagamentos processados.
+              </p>
+            </div>
           </div>
+
+          <span className="text-xs font-black uppercase tracking-widest text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/20">
+            {invoices.length} {invoices.length === 1 ? 'Fatura' : 'Faturas'}
+          </span>
         </div>
 
         {invoices.length === 0 ? (
-          <div className="py-8 text-center text-xs font-semibold text-slate-400">
+          <div className="py-12 text-center text-xs font-semibold text-slate-400 dark:text-[#8a90a0]">
             Nenhuma fatura anterior registrada para esta loja.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="border-b border-slate-100 text-slate-400 dark:border-slate-800">
-                <tr>
-                  <th className="py-2.5 font-bold">Data</th>
-                  <th className="py-2.5 font-bold">Descrição</th>
-                  <th className="py-2.5 font-bold">Valor</th>
-                  <th className="py-2.5 font-bold">Status</th>
-                  <th className="py-2.5 font-bold text-right">Nota Fiscal</th>
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#0f1220]/50 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+                  <th className="px-6 py-4 rounded-l-2xl">Data</th>
+                  <th className="px-6 py-4">Descrição</th>
+                  <th className="px-6 py-4">Valor</th>
+                  <th className="px-6 py-4 text-center">Status</th>
+                  <th className="px-6 py-4 text-right rounded-r-2xl">Nota Fiscal</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                 {invoices.map((inv) => (
-                  <tr key={inv.id}>
-                    <td className="py-3 font-semibold text-slate-600 dark:text-slate-300">
+                  <tr key={inv.id} className="transition-colors hover:bg-slate-50/60 dark:hover:bg-white/[0.02]">
+                    <td className="px-6 py-4 font-mono text-xs font-bold text-slate-600 dark:text-[#c0c5d4]">
                       {new Date(inv.created_at).toLocaleDateString('pt-BR')}
                     </td>
-                    <td className="py-3 font-bold text-slate-800 dark:text-white">{inv.description}</td>
-                    <td className="py-3 font-black text-slate-900 dark:text-white">
+                    <td className="px-6 py-4 font-black text-xs text-slate-800 dark:text-[#e8ecf4]">
+                      {inv.description}
+                    </td>
+                    <td className="px-6 py-4 font-mono font-black text-xs text-slate-900 dark:text-white">
                       R$ {(inv.amount_cents / 100).toFixed(2).replace('.', ',')}
                     </td>
-                    <td className="py-3">
-                      <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:bg-emerald-950/40">
+                    <td className="px-6 py-4 text-center">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 px-3 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                         {inv.status === 'paid' ? 'Pago' : inv.status}
                       </span>
                     </td>
-                    <td className="py-3 text-right">
+                    <td className="px-6 py-4 text-right">
                       {inv.invoice_pdf_url ? (
                         <a
                           href={inv.invoice_pdf_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="font-bold text-[#0094EB] hover:underline"
+                          className="font-black text-xs text-[#0094EB] dark:text-[#ff7a29] hover:underline"
                         >
-                          Visualizar
+                          Visualizar PDF &rarr;
                         </a>
                       ) : (
-                        <span className="text-slate-400">-</span>
+                        <span className="text-slate-400 dark:text-[#8a90a0] text-xs">—</span>
                       )}
                     </td>
                   </tr>
@@ -523,88 +541,109 @@ export function BillingPage() {
         )}
       </div>
 
-      {/* Dados Fiscais para Faturamento */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-        <div className="flex items-center gap-2 mb-4">
-          <Building2 size={18} className="text-[#0094EB]" />
+      {/* ── DADOS DA NOTA FISCAL (MODULAR NO PADRÃO VIDLYTICS) ── */}
+      <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
+        <div className="flex items-center gap-3 border-b border-slate-100 dark:border-white/5 pb-4">
+          <div 
+            style={{ backgroundColor: '#ff7a29' }}
+            className="w-10 h-10 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0"
+          >
+            <Building2 size={18} className="!text-white stroke-[2.5]" />
+          </div>
           <div>
-            <h3 className="text-sm font-black text-slate-900 dark:text-white">Dados da Nota Fiscal</h3>
-            <p className="text-[11px] font-semibold text-slate-400">Informações utilizadas na emissão das faturas.</p>
+            <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">
+              Dados da Nota Fiscal
+            </h3>
+            <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0]">
+              Informações fiscais e cadastrais utilizadas na emissão das suas faturas.
+            </p>
           </div>
         </div>
 
-        <form onSubmit={handleSaveFiscal} className="space-y-4">
+        <form onSubmit={handleSaveFiscal} className="space-y-5">
           <div className="grid gap-4 md:grid-cols-3">
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">CNPJ ou CPF</label>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0] mb-1.5">
+                CNPJ ou CPF
+              </label>
               <input
                 type="text"
                 value={fiscalData.cnpj_cpf}
                 onChange={(e) => setFiscalData({ ...fiscalData, cnpj_cpf: e.target.value })}
                 placeholder="00.000.000/0000-00"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold outline-none transition focus:border-[#0094EB] focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Nome / Razão Social</label>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0] mb-1.5">
+                Nome / Razão Social
+              </label>
               <input
                 type="text"
                 value={fiscalData.legal_name}
                 onChange={(e) => setFiscalData({ ...fiscalData, legal_name: e.target.value })}
                 placeholder="Nome da sua empresa"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold outline-none transition focus:border-[#0094EB] focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">E-mail de Cobrança</label>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0] mb-1.5">
+                E-mail de Cobrança
+              </label>
               <input
                 type="email"
                 value={fiscalData.email}
                 onChange={(e) => setFiscalData({ ...fiscalData, email: e.target.value })}
                 placeholder="financeiro@empresa.com"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold outline-none transition focus:border-[#0094EB] focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
               />
             </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-4">
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">CEP</label>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0] mb-1.5">
+                CEP
+              </label>
               <input
                 type="text"
                 value={fiscalData.cep}
                 onChange={(e) => setFiscalData({ ...fiscalData, cep: e.target.value })}
                 placeholder="00000-000"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold outline-none transition focus:border-[#0094EB] focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
               />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Endereço</label>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0] mb-1.5">
+                Endereço
+              </label>
               <input
                 type="text"
                 value={fiscalData.address}
                 onChange={(e) => setFiscalData({ ...fiscalData, address: e.target.value })}
                 placeholder="Rua, Avenida..."
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold outline-none transition focus:border-[#0094EB] focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Número</label>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0] mb-1.5">
+                Número
+              </label>
               <input
                 type="text"
                 value={fiscalData.number}
                 onChange={(e) => setFiscalData({ ...fiscalData, number: e.target.value })}
                 placeholder="123"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold outline-none transition focus:border-[#0094EB] focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
               />
             </div>
           </div>
 
-          <div className="flex justify-end pt-2">
+          <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-white/5">
             <button
               type="submit"
               disabled={savingFiscal}
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2 text-xs font-bold text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+              className="inline-flex items-center gap-2 rounded-2xl bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/10 px-6 py-3 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white hover:border-[#ff7a29]/60 hover:bg-slate-200 dark:hover:bg-white/5 transition-all shadow-xs disabled:opacity-50 cursor-pointer"
             >
               {savingFiscal ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
               Atualizar Dados Fiscais
@@ -612,6 +651,6 @@ export function BillingPage() {
           </div>
         </form>
       </div>
-    </div>
+          </div>
   );
 }
