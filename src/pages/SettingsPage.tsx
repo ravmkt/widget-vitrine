@@ -650,7 +650,7 @@ return (
             </div>
           </div>
         </div>
-        
+
         {/* 2. Módulos */}
         <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900">
           <CardHeader className="p-6">
@@ -710,16 +710,20 @@ return (
           </CardContent>
         </Card>
 
-        {/* 3. Integração WhatsApp */}
-        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900">
-          <CardHeader className="p-6">
-            <CardTitle className="text-xl font-black text-slate-800 dark:text-white">
-              3. Integração WhatsApp
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 space-y-6">
-            <div className="space-y-4">
-              <Label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+{/* ── 3. INTEGRAÇÃO WHATSAPP ── */}
+        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
+          <div className="border-b border-slate-100 dark:border-white/5 pb-4">
+            <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+              <span>💬</span> 3. Integração WhatsApp
+            </h2>
+            <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
+              Defina o número receptor e a mensagem automática enviada pelos clientes nos vídeos.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
                 Número do WhatsApp
               </Label>
               <Input
@@ -730,14 +734,15 @@ return (
                   const v = e.target.value.replace(/[^\d+\-\(\) ]/g, '');
                   setSettings(prev => ({ ...prev, whatsapp_number: v }));
                 }}
-                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB] dark:text-white"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
               />
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Informe o WhatsApp com código do país e DDD. Ex: 5545998888888
+              <p className="text-[11px] text-slate-500 dark:text-[#8a90a0]">
+                Informe o WhatsApp com código do país e DDD (Ex: 5545998888888).
               </p>
             </div>
-            <div className="space-y-4">
-              <Label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
                 Mensagem Padrão de Contato
               </Label>
               <Textarea
@@ -748,127 +753,129 @@ return (
                     whatsapp_message_template: e.target.value,
                   }))
                 }
-                rows={4}
-                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB] dark:text-white"
+                rows={3}
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
               />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* 4. Aparência (Tema) */}
-        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900 transition-colors">
-          <CardHeader className="p-6">
-            <CardTitle className="text-xl font-black text-slate-800 dark:text-white">
-              4. Aparência
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
+        {/* ── 4. APARÊNCIA (TEMA) ── */}
+        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-4">
+          <div className="border-b border-slate-100 dark:border-white/5 pb-4">
+            <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+              <span>🌗</span> 4. Aparência do Painel
+            </h2>
+            <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
+              Alterne entre o tema Claro e o tema Escuro (Dark Glass).
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50/70 dark:bg-[#0f1220]/60 border border-slate-100 dark:border-white/5">
+            <div className="flex items-center gap-3">
+              <span className={`text-lg transition-opacity ${isDark ? 'opacity-40' : 'opacity-100'}`}>
+                ☀️
+              </span>
+
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isDark}
+                aria-label="Alternar tema claro/escuro"
+                onClick={() => setIsDark(prev => !prev)}
+                className={`
+                  relative inline-flex h-7 w-14 shrink-0 cursor-pointer
+                  items-center rounded-full border-2 border-transparent
+                  transition-colors duration-300 ease-in-out
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff7a29]
+                  ${isDark ? 'bg-[#ff7a29]' : 'bg-slate-300'}
+                `}
+              >
                 <span
-                  className={`text-xl transition-opacity ${isDark ? 'opacity-40' : 'opacity-100'}`}
-                >
-                  ☀️
-                </span>
-
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={isDark}
-                  aria-label="Alternar tema claro/escuro"
-                  onClick={() => setIsDark(prev => !prev)}
                   className={`
-                    relative inline-flex h-7 w-14 shrink-0 cursor-pointer
-                    items-center rounded-full border-2 border-transparent
-                    transition-colors duration-300 ease-in-out
-                    focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0094EB]
-                    focus-visible:ring-offset-2
-                    ${isDark ? 'bg-[#3b82f6]' : 'bg-slate-300'}
+                    pointer-events-none inline-block h-5 w-5
+                    transform rounded-full bg-white shadow-md
+                    ring-0 transition-transform duration-300 ease-in-out
+                    ${isDark ? 'translate-x-7' : 'translate-x-1'}
                   `}
-                >
-                  <span
-                    className={`
-                      pointer-events-none inline-block h-5 w-5
-                      transform rounded-full bg-white shadow-md
-                      ring-0 transition-transform duration-300 ease-in-out
-                      ${isDark ? 'translate-x-7' : 'translate-x-1'}
-                    `}
-                  />
-                </button>
+                />
+              </button>
 
-                <span
-                  className={`text-xl transition-opacity ${isDark ? 'opacity-100' : 'opacity-40'}`}
-                >
-                  🌙
-                </span>
-              </div>
-
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                {isDark ? 'Tema Escuro' : 'Tema Claro'}
+              <span className={`text-lg transition-opacity ${isDark ? 'opacity-100' : 'opacity-40'}`}>
+                🌙
               </span>
             </div>
 
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-4">
-              Sua preferência é salva automaticamente e será aplicada na próxima visita.
+            <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
+              {isDark ? 'Tema Escuro (Deep Glass)' : 'Tema Claro'}
+            </span>
+          </div>
+        </div>
+
+        {/* ── 5. SEGURANÇA & API KEYS ── */}
+        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-5">
+          <div className="border-b border-slate-100 dark:border-white/5 pb-4">
+            <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+              <span>🔒</span> 5. Segurança & API
+            </h2>
+            <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
+              Credenciais e chaves públicas de integração do widget na loja.
             </p>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* 5. Segurança */}
-        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900">
-          <CardHeader className="p-6">
-            <CardTitle className="text-xl font-black text-slate-800 dark:text-white">
-              5. Segurança
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 space-y-6">
-            <div className="space-y-4">
-              <Label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                Token Público / API Keys
-              </Label>
-              <div className="flex items-center gap-3">
-                <Input
-                  type="text"
-                  value={settings?.public_live_key ?? ''}
-                  readOnly
-                  className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-600 dark:text-slate-300 break-all"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => {
-                    navigator.clipboard.writeText(settings?.public_live_key ?? '');
-                    toast.success('Token copiado');
-                  }}
-                >
-                  <Copy size={20} />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => {
-                    const k =
-                      'pub_live_' + Math.random().toString(36).substr(2, 24);
-                    setSettings(prev => ({ ...prev, public_live_key: k }));
-                    toast.success('Token regenerado');
-                  }}
-                >
-                  <RefreshCw size={20} className="text-amber-600" />
-                </Button>
-              </div>
+          <div className="space-y-2">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+              Token Público / Live Key
+            </Label>
+            <div className="flex items-center gap-2.5">
+              <Input
+                type="text"
+                value={settings?.public_live_key ?? ''}
+                readOnly
+                className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-mono text-slate-600 dark:text-slate-300 break-all"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  navigator.clipboard.writeText(settings?.public_live_key ?? '');
+                  toast.success('Token copiado');
+                }}
+                className="rounded-xl border-slate-200 dark:border-white/10 hover:border-[#ff7a29] dark:hover:border-[#ff7a29]"
+                title="Copiar token"
+              >
+                <Copy size={16} />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  const k = 'pub_live_' + Math.random().toString(36).substr(2, 24);
+                  setSettings(prev => ({ ...prev, public_live_key: k }));
+                  toast.success('Token regenerado');
+                }}
+                className="rounded-xl border-slate-200 dark:border-white/10 hover:border-amber-500"
+                title="Regenerar token"
+              >
+                <RefreshCw size={16} className="text-amber-500" />
+              </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <div className="flex justify-end pt-6">
+        {/* ── BOTÃO SALVAR PRIMÁRIO LARANJA ── */}
+        <div className="flex justify-end pt-4">
           <Button
             type="submit"
             disabled={saving}
-            className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-8 py-3.5 rounded-2xl font-black text-sm shadow-xl shadow-blue-100 dark:shadow-none transition-all flex items-center gap-2"
+            style={{ backgroundColor: '#ff7a29' }}
+            className="!bg-[#ff7a29] hover:opacity-95 hover:scale-[1.02] text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-orange-500/30 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
           >
             {saving ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin !text-white" />
                 Salvando...
               </>
             ) : (
@@ -879,6 +886,5 @@ return (
       </form>
     </div>
   );
-};
-
+  
 export default SettingsPage;
