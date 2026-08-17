@@ -3964,14 +3964,11 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
             if (productUrl) {
               window.open(productUrl, '_blank');
             }
-            trackMetric({
-              event_type: 'product_click',
-              story_id: story.id,
-              video_id: video.id,
-              product_id: productData.id,
-              page_url: window.location.href
-            });
+            sendAnalyticsEvent('product_click', video ? video.id : null, productData ? productData.id : null);
           });
+
+          // Registra a visualização do produto na vitrine do carrossel
+          sendAnalyticsEvent('product_view', video ? video.id : null, productData ? productData.id : null);
 
           item.appendChild(prodCard);
         }
