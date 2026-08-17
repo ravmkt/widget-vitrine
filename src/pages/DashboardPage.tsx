@@ -677,31 +677,24 @@ const getBarColor = (pct: number) => {
           </div>
         </div>
 
-{/* Card Destaque: Indique e Ganhe (Clean com Ícone Cifrão e Linha Azul) */}
-        <div className="lg:col-span-5 !bg-[#f0f6ff] dark:!bg-[#f8fafc] text-slate-900 p-6 sm:p-7 rounded-[2.5rem] shadow-xl flex flex-col justify-between border border-blue-200/80 dark:border-slate-300 hover:-translate-y-1 transition-all duration-300">
+{/* Card Destaque: Indique e Ganhe (Dual-Theme: Azul no Light / Laranja no Dark) */}
+        <div className="lg:col-span-5 bg-white dark:bg-[#1a1f35]/90 dark:backdrop-blur-md p-6 sm:p-7 rounded-[2.5rem] shadow-sm hover:shadow-md dark:hover:shadow-[0_8px_20px_rgba(255,122,41,0.15)] flex flex-col justify-between border border-slate-200 dark:border-orange-500/15 hover:-translate-y-1 transition-all duration-300">
           <div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div 
-                  style={{ backgroundColor: '#0094EB' }}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-white shadow-sm shadow-blue-500/30"
-                >
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-sm shadow-blue-500/30 dark:shadow-orange-500/30">
                   <DollarSign size={18} className="!text-white stroke-[2.5]" />
                 </div>
-                <h4 className="text-lg font-black !text-[#0f172a] tracking-tight">
+                <h4 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
                   Indique e Ganhe
                 </h4>
               </div>
-              <Share2 size={16} className="!text-[#0f172a]" />
+              <Share2 size={16} className="text-slate-400 dark:text-slate-400" />
             </div>
 
-            {/* Linha Divisória Azul #0094EB no padrão do card Atividade Recente */}
-            <div 
-              style={{ borderColor: 'rgba(0, 148, 235, 0.35)' }}
-              className="border-b my-3.5"
-            />
+            <div className="border-b border-blue-500/20 dark:border-orange-500/20 my-3.5" />
 
-            <p className="text-xs !text-[#475569] font-medium leading-relaxed">
+            <p className="text-xs text-slate-500 dark:text-[#c0c5d4] font-medium leading-relaxed">
               Receba comissões e desbloqueie meses gratuitos ao indicar o Vidlytics para outros lojistas.
             </p>
           </div>
@@ -709,14 +702,13 @@ const getBarColor = (pct: number) => {
           <button
             type="button"
             onClick={() => alert('Link de indicação copiado para a área de transferência!')}
-            style={{ backgroundColor: '#ff7a29' }}
-            className="mt-5 w-full !bg-[#ff7a29] hover:!bg-[#e66c22] !text-white font-black py-3.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md hover:shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 cursor-pointer"
+            className="mt-5 w-full bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] text-white font-black py-3.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 dark:shadow-orange-500/30 flex items-center justify-center gap-2 cursor-pointer"
           >
             <Share2 size={14} className="!text-white shrink-0" />
             <span className="!text-white font-black">Copiar Meu Link de Indicação</span>
           </button>
         </div>
-              </div>
+                      </div>
 
       {/* DIALOG DE DATA PERSONALIZADA */}
       <CustomDialog
