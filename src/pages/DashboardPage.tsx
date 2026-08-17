@@ -677,28 +677,32 @@ const getBarColor = (pct: number) => {
           </div>
         </div>
 
-        {/* Card Destaque: Indique e Ganhe (Gradiente Diagonal Intenso) */}
-        <div className="lg:col-span-5 bg-gradient-to-br from-[#0094EB] via-blue-600 to-blue-700 dark:from-[#ff7a29] dark:via-[#ea580c] dark:to-[#c2410c] text-white p-6 sm:p-7 rounded-[2.5rem] shadow-xl dark:shadow-[0_12px_35px_rgba(255,122,41,0.28)] flex flex-col justify-between border border-blue-400/30 dark:border-orange-400/40 hover:-translate-y-1 transition-all duration-300">
+{/* Card Destaque: Indique e Ganhe (Off-White / Azul Claro com Botão Laranja) */}
+        <div className="lg:col-span-5 !bg-[#f0f6ff] dark:!bg-[#f8fafc] text-slate-900 p-6 sm:p-7 rounded-[2.5rem] shadow-xl flex flex-col justify-between border border-blue-200/80 dark:border-slate-300 hover:-translate-y-1 transition-all duration-300">
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-2.5 py-1 rounded-full text-white backdrop-blur-sm">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[10px] font-black uppercase tracking-wider !bg-[#0094EB]/10 !text-[#0094EB] px-3 py-1 rounded-full border border-[#0094EB]/20">
                 Programa de Parceiros
               </span>
-              <Share2 size={16} className="text-white/90" />
+              <Share2 size={16} className="!text-[#0f172a]" />
             </div>
-            <h4 className="text-xl font-black text-white tracking-tight">Indique e Ganhe</h4>
-            <p className="text-xs text-blue-50 dark:text-orange-50/90 mt-1.5 font-medium leading-relaxed">
+            <h4 className="text-xl font-black !text-[#0f172a] tracking-tight">
+              Indique e Ganhe
+            </h4>
+            <p className="text-xs !text-[#475569] mt-1.5 font-semibold leading-relaxed">
               Receba comissões e desbloqueie meses gratuitos ao indicar o Vidlytics para outros lojistas.
             </p>
           </div>
           <button
+            type="button"
             onClick={() => alert('Link de indicação copiado para a área de transferência!')}
-            className="mt-5 w-full bg-white text-[#0094EB] dark:text-[#ff7a29] hover:bg-slate-50 font-black py-3.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md hover:shadow-lg dark:shadow-[0_0_15px_rgba(255,255,255,0.2)] flex items-center justify-center gap-2"
+            className="mt-5 w-full !bg-[#ff7a29] hover:!bg-[#e66c22] !text-white font-black py-3.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md hover:shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 cursor-pointer"
           >
-            <Share2 size={14} /> Copiar Meu Link de Indicação
+            <Share2 size={14} className="!text-white shrink-0" />
+            <span className="!text-white font-black">Copiar Meu Link de Indicação</span>
           </button>
         </div>
-      </div>
+              </div>
 
       {/* DIALOG DE DATA PERSONALIZADA */}
       <CustomDialog
