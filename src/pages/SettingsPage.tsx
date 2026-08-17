@@ -865,7 +865,7 @@ return (
           </div>
         </div>
 
-        {/* ── BOTÃO SALVAR PRIMÁRIO LARANJA ── */}
+{/* ── BOTÃO SALVAR PRIMÁRIO LARANJA ── */}
         <div className="flex justify-end pt-4">
           <Button
             type="submit"
@@ -886,5 +886,7 @@ return (
       </form>
     </div>
   );
-  
+};
+
 export default SettingsPage;
+
