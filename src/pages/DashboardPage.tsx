@@ -519,7 +519,7 @@ const [loading, setLoading] = useState(true);
               >
                 {item.completed ? '✓' : index + 1}
               </div>
-              
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <h3 className={`text-xs font-black ${item.completed ? 'text-emerald-950 dark:text-emerald-300 line-through opacity-80' : 'text-slate-900 dark:text-white group-hover:text-[#0094EB]'}`}>
@@ -608,8 +608,8 @@ const [loading, setLoading] = useState(true);
           </div>
         </div>
 
-        {/* Card Destaque: Indique e Ganhe / Ganhos & Benefícios */}
-        <div className="lg:col-span-5 bg-gradient-to-br from-[#0094EB] to-blue-700 text-white p-6 sm:p-7 rounded-[2.5rem] shadow-lg flex flex-col justify-between border border-blue-400/30">
+{/* Card Destaque: Indique e Ganhe / Ganhos & Benefícios (Laranja no Dark Mode) */}
+        <div className="lg:col-span-5 bg-gradient-to-br from-[#0094EB] to-blue-700 dark:from-[#fd8539] dark:to-orange-600 text-white p-6 sm:p-7 rounded-[2.5rem] shadow-lg flex flex-col justify-between border border-blue-400/30 dark:border-orange-400/30">
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-2.5 py-1 rounded-full text-white backdrop-blur-sm">
@@ -618,19 +618,18 @@ const [loading, setLoading] = useState(true);
               <Share2 size={16} className="text-white/80" />
             </div>
             <h4 className="text-lg font-black text-white">Indique e Ganhe</h4>
-            <p className="text-xs text-blue-50 mt-1 font-medium leading-relaxed">
+            <p className="text-xs text-blue-50 dark:text-orange-50 mt-1 font-medium leading-relaxed">
               Receba comissões e desbloqueie meses gratuitos ao indicar o Vidlytics para outros lojistas.
             </p>
           </div>
           <button
             onClick={() => alert('Link de indicação copiado para a área de transferência!')}
-            className="mt-4 w-full bg-white text-[#0094EB] hover:bg-blue-50 font-black py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2"
+            className="mt-4 w-full bg-white text-[#0094EB] dark:text-[#fd8539] hover:bg-slate-50 font-black py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2"
           >
             <Share2 size={14} /> Copiar Meu Link de Indicação
           </button>
         </div>
-      </div>
-
+        
       {/* DIALOG DE DATA PERSONALIZADA */}
       <CustomDialog
         isOpen={isCalendarOpen}
