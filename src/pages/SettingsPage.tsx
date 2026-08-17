@@ -410,15 +410,16 @@ useEffect(() => {
       </div>
     );
 
-  return (
-    <div className="space-y-8 animate-fade-in pb-20">
+return (
+    <div className="space-y-8 animate-fade-in pb-20 font-sans">
+      {/* ── CABEÇALHO DA PÁGINA ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             Configurações do Sistema
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">
-            Configure dados da loja, módulos, integrações e comportamento dos vídeos.
+          <p className="text-sm font-medium text-slate-500 dark:text-[#c0c5d4] mt-1">
+            Configure dados da loja, módulos ativos, integrações e comportamento global dos vídeos.
           </p>
         </div>
       </div>
@@ -430,158 +431,226 @@ useEffect(() => {
           handleSave();
         }}
       >
-        {/* 1. Dados da Loja */}
-        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900">
-          <CardHeader className="p-6">
-            <CardTitle className="text-xl font-black text-slate-800 dark:text-white">
-              1. Dados da Loja
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <Label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                  Nome da Loja *
-                </Label>
-                <Input
-                  type="text"
-                  placeholder="Nome da sua loja"
-                  value={settings?.store_name ?? ''}
-                  onChange={e =>
-                    setSettings(prev => ({ ...prev, store_name: e.target.value }))
-                  }
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB] dark:text-white"
-                  required
-                />
-              </div>
-              <div className="space-y-4">
-                <Label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                  URL da Loja *
-                </Label>
-                <Input
-                  type="url"
-                  placeholder="https://sualoja.com"
-                  value={settings?.store_url ?? ''}
-                  onChange={e =>
-                    setSettings(prev => ({ ...prev, store_url: e.target.value }))
-                  }
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB] dark:text-white"
-                  required
-                />
-              </div>
-              <div className="space-y-4">
-                <Label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                  Plataforma de E-commerce
-                </Label>
-                <Select
-                  value={settings?.platform ?? ''}
-                  onValueChange={(value) =>
-                    setSettings(prev => ({ ...prev, platform: value || null }))
-                  }
-                >
-                  <SelectTrigger className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB] dark:text-white">
-                    <SelectValue placeholder="Selecione uma plataforma..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Selecione uma plataforma...</SelectItem>
-                    {PLATFORM_OPTIONS.map((p) => (
-                      <SelectItem key={p.value} value={p.value}>
-                        {p.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Isso nos ajuda a gerar o script de instalação correto para sua loja.
-                </p>
-              </div>
+        {/* ── 1. DADOS DA LOJA ── */}
+        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
+          <div className="border-b border-slate-100 dark:border-white/5 pb-4">
+            <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+              <span>🏪</span> 1. Dados da Loja
+            </h2>
+            <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
+              Informações cadastrais e identidade da sua marca no Vidlytics.
+            </p>
+          </div>
 
-              {/* ── NOVO: Seletor de Setor ── */}
-              <div className="space-y-4">
-                <Label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                  Setor da Loja
-                </Label>
-                <Select
-                  value={selectedSectorId || 'none'}
-                  onValueChange={setSelectedSectorId}
-                  disabled={loadingSectors}
-                >
-                  <SelectTrigger className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB] dark:text-white">
-                    <SelectValue placeholder="Selecione um setor..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Nenhum setor selecionado</SelectItem>
-                    {sectors.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.icon} {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Usado para comparar sua performance com a média do mercado.
-                </p>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+                Nome da Loja *
+              </Label>
+              <Input
+                type="text"
+                placeholder="Nome da sua loja"
+                value={settings?.store_name ?? ''}
+                onChange={e =>
+                  setSettings(prev => ({ ...prev, store_name: e.target.value }))
+                }
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
+                required
+              />
+            </div>
 
-              <div className="space-y-4">
-                <Label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                  Logo da Loja
-                </Label>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-4">
-                    <div className="h-20 w-20 rounded-2xl overflow-hidden bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 flex items-center justify-center">
-                      {logoPreview ? (
-                        <img
-                          src={logoPreview}
-                          className="w-full h-full object-cover"
-                          alt="Logo"
-                        />
-                      ) : (
-                        <Image className="w-8 h-8 text-slate-400 dark:text-slate-500" />
-                      )}
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <div className="flex gap-2">
-                        <Input
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp"
-                          onChange={handleLogoChange}
-                          className="flex-1 text-xs text-slate-500 dark:text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-[#EAF6FF] dark:file:bg-blue-900/40 file:text-[#0094EB] dark:file:text-blue-400 file:font-bold file:cursor-pointer hover:file:bg-[#0094EB] hover:file:text-white transition-all"
-                        />
-                        <Button variant="outline" size="icon" onClick={handleRemoveLogo}>
-                          <X size={20} className="text-rose-600" />
-                        </Button>
-                      </div>
-                      <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                        JPG, PNG ou WEBP. Máx. 150 KB.
-                      </p>
-                      {logoPreview && (
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                          {new URL(logoPreview).pathname.split('/').pop()}
-                        </p>
-                      )}
-                    </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+                URL da Loja *
+              </Label>
+              <Input
+                type="url"
+                placeholder="https://sualoja.com"
+                value={settings?.store_url ?? ''}
+                onChange={e =>
+                  setSettings(prev => ({ ...prev, store_url: e.target.value }))
+                }
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+                Plataforma de E-commerce
+              </Label>
+              <Select
+                value={settings?.platform ?? ''}
+                onValueChange={(value) =>
+                  setSettings(prev => ({ ...prev, platform: value || null }))
+                }
+              >
+                <SelectTrigger className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]">
+                  <SelectValue placeholder="Selecione uma plataforma..." />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35] text-xs font-bold text-slate-800 dark:text-white shadow-xl">
+                  <SelectItem value="none">Selecione uma plataforma...</SelectItem>
+                  {PLATFORM_OPTIONS.map((p) => (
+                    <SelectItem key={p.value} value={p.value}>
+                      {p.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-slate-500 dark:text-[#8a90a0]">
+                Isso nos ajuda a gerar o script de instalação correto para sua loja.
+              </p>
+            </div>
+
+            {/* Seletor de Setor */}
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+                Setor da Loja
+              </Label>
+              <Select
+                value={selectedSectorId || 'none'}
+                onValueChange={setSelectedSectorId}
+                disabled={loadingSectors}
+              >
+                <SelectTrigger className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]">
+                  <SelectValue placeholder="Selecione um setor..." />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35] text-xs font-bold text-slate-800 dark:text-white shadow-xl">
+                  <SelectItem value="none">Nenhum setor selecionado</SelectItem>
+                  {sectors.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.icon} {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-slate-500 dark:text-[#8a90a0]">
+                Usado para comparar sua performance com os benchmarks do setor.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+                Logo da Loja
+              </Label>
+              <div className="flex items-center gap-4">
+                <div className="h-16 w-16 rounded-2xl overflow-hidden bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0 shadow-xs">
+                  {logoPreview ? (
+                    <img
+                      src={logoPreview}
+                      className="w-full h-full object-cover"
+                      alt="Logo"
+                    />
+                  ) : (
+                    <Image className="w-6 h-6 text-slate-400 dark:text-[#8a90a0]" />
+                  )}
+                </div>
+                <div className="flex-1 space-y-1.5">
+                  <div className="flex gap-2">
+                    <Input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleLogoChange}
+                      className="flex-1 text-xs text-slate-500 dark:text-[#c0c5d4] file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-[#ff7a29] file:text-white file:font-black file:text-[11px] file:cursor-pointer hover:file:bg-[#e66c22] transition-all"
+                    />
+                    {logoPreview && (
+                      <Button variant="outline" size="icon" onClick={handleRemoveLogo} className="rounded-xl border-slate-200 dark:border-white/10">
+                        <X size={16} className="text-rose-500" />
+                      </Button>
+                    )}
                   </div>
+                  <p className="text-[10px] font-bold text-slate-400 dark:text-[#8a90a0]">
+                    JPG, PNG ou WEBP. Máx. 150 KB.
+                  </p>
                 </div>
               </div>
-              <div className="space-y-4">
-                <Label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                  E-mail de Contato
-                </Label>
-                <Input
-                  type="email"
-                  placeholder="contato@sualoja.com"
-                  value={settings?.contact_email ?? ''}
-                  onChange={e =>
-                    setSettings(prev => ({ ...prev, contact_email: e.target.value }))
-                  }
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB] dark:text-white"
-                />
-              </div>
             </div>
-          </CardContent>
-        </Card>
 
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+                E-mail de Contato
+              </Label>
+              <Input
+                type="email"
+                placeholder="contato@sualoja.com"
+                value={settings?.contact_email ?? ''}
+                onChange={e =>
+                  setSettings(prev => ({ ...prev, contact_email: e.target.value }))
+                }
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ── 2. MÓDULOS ── */}
+        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-5">
+          <div className="border-b border-slate-100 dark:border-white/5 pb-4">
+            <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+              <span>⚡</span> 2. Módulos
+            </h2>
+            <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
+              Ative ou desative recursos e integrações públicas da plataforma.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-start justify-between gap-4 p-4 rounded-2xl bg-slate-50/70 dark:bg-[#0f1220]/60 border border-slate-100 dark:border-white/5">
+              <div>
+                <Label className="text-xs font-black text-slate-800 dark:text-white block">
+                  Ativar Vitrine de Vídeos
+                </Label>
+                <p className="text-[11px] font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
+                  Controla a renderização pública do carrossel/grade na loja virtual.
+                </p>
+              </div>
+              <Switch
+                checked={settings?.widget_enabled ?? true}
+                onCheckedChange={c =>
+                  setSettings(prev => ({ ...prev, widget_enabled: c }))
+                }
+                className="data-[state=checked]:!bg-[#ff7a29]"
+              />
+            </div>
+
+            <div className="flex items-start justify-between gap-4 p-4 rounded-2xl bg-slate-50/70 dark:bg-[#0f1220]/60 border border-slate-100 dark:border-white/5">
+              <div>
+                <Label className="text-xs font-black text-slate-800 dark:text-white block">
+                  Ativar Botão do WhatsApp
+                </Label>
+                <p className="text-[11px] font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
+                  Exibe o botão de conversa direta do WhatsApp sobre os vídeos.
+                </p>
+              </div>
+              <Switch
+                checked={settings?.whatsapp_enabled ?? true}
+                onCheckedChange={c =>
+                  setSettings(prev => ({ ...prev, whatsapp_enabled: c }))
+                }
+                className="data-[state=checked]:!bg-[#ff7a29]"
+              />
+            </div>
+
+            <div className="flex items-start justify-between gap-4 p-4 rounded-2xl bg-slate-50/70 dark:bg-[#0f1220]/60 border border-slate-100 dark:border-white/5">
+              <div>
+                <Label className="text-xs font-black text-slate-800 dark:text-white block">
+                  Ativar Telemetria e Analytics
+                </Label>
+                <p className="text-[11px] font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
+                  Coleta métricas de visualização, retenção e engajamento em tempo real.
+                </p>
+              </div>
+              <Switch
+                checked={settings?.stories_enabled ?? true}
+                onCheckedChange={c =>
+                  setSettings(prev => ({ ...prev, stories_enabled: c }))
+                }
+                className="data-[state=checked]:!bg-[#ff7a29]"
+              />
+            </div>
+          </div>
+        </div>
+        
         {/* 2. Módulos */}
         <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900">
           <CardHeader className="p-6">
