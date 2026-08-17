@@ -284,7 +284,7 @@ const getBarColor = (pct: number) => {
     if (pct >= 75) return '!bg-[#ff7a29]'; // Ultrapassou 75% -> Laranja
     return '!bg-[#22c55e]'; // Até 74% de uso -> Verde
   };
-  
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
@@ -728,14 +728,14 @@ interface MetricCardProps {
 }
 
 const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon: Icon }) => (
-  <div className="bg-slate-50 dark:bg-[#1a1f35]/90 dark:backdrop-blur-md border border-slate-100 dark:border-orange-500/15 rounded-[1.8rem] p-5 shadow-sm hover:shadow-md dark:hover:shadow-[0_8px_20px_rgba(255,122,41,0.15)] hover:-translate-y-1 transition-all duration-300 group">
+  <div className="bg-[#1a1f35]/90 backdrop-blur-md border border-orange-500/15 rounded-[1.8rem] p-5 shadow-sm hover:shadow-[0_8px_20px_rgba(255,122,41,0.15)] hover:-translate-y-1 transition-all duration-300 group">
     <div className="flex items-start justify-between mb-3">
-      <div className="w-11 h-11 rounded-2xl transition-all duration-300 group-hover:scale-110 flex items-center justify-center bg-blue-50 dark:bg-[#ff7a29] text-[#0094EB] dark:text-white dark:shadow-[0_0_15px_rgba(255,122,41,0.45)]">
-        <Icon size={20} className="text-[#0094EB] dark:!text-white" />
+      <div className="w-11 h-11 rounded-2xl transition-all duration-300 group-hover:scale-110 flex items-center justify-center !bg-[#ff7a29] shadow-[0_0_15px_rgba(255,122,41,0.45)]">
+        <Icon size={20} className="!text-white stroke-[2.5]" />
       </div>
     </div>
-    <p className="text-[10px] font-black text-slate-400 dark:text-[#8a90a0] uppercase tracking-widest mb-1">{title}</p>
-    <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{value}</h2>
+    <p className="text-[10px] font-black text-[#8a90a0] uppercase tracking-widest mb-1">{title}</p>
+    <h2 className="text-2xl font-black text-white tracking-tight">{value}</h2>
   </div>
 );
 
