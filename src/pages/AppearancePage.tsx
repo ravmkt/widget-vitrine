@@ -2571,13 +2571,10 @@ const AppearancePage = () => {
       {/* Módulo de Estilos Cadastrados no Padrão Modular do Dashboard */}
       <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
         
-        {/* Cabeçalho do Módulo */}
+{/* Cabeçalho do Módulo */}
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
           <div className="flex items-center gap-3">
-            <div 
-              style={{ backgroundColor: '#ff7a29' }}
-              className="w-10 h-10 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(255,122,41,0.4)]"
-            >
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-white bg-[#0094EB] dark:bg-[#ff7a29] shadow-[0_0_15px_rgba(0,148,235,0.35)] dark:shadow-[0_0_15px_rgba(255,122,41,0.4)]">
               <Palette size={18} className="!text-white stroke-[2.5]" />
             </div>
             <div>
@@ -2589,7 +2586,7 @@ const AppearancePage = () => {
               </p>
             </div>
           </div>
-
+          
           <span className="text-xs font-black uppercase tracking-widest text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/20">
             {appearances.length} {appearances.length === 1 ? 'Tema' : 'Temas'}
           </span>
