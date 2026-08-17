@@ -546,14 +546,18 @@ const getBarColor = (pct: number) => {
                   <div 
                     className={cn(
                       "h-full rounded-full transition-all duration-500 animate-shimmer",
-                      checklistPercent === 100 ? "!bg-[#22c55e]" : "!bg-[#ff7a29]"
+                      checklistPercent === 100 
+                        ? "!bg-[#22c55e]" 
+                        : "!bg-[#0094EB] dark:!bg-[#ff7a29]"
                     )} 
                     style={{ width: `${checklistPercent}%` }} 
                   />
                 </div>
                 <span className={cn(
                   "text-xs font-black",
-                  checklistPercent === 100 ? "text-[#22c55e]" : "text-[#ff7a29]"
+                  checklistPercent === 100 
+                    ? "text-[#22c55e]" 
+                    : "text-[#0094EB] dark:text-[#ff7a29]"
                 )}>
                   {checklistPercent}%
                 </span>
