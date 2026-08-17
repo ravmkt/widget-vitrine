@@ -76,7 +76,7 @@ const [dashboardMetrics, setDashboardMetrics] = useState({
       isMounted = false;
     };
   }, [storeId, activeInterval, customRange]);
-  
+
   if (loading) return null;
 
   return (
@@ -192,8 +192,16 @@ const [dashboardMetrics, setDashboardMetrics] = useState({
   );
 };
 
-const MetricCard = ({ title, value, icon: Icon, isConversion = false, isRevenue = false }: any) => (
-  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
+interface MetricCardProps {
+  title: string;
+  value: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  isConversion?: boolean;
+  isRevenue?: boolean;
+}
+
+const MetricCard = ({ title, value, icon: Icon, isConversion = false, isRevenue = false }: MetricCardProps) => (
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
     <div className="flex items-start justify-between mb-6">
       <div className={cn('p-4 rounded-2xl transition-all group-hover:scale-110', isConversion ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500 dark:text-emerald-400' : isRevenue ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' : 'bg-blue-50 dark:bg-blue-900/30 text-[#0094EB]')}>
         <Icon size={24} />
