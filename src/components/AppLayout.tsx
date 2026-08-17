@@ -18,7 +18,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [trialDaysRemaining, setTrialDaysRemaining] = useState<number | null>(null);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
-  
+
   // Busca status de assinatura para controle do banner global com reatividade e invalidação
   useEffect(() => {
     const checkStoreSubscription = async () => {
@@ -42,10 +42,11 @@ export function AppLayout({ children }: AppLayoutProps) {
             .limit(1)
             .maybeSingle();
 
-          if (userStore) {
+if (userStore) {
             activeStoreId = userStore.id;
             localStorage.setItem('vidlytics_current_store_id', userStore.id);
             setSubscriptionStatus(userStore.subscription_status || 'trialing');
+            setTrialEndsAt(userStore.trial_ends_at || null);
 
             if (userStore.subscription_status === 'trialing' && userStore.trial_ends_at) {
               const endsAt = new Date(userStore.trial_ends_at).getTime();
@@ -68,6 +69,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
           if (store) {
             setSubscriptionStatus(store.subscription_status || 'trialing');
+            setTrialEndsAt(store.trial_ends_at || null);
 
             if (store.subscription_status === 'trialing' && store.trial_ends_at) {
               const endsAt = new Date(store.trial_ends_at).getTime();
@@ -79,7 +81,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             }
           }
         }
-      } catch (e) {
+              } catch (e) {
         console.warn('[AppLayout] Falha ao verificar status da loja:', e);
       }
     };
