@@ -1037,7 +1037,7 @@ function readStoreSettings() {
         };
       });
   }
-  
+
   function matchesRule(rule) {
     if (!rule) return false;
     if (rule.active === false || rule.active === 'false' || rule.active === 0 || rule.active === '0') return false;
@@ -4922,12 +4922,14 @@ function initWidget() {
     return readAppearance().then(function (appearance) {
           currentAppearance = appearance;
 
-    return readStoreSettings().then(function (settings) {
+return readStoreSettings().then(function (settings) {
       autoApproveComments = settings.auto_approve_comments === true || settings.auto_approve_comments === 'true';
       storeWhatsappNumber = settings.whatsapp_number || '';
       storeWhatsappMessage = settings.whatsapp_message || '';
+      storeLogoUrl = normalizeMediaUrl(settings.store_logo_url || '');
+      storeName = settings.store_name || '';
     }).catch(function () {}).then(function () {
-      return readStories();
+            return readStories();
     }).then(function (stories) {
       currentStories = stories || [];
 
