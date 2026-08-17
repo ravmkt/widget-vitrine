@@ -681,7 +681,10 @@ const getBarColor = (pct: number) => {
         <div className="lg:col-span-5 !bg-[#f0f6ff] dark:!bg-[#f8fafc] text-slate-900 p-6 sm:p-7 rounded-[2.5rem] shadow-xl flex flex-col justify-between border border-blue-200/80 dark:border-slate-300 hover:-translate-y-1 transition-all duration-300">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] font-black uppercase tracking-wider !bg-[#0094EB]/10 !text-[#0094EB] px-3 py-1 rounded-full border border-[#0094EB]/20">
+              <span 
+                style={{ backgroundColor: '#0094EB', color: '#ffffff' }}
+                className="text-[10px] font-black uppercase tracking-wider !bg-[#0094EB] !text-white px-3.5 py-1 rounded-full shadow-sm"
+              >
                 Programa de Parceiros
               </span>
               <Share2 size={16} className="!text-[#0f172a]" />
