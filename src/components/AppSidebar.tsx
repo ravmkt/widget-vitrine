@@ -194,21 +194,21 @@ export function AppSidebar() {
                       className={cn(
                         "h-11 rounded-xl px-3.5 transition-all duration-200 font-bold overflow-hidden",
                         isItemActive 
-                          ? "bg-[#EAF6FF] text-[#0094EB] dark:bg-[#fd8539] dark:!text-white hover:bg-[#EAF6FF] dark:hover:bg-[#fd8539] shadow-sm" 
-                          : "text-[#64748B] dark:text-slate-400 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 hover:text-[#0F172A] dark:hover:text-white"
+                          ? "bg-[#0094EB] dark:bg-[#ff7a29] text-white dark:text-white shadow-md dark:shadow-[0_0_15px_rgba(255,122,41,0.4)] hover:bg-[#0094EB] dark:hover:bg-[#ff7a29]" 
+                          : "text-[#64748B] dark:text-[#8a90a0] hover:bg-[#F1F5F9] dark:hover:bg-slate-800/60 hover:text-[#0F172A] dark:hover:text-white"
                       )}
                     >
                       <Link to={item.url} className="flex items-center gap-3 w-full">
                         <item.icon className={cn(
                           "h-4.5 w-4.5 shrink-0 transition-colors",
                           isItemActive 
-                            ? "text-[#0094EB] dark:!text-white" 
-                            : "text-[#94A3B8] dark:text-slate-500"
+                            ? "text-white" 
+                            : "text-[#94A3B8] dark:text-[#8a90a0]"
                         )} />
                         <span
                           className={cn(
                             "text-sm whitespace-nowrap transition-all duration-300",
-                            isItemActive ? "dark:!text-white" : "",
+                            isItemActive ? "text-white font-black" : "",
                             isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
                           )}
                         >
