@@ -1257,13 +1257,13 @@ return (
                     })}
                   </td>
 
-                  <td className="px-4 py-3.5 text-center">
+<td className="px-4 py-3.5 text-center">
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#0f1220] text-slate-700 dark:text-[#c0c5d4] text-[11px] font-bold border border-slate-200/60 dark:border-white/5 max-w-full truncate">
-                      <Tag size={11} className="text-[#ff7a29] shrink-0" />
+                      <Tag size={11} className="text-[#0094EB] dark:text-[#ff7a29] shrink-0" />
                       <span className="truncate">{(product as any).category || 'Sem categoria'}</span>
                     </span>
                   </td>
-
+                  
                   <td className="px-4 py-3.5 text-center">
                     {(product as any).video ? (
                       <span className="inline-flex max-w-full items-center gap-1.5 text-[#0094EB] dark:text-[#ff7a29] text-xs font-bold truncate">
