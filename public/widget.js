@@ -2999,7 +2999,7 @@ var pButtonBg = appearanceConfig.product_card_button_bg || priColor;
           }
           buyBtn.onclick = function (e) {
             e.stopPropagation();
-            trackMetric({ event_type: 'product_click', story_id: story.id, video_id: video ? video.id : null, product_id: productData.id, page_url: window.location.href });
+            sendAnalyticsEvent('cta_click', video ? video.id : null, productData ? productData.id : null);
           };
           pActions.appendChild(buyBtn);
         }
