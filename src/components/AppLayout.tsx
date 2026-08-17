@@ -125,21 +125,28 @@ export function AppLayout({ children }: AppLayoutProps) {
                 const days = trialDaysRemaining ?? 7;
                 const isRed = days <= 1;
                 const isOrange = days === 2;
-                const message = isRed
-                  ? `Expira ${days === 1 ? 'em 1 dia' : 'hoje'}`
-                  : isOrange
-                  ? 'Expira em 2 dias'
+                
+                // Mensagens dinâmicas calibradas
+                const message = days <= 0
+                  ? 'O seu período de teste expira hoje.'
+                  : days === 1
+                  ? 'O seu período de teste expira amanhã.'
+                  : days === 2
+                  ? 'Expira em 2 dias.'
                   : `Você está no período de teste gratuito: restam ${days} dias.`;
+
+                // Transição de cores do banner: Azul -> Laranja (2 dias) -> Vermelho (1 dia)
+                const bannerBgColor = isRed
+                  ? 'bg-[#ef4444]'
+                  : isOrange
+                  ? 'bg-[#ff7a29]'
+                  : 'bg-[#0094EB]';
 
                 return (
                   <div
                     className={cn(
                       "px-4 py-2.5 text-white shadow-md transition-colors duration-300",
-                      isRed
-                        ? "bg-[#ef4444]"
-                        : isOrange
-                        ? "bg-[#ff7a29]"
-                        : "bg-[#0094EB]"
+                      bannerBgColor
                     )}
                   >
                     <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
@@ -159,7 +166,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   </div>
                 );
               })()}
-              
+                            
               {subscriptionStatus === 'canceled' && (
                 <div className="bg-red-600 px-4 py-2.5 text-white shadow-sm">
                   <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
