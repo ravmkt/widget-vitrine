@@ -2417,20 +2417,55 @@ function sendAnalyticsEvent(eventType, videoId, productId) {
         var replyStatus = String(comment.reply_status || comment.replyStatus || '').trim().toLowerCase();
         var replyIsVisible = replyContent && (!replyStatus || replyStatus === 'replied' || replyStatus === 'respondido' || replyStatus === 'published' || replyStatus === 'publicado');
 
-        if (replyIsVisible) {
+if (replyIsVisible) {
           var replyBox = createEl('div');
-          replyBox.style.cssText = 'margin-top:8px;padding:8px 12px;background:#f0f9ff;border-left:3px solid ' + primaryColor + ';border-radius:6px;';
-          var replyLabel = createEl('div');
-          replyLabel.textContent = 'Resposta da loja';
-          replyLabel.style.cssText = 'font-size:10px;font-weight:700;color:' + primaryColor + ';margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px;';
+          replyBox.style.cssText = 'margin-top:10px;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid ' + primaryColor + ';border-radius:12px;display:flex;flex-direction:column;gap:4px;';
+
+          var replyHeader = createEl('div');
+          replyHeader.style.cssText = 'display:flex;align-items:center;gap:8px;';
+
+          var displayName = storeName || 'Loja';
+
+          if (storeLogoUrl) {
+            var replyLogo = createEl('img');
+            replyLogo.src = storeLogoUrl;
+            replyLogo.alt = displayName;
+            replyLogo.style.cssText = 'width:22px;height:22px;min-width:22px;border-radius:50%;object-fit:cover;border:1px solid ' + primaryColor + ';display:block;flex-shrink:0;';
+            replyLogo.onerror = function () {
+              replyLogo.style.display = 'none';
+              var fallbackAvatar = createEl('div');
+              fallbackAvatar.textContent = displayName.charAt(0).toUpperCase();
+              fallbackAvatar.style.cssText = 'width:22px;height:22px;min-width:22px;border-radius:50%;background:' + primaryColor + ';color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+              replyHeader.insertBefore(fallbackAvatar, replyHeader.firstChild);
+            };
+            replyHeader.appendChild(replyLogo);
+          } else {
+            var defaultAvatar = createEl('div');
+            defaultAvatar.textContent = displayName.charAt(0).toUpperCase();
+            defaultAvatar.style.cssText = 'width:22px;height:22px;min-width:22px;border-radius:50%;background:' + primaryColor + ';color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+            replyHeader.appendChild(defaultAvatar);
+          }
+
+          var storeTitle = createEl('span');
+          storeTitle.textContent = displayName;
+          storeTitle.style.cssText = 'font-size:12px;font-weight:800;color:#0f172a;';
+          replyHeader.appendChild(storeTitle);
+
+          var replyBadge = createEl('span');
+          replyBadge.textContent = 'Resposta Oficial';
+          replyBadge.style.cssText = 'font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:' + primaryColor + ';background:rgba(0,148,235,0.08);border:1px solid rgba(0,148,235,0.2);padding:1px 6px;border-radius:999px;';
+          replyHeader.appendChild(replyBadge);
+
+          replyBox.appendChild(replyHeader);
+
           var replyText = createEl('p');
           replyText.textContent = replyContent;
-          replyText.style.cssText = 'margin:0;font-size:13px;color:#334155;line-height:1.4;word-break:break-word;';
-          replyBox.appendChild(replyLabel);
+          replyText.style.cssText = 'margin:0;padding-left:30px;font-size:13px;color:#334155;line-height:1.45;word-break:break-word;';
           replyBox.appendChild(replyText);
+
           commentBody.appendChild(replyBox);
         }
-
+        
         commentCard.appendChild(avatar);
         commentCard.appendChild(commentBody);
         listWrap.appendChild(commentCard);
