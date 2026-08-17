@@ -980,24 +980,24 @@ return (
             Novo produto
           </button>
           
-          <button
+<button
             type="button"
             onClick={() => setShowCategoriesModal(true)}
-            className="flex items-center gap-2 rounded-2xl bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-[#e8ecf4] shadow-sm hover:border-[#ff7a29] dark:hover:border-[#ff7a29]/50 transition-all cursor-pointer"
+            className="flex items-center gap-2 rounded-2xl bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-[#e8ecf4] shadow-sm hover:border-[#0094EB] dark:hover:border-[#ff7a29]/50 transition-all cursor-pointer"
           >
-            <Tag size={15} className="text-[#ff7a29]" />
+            <Tag size={15} className="text-[#0094EB] dark:text-[#ff7a29]" />
             Categorias
           </button>
 
           <button
             type="button"
             onClick={() => setShowImportModal(true)}
-            className="flex items-center gap-2 rounded-2xl bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-[#e8ecf4] shadow-sm hover:border-[#ff7a29] dark:hover:border-[#ff7a29]/50 transition-all cursor-pointer"
+            className="flex items-center gap-2 rounded-2xl bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-[#e8ecf4] shadow-sm hover:border-[#0094EB] dark:hover:border-[#ff7a29]/50 transition-all cursor-pointer"
           >
-            <Upload size={15} className="text-[#ff7a29]" />
+            <Upload size={15} className="text-[#0094EB] dark:text-[#ff7a29]" />
             Importar produtos
           </button>
-        </div>
+                  </div>
       </div>
 
       {/* ── MÓDULO DE FILTROS REFINADO E ARREDONDADO ── */}
