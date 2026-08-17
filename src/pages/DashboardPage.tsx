@@ -271,83 +271,95 @@ return (
           Visão Geral — Acompanhe o consumo do plano, performance dos vídeos e configuração da sua loja.
         </p>
       </div>
-      
-      {/* ── 2. CONSUMO DO PLANO ── */}
+
+      {/* ── 2. CONSUMO DO PLANO (CARDS GLASS COM HOVER ELEVADO) ── */}
       <div>
-        <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3 px-1">
+        <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0] mb-3 px-1">
           Consumo do Plano
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-slate-900 p-5 rounded-[1.8rem] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-            <div className="flex justify-between items-center text-slate-400">
-              <span className="text-xs font-bold uppercase tracking-wider">Visualizações</span>
-              <Eye size={18} className="text-[#0094EB] dark:text-[#fd8539]" />
+          {/* Card Views */}
+          <div className="bg-white dark:bg-[#1a1f35]/70 dark:backdrop-blur-md p-5 rounded-[1.8rem] border border-slate-200 dark:border-orange-500/15 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">Visualizações</span>
+              <div className="p-2 rounded-xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0094EB] dark:text-[#ff7a29] dark:shadow-[0_0_10px_rgba(255,122,41,0.2)]">
+                <Eye size={16} />
+              </div>
             </div>
             <div className="flex items-baseline justify-between">
               <span className="text-xl font-black text-slate-900 dark:text-white">
                 {usage.viewsUsed.toLocaleString('pt-BR')}
               </span>
-              <span className="text-xs font-bold text-slate-400">de {usage.viewsLimit.toLocaleString('pt-BR')}</span>
+              <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">de {usage.viewsLimit.toLocaleString('pt-BR')}</span>
             </div>
-            <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-              <div className={`h-full ${getBarColor(viewsPercent)} rounded-full transition-all duration-500`} style={{ width: `${viewsPercent}%` }} />
+            <div className="w-full h-2.5 bg-slate-100 dark:bg-[#0f1220] rounded-full overflow-hidden p-0.5 border border-transparent dark:border-white/5">
+              <div className={`h-full ${getBarColor(viewsPercent)} rounded-full transition-all duration-500 animate-shimmer`} style={{ width: `${viewsPercent}%` }} />
             </div>
-            <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-slate-400">
+            <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-[#c0c5d4]">
               <span>Quota do mês</span>
-              <span className={viewsPercent >= 90 ? 'text-rose-500 font-black' : ''}>{viewsPercent}%</span>
+              <span className={viewsPercent >= 90 ? 'text-rose-500 font-black' : 'text-[#0094EB] dark:text-[#ff7a29]'}>{viewsPercent}%</span>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-5 rounded-[1.8rem] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-            <div className="flex justify-between items-center text-slate-400">
-              <span className="text-xs font-bold uppercase tracking-wider">Armazenamento</span>
-              <HardDrive size={18} className="text-[#0094EB] dark:text-[#fd8539]" />
+          {/* Card Armazenamento */}
+          <div className="bg-white dark:bg-[#1a1f35]/70 dark:backdrop-blur-md p-5 rounded-[1.8rem] border border-slate-200 dark:border-orange-500/15 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">Armazenamento</span>
+              <div className="p-2 rounded-xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0094EB] dark:text-[#ff7a29] dark:shadow-[0_0_10px_rgba(255,122,41,0.2)]">
+                <HardDrive size={16} />
+              </div>
             </div>
             <div className="flex items-baseline justify-between">
               <span className="text-xl font-black text-slate-900 dark:text-white">
                 {usage.storageUsedMB >= 1024 ? `${(usage.storageUsedMB / 1024).toFixed(1)} GB` : `${usage.storageUsedMB} MB`}
               </span>
-              <span className="text-xs font-bold text-slate-400">de {(usage.storageLimitMB / 1024).toFixed(0)} GB</span>
+              <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">de {(usage.storageLimitMB / 1024).toFixed(0)} GB</span>
             </div>
-            <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-              <div className={`h-full ${getBarColor(storagePercent)} rounded-full transition-all duration-500`} style={{ width: `${storagePercent}%` }} />
+            <div className="w-full h-2.5 bg-slate-100 dark:bg-[#0f1220] rounded-full overflow-hidden p-0.5 border border-transparent dark:border-white/5">
+              <div className={`h-full ${getBarColor(storagePercent)} rounded-full transition-all duration-500 animate-shimmer`} style={{ width: `${storagePercent}%` }} />
             </div>
-            <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-slate-400">
+            <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-[#c0c5d4]">
               <span>Vídeos na nuvem</span>
-              <span className={storagePercent >= 90 ? 'text-rose-500 font-black' : ''}>{storagePercent}%</span>
+              <span className={storagePercent >= 90 ? 'text-rose-500 font-black' : 'text-[#0094EB] dark:text-[#ff7a29]'}>{storagePercent}%</span>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-5 rounded-[1.8rem] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-            <div className="flex justify-between items-center text-slate-400">
-              <span className="text-xs font-bold uppercase tracking-wider">Páginas com Vídeos</span>
-              <FileText size={18} className="text-[#0094EB] dark:text-[#fd8539]" />
+          {/* Card Páginas */}
+          <div className="bg-white dark:bg-[#1a1f35]/70 dark:backdrop-blur-md p-5 rounded-[1.8rem] border border-slate-200 dark:border-orange-500/15 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">Páginas com Vídeos</span>
+              <div className="p-2 rounded-xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0094EB] dark:text-[#ff7a29] dark:shadow-[0_0_10px_rgba(255,122,41,0.2)]">
+                <FileText size={16} />
+              </div>
             </div>
             <div className="flex items-baseline justify-between">
               <span className="text-xl font-black text-slate-900 dark:text-white">{usage.pagesUsed}</span>
-              <span className="text-xs font-bold text-slate-400">de {usage.pagesLimit} ativas</span>
+              <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">de {usage.pagesLimit} ativas</span>
             </div>
-            <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-              <div className={`h-full ${getBarColor(pagesPercent)} rounded-full transition-all duration-500`} style={{ width: `${pagesPercent}%` }} />
+            <div className="w-full h-2.5 bg-slate-100 dark:bg-[#0f1220] rounded-full overflow-hidden p-0.5 border border-transparent dark:border-white/5">
+              <div className={`h-full ${getBarColor(pagesPercent)} rounded-full transition-all duration-500 animate-shimmer`} style={{ width: `${pagesPercent}%` }} />
             </div>
-            <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-slate-400">
+            <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-[#c0c5d4]">
               <span>Locais de exibição</span>
-              <span className={pagesPercent >= 90 ? 'text-rose-500 font-black' : ''}>{pagesPercent}%</span>
+              <span className={pagesPercent >= 90 ? 'text-rose-500 font-black' : 'text-[#0094EB] dark:text-[#ff7a29]'}>{pagesPercent}%</span>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-5 rounded-[1.8rem] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 flex flex-col justify-between">
-            <div className="flex justify-between items-center text-slate-400">
-              <span className="text-xs font-bold uppercase tracking-wider">Ciclo da Conta</span>
-              <Clock size={18} className="text-[#0094EB] dark:text-[#fd8539]" />
+          {/* Card Próximo Vencimento */}
+          <div className="bg-white dark:bg-[#1a1f35]/70 dark:backdrop-blur-md p-5 rounded-[1.8rem] border border-slate-200 dark:border-orange-500/15 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 space-y-3 flex flex-col justify-between">
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">Ciclo da Conta</span>
+              <div className="p-2 rounded-xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0094EB] dark:text-[#ff7a29] dark:shadow-[0_0_10px_rgba(255,122,41,0.2)]">
+                <Clock size={16} />
+              </div>
             </div>
             <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</p>
+              <p className="text-[10px] font-black text-slate-400 dark:text-[#8a90a0] uppercase tracking-widest">Status</p>
               <p className="text-base font-black text-slate-900 dark:text-white">
                 {usage.subscriptionStatus === 'active' ? 'Assinatura Ativa' : `${usage.trialDaysLeft} dias restantes`}
               </p>
             </div>
-            <div className="flex justify-between items-center text-xs font-bold text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800 pt-2">
+            <div className="flex justify-between items-center text-xs font-bold text-slate-500 dark:text-[#c0c5d4] border-t border-slate-100 dark:border-white/5 pt-2">
               <span>Renovação:</span>
               <span>{usage.currentPeriodEnd ? new Date(usage.currentPeriodEnd).toLocaleDateString('pt-BR') : '—'}</span>
             </div>
