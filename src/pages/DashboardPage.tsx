@@ -21,6 +21,7 @@ import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import { getDashboardMetrics, getVideoMetricsRows, type AnalyticsInterval } from '@/lib/analytics';
 import { useTenant } from '@/context/TenantContext';
+import { useAuth } from '@/context/AuthContext';
 
 interface StoreUsageData {
   planName: string;
