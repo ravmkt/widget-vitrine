@@ -143,12 +143,12 @@ return (
             onSelect={(r) => r && setCustomRange({ from: r.from, to: r.to })}
             locale={ptBR}
             className="border-none"
-            modifiersStyles={{
-              selected: { backgroundColor: '#ff7a29', color: 'white' },
+            modifiersClassNames={{
+              selected: '!bg-[#0094EB] dark:!bg-[#ff7a29] !text-white',
             }}
           />
         </div>
       </CustomDialog>
-          </div>
+                </div>
   )
 }
