@@ -13,6 +13,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
+    /* Destaque Tema Claro: Azul (#0094EB) */
     --primary: 202 100% 46%;
     --primary-foreground: 210 40% 98%;
 
@@ -45,7 +46,7 @@
   }
 
   /* ═══════════════════════════════════════════════
-     🌙 DARK MODE — ESTA É A CORREÇÃO PRINCIPAL
+     🌙 DARK MODE — DESTAQUES EM LARANJA (#fd8539)
      ═══════════════════════════════════════════════ */
   .dark {
     --background: 222 47% 5%;
@@ -57,7 +58,8 @@
     --popover: 222 47% 9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 202 100% 46%;
+    /* Destaque Tema Escuro: Laranja #fd8539 (23 98% 61%) */
+    --primary: 23 98% 61%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 212 81% 29%;
@@ -74,143 +76,16 @@
 
     --border: 217 33% 17%;
     --input: 217 33% 17%;
-    --ring: 202 100% 46%;
+    --ring: 23 98% 61%;
 
     --sidebar-background: 222 47% 5%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 202 100% 46%;
+    --sidebar-primary: 23 98% 61%;
     --sidebar-primary-foreground: 210 40% 98%;
     --sidebar-accent: 217 33% 17%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 202 100% 46%;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground font-sans antialiased;
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.scrollbar-none::-webkit-scrollbar {
-  display: none;
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #E2E8F0;
-  border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #CBD5E1;
-}
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-
-    --primary: 202 100% 46%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 212 81% 29%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 214 32% 91%;
-    --muted-foreground: 215 16% 47%;
-
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 11%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 202 100% 46%;
-
-    --radius: 0.75rem;
-
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 202 100% 46%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 202 100% 46%;
-  }
-
-  /* ═══════════════════════════════════════════════
-     🌙 DARK MODE
-     ═══════════════════════════════════════════════ */
-  .dark {
-    --background: 222 47% 5%;
-    --foreground: 210 40% 98%;
-
-    --card: 222 47% 9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 202 100% 46%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 212 81% 29%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 202 100% 46%;
-
-    --sidebar-background: 222 47% 5%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 202 100% 46%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 202 100% 46%;
+    --sidebar-ring: 23 98% 61%;
   }
 }
 
@@ -255,7 +130,6 @@
 
 /* ═══════════════════════════════════════════════
    COMPATIBILIDADE: CORES FIXAS → TEMA ESCURO
-   Remove cards/fundos brancos remanescentes
    ═══════════════════════════════════════════════ */
 .dark .bg-white,
 .dark [class*="bg-[#FFFFFF]"],
@@ -278,12 +152,32 @@
   background-color: hsl(var(--accent)) !important;
 }
 
+/* Fundo sutil de destaque no dark mode (Laranja translúcido) */
 .dark .bg-\[\#EAF6FF\],
-.dark [class*="bg-[#EAF6FF]"] {
-  background-color: rgba(0, 148, 235, 0.14) !important;
+.dark [class*="bg-[#EAF6FF]"],
+.dark .bg-blue-50 {
+  background-color: rgba(253, 133, 57, 0.14) !important;
 }
 
-/* Bordas */
+/* Destaques de texto e ícones azuis no claro → Laranja #fd8539 no escuro */
+.dark .text-\[\#0094EB\],
+.dark [class*="text-[#0094EB]"] {
+  color: #fd8539 !important;
+}
+
+/* Bordas de destaque azuis no claro → Laranja no escuro */
+.dark .border-\[\#0094EB\],
+.dark [class*="border-[#0094EB]"] {
+  border-color: #fd8539 !important;
+}
+
+/* Fundos de botões/badges azuis no claro → Laranja no escuro */
+.dark .bg-\[\#0094EB\],
+.dark [class*="bg-[#0094EB]"] {
+  background-color: #fd8539 !important;
+}
+
+/* Bordas comuns */
 .dark .border-slate-200,
 .dark .border-slate-100,
 .dark .border-\[\#E2E8F0\],
