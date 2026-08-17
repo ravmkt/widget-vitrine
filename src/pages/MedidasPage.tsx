@@ -275,23 +275,31 @@ const MedidasPage = () => {
     }
   };
 
-  return (
-    <div className="space-y-8 animate-fade-in pb-20">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-          Medidas
-        </h1>
+return (
+    <div className="space-y-8 animate-fade-in pb-20 font-sans">
+      {/* ── CABEÇALHO DA PÁGINA ── */}
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            Medidas
+          </h1>
+          <p className="text-sm font-medium text-slate-500 dark:text-[#c0c5d4] mt-1">
+            Cadastre as medidas corporais das modelos para exibição interativa nos provadores dos vídeos.
+          </p>
+        </div>
 
         <button
+          type="button"
           onClick={openNewModel}
           disabled={!storeId || tenantLoading}
-          className="bg-[#0094EB] hover:bg-[#0E4787] disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-2xl font-black text-sm shadow-lg flex items-center gap-2"
+          style={{ backgroundColor: '#ff7a29' }}
+          className="flex items-center gap-2 rounded-2xl !bg-[#ff7a29] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/30 hover:opacity-95 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
-          <Plus size={18} />
+          <Plus size={16} className="!text-white stroke-[2.5]" />
           Nova modelo
         </button>
       </div>
-
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {models.map((model) => {
           const heightMeasure = model.measures?.find(
