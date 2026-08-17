@@ -259,22 +259,24 @@ return (
           </div>
         </div>
       </div>
-      
-      <div className="space-y-6">
-        {/* PASSO 1 */}
-        <div className="rounded-[2.5rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-10">
+
+<div className="space-y-6">
+        {/* ── PASSO 1: SCRIPT PRINCIPAL ── */}
+        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 font-black text-white">
+            <div className="flex items-start gap-4">
+              <div 
+                style={{ backgroundColor: '#ff7a29' }}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-white font-black text-sm shadow-[0_0_15px_rgba(255,122,41,0.4)]"
+              >
                 1
               </div>
               <div>
-                <h2 className="text-2xl font-black tracking-tight text-slate-900">
+                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
                   Script Principal (Widget)
                 </h2>
-                <p className="mt-2 max-w-3xl text-sm font-medium leading-relaxed text-slate-500">
-                  Este script carrega o player de vídeo e os stories no seu site.
-                  Cole este código no <strong>Cabeçalho (Header)</strong> da sua loja.
+                <p className="mt-1 max-w-3xl text-xs sm:text-sm font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+                  Este script carrega o player de vídeo, os stories e os widgets no seu tema. Cole este código dentro da tag <strong>&lt;head&gt;</strong> da sua loja.
                 </p>
               </div>
             </div>
@@ -283,56 +285,59 @@ return (
               type="button"
               onClick={handleCopyScript}
               disabled={!canInstall}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              style={{ backgroundColor: '#ff7a29' }}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl !bg-[#ff7a29] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/30 hover:opacity-95 hover:scale-[1.02] transition-all disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0"
             >
               {copied ? (
                 <>
-                  <CheckCircle2 className="h-4 w-4" />
-                  Copiado
+                  <CheckCircle2 size={16} className="!text-white" />
+                  Copiado!
                 </>
               ) : (
                 <>
-                  <Copy className="h-4 w-4" />
+                  <Copy size={16} className="!text-white" />
                   Copiar Script
                 </>
               )}
             </button>
           </div>
 
-          <div className="mt-8 overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-5 py-3">
+          <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-white/10 bg-[#0f1220] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/5 bg-[#14182b] px-5 py-3">
               <div className="flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-red-400" />
-                <span className="h-3 w-3 rounded-full bg-yellow-400" />
-                <span className="h-3 w-3 rounded-full bg-green-400" />
+                <span className="h-3 w-3 rounded-full bg-rose-500/80" />
+                <span className="h-3 w-3 rounded-full bg-amber-500/80" />
+                <span className="h-3 w-3 rounded-full bg-emerald-500/80" />
               </div>
-              <span className="text-xs font-bold text-slate-400">widget.js</span>
+              <span className="font-mono text-xs font-bold text-slate-400 dark:text-[#8a90a0]">widget.js</span>
             </div>
-            <pre className="overflow-x-auto whitespace-pre-wrap p-6 text-xs font-medium leading-relaxed text-emerald-400 md:text-sm">
+            <pre className="overflow-x-auto whitespace-pre-wrap p-6 font-mono text-xs font-semibold leading-relaxed text-[#22c55e] md:text-sm [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:bg-white/10">
               {scriptCode}
             </pre>
           </div>
         </div>
 
-        {/* PASSO 2 */}
-        <div className="rounded-[2.5rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-10">
+        {/* ── PASSO 2: SCRIPT DE RASTREAMENTO DE VENDAS ── */}
+        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500 font-black text-white">
+            <div className="flex items-start gap-4">
+              <div 
+                style={{ backgroundColor: '#ff7a29' }}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-white font-black text-sm shadow-[0_0_15px_rgba(255,122,41,0.4)]"
+              >
                 2
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-black tracking-tight text-slate-900">
+                <div className="flex items-center gap-2.5">
+                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
                     Script de Rastreamento (Vendas)
                   </h2>
-                  <span className="rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-black uppercase text-emerald-700">
+                  <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-700/40 px-3 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                     Recomendado
                   </span>
                 </div>
-                <p className="mt-2 max-w-3xl text-sm font-medium leading-relaxed text-slate-500">
-                  Para medir o lucro gerado por cada vídeo, instale este script adicional.
-                  Ele captura as vendas finalizadas no checkout da loja e atribui ao vídeo assistido.
+                <p className="mt-1 max-w-3xl text-xs sm:text-sm font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+                  Para medir o faturamento gerado pelos vídeos, instale este script na página de <strong>Obrigado / Confirmação de Pedido</strong>.
                 </p>
               </div>
             </div>
@@ -340,38 +345,39 @@ return (
             <button
               type="button"
               onClick={handleCopyTrackingScript}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-slate-800"
+              style={{ backgroundColor: '#ff7a29' }}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl !bg-[#ff7a29] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/30 hover:opacity-95 hover:scale-[1.02] transition-all cursor-pointer shrink-0"
             >
               {copiedTracking ? (
                 <>
-                  <CheckCircle2 className="h-4 w-4" />
-                  Copiado
+                  <CheckCircle2 size={16} className="!text-white" />
+                  Copiado!
                 </>
               ) : (
                 <>
-                  <Copy className="h-4 w-4" />
+                  <Copy size={16} className="!text-white" />
                   Copiar Script
                 </>
               )}
             </button>
           </div>
 
-          <div className="mt-8 overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-5 py-3">
+          <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-white/10 bg-[#0f1220] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/5 bg-[#14182b] px-5 py-3">
               <div className="flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-red-400" />
-                <span className="h-3 w-3 rounded-full bg-yellow-400" />
-                <span className="h-3 w-3 rounded-full bg-green-400" />
+                <span className="h-3 w-3 rounded-full bg-rose-500/80" />
+                <span className="h-3 w-3 rounded-full bg-amber-500/80" />
+                <span className="h-3 w-3 rounded-full bg-emerald-500/80" />
               </div>
-              <span className="text-xs font-bold text-slate-400">custom-tracking.js</span>
+              <span className="font-mono text-xs font-bold text-slate-400 dark:text-[#8a90a0]">custom-tracking.js</span>
             </div>
-            <pre className="overflow-x-auto whitespace-pre-wrap p-6 text-xs font-medium leading-relaxed text-blue-400 md:text-sm">
+            <pre className="overflow-x-auto whitespace-pre-wrap p-6 font-mono text-xs font-semibold leading-relaxed text-[#0094EB] dark:text-[#38bdf8] md:text-sm [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:bg-white/10">
               {trackingScriptCode}
             </pre>
           </div>
         </div>
       </div>
-
+      
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-[2.5rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex items-start gap-4">
