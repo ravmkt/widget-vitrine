@@ -625,34 +625,31 @@ export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
   );
 }
 
-// ─── MetricCard com badge de benchmark ───────────────────────
+// ─── MetricCard com badge de benchmark (Padronizado em Laranja #ff7a29) ───
 
 const MetricCard = ({
   title,
   value,
   icon: Icon,
-  color = 'blue',
   benchmarkDiff,
   benchmarkLabel,
 }: {
   title: string;
   value: string;
   icon: React.ElementType;
-  color?: 'blue' | 'emerald' | 'amber';
+  color?: string;
   benchmarkDiff?: number;
   benchmarkLabel?: string;
 }) => {
-  const colorClasses = {
-    blue:    'bg-blue-50 dark:bg-blue-900/30 text-[#0094EB]',
-    emerald: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500 dark:text-emerald-400',
-    amber:   'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400',
-  };
-
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group relative h-full">
-      <div className="flex items-start justify-between mb-6">
-        <div className={cn('p-4 rounded-2xl transition-all group-hover:scale-110', colorClasses[color])}>
-          <Icon size={24} />
+    <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2rem] p-6 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 group relative h-full flex flex-col justify-between">
+      <div className="flex items-start justify-between mb-4">
+        {/* Quadrado do Ícone Padronizado: Laranja #ff7a29 com Ícone Branco */}
+        <div 
+          style={{ backgroundColor: '#ff7a29' }}
+          className="w-11 h-11 rounded-2xl flex items-center justify-center shadow-[0_0_15px_rgba(255,122,41,0.45)] transition-transform duration-300 group-hover:scale-110 shrink-0"
+        >
+          <Icon size={20} style={{ color: '#ffffff', stroke: '#ffffff' }} className="!text-white stroke-[2.5]" />
         </div>
 
         {/* Badge de benchmark */}
@@ -661,10 +658,10 @@ const MetricCard = ({
             className={cn(
               'flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black',
               benchmarkDiff > 5
-                ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400'
+                ? 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20'
                 : benchmarkDiff < -5
-                  ? 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                  ? 'bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-500/20'
+                  : 'bg-slate-100 dark:bg-[#0f1220] text-slate-500 dark:text-[#8a90a0] border border-white/5'
             )}
           >
             {benchmarkDiff > 5 ? (
@@ -683,16 +680,20 @@ const MetricCard = ({
         )}
       </div>
 
-      <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
-        {title}
-      </p>
-      <h2 className="text-2xl font-black text-slate-900 dark:text-white">{value}</h2>
-
-      {benchmarkLabel && (
-        <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-1">
-          Média do setor: {benchmarkLabel}
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0] mb-1">
+          {title}
         </p>
-      )}
+        <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+          {value}
+        </h2>
+
+        {benchmarkLabel && (
+          <p className="text-[9px] font-bold text-slate-400 dark:text-[#8a90a0] mt-1">
+            Média do setor: {benchmarkLabel}
+          </p>
+        )}
+      </div>
     </div>
   );
 };
