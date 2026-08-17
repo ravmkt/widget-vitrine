@@ -543,9 +543,20 @@ const getBarColor = (pct: number) => {
               </div>
               <div className="flex items-center gap-2.5">
                 <div className="w-24 h-2.5 bg-slate-100 dark:bg-[#0f1220] rounded-full overflow-hidden p-0.5 border border-transparent dark:border-white/5">
-                  <div className="h-full bg-emerald-500 dark:bg-[#ff7a29] rounded-full transition-all duration-500 animate-shimmer" style={{ width: `${checklistPercent}%` }} />
+                  <div 
+                    className={cn(
+                      "h-full rounded-full transition-all duration-500 animate-shimmer",
+                      checklistPercent === 100 ? "!bg-[#22c55e]" : "!bg-[#ff7a29]"
+                    )} 
+                    style={{ width: `${checklistPercent}%` }} 
+                  />
                 </div>
-                <span className="text-xs font-extrabold text-emerald-600 dark:text-[#ff7a29]">{checklistPercent}%</span>
+                <span className={cn(
+                  "text-xs font-black",
+                  checklistPercent === 100 ? "text-[#22c55e]" : "text-[#ff7a29]"
+                )}>
+                  {checklistPercent}%
+                </span>
               </div>
             </div>
 
