@@ -82,33 +82,33 @@ return (
         onValueChange={(v) => setActiveTab(v as TabKey)}
         className="flex flex-col gap-6"
       >
-        <TabsList className="w-fit bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-2xl p-1.5 gap-1 shadow-inner h-auto">
+<TabsList className="w-fit bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-2xl p-1.5 gap-1 shadow-inner h-auto">
           <TabsTrigger
             value="overview"
-            className="px-4 py-2 rounded-xl text-xs font-black transition-all text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white data-[state=active]:!bg-[#ff7a29] data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-orange-500/30 cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs font-black transition-all text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white data-[state=active]:!bg-[#0094EB] dark:data-[state=active]:!bg-[#ff7a29] data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-blue-500/20 dark:data-[state=active]:shadow-orange-500/30 cursor-pointer"
           >
             📊 Visão Geral
           </TabsTrigger>
           <TabsTrigger
             value="videos"
-            className="px-4 py-2 rounded-xl text-xs font-black transition-all text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white data-[state=active]:!bg-[#ff7a29] data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-orange-500/30 cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs font-black transition-all text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white data-[state=active]:!bg-[#0094EB] dark:data-[state=active]:!bg-[#ff7a29] data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-blue-500/20 dark:data-[state=active]:shadow-orange-500/30 cursor-pointer"
           >
             🎬 Vídeos
           </TabsTrigger>
           <TabsTrigger
             value="retention"
-            className="px-4 py-2 rounded-xl text-xs font-black transition-all text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white data-[state=active]:!bg-[#ff7a29] data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-orange-500/30 cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs font-black transition-all text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white data-[state=active]:!bg-[#0094EB] dark:data-[state=active]:!bg-[#ff7a29] data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-blue-500/20 dark:data-[state=active]:shadow-orange-500/30 cursor-pointer"
           >
             📈 Retenção
           </TabsTrigger>
           <TabsTrigger
             value="insights"
-            className="px-4 py-2 rounded-xl text-xs font-black transition-all text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white data-[state=active]:!bg-[#ff7a29] data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-orange-500/30 cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs font-black transition-all text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white data-[state=active]:!bg-[#0094EB] dark:data-[state=active]:!bg-[#ff7a29] data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-blue-500/20 dark:data-[state=active]:shadow-orange-500/30 cursor-pointer"
           >
             🧠 Insights
           </TabsTrigger>
         </TabsList>
-
+        
         <TabsContent value="overview">
           <OverviewTab timeRange={timeRange} customFrom={customRange.from?.toISOString()} customTo={customRange.to?.toISOString()} />
         </TabsContent>
