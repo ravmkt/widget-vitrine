@@ -510,16 +510,16 @@ const [loading, setLoading] = useState(true);
                       : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 hover:border-[#0094EB] hover:shadow-md'
                   }`}
                 >
-                  <div
-                    className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-black text-[11px] transition-all ${
-                      item.completed
-                        ? 'bg-emerald-500 text-white shadow-sm'
-                        : 'border-2 border-slate-300 dark:border-slate-600 text-slate-400 group-hover:border-[#0094EB]'
-                    }`}
-                  >
-                    {item.completed ? '✓' : index + 1}
-                  </div>
-
+<div
+                className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-black text-[11px] transition-all ${
+                  item.completed
+                    ? 'bg-emerald-500 dark:bg-[#fd8539] text-white shadow-sm'
+                    : 'border-2 border-slate-300 dark:border-slate-600 text-slate-400 group-hover:border-[#0094EB] dark:group-hover:border-[#fd8539]'
+                }`}
+              >
+                {item.completed ? '✓' : index + 1}
+              </div>
+              
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <h3 className={`text-xs font-black ${item.completed ? 'text-emerald-950 dark:text-emerald-300 line-through opacity-80' : 'text-slate-900 dark:text-white group-hover:text-[#0094EB]'}`}>
