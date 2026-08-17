@@ -872,13 +872,12 @@ return (
           </div>
         </div>
 
-{/* ── BOTÃO SALVAR PRIMÁRIO LARANJA ── */}
+{/* ── BOTÃO SALVAR PRIMÁRIO DUAL-THEME ── */}
         <div className="flex justify-end pt-4">
           <Button
             type="submit"
             disabled={saving}
-            style={{ backgroundColor: '#ff7a29' }}
-            className="!bg-[#ff7a29] hover:opacity-95 hover:scale-[1.02] text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-orange-500/30 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            className="bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
           >
             {saving ? (
               <>
@@ -890,7 +889,7 @@ return (
             )}
           </Button>
         </div>
-      </form>
+              </form>
     </div>
   );
 };
