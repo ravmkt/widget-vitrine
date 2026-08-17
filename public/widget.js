@@ -3027,7 +3027,7 @@ var pButtonBg = appearanceConfig.product_card_button_bg || priColor;
             waBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;background:#25D366;color:#fff;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;';
             waBtn.onclick = function (e) {
               e.stopPropagation();
-              trackMetric({ event_type: 'whatsapp_click', story_id: story.id, video_id: video ? video.id : null, product_id: productData.id, page_url: window.location.href });
+              sendAnalyticsEvent('cta_click', video ? video.id : null, productData ? productData.id : null);
             };
             pActions.appendChild(waBtn);
           }
