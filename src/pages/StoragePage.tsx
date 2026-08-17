@@ -1363,31 +1363,31 @@ if (Array.isArray(realVideos)) {
         </div>
       )}
 
-      {/* Tabela de Arquivos */}
-      <div className="overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+{/* ── MÓDULO MODULAR DE TABELA DE ARQUIVOS (PADRÃO TOP VÍDEOS DASHBOARD) ── */}
+      <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
         
-        {/* Barra de Busca e Filtros */}
-        <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
+        {/* Barra de Busca e Filtros Integrados */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-white/5 pb-5">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8a90a0]" size={16} />
             <input
               type="text"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Pesquisar pelo nome do arquivo..."
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-4 py-2 text-xs font-bold text-slate-800 outline-none transition focus:border-[#0094EB] focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+              className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] pl-10 pr-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#0f1220] p-1.5 rounded-2xl border border-transparent dark:border-white/5">
             <button
               type="button"
               onClick={() => setSelectedType('all')}
               className={cn(
-                "rounded-xl px-3.5 py-2 text-xs font-bold transition-all",
+                "rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer",
                 selectedType === 'all'
-                  ? "bg-[#0094EB] text-white shadow-md shadow-blue-500/20"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                  ? "!bg-[#ff7a29] text-white shadow-md shadow-orange-500/30"
+                  : "text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white"
               )}
             >
               Todos
@@ -1396,10 +1396,10 @@ if (Array.isArray(realVideos)) {
               type="button"
               onClick={() => setSelectedType('video')}
               className={cn(
-                "flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all",
+                "flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer",
                 selectedType === 'video'
-                  ? "bg-[#0094EB] text-white shadow-md shadow-blue-500/20"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                  ? "!bg-[#ff7a29] text-white shadow-md shadow-orange-500/30"
+                  : "text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white"
               )}
             >
               <FileVideo size={14} />
@@ -1409,10 +1409,10 @@ if (Array.isArray(realVideos)) {
               type="button"
               onClick={() => setSelectedType('image')}
               className={cn(
-                "flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all",
+                "flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer",
                 selectedType === 'image'
-                  ? "bg-[#0094EB] text-white shadow-md shadow-blue-500/20"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                  ? "!bg-[#ff7a29] text-white shadow-md shadow-orange-500/30"
+                  : "text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white"
               )}
             >
               <FileImage size={14} />
@@ -1421,38 +1421,38 @@ if (Array.isArray(realVideos)) {
           </div>
         </div>
 
-        {/* Tabela de Mídias */}
+        {/* Tabela de Mídias com Estilo Limpo */}
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/50 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:border-slate-800 dark:bg-slate-900/50">
-                <th className="px-6 py-4">Mídia</th>
+              <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#0f1220]/50 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+                <th className="px-6 py-4 rounded-l-2xl">Mídia</th>
                 <th className="px-6 py-4">Nome do Arquivo</th>
                 <th className="px-6 py-4">Produto</th>
-                <th className="px-6 py-4">Story Vinculado</th>
+                <th className="px-6 py-4 text-center">Story Vinculado</th>
                 <th className="px-6 py-4 text-center">Tamanho</th>
                 <th className="px-6 py-4 text-center">Status</th>
-                <th className="px-6 py-4 text-right">Ações</th>
+                <th className="px-6 py-4 text-right rounded-r-2xl">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-xs font-bold text-slate-400">
+                  <td colSpan={7} className="px-6 py-12 text-center text-xs font-bold text-slate-400 dark:text-[#8a90a0]">
                     Carregando mídias da sua conta...
                   </td>
                 </tr>
               ) : filteredFiles.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-xs font-bold text-slate-400">
+                  <td colSpan={7} className="px-6 py-12 text-center text-xs font-bold text-slate-400 dark:text-[#8a90a0]">
                     Nenhum arquivo encontrado no seu armazenamento.
                   </td>
                 </tr>
               ) : (
-filteredFiles.map(file => (
-                  <tr key={file.id} className="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
-<td className="px-6 py-3.5">
-                      <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex items-center justify-center shrink-0">
+                filteredFiles.map(file => (
+                  <tr key={file.id} className="transition-colors hover:bg-slate-50/60 dark:hover:bg-white/[0.02]">
+                    <td className="px-6 py-3.5">
+                      <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-[#0f1220] shadow-xs flex items-center justify-center shrink-0">
                         {/* Camada de Imagem */}
                         {file.thumbnailUrl || (file.type === 'image' && file.fileUrl) ? (
                           <img 
@@ -1461,7 +1461,6 @@ filteredFiles.map(file => (
                             referrerPolicy="no-referrer"
                             className="relative z-10 h-full w-full object-cover"
                             onError={(e) => {
-                              // Se o link falhar ou der 404, oculta a tag quebrada e deixa o ícone limpo
                               e.currentTarget.style.display = 'none';
                             }}
                           />
@@ -1482,17 +1481,17 @@ filteredFiles.map(file => (
                               <FileVideo size={16} />
                             </div>
                           ) : (
-                            <FileImage size={16} className="text-slate-400" />
+                            <FileImage size={16} className="text-slate-400 dark:text-[#8a90a0]" />
                           )}
                         </div>
                       </div>
                     </td>
                     
                     <td className="px-6 py-3.5 max-w-xs truncate">
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate" title={file.name}>
+                      <span className="text-xs font-black text-slate-800 dark:text-[#e8ecf4] block truncate" title={file.name}>
                         {file.name}
                       </span>
-                      <span className="text-[10px] font-bold text-[#0094EB] uppercase">
+                      <span className="text-[10px] font-bold text-[#0094EB] dark:text-[#ff7a29] uppercase tracking-wider">
                         {file.type === 'image'
                           ? 'Imagem (Hospedada)'
                           : file.sizeInBytes === 0
@@ -1501,13 +1500,13 @@ filteredFiles.map(file => (
                       </span>
                     </td>
 
-<td className="px-6 py-3.5">
+                    <td className="px-6 py-3.5">
                       {file.productName ? (
                         <div 
-                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200/80 bg-slate-50/80 p-1.5 pr-3 shadow-sm transition hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:bg-slate-800"
+                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200/80 dark:border-white/5 bg-slate-50/80 dark:bg-[#0f1220]/60 p-1.5 pr-3 shadow-xs"
                           title={file.productName}
                         >
-                          <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xs dark:border-slate-700 dark:bg-slate-800">
+                          <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35]">
                             {file.productImageUrl ? (
                               <img
                                 src={file.productImageUrl}
@@ -1519,56 +1518,59 @@ filteredFiles.map(file => (
                                 }}
                               />
                             ) : (
-                              <div className="flex h-full w-full items-center justify-center bg-slate-100 text-[11px] font-black text-slate-400 dark:bg-slate-800">
+                              <div className="flex h-full w-full items-center justify-center bg-slate-100 dark:bg-[#1a1f35] text-[10px] font-black text-slate-400">
                                 {file.productName.charAt(0).toUpperCase()}
                               </div>
                             )}
                           </div>
-                          <span className="max-w-[130px] truncate text-[11px] font-bold text-slate-700 dark:text-slate-200">
+                          <span className="max-w-[120px] truncate text-[11px] font-bold text-slate-700 dark:text-[#c0c5d4]">
                             {file.productName}
                           </span>
                         </div>
                       ) : (
-                        <span className="inline-flex items-center rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-400 dark:bg-slate-800/60 dark:text-slate-500">
+                        <span className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-[#0f1220] px-2.5 py-1 text-[10px] font-bold text-slate-400 dark:text-[#8a90a0] border border-transparent dark:border-white/5">
                           Sem produto
                         </span>
                       )}
                     </td>
 
-                    <td className="px-6 py-3.5">
+                    <td className="px-6 py-3.5 text-center">
                       {file.storyTitle ? (
-                        <span className="inline-flex items-center gap-1 rounded-lg bg-purple-50 px-2.5 py-1 text-[11px] font-extrabold text-purple-600 dark:bg-purple-950/40 dark:text-purple-400">
+                        <span 
+                          style={{ backgroundColor: 'rgba(0, 148, 235, 0.12)', color: '#0094EB', borderColor: 'rgba(0, 148, 235, 0.25)' }}
+                          className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-wider border shadow-xs"
+                        >
                           {file.storyTitle}
                         </span>
                       ) : (
-                        <span className="text-xs font-bold text-slate-400">—</span>
+                        <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">—</span>
                       )}
                     </td>
 
-                    <td className="px-6 py-3.5 text-center font-mono text-xs font-bold text-slate-700 dark:text-slate-300">
+                    <td className="px-6 py-3.5 text-center font-mono text-xs font-black text-slate-700 dark:text-[#e8ecf4]">
                       {formatSize(file.sizeInBytes)}
                     </td>
 
                     <td className="px-6 py-3.5 text-center">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-extrabold text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
-                        <CheckCircle2 size={12} />
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle2 size={11} />
                         Disponível
                       </span>
                     </td>
 
                     <td className="px-6 py-3.5 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1">
                         {file.type === 'video' && (
                           <button
                             type="button"
                             onClick={() => window.location.href = `/videos/${file.id}/edit`}
-                            className="rounded-lg p-2 text-slate-400 hover:bg-purple-50 hover:text-purple-600 dark:hover:bg-purple-950"
-                            title="Editar vínculos e dados do vídeo"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-all"
+                            title="Editar vínculos do vídeo"
                           >
-                            <Pencil size={16} />
+                            <Pencil size={15} />
                           </button>
                         )}
-<button
+                        <button
                           type="button"
                           onClick={() => {
                             const targetUrl = file.fileUrl || file.thumbnailUrl;
@@ -1578,26 +1580,26 @@ filteredFiles.map(file => (
                               showError('Endereço do arquivo indisponível para visualização.');
                             }
                           }}
-                          className="rounded-lg p-2 text-slate-400 hover:bg-blue-50 hover:text-[#0094EB] dark:hover:bg-blue-950"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-[#0094EB] hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-all"
                           title="Visualizar mídia"
                         >
-                          <Eye size={16} />
+                          <Eye size={15} />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDownloadFile(file.fileUrl || file.thumbnailUrl, file.name)}
-                          className="rounded-lg p-2 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-950"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-all"
                           title="Baixar arquivo"
                         >
-                          <Download size={16} />
+                          <Download size={15} />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteFile(file.id, file.name)}
-                          className="rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-950"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all"
                           title="Excluir arquivo"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={15} />
                         </button>
                       </div>
                     </td>
@@ -1608,7 +1610,7 @@ filteredFiles.map(file => (
           </table>
         </div>
       </div>
-
+      
       {/* Modal de Cadastro por URL Externa */}
       {showUrlModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in">
