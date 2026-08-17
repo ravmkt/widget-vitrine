@@ -94,6 +94,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       window.removeEventListener('storage', handleFocus);
     };
   }, [location.pathname]);
+
   // ═══════════════════════════════════════════════
   // 🌗 APLICA O TEMA SALVO AO CARREGAR QUALQUER PÁGINA
   // ═══════════════════════════════════════════════
@@ -120,7 +121,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           {/* Banner Global de Trial / Status (exceto na página de billing e plans para evitar duplicidade visual) */}
           {location.pathname !== '/billing' && location.pathname !== '/plans' && (
             <>
-{subscriptionStatus === 'trialing' && (() => {
+              {subscriptionStatus === 'trialing' && (() => {
                 const days = trialDaysRemaining ?? 7;
                 const isRed = days <= 1;
                 const isOrange = days === 2;
@@ -131,13 +132,13 @@ export function AppLayout({ children }: AppLayoutProps) {
                   : `Você está no período de teste gratuito: restam ${days} dias.`;
 
                 return (
-                  <div 
+                  <div
                     className={cn(
                       "px-4 py-2.5 text-white shadow-md transition-colors duration-300",
-                      isRed 
-                        ? "bg-[#ef4444]" 
-                        : isOrange 
-                        ? "bg-[#ff7a29]" 
+                      isRed
+                        ? "bg-[#ef4444]"
+                        : isOrange
+                        ? "bg-[#ff7a29]"
                         : "bg-[#0094EB]"
                     )}
                   >
@@ -161,7 +162,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   </div>
                 );
               })()}
-                                                        
+
               {subscriptionStatus === 'canceled' && (
                 <div className="bg-red-600 px-4 py-2.5 text-white shadow-sm">
                   <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
@@ -201,7 +202,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </>
           )}
 
-<main className="flex-1 p-4 md:p-8 animate-fade-in relative z-0">
+          <main className="flex-1 p-4 md:p-8 animate-fade-in relative z-0">
             <div className="mx-auto max-w-7xl">
               {children}
             </div>
