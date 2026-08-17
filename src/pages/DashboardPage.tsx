@@ -9,7 +9,7 @@ import {
   Calendar,
   DollarSign,
   HardDrive,
-  FileText,s
+  FileText,
   Clock,
   Play,
   Share2,
