@@ -2424,26 +2424,34 @@ function sendAnalyticsEvent(eventType, videoId, productId) {
 
 if (replyIsVisible) {
           var replyBox = createEl('div');
-          replyBox.style.cssText = 'margin-top:10px;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid ' + primaryColor + ';border-radius:12px;display:flex;flex-direction:column;gap:4px;';
+          replyBox.style.cssText = 'margin-top:10px;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid ' + primaryColor + ';border-radius:12px;display:flex;flex-direction:column;gap:6px;';
 
           var replyHeader = createEl('div');
           replyHeader.style.cssText = 'display:flex;align-items:center;gap:8px;';
 
           var displayName = storeName || 'Loja';
+          var resolvedLogo = storeLogoUrl || '';
 
-          if (storeLogoUrl) {
+          if (resolvedLogo) {
             var replyLogo = createEl('img');
-            replyLogo.src = storeLogoUrl;
+            replyLogo.src = resolvedLogo;
             replyLogo.alt = displayName;
-            replyLogo.style.cssText = 'width:22px;height:22px;min-width:22px;border-radius:50%;object-fit:cover;border:1px solid ' + primaryColor + ';display:block;flex-shrink:0;';
+            replyLogo.crossOrigin = 'anonymous';
+            replyLogo.referrerPolicy = 'no-referrer';
+            replyLogo.style.cssText = 'width:22px;height:22px;min-width:22px;max-width:22px;border-radius:50%;object-fit:cover;border:1px solid ' + primaryColor + ';display:block;flex-shrink:0;background:#fff;';
+            
             replyLogo.onerror = function () {
-              replyLogo.style.display = 'none';
-              var fallbackAvatar = createEl('div');
-              fallbackAvatar.textContent = displayName.charAt(0).toUpperCase();
-              fallbackAvatar.style.cssText = 'width:22px;height:22px;min-width:22px;border-radius:50%;background:' + primaryColor + ';color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
-              replyHeader.insertBefore(fallbackAvatar, replyHeader.firstChild);
+              this.style.display = 'none';
+              if (this.nextElementSibling && this.nextElementSibling.classList.contains('vl-fallback-avatar')) {
+                this.nextElementSibling.style.display = 'flex';
+              }
             };
             replyHeader.appendChild(replyLogo);
+
+            var fallbackAvatar = createEl('div', 'vl-fallback-avatar');
+            fallbackAvatar.textContent = displayName.charAt(0).toUpperCase();
+            fallbackAvatar.style.cssText = 'display:none;width:22px;height:22px;min-width:22px;border-radius:50%;background:' + primaryColor + ';color:#fff;font-size:10px;font-weight:800;align-items:center;justify-content:center;flex-shrink:0;';
+            replyHeader.appendChild(fallbackAvatar);
           } else {
             var defaultAvatar = createEl('div');
             defaultAvatar.textContent = displayName.charAt(0).toUpperCase();
@@ -2453,12 +2461,12 @@ if (replyIsVisible) {
 
           var storeTitle = createEl('span');
           storeTitle.textContent = displayName;
-          storeTitle.style.cssText = 'font-size:12px;font-weight:800;color:#0f172a;';
+          storeTitle.style.cssText = 'font-size:12px;font-weight:800;color:#0f172a;line-height:1;';
           replyHeader.appendChild(storeTitle);
 
           var replyBadge = createEl('span');
           replyBadge.textContent = 'Resposta Oficial';
-          replyBadge.style.cssText = 'font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:' + primaryColor + ';background:rgba(0,148,235,0.08);border:1px solid rgba(0,148,235,0.2);padding:1px 6px;border-radius:999px;';
+          replyBadge.style.cssText = 'font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:' + primaryColor + ';background:rgba(0,148,235,0.08);border:1px solid rgba(0,148,235,0.2);padding:2px 6px;border-radius:999px;line-height:1;';
           replyHeader.appendChild(replyBadge);
 
           replyBox.appendChild(replyHeader);
@@ -2470,7 +2478,7 @@ if (replyIsVisible) {
 
           commentBody.appendChild(replyBox);
         }
-        
+                
         commentCard.appendChild(avatar);
         commentCard.appendChild(commentBody);
         listWrap.appendChild(commentCard);
