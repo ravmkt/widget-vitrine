@@ -625,7 +625,7 @@ export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
   );
 }
 
-// ─── MetricCard com badge de benchmark (Padronizado em Laranja #ff7a29) ───
+// ─── MetricCard com badge de benchmark (Dual-Theme: Azul no Light / Laranja no Dark) ───
 
 const MetricCard = ({
   title,
@@ -644,12 +644,9 @@ const MetricCard = ({
   return (
     <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2rem] p-6 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 group relative h-full flex flex-col justify-between">
       <div className="flex items-start justify-between mb-4">
-        {/* Quadrado do Ícone Padronizado: Laranja #ff7a29 com Ícone Branco */}
-        <div 
-          style={{ backgroundColor: '#ff7a29' }}
-          className="w-11 h-11 rounded-2xl flex items-center justify-center shadow-[0_0_15px_rgba(255,122,41,0.45)] transition-transform duration-300 group-hover:scale-110 shrink-0"
-        >
-          <Icon size={20} style={{ color: '#ffffff', stroke: '#ffffff' }} className="!text-white stroke-[2.5]" />
+        {/* Quadrado do Ícone Dual-Theme: Azul #0094EB no Light / Laranja #ff7a29 no Dark */}
+        <div className="w-11 h-11 rounded-2xl flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] transition-transform duration-300 group-hover:scale-110 shrink-0">
+          <Icon size={20} className="!text-white stroke-[2.5]" />
         </div>
 
         {/* Badge de benchmark */}
