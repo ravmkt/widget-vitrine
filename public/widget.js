@@ -1741,7 +1741,7 @@ function sendAnalyticsEvent(eventType, videoId, productId) {
     if (!data) return;
     sendAnalyticsEvent(data.event_type || 'interaction', data.video_id || null, data.product_id || null);
   }
-  
+
   function buildVideoPlayer(video, storyId, onEnded) {
     var sourceType = String(video.source_type || video.sourceType || '').toLowerCase();
     var isImage = sourceType === 'image' || (video && video.type === 'image');
@@ -4917,13 +4917,13 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
     return true;
   }
 
-  function readStoreStatus() {
+function readStoreStatus() {
     if (!storeId || !hasSupabase) return Promise.resolve(null);
     return supabaseFetch(
-      'stores?select=id,subscription_status,trial_ends_at,past_due_since&id=eq.' + encodeURIComponent(storeId) + '&limit=1',
+      'stores?select=id,name,logo_url,subscription_status,trial_ends_at,past_due_since&id=eq.' + encodeURIComponent(storeId) + '&limit=1',
       { method: 'GET' }
     )
-      .then(function (response) {
+          .then(function (response) {
         if (!response.ok) return null;
         return response.json();
       })
