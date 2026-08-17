@@ -184,47 +184,51 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1.5">
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title} className="relative group">
-                  <SidebarMenuButton 
-                    asChild 
-                    isActive={location.pathname === item.url}
-                    className={cn(
-                      "h-11 rounded-xl px-3.5 transition-all duration-200 font-bold overflow-hidden",
-                      location.pathname === item.url 
-                        ? "bg-[#EAF6FF] dark:bg-[#0094EB]/20 text-[#0094EB] hover:bg-[#EAF6FF] dark:hover:bg-[#0094EB]/20 hover:text-[#0094EB]" 
-                        : "text-[#64748B] dark:text-slate-400 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 hover:text-[#0F172A] dark:hover:text-white"
-                    )}
-                  >
-                    <Link to={item.url} className="flex items-center gap-3 w-full">
-                      <item.icon className={cn(
-                        "h-4.5 w-4.5 shrink-0",
-                        location.pathname === item.url 
-                          ? "text-[#0094EB]" 
-                          : "text-[#94A3B8] dark:text-slate-500"
-                      )} />
-                      <span
-                        className={cn(
-                          "text-sm whitespace-nowrap transition-all duration-300",
-                          isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
-                        )}
-                      >
-                        {item.title}
-                      </span>
-                    </Link>
-                  </SidebarMenuButton>
+{menuItems.map((item) => {
+                const isItemActive = location.pathname === item.url;
+                return (
+                  <SidebarMenuItem key={item.title} className="relative group">
+                    <SidebarMenuButton 
+                      asChild 
+                      isActive={isItemActive}
+                      className={cn(
+                        "h-11 rounded-xl px-3.5 transition-all duration-200 font-bold overflow-hidden",
+                        isItemActive 
+                          ? "bg-[#EAF6FF] text-[#0094EB] dark:bg-[#fd8539] dark:!text-white hover:bg-[#EAF6FF] dark:hover:bg-[#fd8539] shadow-sm" 
+                          : "text-[#64748B] dark:text-slate-400 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 hover:text-[#0F172A] dark:hover:text-white"
+                      )}
+                    >
+                      <Link to={item.url} className="flex items-center gap-3 w-full">
+                        <item.icon className={cn(
+                          "h-4.5 w-4.5 shrink-0 transition-colors",
+                          isItemActive 
+                            ? "text-[#0094EB] dark:!text-white" 
+                            : "text-[#94A3B8] dark:text-slate-500"
+                        )} />
+                        <span
+                          className={cn(
+                            "text-sm whitespace-nowrap transition-all duration-300",
+                            isItemActive ? "dark:!text-white" : "",
+                            isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
+                          )}
+                        >
+                          {item.title}
+                        </span>
+                      </Link>
+                    </SidebarMenuButton>
 
-                  {/* Tooltip flutuante destacado no modo recolhido sem corte */}
-                  {!isExpanded && (
-                    <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-5">
-                      <div className="bg-[#0094EB] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
-                        {item.title}
+                    {/* Tooltip flutuante adaptável ao tema */}
+                    {!isExpanded && (
+                      <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-5">
+                        <div className="bg-[#0094EB] dark:bg-[#fd8539] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
+                          {item.title}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+                    )}
+                  </SidebarMenuItem>
+                );
+              })}
+                          </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
