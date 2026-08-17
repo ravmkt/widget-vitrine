@@ -456,15 +456,12 @@ export function BillingPage() {
           </div>
         </div>
       </div>
-      
-{/* ── HISTÓRICO DE FATURAS (MODULAR NO PADRÃO TOP VÍDEOS DASHBOARD) ── */}
+
+{/* ── HISTÓRICO DE FATURAS (DUAL-THEME) ── */}
       <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
           <div className="flex items-center gap-3">
-            <div 
-              style={{ backgroundColor: '#ff7a29' }}
-              className="w-10 h-10 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0"
-            >
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0">
               <Receipt size={18} className="!text-white stroke-[2.5]" />
             </div>
             <div>
@@ -537,13 +534,10 @@ export function BillingPage() {
         )}
       </div>
 
-      {/* ── DADOS DA NOTA FISCAL (MODULAR NO PADRÃO VIDLYTICS) ── */}
+      {/* ── DADOS DA NOTA FISCAL (DUAL-THEME) ── */}
       <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
         <div className="flex items-center gap-3 border-b border-slate-100 dark:border-white/5 pb-4">
-          <div 
-            style={{ backgroundColor: '#ff7a29' }}
-            className="w-10 h-10 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0"
-          >
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0">
             <Building2 size={18} className="!text-white stroke-[2.5]" />
           </div>
           <div>
@@ -567,7 +561,7 @@ export function BillingPage() {
                 value={fiscalData.cnpj_cpf}
                 onChange={(e) => setFiscalData({ ...fiscalData, cnpj_cpf: e.target.value })}
                 placeholder="00.000.000/0000-00"
-                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29]"
               />
             </div>
             <div>
@@ -579,7 +573,7 @@ export function BillingPage() {
                 value={fiscalData.legal_name}
                 onChange={(e) => setFiscalData({ ...fiscalData, legal_name: e.target.value })}
                 placeholder="Nome da sua empresa"
-                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29]"
               />
             </div>
             <div>
@@ -591,7 +585,7 @@ export function BillingPage() {
                 value={fiscalData.email}
                 onChange={(e) => setFiscalData({ ...fiscalData, email: e.target.value })}
                 placeholder="financeiro@empresa.com"
-                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29]"
               />
             </div>
           </div>
@@ -606,7 +600,7 @@ export function BillingPage() {
                 value={fiscalData.cep}
                 onChange={(e) => setFiscalData({ ...fiscalData, cep: e.target.value })}
                 placeholder="00000-000"
-                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29]"
               />
             </div>
             <div className="md:col-span-2">
@@ -618,7 +612,7 @@ export function BillingPage() {
                 value={fiscalData.address}
                 onChange={(e) => setFiscalData({ ...fiscalData, address: e.target.value })}
                 placeholder="Rua, Avenida..."
-                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29]"
               />
             </div>
             <div>
@@ -630,7 +624,7 @@ export function BillingPage() {
                 value={fiscalData.number}
                 onChange={(e) => setFiscalData({ ...fiscalData, number: e.target.value })}
                 placeholder="123"
-                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29]"
               />
             </div>
           </div>
@@ -639,14 +633,14 @@ export function BillingPage() {
             <button
               type="submit"
               disabled={savingFiscal}
-              className="inline-flex items-center gap-2 rounded-2xl bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/10 px-6 py-3 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white hover:border-[#ff7a29]/60 hover:bg-slate-200 dark:hover:bg-white/5 transition-all shadow-xs disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#0f1220] dark:border dark:border-white/10 px-6 py-3 text-xs font-black uppercase tracking-wider text-white dark:text-white dark:hover:border-[#ff7a29]/60 transition-all shadow-md shadow-blue-500/20 dark:shadow-none disabled:opacity-50 cursor-pointer"
             >
-              {savingFiscal ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+              {savingFiscal ? <Loader2 size={14} className="animate-spin !text-white" /> : <Save size={14} className="!text-white" />}
               Atualizar Dados Fiscais
             </button>
           </div>
         </form>
       </div>
-          </div>
+                </div>
   );
 }
