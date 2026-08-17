@@ -1825,9 +1825,10 @@ function sendAnalyticsEvent(eventType, videoId, productId) {
       media.src = url;
 
       media.addEventListener('play', function () {
-        trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
+        sendAnalyticsEvent('video_view', video ? video.id : null, null);
       });
       media.addEventListener('ended', function () {
+        sendAnalyticsEvent('story_complete', video ? video.id : null, null);
         if (typeof onEnded === 'function') onEnded();
       });
       
