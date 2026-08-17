@@ -55,7 +55,9 @@ interface ActivityEvent {
 const DashboardPage = () => {
   const navigate = useNavigate();
   const { storeId } = useTenant();
-  const [loading, setLoading] = useState(true);
+const [loading, setLoading] = useState(true);
+  const [metricsLoading, setMetricsLoading] = useState(false);
+  const [storeName, setStoreName] = useState<string>('');
   const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsInterval>('30');
   const [customRange, setCustomRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: undefined,
@@ -81,7 +83,7 @@ const DashboardPage = () => {
   });
   const [topVideos, setTopVideos] = useState<any[]>([]);
 
-  // Estados dos Novos Blocos
+  // Estados dos Blocos
   const [usage, setUsage] = useState<StoreUsageData>({
     planName: 'Starter',
     subscriptionStatus: 'trialing',
@@ -100,34 +102,40 @@ const DashboardPage = () => {
     { id: 'videos', title: 'Fazer upload de vídeos', description: 'Suba seus vídeos verticais ou importe das redes sociais.', route: '/videos', completed: false },
     { id: 'products', title: 'Cadastrar produtos da loja', description: 'Vincule produtos com preço para compra direta.', route: '/products', completed: false },
     { id: 'stories', title: 'Criar coleção de Stories', description: 'Agrupe seus vídeos em coleções interativas.', route: '/stories', completed: false },
-    { id: 'appearance', title: 'Personalizar aparência do player', description: 'Ajuste cores, bordas e botões da marca.', route: '/appearance', completed: true },
+    { id: 'appearance', title: 'Personalizar aparência do player', description: 'Ajuste cores, bordas e botões da marca.', route: '/appearance', completed: false },
     { id: 'locations', title: 'Publicar widget na sua loja', description: 'Escolha onde os vídeos devem aparecer no seu tema.', route: '/settings', completed: false },
   ]);
 
   const activeInterval = useMemo(() => selectedPeriod, [selectedPeriod]);
 
-  // Carregamento consolidado
+  // 1. Carregamento Estrutural da Página (Executa apenas na troca de loja)
   useEffect(() => {
     if (!storeId) return;
     let isMounted = true;
 
-    const loadAllData = async () => {
+    const loadStoreStructure = async () => {
       try {
         setLoading(true);
 
-        // 1. Carrega dados do tenant, quotas e checklist
+        const now = new Date();
+        const currentMonth = now.toISOString().slice(0, 7);
+
         const [
           fetchedVideos,
           storeRes,
+          usageCounterRes,
           productsRes,
           storiesRes,
+          appearanceRes,
           locationsRes,
           eventsRes
         ] = await Promise.all([
           db.videos.getAll(storeId),
           supabase.from('stores').select('*').eq('id', storeId).single(),
+          supabase.from('usage_counters').select('*').eq('store_id', storeId).eq('month', currentMonth).maybeSingle(),
           supabase.from('products').select('id', { count: 'exact', head: true }).eq('store_id', storeId),
           supabase.from('stories').select('id', { count: 'exact', head: true }).eq('store_id', storeId),
+          supabase.from('appearances').select('id', { count: 'exact', head: true }).eq('store_id', storeId),
           supabase.from('display_locations').select('id', { count: 'exact', head: true }).eq('store_id', storeId),
           supabase.from('store_activity_events').select('*').eq('store_id', storeId).order('created_at', { ascending: false }).limit(6),
         ]);
@@ -136,6 +144,8 @@ const DashboardPage = () => {
         setVideos(fetchedVideos);
 
         const storeData = storeRes.data || {};
+        setStoreName(storeData.name || '');
+
         let trialDays: number | null = null;
         if (storeData.subscription_status === 'trialing' && storeData.trial_ends_at) {
           const diff = new Date(storeData.trial_ends_at).getTime() - Date.now();
@@ -144,25 +154,14 @@ const DashboardPage = () => {
 
         const totalVideosCount = fetchedVideos.length;
         const estimatedStorage = Math.round(totalVideosCount * 15);
-
-        // 2. Carrega métricas analíticas filtradas
-        const [metrics, rows] = await Promise.all([
-          getDashboardMetrics(storeId, activeInterval, customRange),
-          getVideoMetricsRows(storeId, fetchedVideos, activeInterval, customRange),
-        ]);
-
-        if (!isMounted) return;
-
-        setDashboardMetrics(metrics);
-        setTopVideos([...rows].sort((a, b) => b.metrics.views - a.metrics.views).slice(0, 5));
-        setActivities(eventsRes.data || []);
+        const usageData = usageCounterRes.data || {};
 
         setUsage({
           planName: String(storeData.plan_tier || 'starter').toUpperCase(),
           subscriptionStatus: storeData.subscription_status || 'trialing',
           trialDaysLeft: trialDays,
           currentPeriodEnd: storeData.current_period_end || storeData.trial_ends_at,
-          viewsUsed: metrics.views || 0,
+          viewsUsed: usageData.views_count || 0,
           viewsLimit: 10000,
           storageUsedMB: estimatedStorage,
           storageLimitMB: 2048,
@@ -170,27 +169,60 @@ const DashboardPage = () => {
           pagesLimit: 5,
         });
 
+        setActivities(eventsRes.data || []);
+
+        // Checklist 100% validado pelo banco de dados
         setChecklist([
           { id: 'videos', title: 'Fazer upload de vídeos', description: 'Suba seus vídeos verticais ou importe das redes sociais.', route: '/videos', completed: totalVideosCount > 0 },
           { id: 'products', title: 'Cadastrar produtos da loja', description: 'Vincule produtos com preço para compra direta.', route: '/products', completed: (productsRes.count || 0) > 0 },
           { id: 'stories', title: 'Criar coleção de Stories', description: 'Agrupe seus vídeos em coleções interativas.', route: '/stories', completed: (storiesRes.count || 0) > 0 },
-          { id: 'appearance', title: 'Personalizar aparência do player', description: 'Ajuste cores, bordas e botões da marca.', route: '/appearance', completed: true },
+          { id: 'appearance', title: 'Personalizar aparência do player', description: 'Ajuste cores, bordas e botões da marca.', route: '/appearance', completed: (appearanceRes.count || 0) > 0 },
           { id: 'locations', title: 'Publicar widget na sua loja', description: 'Escolha onde os vídeos devem aparecer no seu tema.', route: '/settings', completed: (locationsRes.count || 0) > 0 },
         ]);
       } catch (err) {
-        console.error('[DashboardPage] Erro ao carregar dados:', err);
+        console.error('[DashboardPage] Erro ao carregar estrutura:', err);
       } finally {
         if (isMounted) setLoading(false);
       }
     };
 
-    loadAllData();
+    loadStoreStructure();
 
     return () => {
       isMounted = false;
     };
-  }, [storeId, activeInterval, customRange]);
+  }, [storeId]);
 
+  // 2. Carregamento Isolado do Filtro de Métricas (Sem recarregar a página toda)
+  useEffect(() => {
+    if (!storeId) return;
+    let isMounted = true;
+
+    const updateMetricsOnly = async () => {
+      try {
+        setMetricsLoading(true);
+        const [metrics, rows] = await Promise.all([
+          getDashboardMetrics(storeId, activeInterval, customRange),
+          getVideoMetricsRows(storeId, videos, activeInterval, customRange),
+        ]);
+
+        if (!isMounted) return;
+        setDashboardMetrics(metrics);
+        setTopVideos([...rows].sort((a, b) => b.metrics.views - a.metrics.views).slice(0, 5));
+      } catch (err) {
+        console.error('[DashboardPage] Erro ao atualizar métricas:', err);
+      } finally {
+        if (isMounted) setMetricsLoading(false);
+      }
+    };
+
+    updateMetricsOnly();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [storeId, activeInterval, customRange, videos]);
+  
   const calcPercent = (current: number, max: number) => {
     if (!max || max <= 0) return 0;
     return Math.min(100, Math.round((current / max) * 100));
