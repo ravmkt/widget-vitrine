@@ -579,103 +579,124 @@ const submitReply = async () => {
     return null;
   }
 
-  return (
-    <div className="space-y-8 animate-fade-in pb-20">
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+return (
+    <div className="space-y-8 animate-fade-in pb-20 font-sans">
+      {/* ── CABEÇALHO DA PÁGINA ── */}
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Comentários
           </h1>
-
-          <p className="mt-1 font-medium text-slate-500">
-            Gerencie a interação dos clientes nos seus stories.
+          <p className="mt-1 text-sm font-medium text-slate-500 dark:text-[#c0c5d4]">
+            Gerencie a interação dos clientes nos seus stories, responda dúvidas e modere comentários públicos.
           </p>
+        </div>
+      </div>
 
-          {/* 🆕 Toggle: Aprovar comentários automaticamente */}
-          <div className="mt-4 flex items-center gap-3">
+      {/* ── MÓDULOS DE CONFIGURAÇÃO DE MODERAÇÃO E FILTROS ── */}
+      <div className="grid gap-6 lg:grid-cols-3 items-stretch">
+        {/* Card: Moderação de Comentários */}
+        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 shadow-sm flex flex-col justify-between space-y-4">
+          <div className="flex items-center gap-3 border-b border-slate-100 dark:border-white/5 pb-3">
+            <div 
+              style={{ backgroundColor: '#ff7a29' }}
+              className="w-10 h-10 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0"
+            >
+              <ShieldCheck size={18} className="!text-white stroke-[2.5]" />
+            </div>
+            <div>
+              <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                Moderação de Conteúdo
+              </h2>
+              <p className="text-[11px] font-medium text-slate-500 dark:text-[#8a90a0]">
+                Controle de publicação na loja.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#0f1220]/70 border border-slate-100 dark:border-white/5">
+            <div>
+              <span className="text-xs font-black text-slate-800 dark:text-white block">
+                {autoApprove ? "Aprovação automática ativada" : "Moderação manual ativada"}
+              </span>
+              <p className="text-[11px] font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
+                {autoApprove ? "Publicados imediatamente." : "Requer aprovação prévia."}
+              </p>
+            </div>
+
             <button
               type="button"
               onClick={handleAutoApproveToggle}
               disabled={autoApproveLoading}
+              aria-label="Alternar aprovação automática de comentários"
+              style={autoApprove ? { backgroundColor: '#ff7a29' } : undefined}
               className={cn(
-                "relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200",
-                autoApprove
-                  ? "bg-emerald-500"
-                  : "bg-slate-300"
+                "relative inline-flex h-7 w-13 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-300 ease-in-out focus:outline-none disabled:opacity-50",
+                autoApprove ? "!bg-[#ff7a29]" : "bg-slate-300 dark:bg-slate-700"
               )}
             >
               <span
                 className={cn(
-                  "inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200",
+                  "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ease-in-out",
                   autoApprove ? "translate-x-6" : "translate-x-1"
                 )}
               />
             </button>
-
-            <div>
-              <span className="text-sm font-bold text-slate-700">
-                {autoApprove
-                  ? "Aprovação automática ativada"
-                  : "Moderação manual ativada"}
-              </span>
-              <p className="text-xs text-slate-400">
-                {autoApprove
-                  ? "Comentários são publicados imediatamente."
-                  : "Comentários precisam ser aprovados antes de aparecer."}
-              </p>
-            </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:flex-row">
-          <div className="relative flex-1">
-            <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-              size={18}
-            />
-
-            <input
-              type="text"
-              placeholder="Pesquisar autor ou conteúdo..."
-              value={searchTerm}
-              onChange={(event) =>
-                setSearchTerm(event.target.value)
-              }
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-12 pr-4 text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
-            />
+        {/* Card: Barra de Pesquisa e Filtros */}
+        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 shadow-sm lg:col-span-2 flex flex-col justify-between space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-3">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">
+                Filtros & Busca
+              </span>
+            </div>
+            <span className="text-xs font-black uppercase tracking-widest text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-0.5 rounded-full border border-blue-100 dark:border-[#ff7a29]/20">
+              {filteredComments.length} {filteredComments.length === 1 ? 'Comentário' : 'Comentários'}
+            </span>
           </div>
 
-          <select
-            value={filterStatus}
-            onChange={(event) =>
-              setFilterStatus(event.target.value)
-            }
-            className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold text-slate-600 outline-none focus:border-[#0094EB]"
-          >
-            <option value="all">Todos</option>
-            <option value="Pendente">Pendente</option>
-            <option value="Aprovado">Aprovado</option>
-            <option value="Rejeitado">Rejeitado</option>
-          </select>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="relative sm:col-span-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8a90a0]" size={16} />
+              <input
+                type="text"
+                placeholder="Pesquisar autor ou texto..."
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
+              />
+            </div>
 
-          <select
-            value={filterVideo}
-            onChange={(event) =>
-              setFilterVideo(event.target.value)
-            }
-            className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold text-slate-600 outline-none focus:border-[#0094EB]"
-          >
-            <option value="all">Todos os Vídeos</option>
+            <select
+              value={filterStatus}
+              onChange={(event) => setFilterStatus(event.target.value)}
+              className="bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-[#e8ecf4] outline-none transition focus:border-[#ff7a29]"
+            >
+              <option value="all">Todos os Status</option>
+              <option value="Pendente">Pendente</option>
+              <option value="Aprovado">Aprovado</option>
+              <option value="Rejeitado">Rejeitado</option>
+            </select>
 
-            {videos.map((video) => (
-              <option key={video.id} value={video.id}>
-                {video.title}
-              </option>
-            ))}
-          </select>
+            <select
+              value={filterVideo}
+              onChange={(event) => setFilterVideo(event.target.value)}
+              className="bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-[#e8ecf4] outline-none transition focus:border-[#ff7a29] truncate"
+            >
+              <option value="all">Todos os Vídeos</option>
+              {videos.map((video) => (
+                <option key={video.id} value={video.id}>
+                  {video.title}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
-
+      
       <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
