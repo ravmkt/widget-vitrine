@@ -159,10 +159,18 @@
   background-color: rgba(253, 133, 57, 0.14) !important;
 }
 
-/* Destaques de texto e ícones azuis no claro → Laranja #fd8539 no escuro */
-.dark .text-\[\#0094EB\],
-.dark [class*="text-[#0094EB]"] {
+/* Destaques de texto e ícones azuis no claro → Laranja #fd8539 no escuro (exceto quando explicitamente text-white) */
+.dark .text-\[\#0094EB\]:not(.text-white),
+.dark [class*="text-[#0094EB]"]:not(.text-white) {
   color: #fd8539 !important;
+}
+
+/* Garante que texto sobre botão primário/ativo permaneça sempre branco */
+.dark .bg-\[\#0094EB\] *,
+.dark .bg-\[\#fd8539\] *,
+.dark [class*="bg-[#0094EB]"] *,
+.dark [class*="bg-[#fd8539]"] * {
+  color: #ffffff !important;
 }
 
 /* Bordas de destaque azuis no claro → Laranja no escuro */
