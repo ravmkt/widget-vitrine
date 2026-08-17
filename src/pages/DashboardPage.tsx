@@ -334,7 +334,7 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      {/* ── 3. DESEMPENHO (FILTRO ÚNICO + KPIS + TOP 5 VÍDEOS) ── */}
+{/* ── 3. DESEMPENHO DOS VÍDEOS (SPLIT 50/50: GRID 2x2 À ESQUERDA + TOP VÍDEOS À DIREITA) ── */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 sm:p-8 shadow-sm space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-5">
           <div>
@@ -368,214 +368,233 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {/* Faixa de KPIs (5 Cards) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          <MetricCard title="Visualizações" value={dashboardMetrics.views.toLocaleString()} icon={Eye} />
-          <MetricCard title="Cliques em CTA" value={dashboardMetrics.ctaClicks.toLocaleString()} icon={MousePointerClick} />
-          <MetricCard title="Conversões" value={dashboardMetrics.conversions.toLocaleString()} icon={CheckCircle2} isConversion />
-          <MetricCard title="CTR Médio" value={`${dashboardMetrics.ctr.toFixed(1).replace('.', ',')}%`} icon={MousePointerClick} />
-          <MetricCard
-            title="Receita Estimada"
-            value={dashboardMetrics.revenue > 0 ? `R$ ${dashboardMetrics.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'}
-            icon={DollarSign}
-            isRevenue
-          />
-        </div>
-
-        {/* Top 5 Vídeos */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
-              Top Vídeos Mais Assistidos
-            </h4>
-            <button
-              onClick={() => navigate('/videos/performance')}
-              className="text-xs font-bold text-[#0094EB] hover:underline"
-            >
-              Ver relatório completo &rarr;
-            </button>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Lado Esquerdo: Grid 2x2 com 4 Métricas (Sem Receita) */}
+          <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <MetricCard title="Visualizações" value={dashboardMetrics.views.toLocaleString()} icon={Eye} />
+            <MetricCard title="Cliques em CTA" value={dashboardMetrics.ctaClicks.toLocaleString()} icon={MousePointerClick} />
+            <MetricCard title="Conversões" value={dashboardMetrics.conversions.toLocaleString()} icon={CheckCircle2} isConversion />
+            <MetricCard title="CTR Médio" value={`${dashboardMetrics.ctr.toFixed(1).replace('.', ',')}%`} icon={MousePointerClick} />
           </div>
 
-          {topVideos.length === 0 ? (
-            <div className="text-center py-6 text-slate-400 text-xs font-semibold">
-              Nenhum vídeo registrado no período selecionado.
+          {/* Lado Direito: Top Vídeos Mais Assistidos */}
+          <div className="lg:col-span-6 border-t lg:border-t-0 lg:border-l border-slate-100 dark:border-slate-800 lg:pl-8 flex flex-col justify-between h-full">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                  Top Vídeos Mais Assistidos
+                </h4>
+                <button
+                  onClick={() => navigate('/videos/performance')}
+                  className="text-xs font-bold text-[#0094EB] hover:underline"
+                >
+                  Ver relatório completo &rarr;
+                </button>
+              </div>
+
+              {topVideos.length === 0 ? (
+                <div className="text-center py-10 text-slate-400 text-xs font-semibold">
+                  Nenhum vídeo registrado no período selecionado.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {topVideos.map((item, i) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 hover:border-[#0094EB]/40 transition-all"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-black flex items-center justify-center flex-shrink-0">
+                          {i + 1}
+                        </span>
+                        <div className="h-10 w-10 rounded-xl bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
+                          {item.thumbnail_url ? (
+                            <img src={item.thumbnail_url} alt={item.title} className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center text-xs">🎬</div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-black text-slate-800 dark:text-white truncate max-w-[140px] sm:max-w-[200px]">
+                            {item.title}
+                          </p>
+                          <span className="text-[10px] font-black text-slate-400">RANK #{i + 1}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-5 text-right flex-shrink-0">
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase">Views</p>
+                          <p className="text-xs font-black text-slate-900 dark:text-white">{item.metrics?.views?.toLocaleString() || 0}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase">CTR</p>
+                          <p className="text-xs font-black text-slate-900 dark:text-white">
+                            {item.metrics?.ctr ? `${item.metrics.ctr.toFixed(1).replace('.', ',')}%` : '0,0%'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {topVideos.map((item, i) => (
+          </div>
+        </div>
+      </div>
+
+      {/* ── 4 & 5. LINHA DIVIDIDA: CHECKLIST À ESQUERDA + ATIVIDADE RECENTE À DIREITA ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+        {/* Lado Esquerdo: Checklist de Ativação (Itens Empilhados Verticalmente) */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-5 mb-5">
+              <div>
+                <h2 className="text-base font-black text-slate-800 dark:text-white flex items-center gap-2">
+                  <span>🚀</span> Checklist da Ativação da Loja
+                </h2>
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+                  Conclua os passos para publicar seus stories.
+                </p>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <div className="w-24 h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${checklistPercent}%` }} />
+                </div>
+                <span className="text-xs font-extrabold text-emerald-600">{checklistPercent}%</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col space-y-3">
+              {checklist.map((item, index) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 hover:border-[#0094EB]/40 transition-all"
+                  onClick={() => navigate(item.route)}
+                  className={`flex items-start gap-3.5 p-3.5 rounded-2xl border transition-all cursor-pointer group ${
+                    item.completed
+                      ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200/70 dark:border-emerald-900/50'
+                      : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 hover:border-[#0094EB] hover:shadow-md'
+                  }`}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-black flex items-center justify-center flex-shrink-0">
-                      {i + 1}
-                    </span>
-                    <div className="h-10 w-10 rounded-xl bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
-                      {item.thumbnail_url ? (
-                        <img src={item.thumbnail_url} alt={item.title} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center text-xs">🎬</div>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-black text-slate-800 dark:text-white truncate max-w-[160px] sm:max-w-[200px]">
-                        {item.title}
-                      </p>
-                      <span className="text-[10px] font-black text-slate-400">RANK #{i + 1}</span>
-                    </div>
+                  <div
+                    className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-black text-[11px] transition-all ${
+                      item.completed
+                        ? 'bg-emerald-500 text-white shadow-sm'
+                        : 'border-2 border-slate-300 dark:border-slate-600 text-slate-400 group-hover:border-[#0094EB]'
+                    }`}
+                  >
+                    {item.completed ? '✓' : index + 1}
                   </div>
 
-                  <div className="flex items-center gap-5 text-right flex-shrink-0">
-                    <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase">Views</p>
-                      <p className="text-xs font-black text-slate-900 dark:text-white">{item.metrics?.views?.toLocaleString() || 0}</p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h3 className={`text-xs font-black ${item.completed ? 'text-emerald-950 dark:text-emerald-300 line-through opacity-80' : 'text-slate-900 dark:text-white group-hover:text-[#0094EB]'}`}>
+                        {item.title}
+                      </h3>
+                      <span className="text-[11px] font-bold text-[#0094EB] opacity-0 group-hover:opacity-100 transition-opacity">
+                        Configurar &rarr;
+                      </span>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase">CTR</p>
-                      <p className="text-xs font-black text-slate-900 dark:text-white">
-                        {item.metrics?.ctr ? `${item.metrics.ctr.toFixed(1).replace('.', ',')}%` : '0,0%'}
-                      </p>
-                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium leading-relaxed truncate">
+                      {item.description}
+                    </p>
                   </div>
                 </div>
               ))}
             </div>
-          )}
+          </div>
+        </div>
+
+        {/* Lado Direito: Atividade Recente */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="border-b border-slate-100 dark:border-slate-800 pb-5 mb-5">
+              <h2 className="text-base font-black text-slate-800 dark:text-white flex items-center gap-2">
+                <span>⚡</span> Atividade Recente
+              </h2>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+                Feed de eventos e interações em tempo real.
+              </p>
+            </div>
+
+            {activities.length === 0 ? (
+              <div className="text-center py-12 text-slate-400 text-xs font-semibold">
+                Nenhuma interação recente registrada.
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                {activities.map((ev) => (
+                  <div key={ev.id} className="py-3.5 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-3">
+                      <span className="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/60 text-[#0094EB] rounded-lg font-black text-[10px] uppercase">
+                        {ev.event_type === 'video_view' ? '👁️ View' : ev.event_type === 'cta_click' ? '🛍️ Clique CTA' : '⚡ Evento'}
+                      </span>
+                      <span className="font-bold text-slate-700 dark:text-slate-300">
+                        Interação no widget da loja
+                      </span>
+                    </div>
+                    <span className="text-slate-400 font-medium text-[11px]">
+                      {new Date(ev.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* ── 4. CHECKLIST DE ATIVAÇÃO DA LOJA (5 PASSOS) ── */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 sm:p-8 shadow-sm space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-5">
-          <div>
-            <h2 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
-              <span>🚀</span> Checklist de Ativação da Loja
-            </h2>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
-              Conclua as etapas essenciais para colocar seus stories no ar e converter visitantes.
+      {/* ── 6 & 7. SEÇÃO INFERIOR: ACADEMY (7 COLS) & DESTAQUE DE BENEFÍCIOS (5 COLS) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+        {/* Videolytics Academy com Thumbnail Semântica */}
+        <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-7 rounded-[2.5rem] shadow-sm flex flex-col md:flex-row items-center gap-5">
+          <div className="w-full md:w-44 h-28 bg-slate-900 rounded-2xl flex items-center justify-center relative overflow-hidden flex-shrink-0 group cursor-pointer border border-slate-800">
+            <img
+              src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400&auto=format&fit=crop"
+              alt="Thumbnail do Tutorial"
+              className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-[#0094EB] text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <Play size={16} fill="white" className="ml-0.5" />
+              </div>
+            </div>
+          </div>
+          <div className="flex-1 space-y-1.5 text-center md:text-left">
+            <span className="text-[10px] font-black uppercase tracking-wider text-[#0094EB] bg-blue-50 dark:bg-blue-950/60 px-2.5 py-0.5 rounded-full border border-blue-100 dark:border-blue-800 inline-block">
+              🎓 Vidlytics Academy
+            </span>
+            <h4 className="text-sm font-black text-slate-800 dark:text-white">
+              Como dobrar suas conversões com vídeos em 3 passos
+            </h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+              Aprenda as melhores práticas de posicionamento e gatilhos de CTA para aumentar as vendas da sua loja.
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-black text-slate-700 dark:text-slate-300">
-              {completedSteps} de {checklist.length} concluídos
-            </span>
-            <div className="w-28 h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-              <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${checklistPercent}%` }} />
+        </div>
+
+        {/* Card Destaque: Indique e Ganhe / Ganhos & Benefícios */}
+        <div className="lg:col-span-5 bg-gradient-to-br from-[#0094EB] to-blue-700 text-white p-6 sm:p-7 rounded-[2.5rem] shadow-lg flex flex-col justify-between border border-blue-400/30">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-2.5 py-1 rounded-full text-white backdrop-blur-sm">
+                Programa de Parceiros
+              </span>
+              <Share2 size={16} className="text-white/80" />
             </div>
-            <span className="text-xs font-extrabold text-emerald-600">{checklistPercent}%</span>
+            <h4 className="text-lg font-black text-white">Indique e Ganhe</h4>
+            <p className="text-xs text-blue-50 mt-1 font-medium leading-relaxed">
+              Receba comissões e desbloqueie meses gratuitos ao indicar o Vidlytics para outros lojistas.
+            </p>
           </div>
+          <button
+            onClick={() => alert('Link de indicação copiado para a área de transferência!')}
+            className="mt-4 w-full bg-white text-[#0094EB] hover:bg-blue-50 font-black py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2"
+          >
+            <Share2 size={14} /> Copiar Meu Link de Indicação
+          </button>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {checklist.map((item, index) => (
-            <div
-              key={item.id}
-              onClick={() => navigate(item.route)}
-              className={`flex items-start gap-4 p-4 rounded-2xl border transition-all cursor-pointer group ${
-                item.completed
-                  ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200/70 dark:border-emerald-900/50'
-                  : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 hover:border-[#0094EB] hover:shadow-md'
-              }`}
-            >
-              <div
-                className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-black text-xs transition-all ${
-                  item.completed
-                    ? 'bg-emerald-500 text-white shadow-sm'
-                    : 'border-2 border-slate-300 dark:border-slate-600 text-slate-400 group-hover:border-[#0094EB]'
-                }`}
-              >
-                {item.completed ? '✓' : index + 1}
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <h3 className={`text-sm font-black ${item.completed ? 'text-emerald-950 dark:text-emerald-300 line-through opacity-80' : 'text-slate-900 dark:text-white group-hover:text-[#0094EB]'}`}>
-                    {item.title}
-                  </h3>
-                  <span className="text-xs font-bold text-[#0094EB] opacity-0 group-hover:opacity-100 transition-opacity">
-                    Configurar &rarr;
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium leading-relaxed">
-                  {item.description}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── 5. ATIVIDADE RECENTE (FEED DE EVENTOS) ── */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 sm:p-8 shadow-sm space-y-4">
-        <h2 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
-          <span>⚡</span> Atividade Recente (Feed em Tempo Real)
-        </h2>
-        {activities.length === 0 ? (
-          <p className="text-xs text-slate-400 font-semibold py-4">
-            Nenhuma interação recente registrada. Os eventos do widget na loja aparecerão aqui.
-          </p>
-        ) : (
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
-            {activities.map((ev) => (
-              <div key={ev.id} className="py-3 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-3">
-                  <span className="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/60 text-[#0094EB] rounded-lg font-black text-[11px]">
-                    {ev.event_type === 'video_view' ? '👁️ View' : ev.event_type === 'cta_click' ? '🛍️ Clique CTA' : '⚡ Evento'}
-                  </span>
-                  <span className="font-bold text-slate-700 dark:text-slate-300">
-                    Interação registrada no widget da loja virtual
-                  </span>
-                </div>
-                <span className="text-slate-400 font-medium">
-                  {new Date(ev.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* ── 6. BANNER VIDLYTICS ACADEMY ── */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-6 sm:p-8 rounded-[2.5rem] shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 border border-slate-800">
-        <div className="space-y-2 max-w-xl text-center md:text-left">
-          <span className="text-[11px] font-black uppercase tracking-wider text-blue-400 bg-blue-950/70 px-3 py-1 rounded-full border border-blue-800 inline-block">
-            🎓 Vidlytics Academy
-          </span>
-          <h2 className="text-xl font-black text-white">Aprenda a dobrar suas conversões em 3 minutos</h2>
-          <p className="text-xs text-slate-300 leading-relaxed font-medium">
-            Assista aos tutoriais práticos e descubra como criar vídeos verticais estratégicos para o seu e-commerce.
-          </p>
-          <div className="pt-2 flex flex-wrap gap-2 justify-center md:justify-start">
-            <span className="text-[11px] font-bold bg-white/10 px-3 py-1 rounded-xl">📹 Como instalar na Shopify/Nuvemshop</span>
-            <span className="text-[11px] font-bold bg-white/10 px-3 py-1 rounded-xl">🎬 Gravando vídeos que vendem</span>
-          </div>
-        </div>
-
-        <button
-          onClick={() => window.open('https://youtube.com', '_blank')}
-          className="bg-[#0094EB] hover:bg-[#0077c2] text-white font-black text-xs uppercase tracking-widest px-6 py-4 rounded-2xl transition-all shadow-lg flex-shrink-0 flex items-center gap-2"
-        >
-          <Play size={16} fill="white" /> Assistir Tutoriais
-        </button>
-      </div>
-
-      {/* ── 7. RODAPÉ DE INDICAÇÃO & AFILIADOS ── */}
-      <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-        <div>
-          <h4 className="text-xs font-black text-slate-800 dark:text-white flex items-center gap-1.5 justify-center sm:justify-start">
-            <span>🎁</span> Indique o Vidlytics e Ganhe Benefícios
-          </h4>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-            Ganhe mensalidades gratuitas e comissões para cada lojista amigo que começar a usar o app.
-          </p>
-        </div>
-        <button
-          onClick={() => alert('Link de indicação copiado para a área de transferência!')}
-          className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 text-slate-700 dark:text-slate-200 text-xs font-black px-4 py-2 rounded-xl transition-all shadow-sm flex items-center gap-2"
-        >
-          <Share2 size={13} /> Copiar Link de Indicação
-        </button>
       </div>
 
       {/* DIALOG DE DATA PERSONALIZADA */}
