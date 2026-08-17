@@ -215,16 +215,13 @@ return (
                 isCurrent && "bg-slate-50/70 dark:bg-[#1a1f35]/95"
               )}
             >
-              {/* Badge Arredondado "Mais Popular" */}
+{/* Badge Arredondado "Mais Popular" Dual-Theme */}
               {isPopular && (
-                <div 
-                  style={{ backgroundColor: '#ff7a29' }}
-                  className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full !bg-[#ff7a29] px-3.5 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-md shadow-orange-500/40"
-                >
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-[#0094EB] dark:bg-[#ff7a29] px-3.5 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-md shadow-blue-500/30 dark:shadow-orange-500/40">
                   Mais Popular
                 </div>
               )}
-
+              
               <div>
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-4">
                   <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
