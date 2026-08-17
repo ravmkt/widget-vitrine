@@ -89,7 +89,7 @@
     --sidebar-border: 228 25% 18%;
     --sidebar-ring: 23 100% 58%;
   }
-  
+
     --secondary: 212 81% 29%;
     --secondary-foreground: 210 40% 98%;
 
@@ -130,9 +130,54 @@
   animation: fadeIn 0.4s ease-out forwards;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+/* Animação Shimmer para Barras de Progresso */
+@keyframes shimmerWave {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.animate-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.animate-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 100%
+  );
+  animation: shimmerWave 2s infinite ease-in-out;
+}
+
+/* Utilitários Glass & Glow */
+.dark-glass-card {
+  background: rgba(26, 31, 53, 0.7) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 122, 41, 0.15) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+}
+
+.dark-glass-card:hover {
+  border-color: rgba(255, 122, 41, 0.35) !important;
+  box-shadow: 0 12px 40px 0 rgba(255, 122, 41, 0.12), 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+  transform: translateY(-2px);
+}
+
+.glow-orange {
+  box-shadow: 0 0 20px rgba(255, 122, 41, 0.35) !important;
+}
+
+.glow-orange-sm {
+  box-shadow: 0 0 10px rgba(255, 122, 41, 0.25) !important;
 }
 
 .scrollbar-none::-webkit-scrollbar {
