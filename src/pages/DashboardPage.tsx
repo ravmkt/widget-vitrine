@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, Video } from '@/lib/db';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Eye, MousePointerClick, ShoppingBag, CheckCircle2, Calendar, TrendingUp, DollarSign } from 'lucide-react';
+import { Eye, MousePointerClick, CheckCircle2, Calendar, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
