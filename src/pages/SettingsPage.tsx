@@ -657,7 +657,7 @@ return (
             </div>
           </div>
         </div>
-        
+
 {/* ── 3. INTEGRAÇÃO WHATSAPP ── */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
           <div className="border-b border-slate-100 dark:border-white/5 pb-4">
@@ -760,7 +760,7 @@ return (
           </div>
         </div>
 
-        {/* ── 5. SEGURANÇA & API KEYS ── */}
+{/* ── 5. SEGURANÇA & API KEYS (DUAL-THEME) ── */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-5">
           <div className="border-b border-slate-100 dark:border-white/5 pb-4">
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
@@ -790,7 +790,7 @@ return (
                   navigator.clipboard.writeText(settings?.public_live_key ?? '');
                   toast.success('Token copiado');
                 }}
-                className="rounded-xl border-slate-200 dark:border-white/10 hover:border-[#ff7a29] dark:hover:border-[#ff7a29]"
+                className="rounded-xl border-slate-200 dark:border-white/10 hover:border-[#0094EB] dark:hover:border-[#ff7a29] text-slate-600 dark:text-slate-300 hover:text-[#0094EB] dark:hover:text-[#ff7a29]"
                 title="Copiar token"
               >
                 <Copy size={16} />
@@ -804,15 +804,15 @@ return (
                   setSettings(prev => ({ ...prev, public_live_key: k }));
                   toast.success('Token regenerado');
                 }}
-                className="rounded-xl border-slate-200 dark:border-white/10 hover:border-amber-500"
+                className="rounded-xl border-slate-200 dark:border-white/10 hover:border-[#0094EB] dark:hover:border-amber-500 text-[#0094EB] dark:text-amber-500"
                 title="Regenerar token"
               >
-                <RefreshCw size={16} className="text-amber-500" />
+                <RefreshCw size={16} />
               </Button>
             </div>
           </div>
         </div>
-
+        
 {/* ── BOTÃO SALVAR PRIMÁRIO DUAL-THEME ── */}
         <div className="flex justify-end pt-4">
           <Button
