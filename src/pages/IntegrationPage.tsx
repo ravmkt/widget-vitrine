@@ -197,15 +197,12 @@ return (
         </div>
       )}
 
-      {/* ── MÓDULOS SUPERIORES: FORMATOS DE VÍDEO ── */}
+{/* ── MÓDULOS SUPERIORES: FORMATOS DE VÍDEO (DUAL-THEME) ── */}
       <div className="grid gap-6 md:grid-cols-3">
         {/* Card: Vídeo Flutuante */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
           <div>
-            <div 
-              style={{ backgroundColor: '#ff7a29' }}
-              className="flex h-11 w-11 items-center justify-center rounded-2xl text-white shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4"
-            >
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4">
               <PlayCircle size={20} className="!text-white stroke-[2.5]" />
             </div>
 
@@ -222,10 +219,7 @@ return (
         {/* Card: Carrossel de Stories */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
           <div>
-            <div 
-              style={{ backgroundColor: '#ff7a29' }}
-              className="flex h-11 w-11 items-center justify-center rounded-2xl text-white shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4"
-            >
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4">
               <Film size={20} className="!text-white stroke-[2.5]" />
             </div>
 
@@ -242,10 +236,7 @@ return (
         {/* Card: Galeria de Vídeos */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
           <div>
-            <div 
-              style={{ backgroundColor: '#ff7a29' }}
-              className="flex h-11 w-11 items-center justify-center rounded-2xl text-white shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4"
-            >
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4">
               <Layers3 size={20} className="!text-white stroke-[2.5]" />
             </div>
 
@@ -259,7 +250,7 @@ return (
           </div>
         </div>
       </div>
-
+      
 <div className="space-y-6">
         {/* ── PASSO 1: SCRIPT PRINCIPAL ── */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
