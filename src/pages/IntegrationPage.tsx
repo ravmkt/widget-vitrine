@@ -377,196 +377,206 @@ return (
           </div>
         </div>
       </div>
-      
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-[2.5rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
-              <MapPin className="h-6 w-6" />
-            </div>
 
-            <div>
-              <h2 className="text-xl font-black text-slate-900">
-                Onde os vídeos aparecem?
-              </h2>
+{/* ── MÓDULOS INFERIORES: ONDE APARECEM & PRODUTOS ── */}
+      <div className="grid gap-6 lg:grid-cols-2 items-stretch">
+        {/* Card: Onde os vídeos aparecem? */}
+        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 shadow-sm flex flex-col justify-between space-y-6">
+          <div>
+            <div className="flex items-start gap-4 border-b border-slate-100 dark:border-white/5 pb-4">
+              <div 
+                style={{ backgroundColor: '#ff7a29' }}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white shadow-[0_0_15px_rgba(255,122,41,0.4)]"
+              >
+                <MapPin size={20} className="!text-white stroke-[2.5]" />
+              </div>
 
-              <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
-                O widget pode ser exibido na página e no local configurado no
-                painel. Para carrossel e galeria, use seletores CSS do tema
-                da loja para escolher exatamente onde o bloco será inserido.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-6 space-y-3">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm font-black text-slate-900">
-                Exemplos de páginas
-              </p>
-
-              <p className="mt-1 text-sm font-medium text-slate-500">
-                Home, produto, categoria, carrinho, página específica ou todas
-                as páginas.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm font-black text-slate-900">
-                Exemplos de seletor CSS
-              </p>
-
-              <div className="mt-2 flex flex-wrap gap-2">
-                <code className="rounded-lg bg-white px-2 py-1 text-xs font-bold text-slate-700">
-                  main
-                </code>
-
-                <code className="rounded-lg bg-white px-2 py-1 text-xs font-bold text-slate-700">
-                  .main-content
-                </code>
-
-                <code className="rounded-lg bg-white px-2 py-1 text-xs font-bold text-slate-700">
-                  #banner-principal
-                </code>
-
-                <code className="rounded-lg bg-white px-2 py-1 text-xs font-bold text-slate-700">
-                  .product-description
-                </code>
-
-                <code className="rounded-lg bg-white px-2 py-1 text-xs font-bold text-slate-700">
-                  .vitrine
-                </code>
+              <div>
+                <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                  Onde os vídeos aparecem?
+                </h2>
+                <p className="mt-0.5 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+                  O widget pode ser exibido automaticamente ou injetado via seletores CSS em qualquer bloco do tema da loja.
+                </p>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm font-black text-slate-900">
-                Posições disponíveis
-              </p>
+            <div className="mt-6 space-y-3.5">
+              <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-4">
+                <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                  Exemplos de páginas
+                </p>
+                <p className="mt-1 text-xs font-medium text-slate-500 dark:text-[#c0c5d4]">
+                  Home, página de produto, categorias, carrinho, landing pages ou em todas as páginas.
+                </p>
+              </div>
 
-              <ul className="mt-2 space-y-1 text-sm font-medium text-slate-500">
-                <li>Antes do elemento</li>
-                <li>Dentro do elemento, no começo</li>
-                <li>Dentro do elemento, no final</li>
-                <li>Depois do elemento</li>
-              </ul>
+              <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-4">
+                <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                  Exemplos de seletores CSS
+                </p>
+                <div className="mt-2.5 flex flex-wrap gap-2">
+                  <code className="rounded-lg bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 px-2.5 py-1 font-mono text-[11px] font-black text-[#0094EB] dark:text-[#ff7a29]">
+                    main
+                  </code>
+                  <code className="rounded-lg bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 px-2.5 py-1 font-mono text-[11px] font-black text-[#0094EB] dark:text-[#ff7a29]">
+                    .main-content
+                  </code>
+                  <code className="rounded-lg bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 px-2.5 py-1 font-mono text-[11px] font-black text-[#0094EB] dark:text-[#ff7a29]">
+                    #banner-principal
+                  </code>
+                  <code className="rounded-lg bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 px-2.5 py-1 font-mono text-[11px] font-black text-[#0094EB] dark:text-[#ff7a29]">
+                    .product-description
+                  </code>
+                  <code className="rounded-lg bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 px-2.5 py-1 font-mono text-[11px] font-black text-[#0094EB] dark:text-[#ff7a29]">
+                    .vitrine
+                  </code>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-4">
+                <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                  Posições de injeção
+                </p>
+                <ul className="mt-1.5 space-y-1 text-xs font-medium text-slate-500 dark:text-[#c0c5d4] list-disc list-inside">
+                  <li>Antes do elemento</li>
+                  <li>Dentro do elemento (no início)</li>
+                  <li>Dentro do elemento (no final)</li>
+                  <li>Depois do elemento</li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Card de Produtos */}
-        <div className="rounded-[2.5rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
-              <ShoppingBag className="h-6 w-6" />
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-slate-900">
-                Produtos
-              </h2>
-
-              <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
-                Importe os produtos da sua loja para que eles possam ser
-                vinculados aos vídeos. Assim, quando o cliente clicar no vídeo,
-                o player pode mostrar o produto e levar para a página de compra.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-5">
-            <p className="text-sm font-black text-slate-900">
-              Importação de produtos
-            </p>
-
-            <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
-              Você pode importar produtos via XML (feed de produtos) ou planilha
-              CSV diretamente na página de Produtos. Basta acessar a seção de
-              produtos e clicar em "Importar produtos".
-            </p>
-          </div>
-
-          <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+        {/* Card: Produtos & Aviso Importante */}
+        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 shadow-sm flex flex-col justify-between space-y-6">
+          <div>
+            <div className="flex items-start gap-4 border-b border-slate-100 dark:border-white/5 pb-4">
+              <div 
+                style={{ backgroundColor: '#ff7a29' }}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white shadow-[0_0_15px_rgba(255,122,41,0.4)]"
+              >
+                <ShoppingBag size={20} className="!text-white stroke-[2.5]" />
+              </div>
 
               <div>
-                <p className="text-sm font-black text-amber-900">
-                  Importante
+                <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                  Produtos
+                </h2>
+                <p className="mt-0.5 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+                  Vincule os produtos do seu catálogo diretamente aos vídeos para permitir a compra em 1 clique durante a reprodução.
                 </p>
+              </div>
+            </div>
 
-                <p className="mt-1 text-sm font-medium leading-relaxed text-amber-800">
-                  Os dados de API não devem ficar no script público.
-                  Eles precisam ser salvos apenas no backend/banco de dados da
-                  aplicação.
-                </p>
+            <div className="mt-6 rounded-2xl border border-dashed border-slate-200 dark:border-white/10 bg-slate-50/70 dark:bg-[#0f1220]/70 p-5">
+              <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                Importação e Catálogo
+              </p>
+              <p className="mt-1.5 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+                Você pode importar produtos via XML (Google Merchant / Feed XML) ou planilha CSV na página de <strong>Produtos</strong>.
+              </p>
+            </div>
+
+            {/* Módulo de Aviso Refinado */}
+            <div className="mt-5 rounded-2xl border border-amber-500/30 bg-amber-50/80 dark:bg-amber-950/30 p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                <div>
+                  <p className="text-xs font-black text-amber-900 dark:text-amber-300 uppercase tracking-tight">
+                    Importante
+                  </p>
+                  <p className="mt-0.5 text-xs font-medium leading-relaxed text-amber-800 dark:text-amber-400/90">
+                    As credenciais secretas da sua conta nunca são expostas no script público. Toda a comunicação pública utiliza tokens com proteção de domínio e isolamento RLS.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Seção "Como instalar" */}
-      <div className="rounded-[2.5rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
-        <h2 className="text-xl font-black text-slate-900">
-          Como instalar na sua loja
-        </h2>
+      {/* ── SEÇÃO: COMO INSTALAR NA SUA LOJA ── */}
+      <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
+        <div className="border-b border-slate-100 dark:border-white/5 pb-4">
+          <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+            <span>🚀</span> Como instalar na sua loja
+          </h2>
+          <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-[#8a90a0]">
+            Três passos simples para ativar a experiência de vídeo commerce no seu e-commerce.
+          </p>
+        </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-900 shadow-sm">
-              <span className="text-sm font-black">1</span>
+        <div className="grid gap-4 md:grid-cols-3">
+          {/* Passo 1 */}
+          <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
+            <div>
+              <div 
+                style={{ backgroundColor: '#ff7a29' }}
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-white font-black text-xs shadow-xs shadow-orange-500/30"
+              >
+                1
+              </div>
+
+              <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                Acesse o painel da loja
+              </h3>
+
+              <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+                Abra as configurações do tema da sua plataforma (Shopify, Nuvemshop, Tray, Vtex, etc.) e localize a área de scripts/HTML personalizado.
+              </p>
             </div>
-
-            <h3 className="mt-4 text-sm font-black text-slate-900">
-              Acesse o painel da sua loja
-            </h3>
-
-            <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
-              Entre no painel administrativo da sua loja e localize a área de
-              tema, scripts, HTML personalizado ou cabeçalho.
-            </p>
           </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-900 shadow-sm">
-              <span className="text-sm font-black">2</span>
+          {/* Passo 2 */}
+          <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
+            <div>
+              <div 
+                style={{ backgroundColor: '#ff7a29' }}
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-white font-black text-xs shadow-xs shadow-orange-500/30"
+              >
+                2
+              </div>
+
+              <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                Cole os scripts
+              </h3>
+
+              <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+                Cole o <strong>Script Principal (Passo 1)</strong> no cabeçalho e o <strong>Script de Rastreamento (Passo 2)</strong> na página de conclusão de compra.
+              </p>
             </div>
-
-            <h3 className="mt-4 text-sm font-black text-slate-900">
-              Cole os scripts
-            </h3>
-
-            <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
-              Cole os códigos de instalação (Passo 1 e Passo 2) no campo de
-              scripts personalizados da sua loja.
-            </p>
           </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-900 shadow-sm">
-              <span className="text-sm font-black">3</span>
+          {/* Passo 3 */}
+          <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
+            <div>
+              <div 
+                style={{ backgroundColor: '#ff7a29' }}
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-white font-black text-xs shadow-xs shadow-orange-500/30"
+              >
+                3
+              </div>
+
+              <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                Publique seus vídeos
+              </h3>
+
+              <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+                Faça upload dos vídeos no Vidlytics, configure suas coleções de stories e os vídeos aparecerão automaticamente para seus clientes.
+              </p>
             </div>
-
-            <h3 className="mt-4 text-sm font-black text-slate-900">
-              Configure os vídeos
-            </h3>
-
-            <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
-              Volte ao painel, cadastre seus vídeos, escolha onde eles aparecem
-              e vincule os produtos importados.
-            </p>
           </div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-5 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-3 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-5 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm font-black text-slate-900">
-              Precisa configurar o local exato do carrossel?
+            <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+              Precisa customizar o posicionamento ou estilo?
             </p>
-
-            <p className="mt-1 text-sm font-medium text-slate-500">
-              Use a aba de aparência/configuração do widget para informar o
-              seletor CSS da página.
+            <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-[#c0c5d4]">
+              Utilize o menu <strong>Aparência</strong> para ajustar bordas, cores, formatos de card e seletores CSS sem precisar programar.
             </p>
           </div>
         </div>
