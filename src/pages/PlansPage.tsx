@@ -171,33 +171,34 @@ export function PlansPage() {
     );
   }
 
-  return (
-    <div className="mx-auto max-w-6xl space-y-8 p-6 pb-20">
-      {/* Botão Voltar e Cabeçalho */}
+return (
+    <div className="mx-auto max-w-7xl space-y-8 p-4 sm:p-6 pb-20 font-sans animate-fade-in">
+      {/* ── CABEÇALHO & RETORNO ── */}
       <div>
         <button
           type="button"
           onClick={() => navigate('/billing')}
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 transition-colors hover:text-slate-900 dark:hover:text-white mb-4"
+          className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-[#8a90a0] transition-colors hover:text-[#0094EB] dark:hover:text-[#ff7a29] mb-4 group cursor-pointer"
         >
-          <ArrowLeft size={16} /> Voltar para Minha Assinatura
+          <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" />
+          Voltar para Minha Assinatura
         </button>
 
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="rounded-full bg-blue-50 px-3 py-1 text-[10px] font-black uppercase text-[#0094EB] dark:bg-blue-950/40">
+        <div className="text-center max-w-2xl mx-auto space-y-2.5">
+          <span className="inline-block text-[10px] font-black uppercase tracking-widest text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3.5 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/25 dark:shadow-[0_0_12px_rgba(255,122,41,0.2)]">
             Planos & Assinaturas
           </span>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             Escolha o melhor plano para o seu negócio
           </h1>
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+          <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-[#c0c5d4]">
             Faça upgrade ou downgrade a qualquer momento com cálculo proporcional automático.
           </p>
         </div>
       </div>
 
-      {/* Grid de Cards dos Planos */}
-      <div className="grid gap-6 md:grid-cols-4 pt-4">
+      {/* ── GRID DE CARDS MODULARES DE PLANOS ── */}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 pt-4 items-stretch">
         {plans.map((p, idx) => {
           const isCurrent = p.id === currentPlanId;
           const isUpdating = updatingPlanId === p.id;
@@ -207,70 +208,90 @@ export function PlansPage() {
             <div
               key={p.id}
               className={cn(
-                "relative flex flex-col justify-between rounded-2xl border bg-white p-6 shadow-sm transition-all dark:bg-slate-950",
+                "relative flex flex-col justify-between rounded-[2.5rem] border bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 transition-all duration-300 hover:-translate-y-1.5 shadow-sm",
                 isPopular
-                  ? "border-[#0094EB] ring-2 ring-[#0094EB]/20 shadow-blue-500/10"
-                  : "border-slate-200 dark:border-slate-800",
-                isCurrent && "bg-slate-50/50 dark:bg-slate-900/30"
+                  ? "border-[#ff7a29] dark:border-[#ff7a29]/70 shadow-lg dark:shadow-[0_12px_35px_rgba(255,122,41,0.22)] ring-1 ring-[#ff7a29]/30"
+                  : "border-slate-200 dark:border-orange-500/15 dark:hover:border-orange-500/35 dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.1)]",
+                isCurrent && "bg-slate-50/70 dark:bg-[#1a1f35]/95"
               )}
             >
+              {/* Badge Arredondado "Mais Popular" */}
               {isPopular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#0094EB] px-3 py-0.5 text-[10px] font-black uppercase tracking-wider text-white shadow-md shadow-blue-500/30">
+                <div 
+                  style={{ backgroundColor: '#ff7a29' }}
+                  className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full !bg-[#ff7a29] px-3.5 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-md shadow-orange-500/40"
+                >
                   Mais Popular
                 </div>
               )}
 
               <div>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-4">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
                     {p.name}
                   </h3>
                   {isCurrent && (
-                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-600 dark:bg-emerald-950/40">
+                    <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-700/40 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                       Atual
                     </span>
                   )}
                 </div>
 
-                <div className="mt-4 flex items-baseline gap-1">
-                  <span className="text-3xl font-black text-slate-900 dark:text-white">
+                <div className="mt-2 flex items-baseline gap-1.5">
+                  <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
                     R$ {(p.price_cents / 100).toFixed(0)}
                   </span>
-                  <span className="text-xs font-bold text-slate-400">/mês</span>
+                  <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">/mês</span>
                 </div>
 
-                {/* Recursos Principais */}
-                <div className="mt-6 space-y-3 border-t border-slate-100 pt-5 dark:border-slate-800">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
-                    <Check size={14} className="text-[#0094EB] shrink-0" />
-                    <span><strong>{(p.views_limit / 1000).toFixed(0)}k</strong> visualizações/mês</span>
+                {/* Lista de Recursos com Checkmark Laranja */}
+                <div className="mt-6 space-y-3.5 border-t border-slate-100 dark:border-white/5 pt-5">
+                  <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-[#c0c5d4]">
+                    <div 
+                      style={{ backgroundColor: '#ff7a29' }}
+                      className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 shadow-xs shadow-orange-500/30"
+                    >
+                      <Check size={11} className="text-white stroke-[3]" />
+                    </div>
+                    <span><strong className="text-slate-900 dark:text-white">{(p.views_limit / 1000).toFixed(0)}k</strong> visualizações/mês</span>
                   </div>
 
-                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
-                    <Check size={14} className="text-[#0094EB] shrink-0" />
-                    <span><strong>{p.pages_limit}</strong> páginas ativas</span>
+                  <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-[#c0c5d4]">
+                    <div 
+                      style={{ backgroundColor: '#ff7a29' }}
+                      className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 shadow-xs shadow-orange-500/30"
+                    >
+                      <Check size={11} className="text-white stroke-[3]" />
+                    </div>
+                    <span><strong className="text-slate-900 dark:text-white">{p.pages_limit}</strong> páginas ativas</span>
                   </div>
 
-                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
-                    <Check size={14} className="text-[#0094EB] shrink-0" />
-                    <span><strong>{formatSize(p.storage_limit_bytes)}</strong> armazenamento</span>
+                  <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-[#c0c5d4]">
+                    <div 
+                      style={{ backgroundColor: '#ff7a29' }}
+                      className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 shadow-xs shadow-orange-500/30"
+                    >
+                      <Check size={11} className="text-white stroke-[3]" />
+                    </div>
+                    <span><strong className="text-slate-900 dark:text-white">{formatSize(p.storage_limit_bytes)}</strong> armazenamento</span>
                   </div>
                 </div>
               </div>
 
-              {/* Botão de Ação */}
-              <div className="mt-8 pt-4 border-t border-slate-100 dark:border-slate-800">
+              {/* Botão de Ação Alinhado ao Padrão Vidlytics */}
+              <div className="mt-8 pt-4 border-t border-slate-100 dark:border-white/5">
                 <button
                   type="button"
                   disabled={isCurrent || !!updatingPlanId}
                   onClick={() => handleSelectPlan(p)}
+                  style={isPopular && !isCurrent ? { backgroundColor: '#ff7a29' } : undefined}
                   className={cn(
-                    "w-full rounded-xl py-2.5 px-4 text-xs font-black transition-all shadow-sm flex items-center justify-center gap-2",
+                    "w-full rounded-2xl py-3 px-4 text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer",
                     isCurrent
-                      ? "bg-slate-100 text-slate-400 cursor-default dark:bg-slate-800 dark:text-slate-500 shadow-none"
+                      ? "bg-slate-100 dark:bg-[#0f1220] text-slate-400 dark:text-slate-500 border border-transparent dark:border-white/5 cursor-default shadow-none"
                       : isPopular
-                      ? "bg-[#0094EB] text-white hover:bg-[#0E4787] shadow-blue-500/20"
-                      : "bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+                      ? "!bg-[#ff7a29] text-white shadow-lg shadow-orange-500/30 hover:opacity-95 hover:scale-[1.02]"
+                      : "bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white hover:border-[#ff7a29]/60 hover:bg-slate-200 dark:hover:bg-white/5 shadow-xs"
                   )}
                 >
                   {isUpdating ? (
@@ -288,4 +309,4 @@ export function PlansPage() {
       </div>
     </div>
   );
-}
+  }
