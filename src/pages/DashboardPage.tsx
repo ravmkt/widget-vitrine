@@ -676,10 +676,10 @@ const MetricCard = ({ title, value, icon: Icon, isConversion = false, isRevenue 
         className={cn(
           'p-3 rounded-2xl transition-all group-hover:scale-110',
           isConversion
-            ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500 dark:text-emerald-400'
+            ? 'bg-emerald-50 text-emerald-500 dark:bg-orange-500/15 dark:text-[#fd8539]'
             : isRevenue
-            ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
-            : 'bg-blue-50 dark:bg-blue-900/30 text-[#0094EB]'
+            ? 'bg-amber-50 text-amber-600 dark:bg-orange-500/15 dark:text-[#fd8539]'
+            : 'bg-blue-50 text-[#0094EB] dark:bg-orange-500/15 dark:text-[#fd8539]'
         )}
       >
         <Icon size={20} />
