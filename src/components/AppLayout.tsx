@@ -123,8 +123,6 @@ export function AppLayout({ children }: AppLayoutProps) {
                 const days = trialDaysRemaining ?? 7;
                 const isRed = days <= 1;
                 const isOrange = days === 2;
-                const bannerBg = isRed ? '#ef4444' : isOrange ? '#ff7a29' : '#0094EB';
-                const textBtnColor = isRed ? '#ef4444' : isOrange ? '#ff7a29' : '#0094EB';
                 const message = isRed
                   ? `Expira ${days === 1 ? 'em 1 dia' : 'hoje'}`
                   : isOrange
@@ -133,8 +131,14 @@ export function AppLayout({ children }: AppLayoutProps) {
 
                 return (
                   <div 
-                    style={{ backgroundColor: bannerBg }}
-                    className="px-4 py-2.5 text-white shadow-md transition-colors duration-300"
+                    className={cn(
+                      "px-4 py-2.5 text-white shadow-md transition-colors duration-300",
+                      isRed 
+                        ? "bg-[#ef4444]" 
+                        : isOrange 
+                        ? "bg-[#ff7a29]" 
+                        : "bg-[#0094EB]"
+                    )}
                   >
                     <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
                       <div className="flex items-center gap-2 text-white">
@@ -144,17 +148,19 @@ export function AppLayout({ children }: AppLayoutProps) {
                       <button
                         type="button"
                         onClick={() => navigate('/plans')}
-                        style={{ backgroundColor: '#ffffff', color: textBtnColor }}
-                        className="inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-black shadow-sm transition hover:bg-slate-50"
+                        className={cn(
+                          "inline-flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-1.5 text-xs font-black shadow-sm transition hover:bg-slate-50",
+                          isRed ? "text-[#ef4444]" : isOrange ? "text-[#ff7a29]" : "text-[#0094EB]"
+                        )}
                       >
-                        <Sparkles size={13} style={{ color: textBtnColor }} />
+                        <Sparkles size={13} />
                         Fazer Upgrade
                       </button>
                     </div>
                   </div>
                 );
               })()}
-                                          
+                                                        
               {subscriptionStatus === 'canceled' && (
                 <div className="bg-red-600 px-4 py-2.5 text-white shadow-sm">
                   <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
