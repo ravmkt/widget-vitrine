@@ -1664,14 +1664,10 @@ function applyHostPosition(host, appearance) {
       + 'font-family:inherit!important;'
       + '}'
       + '.vl-form-status{min-height:18px!important;text-align:center!important;font-size:12px!important;margin-top:6px!important;}'
-      + '.vl-form-charcount{text-align:right!important;font-size:11px!important;color:#94a3b8!important;margin-bottom:8px!important;}'
-      + '.vl-modal.has-comments-open{'
-      + 'height:100%!important;'
-      + 'max-height:90vh!important;'
-      + 'border-radius:36px!important;'
-      + '}'
++ '.vl-form-charcount{text-align:right!important;font-size:11px!important;color:#94a3b8!important;margin-bottom:8px!important;}'
+      + '.vl-modal.has-comments-open{}'
     );
-  }
+      }
 
   function buildFloatingCss(appearance, behaviorConfig) {
     behaviorConfig = behaviorConfig || getFloatingBehaviorConfig(appearance);
