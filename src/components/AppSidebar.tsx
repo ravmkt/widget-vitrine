@@ -191,24 +191,27 @@ export function AppSidebar() {
                     <SidebarMenuButton 
                       asChild 
                       isActive={isItemActive}
+                      style={isItemActive ? { backgroundColor: '#ff7a29', color: '#ffffff' } : undefined}
                       className={cn(
-                        "h-11 rounded-xl px-3.5 transition-all duration-200 font-bold overflow-hidden",
+                        "h-11 rounded-xl px-3.5 transition-all duration-200 font-black overflow-hidden",
                         isItemActive 
-                          ? "bg-[#0094EB] dark:bg-[#ff7a29] text-white dark:text-white shadow-md dark:shadow-[0_0_15px_rgba(255,122,41,0.4)] hover:bg-[#0094EB] dark:hover:bg-[#ff7a29]" 
-                          : "text-[#64748B] dark:text-[#8a90a0] hover:bg-[#F1F5F9] dark:hover:bg-slate-800/60 hover:text-[#0F172A] dark:hover:text-white"
+                          ? "!bg-[#ff7a29] !text-white shadow-md shadow-orange-500/30 hover:!bg-[#ff7a29]" 
+                          : "text-slate-400 hover:bg-slate-800/60 hover:text-white"
                       )}
                     >
-                      <Link to={item.url} className="flex items-center gap-3 w-full">
-                        <item.icon className={cn(
-                          "h-4.5 w-4.5 shrink-0 transition-colors",
-                          isItemActive 
-                            ? "text-white" 
-                            : "text-[#94A3B8] dark:text-[#8a90a0]"
-                        )} />
-                        <span
+                      <Link to={item.url} className="flex items-center gap-3 w-full" style={isItemActive ? { color: '#ffffff' } : undefined}>
+                        <item.icon 
+                          style={isItemActive ? { color: '#ffffff', stroke: '#ffffff' } : undefined}
                           className={cn(
-                            "text-sm whitespace-nowrap transition-all duration-300",
-                            isItemActive ? "text-white font-black" : "",
+                            "h-4.5 w-4.5 shrink-0 transition-colors",
+                            isItemActive ? "!text-white stroke-[2.5]" : "text-slate-400"
+                          )} 
+                        />
+                        <span
+                          style={isItemActive ? { color: '#ffffff' } : undefined}
+                          className={cn(
+                            "text-sm whitespace-nowrap transition-all duration-300 font-black",
+                            isItemActive ? "!text-white" : "",
                             isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
                           )}
                         >
@@ -217,10 +220,10 @@ export function AppSidebar() {
                       </Link>
                     </SidebarMenuButton>
 
-                    {/* Tooltip flutuante adaptável ao tema */}
+                    {/* Tooltip flutuante no modo recolhido */}
                     {!isExpanded && (
                       <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-5">
-                        <div className="bg-[#0094EB] dark:bg-[#fd8539] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
+                        <div className="bg-[#ff7a29] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-orange-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
                           {item.title}
                         </div>
                       </div>
@@ -228,7 +231,7 @@ export function AppSidebar() {
                   </SidebarMenuItem>
                 );
               })}
-                          </SidebarMenu>
+                                        </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
