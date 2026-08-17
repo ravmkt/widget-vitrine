@@ -1704,26 +1704,34 @@ function applyHostPosition(host, appearance) {
     }
   }
 
-function trackMetric(data) {
-  if (!hasSupabase) return;
-  data = data || {};
-  supabaseFetch('metrics', {
-    method: 'POST',
-    headers: { 'Prefer': 'return=minimal' },
-    body: JSON.stringify({
-      store_id: storeId,
-      event_type: data.event_type || 'unknown',
-      story_id: data.story_id || null,
-      video_id: data.video_id || null,
-      product_id: data.product_id || null,
-      page_url: data.page_url || window.location.href,
-      visitor_id: getFingerprint(),
-      device_type: getDevice(),
-      browser: navigator.userAgent,
-      created_at: new Date().toISOString()
-    })
-  }).catch(function () {});
-}
+function sendAnalyticsEvent(eventType, videoId, productId) {
+    if (!storeId || !supabaseUrl) return;
+
+    var payload = {
+      storeId: storeId,
+      eventType: eventType,
+      videoId: videoId || null,
+      productId: productId || null,
+      deviceType: window.innerWidth < 768 ? 'mobile' : 'desktop',
+      pagePath: window.location.pathname || '/'
+    };
+
+    var endpoint = supabaseUrl.replace(/\/rest\/v1.*/, '').replace(/\/+$/, '') + '/functions/v1/track-event';
+
+    try {
+      if (navigator.sendBeacon) {
+        var blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+        navigator.sendBeacon(endpoint, blob);
+      } else {
+        fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          keepalive: true
+        }).catch(function () {});
+      }
+    } catch (_) {}
+  }
 
   function buildVideoPlayer(video, storyId, onEnded) {
     var sourceType = String(video.source_type || video.sourceType || '').toLowerCase();
