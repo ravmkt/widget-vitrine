@@ -696,148 +696,139 @@ return (
           </div>
         </div>
       </div>
-      
-      <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
+
+{/* ── TABELA MODULAR DE COMENTÁRIOS (PADRÃO TOP VÍDEOS DASHBOARD) ── */}
+      <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50">
-                <th className="w-20 px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
+              <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#0f1220]/50 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+                <th className="w-48 px-6 py-4 rounded-l-2xl">
                   <button
                     type="button"
                     onClick={() => handleSort("autor")}
-                    className="flex items-center gap-1.5 transition-colors hover:text-slate-700"
+                    className="flex items-center gap-1.5 transition-colors hover:text-slate-800 dark:hover:text-white"
                   >
                     Autor
-
                     {sortColumn === "autor" && (
-                      <span>
-                        {sortDirection === "asc" ? "↑" : "↓"}
-                      </span>
+                      <span>{sortDirection === "asc" ? "↑" : "↓"}</span>
                     )}
                   </button>
                 </th>
 
-                <th className="w-40 px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                <th className="px-6 py-4">
                   Conteúdo / Vídeo
                 </th>
 
-                <th className="w-28 px-6 py-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">
+                <th className="w-36 px-6 py-4 text-center">
                   <button
                     type="button"
                     onClick={() => handleSort("status")}
-                    className="mx-auto flex items-center gap-1.5 transition-colors hover:text-slate-700"
+                    className="mx-auto flex items-center gap-1.5 transition-colors hover:text-slate-800 dark:hover:text-white"
                   >
                     Status
-
                     {sortColumn === "status" && (
-                      <span>
-                        {sortDirection === "asc" ? "↑" : "↓"}
-                      </span>
+                      <span>{sortDirection === "asc" ? "↑" : "↓"}</span>
                     )}
                   </button>
                 </th>
 
-                <th className="w-36 px-6 py-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">
+                <th className="w-32 px-6 py-4 text-center rounded-r-2xl">
                   Ações
                 </th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
               {sortedComments.map((row) => {
-                const video = videos.find(
-                  (item) => item.id === row.video_id,
-                );
-
-                const isMainStoreReply =
-                  row.is_store_reply === true;
-
-                const mainAuthorName = isMainStoreReply
-                  ? storeName || "Loja"
-                  : row.user_name;
-
-                const mainAuthorLogo = isMainStoreReply
-                  ? storeLogoUrl
-                  : undefined;
+                const video = videos.find((item) => item.id === row.video_id);
+                const isMainStoreReply = row.is_store_reply === true;
+                const mainAuthorName = isMainStoreReply ? storeName || "Loja" : row.user_name;
+                const mainAuthorLogo = isMainStoreReply ? storeLogoUrl : undefined;
+                const normalizedSt = normalizeStatus(row.status);
 
                 return (
                   <tr
                     key={row.id}
-                    className="transition-colors hover:bg-slate-50/50"
+                    className="transition-colors hover:bg-slate-50/60 dark:hover:bg-white/[0.02]"
                   >
-                    <td className="px-6 py-4">
+                    {/* Autor */}
+                    <td className="px-6 py-4 align-top">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full">
+                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/10 shrink-0 shadow-xs">
                           {mainAuthorLogo ? (
                             <img
                               src={mainAuthorLogo}
                               alt={mainAuthorName}
-                              className="h-9 w-9 rounded-full object-cover"
+                              className="h-full w-full object-cover"
                             />
                           ) : (
-                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-xs font-black text-[#0094EB]">
-                              {mainAuthorName
-                                ?.charAt(0)
-                                .toUpperCase() || "?"}
+                            <div 
+                              style={{ backgroundColor: '#ff7a29' }}
+                              className="flex h-full w-full items-center justify-center text-xs font-black text-white"
+                            >
+                              {mainAuthorName?.charAt(0).toUpperCase() || "?"}
                             </div>
                           )}
                         </div>
 
-                        <span className="text-sm font-bold text-slate-800">
-                          {mainAuthorName}
-                        </span>
+                        <div className="min-w-0">
+                          <span className="text-xs font-black text-slate-800 dark:text-[#e8ecf4] block truncate">
+                            {mainAuthorName}
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-400 dark:text-[#8a90a0]">
+                            Cliente
+                          </span>
+                        </div>
                       </div>
                     </td>
 
+                    {/* Conteúdo & Resposta da Loja */}
                     <td className="px-6 py-4">
-                      <p className="mb-1 text-sm text-slate-600">
+                      <p className="text-xs font-bold text-slate-700 dark:text-[#e8ecf4] leading-relaxed">
                         &quot;{row.text}&quot;
                       </p>
 
                       {row.reply_content && row.reply_status !== 'hidden' && (
-                        <div className="mt-3 ml-4 border-l-2 border-[#0094EB]/20 pl-3">
-                          <div className="rounded-xl bg-blue-50/50 p-3">
-                            <div className="mb-1 flex items-center gap-2">
-                              {storeLogoUrl ? (
-                                <img
-                                  src={storeLogoUrl}
-                                  alt={storeName || 'Loja'}
-                                  className="h-6 w-6 rounded-full border border-[#0094EB] object-cover"
-                                />
-                              ) : (
-                                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0094EB] text-xs font-black text-white">
-                                  {(storeName || 'L').charAt(0).toUpperCase()}
-                                </div>
-                              )}
+                        <div className="mt-3 rounded-2xl bg-slate-50 dark:bg-[#0f1220]/80 border border-slate-200/60 dark:border-white/5 p-3.5 space-y-1">
+                          <div className="flex items-center gap-2">
+                            {storeLogoUrl ? (
+                              <img
+                                src={storeLogoUrl}
+                                alt={storeName || 'Loja'}
+                                className="h-5 w-5 rounded-full object-cover border border-[#ff7a29]"
+                              />
+                            ) : (
+                              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#ff7a29] text-[9px] font-black text-white">
+                                {(storeName || 'L').charAt(0).toUpperCase()}
+                              </div>
+                            )}
 
-                              <span className="text-xs font-bold text-slate-700">
-                                {storeName || 'Loja'}
-                              </span>
+                            <span className="text-xs font-black text-slate-800 dark:text-white">
+                              {storeName || 'Loja'}
+                            </span>
 
-                              <span className="text-[9px] text-slate-400">
-                                Resposta da loja
-                              </span>
-                            </div>
-
-                            <p className="ml-8 text-sm text-slate-600">
-                              {row.reply_content}
-                            </p>
+                            <span className="text-[9px] font-black uppercase text-[#ff7a29] bg-[#ff7a29]/10 px-2 py-0.5 rounded-full border border-[#ff7a29]/20">
+                              Resposta Oficial
+                            </span>
                           </div>
+
+                          <p className="text-xs font-medium text-slate-600 dark:text-[#c0c5d4] pl-7">
+                            {row.reply_content}
+                          </p>
                         </div>
                       )}
 
                       {video && (
-                        <div className="mt-2 flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-[#0094EB]">
-                          VÍDEO:
-
+                        <div className="mt-2.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider">
+                          <span className="text-slate-400 dark:text-[#8a90a0]">VÍDEO:</span>
                           <button
                             type="button"
                             onClick={(event) => {
                               event.stopPropagation();
                               handleViewVideo(row);
                             }}
-                            className="cursor-pointer hover:underline"
+                            className="text-[#0094EB] dark:text-[#ff7a29] hover:underline cursor-pointer font-black truncate max-w-xs"
                           >
                             {video.title}
                           </button>
@@ -845,43 +836,43 @@ return (
                       )}
                     </td>
 
-                    <td className="px-6 py-4 text-center">
+                    {/* Status com Estilo de Tag Arredondada */}
+                    <td className="px-6 py-4 text-center align-middle">
                       <button
                         type="button"
-                        onClick={(event) =>
-                          openStatusDropdown(event, row.id)
-                        }
+                        onClick={(event) => openStatusDropdown(event, row.id)}
                         className={cn(
-                          "cursor-pointer rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider",
-                          getStatusColor(row.status),
+                          "cursor-pointer rounded-full border px-3.5 py-1 text-[10px] font-black uppercase tracking-wider transition-all",
+                          normalizedSt === "approved"
+                            ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700/40"
+                            : normalizedSt === "rejected"
+                            ? "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-700/40"
+                            : "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700/40"
                         )}
                       >
                         {getStatusLabel(row.status)}
                       </button>
                     </td>
 
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex justify-center gap-2">
+                    {/* Ações */}
+                    <td className="px-6 py-4 text-center align-middle">
+                      <div className="flex justify-center items-center gap-1.5">
                         <button
                           type="button"
-                          onClick={(event) =>
-                            handleReply(event, row)
-                          }
-                          className="rounded-lg p-2 text-[#0094EB] transition-colors hover:bg-blue-50"
-                          title="Responder"
+                          onClick={(event) => handleReply(event, row)}
+                          className="p-2 rounded-xl text-slate-400 hover:text-[#0094EB] dark:hover:text-[#ff7a29] hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
+                          title="Responder comentário"
                         >
-                          <MessageSquare size={18} />
+                          <MessageSquare size={16} />
                         </button>
 
                         <button
                           type="button"
-                          onClick={(event) =>
-                            handleDeleteClick(event, row)
-                          }
-                          className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-500"
-                          title="Excluir"
+                          onClick={(event) => handleDeleteClick(event, row)}
+                          className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all"
+                          title="Excluir comentário"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </td>
@@ -892,15 +883,19 @@ return (
           </table>
 
           {sortedComments.length === 0 && (
-            <div className="py-12 text-center">
-              <p className="text-sm font-medium text-slate-400">
+            <div className="py-16 text-center space-y-2">
+              <MessageSquare size={36} className="mx-auto text-slate-300 dark:text-slate-600" />
+              <p className="text-sm font-black text-slate-700 dark:text-slate-300">
                 Nenhum comentário encontrado.
+              </p>
+              <p className="text-xs text-slate-400 dark:text-[#8a90a0]">
+                Ajuste os filtros de busca ou aguarde novas interações dos clientes nos seus vídeos.
               </p>
             </div>
           )}
         </div>
       </div>
-
+      
       <CustomDialog
         isOpen={!!editingCommentId && !showStatusDropdown}
         type="form"
