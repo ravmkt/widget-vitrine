@@ -145,21 +145,22 @@ if (userStore) {
                   ? 'Expira em 2 dias.'
                   : `Você está no período de teste gratuito: restam ${days} dias.`;
 
-                // 2. Estilo da Barra (Idêntico no Claro e no Escuro)
+                // 2. Estilo da Barra Blindada contra o Dark Mode
                 const bannerStyle = isCritical
-                  ? 'bg-[#ef4444] text-white shadow-md' // 3. Crítico: Vermelho bem vivo
+                  ? '!bg-[#ef4444] shadow-md border-transparent' // 3. Crítico: Vermelho bem vivo
                   : isWarning
-                  ? 'bg-[#fed7aa] text-slate-900 border-b border-orange-300 shadow-sm' // 2. Atenção: Laranja suave / Alerta
-                  : 'bg-slate-100 text-slate-900 border-b border-slate-200 shadow-xs'; // 1. Normal: Cinza claro
+                  ? '!bg-[#fed7aa] border-b border-orange-300 shadow-sm' // 2. Atenção: Laranja suave / Alerta
+                  : '!bg-slate-100 border-b border-slate-200 shadow-xs'; // 1. Normal: Cinza claro
 
-                // 3. Estilo do Botão "Fazer Upgrade" (Idêntico no Claro e no Escuro)
+                // 3. Estilo do Botão "Fazer Upgrade" (Forçado e Imutável)
                 const buttonStyle = isCritical
-                  ? 'bg-white hover:bg-slate-100 text-[#ef4444] border border-white' // Botão Branco com texto Vermelho
+                  ? '!bg-white hover:!bg-slate-100 !text-[#ef4444] border !border-white' // Botão Branco com texto Vermelho
                   : isWarning
-                  ? 'bg-slate-900 hover:bg-black text-white border border-slate-900' // Botão Preto com texto Branco
-                  : 'bg-[#22c55e] hover:bg-[#16a34a] text-white border border-emerald-600'; // Botão Verde vibrante com texto Branco
+                  ? '!bg-slate-900 hover:!bg-black !text-white border !border-slate-900' // Botão Preto com texto Branco
+                  : '!bg-[#22c55e] hover:!bg-[#16a34a] !text-white border !border-emerald-600'; // Botão Verde vibrante com texto Branco
 
-                const iconTextColor = isCritical ? 'text-white' : 'text-slate-900';
+                // 4. Cor do Texto e Ícone Forçados
+                const textAndIconClass = isCritical ? '!text-white' : '!text-slate-900';
 
                 return (
                   <div
@@ -174,11 +175,11 @@ if (userStore) {
                           size={18}
                           className={cn(
                             'shrink-0',
-                            iconTextColor,
+                            textAndIconClass,
                             isCritical && 'animate-pulse'
                           )}
                         />
-                        <span className={cn('text-sm font-bold tracking-tight', iconTextColor)}>
+                        <span className={cn('text-sm font-bold tracking-tight', textAndIconClass)}>
                           {message}
                         </span>
                       </div>
@@ -192,15 +193,17 @@ if (userStore) {
                       >
                         <Sparkles
                           size={14}
-                          className={isCritical ? 'text-[#ef4444]' : 'text-white'}
+                          className={isCritical ? '!text-[#ef4444]' : '!text-white'}
                         />
-                        Fazer Upgrade
+                        <span className={isCritical ? '!text-[#ef4444]' : '!text-white'}>
+                          Fazer Upgrade
+                        </span>
                       </button>
                     </div>
                   </div>
                 );
               })()}
-                                                        
+                                                                      
               {subscriptionStatus === 'canceled' && (
                 <div className="bg-red-600 px-4 py-2.5 text-white shadow-sm">
                   <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
