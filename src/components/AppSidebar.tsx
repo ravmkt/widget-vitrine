@@ -235,12 +235,12 @@ export function AppSidebar() {
 
       <SidebarFooter className="p-4 border-t border-[#F1F5F9] dark:border-slate-800 overflow-hidden shrink-0">
         <div className="relative group mb-3">
-          <Link
+<Link
             to="/billing"
             className={cn(
               "flex items-center gap-3 min-w-0 p-1.5 -m-1.5 rounded-xl transition-all duration-200 cursor-pointer",
               location.pathname === "/billing"
-                ? "bg-[#EAF6FF] dark:bg-[#0094EB]/20"
+                ? "bg-[#EAF6FF] dark:bg-[#fd8539]/20"
                 : "hover:bg-[#F8FAFC] dark:hover:bg-slate-900"
             )}
           >
@@ -257,10 +257,10 @@ export function AppSidebar() {
                 isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
               )}
             >
-              <span className="text-xs font-bold text-[#0F172A] dark:text-white truncate group-hover:text-[#0094EB] transition-colors">
+              <span className="text-xs font-bold text-[#0F172A] dark:text-white truncate group-hover:text-[#0094EB] dark:group-hover:text-[#fd8539] transition-colors">
                 {storeName || 'Minha Loja'}
               </span>
-              <span className="text-[10px] font-bold text-[#0094EB] uppercase tracking-wide">
+              <span className="text-[10px] font-black text-[#0094EB] dark:text-[#fd8539] uppercase tracking-wide">
                 {planName}
               </span>
             </div>
@@ -269,12 +269,12 @@ export function AppSidebar() {
           {/* Tooltip flutuante no modo recolhido */}
           {!isExpanded && (
             <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-4">
-              <div className="bg-[#0094EB] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
+              <div className="bg-[#0094EB] dark:bg-[#fd8539] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
                 Minha Assinatura / Financeiro
               </div>
             </div>
           )}
-        </div>
+                  </div>
 
         <div className="relative group">
           <button
