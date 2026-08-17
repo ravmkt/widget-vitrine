@@ -551,7 +551,7 @@ return (
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
                       onChange={handleLogoChange}
-                      className="flex-1 h-11 p-1 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-600 dark:text-[#c0c5d4] flex items-center file:inline-flex file:items-center file:justify-center file:h-9 file:px-4 file:mr-3 file:rounded-lg file:border-0 file:bg-[#ff7a29] file:text-white file:font-black file:text-xs file:cursor-pointer hover:file:bg-[#e66c22] transition-all cursor-pointer"
+                      className="flex-1 h-11 p-1 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-600 dark:text-[#c0c5d4] flex items-center file:inline-flex file:items-center file:justify-center file:h-9 file:px-4 file:mr-3 file:rounded-lg file:border-0 file:bg-[#0094EB] dark:file:bg-[#ff7a29] file:text-white file:font-black file:text-xs file:cursor-pointer hover:file:bg-[#0081cc] dark:hover:file:bg-[#e66c22] transition-all cursor-pointer"
                     />
                     {logoPreview && (
                       <Button 
@@ -572,7 +572,7 @@ return (
                 </div>
               </div>
             </div>
-            
+                        
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
                 E-mail de Contato
