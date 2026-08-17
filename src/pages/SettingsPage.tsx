@@ -529,7 +529,7 @@ return (
               </p>
             </div>
 
-            <div className="space-y-2">
+<div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
                 Logo da Loja
               </Label>
@@ -546,15 +546,22 @@ return (
                   )}
                 </div>
                 <div className="flex-1 space-y-1.5">
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     <Input
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
                       onChange={handleLogoChange}
-                      className="flex-1 text-xs text-slate-500 dark:text-[#c0c5d4] file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-[#ff7a29] file:text-white file:font-black file:text-[11px] file:cursor-pointer hover:file:bg-[#e66c22] transition-all"
+                      className="flex-1 h-11 p-1 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-600 dark:text-[#c0c5d4] flex items-center file:inline-flex file:items-center file:justify-center file:h-9 file:px-4 file:mr-3 file:rounded-lg file:border-0 file:bg-[#ff7a29] file:text-white file:font-black file:text-xs file:cursor-pointer hover:file:bg-[#e66c22] transition-all cursor-pointer"
                     />
                     {logoPreview && (
-                      <Button variant="outline" size="icon" onClick={handleRemoveLogo} className="rounded-xl border-slate-200 dark:border-white/10">
+                      <Button 
+                        type="button"
+                        variant="outline" 
+                        size="icon" 
+                        onClick={handleRemoveLogo} 
+                        className="h-11 w-11 rounded-xl border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0f1220] hover:bg-rose-50 dark:hover:bg-rose-950/40 shrink-0"
+                        title="Remover logo"
+                      >
                         <X size={16} className="text-rose-500" />
                       </Button>
                     )}
@@ -565,7 +572,7 @@ return (
                 </div>
               </div>
             </div>
-
+            
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
                 E-mail de Contato
