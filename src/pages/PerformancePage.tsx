@@ -108,7 +108,7 @@ return (
             🧠 Insights
           </TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="overview">
           <OverviewTab timeRange={timeRange} customFrom={customRange.from?.toISOString()} customTo={customRange.to?.toISOString()} />
         </TabsContent>
@@ -126,7 +126,7 @@ return (
         </TabsContent>
       </Tabs>
 
-      {/* ── Modal calendário ── */}
+{/* ── Modal calendário ── */}
       <CustomDialog
         isOpen={isCalendarOpen}
         type="form"
@@ -136,16 +136,19 @@ return (
         onConfirm={() => setIsCalendarOpen(false)}
         confirmText="Aplicar"
       >
-        <DayPicker
-          mode="range"
-          selected={customRange}
-          onSelect={(r) => r && setCustomRange({ from: r.from, to: r.to })}
-          locale={ptBR}
-          modifiersStyles={{
-            selected: { backgroundColor: '#0094EB', color: 'white' },
-          }}
-        />
+        <div className="flex flex-col items-center">
+          <DayPicker
+            mode="range"
+            selected={customRange}
+            onSelect={(r) => r && setCustomRange({ from: r.from, to: r.to })}
+            locale={ptBR}
+            className="border-none"
+            modifiersStyles={{
+              selected: { backgroundColor: '#ff7a29', color: 'white' },
+            }}
+          />
+        </div>
       </CustomDialog>
-    </div>
+          </div>
   )
 }
