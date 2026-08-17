@@ -157,11 +157,13 @@ function ensureModalStylesInLightDOM(appearance) {
   var likedVideos = {};
   var videoLikeCounts = {};
   var userCommentedVideos = {};
-  var storeWhatsappNumber = '';
+var storeWhatsappNumber = '';
   var storeWhatsappMessage = '';
+  var storeLogoUrl = '';
+  var storeName = '';
 
   var currentStories = [];
-  var currentStoryIndex = 0;
+    var currentStoryIndex = 0;
   var currentVideoIndex = 0;
 var isUserMuted = true; // Controla a persistência da preferência de som durante a navegação
 
