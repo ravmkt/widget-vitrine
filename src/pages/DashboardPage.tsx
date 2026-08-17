@@ -677,28 +677,39 @@ const getBarColor = (pct: number) => {
           </div>
         </div>
 
-{/* Card Destaque: Indique e Ganhe (Off-White / Azul Claro com Botão Laranja) */}
+{/* Card Destaque: Indique e Ganhe (Clean com Ícone Cifrão e Linha Azul) */}
         <div className="lg:col-span-5 !bg-[#f0f6ff] dark:!bg-[#f8fafc] text-slate-900 p-6 sm:p-7 rounded-[2.5rem] shadow-xl flex flex-col justify-between border border-blue-200/80 dark:border-slate-300 hover:-translate-y-1 transition-all duration-300">
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <span 
-                style={{ backgroundColor: '#0094EB', color: '#ffffff' }}
-                className="text-[10px] font-black uppercase tracking-wider !bg-[#0094EB] !text-white px-3.5 py-1 rounded-full shadow-sm"
-              >
-                Programa de Parceiros
-              </span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div 
+                  style={{ backgroundColor: '#0094EB' }}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-white shadow-sm shadow-blue-500/30"
+                >
+                  <DollarSign size={18} className="!text-white stroke-[2.5]" />
+                </div>
+                <h4 className="text-lg font-black !text-[#0f172a] tracking-tight">
+                  Indique e Ganhe
+                </h4>
+              </div>
               <Share2 size={16} className="!text-[#0f172a]" />
             </div>
-            <h4 className="text-xl font-black !text-[#0f172a] tracking-tight">
-              Indique e Ganhe
-            </h4>
-            <p className="text-xs !text-[#475569] mt-1.5 font-semibold leading-relaxed">
+
+            {/* Linha Divisória Azul #0094EB no padrão do card Atividade Recente */}
+            <div 
+              style={{ borderColor: 'rgba(0, 148, 235, 0.35)' }}
+              className="border-b my-3.5"
+            />
+
+            <p className="text-xs !text-[#475569] font-medium leading-relaxed">
               Receba comissões e desbloqueie meses gratuitos ao indicar o Vidlytics para outros lojistas.
             </p>
           </div>
+
           <button
             type="button"
             onClick={() => alert('Link de indicação copiado para a área de transferência!')}
+            style={{ backgroundColor: '#ff7a29' }}
             className="mt-5 w-full !bg-[#ff7a29] hover:!bg-[#e66c22] !text-white font-black py-3.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md hover:shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 cursor-pointer"
           >
             <Share2 size={14} className="!text-white shrink-0" />
