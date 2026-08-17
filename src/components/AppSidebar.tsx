@@ -191,24 +191,21 @@ export function AppSidebar() {
                     <SidebarMenuButton 
                       asChild 
                       isActive={isItemActive}
-                      style={isItemActive ? { backgroundColor: '#ff7a29', color: '#ffffff' } : undefined}
                       className={cn(
                         "h-11 rounded-xl px-3.5 transition-all duration-200 font-black overflow-hidden",
                         isItemActive 
-                          ? "!bg-[#ff7a29] !text-white shadow-md shadow-orange-500/30 hover:!bg-[#ff7a29]" 
-                          : "text-slate-400 hover:bg-slate-800/60 hover:text-white"
+                          ? "!bg-[#0094EB] dark:!bg-[#ff7a29] !text-white shadow-md shadow-blue-500/20 dark:shadow-orange-500/30 hover:!bg-[#0094EB] dark:hover:!bg-[#ff7a29]" 
+                          : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white"
                       )}
                     >
-                      <Link to={item.url} className="flex items-center gap-3 w-full" style={isItemActive ? { color: '#ffffff' } : undefined}>
+                      <Link to={item.url} className="flex items-center gap-3 w-full">
                         <item.icon 
-                          style={isItemActive ? { color: '#ffffff', stroke: '#ffffff' } : undefined}
                           className={cn(
                             "h-4.5 w-4.5 shrink-0 transition-colors",
-                            isItemActive ? "!text-white stroke-[2.5]" : "text-slate-400"
+                            isItemActive ? "!text-white stroke-[2.5]" : "text-slate-400 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white"
                           )} 
                         />
                         <span
-                          style={isItemActive ? { color: '#ffffff' } : undefined}
                           className={cn(
                             "text-sm whitespace-nowrap transition-all duration-300 font-black",
                             isItemActive ? "!text-white" : "",
@@ -220,10 +217,10 @@ export function AppSidebar() {
                       </Link>
                     </SidebarMenuButton>
 
-                    {/* Tooltip flutuante no modo recolhido */}
+                    {/* Tooltip flutuante no modo recolhido (Azul no Light / Laranja no Dark) */}
                     {!isExpanded && (
                       <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-5">
-                        <div className="bg-[#ff7a29] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-orange-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
+                        <div className="bg-[#0094EB] dark:bg-[#ff7a29] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/40 dark:shadow-orange-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
                           {item.title}
                         </div>
                       </div>
@@ -231,7 +228,7 @@ export function AppSidebar() {
                   </SidebarMenuItem>
                 );
               })}
-                                        </SidebarMenu>
+                                                      </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
