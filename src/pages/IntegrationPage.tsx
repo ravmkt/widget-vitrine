@@ -344,7 +344,7 @@ return (
               )}
             </button>
           </div>
-          
+
           <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-white/10 bg-[#0f1220] shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/5 bg-[#14182b] px-5 py-3">
               <div className="flex items-center gap-2">
@@ -361,16 +361,13 @@ return (
         </div>
       </div>
 
-{/* ── MÓDULOS INFERIORES: ONDE APARECEM & PRODUTOS ── */}
+{/* ── MÓDULOS INFERIORES: ONDE APARECEM & PRODUTOS (DUAL-THEME) ── */}
       <div className="grid gap-6 lg:grid-cols-2 items-stretch">
         {/* Card: Onde os vídeos aparecem? */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 shadow-sm flex flex-col justify-between space-y-6">
           <div>
             <div className="flex items-start gap-4 border-b border-slate-100 dark:border-white/5 pb-4">
-              <div 
-                style={{ backgroundColor: '#ff7a29' }}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white shadow-[0_0_15px_rgba(255,122,41,0.4)]"
-              >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)]">
                 <MapPin size={20} className="!text-white stroke-[2.5]" />
               </div>
 
@@ -436,10 +433,7 @@ return (
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 shadow-sm flex flex-col justify-between space-y-6">
           <div>
             <div className="flex items-start gap-4 border-b border-slate-100 dark:border-white/5 pb-4">
-              <div 
-                style={{ backgroundColor: '#ff7a29' }}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white shadow-[0_0_15px_rgba(255,122,41,0.4)]"
-              >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)]">
                 <ShoppingBag size={20} className="!text-white stroke-[2.5]" />
               </div>
 
@@ -480,7 +474,7 @@ return (
         </div>
       </div>
 
-      {/* ── SEÇÃO: COMO INSTALAR NA SUA LOJA ── */}
+      {/* ── SEÇÃO: COMO INSTALAR NA SUA LOJA (DUAL-THEME) ── */}
       <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
         <div className="border-b border-slate-100 dark:border-white/5 pb-4">
           <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
@@ -495,10 +489,7 @@ return (
           {/* Passo 1 */}
           <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
             <div>
-              <div 
-                style={{ backgroundColor: '#ff7a29' }}
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-white font-black text-xs shadow-xs shadow-orange-500/30"
-              >
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
                 1
               </div>
 
@@ -515,10 +506,7 @@ return (
           {/* Passo 2 */}
           <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
             <div>
-              <div 
-                style={{ backgroundColor: '#ff7a29' }}
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-white font-black text-xs shadow-xs shadow-orange-500/30"
-              >
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
                 2
               </div>
 
@@ -535,10 +523,7 @@ return (
           {/* Passo 3 */}
           <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
             <div>
-              <div 
-                style={{ backgroundColor: '#ff7a29' }}
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-white font-black text-xs shadow-xs shadow-orange-500/30"
-              >
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
                 3
               </div>
 
@@ -552,7 +537,7 @@ return (
             </div>
           </div>
         </div>
-
+        
         <div className="flex flex-col gap-3 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-5 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
