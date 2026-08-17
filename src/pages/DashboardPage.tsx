@@ -367,7 +367,10 @@ const [loading, setLoading] = useState(true);
       </div>
 
 {/* ── 3. DESEMPENHO DOS VÍDEOS (SPLIT 50/50: GRID 2x2 À ESQUERDA + TOP VÍDEOS À DIREITA) ── */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 sm:p-8 shadow-sm space-y-6">
+      <div className={cn(
+        "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 sm:p-8 shadow-sm space-y-6 transition-opacity duration-200",
+        metricsLoading && "opacity-60 pointer-events-none"
+      )}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-5">
           <div>
             <h2 className="text-lg font-black text-slate-800 dark:text-white">Desempenho dos Vídeos</h2>
