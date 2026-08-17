@@ -572,7 +572,7 @@ return (
                 </div>
               </div>
             </div>
-                        
+
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
                 E-mail de Contato
@@ -590,7 +590,7 @@ return (
           </div>
         </div>
 
-        {/* ── 2. MÓDULOS ── */}
+{/* ── 2. MÓDULOS (DUAL-THEME: AZUL NO LIGHT / LARANJA NO DARK) ── */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-5">
           <div className="border-b border-slate-100 dark:border-white/5 pb-4">
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
@@ -616,7 +616,7 @@ return (
                 onCheckedChange={c =>
                   setSettings(prev => ({ ...prev, widget_enabled: c }))
                 }
-                className="data-[state=checked]:!bg-[#ff7a29]"
+                className="data-[state=checked]:bg-[#0094EB] dark:data-[state=checked]:!bg-[#ff7a29]"
               />
             </div>
 
@@ -634,7 +634,7 @@ return (
                 onCheckedChange={c =>
                   setSettings(prev => ({ ...prev, whatsapp_enabled: c }))
                 }
-                className="data-[state=checked]:!bg-[#ff7a29]"
+                className="data-[state=checked]:bg-[#0094EB] dark:data-[state=checked]:!bg-[#ff7a29]"
               />
             </div>
 
@@ -652,71 +652,12 @@ return (
                 onCheckedChange={c =>
                   setSettings(prev => ({ ...prev, stories_enabled: c }))
                 }
-                className="data-[state=checked]:!bg-[#ff7a29]"
+                className="data-[state=checked]:bg-[#0094EB] dark:data-[state=checked]:!bg-[#ff7a29]"
               />
             </div>
           </div>
         </div>
-
-        {/* 2. Módulos */}
-        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900">
-          <CardHeader className="p-6">
-            <CardTitle className="text-xl font-black text-slate-800 dark:text-white">
-              2. Módulos
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 space-y-6">
-            <div className="flex items-start gap-3">
-              <Switch
-                checked={settings?.widget_enabled ?? true}
-                onCheckedChange={c =>
-                  setSettings(prev => ({ ...prev, widget_enabled: c }))
-                }
-              />
-              <div className="pt-0.5">
-                <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                  Ativar Vitrine de Vídeos
-                </Label>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Controla a renderização pública do carrossel/grade na loja.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Switch
-                checked={settings?.whatsapp_enabled ?? true}
-                onCheckedChange={c =>
-                  setSettings(prev => ({ ...prev, whatsapp_enabled: c }))
-                }
-              />
-              <div className="pt-0.5">
-                <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                  Ativar WhatsApp
-                </Label>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Exibe botão de WhatsApp nos vídeos.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Switch
-                checked={settings?.stories_enabled ?? true}
-                onCheckedChange={c =>
-                  setSettings(prev => ({ ...prev, stories_enabled: c }))
-                }
-              />
-              <div className="pt-0.5">
-                <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                  Ativar Analytics
-                </Label>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Coleta métricas de visualização e engajamento.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
+        
 {/* ── 3. INTEGRAÇÃO WHATSAPP ── */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
           <div className="border-b border-slate-100 dark:border-white/5 pb-4">
