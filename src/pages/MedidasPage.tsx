@@ -320,13 +320,10 @@ return (
                 {/* Cabeçalho do Cartão: Título e Ações */}
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-5">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div 
-                      style={{ backgroundColor: '#ff7a29' }}
-                      className="w-10 h-10 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0"
-                    >
+<div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0">
                       <Ruler size={18} className="!text-white stroke-[2.5]" />
                     </div>
-                    <div className="min-w-0">
+                                        <div className="min-w-0">
                       <h3 className="font-black text-lg text-slate-900 dark:text-white uppercase tracking-tight truncate">
                         {model.name}
                       </h3>
