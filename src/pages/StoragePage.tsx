@@ -1140,14 +1140,11 @@ if (Array.isArray(realVideos)) {
           <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm space-y-4">
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
               <div className="flex items-center gap-4">
-                {/* Ícone Padronizado: Laranja com Ícone Branco */}
-                <div
-                  style={{ backgroundColor: '#ff7a29' }}
-                  className="flex h-12 w-12 items-center justify-center rounded-2xl shadow-[0_0_15px_rgba(255,122,41,0.45)] transition-transform hover:scale-105 shrink-0"
-                >
-                  <HardDrive size={22} className="!text-white stroke-[2.5]" style={{ color: '#ffffff', stroke: '#ffffff' }} />
+{/* Ícone Padronizado Dual-Theme: Azul no Light / Laranja no Dark */}
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] transition-transform hover:scale-105 shrink-0">
+                  <HardDrive size={22} className="!text-white stroke-[2.5]" />
                 </div>
-                <div>
+                                <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">
                       {planName}
