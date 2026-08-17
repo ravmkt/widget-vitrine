@@ -4220,12 +4220,7 @@ function renderGridWidget(container, stories, appearance) {
     card.addEventListener('click', function (e) {
       e.preventDefault();
       openStoryModal(item.storyIndex, item.videoIndex);
-      trackMetric({
-        event_type: 'play',
-        story_id: story.id,
-        video_id: video.id,
-        page_url: window.location.href
-      });
+      sendAnalyticsEvent('video_view', item.video ? item.video.id : null, null);
     });
 
     var borderBoxShadow = hasBorder ? ('inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor) : '';
