@@ -250,16 +250,13 @@ return (
           </div>
         </div>
       </div>
-      
+
 <div className="space-y-6">
-        {/* ── PASSO 1: SCRIPT PRINCIPAL ── */}
+        {/* ── PASSO 1: SCRIPT PRINCIPAL (DUAL-THEME) ── */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex items-start gap-4">
-              <div 
-                style={{ backgroundColor: '#ff7a29' }}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-white font-black text-sm shadow-[0_0_15px_rgba(255,122,41,0.4)]"
-              >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-sm shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)]">
                 1
               </div>
               <div>
@@ -276,8 +273,7 @@ return (
               type="button"
               onClick={handleCopyScript}
               disabled={!canInstall}
-              style={{ backgroundColor: '#ff7a29' }}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl !bg-[#ff7a29] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/30 hover:opacity-95 hover:scale-[1.02] transition-all disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0"
             >
               {copied ? (
                 <>
@@ -308,14 +304,11 @@ return (
           </div>
         </div>
 
-        {/* ── PASSO 2: SCRIPT DE RASTREAMENTO DE VENDAS ── */}
+        {/* ── PASSO 2: SCRIPT DE RASTREAMENTO DE VENDAS (DUAL-THEME) ── */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex items-start gap-4">
-              <div 
-                style={{ backgroundColor: '#ff7a29' }}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-white font-black text-sm shadow-[0_0_15px_rgba(255,122,41,0.4)]"
-              >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-sm shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)]">
                 2
               </div>
               <div>
@@ -336,8 +329,7 @@ return (
             <button
               type="button"
               onClick={handleCopyTrackingScript}
-              style={{ backgroundColor: '#ff7a29' }}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl !bg-[#ff7a29] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/30 hover:opacity-95 hover:scale-[1.02] transition-all cursor-pointer shrink-0"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all cursor-pointer shrink-0"
             >
               {copiedTracking ? (
                 <>
@@ -352,7 +344,7 @@ return (
               )}
             </button>
           </div>
-
+          
           <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-white/10 bg-[#0f1220] shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/5 bg-[#14182b] px-5 py-3">
               <div className="flex items-center gap-2">
