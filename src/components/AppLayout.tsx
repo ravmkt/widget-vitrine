@@ -119,45 +119,42 @@ export function AppLayout({ children }: AppLayoutProps) {
           {/* Banner Global de Trial / Status (exceto na página de billing e plans para evitar duplicidade visual) */}
           {location.pathname !== '/billing' && location.pathname !== '/plans' && (
             <>
-{subscriptionStatus === 'trialing' && (
-                <div className={cn(
-                  "px-4 py-2.5 text-white shadow-sm transition-colors duration-300",
-                  (trialDaysRemaining ?? 7) <= 1
-                    ? "bg-[#ef4444]"
-                    : (trialDaysRemaining ?? 7) === 2
-                    ? "bg-[#ff7a29]"
-                    : "bg-[#0094EB]"
-                )}>
-                  <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
-                    <div className="flex items-center gap-2">
-                      <Clock size={16} className="shrink-0 animate-pulse text-white/90" />
-                      <span>
-                        {(trialDaysRemaining ?? 7) <= 1
-                          ? `Expira ${(trialDaysRemaining ?? 0) === 1 ? 'em 1 dia' : 'hoje'}`
-                          : (trialDaysRemaining ?? 7) === 2
-                          ? 'Expira em 2 dias'
-                          : `Você está no período de teste gratuito: restam ${trialDaysRemaining} dias.`}
-                      </span>
+{subscriptionStatus === 'trialing' && (() => {
+                const days = trialDaysRemaining ?? 7;
+                const isRed = days <= 1;
+                const isOrange = days === 2;
+                const bannerBg = isRed ? '#ef4444' : isOrange ? '#ff7a29' : '#0094EB';
+                const textBtnColor = isRed ? '#ef4444' : isOrange ? '#ff7a29' : '#0094EB';
+                const message = isRed
+                  ? `Expira ${days === 1 ? 'em 1 dia' : 'hoje'}`
+                  : isOrange
+                  ? 'Expira em 2 dias'
+                  : `Você está no período de teste gratuito: restam ${days} dias.`;
+
+                return (
+                  <div 
+                    style={{ backgroundColor: bannerBg }}
+                    className="px-4 py-2.5 text-white shadow-md transition-colors duration-300"
+                  >
+                    <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
+                      <div className="flex items-center gap-2 text-white">
+                        <Clock size={16} className="shrink-0 animate-pulse text-white" />
+                        <span className="text-white font-bold">{message}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => navigate('/plans')}
+                        style={{ backgroundColor: '#ffffff', color: textBtnColor }}
+                        className="inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-black shadow-sm transition hover:bg-slate-50"
+                      >
+                        <Sparkles size={13} style={{ color: textBtnColor }} />
+                        Fazer Upgrade
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => navigate('/plans')}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-1.5 text-xs font-black shadow-sm transition hover:bg-slate-50",
-                        (trialDaysRemaining ?? 7) <= 1
-                          ? "text-[#ef4444]"
-                          : (trialDaysRemaining ?? 7) === 2
-                          ? "text-[#ff7a29]"
-                          : "text-[#0094EB]"
-                      )}
-                    >
-                      <Sparkles size={13} />
-                      Fazer Upgrade
-                    </button>
                   </div>
-                </div>
-              )}
-                            
+                );
+              })()}
+                                          
               {subscriptionStatus === 'canceled' && (
                 <div className="bg-red-600 px-4 py-2.5 text-white shadow-sm">
                   <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
