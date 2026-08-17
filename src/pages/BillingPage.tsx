@@ -280,78 +280,84 @@ export function BillingPage() {
         </div>
       )}
 
-      {/* Cabeçalho */}
-      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+{/* ── CABEÇALHO DA PÁGINA ── */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white">Minha Assinatura & Financeiro</h1>
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-            Gerencie seu plano atual, acompanhe o consumo de recursos e gerencie faturas.
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            Minha Assinatura & Financeiro
+          </h1>
+          <p className="text-sm font-medium text-slate-500 dark:text-[#c0c5d4] mt-1">
+            Gerencie seu plano atual, acompanhe o consumo de recursos e visualize seu histórico de faturas.
           </p>
         </div>
         <button
           type="button"
           onClick={() => navigate('/plans')}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0094EB] px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-[#0E4787]"
+          style={{ backgroundColor: '#ff7a29' }}
+          className="inline-flex items-center justify-center gap-2 rounded-2xl !bg-[#ff7a29] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/30 hover:opacity-95 hover:scale-[1.02] transition-all cursor-pointer shrink-0"
         >
-          <Sparkles size={16} />
-          Alterar / Fazer Upgrade de Plano
+          <Sparkles size={16} className="!text-white stroke-[2.5]" />
+          Alterar / Fazer Upgrade
         </button>
       </div>
 
-      {/* Card do Plano Ativo & Consumo de Recursos */}
-      <div className="grid gap-6 md:grid-cols-3">
-        {/* Detalhes do Plano */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 md:col-span-1 flex flex-col justify-between">
+      {/* ── MÓDULOS SUPERIORES: PLANO ATUAL & CONSUMO DE RECURSOS ── */}
+      <div className="grid gap-6 md:grid-cols-3 items-stretch">
+        {/* Card: Detalhes do Plano */}
+        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm md:col-span-1 flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between">
-              <span className="rounded-full bg-blue-50 px-3 py-1 text-[10px] font-black uppercase text-[#0094EB] dark:bg-blue-950/40">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-4">
+              <span className="rounded-full bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#0094EB] dark:text-[#ff7a29] border border-blue-100 dark:border-[#ff7a29]/20">
                 Plano Atual
               </span>
 
-              {/* Badge Dinâmico de Status */}
+              {/* Badge de Status */}
               {subscriptionStatus === 'active' && (
-                <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-600 dark:bg-emerald-950/40">
-                  <CheckCircle2 size={14} /> Ativo
+                <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-700/40 px-2.5 py-0.5 text-xs font-black text-emerald-700 dark:text-emerald-400">
+                  <CheckCircle2 size={13} /> Ativo
                 </span>
               )}
               {subscriptionStatus === 'canceled' && (
-                <span className="flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-bold text-red-600 dark:bg-red-950/40">
-                  <XCircle size={14} /> Cancelada
+                <span className="flex items-center gap-1.5 rounded-full bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-700/40 px-2.5 py-0.5 text-xs font-black text-rose-700 dark:text-rose-400">
+                  <XCircle size={13} /> Cancelada
                 </span>
               )}
               {subscriptionStatus === 'past_due' && (
-                <span className="flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-600 dark:bg-amber-950/40">
-                  <AlertTriangle size={14} /> Pendente
+                <span className="flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-700/40 px-2.5 py-0.5 text-xs font-black text-amber-700 dark:text-amber-300">
+                  <AlertTriangle size={13} /> Pendente
                 </span>
               )}
               {subscriptionStatus === 'trialing' && (
-                <span className="flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-[#0094EB] dark:bg-blue-950/40">
-                  <Clock size={14} /> Em Teste
+                <span className="flex items-center gap-1.5 rounded-full bg-blue-50 dark:bg-[#ff7a29]/15 border border-blue-100 dark:border-[#ff7a29]/25 px-2.5 py-0.5 text-xs font-black text-[#0094EB] dark:text-[#ff7a29]">
+                  <Clock size={13} /> Em Teste
                 </span>
               )}
             </div>
 
-            <h2 className="mt-4 text-2xl font-black text-slate-900 dark:text-white">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
               {plan?.name ? `Plano ${plan.name}` : 'Plano Iniciante'}
             </h2>
-            <p className="mt-1 text-3xl font-black text-[#0094EB]">
-              R$ {plan?.price_cents !== undefined ? (plan.price_cents / 100).toFixed(2).replace('.', ',') : '0,00'}
-              <span className="text-xs font-bold text-slate-400">/mês</span>
-            </p>
-            <p className="mt-3 text-xs font-medium text-slate-500">
+            <div className="mt-2 flex items-baseline gap-1">
+              <span className="text-3xl font-black text-[#0094EB] dark:text-[#ff7a29] tracking-tight">
+                R$ {plan?.price_cents !== undefined ? (plan.price_cents / 100).toFixed(2).replace('.', ',') : '0,00'}
+              </span>
+              <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">/mês</span>
+            </div>
+
+            <p className="mt-3 text-xs font-medium text-slate-500 dark:text-[#c0c5d4] leading-relaxed">
               {subscriptionStatus === 'canceled' ? (
-                <span className="text-red-500 font-bold">Assinatura desativada</span>
+                <span className="text-rose-500 font-black">Assinatura desativada</span>
               ) : subscriptionStatus === 'trialing' ? (
                 <>
                   Período de teste até:{' '}
-                  <strong className="text-slate-700 dark:text-slate-300">
+                  <strong className="text-slate-800 dark:text-white font-bold">
                     {trialEndsAt ? new Date(trialEndsAt).toLocaleDateString('pt-BR') : '14 dias'}
                   </strong>
                 </>
               ) : (
                 <>
-                  Renovação em:{' '}
-                  <strong className="text-slate-700 dark:text-slate-300">
+                  Próxima renovação em:{' '}
+                  <strong className="text-slate-800 dark:text-white font-bold">
                     {subscription?.current_period_end
                       ? new Date(subscription.current_period_end).toLocaleDateString('pt-BR')
                       : 'Em 30 dias'}
@@ -361,58 +367,69 @@ export function BillingPage() {
             </p>
           </div>
 
-          <div className="mt-6 border-t border-slate-100 pt-4 dark:border-slate-800">
+          <div className="mt-6 border-t border-slate-100 dark:border-white/5 pt-4">
             <button
+              type="button"
               onClick={() => navigate('/plans')}
-              className="flex w-full items-center justify-between text-xs font-bold text-[#0094EB] hover:underline"
+              className="flex w-full items-center justify-between text-xs font-black text-[#0094EB] dark:text-[#ff7a29] hover:underline cursor-pointer"
             >
-              Ver comparativo de planos <ChevronRight size={14} />
+              <span>Ver comparativo de planos</span>
+              <ChevronRight size={15} />
             </button>
           </div>
         </div>
 
-        {/* Consumo de Cotas / Limites com Destaque em Armazenamento */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 md:col-span-2 space-y-5">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black text-slate-900 dark:text-white">Consumo de Recursos</h3>
-            <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full">
+        {/* Card: Consumo de Recursos */}
+        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm md:col-span-2 flex flex-col justify-between space-y-5">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
+            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
+              Consumo de Recursos
+            </h3>
+            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-700/40 px-3 py-0.5 rounded-full">
               {formatSize(Math.max(0, storageLimitBytes - storageUsedBytes))} livres
             </span>
           </div>
 
-          {/* Card Destacado de Armazenamento */}
-          <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50/50 to-white p-5 dark:border-slate-800 dark:from-slate-900 dark:to-slate-950">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#0094EB] text-white shadow-md shadow-blue-500/20">
-                  <HardDrive size={18} />
+          {/* Destaque de Armazenamento com Barra Shimmer */}
+          <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div 
+                  style={{ backgroundColor: '#ff7a29' }}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-[0_0_12px_rgba(255,122,41,0.35)] shrink-0"
+                >
+                  <HardDrive size={18} className="!text-white stroke-[2.5]" />
                 </div>
                 <div>
-                  <span className="text-xs font-bold text-slate-900 dark:text-white block">Armazenamento em Nuvem</span>
-                  <span className="text-[10px] font-semibold text-slate-400">Vídeos, mídias e assets</span>
+                  <span className="text-xs font-black text-slate-900 dark:text-white block">
+                    Armazenamento em Nuvem
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-[#8a90a0]">
+                    Vídeos, mídias e assets
+                  </span>
                 </div>
               </div>
+
               <div className="text-right">
-                <span className="text-lg font-black text-slate-900 dark:text-white block">
+                <span className="text-base font-black text-slate-900 dark:text-white block">
                   {formatSize(storageUsedBytes)}
-                  <span className="text-xs font-bold text-slate-400"> / {formatSize(storageLimitBytes)}</span>
+                  <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]"> / {formatSize(storageLimitBytes)}</span>
                 </span>
-                <span className="text-[10px] font-bold text-[#0094EB]">
+                <span className={cn(
+                  "text-[11px] font-black",
+                  storagePct >= 90 ? "text-rose-500" : storagePct >= 70 ? "text-[#ff7a29]" : "text-[#0094EB] dark:text-[#ff7a29]"
+                )}>
                   {storagePct}% utilizado
                 </span>
               </div>
             </div>
 
-            {/* Barra de Progresso Encorpada */}
-            <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100 p-0.5 dark:bg-slate-800">
+            {/* Barra de Progresso no padrão do dashboard */}
+            <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-[#1a1f35] p-0.5 border border-transparent dark:border-white/5">
               <div
                 className={cn(
-                  "h-full rounded-full transition-all duration-700 shadow-sm",
-                  storagePct > 90 
-                    ? "bg-red-500" 
-                    : storagePct > 70 
-                    ? "bg-amber-500" 
-                    : "bg-[#0094EB]"
+                  "h-full rounded-full transition-all duration-700 animate-shimmer",
+                  storagePct >= 90 ? "!bg-[#ef4444]" : storagePct >= 70 ? "!bg-[#ff7a29]" : "!bg-[#22c55e]"
                 )}
                 style={{ width: `${Math.max(1, storagePct)}%` }}
               />
@@ -421,9 +438,9 @@ export function BillingPage() {
 
           {/* Cards de Métricas Secundárias */}
           <div className="grid grid-cols-2 gap-4 pt-1">
-            <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                <Eye size={16} className="text-[#0094EB]" />
+            <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-4">
+              <div className="flex items-center gap-2 text-slate-500 dark:text-[#8a90a0]">
+                <Eye size={16} className="text-[#ff7a29]" />
                 <span className="text-xs font-bold">Limite de Views</span>
               </div>
               <p className="mt-2 text-lg font-black text-slate-900 dark:text-white">
@@ -431,9 +448,9 @@ export function BillingPage() {
               </p>
             </div>
 
-            <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                <FileCode size={16} className="text-[#0094EB]" />
+            <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-4">
+              <div className="flex items-center gap-2 text-slate-500 dark:text-[#8a90a0]">
+                <FileCode size={16} className="text-[#ff7a29]" />
                 <span className="text-xs font-bold">Páginas Ativas</span>
               </div>
               <p className="mt-2 text-lg font-black text-slate-900 dark:text-white">
@@ -443,7 +460,7 @@ export function BillingPage() {
           </div>
         </div>
       </div>
-
+      
       {/* Histórico de Faturas */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950">
         <div className="flex items-center justify-between mb-4">
