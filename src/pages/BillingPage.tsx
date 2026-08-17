@@ -280,7 +280,7 @@ export function BillingPage() {
         </div>
       )}
 
-{/* ── CABEÇALHO DA PÁGINA ── */}
+{/* ── CABEÇALHO DA PÁGINA (DUAL-THEME: AZUL NO LIGHT / LARANJA NO DARK) ── */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -293,15 +293,14 @@ export function BillingPage() {
         <button
           type="button"
           onClick={() => navigate('/plans')}
-          style={{ backgroundColor: '#ff7a29' }}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl !bg-[#ff7a29] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/30 hover:opacity-95 hover:scale-[1.02] transition-all cursor-pointer shrink-0"
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all cursor-pointer shrink-0"
         >
           <Sparkles size={16} className="!text-white stroke-[2.5]" />
           Alterar / Fazer Upgrade
         </button>
       </div>
 
-      {/* ── MÓDULOS SUPERIORES: PLANO ATUAL & CONSUMO DE RECURSOS ── */}
+      {/* ── MÓDULOS SUPERIORES: PLANO ATUAL & CONSUMO DE RECURSOS (DUAL-THEME) ── */}
       <div className="grid gap-6 md:grid-cols-3 items-stretch">
         {/* Card: Detalhes do Plano */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm md:col-span-1 flex flex-col justify-between">
@@ -394,10 +393,7 @@ export function BillingPage() {
           <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-5 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div 
-                  style={{ backgroundColor: '#ff7a29' }}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-[0_0_12px_rgba(255,122,41,0.35)] shrink-0"
-                >
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_12px_rgba(255,122,41,0.35)] shrink-0">
                   <HardDrive size={18} className="!text-white stroke-[2.5]" />
                 </div>
                 <div>
@@ -440,7 +436,7 @@ export function BillingPage() {
           <div className="grid grid-cols-2 gap-4 pt-1">
             <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-4">
               <div className="flex items-center gap-2 text-slate-500 dark:text-[#8a90a0]">
-                <Eye size={16} className="text-[#ff7a29]" />
+                <Eye size={16} className="text-[#0094EB] dark:text-[#ff7a29]" />
                 <span className="text-xs font-bold">Limite de Views</span>
               </div>
               <p className="mt-2 text-lg font-black text-slate-900 dark:text-white">
@@ -450,7 +446,7 @@ export function BillingPage() {
 
             <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-4">
               <div className="flex items-center gap-2 text-slate-500 dark:text-[#8a90a0]">
-                <FileCode size={16} className="text-[#ff7a29]" />
+                <FileCode size={16} className="text-[#0094EB] dark:text-[#ff7a29]" />
                 <span className="text-xs font-bold">Páginas Ativas</span>
               </div>
               <p className="mt-2 text-lg font-black text-slate-900 dark:text-white">
@@ -460,7 +456,7 @@ export function BillingPage() {
           </div>
         </div>
       </div>
-
+      
 {/* ── HISTÓRICO DE FATURAS (MODULAR NO PADRÃO TOP VÍDEOS DASHBOARD) ── */}
       <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
