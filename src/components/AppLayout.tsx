@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AppSidebar } from './AppSidebar';
 import FloatingSupportButton from './FloatingSupportButton';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { Sparkles, Clock, AlertTriangle, XCircle } from 'lucide-react';
 
