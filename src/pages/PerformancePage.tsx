@@ -42,10 +42,10 @@ return (
           </p>
         </div>
 
-        {/* ── FILTRO DE PERÍODO REFINADO ── */}
+{/* ── FILTRO DE PERÍODO REFINADO ── */}
         <div className="flex items-center gap-2.5">
           <Select value={timeRange} onValueChange={(v) => setTimeRange(v as TimeRange)}>
-            <SelectTrigger className="w-36 h-10 rounded-2xl border-slate-200 dark:border-white/5 bg-white dark:bg-[#1a1f35] text-xs font-black text-slate-800 dark:text-white shadow-sm focus:border-[#ff7a29]">
+            <SelectTrigger className="w-36 h-10 rounded-2xl border-slate-200 dark:border-white/5 bg-white dark:bg-[#1a1f35] text-xs font-black text-slate-800 dark:text-white shadow-sm focus:border-[#0094EB] dark:focus:border-[#ff7a29]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="rounded-2xl border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35] text-xs font-bold text-slate-800 dark:text-white shadow-xl">
@@ -63,8 +63,8 @@ return (
               className={cn(
                 'flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-xs font-black transition-all shadow-sm',
                 customRange.from
-                  ? 'border-[#ff7a29]/40 bg-[#ff7a29]/10 text-[#ff7a29]'
-                  : 'border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35] text-slate-400 hover:text-white'
+                  ? 'border-[#0094EB]/40 bg-[#0094EB]/10 text-[#0094EB] dark:border-[#ff7a29]/40 dark:bg-[#ff7a29]/10 dark:text-[#ff7a29]'
+                  : 'border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               )}
             >
               <CalendarIcon className="h-4 w-4 shrink-0" />
@@ -74,7 +74,7 @@ return (
             </button>
           )}
         </div>
-      </div>
+              </div>
 
       {/* ── ABAS DE NAVEGAÇÃO MODULARES E ARREDONDADAS ── */}
       <Tabs
