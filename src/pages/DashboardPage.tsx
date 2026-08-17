@@ -51,10 +51,195 @@ interface ActivityEvent {
 }
 
 const DashboardPage: React.FC = () => {
+  const navigate = useNavigate();
   
-  // 2. Carregamento Isolado de Métricas
+  // 🛡️ Hooks de Contexto e Autenticação no Escopo Principal
+  const { storeId } = useTenant();
+  const { loading: authLoading } = useAuth();
+
+  const [loading, setLoading] = useState(true);
+  const [metricsLoading, setMetricsLoading] = useState(false);
+  const [storeName, setStoreName] = useState<string>('');
+  const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsInterval>('30');
+  const [customRange, setCustomRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined,
+  });
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [dashboardMetrics, setDashboardMetrics] = useState({
+    views: 0,
+    plays: 0,
+    pauses: 0,
+    clicks: 0,
+    ctaClicks: 0,
+    productClicks: 0,
+    whatsappClicks: 0,
+    likes: 0,
+    shares: 0,
+    comments: 0,
+    closes: 0,
+    conversions: 0,
+    ctr: 0,
+    revenue: 0,
+  });
+  const [topVideos, setTopVideos] = useState<any[]>([]);
+
+  const [usage, setUsage] = useState<StoreUsageData>({
+    planName: 'Starter',
+    subscriptionStatus: 'trialing',
+    trialDaysLeft: 7,
+    currentPeriodEnd: null,
+    viewsUsed: 0,
+    viewsLimit: 10000,
+    storageUsedMB: 0,
+    storageLimitMB: 2048,
+    pagesUsed: 0,
+    pagesLimit: 5,
+  });
+
+  const [activities, setActivities] = useState<ActivityEvent[]>([]);
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([
+    { id: 'videos', title: 'Fazer upload de vídeos', description: 'Suba seus vídeos verticais ou importe das redes sociais.', route: '/videos', completed: false },
+    { id: 'products', title: 'Cadastrar produtos da loja', description: 'Vincule produtos com preço para compra direta.', route: '/products', completed: false },
+    { id: 'stories', title: 'Criar coleção de Stories', description: 'Agrupe seus vídeos em coleções interativas.', route: '/stories', completed: false },
+    { id: 'appearance', title: 'Personalizar aparência do player', description: 'Ajuste cores, bordas e botões da marca.', route: '/appearance', completed: false },
+    { id: 'locations', title: 'Publicar widget na sua loja', description: 'Escolha onde os vídeos devem aparecer no seu tema.', route: '/settings', completed: false },
+  ]);
+
+  const activeInterval = useMemo(() => selectedPeriod, [selectedPeriod]);
+
+  // 1. Carregamento Estrutural da Loja (Protegido contra Race Condition de Auth)
   useEffect(() => {
-    if (!storeId) return;
+    if (!storeId || authLoading) return;
+    let isMounted = true;
+
+    const loadStoreStructure = async () => {
+      try {
+        setLoading(true);
+
+        const now = new Date();
+        const currentMonth = now.toISOString().slice(0, 7);
+
+        // Execução resiliente com Promise.allSettled
+        const results = await Promise.allSettled([
+          db.videos.getAll(storeId),
+          supabase.from('stores').select('*').eq('id', storeId).single(),
+          supabase.from('usage_counters').select('*').eq('store_id', storeId).eq('month', currentMonth).maybeSingle(),
+          supabase.from('products').select('id', { count: 'exact', head: true }).eq('store_id', storeId),
+          supabase.from('stories').select('id', { count: 'exact', head: true }).eq('store_id', storeId),
+          supabase.from('appearances').select('id', { count: 'exact', head: true }).eq('store_id', storeId),
+          supabase.from('display_locations').select('id', { count: 'exact', head: true }).eq('store_id', storeId),
+          supabase.from('store_activity_events').select('*').eq('store_id', storeId).order('created_at', { ascending: false }).limit(6),
+        ]);
+
+        if (!isMounted) return;
+
+        const [
+          videosRes,
+          storeRes,
+          usageCounterRes,
+          productsRes,
+          storiesRes,
+          appearanceRes,
+          locationsRes,
+          eventsRes,
+        ] = results;
+
+        // 1. Vídeos
+        const fetchedVideos: Video[] = videosRes.status === 'fulfilled' ? videosRes.value : [];
+        if (videosRes.status === 'rejected') {
+          console.error('[DashboardPage] Falha ao carregar vídeos:', videosRes.reason);
+        }
+        setVideos(fetchedVideos);
+
+        // 2. Loja
+        const storeData = storeRes.status === 'fulfilled' ? storeRes.value.data || {} : {};
+        if (storeRes.status === 'rejected') {
+          console.error('[DashboardPage] Falha ao carregar dados da loja:', storeRes.reason);
+        }
+        setStoreName(storeData.name || '');
+
+        let trialDays: number | null = null;
+        if (storeData.subscription_status === 'trialing' && storeData.trial_ends_at) {
+          const diff = new Date(storeData.trial_ends_at).getTime() - Date.now();
+          trialDays = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+        }
+
+        // 3. Quotas e Contadores
+        const usageData = usageCounterRes.status === 'fulfilled' ? usageCounterRes.value.data || {} : {};
+        if (usageCounterRes.status === 'rejected') {
+          console.error('[DashboardPage] Falha ao carregar usage_counters:', usageCounterRes.reason);
+        }
+
+        const totalVideosCount = fetchedVideos.length;
+        const estimatedStorage = Math.round(totalVideosCount * 15);
+
+        const pagesCount = locationsRes.status === 'fulfilled' ? locationsRes.value.count || 0 : 0;
+        if (locationsRes.status === 'rejected') {
+          console.error('[DashboardPage] Falha ao carregar display_locations:', locationsRes.reason);
+        }
+
+        setUsage({
+          planName: String(storeData.plan_tier || 'starter').toUpperCase(),
+          subscriptionStatus: storeData.subscription_status || 'trialing',
+          trialDaysLeft: trialDays,
+          currentPeriodEnd: storeData.current_period_end || storeData.trial_ends_at,
+          viewsUsed: usageData.views_count || 0,
+          viewsLimit: 10000,
+          storageUsedMB: estimatedStorage,
+          storageLimitMB: 2048,
+          pagesUsed: pagesCount,
+          pagesLimit: 5,
+        });
+
+        // 4. Feed de Eventos
+        const fetchedEvents = eventsRes.status === 'fulfilled' ? eventsRes.value.data || [] : [];
+        if (eventsRes.status === 'rejected') {
+          console.error('[DashboardPage] Falha ao carregar store_activity_events:', eventsRes.reason);
+        }
+        setActivities(fetchedEvents);
+
+        // 5. Checklist Dinâmico
+        const productsCount = productsRes.status === 'fulfilled' ? productsRes.value.count || 0 : 0;
+        if (productsRes.status === 'rejected') {
+          console.error('[DashboardPage] Falha ao carregar products:', productsRes.reason);
+        }
+
+        const storiesCount = storiesRes.status === 'fulfilled' ? storiesRes.value.count || 0 : 0;
+        if (storiesRes.status === 'rejected') {
+          console.error('[DashboardPage] Falha ao carregar stories:', storiesRes.reason);
+        }
+
+        const appearanceCount = appearanceRes.status === 'fulfilled' ? appearanceRes.value.count || 0 : 0;
+        if (appearanceRes.status === 'rejected') {
+          console.error('[DashboardPage] Falha ao carregar appearances:', appearanceRes.reason);
+        }
+
+        setChecklist([
+          { id: 'videos', title: 'Fazer upload de vídeos', description: 'Suba seus vídeos verticais ou importe das redes sociais.', route: '/videos', completed: totalVideosCount > 0 },
+          { id: 'products', title: 'Cadastrar produtos da loja', description: 'Vincule produtos com preço para compra direta.', route: '/products', completed: productsCount > 0 },
+          { id: 'stories', title: 'Criar coleção de Stories', description: 'Agrupe seus vídeos em coleções interativas.', route: '/stories', completed: storiesCount > 0 },
+          { id: 'appearance', title: 'Personalizar aparência do player', description: 'Ajuste cores, bordas e botões da marca.', route: '/appearance', completed: appearanceCount > 0 },
+          { id: 'locations', title: 'Publicar widget na sua loja', description: 'Escolha onde os vídeos devem aparecer no seu tema.', route: '/settings', completed: pagesCount > 0 },
+        ]);
+      } catch (err) {
+        console.error('[DashboardPage] Erro crítico ao carregar estrutura da dashboard:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    loadStoreStructure();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [storeId, authLoading]);
+
+  // 2. Carregamento Isolado do Filtro de Métricas
+  useEffect(() => {
+    if (!storeId || authLoading) return;
     let isMounted = true;
 
     const updateMetricsOnly = async () => {
@@ -80,7 +265,7 @@ const DashboardPage: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [storeId, activeInterval, customRange, videos]);
+  }, [storeId, authLoading, activeInterval, customRange, videos]);
 
   const calcPercent = (current: number, max: number) => {
     if (!max || max <= 0) return 0;
@@ -97,19 +282,19 @@ const DashboardPage: React.FC = () => {
   const getBarColor = (pct: number) => {
     if (pct >= 90) return 'bg-rose-500';
     if (pct >= 75) return 'bg-amber-500';
-    return 'bg-[#0094EB] dark:bg-[#fd8539]';
+    return 'bg-[#0094EB] dark:bg-[#ff7a29]';
   };
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <div className="w-10 h-10 border-4 border-[#0094EB] dark:border-[#fd8539] border-t-transparent rounded-full animate-spin mb-3" />
-        <p className="text-sm font-semibold text-slate-500">Atualizando visão geral...</p>
+        <div className="w-10 h-10 border-4 border-[#0094EB] dark:border-[#ff7a29] border-t-transparent rounded-full animate-spin mb-3" />
+        <p className="text-sm font-semibold text-slate-500 dark:text-[#c0c5d4]">Atualizando visão geral...</p>
       </div>
     );
   }
 
-return (
+  return (
     <div className="space-y-8 animate-fade-in font-sans text-slate-900 dark:text-[#e8ecf4] min-h-screen -m-6 p-6 sm:p-8 bg-transparent dark:bg-[radial-gradient(ellipse_at_top,_#1a1f3a_0%,_#0f1220_55%,_#0a0e1a_100%)]">
       {/* ── 1. HEADER (BOAS-VINDAS & STATUS COM GLOW) ── */}
       <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 rounded-[2rem] border border-slate-200 dark:border-orange-500/15 shadow-sm dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
@@ -234,19 +419,19 @@ return (
       {/* ── 3. DESEMPENHO DOS VÍDEOS (SPLIT 50/50) ── */}
       <div
         className={cn(
-          'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 sm:p-8 shadow-sm space-y-6 transition-opacity duration-200',
+          'bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2.5rem] p-6 sm:p-8 shadow-sm space-y-6 transition-opacity duration-200',
           metricsLoading && 'opacity-60 pointer-events-none'
         )}
       >
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-white/5 pb-5">
           <div>
             <h2 className="text-lg font-black text-slate-800 dark:text-white">Desempenho dos Vídeos</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-[#c0c5d4]">
               Métricas consolidadas de engajamento e conversão.
             </p>
           </div>
 
-          <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl gap-1 shadow-inner">
+          <div className="flex bg-slate-100 dark:bg-[#0f1220] p-1.5 rounded-2xl gap-1 shadow-inner border border-transparent dark:border-white/5">
             {[
               { id: 'today', label: 'Hoje' },
               { id: '7', label: '7 dias' },
@@ -259,8 +444,8 @@ return (
                 className={cn(
                   'px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5',
                   selectedPeriod === p.id
-                    ? 'bg-[#0094EB] dark:bg-[#fd8539] text-white shadow-md'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                    ? 'bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md dark:shadow-[0_0_12px_rgba(255,122,41,0.4)]'
+                    : 'text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white'
                 )}
               >
                 {p.icon && <p.icon size={13} />}
@@ -278,22 +463,22 @@ return (
             <MetricCard title="CTR Médio" value={`${dashboardMetrics.ctr.toFixed(1).replace('.', ',')}%`} icon={MousePointerClick} />
           </div>
 
-          <div className="lg:col-span-6 border-t lg:border-t-0 lg:border-l border-slate-100 dark:border-slate-800 lg:pl-8 flex flex-col justify-between h-full">
+          <div className="lg:col-span-6 border-t lg:border-t-0 lg:border-l border-slate-100 dark:border-white/5 lg:pl-8 flex flex-col justify-between h-full">
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
                   Top Vídeos Mais Assistidos
                 </h4>
                 <button
                   onClick={() => navigate('/videos/performance')}
-                  className="text-xs font-bold text-[#0094EB] dark:text-[#fd8539] hover:underline"
+                  className="text-xs font-bold text-[#0094EB] dark:text-[#ff7a29] hover:underline"
                 >
                   Ver relatório completo &rarr;
                 </button>
               </div>
 
               {topVideos.length === 0 ? (
-                <div className="text-center py-10 text-slate-400 text-xs font-semibold">
+                <div className="text-center py-10 text-slate-400 dark:text-[#8a90a0] text-xs font-semibold">
                   Nenhum vídeo registrado no período selecionado.
                 </div>
               ) : (
@@ -301,13 +486,13 @@ return (
                   {topVideos.map((item, i) => (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 hover:border-[#0094EB]/40 dark:hover:border-[#fd8539]/40 transition-all"
+                      className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-[#0f1220]/70 border border-slate-100 dark:border-white/5 hover:border-[#0094EB]/40 dark:hover:border-[#ff7a29]/40 transition-all"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <span className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-black flex items-center justify-center flex-shrink-0">
+                        <span className="w-6 h-6 rounded-full bg-slate-200 dark:bg-[#1a1f35] text-slate-700 dark:text-[#c0c5d4] text-xs font-black flex items-center justify-center flex-shrink-0">
                           {i + 1}
                         </span>
-                        <div className="h-10 w-10 rounded-xl bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
+                        <div className="h-10 w-10 rounded-xl bg-slate-200 dark:bg-[#1a1f35] overflow-hidden shrink-0">
                           {item.thumbnail_url ? (
                             <img src={item.thumbnail_url} alt={item.title} className="h-full w-full object-cover" />
                           ) : (
@@ -318,17 +503,17 @@ return (
                           <p className="text-xs font-black text-slate-800 dark:text-white truncate max-w-[140px] sm:max-w-[200px]">
                             {item.title}
                           </p>
-                          <span className="text-[10px] font-black text-slate-400">RANK #{i + 1}</span>
+                          <span className="text-[10px] font-black text-slate-400 dark:text-[#8a90a0]">RANK #{i + 1}</span>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-5 text-right flex-shrink-0">
                         <div>
-                          <p className="text-[10px] font-black text-slate-400 uppercase">Views</p>
+                          <p className="text-[10px] font-black text-slate-400 dark:text-[#8a90a0] uppercase">Views</p>
                           <p className="text-xs font-black text-slate-900 dark:text-white">{item.metrics?.views?.toLocaleString() || 0}</p>
                         </div>
                         <div>
-                          <p className="text-[10px] font-black text-slate-400 uppercase">CTR</p>
+                          <p className="text-[10px] font-black text-slate-400 dark:text-[#8a90a0] uppercase">CTR</p>
                           <p className="text-xs font-black text-slate-900 dark:text-white">
                             {item.metrics?.ctr ? `${item.metrics.ctr.toFixed(1).replace('.', ',')}%` : '0,0%'}
                           </p>
@@ -345,22 +530,22 @@ return (
 
       {/* ── 4 & 5. LINHA DIVIDIDA: CHECKLIST + ATIVIDADE RECENTE ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between">
+        <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2.5rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between">
           <div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-5 mb-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-white/5 pb-5 mb-5">
               <div>
                 <h2 className="text-base font-black text-slate-800 dark:text-white flex items-center gap-2">
                   <span>🚀</span> Checklist da Ativação da Loja
                 </h2>
-                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-xs font-semibold text-slate-500 dark:text-[#c0c5d4] mt-0.5">
                   Conclua os passos para publicar seus stories.
                 </p>
               </div>
               <div className="flex items-center gap-2.5">
-                <div className="w-24 h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500 dark:bg-[#fd8539] rounded-full transition-all duration-500" style={{ width: `${checklistPercent}%` }} />
+                <div className="w-24 h-2.5 bg-slate-100 dark:bg-[#0f1220] rounded-full overflow-hidden p-0.5 border border-transparent dark:border-white/5">
+                  <div className="h-full bg-emerald-500 dark:bg-[#ff7a29] rounded-full transition-all duration-500 animate-shimmer" style={{ width: `${checklistPercent}%` }} />
                 </div>
-                <span className="text-xs font-extrabold text-emerald-600 dark:text-[#fd8539]">{checklistPercent}%</span>
+                <span className="text-xs font-extrabold text-emerald-600 dark:text-[#ff7a29]">{checklistPercent}%</span>
               </div>
             </div>
 
@@ -372,16 +557,16 @@ return (
                   className={cn(
                     'flex items-start gap-3.5 p-3.5 rounded-2xl border transition-all cursor-pointer group',
                     item.completed
-                      ? 'bg-emerald-50/40 dark:bg-orange-500/10 border-emerald-200/70 dark:border-orange-500/20'
-                      : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 hover:border-[#0094EB] dark:hover:border-[#fd8539] hover:shadow-md'
+                      ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200/70 dark:border-emerald-800/30'
+                      : 'bg-slate-50/70 dark:bg-[#0f1220]/60 border-slate-200 dark:border-white/5 hover:bg-white dark:hover:bg-[#1a1f35] hover:border-[#0094EB] dark:hover:border-[#ff7a29] hover:shadow-md'
                   )}
                 >
                   <div
                     className={cn(
                       'w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-black text-[11px] transition-all',
                       item.completed
-                        ? 'bg-emerald-500 dark:bg-[#fd8539] text-white shadow-sm'
-                        : 'border-2 border-slate-300 dark:border-slate-600 text-slate-400 group-hover:border-[#0094EB] dark:group-hover:border-[#fd8539]'
+                        ? 'bg-emerald-500 text-white shadow-sm'
+                        : 'border-2 border-slate-300 dark:border-slate-600 text-slate-400 group-hover:border-[#0094EB] dark:group-hover:border-[#ff7a29]'
                     )}
                   >
                     {item.completed ? '✓' : index + 1}
@@ -393,17 +578,17 @@ return (
                         className={cn(
                           'text-xs font-black',
                           item.completed
-                            ? 'text-emerald-950 dark:text-orange-200 line-through opacity-80'
-                            : 'text-slate-900 dark:text-white group-hover:text-[#0094EB] dark:group-hover:text-[#fd8539]'
+                            ? 'text-emerald-950 dark:text-emerald-300 line-through opacity-80'
+                            : 'text-slate-900 dark:text-white group-hover:text-[#0094EB] dark:group-hover:text-[#ff7a29]'
                         )}
                       >
                         {item.title}
                       </h3>
-                      <span className="text-[11px] font-bold text-[#0094EB] dark:text-[#fd8539] opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-[11px] font-bold text-[#0094EB] dark:text-[#ff7a29] opacity-0 group-hover:opacity-100 transition-opacity">
                         Configurar &rarr;
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium leading-relaxed truncate">
+                    <p className="text-[11px] text-slate-500 dark:text-[#8a90a0] mt-0.5 font-medium leading-relaxed truncate">
                       {item.description}
                     </p>
                   </div>
@@ -413,34 +598,34 @@ return (
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between">
+        <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2.5rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between">
           <div>
-            <div className="border-b border-slate-100 dark:border-slate-800 pb-5 mb-5">
+            <div className="border-b border-slate-100 dark:border-white/5 pb-5 mb-5">
               <h2 className="text-base font-black text-slate-800 dark:text-white flex items-center gap-2">
                 <span>⚡</span> Atividade Recente
               </h2>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-xs font-semibold text-slate-500 dark:text-[#c0c5d4] mt-0.5">
                 Feed de eventos e interações em tempo real.
               </p>
             </div>
 
             {activities.length === 0 ? (
-              <div className="text-center py-12 text-slate-400 text-xs font-semibold">
+              <div className="text-center py-12 text-slate-400 dark:text-[#8a90a0] text-xs font-semibold">
                 Nenhuma interação recente registrada.
               </div>
             ) : (
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="divide-y divide-slate-100 dark:divide-white/5">
                 {activities.map((ev) => (
                   <div key={ev.id} className="py-3.5 flex items-center justify-between text-xs">
                     <div className="flex items-center gap-3">
-                      <span className="px-2.5 py-1 bg-blue-50 dark:bg-orange-500/10 text-[#0094EB] dark:text-[#fd8539] rounded-lg font-black text-[10px] uppercase">
+                      <span className="px-2.5 py-1 bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0094EB] dark:text-[#ff7a29] rounded-lg font-black text-[10px] uppercase">
                         {ev.event_type === 'video_view' ? '👁️ View' : ev.event_type === 'cta_click' ? '🛍️ Clique CTA' : '⚡ Evento'}
                       </span>
-                      <span className="font-bold text-slate-700 dark:text-slate-300">
+                      <span className="font-bold text-slate-700 dark:text-[#e8ecf4]">
                         Interação no widget da loja
                       </span>
                     </div>
-                    <span className="text-slate-400 font-medium text-[11px]">
+                    <span className="text-slate-400 dark:text-[#8a90a0] font-medium text-[11px]">
                       {new Date(ev.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
@@ -451,7 +636,7 @@ return (
         </div>
       </div>
 
-{/* ── 6 & 7. SEÇÃO INFERIOR: ACADEMY & INDIQUE E GANHE COM GRADIENTE DIAGONAL ── */}
+      {/* ── 6 & 7. SEÇÃO INFERIOR: ACADEMY & INDIQUE E GANHE COM GRADIENTE DIAGONAL ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
         {/* Academy */}
         <div className="lg:col-span-7 bg-white dark:bg-[#1a1f35]/75 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 p-6 sm:p-7 rounded-[2.5rem] shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_30px_rgba(255,122,41,0.1)] transition-all duration-300 flex flex-col md:flex-row items-center gap-5">
@@ -503,7 +688,7 @@ return (
           </button>
         </div>
       </div>
-      
+
       {/* DIALOG DE DATA PERSONALIZADA */}
       <CustomDialog
         isOpen={isCalendarOpen}
