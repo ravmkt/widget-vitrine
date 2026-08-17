@@ -4959,17 +4959,26 @@ function initWidget() {
       return;
     }
 
-    return readAppearance().then(function (appearance) {
-          currentAppearance = appearance;
+return readAppearance().then(function (appearance) {
+      currentAppearance = appearance;
 
-return readStoreSettings().then(function (settings) {
-      autoApproveComments = settings.auto_approve_comments === true || settings.auto_approve_comments === 'true';
-      storeWhatsappNumber = settings.whatsapp_number || '';
-      storeWhatsappMessage = settings.whatsapp_message || '';
-      storeLogoUrl = normalizeMediaUrl(settings.store_logo_url || '');
-      storeName = settings.store_name || '';
-    }).catch(function () {}).then(function () {
-            return readStories();
+      if (storeData) {
+        if (storeData.logo_url) storeLogoUrl = normalizeMediaUrl(storeData.logo_url);
+        if (storeData.name) storeName = storeData.name;
+      }
+
+      return readStoreSettings().then(function (settings) {
+        autoApproveComments = settings.auto_approve_comments === true || settings.auto_approve_comments === 'true';
+        storeWhatsappNumber = settings.whatsapp_number || '';
+        storeWhatsappMessage = settings.whatsapp_message || '';
+        if (settings.store_logo_url || settings.logo_url) {
+          storeLogoUrl = normalizeMediaUrl(settings.store_logo_url || settings.logo_url);
+        }
+        if (settings.store_name) {
+          storeName = settings.store_name;
+        }
+      }).catch(function () {}).then(function () {
+                    return readStories();
     }).then(function (stories) {
       currentStories = stories || [];
 
