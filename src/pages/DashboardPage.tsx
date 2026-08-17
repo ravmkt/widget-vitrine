@@ -587,10 +587,11 @@ return (
         </div>
       </div>
 
-      {/* ── 6 & 7. SEÇÃO INFERIOR: ACADEMY & INDIQUE E GANHE ── */}
+{/* ── 6 & 7. SEÇÃO INFERIOR: ACADEMY & INDIQUE E GANHE COM GRADIENTE DIAGONAL ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-        <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-7 rounded-[2.5rem] shadow-sm flex flex-col md:flex-row items-center gap-5">
-          <div className="w-full md:w-44 h-28 bg-slate-900 rounded-2xl flex items-center justify-center relative overflow-hidden flex-shrink-0 group cursor-pointer border border-slate-800">
+        {/* Academy */}
+        <div className="lg:col-span-7 bg-white dark:bg-[#1a1f35]/75 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 p-6 sm:p-7 rounded-[2.5rem] shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_30px_rgba(255,122,41,0.1)] transition-all duration-300 flex flex-col md:flex-row items-center gap-5">
+          <div className="w-full md:w-44 h-28 bg-slate-900 rounded-2xl flex items-center justify-center relative overflow-hidden flex-shrink-0 group cursor-pointer border border-slate-800 dark:border-white/10">
             <img
               src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400&auto=format&fit=crop"
               alt="Thumbnail do Tutorial"
@@ -598,46 +599,47 @@ return (
               loading="lazy"
             />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-10 h-10 rounded-full bg-[#0094EB] dark:bg-[#fd8539] text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                <Play size={16} fill="white" className="ml-0.5" />
+              <div className="w-11 h-11 rounded-full bg-[#0094EB] dark:bg-[#ff7a29] text-white flex items-center justify-center shadow-lg dark:shadow-[0_0_16px_rgba(255,122,41,0.6)] group-hover:scale-110 transition-transform">
+                <Play size={17} fill="white" className="ml-0.5" />
               </div>
             </div>
           </div>
           <div className="flex-1 space-y-1.5 text-center md:text-left">
-            <span className="text-[10px] font-black uppercase tracking-wider text-[#0094EB] dark:text-[#fd8539] bg-blue-50 dark:bg-orange-500/10 px-2.5 py-0.5 rounded-full border border-blue-100 dark:border-orange-500/20 inline-block">
+            <span className="text-[10px] font-black uppercase tracking-wider text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-2.5 py-0.5 rounded-full border border-blue-100 dark:border-[#ff7a29]/25 inline-block">
               🎓 Vidlytics Academy
             </span>
             <h4 className="text-sm font-black text-slate-800 dark:text-white">
               Como dobrar suas conversões com vídeos em 3 passos
             </h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+            <p className="text-xs text-slate-500 dark:text-[#c0c5d4] font-medium leading-relaxed">
               Aprenda as melhores práticas de posicionamento e gatilhos de CTA para aumentar as vendas da sua loja.
             </p>
           </div>
         </div>
 
-        <div className="lg:col-span-5 bg-gradient-to-br from-[#0094EB] to-blue-700 dark:from-[#fd8539] dark:to-orange-600 text-white p-6 sm:p-7 rounded-[2.5rem] shadow-lg flex flex-col justify-between border border-blue-400/30 dark:border-orange-400/30">
+        {/* Card Destaque: Indique e Ganhe (Gradiente Diagonal Intenso) */}
+        <div className="lg:col-span-5 bg-gradient-to-br from-[#0094EB] via-blue-600 to-blue-700 dark:from-[#ff7a29] dark:via-[#ea580c] dark:to-[#c2410c] text-white p-6 sm:p-7 rounded-[2.5rem] shadow-xl dark:shadow-[0_12px_35px_rgba(255,122,41,0.28)] flex flex-col justify-between border border-blue-400/30 dark:border-orange-400/40 hover:-translate-y-1 transition-all duration-300">
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-2.5 py-1 rounded-full text-white backdrop-blur-sm">
                 Programa de Parceiros
               </span>
-              <Share2 size={16} className="text-white/80" />
+              <Share2 size={16} className="text-white/90" />
             </div>
-            <h4 className="text-lg font-black text-white">Indique e Ganhe</h4>
-            <p className="text-xs text-blue-50 dark:text-orange-50 mt-1 font-medium leading-relaxed">
+            <h4 className="text-xl font-black text-white tracking-tight">Indique e Ganhe</h4>
+            <p className="text-xs text-blue-50 dark:text-orange-50/90 mt-1.5 font-medium leading-relaxed">
               Receba comissões e desbloqueie meses gratuitos ao indicar o Vidlytics para outros lojistas.
             </p>
           </div>
           <button
             onClick={() => alert('Link de indicação copiado para a área de transferência!')}
-            className="mt-4 w-full bg-white text-[#0094EB] dark:text-[#fd8539] hover:bg-slate-50 font-black py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2"
+            className="mt-5 w-full bg-white text-[#0094EB] dark:text-[#ff7a29] hover:bg-slate-50 font-black py-3.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md hover:shadow-lg dark:shadow-[0_0_15px_rgba(255,255,255,0.2)] flex items-center justify-center gap-2"
           >
             <Share2 size={14} /> Copiar Meu Link de Indicação
           </button>
         </div>
       </div>
-
+      
       {/* DIALOG DE DATA PERSONALIZADA */}
       <CustomDialog
         isOpen={isCalendarOpen}
