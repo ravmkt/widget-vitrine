@@ -299,7 +299,8 @@ return (
           Nova modelo
         </button>
       </div>
-      
+
+{/* ── GRID MODULAR DE MODELOS ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {models.map((model) => {
           const heightMeasure = model.measures?.find(
@@ -314,88 +315,110 @@ return (
           return (
             <div
               key={model.id}
-              className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm hover:shadow-md transition-shadow"
+              className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2.5rem] p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
             >
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-black text-lg text-slate-800 truncate pr-4">
-                    {model.name}
-                  </h3>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => openEditModel(model)}
-                    className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-blue-50 rounded-lg transition-colors"
-                    title="Editar"
-                  >
-                    <Edit3 size={18} />
-                  </button>
-
-                  <button
-                    onClick={() => handleDeleteClick(model)}
-                    className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-                    title="Excluir"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {heightMeasure && (
-                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
-                    <div className="flex items-center gap-2">
-                      <Ruler className="text-[#0094EB]" size={18} />
-                      <span className="font-bold text-slate-700">Altura</span>
+              <div>
+                {/* Cabeçalho do Cartão: Título e Ações */}
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-5">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div 
+                      style={{ backgroundColor: '#ff7a29' }}
+                      className="w-10 h-10 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0"
+                    >
+                      <Ruler size={18} className="!text-white stroke-[2.5]" />
                     </div>
-
-                    <span className="font-black text-slate-900">
-                      {heightMeasure.value} cm
-                    </span>
+                    <div className="min-w-0">
+                      <h3 className="font-black text-lg text-slate-900 dark:text-white uppercase tracking-tight truncate">
+                        {model.name}
+                      </h3>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">
+                        Perfil de Medidas
+                      </span>
+                    </div>
                   </div>
-                )}
 
-                {otherMeasures.map((measure, index) => (
-                  <div
-                    key={`${model.id}-${measure.name}-${index}`}
-                    className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100"
-                  >
-                    <span className="font-bold text-slate-700">
-                      {measure.name}
-                    </span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => openEditModel(model)}
+                      className="p-2 rounded-xl text-slate-400 hover:text-[#0094EB] dark:hover:text-[#ff7a29] hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
+                      title="Editar modelo"
+                    >
+                      <Edit3 size={16} />
+                    </button>
 
-                    <span className="font-black text-slate-900">
-                      {measure.value} cm
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteClick(model)}
+                      className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all"
+                      title="Excluir modelo"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
-                ))}
+                </div>
 
-                {otherMeasures.length === 0 && !heightMeasure && (
-                  <p className="text-center text-slate-400 text-sm py-4">
-                    Nenhuma medida cadastrada
-                  </p>
-                )}
+                {/* Linhas de Dados de Medidas */}
+                <div className="space-y-2.5">
+                  {heightMeasure && (
+                    <div className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-[#0f1220]/70 rounded-2xl border border-slate-100 dark:border-white/5 transition-all">
+                      <div className="flex items-center gap-2.5">
+                        <Ruler className="text-[#0094EB] dark:text-[#ff7a29]" size={16} />
+                        <span className="text-xs font-bold text-slate-700 dark:text-[#c0c5d4]">
+                          Altura
+                        </span>
+                      </div>
+
+                      <span className="font-mono text-xs font-black text-slate-900 dark:text-white bg-white dark:bg-[#1a1f35] px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-white/5 shadow-xs">
+                        {heightMeasure.value} cm
+                      </span>
+                    </div>
+                  )}
+
+                  {otherMeasures.map((measure, index) => (
+                    <div
+                      key={`${model.id}-${measure.name}-${index}`}
+                      className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-[#0f1220]/70 rounded-2xl border border-slate-100 dark:border-white/5 transition-all"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0094EB] dark:bg-[#ff7a29]" />
+                        <span className="text-xs font-bold text-slate-700 dark:text-[#c0c5d4]">
+                          {measure.name}
+                        </span>
+                      </div>
+
+                      <span className="font-mono text-xs font-black text-slate-900 dark:text-white bg-white dark:bg-[#1a1f35] px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-white/5 shadow-xs">
+                        {measure.value} cm
+                      </span>
+                    </div>
+                  ))}
+
+                  {otherMeasures.length === 0 && !heightMeasure && (
+                    <p className="text-center text-slate-400 dark:text-[#8a90a0] text-xs font-semibold py-4">
+                      Nenhuma medida cadastrada.
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           );
         })}
 
         {models.length === 0 && (
-          <div className="col-span-full p-12 text-center bg-slate-50 rounded-[3rem] border border-dashed border-slate-200">
-            <Ruler size={48} className="mx-auto text-slate-300 mb-4" />
+          <div className="col-span-full p-12 text-center bg-white dark:bg-[#1a1f35]/60 rounded-[3rem] border border-dashed border-slate-200 dark:border-orange-500/20">
+            <Ruler size={40} className="mx-auto text-slate-400 dark:text-[#ff7a29]/60 mb-3" />
 
-            <p className="text-slate-500 font-bold">
+            <p className="text-slate-700 dark:text-white font-black text-base">
               Nenhum modelo de medidas cadastrado.
             </p>
 
-            <p className="text-xs text-slate-400 mt-1">
-              Clique em "Nova modelo" para começar.
+            <p className="text-xs text-slate-400 dark:text-[#8a90a0] mt-1">
+              Clique em "Nova modelo" para criar o primeiro perfil de medidas da sua loja.
             </p>
           </div>
         )}
       </div>
-
+      
       <CustomDialog
         isOpen={isModalOpen}
         type="form"
