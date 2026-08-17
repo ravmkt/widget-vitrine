@@ -23,34 +23,60 @@ const DashboardPage = () => {
   });
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [videos, setVideos] = useState<Video[]>([]);
-  const [dashboardMetrics, setDashboardMetrics] = useState({ views: 0, plays: 0, pauses: 0, clicks: 0, ctaClicks: 0, productClicks: 0, whatsappClicks: 0, likes: 0, shares: 0, comments: 0, closes: 0, conversions: 0, ctr: 0, revenue: 0 });
-  const [flow, setFlow] = useState<any[]>([]);
+const [dashboardMetrics, setDashboardMetrics] = useState({
+    views: 0,
+    plays: 0,
+    pauses: 0,
+    clicks: 0,
+    ctaClicks: 0,
+    productClicks: 0,
+    whatsappClicks: 0,
+    likes: 0,
+    shares: 0,
+    comments: 0,
+    closes: 0,
+    conversions: 0,
+    ctr: 0,
+    revenue: 0,
+  });
+  const [flow, setFlow] = useState<Array<{ name: string; views: number }>>([]);
   const [topVideos, setTopVideos] = useState<any[]>([]);
 
   const activeInterval = useMemo(() => selectedPeriod, [selectedPeriod]);
 
   useEffect(() => {
-    const init = async () => {
-      const allVideos = storeId ? await db.videos.getAll(storeId) : [];
-      setVideos(allVideos);
-      setLoading(false);
-    };
-    init();
-  }, [storeId]);
-
-  useEffect(() => {
     if (!storeId) return;
-    const loadMetrics = async () => {
-      const metrics = await getDashboardMetrics(storeId, activeInterval, customRange);
-      const flowRows = await getMetricsFlow(storeId, activeInterval, customRange);
-      const rows = await getVideoMetricsRows(storeId, videos, activeInterval, customRange);
-      setDashboardMetrics(metrics);
-      setFlow(flowRows);
-      setTopVideos([...rows].sort((a, b) => b.metrics.views - a.metrics.views).slice(0, 4));
-    };
-    loadMetrics();
-  }, [storeId, activeInterval, customRange, videos]);
 
+    let isMounted = true;
+
+    const loadData = async () => {
+      try {
+        const fetchedVideos = await db.videos.getAll(storeId);
+        if (!isMounted) return;
+        setVideos(fetchedVideos);
+
+        const [metrics, flowRows, rows] = await Promise.all([
+          getDashboardMetrics(storeId, activeInterval, customRange),
+          getMetricsFlow(storeId, activeInterval, customRange),
+          getVideoMetricsRows(storeId, fetchedVideos, activeInterval, customRange),
+        ]);
+
+        if (!isMounted) return;
+        setDashboardMetrics(metrics);
+        setFlow(flowRows);
+        setTopVideos([...rows].sort((a, b) => b.metrics.views - a.metrics.views).slice(0, 4));
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    loadData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [storeId, activeInterval, customRange]);
+  
   if (loading) return null;
 
   return (
