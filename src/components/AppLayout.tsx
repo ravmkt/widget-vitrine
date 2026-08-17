@@ -126,50 +126,78 @@ if (userStore) {
             <>
 {subscriptionStatus === 'trialing' && (() => {
                 const days = trialDaysRemaining ?? 7;
-                const isRed = days <= 1;
-                const isOrange = days === 2;
-                
-                // Mensagens dinâmicas calibradas
-                const message = days <= 0
-                  ? 'O seu período de teste expira hoje.'
-                  : days === 1
-                  ? 'O seu período de teste expira amanhã.'
-                  : days === 2
+                const isCritical = days <= 1;
+                const isWarning = days === 2;
+
+                // Cálculo preciso de horas restantes para quando faltar 1 dia ou menos
+                let hoursRemaining = 24;
+                if (trialEndsAt) {
+                  const diffMs = new Date(trialEndsAt).getTime() - Date.now();
+                  hoursRemaining = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60)));
+                }
+
+                // 1. Mensagem Dinâmica
+                const message = isCritical
+                  ? hoursRemaining <= 1
+                    ? 'O seu período de teste expira em menos de 1 hora.'
+                    : `O seu período de teste expira em ${hoursRemaining} horas.`
+                  : isWarning
                   ? 'Expira em 2 dias.'
                   : `Você está no período de teste gratuito: restam ${days} dias.`;
 
-                // Transição de cores do banner: Azul -> Laranja (2 dias) -> Vermelho (1 dia)
-                const bannerBgColor = isRed
-                  ? 'bg-[#ef4444]'
-                  : isOrange
-                  ? 'bg-[#ff7a29]'
-                  : 'bg-[#0094EB]';
+                // 2. Estilo do Container da Barra
+                const bannerStyle = isCritical
+                  ? 'bg-[#ef4444] text-white shadow-md' // Estado 3: Vermelho bem vivo
+                  : isWarning
+                  ? 'bg-[#fed7aa] text-slate-900 border-b border-orange-300/70 shadow-sm' // Estado 2: Laranja pastel / Alerta suave
+                  : 'bg-slate-100 text-slate-900 border-b border-slate-200 shadow-xs'; // Estado 1: Cinza claro
+
+                // 3. Estilo do Botão "Fazer Upgrade"
+                const buttonStyle = isCritical
+                  ? 'bg-white hover:bg-slate-100 text-[#ef4444] border border-white' // Botão Branco com texto Vermelho
+                  : isWarning
+                  ? 'bg-slate-900 hover:bg-black text-white border border-slate-900' // Botão Preto com texto Branco
+                  : 'bg-[#22c55e] hover:bg-[#16a34a] text-white border border-emerald-600'; // Botão Verde vibrante com texto Branco
 
                 return (
                   <div
                     className={cn(
-                      "px-4 py-2.5 text-white shadow-md transition-colors duration-300",
-                      bannerBgColor
+                      'px-4 py-2.5 transition-colors duration-300',
+                      bannerStyle
                     )}
                   >
                     <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
-                      <div className="flex items-center gap-2 text-white">
-                        <Clock size={16} className="shrink-0 animate-pulse text-white" />
-                        <span className="text-white font-bold">{message}</span>
+                      <div className="flex items-center gap-2">
+                        <Clock
+                          size={16}
+                          className={cn(
+                            'shrink-0',
+                            isCritical ? 'animate-pulse text-white' : 'text-slate-900'
+                          )}
+                        />
+                        <span className={cn('font-bold', isCritical ? 'text-white' : 'text-slate-900')}>
+                          {message}
+                        </span>
                       </div>
                       <button
                         type="button"
                         onClick={() => navigate('/plans')}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-white bg-emerald-600 hover:bg-emerald-700 px-4 py-1.5 text-xs font-black text-white shadow-sm transition-all hover:scale-[1.02] cursor-pointer"
+                        className={cn(
+                          'inline-flex items-center gap-1.5 rounded-xl px-4 py-1.5 text-xs font-black shadow-sm transition-all hover:scale-[1.02] cursor-pointer',
+                          buttonStyle
+                        )}
                       >
-                        <Sparkles size={13} className="text-white" />
+                        <Sparkles
+                          size={13}
+                          className={isCritical ? 'text-[#ef4444]' : 'text-white'}
+                        />
                         Fazer Upgrade
                       </button>
                     </div>
                   </div>
                 );
               })()}
-                            
+                                          
               {subscriptionStatus === 'canceled' && (
                 <div className="bg-red-600 px-4 py-2.5 text-white shadow-sm">
                   <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
