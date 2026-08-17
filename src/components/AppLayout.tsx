@@ -120,28 +120,44 @@ export function AppLayout({ children }: AppLayoutProps) {
           {location.pathname !== '/billing' && location.pathname !== '/plans' && (
             <>
 {subscriptionStatus === 'trialing' && (
-                <div className="bg-gradient-to-r from-blue-600 to-[#0094EB] dark:from-slate-900 dark:to-slate-800 dark:border-b dark:border-slate-800 px-4 py-2.5 text-white shadow-sm">
+                <div className={cn(
+                  "px-4 py-2.5 text-white shadow-sm transition-colors duration-300",
+                  (trialDaysRemaining ?? 7) <= 1
+                    ? "bg-[#ef4444]"
+                    : (trialDaysRemaining ?? 7) === 2
+                    ? "bg-[#ff7a29]"
+                    : "bg-[#0094EB]"
+                )}>
                   <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
                     <div className="flex items-center gap-2">
-                      <Clock size={16} className="shrink-0 animate-pulse text-blue-100 dark:text-[#fd8539]" />
+                      <Clock size={16} className="shrink-0 animate-pulse text-white/90" />
                       <span>
-                        {trialDaysRemaining !== null && trialDaysRemaining > 0
-                          ? `Você está no período de teste gratuito: restam ${trialDaysRemaining} ${trialDaysRemaining === 1 ? 'dia' : 'dias'}.`
-                          : 'Seu período de teste gratuito encerrou hoje.'}
+                        {(trialDaysRemaining ?? 7) <= 1
+                          ? `Expira ${(trialDaysRemaining ?? 0) === 1 ? 'em 1 dia' : 'hoje'}`
+                          : (trialDaysRemaining ?? 7) === 2
+                          ? 'Expira em 2 dias'
+                          : `Você está no período de teste gratuito: restam ${trialDaysRemaining} dias.`}
                       </span>
                     </div>
                     <button
                       type="button"
                       onClick={() => navigate('/plans')}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-1.5 text-xs font-black text-[#0094EB] dark:text-[#fd8539] shadow-sm transition hover:bg-slate-100"
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-1.5 text-xs font-black shadow-sm transition hover:bg-slate-50",
+                        (trialDaysRemaining ?? 7) <= 1
+                          ? "text-[#ef4444]"
+                          : (trialDaysRemaining ?? 7) === 2
+                          ? "text-[#ff7a29]"
+                          : "text-[#0094EB]"
+                      )}
                     >
-                      <Sparkles size={13} className="text-[#0094EB] dark:text-[#fd8539]" />
+                      <Sparkles size={13} />
                       Fazer Upgrade
                     </button>
                   </div>
                 </div>
               )}
-              
+                            
               {subscriptionStatus === 'canceled' && (
                 <div className="bg-red-600 px-4 py-2.5 text-white shadow-sm">
                   <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
