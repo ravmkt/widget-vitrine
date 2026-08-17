@@ -140,121 +140,126 @@ window.VIDLYTICS_CONFIG = {
     }
   };
 
-  return (
-    <div className="space-y-8 animate-fade-in">
+return (
+    <div className="space-y-8 animate-fade-in pb-20 font-sans">
+      {/* ── CABEÇALHO DA PÁGINA ── */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700">
-            <Store className="h-4 w-4" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 dark:border-[#ff7a29]/25 bg-blue-50 dark:bg-[#ff7a29]/10 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-[#0094EB] dark:text-[#ff7a29] shadow-xs">
+            <Store className="h-3.5 w-3.5" />
             Integração
           </div>
 
-          <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900">
+          <h1 className="mt-3 text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Instalação do Video Commerce
           </h1>
 
-          <p className="mt-2 max-w-3xl text-base font-medium text-slate-500">
-            Instale o widget na sua loja para exibir vídeos/stories como
-            vídeo flutuante, carrossel e galeria em páginas específicas da loja.
+          <p className="mt-1 max-w-3xl text-sm font-medium text-slate-500 dark:text-[#c0c5d4]">
+            Instale o widget na sua loja para exibir vídeos e stories interativos como vídeo flutuante, carrossel e galeria em páginas estratégicas.
           </p>
         </div>
       </div>
 
+      {/* ── ALERTAS DE AMBIENTE ── */}
       {!hasStoreId && (
-        <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
-          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
-
-          <div className="text-sm text-red-800">
-            <p className="font-bold">Loja não identificada</p>
-
-            <p className="mt-1 opacity-80">
-              O <strong>storeId</strong> não foi encontrado no contexto da loja.
-              Sem ele, o widget não saberá quais vídeos carregar.
+        <div className="flex items-start gap-3 rounded-[2rem] border border-rose-500/30 bg-rose-50 dark:bg-rose-950/30 p-5">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
+          <div className="text-xs text-rose-800 dark:text-rose-300">
+            <p className="font-black text-sm uppercase tracking-tight">Loja não identificada</p>
+            <p className="mt-0.5 opacity-90 font-medium">
+              O <strong>storeId</strong> não foi localizado no contexto da loja. Sem ele, o widget não saberá quais vídeos carregar.
             </p>
           </div>
         </div>
       )}
 
       {!hasSupabaseConfig && (
-        <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
-          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
-
-          <div className="text-sm text-red-800">
-            <p className="font-bold">Configuração do Supabase ausente</p>
-
-            <p className="mt-1 opacity-80">
-              Verifique se as variáveis{' '}
-              <strong>VITE_SUPABASE_URL</strong> e{' '}
-              <strong>VITE_SUPABASE_ANON_KEY</strong> estão configuradas no
-              ambiente.
+        <div className="flex items-start gap-3 rounded-[2rem] border border-rose-500/30 bg-rose-50 dark:bg-rose-950/30 p-5">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
+          <div className="text-xs text-rose-800 dark:text-rose-300">
+            <p className="font-black text-sm uppercase tracking-tight">Configuração do Supabase ausente</p>
+            <p className="mt-0.5 opacity-90 font-medium">
+              Verifique se as variáveis <strong>VITE_SUPABASE_URL</strong> e <strong>VITE_SUPABASE_ANON_KEY</strong> estão configuradas no ambiente.
             </p>
           </div>
         </div>
       )}
 
       {isLocal && (
-        <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-
-          <div className="text-sm text-amber-800">
-            <p className="font-bold">URL pública ausente</p>
-
-            <p className="mt-1 opacity-80">
-              O widget está usando uma URL local. Para funcionar dentro da loja,
-              configure uma URL pública de produção, por exemplo a URL da
-              Vercel, na variável <strong>VITE_WIDGET_PUBLIC_URL</strong>.
+        <div className="flex items-start gap-3 rounded-[2rem] border border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 p-5">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+          <div className="text-xs text-amber-800 dark:text-amber-300">
+            <p className="font-black text-sm uppercase tracking-tight">URL pública ausente</p>
+            <p className="mt-0.5 opacity-90 font-medium">
+              O widget está usando uma URL local. Para funcionar na loja real, configure a variável <strong>VITE_WIDGET_PUBLIC_URL</strong> com o domínio público da aplicação.
             </p>
           </div>
         </div>
       )}
 
-      <div className="grid gap-5 md:grid-cols-3">
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 text-violet-600">
-            <PlayCircle className="h-6 w-6" />
+      {/* ── MÓDULOS SUPERIORES: FORMATOS DE VÍDEO ── */}
+      <div className="grid gap-6 md:grid-cols-3">
+        {/* Card: Vídeo Flutuante */}
+        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+          <div>
+            <div 
+              style={{ backgroundColor: '#ff7a29' }}
+              className="flex h-11 w-11 items-center justify-center rounded-2xl text-white shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4"
+            >
+              <PlayCircle size={20} className="!text-white stroke-[2.5]" />
+            </div>
+
+            <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
+              Vídeo flutuante
+            </h2>
+
+            <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+              Exiba vídeos fixos no canto da tela, ideal para destaques, lançamentos, ofertas e apresentações rápidas de produto.
+            </p>
           </div>
-
-          <h2 className="mt-5 text-lg font-black text-slate-900">
-            Vídeo flutuante
-          </h2>
-
-          <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
-            Exiba vídeos fixos no canto da tela, ideal para destaque,
-            lançamento, oferta ou apresentação rápida de produto.
-          </p>
         </div>
 
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
-            <Film className="h-6 w-6" />
+        {/* Card: Carrossel de Stories */}
+        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+          <div>
+            <div 
+              style={{ backgroundColor: '#ff7a29' }}
+              className="flex h-11 w-11 items-center justify-center rounded-2xl text-white shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4"
+            >
+              <Film size={20} className="!text-white stroke-[2.5]" />
+            </div>
+
+            <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
+              Carrossel de stories
+            </h2>
+
+            <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+              Mostre múltiplos vídeos em formato horizontal na Home, páginas de categorias ou diretamente na vitrine de produtos.
+            </p>
           </div>
-
-          <h2 className="mt-5 text-lg font-black text-slate-900">
-            Carrossel de stories
-          </h2>
-
-          <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
-            Mostre vários vídeos em formato horizontal, parecido com stories,
-            em vitrines, home, páginas de categoria ou produto.
-          </p>
         </div>
 
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-            <Layers3 className="h-6 w-6" />
+        {/* Card: Galeria de Vídeos */}
+        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+          <div>
+            <div 
+              style={{ backgroundColor: '#ff7a29' }}
+              className="flex h-11 w-11 items-center justify-center rounded-2xl text-white shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4"
+            >
+              <Layers3 size={20} className="!text-white stroke-[2.5]" />
+            </div>
+
+            <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
+              Galeria de vídeos
+            </h2>
+
+            <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+              Crie seções em grade completas com vídeos compráveis para destacar looks, depoimentos, provadores e campanhas.
+            </p>
           </div>
-
-          <h2 className="mt-5 text-lg font-black text-slate-900">
-            Galeria de vídeos
-          </h2>
-
-          <p className="mt-2 text-sm font-medium leading-relaxed text-slate-500">
-            Crie uma seção completa com vídeos compráveis para destacar looks,
-            depoimentos, demonstrações e campanhas.
-          </p>
         </div>
       </div>
-
+      
       <div className="space-y-6">
         {/* PASSO 1 */}
         <div className="rounded-[2.5rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-10">
