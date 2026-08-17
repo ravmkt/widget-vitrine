@@ -245,33 +245,33 @@ const DashboardPage: React.FC = () => {
     );
   }
 
-  return (
-    <div className="space-y-8 animate-fade-in font-sans text-slate-900 dark:text-slate-100">
-      {/* ── 1. HEADER (BOAS-VINDAS & STATUS DO PLANO) ── */}
-      <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs font-black uppercase tracking-wider text-[#0094EB] dark:text-[#fd8539] bg-blue-50 dark:bg-orange-500/10 px-3 py-1 rounded-full border border-blue-100 dark:border-orange-500/20">
+return (
+    <div className="space-y-8 animate-fade-in font-sans text-slate-900 dark:text-[#e8ecf4] min-h-screen -m-6 p-6 sm:p-8 bg-transparent dark:bg-[radial-gradient(ellipse_at_top,_#1a1f3a_0%,_#0f1220_55%,_#0a0e1a_100%)]">
+      {/* ── 1. HEADER (BOAS-VINDAS & STATUS COM GLOW) ── */}
+      <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 rounded-[2rem] border border-slate-200 dark:border-orange-500/15 shadow-sm dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
+        <div className="flex items-center gap-2 mb-2.5">
+          <span className="text-xs font-black uppercase tracking-wider text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/25 dark:shadow-[0_0_12px_rgba(255,122,41,0.2)]">
             Plano {usage.planName}
           </span>
           {usage.subscriptionStatus === 'trialing' && usage.trialDaysLeft !== null ? (
-            <span className="text-xs font-extrabold text-amber-700 bg-amber-50 dark:bg-amber-950/50 dark:text-amber-400 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
+            <span className="text-xs font-extrabold text-amber-700 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-700/40">
               Período de Testes ({usage.trialDaysLeft} dias restantes)
             </span>
           ) : usage.subscriptionStatus === 'active' ? (
-            <span className="text-xs font-extrabold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 dark:text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+            <span className="text-xs font-extrabold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-700/40">
               Assinatura Ativa
             </span>
           ) : null}
         </div>
 
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
           Olá, {storeName || 'seja bem-vindo(a)'} 👋
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-sm text-slate-500 dark:text-[#c0c5d4] mt-1 font-medium">
           Visão Geral — Acompanhe o consumo do plano, performance dos vídeos e configuração da sua loja.
         </p>
       </div>
-
+      
       {/* ── 2. CONSUMO DO PLANO ── */}
       <div>
         <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3 px-1">
