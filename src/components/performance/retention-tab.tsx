@@ -312,35 +312,37 @@ export function RetentionTab(_props: Props) {
   );
 }
 
-// ─── Card de retenção ───────────────────────────────────────
+// ─── Card de retenção (Padronizado em Laranja #ff7a29) ───
 
 const RetentionCard = ({
   icon: Icon,
   label,
   value,
-  color,
 }: {
   icon: React.ElementType;
   label: string;
   value: string;
-  color: 'blue' | 'emerald' | 'amber' | 'rose';
+  color?: string;
 }) => {
-  const colors = {
-    blue:    'bg-blue-50 dark:bg-blue-900/30 text-[#0094EB]',
-    emerald: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500 dark:text-emerald-400',
-    amber:   'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400',
-    rose:    'bg-rose-50 dark:bg-rose-900/30 text-rose-500 dark:text-rose-400',
-  };
-
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-[2rem] p-6 shadow-sm">
-      <div className={cn('p-3 rounded-xl inline-flex mb-4', colors[color])}>
-        <Icon size={20} />
+    <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2rem] p-6 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between">
+      <div className="flex items-start justify-between mb-4">
+        {/* Quadrado do Ícone Padronizado: Laranja #ff7a29 com Ícone Branco */}
+        <div 
+          style={{ backgroundColor: '#ff7a29' }}
+          className="w-11 h-11 rounded-2xl flex items-center justify-center shadow-[0_0_15px_rgba(255,122,41,0.45)] transition-transform duration-300 group-hover:scale-110 shrink-0"
+        >
+          <Icon size={20} style={{ color: '#ffffff', stroke: '#ffffff' }} className="!text-white stroke-[2.5]" />
+        </div>
       </div>
-      <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
-        {label}
-      </p>
-      <h3 className="text-xl font-black text-slate-900 dark:text-white">{value}</h3>
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0] mb-1">
+          {label}
+        </p>
+        <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+          {value}
+        </h3>
+      </div>
     </div>
   );
 };
