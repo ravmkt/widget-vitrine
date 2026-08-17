@@ -252,7 +252,7 @@ const [loading, setLoading] = useState(true);
 
   return (
     <div className="space-y-8 animate-fade-in font-sans text-slate-900 dark:text-slate-100">
-      {/* ── 1. HEADER (SAUDAÇÃO, PLANO, TRIAL E UPGRADE) ── */}
+{/* ── 1. HEADER (SAUDAÇÃO, PLANO, TRIAL E UPGRADE) ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
         <div>
           <div className="flex items-center gap-2">
