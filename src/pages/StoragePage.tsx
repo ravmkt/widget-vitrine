@@ -1112,18 +1112,17 @@ if (Array.isArray(realVideos)) {
             URL Externa
           </button>
 
-          {/* Botão Primário Laranja: Fazer Upload */}
+{/* Botão Primário Dual-Theme: Fazer Upload */}
           <button
             type="button"
             disabled={uploading}
             onClick={handleTriggerUpload}
-            style={{ backgroundColor: '#ff7a29' }}
-            className="flex items-center gap-2 rounded-2xl !bg-[#ff7a29] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/30 hover:opacity-95 hover:scale-[1.02] transition-all disabled:opacity-50 cursor-pointer"
+            className="flex items-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all disabled:opacity-50 cursor-pointer"
           >
             <UploadCloud size={16} className={cn("!text-white stroke-[2.5]", uploading && "animate-bounce")} />
             {uploading ? 'Enviando...' : 'Fazer Upload'}
           </button>
-        </div>
+                  </div>
       </div>
 
       {/* ── CARD MODULAR DA RÉGUA DE USO (ESTILO DASHBOARD VIDLYTICS) ── */}
