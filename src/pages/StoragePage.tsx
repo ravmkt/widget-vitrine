@@ -1362,7 +1362,7 @@ if (Array.isArray(realVideos)) {
 {/* ── MÓDULO MODULAR DE TABELA DE ARQUIVOS (PADRÃO TOP VÍDEOS DASHBOARD) ── */}
       <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
         
-        {/* Barra de Busca e Filtros Integrados */}
+{/* Barra de Busca e Filtros Integrados (Dual-Theme: Azul no Light / Laranja no Dark) */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-white/5 pb-5">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8a90a0]" size={16} />
@@ -1371,19 +1371,19 @@ if (Array.isArray(realVideos)) {
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Pesquisar pelo nome do arquivo..."
-              className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] pl-10 pr-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
+              className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] pl-10 pr-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29]"
             />
           </div>
 
-          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#0f1220] p-1.5 rounded-2xl border border-transparent dark:border-white/5">
+          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#0f1220] p-1.5 rounded-2xl border border-slate-200/60 dark:border-white/5">
             <button
               type="button"
               onClick={() => setSelectedType('all')}
               className={cn(
                 "rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer",
                 selectedType === 'all'
-                  ? "!bg-[#ff7a29] text-white shadow-md shadow-orange-500/30"
-                  : "text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white"
+                  ? "bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-orange-500/30"
+                  : "text-slate-600 dark:text-[#8a90a0] hover:text-slate-900 dark:hover:text-white"
               )}
             >
               Todos
@@ -1394,8 +1394,8 @@ if (Array.isArray(realVideos)) {
               className={cn(
                 "flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer",
                 selectedType === 'video'
-                  ? "!bg-[#ff7a29] text-white shadow-md shadow-orange-500/30"
-                  : "text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white"
+                  ? "bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-orange-500/30"
+                  : "text-slate-600 dark:text-[#8a90a0] hover:text-slate-900 dark:hover:text-white"
               )}
             >
               <FileVideo size={14} />
@@ -1407,8 +1407,8 @@ if (Array.isArray(realVideos)) {
               className={cn(
                 "flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer",
                 selectedType === 'image'
-                  ? "!bg-[#ff7a29] text-white shadow-md shadow-orange-500/30"
-                  : "text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white"
+                  ? "bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-orange-500/30"
+                  : "text-slate-600 dark:text-[#8a90a0] hover:text-slate-900 dark:hover:text-white"
               )}
             >
               <FileImage size={14} />
@@ -1416,7 +1416,7 @@ if (Array.isArray(realVideos)) {
             </button>
           </div>
         </div>
-
+        
         {/* Tabela de Mídias com Estilo Limpo */}
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
