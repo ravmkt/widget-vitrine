@@ -252,31 +252,30 @@ const [loading, setLoading] = useState(true);
 
   return (
     <div className="space-y-8 animate-fade-in font-sans text-slate-900 dark:text-slate-100">
-{/* ── 1. HEADER (SAUDAÇÃO, PLANO, TRIAL E UPGRADE) ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-black uppercase tracking-wider text-[#0094EB] bg-blue-50 dark:bg-blue-950/60 px-3 py-1 rounded-full border border-blue-100 dark:border-blue-800">
-              Plano {usage.planName}
+{/* ── 1. HEADER (BOAS-VINDAS PERSONALIZADAS & STATUS DO PLANO) ── */}
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xs font-black uppercase tracking-wider text-[#0094EB] bg-blue-50 dark:bg-blue-950/60 px-3 py-1 rounded-full border border-blue-100 dark:border-blue-800">
+            Plano {usage.planName}
+          </span>
+          {usage.subscriptionStatus === 'trialing' && usage.trialDaysLeft !== null && (
+            <span className="text-xs font-extrabold text-amber-700 bg-amber-50 dark:bg-amber-950/50 dark:text-amber-400 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
+              Período de Testes ({usage.trialDaysLeft} dias restantes)
             </span>
-            {usage.subscriptionStatus === 'trialing' && usage.trialDaysLeft !== null && (
-              <span className="text-xs font-extrabold text-amber-700 bg-amber-50 dark:bg-amber-950/50 dark:text-amber-400 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
-                Período de Testes ({usage.trialDaysLeft} dias restantes)
-              </span>
-            )}
-          </div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white mt-2">Visão Geral</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Acompanhe o consumo do plano, performance dos vídeos e configuração da sua loja.
-          </p>
+          )}
+          {usage.subscriptionStatus === 'active' && (
+            <span className="text-xs font-extrabold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 dark:text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+              Assinatura Ativa
+            </span>
+          )}
         </div>
 
-        <button
-          onClick={() => navigate('/billing')}
-          className="bg-[#0094EB] hover:bg-[#0077c2] text-white font-black text-xs uppercase tracking-widest px-6 py-3.5 rounded-2xl transition-all shadow-md flex items-center justify-center gap-2"
-        >
-          <Sparkles size={16} /> Fazer Upgrade
-        </button>
+        <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+          Olá, {storeName || 'seja bem-vindo(a)'} 👋
+        </h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          Visão Geral — Acompanhe o consumo do plano, performance dos vídeos e configuração da sua loja.
+        </p>
       </div>
 
       {/* ── 2. CONSUMO DO PLANO (4 CARDS COM BARRAS DE %) ── */}
