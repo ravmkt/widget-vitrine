@@ -17,7 +17,8 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [trialDaysRemaining, setTrialDaysRemaining] = useState<number | null>(null);
-
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
+  
   // Busca status de assinatura para controle do banner global com reatividade e invalidação
   useEffect(() => {
     const checkStoreSubscription = async () => {
