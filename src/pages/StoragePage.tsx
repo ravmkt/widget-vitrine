@@ -1035,15 +1035,15 @@ if (Array.isArray(realVideos)) {
   };
 
   return (
-    <div className="animate-fade-in space-y-8 pb-16">
-      {/* Header da Página */}
-      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+    <div className="animate-fade-in space-y-8 pb-20 font-sans">
+      {/* ── CABEÇALHO DA PÁGINA ── */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Meu Armazenamento
           </h1>
-          <p className="mt-1 font-medium text-slate-500 dark:text-slate-400">
-            Gerencie os vídeos e imagens hospedados no seu plano.
+          <p className="mt-1 text-sm font-medium text-slate-500 dark:text-[#c0c5d4]">
+            Gerencie os vídeos e imagens hospedados no seu plano e monitore o uso de espaço.
           </p>
         </div>
 
@@ -1060,10 +1060,10 @@ if (Array.isArray(realVideos)) {
             }}
             title={connectedPlatforms.includes('instagram') ? "Ver Mídias do Instagram" : "Conectar Conta do Instagram"}
             className={cn(
-              "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-bold transition-all border shadow-sm",
+              "flex items-center gap-2 rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-wider transition-all border shadow-sm cursor-pointer",
               connectedPlatforms.includes('instagram')
                 ? "border-pink-500/40 bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white shadow-pink-500/20 hover:opacity-95"
-                : "border-slate-200 bg-slate-100 text-slate-400 hover:bg-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500"
+                : "border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35] text-slate-600 dark:text-[#c0c5d4] hover:bg-slate-50 dark:hover:bg-white/5"
             )}
           >
             <SocialIcons.Instagram />
@@ -1082,12 +1082,12 @@ if (Array.isArray(realVideos)) {
             }}
             title={connectedPlatforms.includes('tiktok') ? "Ver Vídeos do TikTok" : "Conectar Conta do TikTok"}
             className={cn(
-              "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-bold transition-all border shadow-sm",
+              "flex items-center gap-2 rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-wider transition-all border shadow-sm cursor-pointer",
               connectedPlatforms.includes('tiktok')
                 ? activePlatformTab === 'tiktok'
-                  ? "border-slate-800 bg-slate-800 text-white shadow-slate-900/40"
+                  ? "border-slate-700 bg-slate-800 text-white shadow-slate-900/40"
                   : "border-slate-700 bg-black text-white shadow-slate-900/40 hover:bg-slate-950"
-                : "border-slate-200 bg-slate-100 text-slate-400 hover:bg-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500"
+                : "border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35] text-slate-600 dark:text-[#c0c5d4] hover:bg-slate-50 dark:hover:bg-white/5"
             )}
           >
             <SocialIcons.TikTok />
@@ -1106,71 +1106,61 @@ if (Array.isArray(realVideos)) {
           <button
             type="button"
             onClick={() => setShowUrlModal(true)}
-            className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm hover:border-purple-300 hover:bg-purple-50/50 hover:text-purple-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-purple-800 dark:hover:bg-purple-950/40 dark:hover:text-purple-400 transition-all"
+            className="flex items-center gap-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35] px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-[#e8ecf4] shadow-sm hover:border-purple-400 hover:text-purple-500 transition-all cursor-pointer"
           >
-            <Link size={16} className="text-purple-500" />
+            <Link size={15} className="text-purple-500" />
             URL Externa
           </button>
 
-          {/* Botão Fazer Upload */}
+          {/* Botão Primário Laranja: Fazer Upload */}
           <button
             type="button"
             disabled={uploading}
             onClick={handleTriggerUpload}
-            className="flex items-center gap-2 rounded-2xl bg-[#0094EB] px-5 py-2.5 text-xs font-bold text-white shadow-lg hover:bg-[#0E4787] transition-all disabled:opacity-50"
+            style={{ backgroundColor: '#ff7a29' }}
+            className="flex items-center gap-2 rounded-2xl !bg-[#ff7a29] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/30 hover:opacity-95 hover:scale-[1.02] transition-all disabled:opacity-50 cursor-pointer"
           >
-            <UploadCloud size={16} className={uploading ? 'animate-bounce' : ''} />
+            <UploadCloud size={16} className={cn("!text-white stroke-[2.5]", uploading && "animate-bounce")} />
             {uploading ? 'Enviando...' : 'Fazer Upload'}
           </button>
         </div>
       </div>
 
-      {/* Card da Régua de Porcentagem de Armazenamento Dinâmica */}
+      {/* ── CARD MODULAR DA RÉGUA DE USO (ESTILO DASHBOARD VIDLYTICS) ── */}
       {(() => {
-        const isCritical = usedPercentage >= 95;
-        const isWarning = usedPercentage >= 70 && usedPercentage < 95;
+        const isCritical = usedPercentage >= 90;
+        const isWarning = usedPercentage >= 70 && usedPercentage < 90;
 
-        const progressColorClass = isCritical
-          ? 'bg-[#E11D48]'
+        const currentColorHex = isCritical
+          ? '#ef4444' // >= 90% -> Vermelho
           : isWarning
-            ? 'bg-amber-500'
-            : 'bg-emerald-500';
-
-        const textColorClass = isCritical
-          ? 'text-[#E11D48]'
-          : isWarning
-            ? 'text-amber-500'
-            : 'text-emerald-500';
+            ? '#ff7a29' // 70% a 89% -> Laranja
+            : '#22c55e'; // < 70% -> Verde
 
         return (
-          <div className="rounded-[1.5rem] border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 space-y-4">
+          <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm space-y-4">
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
               <div className="flex items-center gap-4">
+                {/* Ícone Padronizado: Laranja com Ícone Branco */}
                 <div
-                  className={cn(
-                    'flex h-12 w-12 items-center justify-center rounded-2xl transition-colors',
-                    isCritical
-                      ? 'bg-rose-50 text-[#E11D48] dark:bg-rose-950/40'
-                      : isWarning
-                        ? 'bg-amber-50 text-amber-500 dark:bg-amber-950/40'
-                        : 'bg-emerald-50 text-emerald-500 dark:bg-emerald-950/40'
-                  )}
+                  style={{ backgroundColor: '#ff7a29' }}
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl shadow-[0_0_15px_rgba(255,122,41,0.45)] transition-transform hover:scale-105 shrink-0"
                 >
-                  <HardDrive size={24} />
+                  <HardDrive size={22} className="!text-white stroke-[2.5]" style={{ color: '#ffffff', stroke: '#ffffff' }} />
                 </div>
                 <div>
-<div className="flex items-center gap-2">
-                    <h3 className="text-base font-black text-slate-900 dark:text-white">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">
                       {planName}
                     </h3>
-                    <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-black uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    <span className="rounded-full bg-slate-100 dark:bg-[#0f1220] px-2.5 py-0.5 text-[10px] font-black uppercase text-slate-600 dark:text-[#ff7a29] border border-transparent dark:border-white/5">
                       {formatSize(maxLimitBytes)} Limite
                     </span>
                   </div>
-                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
-                    Uso atual: <strong className="text-slate-800 dark:text-slate-200">{formatSize(totalUsedBytes)}</strong> de {formatSize(maxLimitBytes)}
+                  <p className="text-xs font-semibold text-slate-500 dark:text-[#c0c5d4] mt-0.5">
+                    Uso atual: <strong className="text-slate-800 dark:text-white">{formatSize(totalUsedBytes)}</strong> de {formatSize(maxLimitBytes)}
                   </p>
-                                  </div>
+                </div>
               </div>
 
               <div className="flex items-center gap-4 text-right">
@@ -1178,23 +1168,24 @@ if (Array.isArray(realVideos)) {
                   <button
                     type="button"
                     onClick={() => showSuccess('Redirecionando para a página de planos...')}
-                    className={cn(
-                      'flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black text-white shadow-md transition-all',
-                      isCritical
-                        ? 'bg-[#E11D48] hover:bg-rose-700 shadow-rose-500/20'
-                        : 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/20'
-                    )}
+                    style={{ backgroundColor: currentColorHex }}
+                    className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black text-white shadow-md transition-all hover:opacity-90"
                   >
-                    <Sparkles size={14} />
+                    <Sparkles size={14} className="!text-white" />
                     Faça Upgrade
                   </button>
                 )}
 
                 <div>
-                  <span className={cn('text-2xl font-black', textColorClass)}>
+                  <span 
+                    style={{ color: currentColorHex }}
+                    className="text-2xl font-black tracking-tight block"
+                  >
                     {usedPercentage}%
                   </span>
-                  <span className="block text-[11px] font-bold text-slate-400">Espaço Consumido</span>
+                  <span className="block text-[11px] font-bold text-slate-400 dark:text-[#8a90a0]">
+                    Espaço Consumido
+                  </span>
                 </div>
               </div>
             </div>
@@ -1204,23 +1195,27 @@ if (Array.isArray(realVideos)) {
                 className={cn(
                   'flex items-center gap-2 rounded-xl p-3 text-xs font-bold',
                   isCritical
-                    ? 'bg-rose-50 text-[#E11D48] dark:bg-rose-950/30'
-                    : 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400'
+                    ? 'bg-rose-50 text-[#ef4444] dark:bg-rose-950/30 dark:text-rose-400 border border-rose-500/20'
+                    : 'bg-orange-50 text-[#ff7a29] dark:bg-orange-950/30 dark:text-orange-400 border border-orange-500/20'
                 )}
               >
                 <AlertTriangle size={16} className="shrink-0" />
                 <span>
                   {isCritical
-                    ? 'Atenção: Seu armazenamento está quase cheio! Faça upgrade agora para não interromper a exibição das mídias.'
-                    : 'Seu limite de armazenamento está se aproximando do fim. Considere fazer upgrade do seu plano.'}
+                    ? 'Atenção: Seu armazenamento atingiu 90% ou mais! Faça upgrade para garantir a continuidade dos vídeos.'
+                    : 'Atenção: Você atingiu 70% do seu limite de armazenamento. Considere fazer upgrade do seu plano.'}
                 </span>
               </div>
             )}
 
-<div className="h-3 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+            {/* Barra de Progresso com Shimmer */}
+            <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-[#0f1220] p-0.5 border border-transparent dark:border-white/5">
               <div
-                className={cn('h-full rounded-full transition-all duration-500', progressColorClass)}
-                style={{ width: `${usedPercentage}%` }}
+                className="h-full rounded-full transition-all duration-500 animate-shimmer"
+                style={{
+                  width: `${usedPercentage}%`,
+                  backgroundColor: currentColorHex,
+                }}
               />
             </div>
           </div>
