@@ -45,23 +45,51 @@
     --sidebar-ring: 202 100% 46%;
   }
 
-  /* ═══════════════════════════════════════════════
-     🌙 DARK MODE — DESTAQUES EM LARANJA (#fd8539)
+/* ═══════════════════════════════════════════════
+     🌙 DARK MODE — LARANJA VIBRANTE (#ff7a29) & DEEP GLASS
      ═══════════════════════════════════════════════ */
   .dark {
-    --background: 222 47% 5%;
-    --foreground: 210 40% 98%;
+    /* Fundo base: #0f1220 */
+    --background: 231 36% 9%;
+    --foreground: 220 30% 94%;
 
-    --card: 222 47% 9%;
-    --card-foreground: 210 40% 98%;
+    /* Cards: #1a1f35 translúcido */
+    --card: 228 34% 16%;
+    --card-foreground: 220 30% 96%;
 
-    --popover: 222 47% 9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 228 34% 16%;
+    --popover-foreground: 220 30% 96%;
 
-    /* Destaque Tema Escuro: Laranja #fd8539 (23 98% 61%) */
-    --primary: 23 98% 61%;
-    --primary-foreground: 210 40% 98%;
+    /* Destaque Tema Escuro: Laranja Vibrante #ff7a29 (23 100% 58%) */
+    --primary: 23 100% 58%;
+    --primary-foreground: 0 0% 100%;
 
+    --secondary: 228 30% 20%;
+    --secondary-foreground: 220 30% 94%;
+
+    --muted: 228 25% 18%;
+    --muted-foreground: 223 14% 59%;
+
+    --accent: 228 34% 20%;
+    --accent-foreground: 220 30% 96%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 23 100% 58% / 0.15;
+    --input: 228 25% 18%;
+    --ring: 23 100% 58%;
+
+    --sidebar-background: 231 36% 8%;
+    --sidebar-foreground: 220 30% 94%;
+    --sidebar-primary: 23 100% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 228 34% 16%;
+    --sidebar-accent-foreground: 220 30% 96%;
+    --sidebar-border: 228 25% 18%;
+    --sidebar-ring: 23 100% 58%;
+  }
+  
     --secondary: 212 81% 29%;
     --secondary-foreground: 210 40% 98%;
 
