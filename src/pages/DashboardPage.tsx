@@ -11,18 +11,15 @@ import {
   HardDrive,
   FileText,
   Clock,
-  Sparkles,
   Play,
   Share2,
-  HelpCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import CustomDialog from '@/components/CustomDialog';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
-import { getDashboardMetrics, getMetricsFlow, getVideoMetricsRows, type AnalyticsInterval } from '@/lib/analytics';
+import { getDashboardMetrics, getVideoMetricsRows, type AnalyticsInterval } from '@/lib/analytics';
 import { useTenant } from '@/context/TenantContext';
 
 interface StoreUsageData {
@@ -52,10 +49,10 @@ interface ActivityEvent {
   created_at: string;
 }
 
-const DashboardPage = () => {
+const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { storeId } = useTenant();
-const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [metricsLoading, setMetricsLoading] = useState(false);
   const [storeName, setStoreName] = useState<string>('');
   const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsInterval>('30');
@@ -83,7 +80,6 @@ const [loading, setLoading] = useState(true);
   });
   const [topVideos, setTopVideos] = useState<any[]>([]);
 
-  // Estados dos Blocos
   const [usage, setUsage] = useState<StoreUsageData>({
     planName: 'Starter',
     subscriptionStatus: 'trialing',
@@ -108,7 +104,7 @@ const [loading, setLoading] = useState(true);
 
   const activeInterval = useMemo(() => selectedPeriod, [selectedPeriod]);
 
-  // 1. Carregamento Estrutural da Página (Executa apenas na troca de loja)
+  // 1. Carregamento Estrutural da Loja
   useEffect(() => {
     if (!storeId) return;
     let isMounted = true;
@@ -128,7 +124,7 @@ const [loading, setLoading] = useState(true);
           storiesRes,
           appearanceRes,
           locationsRes,
-          eventsRes
+          eventsRes,
         ] = await Promise.all([
           db.videos.getAll(storeId),
           supabase.from('stores').select('*').eq('id', storeId).single(),
@@ -171,7 +167,6 @@ const [loading, setLoading] = useState(true);
 
         setActivities(eventsRes.data || []);
 
-        // Checklist 100% validado pelo banco de dados
         setChecklist([
           { id: 'videos', title: 'Fazer upload de vídeos', description: 'Suba seus vídeos verticais ou importe das redes sociais.', route: '/videos', completed: totalVideosCount > 0 },
           { id: 'products', title: 'Cadastrar produtos da loja', description: 'Vincule produtos com preço para compra direta.', route: '/products', completed: (productsRes.count || 0) > 0 },
@@ -193,7 +188,7 @@ const [loading, setLoading] = useState(true);
     };
   }, [storeId]);
 
-  // 2. Carregamento Isolado do Filtro de Métricas (Sem recarregar a página toda)
+  // 2. Carregamento Isolado de Métricas
   useEffect(() => {
     if (!storeId) return;
     let isMounted = true;
@@ -222,7 +217,7 @@ const [loading, setLoading] = useState(true);
       isMounted = false;
     };
   }, [storeId, activeInterval, customRange, videos]);
-  
+
   const calcPercent = (current: number, max: number) => {
     if (!max || max <= 0) return 0;
     return Math.min(100, Math.round((current / max) * 100));
@@ -238,13 +233,13 @@ const [loading, setLoading] = useState(true);
   const getBarColor = (pct: number) => {
     if (pct >= 90) return 'bg-rose-500';
     if (pct >= 75) return 'bg-amber-500';
-    return 'bg-[#0094EB]';
+    return 'bg-[#0094EB] dark:bg-[#fd8539]';
   };
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <div className="w-10 h-10 border-4 border-[#0094EB] border-t-transparent rounded-full animate-spin mb-3" />
+        <div className="w-10 h-10 border-4 border-[#0094EB] dark:border-[#fd8539] border-t-transparent rounded-full animate-spin mb-3" />
         <p className="text-sm font-semibold text-slate-500">Atualizando visão geral...</p>
       </div>
     );
@@ -252,22 +247,21 @@ const [loading, setLoading] = useState(true);
 
   return (
     <div className="space-y-8 animate-fade-in font-sans text-slate-900 dark:text-slate-100">
-{/* ── 1. HEADER (BOAS-VINDAS PERSONALIZADAS & STATUS DO PLANO) ── */}
+      {/* ── 1. HEADER (BOAS-VINDAS & STATUS DO PLANO) ── */}
       <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs font-black uppercase tracking-wider text-[#0094EB] bg-blue-50 dark:bg-blue-950/60 px-3 py-1 rounded-full border border-blue-100 dark:border-blue-800">
+          <span className="text-xs font-black uppercase tracking-wider text-[#0094EB] dark:text-[#fd8539] bg-blue-50 dark:bg-orange-500/10 px-3 py-1 rounded-full border border-blue-100 dark:border-orange-500/20">
             Plano {usage.planName}
           </span>
-          {usage.subscriptionStatus === 'trialing' && usage.trialDaysLeft !== null && (
+          {usage.subscriptionStatus === 'trialing' && usage.trialDaysLeft !== null ? (
             <span className="text-xs font-extrabold text-amber-700 bg-amber-50 dark:bg-amber-950/50 dark:text-amber-400 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
               Período de Testes ({usage.trialDaysLeft} dias restantes)
             </span>
-          )}
-          {usage.subscriptionStatus === 'active' && (
+          ) : usage.subscriptionStatus === 'active' ? (
             <span className="text-xs font-extrabold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 dark:text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
               Assinatura Ativa
             </span>
-          )}
+          ) : null}
         </div>
 
         <h1 className="text-2xl font-black text-slate-900 dark:text-white">
@@ -278,17 +272,16 @@ const [loading, setLoading] = useState(true);
         </p>
       </div>
 
-      {/* ── 2. CONSUMO DO PLANO (4 CARDS COM BARRAS DE %) ── */}
+      {/* ── 2. CONSUMO DO PLANO ── */}
       <div>
         <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3 px-1">
           Consumo do Plano
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Card Views */}
           <div className="bg-white dark:bg-slate-900 p-5 rounded-[1.8rem] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
             <div className="flex justify-between items-center text-slate-400">
               <span className="text-xs font-bold uppercase tracking-wider">Visualizações</span>
-              <Eye size={18} className="text-[#0094EB]" />
+              <Eye size={18} className="text-[#0094EB] dark:text-[#fd8539]" />
             </div>
             <div className="flex items-baseline justify-between">
               <span className="text-xl font-black text-slate-900 dark:text-white">
@@ -305,11 +298,10 @@ const [loading, setLoading] = useState(true);
             </div>
           </div>
 
-          {/* Card Armazenamento */}
           <div className="bg-white dark:bg-slate-900 p-5 rounded-[1.8rem] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
             <div className="flex justify-between items-center text-slate-400">
               <span className="text-xs font-bold uppercase tracking-wider">Armazenamento</span>
-              <HardDrive size={18} className="text-[#0094EB]" />
+              <HardDrive size={18} className="text-[#0094EB] dark:text-[#fd8539]" />
             </div>
             <div className="flex items-baseline justify-between">
               <span className="text-xl font-black text-slate-900 dark:text-white">
@@ -326,11 +318,10 @@ const [loading, setLoading] = useState(true);
             </div>
           </div>
 
-          {/* Card Páginas */}
           <div className="bg-white dark:bg-slate-900 p-5 rounded-[1.8rem] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
             <div className="flex justify-between items-center text-slate-400">
               <span className="text-xs font-bold uppercase tracking-wider">Páginas com Vídeos</span>
-              <FileText size={18} className="text-[#0094EB]" />
+              <FileText size={18} className="text-[#0094EB] dark:text-[#fd8539]" />
             </div>
             <div className="flex items-baseline justify-between">
               <span className="text-xl font-black text-slate-900 dark:text-white">{usage.pagesUsed}</span>
@@ -345,11 +336,10 @@ const [loading, setLoading] = useState(true);
             </div>
           </div>
 
-          {/* Card Próximo Vencimento */}
           <div className="bg-white dark:bg-slate-900 p-5 rounded-[1.8rem] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 flex flex-col justify-between">
             <div className="flex justify-between items-center text-slate-400">
               <span className="text-xs font-bold uppercase tracking-wider">Ciclo da Conta</span>
-              <Clock size={18} className="text-[#0094EB]" />
+              <Clock size={18} className="text-[#0094EB] dark:text-[#fd8539]" />
             </div>
             <div>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</p>
@@ -365,11 +355,13 @@ const [loading, setLoading] = useState(true);
         </div>
       </div>
 
-{/* ── 3. DESEMPENHO DOS VÍDEOS (SPLIT 50/50: GRID 2x2 À ESQUERDA + TOP VÍDEOS À DIREITA) ── */}
-      <div className={cn(
-        "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 sm:p-8 shadow-sm space-y-6 transition-opacity duration-200",
-        metricsLoading && "opacity-60 pointer-events-none"
-      )}>
+      {/* ── 3. DESEMPENHO DOS VÍDEOS (SPLIT 50/50) ── */}
+      <div
+        className={cn(
+          'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 sm:p-8 shadow-sm space-y-6 transition-opacity duration-200',
+          metricsLoading && 'opacity-60 pointer-events-none'
+        )}
+      >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-5">
           <div>
             <h2 className="text-lg font-black text-slate-800 dark:text-white">Desempenho dos Vídeos</h2>
@@ -387,11 +379,11 @@ const [loading, setLoading] = useState(true);
             ].map((p) => (
               <button
                 key={p.id}
-                onClick={() => p.id === 'custom' ? setIsCalendarOpen(true) : setSelectedPeriod(p.id as AnalyticsInterval)}
+                onClick={() => (p.id === 'custom' ? setIsCalendarOpen(true) : setSelectedPeriod(p.id as AnalyticsInterval))}
                 className={cn(
                   'px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5',
                   selectedPeriod === p.id
-                    ? 'bg-[#0094EB] text-white shadow-md'
+                    ? 'bg-[#0094EB] dark:bg-[#fd8539] text-white shadow-md'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                 )}
               >
@@ -403,7 +395,6 @@ const [loading, setLoading] = useState(true);
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Lado Esquerdo: Grid 2x2 com 4 Métricas (Sem Receita) */}
           <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <MetricCard title="Visualizações" value={dashboardMetrics.views.toLocaleString()} icon={Eye} />
             <MetricCard title="Cliques em CTA" value={dashboardMetrics.ctaClicks.toLocaleString()} icon={MousePointerClick} />
@@ -411,7 +402,6 @@ const [loading, setLoading] = useState(true);
             <MetricCard title="CTR Médio" value={`${dashboardMetrics.ctr.toFixed(1).replace('.', ',')}%`} icon={MousePointerClick} />
           </div>
 
-          {/* Lado Direito: Top Vídeos Mais Assistidos */}
           <div className="lg:col-span-6 border-t lg:border-t-0 lg:border-l border-slate-100 dark:border-slate-800 lg:pl-8 flex flex-col justify-between h-full">
             <div>
               <div className="flex items-center justify-between mb-4">
@@ -420,7 +410,7 @@ const [loading, setLoading] = useState(true);
                 </h4>
                 <button
                   onClick={() => navigate('/videos/performance')}
-                  className="text-xs font-bold text-[#0094EB] hover:underline"
+                  className="text-xs font-bold text-[#0094EB] dark:text-[#fd8539] hover:underline"
                 >
                   Ver relatório completo &rarr;
                 </button>
@@ -435,7 +425,7 @@ const [loading, setLoading] = useState(true);
                   {topVideos.map((item, i) => (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 hover:border-[#0094EB]/40 transition-all"
+                      className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 hover:border-[#0094EB]/40 dark:hover:border-[#fd8539]/40 transition-all"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <span className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-black flex items-center justify-center flex-shrink-0">
@@ -477,9 +467,8 @@ const [loading, setLoading] = useState(true);
         </div>
       </div>
 
-      {/* ── 4 & 5. LINHA DIVIDIDA: CHECKLIST À ESQUERDA + ATIVIDADE RECENTE À DIREITA ── */}
+      {/* ── 4 & 5. LINHA DIVIDIDA: CHECKLIST + ATIVIDADE RECENTE ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
-        {/* Lado Esquerdo: Checklist de Ativação (Itens Empilhados Verticalmente) */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-5 mb-5">
@@ -493,9 +482,9 @@ const [loading, setLoading] = useState(true);
               </div>
               <div className="flex items-center gap-2.5">
                 <div className="w-24 h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${checklistPercent}%` }} />
+                  <div className="h-full bg-emerald-500 dark:bg-[#fd8539] rounded-full transition-all duration-500" style={{ width: `${checklistPercent}%` }} />
                 </div>
-                <span className="text-xs font-extrabold text-emerald-600">{checklistPercent}%</span>
+                <span className="text-xs font-extrabold text-emerald-600 dark:text-[#fd8539]">{checklistPercent}%</span>
               </div>
             </div>
 
@@ -504,28 +493,37 @@ const [loading, setLoading] = useState(true);
                 <div
                   key={item.id}
                   onClick={() => navigate(item.route)}
-                  className={`flex items-start gap-3.5 p-3.5 rounded-2xl border transition-all cursor-pointer group ${
+                  className={cn(
+                    'flex items-start gap-3.5 p-3.5 rounded-2xl border transition-all cursor-pointer group',
                     item.completed
-                      ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200/70 dark:border-emerald-900/50'
-                      : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 hover:border-[#0094EB] hover:shadow-md'
-                  }`}
+                      ? 'bg-emerald-50/40 dark:bg-orange-500/10 border-emerald-200/70 dark:border-orange-500/20'
+                      : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 hover:border-[#0094EB] dark:hover:border-[#fd8539] hover:shadow-md'
+                  )}
                 >
-<div
-                className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-black text-[11px] transition-all ${
-                  item.completed
-                    ? 'bg-emerald-500 dark:bg-[#fd8539] text-white shadow-sm'
-                    : 'border-2 border-slate-300 dark:border-slate-600 text-slate-400 group-hover:border-[#0094EB] dark:group-hover:border-[#fd8539]'
-                }`}
-              >
-                {item.completed ? '✓' : index + 1}
-              </div>
+                  <div
+                    className={cn(
+                      'w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-black text-[11px] transition-all',
+                      item.completed
+                        ? 'bg-emerald-500 dark:bg-[#fd8539] text-white shadow-sm'
+                        : 'border-2 border-slate-300 dark:border-slate-600 text-slate-400 group-hover:border-[#0094EB] dark:group-hover:border-[#fd8539]'
+                    )}
+                  >
+                    {item.completed ? '✓' : index + 1}
+                  </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <h3 className={`text-xs font-black ${item.completed ? 'text-emerald-950 dark:text-emerald-300 line-through opacity-80' : 'text-slate-900 dark:text-white group-hover:text-[#0094EB]'}`}>
+                      <h3
+                        className={cn(
+                          'text-xs font-black',
+                          item.completed
+                            ? 'text-emerald-950 dark:text-orange-200 line-through opacity-80'
+                            : 'text-slate-900 dark:text-white group-hover:text-[#0094EB] dark:group-hover:text-[#fd8539]'
+                        )}
+                      >
                         {item.title}
                       </h3>
-                      <span className="text-[11px] font-bold text-[#0094EB] opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-[11px] font-bold text-[#0094EB] dark:text-[#fd8539] opacity-0 group-hover:opacity-100 transition-opacity">
                         Configurar &rarr;
                       </span>
                     </div>
@@ -539,7 +537,6 @@ const [loading, setLoading] = useState(true);
           </div>
         </div>
 
-        {/* Lado Direito: Atividade Recente */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between">
           <div>
             <div className="border-b border-slate-100 dark:border-slate-800 pb-5 mb-5">
@@ -560,7 +557,7 @@ const [loading, setLoading] = useState(true);
                 {activities.map((ev) => (
                   <div key={ev.id} className="py-3.5 flex items-center justify-between text-xs">
                     <div className="flex items-center gap-3">
-                      <span className="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/60 text-[#0094EB] rounded-lg font-black text-[10px] uppercase">
+                      <span className="px-2.5 py-1 bg-blue-50 dark:bg-orange-500/10 text-[#0094EB] dark:text-[#fd8539] rounded-lg font-black text-[10px] uppercase">
                         {ev.event_type === 'video_view' ? '👁️ View' : ev.event_type === 'cta_click' ? '🛍️ Clique CTA' : '⚡ Evento'}
                       </span>
                       <span className="font-bold text-slate-700 dark:text-slate-300">
@@ -578,9 +575,8 @@ const [loading, setLoading] = useState(true);
         </div>
       </div>
 
-      {/* ── 6 & 7. SEÇÃO INFERIOR: ACADEMY (7 COLS) & DESTAQUE DE BENEFÍCIOS (5 COLS) ── */}
+      {/* ── 6 & 7. SEÇÃO INFERIOR: ACADEMY & INDIQUE E GANHE ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-        {/* Videolytics Academy com Thumbnail Semântica */}
         <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-7 rounded-[2.5rem] shadow-sm flex flex-col md:flex-row items-center gap-5">
           <div className="w-full md:w-44 h-28 bg-slate-900 rounded-2xl flex items-center justify-center relative overflow-hidden flex-shrink-0 group cursor-pointer border border-slate-800">
             <img
@@ -590,13 +586,13 @@ const [loading, setLoading] = useState(true);
               loading="lazy"
             />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-10 h-10 rounded-full bg-[#0094EB] text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <div className="w-10 h-10 rounded-full bg-[#0094EB] dark:bg-[#fd8539] text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                 <Play size={16} fill="white" className="ml-0.5" />
               </div>
             </div>
           </div>
           <div className="flex-1 space-y-1.5 text-center md:text-left">
-            <span className="text-[10px] font-black uppercase tracking-wider text-[#0094EB] bg-blue-50 dark:bg-blue-950/60 px-2.5 py-0.5 rounded-full border border-blue-100 dark:border-blue-800 inline-block">
+            <span className="text-[10px] font-black uppercase tracking-wider text-[#0094EB] dark:text-[#fd8539] bg-blue-50 dark:bg-orange-500/10 px-2.5 py-0.5 rounded-full border border-blue-100 dark:border-orange-500/20 inline-block">
               🎓 Vidlytics Academy
             </span>
             <h4 className="text-sm font-black text-slate-800 dark:text-white">
@@ -608,7 +604,6 @@ const [loading, setLoading] = useState(true);
           </div>
         </div>
 
-{/* Card Destaque: Indique e Ganhe / Ganhos & Benefícios (Laranja no Dark Mode) */}
         <div className="lg:col-span-5 bg-gradient-to-br from-[#0094EB] to-blue-700 dark:from-[#fd8539] dark:to-orange-600 text-white p-6 sm:p-7 rounded-[2.5rem] shadow-lg flex flex-col justify-between border border-blue-400/30 dark:border-orange-400/30">
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -629,7 +624,8 @@ const [loading, setLoading] = useState(true);
             <Share2 size={14} /> Copiar Meu Link de Indicação
           </button>
         </div>
-        
+      </div>
+
       {/* DIALOG DE DATA PERSONALIZADA */}
       <CustomDialog
         isOpen={isCalendarOpen}
@@ -668,7 +664,7 @@ interface MetricCardProps {
   isRevenue?: boolean;
 }
 
-const MetricCard = ({ title, value, icon: Icon, isConversion = false, isRevenue = false }: MetricCardProps) => (
+const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon: Icon, isConversion = false, isRevenue = false }) => (
   <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 rounded-[1.8rem] p-5 shadow-sm hover:shadow-md transition-all group">
     <div className="flex items-start justify-between mb-3">
       <div
