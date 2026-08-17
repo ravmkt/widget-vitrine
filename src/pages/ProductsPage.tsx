@@ -1064,15 +1064,15 @@ return (
           </div>
         )}
       </div>
-      
-      {/* Barra de seleção e paginação */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+
+{/* ── BARRA DE SELEÇÃO E CONTROLE DE ITENS POR PÁGINA ── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-1">
         <div className="flex items-center gap-3">
-          <p className="text-sm font-bold text-slate-500">
-            {filteredProducts.length} {filteredProducts.length === 1 ? 'produto' : 'produtos'}
+          <p className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-[#8a90a0]">
+            {filteredProducts.length} {filteredProducts.length === 1 ? 'produto encontrado' : 'produtos encontrados'}
           </p>
           {selectedIds.size > 0 && (
-            <span className="rounded-full bg-[#EAF6FF] px-3 py-1 text-xs font-black text-[#0094EB]">
+            <span className="rounded-full bg-[#ff7a29]/15 border border-[#ff7a29]/30 px-3 py-0.5 text-xs font-black text-[#ff7a29]">
               {selectedIds.size} selecionados
             </span>
           )}
@@ -1080,7 +1080,7 @@ return (
             <button
               type="button"
               onClick={selectAllFiltered}
-              className="text-xs font-black text-[#0094EB] underline hover:text-[#0E4787]"
+              className="text-xs font-black text-[#ff7a29] underline hover:opacity-80 transition-all"
             >
               Selecionar todos os {filteredProducts.length}
             </button>
@@ -1092,22 +1092,22 @@ return (
             <button
               type="button"
               onClick={handleBulkDeleteClick}
-              className="inline-flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-black text-rose-600 transition-all hover:bg-rose-100"
+              className="inline-flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3.5 py-2 text-xs font-black text-rose-500 transition-all hover:bg-rose-500/20"
             >
-              <Trash2 size={16} />
+              <Trash2 size={14} />
               Excluir {selectedIds.size} {selectedIds.size === 1 ? 'selecionado' : 'selecionados'}
             </button>
           )}
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-400">Itens por página</span>
+            <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">Itens por página:</span>
             <select
               value={pageSize}
               onChange={e => {
                 setPageSize(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-xs font-black text-slate-600 outline-none focus:border-[#0094EB]"
+              className="rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-3 py-1.5 text-xs font-black text-slate-700 dark:text-white outline-none focus:border-[#ff7a29]"
             >
               <option value={10}>10</option>
               <option value={50}>50</option>
@@ -1117,66 +1117,74 @@ return (
         </div>
       </div>
 
-      {/* Tabela */}
-      <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm">
+      {/* ── TABELA MODULAR DE PRODUTOS (ESTILO TOP VÍDEOS DASHBOARD) ── */}
+      <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2.5rem] overflow-hidden shadow-sm p-6 sm:p-8 space-y-4">
         <div className="overflow-x-auto">
           <table className="w-full table-fixed text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="px-4 py-4 text-center w-[48px]">
+              <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#0f1220]/50 text-[10px] font-black uppercase text-slate-400 dark:text-[#8a90a0] tracking-widest">
+                <th className="px-4 py-4 text-center w-[48px] rounded-l-2xl">
                   <input
                     type="checkbox"
                     checked={allOnPageSelected}
                     onChange={toggleSelectAll}
-                    className="h-4 w-4 cursor-pointer rounded border-slate-300 text-[#0094EB] focus:ring-[#0094EB]"
+                    className="h-4 w-4 cursor-pointer rounded border-slate-300 dark:border-slate-600 text-[#ff7a29] focus:ring-[#ff7a29]"
                   />
                 </th>
 
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-[80px]">
+                <th className="px-4 py-4 text-center w-[76px]">
                   Foto
                 </th>
 
                 <th
                   onClick={() => handleSort('produto')}
-                  className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest"
+                  className="cursor-pointer select-none px-5 py-4 text-left"
                 >
-                  Produto{' '}
-                  {sortColumn === 'produto' &&
-                    (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                  <div className="flex items-center gap-1.5">
+                    <span>Produto</span>
+                    {sortColumn === 'produto' &&
+                      (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                  </div>
                 </th>
 
                 <th
                   onClick={() => handleSort('preco')}
-                  className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center w-32"
+                  className="cursor-pointer select-none px-4 py-4 text-center w-32"
                 >
-                  Preço{' '}
-                  {sortColumn === 'preco' &&
-                    (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                  <div className="flex items-center justify-center gap-1.5">
+                    <span>Preço</span>
+                    {sortColumn === 'preco' &&
+                      (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                  </div>
                 </th>
 
                 <th
                   onClick={() => handleSort('categoria')}
-                  className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center w-36"
+                  className="cursor-pointer select-none px-4 py-4 text-center w-36"
                 >
-                  Categoria{' '}
-                  {sortColumn === 'categoria' &&
-                    (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                  <div className="flex items-center justify-center gap-1.5">
+                    <span>Categoria</span>
+                    {sortColumn === 'categoria' &&
+                      (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                  </div>
                 </th>
 
                 <th
                   onClick={() => handleSort('video')}
-                  className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center w-48"
+                  className="cursor-pointer select-none px-4 py-4 text-center w-44"
                 >
-                  Vídeo Vinculado{' '}
-                  {sortColumn === 'video' &&
-                    (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                  <div className="flex items-center justify-center gap-1.5">
+                    <span>Vídeo Vinculado</span>
+                    {sortColumn === 'video' &&
+                      (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                  </div>
                 </th>
 
                 <th
                   onClick={() => handleSort('origem')}
-                  className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-28 text-center"
+                  className="cursor-pointer select-none px-4 py-4 text-center w-28"
                 >
-                  <div className="flex items-center justify-center text-center gap-1.5 w-full">
+                  <div className="flex items-center justify-center gap-1.5">
                     <span>Origem</span>
                     {sortColumn === 'origem' &&
                       (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
@@ -1185,41 +1193,43 @@ return (
 
                 <th
                   onClick={() => handleSort('status')}
-                  className="cursor-pointer select-none px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-28 text-center"
+                  className="cursor-pointer select-none px-4 py-4 text-center w-28"
                 >
-                  <div className="flex items-center justify-center text-center gap-1.5 w-full">
+                  <div className="flex items-center justify-center gap-1.5">
                     <span>Status</span>
                     {sortColumn === 'status' &&
                       (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
                   </div>
                 </th>
 
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest w-48 text-center">
+                <th className="px-4 py-4 text-center w-36 rounded-r-2xl">
                   Ações
                 </th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
               {pagedProducts.map(product => (
                 <tr
                   key={product.id}
                   className={cn(
                     'transition-colors',
-                    selectedIds.has(product.id) ? 'bg-[#EAF6FF]/60' : 'hover:bg-slate-50/50'
+                    selectedIds.has(product.id)
+                      ? 'bg-orange-500/10 dark:bg-orange-500/15'
+                      : 'hover:bg-slate-50/60 dark:hover:bg-white/[0.02]'
                   )}
                 >
-                  <td className="px-4 py-4 text-center align-middle">
+                  <td className="px-4 py-3.5 text-center align-middle">
                     <input
                       type="checkbox"
                       checked={selectedIds.has(product.id)}
                       onChange={() => toggleSelectOne(product.id)}
-                      className="h-4 w-4 cursor-pointer rounded border-slate-300 text-[#0094EB] focus:ring-[#0094EB]"
+                      className="h-4 w-4 cursor-pointer rounded border-slate-300 dark:border-slate-600 text-[#ff7a29] focus:ring-[#ff7a29]"
                     />
                   </td>
 
-                  <td className="px-6 py-4 align-middle">
-                    <div className="h-14 w-14 min-h-[56px] min-w-[56px] rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
+                  <td className="px-4 py-3.5 align-middle">
+                    <div className="h-12 w-12 rounded-xl bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
                       {product.image_url ? (
                         <img
                           src={product.image_url}
@@ -1230,49 +1240,51 @@ return (
                           }}
                         />
                       ) : (
-                        <Package size={18} className="text-slate-400" />
+                        <Package size={18} className="text-slate-400 dark:text-[#8a90a0]" />
                       )}
                     </div>
                   </td>
 
-                  <td className="px-6 py-4">
-                    <p className="font-bold text-slate-800 truncate max-w-xs">{product.name}</p>
+                  <td className="px-5 py-3.5">
+                    <p className="font-black text-xs text-slate-800 dark:text-[#e8ecf4] truncate max-w-xs" title={product.name}>
+                      {product.name}
+                    </p>
                   </td>
 
-                  <td className="px-6 py-4 text-center font-black text-slate-800">
+                  <td className="px-4 py-3.5 text-center font-mono font-black text-xs text-slate-900 dark:text-white">
                     {Number(product.price || 0).toLocaleString('pt-BR', {
                       style: 'currency',
                       currency: 'BRL',
                     })}
                   </td>
 
-                  <td className="px-6 py-4 text-center">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-xs font-bold border border-slate-100 max-w-full truncate">
-                      <Tag size={12} className="shrink-0" />
+                  <td className="px-4 py-3.5 text-center">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#0f1220] text-slate-700 dark:text-[#c0c5d4] text-[11px] font-bold border border-slate-200/60 dark:border-white/5 max-w-full truncate">
+                      <Tag size={11} className="text-[#ff7a29] shrink-0" />
                       <span className="truncate">{(product as any).category || 'Sem categoria'}</span>
                     </span>
                   </td>
 
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-4 py-3.5 text-center">
                     {(product as any).video ? (
-                      <span className="inline-flex max-w-full items-center gap-1.5 text-[#0094EB] text-sm font-bold truncate">
+                      <span className="inline-flex max-w-full items-center gap-1.5 text-[#0094EB] dark:text-[#ff7a29] text-xs font-bold truncate">
                         {(product as any).video}
                       </span>
                     ) : (
-                      <span className="text-slate-400 text-sm italic">Nenhum</span>
+                      <span className="text-slate-400 dark:text-[#8a90a0] text-xs italic">Nenhum</span>
                     )}
                   </td>
 
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-4 py-3.5 text-center">
                     <div className="flex items-center justify-center text-center w-full">
                       <span
                         className={cn(
-                          'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border',
+                          'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border',
                           (product as any).origin === 'manual'
-                            ? 'bg-blue-50 text-blue-600 border-blue-100'
+                            ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-200/60 dark:border-blue-800/40'
                             : (product as any).origin === 'planilha'
-                            ? 'bg-violet-50 text-violet-700 border-violet-100'
-                            : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                            ? 'bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-400 border-violet-200/60 dark:border-violet-800/40'
+                            : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800/40'
                         )}
                       >
                         {(product as any).origin === 'manual' ? (
@@ -1289,16 +1301,16 @@ return (
                     </div>
                   </td>
 
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-4 py-3.5 text-center">
                     <div className="flex items-center justify-center text-center w-full">
                       <button
                         type="button"
                         onClick={() => handleToggleStatus(product)}
                         className={cn(
-                          'inline-flex h-8 w-[112px] min-w-[112px] items-center justify-center rounded-lg px-4 text-[10px] font-black uppercase tracking-wider border cursor-pointer transition-all',
+                          'inline-flex h-7 w-[100px] items-center justify-center rounded-lg px-2.5 text-[10px] font-black uppercase tracking-wider border cursor-pointer transition-all',
                           product.active
-                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100'
-                            : 'bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800/40 hover:bg-emerald-100'
+                            : 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/40 hover:bg-rose-100'
                         )}
                       >
                         {product.active ? 'ATIVO' : 'DESATIVADO'}
@@ -1306,24 +1318,24 @@ return (
                     </div>
                   </td>
 
-                  <td className="px-6 py-4 text-center">
-                    <div className="flex items-center justify-center gap-2">
+                  <td className="px-4 py-3.5 text-center">
+                    <div className="flex items-center justify-center gap-1.5">
                       <button
                         type="button"
                         onClick={() => openEditProduct(product)}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-3 py-2 text-xs font-black text-slate-600 transition hover:bg-slate-100"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-[#0094EB] dark:hover:text-[#ff7a29] hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
+                        title="Editar produto"
                       >
-                        <Edit3 size={14} />
-                        Editar
+                        <Edit3 size={15} />
                       </button>
 
                       <button
                         type="button"
                         onClick={() => handleDeleteClick(product)}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-rose-50 px-3 py-2 text-xs font-black text-rose-600 transition hover:bg-rose-100"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all"
+                        title="Excluir produto"
                       >
-                        <Trash2 size={14} />
-                        Excluir
+                        <Trash2 size={15} />
                       </button>
                     </div>
                   </td>
@@ -1332,14 +1344,14 @@ return (
 
               {pagedProducts.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="px-6 py-20 text-center">
+                  <td colSpan={9} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center gap-3">
-                      <Package size={48} className="text-slate-300" />
-                      <p className="text-sm font-bold text-slate-500">Nenhum produto encontrado</p>
-                      <p className="text-xs text-slate-400">
+                      <Package size={40} className="text-slate-300 dark:text-slate-600" />
+                      <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Nenhum produto encontrado</p>
+                      <p className="text-xs text-slate-400 dark:text-[#8a90a0]">
                         {searchTerm || filterCategory !== 'all' || filterStatus !== 'all' || filterOrigin !== 'all' || filterVideo !== 'all'
-                          ? 'Tente ajustar os filtros.'
-                          : 'Clique em "Novo produto" para começar.'}
+                          ? 'Tente ajustar os filtros acima.'
+                          : 'Clique em "Novo produto" para cadastrar seu primeiro item.'}
                       </p>
                     </div>
                   </td>
@@ -1349,19 +1361,19 @@ return (
           </table>
         </div>
 
-        {/* Paginação */}
+        {/* ── PAGINAÇÃO LIMPA E MODULAR ── */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-slate-200 px-6 py-4">
-            <p className="text-xs font-bold text-slate-400">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100 dark:border-white/5 pt-4 px-2">
+            <p className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">
               Página {safePage} de {totalPages}
             </p>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 disabled={safePage <= 1}
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-600 transition hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="rounded-xl bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 px-3 py-1.5 text-xs font-black text-slate-600 dark:text-slate-300 transition hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 Anterior
               </button>
@@ -1372,10 +1384,10 @@ return (
                   type="button"
                   onClick={() => setCurrentPage(page)}
                   className={cn(
-                    'rounded-lg px-3 py-1.5 text-xs font-black transition',
+                    'rounded-xl px-3 py-1.5 text-xs font-black transition',
                     page === safePage
-                      ? 'bg-[#0094EB] text-white'
-                      : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                      ? '!bg-[#ff7a29] text-white shadow-sm shadow-orange-500/30'
+                      : 'bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10'
                   )}
                 >
                   {page}
@@ -1386,7 +1398,7 @@ return (
                 type="button"
                 disabled={safePage >= totalPages}
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-600 transition hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="rounded-xl bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 px-3 py-1.5 text-xs font-black text-slate-600 dark:text-slate-300 transition hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 Próximo
               </button>
@@ -1394,7 +1406,7 @@ return (
           </div>
         )}
       </div>
-
+      
       {/* Modal de Produto (Novo/Editar) */}
       {showProductModal && (
         <div className="fixed inset-0 z-[99998] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
