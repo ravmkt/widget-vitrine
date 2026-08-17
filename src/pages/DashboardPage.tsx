@@ -279,12 +279,12 @@ const DashboardPage: React.FC = () => {
   const completedSteps = checklist.filter((item) => item.completed).length;
   const checklistPercent = Math.round((completedSteps / checklist.length) * 100);
 
-  const getBarColor = (pct: number) => {
-    if (pct >= 90) return 'bg-rose-500';
-    if (pct >= 75) return 'bg-amber-500';
-    return 'bg-[#0094EB] dark:bg-[#ff7a29]';
+const getBarColor = (pct: number) => {
+    if (pct >= 90) return 'bg-[#ef4444]'; // Faltando 10% ou menos -> Vermelho
+    if (pct >= 75) return 'bg-[#ff7a29]'; // Ultrapassou 75% -> Laranja
+    return 'bg-[#22c55e]'; // Padrão seguro -> Verde
   };
-
+  
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
