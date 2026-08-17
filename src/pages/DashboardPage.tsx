@@ -7,7 +7,7 @@ import {
   MousePointerClick,
   CheckCircle2,
   Calendar,
-  DollarSign,s
+  DollarSign,
   HardDrive,
   FileText,
   Clock,
