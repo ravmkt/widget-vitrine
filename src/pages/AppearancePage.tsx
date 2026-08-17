@@ -2568,86 +2568,124 @@ const AppearancePage = () => {
           Novo Estilo
         </button>
       </div>
-      
-      {/* Tabela de estilos */}
-      <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center gap-3 border-b border-slate-100 p-6">
-          <Brush className="h-5 w-5 text-[#0094EB]" />
-          <h3 className="font-extrabold text-slate-800">Estilos Cadastrados</h3>
+
+      {/* Módulo de Estilos Cadastrados no Padrão Modular do Dashboard */}
+      <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
+        
+        {/* Cabeçalho do Módulo */}
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
+          <div className="flex items-center gap-3">
+            <div 
+              style={{ backgroundColor: '#ff7a29' }}
+              className="w-10 h-10 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(255,122,41,0.4)]"
+            >
+              <Palette size={18} className="!text-white stroke-[2.5]" />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-slate-900 dark:text-white">
+                Estilos Cadastrados
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-[#8a90a0] font-medium">
+                Templates e temas ativos configurados para a sua vitrine.
+              </p>
+            </div>
+          </div>
+
+          <span className="text-xs font-black uppercase tracking-widest text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/20">
+            {appearances.length} {appearances.length === 1 ? 'Tema' : 'Temas'}
+          </span>
         </div>
+
+        {/* Tabela Limpa e Modular */}
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50">
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                  Template
-                </th>
-                <th className="px-6 py-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">
-                  Cor Principal
-                </th>
-                <th className="px-6 py-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-500">
-                  Ações
-                </th>
+              <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#0f1220]/50 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+                <th className="px-6 py-4 rounded-l-2xl">Template</th>
+                <th className="px-6 py-4 text-center">Cor Principal</th>
+                <th className="px-6 py-4 text-center">Status</th>
+                <th className="px-6 py-4 text-right rounded-r-2xl">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
               {appearances.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-10 text-center text-sm font-semibold text-slate-500">
-                    Nenhum estilo cadastrado ainda.
+                  <td colSpan={4} className="px-6 py-12 text-center text-xs font-semibold text-slate-400 dark:text-[#8a90a0]">
+                    Nenhum estilo cadastrado ainda. Clique em "+ Novo Estilo" para criar o primeiro.
                   </td>
                 </tr>
               ) : (
                 appearances.map(app => (
-                  <tr key={app.id} className="transition-colors hover:bg-slate-50/50">
+                  <tr 
+                    key={app.id} 
+                    className="transition-colors hover:bg-slate-50/60 dark:hover:bg-white/[0.02]"
+                  >
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3.5">
                         <div
-                          className="h-8 w-8 rounded-lg border border-slate-200 shadow-sm"
+                          className="h-9 w-9 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm shrink-0 flex items-center justify-center"
                           style={{ backgroundColor: app.primary_color || '#0094EB' }}
                         />
-                        <span className="text-sm font-bold text-slate-800">{app.name}</span>
+                        <div>
+                          <span className="text-xs font-black text-slate-800 dark:text-[#e8ecf4] block">
+                            {app.name}
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-400 dark:text-[#8a90a0] uppercase">
+                            Identidade Visual
+                          </span>
+                        </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-center font-mono text-xs text-slate-500">
-                      {app.primary_color}
+
+                    <td className="px-6 py-4 text-center">
+                      <span className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-slate-600 dark:text-[#c0c5d4] bg-slate-100 dark:bg-[#0f1220] px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-white/5">
+                        <span 
+                          className="w-2.5 h-2.5 rounded-full shrink-0" 
+                          style={{ backgroundColor: app.primary_color || '#0094EB' }}
+                        />
+                        {app.primary_color || '#0094EB'}
+                      </span>
                     </td>
+
                     <td className="px-6 py-4 text-center">
                       {app.is_default ? (
-                        <span className="mx-auto flex w-fit items-center justify-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#0094EB]">
-                          <Star size={12} className="fill-[#0094EB]" />
+                        <span 
+                          style={{ backgroundColor: '#ff7a29' }}
+                          className="mx-auto inline-flex items-center justify-center gap-1.5 rounded-full !bg-[#ff7a29] px-3.5 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-sm shadow-orange-500/20"
+                        >
+                          <Star size={11} className="fill-white !text-white" />
                           Padrão
                         </span>
                       ) : (
                         <button
                           type="button"
                           onClick={() => handleSetDefault(app.id)}
-                          className="text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-[#0094EB]"
+                          className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-[#8a90a0] hover:text-[#0094EB] dark:hover:text-[#ff7a29] transition-colors cursor-pointer"
                         >
                           Definir Padrão
                         </button>
                       )}
                     </td>
+
                     <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1.5">
                         <button
                           type="button"
                           onClick={() => handleEditStyle(app)}
-                          className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-blue-50 hover:text-[#0094EB]"
+                          className="p-2 rounded-xl text-slate-400 hover:text-[#0094EB] dark:hover:text-[#ff7a29] hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
                           aria-label="Editar estilo"
+                          title="Editar estilo"
                         >
-                          <Edit3 size={18} />
+                          <Edit3 size={15} />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteClick(app)}
-                          className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-500"
+                          className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all"
                           aria-label="Excluir estilo"
+                          title="Excluir estilo"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={15} />
                         </button>
                       </div>
                     </td>
