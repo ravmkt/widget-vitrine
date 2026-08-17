@@ -593,15 +593,12 @@ return (
         </div>
       </div>
 
-      {/* ── MÓDULOS DE CONFIGURAÇÃO DE MODERAÇÃO E FILTROS ── */}
+{/* ── MÓDULOS DE CONFIGURAÇÃO DE MODERAÇÃO E FILTROS ── */}
       <div className="grid gap-6 lg:grid-cols-3 items-stretch">
-        {/* Card: Moderação de Comentários */}
+        {/* Card: Moderação de Comentários (Dual-Theme) */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 shadow-sm flex flex-col justify-between space-y-4">
           <div className="flex items-center gap-3 border-b border-slate-100 dark:border-white/5 pb-3">
-            <div 
-              style={{ backgroundColor: '#ff7a29' }}
-              className="w-10 h-10 rounded-2xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0"
-            >
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0">
               <ShieldCheck size={18} className="!text-white stroke-[2.5]" />
             </div>
             <div>
@@ -624,28 +621,30 @@ return (
               </p>
             </div>
 
+            {/* Switch com Trilha e Bolinha Perfeitamente Alinhadas */}
             <button
               type="button"
               onClick={handleAutoApproveToggle}
               disabled={autoApproveLoading}
               aria-label="Alternar aprovação automática de comentários"
-              style={autoApprove ? { backgroundColor: '#ff7a29' } : undefined}
               className={cn(
-                "relative inline-flex h-7 w-13 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-300 ease-in-out focus:outline-none disabled:opacity-50",
-                autoApprove ? "!bg-[#ff7a29]" : "bg-slate-300 dark:bg-slate-700"
+                "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-300 ease-in-out focus:outline-none disabled:opacity-50",
+                autoApprove 
+                  ? "bg-[#0094EB] dark:bg-[#ff7a29] shadow-sm shadow-blue-500/30 dark:shadow-orange-500/30" 
+                  : "bg-slate-300 dark:bg-slate-700"
               )}
             >
               <span
                 className={cn(
                   "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ease-in-out",
-                  autoApprove ? "translate-x-6" : "translate-x-1"
+                  autoApprove ? "translate-x-5" : "translate-x-0"
                 )}
               />
             </button>
           </div>
         </div>
 
-        {/* Card: Barra de Pesquisa e Filtros */}
+        {/* Card: Barra de Pesquisa e Filtros (Dual-Theme com Foco Azul/Laranja) */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 shadow-sm lg:col-span-2 flex flex-col justify-between space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-3">
             <div className="flex items-center gap-2.5">
@@ -666,14 +665,14 @@ return (
                 placeholder="Pesquisar autor ou texto..."
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
-                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
+                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29]"
               />
             </div>
 
             <select
               value={filterStatus}
               onChange={(event) => setFilterStatus(event.target.value)}
-              className="bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-[#e8ecf4] outline-none transition focus:border-[#ff7a29]"
+              className="bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-[#e8ecf4] outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29]"
             >
               <option value="all">Todos os Status</option>
               <option value="Pendente">Pendente</option>
@@ -684,7 +683,7 @@ return (
             <select
               value={filterVideo}
               onChange={(event) => setFilterVideo(event.target.value)}
-              className="bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-[#e8ecf4] outline-none transition focus:border-[#ff7a29] truncate"
+              className="bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-[#e8ecf4] outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] truncate"
             >
               <option value="all">Todos os Vídeos</option>
               {videos.map((video) => (
@@ -696,7 +695,7 @@ return (
           </div>
         </div>
       </div>
-
+      
 {/* ── TABELA MODULAR DE COMENTÁRIOS (PADRÃO TOP VÍDEOS DASHBOARD) ── */}
       <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
         <div className="overflow-x-auto">
