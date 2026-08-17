@@ -119,11 +119,11 @@ export function AppLayout({ children }: AppLayoutProps) {
           {/* Banner Global de Trial / Status (exceto na página de billing e plans para evitar duplicidade visual) */}
           {location.pathname !== '/billing' && location.pathname !== '/plans' && (
             <>
-              {subscriptionStatus === 'trialing' && (
-                <div className="bg-gradient-to-r from-blue-600 to-[#0094EB] px-4 py-2.5 text-white shadow-sm">
+{subscriptionStatus === 'trialing' && (
+                <div className="bg-gradient-to-r from-blue-600 to-[#0094EB] dark:from-slate-900 dark:to-slate-800 dark:border-b dark:border-slate-800 px-4 py-2.5 text-white shadow-sm">
                   <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
                     <div className="flex items-center gap-2">
-                      <Clock size={16} className="shrink-0 animate-pulse text-blue-100" />
+                      <Clock size={16} className="shrink-0 animate-pulse text-blue-100 dark:text-[#fd8539]" />
                       <span>
                         {trialDaysRemaining !== null && trialDaysRemaining > 0
                           ? `Você está no período de teste gratuito: restam ${trialDaysRemaining} ${trialDaysRemaining === 1 ? 'dia' : 'dias'}.`
@@ -133,15 +133,15 @@ export function AppLayout({ children }: AppLayoutProps) {
                     <button
                       type="button"
                       onClick={() => navigate('/plans')}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1 text-xs font-bold text-[#0094EB] shadow-sm transition hover:bg-blue-50"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-1.5 text-xs font-black text-[#0094EB] dark:text-[#fd8539] shadow-sm transition hover:bg-slate-100"
                     >
-                      <Sparkles size={13} />
+                      <Sparkles size={13} className="text-[#0094EB] dark:text-[#fd8539]" />
                       Fazer Upgrade
                     </button>
                   </div>
                 </div>
               )}
-
+              
               {subscriptionStatus === 'canceled' && (
                 <div className="bg-red-600 px-4 py-2.5 text-white shadow-sm">
                   <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
