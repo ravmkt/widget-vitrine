@@ -2548,24 +2548,27 @@ const AppearancePage = () => {
 
   return (
     <div className="animate-fade-in space-y-8 pb-20">
-      {/* Header */}
+{/* Header com Estética Dashboard Vidlytics */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900">Aparência</h1>
-          <p className="mt-1 font-medium text-slate-500">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+            Aparência
+          </h1>
+          <p className="mt-1 text-sm font-medium text-slate-500 dark:text-[#c0c5d4]">
             Customize a identidade visual, widgets, carrosséis, grades e player da sua loja.
           </p>
         </div>
         <button
           type="button"
           onClick={handleNewStyle}
-          className="flex items-center gap-2 rounded-2xl bg-[#0094EB] px-6 py-3 text-sm font-bold text-white shadow-lg hover:bg-[#0E4787]"
+          style={{ backgroundColor: '#ff7a29' }}
+          className="flex items-center gap-2 rounded-2xl !bg-[#ff7a29] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/30 hover:opacity-95 hover:scale-[1.02] transition-all cursor-pointer"
         >
-          <Plus size={18} />
+          <Plus size={16} className="!text-white stroke-[2.5]" />
           Novo Estilo
         </button>
       </div>
-
+      
       {/* Tabela de estilos */}
       <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
         <div className="flex items-center gap-3 border-b border-slate-100 p-6">
