@@ -957,61 +957,68 @@ const ProductsPage = () => {
   //  RENDER
   // ──────────────────────────────────────────────────────────────────
 
-  return (
-    <div className="space-y-6 animate-fade-in pb-20">
-      {/* Cabeçalho */}
+return (
+    <div className="space-y-8 animate-fade-in pb-20 font-sans">
+      {/* ── CABEÇALHO DA PÁGINA COM BOTÕES LARANJAS ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Produtos</h1>
-          <p className="text-slate-500 font-medium mt-1">
-            Gerencie o catálogo de produtos da sua loja.
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+            Produtos
+          </h1>
+          <p className="mt-1 text-sm font-medium text-slate-500 dark:text-[#c0c5d4]">
+            Gerencie o catálogo de produtos da sua loja e seus vínculos com os vídeos.
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
+            type="button"
             onClick={openNewProduct}
-            className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-xl font-black text-sm shadow-md transition-all flex items-center gap-2"
+            style={{ backgroundColor: '#ff7a29' }}
+            className="flex items-center gap-2 rounded-2xl !bg-[#ff7a29] px-5 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/30 hover:opacity-95 hover:scale-[1.02] transition-all cursor-pointer"
           >
-            <Plus size={18} /> Novo produto
+            <Plus size={16} className="!text-white stroke-[2.5]" />
+            Novo produto
           </button>
 
           <button
             type="button"
             onClick={() => setShowCategoriesModal(true)}
-            className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-xl font-black text-sm shadow-md transition-all flex items-center gap-2"
+            className="flex items-center gap-2 rounded-2xl bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-[#e8ecf4] shadow-sm hover:border-[#ff7a29] dark:hover:border-[#ff7a29]/50 transition-all cursor-pointer"
           >
-            <Tag size={18} /> Categorias
+            <Tag size={15} className="text-[#ff7a29]" />
+            Categorias
           </button>
 
           <button
             type="button"
             onClick={() => setShowImportModal(true)}
-            className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-xl font-black text-sm shadow-md transition-all flex items-center gap-2"
+            className="flex items-center gap-2 rounded-2xl bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-[#e8ecf4] shadow-sm hover:border-[#ff7a29] dark:hover:border-[#ff7a29]/50 transition-all cursor-pointer"
           >
-            <Upload size={18} /> Importar produtos
+            <Upload size={15} className="text-[#ff7a29]" />
+            Importar produtos
           </button>
         </div>
       </div>
 
-      {/* Filtros */}
-      <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 shadow-sm">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* ── MÓDULO DE FILTROS REFINADO E ARREDONDADO ── */}
+      <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2rem] p-5 shadow-sm space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <div className="relative lg:col-span-2">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8a90a0]" size={16} />
             <input
               type="text"
-              placeholder="Buscar por nome..."
+              placeholder="Buscar por nome do produto..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
             />
           </div>
 
           <select
             value={filterCategory}
             onChange={e => setFilterCategory(e.target.value)}
-            className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:border-[#0094EB]"
+            className="bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-[#e8ecf4] outline-none transition focus:border-[#ff7a29]"
           >
             <option value="all">Todas Categorias</option>
             {activeCategories.map(cat => (
@@ -1022,7 +1029,7 @@ const ProductsPage = () => {
           <select
             value={filterStatus}
             onChange={e => setFilterStatus(e.target.value)}
-            className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:border-[#0094EB]"
+            className="bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-[#e8ecf4] outline-none transition focus:border-[#ff7a29]"
           >
             <option value="all">Todos Status</option>
             <option value="active">Ativos</option>
@@ -1032,7 +1039,7 @@ const ProductsPage = () => {
           <select
             value={filterOrigin}
             onChange={e => setFilterOrigin(e.target.value)}
-            className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:border-[#0094EB]"
+            className="bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-[#e8ecf4] outline-none transition focus:border-[#ff7a29]"
           >
             <option value="all">Todas Origens</option>
             <option value="manual">Manual</option>
@@ -1041,10 +1048,10 @@ const ProductsPage = () => {
           </select>
         </div>
 
-        {/* 🆕 Badge de filtro ativo: Sem vídeo */}
+        {/* Badge de filtro ativo: Sem vídeo */}
         {filterVideo === 'without' && (
-          <div className="mt-3 flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-3 py-1.5 text-xs font-black text-amber-700">
+          <div className="flex items-center gap-2 pt-1">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-700/40 px-3 py-1 text-xs font-black text-amber-700 dark:text-amber-300">
               Filtrando: produtos sem vídeo
               <button
                 type="button"
@@ -1057,7 +1064,7 @@ const ProductsPage = () => {
           </div>
         )}
       </div>
-
+      
       {/* Barra de seleção e paginação */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
