@@ -2646,13 +2646,10 @@ const AppearancePage = () => {
                       </span>
                     </td>
 
-                    <td className="px-6 py-4 text-center">
+<td className="px-6 py-4 text-center">
                       {app.is_default ? (
-                        <span 
-                          style={{ backgroundColor: '#ff7a29' }}
-                          className="mx-auto inline-flex items-center justify-center gap-1.5 rounded-full !bg-[#ff7a29] px-3.5 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-sm shadow-orange-500/20"
-                        >
-                          <Star size={11} className="fill-white !text-white" />
+                        <span className="mx-auto inline-flex items-center justify-center gap-1.5 rounded-full bg-blue-50 dark:bg-[#ff7a29]/15 border border-blue-200 dark:border-[#ff7a29]/30 px-3.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#0094EB] dark:text-[#ff7a29] shadow-xs">
+                          <Star size={11} className="fill-[#0094EB] text-[#0094EB] dark:fill-[#ff7a29] dark:text-[#ff7a29]" />
                           Padrão
                         </span>
                       ) : (
@@ -2665,7 +2662,7 @@ const AppearancePage = () => {
                         </button>
                       )}
                     </td>
-
+                    
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
