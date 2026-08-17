@@ -1725,7 +1725,11 @@ function sendAnalyticsEvent(eventType, videoId, productId) {
       } else {
         fetch(endpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          mode: 'cors',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabaseAnonKey
+          },
           body: JSON.stringify(payload),
           keepalive: true
         }).catch(function () {});
@@ -1733,6 +1737,11 @@ function sendAnalyticsEvent(eventType, videoId, productId) {
     } catch (_) {}
   }
 
+  function trackMetric(data) {
+    if (!data) return;
+    sendAnalyticsEvent(data.event_type || 'interaction', data.video_id || null, data.product_id || null);
+  }
+  
   function buildVideoPlayer(video, storyId, onEnded) {
     var sourceType = String(video.source_type || video.sourceType || '').toLowerCase();
     var isImage = sourceType === 'image' || (video && video.type === 'image');
