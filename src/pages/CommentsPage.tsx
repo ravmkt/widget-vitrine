@@ -695,7 +695,7 @@ return (
           </div>
         </div>
       </div>
-      
+
 {/* ── TABELA MODULAR DE COMENTÁRIOS (PADRÃO TOP VÍDEOS DASHBOARD) ── */}
       <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
         <div className="overflow-x-auto">
@@ -751,7 +751,7 @@ return (
                     key={row.id}
                     className="transition-colors hover:bg-slate-50/60 dark:hover:bg-white/[0.02]"
                   >
-                    {/* Autor */}
+{/* Autor (Avatar Dual-Theme: Azul no Light / Laranja no Dark) */}
                     <td className="px-6 py-4 align-top">
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/10 shrink-0 shadow-xs">
@@ -762,10 +762,7 @@ return (
                               className="h-full w-full object-cover"
                             />
                           ) : (
-                            <div 
-                              style={{ backgroundColor: '#ff7a29' }}
-                              className="flex h-full w-full items-center justify-center text-xs font-black text-white"
-                            >
+                            <div className="flex h-full w-full items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-xs font-black text-white shadow-xs">
                               {mainAuthorName?.charAt(0).toUpperCase() || "?"}
                             </div>
                           )}
@@ -795,10 +792,10 @@ return (
                               <img
                                 src={storeLogoUrl}
                                 alt={storeName || 'Loja'}
-                                className="h-5 w-5 rounded-full object-cover border border-[#ff7a29]"
+                                className="h-5 w-5 rounded-full object-cover border border-[#0094EB] dark:border-[#ff7a29]"
                               />
                             ) : (
-                              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#ff7a29] text-[9px] font-black text-white">
+                              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0094EB] dark:bg-[#ff7a29] text-[9px] font-black text-white">
                                 {(storeName || 'L').charAt(0).toUpperCase()}
                               </div>
                             )}
@@ -807,7 +804,7 @@ return (
                               {storeName || 'Loja'}
                             </span>
 
-                            <span className="text-[9px] font-black uppercase text-[#ff7a29] bg-[#ff7a29]/10 px-2 py-0.5 rounded-full border border-[#ff7a29]/20">
+                            <span className="text-[9px] font-black uppercase text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-2 py-0.5 rounded-full border border-blue-200/60 dark:border-[#ff7a29]/20">
                               Resposta Oficial
                             </span>
                           </div>
@@ -817,7 +814,7 @@ return (
                           </p>
                         </div>
                       )}
-
+                      
                       {video && (
                         <div className="mt-2.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider">
                           <span className="text-slate-400 dark:text-[#8a90a0]">VÍDEO:</span>
