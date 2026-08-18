@@ -1933,36 +1933,49 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     return firstDefined(video.model_id, video.modelId, video.sizing_model_id, video.sizingModelId, video.modelo_id, video.modeloId, video.model) || null;
   }
 
-  function createComment(commentData) {
+function createComment(commentData) {
     if (!hasSupabase) return Promise.reject(new Error('Supabase não configurado.'));
     commentData = commentData || {};
-    var payload = {
-      store_id: storeId,
-      video_id: commentData.video_id || null,
-      user_name: String(commentData.author_name || '').trim(),
-      user_email: commentData.author_email ? String(commentData.author_email).trim() : null,
-      content: String(commentData.content || '').trim(),
-      status: commentData.status || 'pending'
-    };
-    if (!payload.user_name) return Promise.reject(new Error('Informe seu nome.'));
-    if (!payload.content) return Promise.reject(new Error('Digite um comentário.'));
-    return supabaseFetch('comments', {
-      method: 'POST',
-      headers: { 'Prefer': 'return=minimal' },
-      body: JSON.stringify(payload)
-    })
-      .then(function (response) {
-        if (response.ok) return true;
-        return response.text().then(function (rawMessage) {
-          var parsed = {};
-          try { parsed = JSON.parse(rawMessage || '{}'); } catch (error) {}
-          if (response.status === 401) throw new Error('A chave pública ou a URL do Supabase são inválidas.');
-          if (response.status === 403 || parsed.code === '42501') throw new Error('Inserção bloqueada pelas políticas RLS da tabela comments.');
-          throw new Error(parsed.message || parsed.error_description || parsed.hint || parsed.details || 'Não foi possível enviar o comentário.');
-        });
-      });
-  }
 
+    var authorName = String(commentData.author_name || '').trim();
+    var commentText = String(commentData.content || commentData.text || '').trim();
+
+    if (!authorName) return Promise.reject(new Error('Informe seu nome.'));
+    if (!commentText) return Promise.reject(new Error('Digite um comentário.'));
+
+    // Consulta em tempo real store_settings para garantir o valor atualizado da flag
+    return readStoreSettings().then(function (settings) {
+      var isAuto = settings.auto_approve_comments === true || autoApproveComments === true;
+      var resolvedStatus = isAuto ? 'approved' : 'pending';
+
+      var payload = {
+        store_id: storeId,
+        video_id: commentData.video_id || null,
+        user_name: authorName,
+        user_email: commentData.author_email ? String(commentData.author_email).trim() : null,
+        content: commentText,
+        status: resolvedStatus,
+        created_at: new Date().toISOString()
+      };
+
+      return supabaseFetch('comments', {
+        method: 'POST',
+        headers: { 'Prefer': 'return=minimal' },
+        body: JSON.stringify(payload)
+      })
+        .then(function (response) {
+          if (response.ok) return { status: resolvedStatus, isAuto: isAuto };
+          return response.text().then(function (rawMessage) {
+            var parsed = {};
+            try { parsed = JSON.parse(rawMessage || '{}'); } catch (error) {}
+            if (response.status === 401) throw new Error('A chave pública ou a URL do Supabase são inválidas.');
+            if (response.status === 403 || parsed.code === '42501') throw new Error('Inserção bloqueada pelas políticas RLS da tabela comments.');
+            throw new Error(parsed.message || parsed.error_description || parsed.hint || parsed.details || 'Não foi possível enviar o comentário.');
+          });
+        });
+    });
+  }
+  
   function getFingerprint() {
     var key = '__vid_fp';
     var stored = localStorage.getItem(key);
