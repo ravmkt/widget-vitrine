@@ -2028,30 +2028,14 @@ function createComment(commentData) {
     if (!video || !video.id) return;
     var vidId = video.id;
     var isCurrentlyLiked = !!likedVideos[vidId];
+
+    // Optimistic UI update
     if (isCurrentlyLiked) {
       delete likedVideos[vidId];
       videoLikeCounts[vidId] = Math.max(0, (videoLikeCounts[vidId] || 1) - 1);
-      if (hasSupabase) {
-        supabaseFetch('video_likes?video_id=eq.' + encodeURIComponent(vidId) + '&user_fingerprint=eq.' + encodeURIComponent(getFingerprint()), { method: 'DELETE' })
-          .catch(function () {});
-      }
     } else {
       likedVideos[vidId] = true;
       videoLikeCounts[vidId] = (videoLikeCounts[vidId] || 0) + 1;
-      if (hasSupabase) {
-        supabaseFetch('video_likes', {
-          method: 'POST',
-          headers: { 'Prefer': 'return=minimal' },
-          body: JSON.stringify({
-            video_id: vidId,
-            user_fingerprint: getFingerprint(),
-            store_id: storeId,
-            story_id: currentStories[currentStoryIndex].id,
-            page_url: window.location.href,
-            created_at: new Date().toISOString()
-          })
-        }).catch(function () {});
-      }
     }
 
     var isNowLiked = !!likedVideos[vidId];
@@ -2073,7 +2057,63 @@ function createComment(commentData) {
       video_id: vidId,
       page_url: window.location.href
     });
+
+    if (!hasSupabase) return;
+
+    supabaseFetch('rpc/toggle_video_like_safe', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=representation' },
+      body: JSON.stringify({
+        p_store_id: storeId,
+        p_video_id: vidId,
+        p_user_fingerprint: getFingerprint()
+      })
+    })
+      .then(function (response) {
+        if (!response.ok) throw new Error('rpc_failed');
+        return response.json();
+      })
+      .then(function (result) {
+        var row = Array.isArray(result) ? result[0] : result;
+        if (!row) return;
+        // Reconcilia UI com o valor real do banco (caso o optimistic esteja errado)
+        videoLikeCounts[vidId] = row.likes_count;
+        if (row.viewer_liked) {
+          likedVideos[vidId] = true;
+        } else {
+          delete likedVideos[vidId];
+        }
+        var realIsLiked = !!likedVideos[vidId];
+        var realCount = videoLikeCounts[vidId] || 0;
+        btnEl.innerHTML = svgIcon(realIsLiked ? 'heartFilled' : 'heart');
+        btnEl.title = realIsLiked ? 'Descurtir' : 'Curtir';
+        var w = btnEl.parentNode;
+        if (w && w.classList.contains('vl-social-wrapper')) {
+          var cEl = w.querySelector('.vl-social-count');
+          if (cEl) cEl.textContent = realCount > 0 ? realCount : '';
+        }
+      })
+      .catch(function () {
+        // Rollback do optimistic update em caso de erro (ex.: rate limit)
+        if (isCurrentlyLiked) {
+          likedVideos[vidId] = true;
+          videoLikeCounts[vidId] = (videoLikeCounts[vidId] || 0) + 1;
+        } else {
+          delete likedVideos[vidId];
+          videoLikeCounts[vidId] = Math.max(0, (videoLikeCounts[vidId] || 1) - 1);
+        }
+        var rollbackIsLiked = !!likedVideos[vidId];
+        var rollbackCount = videoLikeCounts[vidId] || 0;
+        btnEl.innerHTML = svgIcon(rollbackIsLiked ? 'heartFilled' : 'heart');
+        btnEl.title = rollbackIsLiked ? 'Descurtir' : 'Curtir';
+        var w2 = btnEl.parentNode;
+        if (w2 && w2.classList.contains('vl-social-wrapper')) {
+          var cEl2 = w2.querySelector('.vl-social-count');
+          if (cEl2) cEl2.textContent = rollbackCount > 0 ? rollbackCount : '';
+        }
+      });
   }
+
 
   function openSharePanel(btnEl) {
     var existing = document.getElementById('vl-share-panel');
