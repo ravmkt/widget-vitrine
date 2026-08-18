@@ -620,7 +620,7 @@ return (
                 {autoApprove ? "Publicados imediatamente." : "Requer aprovação prévia."}
               </p>
             </div>
-                        
+                                    
             {/* Switch com Trilha e Bolinha Perfeitamente Alinhadas */}
             <button
               type="button"
