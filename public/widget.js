@@ -1753,12 +1753,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       }
     );
   }
-
-  function trackMetric(data) {
-    if (!data) return;
-    sendAnalyticsEvent(data.event_type || 'interaction', data.video_id || null, data.product_id || null);
-  }
-
+  
   function buildVideoPlayer(video, storyId, onEnded) {
     var sourceType = String(video.source_type || video.sourceType || '').toLowerCase();
     var isImage = sourceType === 'image' || (video && video.type === 'image');
