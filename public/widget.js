@@ -1709,7 +1709,44 @@ function applyHostPosition(host, appearance) {
   }
 
 function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
-  
+    if (!storeId || !supabaseUrl || !supabaseAnonKey) return;
+
+    try {
+      extraData = extraData || {};
+
+      var resolvedStoryId = extraData.storyId || extraData.story_id || null;
+      var resolvedPageUrl = extraData.pageUrl || extraData.page_url || window.location.href;
+      var resolvedDevice = window.innerWidth < 768 ? 'mobile' : 'desktop';
+      var resolvedPath = window.location.pathname || '/';
+
+      var payload = {
+        storeId: storeId,
+        eventType: eventType,
+        videoId: videoId || null,
+        productId: productId || null,
+        storyId: resolvedStoryId,
+        pageUrl: resolvedPageUrl,
+        deviceType: resolvedDevice,
+        pagePath: resolvedPath
+      };
+
+      var endpoint = supabaseUrl.replace(/\/rest\/v1.*/, '').replace(/\/+$/, '') + '/functions/v1/track-event';
+
+      fetch(endpoint, {
+        method: 'POST',
+        mode: 'cors',
+        credentials: 'omit',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseAnonKey,
+          'Authorization': 'Bearer ' + supabaseAnonKey
+        },
+        body: JSON.stringify(payload),
+        keepalive: true
+      }).catch(function () {});
+    } catch (_) {}
+  }
+
   function trackMetric(data) {
     if (!data) return;
     sendAnalyticsEvent(
