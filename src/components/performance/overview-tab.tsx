@@ -20,7 +20,6 @@ import {
   DollarSign,
   Heart,
   MessageCircle,
-  Share2,
   TrendingUp,
   TrendingDown,
   Minus,
@@ -31,7 +30,6 @@ import { useTenant } from '@/context/TenantContext';
 import { db } from '@/lib/db';
 import {
   getDashboardMetrics,
-  getMetricsFlow,
   getVideoMetricsRows,
   type AnalyticsInterval,
 } from '@/lib/analytics';
@@ -68,29 +66,28 @@ interface BenchmarkRow {
 }
 
 // ─── Config do seletor de métricas ──────────────────────────
+// 🟡 REMOVIDO: 'shares' e 'whatsapp_clicks' — não existem no
+// Sistema B (daily_store_metrics não separa whatsapp de outros
+// cliques CTA, e share nunca foi rastreado). Ver Prioridade 4.
 
 const METRIC_OPTIONS = [
-  { key: 'views',           label: 'Visualizações',           isRate: false },
-  { key: 'likes',           label: 'Curtidas',                isRate: false },
-  { key: 'ctr',             label: 'CTR',                     isRate: true  },
-  { key: 'comments',        label: 'Comentários',             isRate: false },
-  { key: 'shares',          label: 'Compartilhamentos',       isRate: false },
-  { key: 'whatsapp_clicks', label: 'Cliques WhatsApp',        isRate: false },
-  { key: 'cta_clicks',      label: 'Total de Cliques (CTA)',  isRate: false }, // 🟢 corrigido: label mais claro
-  { key: 'conversions',     label: 'Conversões',              isRate: false },
-  { key: 'revenue',         label: 'Receita',                 isRate: false },
+  { key: 'views',        label: 'Visualizações',          isRate: false },
+  { key: 'likes',        label: 'Curtidas',                isRate: false },
+  { key: 'ctr',          label: 'CTR',                     isRate: true  },
+  { key: 'comments',     label: 'Comentários',             isRate: false },
+  { key: 'cta_clicks',   label: 'Cliques (CTA)',           isRate: false },
+  { key: 'conversions',  label: 'Conversões',              isRate: false },
+  { key: 'revenue',      label: 'Receita',                 isRate: false },
 ] as const;
 
 // ─── Mapeamento métrica → benchmark ─────────────────────────
 
 const METRIC_TO_BENCHMARK: Record<string, string> = {
-  ctr:             'video_ctr',
-  cta_clicks:      'video_ctr',
-  whatsapp_clicks: 'ctr_whatsapp',
-  conversions:     'conversion_rate',
-  likes:           'engagement_rate',
-  comments:        'engagement_rate',
-  shares:          'engagement_rate',
+  ctr:         'video_ctr',
+  cta_clicks:  'video_ctr',
+  conversions: 'conversion_rate',
+  likes:       'engagement_rate',
+  comments:    'engagement_rate',
 };
 
 // ─── Helpers ────────────────────────────────────────────────
@@ -112,6 +109,8 @@ const getDiasNoPeriodo = (timeRange: string, customFrom?: string, customTo?: str
   return 30;
 };
 
+const toDateStr = (d: Date) => d.toISOString().slice(0, 10);
+
 // ─── Componente principal ───────────────────────────────────
 
 export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
@@ -122,7 +121,6 @@ export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
     productClicks: 0, whatsappClicks: 0, likes: 0, shares: 0,
     comments: 0, closes: 0, conversions: 0, ctr: 0, revenue: 0,
   });
-  const [flow, setFlow] = useState<any[]>([]);
   const [topVideos, setTopVideos] = useState<any[]>([]);
 
   // ── Estados para gráfico e benchmarks ──
@@ -130,33 +128,25 @@ export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
   const [dailyData, setDailyData] = useState<Record<string, DailyMetricPoint[]>>({});
   const [benchmarks, setBenchmarks] = useState<BenchmarkRow[]>([]);
   const [avgDailyViews, setAvgDailyViews] = useState(0);
-
-  // 🆕 estado para erro nos dados diários (correção #2)
   const [dailyError, setDailyError] = useState(false);
 
   // ── Computar datas do período ──
   const getDateRange = useCallback(() => {
     const now = new Date();
 
-    // 🟢 correção #3: custom sem datas → usar fallback claro
     if (timeRange === 'custom') {
       if (!customFrom || !customTo) {
-        // Retorna intervalo de 30 dias como fallback seguro,
-        // mas o loader só será exibido se houver storeId e a UI
-        // abaixo mostrará aviso de "selecione as datas"
         const from = new Date(now.getTime() - 30 * 86400000);
-        return { fromISO: from.toISOString(), toISO: now.toISOString(), datasInvalidas: true };
+        return { fromDate: toDateStr(from), toDate: toDateStr(now), fromISO: from.toISOString(), toISO: now.toISOString(), datasInvalidas: true };
       }
-      return {
-        fromISO: new Date(customFrom).toISOString(),
-        toISO: new Date(customTo).toISOString(),
-        datasInvalidas: false,
-      };
+      const from = new Date(customFrom);
+      const to = new Date(customTo);
+      return { fromDate: toDateStr(from), toDate: toDateStr(to), fromISO: from.toISOString(), toISO: to.toISOString(), datasInvalidas: false };
     }
 
     const days = timeRange === '7d' ? 7 : timeRange === '15d' ? 15 : 30;
     const from = new Date(now.getTime() - days * 86400000);
-    return { fromISO: from.toISOString(), toISO: now.toISOString(), datasInvalidas: false };
+    return { fromDate: toDateStr(from), toDate: toDateStr(now), fromISO: from.toISOString(), toISO: now.toISOString(), datasInvalidas: false };
   }, [timeRange, customFrom, customTo]);
 
   // ── LOAD ──
@@ -166,21 +156,19 @@ export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
 
     const load = async () => {
       setLoading(true);
-      setDailyError(false); // 🆕 reset
+      setDailyError(false);
       try {
         const interval = mapInterval(timeRange);
 
-        // 🟢 correção #1: só monta customRange se for custom com datas reais
         const isCustomWithDates = timeRange === 'custom' && Boolean(customFrom) && Boolean(customTo);
         const customRange = isCustomWithDates
           ? { from: new Date(customFrom!), to: new Date(customTo!) }
           : undefined;
 
-        const { fromISO, toISO } = getDateRange();
+        const { fromDate, toDate, fromISO, toISO } = getDateRange();
 
-        const [dashMetrics, flowRows, videos, benchRows] = await Promise.all([
+        const [dashMetrics, videos, benchRows] = await Promise.all([
           getDashboardMetrics(storeId, interval, customRange),
-          getMetricsFlow(storeId, interval, customRange),
           db.videos.getAll(storeId),
           getSectorBenchmark(storeId),
         ]);
@@ -188,7 +176,6 @@ export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
         if (!mounted) return;
 
         setMetrics(dashMetrics);
-        setFlow(flowRows);
         setBenchmarks(benchRows || []);
 
         const rows = await getVideoMetricsRows(storeId, videos, interval, customRange);
@@ -198,59 +185,80 @@ export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
           [...rows].sort((a, b) => b.metrics.views - a.metrics.views).slice(0, 5)
         );
 
-        // ── Dados diários (Supabase) ──
-        // 🟢 correção #2: try/catch com fallback visível
+        // ── Dados diários — Sistema B (daily_store_metrics) ──
+        // 🟢 CORRIGIDO: antes lia direto de `metrics` (congelada, event_name
+        // sempre NULL). Agora usa a tabela viva de agregados diários da loja
+        // + video_likes/comments agrupados por dia em JS.
         if (supabase) {
           try {
-            const [{ data: metricRows }, { data: convRows }] = await Promise.all([
-              supabase
-                .from('metrics')
-                .select('created_at, event_name')
-                .eq('store_id', storeId)
-                .gte('created_at', fromISO)
-                .lte('created_at', toISO),
-              supabase
-                .from('conversions')
-                .select('created_at, order_value')
-                .eq('store_id', storeId)
-                .gte('created_at', fromISO)
-                .lte('created_at', toISO),
-            ]);
+            const [{ data: storeRows, error: storeErr }, { data: likesRows }, { data: commentsRows }, { data: convRows }] =
+              await Promise.all([
+                supabase
+                  .from('daily_store_metrics')
+                  .select('date, views_count, cta_clicks_count, product_clicks_count, estimated_revenue')
+                  .eq('store_id', storeId)
+                  .gte('date', fromDate)
+                  .lte('date', toDate),
+                supabase
+                  .from('video_likes')
+                  .select('created_at')
+                  .in('video_id', videos.map(v => v.id))
+                  .gte('created_at', fromISO)
+                  .lte('created_at', toISO),
+                supabase
+                  .from('comments')
+                  .select('created_at')
+                  .eq('store_id', storeId)
+                  .eq('status', 'approved')
+                  .gte('created_at', fromISO)
+                  .lte('created_at', toISO),
+                supabase
+                  .from('conversions')
+                  .select('created_at, order_value')
+                  .eq('store_id', storeId)
+                  .gte('created_at', fromISO)
+                  .lte('created_at', toISO)
+                  .eq('status', 'paid'),
+              ]);
 
             if (!mounted) return;
+            if (storeErr) throw storeErr;
 
-            // Agrupar por dia + event_name
-            const dayMap: Record<string, Record<string, number>> = {};
-            for (const row of metricRows || []) {
+            // Agrupar likes/comments por dia
+            const likesByDay: Record<string, number> = {};
+            for (const row of likesRows || []) {
               const day = row.created_at.slice(0, 10);
-              if (!dayMap[day]) dayMap[day] = {};
-              dayMap[day][row.event_name] = (dayMap[day][row.event_name] || 0) + 1;
+              likesByDay[day] = (likesByDay[day] || 0) + 1;
             }
-
-            // Agrupar conversões por dia
-            const convDayMap: Record<string, { count: number; revenue: number }> = {};
+            const commentsByDay: Record<string, number> = {};
+            for (const row of commentsRows || []) {
+              const day = row.created_at.slice(0, 10);
+              commentsByDay[day] = (commentsByDay[day] || 0) + 1;
+            }
+            const convByDay: Record<string, { count: number; revenue: number }> = {};
             for (const row of convRows || []) {
               const day = row.created_at.slice(0, 10);
-              if (!convDayMap[day]) convDayMap[day] = { count: 0, revenue: 0 };
-              convDayMap[day].count++;
-              convDayMap[day].revenue += row.order_value || 0;
+              if (!convByDay[day]) convByDay[day] = { count: 0, revenue: 0 };
+              convByDay[day].count++;
+              convByDay[day].revenue += Number(row.order_value) || 0;
             }
 
-            // Pivotar por métrica
-            const sortedDays = Object.keys(dayMap).sort();
+            const byDate = new Map((storeRows || []).map((r: any) => [r.date, r]));
+            const sortedDays = (storeRows || []).map((r: any) => r.date).sort();
+
             const daily: Record<string, DailyMetricPoint[]> = {
-              views:           sortedDays.map(d => ({ date: d, value: dayMap[d]?.play || 0 })),
-              likes:           sortedDays.map(d => ({ date: d, value: dayMap[d]?.like || 0 })),
-              comments:        sortedDays.map(d => ({ date: d, value: (dayMap[d]?.comment || 0) + (dayMap[d]?.comment_open || 0) })),
-              shares:          sortedDays.map(d => ({ date: d, value: dayMap[d]?.share || 0 })),
-              whatsapp_clicks: sortedDays.map(d => ({ date: d, value: dayMap[d]?.whatsapp_click || 0 })),
-              // 🟢 correção #5: comentário documentando que cta_clicks inclui whatsapp + product
-              cta_clicks:      sortedDays.map(d => ({ date: d, value: (dayMap[d]?.whatsapp_click || 0) + (dayMap[d]?.product_click || 0) })),
-              conversions:     sortedDays.map(d => ({ date: d, value: convDayMap[d]?.count || 0 })),
-              revenue:         sortedDays.map(d => ({ date: d, value: +(convDayMap[d]?.revenue || 0).toFixed(2) })),
-              ctr:             sortedDays.map(d => {
-                const v = dayMap[d]?.play || 0;
-                const c = (dayMap[d]?.whatsapp_click || 0) + (dayMap[d]?.product_click || 0);
+              views:       sortedDays.map(d => ({ date: d, value: byDate.get(d)?.views_count || 0 })),
+              cta_clicks:  sortedDays.map(d => ({ date: d, value: byDate.get(d)?.cta_clicks_count || 0 })),
+              likes:       sortedDays.map(d => ({ date: d, value: likesByDay[d] || 0 })),
+              comments:    sortedDays.map(d => ({ date: d, value: commentsByDay[d] || 0 })),
+              conversions: sortedDays.map(d => ({ date: d, value: convByDay[d]?.count || 0 })),
+              revenue:     sortedDays.map(d => ({
+                date: d,
+                value: +(Number(byDate.get(d)?.estimated_revenue || 0) + (convByDay[d]?.revenue || 0)).toFixed(2),
+              })),
+              ctr: sortedDays.map(d => {
+                const v = byDate.get(d)?.views_count || 0;
+                const c = (byDate.get(d)?.cta_clicks_count || 0) + (byDate.get(d)?.product_clicks_count || 0);
                 return { date: d, value: v > 0 ? +((c / v) * 100).toFixed(1) : 0 };
               }),
             };
@@ -258,22 +266,20 @@ export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
             setDailyData(daily);
             setDailyError(false);
 
-            const totalViews = sortedDays.reduce((s, d) => s + (dayMap[d]?.play || 0), 0);
+            const totalViews = sortedDays.reduce((s, d) => s + (byDate.get(d)?.views_count || 0), 0);
 
-            // 🟢 correção #6: fallback se sortedDays estiver vazio
             if (sortedDays.length > 0) {
               setAvgDailyViews(Math.round(totalViews / sortedDays.length));
             } else {
               const dias = getDiasNoPeriodo(timeRange, customFrom, customTo);
-              setAvgDailyViews(dias > 0 ? Math.round(metrics.views / dias) : 0);
+              setAvgDailyViews(dias > 0 ? Math.round(dashMetrics.views / dias) : 0);
             }
           } catch (supabaseErr) {
             console.error('Erro ao buscar dados diários do Supabase:', supabaseErr);
             if (mounted) {
               setDailyError(true);
-              // 🟢 correção #6: fallback usando métricas agregadas
               const dias = getDiasNoPeriodo(timeRange, customFrom, customTo);
-              setAvgDailyViews(dias > 0 ? Math.round(metrics.views / dias) : 0);
+              setAvgDailyViews(dias > 0 ? Math.round(dashMetrics.views / dias) : 0);
             }
           }
         }
@@ -287,7 +293,8 @@ export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
     load();
     return () => { mounted = false; };
   }, [storeId, timeRange, customFrom, customTo, getDateRange]);
-  // ── NOVO: achar benchmark para a métrica selecionada ──
+
+  // ── achar benchmark para a métrica selecionada ──
   const getBenchmarkForMetric = (metricKey: string): number | undefined => {
     const benchKey = METRIC_TO_BENCHMARK[metricKey];
     if (!benchKey) return undefined;
@@ -295,17 +302,14 @@ export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
     return b?.value_mid;
   };
 
-  // ── NOVO: valor da linha de referência ──
   const referenceLineValue = ((): number | undefined => {
     const option = METRIC_OPTIONS.find(o => o.key === selectedMetric);
     if (!option) return undefined;
 
     if (option.isRate) {
-      // Para taxas (CTR), o benchmark é o próprio valor
       return getBenchmarkForMetric(selectedMetric);
     }
 
-    // Para absolutos, benchmark_rate × avg_daily_views
     const benchRate = getBenchmarkForMetric(selectedMetric);
     if (benchRate && avgDailyViews > 0) {
       return +(benchRate / 100 * avgDailyViews).toFixed(1);
@@ -313,7 +317,6 @@ export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
     return undefined;
   })();
 
-  // ── NOVO: computar diff para os cards ──
   const computeBenchmarkDiff = (cardKey: string, cardValue: number, cardIsRate: boolean): { diff: number; bench: number } | null => {
     const benchKey = METRIC_TO_BENCHMARK[cardKey];
     if (!benchKey) return null;
@@ -321,34 +324,32 @@ export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
     if (!b) return null;
 
     if (cardIsRate) {
-      // Compara taxas diretamente
       return { diff: +((cardValue - b.value_mid) / b.value_mid * 100).toFixed(0), bench: b.value_mid };
     }
 
-    // Para absolutos: compara com benchmark_rate × total_views
     const expectedValue = b.value_mid / 100 * metrics.views;
     if (expectedValue === 0) return null;
     return { diff: +((cardValue - expectedValue) / expectedValue * 100).toFixed(0), bench: b.value_mid };
   };
 
-  // ── Dados para os cards com benchmark ──
+  // ── Cards com benchmark ──
+  // 🟡 REMOVIDOS: cards de "Compartilhamentos" e "Cliques WhatsApp"
+  // (dado inexistente no Sistema B — sempre mostrariam zero
+  // permanentemente, o que é enganoso). Ver Prioridade 4 para
+  // reintroduzir quando esses eventos forem rastreados.
   const cardData = [
-    { key: 'views',           label: 'Visualizações',      value: metrics.views,                   unit: 'count' as const, icon: Eye,              color: 'blue',    isRate: false },
-    { key: 'cta_clicks',      label: 'Cliques em CTA',     value: metrics.ctaClicks,               unit: 'count' as const, icon: MousePointerClick, color: 'blue',    isRate: false },
-    { key: 'conversions',     label: 'Conversões',         value: metrics.conversions,             unit: 'count' as const, icon: CheckCircle2,     color: 'emerald', isRate: false },
-    { key: 'ctr',             label: 'CTR',                value: metrics.ctr,                     unit: '%'    as const, icon: MousePointerClick, color: 'blue',    isRate: true  },
-    { key: 'revenue',         label: 'Receita',            value: metrics.revenue,                 unit: 'R$'   as const, icon: DollarSign,        color: 'amber',  isRate: false },
-    { key: 'likes',           label: 'Curtidas',           value: metrics.likes,                   unit: 'count' as const, icon: Heart,             color: 'emerald', isRate: false },
-    { key: 'comments',        label: 'Comentários',        value: metrics.comments,                unit: 'count' as const, icon: MessageCircle,     color: 'blue',    isRate: false },
-    { key: 'shares',          label: 'Compartilhamentos',  value: metrics.shares,                  unit: 'count' as const, icon: Share2,            color: 'blue',    isRate: false },
-    { key: 'whatsapp_clicks', label: 'Cliques WhatsApp',   value: metrics.whatsappClicks,          unit: 'count' as const, icon: MessageCircle,     color: 'amber',  isRate: false },
+    { key: 'views',       label: 'Visualizações',  value: metrics.views,       unit: 'count' as const, icon: Eye,               color: 'blue',    isRate: false },
+    { key: 'cta_clicks',  label: 'Cliques em CTA', value: metrics.ctaClicks,   unit: 'count' as const, icon: MousePointerClick, color: 'blue',    isRate: false },
+    { key: 'conversions', label: 'Conversões',     value: metrics.conversions, unit: 'count' as const, icon: CheckCircle2,      color: 'emerald', isRate: false },
+    { key: 'ctr',         label: 'CTR',            value: metrics.ctr,         unit: '%'    as const,  icon: MousePointerClick, color: 'blue',    isRate: true  },
+    { key: 'revenue',     label: 'Receita',        value: metrics.revenue,     unit: 'R$'   as const,  icon: DollarSign,        color: 'amber',   isRate: false },
+    { key: 'likes',       label: 'Curtidas',       value: metrics.likes,       unit: 'count' as const, icon: Heart,             color: 'emerald', isRate: false },
+    { key: 'comments',    label: 'Comentários',    value: metrics.comments,    unit: 'count' as const, icon: MessageCircle,     color: 'blue',    isRate: false },
   ];
 
-  // ── Dados do gráfico ──
   const chartData = dailyData[selectedMetric] || [];
   const selectedOption = METRIC_OPTIONS.find(o => o.key === selectedMetric);
 
-  // 🆕 Verifica se é custom sem datas
   const isCustomSemDatas = timeRange === 'custom' && (!customFrom || !customTo);
 
   if (loading) {
@@ -359,18 +360,18 @@ export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
     );
   }
 
-  // ── Donut ──
+  // ── Donut — apenas eventos com dado real ──
+  // 🟢 CORRIGIDO: antes tinha "Plays" e "WhatsApp" que nunca existiram
+  // separadamente. Agora reflete exatamente o que temos de fato.
   const eventBreakdown = [
-    { name: 'Plays', value: metrics.plays, color: '#0094EB' },
-    { name: 'Curtidas', value: metrics.likes, color: '#f43f5e' },
-    { name: 'Comentários', value: metrics.comments, color: '#10b981' },
-    { name: 'Compartilh.', value: metrics.shares, color: '#f59e0b' },
-    { name: 'WhatsApp', value: metrics.whatsappClicks, color: '#25D366' },
+    { name: 'Visualizações', value: metrics.views,      color: '#0094EB' },
+    { name: 'Cliques CTA',   value: metrics.ctaClicks,  color: '#25D366' },
+    { name: 'Curtidas',      value: metrics.likes,      color: '#f43f5e' },
+    { name: 'Comentários',   value: metrics.comments,   color: '#10b981' },
   ].filter((e) => e.value > 0);
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* 🟢 correção #3: aviso custom sem datas */}
       {isCustomSemDatas && (
         <div className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm font-bold text-amber-700">
           <AlertTriangle size={18} className="shrink-0" />
@@ -378,7 +379,6 @@ export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
         </div>
       )}
 
-      {/* 🆕 correção #2: aviso de erro nos dados diários */}
       {dailyError && (
         <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-bold text-slate-500">
           <AlertTriangle size={18} className="shrink-0" />
@@ -409,8 +409,7 @@ export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
         })}
       </div>
 
-      {/* ── Cards de engajamento ── */}
-      {/* 🟢 correção #4: grid padronizado lg:grid-cols-4 (igual linha acima) */}
+      {/* ── Cards de engajamento — agora só 2 (likes, comments) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {cardData.slice(5).map(card => {
           const bench = computeBenchmarkDiff(card.key, card.value, card.isRate);
@@ -490,7 +489,6 @@ export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
                       selectedOption?.label || '',
                     ]}
                   />
-                  {/* Linha de referência do benchmark */}
                   {referenceLineValue !== undefined && referenceLineValue > 0 && (
                     <ReferenceLine
                       y={referenceLineValue}
@@ -625,7 +623,7 @@ export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
   );
 }
 
-// ─── MetricCard com badge de benchmark (Dual-Theme: Azul no Light / Laranja no Dark) ───
+// ─── MetricCard — inalterado ───
 
 const MetricCard = ({
   title,
@@ -644,12 +642,10 @@ const MetricCard = ({
   return (
     <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2rem] p-6 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 group relative h-full flex flex-col justify-between">
       <div className="flex items-start justify-between mb-4">
-        {/* Quadrado do Ícone Dual-Theme: Azul #0094EB no Light / Laranja #ff7a29 no Dark */}
         <div className="w-11 h-11 rounded-2xl flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] transition-transform duration-300 group-hover:scale-110 shrink-0">
           <Icon size={20} className="!text-white stroke-[2.5]" />
         </div>
 
-        {/* Badge de benchmark */}
         {benchmarkDiff !== undefined && (
           <div
             className={cn(
