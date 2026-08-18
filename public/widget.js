@@ -2655,7 +2655,7 @@ if (replyIsVisible) {
       };
       btnRow.appendChild(backBtn);
 
-      var sendBtn = createEl('button', 'vl-form-btn-send');
+var sendBtn = createEl('button', 'vl-form-btn-send');
       sendBtn.type = 'button';
       sendBtn.textContent = 'Enviar';
       sendBtn.style.background = buttonColor;
@@ -2663,7 +2663,7 @@ if (replyIsVisible) {
       sendBtn.onmouseenter = function () { sendBtn.style.opacity = '.9'; };
       sendBtn.onmouseleave = function () { sendBtn.style.opacity = '1'; };
 
-sendBtn.onclick = function (ev) {
+      sendBtn.onclick = function (ev) {
         ev.preventDefault(); 
         ev.stopPropagation();
 
@@ -2765,8 +2765,7 @@ sendBtn.onclick = function (ev) {
 
       btnRow.appendChild(sendBtn);
       formWrap.appendChild(btnRow);
-      panelFooter.style.display = 'none';
-      
+      panelFooter.style.display = 'none';      
       setTimeout(function () { nameInput.focus(); }, 200);
     }
 
