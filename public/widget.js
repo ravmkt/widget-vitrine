@@ -3029,8 +3029,9 @@ if (hasSupabase) {
 
       var likeBtn = createEl('button', 'vl-social-btn');
       likeBtn.id = 'vl-like-btn';
-      likeBtn.innerHTML = svgIcon(hasLikes ? 'heartFilled' : 'heart');
+            likeBtn.innerHTML = svgIcon(isLiked ? 'heartFilled' : 'heart');
       likeBtn.title = isLiked ? 'Descurtir' : 'Curtir';
+
 
       likeBtn.onclick = function (e) {
         e.stopPropagation();
