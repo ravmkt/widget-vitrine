@@ -1017,7 +1017,7 @@ product_card_price_size: toNumber(rcv('product_card_price_size', '12'), 12),
 function readStoreSettings() {
     if (!storeId || !hasSupabase) return Promise.resolve({});
     return supabaseFetch(
-      'store_settings?select=auto_approve_comments,whatsapp_number,whatsapp_message,whatsapp_message_template,store_logo_url,store_name,logo_url&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
+      'store_settings?select=auto_approve_comments,whatsapp_number,whatsapp_message,whatsapp_message_template,store_name,logo_url&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
       { method: 'GET' }
     )
       .then(function (response) { if (!response.ok) return {}; return response.json(); })
@@ -1036,12 +1036,12 @@ function readStoreSettings() {
           whatsapp_number: store.whatsapp_number || '',
           whatsapp_message: store.whatsapp_message || '',
           whatsapp_message_template: store.whatsapp_message_template || '',
-          store_logo_url: store.store_logo_url || store.logo_url || '',
+          store_logo_url: store.logo_url || '',
           store_name: store.store_name || ''
         };
       });
   }
-
+  
   function matchesRule(rule) {
     if (!rule) return false;
     if (rule.active === false || rule.active === 'false' || rule.active === 0 || rule.active === '0') return false;
