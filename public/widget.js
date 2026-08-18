@@ -3180,7 +3180,8 @@ var pButtonBg = appearanceConfig.product_card_button_bg || priColor;
           }
           buyBtn.onclick = function (e) {
             e.stopPropagation();
-            sendAnalyticsEvent('cta_click', video ? video.id : null, productData ? productData.id : null);
+            sendAnalyticsEvent('website_click', video ? video.id : null, productData ? productData.id : null);
+
           };
           pActions.appendChild(buyBtn);
         }
