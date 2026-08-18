@@ -2749,7 +2749,7 @@ userCommentedVideos[videoId] = true;
           restoreVideoView();
         }, 2000);
       };
-      
+
       btnRow.appendChild(sendBtn);
       formWrap.appendChild(btnRow);
       panelFooter.style.display = 'none';
@@ -5024,11 +5024,11 @@ return readAppearance().then(function (appearance) {
         if (storeData.name) storeName = storeData.name;
       }
 
-      return readStoreSettings().then(function (settings) {
-        autoApproveComments = settings.auto_approve_comments === true || settings.auto_approve_comments === 'true';
+return readStoreSettings().then(function (settings) {
+        autoApproveComments = Boolean(settings.auto_approve_comments);
         storeWhatsappNumber = settings.whatsapp_number || '';
         storeWhatsappMessage = settings.whatsapp_message || '';
-        if (settings.store_logo_url || settings.logo_url) {
+                if (settings.store_logo_url || settings.logo_url) {
           storeLogoUrl = normalizeMediaUrl(settings.store_logo_url || settings.logo_url);
         }
         if (settings.store_name) {
