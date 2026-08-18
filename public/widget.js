@@ -1711,7 +1711,17 @@ function applyHostPosition(host, appearance) {
 function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     if (!storeId || !supabaseUrl || !supabaseAnonKey) return;
 
+    // Throttle: evita reenviar o mesmo evento para o mesmo vídeo em menos de 4s
+    sendAnalyticsEvent._lastSent = sendAnalyticsEvent._lastSent || {};
+    var throttleKey = String(eventType) + '_' + String(videoId);
+    var throttleNow = Date.now();
+    if (sendAnalyticsEvent._lastSent[throttleKey] && (throttleNow - sendAnalyticsEvent._lastSent[throttleKey]) < 4000) {
+      return;
+    }
+    sendAnalyticsEvent._lastSent[throttleKey] = throttleNow;
+
     try {
+
       function cleanUuid(val) {
         if (!val) return null;
         var s = String(val).trim();
