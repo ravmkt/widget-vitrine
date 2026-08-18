@@ -1041,7 +1041,7 @@ function readStoreSettings() {
         };
       });
   }
-  
+
   function matchesRule(rule) {
     if (!rule) return false;
     if (rule.active === false || rule.active === 'false' || rule.active === 0 || rule.active === '0') return false;
@@ -2680,7 +2680,9 @@ userCommentedVideos[videoId] = true;
           })
             .then(function () {
               if (autoApproveComments) {
+                // ✅ Aprovação Automática: entra no ar imediatamente na lista do vídeo
                 readCommentsData.push({
+                  id: 'local_' + Date.now(),
                   video_id: videoId,
                   user_name: name || 'Visitante',
                   content: text,
@@ -2691,6 +2693,7 @@ userCommentedVideos[videoId] = true;
                 statusMsg.textContent = 'Seu comentário foi publicado.';
                 statusMsg.style.color = '#22c55e';
               } else {
+                // ⏳ Moderação Manual: não exibe até ser aprovado no painel
                 statusMsg.textContent = 'Obrigado pelo seu comentário. Em breve ele será publicado.';
                 statusMsg.style.color = '#f59e0b';
               }
@@ -2705,7 +2708,7 @@ userCommentedVideos[videoId] = true;
                 page_url: window.location.href
               });
 
-              // Fecha automaticamente o painel de comentários e retoma o vídeo após 2 segundos
+              // ⏱️ Fecha automaticamente o painel de comentários e retoma o vídeo após 2 segundos
               setTimeout(function () {
                 restoreVideoView();
               }, 2000);
@@ -2720,16 +2723,24 @@ userCommentedVideos[videoId] = true;
           return;
         }
 
-        readCommentsData.push({
-          video_id: videoId,
-          user_name: name || 'Visitante',
-          content: text,
-          text: text,
-          created_at: new Date().toISOString(),
-          status: 'approved'
-        });
-        statusMsg.textContent = 'Seu comentário foi publicado.';
-        statusMsg.style.color = '#22c55e';
+        // Fallback local sem Supabase
+        if (autoApproveComments) {
+          readCommentsData.push({
+            id: 'local_' + Date.now(),
+            video_id: videoId,
+            user_name: name || 'Visitante',
+            content: text,
+            text: text,
+            created_at: new Date().toISOString(),
+            status: 'approved'
+          });
+          statusMsg.textContent = 'Seu comentário foi publicado.';
+          statusMsg.style.color = '#22c55e';
+        } else {
+          statusMsg.textContent = 'Obrigado pelo seu comentário. Em breve ele será publicado.';
+          statusMsg.style.color = '#f59e0b';
+        }
+
         commentsCount = getCommentCountForVideo(videoId);
         panelTitle.textContent = 'Comentários' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
 
@@ -2737,8 +2748,8 @@ userCommentedVideos[videoId] = true;
         setTimeout(function () {
           restoreVideoView();
         }, 2000);
-              };
-
+      };
+      
       btnRow.appendChild(sendBtn);
       formWrap.appendChild(btnRow);
       panelFooter.style.display = 'none';
