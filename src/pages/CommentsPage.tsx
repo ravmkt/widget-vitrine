@@ -611,16 +611,16 @@ return (
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#0f1220]/70 border border-slate-100 dark:border-white/5">
+<div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#0f1220]/70 border border-slate-100 dark:border-white/5">
             <div>
               <span className="text-xs font-black text-slate-800 dark:text-white block">
-                {autoApprove ? "Aprovação automática ativada" : "Moderação manual ativada"}
+                {autoApprove ? "Aprovação automática ativada" : "Aprovação automática desativada"}
               </span>
               <p className="text-[11px] font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
                 {autoApprove ? "Publicados imediatamente." : "Requer aprovação prévia."}
               </p>
             </div>
-
+            
             {/* Switch com Trilha e Bolinha Perfeitamente Alinhadas */}
             <button
               type="button"
