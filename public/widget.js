@@ -1979,7 +1979,7 @@ function createComment(commentData) {
         });
     });
   }
-  
+
   function getFingerprint() {
     var key = '__vid_fp';
     var stored = localStorage.getItem(key);
@@ -2686,16 +2686,20 @@ var sendBtn = createEl('button', 'vl-form-btn-send');
         statusMsg.textContent = '';
 
         userCommentedVideos[videoId] = true;
+        
+        var isAuto = autoApproveComments === true || autoApproveComments === 'true' || autoApproveComments === 1 || autoApproveComments === '1';
+        var commentStatus = isAuto ? 'approved' : 'pending';
 
         if (hasSupabase) {
           createComment({
             story_id: storyId,
             video_id: videoId,
             author_name: name || 'Visitante',
-            content: text
+            content: text,
+            status: commentStatus
           })
             .then(function (result) {
-              var isApproved = result && result.status === 'approved';
+              var isApproved = (result && result.status === 'approved') || commentStatus === 'approved';
 
               if (isApproved) {
                 // ✅ Aprovação Automática: insere imediatamente na lista em memória para exibição instantânea
@@ -2742,7 +2746,7 @@ var sendBtn = createEl('button', 'vl-form-btn-send');
         }
 
         // Fallback local sem Supabase
-        if (autoApproveComments) {
+        if (isAuto) {
           readCommentsData.push({
             id: 'local_' + Date.now(),
             video_id: videoId,
@@ -2767,6 +2771,12 @@ var sendBtn = createEl('button', 'vl-form-btn-send');
         }, 2000);
       };
 
+      btnRow.appendChild(sendBtn);
+      formWrap.appendChild(btnRow);
+      panelFooter.style.display = 'none';      
+      setTimeout(function () { nameInput.focus(); }, 200);
+    }
+    
       btnRow.appendChild(sendBtn);
       formWrap.appendChild(btnRow);
       panelFooter.style.display = 'none';      
