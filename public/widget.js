@@ -1712,18 +1712,19 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     if (!storeId || !supabaseUrl || !supabaseAnonKey) return;
 
     try {
-      extraData = extraData || {};
-
       function cleanUuid(val) {
         if (!val) return null;
         var s = String(val).trim();
         if (!s || s === 'null' || s === 'undefined' || s === '""') return null;
-        // Regex para UUID v4 padrão
         var isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
         return isUuid ? s : null;
       }
 
-      var cleanStoreId = cleanUuid(storeId) || String(storeId).trim();
+      var cleanStoreId = cleanUuid(storeId);
+      if (!cleanStoreId) return;
+
+      extraData = extraData || {};
+
       var cleanVideoId = cleanUuid(videoId);
       var cleanProductId = cleanUuid(productId);
       var cleanStoryId = cleanUuid(extraData.storyId || extraData.story_id);
