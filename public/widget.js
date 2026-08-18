@@ -1727,24 +1727,20 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     var endpoint = supabaseUrl.replace(/\/rest\/v1.*/, '').replace(/\/+$/, '') + '/functions/v1/track-event';
 
     try {
-      if (navigator.sendBeacon) {
-        var blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-        navigator.sendBeacon(endpoint, blob);
-      } else {
-        fetch(endpoint, {
-          method: 'POST',
-          mode: 'cors',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': supabaseAnonKey
-          },
-          body: JSON.stringify(payload),
-          keepalive: true
-        }).catch(function () {});
-      }
+      fetch(endpoint, {
+        method: 'POST',
+        mode: 'cors',
+        credentials: 'omit',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseAnonKey
+        },
+        body: JSON.stringify(payload),
+        keepalive: true
+      }).catch(function () {});
     } catch (_) {}
   }
-
+  
   function trackMetric(data) {
     if (!data) return;
     sendAnalyticsEvent(
