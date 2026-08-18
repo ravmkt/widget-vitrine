@@ -1740,7 +1740,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       }).catch(function () {});
     } catch (_) {}
   }
-
+  
   function trackMetric(data) {
     if (!data) return;
     sendAnalyticsEvent(
