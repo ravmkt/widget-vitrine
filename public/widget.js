@@ -1975,7 +1975,7 @@ function createComment(commentData) {
         });
     });
   }
-  
+
   function getFingerprint() {
     var key = '__vid_fp';
     var stored = localStorage.getItem(key);
@@ -2663,8 +2663,9 @@ if (replyIsVisible) {
       sendBtn.onmouseenter = function () { sendBtn.style.opacity = '.9'; };
       sendBtn.onmouseleave = function () { sendBtn.style.opacity = '1'; };
 
-      sendBtn.onclick = function (ev) {
-        ev.preventDefault(); ev.stopPropagation();
+sendBtn.onclick = function (ev) {
+        ev.preventDefault(); 
+        ev.stopPropagation();
 
         var name = nameInput.value.trim();
         var text = commentTextarea.value.trim();
@@ -2680,20 +2681,20 @@ if (replyIsVisible) {
         sendBtn.style.opacity = '.6';
         statusMsg.textContent = '';
 
-userCommentedVideos[videoId] = true;
-        var commentStatus = autoApproveComments ? 'approved' : 'pending';
+        userCommentedVideos[videoId] = true;
 
         if (hasSupabase) {
           createComment({
             story_id: storyId,
             video_id: videoId,
             author_name: name || 'Visitante',
-            content: text,
-            status: commentStatus
+            content: text
           })
-            .then(function () {
-              if (autoApproveComments) {
-                // ✅ Aprovação Automática: entra no ar imediatamente na lista do vídeo
+            .then(function (result) {
+              var isApproved = result && result.status === 'approved';
+
+              if (isApproved) {
+                // ✅ Aprovação Automática: insere imediatamente na lista em memória para exibição instantânea
                 readCommentsData.push({
                   id: 'local_' + Date.now(),
                   video_id: videoId,
@@ -2706,7 +2707,7 @@ userCommentedVideos[videoId] = true;
                 statusMsg.textContent = 'Seu comentário foi publicado.';
                 statusMsg.style.color = '#22c55e';
               } else {
-                // ⏳ Moderação Manual: não exibe até ser aprovado no painel
+                // ⏳ Moderação Manual: não exibe até a aprovação no painel
                 statusMsg.textContent = 'Obrigado pelo seu comentário. Em breve ele será publicado.';
                 statusMsg.style.color = '#f59e0b';
               }
@@ -2721,12 +2722,47 @@ userCommentedVideos[videoId] = true;
                 page_url: window.location.href
               });
 
-              // ⏱️ Fecha automaticamente o painel de comentários e retoma o vídeo após 2 segundos
+              // ⏱️ Fecha o painel e volta para o vídeo após 2 segundos
               setTimeout(function () {
                 restoreVideoView();
               }, 2000);
             })
             .catch(function (error) {
+              statusMsg.textContent = error && error.message ? error.message : 'Erro ao enviar. Tente novamente.';
+              statusMsg.style.color = '#ef4444';
+              sendBtn.textContent = 'Enviar';
+              sendBtn.disabled = false;
+              sendBtn.style.opacity = '1';
+            });
+          return;
+        }
+
+        // Fallback local sem Supabase
+        if (autoApproveComments) {
+          readCommentsData.push({
+            id: 'local_' + Date.now(),
+            video_id: videoId,
+            user_name: name || 'Visitante',
+            content: text,
+            text: text,
+            created_at: new Date().toISOString(),
+            status: 'approved'
+          });
+          statusMsg.textContent = 'Seu comentário foi publicado.';
+          statusMsg.style.color = '#22c55e';
+        } else {
+          statusMsg.textContent = 'Obrigado pelo seu comentário. Em breve ele será publicado.';
+          statusMsg.style.color = '#f59e0b';
+        }
+
+        commentsCount = getCommentCountForVideo(videoId);
+        panelTitle.textContent = 'Comentários' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
+
+        setTimeout(function () {
+          restoreVideoView();
+        }, 2000);
+      };
+                  .catch(function (error) {
               statusMsg.textContent = error && error.message ? error.message : 'Erro ao enviar. Tente novamente.';
               statusMsg.style.color = '#ef4444';
               sendBtn.textContent = 'Enviar';
