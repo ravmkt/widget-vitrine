@@ -1948,7 +1948,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     return firstDefined(video.model_id, video.modelId, video.sizing_model_id, video.sizingModelId, video.modelo_id, video.modeloId, video.model) || null;
   }
 
-function createComment(commentData) {
+  function createComment(commentData) {
     if (!hasSupabase) return Promise.reject(new Error('Supabase não configurado.'));
     commentData = commentData || {};
 
