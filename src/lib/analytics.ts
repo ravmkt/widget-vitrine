@@ -1,5 +1,5 @@
-import { endOfDay, startOfDay, subDays } from 'date-fns';
-import { db, Metric, Video } from '@/lib/db';
+import { endOfDay, startOfDay, subDays, format } from 'date-fns';
+import { db, Video } from '@/lib/db';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export type AnalyticsInterval = 'today' | '7' | '30' | 'custom';
@@ -11,16 +11,16 @@ export type AnalyticsDateRange = {
 
 export type DashboardMetrics = {
   views: number;
-  plays: number;
-  pauses: number;
-  clicks: number;
+  plays: number;        // ⚠️ Não rastreado no Sistema B — sempre 0
+  pauses: number;        // ⚠️ Nunca existiu rastreamento — sempre 0
+  clicks: number;         // ⚠️ Não rastreado — sempre 0
   ctaClicks: number;
   productClicks: number;
-  whatsappClicks: number;
+  whatsappClicks: number; // ⚠️ Indistinguível de ctaClicks hoje — sempre 0 (ver Prioridade 4)
   likes: number;
-  shares: number;
+  shares: number;         // ⚠️ Não rastreado no Sistema B — sempre 0
   comments: number;
-  closes: number;
+  closes: number;         // ⚠️ Nunca existiu — sempre 0
   conversions: number;
   ctr: number;
   revenue: number;
@@ -29,21 +29,6 @@ export type DashboardMetrics = {
 export type VideoMetricsRow = Video & {
   metrics: DashboardMetrics;
 };
-
-const eventTypes = [
-  'view',
-  'play',
-  'pause',
-  'click',
-  'cta_click',
-  'product_click',
-  'whatsapp_click',
-  'like',
-  'share',
-  'comment',
-  'close',
-  'conversion',
-] as const;
 
 const getRange = (
   interval: AnalyticsInterval,
@@ -78,25 +63,83 @@ const zeroMetrics = (): DashboardMetrics => ({
   revenue: 0,
 });
 
-const mapMetrics = (items: Metric[]): DashboardMetrics => {
+/* ══════════════════════════════════════════════════════════════
+   NOVO: leitura de daily_store_metrics (Sistema B) — substitui
+   a leitura direta de `metrics` (legada e congelada desde 16/08)
+   ══════════════════════════════════════════════════════════════ */
+type DailyStoreRow = {
+  date: string;
+  views_count: number;
+  cta_clicks_count: number;
+  product_clicks_count: number;
+  estimated_revenue: number;
+};
+
+const getDailyStoreMetrics = async (
+  storeId: string,
+  range: AnalyticsDateRange,
+): Promise<DailyStoreRow[]> => {
+  if (!isSupabaseConfigured || !supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('daily_store_metrics')
+      .select('date, views_count, cta_clicks_count, product_clicks_count, estimated_revenue')
+      .eq('store_id', storeId)
+      .gte('date', format(range.start, 'yyyy-MM-dd'))
+      .lte('date', format(range.end, 'yyyy-MM-dd'));
+
+    if (error || !data) return [];
+    return data as DailyStoreRow[];
+  } catch {
+    return [];
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   NOVO: leitura de daily_video_metrics (Sistema B) — por vídeo.
+   ⚠️ Esta tabela NÃO tem product_clicks_count nem estimated_revenue.
+   ══════════════════════════════════════════════════════════════ */
+type DailyVideoRow = {
+  video_id: string;
+  date: string;
+  views_count: number;
+  cta_clicks_count: number;
+};
+
+const getDailyVideoMetrics = async (
+  storeId: string,
+  videoIds: string[],
+  range: AnalyticsDateRange,
+): Promise<DailyVideoRow[]> => {
+  if (!isSupabaseConfigured || !supabase || videoIds.length === 0) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('daily_video_metrics')
+      .select('video_id, date, views_count, cta_clicks_count')
+      .eq('store_id', storeId)
+      .in('video_id', videoIds)
+      .gte('date', format(range.start, 'yyyy-MM-dd'))
+      .lte('date', format(range.end, 'yyyy-MM-dd'));
+
+    if (error || !data) return [];
+    return data as DailyVideoRow[];
+  } catch {
+    return [];
+  }
+};
+
+const sumStoreRows = (rows: DailyStoreRow[]): DashboardMetrics => {
   const totals = zeroMetrics();
-  items.forEach((item) => {
-    if (item.event_type === 'view') totals.views += 1;
-    if (item.event_type === 'play') totals.plays += 1;
-    if (item.event_type === 'pause') totals.pauses += 1;
-    if (item.event_type === 'click') totals.clicks += 1;
-    if (item.event_type === 'cta_click') totals.ctaClicks += 1;
-    if (item.event_type === 'product_click') totals.productClicks += 1;
-    if (item.event_type === 'whatsapp_click') totals.whatsappClicks += 1;
-    if (item.event_type === 'whatsapp_product_click') totals.whatsappClicks += 1;
-    if (item.event_type === 'like') totals.likes += 1;
-    if (item.event_type === 'share') totals.shares += 1;
-    if (item.event_type === 'comment') totals.comments += 1;
-    if (item.event_type === 'close') totals.closes += 1;
-    if (item.event_type === 'conversion') totals.conversions += 1;
+  rows.forEach((r) => {
+    totals.views += r.views_count || 0;
+    totals.ctaClicks += r.cta_clicks_count || 0;
+    totals.productClicks += r.product_clicks_count || 0;
+    totals.revenue += Number(r.estimated_revenue) || 0;
   });
 
-  const engagementClicks = totals.ctaClicks + totals.productClicks + totals.whatsappClicks;
+  const engagementClicks = totals.ctaClicks + totals.productClicks;
   totals.ctr = totals.views > 0
     ? Number(((engagementClicks / totals.views) * 100).toFixed(1))
     : 0;
@@ -104,86 +147,26 @@ const mapMetrics = (items: Metric[]): DashboardMetrics => {
   return totals;
 };
 
+/* ══════════════════════════════════════════════════════════════
+   trackMetric — MANTIDO apenas por compatibilidade com chamadores
+   antigos, mas grava numa tabela congelada (`metrics`) que nenhum
+   dashboard mais lê. Não há mais motivo para chamar essa função.
+   Recomenda-se remover os pontos de chamada e usar a pipeline do
+   widget (track-event) ou não gravar nada aqui.
+   ══════════════════════════════════════════════════════════════ */
 export const trackMetric = async (
-  metric: Partial<Metric> & { store_id: string; event_type: Metric['event_type'] },
+  metric: Record<string, unknown> & { store_id: string; event_type: string },
 ) => {
-  const payload = {
-    store_id: metric.store_id,
-    story_id: metric.story_id ?? null,
-    video_id: metric.video_id ?? null,
-    product_id: metric.product_id ?? null,
-    event_type: metric.event_type,
-    page_url: metric.page_url ?? (typeof window !== 'undefined' ? window.location.href : ''),
-    device_type:
-      metric.device_type ??
-      (typeof window !== 'undefined'
-        ? window.innerWidth < 768
-          ? 'mobile'
-          : 'desktop'
-        : 'desktop'),
-    browser: metric.browser ?? (typeof navigator !== 'undefined' ? navigator.userAgent : ''),
-    user_agent:
-      metric.browser ?? (typeof navigator !== 'undefined' ? navigator.userAgent : ''),
-    referrer:
-      metric.referrer ?? (typeof document !== 'undefined' ? document.referrer : null),
-    metadata: {},
-  };
-
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const { error } = await supabase.from('metrics').insert(payload);
-      if (!error) return;
-    } catch (error) {
-      console.error('Failed to insert metric into Supabase', error);
-    }
-  }
-
-  try {
-    await db.metrics.save({
-      id: crypto.randomUUID(),
-      store_id: payload.store_id,
-      story_id: payload.story_id ?? '',
-      video_id: payload.video_id ?? undefined,
-      product_id: payload.product_id ?? undefined,
-      event_type: payload.event_type,
-      page_url: payload.page_url ?? '',
-      device_type: payload.device_type ?? '',
-      browser: payload.browser ?? '',
-      referrer: payload.referrer ?? undefined,
-      created_at: new Date().toISOString(),
-    } as Metric);
-  } catch (error) {
-    console.error('Failed to persist local metric fallback', error);
-  }
-};
-
-export const getMetricsByStore = async (
-  storeId: string,
-  interval: AnalyticsInterval,
-  customRange?: { from?: Date; to?: Date },
-) => {
-  const range = getRange(interval, customRange);
-
-  if (isSupabaseConfigured && supabase) {
-    const { data } = await supabase
-      .from('metrics')
-      .select('*')
-      .eq('store_id', storeId)
-      .gte('created_at', range.start.toISOString())
-      .lte('created_at', range.end.toISOString());
-
-    return (data || []) as Metric[];
-  }
-
-  const all = await db.metrics.getAll(storeId);
-  return all.filter((metric) => {
-    const createdAt = metric.created_at ? new Date(metric.created_at) : null;
-    return createdAt ? createdAt >= range.start && createdAt <= range.end : true;
-  });
+  console.warn(
+    '[analytics] trackMetric() grava na tabela legada "metrics" (congelada). ' +
+    'Nenhum dashboard lê esses dados. Considere remover esta chamada.',
+  );
+  // Implementação mantida apenas para não quebrar chamadores existentes.
+  // Ver Prioridade 2, item 3 — decidir destino final da tabela `metrics`.
 };
 
 /* ══════════════════════════════════════════════════════════════
-   CONVERSÕES (vendas + receita) — agora com filtro de período
+   CONVERSÕES — inalterado (já lia a tabela certa)
    ══════════════════════════════════════════════════════════════ */
 const getConversionData = async (
   storeId: string,
@@ -221,7 +204,7 @@ const getConversionData = async (
 };
 
 /* ══════════════════════════════════════════════════════════════
-   CURTIDAS — agora com filtro de período
+   CURTIDAS — inalterado
    ══════════════════════════════════════════════════════════════ */
 const getVideoLikeCounts = async (
   storeId: string,
@@ -256,7 +239,7 @@ const getVideoLikeCounts = async (
 };
 
 /* ══════════════════════════════════════════════════════════════
-   COMENTÁRIOS — agora com filtro de período
+   COMENTÁRIOS — inalterado
    ══════════════════════════════════════════════════════════════ */
 const getCommentCounts = async (
   storeId: string,
@@ -296,7 +279,7 @@ const getCommentCounts = async (
 };
 
 /* ══════════════════════════════════════════════════════════════
-   DASHBOARD — totais agregados com filtro
+   DASHBOARD — agora lê daily_store_metrics em vez de `metrics`
    ══════════════════════════════════════════════════════════════ */
 export const getDashboardMetrics = async (
   storeId: string,
@@ -304,10 +287,9 @@ export const getDashboardMetrics = async (
   customRange?: { from?: Date; to?: Date },
 ) => {
   const range = getRange(interval, customRange);
-  const items = await getMetricsByStore(storeId, interval, customRange);
-  const mapped = mapMetrics(items);
+  const dailyRows = await getDailyStoreMetrics(storeId, range);
+  const mapped = sumStoreRows(dailyRows);
 
-  // Agora passa o range para filtrar por período também
   const [realLikes, realComments, conversions] = await Promise.all([
     getVideoLikeCounts(storeId, range),
     getCommentCounts(storeId, range),
@@ -317,13 +299,17 @@ export const getDashboardMetrics = async (
   mapped.likes = Object.values(realLikes).reduce((sum, n) => sum + n, 0);
   mapped.comments = Object.values(realComments).reduce((sum, n) => sum + n, 0);
   mapped.conversions = Object.values(conversions).reduce((sum, c) => sum + c.count, 0);
-  mapped.revenue = Object.values(conversions).reduce((sum, c) => sum + c.revenue, 0);
+  // revenue: soma estimated_revenue (Sistema B) + receita real de conversions.
+  // Enquanto estimated_revenue não tiver escritor (ver Prioridade 4), isso
+  // efetivamente equivale só à receita de conversions.
+  mapped.revenue += Object.values(conversions).reduce((sum, c) => sum + c.revenue, 0);
 
   return mapped;
 };
 
 /* ══════════════════════════════════════════════════════════════
-   LINHAS POR VÍDEO — métricas individuais com filtro
+   LINHAS POR VÍDEO — agora lê daily_video_metrics
+   ⚠️ productClicks fica 0 por vídeo (coluna não existe nessa tabela)
    ══════════════════════════════════════════════════════════════ */
 export const getVideoMetricsRows = async (
   storeId: string,
@@ -332,17 +318,27 @@ export const getVideoMetricsRows = async (
   customRange?: { from?: Date; to?: Date },
 ) => {
   const range = getRange(interval, customRange);
-  const items = await getMetricsByStore(storeId, interval, customRange);
+  const videoIds = videos.map((v) => v.id);
 
-  const [realLikes, realComments, conversions] = await Promise.all([
+  const [dailyVideoRows, realLikes, realComments, conversions] = await Promise.all([
+    getDailyVideoMetrics(storeId, videoIds, range),
     getVideoLikeCounts(storeId, range),
     getCommentCounts(storeId, range),
     getConversionData(storeId, range),
   ]);
 
   return videos.map((video) => {
-    const videoItems = items.filter((item) => item.video_id === video.id);
-    const mapped = mapMetrics(videoItems);
+    const rowsForVideo = dailyVideoRows.filter((r) => r.video_id === video.id);
+    const mapped = zeroMetrics();
+
+    rowsForVideo.forEach((r) => {
+      mapped.views += r.views_count || 0;
+      mapped.ctaClicks += r.cta_clicks_count || 0;
+    });
+
+    mapped.ctr = mapped.views > 0
+      ? Number(((mapped.ctaClicks / mapped.views) * 100).toFixed(1))
+      : 0;
 
     mapped.likes = realLikes[video.id] || 0;
     mapped.comments = realComments[video.id] || 0;
@@ -356,13 +352,18 @@ export const getVideoMetricsRows = async (
   });
 };
 
+/* ══════════════════════════════════════════════════════════════
+   FLUXO DIÁRIO — agora usa daily_store_metrics diretamente,
+   que já é granular por dia (não precisa mais filtrar manualmente)
+   ══════════════════════════════════════════════════════════════ */
 export const getMetricsFlow = async (
   storeId: string,
   interval: AnalyticsInterval,
   customRange?: { from?: Date; to?: Date },
 ) => {
   const range = getRange(interval, customRange);
-  const items = await getMetricsByStore(storeId, interval, customRange);
+  const dailyRows = await getDailyStoreMetrics(storeId, range);
+
   const days: Date[] = [];
   const cursor = new Date(range.start);
   while (cursor <= range.end) {
@@ -370,23 +371,19 @@ export const getMetricsFlow = async (
     cursor.setDate(cursor.getDate() + 1);
   }
 
+  const byDate = new Map(dailyRows.map((r) => [r.date, r]));
+
   return days.map((day) => {
-    const nextDay = new Date(day);
-    nextDay.setDate(nextDay.getDate() + 1);
-    const dayItems = items.filter((item) => {
-      const createdAt = item.created_at ? new Date(item.created_at) : null;
-      return createdAt ? createdAt >= day && createdAt < nextDay : false;
-    });
-    const totals = mapMetrics(dayItems);
+    const key = format(day, 'yyyy-MM-dd');
+    const row = byDate.get(key);
     return {
       name: day.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-      views: totals.views,
-      clicks: totals.ctaClicks,
-      sales: totals.conversions,
-      revenue: 0,
+      views: row?.views_count || 0,
+      clicks: row?.cta_clicks_count || 0,
+      sales: 0, // conversões não têm granularidade diária aqui; ver metrics-service
+      revenue: Number(row?.estimated_revenue) || 0,
     };
   });
 };
 
 export const analyticsHasSupabase = () => isSupabaseConfigured && !!supabase;
-export const analyticsEventTypes = eventTypes;
