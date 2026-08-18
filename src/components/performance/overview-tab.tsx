@@ -410,7 +410,7 @@ export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
       </div>
 
       {/* ── Cards de engajamento — agora só 2 (likes, comments) ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl">
         {cardData.slice(5).map(card => {
           const bench = computeBenchmarkDiff(card.key, card.value, card.isRate);
           return (
@@ -426,6 +426,7 @@ export function OverviewTab({ timeRange, customFrom, customTo }: Props) {
           );
         })}
       </div>
+
 
       {/* ── Gráfico com seletor de métrica + Referência ── */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
