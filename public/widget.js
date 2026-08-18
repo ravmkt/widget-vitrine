@@ -1027,8 +1027,12 @@ function readStoreSettings() {
       })
       .catch(function () { return {}; })
       .then(function (store) {
+        var isAutoApprove = store.auto_approve_comments === true ||
+                            store.auto_approve_comments === 'true' ||
+                            store.auto_approve_comments === 1 ||
+                            store.auto_approve_comments === '1';
         return {
-          auto_approve_comments: store.auto_approve_comments,
+          auto_approve_comments: isAutoApprove,
           whatsapp_number: store.whatsapp_number || '',
           whatsapp_message: store.whatsapp_message || '',
           whatsapp_message_template: store.whatsapp_message_template || '',
@@ -1037,7 +1041,7 @@ function readStoreSettings() {
         };
       });
   }
-
+  
   function matchesRule(rule) {
     if (!rule) return false;
     if (rule.active === false || rule.active === 'false' || rule.active === 0 || rule.active === '0') return false;
@@ -1753,7 +1757,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       }
     );
   }
-  
+
   function buildVideoPlayer(video, storyId, onEnded) {
     var sourceType = String(video.source_type || video.sourceType || '').toLowerCase();
     var isImage = sourceType === 'image' || (video && video.type === 'image');
