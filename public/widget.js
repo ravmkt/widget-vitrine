@@ -2114,7 +2114,6 @@ function createComment(commentData) {
       });
   }
 
-
   function openSharePanel(btnEl) {
     var existing = document.getElementById('vl-share-panel');
     if (existing) { existing.remove(); return; }
