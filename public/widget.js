@@ -1041,7 +1041,7 @@ function readStoreSettings() {
         };
       });
   }
-  
+
   function matchesRule(rule) {
     if (!rule) return false;
     if (rule.active === false || rule.active === 'false' || rule.active === 0 || rule.active === '0') return false;
@@ -1943,9 +1943,19 @@ function createComment(commentData) {
     if (!authorName) return Promise.reject(new Error('Informe seu nome.'));
     if (!commentText) return Promise.reject(new Error('Digite um comentário.'));
 
-    // Consulta em tempo real store_settings para garantir o valor atualizado da flag
-    return readStoreSettings().then(function (settings) {
-      var isAuto = settings.auto_approve_comments === true || autoApproveComments === true;
+    // Se o banco falhar na leitura ou cachear, a variável global dita a regra, mas tentamos o banco antes
+    return supabaseFetch(
+      'store_settings?select=auto_approve_comments&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
+      { method: 'GET' }
+    )
+    .then(function(res) { return res.ok ? res.json() : []; })
+    .then(function(data) {
+      var isAuto = autoApproveComments === true || autoApproveComments === 'true'; // fallback da carga da página
+      if (Array.isArray(data) && data.length > 0) {
+        var bdAuto = data[0].auto_approve_comments;
+        isAuto = bdAuto === true || bdAuto === 'true' || bdAuto === 1 || bdAuto === '1';
+      }
+
       var resolvedStatus = isAuto ? 'approved' : 'pending';
 
       var payload = {
@@ -1960,21 +1970,52 @@ function createComment(commentData) {
 
       return supabaseFetch('comments', {
         method: 'POST',
-        headers: { 'Prefer': 'return=minimal' },
+        headers: { 'Prefer': 'return=representation' },
         body: JSON.stringify(payload)
       })
-        .then(function (response) {
-          if (response.ok) return { status: resolvedStatus, isAuto: isAuto };
-          return response.text().then(function (rawMessage) {
-            var parsed = {};
-            try { parsed = JSON.parse(rawMessage || '{}'); } catch (error) {}
-            if (response.status === 401) throw new Error('A chave pública ou a URL do Supabase são inválidas.');
-            if (response.status === 403 || parsed.code === '42501') throw new Error('Inserção bloqueada pelas políticas RLS da tabela comments.');
-            throw new Error(parsed.message || parsed.error_description || parsed.hint || parsed.details || 'Não foi possível enviar o comentário.');
+      .then(function (response) {
+        if (response.ok) {
+          return response.json().then(function (insertedData) {
+            var actualStatus = (Array.isArray(insertedData) && insertedData[0] && insertedData[0].status) 
+              ? insertedData[0].status 
+              : resolvedStatus;
+            return { status: actualStatus, isAuto: actualStatus === 'approved' };
+          }).catch(function () {
+            return { status: resolvedStatus, isAuto: isAuto };
           });
+        }
+        return response.text().then(function (rawMessage) {
+          var parsed = {};
+          try { parsed = JSON.parse(rawMessage || '{}'); } catch (error) {}
+          if (response.status === 401) throw new Error('A chave pública ou a URL do Supabase são inválidas.');
+          if (response.status === 403 || parsed.code === '42501') throw new Error('Inserção bloqueada pelas políticas RLS da tabela comments.');
+          throw new Error(parsed.message || parsed.error_description || parsed.hint || parsed.details || 'Não foi possível enviar o comentário.');
         });
+      });
+    })
+    .catch(function(err) {
+      console.warn('[Vidlytics] Falha ao verificar auto_approve_comments no envio, usando global.', err);
+      // Fallback imediato se o fetch falhar
+      var fallbackStatus = (autoApproveComments === true || autoApproveComments === 'true') ? 'approved' : 'pending';
+      var fallbackPayload = {
+        store_id: storeId,
+        video_id: commentData.video_id || null,
+        user_name: authorName,
+        user_email: commentData.author_email ? String(commentData.author_email).trim() : null,
+        content: commentText,
+        status: fallbackStatus,
+        created_at: new Date().toISOString()
+      };
+      return supabaseFetch('comments', {
+        method: 'POST',
+        headers: { 'Prefer': 'return=representation' },
+        body: JSON.stringify(fallbackPayload)
+      }).then(function(response) {
+        if (response.ok) return { status: fallbackStatus, isAuto: fallbackStatus === 'approved' };
+        throw new Error('Falha ao enviar comentário via fallback.');
+      });
     });
-  }
+}
 
   function getFingerprint() {
     var key = '__vid_fp';
