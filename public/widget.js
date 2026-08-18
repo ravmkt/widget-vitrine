@@ -1704,14 +1704,18 @@ function applyHostPosition(host, appearance) {
     }
   }
 
-function sendAnalyticsEvent(eventType, videoId, productId) {
+function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     if (!storeId || !supabaseUrl) return;
+
+    extraData = extraData || {};
 
     var payload = {
       storeId: storeId,
       eventType: eventType,
       videoId: videoId || null,
       productId: productId || null,
+      storyId: extraData.story_id || extraData.storyId || null,
+      pageUrl: extraData.page_url || extraData.pageUrl || window.location.href,
       deviceType: window.innerWidth < 768 ? 'mobile' : 'desktop',
       pagePath: window.location.pathname || '/'
     };
@@ -1737,6 +1741,19 @@ function sendAnalyticsEvent(eventType, videoId, productId) {
     } catch (_) {}
   }
 
+  function trackMetric(data) {
+    if (!data) return;
+    sendAnalyticsEvent(
+      data.event_type || 'interaction',
+      data.video_id || null,
+      data.product_id || null,
+      {
+        story_id: data.story_id || null,
+        page_url: data.page_url || window.location.href
+      }
+    );
+  }
+  
   function trackMetric(data) {
     if (!data) return;
     sendAnalyticsEvent(data.event_type || 'interaction', data.video_id || null, data.product_id || null);
