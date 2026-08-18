@@ -1041,7 +1041,7 @@ function readStoreSettings() {
         };
       });
   }
-
+  
   function matchesRule(rule) {
     if (!rule) return false;
     if (rule.active === false || rule.active === 'false' || rule.active === 0 || rule.active === '0') return false;
