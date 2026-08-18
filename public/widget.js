@@ -1753,7 +1753,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       }
     );
   }
-  
+
   function trackMetric(data) {
     if (!data) return;
     sendAnalyticsEvent(data.event_type || 'interaction', data.video_id || null, data.product_id || null);
@@ -2668,7 +2668,7 @@ if (replyIsVisible) {
         sendBtn.style.opacity = '.6';
         statusMsg.textContent = '';
 
-        userCommentedVideos[videoId] = true;
+userCommentedVideos[videoId] = true;
         var commentStatus = autoApproveComments ? 'approved' : 'pending';
 
         if (hasSupabase) {
@@ -2682,20 +2682,34 @@ if (replyIsVisible) {
             .then(function () {
               if (autoApproveComments) {
                 readCommentsData.push({
-                  video_id: videoId, user_name: name || 'Visitante',
-                  content: text, text: text,
-                  created_at: new Date().toISOString(), status: 'approved'
+                  video_id: videoId,
+                  user_name: name || 'Visitante',
+                  content: text,
+                  text: text,
+                  created_at: new Date().toISOString(),
+                  status: 'approved'
                 });
-                statusMsg.textContent = 'Obrigado pelo seu comentário! ❤️';
+                statusMsg.textContent = 'Seu comentário foi publicado.';
                 statusMsg.style.color = '#22c55e';
               } else {
-                statusMsg.textContent = 'Obrigado pelo seu comentário! Sua mensagem será publicada em breve. 📝';
+                statusMsg.textContent = 'Obrigado pelo seu comentário. Em breve ele será publicado.';
                 statusMsg.style.color = '#f59e0b';
               }
+
               commentsCount = getCommentCountForVideo(videoId);
               panelTitle.textContent = 'Comentários' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
-              setTimeout(function () { renderInitialState(); }, 2000);
-              trackMetric({ event_type: 'comment', story_id: storyId, video_id: videoId, page_url: window.location.href });
+
+              trackMetric({
+                event_type: 'comment',
+                story_id: storyId,
+                video_id: videoId,
+                page_url: window.location.href
+              });
+
+              // Fecha automaticamente o painel de comentários e retoma o vídeo após 2 segundos
+              setTimeout(function () {
+                restoreVideoView();
+              }, 2000);
             })
             .catch(function (error) {
               statusMsg.textContent = error && error.message ? error.message : 'Erro ao enviar. Tente novamente.';
@@ -2708,15 +2722,23 @@ if (replyIsVisible) {
         }
 
         readCommentsData.push({
-          video_id: videoId, user_name: name || 'Visitante',
-          content: text, text: text, created_at: new Date().toISOString()
+          video_id: videoId,
+          user_name: name || 'Visitante',
+          content: text,
+          text: text,
+          created_at: new Date().toISOString(),
+          status: 'approved'
         });
-        statusMsg.textContent = 'Obrigado pelo seu comentário!';
+        statusMsg.textContent = 'Seu comentário foi publicado.';
         statusMsg.style.color = '#22c55e';
         commentsCount = getCommentCountForVideo(videoId);
         panelTitle.textContent = 'Comentários' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
-        setTimeout(function () { renderInitialState(); }, 2000);
-      };
+
+        // Fecha automaticamente o painel de comentários e retoma o vídeo após 2 segundos
+        setTimeout(function () {
+          restoreVideoView();
+        }, 2000);
+              };
 
       btnRow.appendChild(sendBtn);
       formWrap.appendChild(btnRow);
