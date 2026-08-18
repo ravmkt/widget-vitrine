@@ -3023,7 +3023,6 @@ if (hasSupabase) {
       var vidId = video.id;
       var isLiked = !!likedVideos[vidId];
       var likeCount = videoLikeCounts[vidId] || 0;
-      var hasLikes = likeCount > 0;
 
       var likeWrapper = createEl('div', 'vl-social-wrapper');
 
