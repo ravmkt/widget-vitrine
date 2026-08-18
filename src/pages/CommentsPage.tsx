@@ -157,12 +157,12 @@ useEffect(() => {
 
       if (error) throw error;
 
-      showSuccess(
+showSuccess(
         newValue
           ? 'Comentários serão aprovados automaticamente.'
-          : 'Comentários passarão por moderação.'
+          : 'Aprovação automática desativada.'
       );
-    } catch (err) {
+          } catch (err) {
       console.error('[CommentsPage] erro ao salvar config:', err);
       setAutoApprove(!newValue); // Reverte
       showError('Erro ao salvar configuração.');
