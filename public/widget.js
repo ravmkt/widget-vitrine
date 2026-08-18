@@ -1740,7 +1740,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       }).catch(function () {});
     } catch (_) {}
   }
-  
+
   function trackMetric(data) {
     if (!data) return;
     sendAnalyticsEvent(
@@ -1979,30 +1979,7 @@ function createComment(commentData) {
         });
     });
   }
-      .catch(function(err) {
-      console.warn('[Vidlytics] Falha ao verificar auto_approve_comments no envio, usando global.', err);
-      // Fallback imediato se o fetch falhar
-      var fallbackStatus = (autoApproveComments === true || autoApproveComments === 'true') ? 'approved' : 'pending';
-      var fallbackPayload = {
-        store_id: storeId,
-        video_id: commentData.video_id || null,
-        user_name: authorName,
-        user_email: commentData.author_email ? String(commentData.author_email).trim() : null,
-        content: commentText,
-        status: fallbackStatus,
-        created_at: new Date().toISOString()
-      };
-      return supabaseFetch('comments', {
-        method: 'POST',
-        headers: { 'Prefer': 'return=representation' },
-        body: JSON.stringify(fallbackPayload)
-      }).then(function(response) {
-        if (response.ok) return { status: fallbackStatus, isAuto: fallbackStatus === 'approved' };
-        throw new Error('Falha ao enviar comentário via fallback.');
-      });
-    });
-}
-
+  
   function getFingerprint() {
     var key = '__vid_fp';
     var stored = localStorage.getItem(key);
