@@ -2696,16 +2696,15 @@ var sendBtn = createEl('button', 'vl-form-btn-send');
         var isAuto = autoApproveComments === true || autoApproveComments === 'true' || autoApproveComments === 1 || autoApproveComments === '1';
         var commentStatus = isAuto ? 'approved' : 'pending';
 
-        if (hasSupabase) {
+if (hasSupabase) {
           createComment({
             story_id: storyId,
             video_id: videoId,
             author_name: name || 'Visitante',
-            content: text,
-            status: commentStatus
+            content: text
           })
             .then(function (result) {
-              var isApproved = (result && result.status === 'approved') || commentStatus === 'approved';
+              var isApproved = Boolean(result && result.status === 'approved');
 
               if (isApproved) {
                 // ✅ Aprovação Automática: insere imediatamente na lista em memória para exibição instantânea
