@@ -1714,17 +1714,29 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     try {
       extraData = extraData || {};
 
-      var resolvedStoryId = extraData.storyId || extraData.story_id || null;
-      var resolvedPageUrl = extraData.pageUrl || extraData.page_url || window.location.href;
+      function cleanUuid(val) {
+        if (!val) return null;
+        var s = String(val).trim();
+        if (!s || s === 'null' || s === 'undefined' || s === '""') return null;
+        // Regex para UUID v4 padrão
+        var isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+        return isUuid ? s : null;
+      }
+
+      var cleanStoreId = cleanUuid(storeId) || String(storeId).trim();
+      var cleanVideoId = cleanUuid(videoId);
+      var cleanProductId = cleanUuid(productId);
+      var cleanStoryId = cleanUuid(extraData.storyId || extraData.story_id);
+      var resolvedPageUrl = String(extraData.pageUrl || extraData.page_url || window.location.href);
       var resolvedDevice = window.innerWidth < 768 ? 'mobile' : 'desktop';
-      var resolvedPath = window.location.pathname || '/';
+      var resolvedPath = String(window.location.pathname || '/');
 
       var payload = {
-        storeId: storeId,
-        eventType: eventType,
-        videoId: videoId || null,
-        productId: productId || null,
-        storyId: resolvedStoryId,
+        storeId: cleanStoreId,
+        eventType: String(eventType).trim(),
+        videoId: cleanVideoId,
+        productId: cleanProductId,
+        storyId: cleanStoryId,
         pageUrl: resolvedPageUrl,
         deviceType: resolvedDevice,
         pagePath: resolvedPath
