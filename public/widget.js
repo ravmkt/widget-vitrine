@@ -1757,7 +1757,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       }
     );
   }
-
+  
   function buildVideoPlayer(video, storyId, onEnded) {
     var sourceType = String(video.source_type || video.sourceType || '').toLowerCase();
     var isImage = sourceType === 'image' || (video && video.type === 'image');
