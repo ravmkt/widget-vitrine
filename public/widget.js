@@ -1958,46 +1958,39 @@ function createComment(commentData) {
     if (!authorName) return Promise.reject(new Error('Informe seu nome.'));
     if (!commentText) return Promise.reject(new Error('Digite um comentário.'));
 
-    return readStoreSettings().then(function (settings) {
-      var isAuto = settings.auto_approve_comments === true || autoApproveComments === true;
-      var resolvedStatus = isAuto ? 'approved' : 'pending';
+    var payload = {
+      p_store_id: storeId,
+      p_video_id: commentData.video_id || null,
+      p_user_fingerprint: getFingerprint(),
+      p_user_name: authorName,
+      p_user_email: commentData.author_email ? String(commentData.author_email).trim() : null,
+      p_content: commentText
+    };
 
-      var payload = {
-        store_id: storeId,
-        video_id: commentData.video_id || null,
-        user_name: authorName,
-        user_email: commentData.author_email ? String(commentData.author_email).trim() : null,
-        content: commentText,
-        status: resolvedStatus,
-        created_at: new Date().toISOString()
-      };
-
-      return supabaseFetch('comments', {
-        method: 'POST',
-        headers: { 'Prefer': 'return=representation' },
-        body: JSON.stringify(payload)
-      })
-        .then(function (response) {
-          if (response.ok) {
-            return response.json().then(function (insertedData) {
-              var actualStatus = (Array.isArray(insertedData) && insertedData[0] && insertedData[0].status) 
-                ? insertedData[0].status 
-                : resolvedStatus;
-              return { status: actualStatus, isAuto: actualStatus === 'approved' };
-            }).catch(function () {
-              return { status: resolvedStatus, isAuto: isAuto };
-            });
-          }
-          return response.text().then(function (rawMessage) {
-            var parsed = {};
-            try { parsed = JSON.parse(rawMessage || '{}'); } catch (error) {}
-            if (response.status === 401) throw new Error('A chave pública ou a URL do Supabase são inválidas.');
-            if (response.status === 403 || parsed.code === '42501') throw new Error('Inserção bloqueada pelas políticas RLS da tabela comments.');
-            throw new Error(parsed.message || parsed.error_description || parsed.hint || parsed.details || 'Não foi possível enviar o comentário.');
+    return supabaseFetch('rpc/create_comment_safe', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=representation' },
+      body: JSON.stringify(payload)
+    })
+      .then(function (response) {
+        if (response.ok) {
+          return response.json().then(function (insertedData) {
+            var row = Array.isArray(insertedData) ? insertedData[0] : insertedData;
+            var actualStatus = row && row.status ? row.status : 'pending';
+            return { status: actualStatus, isAuto: actualStatus === 'approved' };
           });
+        }
+        return response.text().then(function (rawMessage) {
+          var parsed = {};
+          try { parsed = JSON.parse(rawMessage || '{}'); } catch (error) {}
+          if (response.status === 401) throw new Error('A chave pública ou a URL do Supabase são inválidas.');
+          if (parsed.message === 'rate_limit_exceeded') throw new Error('Você está comentando rápido demais. Aguarde um pouco.');
+          if (parsed.message === 'invalid_content') throw new Error('Comentário inválido.');
+          throw new Error(parsed.message || parsed.error_description || parsed.hint || parsed.details || 'Não foi possível enviar o comentário.');
         });
-    });
+      });
   }
+
 
   function getFingerprint() {
     var key = '__vid_fp';
