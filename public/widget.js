@@ -2795,6 +2795,12 @@ var sendBtn = createEl('button', 'vl-form-btn-send');
       panelFooter.style.display = 'none';      
       setTimeout(function () { nameInput.focus(); }, 200);
     }
+    
+      btnRow.appendChild(sendBtn);
+      formWrap.appendChild(btnRow);
+      panelFooter.style.display = 'none';      
+      setTimeout(function () { nameInput.focus(); }, 200);
+    }
 
     function renderInitialState() {
       commentsCount = getCommentCountForVideo(videoId);
