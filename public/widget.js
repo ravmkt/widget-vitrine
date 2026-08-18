@@ -1975,7 +1975,7 @@ function createComment(commentData) {
         });
     });
   }
-  
+
   function getFingerprint() {
     var key = '__vid_fp';
     var stored = localStorage.getItem(key);
@@ -2762,47 +2762,11 @@ sendBtn.onclick = function (ev) {
           restoreVideoView();
         }, 2000);
       };
-                  .catch(function (error) {
-              statusMsg.textContent = error && error.message ? error.message : 'Erro ao enviar. Tente novamente.';
-              statusMsg.style.color = '#ef4444';
-              sendBtn.textContent = 'Enviar';
-              sendBtn.disabled = false;
-              sendBtn.style.opacity = '1';
-            });
-          return;
-        }
-
-        // Fallback local sem Supabase
-        if (autoApproveComments) {
-          readCommentsData.push({
-            id: 'local_' + Date.now(),
-            video_id: videoId,
-            user_name: name || 'Visitante',
-            content: text,
-            text: text,
-            created_at: new Date().toISOString(),
-            status: 'approved'
-          });
-          statusMsg.textContent = 'Seu comentário foi publicado.';
-          statusMsg.style.color = '#22c55e';
-        } else {
-          statusMsg.textContent = 'Obrigado pelo seu comentário. Em breve ele será publicado.';
-          statusMsg.style.color = '#f59e0b';
-        }
-
-        commentsCount = getCommentCountForVideo(videoId);
-        panelTitle.textContent = 'Comentários' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
-
-        // Fecha automaticamente o painel de comentários e retoma o vídeo após 2 segundos
-        setTimeout(function () {
-          restoreVideoView();
-        }, 2000);
-      };
 
       btnRow.appendChild(sendBtn);
       formWrap.appendChild(btnRow);
       panelFooter.style.display = 'none';
-
+      
       setTimeout(function () { nameInput.focus(); }, 200);
     }
 
