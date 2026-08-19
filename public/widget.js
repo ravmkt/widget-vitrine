@@ -2139,6 +2139,12 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     copyBtn.onmouseenter = function () { copyBtn.style.background = 'rgba(255,255,255,0.1)'; };
     copyBtn.onmouseleave = function () { copyBtn.style.background = 'transparent'; };
     copyBtn.onclick = function () {
+      trackMetric({
+        event_type: 'share',
+        story_id: story ? story.id : null,
+        video_id: (story && (story.videos || [])[currentVideoIndex]) ? story.videos[currentVideoIndex].id : null,
+        page_url: window.location.href
+      });
       navigator.clipboard.writeText(shareUrl).then(function () {
         copyBtn.innerHTML = svgIcon('check') + ' Copiado!';
         setTimeout(function () { panel.remove(); }, 1500);
