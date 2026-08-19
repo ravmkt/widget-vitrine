@@ -1669,7 +1669,6 @@ export const db = {
 
   comments: createSupabaseCrudFunctions<Comment>('comments', memoryComments),
 
-  metrics: createSupabaseCrudFunctions<Metric>('metrics', memoryMetrics),
 
   sizingModels: createSupabaseCrudFunctions<SizingModel>(
     'sizing_models',
