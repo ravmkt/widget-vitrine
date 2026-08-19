@@ -126,15 +126,14 @@
   // 3. DETECTA A COMPRA NA YAMPI
   // ================================================================
 
-  /**
-   * A Yampi usa diferentes eventos dependendo da versão:
-   *
-   * — dataLayer.push (Google Tag Manager pattern)
-   * — Evento customizado "purchase" no dataLayer
-   * — Webhook nativo da Yampi (alternativa ao script)
-   *
-   * Aqui interceptamos o dataLayer para capturar a compra.
-   */
+/**
+ * A Yampi usa diferentes eventos dependendo da versão:
+ *
+ * — dataLayer.push (Google Tag Manager pattern)
+ * — Evento customizado "purchase" no dataLayer
+ *
+ * Aqui interceptamos o dataLayer para capturar a compra.
+ */
 
   // Método 1: Intercepta dataLayer.push (padrão Yampi/GTM)
   if (typeof window.dataLayer !== "undefined") {
