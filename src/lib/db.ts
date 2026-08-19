@@ -244,36 +244,6 @@ export interface Comment {
   created_at?: string;
 }
 
-export type EventType =
-  | 'view'
-  | 'play'
-  | 'pause'
-  | 'click'
-  | 'cta_click'
-  | 'product_click'
-  | 'whatsapp_click'
-  | 'whatsapp_product_click'
-  | 'like'
-  | 'unlike'
-  | 'share'
-  | 'comment'
-  | 'close'
-  | 'conversion';
-
-export interface Metric {
-  id: string;
-  store_id: string;
-  story_id: string;
-  video_id?: string;
-  product_id?: string;
-  event_type: EventType;
-  page_url: string;
-  device_type: string;
-  browser: string;
-  referrer?: string;
-  created_at?: string;
-}
-
 export interface GeneralSettings {
   id: string;
   store_id: string;
