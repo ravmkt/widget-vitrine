@@ -148,24 +148,6 @@ const sumStoreRows = (rows: DailyStoreRow[]): DashboardMetrics => {
 };
 
 /* ══════════════════════════════════════════════════════════════
-   trackMetric — MANTIDO apenas por compatibilidade com chamadores
-   antigos, mas grava numa tabela congelada (`metrics`) que nenhum
-   dashboard mais lê. Não há mais motivo para chamar essa função.
-   Recomenda-se remover os pontos de chamada e usar a pipeline do
-   widget (track-event) ou não gravar nada aqui.
-   ══════════════════════════════════════════════════════════════ */
-export const trackMetric = async (
-  metric: Record<string, unknown> & { store_id: string; event_type: string },
-) => {
-  console.warn(
-    '[analytics] trackMetric() grava na tabela legada "metrics" (congelada). ' +
-    'Nenhum dashboard lê esses dados. Considere remover esta chamada.',
-  );
-  // Implementação mantida apenas para não quebrar chamadores existentes.
-  // Ver Prioridade 2, item 3 — decidir destino final da tabela `metrics`.
-};
-
-/* ══════════════════════════════════════════════════════════════
    CONVERSÕES — inalterado (já lia a tabela certa)
    ══════════════════════════════════════════════════════════════ */
 const getConversionData = async (
