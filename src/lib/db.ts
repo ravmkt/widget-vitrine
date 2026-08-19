@@ -568,7 +568,6 @@ let memoryStoryProducts: StoryProduct[] = [];
 let memoryDisplayLocations: DisplayLocation[] = [];
 let memoryPageRules: PageRule[] = [];
 let memoryComments: Comment[] = [];
-let memoryMetrics: Metric[] = [];
 let memorySizingModels: SizingModel[] = [];
 
 // ═══════════════════════════════════════════════════════
