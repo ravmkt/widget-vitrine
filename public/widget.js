@@ -1017,7 +1017,7 @@ product_card_price_size: toNumber(rcv('product_card_price_size', '12'), 12),
 function readStoreSettings() {
     if (!storeId || !hasSupabase) return Promise.resolve({});
     return supabaseFetch(
-      'store_settings?select=auto_approve_comments,whatsapp_number,whatsapp_message,whatsapp_message_template,store_name,logo_url&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
+'store_settings?select=auto_approve_comments,whatsapp_number,whatsapp_message,whatsapp_message_template,store_name,logo_url,security_token&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
       { method: 'GET' }
     )
       .then(function (response) { if (!response.ok) return {}; return response.json(); })
