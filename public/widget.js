@@ -2167,6 +2167,12 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     waBtn.onmouseenter = function () { waBtn.style.background = 'rgba(255,255,255,0.1)'; };
     waBtn.onmouseleave = function () { waBtn.style.background = 'transparent'; };
     waBtn.onclick = function () {
+      trackMetric({
+        event_type: 'share',
+        story_id: story ? story.id : null,
+        video_id: (story && (story.videos || [])[currentVideoIndex]) ? story.videos[currentVideoIndex].id : null,
+        page_url: window.location.href
+      });
       window.open('https://wa.me/?text=' + encodeURIComponent(shareText + ' ' + shareUrl), '_blank');
       panel.remove();
     };
