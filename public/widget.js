@@ -2852,6 +2852,15 @@ if (hasSupabase) {
   }
 
   function closeOverlay() {
+    // Dispara video_close antes de limpar o estado, se havia um vídeo ativo
+    try {
+      var closingStory = currentStories[currentStoryIndex];
+      var closingVideo = closingStory && (closingStory.videos || [])[currentVideoIndex];
+      if (closingVideo) {
+        sendAnalyticsEvent('video_close', closingVideo.id, null);
+      }
+    } catch (err) { /* noop - não deve travar o fechamento */ }
+
     if (overlay) overlay.className = 'vl-overlay';
     if (modalContent) {
       var oldVid = modalContent.querySelector('video');
