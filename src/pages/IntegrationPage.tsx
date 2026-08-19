@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -11,12 +11,16 @@ import {
   Store,
 } from 'lucide-react';
 import { useTenant } from '@/context/TenantContext';
+import { supabase } from '@/lib/supabase';
 
 const IntegrationPage = () => {
   const { storeId } = useTenant();
 
   const [copied, setCopied] = useState(false);
   const [copiedTracking, setCopiedTracking] = useState(false);
+  const [installTab, setInstallTab] = useState<'platform' | 'gtm'>('platform');
+  const [securityToken, setSecurityToken] = useState<string>('');
+  const [tokenLoading, setTokenLoading] = useState(true);
 
   const publicUrl = useMemo(() => {
     const envUrl = import.meta.env.VITE_WIDGET_PUBLIC_URL || '';
@@ -47,7 +51,39 @@ const IntegrationPage = () => {
   const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey);
   const canInstall = hasStoreId && hasSupabaseConfig && Boolean(publicUrl);
 
-const widgetVersion = '2026.08.11-00';
+  const widgetVersion = '2026.08.11-00';
+
+  // Busca o token de segurança da loja (usado no script de rastreamento)
+  useEffect(() => {
+    let active = true;
+
+    async function fetchToken() {
+      if (!supabase || !storeId) {
+        setTokenLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('store_settings')
+        .select('security_token')
+        .eq('store_id', storeId)
+        .maybeSingle();
+
+      if (!active) return;
+
+      if (!error && data?.security_token) {
+        setSecurityToken(data.security_token);
+      }
+
+      setTokenLoading(false);
+    }
+
+    fetchToken();
+
+    return () => {
+      active = false;
+    };
+  }, [storeId]);
 
   const scriptCode = useMemo(() => {
     return `<script>
@@ -78,21 +114,26 @@ window.VIDLYTICS_CONFIG = {
     return `<script>
 (function() {
   var script = document.createElement('script');
-  script.src = '${publicUrl}/custom-tracking.js';
+  script.src = '${publicUrl}/vidlytics-tracking.js'
+    + '?store=${encodeURIComponent(storeId || '')}'
+    + '&token=${encodeURIComponent(securityToken)}';
   script.type = 'text/javascript';
   script.async = true;
   document.head.appendChild(script);
 })();
 </script>`;
-  }, [publicUrl]);
+  }, [publicUrl, storeId, securityToken]);
 
-  const handleCopyScript = async () => {
+  const hasSecurityToken = Boolean(securityToken);
+  const trackingReady = canInstall && hasSecurityToken && !tokenLoading;
+
+  const copyToClipboard = async (text: string, onDone: () => void) => {
     try {
       if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(scriptCode);
+        await navigator.clipboard.writeText(text);
       } else {
         const textarea = document.createElement('textarea');
-        textarea.value = scriptCode;
+        textarea.value = text;
         textarea.style.position = 'fixed';
         textarea.style.left = '-9999px';
         textarea.style.top = '-9999px';
@@ -102,45 +143,27 @@ window.VIDLYTICS_CONFIG = {
         document.execCommand('copy');
         textarea.remove();
       }
-
-      setCopied(true);
-
-      window.setTimeout(() => {
-        setCopied(false);
-      }, 2500);
+      onDone();
     } catch (error) {
       console.error('Erro ao copiar script:', error);
     }
   };
 
-  const handleCopyTrackingScript = async () => {
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(trackingScriptCode);
-      } else {
-        const textarea = document.createElement('textarea');
-        textarea.value = trackingScriptCode;
-        textarea.style.position = 'fixed';
-        textarea.style.left = '-9999px';
-        textarea.style.top = '-9999px';
-        document.body.appendChild(textarea);
-        textarea.focus();
-        textarea.select();
-        document.execCommand('copy');
-        textarea.remove();
-      }
-
-      setCopiedTracking(true);
-
-      window.setTimeout(() => {
-        setCopiedTracking(false);
-      }, 2500);
-    } catch (error) {
-      console.error('Erro ao copiar script de rastreamento:', error);
-    }
+  const handleCopyScript = () => {
+    copyToClipboard(scriptCode, () => {
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2500);
+    });
   };
 
-return (
+  const handleCopyTrackingScript = () => {
+    copyToClipboard(trackingScriptCode, () => {
+      setCopiedTracking(true);
+      window.setTimeout(() => setCopiedTracking(false), 2500);
+    });
+  };
+
+  return (
     <div className="space-y-8 animate-fade-in pb-20 font-sans">
       {/* ── CABEÇALHO DA PÁGINA ── */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -197,7 +220,7 @@ return (
         </div>
       )}
 
-{/* ── MÓDULOS SUPERIORES: FORMATOS DE VÍDEO (DUAL-THEME) ── */}
+      {/* ── MÓDULOS SUPERIORES: FORMATOS DE VÍDEO (DUAL-THEME) ── */}
       <div className="grid gap-6 md:grid-cols-3">
         {/* Card: Vídeo Flutuante */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
@@ -251,7 +274,7 @@ return (
         </div>
       </div>
 
-<div className="space-y-6">
+      <div className="space-y-6">
         {/* ── PASSO 1: SCRIPT PRINCIPAL (DUAL-THEME) ── */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -321,15 +344,58 @@ return (
                   </span>
                 </div>
                 <p className="mt-1 max-w-3xl text-xs sm:text-sm font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                  Para medir o faturamento gerado pelos vídeos, instale este script na página de <strong>Obrigado / Confirmação de Pedido</strong>.
+                  Compatível com <strong>Yampi, Shopify, Nuvemshop, WBuy, Bagy e Tray</strong>. Para medir o faturamento gerado pelos vídeos, instale este script na página de <strong>Obrigado / Confirmação de Pedido</strong>.
                 </p>
+
+                {/* Abas de instalação */}
+                <div className="mt-4 inline-flex rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0f1220] p-1">
+                  <button
+                    type="button"
+                    onClick={() => setInstallTab('platform')}
+                    className={`rounded-lg px-4 py-2 text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                      installTab === 'platform'
+                        ? 'bg-white dark:bg-[#1a1f35] text-[#0094EB] dark:text-[#ff7a29] shadow-sm'
+                        : 'text-slate-500 dark:text-[#8a90a0]'
+                    }`}
+                  >
+                    Colar na plataforma
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInstallTab('gtm')}
+                    className={`rounded-lg px-4 py-2 text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                      installTab === 'gtm'
+                        ? 'bg-white dark:bg-[#1a1f35] text-[#0094EB] dark:text-[#ff7a29] shadow-sm'
+                        : 'text-slate-500 dark:text-[#8a90a0]'
+                    }`}
+                  >
+                    Via Google Tag Manager
+                  </button>
+                </div>
+
+                {installTab === 'platform' ? (
+                  <p className="mt-3 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+                    Cole o código abaixo na área de <strong>Scripts / HTML personalizado</strong> da sua plataforma (Yampi, Shopify, Nuvemshop, WBuy, Bagy ou Tray), na página de <strong>Obrigado / Confirmação de Pedido</strong>.
+                  </p>
+                ) : (
+                  <div className="mt-3 space-y-1 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+                    <p>No Google Tag Manager:</p>
+                    <ol className="list-decimal list-inside space-y-0.5">
+                      <li>Crie uma nova tag do tipo <strong>HTML Personalizado</strong></li>
+                      <li>Cole o código abaixo dentro dela</li>
+                      <li>No gatilho, selecione <strong>All Pages</strong> (o próprio script identifica a página de compra)</li>
+                      <li>Publique o contêiner</li>
+                    </ol>
+                  </div>
+                )}
               </div>
             </div>
 
             <button
               type="button"
               onClick={handleCopyTrackingScript}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all cursor-pointer shrink-0"
+              disabled={!trackingReady}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0"
             >
               {copiedTracking ? (
                 <>
@@ -345,6 +411,15 @@ return (
             </button>
           </div>
 
+          {!hasSecurityToken && !tokenLoading && (
+            <div className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 p-4">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+              <p className="text-xs font-medium text-amber-800 dark:text-amber-400/90">
+                Token de segurança da loja não encontrado. Contate o suporte antes de instalar este script.
+              </p>
+            </div>
+          )}
+
           <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-white/10 bg-[#0f1220] shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/5 bg-[#14182b] px-5 py-3">
               <div className="flex items-center gap-2">
@@ -352,7 +427,7 @@ return (
                 <span className="h-3 w-3 rounded-full bg-amber-500/80" />
                 <span className="h-3 w-3 rounded-full bg-emerald-500/80" />
               </div>
-              <span className="font-mono text-xs font-bold text-slate-400 dark:text-[#8a90a0]">custom-tracking.js</span>
+              <span className="font-mono text-xs font-bold text-slate-400 dark:text-[#8a90a0]">vidlytics-tracking.js</span>
             </div>
             <pre className="overflow-x-auto whitespace-pre-wrap p-6 font-mono text-xs font-semibold leading-relaxed text-[#0094EB] dark:text-[#38bdf8] md:text-sm [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:bg-white/10">
               {trackingScriptCode}
@@ -361,7 +436,7 @@ return (
         </div>
       </div>
 
-{/* ── MÓDULOS INFERIORES: ONDE APARECEM & PRODUTOS (DUAL-THEME) ── */}
+      {/* ── MÓDULOS INFERIORES: ONDE APARECEM & PRODUTOS (DUAL-THEME) ── */}
       <div className="grid gap-6 lg:grid-cols-2 items-stretch">
         {/* Card: Onde os vídeos aparecem? */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 shadow-sm flex flex-col justify-between space-y-6">
@@ -498,7 +573,7 @@ return (
               </h3>
 
               <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                Abra as configurações do tema da sua plataforma (Shopify, Nuvemshop, Tray, Vtex, etc.) e localize a área de scripts/HTML personalizado.
+                Abra as configurações do tema da sua plataforma (Yampi, Shopify, Nuvemshop, WBuy, Bagy, Tray, etc.) e localize a área de scripts/HTML personalizado.
               </p>
             </div>
           </div>
@@ -515,7 +590,7 @@ return (
               </h3>
 
               <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                Cole o <strong>Script Principal (Passo 1)</strong> no cabeçalho e o <strong>Script de Rastreamento (Passo 2)</strong> na página de conclusão de compra.
+                Cole o <strong>Script Principal (Passo 1)</strong> no cabeçalho e o <strong>Script de Rastreamento (Passo 2)</strong> na página de conclusão de compra, direto na plataforma ou via Google Tag Manager.
               </p>
             </div>
           </div>
@@ -537,7 +612,7 @@ return (
             </div>
           </div>
         </div>
-        
+
         <div className="flex flex-col gap-3 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-5 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
