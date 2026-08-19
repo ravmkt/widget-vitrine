@@ -1,0 +1,59 @@
+﻿
+  supabase\functions\track-event\index.ts:1:import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+  supabase\functions\track-event\index.ts:2:import { createClient } from "https://esm.sh/@supabase/supabase-js@2.0.0";
+  supabase\functions\track-event\index.ts:3:
+> supabase\functions\track-event\index.ts:4:const ALLOWED_EVENTS = new Set([
+> supabase\functions\track-event\index.ts:5:  "video_view",
+> supabase\functions\track-event\index.ts:6:  "cta_click",
+> supabase\functions\track-event\index.ts:7:  "product_view",
+  supabase\functions\track-event\index.ts:8:  "story_complete",
+  supabase\functions\track-event\index.ts:9:  "product_click",
+  supabase\functions\track-event\index.ts:10:]);
+  supabase\functions\track-event\index.ts:11:
+  supabase\functions\track-event\index.ts:12:const supabaseAdmin = createClient(
+  supabase\functions\track-event\index.ts:24:  if (req.method === "OPTIONS") {
+  supabase\functions\track-event\index.ts:25:    return new Response("ok", { headers: corsHeaders });
+  supabase\functions\track-event\index.ts:26:  }
+  supabase\functions\track-event\index.ts:27:
+  supabase\functions\track-event\index.ts:28:  if (req.method !== "POST") {
+> supabase\functions\track-event\index.ts:29:    return new Response("Method Not Allowed", { status: 405, headers: corsHeaders });
+  supabase\functions\track-event\index.ts:30:  }
+  supabase\functions\track-event\index.ts:31:
+  supabase\functions\track-event\index.ts:32:  try {
+  supabase\functions\track-event\index.ts:33:    const rawOrigin = req.headers.get("origin") || req.headers.get("referer") || "";
+  supabase\functions\track-event\index.ts:34:
+  supabase\functions\track-event\index.ts:42:
+  supabase\functions\track-event\index.ts:43:    const body = await req.json();
+  supabase\functions\track-event\index.ts:44:    const { storeId, eventType, videoId, productId, deviceType, pagePath } = body;
+  supabase\functions\track-event\index.ts:45:
+  supabase\functions\track-event\index.ts:46:    // 2. Validação do Payload e Whitelist
+> supabase\functions\track-event\index.ts:47:    if (!storeId || !eventType || !ALLOWED_EVENTS.has(eventType)) {
+  supabase\functions\track-event\index.ts:48:      return new Response(JSON.stringify({ error: "Payload inválido ou tipo de evento não permitido." }), {
+  supabase\functions\track-event\index.ts:49:        status: 400,
+  supabase\functions\track-event\index.ts:50:        headers: { ...corsHeaders, "Content-Type": "application/json" },
+  supabase\functions\track-event\index.ts:51:      });
+  supabase\functions\track-event\index.ts:52:    }
+  supabase\functions\track-event\index.ts:105:      .map((b) => b.toString(16).padStart(2, "0"))
+  supabase\functions\track-event\index.ts:106:      .join("")
+  supabase\functions\track-event\index.ts:107:      .substring(0, 32);
+  supabase\functions\track-event\index.ts:108:
+  supabase\functions\track-event\index.ts:109:    // 6. Ingestão Atômica no Banco via RPC protegida
+> supabase\functions\track-event\index.ts:110:    const { data: allowed, error: rpcError } = await supabaseAdmin.rpc("track_widget_event", {
+  supabase\functions\track-event\index.ts:111:      p_store_id: storeId,
+  supabase\functions\track-event\index.ts:112:      p_event_type: eventType,
+  supabase\functions\track-event\index.ts:113:      p_video_id: videoId || null,
+  supabase\functions\track-event\index.ts:114:      p_product_id: productId || null,
+  supabase\functions\track-event\index.ts:115:      p_device_type: typeof deviceType === "string" ? deviceType : "desktop",
+  supabase\functions\track-event\index.ts:123:        status: 500,
+  supabase\functions\track-event\index.ts:124:        headers: { ...corsHeaders, "Content-Type": "application/json" },
+  supabase\functions\track-event\index.ts:125:      });
+  supabase\functions\track-event\index.ts:126:    }
+  supabase\functions\track-event\index.ts:127:
+> supabase\functions\track-event\index.ts:128:    if (allowed === false) {
+  supabase\functions\track-event\index.ts:129:      return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente mais tarde." }), {
+  supabase\functions\track-event\index.ts:130:        status: 429,
+  supabase\functions\track-event\index.ts:131:        headers: { ...corsHeaders, "Content-Type": "application/json" },
+  supabase\functions\track-event\index.ts:132:      });
+  supabase\functions\track-event\index.ts:133:    }
+
+

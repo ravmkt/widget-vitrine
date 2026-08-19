@@ -1,0 +1,106 @@
+﻿
+  public\widget.js:1708:    }
+  public\widget.js:1709:  }
+  public\widget.js:1710:
+> public\widget.js:1711:function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
+  public\widget.js:1712:    if (!storeId || !supabaseUrl || !supabaseAnonKey) return;
+  public\widget.js:1713:
+  public\widget.js:1714:    // Throttle: evita reenviar o mesmo evento para o mesmo vídeo em menos de 4s
+  public\widget.js:1715:    sendAnalyticsEvent._lastSent = sendAnalyticsEvent._lastSent || {};
+> public\widget.js:1716:    var throttleKey = String(eventType) + '_' + String(videoId);
+  public\widget.js:1717:    var throttleNow = Date.now();
+  public\widget.js:1718:    if (sendAnalyticsEvent._lastSent[throttleKey] && (throttleNow - sendAnalyticsEvent._lastSent[throttleKey]) < 4000) {
+  public\widget.js:1719:      return;
+  public\widget.js:1744:
+  public\widget.js:1745:      var payload = {
+  public\widget.js:1746:        storeId: cleanStoreId,
+> public\widget.js:1747:        eventType: String(eventType).trim(),
+  public\widget.js:1748:        videoId: cleanVideoId,
+  public\widget.js:1749:        productId: cleanProductId,
+  public\widget.js:1750:        storyId: cleanStoryId,
+  public\widget.js:1773:  function trackMetric(data) {
+  public\widget.js:1774:    if (!data) return;
+  public\widget.js:1775:    sendAnalyticsEvent(
+> public\widget.js:1776:      data.event_type || 'interaction',
+  public\widget.js:1777:      data.video_id || null,
+  public\widget.js:1778:      data.product_id || null,
+  public\widget.js:1779:      {
+  public\widget.js:1806:        'background:#000 !important;';
+  public\widget.js:1807:
+  public\widget.js:1808:      wrapper.appendChild(imgEl);
+> public\widget.js:1809:      trackMetric({ event_type: 'play', story_id: storyId, video_id: video ? video.id : null, page_url: window.location.href });
+  public\widget.js:1810:      return wrapper;
+  public\widget.js:1811:    }
+  public\widget.js:1812:
+  public\widget.js:1820:      iframe.setAttribute('data-is-muted', isUserMuted ? 'true' : 'false');
+  public\widget.js:1821:      iframe.setAttribute('data-is-paused', 'false');
+  public\widget.js:1822:      wrapper.appendChild(iframe);
+> public\widget.js:1823:      trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
+  public\widget.js:1824:      return wrapper;
+  public\widget.js:1825:    }
+  public\widget.js:1826:
+  public\widget.js:1840:      pinIframe.setAttribute('allowfullscreen', '');
+  public\widget.js:1841:      pinIframe.style.cssText = 'width:100% !important;height:100% !important;border:none !important;background:#fff !important;';
+  public\widget.js:1842:      wrapper.appendChild(pinIframe);
+> public\widget.js:1843:      trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
+  public\widget.js:1844:      return wrapper;
+  public\widget.js:1845:    }
+  public\widget.js:1846:
+  public\widget.js:1852:      tkIframe.setAttribute('allowfullscreen', '');
+  public\widget.js:1853:      tkIframe.style.cssText = 'width:100% !important;height:100% !important;border:none !important;';
+  public\widget.js:1854:      wrapper.appendChild(tkIframe);
+> public\widget.js:1855:      trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
+  public\widget.js:1856:      return wrapper;
+  public\widget.js:1857:    }
+  public\widget.js:1858:
+  public\widget.js:2062:    }
+  public\widget.js:2063:
+  public\widget.js:2064:    trackMetric({
+> public\widget.js:2065:      event_type: isCurrentlyLiked ? 'unlike' : 'like',
+  public\widget.js:2066:      story_id: currentStories[currentStoryIndex].id,
+  public\widget.js:2067:      video_id: vidId,
+  public\widget.js:2068:      page_url: window.location.href
+  public\widget.js:2177:      document.addEventListener('click', handler);
+  public\widget.js:2178:    }, 0);
+  public\widget.js:2179:    trackMetric({
+> public\widget.js:2180:      event_type: 'share',
+  public\widget.js:2181:      story_id: story ? story.id : null,
+  public\widget.js:2182:      page_url: shareUrl
+  public\widget.js:2183:    });
+  public\widget.js:2784:              panelTitle.textContent = 'Comentários' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
+  public\widget.js:2785:
+  public\widget.js:2786:              trackMetric({
+> public\widget.js:2787:                event_type: 'comment',
+  public\widget.js:2788:                story_id: storyId,
+  public\widget.js:2789:                video_id: videoId,
+  public\widget.js:2790:                page_url: window.location.href
+  public\widget.js:3180:          }
+  public\widget.js:3181:          buyBtn.onclick = function (e) {
+  public\widget.js:3182:            e.stopPropagation();
+> public\widget.js:3183:            sendAnalyticsEvent('website_click', video ? video.id : null, productData ? productData.id : null);
+  public\widget.js:3184:
+  public\widget.js:3185:          };
+  public\widget.js:3186:          pActions.appendChild(buyBtn);
+  public\widget.js:3209:            waBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;background:#25D366;color:#fff;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;';
+  public\widget.js:3210:            waBtn.onclick = function (e) {
+  public\widget.js:3211:              e.stopPropagation();
+> public\widget.js:3212:sendAnalyticsEvent('whatsapp_click', video ? video.id : null, productData ? productData.id : null);
+  public\widget.js:3213:            };
+  public\widget.js:3214:            pActions.appendChild(waBtn);
+  public\widget.js:3215:          }
+  public\widget.js:3247:
+  public\widget.js:3248:    renderStoryModal();
+  public\widget.js:3249:    trackMetric({
+> public\widget.js:3250:      event_type: 'next_video',
+  public\widget.js:3251:      story_id: currentStories[currentStoryIndex].id,
+  public\widget.js:3252:      video_id: (currentStories[currentStoryIndex].videos || [])[currentVideoIndex]
+  public\widget.js:3253:        ? (currentStories[currentStoryIndex].videos || [])[currentVideoIndex].id
+  public\widget.js:3365:    attachTouchListeners();
+  public\widget.js:3366:
+  public\widget.js:3367:    trackMetric({
+> public\widget.js:3368:      event_type: 'story_open',
+  public\widget.js:3369:      story_id: currentStories[currentStoryIndex].id,
+  public\widget.js:3370:      page_url: window.location.href
+  public\widget.js:3371:    });
+
+
