@@ -934,8 +934,8 @@ product_card_price_size: toNumber(rcv('product_card_price_size', '12'), 12),
 
   function readComments() {
     if (!storeId || !hasSupabase) return Promise.resolve(getStorageItem('vidlytics_comments', []));
-    var query = 'comments?select=id,store_id,video_id,user_name,user_email,content,status,created_at,reply_content,reply_status&store_id=eq.' +
-      encodeURIComponent(storeId) + '&status=eq.approved&order=created_at.asc';
+var query = 'comments_public?select=id,store_id,video_id,user_name,content,status,created_at,reply_content,reply_status&store_id=eq.' +
+  encodeURIComponent(storeId) + '&status=eq.approved&order=created_at.asc';
     return fetchJson(query);
   }
 
