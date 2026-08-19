@@ -1987,6 +1987,11 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
           return response.json().then(function (insertedData) {
             var row = Array.isArray(insertedData) ? insertedData[0] : insertedData;
             var actualStatus = row && row.status ? row.status : 'pending';
+            trackMetric({
+              event_type: 'comment',
+              video_id: commentData.video_id || null,
+              page_url: window.location.href
+            });
             return { status: actualStatus, isAuto: actualStatus === 'approved' };
           });
         }
