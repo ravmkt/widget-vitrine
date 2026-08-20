@@ -1795,6 +1795,8 @@ const GridPreview = ({
           style={{
             gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
             gap: `${safeNumber(grid.spacing, 8, 0)}px`,
+            transform: `scale(${scale})`,
+            transformOrigin: 'top center',
           }}
         >
           {items.map((_, index) => (
