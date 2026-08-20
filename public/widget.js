@@ -5084,7 +5084,7 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
 function readStoreStatus() {
     if (!storeId || !hasSupabase) return Promise.resolve(null);
     return supabaseFetch(
-      'stores?select=id,name,logo_url,subscription_status,trial_ends_at,past_due_since&id=eq.' + encodeURIComponent(storeId) + '&limit=1',
+'stores_public?select=id,name,logo_url,subscription_status,trial_ends_at,past_due_since&id=eq.' + ...
       { method: 'GET' }
     )
           .then(function (response) {
