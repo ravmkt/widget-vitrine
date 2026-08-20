@@ -1455,6 +1455,8 @@ const getShapeLabel = (shape: WidgetShape) => {
 
 // ──────────────────── PREVIEWS ────────────────────
 
+
+
 const FloatingPreview = ({
   floating,
   colors,
