@@ -13,7 +13,7 @@
   var SUPABASE_ANON_KEY = "__VLY_ANON_KEY__";
   var STORE_ID = "__VLY_STORE_ID__";
   var SECURITY_TOKEN = "__VLY_SECURITY_TOKEN__";
-  var EDGE_FUNCTION = SUPABASE_URL + "/functions/v1/yampi-conversion";
+var EDGE_FUNCTION = SUPABASE_URL + "/functions/v1/universal-conversion";
 
   // ---------- Utilitários de cookie/URL ----------
   function getUrlParam(name) {
