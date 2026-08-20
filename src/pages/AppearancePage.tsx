@@ -1660,7 +1660,11 @@ const CarouselPreview = ({
               'flex overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden',
               carousel.auto_center ? 'justify-center' : 'justify-start'
             )}
-            style={{ gap: `${safeNumber(carousel.spacing, 8, 0)}px` }}
+            style={{
+              gap: `${safeNumber(carousel.spacing, 8, 0)}px`,
+              transform: `scale(${scale})`,
+              transformOrigin: carousel.auto_center ? 'top center' : 'top left',
+            }}
           >
             {items.map((_, index) => (
               <div key={index} className="flex flex-col gap-1 shrink-0" style={{ width: cardWidth }}>
