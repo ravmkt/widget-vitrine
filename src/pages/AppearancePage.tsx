@@ -1455,7 +1455,28 @@ const getShapeLabel = (shape: WidgetShape) => {
 
 // ──────────────────── PREVIEWS ────────────────────
 
+const PREVIEW_BASE_WIDTH = 1920; // largura de referência do site real
 
+function usePreviewScale(containerRef: React.RefObject<HTMLDivElement>) {
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const width = el.getBoundingClientRect().width;
+      if (width > 0) setScale(width / PREVIEW_BASE_WIDTH);
+    };
+
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [containerRef]);
+
+  return scale;
+}
 
 const FloatingPreview = ({
   floating,
