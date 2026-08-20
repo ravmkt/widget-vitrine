@@ -4,8 +4,8 @@ import { supabase } from '@/lib/supabase';
 
 export type LikeRecord = Record<string, { liked: boolean; count: number }>;
 
-/** Obtém ID anônimo do usuário (persiste no localStorage) */
-function getUserId(): string {
+/** Obtém fingerprint anônimo do usuário (persiste no localStorage) */
+function getUserFingerprint(): string {
   let uid = localStorage.getItem('anonymous_user_id');
   if (!uid) {
     uid = `anon_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
@@ -27,29 +27,25 @@ export async function fetchLikes(videoIds: string[], storeId?: string): Promise<
   if (!videoIds.length) return localLikes;
 
   try {
-    const userId = getUserId();
+    const fingerprint = getUserFingerprint();
 
-    // Busca contagens do backend
-    // (ajuste o nome da tabela conforme seu schema)
     const countsMap: Record<string, number> = {};
     const userLikedSet = new Set<string>();
 
-    // Tenta buscar da tabela story_likes
     const { data, error } = await supabase
-      .from('story_likes')
-      .select('video_id, user_id')
+      .from('video_likes')
+      .select('video_id, user_fingerprint')
       .in('video_id', videoIds);
 
     if (!error && data) {
       for (const row of data) {
         countsMap[row.video_id] = (countsMap[row.video_id] || 0) + 1;
-        if (row.user_id === userId) {
+        if (row.user_fingerprint === fingerprint) {
           userLikedSet.add(row.video_id);
         }
       }
     }
 
-    // Merge: backend vence, mas localStorage complementa se backend falhou
     const merged: LikeRecord = {};
 
     for (const id of videoIds) {
@@ -69,22 +65,19 @@ export async function fetchLikes(videoIds: string[], storeId?: string): Promise<
   }
 }
 
-/** Envia toggle de like para o backend */
+/** Envia toggle de like para o backend via RPC segura (rate-limited) */
 export async function toggleLike(videoId: string, liked: boolean, storeId?: string) {
-  const userId = getUserId();
+  if (!storeId) throw new Error('storeId é obrigatório para toggleLike');
 
-  const { error } = liked
-    ? await supabase.from('story_likes').upsert({
-        video_id: videoId,
-        user_id: userId,
-        store_id: storeId || null,
-        created_at: new Date().toISOString(),
-      })
-    : await supabase
-        .from('story_likes')
-        .delete()
-        .eq('video_id', videoId)
-        .eq('user_id', userId);
+  const fingerprint = getUserFingerprint();
+
+  const { data, error } = await supabase.rpc('toggle_video_like_safe', {
+    p_store_id: storeId,
+    p_video_id: videoId,
+    p_user_fingerprint: fingerprint,
+  });
 
   if (error) throw error;
+
+  return data?.[0] as { likes_count: number; viewer_liked: boolean } | undefined;
 }
