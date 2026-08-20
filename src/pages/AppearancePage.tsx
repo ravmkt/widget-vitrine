@@ -1793,7 +1793,7 @@ const totalItems = cols * rows;
         <div
           className="grid justify-center"
           style={{
-            gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+gridTemplateColumns: `repeat(${cols}, 150px)`,
             gap: `${safeNumber(grid.spacing, 8, 0)}px`,
             transform: `scale(${scale})`,
             transformOrigin: 'top center',
