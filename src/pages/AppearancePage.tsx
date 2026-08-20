@@ -1595,24 +1595,26 @@ const CarouselPreview = ({
   carousel: CarouselConfig;
   colors: PreviewColors;
 }) => {
+  const mockupRef = useRef<HTMLDivElement>(null);
+  const scale = usePreviewScale(mockupRef);
+
   const visibleItems = safeNumber(carousel.visible_items, 4, 1);
   const shape = normalizeWidgetShape(carousel.shape, 'portrait');
   const items = Array.from({ length: Math.max(1, Math.min(visibleItems, 6)) });
-const isCircle = shape === 'circle';
+  const isCircle = shape === 'circle';
   const isSquare = shape === 'square';
   const isPortrait = shape === 'portrait';
   const isLandscape = shape === 'landscape';
 
-  // Ajuste de proporção para escala do mockup sem estourar
+  // Tamanho real configurado (sem clamp artificial), escalado via transform
   const rawWidth = safeNumber(parseFloat(carousel.width || '120'), 120, 40);
-  const cardWidthPx = Math.min(rawWidth, 130);
-  const cardWidth = `${cardWidthPx}px`;
+  const cardWidth = `${rawWidth}px`;
 
   const cardHeightPx = isPortrait
-    ? Math.min(Math.round((cardWidthPx * 16) / 9), 210)
+    ? Math.round((rawWidth * 16) / 9)
     : isLandscape
-      ? Math.round((cardWidthPx * 9) / 16)
-      : cardWidthPx;
+      ? Math.round((rawWidth * 9) / 16)
+      : rawWidth;
   const cardHeight = `${cardHeightPx}px`;
 
   const borderRadius = isCircle
