@@ -1769,7 +1769,7 @@ const GridPreview = ({
   const scale = usePreviewScale(mockupRef);
 
   const cols = limitNumber(grid.visible_items, 10, 1, 10);
-  const rows = safeNumber(grid.rows, 1, 1);
+const rows = 2;
   const shape = normalizeWidgetShape(grid.shape, 'portrait');
   const totalItems = Math.max(1, Math.min(cols * rows, 12));
   const items = Array.from({ length: totalItems });
