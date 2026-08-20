@@ -1771,7 +1771,7 @@ const GridPreview = ({
   const cols = limitNumber(grid.visible_items, 10, 1, 10);
 const rows = 2;
   const shape = normalizeWidgetShape(grid.shape, 'portrait');
-  const totalItems = Math.max(1, Math.min(cols * rows, 12));
+const totalItems = cols * rows;
   const items = Array.from({ length: totalItems });
   const isCircle = shape === 'circle';
   const isSquare = shape === 'square';
