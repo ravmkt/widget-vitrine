@@ -562,6 +562,7 @@ const createDefaultFloatingMobileConfig = (): FloatingConfig => ({
   allow_close: false,
   z_index: '2147483647',
   show_title: true,
+  autoplay_videos: true,
 });
 
 const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
