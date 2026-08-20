@@ -107,7 +107,8 @@ type FloatingConfig = {
   draggable: boolean;
   allow_close: boolean;
   z_index: string;
-  show_title: boolean;
+show_title: boolean;
+autoplay_videos: boolean;
 };
 
 type CarouselConfig = {
