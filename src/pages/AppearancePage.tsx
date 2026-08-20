@@ -1485,6 +1485,9 @@ const FloatingPreview = ({
   floating: FloatingConfig;
   colors: PreviewColors;
 }) => {
+  const mockupRef = useRef<HTMLDivElement>(null);
+  const scale = usePreviewScale(mockupRef);
+
   const isCircle = floating.shape === 'circle';
   const width = cssSize(floating.width, '80px');
   const height = cssSize(floating.height, '142px');
@@ -1519,9 +1522,14 @@ const FloatingPreview = ({
     positionStyle.right = lateralSpacing;
   }
 
+  const transformOrigin =
+    floating.position === 'fixed_bottom_right' ? 'bottom right' :
+    floating.position === 'fixed_bottom_left' ? 'bottom left' :
+    floating.position === 'fixed_top_right' ? 'top right' : 'top left';
+
   return (
     <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
-      <div className="relative h-[480px] overflow-hidden rounded-[1rem] border border-slate-200 bg-white">
+      <div ref={mockupRef} className="relative h-[480px] overflow-hidden rounded-[1rem] border border-slate-200 bg-white">
         <div className="p-5">
           <div className="h-3 w-28 rounded-full bg-slate-200" />
           <div className="mt-2 h-3 w-48 rounded-full bg-slate-100" />
@@ -1540,6 +1548,8 @@ const FloatingPreview = ({
             borderRadius: isCircle ? '999px' : cssSize(floating.border_radius, '12px'),
             border: cssBorder(floating.border_style, colors.floatingBorder),
             zIndex: safeNumber(floating.z_index, 5, 1),
+            transform: `scale(${scale})`,
+            transformOrigin,
             ...positionStyle,
           }}
         >
@@ -1578,7 +1588,6 @@ const FloatingPreview = ({
   );
 };
 
-// trecho novo
 const CarouselPreview = ({
   carousel,
   colors,
