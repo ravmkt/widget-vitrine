@@ -647,6 +647,7 @@ const createDefaultGridMobileConfig = (): GridConfig => ({
 
 const createDefaultModalConfig = (): ModalConfig & Record<string, any> => ({
   show_title: true,
+  autoplay_videos: true,
   show_play_button: true,
   show_product: true,
   show_product_button: true,
