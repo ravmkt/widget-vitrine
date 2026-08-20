@@ -1758,7 +1758,6 @@ const CarouselPreview = ({
   );
 };
 
-// trecho novo
 const GridPreview = ({
   grid,
   colors,
@@ -1766,6 +1765,9 @@ const GridPreview = ({
   grid: GridConfig;
   colors: PreviewColors;
 }) => {
+  const mockupRef = useRef<HTMLDivElement>(null);
+  const scale = usePreviewScale(mockupRef);
+
   const cols = limitNumber(grid.visible_items, 10, 1, 10);
   const rows = safeNumber(grid.rows, 1, 1);
   const shape = normalizeWidgetShape(grid.shape, 'portrait');
@@ -1777,7 +1779,7 @@ const GridPreview = ({
   const isLandscape = shape === 'landscape';
 
   return (
-    <div className="overflow-hidden rounded-[1rem] border border-slate-200 bg-slate-50 flex flex-col h-[500px]">
+    <div ref={mockupRef} className="overflow-hidden rounded-[1rem] border border-slate-200 bg-slate-50 flex flex-col h-[500px]">
       <div className="flex items-center justify-between bg-white px-4 py-2.5 shadow-sm shrink-0 border-b border-slate-100">
         <div className="flex items-center gap-2">
           <div className="flex h-6 w-6 items-center justify-center rounded-md" style={{ backgroundColor: colors.primary }}>
