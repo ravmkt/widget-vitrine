@@ -1809,10 +1809,10 @@ gridTemplateColumns: `repeat(${cols}, ${cardWidth})`,
                   isCircle && 'rounded-full',
                   !isCircle && 'rounded-xl'
                 )}
-                style={{
-                  width: '100%',
-                  aspectRatio: isPortrait ? '9 / 16' : isLandscape ? '16 / 9' : '1 / 1',
-                  borderColor: grid.border_color || colors.primary,
+style={{
+  width: cardWidth,
+  aspectRatio: isPortrait ? '9 / 16' : isLandscape ? '16 / 9' : '1 / 1',
+                    borderColor: grid.border_color || colors.primary,
                   borderWidth: `${safeNumber(grid.border_style, 2, 0)}px`,
                   borderStyle: 'solid',
                   borderRadius: isCircle ? '999px' : cssSize(grid.border_radius, '12px'),
