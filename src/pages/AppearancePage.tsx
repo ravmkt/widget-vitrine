@@ -126,7 +126,8 @@ type CarouselConfig = {
   border_style: string;
   border_radius: string;
   object_fit: string;
-  show_title: boolean;
+show_title: boolean;
+autoplay_videos: boolean;
   product_card_bg: string;
   product_card_border_color: string;
   product_card_border_width: string;
