@@ -149,7 +149,8 @@ type GridConfig = {
   border_style: string;
   border_radius: string;
   object_fit: string;
-  show_title: boolean;
+show_title: boolean;
+autoplay_videos: boolean;
 };
 
 type ModalConfig = {
