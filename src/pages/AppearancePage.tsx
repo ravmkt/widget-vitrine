@@ -1769,6 +1769,8 @@ const GridPreview = ({
   const scale = usePreviewScale(mockupRef);
 
   const cols = limitNumber(grid.visible_items, 10, 1, 10);
+  const rawWidth = safeNumber(parseFloat(grid.width || '90'), 90, 40);
+const cardWidth = `${rawWidth}px`;
 const rows = 2;
   const shape = normalizeWidgetShape(grid.shape, 'portrait');
 const totalItems = cols * rows;
