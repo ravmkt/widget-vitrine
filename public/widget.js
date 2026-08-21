@@ -4383,7 +4383,6 @@ function renderGridWidget(container, stories, appearance) {
       // ðŸ› DEBUG #3 â€” mostra qual branch foi escolhida (imagem estÃ¡tica vs vÃ­deo autoplay)
       var willUseImage = isImageItem || !rawVideoUrl || (!cfg.autoplayVideos && thumbUrl);
       console.log('[DEBUG] Branch escolhida:', willUseImage ? 'IMAGEM ESTÃTICA' : 'VÃDEO AUTOPLAY');
-
       if (willUseImage) {
         var img = createEl('img');
         img.src = thumbUrl || rawVideoUrl;
@@ -4401,12 +4400,20 @@ function renderGridWidget(container, stories, appearance) {
             fallbackGridVid.muted = true;
             fallbackGridVid.defaultMuted = true;
             fallbackGridVid.playsInline = true;
+            fallbackGridVid.loop = true;
+            fallbackGridVid.autoplay = true;
             fallbackGridVid.setAttribute('playsinline', '');
             fallbackGridVid.setAttribute('webkit-playsinline', '');
             fallbackGridVid.setAttribute('muted', '');
+            fallbackGridVid.setAttribute('autoplay', '');
+            fallbackGridVid.setAttribute('loop', '');
             fallbackGridVid.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;';
 
-fallbackGridVid.src = fallbackGridUrlWithFragment;
+            fallbackGridVid.src = fallbackGridUrlWithFragment;
+            var fallbackPlayPromise = fallbackGridVid.play();
+            if (fallbackPlayPromise && typeof fallbackPlayPromise.catch === 'function') {
+              fallbackPlayPromise.catch(function () {});
+            }
 
             innerMask.appendChild(fallbackGridVid);
           }
