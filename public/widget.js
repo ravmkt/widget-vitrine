@@ -4428,8 +4428,7 @@ function renderGridWidget(container, stories, appearance) {
             fallbackGridVid.setAttribute('muted', '');
             fallbackGridVid.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;';
 
-            primeVideoFrame(fallbackGridVid);
-            fallbackGridVid.src = fallbackGridUrlWithFragment;
+fallbackGridVid.src = fallbackGridUrlWithFragment;
 
             innerMask.appendChild(fallbackGridVid);
           }
