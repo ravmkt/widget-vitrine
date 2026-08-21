@@ -4432,6 +4432,12 @@ fallbackGridVid.src = fallbackGridUrlWithFragment;
 
 gridVideo.src = gridUrlWithFragment;
 
+        gridVideo.src = gridUrlWithFragment;
+        var gridPlayPromise = gridVideo.play();
+        if (gridPlayPromise && typeof gridPlayPromise.catch === 'function') {
+          gridPlayPromise.catch(function () {});
+        }
+
         innerMask.appendChild(gridVideo);
       }
 
