@@ -4448,8 +4448,7 @@ fallbackGridVid.src = fallbackGridUrlWithFragment;
         gridVideo.setAttribute('muted', '');
         gridVideo.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;';
 
-        primeVideoFrame(gridVideo);
-        gridVideo.src = gridUrlWithFragment;
+gridVideo.src = gridUrlWithFragment;
 
         innerMask.appendChild(gridVideo);
       }
