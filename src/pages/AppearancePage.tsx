@@ -179,6 +179,7 @@ type ExtendedAppearance = Appearance & {
 
   floating_config: ResponsiveConfig<FloatingConfig>;
   carousel_config: ResponsiveConfig<CarouselConfig>;
+  dynamic_carousel_config: ResponsiveConfig<DynamicCarouselConfig>;
   grid_config: ResponsiveConfig<GridConfig>;
   modal_config: ModalConfig;
 
