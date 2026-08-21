@@ -4698,7 +4698,6 @@ function renderFloatingWidget(floatingStories) {
   var mode = 'bubble';
 
   if (!stories || stories.length === 0) {
-    console.log('[Vidlytics] âš ï¸ Nenhum story para flutuante.');
     return;
   }
 
