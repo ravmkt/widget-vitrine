@@ -1729,6 +1729,11 @@ const CarouselPreview = ({
                     borderWidth: `${safeNumber(carousel.border_style, 2, 0)}px`,
                     borderStyle: 'solid',
                     borderRadius,
+                                        transform: carousel.auto_highlight && index === highlightIndex ? 'scale(1.08)' : 'scale(1)',
+                    zIndex: carousel.auto_highlight && index === highlightIndex ? 10 : 1,
+                    boxShadow: carousel.auto_highlight && index === highlightIndex ? `0 0 0 2px ${colors.primary}` : undefined,
+                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+
                   }}
                 >
 <video
