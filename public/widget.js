@@ -4271,18 +4271,7 @@ if (cfg.autoHighlight) {
   var vlItems = Array.prototype.slice.call(track.querySelectorAll('.vidlytics-carousel-item'));
   var vlHighlightIdx = 0;
 
-  function vlApplyHighlight() {
-    vlItems.forEach(function (el, idx) {
-      var card = el.querySelector('div');
-      if (!card) return;
-      var isActive = idx === vlHighlightIdx;
-      card.style.transform = isActive ? 'translateZ(0) scale(1.08)' : 'translateZ(0) scale(1)';
-      card.style.zIndex = isActive ? '10' : '1';
-      card.style.transition = 'transform 0.3s ease';
-
-      var vid = el.querySelector('video');
-      if (vid) {
-        if (isActive) {function vlApplyHighlight() {
+function vlApplyHighlight() {
   vlItems.forEach(function (el, idx) {
     var card = el.querySelector('div');
     if (!card) return;
@@ -4296,6 +4285,15 @@ if (cfg.autoHighlight) {
 
     card.style.transform = 'translateZ(0)';
     card.style.zIndex = '';
+
+    var vid = el.querySelector('video');
+    if (vid) {
+      if (isActive) {
+        vid.play().catch(function () {});
+      } else {
+        vid.pause();
+      }
+    }
   });
 
   var activeEl = vlItems[vlHighlightIdx];
