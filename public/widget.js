@@ -3817,24 +3817,28 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
   var trackContainer = document.createElement('div');
   trackContainer.className = 'vidlytics-carousel-track-container';
 
-  var itemWidthPx = parseFloat(cfg.itemWidth) || 120;
-  var gapPx = parseFloat(cfg.itemSpacing) || 8;
-  var visibleItems = cfg.visibleItems || 4;
+var itemWidthPx = parseFloat(cfg.itemWidth) || 120;
+var gapPx = parseFloat(cfg.itemSpacing) || 8;
+var visibleItems = cfg.visibleItems || 4;
 
-  var containerWidthPx = (itemWidthPx * visibleItems) + (gapPx * (visibleItems - 1));
+// Espaço extra para o zoom (scale 1.08 no autoHighlight) não cortar nas bordas
+var zoomBufferPx = itemWidthPx * 0.08 + 8;
+
+var containerWidthPx = (itemWidthPx * visibleItems) + (gapPx * (visibleItems - 1)) + (zoomBufferPx * 2);
 
 trackContainer.style.cssText =
   'overflow-x:hidden !important;' +
   'overflow-y:visible !important;' +
   'position:relative !important;' +
+  'box-sizing:border-box !important;' +
   'width:' + containerWidthPx + 'px !important;' +
   'max-width:100% !important;' +
   'margin:0 auto !important;' +
   'padding-top:64px !important;' +
   'padding-bottom:2px !important;' +
-  'padding-left:16px !important;' +
-  'padding-right:16px !important;';
-  
+  'padding-left:' + zoomBufferPx + 'px !important;' +
+  'padding-right:' + zoomBufferPx + 'px !important;';
+
   var track = document.createElement('div');
   track.className = 'vidlytics-carousel-track';
   track.style.cssText =
