@@ -4818,7 +4818,28 @@ function renderFloatingWidget(floatingStories) {
     'position:relative !important;' +
     'transform:translateZ(0) !important;';
 
-  if (thumbUrl) {
+  var rawVideoUrl = (story.videos && story.videos.length > 0)
+    ? (story.videos[0].video_url || story.videos[0].url || '')
+    : '';
+  var isImageItem = !rawVideoUrl;
+
+  if (cfg.autoplayVideos && rawVideoUrl && !isImageItem) {
+    var video = createEl('video');
+    video.src = rawVideoUrl;
+    video.muted = true;
+    video.autoplay = true;
+    video.loop = true;
+    video.playsInline = true;
+    if (thumbUrl) video.poster = thumbUrl;
+    video.style.cssText =
+      'width:100% !important;' +
+      'height:100% !important;' +
+      'object-fit:' + cfg.objectFit + ' !important;' +
+      'border-radius:' + cfg.innerRadius + ' !important;' +
+      '-webkit-backface-visibility:hidden !important;';
+    cardInner.appendChild(video);
+    video.play().catch(function () {});
+  } else if (thumbUrl) {
     var img = createEl('img');
     img.src = thumbUrl;
     img.alt = story.title || 'Story';
