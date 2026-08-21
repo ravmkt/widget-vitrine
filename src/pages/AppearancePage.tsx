@@ -2237,6 +2237,7 @@ const PreviewCard = ({
       <div className="space-y-4">
         {activeTab === 'floating' && <FloatingPreview floating={floating} colors={colors} />}
         {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} />}
+                {activeTab === 'dynamic_carousel' && <CarouselPreview carousel={dynamicCarousel} colors={colors} />}
         {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} />}
         {activeTab === 'modal' && <ModalPreview formData={formData} colors={colors} />}
         {activeTab === 'basic' && (
