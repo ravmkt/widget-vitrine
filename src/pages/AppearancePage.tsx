@@ -3603,11 +3603,11 @@ if (activeFloatingConfig.shape === 'portrait') {
                         </div>
                       </div>
 
-                      {/* 4. Estilo do Card de Produto */}
+                      {/* 5. Estilo do Card de Produto */}
                       {activeDynamicCarouselConfig.show_product && (
                         <div className="rounded-xl border border-blue-200/80 bg-blue-50/30 p-3.5 space-y-3">
                           <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">
-                            4. Estilo do Card de Produto
+                            5. Estilo do Card de Produto
                           </h4>
                           
 <div className="grid grid-cols-2 gap-2.5">
