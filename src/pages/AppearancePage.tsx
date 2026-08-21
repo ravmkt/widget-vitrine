@@ -140,6 +140,10 @@ product_card_bg: string;
   product_card_price_bold: boolean;
 };
 
+type DynamicCarouselConfig = CarouselConfig & {
+  enabled: boolean;
+};
+
 type GridConfig = {
   visible_items: number;
   rows: number;
