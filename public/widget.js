@@ -4354,14 +4354,6 @@ function renderGridWidget(container, stories, appearance) {
     var isImageItem = sourceType === 'image' || (video && video.type === 'image');
     var effectiveMediaUrl = thumbUrl || rawVideoUrl;
 
-    // Ã°Å¸Ââ€º DEBUG #2 Ã¢â‚¬â€ confirma se a URL do vÃƒÂ­deo estÃƒÂ¡ vindo preenchida e o objeto completo
-      title: video.title || story.title,
-      rawVideoUrl: rawVideoUrl,
-      thumbUrl: thumbUrl,
-      sourceType: sourceType,
-      isImageItem: isImageItem,
-      videoObjectRaw: video
-    });
 
     if (effectiveMediaUrl) {
       var innerMask = createEl('div', 'vl-grid-img-mask');
@@ -5203,8 +5195,6 @@ return readStoreSettings().then(function (settings) {
 
         currentStories = joinStoriesWithVideos(currentStories, storyVideosData, videosData);
 
-          return s.videos && s.videos.length > 0;
-        }).length);
 
         return readProducts();
       });
