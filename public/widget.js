@@ -710,7 +710,6 @@ var showTitle = toBoolean(rcv('show_title', 'carousel_show_title', false), false
   var showProduct = toBoolean(rcv('show_product', 'carousel_show_product', true), true);
 
   // Leitura da chave real view_mode ('preview' / 'playing' / 'video' = reproduz mutado)
-var rawViewMode = String(rcv('view_mode', 'carousel_view_mode', 'preview') || '').trim().toLowerCase();
   var autoplayVideos = rcv('autoplay_videos', 'carousel_autoplay_videos', true);
   autoplayVideos = (autoplayVideos === false || autoplayVideos === 'false') ? false : true;
   var carouselPlayMode = autoplayVideos ? 'playing' : 'static';
@@ -3980,6 +3979,10 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         previewVideo.src = videoUrlWithFragment;
 
         innerMask.appendChild(previewVideo);
+        var pvPlayPromise = previewVideo.play();
+        if (pvPlayPromise && typeof pvPlayPromise.catch === 'function') {
+          pvPlayPromise.catch(function () {});
+        }
       } else {
         var displayImgSrc = thumbUrl;
 
