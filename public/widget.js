@@ -650,6 +650,9 @@ function getFloatingConfig(appearance) {
     bottom = px(marginBottomNumber); right = px(rightSpacingNumber); alignItems = 'flex-end';
   }
   
+    var autoplayVideosRaw = rcv('autoplay_videos', true);
+  var autoplayVideos = (autoplayVideosRaw === false || autoplayVideosRaw === 'false') ? false : true;
+
   var displayRadius = shape === 'circle' ? '999px' : px(radiusNumber);
   
   return {
