@@ -4320,6 +4320,11 @@ function renderGridWidget(container, stories, appearance) {
   }
 
   var cfg = getGridConfig(appearance);
+
+  // 🐛 DEBUG #1 — confirma se autoplayVideos está true/false vindo da config
+  console.log('[DEBUG] cfg completo:', cfg);
+  console.log('[DEBUG] cfg.autoplayVideos:', cfg.autoplayVideos);
+
   var fontFamily = getFontFamily(appearance);
   var columns = cfg.columns || 4;
   var gapPx = cfg.spacing + 'px';
@@ -4359,18 +4364,27 @@ function renderGridWidget(container, stories, appearance) {
       hasBorder ? ('box-shadow: inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ';') : '',
     ].join('');
 
-// 1. Resolução segura de URLs e Mídia da Grade
     var rawVideoUrl = getVideoUrl(video);
-    var thumbUrl = getVideoThumbnail(video) || 
+    var thumbUrl = getVideoThumbnail(video) ||
                    (video && (video.thumbnail_url || video.cover_image_url || video.poster_url || video.image_url)) ||
                    (story && (story.cover_url || story.thumbnail_url || story.cover || story.thumbnail)) || '';
     var sourceType = String(video.source_type || video.sourceType || '').toLowerCase();
     var isImageItem = sourceType === 'image' || (video && video.type === 'image');
     var effectiveMediaUrl = thumbUrl || rawVideoUrl;
 
+    // 🐛 DEBUG #2 — confirma se a URL do vídeo está vindo preenchida e o objeto completo
+    console.log('[DEBUG] video item:', {
+      title: video.title || story.title,
+      rawVideoUrl: rawVideoUrl,
+      thumbUrl: thumbUrl,
+      sourceType: sourceType,
+      isImageItem: isImageItem,
+      videoObjectRaw: video
+    });
+
     if (effectiveMediaUrl) {
       var innerMask = createEl('div', 'vl-grid-img-mask');
-      
+
       var borderWidthNum = cfg.borderWidth || 0;
       var rawRadiusNum = parseFloat(cfg.borderRadius) || 20;
       var innerRadiusVal = Math.max(0, rawRadiusNum - borderWidthNum);
@@ -4388,14 +4402,17 @@ function renderGridWidget(container, stories, appearance) {
         'background:#000;'
       ].join('');
 
-      // 2. Renderização Determinística: Prioriza Imagem e usa Vídeo apenas como fallback do primeiro frame
-if (isImageItem || !rawVideoUrl || (!cfg.autoplayVideos && thumbUrl)) {
+      // 🐛 DEBUG #3 — mostra qual branch foi escolhida (imagem estática vs vídeo autoplay)
+      var willUseImage = isImageItem || !rawVideoUrl || (!cfg.autoplayVideos && thumbUrl);
+      console.log('[DEBUG] Branch escolhida:', willUseImage ? 'IMAGEM ESTÁTICA' : 'VÍDEO AUTOPLAY');
+
+      if (willUseImage) {
         var img = createEl('img');
         img.src = thumbUrl || rawVideoUrl;
         img.alt = (video && video.title) || (story && story.title) || 'Story';
         img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;';
         img.loading = 'lazy';
-        
+
         img.onerror = function () {
           if (rawVideoUrl && !isImageItem) {
             img.style.display = 'none';
@@ -4437,11 +4454,10 @@ if (isImageItem || !rawVideoUrl || (!cfg.autoplayVideos && thumbUrl)) {
 
         innerMask.appendChild(gridVideo);
       }
-      
+
       card.appendChild(innerMask);
     }
-        
-    // Play button overlay
+
     var playBadge = createEl('div');
     playBadge.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;';
     var playIcon = createEl('div');
