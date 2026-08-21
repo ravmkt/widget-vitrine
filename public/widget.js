@@ -766,6 +766,54 @@ var shape = String(rcv('shape', 'card_shape', 'portrait')).trim().toLowerCase();
   };
 }
 
+function getDynamicCarouselConfig(appearance) {
+  var raw = appearance.dynamic_carousel_config;
+  if (typeof raw === 'string') {
+    try { raw = JSON.parse(raw); } catch(e) { raw = null; }
+  }
+  if (!raw || typeof raw !== 'object') raw = {};
+
+  var rcv = function(field, fallback) {
+    var v = raw[field];
+    return (v !== undefined && v !== null && v !== '') ? v : fallback;
+  };
+
+  var clamp = function(n, min, max) {
+    n = Number(n);
+    if (!isFinite(n)) return min;
+    return Math.min(max, Math.max(min, n));
+  };
+
+  var shape = String(rcv('shape', 'portrait')).trim().toLowerCase();
+  if (['square', 'landscape', 'circle'].indexOf(shape) === -1) shape = 'portrait';
+
+  return {
+    enabled: toBoolean(rcv('enabled', false), false),
+
+    width: toNumber(rcv('width', '160'), 160),
+    spacing: toNumber(rcv('spacing', '14'), 14),
+    shape: shape,
+    borderRadius: toNumber(rcv('border_radius', '14'), 14),
+    bgColor: rcv('bg_color', '#000000') || '#000000',
+
+    highlightMode: String(rcv('highlight_mode', 'ring')).trim().toLowerCase(),
+    highlightShadow: toBoolean(rcv('highlight_shadow', false), false),
+    highlightBorderColor: rcv('border_color', '#0094EB') || '#0094EB',
+    highlightBorderWidth: toNumber(rcv('highlight_border_width', '0'), 0),
+    highlightBorderRadius: toNumber(rcv('highlight_border_radius', rcv('border_radius', '14')), 14),
+
+    dimInactive: toBoolean(rcv('highlight_dim_inactive', true), true),
+    inactiveScale: clamp(rcv('inactive_scale', '0.85'), 0.5, 1),
+    inactiveOpacity: clamp(rcv('inactive_opacity', '0.5'), 0.1, 1),
+
+    enlargeActive: toBoolean(rcv('highlight_enlarge_active', false), false),
+    activeScale: clamp(rcv('active_scale', '1.15'), 1, 1.5),
+
+    transitionMs: clamp(rcv('highlight_transition', '300'), 100, 1000),
+    autoplayDelay: clamp(rcv('autoplay_delay', '5000'), 1500, 20000),
+  };
+}
+
 function getGridConfig(appearance) {
   appearance = normalizeAppearanceItem(appearance || {});
   function rcv(jsonbField, flatField, fallback) {
