@@ -3576,7 +3576,26 @@ function openStoryModal(storyIndex, videoIndex) {
         thumbUrl = getVideoThumbnail(firstVideo);
       }
 
-      if (thumbUrl) {
+var bubbleAutoplay = (function () {
+        var v = (currentAppearance && (currentAppearance.autoplay_videos ?? currentAppearance.floating_autoplay_videos));
+        return !(v === false || v === 'false');
+      })();
+      var bubbleVideoUrl = (story.videos && story.videos[0]) ? getVideoUrl(story.videos[0]) : '';
+
+      if (bubbleAutoplay && bubbleVideoUrl) {
+        var bubbleVid = createEl('video', 'vl-img');
+        bubbleVid.src = bubbleVideoUrl;
+        bubbleVid.muted = true;
+        bubbleVid.defaultMuted = true;
+        bubbleVid.autoplay = true;
+        bubbleVid.loop = true;
+        bubbleVid.playsInline = true;
+        bubbleVid.setAttribute('playsinline', '');
+        bubbleVid.setAttribute('muted', '');
+        bubbleVid.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
+        if (thumbUrl) bubbleVid.poster = thumbUrl;
+        inner.appendChild(bubbleVid);
+      } else if (thumbUrl) {
         var img = createEl('img', 'vl-img');
         img.src = thumbUrl;
         img.alt = story.title || 'Story';
