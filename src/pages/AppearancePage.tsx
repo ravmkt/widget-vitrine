@@ -632,6 +632,7 @@ const createDefaultGridDesktopConfig = (): GridConfig => ({
   border_radius: '12',
   object_fit: 'cover',
   show_title: false,
+  autoplay_videos: true,
 });
 
 const createDefaultGridMobileConfig = (): GridConfig => ({
