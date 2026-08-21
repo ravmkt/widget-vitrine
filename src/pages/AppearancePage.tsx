@@ -2744,6 +2744,12 @@ const AppearancePage = () => {
     [formData.carousel_config, carouselDevice, formData.useGlobalAppearance],
   );
 
+  const activeDynamicCarouselConfig = useMemo(
+    () =>
+      getActiveResponsiveConfig(formData.dynamic_carousel_config, dynamicCarouselDevice, formData.useGlobalAppearance),
+    [formData.dynamic_carousel_config, dynamicCarouselDevice, formData.useGlobalAppearance],
+  );
+
   const activeGridConfig = useMemo(
     () =>
       getActiveResponsiveConfig(formData.grid_config, gridDevice, formData.useGlobalAppearance),
