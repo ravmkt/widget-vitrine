@@ -1867,8 +1867,8 @@ style={{
               >
 <video
   ref={(el) => {
-    if (el) gridPreviewVideoRefs.current.set(index, el);
-    else gridPreviewVideoRefs.current.delete(index);
+    if (el) videoRefs.current.set(index, el);
+    else videoRefs.current.delete(index);
   }}
   src={DEMO_PREVIEW_VIDEOS[index % DEMO_PREVIEW_VIDEOS.length]}
   loop={grid.autoplay_videos ?? true}
