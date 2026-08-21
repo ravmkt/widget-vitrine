@@ -710,7 +710,7 @@ var showTitle = toBoolean(rcv('show_title', 'carousel_show_title', false), false
   var showProduct = toBoolean(rcv('show_product', 'carousel_show_product', true), true);
 
   // Leitura da chave real view_mode ('preview' / 'playing' / 'video' = reproduz mutado)
-  var rawViewMode = String(rcv('autoplay_videos', 'carousel_view_mode', 'preview') || '').trim().toLowerCase();
+  var rawViewMode = String(rcv('view_mode', 'carousel_view_mode', 'preview') || '').trim().toLowerCase();
   var carouselPlayMode = (rawViewMode === 'preview' || rawViewMode === 'playing' || rawViewMode === 'video' || rawViewMode === 'true') ? 'playing' : 'static';
 
 var shape = String(rcv('shape', 'card_shape', 'portrait')).trim().toLowerCase();
