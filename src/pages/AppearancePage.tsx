@@ -750,6 +750,8 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
   const floatingMobile = createDefaultFloatingMobileConfig();
   const carouselDesktop = createDefaultCarouselDesktopConfig();
   const carouselMobile = createDefaultCarouselMobileConfig();
+  const dynamicCarouselDesktop = createDefaultDynamicCarouselDesktopConfig();
+  const dynamicCarouselMobile = createDefaultDynamicCarouselMobileConfig();
   const gridDesktop = createDefaultGridDesktopConfig();
   const gridMobile = createDefaultGridMobileConfig();
   const modalConfig = createDefaultModalConfig();
