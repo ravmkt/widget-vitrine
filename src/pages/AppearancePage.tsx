@@ -3401,6 +3401,7 @@ if (activeFloatingConfig.shape === 'portrait') {
                   )}
 
 
+
                   {/* ── Grade ── */}
                   {activeTab === 'grid' && (
                     <SectionCard title="Configurações da Grade">
