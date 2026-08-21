@@ -2192,21 +2192,26 @@ const PreviewCard = ({
   gridDevice: DeviceType;
   activeTab: ModalTab;
 }) => {
-  const floating = getActiveResponsiveConfig(
-    formData.floating_config,
-    floatingDevice,
-    formData.useGlobalAppearance,
-  );
-  const dynamicCarousel = getActiveResponsiveConfig(
-    formData.dynamic_carousel_config,
-    dynamicCarouselDevice,
-    formData.useGlobalAppearance,
-  );
-  const grid = getActiveResponsiveConfig(
-    formData.grid_config,
-    gridDevice,
-    formData.useGlobalAppearance,
-  );
+const floating = getActiveResponsiveConfig(
+  formData.floating_config,
+  floatingDevice,
+  formData.useGlobalAppearance,
+);
+const carousel = getActiveResponsiveConfig(
+  formData.carousel_config,
+  carouselDevice,
+  formData.useGlobalAppearance,
+);
+const dynamicCarousel = getActiveResponsiveConfig(
+  formData.dynamic_carousel_config,
+  dynamicCarouselDevice,
+  formData.useGlobalAppearance,
+);
+const grid = getActiveResponsiveConfig(
+  formData.grid_config,
+  gridDevice,
+  formData.useGlobalAppearance,
+);
 
   const colors: PreviewColors = {
     primary: isValidHexColor(formData.primary_color) ? formData.primary_color : '#0094EB',
