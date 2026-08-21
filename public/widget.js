@@ -4256,27 +4256,52 @@ track.appendChild(item);
     }, true);
   });
   
-  if (cfg.autoHighlight) {
-    var vlItems = Array.prototype.slice.call(track.querySelectorAll('.vidlytics-carousel-item'));
-    var vlHighlightIdx = 0;
+if (cfg.autoHighlight) {
+  var vlItems = Array.prototype.slice.call(track.querySelectorAll('.vidlytics-carousel-item'));
+  var vlHighlightIdx = 0;
 
-    function vlApplyHighlight() {
-      vlItems.forEach(function (el, idx) {
-        var card = el.querySelector('div');
-        if (!card) return;
-        var isActive = idx === vlHighlightIdx;
-        card.style.transform = isActive ? 'translateZ(0) scale(1.08)' : 'translateZ(0) scale(1)';
-        card.style.zIndex = isActive ? '10' : '1';
-        card.style.transition = 'transform 0.3s ease';
-      });
+  function vlApplyHighlight() {
+    vlItems.forEach(function (el, idx) {
+      var card = el.querySelector('div');
+      if (!card) return;
+      var isActive = idx === vlHighlightIdx;
+      card.style.transform = isActive ? 'translateZ(0) scale(1.08)' : 'translateZ(0) scale(1)';
+      card.style.zIndex = isActive ? '10' : '1';
+      card.style.transition = 'transform 0.3s ease';
+
+      var vid = el.querySelector('video');
+      if (vid) {
+        if (isActive) {
+          vid.currentTime = 0;
+          var p = vid.play();
+          if (p && p.catch) p.catch(function () {});
+        } else {
+          vid.pause();
+          vid.currentTime = 0;
+        }
+      }
+    });
+
+    // Centraliza o item ativo (efeito de "arrastar" o carrossel)
+    var activeEl = vlItems[vlHighlightIdx];
+    if (activeEl) {
+      var itemOffset = activeEl.offsetLeft;
+      var itemWidthActive = activeEl.offsetWidth;
+      var containerWidth = trackContainer.clientWidth;
+      var targetTranslate = -(itemOffset - (containerWidth / 2) + (itemWidthActive / 2));
+      var maxScroll = getMaxScroll();
+      targetTranslate = clamp(targetTranslate, -maxScroll, 0);
+      track.style.transition = 'transform 0.5s ease';
+      track.style.transform = 'translateX(' + targetTranslate + 'px)';
     }
-
-    vlApplyHighlight();
-    setInterval(function () {
-      vlHighlightIdx = (vlHighlightIdx + 1) % vlItems.length;
-      vlApplyHighlight();
-    }, 5000);
   }
+
+  vlApplyHighlight();
+  setInterval(function () {
+    vlHighlightIdx = (vlHighlightIdx + 1) % vlItems.length;
+    vlApplyHighlight();
+  }, 5000);
+}
 
   target.insertAdjacentElement(position, wrapper);
 }
