@@ -3823,12 +3823,15 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
 
   var containerWidthPx = (itemWidthPx * visibleItems) + (gapPx * (visibleItems - 1));
 
-  trackContainer.style.cssText =
-    'overflow:hidden !important;' +
-    'position:relative !important;' +
-    'width:' + containerWidthPx + 'px !important;' +
-    'max-width:100% !important;' +
-    'margin:0 auto !important;'; // Opcional: Garante que o trackContainer fique centralizado se o wrapper for maior que ele
+trackContainer.style.cssText =
+  'overflow-x:hidden !important;' +
+  'overflow-y:visible !important;' +
+  'position:relative !important;' +
+  'width:' + containerWidthPx + 'px !important;' +
+  'max-width:100% !important;' +
+  'margin:0 auto !important;' +
+  'padding-top:12px !important;' +
+  'padding-bottom:2px !important;';
   
   var track = document.createElement('div');
   track.className = 'vidlytics-carousel-track';
