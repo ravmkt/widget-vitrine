@@ -1901,9 +1901,6 @@ gridTemplateColumns: `repeat(${cols}, ${cardWidth})`,
                   'relative overflow-hidden shadow-sm flex items-center justify-center bg-slate-900',
                   isCircle && 'rounded-full',
                   !isCircle && 'rounded-xl'
-                                    opacity: grid.sequential_playback && index !== activeIndex ? 0.4 : 1,
-                  transition: 'opacity 0.3s ease',
-
                 )}
 style={{
   width: cardWidth,
@@ -1912,6 +1909,8 @@ style={{
                   borderWidth: `${safeNumber(grid.border_style, 2, 0)}px`,
                   borderStyle: 'solid',
                   borderRadius: isCircle ? '999px' : cssSize(grid.border_radius, '12px'),
+                  opacity: grid.sequential_playback && index !== activeIndex ? 0.4 : 1,
+                  transition: 'opacity 0.3s ease',
                 }}
               >
 <video
