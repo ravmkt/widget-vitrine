@@ -2423,6 +2423,39 @@ const AppearancePage = () => {
     });
   };
 
+    const updateDynamicCarouselConfig = (patch: Partial<DynamicCarouselConfig>) => {
+    setFormData(prev => {
+      const device = prev.useGlobalAppearance ? 'desktop' : dynamicCarouselDevice;
+      const current = prev.dynamic_carousel_config[device];
+
+      let updatedDeviceConfig: DynamicCarouselConfig = {
+        ...current,
+        ...patch,
+        spacing: safeNumber(patch.spacing ?? current.spacing, current.spacing || 0, 0),
+        visible_items: safeNumber(
+          patch.visible_items ?? current.visible_items,
+          current.visible_items || 1,
+          1,
+        ),
+      };
+
+      if (patch.shape !== undefined) {
+        const newShape = normalizeWidgetShape(patch.shape, 'portrait');
+        const width = formatNumberLikeCurrent(patch.width ?? current.width ?? '80', '80');
+        updatedDeviceConfig = { ...updatedDeviceConfig, shape: newShape, width };
+      }
+
+      updatedDeviceConfig = normalizeCarouselConfigShape(updatedDeviceConfig) as DynamicCarouselConfig;
+
+      const nextConfig: ResponsiveConfig<DynamicCarouselConfig> = prev.useGlobalAppearance
+        ? { same_for_all: true, desktop: updatedDeviceConfig, mobile: updatedDeviceConfig }
+        : { ...prev.dynamic_carousel_config, same_for_all: false, [device]: updatedDeviceConfig };
+
+      return { ...prev, dynamic_carousel_config: nextConfig };
+    });
+  };
+
+
   const updateGridConfig = (patch: Partial<GridConfig>) => {
     setFormData(prev => {
       const device = prev.useGlobalAppearance ? 'desktop' : gridDevice;
