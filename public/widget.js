@@ -4305,7 +4305,7 @@ function vlApplyHighlight() {
     var maxWindowStart = Math.max(0, totalItems - effectiveVisibleItems);
     windowStart = Math.max(0, Math.min(windowStart, maxWindowStart));
 
-    var targetTranslate = -(windowStart * stepPx);
+var targetTranslate = -(windowStart * (itemWidthPx + gapPx));
     var maxScroll = getMaxScroll();
     targetTranslate = clamp(targetTranslate, -maxScroll, 0);
 
