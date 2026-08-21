@@ -1111,6 +1111,7 @@ const normalizeAppearance = (
 
     floating_config: { ...floatingConfig, same_for_all: globalAppearance },
     carousel_config: { ...carouselConfig, same_for_all: globalAppearance },
+    dynamic_carousel_config: { ...dynamicCarouselConfig, same_for_all: globalAppearance },
     grid_config: { ...gridConfig, same_for_all: globalAppearance },
     modal_config: modalConfig,
 
