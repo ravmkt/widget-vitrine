@@ -3866,6 +3866,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
       // 2. Container principal do item em coluna
       var item = document.createElement('div');
       item.className = 'vidlytics-carousel-item';
+      item.setAttribute('data-vl-index', String(track.children.length));
       item.style.cssText =
         'flex:0 0 ' + cfg.itemWidth + ' !important;' +
         'width:' + cfg.itemWidth + ' !important;' +
