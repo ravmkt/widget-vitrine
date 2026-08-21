@@ -992,19 +992,6 @@ const normalizeAppearance = (
   carouselConfig.desktop = normalizeCarouselConfigShape(carouselConfig.desktop);
   carouselConfig.mobile = normalizeCarouselConfigShape(carouselConfig.mobile);
 
-  carouselConfig.desktop = normalizeCarouselConfigShape(carouselConfig.desktop);
-  carouselConfig.mobile = normalizeCarouselConfigShape(carouselConfig.mobile);
-
-  const dynamicCarouselConfig = normalizeResponsiveConfig<DynamicCarouselConfig>({
-    rawValue: anyItem.dynamic_carousel_config,
-    desktopDefault: createDefaultDynamicCarouselDesktopConfig(),
-    mobileDefault: createDefaultDynamicCarouselMobileConfig(),
-    sameForAll: globalAppearance,
-  });
-  dynamicCarouselConfig.desktop = normalizeCarouselConfigShape(dynamicCarouselConfig.desktop) as DynamicCarouselConfig;
-  dynamicCarouselConfig.mobile = normalizeCarouselConfigShape(dynamicCarouselConfig.mobile) as DynamicCarouselConfig;
-
-  const gridConfig = normalizeResponsiveConfig<GridConfig>({
 
   const gridConfig = normalizeResponsiveConfig<GridConfig>({
     rawValue: anyItem.grid_config,
