@@ -1822,6 +1822,7 @@ const GridPreview = ({
 }: {
   grid: GridConfig;
   colors: PreviewColors;
+}) => {
   const mockupRef = useRef<HTMLDivElement>(null);
   const scale = usePreviewScale(mockupRef);
 
