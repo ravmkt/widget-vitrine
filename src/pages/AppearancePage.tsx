@@ -650,6 +650,7 @@ const createDefaultGridMobileConfig = (): GridConfig => ({
   object_fit: 'cover',
   show_title: false,
   autoplay_videos: true,
+  sequential_playback: false,
 });
 
 const createDefaultModalConfig = (): ModalConfig & Record<string, any> => ({
