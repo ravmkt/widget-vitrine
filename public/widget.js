@@ -4389,7 +4389,7 @@ function renderGridWidget(container, stories, appearance) {
       ].join('');
 
       // 2. Renderização Determinística: Prioriza Imagem e usa Vídeo apenas como fallback do primeiro frame
-if (isImageItem || !cfg.autoplayVideos || !rawVideoUrl || thumbUrl) {
+if (isImageItem || !rawVideoUrl || (!cfg.autoplayVideos && thumbUrl)) {
         var img = createEl('img');
         img.src = thumbUrl || rawVideoUrl;
         img.alt = (video && video.title) || (story && story.title) || 'Story';
