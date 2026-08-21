@@ -3251,61 +3251,52 @@ if (activeFloatingConfig.shape === 'portrait') {
                         )}
                       </div>
 
-                      {/* 1. Layout & Dimensões */}
-                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-3">
-                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">1. Layout & Dimensões</h4>
-                        
-                        <div className="grid grid-cols-2 gap-2.5">
-                          <FormField label="Formato dos Cards">
-<select
-                              value={activeCarouselConfig.shape}
-                              onChange={e => updateCarouselConfig({ shape: e.target.value as WidgetShape })}
-                              className={selectClass}
-                            >
-                              <option value="circle">Circular</option>
-                              <option value="square">Quadrado</option>
-                              <option value="portrait">Retrato 9:16</option>
-                              <option value="landscape">Paisagem 16:9</option>
-                            </select>
-                          </FormField>
+{/* 1. Layout & Dimensões */}
+<div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-3">
+  <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">1. Layout & Dimensões</h4>
 
-                          <FormField label="Largura Card (px)">
-                            <input
-                              type="number" min="20" step="1"
-                              value={toNumberInputValue(activeCarouselConfig.width)}
-                              onChange={e => updateCarouselConfig({ width: e.target.value })}
-                              placeholder="Ex: 120"
-                              className={inputClass}
-                            />
-                          </FormField>
+  <div className="grid grid-cols-2 gap-2.5">
+    <FormField label="Formato dos Cards">
+      <select
+        value={activeDynamicCarouselConfig.shape}
+        onChange={e => updateDynamicCarouselConfig({ shape: e.target.value as WidgetShape })}
+        className={selectClass}
+      >
+        <option value="circle">Circular</option>
+        <option value="square">Quadrado</option>
+        <option value="portrait">Retrato 9:16</option>
+        <option value="landscape">Paisagem 16:9</option>
+      </select>
+    </FormField>
 
-                          <FormField label="Itens Visíveis">
-                            <input
-                              type="number" min="1" step="1"
-                              value={activeCarouselConfig.visible_items}
-                              onChange={e => updateCarouselConfig({ visible_items: safeNumber(e.target.value, 1, 1) })}
-                              className={inputClass}
-                            />
-                          </FormField>
+    <FormField label="Largura Card (px)">
+      <input
+        type="number" min="20" step="1"
+        value={toNumberInputValue(activeDynamicCarouselConfig.width)}
+        onChange={e => updateDynamicCarouselConfig({ width: e.target.value })}
+        placeholder="Ex: 120"
+        className={inputClass}
+      />
+    </FormField>
 
-                          <FormField label="Espaçamento (px)">
-                            <input
-                              type="number" min="0" step="1"
-                              value={activeCarouselConfig.spacing}
-                              onChange={e => updateCarouselConfig({ spacing: safeNumber(e.target.value, 0, 0) })}
-                              className={inputClass}
-                            />
-                          </FormField>
+    <FormField label="Espaçamento (px)">
+      <input
+        type="number" min="0" step="1"
+        value={activeDynamicCarouselConfig.spacing}
+        onChange={e => updateDynamicCarouselConfig({ spacing: safeNumber(e.target.value, 0, 0) })}
+        className={inputClass}
+      />
+    </FormField>
 
-                          <FormField label="Margem Superior (px)">
-                            <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.margin_top)} onChange={e => updateCarouselConfig({ margin_top: e.target.value })} placeholder="Ex: 0" className={inputClass} />
-                          </FormField>
+    <FormField label="Margem Superior (px)">
+      <input type="number" min="0" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.margin_top)} onChange={e => updateDynamicCarouselConfig({ margin_top: e.target.value })} placeholder="Ex: 0" className={inputClass} />
+    </FormField>
 
-                          <FormField label="Margem Inferior (px)">
-                            <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.margin_bottom)} onChange={e => updateCarouselConfig({ margin_bottom: e.target.value })} placeholder="Ex: 0" className={inputClass} />
-                          </FormField>
-                        </div>
-                      </div>
+    <FormField label="Margem Inferior (px)">
+      <input type="number" min="0" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.margin_bottom)} onChange={e => updateDynamicCarouselConfig({ margin_bottom: e.target.value })} placeholder="Ex: 0" className={inputClass} />
+    </FormField>
+  </div>
+</div>
 
                       {/* 2. Bordas & Ajustes */}
                       <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-3">
