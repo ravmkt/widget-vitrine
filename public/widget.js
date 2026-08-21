@@ -4042,8 +4042,7 @@ fallbackVid.src = fallbackUrl;
             'border-radius:' + innerRadiusCss + ' !important;' +
             '-webkit-backface-visibility:hidden !important;' +
             'background:#000 !important;';
-          primeVideoFrame(directFrameVid);
-          directFrameVid.src = directUrl;
+directFrameVid.src = directUrl;
           innerMask.appendChild(directFrameVid);
         }
       }
