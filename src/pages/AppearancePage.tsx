@@ -2600,12 +2600,6 @@ const AppearancePage = () => {
     [formData.grid_config, gridDevice, formData.useGlobalAppearance],
   );
 
-    const activeGridConfig = useMemo(
-    () =>
-      getActiveResponsiveConfig(formData.grid_config, gridDevice, formData.useGlobalAppearance),
-    [formData.grid_config, gridDevice, formData.useGlobalAppearance],
-  );
-
   useEffect(() => {
     const vid = floatingPreviewVideoRef.current;
     if (!vid) return;
