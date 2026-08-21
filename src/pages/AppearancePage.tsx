@@ -1874,17 +1874,17 @@ const ModalPreview = ({
             borderRadius: cssSize(m.border_radius, '1.25rem'),
           }}
         >
-          <video
-            src={DEMO_PREVIEW_VIDEOS[0]}
-            autoPlay={carousel.autoplay_videos ?? true}
-            loop={carousel.autoplay_videos ?? true}
-            muted
-            playsInline
-            preload="auto"
-            onLoadedData={(e) => { if (carousel.autoplay_videos ?? true) e.currentTarget.play().catch(() => {}); }}
-            poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
-            className="absolute inset-0 h-full w-full object-cover pointer-events-none"
-          />
+<video
+  src={DEMO_PREVIEW_VIDEOS[0]}
+  autoPlay
+  loop
+  muted
+  playsInline
+  preload="auto"
+  onLoadedData={(e) => e.currentTarget.play().catch(() => {})}
+  poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
+  className="absolute inset-0 h-full w-full object-cover pointer-events-none"
+/>
 
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80" />
 
