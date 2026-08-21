@@ -3830,7 +3830,7 @@ trackContainer.style.cssText =
   'width:' + containerWidthPx + 'px !important;' +
   'max-width:100% !important;' +
   'margin:0 auto !important;' +
-  'padding-top:24px !important;' +
+  'padding-top:32px !important;' +
   'padding-bottom:2px !important;';
   
   var track = document.createElement('div');
