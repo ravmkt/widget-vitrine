@@ -4756,6 +4756,28 @@ function getWidgetDisplayMode(appearance) {
   }
 
 }
+// No mount principal (onde hoje tem "if (displayMode === 'carousel') {...}"), adicionar ANTES desse bloco:
+if (displayMode === 'dynamic_carousel') {
+  document.querySelectorAll('[id^="vidlytics-wrapper-"]').forEach(function (w) { w.remove(); });
+
+  var dcWrapper = document.createElement('div');
+  dcWrapper.id = 'vidlytics-wrapper-' + Date.now();
+  Object.assign(dcWrapper.style, {
+    width: '100%',
+    minHeight: '260px',
+    margin: '20px 0',
+    overflow: 'visible',
+    display: 'block',
+  });
+  target.insertAdjacentElement('afterend', dcWrapper);
+
+  renderDynamicCarouselWidget({
+    target: '#' + dcWrapper.id,
+    position: 'beforeend',
+  }, stories, appearance);
+
+  return;
+}
 
   if (displayMode === 'carousel') {
     document.querySelectorAll('[id^="vidlytics-wrapper-"]').forEach(function (w) { w.remove(); });
