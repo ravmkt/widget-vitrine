@@ -3666,6 +3666,12 @@ function getWidgetDisplayMode(appearance) {
   ]);
   if (mode) {
     mode = String(mode).trim().toLowerCase();
+    if (mode === 'dynamic_carousel' || mode === 'carrossel_dinamico') {
+      var dcCfg = appearance.dynamic_carousel_config;
+      if (typeof dcCfg === 'string') { try { dcCfg = JSON.parse(dcCfg); } catch(e) { dcCfg = null; } }
+      if (dcCfg && toBoolean(dcCfg.enabled, false)) return 'dynamic_carousel';
+      // enabled=false → cai para o próximo modo (não quebra usuários existentes)
+    }
     if (mode === 'carousel' || mode === 'carrossel') return 'carousel';
     if (mode === 'grid' || mode === 'grade') return 'grid';
     if (mode === 'floating' || mode === 'flutuante') return 'floating';
