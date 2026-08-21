@@ -1626,7 +1626,6 @@ const CarouselPreview = ({
 
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
 
-  const visibleItems = safeNumber(carousel.visible_items, 4, 1);
   const items = Array.from({ length: Math.max(1, Math.min(visibleItems, 6)) });
 
   const [highlightIndex, setHighlightIndex] = useState(0);
